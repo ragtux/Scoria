@@ -1,0 +1,20 @@
+[package]
+name = "scoria"
+description = "Scoria: a native Rust/GPUI knowledge base compatible with Obsidian vaults"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "scoria"
+path = "src/main.rs"
+
+[dependencies]
+scoria-vault.workspace = true
+scoria-cache.workspace = true
+scoria-commands.workspace = true
+scoria-formats.workspace = true
+anyhow.workspace = true
+gpui.workspace = true
