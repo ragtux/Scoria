@@ -7,7 +7,7 @@ tags:
 # Scoria
 
 Scoria is a native Rust/GPUI knowledge base that opens [Obsidian](https://obsidian.md) vaults
-unchanged. This folder is itself an Obsidian vault: open `docs/` in Obsidian, and once Scoria can
+unchanged. This folder is itself an Obsidian vault: open `docs/scoria` in Obsidian, and once Scoria can
 browse a vault, open it in Scoria too. Anything the two apps disagree on here is a bug or a spec gap.
 
 ## Notes

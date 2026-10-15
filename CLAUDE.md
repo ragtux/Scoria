@@ -8,7 +8,7 @@ Native Rust/GPUI clone of Obsidian's desktop app, targeting byte-level vault com
   line endings, BOMs, and unknown JSON/YAML keys (`#[serde(flatten)] extra` everywhere).
 - One Markdown parser (`scoria-markdown`) feeds the editor, reading view, cache, and link rewriting.
   Do not add a second tokenizer for any of those.
-- Formats and behaviors are specified in `docs/Specification.md`. When the spec and Obsidian disagree, test
+- Formats and behaviors are specified in `docs/scoria/Specification.md`. When the spec and Obsidian disagree, test
   against a real vault and fix the spec.
 - Command ids, config keys, and file names must match Obsidian's exactly (`scoria-commands/data/commands.txt`,
   `scoria-formats/src/config.rs`). Add new ones only with the observed string.
@@ -25,7 +25,7 @@ crates/scoria-cache     CachedMetadata, LinkResolver
 crates/scoria-formats   FileKind, config types, canvas, base
 crates/scoria-commands  command registry, default hotkeys
 crates/scoria-bench     spike benchmarks: synthetic vault generator, index timer (bin)
-docs/                   Obsidian vault: spec and design notes (dogfooded by Scoria)
+docs/scoria             Obsidian vault: spec and design notes (dogfooded by Scoria)
 ```
 
 ## Commands
@@ -49,5 +49,5 @@ cargo fmt --all && cargo clippy --workspace --all-targets
 - Vault-relative paths use `/` and keep original case; comparisons are case-insensitive.
 - Positions are zero-based line/column plus byte offset, like Obsidian's `Pos`.
 - Tests that need a vault build one in a `tempfile::tempdir()`; never depend on the developer's vault.
-- `docs/` is an Obsidian vault: write notes with wikilinks and frontmatter, and keep `.obsidian/`
-  committed except `workspace.json`.
+- `docs/scoria/` is an Obsidian vault: write notes with wikilinks and frontmatter, and keep
+  `.obsidian/` committed except `workspace.json`.
