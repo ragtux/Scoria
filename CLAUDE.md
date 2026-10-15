@@ -24,15 +24,23 @@ crates/scoria-markdown  OFM primitives
 crates/scoria-cache     CachedMetadata, LinkResolver
 crates/scoria-formats   FileKind, config types, canvas, base
 crates/scoria-commands  command registry, default hotkeys
+crates/scoria-bench     spike benchmarks: synthetic vault generator, index timer (bin)
 docs/                   spec and design notes
 ```
 
 ## Commands
 
+On NixOS run these inside `nix-shell` (`shell.nix` supplies gpui's X11, Wayland, and Vulkan libraries).
+Known issue: on NVIDIA GPUs gpui 0.2.2's blade 0.7.1 requests ray-tracing extensions and `vkCreateDevice`
+fails with `ERROR_INITIALIZATION_FAILED`; until gpui is moved past that, run the app on the software
+driver: `VK_DRIVER_FILES=/run/opengl-driver/share/vulkan/icd.d/lvp_icd.x86_64.json cargo run -p scoria -- <vault>`.
+
 ```
 cargo test --workspace            # all library tests (fast)
 cargo check -p scoria             # app, pulls gpui (slow first time)
 cargo run -p scoria -- <vault>    # open a vault
+cargo run --release -p scoria-bench -- generate <dir>   # synthetic 20k-note vault
+cargo run --release -p scoria-bench -- index <vault>    # time scan/read/index/resolve, check the 2 s gate
 cargo fmt --all && cargo clippy --workspace --all-targets
 ```
 
