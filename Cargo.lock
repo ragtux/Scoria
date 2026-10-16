@@ -4676,6 +4676,7 @@ dependencies = [
  "scoria-cache",
  "scoria-commands",
  "scoria-formats",
+ "scoria-markdown",
  "scoria-vault",
 ]
 

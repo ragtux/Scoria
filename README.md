@@ -11,10 +11,12 @@ Parser foundation. `scoria-markdown` parses CommonMark (all 652 spec examples), 
 extensions Obsidian uses, and Obsidian's own syntax into one tree with byte spans, and renders
 it to reading-view HTML that matches Obsidian 1.13.7 on 1007 of 1009 corpus notes; the
 metadata cache is built from that tree. The application opens a
-window with the three-pane shell and reports the vault it was given.
+window with the three-pane shell and an editor prototype that shows a 50k-line note with
+syntax decorations from the same parser; click a note in the file list to open it.
 
 ```
-cargo run -p scoria -- "C:\path\to\your\vault"
+cargo run --release -p scoria -- "C:\path\to\your\vault"
+cargo run --release -p scoria -- docs/scoria --synthetic 50000 --stress   # editor spike with a report
 cargo test --workspace
 ```
 
@@ -43,7 +45,7 @@ behavior, file formats, and public documentation, lives in the `docs/scoria` vau
 
 ## Roadmap
 
-1. Spike: GPUI editor prototype, OFM parser conformance corpus, vault index performance.
+1. Spike: GPUI editor prototype, OFM parser conformance corpus, vault index performance. Done; see `docs/scoria/Development.md`.
 2. Reader: browse, search, graph, backlinks on a real vault.
 3. Writer: Live Preview, properties, link rewriting on rename.
 4. Parity: canvas, bases, PDF, themes subset, URI and CLI.

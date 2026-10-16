@@ -14,6 +14,7 @@ path = "src/main.rs"
 
 [dependencies]
 scoria-vault.workspace = true
+scoria-markdown.workspace = true
 scoria-cache.workspace = true
 scoria-commands.workspace = true
 scoria-formats.workspace = true
