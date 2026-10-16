@@ -37,6 +37,8 @@ with the command inventory and bundle evidence.
 | Files view: folders before files, names compared case-insensitively, `.md` hidden, unknown kinds hidden unless `showUnsupportedFiles` | `scoria::explorer::FileTree` |
 | Search grammar: implicit AND, uppercase `OR` binds looser, `-` negation, `"phrase"` with `\"`, `/regex/flags`, field operators apply to one term or group, `[prop]` forms; explain tree uses Obsidian's labels; `tag:` matches exactly or a parent of a nested tag | `scoria-search::query`, `scoria-search::matcher` |
 | Fuzzy search: query characters in order, case-insensitive, word starts and consecutive runs score higher; simple search needs every token as a substring | `scoria-search::fuzzy` |
+| Filesystem changes: dot-folders ignored, a removed folder removes its files, a moved-in folder is walked; adding or removing a file re-resolves every link | `scoria-vault::Vault::refresh_path`, `scoria-cache::MetadataCache::reresolve` |
+| Unlinked mentions: whole-word, case-insensitive, names and aliases, longest name wins, not inside `[[ ]]`, `[ ]( )`, inline or fenced code | `scoria::mentions` |
 | Config files are sparse and optional; unknown keys round-trip | `scoria-formats::config`, `scoria-vault::Vault::read_config` |
 | `core-plugins.json` map and legacy array shapes | `scoria-formats::config::CorePlugins` |
 | JSON Canvas 1.0 fields, z-order by array order, tab-indented output | `scoria-formats::canvas` |
