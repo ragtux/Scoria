@@ -7,8 +7,10 @@ and is not affiliated with Obsidian.
 
 ## Status
 
-Skeleton. The workspace compiles and the format, parser, cache, and vault crates have tests;
-the application opens a window with the three-pane shell and reports the vault it was given.
+Parser foundation. `scoria-markdown` parses CommonMark (all 652 spec examples), the GitHub
+extensions Obsidian uses, and Obsidian's own syntax into one tree with byte spans, and renders
+it to reading-view HTML; the metadata cache is built from that tree. The application opens a
+window with the three-pane shell and reports the vault it was given.
 
 ```
 cargo run -p scoria -- "C:\path\to\your\vault"
@@ -33,7 +35,7 @@ behavior, file formats, and public documentation, lives in the `docs/scoria` vau
 | --- | --- |
 | `scoria` | GPUI application: window, workspace shell, views |
 | `scoria-vault` | A vault is a folder: scanning, file kinds, `.obsidian` config reads |
-| `scoria-markdown` | Obsidian Flavored Markdown primitives: frontmatter, wikilinks, embeds, tags, block ids, callouts |
+| `scoria-markdown` | Obsidian Flavored Markdown: CommonMark + GFM + Obsidian syntax parsed into one spanned tree, HTML renderer |
 | `scoria-cache` | Metadata cache (`CachedMetadata`) and link resolution with Obsidian's rules |
 | `scoria-formats` | On-disk formats: file kinds, `app.json` and friends, JSON Canvas 1.0, Bases YAML |
 | `scoria-commands` | The 196 command ids and default hotkeys so vault `hotkeys.json` applies unchanged |
