@@ -4798,6 +4798,7 @@ name = "scoria-commands"
 version = "0.1.0"
 dependencies = [
  "scoria-formats",
+ "serde_json",
 ]
 
 [[package]]

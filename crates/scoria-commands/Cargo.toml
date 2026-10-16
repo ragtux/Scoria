@@ -10,3 +10,6 @@ publish.workspace = true
 
 [dependencies]
 scoria-formats.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

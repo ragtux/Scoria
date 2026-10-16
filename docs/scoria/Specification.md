@@ -44,7 +44,9 @@ with the command inventory and bundle evidence.
 | `core-plugins.json` map and legacy array shapes | `scoria-formats::config::CorePlugins` |
 | JSON Canvas 1.0 fields, z-order by array order, tab-indented output | `scoria-formats::canvas` |
 | Bases top-level keys and recursive filters | `scoria-formats::base` |
-| Command ids and default hotkeys | `scoria-commands` |
+| Command ids, palette names and default hotkeys as Obsidian 1.14.4 registers them; `hotkeys.json` entries replace the defaults and an empty list unbinds; labels read `Ctrl + Shift + F` | `scoria-commands` |
+| Command palette: fuzzy over names, pinned ids from `command-palette.json` first, then this session's recent commands, then registration order; commands that cannot run are not listed | `scoria::palette` |
+| Settings tabs, rows and defaults as Obsidian 1.14.4 shows them; `switcher.json`, `command-palette.json` and plugin manifests round-trip | `scoria::settings`, `scoria-formats::config` |
 
 ## Parser notes
 
