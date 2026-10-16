@@ -24,6 +24,7 @@ crates/scoria-markdown  OFM primitives
 crates/scoria-cache     CachedMetadata, LinkResolver
 crates/scoria-formats   FileKind, config types, canvas, base
 crates/scoria-commands  command registry, default hotkeys
+crates/scoria-search    search query grammar and matcher, fuzzy search
 crates/scoria-bench     spike benchmarks: synthetic vault generator, index timer (bin)
 docs/scoria             Obsidian vault: spec and design notes (dogfooded by Scoria)
 ```
