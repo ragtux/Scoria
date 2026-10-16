@@ -19,5 +19,7 @@ scoria-cache.workspace = true
 scoria-commands.workspace = true
 scoria-formats.workspace = true
 anyhow.workspace = true
+rayon.workspace = true
+serde_yaml.workspace = true
 gpui.workspace = true
 gpui_platform.workspace = true

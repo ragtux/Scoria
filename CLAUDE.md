@@ -18,7 +18,7 @@ Native Rust/GPUI clone of Obsidian's desktop app, targeting byte-level vault com
 ## Layout
 
 ```
-crates/scoria           GPUI app (bin)
+crates/scoria           GPUI app (bin): workspace shell, Files view, reading view, source editor
 crates/scoria-vault     folder scanning, .obsidian config
 crates/scoria-markdown  OFM primitives
 crates/scoria-cache     CachedMetadata, LinkResolver
@@ -38,7 +38,7 @@ app on a real GPU before committing.
 ```
 cargo test --workspace            # all library tests (fast)
 cargo check -p scoria             # app, pulls gpui (slow first time)
-cargo run --release -p scoria -- <vault> [--note <path>]      # open a vault (release: the editor reparses on every edit)
+cargo run --release -p scoria -- <vault> [--note "Name#Heading"]   # open a vault (release: the editor reparses on every edit)
 cargo run --release -p scoria -- <vault> --synthetic 50000 --stress   # editor spike: self-driven edits, prints timings
 cargo run --release -p scoria-bench -- generate <dir>   # synthetic 20k-note vault
 cargo run --release -p scoria-bench -- index <vault>    # time scan/read/index/resolve, check the 2 s gate

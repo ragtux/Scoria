@@ -4673,11 +4673,13 @@ dependencies = [
  "anyhow",
  "gpui",
  "gpui_platform",
+ "rayon",
  "scoria-cache",
  "scoria-commands",
  "scoria-formats",
  "scoria-markdown",
  "scoria-vault",
+ "serde_yaml",
 ]
 
 [[package]]
