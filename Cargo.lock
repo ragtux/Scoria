@@ -4771,6 +4771,7 @@ dependencies = [
  "scoria-search",
  "scoria-vault",
  "serde_yaml",
+ "tempfile",
 ]
 
 [[package]]
