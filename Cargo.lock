@@ -4759,6 +4759,7 @@ name = "scoria"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "chrono",
  "gpui",
  "gpui_platform",
  "indexmap",
@@ -4771,6 +4772,7 @@ dependencies = [
  "scoria-markdown",
  "scoria-search",
  "scoria-suggest",
+ "scoria-templates",
  "scoria-text",
  "scoria-vault",
  "serde",
@@ -4853,6 +4855,7 @@ dependencies = [
  "scoria-formats",
  "scoria-markdown",
  "scoria-suggest",
+ "scoria-templates",
  "scoria-vault",
  "serde",
  "tempfile",

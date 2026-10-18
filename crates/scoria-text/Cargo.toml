@@ -19,5 +19,6 @@ scoria-cache.workspace = true
 serde.workspace = true
 scoria-formats.workspace = true
 scoria-suggest.workspace = true
+scoria-templates.workspace = true
 scoria-vault.workspace = true
 tempfile.workspace = true
