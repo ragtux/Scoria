@@ -4770,6 +4770,7 @@ dependencies = [
  "scoria-formats",
  "scoria-markdown",
  "scoria-search",
+ "scoria-suggest",
  "scoria-text",
  "scoria-vault",
  "serde",
@@ -4829,12 +4830,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "scoria-suggest"
+version = "0.1.0"
+dependencies = [
+ "scoria-cache",
+ "scoria-formats",
+ "scoria-markdown",
+ "scoria-search",
+ "scoria-vault",
+]
+
+[[package]]
 name = "scoria-text"
 version = "0.1.0"
 dependencies = [
  "regex",
  "scoria-cache",
  "scoria-formats",
+ "scoria-suggest",
  "scoria-vault",
  "serde",
  "tempfile",

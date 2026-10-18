@@ -9,6 +9,7 @@ members = [
     "crates/scoria-commands",
     "crates/scoria-search",
     "crates/scoria-text",
+    "crates/scoria-suggest",
     "crates/scoria-bench",
 ]
 
@@ -28,6 +29,7 @@ scoria-formats = { path = "crates/scoria-formats" }
 scoria-commands = { path = "crates/scoria-commands" }
 scoria-search = { path = "crates/scoria-search" }
 scoria-text = { path = "crates/scoria-text" }
+scoria-suggest = { path = "crates/scoria-suggest" }
 
 anyhow = "1"
 thiserror = "2"

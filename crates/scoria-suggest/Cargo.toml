@@ -1,0 +1,16 @@
+[package]
+name = "scoria-suggest"
+description = "Editor autocompletion: what a line triggers, what the vault offers for it, and the text accepting one writes"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+scoria-cache.workspace = true
+scoria-markdown.workspace = true
+scoria-vault.workspace = true
+scoria-formats.workspace = true
+scoria-search.workspace = true

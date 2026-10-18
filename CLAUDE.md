@@ -26,6 +26,7 @@ crates/scoria-formats   FileKind, config types, canvas, base
 crates/scoria-commands  command registry, default hotkeys
 crates/scoria-search    search query grammar and matcher, fuzzy search
 crates/scoria-text      editor text model: buffer, selections, undo, edit plans (no gpui)
+crates/scoria-suggest   autocompletion: triggers, candidates, the link an accepted row writes (no gpui)
 crates/scoria-bench     spike benchmarks: synthetic vault generator, index timer (bin)
 docs/scoria             Obsidian vault: spec and design notes (dogfooded by Scoria)
 ```
@@ -43,6 +44,7 @@ SCORIA_ROUNDTRIP_VAULT=<vault> cargo test -p scoria-text --test writer_roundtrip
 cargo check -p scoria             # app, pulls gpui (slow first time)
 cargo run --release -p scoria -- <vault> [--note "Name#Heading"]   # open a vault (release: the editor reparses on every edit)
 cargo run --release -p scoria -- <vault> --synthetic 50000 --stress   # editor spike: self-driven edits, prints timings
+cargo run --release -p scoria -- <vault> --note X --source --type '[[al' [--accept enter]  # open the autocompletion popup (and press its keys) for a screenshot
 cargo run --release -p scoria-bench -- generate <dir>   # synthetic 20k-note vault
 cargo run --release -p scoria-bench -- index <vault>    # time scan/read/index/resolve, check the 2 s gate
 cargo fmt --all && cargo clippy --workspace --all-targets

@@ -15,7 +15,8 @@
 //! - **Every command is invertible.** A scripted editing session wound all
 //!   the way back through undo leaves the original bytes.
 //! - **An edit is local.** Typing changes the bytes at the cursor and
-//!   nothing else; a property write stays inside the properties block.
+//!   nothing else; a property write stays inside the properties block, and
+//!   an accepted autocompletion replaces the query it was offered for.
 //! - **A config file read and written back is unchanged**, unknown keys
 //!   included.
 //!
@@ -30,13 +31,14 @@
 //! (`scoria-cache/tests/properties_corpus.rs`). This harness drives the
 //! writer's own path into those, not their internals.
 
-use scoria_cache::note_properties;
+use scoria_cache::links::LinkFormat;
+use scoria_cache::{index_markdown, note_properties, LinkResolver, MetadataCache};
 use scoria_formats::config::{
     AppConfig, AppearanceConfig, CommunityPlugins, CorePlugins, GraphConfig, Hotkeys, PropertyTypes,
 };
 use scoria_formats::properties::{self as props, Change, Value};
 use scoria_text::{find, Cursors, EditKind, Sel, TextBuffer};
-use scoria_vault::Vault;
+use scoria_vault::{Vault, VaultFile};
 use std::ops::Range;
 use std::path::{Path, PathBuf};
 
@@ -329,6 +331,96 @@ fn typing_changes_only_the_bytes_at_the_cursor() {
                 buf.text(),
                 before,
                 "undo of typing at {at} in {}",
+                note.display()
+            );
+        }
+    }
+}
+
+/// A vault for the suggester to offer rows from: two notes that exist, so
+/// `[[al` has something to resolve to whatever note is under test.
+fn suggest_fixture() -> (Vec<VaultFile>, MetadataCache) {
+    let notes = [
+        ("Alpha.md", "# Alpha\n\n## First Heading\n"),
+        ("Beta Note.md", "# Beta Note\n"),
+    ];
+    let mut resolver = LinkResolver::default();
+    for (path, _) in notes {
+        resolver.insert(path);
+    }
+    let files = notes
+        .iter()
+        .map(|(path, _)| VaultFile {
+            path: (*path).to_string(),
+            kind: scoria_formats::FileKind::from_path(path),
+            size: 0,
+            mtime: 0,
+        })
+        .collect();
+    let cache = MetadataCache::new(
+        resolver,
+        notes.iter().map(|(path, src)| (*path, index_markdown(src))),
+    );
+    (files, cache)
+}
+
+#[test]
+fn accepting_a_suggestion_replaces_only_the_query_and_undoes_cleanly() {
+    let (files, cache) = suggest_fixture();
+    let opts = scoria_suggest::Options {
+        format: LinkFormat::Shortest,
+        markdown_links: false,
+    };
+    for note in notes_under_test() {
+        let raw = std::fs::read_to_string(&note).unwrap();
+        for at in probe_offsets(&TextBuffer::from_file(&raw)) {
+            let mut buf = TextBuffer::from_file(&raw);
+            let before = buf.text().to_string();
+            // Type the query the way the editor's keystrokes do.
+            buf.set_cursor(at, None);
+            buf.insert_all("[[al", EditKind::Typing);
+            check_invariants(&buf, &note, "suggest typing");
+            let cursor = buf.cursor();
+            let line = buf.line_text(cursor.line).to_string();
+            let t = scoria_suggest::trigger(&line, cursor.col)
+                .expect("a `[[` query triggers wherever it is typed");
+            let vault = scoria_suggest::Vault {
+                files: &files,
+                cache: &cache,
+                source: "Note.md",
+                show_unsupported: false,
+            };
+            let items = scoria_suggest::suggestions(&t, &vault);
+            let item = &items.first().expect("`al` offers Alpha").item;
+            let ins =
+                scoria_suggest::insert(&t, item, scoria_suggest::Accept::Whole, &vault, &opts);
+            let line_start = buf.line_range(cursor.line).start;
+            let range = line_start + t.range.start..line_start + t.range.end + ins.consume;
+            let cursor_to = range.start + ins.cursor;
+            assert!(
+                buf.edit_many(vec![(range.clone(), ins.text.clone())], cursor_to, None),
+                "accepting wrote nothing in {} at {at}",
+                note.display()
+            );
+            check_invariants(&buf, &note, "suggest accept");
+            // Only the query is replaced: the bytes before it and the bytes
+            // after what it consumed are the note's own.
+            let want = format!(
+                "{}{}{}",
+                &before[..range.start],
+                ins.text,
+                &before[at + ins.consume..]
+            );
+            assert_eq!(
+                buf.text(),
+                want,
+                "accepting at {at} moved other bytes in {}",
+                note.display()
+            );
+            assert_eq!(
+                undo_all(&mut buf, &note),
+                raw,
+                "undo did not restore {} after accepting at {at}",
                 note.display()
             );
         }
