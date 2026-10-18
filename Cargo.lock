@@ -4867,6 +4867,7 @@ version = "0.1.0"
 dependencies = [
  "scoria-cache",
  "scoria-formats",
+ "scoria-templates",
  "serde",
  "serde_json",
  "tempfile",
