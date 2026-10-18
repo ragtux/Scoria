@@ -33,7 +33,8 @@ cargo test --workspace
 | 4 | Community plugin compatibility | New native plugin API; existing JS plugins are out of scope |
 
 The full functional specification this project implements, derived from observing Obsidian 1.12.7's
-behavior, file formats, and public documentation, lives in the `docs/scoria` vault.
+behavior, file formats, and public documentation, lives in the `docs/scoria` vault and is published
+at [scoria.ragtux.com](https://scoria.ragtux.com).
 
 ## Crates
 
