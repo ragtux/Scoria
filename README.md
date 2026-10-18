@@ -48,6 +48,7 @@ at [scoria.ragtux.com](https://scoria.ragtux.com).
 | `scoria-markdown` | Obsidian Flavored Markdown: CommonMark + GFM + Obsidian syntax parsed into one spanned tree, HTML renderer |
 | `scoria-cache` | Metadata cache (`CachedMetadata`) and link resolution with Obsidian's rules |
 | `scoria-suggest` | Autocompletion: what a line triggers, what the vault offers, and the link accepting one writes |
+| `scoria-templates` | Template placeholders and the moment.js date formats they take |
 | `scoria-formats` | On-disk formats: file kinds, `app.json` and friends, JSON Canvas 1.0, Bases YAML |
 | `scoria-commands` | The 196 command ids and default hotkeys so vault `hotkeys.json` applies unchanged |
 
