@@ -25,6 +25,7 @@ crates/scoria-cache     CachedMetadata, LinkResolver
 crates/scoria-formats   FileKind, config types, canvas, base
 crates/scoria-commands  command registry, default hotkeys
 crates/scoria-search    search query grammar and matcher, fuzzy search
+crates/scoria-text      editor text model: buffer, selections, undo, edit plans (no gpui)
 crates/scoria-bench     spike benchmarks: synthetic vault generator, index timer (bin)
 docs/scoria             Obsidian vault: spec and design notes (dogfooded by Scoria)
 ```
@@ -38,6 +39,7 @@ app on a real GPU before committing.
 
 ```
 cargo test --workspace            # all library tests (fast)
+SCORIA_ROUNDTRIP_VAULT=<vault> cargo test -p scoria-text --test writer_roundtrip   # Writer gate round trips, over a real vault too
 cargo check -p scoria             # app, pulls gpui (slow first time)
 cargo run --release -p scoria -- <vault> [--note "Name#Heading"]   # open a vault (release: the editor reparses on every edit)
 cargo run --release -p scoria -- <vault> --synthetic 50000 --stress   # editor spike: self-driven edits, prints timings

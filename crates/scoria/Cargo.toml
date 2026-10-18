@@ -19,6 +19,7 @@ scoria-cache.workspace = true
 scoria-commands.workspace = true
 scoria-formats.workspace = true
 scoria-search.workspace = true
+scoria-text.workspace = true
 anyhow.workspace = true
 rayon.workspace = true
 notify.workspace = true
