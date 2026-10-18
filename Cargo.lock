@@ -4847,6 +4847,7 @@ dependencies = [
  "regex",
  "scoria-cache",
  "scoria-formats",
+ "scoria-markdown",
  "scoria-suggest",
  "scoria-vault",
  "serde",
