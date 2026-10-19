@@ -6,7 +6,9 @@ members = [
     "crates/scoria-markdown",
     "crates/scoria-cache",
     "crates/scoria-formats",
+    "crates/scoria-mcp",
     "crates/scoria-commands",
+    "crates/scoria-control",
     "crates/scoria-search",
     "crates/scoria-text",
     "crates/scoria-suggest",
@@ -28,6 +30,7 @@ scoria-markdown = { path = "crates/scoria-markdown" }
 scoria-cache = { path = "crates/scoria-cache" }
 scoria-formats = { path = "crates/scoria-formats" }
 scoria-commands = { path = "crates/scoria-commands" }
+scoria-control = { path = "crates/scoria-control" }
 scoria-search = { path = "crates/scoria-search" }
 scoria-text = { path = "crates/scoria-text" }
 scoria-suggest = { path = "crates/scoria-suggest" }
@@ -38,6 +41,7 @@ thiserror = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 serde_yaml = "0.9"
+async-channel = "2"
 # Order-preserving map: Obsidian writes types.json in insertion order, so a
 # sorted map would rewrite the file on every save.
 indexmap = { version = "2", features = ["serde"] }

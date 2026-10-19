@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "scoria": {
+      "command": "target/release/scoria-mcp",
+      "env": {
+        "SCORIA_MCP_BIN": "nix-shell --run \"target/release/scoria {args}\"",
+        "SCORIA_MCP_REPO": "."
+      }
+    }
+  }
+}
