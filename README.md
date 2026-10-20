@@ -81,8 +81,16 @@ Pushing a `v*` tag builds the `scoria` binary on both forges and attaches the ar
 - [GitHub releases](https://github.com/ragtux/scoria/releases) — Linux x86_64, Windows x86_64, macOS arm64
 - [git.ragtux.com releases](https://git.ragtux.com/ragtux/scoria/releases) — Linux x86_64
 
-There is no installer: unpack the archive and run `scoria /path/to/vault`. The binaries are
-unsigned, and only the Linux build has been run on a real GPU — see `docs/scoria/Development.md`.
+There is no installer: unpack the archive and run `scoria /path/to/vault`. Only the Linux build
+has been run on a real GPU, and nothing is code-signed for macOS or Windows — see
+`docs/scoria/Development.md`.
+
+Verify a download: `sha256sum -c --ignore-missing SHA256SUMS` checks the archive against the
+checksums the workflow wrote; `gh attestation verify <archive> --repo ragtux/scoria` checks GitHub's
+build provenance, which ties the archive to the workflow run and the commit it was built from. When
+a release carries `SHA256SUMS.asc`, `gpg --verify SHA256SUMS.asc SHA256SUMS` checks the maintainer's
+signature; the key's fingerprint is in the release notes. Security problems go through
+[SECURITY.md](SECURITY.md), not the issue tracker.
 
 ## License
 
