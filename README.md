@@ -1,3 +1,5 @@
+<img src="docs/img/scoria_v3_fixed.svg" alt="" width="108" align="right">
+
 # Scoria
 
 Scoria is a native knowledge base written in Rust on [GPUI](https://gpui.rs), built to open
@@ -26,6 +28,7 @@ Obsidian's command ids, so a vault's `hotkeys.json` applies unchanged.
 cargo run --release -p scoria -- "C:\path\to\your\vault"
 cargo run --release -p scoria -- docs/scoria --synthetic 50000 --stress   # editor spike with a report
 cargo run --release -p scoria -- "/path/to/vault" --control /run/user/1000/scoria.sock
+cargo run --release -p scoria -- "/path/to/vault" --frame native   # the desktop's own title bar instead of Scoria's hidden frame
 cargo test --workspace
 ```
 
@@ -46,7 +49,7 @@ screenshot it. Both are described in `docs/scoria/Development.md`.
 
 The full functional specification this project implements, derived from observing Obsidian 1.12.7's
 behavior, file formats, and public documentation, lives in the `docs/scoria` vault and is published
-at [scoria.ragtux.com](https://scoria.ragtux.com).
+at [scoria.cc](https://scoria.cc), whose site is built from `site/` in this repository.
 
 ## Crates
 
