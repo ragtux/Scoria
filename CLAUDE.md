@@ -30,6 +30,7 @@ crates/scoria-suggest   autocompletion: triggers, candidates, the link an accept
 crates/scoria-bench     spike benchmarks: synthetic vault generator, index timer (bin)
 docs/scoria             Obsidian vault: spec and design notes (dogfooded by Scoria)
 docs/img                brand art; scoria_v3_fixed.svg is the logo every other copy is cut from
+docs/img/app            README screenshots and the tab recording, captured over the control socket
 site                    scoria.cc: the informational site and the manual (static, node)
 ```
 
