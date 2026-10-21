@@ -23,6 +23,7 @@ scoria-search.workspace = true
 scoria-suggest.workspace = true
 scoria-templates.workspace = true
 scoria-text.workspace = true
+scoria-canvas.workspace = true
 anyhow.workspace = true
 async-channel.workspace = true
 indexmap.workspace = true

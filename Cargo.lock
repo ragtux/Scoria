@@ -4768,6 +4768,7 @@ dependencies = [
  "rayon",
  "regex",
  "scoria-cache",
+ "scoria-canvas",
  "scoria-commands",
  "scoria-control",
  "scoria-formats",
@@ -4801,6 +4802,14 @@ dependencies = [
  "scoria-markdown",
  "serde",
  "serde_yaml",
+]
+
+[[package]]
+name = "scoria-canvas"
+version = "0.2.1"
+dependencies = [
+ "scoria-formats",
+ "serde_json",
 ]
 
 [[package]]
