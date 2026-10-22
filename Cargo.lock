@@ -4894,6 +4894,7 @@ dependencies = [
 name = "scoria-vault"
 version = "0.2.1"
 dependencies = [
+ "indexmap",
  "libc",
  "scoria-cache",
  "scoria-formats",

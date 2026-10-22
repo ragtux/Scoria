@@ -2,8 +2,10 @@
 //! reads `.obsidian` configuration without ever owning data outside the folder.
 
 pub mod ops;
+pub mod registry;
 
 pub use ops::{OpError, TrashOption};
+pub use registry::{VaultEntry, VaultRegistry};
 use scoria_cache::LinkResolver;
 use scoria_formats::bookmarks::Bookmarks;
 use scoria_formats::config::{
