@@ -23,7 +23,7 @@ cargo run --release -p scoria -- <vault>                      # Files, reading v
 cargo run --release -p scoria -- <vault> --note "Name#Heading" # open a note, scrolled to a heading or ^block
 cargo run --release -p scoria -- <vault> --search "tag:#x OR y"  # open with the Search tab filled (for screenshots)
 cargo run --release -p scoria -- <vault> --switcher "spc"        # open with the quick switcher up (for screenshots)
-cargo run --release -p scoria -- <vault> --pane outgoing          # right dock tab: backlinks, outgoing, outline, tags
+cargo run --release -p scoria -- <vault> --pane outgoing          # right dock tab: backlinks, outgoing, tags, properties, outline
 cargo run --release -p scoria -- <vault> --graph [local]          # open on the graph view
 cargo run --release -p scoria -- <vault> --palette "open"         # open with the command palette up
 cargo run --release -p scoria -- <vault> --settings hotkeys       # open Settings on a tab (general, appearance, editor, ...)
@@ -763,8 +763,8 @@ present and absence is `null`, so a driver can index into it without guarding
 each step. `vault` is the root, name and load state; `file` the open path, mode,
 dirty flag and tab history; `tabs` the strip — each tab's path, mode and
 title, and which is active; `docks` the explorer's rows and the search pane's
-query, counts and results on the left, outline, backlinks, outgoing links and
-tags on the right; `modal` which of the switcher, palette, Settings, prompt or
+query, counts and results on the left, backlinks, outgoing links, tags, all
+properties and the outline on the right; `modal` which of the switcher, palette, Settings, prompt or
 chooser is up and its query, selection and row labels; `editor` the cursor,
 selection, scroll, visible line range, line count, find panel and suggest
 popup; then `reading`, `graph`, `status`, `focus` and `window`. The note's text
