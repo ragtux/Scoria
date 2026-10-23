@@ -22,9 +22,9 @@ sha256sum -c SHA256SUMS      # against the file in the same release
 ./scoria ~/notes
 ```
 
-> **Warning** Nothing is code signed or notarized. Linux is the platform Scoria is developed on;
-> the Windows build has been started on Windows 11, where it opens a vault and draws the hidden
-> frame, but it is not exercised daily; the macOS build has never been run. On macOS, Gatekeeper
+> **Warning** Nothing is code signed or notarized. Linux is the platform Scoria is developed on
+> and the one that gets the hours; since 0.3.1 the Windows and macOS builds are run on real
+> hardware too, each drawing its own platform's window. On macOS, Gatekeeper
 > will refuse the first launch — open it once with
 > *right-click › Open*, or run `xattr -d com.apple.quarantine scoria`. On Windows,
 > SmartScreen warns — *More info › Run anyway*.

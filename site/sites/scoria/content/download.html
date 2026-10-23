@@ -29,11 +29,11 @@ description: Download Scoria 0.3.2 for Linux, Windows or macOS — one archive p
 <section class="band">
   <h2>Pick your platform</h2>
   <p class="notice">
-    <strong>Linux is the platform Scoria is developed on.</strong> The Windows build has been
-    started on Windows 11 and opens a vault, but it is not used daily; the macOS binary has never
-    been run at all — CI compiles it and the release job links it. If one of them misbehaves, an
-    <a href="https://github.com/ragtux/scoria/issues">issue</a> is genuinely useful — you will be
-    the first person to see it.
+    <strong>Linux is the platform Scoria is developed on</strong>, and the one that gets the
+    hours. Since 0.3.1 the Windows and macOS builds are run on real hardware too, each drawing
+    its own platform's window. They still see a fraction of the use Linux does, so if one of
+    them misbehaves an <a href="https://github.com/ragtux/scoria/issues">issue</a> is genuinely
+    useful.
   </p>
   <div class="dl-grid">
     <div class="dl" data-platform="linux">
@@ -52,8 +52,7 @@ description: Download Scoria 0.3.2 for Linux, Windows or macOS — one archive p
       <p class="os">x86-64 · <code>.zip</code> · about 9 MB</p>
       <a class="btn" href="https://github.com/ragtux/scoria/releases/latest/download/scoria-windows-x86_64.zip">Download 0.3.2</a>
       <ul>
-        <li>Starts, opens a vault and draws the hidden frame on Windows 11, but is not
-        exercised daily</li>
+        <li>Run on Windows 11: starts, opens a vault and draws the hidden frame there too</li>
         <li>Not code signed: SmartScreen warns on first launch —
         <em>More info › Run anyway</em></li>
       </ul>
@@ -63,7 +62,8 @@ description: Download Scoria 0.3.2 for Linux, Windows or macOS — one archive p
       <p class="os">Apple silicon (arm64) · <code>.tar.gz</code> · about 7 MB</p>
       <a class="btn" href="https://github.com/ragtux/scoria/releases/latest/download/scoria-macos-aarch64.tar.gz">Download 0.3.2</a>
       <ul>
-        <li>Untested on real hardware; there is no Intel build</li>
+        <li>Run on Apple silicon, where it draws Obsidian's macOS frame and uses the
+        platform's text system; there is no Intel build</li>
         <li>Not notarized: open it the first time with <em>right-click › Open</em>, or clear the
         quarantine flag with <code>xattr -d com.apple.quarantine</code></li>
       </ul>

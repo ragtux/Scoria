@@ -109,9 +109,9 @@ the whole cost.
 
 ## A caveat on the GPU
 
-GPUI renders on the GPU, and only the Linux build has been run on a real one. The numbers
-above are from that machine. The Windows and macOS builds are compiled and linked by CI and
-have never been started, so their frame timings are unknown rather than slow.
+GPUI renders on the GPU, and the numbers above are all from the reference Linux machine. The
+Windows and macOS builds do run on real hardware, but they have not been profiled there, so
+their frame timings are unrecorded rather than slow.
 
 ## Next
 

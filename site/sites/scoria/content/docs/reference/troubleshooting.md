@@ -27,8 +27,8 @@ notarized. Open it once with *right-click › Open*, or `xattr -d com.apple.quar
 resolved a newer `gpui` from crates.io, which is stale and crashes on NVIDIA. Rebuild with
 `cargo build --release --locked`.
 
-> **Note** The Windows and macOS builds have never been run on real hardware. If one of them
-> fails to start, that is new information and worth an
+> **Note** The Windows and macOS builds are run on real hardware, but for a fraction of the
+> hours Linux gets. If one of them fails to start, that is worth an
 > [issue](https://github.com/ragtux/scoria/issues) — include the terminal output.
 
 ## Nothing renders bold

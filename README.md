@@ -185,9 +185,10 @@ version in it, which is the address that always resolves to the newest release a
 - `https://github.com/ragtux/scoria/releases/latest/download/scoria-macos-aarch64.tar.gz`
 
 There is no installer: unpack the archive and run `scoria /path/to/vault`. Linux x86_64 is the
-build that runs on the reference machine; the Windows build opens a vault on Windows 11 and draws
-the hidden frame there too. The macOS build has never been started. Nothing is code-signed for
-macOS or Windows — see `docs/scoria/Development.md`.
+build that runs on the reference machine and gets the hours; since 0.3.1 the Windows and macOS
+builds are run on real hardware too, each drawing its own platform's window — the hidden frame on
+Windows 11, the traffic lights and the platform text system on Apple silicon. Nothing is
+code-signed for macOS or Windows — see `docs/scoria/Development.md`.
 
 Verify a download: `sha256sum -c --ignore-missing SHA256SUMS` checks the archive against the
 checksums the workflow wrote; `gh attestation verify <archive> --repo ragtux/scoria` checks GitHub's
