@@ -30,8 +30,9 @@ crates/scoria-suggest   autocompletion: triggers, candidates, the link an accept
 crates/scoria-canvas    canvas model: viewport math, edge geometry, hit tests, selection, edits with undo (no gpui)
 crates/scoria-bench     spike benchmarks: synthetic vault generator, index timer (bin)
 docs/scoria             Obsidian vault: spec and design notes (dogfooded by Scoria)
+docs/scoria-demo        Obsidian vault: the geology field guide the README recordings are made on
 docs/img                brand art; scoria_v3_fixed.svg is the logo every other copy is cut from
-docs/img/app            README screenshots and the tab recording, captured over the control socket
+docs/img/app            README screenshots and recordings, made by tools/readme-recording over the control socket
 site                    scoria.cc: the informational site and the manual (static, node)
 ```
 
