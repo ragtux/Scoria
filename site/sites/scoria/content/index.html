@@ -14,16 +14,16 @@ description: Scoria is a native knowledge base written in Rust that opens Obsidi
     <code>hotkeys.json</code>. There is no import step, no conversion and no second copy
     of anything. It is an independent implementation, and it is not affiliated with Obsidian.
   </p>
-  <div class="btn-row">
-    <a class="btn primary" id="dl-main" href="https://github.com/ragtux/scoria/releases/latest/download/scoria-linux-x86_64.tar.gz"
-       data-dl-main>Download for Linux</a>
-    <a class="btn" href="/download/">Windows and macOS</a>
+  <div class="btn-row" data-dl-row>
+    <a class="btn primary" data-dl="linux" href="https://github.com/ragtux/scoria/releases/latest/download/scoria-linux-x86_64.tar.gz">Download for Linux</a>
+    <a class="btn" data-dl="windows" href="https://github.com/ragtux/scoria/releases/latest/download/scoria-windows-x86_64.zip">Download for Windows</a>
+    <a class="btn" data-dl="macos" href="https://github.com/ragtux/scoria/releases/latest/download/scoria-macos-aarch64.tar.gz">Download for macOS</a>
     <a class="btn" href="/docs/">Read the manual</a>
   </div>
   <p class="dim small" style="margin-top:22px">
     Version 0.3.2, free software under the MIT license, with the
-    <a href="https://github.com/ragtux/scoria">source on GitHub</a>. Only the Linux build has
-    been run on real hardware so far, and nothing is code signed — see
+    <a href="https://github.com/ragtux/scoria">source on GitHub</a>. All three builds run on
+    real hardware; none of them is code signed — see
     <a href="#where-it-is">where it is</a> before you point it at a vault you care about.
   </p>
   <figure class="shot">
@@ -47,29 +47,29 @@ description: Scoria is a native knowledge base written in Rust that opens Obsidi
   </p>
   <div class="dl-grid">
     <div class="dl" data-platform="linux">
-      <h3>Linux <span class="tag now">Tested</span></h3>
+      <h3>Linux <span class="tag now">Daily</span></h3>
       <p class="os">x86-64 · tar.gz · about 13 MB</p>
       <a class="btn primary" href="https://github.com/ragtux/scoria/releases/latest/download/scoria-linux-x86_64.tar.gz">Download</a>
       <ul>
-        <li>The platform Scoria is developed on, and the only one run on real hardware</li>
+        <li>The platform Scoria is developed on, and the one it is used on daily</li>
         <li>Needs a Vulkan-capable driver; Wayland and X11 both work</li>
       </ul>
     </div>
     <div class="dl" data-platform="windows">
-      <h3>Windows <span class="tag soon">Barely run</span></h3>
+      <h3>Windows <span class="tag now">Tested</span></h3>
       <p class="os">x86-64 · zip · about 9 MB</p>
       <a class="btn" href="https://github.com/ragtux/scoria/releases/latest/download/scoria-windows-x86_64.zip">Download</a>
       <ul>
-        <li>Opens a vault and draws the hidden frame on Windows 11, but is not used daily</li>
+        <li>Run on Windows 11: opens a vault and draws the hidden frame there too</li>
         <li>Unsigned: SmartScreen warns once — <em>More info › Run anyway</em></li>
       </ul>
     </div>
     <div class="dl" data-platform="macos">
-      <h3>macOS <span class="tag soon">Unproven</span></h3>
+      <h3>macOS <span class="tag now">Tested</span></h3>
       <p class="os">Apple silicon · tar.gz · about 7 MB</p>
       <a class="btn" href="https://github.com/ragtux/scoria/releases/latest/download/scoria-macos-aarch64.tar.gz">Download</a>
       <ul>
-        <li>Compiled and linked by CI, never started on real hardware</li>
+        <li>Run on Apple silicon, with the macOS frame and text system; no Intel build</li>
         <li>Not notarized: open it the first time with <em>right-click › Open</em></li>
       </ul>
     </div>
@@ -241,10 +241,10 @@ description: Scoria is a native knowledge base written in Rust that opens Obsidi
   <div class="grid">
     <div class="card">
       <span class="k">Platforms</span>
-      <h3>Linux is the tested one</h3>
-      <p>Each release builds Linux x86-64, Windows x86-64 and macOS on Apple silicon, but only
-      the Linux build has been started on a real GPU. The other two are compiled and linked by
-      CI and otherwise unproven.</p>
+      <h3>All three are run; Linux daily</h3>
+      <p>Each release builds Linux x86-64, Windows x86-64 and macOS on Apple silicon, and since
+      0.3.1 all three have been started on real hardware and drawn their window there. Linux is
+      the development platform and the one that gets the hours.</p>
     </div>
     <div class="card">
       <span class="k">Signing</span>

@@ -330,6 +330,12 @@ figure.shot figcaption {
   font-size:13.5px; line-height:1.6; color:var(--dim);
 }
 
+/* platform.js swaps the hero's download buttons after the first paint; without
+   this the swapped button animates its background in from the hairline style
+   and reads as a glitch. Hover keeps its transition — the class is gone by the
+   next frame. */
+.btn-row.dl-switching .btn { transition:none; }
+
 /* The visitor's own platform, marked by platform.js: the accent border a
    download card gets on hover, kept lit, and a chip in the heading. Entirely
    additive — the card reads the same without it. */

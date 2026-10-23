@@ -1,21 +1,22 @@
 // Point the download buttons at the visitor's platform.
 //
-// Every address on the page is already a working direct download, and Linux is
-// the one the markup ships with, because it is the platform Scoria is developed
-// on and the only one run on real hardware. This only reorders the offer:
+// Every address on the page is already a working direct download, and all
+// three ship in the markup, so with JavaScript off — or on a platform none of
+// them matches — the pages stand as written. What detection does is narrow the
+// offer:
 //
-//   - the hero's primary button (data-dl-main) takes the matching archive and
-//     says so, and
-//   - the card in a .dl-grid for the matching platform is marked [data-you],
-//     which the stylesheet gives the accent border and a "Yours" chip.
-//
-// With JavaScript off, or on a platform none of the three matches, the page
-// stands as written: three equal cards and a Linux button.
+//   - in a [data-dl-row], the matching [data-dl] button becomes the primary one
+//     and the other two are hidden, because the Get it band further down the
+//     page carries all three anyway;
+//   - a lone [data-dl-main] button (the download page's hero, where the three
+//     cards sit directly beneath it) is retargeted and relabelled instead;
+//   - the matching .dl-grid card is marked [data-you], which the stylesheet
+//     gives the accent border and a "Yours" chip.
 (function () {
   var files = {
-    linux:   { file: 'scoria-linux-x86_64.tar.gz',   label: 'Download for Linux' },
-    windows: { file: 'scoria-windows-x86_64.zip',    label: 'Download for Windows' },
-    macos:   { file: 'scoria-macos-aarch64.tar.gz',  label: 'Download for macOS' },
+    linux:   { file: 'scoria-linux-x86_64.tar.gz',  label: 'Download for Linux' },
+    windows: { file: 'scoria-windows-x86_64.zip',   label: 'Download for Windows' },
+    macos:   { file: 'scoria-macos-aarch64.tar.gz', label: 'Download for macOS' },
   };
 
   // userAgentData where it exists, the user-agent string otherwise. Android
@@ -33,10 +34,29 @@
   }
 
   var me = detect();
-  if (!me) return;
+  if (!me || !files[me]) return;
 
+  // A row of per-platform buttons: keep the one that fits, drop the others.
+  // The row's transitions are off while this happens — the script runs after
+  // the first paint, and a button that fades from hairline to ink on load
+  // reads as a glitch rather than as a transition.
+  Array.prototype.forEach.call(document.querySelectorAll('[data-dl-row]'), function (row) {
+    var mine = row.querySelector('[data-dl="' + me + '"]');
+    if (!mine) return;
+    row.classList.add('dl-switching');
+    Array.prototype.forEach.call(row.querySelectorAll('[data-dl]'), function (btn) {
+      if (btn === mine) return;
+      btn.classList.remove('primary');
+      btn.hidden = true;
+    });
+    mine.classList.add('primary');
+    void row.offsetWidth;   // apply it before the transitions come back
+    requestAnimationFrame(function () { row.classList.remove('dl-switching'); });
+  });
+
+  // A single button that stands for whichever platform the reader is on.
   var main = document.querySelector('[data-dl-main]');
-  if (main && files[me]) {
+  if (main) {
     main.href = main.href.replace(/[^/]+$/, files[me].file);
     main.textContent = files[me].label;
   }
