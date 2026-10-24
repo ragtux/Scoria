@@ -1598,6 +1598,25 @@ fn build(state: &VaultState, config: &GraphConfig, local: Option<&str>) -> Built
             }
         }
     }
+    // Obsidian's `localFile` is independent of `showAttachments` and of
+    // `showTags`: a local graph is centred on the file the user has open,
+    // whether or not the filters would show that file in the global graph.
+    // Without this the centre is missing from the index and the whole
+    // graph comes back empty.
+    if let Some(center) = local {
+        let kind = if FileKind::from_path(center) == FileKind::Markdown {
+            NodeKind::Note
+        } else {
+            NodeKind::Attachment
+        };
+        add(
+            &mut index,
+            &mut nodes,
+            center.to_string(),
+            label_of(center),
+            kind,
+        );
+    }
 
     let mut edge_set: HashSet<(u32, u32)> = HashSet::new();
     let note_paths: Vec<String> = cache.files().map(|(p, _)| p.to_string()).collect();
@@ -1608,7 +1627,10 @@ fn build(state: &VaultState, config: &GraphConfig, local: Option<&str>) -> Built
         if let Some(targets) = cache.resolved_links(path) {
             for target in targets.keys() {
                 let kind = FileKind::from_path(target);
-                if kind != FileKind::Markdown && !show_attachments {
+                // An edge into the centre is drawn whatever the filters
+                // say about its kind, for the same reason the node is.
+                let is_center = local == Some(target.as_str());
+                if kind != FileKind::Markdown && !show_attachments && !is_center {
                     continue;
                 }
                 let to = match index.get(target) {
@@ -1699,6 +1721,8 @@ fn build(state: &VaultState, config: &GraphConfig, local: Option<&str>) -> Built
 
     // Local graph: the center and its neighbors at depth 1 in either direction.
     if let Some(center) = local {
+        // Added above whether the filters kept it or not, so the only way
+        // this misses is a centre that is not a vault path at all.
         let Some(&c) = index.get(center) else {
             return Built {
                 nodes: Vec::new(),
@@ -2296,6 +2320,22 @@ mod tests {
         let kept: Vec<&str> = built.nodes.iter().map(|n| n.id.as_str()).collect();
         assert_eq!(kept, ["Linker.md", "used.png"]);
         assert_eq!(built.edges, [(0, 1)]);
+    }
+
+    /// Obsidian's `localFile` is independent of the filters: a local graph
+    /// centred on an attachment draws it with "Attachments" off, where
+    /// before the centre was missing from the index and the graph came
+    /// back empty.
+    #[test]
+    fn a_local_centre_the_filters_hide_is_still_drawn() {
+        let nodes = vec![
+            node("Note.md", NodeKind::Note),
+            node("lonely.png", NodeKind::Attachment),
+        ];
+        // The centre alone, kept even though nothing links to it.
+        let built = finish(nodes, Vec::new(), Some([1].into_iter().collect()), true);
+        let kept: Vec<&str> = built.nodes.iter().map(|n| n.id.as_str()).collect();
+        assert_eq!(kept, ["lonely.png"]);
     }
 
     #[test]

@@ -4129,7 +4129,11 @@ impl Workspace {
     }
 
     fn open_graph_action(&mut self, _: &OpenGraph, window: &mut Window, cx: &mut Context<Self>) {
-        if self.mode == ViewMode::Graph {
+        // "Open graph view" toggles the *global* graph. Asked for it with a
+        // local graph on screen, Obsidian shows the global one rather than
+        // leaving graph mode: `graph:open-local` is not a toggle either, so
+        // treating any graph as the one to close made the pair inconsistent.
+        if self.mode == ViewMode::Graph && !self.graph.read(cx).is_local() {
             let back = self.mode_before_graph;
             self.set_mode(back, window, cx);
         } else {
