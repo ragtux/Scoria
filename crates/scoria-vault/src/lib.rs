@@ -37,6 +37,11 @@ pub enum VaultError {
     OutsideVault(String),
     #[error("{0} is a symbolic link; the vault folder is the only place Scoria writes")]
     Symlink(PathBuf),
+    /// A config file on disk that nothing can parse. Writing it would
+    /// replace every key it holds with the handful Scoria models, so the
+    /// write is refused and the bytes are left alone.
+    #[error("{0} is not valid JSON; Scoria will not overwrite it")]
+    Unparseable(PathBuf),
 }
 
 /// One file in the vault. `path` is vault-relative with `/` separators.
@@ -472,11 +477,16 @@ impl Vault {
             Ok(text) => {
                 let bom = text.starts_with('\u{feff}');
                 let body = text.strip_prefix('\u{feff}').unwrap_or(&text);
-                match serde_json::from_str(body) {
+                match serde_json::from_str::<serde_json::Value>(body) {
                     Ok(old) if merge => (bom, merge_config(old, fresh)),
-                    // A file nobody can parse is replaced rather than
-                    // merged into.
-                    _ => (bom, fresh),
+                    Ok(_) => (bom, fresh),
+                    // A file nobody can parse is a file nobody may
+                    // overwrite. Reading it gave defaults, so writing it
+                    // would put those defaults on disk in place of
+                    // everything the user had -- the one thing the vault
+                    // being the source of truth forbids. The bytes stay as
+                    // they are and the caller is told which file it was.
+                    Err(_) => return Err(VaultError::Unparseable(path)),
                 }
             }
             Err(_) => (false, fresh),
@@ -981,19 +991,46 @@ mod tests {
         assert!(written.contains("\"trashOption\": \"local\""), "{written}");
     }
 
+    /// A config file nothing can parse is a file nothing may overwrite:
+    /// reading it gave defaults, so writing it would put those defaults on
+    /// disk in place of everything the user had. Both the merging write
+    /// and the whole-file one refuse, and the bytes stay exactly as they
+    /// were.
     #[test]
-    fn unparsable_json_is_replaced_rather_than_merged_into() {
+    fn unparsable_json_is_refused_rather_than_replaced() {
         let dir = sample_vault();
         let path = dir.path().join(".obsidian/types.json");
-        fs::write(&path, "{ not json").unwrap();
+        let broken = "{\n  \"types\": { \"due\": \"date\", },\n}";
+        fs::write(&path, broken).unwrap();
+        let vault = Vault::open(dir.path()).unwrap();
+        let mut types = PropertyTypes::default();
+        types.types.insert("owner".into(), "text".into());
+
+        let err = vault.write_config("types.json", &types).unwrap_err();
+        assert!(matches!(err, VaultError::Unparseable(_)), "{err:?}");
+        assert!(err.to_string().contains("types.json"), "{err}");
+        assert_eq!(fs::read_to_string(&path).unwrap(), broken, "bytes changed");
+
+        let err = vault.replace_config("types.json", &types).unwrap_err();
+        assert!(matches!(err, VaultError::Unparseable(_)), "{err:?}");
+        assert_eq!(fs::read_to_string(&path).unwrap(), broken, "bytes changed");
+    }
+
+    /// A file that is valid JSON but not the shape the type expects is a
+    /// different case: nothing is lost by writing it, because the merge
+    /// keeps every key it did not change.
+    #[test]
+    fn json_of_the_wrong_shape_is_still_merged_into() {
+        let dir = sample_vault();
+        let path = dir.path().join(".obsidian/types.json");
+        fs::write(&path, "{\"types\": 7, \"future\": \"kept\"}").unwrap();
         let vault = Vault::open(dir.path()).unwrap();
         let mut types = PropertyTypes::default();
         types.types.insert("due".into(), "date".into());
         vault.write_config("types.json", &types).unwrap();
-        assert_eq!(
-            fs::read_to_string(&path).unwrap(),
-            "{\n  \"types\": {\n    \"due\": \"date\"\n  }\n}"
-        );
+        let written = fs::read_to_string(&path).unwrap();
+        assert!(written.contains("\"due\": \"date\""), "{written}");
+        assert!(written.contains("\"future\": \"kept\""), "{written}");
     }
 
     #[test]

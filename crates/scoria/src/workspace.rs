@@ -57,7 +57,7 @@ use scoria_markdown::Subpath;
 use scoria_templates as templates;
 use scoria_text::table::TableCommand;
 use scoria_text::{LinePrefix, LinkSyntax};
-use scoria_vault::{FileChange, TrashOption, Vault, VaultRegistry};
+use scoria_vault::{FileChange, TrashOption, Vault, VaultError, VaultRegistry};
 use serde_json::{json, Map, Value};
 use std::collections::{HashMap, HashSet};
 use std::ops::Range;
@@ -275,6 +275,12 @@ pub struct VaultState {
     property_types: RwLock<PropertyTypes>,
     /// `bookmarks.json`, the Bookmarks plugin's items.
     bookmarks: RwLock<Bookmarks>,
+    /// Config files that would not parse, so the app is running on
+    /// defaults for them. Writing one is refused -- it would put those
+    /// defaults on disk in place of what the user had -- and the window
+    /// says so once, on the way in, rather than leaving the Settings tab
+    /// looking merely wrong.
+    pub unreadable_configs: Vec<String>,
     pub index_ms: f64,
 }
 
@@ -316,17 +322,50 @@ impl VaultState {
     pub fn load(root: &PathBuf) -> Result<VaultState, String> {
         let started = Instant::now();
         let vault = Vault::open(root).map_err(|e| e.to_string())?;
-        let app = vault.app_config().unwrap_or_default();
-        let appearance = vault.appearance_config().unwrap_or_default();
-        let core_plugins = vault.core_plugins().unwrap_or_default();
-        let community_plugins = vault.community_plugins().unwrap_or_default();
+        // Every config falls back to its defaults when it will not parse,
+        // because one broken file may not stop a vault opening. Which ones
+        // did is worth knowing, though: the window reports them, and a
+        // write to any of them is refused rather than replacing it.
+        let mut unreadable = Vec::new();
+        // Only a parse failure counts. An unreadable file is a different
+        // problem with a different message, and the write path lets it
+        // through: there is nothing on disk to lose.
+        let mut note = |name: &'static str, err: Option<&VaultError>| {
+            if matches!(err, Some(VaultError::Json { .. })) {
+                unreadable.push(name.to_string());
+            }
+        };
+        let app = vault.app_config();
+        note("app.json", app.as_ref().err());
+        let app = app.unwrap_or_default();
+        let appearance = vault.appearance_config();
+        note("appearance.json", appearance.as_ref().err());
+        let appearance = appearance.unwrap_or_default();
+        let core_plugins = vault.core_plugins();
+        note("core-plugins.json", core_plugins.as_ref().err());
+        let core_plugins = core_plugins.unwrap_or_default();
+        let community_plugins = vault.community_plugins();
+        note("community-plugins.json", community_plugins.as_ref().err());
+        let community_plugins = community_plugins.unwrap_or_default();
         let plugin_manifests = vault.plugin_manifests();
-        let palette = vault.command_palette_config().unwrap_or_default();
-        let switcher = vault.switcher_config().unwrap_or_default();
-        let templates = vault.templates_config().unwrap_or_default();
-        let daily_notes = vault.daily_notes_config().unwrap_or_default();
-        let property_types = vault.property_types().unwrap_or_default();
-        let bookmarks = vault.bookmarks().unwrap_or_default();
+        let palette = vault.command_palette_config();
+        note("command-palette.json", palette.as_ref().err());
+        let palette = palette.unwrap_or_default();
+        let switcher = vault.switcher_config();
+        note("switcher.json", switcher.as_ref().err());
+        let switcher = switcher.unwrap_or_default();
+        let templates = vault.templates_config();
+        note("templates.json", templates.as_ref().err());
+        let templates = templates.unwrap_or_default();
+        let daily_notes = vault.daily_notes_config();
+        note("daily-notes.json", daily_notes.as_ref().err());
+        let daily_notes = daily_notes.unwrap_or_default();
+        let property_types = vault.property_types();
+        note("types.json", property_types.as_ref().err());
+        let property_types = property_types.unwrap_or_default();
+        let bookmarks = vault.bookmarks();
+        note("bookmarks.json", bookmarks.as_ref().err());
+        let bookmarks = bookmarks.unwrap_or_default();
         let notes: Vec<String> = vault.markdown_files().map(|f| f.path.clone()).collect();
         let loaded: Vec<(String, CachedMetadata, Arc<String>)> = notes
             .par_iter()
@@ -361,6 +400,7 @@ impl VaultState {
             palette,
             property_types: RwLock::new(property_types),
             bookmarks: RwLock::new(bookmarks),
+            unreadable_configs: unreadable,
             index_ms: started.elapsed().as_secs_f64() * 1000.0,
         })
     }
@@ -2803,6 +2843,20 @@ impl Workspace {
             state.index_ms
         )
         .into();
+        // A config that would not parse is being stood in for by its
+        // defaults, and Settings will refuse to write it. Say so once, on
+        // the way in, rather than leaving a tab that looks merely wrong.
+        if !state.unreadable_configs.is_empty() {
+            let names = state.unreadable_configs.join(", ");
+            let one = state.unreadable_configs.len() == 1;
+            let (verb, noun) = if one { ("is", "it") } else { ("are", "them") };
+            self.report(
+                format!(
+                    "{names} {verb} not valid JSON; Scoria is using defaults and will not overwrite {noun}"
+                ),
+                cx,
+            );
+        }
         let state = Arc::new(state);
         self.state = Some(state.clone());
         if self.record_vault {
