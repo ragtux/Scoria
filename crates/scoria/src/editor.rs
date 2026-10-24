@@ -1344,6 +1344,16 @@ impl Editor {
         self.widget_is_folded(entry).then_some(entry)
     }
 
+    /// A widget that takes no room and draws nothing: the properties block
+    /// under `propertiesInDocument: hidden`, where Obsidian shows neither
+    /// the table nor the YAML behind it. Folding it to one line's height,
+    /// which is what every other widget gets, leaves a band of empty space
+    /// where the block used to be.
+    fn widget_is_hidden(&self, widget: &Widget) -> bool {
+        matches!(widget.block, RBlock::Properties(_))
+            && self.properties_in_document == PropertiesInDocument::Hidden
+    }
+
     fn widget_is_folded(&self, entry: &(Range<usize>, Widget)) -> bool {
         // The properties block stays a table wherever the cursor is: it is
         // edited in its own fields, not by revealing the YAML. `Show as
@@ -1391,8 +1401,8 @@ impl Editor {
     /// folded widget's height sits on its first line; its other lines are
     /// not on screen at all.
     fn height_of(&self, window: &mut Window, line: usize) -> Pixels {
-        if let Some((lines, _)) = self.folded_widget(line) {
-            if line != lines.start {
+        if let Some((lines, widget)) = self.folded_widget(line) {
+            if line != lines.start || self.widget_is_hidden(widget) {
                 return px(0.);
             }
             return self
@@ -4438,8 +4448,9 @@ impl Element for EditorElement {
             while line < count && y < bounds.bottom_left().y {
                 if let Some((wlines, widget)) = editor.folded_widget(line) {
                     let wlines = wlines.clone();
-                    if line != wlines.start {
-                        // Scrolled into a folded widget: its lines take no room.
+                    if line != wlines.start || editor.widget_is_hidden(widget) {
+                        // Scrolled into a folded widget: its lines take no
+                        // room. A hidden properties block takes none at all.
                         line = wlines.end;
                         continue;
                     }
@@ -4611,9 +4622,16 @@ impl Element for EditorElement {
             for w in &widgets {
                 let height = w.bounds.size.height;
                 let previous = editor.widget_heights.insert(w.lines.start, height);
-                // A widget that grew (an image that just loaded) may have
-                // pushed the cursor off screen.
-                if previous.is_some_and(|p| p != height) {
+                // Whatever the reveal that got us here was computed from
+                // has to be what the measurement is checked against, or the
+                // first jump over a widget never gets its correction: a
+                // widget nothing had measured yet was estimated by
+                // `height_of` at one line each, and a table or a code fence
+                // is nothing like that tall. A widget that grew later -- an
+                // image that has just loaded -- is the same case with a real
+                // previous height.
+                let estimate = previous.unwrap_or(editor.layout.line_height * w.lines.len() as f32);
+                if estimate != height {
                     editor.pending_reveal = true;
                 }
             }
