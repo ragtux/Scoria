@@ -4465,8 +4465,14 @@ impl Workspace {
                         self.editor
                             .update(cx, |e, cx| e.set_text(path.to_string(), text, cx));
                     }
-                    self.status =
-                        format!("{path}  ·  reading view built in {build_ms:.1} ms").into();
+                    // Nothing about a build time reaches Obsidian's status
+                    // bar; the number is still there to be read with
+                    // `SCORIA_DEBUG_STATUS` set.
+                    self.status = if debug_status() {
+                        format!("{path}  ·  reading view built in {build_ms:.1} ms").into()
+                    } else {
+                        path.to_string().into()
+                    };
                 }
                 Err(err) => self.unreadable(path, previous, &err, state, cx),
             },
@@ -8960,6 +8966,7 @@ impl Workspace {
             "graph": graph,
             "canvas": self.canvas.read(cx).describe(cx),
             "status": self.status_text(),
+            "status_bar": self.status_bar_text(cx),
             "notices": self.notices.texts(),
             "focus": {
                 "name": self.focus_name(window, cx),
@@ -9246,6 +9253,59 @@ impl Workspace {
         self.notices.clear();
         self.status = "".into();
         cx.notify();
+    }
+
+    /// The status bar's right half, or `None` when it carries nothing.
+    ///
+    /// Obsidian's default status bar is right-aligned only and holds the
+    /// Backlinks item and the Word count item, in that order. Both belong
+    /// to the open Markdown view, so a canvas tab and an empty tab show
+    /// neither. The caret position is Scoria's own and sits in front of
+    /// them; the parse and shape numbers behind it are diagnostics and
+    /// appear only with `SCORIA_DEBUG_STATUS` set.
+    pub fn status_bar_text(&self, cx: &App) -> Option<String> {
+        let path = self.current.as_deref()?;
+        if FileKind::from_path(path) == FileKind::Canvas {
+            return None;
+        }
+        let (caret, words, chars) = if self.mode.is_editing() {
+            let editor = self.editor.read(cx);
+            let cursor = editor.cursor();
+            let cursors = match editor.cursor_count() {
+                1 => String::new(),
+                n => format!("{n} cursors  ·  "),
+            };
+            let timings = if debug_status() {
+                format!(
+                    "parse {:.1} ms, {} spans  ·  shape {:.2} ms  ·  ",
+                    editor.stats.parse_ms,
+                    editor.stats.spans,
+                    editor.prepaint_ms()
+                )
+            } else {
+                String::new()
+            };
+            (
+                format!(
+                    "Ln {}, Col {}  ·  {cursors}{timings}",
+                    cursor.line + 1,
+                    cursor.col + 1
+                ),
+                editor.stats.words,
+                editor.stats.chars,
+            )
+        } else {
+            (String::new(), self.words, self.chars)
+        };
+        let backlinks = self
+            .backlink_sections
+            .first()
+            .map(|section| section.count)
+            .unwrap_or(0);
+        Some(format!(
+            "{caret}{backlinks} backlink{}  ·  {words} words, {chars} characters",
+            plural(backlinks)
+        ))
     }
 
     /// What the last command said, which is how every command reports:
@@ -10958,6 +11018,16 @@ impl Workspace {
 
 /// Unlinked mentions for `path`: other notes mentioning its names (incoming)
 /// and names of other notes mentioned in it (outgoing).
+/// Whether the status bar carries the parse, span and shape numbers.
+///
+/// They are Scoria's own: Obsidian's status bar has no diagnostics, so
+/// they are off unless `SCORIA_DEBUG_STATUS` is set, and read once rather
+/// than on every frame.
+fn debug_status() -> bool {
+    static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ON.get_or_init(|| std::env::var_os("SCORIA_DEBUG_STATUS").is_some())
+}
+
 /// The `s` a count needs, for the notices that carry one.
 fn plural(n: usize) -> &'static str {
     if n == 1 {
@@ -11897,33 +11967,7 @@ impl Render for Workspace {
             .child(self.render_vault_profile(&theme, cx))
             .child(self.dock_handle(true, &theme));
 
-        // Obsidian's word count is the Markdown view's: a canvas tab shows
-        // none, and no caret either.
-        let is_canvas = self
-            .current
-            .as_deref()
-            .is_some_and(|p| FileKind::from_path(p) == FileKind::Canvas);
-        let (editor_status, words, chars) = if is_canvas {
-            (String::new(), 0, 0)
-        } else if self.mode.is_editing() {
-            let editor = self.editor.read(cx);
-            let cursor = editor.cursor();
-            let cursors = match editor.cursor_count() {
-                1 => String::new(),
-                n => format!("{n} cursors  ·  "),
-            };
-            let line_status = format!(
-                "Ln {}, Col {}  ·  {cursors}parse {:.1} ms, {} spans  ·  shape {:.2} ms  ·  ",
-                cursor.line + 1,
-                cursor.col + 1,
-                editor.stats.parse_ms,
-                editor.stats.spans,
-                editor.prepaint_ms()
-            );
-            (line_status, editor.stats.words, editor.stats.chars)
-        } else {
-            (String::new(), self.words, self.chars)
-        };
+        let status_items = self.status_bar_text(cx);
         // Obsidian's status bar is a tab in the window's bottom right
         // corner rather than a bar across it: the sidebar colour, a border
         // on its open sides, an 8 px top left corner, the smaller UI size.
@@ -11955,16 +11999,12 @@ impl Render for Workspace {
                     .overflow_hidden()
                     .child(self.status.clone()),
             )
-            .when(!is_canvas, |bar| {
-                bar.child(
-                    div()
-                        .px(px(4.))
-                        .whitespace_nowrap()
-                        .child(SharedString::from(format!(
-                            "{editor_status}{words} words, {chars} characters"
-                        ))),
-                )
-            });
+            .children(status_items.map(|text| {
+                div()
+                    .px(px(4.))
+                    .whitespace_nowrap()
+                    .child(SharedString::from(text))
+            }));
 
         // Every overlay occludes: a modal in Obsidian owns the pointer as
         // well as the keyboard, and without this the editor's raw window
