@@ -7,6 +7,10 @@ rust-version.workspace = true
 repository.workspace = true
 license.workspace = true
 publish.workspace = true
+# Windows resources: the icon as resource 1 and a VERSIONINFO block, which is
+# where gpui's window class, the taskbar and Explorer all look. A no-op
+# everywhere else, so it is not behind a target table.
+build = "build.rs"
 
 [[bin]]
 name = "scoria"
@@ -36,6 +40,9 @@ serde_yaml.workspace = true
 chrono.workspace = true
 gpui.workspace = true
 gpui_platform.workspace = true
+
+[build-dependencies]
+embed-resource.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true

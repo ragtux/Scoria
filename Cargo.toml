@@ -55,6 +55,9 @@ tempfile = "3"
 rayon = "1"
 regex = "1"
 notify = "8"
+# Already in the tree through gpui; crates/scoria/build.rs compiles the icon
+# and VERSIONINFO into scoria.exe with it, and does nothing off Windows.
+embed-resource = "3"
 # Already in the tree through gpui; the app needs it for the local civil
 # date a daily note is named after and a template's `{{date}}` renders.
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }

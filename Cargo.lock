@@ -4762,6 +4762,7 @@ dependencies = [
  "anyhow",
  "async-channel 2.5.0",
  "chrono",
+ "embed-resource",
  "gpui",
  "gpui_platform",
  "indexmap",

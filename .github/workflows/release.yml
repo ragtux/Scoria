@@ -93,6 +93,23 @@ jobs:
             cp target/release/scoria "dist/$name/"
             strip "dist/$name/scoria" 2>/dev/null || true
           fi
+          # macOS keeps an application's icon, name and version in a bundle
+          # rather than in the executable, so the archive ships Scoria.app.
+          # `scoria` stays beside it as a symlink into the bundle, so the
+          # documented `./scoria ~/notes` keeps working.
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            tools/macos-app/bundle.sh "dist/$name/scoria" "dist/$name"
+            rm "dist/$name/scoria"
+            ln -s Scoria.app/Contents/MacOS/scoria "dist/$name/scoria"
+          fi
+          # A Linux desktop reads the icon out of the icon theme, not out of
+          # the binary, so the archive carries the entry, the hicolor theme
+          # and the installer that puts both under ~/.local/share.
+          if [ "${{ runner.os }}" = "Linux" ]; then
+            cp tools/linux-desktop/install.sh "dist/$name/"
+            cp crates/scoria/resources/linux/scoria.desktop "dist/$name/"
+            cp -r crates/scoria/resources/linux/icons "dist/$name/"
+          fi
           cp README.md LICENSE "dist/$name/"
           cd dist
           if [ "${{ matrix.archive }}" = "zip" ]; then

@@ -78,6 +78,12 @@ jobs:
           mkdir -p "dist/$name"
           cp target/release/scoria README.md LICENSE "dist/$name/"
           strip "dist/$name/scoria" 2>/dev/null || true
+          # A Linux desktop reads the icon out of the icon theme, not out of the
+          # binary, so the archive carries the entry, the hicolor theme and the
+          # installer that puts both under ~/.local/share.
+          cp tools/linux-desktop/install.sh "dist/$name/"
+          cp crates/scoria/resources/linux/scoria.desktop "dist/$name/"
+          cp -r crates/scoria/resources/linux/icons "dist/$name/"
           tar czf "dist/$name.tar.gz" -C dist "$name"
           rm -rf "dist/$name"
           cd dist

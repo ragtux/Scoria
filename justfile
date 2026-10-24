@@ -48,6 +48,26 @@ mcp:
 clean:
     cargo clean
 
+# ---- Packaging -----------------------------------------------------------
+
+# Re-cut the app icons from the logo master (docs/img/scoria_v3_fixed.svg)
+icons:
+    nix-shell -p imagemagick --run tools/app-icons/cut.py
+
+# Wrap a release build in Scoria.app, the only place macOS looks for an icon (run on a Mac)
+macos-app:
+    cargo build --release -p scoria
+    tools/macos-app/bundle.sh "$CARGO_TARGET_DIR/release/scoria" "$CARGO_TARGET_DIR/release"
+
+# Put a menu entry and a task bar icon for the release build in ~/.local/share (Linux)
+desktop-install:
+    cargo build --release -p scoria
+    tools/linux-desktop/install.sh --binary "$CARGO_TARGET_DIR/release/scoria"
+
+# Take the menu entry and the icons back out again
+desktop-uninstall:
+    tools/linux-desktop/install.sh --uninstall
+
 # ---- Run -----------------------------------------------------------------
 
 # Open a vault (release: the editor reparses on every edit). Extra args go to the app.

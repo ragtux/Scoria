@@ -76,5 +76,13 @@ cd site && npm run serve                  # the same, served on http://localhost
 - The logo lives in three places — `docs/img/scoria_v3_fixed.svg` (the master), the app's
   `crates/scoria/assets/logo.svg` and the site's `site/sites/scoria/assets/`. Change the master
   and re-cut the copies; never edit one of the copies on its own.
+- The app icons are a fourth cut of that master, and `just icons` (`tools/app-icons/cut.py`) is
+  the only thing that writes them: `crates/scoria/resources/windows/scoria.ico`, which
+  `crates/scoria/build.rs` embeds as resource 1 of `scoria.exe`;
+  `crates/scoria/resources/macos/scoria.icns`, which `tools/macos-app/bundle.sh` puts in
+  `Scoria.app`; and `crates/scoria/resources/linux/icons`, the hicolor theme
+  `tools/linux-desktop/install.sh` installs beside `scoria.desktop`. Re-cut them when the
+  master changes. The entry's `StartupWMClass` must stay equal to the `app_id` in
+  `WindowOptions`, or the Linux task bar loses the icon.
 - `site/` vendors the builder from the `ragtux.com` repository byte for byte, bar the two
   differences `site/README.md` records. Port fixes across whole rather than merging.
