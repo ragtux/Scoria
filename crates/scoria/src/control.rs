@@ -265,15 +265,20 @@ fn handle(
                 if !ws.is_loaded() {
                     return Err("the vault is still loading".to_string());
                 }
-                if let Some(mode) = ws.open_mode(mode)? {
-                    ws.set_mode(mode, window, cx);
-                }
+                // Validated first and applied after: "open X in mode M"
+                // is about X, and switching before leaving would change the
+                // mode of the note being left -- which its history entry
+                // then remembers as the mode it was read in.
+                let mode = ws.open_mode(mode)?;
                 // A name that matches nothing is not an error: the
                 // protocol answers with a null current file, so a caller
                 // cannot mistake the note that is still open for the one it
                 // asked for.
                 if !ws.open_by_name(name, cx) {
                     return Ok(json!({"current": Value::Null}));
+                }
+                if let Some(mode) = mode {
+                    ws.set_mode(mode, window, cx);
                 }
                 Ok(json!({"current": ws.current()}))
             })

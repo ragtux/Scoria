@@ -1239,11 +1239,38 @@ enum PendingOp {
 /// `history`, `history_ix` — so every path that opens a note keeps working
 /// unchanged; `tabs[active_tab]` is a snapshot of them, refreshed by
 /// [`Workspace::stash_active_tab`] before anything reads it.
+/// One place back and forward can land: the note, and the state the view
+/// was left in. Obsidian's history entries carry the same -- the mode and
+/// the scroll -- which is why going back to a note read in Reading brings
+/// it back in Reading, where it was.
+#[derive(Debug, Clone, PartialEq)]
+struct HistoryEntry {
+    path: String,
+    /// The mode the note was in. Graph is never recorded: it is a toggle
+    /// over the note rather than a place a note can be.
+    mode: ViewMode,
+    /// Where in the note the reader was, as a byte offset: the caret in an
+    /// editing mode, the top block in Reading.
+    offset: usize,
+}
+
+impl HistoryEntry {
+    /// A note with nothing known about it yet, for the entry an open
+    /// pushes before the view has settled.
+    fn new(path: String, mode: ViewMode) -> HistoryEntry {
+        HistoryEntry {
+            path,
+            mode,
+            offset: 0,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 struct Tab {
     path: Option<String>,
     mode: ViewMode,
-    history: Vec<String>,
+    history: Vec<HistoryEntry>,
     history_ix: usize,
     /// The `workspace.json` leaf this tab was restored from, so a layout
     /// nothing changed is written back with the keys Obsidian gave it.
@@ -2192,7 +2219,7 @@ pub struct Workspace {
     /// is no longer backed by a file, so the main area says so and nothing
     /// writes it back.
     detached: Option<SharedString>,
-    history: Vec<String>,
+    history: Vec<HistoryEntry>,
     history_ix: usize,
     /// The main area's tabs; the active one's fields are the live ones above.
     tabs: Vec<Tab>,
@@ -3556,9 +3583,9 @@ impl Workspace {
     /// Opens the quick switcher pre-filled with `query`.
     pub fn open_switcher(&mut self, query: &str, window: &mut Window, cx: &mut Context<Self>) {
         let mut recent: Vec<String> = Vec::new();
-        for path in self.history.iter().rev() {
-            if !recent.contains(path) {
-                recent.push(path.clone());
+        for entry in self.history.iter().rev() {
+            if !recent.contains(&entry.path) {
+                recent.push(entry.path.clone());
             }
         }
         self.close_editor_suggest(cx);
@@ -4251,6 +4278,10 @@ impl Workspace {
         if mode == ViewMode::Graph && self.mode != ViewMode::Graph {
             self.mode_before_graph = self.mode;
         }
+        // The history entry for the note on screen tracks the state it is
+        // in, so a reader who presses Ctrl+E and then navigates away comes
+        // back to the mode they were reading in.
+        self.record_history_state(cx);
         if !mode.is_editing() && self.mode.is_editing() {
             // The reading view shows what the editor has: save and rebuild now
             // rather than waiting for the autosave and the watcher.
@@ -4450,8 +4481,12 @@ impl Workspace {
         }
         if self.current.as_deref() != Some(path.as_str()) {
             self.flush_save(cx);
+            // The entry being left keeps the state it is being left in, so
+            // coming back to it comes back to where the reader was.
+            self.record_history_state(cx);
             self.history.truncate(self.history_ix);
-            self.history.push(path.clone());
+            self.history
+                .push(HistoryEntry::new(path.clone(), self.mode));
             self.history_ix = self.history.len();
             self.last_open_files.retain(|p| *p != path);
             self.last_open_files.insert(0, path.clone());
@@ -5156,6 +5191,7 @@ impl Workspace {
     }
 
     fn go_back(&mut self, _: &GoBack, _: &mut Window, cx: &mut Context<Self>) {
+        self.record_history_state(cx);
         if self.history_ix > 1 {
             self.history_ix -= 1;
             self.navigate_history(cx);
@@ -5163,6 +5199,7 @@ impl Workspace {
     }
 
     fn go_forward(&mut self, _: &GoForward, _: &mut Window, cx: &mut Context<Self>) {
+        self.record_history_state(cx);
         if self.history_ix < self.history.len() {
             self.history_ix += 1;
             self.navigate_history(cx);
@@ -5170,7 +5207,7 @@ impl Workspace {
     }
 
     fn navigate_history(&mut self, cx: &mut Context<Self>) {
-        let (Some(state), Some(path)) = (
+        let (Some(state), Some(entry)) = (
             self.state.clone(),
             self.history.get(self.history_ix.wrapping_sub(1)).cloned(),
         ) else {
@@ -5180,8 +5217,43 @@ impl Workspace {
             self.mode = self.mode_before_graph;
         }
         self.flush_save(cx);
-        self.show_file(&path, &state, cx);
+        // Obsidian's history carries the view state, so back and forward
+        // restore the mode the note was left in as well as the note.
+        self.mode = entry.mode;
+        self.show_file(&entry.path, &state, cx);
+        if entry.offset > 0 {
+            self.reveal_offset(entry.offset, cx);
+        }
         self.request_focus_main(cx);
+    }
+
+    /// Writes the view state into the entry the history is standing on,
+    /// which is the note about to be left.
+    ///
+    /// The offset is what brings the reader back to the same place: the
+    /// caret while editing, and the block at the top of the page in
+    /// Reading, where there is no caret to speak of.
+    fn record_history_state(&mut self, cx: &mut Context<Self>) {
+        let Some(current) = self.current.clone() else {
+            return;
+        };
+        let mode = if self.mode == ViewMode::Graph {
+            self.mode_before_graph
+        } else {
+            self.mode
+        };
+        let offset = if mode == ViewMode::Reading {
+            self.reading.read(cx).top_offset().unwrap_or(0)
+        } else {
+            self.editor.read(cx).selection().start
+        };
+        let Some(entry) = self.history.get_mut(self.history_ix.wrapping_sub(1)) else {
+            return;
+        };
+        if entry.path == current {
+            entry.mode = mode;
+            entry.offset = offset;
+        }
     }
 
     /// A task checkbox a reader clicked in the reading view. The editor
@@ -6010,14 +6082,19 @@ impl Workspace {
             .map(|(a, b)| (a.as_str(), b.as_str()))
             .collect();
         for entry in &mut self.history {
-            if let Some(new) = renamed.get(entry.as_str()) {
-                *entry = new.to_string();
+            if let Some(new) = renamed.get(entry.path.as_str()) {
+                entry.path = new.to_string();
             }
         }
         for tab in self.stashed_tabs_mut() {
-            for entry in tab.history.iter_mut().chain(tab.path.iter_mut()) {
-                if let Some(new) = renamed.get(entry.as_str()) {
-                    *entry = new.to_string();
+            for entry in &mut tab.history {
+                if let Some(new) = renamed.get(entry.path.as_str()) {
+                    entry.path = new.to_string();
+                }
+            }
+            if let Some(path) = tab.path.as_mut() {
+                if let Some(new) = renamed.get(path.as_str()) {
+                    *path = new.to_string();
                 }
             }
         }
@@ -8931,7 +9008,7 @@ impl Workspace {
         put_capped(
             &mut file,
             "history",
-            self.history.iter().map(|p| json!(p)).collect(),
+            self.history.iter().map(|e| json!(e.path)).collect(),
             rows,
         );
         file.insert("history_ix".into(), json!(self.history_ix));
@@ -11409,12 +11486,12 @@ pub(crate) fn context_names(window: &Window) -> Vec<String> {
 /// navigation history, answering where the one-based cursor lands. Entries
 /// before the cursor carry it back with them, so back and forward still
 /// reach the same notes they did.
-fn prune_history(history: &mut Vec<String>, ix: usize, path: &str) -> usize {
+fn prune_history(history: &mut Vec<HistoryEntry>, ix: usize, path: &str) -> usize {
     let prefix = format!("{path}/");
     let mut cursor = ix;
     let mut seen = 0;
     history.retain(|entry| {
-        let keep = entry.as_str() != path && !entry.starts_with(&prefix);
+        let keep = entry.path != path && !entry.path.starts_with(&prefix);
         if !keep && seen < ix {
             cursor -= 1;
         }
@@ -11548,7 +11625,7 @@ fn tab_from_leaf(
             Tab {
                 path: Some(file.to_string()),
                 mode,
-                history: vec![file.to_string()],
+                history: vec![HistoryEntry::new(file.to_string(), mode)],
                 history_ix: 1,
                 leaf: Some(leaf.clone()),
                 view_state: inner.and_then(|s| s.get("viewState")).cloned(),
@@ -12583,8 +12660,11 @@ mod tests {
         );
     }
 
-    fn history(entries: &[&str]) -> Vec<String> {
-        entries.iter().map(|e| e.to_string()).collect()
+    fn history(entries: &[&str]) -> Vec<HistoryEntry> {
+        entries
+            .iter()
+            .map(|e| HistoryEntry::new(e.to_string(), ViewMode::LivePreview))
+            .collect()
     }
 
     /// A deleted note leaves the history, so back and forward cannot land
@@ -12610,7 +12690,10 @@ mod tests {
         let tab = Tab {
             path: Some("Sub/Note.md".into()),
             mode: ViewMode::LivePreview,
-            history: vec!["Sub/Note.md".into()],
+            history: vec![HistoryEntry::new(
+                "Sub/Note.md".into(),
+                ViewMode::LivePreview,
+            )],
             history_ix: 1,
             leaf: Some(read.clone()),
             view_state: None,
