@@ -835,8 +835,7 @@ impl GraphView {
 
     fn scroll(&mut self, event: &ScrollWheelEvent, line_height: Pixels, cx: &mut Context<Self>) {
         let delta = event.delta.pixel_delta(line_height);
-        let factor = (-f32::from(delta.y) * 0.004).exp();
-        self.zoom_at(factor, event.position, cx);
+        self.zoom_at(wheel_zoom_factor(f32::from(delta.y)), event.position, cx);
     }
 
     fn toggle_local(&mut self, cx: &mut Context<Self>) {
@@ -1473,6 +1472,13 @@ fn saved_pin(saved: Option<f32>) -> Option<f32> {
     saved
         .map(|scale| scale.clamp(0.1, 8.0))
         .filter(|scale| (scale - 1.0).abs() > 0.001)
+}
+
+/// The zoom factor a wheel event multiplies the scale by. A wheel-up event,
+/// `dy` positive in the same convention that scrolls the editor up, zooms the
+/// graph in, like `Ctrl+=` and like Obsidian.
+fn wheel_zoom_factor(dy: f32) -> f32 {
+    (dy * 0.004).exp()
 }
 
 /// Whether a refresh takes its zoom from `graph.json`. The vault refresh runs
@@ -2348,6 +2354,15 @@ mod tests {
         assert!(!adopts_saved_scale(None, None, false));
         // The file changed under us: that is a new intention.
         assert!(adopts_saved_scale(Some(2.0), Some(4.0), false));
+    }
+
+    /// Obsidian zooms the graph in when the wheel goes up, the direction
+    /// `Ctrl+=` takes too.
+    #[test]
+    fn the_wheel_zooms_in_when_it_goes_up() {
+        assert!(wheel_zoom_factor(120.0) > 1.0);
+        assert!(wheel_zoom_factor(-120.0) < 1.0);
+        assert_eq!(wheel_zoom_factor(0.0), 1.0);
     }
 
     #[test]
