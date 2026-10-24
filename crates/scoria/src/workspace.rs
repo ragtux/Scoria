@@ -5498,10 +5498,8 @@ impl Workspace {
         }
         self.forget_history(path);
         match state.trash(path) {
-            Ok(changes) => {
-                self.after_changes(changes, cx);
-                self.report(format!("Deleted {path}"), cx);
-            }
+            // Obsidian shows nothing for a delete that worked.
+            Ok(changes) => self.after_changes(changes, cx),
             Err(err) => self.report(err, cx),
         }
     }
@@ -5511,10 +5509,11 @@ impl Workspace {
             return;
         };
         match state.duplicate(path) {
+            // Nothing is reported for a copy that worked either; the new
+            // file opening is the feedback.
             Ok((copy, changes)) => {
                 self.after_changes(changes, cx);
-                self.open_file(copy.clone(), None, cx);
-                self.report(format!("Copied {path} to {copy}"), cx);
+                self.open_file(copy, None, cx);
             }
             Err(err) => self.report(err, cx),
         }
@@ -5909,43 +5908,43 @@ impl Workspace {
                 self.current = Some(new.to_string());
             }
         }
-        let summary = match outcome.renamed.as_slice() {
-            [(from, to)] => format!("Renamed {from} to {to}"),
-            all => format!("Moved {} files", all.len()),
-        };
-        let links = if outcome.rewritten_links > 0 {
+        // Obsidian says nothing about the rename itself. It shows one
+        // Notice, and only when links were rewritten:
+        // [[Specification#A move that changes the file's basename]] records
+        // it as exactly `Updated 1 link in 1 file.`
+        let links = (outcome.rewritten_links > 0).then(|| {
             format!(
-                ", updated {} link{} in {} file{}",
+                "Updated {} link{} in {} file{}.",
                 outcome.rewritten_links,
-                if outcome.rewritten_links == 1 {
-                    ""
-                } else {
-                    "s"
-                },
+                plural(outcome.rewritten_links),
                 outcome.rewritten_files,
-                if outcome.rewritten_files == 1 {
-                    ""
-                } else {
-                    "s"
-                }
+                plural(outcome.rewritten_files),
             )
-        } else {
-            String::new()
-        };
-        // A note that changed underneath keeps its own bytes; say which.
+        });
+        // A note that changed underneath keeps its own bytes. Obsidian has
+        // nothing to say here because it never skips, and silence would
+        // leave stale links behind with no sign of it, so this one stays.
         let skipped = match outcome.stale.len() {
-            0 => String::new(),
-            n => format!(
-                "; {n} file{} changed on disk and {} left alone",
-                if n == 1 { "" } else { "s" },
+            0 => None,
+            n => Some(format!(
+                "{n} file{} changed on disk and {} left alone",
+                plural(n),
                 if n == 1 { "was" } else { "were" }
-            ),
+            )),
         };
         self.after_changes(outcome.changes, cx);
         if let Some(current) = self.current.clone() {
             self.explorer.update(cx, |e, cx| e.follow(&current, cx));
         }
-        self.report(format!("{summary}{links}{skipped}"), cx);
+        let notice = match (links, skipped) {
+            (None, None) => None,
+            (Some(l), None) => Some(l),
+            (None, Some(s)) => Some(s),
+            (Some(l), Some(s)) => Some(format!("{l} {s}")),
+        };
+        if let Some(notice) = notice {
+            self.report(notice, cx);
+        }
     }
 
     /// Renames the open note to `new_name` (same folder, same extension)
@@ -10959,6 +10958,15 @@ impl Workspace {
 
 /// Unlinked mentions for `path`: other notes mentioning its names (incoming)
 /// and names of other notes mentioned in it (outgoing).
+/// The `s` a count needs, for the notices that carry one.
+fn plural(n: usize) -> &'static str {
+    if n == 1 {
+        ""
+    } else {
+        "s"
+    }
+}
+
 fn mention_sections(
     state: &VaultState,
     path: &str,
