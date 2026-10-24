@@ -2404,7 +2404,7 @@ impl Workspace {
                     BookmarkEvent::Folder(path) => {
                         this.left_tab = LeftTab::Files;
                         let path = path.clone();
-                        this.explorer.update(cx, |e, cx| e.reveal(&path, cx));
+                        this.explorer.update(cx, |e, cx| e.reveal_folder(&path, cx));
                         cx.notify();
                     }
                     BookmarkEvent::Url(url) => cx.open_url(url),
@@ -4570,6 +4570,10 @@ impl Workspace {
             )
         });
         self.current = None;
+        // Nothing is open, so no row is the open file's: a highlight left
+        // behind outlives the note it marked, and the next `set_tree` would
+        // keep painting a path the vault no longer has.
+        self.explorer.update(cx, |e, cx| e.clear_active(cx));
         self.graph.update(cx, |g, cx| g.set_current(None, cx));
         self.clear_panes(cx);
     }
@@ -5544,7 +5548,7 @@ impl Workspace {
                         self.pending = None;
                         self.close_modal(window, cx);
                         self.refresh_vault_views(cx);
-                        self.explorer.update(cx, |e, cx| e.reveal(&path, cx));
+                        self.explorer.update(cx, |e, cx| e.reveal_folder(&path, cx));
                         self.report(format!("Created folder {path}"), cx);
                     }
                     Err(err) => self.prompt.update(cx, |p, cx| p.set_error(err, cx)),

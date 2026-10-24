@@ -736,6 +736,19 @@ impl FileExplorer {
     /// Marks `path` as the open file and scrolls it into view.
     pub fn reveal(&mut self, path: &str, cx: &mut Context<Self>) {
         self.active = Some(path.to_string());
+        self.show(path, cx);
+    }
+
+    /// Scrolls `path` into view without claiming it is the open file.
+    ///
+    /// A folder is never the open file, so revealing one — a bookmarked
+    /// folder, or a folder just created — leaves the highlight on the note
+    /// that is open, as Obsidian does.
+    pub fn reveal_folder(&mut self, path: &str, cx: &mut Context<Self>) {
+        self.show(path, cx);
+    }
+
+    fn show(&mut self, path: &str, cx: &mut Context<Self>) {
         if let Some(ix) = self.tree.reveal(path) {
             self.scroll.scroll_to_item(ix, ScrollStrategy::Center);
         }
