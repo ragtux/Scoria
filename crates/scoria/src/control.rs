@@ -496,7 +496,7 @@ fn handle(
             let activate = request.bool_param("activate", false);
             let width = request.opt_f32("width");
             let height = request.opt_f32("height");
-            ctl.window(|window, _| {
+            let result = ctl.window(|window, _| {
                 if activate {
                     window.activate_window();
                 }
@@ -521,8 +521,16 @@ fn handle(
                     "scale": window.scale_factor(),
                     "active": window.is_window_active(),
                 }))
-            })
-            .map(Some)
+            })?;
+            // The title is the workspace's, not the platform window's: it
+            // is what the last paint set, so it says which note and which
+            // vault the window is showing.
+            let title = ctl.workspace(|ws, _, _| Ok(ws.window_title()))?;
+            let mut result = result;
+            if let Value::Object(map) = &mut result {
+                map.insert("title".into(), json!(title));
+            }
+            Ok(Some(result))
         }
         "read_file" => {
             // The path needs the vault, which only the main thread has; the

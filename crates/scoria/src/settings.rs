@@ -977,14 +977,75 @@ impl SettingsView {
     /// Which tab is open and what it has in hand, for the control socket's
     /// state dump. A dropdown and a text field are reported by the config key
     /// they write, which is how the view itself identifies them.
-    pub fn describe(&self, cx: &App) -> Value {
+    pub fn describe(&self, rows: usize, cx: &App) -> Value {
+        let listed = self.described_rows(rows, cx);
+        let total = self.row_count();
         json!({
             "tab": self.tab.id(),
             "menu": self.menu,
             "editing": self.editing.map(|field| field.key),
             "hotkey_search": self.hotkey_search.read(cx).text(),
             "capturing": self.capturing,
+            "rows": listed,
+            "rows_total": (total > rows).then_some(total),
         })
+    }
+
+    /// How many rows the open tab has, listed or not.
+    fn row_count(&self) -> usize {
+        match self.tab {
+            Tab::Hotkeys => self.hotkey_rows.len(),
+            tab => self.items(tab).len(),
+        }
+    }
+
+    /// The open tab's rows, for the control socket's state dump: what each
+    /// one is called, what kind of control it carries and where that
+    /// control stands, and the tag saying how far Scoria gets with it.
+    ///
+    /// The Hotkeys tab is built from the command registry rather than from
+    /// `items`, so it reports commands: the id, the label and the chords
+    /// bound to it, `custom` when they came from `hotkeys.json`.
+    fn described_rows(&self, rows: usize, _cx: &App) -> Vec<Value> {
+        if self.tab == Tab::Hotkeys {
+            return self
+                .hotkey_rows
+                .iter()
+                .take(rows)
+                .filter_map(|ix| self.all_commands.get(*ix))
+                .map(|c| {
+                    json!({
+                        "kind": "command",
+                        "id": c.id,
+                        "name": c.name,
+                        "hotkeys": c.hotkeys.iter().map(hotkey_label).collect::<Vec<_>>(),
+                        "custom": c.custom,
+                    })
+                })
+                .collect();
+        }
+        self.items(self.tab)
+            .into_iter()
+            .take(rows)
+            .map(|item| {
+                let (control, value) = match &item.control {
+                    Control::None => ("none", Value::Null),
+                    Control::Toggle(on) => ("toggle", json!(on)),
+                    Control::Dropdown(v) => ("dropdown", json!(v.as_ref())),
+                    Control::Text(v) => ("text", json!(v.as_ref())),
+                    Control::Slider(v) => ("slider", json!(v.as_ref())),
+                    Control::Button(v) => ("button", json!(v.as_ref())),
+                };
+                json!({
+                    "kind": if item.heading { "heading" } else { "setting" },
+                    "name": item.name.as_ref(),
+                    "desc": item.desc.as_ref(),
+                    "control": control,
+                    "value": value,
+                    "tag": item.honored.tag(),
+                })
+            })
+            .collect()
     }
 
     fn focus_tab(&mut self, window: &mut Window, cx: &mut Context<Self>) {

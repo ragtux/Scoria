@@ -8977,6 +8977,7 @@ impl Workspace {
                 "height": window.viewport_size().height.as_f32(),
                 "scale": window.scale_factor(),
                 "active": window.is_window_active(),
+                "title": self.window_title(),
             },
         })
     }
@@ -9009,7 +9010,7 @@ impl Workspace {
             Modal::Prompt => Some(self.prompt.read(cx).describe(rows, cx)),
             Modal::CopyResults => Some(self.copy_results.read(cx).describe()),
             Modal::Chooser => Some(self.chooser.read(cx).describe(rows, cx)),
-            Modal::Settings => Some(self.settings.read(cx).describe(cx)),
+            Modal::Settings => Some(self.settings.read(cx).describe(rows, cx)),
             Modal::None => None,
         };
         if let Some(Value::Object(view)) = view {
@@ -9306,6 +9307,12 @@ impl Workspace {
             "{caret}{backlinks} backlink{}  ·  {words} words, {chars} characters",
             plural(backlinks)
         ))
+    }
+
+    /// The title the desktop shows, as the last paint set it: empty until
+    /// the first frame has run.
+    pub fn window_title(&self) -> SharedString {
+        self.window_title.clone()
     }
 
     /// What the last command said, which is how every command reports:

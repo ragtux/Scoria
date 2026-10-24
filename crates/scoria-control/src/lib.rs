@@ -35,7 +35,9 @@ pub use protocol::{Request, Response};
 
 /// Wire protocol version, reported by `ping` and `protocol`. Bump it when a
 /// method's params or result change shape, not when one is added.
-pub const PROTOCOL: u32 = 1;
+/// 2: `state` gained `status_bar` and `window.title`, `state.modal` gained
+/// the Settings tab's rows, and `window`'s result gained `title`.
+pub const PROTOCOL: u32 = 2;
 
 /// This crate's version, which is the app's: `ping` reports it so a client can
 /// tell which build it is driving.

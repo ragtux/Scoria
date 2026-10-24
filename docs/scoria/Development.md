@@ -790,6 +790,14 @@ drives a real Obsidian over CDP to learn what Obsidian does
 what Scoria does against it. Two apps, the same shape of harness, and neither
 belongs in CI.
 
+Protocol 2 added three things an audit of the Settings modal and the window
+frame needed: `state.modal` carries the open Settings tab's **rows** (every
+row's name, description, control kind and value, and the tag saying how far
+Scoria gets with it; the Hotkeys tab reports commands instead, with their ids
+and bound chords), `state.window` and `window` both carry the window
+**title**, and `state` carries `status_bar`, the right half of the status bar
+as it is on screen.
+
 **The protocol.** `--control <path>` binds a Unix domain socket (on Windows too, see
 [[#The control socket on Windows, 2026-10-22]]) and speaks
 newline-delimited JSON over it: one request per line, one response line per
@@ -826,7 +834,7 @@ Nothing that crosses the socket may panic.
 | `set_selection` | `start`, `end?` (byte offsets) | `{"cursor"}` |
 | `scroll_to` | `line` | `{"ok"}` |
 | `focus` | `set?`: workspace, editor, reading, graph | `{"name","context_stack"}` |
-| `window` | `activate?`, `width?`, `height?` | `{"width","height","scale","active"}` |
+| `window` | `activate?`, `width?`, `height?` | `{"width","height","scale","active","title"}` |
 | `read_file` | `path` | `{"text","bytes"}` |
 | `write_file` | `path`, `text` | `{"bytes"}` |
 | `list_files` | `folder?` | path, kind and size per file |
