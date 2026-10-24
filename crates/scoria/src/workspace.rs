@@ -3285,6 +3285,32 @@ impl Workspace {
         .detach();
     }
 
+    /// Whether `changes` touched `path` only as a modification whose bytes
+    /// the open buffer already holds: Scoria's own save, arriving back
+    /// through the file watcher.
+    ///
+    /// A content check, not an mtime stamp, so a genuine external write is
+    /// never swallowed — a note saved by another app with different bytes
+    /// still reloads the view.
+    fn is_own_write(&self, path: &str, changes: &Changes, state: &VaultState, cx: &App) -> bool {
+        let modified_only = changes
+            .files
+            .iter()
+            .filter(|c| c.path() == path)
+            .all(|c| matches!(c, FileChange::Modified(_)));
+        if !modified_only {
+            return false;
+        }
+        let editor = self.editor.read(cx);
+        if editor.name.as_ref() != path {
+            return false;
+        }
+        state
+            .texts()
+            .get(path)
+            .is_some_and(|text| editor.text() == text.as_str())
+    }
+
     fn after_changes(&mut self, changes: Changes, cx: &mut Context<Self>) {
         if changes.files.is_empty() {
             return;
@@ -3343,7 +3369,16 @@ impl Workspace {
                     format!("{current} was deleted; this buffer is no longer saved anywhere")
                         .into();
             } else if changes.files.iter().any(|c| c.path() == current) {
-                self.show_file(&current, &state, cx);
+                // Scoria's own autosave comes back through the watcher a
+                // moment later. Rebuilding the view from bytes the buffer
+                // already holds would re-enter `show_file`, which reveals
+                // the row: the Files list would re-centre and every
+                // ancestor folder re-expand every few seconds of typing.
+                if self.is_own_write(&current, &changes, &state, cx) {
+                    self.refresh_panes(&state, cx);
+                } else {
+                    self.show_file(&current, &state, cx);
+                }
             } else {
                 self.refresh_panes(&state, cx);
             }
