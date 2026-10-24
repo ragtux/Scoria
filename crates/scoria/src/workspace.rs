@@ -5016,8 +5016,23 @@ impl Workspace {
             }
             LinkTarget::External(url) => cx.open_url(&url),
             LinkTarget::Tag(tag) => self.show_search(&format!("tag:#{tag}"), None, cx),
-            LinkTarget::Footnote(_) => {
-                self.reading.update(cx, |r, cx| r.scroll_to_end(cx));
+            LinkTarget::Footnote(n) => {
+                // Obsidian's reference is an anchor to that one definition,
+                // not to the end of the note. The model knows where each
+                // definition is written, so the same reveal every heading
+                // jump uses takes the reader there: the Footnotes block in
+                // reading, the definition's own line while editing.
+                let at = self
+                    .reading
+                    .read(cx)
+                    .model()
+                    .footnotes
+                    .get(n.saturating_sub(1))
+                    .copied();
+                match at {
+                    Some(offset) => self.reveal_offset(offset, cx),
+                    None => self.reading.update(cx, |r, cx| r.scroll_to_end(cx)),
+                }
             }
         }
     }

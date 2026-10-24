@@ -215,6 +215,11 @@ impl ReadingView {
     }
 
     /// Scrolls so the top-level block `ix` is at the top of the view.
+    /// The note on screen, as built.
+    pub fn model(&self) -> &Model {
+        &self.model
+    }
+
     pub fn scroll_to_block(&mut self, ix: usize, cx: &mut Context<Self>) {
         if ix < self.model.blocks.len() {
             self.list.scroll_to(ListOffset {

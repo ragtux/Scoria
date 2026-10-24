@@ -178,8 +178,16 @@ pub enum RBlock {
 pub struct Model {
     pub blocks: Vec<RBlock>,
     /// Source byte offset where each top-level block starts, for mapping
-    /// cache positions (outline, backlinks) to list items.
+    /// cache positions (outline, backlinks) to list items. One entry per
+    /// block in `blocks`, built from the same list: a comment or a
+    /// footnote definition is dropped from both or from neither, or every
+    /// jump past one lands on the wrong block.
     pub starts: Vec<usize>,
+    /// Source byte offset of footnote `n`'s definition, `n - 1` indexed, in
+    /// the order the Footnotes section lists them. A footnote written
+    /// inline has no definition of its own and carries the offset of the
+    /// reference instead.
+    pub footnotes: Vec<usize>,
 }
 
 impl Model {
@@ -229,12 +237,20 @@ pub fn build_with(
         line_starts: None,
     };
     b.footnotes.definitions = collect_definitions(&doc.blocks);
-    let starts = doc.blocks.iter().map(|b| b.span.start).collect();
-    let mut blocks = b.blocks(&doc.blocks, false);
-    if let Some(section) = b.footnote_section(&doc) {
+    let (mut blocks, mut starts) = b.blocks_with_starts(&doc.blocks);
+    let mut footnotes = Vec::new();
+    if let Some((section, offsets)) = b.footnote_section(&doc) {
+        // The appended section needs a start of its own, or an offset
+        // inside a definition resolves past the end of the list.
+        starts.push(offsets.iter().copied().min().unwrap_or(doc.source.len()));
         blocks.push(section);
+        footnotes = offsets;
     }
-    Model { blocks, starts }
+    Model {
+        blocks,
+        starts,
+        footnotes,
+    }
 }
 
 /// Builds one part of `text`, the content of `source_path`: the section
@@ -267,12 +283,18 @@ pub(crate) fn build_section(
         line_starts: None,
     };
     b.footnotes.definitions = collect_definitions(&doc.blocks);
-    let starts = selected.iter().map(|b| b.span.start).collect();
-    let mut blocks = b.blocks(&selected, false);
-    if let Some(section) = b.footnote_section(&doc) {
+    let (mut blocks, mut starts) = b.blocks_with_starts(&selected);
+    let mut footnotes = Vec::new();
+    if let Some((section, offsets)) = b.footnote_section(&doc) {
+        starts.push(offsets.iter().copied().min().unwrap_or(doc.source.len()));
         blocks.push(section);
+        footnotes = offsets;
     }
-    Some(Model { blocks, starts })
+    Some(Model {
+        blocks,
+        starts,
+        footnotes,
+    })
 }
 
 /// A top-level block Live Preview renders in place of its source lines:
@@ -365,7 +387,9 @@ fn build_embedded(
     };
     b.footnotes.definitions = collect_definitions(&doc.blocks);
     let mut out = b.blocks(blocks, false);
-    if let Some(section) = b.footnote_section(doc) {
+    // An embedded section is not jumped into, so its footnote offsets are
+    // of no use to anyone.
+    if let Some((section, _)) = b.footnote_section(doc) {
         out.push(section);
     }
     *next_id = b.next_id;
@@ -434,6 +458,22 @@ impl<'v> Builder<'v> {
 
     fn blocks(&mut self, blocks: &[Block<'_>], tight: bool) -> Vec<RBlock> {
         blocks.iter().filter_map(|b| self.block(b, tight)).collect()
+    }
+
+    /// The top level, where each block kept has to keep its source offset
+    /// too: `block` returns `None` for a comment and for a footnote
+    /// definition, so deriving the offsets from the *parsed* list instead
+    /// would leave the two lists one apart for every block dropped.
+    fn blocks_with_starts(&mut self, blocks: &[Block<'_>]) -> (Vec<RBlock>, Vec<usize>) {
+        let mut out = Vec::new();
+        let mut starts = Vec::new();
+        for block in blocks {
+            if let Some(built) = self.block(block, false) {
+                out.push(built);
+                starts.push(block.span.start);
+            }
+        }
+        (out, starts)
     }
 
     fn block(&mut self, block: &Block<'_>, _tight: bool) -> Option<RBlock> {
@@ -742,14 +782,20 @@ impl<'v> Builder<'v> {
         acc.link(start, LinkTarget::Footnote(n));
     }
 
-    fn footnote_section(&mut self, doc: &Document<'_>) -> Option<RBlock> {
+    /// The Footnotes section, and where in the note each definition is
+    /// written. A click on a reference reveals that offset, which is the
+    /// definition's line in an editing mode and the Footnotes block in
+    /// reading.
+    fn footnote_section(&mut self, doc: &Document<'_>) -> Option<(RBlock, Vec<usize>)> {
         if self.footnotes.numbers.is_empty() {
             return None;
         }
         let labels = self.footnotes.numbers.clone();
         let mut out = Vec::new();
+        let mut offsets = Vec::new();
         for (i, label) in labels.iter().enumerate() {
             let n = i + 1;
+            let mut at = None;
             let body =
                 if let Some((_, text)) = self.footnotes.inline.iter().find(|(l, _)| l == label) {
                     vec![RBlock::Paragraph(vec![Segment::Text(text.clone())])]
@@ -760,6 +806,7 @@ impl<'v> Builder<'v> {
                             if let BlockKind::FootnoteDefinition { label: l, children } = &b.kind {
                                 if l == label {
                                     found = Some(children);
+                                    at = Some(b.span.start);
                                 }
                             }
                         }
@@ -769,9 +816,12 @@ impl<'v> Builder<'v> {
                         None => Vec::new(),
                     }
                 };
+            // An inline footnote is written where it is referenced, and a
+            // label nothing defines has nowhere else to point either.
+            offsets.push(at.unwrap_or(0));
             out.push((n, body));
         }
-        Some(RBlock::Footnotes(out))
+        Some((RBlock::Footnotes(out), offsets))
     }
 
     // ----- embeds --------------------------------------------------------------
@@ -1326,6 +1376,69 @@ mod tests {
             }
         }
         assert_eq!(depth, MAX_EMBED_DEPTH - 1);
+    }
+
+    /// `blocks` drops a comment block; `starts` has to drop exactly the
+    /// same one, or every jump past it lands a block out.
+    #[test]
+    fn a_block_comment_shifts_neither_list() {
+        let plain = build("Self.md", "# One\n\nbody\n\n# Two\n", &stub());
+        assert_eq!(plain.blocks.len(), plain.starts.len());
+        let two = plain.starts[2];
+        assert!(matches!(&plain.blocks[2], RBlock::Heading { plain, .. } if plain == "Two"));
+
+        // The same note behind a block comment: one parsed block more, the
+        // same built blocks, and "Two" still the third of them.
+        let text = "%%\na block comment\n%%\n\n# One\n\nbody\n\n# Two\n";
+        let with_comment = build("Self.md", text, &stub());
+        assert_eq!(
+            with_comment.blocks.len(),
+            with_comment.starts.len(),
+            "{:?}",
+            with_comment.blocks
+        );
+        assert_eq!(with_comment.blocks.len(), plain.blocks.len());
+        assert!(matches!(&with_comment.blocks[2], RBlock::Heading { plain, .. } if plain == "Two"));
+        // The offsets moved by the comment's length, and `block_at` follows
+        // them rather than the index the parsed list would have given.
+        assert!(with_comment.starts[2] > two);
+        assert_eq!(
+            with_comment.block_at(text.find("# Two").unwrap()),
+            Some(2),
+            "a jump to Two has to land on Two"
+        );
+    }
+
+    /// An offset inside a footnote definition belongs to the Footnotes
+    /// section, which is appended after every parsed block and so needs a
+    /// start of its own.
+    #[test]
+    fn an_offset_in_a_definition_resolves_to_the_footnotes_block() {
+        let text = "a[^1] b\n\n# H\n\n[^1]: the note\n";
+        let m = build("Self.md", text, &stub());
+        assert_eq!(m.blocks.len(), m.starts.len());
+        let last = m.blocks.len() - 1;
+        assert!(matches!(m.blocks[last], RBlock::Footnotes(_)));
+        let definition = text.find("[^1]: ").unwrap();
+        assert_eq!(m.footnotes, vec![definition]);
+        assert_eq!(m.block_at(definition), Some(last));
+    }
+
+    /// Clicking reference `n` reveals definition `n`, not the end of the
+    /// note; an inline footnote has no definition and points at itself.
+    #[test]
+    fn each_footnote_knows_where_its_definition_is() {
+        let text = "x[^b] y^[inline] z[^a]\n\n[^a]: A text\n[^b]: B text\n";
+        let m = build("Self.md", text, &stub());
+        assert_eq!(
+            m.footnotes,
+            vec![
+                text.find("[^b]: ").unwrap(),
+                0,
+                text.find("[^a]: ").unwrap()
+            ],
+            "b is 1, the inline one is 2, a is 3"
+        );
     }
 
     #[test]
