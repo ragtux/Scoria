@@ -63,6 +63,40 @@ pub enum OpError {
     Refused(#[from] crate::VaultError),
 }
 
+impl OpError {
+    /// The sentence a dialog shows. Everything but an I/O failure already
+    /// reads as one; an I/O failure's `Display` carries the absolute path
+    /// and the errno, which belong in a log and not in a box the user
+    /// typed a file name into.
+    pub fn user_message(&self) -> String {
+        match self {
+            OpError::Io {
+                action,
+                path,
+                source,
+            } => {
+                let name = path
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .unwrap_or("that file");
+                format!("Could not {action} {name}: {}.", why(source))
+            }
+            other => other.to_string(),
+        }
+    }
+}
+
+/// Why an I/O call failed, in words, with no errno in them.
+fn why(err: &std::io::Error) -> &'static str {
+    match err.kind() {
+        std::io::ErrorKind::PermissionDenied => "permission was denied",
+        std::io::ErrorKind::NotFound => "it is no longer there",
+        std::io::ErrorKind::AlreadyExists => "something is already there",
+        std::io::ErrorKind::InvalidInput => "the name is not valid",
+        _ => "the file system refused",
+    }
+}
+
 fn io<'p>(action: &'static str, path: &'p Path) -> impl FnOnce(std::io::Error) -> OpError + 'p {
     move |source| OpError::Io {
         action,

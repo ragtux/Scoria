@@ -52,7 +52,7 @@ use scoria_formats::config::{
     DailyNotesConfig, PluginManifest, PropertyTypes, SwitcherConfig, TemplatesConfig,
 };
 use scoria_formats::properties::PropertiesInDocument;
-use scoria_formats::FileKind;
+use scoria_formats::{validate_renamed_file, FileKind};
 use scoria_markdown::Subpath;
 use scoria_templates as templates;
 use scoria_text::table::TableCommand;
@@ -617,7 +617,7 @@ impl VaultState {
             .write()
             .unwrap_or_else(|e| e.into_inner())
             .create_folder(path)
-            .map_err(|e| e.to_string())
+            .map_err(|e| e.user_message())
     }
 
     /// Copies a file next to itself as `Name 1.ext` and indexes the copy.
@@ -697,7 +697,9 @@ impl VaultState {
             .write()
             .unwrap_or_else(|e| e.into_inner())
             .rename(from, to)
-            .map_err(|e| e.to_string())?;
+            // Both of these end up in a modal the user typed into, so they
+            // get the sentence rather than the path and the errno.
+            .map_err(|e| e.user_message())?;
         let plan = if update_links {
             let texts = self.texts();
             self.cache()
@@ -5541,6 +5543,16 @@ impl Workspace {
                         .map(|(_, e)| e)
                         .filter(|_| basename(name) != name)
                 };
+                // The box holds the stem, so the name the filesystem will be
+                // asked for does not exist yet; both have to be checked, or
+                // an empty box is refused for starting with a dot and a very
+                // long one reaches `rename` and comes back as an errno and
+                // an absolute path.
+                if let Err(err) = validate_renamed_file(value, ext) {
+                    self.prompt
+                        .update(cx, |p, cx| p.set_error(err.to_string(), cx));
+                    return;
+                }
                 let new_name = match ext {
                     Some(ext) => format!("{value}.{ext}"),
                     None => value.to_string(),

@@ -72,6 +72,12 @@ pub fn link_resolution_extensions() -> impl Iterator<Item = &'static str> {
 /// Characters Obsidian refuses in file names.
 pub const FORBIDDEN_NAME_CHARS: &[char] = &['*', '"', '\\', '/', '<', '>', ':', '|', '?'];
 
+/// The longest one path component every filesystem Scoria runs on accepts:
+/// 255 bytes on Linux, 255 UTF-8 bytes on APFS, 255 UTF-16 units on NTFS.
+/// Checking it here is what keeps `ENAMETOOLONG` and its host path out of a
+/// dialog the user typed into.
+pub const MAX_NAME_BYTES: usize = 255;
+
 /// Validates a note title the way the explorer's rename does.
 pub fn validate_file_name(name: &str) -> Result<(), &'static str> {
     if name.trim().is_empty() {
@@ -82,6 +88,25 @@ pub fn validate_file_name(name: &str) -> Result<(), &'static str> {
     }
     if name.contains(FORBIDDEN_NAME_CHARS) {
         return Err("File name cannot contain any of these characters: * \" \\ / < > : | ?");
+    }
+    if name.len() > MAX_NAME_BYTES {
+        return Err("File name is too long.");
+    }
+    Ok(())
+}
+
+/// Validates what a rename prompt was given: the stem the user typed, and
+/// the file name it becomes once the extension is put back.
+///
+/// The two are checked separately on purpose. The stem carries the empty,
+/// dot and character rules, because `.md` appended to an empty stem would
+/// otherwise be refused for starting with a dot rather than for being
+/// empty; the composed name carries the length rule, because that is the
+/// name the filesystem is asked for.
+pub fn validate_renamed_file(stem: &str, ext: Option<&str>) -> Result<(), &'static str> {
+    validate_file_name(stem)?;
+    if stem.len() + ext.map_or(0, |e| e.len() + 1) > MAX_NAME_BYTES {
+        return Err("File name is too long.");
     }
     Ok(())
 }
@@ -110,5 +135,32 @@ mod tests {
         assert!(validate_file_name(".hidden").is_err());
         assert!(validate_file_name("bad:name").is_err());
         assert!(validate_file_name("   ").is_err());
+        assert!(validate_file_name(&"a".repeat(MAX_NAME_BYTES)).is_ok());
+        assert!(validate_file_name(&"a".repeat(MAX_NAME_BYTES + 1)).is_err());
+    }
+
+    /// A rename types the stem and the extension comes back afterwards, so
+    /// an empty box has to read as empty rather than as a leading dot, and
+    /// the length has to count the extension.
+    #[test]
+    fn a_renamed_file_is_checked_as_the_stem_and_as_the_whole_name() {
+        assert_eq!(
+            validate_renamed_file("", Some("md")),
+            Err("File name cannot be empty.")
+        );
+        assert_eq!(
+            validate_renamed_file("Sub/Renamed", Some("md")),
+            Err("File name cannot contain any of these characters: * \" \\ / < > : | ?")
+        );
+        assert!(validate_renamed_file("Renamed", Some("md")).is_ok());
+        // 252 + ".md" is exactly 255; one more is over.
+        let stem = "a".repeat(MAX_NAME_BYTES - 3);
+        assert!(validate_renamed_file(&stem, Some("md")).is_ok());
+        assert_eq!(
+            validate_renamed_file(&format!("{stem}a"), Some("md")),
+            Err("File name is too long.")
+        );
+        // A folder has no extension, so the whole budget is the stem's.
+        assert!(validate_renamed_file(&"a".repeat(MAX_NAME_BYTES), None).is_ok());
     }
 }
