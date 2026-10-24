@@ -320,6 +320,21 @@ fn main() {
         .map(|a| Theme::from_appearance(a, true))
         .unwrap_or_else(Theme::dark);
     let mut registry = CommandRegistry::with_known_ids();
+    // A core plugin that is off has no commands: not in the palette, and
+    // nothing bound to its keys. `core-plugins.json` is read here so the
+    // first frame is already right, and `change_setting` rebuilds this the
+    // same way when a toggle changes it.
+    if let Some(vault) = vault.as_ref() {
+        let core = vault.core_plugins().unwrap_or_default();
+        registry.retain_enabled(|id| {
+            scoria_formats::config::CORE_PLUGINS
+                .iter()
+                .find(|p| p.id == id)
+                .is_none_or(|p| {
+                    scoria_formats::config::CorePlugins::is_enabled_or_default(core.as_ref(), p)
+                })
+        });
+    }
     if let Some(hotkeys) = vault.as_ref().and_then(|v| v.hotkeys().ok()) {
         registry.apply_overrides(&hotkeys);
     }

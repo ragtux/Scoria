@@ -177,6 +177,22 @@ impl CommandRegistry {
         }
     }
 
+    /// Drops every command that belongs to a core plugin `enabled` says is
+    /// off, so the palette does not list it and no key is bound to it.
+    ///
+    /// Turning a plugin off in Obsidian takes its commands with it; this is
+    /// how the same toggle reaches the palette and the hotkeys at once.
+    pub fn retain_enabled(&mut self, enabled: impl Fn(&str) -> bool) {
+        self.commands
+            .retain(|c| plugin_of(&c.id).is_none_or(&enabled));
+        self.index = self
+            .commands
+            .iter()
+            .enumerate()
+            .map(|(ix, c)| (c.id.clone(), ix))
+            .collect();
+    }
+
     pub fn register(&mut self, command: Command) {
         match self.index.get(&command.id).copied() {
             Some(ix) => self.commands[ix] = command,
@@ -445,6 +461,84 @@ mod tests {
         } else {
             assert_eq!(m(&["Mod"]), m(&["Ctrl"]));
             assert_ne!(m(&["Mod"]), m(&["Meta"]));
+        }
+    }
+}
+
+/// The core plugin a command id belongs to, if any.
+///
+/// An id's prefix is its plugin's own id almost everywhere — `graph:open`
+/// is the Graph view plugin's — so the prefix is what this looks up in
+/// [`scoria_formats::config::CORE_PLUGINS`]. The exceptions are the two
+/// prefixes Obsidian spells differently from the plugin, and the ids that
+/// belong to the app rather than to a plugin (`app:`, `editor:`,
+/// `workspace:`, `markdown:` and the rest), which answer `None` and are
+/// never taken away.
+pub fn plugin_of(id: &str) -> Option<&'static str> {
+    // Obsidian's oldest core plugins register ids with no prefix at all.
+    // There are seven of them and they are named here, because nothing in
+    // the id says which plugin it came from.
+    let unprefixed = match id {
+        "daily-notes" => Some("daily-notes"),
+        "insert-template" | "insert-current-date" | "insert-current-time" => Some("templates"),
+        "zk-prefixer" | "insert-unique-link" => Some("zk-prefixer"),
+        "random-note" => Some("random-note"),
+        _ => None,
+    };
+    if let Some(id) = unprefixed {
+        return Some(id);
+    }
+    let prefix = id.split_once(':')?.0;
+    // `outgoing-links:open` is the `outgoing-link` plugin's.
+    let prefix = match prefix {
+        "outgoing-links" => "outgoing-link",
+        other => other,
+    };
+    scoria_formats::config::CORE_PLUGINS
+        .iter()
+        .find(|p| p.id == prefix)
+        .map(|p| p.id)
+}
+
+#[cfg(test)]
+mod plugin_tests {
+    use super::*;
+
+    #[test]
+    fn a_command_belongs_to_the_plugin_its_prefix_names() {
+        assert_eq!(plugin_of("graph:open"), Some("graph"));
+        assert_eq!(plugin_of("daily-notes:goto-prev"), Some("daily-notes"));
+        assert_eq!(plugin_of("file-explorer:new-file"), Some("file-explorer"));
+        // The one prefix Obsidian spells differently from the plugin.
+        assert_eq!(plugin_of("outgoing-links:open"), Some("outgoing-link"));
+        // The app's own commands belong to no plugin and never go away.
+        assert_eq!(plugin_of("app:go-back"), None);
+        // The seven Obsidian registers with no prefix at all.
+        assert_eq!(plugin_of("daily-notes"), Some("daily-notes"));
+        assert_eq!(plugin_of("insert-template"), Some("templates"));
+        assert_eq!(plugin_of("insert-current-date"), Some("templates"));
+        assert_eq!(plugin_of("zk-prefixer"), Some("zk-prefixer"));
+        assert_eq!(plugin_of("insert-unique-link"), Some("zk-prefixer"));
+        assert_eq!(plugin_of("random-note"), Some("random-note"));
+        assert_eq!(plugin_of("editor:toggle-bold"), None);
+        assert_eq!(plugin_of("workspace:split-vertical"), None);
+        assert_eq!(plugin_of("markdown:add-alias"), None);
+        assert_eq!(plugin_of("no-colon-at-all"), None);
+    }
+
+    #[test]
+    fn a_disabled_plugin_takes_its_commands_with_it() {
+        let mut reg = CommandRegistry::with_known_ids();
+        let before = reg.iter().count();
+        assert!(reg.get("graph:open").is_some());
+        reg.retain_enabled(|id| id != "graph");
+        assert!(reg.get("graph:open").is_none(), "graph commands stayed");
+        assert!(reg.get("app:go-back").is_some(), "an app command went");
+        assert!(reg.iter().count() < before);
+        // The index still answers for what is left.
+        let ids: Vec<String> = reg.iter().map(|c| c.id.clone()).collect();
+        for id in ids {
+            assert_eq!(reg.get(&id).map(|g| g.id.clone()), Some(id));
         }
     }
 }

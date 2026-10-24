@@ -49,7 +49,8 @@ use scoria_commands::{keystroke, CommandRegistry};
 use scoria_formats::bookmarks::{Bookmark, Bookmarks};
 use scoria_formats::config::{
     self as config, AppConfig, AppearanceConfig, CommandPaletteConfig, CorePlugins,
-    DailyNotesConfig, PluginManifest, PropertyTypes, SwitcherConfig, TemplatesConfig,
+    DailyNotesConfig, Hotkeys, PluginManifest, PropertyTypes, SwitcherConfig, TemplatesConfig,
+    CORE_PLUGINS,
 };
 use scoria_formats::properties::PropertiesInDocument;
 use scoria_formats::{validate_renamed_file, FileKind};
@@ -429,10 +430,16 @@ impl VaultState {
     /// Whether the Bookmarks core plugin is on: it is by default, and
     /// `core-plugins.json` can turn it off.
     pub fn bookmarks_enabled(&self) -> bool {
-        self.core_plugins()
-            .as_ref()
-            .map(|c| c.is_enabled("bookmarks"))
-            .unwrap_or(true)
+        self.core_plugin_enabled("bookmarks")
+    }
+
+    /// Whether a core plugin is on, by its id: what `core-plugins.json`
+    /// says, or the plugin's own default when the file does not name it.
+    pub fn core_plugin_enabled(&self, id: &str) -> bool {
+        let Some(plugin) = CORE_PLUGINS.iter().find(|p| p.id == id) else {
+            return true;
+        };
+        CorePlugins::is_enabled_or_default(self.core_plugins().as_ref(), plugin)
     }
 
     pub fn app(&self) -> RwLockReadGuard<'_, AppConfig> {
@@ -2811,6 +2818,30 @@ impl Workspace {
     /// Writes a setting the Settings modal changed, then applies it. The
     /// modal redraws from the vault's config either way, so a write that
     /// fails leaves the control as it was and says so in the status bar.
+    /// Rebuilds the command registry and every key bound from it: the
+    /// commands of a core plugin that is off are not in it, and
+    /// `hotkeys.json` is applied over what is left.
+    fn rebuild_commands(
+        &mut self,
+        state: &VaultState,
+        overrides: Option<&Hotkeys>,
+        cx: &mut Context<Self>,
+    ) {
+        let mut registry = CommandRegistry::with_known_ids();
+        registry.retain_enabled(|plugin| state.core_plugin_enabled(plugin));
+        match overrides {
+            Some(overrides) => registry.apply_overrides(overrides),
+            None => {
+                if let Ok(hotkeys) = state.vault().hotkeys() {
+                    registry.apply_overrides(&hotkeys);
+                }
+            }
+        }
+        let registry = Arc::new(registry);
+        crate::bind_all_keys(cx, &registry);
+        cx.set_global(Commands(registry));
+    }
+
     fn change_setting(&mut self, change: SettingChange, cx: &mut Context<Self>) {
         let Some(state) = self.state.clone() else {
             return;
@@ -2819,15 +2850,17 @@ impl Workspace {
             self.report(format!("{} could not be written: {err}", change.file()), cx);
             return;
         }
-        if let SettingChange::Hotkeys(overrides) = &change {
-            // The registry is what the palette, the Hotkeys tab and the key
-            // bindings read, so it is rebuilt from the file as written and
-            // every binding made from it again.
-            let mut registry = CommandRegistry::with_known_ids();
-            registry.apply_overrides(overrides);
-            let registry = Arc::new(registry);
-            crate::bind_all_keys(cx, &registry);
-            cx.set_global(Commands(registry));
+        // The registry is what the palette, the Hotkeys tab and the key
+        // bindings read. Both a hotkey change and a core-plugin toggle
+        // change what belongs in it -- turning a plugin off takes its
+        // commands with it, the way Obsidian does -- so either rebuilds it
+        // from the files as written and makes every binding again.
+        match &change {
+            SettingChange::Hotkeys(overrides) => {
+                self.rebuild_commands(&state, Some(overrides), cx);
+            }
+            SettingChange::CorePlugins(_) => self.rebuild_commands(&state, None, cx),
+            _ => {}
         }
         self.apply_app_config(&state, cx);
         self.refresh_vault_views(cx);
@@ -3606,6 +3639,25 @@ impl Workspace {
     /// Runs a command by its Obsidian id; unknown or not-yet-implemented
     /// ids are reported in the status bar.
     pub fn run_command(&mut self, id: &str, window: &mut Window, cx: &mut Context<Self>) {
+        // A command whose core plugin is off is not in the registry, so it
+        // is in no palette and on no key. Asked for by id -- over the
+        // control socket, or by a binding made before the toggle -- it
+        // says so rather than running anyway.
+        if let Some(plugin) = scoria_commands::plugin_of(id) {
+            let enabled = self
+                .state
+                .as_ref()
+                .is_none_or(|state| state.core_plugin_enabled(plugin));
+            if !enabled {
+                let name = CORE_PLUGINS
+                    .iter()
+                    .find(|p| p.id == plugin)
+                    .map(|p| p.name)
+                    .unwrap_or(plugin);
+                self.report(format!("{name} is turned off in Settings"), cx);
+                return;
+            }
+        }
         if RUNNABLE.contains(&id) {
             self.recent_commands.retain(|r| r != id);
             self.recent_commands.insert(0, id.to_string());
@@ -11009,7 +11061,47 @@ impl Workspace {
             .into_any_element()
     }
 
+    /// Whether a left-dock pane's core plugin is on, by its id.
+    fn left_pane_enabled(&self, id: &str) -> bool {
+        self.state
+            .as_ref()
+            .is_none_or(|state| state.core_plugin_enabled(id))
+    }
+
+    /// Whether a right-dock pane's core plugin is on. Each of the five is
+    /// its own plugin in `core-plugins.json`, and a vault with no file has
+    /// them all, so the default is what `CORE_PLUGINS` says.
+    fn pane_enabled(&self, tab: RightTab) -> bool {
+        let id = match tab {
+            RightTab::Backlinks => "backlink",
+            RightTab::Outgoing => "outgoing-link",
+            RightTab::Tags => "tag-pane",
+            RightTab::Properties => "properties",
+            RightTab::Outline => "outline",
+        };
+        self.state
+            .as_ref()
+            .is_none_or(|state| state.core_plugin_enabled(id))
+    }
+
     fn render_right_dock(&mut self, theme: &Theme, cx: &mut Context<Self>) -> impl IntoElement {
+        // The pane whose plugin was just turned off has no tab any more,
+        // so it cannot be the one on screen either: the first that is
+        // still on takes over, as Obsidian moves to a neighbouring leaf.
+        if !self.pane_enabled(self.right_tab) {
+            if let Some(next) = [
+                RightTab::Backlinks,
+                RightTab::Outgoing,
+                RightTab::Tags,
+                RightTab::Properties,
+                RightTab::Outline,
+            ]
+            .into_iter()
+            .find(|t| self.pane_enabled(*t))
+            {
+                self.right_tab = next;
+            }
+        }
         let tab = self.right_tab;
         let body: gpui::AnyElement = match tab {
             RightTab::Backlinks => self.render_backlinks_pane(theme, cx),
@@ -11018,19 +11110,23 @@ impl Workspace {
             RightTab::Tags => self.render_tags_pane(theme, cx),
             RightTab::Properties => self.render_properties_pane(theme, cx),
         };
+        // A pane whose core plugin is off is not offered: Obsidian takes
+        // the view away with the plugin.
         let tab_button = |this: &mut Self,
                           label: &'static str,
                           icon_name: &'static str,
                           which: RightTab,
                           cx: &mut Context<Self>| {
-            this.dock_tab(
-                label,
-                icon_name,
-                tab == which,
-                theme,
-                move |this, _, cx| this.select_right_tab(which, cx),
-                cx,
-            )
+            this.pane_enabled(which).then(|| {
+                this.dock_tab(
+                    label,
+                    icon_name,
+                    tab == which,
+                    theme,
+                    move |this, _, cx| this.select_right_tab(which, cx),
+                    cx,
+                )
+            })
         };
         let frameless = self.frameless;
         let mac = self.mac_frame();
@@ -11060,29 +11156,29 @@ impl Workspace {
                     .gap(px(3.))
                     .border_b_1()
                     .border_color(theme.border)
-                    .child(tab_button(
+                    .children(tab_button(
                         self,
                         "Backlinks",
                         "links-coming-in",
                         RightTab::Backlinks,
                         cx,
                     ))
-                    .child(tab_button(
+                    .children(tab_button(
                         self,
                         "Outgoing links",
                         "links-going-out",
                         RightTab::Outgoing,
                         cx,
                     ))
-                    .child(tab_button(self, "Tags", "tags", RightTab::Tags, cx))
-                    .child(tab_button(
+                    .children(tab_button(self, "Tags", "tags", RightTab::Tags, cx))
+                    .children(tab_button(
                         self,
                         "All properties",
                         "archive",
                         RightTab::Properties,
                         cx,
                     ))
-                    .child(tab_button(self, "Outline", "list", RightTab::Outline, cx))
+                    .children(tab_button(self, "Outline", "list", RightTab::Outline, cx))
                     .child(window_handle(
                         div().id("right-dock-space").flex_1().h_full(),
                         frameless,
@@ -11966,6 +12062,25 @@ impl Render for Workspace {
         self.fullscreen = window.is_fullscreen();
         let mac = self.mac_frame();
         let ribbon = show_ribbon.then(|| self.render_ribbon(&theme, cx));
+        // As on the right: a pane whose plugin is off has no tab, so it
+        // cannot be the one showing.
+        for (tab, id) in [
+            (LeftTab::Files, "file-explorer"),
+            (LeftTab::Search, "global-search"),
+            (LeftTab::Bookmarks, "bookmarks"),
+        ] {
+            if self.left_tab == tab && !self.left_pane_enabled(id) {
+                self.left_tab = [
+                    (LeftTab::Files, "file-explorer"),
+                    (LeftTab::Search, "global-search"),
+                    (LeftTab::Bookmarks, "bookmarks"),
+                ]
+                .into_iter()
+                .find(|(_, id)| self.left_pane_enabled(id))
+                .map(|(t, _)| t)
+                .unwrap_or(tab);
+            }
+        }
         let left_tab = self.left_tab;
         let left_body: gpui::AnyElement = match left_tab {
             LeftTab::Files => self.explorer.clone().into_any_element(),
@@ -11995,29 +12110,33 @@ impl Render for Workspace {
                     .gap(px(3.))
                     .border_b_1()
                     .border_color(theme.border)
-                    .child(self.dock_tab(
-                        "Files",
-                        "folder-closed",
-                        left_tab == LeftTab::Files,
-                        &theme,
-                        |this, window, cx| {
-                            this.leave_search_field(window, cx);
-                            this.left_tab = LeftTab::Files;
-                            cx.notify();
-                        },
-                        cx,
-                    ))
-                    .child(self.dock_tab(
-                        "Search",
-                        "search",
-                        left_tab == LeftTab::Search,
-                        &theme,
-                        |this, window, cx| {
-                            let q = this.search.read(cx).query(cx);
-                            this.show_search(&q, Some(window), cx);
-                        },
-                        cx,
-                    ))
+                    .children(self.left_pane_enabled("file-explorer").then(|| {
+                        self.dock_tab(
+                            "Files",
+                            "folder-closed",
+                            left_tab == LeftTab::Files,
+                            &theme,
+                            |this, window, cx| {
+                                this.leave_search_field(window, cx);
+                                this.left_tab = LeftTab::Files;
+                                cx.notify();
+                            },
+                            cx,
+                        )
+                    }))
+                    .children(self.left_pane_enabled("global-search").then(|| {
+                        self.dock_tab(
+                            "Search",
+                            "search",
+                            left_tab == LeftTab::Search,
+                            &theme,
+                            |this, window, cx| {
+                                let q = this.search.read(cx).query(cx);
+                                this.show_search(&q, Some(window), cx);
+                            },
+                            cx,
+                        )
+                    }))
                     .when(bookmarks_on, |d| {
                         d.child(self.dock_tab(
                             "Bookmarks",
