@@ -1676,19 +1676,19 @@ impl SettingsView {
                         "Only show results from existing files. Links to files that are not yet created will be hidden.",
                         s,
                         SHOW_EXISTING_ONLY,
-                    ).not_yet(),
+                    ),
                     switcher_toggle(
                         "Show attachments",
                         "Show attachment files like images, videos, and PDFs.",
                         s,
                         SHOW_ATTACHMENTS,
-                    ).not_yet(),
+                    ),
                     switcher_toggle(
                         "Show all file types",
                         "Show all files including ones that Obsidian can't open. The file will be opened with the default app for that file type.",
                         s,
                         SHOW_ALL_FILE_TYPES,
-                    ).not_yet(),
+                    ),
                 ]
             }
             "command-palette" => {
@@ -2937,6 +2937,10 @@ mod tests {
                 "Automatically update internal links",
                 "Show all file types",
                 "Confirm before deleting files",
+                // The Quick switcher tab's three, read by `QuickSwitcher::set_state`.
+                "Show existing only",
+                "Show attachments",
+                "Show all file types",
             ],
             "a toggle claims Scoria reads it"
         );
