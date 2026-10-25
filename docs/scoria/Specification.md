@@ -5292,3 +5292,452 @@ file reached disk — the outline follows the metadata cache, not the buffer.
 tried); headings inside code fences or callouts; a heading with a trailing
 `#`; what the pane does for a canvas or base leaf; the reading-mode marking
 with `followCursor` true; the text of an HTML heading.
+
+## Observed Bases write behavior, Obsidian 1.14.5 (installer build 1.13.7)
+
+Observed on 2026-10-25 over CDP on a scratch vault
+(`tools/obsidian-probe/bases.mjs`, raw results in
+`tools/obsidian-probe/results/2026-10-25-bases.json`). Nothing about Bases had
+ever been observed before this run, so everything here is new; where it
+disagrees with the published syntax documentation, the observation wins and
+says so. The fixture was one `.base` carrying every documented top-level key in
+a scrambled order, both YAML quoting styles, comments at three depths, flow
+collections, four-space indentation, nested `and`/`or`/`not` filters and
+unknown keys at the top, view and property level, in five copies with five
+different fates — never opened, opened and closed, edited, driven through the
+menus, rewritten from outside — plus a CRLF copy, a BOM copy, one with no
+trailing newline, a zero-byte file, `{}`, and eight files broken in eight
+different ways.
+
+**The writer is one function, and it is decompiled.** A base view holds a
+parsed `query`; `view.getViewData()` returns `query.toString()`, which is
+`getSerializable()` passed to a YAML emitter (`""` when the serializable
+object is empty), and Obsidian's own text-file save writes that. So every
+question below is a question about `getSerializable()`:
+
+```js
+getSerializable() {
+  var e = Object.assign({}, this.unrecognizedData);
+  if (this.filters) e.filters = this.filters.serialize();
+  if (this.formulas) { var t = Object.keys(this.formulas);
+    if (t.length > 0) { e.formulas = {}; for (r of t) e.formulas[r] = this.formulas[r].toString(); } }
+  if (this.summaryFormulas) { e.summaries = {};
+    for (r of Object.keys(this.summaryFormulas)) e.summaries[r] = this.summaryFormulas[r].toString(); }
+  for (var s = {}, l = !0, r of Object.keys(this.properties)) {
+    var h = this.properties[r].serialize(); if (null !== h) { l = !1; s[r] = h; } }
+  if (!l) e.properties = s;
+  if (this.views) e.views = this.views.map((e) => e.serialize());
+  if (this.newItemFolder) e.newItemFolder = this.newItemFolder;
+  if (this.newItemTemplate) e.newItemTemplate = this.newItemTemplate;
+  return e;
+}
+```
+
+The other side, `setViewData`, parses the text and on failure keeps the **error
+object** as the query (`this.query = null` for the view's purposes), which is
+why a base that cannot be parsed is never written.
+
+**When Obsidian writes.** Opening a base writes nothing — not within six
+seconds, and the mtime does not move. Closing it writes `query.toString()`
+whenever that differs from the bytes that were read, even with nothing edited:
+the 1352-byte fixture came back 1256 bytes, comments gone. Where the file is
+already in that canonical form the mtime does not move either (`Minimal.base`,
+39 bytes, and `BrokenView.base` both survived a close untouched), so the close
+write is skipped rather than written identically. A base that is only indexed,
+never opened, is never touched. One real edit — a column dragged wider — lands
+on disk within about a second and writes the whole file in the same canonical
+form; there is no surgical write.
+
+So **a `.base` is canonicalized, not preserved**: a comment, a quoting choice,
+flow style, CRLF line endings, a UTF-8 BOM and a missing trailing newline all
+survive being opened and are all lost on the close that follows. This is the
+same open/close asymmetry canvas has, and it is stronger than canvas's: canvas
+keeps the file's own key order on an unedited close, Bases does not.
+
+**Top-level key order.** Unknown keys are spread **first**, in their original
+file order, and every other key is then assigned in the serializer's fixed
+order — but a key already present keeps the position the spread gave it. One
+documented key is in both places: `summaries` is left in `unrecognizedData`
+*and* parsed into `summaryFormulas`, so it is written at the position it had in
+the file, with its statements re-serialized. The fixture's scrambled order came
+back:
+
+| Written | Source |
+| --- | --- |
+| `summaries`, then every unknown top-level key | `unrecognizedData`, in file order |
+| `filters` | `filters.serialize()` |
+| `formulas` | each statement's `toString()`; the whole key is omitted when there are none |
+| `summaries` | `summaryFormulas`; present only when the file had the key |
+| `properties` | each `PropertyConfig.serialize()`; **the whole key is omitted when every one of them returns null** |
+| `views` | each `ViewConfig.serialize()` |
+| `newItemFolder`, `newItemTemplate` | written when truthy |
+
+`newItemFolder` and `newItemTemplate` are two keys the published schema never
+mentions; both round-tripped from the fixture. A property whose config is empty
+(`note.unused: {}`) is **dropped**: its `serialize()` returns null.
+
+**A view's key order** is `type`, `name`, `filters`, `groupBy`, `groupOrder`,
+`order`, `sort`, `limit`, `summaries` — `type` and `name` always, the rest when
+set — and then every key of the raw parsed object that is not one of the
+config's own fields, in file order, appended at the end. That last loop is
+where unknown keys *and* every layout key live, which is why a layout key
+written by the UI lands after a plugin's unknown key rather than among the
+documented ones. `groupBy`, `order`, `sort` and the keys of `summaries` are
+passed through a property-id normalizer; a hand-written bare `status` came back
+`status`, so it does not qualify ids that are already written bare.
+
+**A property's key order** is its own unknown keys first, then `displayName`
+(`unknownPropKey` came back before `displayName`, which the fixture had second).
+
+**The YAML emitter.** Two-space indentation; a sequence's `- ` is indented one
+level past its key (`views:` at column 0 has items at 2, `and:` at 2 has items
+at 4); a mapping inside a sequence item continues at the item's text column.
+Block style only — the fixture's `order: [file.name, status, formula.ppu]` and
+`groupBy: {property: status, direction: ASC}` both came back as block
+collections. One trailing newline, LF, no BOM. No line folding: a 121-character
+statement was written on one line. Scalars are written plain where YAML allows
+it and quoted where it does not, **preferring double quotes, except that a
+value containing a `"` and no `'` is single-quoted** — so
+`'"#" + status'`, `'if(status == "a", "x: y", "z")'`, `'[1, 2, 3].join(", ")'`
+and `'status + "x" '` came back single-quoted while a list separator of `", "`
+came back `", "` in double quotes. Numbers are written bare (`limit: 103`,
+`cardSize: 630`, `imageAspectRatio: 2` for 2.00).
+
+**Statement bytes survive; only their quoting changes.** A parsed statement
+keeps the original string in `formula.text` beside its AST, and `toString()`
+returns that string, so `'type + " "  + file.name'` came back with its double
+space intact as `type + " "  + file.name`. Even a statement the expression
+parser rejects is kept verbatim (`'foo(((('` → `foo((((`). Scoria can therefore
+keep statement text byte-for-byte and still match Obsidian's output, as long as
+it matches the quoting rule above.
+
+**The layout keys**, which the published documentation says are unpublished,
+read two ways that agree: off each registration's `options()` table
+(`plugin.getRegistrations()`, whose source names every key with its widget,
+range and default) and off the file after driving the real "Configure view"
+page — the views toolbar menu lists one row per view, and the row's own icon
+opens that view's settings.
+
+| Layout | Key | Control | Values / range | Default |
+| --- | --- | --- | --- | --- |
+| `table` | `rowHeight` | dropdown | `""` Short, `medium`, `tall`, `extra` (Extra tall) | `""` (key absent) |
+| `table` | `columnSize` | a header drag | a map of property id to integer px (`columnSize:` / `  file.name: 232`) | absent |
+| `cards` | `cardSize` | slider | 50 to 800 step 10 | 200 |
+| `cards`, `kanban` | `image` | property picker | a property id, written qualified (`note.aliases`, `formula.ppu`) | absent |
+| `cards`, `kanban` | `imageFit` | dropdown | `""` Cover, `contain` | `""` (key absent) |
+| `cards` | `imageAspectRatio` | slider | 0.25 to 2.5 step 0.05 | 1 |
+| `kanban` | `columnWidth` | slider | 200 to 500 step 10 | 280 |
+| `kanban` | `imageAspectRatio` | slider | 0.25 to 2.5 step 0.05 | 0.5 |
+| `list` | `markers` | dropdown | `bullet`, `number`, `none` | `bullet` |
+| `list` | `separator` | text | any string | `", "` |
+| `list` | *(Indent properties)* | toggle | — | false |
+
+The four registered layouts are `table` (Table, `lucide-table`), `cards`
+(Cards, `lucide-layout-grid`), `list` (List, `lucide-list`) and `kanban`
+(Kanban, `lucide-kanban-square`), and the Configure view page's Layout
+combobox offers exactly those four. Picking another one **rewrites `type` and
+leaves the previous layout's keys in place**: a list view with `markers:
+number` and `separator: "; "` became `type: kanban` with both keys still
+there. (The combobox marks *Table* as the selected row whatever the view's real
+layout is — a 1.14.5 bug, not a key.)
+
+**What the toolbar writes.** The Bases toolbar does not open menus of rows: each
+control opens a `.menu.bases-toolbar-menu` whose body is a panel. The sort and
+group panels hold `.combobox-button` pairs (property, direction) with a
+`lucide-trash-2` button; the filter panel holds a `<select class="conjunction">`
+(`and`/`or`/`not`) per group, a property combobox, an operator combobox, a
+value input and a `filer-expression-mode-toggle` (`lucide-code-xml`) per rule,
+in two sections, "All views" and "This view"; the properties panel is a
+checkbox list of every property with "Add *name* property", "Add formula" and
+"Hide all"; the results panel holds a "Limit number of results" number input
+and the rows *Show all (n)*, *Copy to clipboard* and *Export CSV...*. A column
+header's own context menu is *Hide column*, *Summarize...*, separator, *Sort A →
+Z*, *Sort Z → A*, (*Clear sort*, once one exists), separator, *Edit property...*.
+*Sort Z → A* **prepends** `{property, direction: DESC}` to the view's `sort`
+list; *Hide column* removes the property from `order`; the limit input writes
+`limit` as a bare number.
+
+**What the commands write.**
+
+| Command | Palette name | Effect |
+| --- | --- | --- |
+| `bases:new-file` | Bases: Create new base | creates `Untitled.base` as a **zero-byte file** and opens it; the parsed query of an empty file is one default view, so closing it writes `views:` / `  - type: table` / `    name: View` |
+| `bases:add-view` | Bases: Add view | appends a view named `View 2` and opens its Configure view page |
+| `bases:insert` | Bases: Insert new base | creates another zero-byte base (`Untitled 1.base`) and inserts `![[Untitled 1.base]]` on a line of its own at the cursor |
+| `bases:copy-table` | Bases: Copy table to clipboard | the visible columns as TSV — one header row of display names, tab separators, no trailing newline (`status\tPrice per unit\ntodo\t0.02\ntodo\t0.06`) — and a "Copied to your clipboard" notice. It needs the view focused: run from the palette with focus elsewhere it reports success and shows "Unable to copy to your clipboard" |
+| `bases:change-view` | Bases: Switch view... | not probed |
+| `bases:add-item` | Bases: Add item | not probed |
+
+The results panel's own *Copy to clipboard* row produces the same TSV.
+
+**A broken base is never written.** Five failure modes, five outcomes, and in
+every case where the parse fails the bytes and the mtime are untouched:
+
+| Fixture | What the view shows | Bytes |
+| --- | --- | --- |
+| a YAML syntax error | `.bases-error`: "Unable to parse your base file:" and the YAML library's own message ("Flow sequence in block collection must be sufficiently indented and end with a ] at line 5, column 1: …") | untouched, open and close |
+| a view with no `name` | "Unable to parse your base file: Missing or invalid "name" in view 1" | untouched |
+| a view with `name: ''` | the same message — **an empty name is invalid too** | untouched |
+| an unknown key beside `and` in `filters` | "Unable to parse your base file: "filters" may only have one of an "and", "or", or "not" keys." — unknown keys are tolerated at every level **except inside a filter group** | untouched |
+| `type: nonsense` | "Unknown view type: nonsense", no rows; the file parses, `type` is kept | canonicalized on close (unchanged here, because the fixture already was) |
+| an unparseable statement in a filter, a formula or a summary | no error banner at all; the statement is kept as an `invalid` AST node with its text | canonicalized on close, statement text intact |
+
+So `name` is required and non-empty on every view — the one hard structural
+rule the published schema does not state.
+
+**An external rewrite.** With the base open, rewriting the file from outside
+reloaded the view within four seconds (the renamed view was in the live query),
+and the close that followed wrote the canonical form **of the external
+content** — the external name and limit both survived. Nothing clobbers an
+outside edit; it is only canonicalized.
+
+**Unprobed:** `bases:change-view` and `bases:add-item`; the *Summarize...*
+submenu (the row opens something that is not a `.menu`, so its options were not
+read) and therefore what a summary chosen from the UI writes; the key the
+list layout's "Indent properties" toggle writes (the toggle produced no write,
+and the registration's source names it only as a minified constant); renaming
+a view through the Configure view page's name field; whether `groupOrder` is
+ever written by the UI; an embedded base in a note (`![[x.base]]`) and what
+`createAndEmbedBase` writes; a base inside a folder rather than the vault root;
+whether a write is atomic (temp-plus-rename) rather than in place.
+
+## Observed Bases expression language, Obsidian 1.14.5 (installer build 1.13.7)
+
+Observed on 2026-10-25 over CDP (`tools/obsidian-probe/bases-expr.mjs`, raw
+results in `tools/obsidian-probe/results/2026-10-25-bases-expr.json`). Three
+oracles, each of which makes a whole class of question cheap:
+
+1. **The parser.** `mockContext.evaluateIdent(s)` is
+   `evaluateFormula(MQ.parse(s))`, so patching `evaluateFormula` on the
+   prototype captures the parse of an arbitrary string. A parsed statement is
+   plain JSON, so precedence and associativity are *read off the tree*, not
+   inferred from values.
+2. **A real context.** `controller.results` is a `Map` whose values are the
+   per-file evaluation contexts; `node.getValue(thatContext)` is what a cell
+   does. The `mockContext` is not bound to a file and answers 0 or null for
+   every ident, so it cannot be used for values.
+3. **The formula editor's completion list.** "Add formula" in the properties
+   panel opens a CodeMirror editor whose autocompletion lists exactly the
+   functions and properties the receiver has, each with
+   `name(param: Type?)` and a sentence of Obsidian's own documentation. It also
+   shows a live `Valid formula` / `Invalid formula` status.
+
+A value is an object `{icon, data}` whose `icon` is its type tag:
+`lucide-text` String, `lucide-binary` Number, `lucide-check-square` Boolean,
+`lucide-calendar` Date, `lucide-clock` DateTime, `lucide-calendar-range`
+Duration, `lucide-list` List and Object, `lucide-tags` Tags, `lucide-link`
+Link, `lucide-file` File, `lucide-regex` RegExp, `lucide-square-function`
+Formulas, `lucide-file-question` null. The names in error messages are String,
+Number, Boolean, List, Date, Object, Link, File, RegExp, Duration and Formulas.
+
+**The parse tree.** Thirteen node types, all plain JSON:
+
+| Type | Fields |
+| --- | --- |
+| `primitive` | `value` (string, number, `true`, `false`, `null`) |
+| `ident` | `id`. `this` is one of these and not a node type of its own: `this.file.name` parses as `object_access(object_access(ident "this", "file"), "name")` |
+| `array` | `elements` |
+| `regexp` | the literal |
+| `paren_expr` | `value` |
+| `arithmetic` | `operator` (`+ - * / %`), `left`, `right` |
+| `comparison` | `operator` (`== != < <= > >= && \|\|`), `left`, `right` |
+| `negate`, `not` | `expr` |
+| `function` | `name`, `subject` (null for a global call), `args` |
+| `object_access` | `object`, `index` (the name as a string) |
+| `array_access` | `array`, `index` (an expression) |
+| `invalid` | `value` (the original text), `parseError` |
+
+One node type, `comparison`, carries both the comparison and the boolean
+operators. A failed parse is a node, not an exception: `{type: "invalid",
+value: "foo((((", parseError: "Unable to parse formula. (position 0)"}`.
+
+**Precedence, highest first, every level left-associative** — read off the tree,
+case by case:
+
+| Level | Operators | Evidence |
+| --- | --- | --- |
+| postfix | `.name`, `.name(...)`, `[expr]` | `a.b.c` → `(a.b).c`; `a.b().c()` → `(a.b()).c()`; `a.b[0]` → `(a.b)[0]` |
+| unary | `-`, `!` | `!a.b` → `!(a.b)`; `-a.b` → `-(a.b)`; `!a && b` → `(!a) && b`; `!a == b` → `(!a) == b` |
+| multiplicative | `*`, `/`, `%` | `1 + 2 * 3` → `1 + (2*3)`; `1 % 2 * 3` → `(1%2)*3` |
+| additive | `+`, `-` | `1 - 2 + 3` → `(1-2)+3` |
+| comparison | `<`, `<=`, `>`, `>=`, `==`, `!=` | `a + b > c + d` → `(a+b) > (c+d)`; `a == b == c` → `(a==b)==c`; `a < b < c` → `(a<b)<c`; `a >= b <= c` → `(a>=b)<=c` |
+| and | `&&` | `a && b == c` → `a && (b==c)` |
+| or | `\|\|` | `a && b \|\| c` → `(a&&b) \|\| c`; `a \|\| b && c` → `a \|\| (b&&c)` |
+
+A negative number is folded into the literal (`-1 + 2` has `primitive -1` on
+the left; `- 1 * 2` is `(-1) * 2`), while `-` in front of anything else is a
+`negate` node.
+
+**What is not in the language**, each tried and rejected by the parser:
+the ternary `a ? b : c`; `??`; `in`; `contains` as an operator; the word
+operators `and`, `or`, `not`; `&` and `|`; `**` and `^`; `===` and `!==`;
+assignment; an object literal `{}`. Array literals *are* in (`[1, 2]`, `[]`,
+and `[1, 2][0]`).
+
+**Literals.** Double- and single-quoted strings, with **JSON escapes** — an
+unknown escape fails with `Bad escaped character in JSON at position 3`, which
+says the lexer hands the quoted token to `JSON.parse`; `\n`, `\t`, `\\`,
+`\uXXXX` and raw UTF-8 all work, an unterminated string does not, and backticks
+are not a string at all. Numbers: `1`, `1.5`, `.5`, `1.`, `01` and `-1` parse;
+`+1`, `1e3`, `0x10` and `1_000` do not. `true`, `false` and `null` are
+primitives; `undefined`, `NaN` and `Infinity` parse as idents and evaluate to
+null. `/re/` and `/re/i` are regexp literals.
+
+**Every name is case-insensitive — values are not.** `NOW()`, `nOw()`,
+`"abc".LOWER()`, `12.3.TOFIXED(1)`, `[1,2].SUM()`, `file.NAME`, `when.YEAR`,
+`file.properties.STATUS` and even the bare ident `DENSITY` all work.
+`listish.contains("ALPHA")` is false where `("alpha")` is true, so values are
+compared case-sensitively; tags are the exception — `file.hasTag("Rock")` and
+`file.hasTag("#rock")` are both true.
+
+**Coercion is for comparison, not arithmetic.** `"3" > 2` is true, `2 > "3"`
+false, `"3" == 3` true, `true == 1` true, `"abc" > 1` false, and two strings
+compare lexicographically (`"10" > "9"` is false). Arithmetic is typed and
+refuses: `1 + true` and `true + 1` both fail with `Invalid operator between
+Number and Boolean`, and `when - "2026-01-01"` with `Invalid operator between
+Date and String`. `+` with a String on either side concatenates (`1 + "2"` is
+the String `12`, `"a" + 1` is `a1`, and a text property `"42" + 1` is `421`).
+Numbers are IEEE doubles printed as JavaScript prints them: `0.1 + 0.2` is
+`0.30000000000000004`, `1 / 0` is `Infinity`, `0 / 0` and `1 % 0` are `NaN`.
+
+**Null absorbs everything.** A missing property is null, and null answers every
+function call and every property access with null: `nosuchprop + 1`,
+`nosuchprop.length`, `nosuchprop.toFixed(2)` and `nosuchprop.nosuch.deeper` are
+all null, with no error. Only three things differ: `isEmpty()` is true,
+`isTruthy()` is false, and `toString()` is the String `null`. Comparison is
+three-valued: `nosuchprop > 1` is **null**, not false, while `nosuchprop == null` is
+true and `nosuchprop == ""` and `== 0` are false. `&&` and `||` coerce through
+truthiness, so `nosuchprop && 1` is false and `nosuchprop || 1` is true. An
+empty string is not null: `empty == null` is false and `empty.length` is 0.
+
+**Dates and durations.** `now()` is a DateTime, `today()` a Date; a Date
+compared against a String parses the String as a date (`when > "2026-01-01"`,
+`when == "2026-01-02"`), but Date arithmetic needs a Duration, and a String in
+that position is parsed as one: `now() - "1 week"`, `when + "1 month"`,
+`when - "1M"` (a month: 2025-12-02) and `when - "1m"` (a minute: 2026-01-01
+23:59). The unit letters are `y M w d h m s`, and the **`M` versus `m`
+distinction is real**. `duration("1w")` and `duration("1 week")` agree;
+`duration("1y 2M 3d")` is **null**, so compound durations are not supported.
+Subtracting two dates gives a Duration, which prints humanized ("10 months",
+"7 days", "a minute", "a few seconds"); its components are **properties, not
+functions** — `days`, `hours`, `minutes`, `seconds`, `milliseconds`, `weeks`,
+`months`, `years`, each fractional (`(now() - when).days` → 296.597990358796).
+`duration("1d") + duration("1d")`, `duration("1d") * 2` and
+`duration("1d") > duration("1h")` all work. `date("not a date")` is null.
+
+**There is no lambda, and that is the whole answer.** `=>` does not parse in any
+form — `filter(x => x != "beta")`, `filter((x) => …)`, `map(x => x * 2)`,
+`reduce((a, b) => a + b)` are all parse errors. The argument to `filter` and
+`map` is an ordinary expression evaluated once per element with two magic idents
+in scope, **`value`** and **`index`**; `reduce` takes two arguments, the
+expression and the initial accumulator, and its accumulator ident is **`acc`**.
+Obsidian's own completion text says so: `filter(value: Boolean)` — "Filter the
+elements of this list by calling a filter function, which uses the variables
+`index` and `value`"; `reduce(value: Any, acc: Any)` — "uses the variables
+`value` and `acc`". Observed, on `nums: [3, 1, 2]` and
+`listish: [alpha, beta, alpha]`:
+
+| Expression | Value |
+| --- | --- |
+| `listish.filter(value != "beta")` | `alpha, alpha` |
+| `nums.filter(index > 0)` | `1, 2` |
+| `nums.map(value * 2)` | `6, 2, 4` |
+| `nums.map(index)` | `0, 1, 2` |
+| `nums.map(item * 2)` | `null, null, null` — an unknown ident is null, not an error |
+| `nums.reduce(acc + value, 0)` | `6` |
+| `nums.reduce(value, 0)` | `2` — the last element, because the expression ignores `acc` |
+| `nums.map(value, index)` | `Cannot call function "map", too many arguments.` |
+
+A summary formula gets the ident **`values`** instead.
+
+**The function table.** It is *not* the JavaScript prototype — `12.345.toFixed(2)`
+works although Number's prototype carries only `renderTo`, and `[3,1,2].length()`
+is refused although List's prototype has `length`. The table was read two ways
+that agree: the formula editor's completion list per receiver, and a brute-force
+pass over candidate names using the four distinguishable refusals
+(`Cannot find function "N" on type T`, `Cannot find "N" on type T` for a
+property, `Cannot call function "N", not enough / too many arguments.`, and
+`Type error in "N", parameter "P". Expected X, given Y.`). Every type has
+`isTruthy()`, `isType(type: String)` and `toString()`.
+
+| Receiver | Functions | Properties |
+| --- | --- | --- |
+| String | `contains(value: String)`, `containsAll(values: String)`, `containsAny(values: String)`, `endsWith(query: String)`, `isEmpty()`, `lower()`, `repeat(count: Number)`, `replace(pattern: String,RegExp, replacement: String)`, `reverse()`, `slice(start: Number, end: Number?)`, `split(separator: String,RegExp, n: Number?)`, `startsWith(query: String)`, `title()`, `trim()` | `length` |
+| Number | `abs()`, `ceil()`, `floor()`, `isEmpty()`, `round()`, `toFixed(precision: Number)` | — |
+| Boolean | — | — |
+| List | `contains(value: Any)`, `containsAll(values: Any)`, `containsAny(values: Any)`, `earliest()`, `filter(value: Boolean)`, `flat()`, `isEmpty()`, `join(separator: String)`, `latest()`, `map(value: Any)`, `max()`, `mean()`, `median()`, `min()`, `reduce(value: Any, acc: Any)`, `reverse()`, `slice(start: Number, end: Number?)`, `sort()`, `stddev()`, `sum()`, `unique()` | `length` |
+| Date, DateTime | `date()` (drops the time), `format(format: String)` (Moment.js), `isEmpty()`, `relative()`, `time()` | `year`, `month`, `day`, `hour`, `minute`, `second`, `millisecond`, `timestamp` |
+| Duration | — | `years`, `months`, `weeks`, `days`, `hours`, `minutes`, `seconds`, `milliseconds` |
+| Link | `asFile()`, plus the whole String set (a Link is a String receiver: `lower()`, `split()`, `slice()`, …), `linksTo(file: File)`, `isEmpty()` | `length` |
+| File | `asLink(display: Any?)`, `hasLink(dest: File,Link,String)`, `hasProperty(property: String)`, `hasTag(values: String)`, `inFolder(folder: String)` | `name`, `basename`, `fullname`, `path`, `folder`, `ext`, `size`, `ctime`, `mtime`, `tags`, `links`, `embeds`, `backlinks`, `properties`, `file` |
+| Object | `filter()`, `isEmpty()`, `keys()`, `map()`, `values()` | any key of the map; an unknown key is null |
+| RegExp | `matches(value: String)` | — |
+| null | every name answers null | every name answers null |
+
+There is **no `upper()`** — `lower()` and `title()` exist and both readings
+agree that nothing uppercases a string. `List.toString()` joins with `", "`; `Link.toString()` is `[[Pumice]]`;
+`Object.toString()` is JSON. `file.folder` for a root file is `/`, `file.tags`
+carry their `#`, and `file.links`/`backlinks`/`embeds` are Lists of Links.
+
+**The globals** are sixteen, and the completion list is the whole set:
+
+| Global | Signature and Obsidian's own description |
+| --- | --- |
+| `now()` | a date object representing the current moment (a DateTime) |
+| `today()` | the current date (a Date) |
+| `date(input: String)` | parses a timestamp or date object; `date("not a date")` is null |
+| `duration(input: String)` | parse a string as a duration |
+| `number(…)` | attempt to return the provided value as a number; a bad input gives `Unable to convert "RegExp" to a number.` |
+| `list(element)` | wrap the element in a list, or return it unchanged if it is one; exactly one argument |
+| `link(path, display: Any?)` | parses a string path and returns a Link |
+| `file(input: String)` | attempt to locate a file for a path or link |
+| `icon(input: String)` | a Lucide icon name, rendered as the icon |
+| `image(input: String)` | an image object the view renders |
+| `html(input: String)` | converts a string into a code snippet that renders as HTML |
+| `escapeHTML(input: String)` | escapes special characters for inclusion in HTML |
+| `if(condition, true_result: Any, false_result: Any?)` | the third argument is optional |
+| `min(…)`, `max(…)` | the smallest/largest of all the numbers given; with no arguments, null |
+| `random()` | a random number between 0 and 1 |
+
+Names the table does **not** know, each tried: `string`, `bool`, `choice`,
+`ifs`, `switch`, `coalesce`, `sum`, `average`, `mean`, `median`, `round`,
+`floor`, `ceil`, `abs`, `sqrt`, `pow`, `log`, `trunc`, `sign`, `regexp`,
+`object`, `type`, `empty`, `notEmpty`, `concat`, `join`, `contains`, `length`,
+`count`, `first`, `last`, `reverse`, `sort`, `unique`, `filter`, `map`,
+`reduce`, `markdown`, `embed`, `tag`, `prop`, `property`, `note`, `formula`,
+`parseInt`, `asDate`, `asNumber`, `asString`, `asLink`, `asFile`, `dateDiff`.
+(`note`, `formula`, `file` and `this` exist, but as idents, not functions.)
+
+**The namespaces, and what `this` is.** A bare ident resolves to a frontmatter
+property, so `density` and `note.density` are the same value, and `note` itself
+is an Object of the note's frontmatter. `file` is the row's File. `formula.<name>`
+is a namespace of its own, of type `Formulas`, holding the base's own formulas;
+asking for one that does not exist gives `Cannot find "ppu" on type Formulas`.
+And **`this` is the base file, not the row**: in a `.base` view `this.file.name`
+is `Main.base`, `this.status` and `this.density` are null, `this.note` is an
+Object and `this.formula` is `Formulas[]`. Scoria must not implement `this` as
+the current row.
+
+**An invalid statement, by where it sits.** All three are kept verbatim in the
+file and canonicalized like any other statement:
+
+| Where | What happens |
+| --- | --- |
+| a filter | **silently empties the view** — 0 results, no error banner, no notice |
+| a formula | the view renders; a cell whose statement failed to *parse* is empty, and one whose evaluation failed shows the error text as the cell's content (`Cannot find function "nosuchfunction"`) |
+| a summary | kept, no error, nothing computed |
+
+A boolean formula renders as a disabled checkbox, so its cell's text is empty
+even though the value is `true`; a cell carries
+`data-property-type="text|number|checkbox"`, which is the rendered type tag.
+
+**Unprobed:** the `sort`, `group`, `filter` and property panels' own expression
+mode (`filer-expression-mode-toggle`) and whether it writes a statement or a
+structured rule; `isType`'s accepted type names; `format()`'s full Moment.js
+token set; `image()` and `icon()` as rendered output rather than values;
+`html()`'s sanitizer; the `tags` type's own function set (only `includes` was
+reachable, and it refused); `Object.filter`/`map`'s idents (`value` and `index`
+are assumed, not shown); how a Duration prints at every magnitude; operator
+behaviour between a List and a scalar; a formula that references another formula
+(`formula.x` inside a formula); and the editor's completion list for Number,
+which `12.` could not reach because it is a valid number literal.

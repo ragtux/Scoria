@@ -62,6 +62,8 @@ Scripts, each one checklist block of `docs/scoria/Interaction probes.md`:
 | `attachment-paste.mjs` | block 4: a real clipboard image through `nativeImage`, folder creation, `./`, Markdown links, reading view and a canvas, the disk timeline and undo depth, and a real file drop (`FIXTURES` names a directory of source files) | fixtures, run |
 | `canvas-menus.mjs` | the canvas's menus for #48: the card menu, the floating row per kind of selection, the right-click list per verified target (card, Markdown and image file cards, URL card, group label and body, edge on and off its label, background, several objects), the Set color, Line direction and Align submenus, Align and Arrange applied so the geometry is recorded, the quick settings and where they persist, Read-only, and what Convert to file writes | fixtures, run |
 | `raw-html-remote.mjs` | blocks 8 and 10: real anchor clicks (guarded so the frame cannot navigate), which tags survive, the iframe and CSS-background fetches, raw HTML in every container, and the remote-image layout — runs its own HTTP server (`HTTP_PORT`) | fixtures, run |
+| `bases.mjs` | Bases: the `.base` format and its write-back — whether opening or closing writes, what one real edit writes, key order at every level, the YAML emitter's quoting and indentation, comments, trailing newline, CRLF and BOM, where a new key lands, the unpublished layout keys of all four layouts (driven through "Configure view"), `bases:new-file`, `bases:insert` and `bases:copy-table`, unknown keys at every level, the five ways a base can be broken, and an external rewrite | fixtures, run |
+| `bases-expr.mjs` | Bases: the expression language — precedence and associativity read off the parse tree (the private parser is turned into an oracle by patching `mockContext.evaluateFormula`), the lambda form of `list.filter`/`map`/`reduce`, literals and escapes, coercion, null propagation, durations, every method reachable from a value, the global functions, `this`, and an invalid statement in a filter, a formula and a summary | fixtures, run |
 | `autopair.mjs` | auto-pairing (predates the runner: start Obsidian yourself with `--remote-debugging-port=9222` on a scratch vault and run it directly) | — |
 
 `results/` keeps the raw JSON of the runs the specification cites, named by
@@ -144,5 +146,26 @@ and returns:
   separators in a row.
 - localStorage is shared across every vault the app has opened, so filter any
   dump to the run's own app id before saving it as evidence.
+- **`ONLY_STEPS` must not filter the `fixtures` phase.** `run-block.sh` makes a
+  fresh vault every time, so a re-run with `ONLY_STEPS` whose `step()` guard
+  also applies to fixtures starts on an *empty* vault and every open misses.
+  `bases.mjs` guards it with `phase === 'run'`.
+- The vault's own index lags `layoutReady` by a second or two:
+  `getAbstractFileByPath` can return null for a file the fixtures phase
+  certainly wrote. Poll for the file instead of throwing on the first miss.
+- **A second Bases leaf is poison the way a second markdown leaf is.** Every
+  `.bases-toolbar-*` selector matches the *first* leaf in the document, which
+  may be a stale hidden one, so the click lands in the wrong view and the step
+  records nothing. `bases.mjs`'s `openBase` detaches every bases and markdown
+  leaf first.
+- **The Bases toolbar does not open `.menu-item` lists.** Each control opens a
+  `.menu.bases-toolbar-menu` whose body is a panel — `.bases-toolbar-section`s
+  of comboboxes, native `<select>`s, range sliders and `.suggestion-item` rows,
+  or a `.view-config-menu` form. A probe that reads `.menu-item` titles sees an
+  empty menu and reports "no such row". A combobox's options open in a
+  `.suggestion-container` that is *not* inside the `.menu`.
+- A command that writes the clipboard itself (`bases:copy-table`) fails with
+  Obsidian's own "Unable to copy to your clipboard" notice unless the view has
+  real focus: click a row first, then run the command.
 
 See [[Development#Driving Obsidian over CDP, 2026-10-18]].

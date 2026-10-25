@@ -36,7 +36,10 @@ paragraph of one specification section.
 
 **Every block of this note has now been run.** Blocks 1-3 went over CDP in
 October 2026 and blocks 4-10 on **2026-10-25**, in six scripts under
-`tools/obsidian-probe/` whose raw runs are in `results/2026-10-25-*.json`. What
+`tools/obsidian-probe/` whose raw runs are in `results/2026-10-25-*.json`. Block
+11, the Bases groundwork, went the same day in two more scripts; it is the one
+block that closed no **Unprobed** paragraph, because it opened the two
+sections it writes. What
 each one found is written into the matching `## Observed ...` section of
 [[Specification]], under a `### The 2026-10-25 pass` heading, and the lines
 they settle are struck from those sections' **Unprobed** paragraphs. The
@@ -59,6 +62,7 @@ still unprobed, which are collected in each section rather than here.
 | ~~8~~ | [[#Raw HTML in reading view — human pass\|Raw HTML]] | ~~55 min~~ **done** | run over CDP on 2026-10-25 (`raw-html-remote.mjs`): real anchor clicks, guarded so the frame cannot navigate |
 | ~~9~~ | [[#Graph view (`.obsidian/graph.json` write-back)\|graph.json write-back]] | ~~50 min~~ **done** | run over CDP on 2026-10-25 (`graph-writeback.mjs`): every section expanded, every control driven |
 | ~~10~~ | [[#Remote images — human pass\|Remote images]] | ~~50 min~~ **done** | run over CDP on 2026-10-25 (`raw-html-remote.mjs`), measured rather than eyeballed |
+| ~~11~~ | [[#Bases: the format, the write-back and the expression language\|Bases]] | ~~2 h~~ **done** | run over CDP on 2026-10-25 (`bases.mjs`, `bases-expr.mjs`): phase-4 groundwork — nothing about Bases had ever been observed |
 
 ## How to record a result
 
@@ -459,3 +463,56 @@ Create the setup files first (see list). Steps are ordered highest-value first �
    - Record: per tab, any item whose label mentions image / remote / network / privacy / offline / cache — label text verbatim, its control type, and its current value; write "none" explicitly for tabs with no such item. Also record the two config files' contents verbatim, so a later toggle can be diffed against them.
 
 **Left out of this checklist, deliberately:** why `app://local/<abs path>` fails while `app://<36 hex>/<abs path>` loads (internal URL resolution — no click settles it; needs another plugin probe); what `CachedMetadata` records for an external image (read the cache via the plugin API, not the UI); and redirects, non-image `Content-Type`, authentication and very large images (all are server-side variants — add routes to `server.py` and re-run the automated probe, which is cheaper and more exact than a human pass).
+
+### Bases: the format, the write-back and the expression language
+
+Settles the whole of Bases, which nothing had ever observed: Scoria cannot open a `.base` at all, `scoria-formats::base` is a guess at the published syntax, and the expression language has no parser. Two scripts, run one after the other because they share one Obsidian and one CDP port — `tools/obsidian-probe/bases.mjs` for the format and the write-back, `bases-expr.mjs` for the expression language — writing [[Specification#Observed Bases write behavior, Obsidian 1.14.5 (installer build 1.13.7)]] and [[Specification#Observed Bases expression language, Obsidian 1.14.5 (installer build 1.13.7)]]. Raw runs in `results/2026-10-25-bases.json` and `results/2026-10-25-bases-expr.json`.
+
+Both scripts are built on two things worth knowing before re-running them: `query.getSerializable()` is the entire writer, and it is readable as source from the renderer; and `mockContext.evaluateIdent(s)` is `evaluateFormula(MQ.parse(s))`, so patching `evaluateFormula` on the prototype turns the private expression parser into an oracle for arbitrary strings.
+
+The format and write-back pass:
+
+1. **The registrations, as source.** `app.internalPlugins.plugins.bases.instance.getRegistrations()` returns one entry per layout, and each entry's `options()` function is a declarative table of that layout's config keys with widget, range and default.
+   - Record: every layout's id, display name and icon, and the `options()` source verbatim. This is where the unpublished layout keys come from, and it is cheaper and more exact than the menus.
+2. **Open the scrambled fixture and read the writer.** Open it in a leaf of its own, wait six seconds, and compare bytes *and* mtime.
+   - Record: whether opening wrote anything; `query.getSerializable()`, `query.unrecognizedData`, `query.toString()`, and the source of `getSerializable`, `toString`, `save`, `setViewData`, `getViewData`, `saveQuery`, each view config's `serialize`, and a property config's `serialize`.
+3. **Close it with nothing edited.** Detach the leaf and watch the file.
+   - Record: the bytes that come back beside the fixture, byte for byte. Everything about key order, quoting, indentation, comments, flow style and the trailing newline is in that one diff. Check the mtime too: a file already in canonical form is *not* rewritten, and bytes alone cannot tell that from an identical write.
+4. **The byte-level copies.** A CRLF copy, a BOM copy, one with no trailing newline, a zero-byte file and `{}`, each opened and closed.
+   - Record: size, BOM, line endings, last byte and mtime before, after the open and after the close.
+5. **One real edit.** Drag `.bases-table-header-resizer` 140 px.
+   - Record: the column widths either side, the key the drag wrote, and where in the view's mapping it landed relative to the unknown keys that are already there.
+6. **The toolbar, which is not a menu.** Click each `.bases-toolbar-item` and dump the whole `.menu.bases-toolbar-menu` — its `.bases-toolbar-section` headers and every combobox, `<select>`, slider and `.suggestion-item` inside it.
+   - Record: each panel's markup and controls. Reading `.menu-item` titles here finds nothing, which is how this was discovered.
+7. **The per-view configuration page.** The views panel lists one row per view; the row's own `.bases-toolbar-menu-item-icon` opens "Configure view". Operate every row of that form — a native `<select>` set with a change event, a slider clicked three quarters along its track, a combobox's option clicked in the `.suggestion-container` that opens *outside* the menu — re-opening the page between operations and reading the file in between.
+   - Record: the key each control writes and its exact value. Do the table, cards, list and kanban layouts; a view's `name` is required, so a list or kanban fixture needs one.
+   - Leave the Layout combobox alone inside that loop: picking in it rewrites `type` and replaces every control after it. Probe it once, on a file of its own, and record what survives the change.
+8. **The column header's own menu and the results panel.** Right-click `.bases-table-header`; then the results panel's limit input, *Copy to clipboard* and *Export CSV...*.
+   - Record: the menu's rows in order; what *Sort Z → A*, *Hide column* and the limit input write; and the clipboard's exact bytes after *Copy to clipboard*.
+9. **The commands.** `bases:new-file`, `bases:add-view`, `bases:insert`, `bases:copy-table`.
+   - Record: the file each creates and its bytes, the text `bases:insert` puts in the note, and the clipboard after `bases:copy-table`. Click a row in the view first: without focus the command reports success and Obsidian shows "Unable to copy to your clipboard".
+10. **The broken ones.** A YAML syntax error, a view with no `name`, a view with `name: ''`, an unknown key beside `and` in `filters`, an unknown view type, and an unparseable statement in a filter, a formula and a summary.
+    - Record: the `.bases-error` text verbatim, and the bytes *and mtime* after the open and after the close. The question that matters is whether a file Obsidian cannot understand is ever written.
+11. **An external rewrite.** With the base open, rewrite the file from the host, wait, then close it.
+    - Record: whether the view reloaded, and whether the close kept the external content or clobbered it.
+
+The expression-language pass:
+
+12. **Install the oracles.** Patch `evaluateFormula` on `mockContext`'s prototype to capture its argument; then find a per-file context by evaluating `density` against every candidate and keeping the one that answers `1.21`. `controller.results` is a `Map` whose values are those contexts; `controller.ctx` is not one.
+    - Record: every candidate and what it answered. Re-install after opening a different base — the patch is on the shared prototype but the context is not.
+13. **Precedence and associativity, structurally.** Parse every pair of operators that can meet and read the tree.
+    - Record: the AST of each, and the parse error of each form the language does not have (`? :`, `??`, `in`, `and`/`or`/`not`, `&`, `|`, `**`, `^`, `===`, assignment, `{}`).
+14. **The lambda question.** Parse and evaluate every syntax a person would try for `filter`, `map` and `reduce`.
+    - Record: which parse at all, and the value each gives on a known list. Then read the formula editor's completion text for `filter`, `map` and `reduce`, which names the magic idents outright.
+15. **Literals, coercion, null and durations.** Evaluate each against the real context.
+    - Record: the escapes a string accepts and the error for one it does not; which number forms parse; what every cross-type comparison and every cross-type `+` gives; what a missing property does to a call, a property access and a comparison; and the duration units, including `M` against `m`.
+16. **The function table.** For each receiver type, type `<seed>.` into the formula editor and dump the completion list and each row's info panel; then brute-force a candidate name list through the four distinguishable refusals.
+    - Record: per type, the functions with their parameter names and types, the properties, and Obsidian's own one-line description. The two readings must agree; where they do not, say which.
+17. **The globals, and case.** The same brute force with no receiver, plus `NOW()`, `nOw()`, `file.NAME`, `DENSITY`, `listish.contains("ALPHA")` and `file.hasTag("Rock")`.
+    - Record: the whole global list, and exactly which of names and values are case-insensitive.
+18. **An invalid statement in each of the three places.** A filter, a formula and a summary that cannot parse, each in its own base.
+    - Record: the rows that survive, the cell text, the `.bases-error`, the AST that is kept, and the bytes after the close.
+19. **The rendered cells as ground truth.** A view whose columns are the test expressions themselves, read off the real table.
+    - Record: the header and cell text per row, and each cell's markup — a boolean renders as a disabled checkbox, so a blank cell is not a blank value, and the table only builds the columns that fit, so the oracle carries the rest.
+
+**Left out, deliberately:** an embedded base in a note (`![[x.base]]`) and `createAndEmbedBase`, which is a rendering question rather than a format one; `bases:change-view` and `bases:add-item`; *Summarize...*, whose submenu is not a `.menu` and needs its own pass; and the `filer-expression-mode-toggle` in the filter panel, which is the one UI path that writes a raw statement rather than a structured rule and deserves a block of its own.
