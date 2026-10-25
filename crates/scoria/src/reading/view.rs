@@ -13,10 +13,11 @@ use crate::properties::{Field, Part, Target};
 use crate::properties::{PROPERTIES_FOLD_ID, PROPERTY_ID_BASE};
 use crate::theme::Theme;
 use gpui::{
-    canvas, div, img, list, prelude::*, px, AnyElement, App, ClipboardItem, Context, EventEmitter,
-    FocusHandle, Focusable, Font, FontStyle, FontWeight, HighlightStyle, Hsla, InteractiveText,
-    ListAlignment, ListOffset, ListState, MouseButton, ObjectFit, Pixels, SharedString,
-    StrikethroughStyle, StyledText, Task, TextRun, UnderlineStyle, Window, WindowTextSystem,
+    actions, canvas, div, img, list, prelude::*, px, AnyElement, App, ClipboardItem, Context,
+    EventEmitter, FocusHandle, Focusable, Font, FontStyle, FontWeight, HighlightStyle, Hsla,
+    InteractiveText, KeyBinding, ListAlignment, ListOffset, ListState, MouseButton, ObjectFit,
+    Pixels, SharedString, StrikethroughStyle, StyledText, Task, TextRun, UnderlineStyle, Window,
+    WindowTextSystem,
 };
 use scoria_formats::config::PropertyTypes;
 use scoria_formats::properties::{PropertiesInDocument, Property, PropertyType};
@@ -27,6 +28,67 @@ use std::ops::Range;
 use std::rc::Rc;
 use std::sync::Arc;
 use std::time::Duration;
+
+actions!(
+    reading,
+    [
+        ScrollPageDown,
+        ScrollPageUp,
+        ScrollLineDown,
+        ScrollLineUp,
+        ScrollToTop,
+        ScrollToBottom,
+    ]
+);
+
+/// Binds the reading view's scrolling keys in its own context; call once at
+/// startup. Obsidian's reading view is a DOM scroller with no commands of its
+/// own, so this is the browser's set of page-scrolling keys rather than a
+/// probed Obsidian binding: the page keys and Space for a page, the arrows
+/// for a line, Home and End (plain and with Ctrl, which a document scroller
+/// treats alike) for the ends.
+pub fn bind_keys(cx: &mut App) {
+    let ctx = Some("ReadingView");
+    cx.bind_keys([
+        KeyBinding::new("pagedown", ScrollPageDown, ctx),
+        KeyBinding::new("pageup", ScrollPageUp, ctx),
+        KeyBinding::new("space", ScrollPageDown, ctx),
+        KeyBinding::new("shift-space", ScrollPageUp, ctx),
+        KeyBinding::new("down", ScrollLineDown, ctx),
+        KeyBinding::new("up", ScrollLineUp, ctx),
+        KeyBinding::new("home", ScrollToTop, ctx),
+        KeyBinding::new("ctrl-home", ScrollToTop, ctx),
+        KeyBinding::new("end", ScrollToBottom, ctx),
+        KeyBinding::new("ctrl-end", ScrollToBottom, ctx),
+    ]);
+}
+
+/// What `render` multiplies the base font size by for the line height, and so
+/// how tall the line an arrow key scrolls is.
+const LINE_HEIGHT: f32 = 1.6;
+
+/// Pixels a page key scrolls a viewport this tall: the viewport less an eighth
+/// of it capped at 40 px, which is what a browser's page keys do, so a strip of
+/// the page just read stays on screen. A viewport of zero is a view that has
+/// not been painted yet, which has nothing to scroll.
+pub(crate) fn page_distance(viewport: f32) -> f32 {
+    if viewport <= 0. {
+        return 0.;
+    }
+    viewport - (viewport / 8.).min(40.)
+}
+
+/// Pixels an arrow key scrolls: one rendered line.
+pub(crate) fn line_distance(base_font_size: f32) -> f32 {
+    base_font_size * LINE_HEIGHT
+}
+
+/// Whether a [`ReadingView::set_note`] is a reload of the note already on
+/// screen, which keeps the reader's place and their folds. Moving to another
+/// note, or to no note at all, drops both.
+pub(crate) fn same_note(current: Option<&str>, next: Option<&str>) -> bool {
+    next.is_some() && current == next
+}
 
 /// Something the reader did to a property row. The reading view raises none
 /// of these; Live Preview turns each into a document edit.
@@ -201,7 +263,7 @@ impl ReadingView {
     }
 
     pub fn set_note(&mut self, path: Option<String>, model: Model, cx: &mut Context<Self>) {
-        let same = path.is_some() && self.path == path;
+        let same = same_note(self.path.as_deref(), path.as_deref());
         let top = self.list.logical_scroll_top();
         self.path = path;
         self.list.reset(model.blocks.len());
@@ -210,7 +272,12 @@ impl ReadingView {
             self.list.scroll_to(top);
         }
         self.model = Arc::new(model);
-        self.toggled.clear();
+        if !same {
+            // ... and the folds they opened: the watcher re-enters this on
+            // every autosave, so clearing them unconditionally collapsed an
+            // expanded callout 1.5 s after any save of the note being read.
+            self.toggled.clear();
+        }
         self.copied = None;
         cx.notify();
     }
@@ -247,6 +314,52 @@ impl ReadingView {
     pub fn scroll_to_end(&mut self, cx: &mut Context<Self>) {
         self.list.scroll_to_end();
         cx.notify();
+    }
+
+    /// Scrolls by `distance` pixels, the way the wheel does. A distance past
+    /// either end is left to the list: its layout pass walks the scroll top
+    /// back until the content fills the view again, which is what
+    /// [`ReadingView::scroll_to_end`] relies on too.
+    fn scroll_by(&mut self, distance: f32, cx: &mut Context<Self>) {
+        self.list.scroll_by(px(distance));
+        cx.notify();
+    }
+
+    /// One page of the painted viewport, down or up.
+    fn page(&mut self, down: bool, cx: &mut Context<Self>) {
+        let height = f32::from(self.list.viewport_bounds().size.height);
+        let dy = page_distance(height);
+        self.scroll_by(if down { dy } else { -dy }, cx);
+    }
+
+    /// One rendered line, down or up.
+    fn line(&mut self, down: bool, cx: &mut Context<Self>) {
+        let dy = line_distance(cx.global::<Theme>().base_font_size);
+        self.scroll_by(if down { dy } else { -dy }, cx);
+    }
+
+    fn scroll_page_down(&mut self, _: &ScrollPageDown, _: &mut Window, cx: &mut Context<Self>) {
+        self.page(true, cx);
+    }
+
+    fn scroll_page_up(&mut self, _: &ScrollPageUp, _: &mut Window, cx: &mut Context<Self>) {
+        self.page(false, cx);
+    }
+
+    fn scroll_line_down(&mut self, _: &ScrollLineDown, _: &mut Window, cx: &mut Context<Self>) {
+        self.line(true, cx);
+    }
+
+    fn scroll_line_up(&mut self, _: &ScrollLineUp, _: &mut Window, cx: &mut Context<Self>) {
+        self.line(false, cx);
+    }
+
+    fn scroll_to_top(&mut self, _: &ScrollToTop, _: &mut Window, cx: &mut Context<Self>) {
+        self.scroll_to_block(0, cx);
+    }
+
+    fn scroll_to_bottom(&mut self, _: &ScrollToBottom, _: &mut Window, cx: &mut Context<Self>) {
+        self.scroll_to_end(cx);
     }
 
     /// What the reader is looking at, for the control socket's state dump.
@@ -389,10 +502,16 @@ impl Render for ReadingView {
         div()
             .key_context("ReadingView")
             .track_focus(&self.focus_handle)
+            .on_action(cx.listener(Self::scroll_page_down))
+            .on_action(cx.listener(Self::scroll_page_up))
+            .on_action(cx.listener(Self::scroll_line_down))
+            .on_action(cx.listener(Self::scroll_line_up))
+            .on_action(cx.listener(Self::scroll_to_top))
+            .on_action(cx.listener(Self::scroll_to_bottom))
             .size_full()
             .font_family(theme.text_font.clone())
             .text_size(px(base))
-            .line_height(px(base * 1.6))
+            .line_height(px(base * LINE_HEIGHT))
             .text_color(theme.text)
             .relative()
             .child(
@@ -1734,5 +1853,58 @@ impl<'a> Renderer<'a> {
             });
         }
         h
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{line_distance, page_distance, same_note, LINE_HEIGHT};
+
+    #[test]
+    fn a_page_is_the_viewport_less_a_strip_of_overlap() {
+        // Tall viewport: the overlap is the 40 px cap.
+        assert_eq!(page_distance(800.), 760.);
+        // Short viewport: the overlap is an eighth of it, so the page keys
+        // still move most of a view rather than a fixed 40 px.
+        assert_eq!(page_distance(160.), 140.);
+        // The cap and the eighth meet at 320 px.
+        assert_eq!(page_distance(320.), 280.);
+    }
+
+    #[test]
+    fn a_page_never_scrolls_backwards_and_an_unpainted_view_not_at_all() {
+        assert_eq!(page_distance(0.), 0.);
+        assert_eq!(page_distance(-1.), 0.);
+        for viewport in [1., 10., 41., 320., 1000., 4000.] {
+            let d = page_distance(viewport);
+            assert!(d > 0., "{viewport} scrolled {d}");
+            assert!(d <= viewport, "{viewport} scrolled {d}, past a page");
+            assert!(
+                d >= viewport * 0.875,
+                "{viewport} scrolled only {d}, less than seven eighths"
+            );
+        }
+    }
+
+    #[test]
+    fn a_line_is_the_rendered_line_height() {
+        assert_eq!(line_distance(16.), 16. * LINE_HEIGHT);
+        assert_eq!(line_distance(20.), 32.);
+        // An arrow key moves less than a page key for every viewport a
+        // window can have.
+        assert!(line_distance(16.) < page_distance(200.));
+    }
+
+    #[test]
+    fn only_a_reload_of_the_same_note_is_the_same_note() {
+        // The reload the watcher drives on every autosave: the reader's
+        // place and their folds are kept.
+        assert!(same_note(Some("Notes/A.md"), Some("Notes/A.md")));
+        // Another note, or no note: both are dropped.
+        assert!(!same_note(Some("Notes/A.md"), Some("Notes/B.md")));
+        assert!(!same_note(Some("Notes/A.md"), None));
+        assert!(!same_note(None, Some("Notes/A.md")));
+        // Clearing the view twice is not a reload of a note.
+        assert!(!same_note(None, None));
     }
 }

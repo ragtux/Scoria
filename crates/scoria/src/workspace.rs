@@ -286,8 +286,9 @@ pub const RUNNABLE: &[&str] = &[
     "bookmarks:bookmark-all-tabs",
 ];
 
-/// Binds every runnable command's hotkeys in the Workspace context; call
-/// once at startup with the registry that has `hotkeys.json` applied.
+/// Binds every runnable command's hotkeys in the Workspace context, and the
+/// reading view's scrolling keys in its own; call once at startup with the
+/// registry that has `hotkeys.json` applied.
 pub fn bind_keys(cx: &mut App, registry: &CommandRegistry) {
     let ctx = Some("Workspace");
     let bindings: Vec<KeyBinding> = RUNNABLE
@@ -301,6 +302,7 @@ pub fn bind_keys(cx: &mut App, registry: &CommandRegistry) {
         })
         .collect();
     cx.bind_keys(bindings);
+    crate::reading::view::bind_keys(cx);
 }
 
 /// Everything derived from the vault folder: built once off the UI thread,
