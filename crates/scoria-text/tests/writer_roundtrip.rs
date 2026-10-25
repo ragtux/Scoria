@@ -1028,12 +1028,42 @@ fn collect_canvases(dir: &Path, out: &mut Vec<PathBuf>) {
     }
 }
 
-/// Obsidian's own layout: a tab-indented object with no trailing newline. A
-/// canvas authored by anything else is rewritten whole the first time
-/// Obsidian saves it, so there is nothing byte-level to hold the writer to
-/// until then.
+/// Whether a `:` is followed by a space outside a string literal. Obsidian's
+/// writer puts no space after a colon; every pretty-printer does. Scanning
+/// rather than searching for `": "` keeps a label like `"Area: north"` out of
+/// the answer.
+fn padded_colon_outside_a_string(text: &str) -> bool {
+    let bytes = text.as_bytes();
+    let (mut in_string, mut escaped) = (false, false);
+    for (i, &b) in bytes.iter().enumerate() {
+        if in_string {
+            match b {
+                _ if escaped => escaped = false,
+                b'\\' => escaped = true,
+                b'"' => in_string = false,
+                _ => {}
+            }
+        } else if b == b'"' {
+            in_string = true;
+        } else if b == b':' && bytes.get(i + 1) == Some(&b' ') {
+            return true;
+        }
+    }
+    false
+}
+
+/// Obsidian's own layout: a tab-indented object with no trailing newline and
+/// no padding after a colon. A canvas authored by anything else is rewritten
+/// whole the first time Obsidian saves it, so there is nothing byte-level to
+/// hold the writer to until then.
+///
+/// The first and last bytes alone do not separate the two, since a
+/// pretty-printer also opens `{\n\t` and can end without a newline. Nor does
+/// one-object-per-line: Obsidian expands an element that *nests* an object
+/// over several lines (`scrambled.out.canvas` has one). The colon is what
+/// tells them apart.
 fn in_obsidians_layout(text: &str) -> bool {
-    text.starts_with("{\n\t") && !text.ends_with('\n')
+    text.starts_with("{\n\t") && !text.ends_with('\n') && !padded_colon_outside_a_string(text)
 }
 
 /// The canvases Obsidian wrote back for files it had read in the CDP probe
@@ -1055,9 +1085,19 @@ fn every_canvas_obsidian_saved_is_written_back_byte_identical() {
         extra.sort();
         canvases.extend(extra);
     }
-    let (mut checked, mut authored_elsewhere) = (0, Vec::new());
+    let (mut checked, mut authored_elsewhere, mut empty) = (0, Vec::new(), Vec::new());
     for path in &canvases {
         let before = std::fs::read_to_string(path).unwrap();
+        // `canvas:new-file` writes a zero-byte file, and Obsidian puts JSON
+        // in it only once the canvas holds something (see
+        // [[Specification#Observed canvas write behavior]]), so an untouched
+        // new canvas is a real vault state with nothing to round trip. It is
+        // skipped rather than failed: a vault that holds one is not a vault
+        // the writer has mangled.
+        if before.trim().is_empty() {
+            empty.push(path.display().to_string());
+            continue;
+        }
         let canvas = scoria_formats::canvas::Canvas::from_json(&before)
             .unwrap_or_else(|e| panic!("{} did not parse: {e}", path.display()));
         if !in_obsidians_layout(&before) {
@@ -1077,6 +1117,13 @@ fn every_canvas_obsidian_saved_is_written_back_byte_identical() {
             "{} canvases not in Obsidian's layout, which Obsidian itself would rewrite: {}",
             authored_elsewhere.len(),
             authored_elsewhere.join(", ")
+        );
+    }
+    if !empty.is_empty() {
+        eprintln!(
+            "{} empty canvases, which is what a new one is until its first edit: {}",
+            empty.len(),
+            empty.join(", ")
         );
     }
     assert!(checked >= 3, "only {checked} canvases were round-tripped");
