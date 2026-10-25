@@ -8,6 +8,12 @@
 # The conformance corpus is byte-exact test data; one note deliberately uses CRLF.
 crates/scoria-markdown/tests/corpus/** -text
 
+# The format fixtures are the bytes Obsidian wrote, which is the whole point of
+# them: one base fixture is deliberately CRLF and another carries a BOM, and the
+# canvas fixtures end without a newline.
+crates/scoria-formats/tests/base/** -text
+crates/scoria-formats/tests/canvas/** -text
+
 # site/ vendors the ragtux.com builder byte for byte (site/README.md); leaving
 # its endings alone is what keeps a diff against that repository readable.
 site/build.mjs -text
