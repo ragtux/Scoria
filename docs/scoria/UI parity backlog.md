@@ -30,7 +30,7 @@ collected under [[#Was declined until Obsidian was probed — all of it now is]]
 **Read the `Landed` lines first.** An entry whose first line after the severity reads
 `**Landed <date>**` describes behaviour that has since been fixed; the evidence under it is kept
 because the Obsidian half is still the record of what was observed, but the **Scoria** paragraph
-describes a binary that no longer exists. Thirty-four entries are marked so far, twenty-five of
+describes a binary that no longer exists. Thirty-five entries are marked so far, twenty-five of
 them on 2026-10-24. Before acting on an unmarked entry, check the behaviour in the running app:
 several of the ones marked that day turned out to have been fixed already, by work that landed
 after this audit was written.
@@ -528,6 +528,19 @@ least readable and clickable. Properly: give `RichText` an inline-embed run (or 
 ### Callouts have no type icon, and the fold affordance is a text triangle
 
 *medium, parity-gap, medium*
+
+**Landed 2026-10-25** (`2891b06`): both prerequisites this entry names were met in the meantime --
+the app bundles Lucide icons behind an `AssetSource`, and the 2026-10-25 probe read the icon of
+every built-in type out of a real Obsidian (see
+[[Specification#The lucide icon and colour of every built-in callout type]]). `callout_icon(kind)`
+in `assets.rs` is that table, keyed by the canonical type so the aliases fold into it and an
+unrecognized type takes note's pencil; seven drawings joined the bundle for it. The fold is
+`chevron-right` collapsed and `chevron-down` expanded. What the probe did **not** settle is which
+element Obsidian rotates -- it holds `lucide-chevron-down` in both states and `.callout-fold`'s own
+transform reads `none` -- so the orientation here is the text triangle's, drawn with the turned
+icon. The **Fix** below asks for the chevron to change with `explorer.rs`, `search.rs` and
+`settings.rs`: those three moved to the icon on their own before this landed, and the two text
+triangles left in the app are the Bookmarks group row and the local graph's section headers.
 
 **Scoria.** The done-task half of this finding landed — a completed task is muted *and* struck
 through. The icon half did not: the callout title row is still `div().flex_1().child(rich(title))`
