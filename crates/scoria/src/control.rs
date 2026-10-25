@@ -595,7 +595,7 @@ fn handle(
                 .map(Some)
         }
         "list_commands" => ctl
-            .workspace(|ws, _, cx| Ok(Value::Array(ws.list_commands(cx))))
+            .workspace(|ws, window, cx| Ok(Value::Array(ws.list_commands(window, cx))))
             .map(Some),
         "notice_clear" => ctl
             .workspace(|ws, _, cx| {

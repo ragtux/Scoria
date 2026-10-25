@@ -106,6 +106,54 @@ fn non_empty(value: Option<&str>) -> Option<&str> {
     value.filter(|v| !v.is_empty())
 }
 
+/// The ids that need the note itself: an editor on screen with the
+/// keyboard in it, which is Obsidian's `editorCallback`. Such a command is
+/// filtered out of the palette when there is nothing to run it in, rather
+/// than listed and refused.
+///
+/// Every id here is guarded by [`Workspace::editing_or_report`] in
+/// `run_command` as well, which is what answers the hotkey path: a palette
+/// filter alone would leave the key silently inert.
+pub const EDITOR_ONLY: &[&str] = &[
+    "bookmarks:bookmark-current-heading",
+    "bookmarks:bookmark-current-section",
+    "editor:add-cursor-above",
+    "editor:add-cursor-below",
+    "editor:delete-paragraph",
+    "editor:follow-link",
+    "editor:indent-list",
+    "editor:insert-embed",
+    "editor:insert-link",
+    "editor:insert-table",
+    "editor:insert-wikilink",
+    "editor:open-link-in-new-leaf",
+    "editor:open-link-in-new-split",
+    "editor:set-heading-0",
+    "editor:set-heading-1",
+    "editor:set-heading-2",
+    "editor:set-heading-3",
+    "editor:set-heading-4",
+    "editor:set-heading-5",
+    "editor:set-heading-6",
+    "editor:swap-line-down",
+    "editor:swap-line-up",
+    "editor:toggle-blockquote",
+    "editor:toggle-bold",
+    "editor:toggle-bullet-list",
+    "editor:toggle-checklist-status",
+    "editor:toggle-code",
+    "editor:toggle-comments",
+    "editor:toggle-highlight",
+    "editor:toggle-inline-math",
+    "editor:toggle-italics",
+    "editor:toggle-numbered-list",
+    "editor:toggle-strikethrough",
+    "editor:unindent-list",
+    "insert-current-date",
+    "insert-current-time",
+    "insert-template",
+];
+
 /// Command ids the workspace can run today; the palette lists only these,
 /// the way Obsidian hides commands whose check callback fails.
 pub const RUNNABLE: &[&str] = &[
@@ -3603,13 +3651,12 @@ impl Workspace {
             .as_ref()
             .map(|s| s.palette.pinned.clone())
             .unwrap_or_default();
-        let in_table = self.mode.is_editing() && self.editor.read(cx).in_table();
+        // The palette is what the check callbacks decide, so the list is
+        // built with the keyboard where it is now: opening the palette
+        // from a reading leaf does not offer the editing commands.
         let commands: Vec<PaletteCommand> = registry
             .iter()
-            .filter(|c| RUNNABLE.contains(&c.id.as_str()))
-            // Obsidian's table commands hide unless the cursor is in a
-            // table; their check callback is what does it there.
-            .filter(|c| in_table || TableCommand::from_id(&c.id).is_none())
+            .filter(|c| self.can_run(&c.id, window, cx))
             .map(|c| PaletteCommand::from_command(c, pinned.contains(&c.id)))
             .collect();
         let recent = self.recent_commands.clone();
@@ -4225,6 +4272,40 @@ impl Workspace {
     /// Obsidian scopes an editor command to the active editor; without this
     /// a Ctrl+B typed into the search field writes bold markers into the
     /// note behind it.
+    /// Whether a command can run right now, which is what the palette
+    /// lists and what the socket reports.
+    ///
+    /// Obsidian hides a command whose check callback fails rather than
+    /// offering it and refusing: an `editorCallback` command is not in the
+    /// palette of a reading leaf, and a table command is not in it unless
+    /// the cursor is in a table. The three readers of this -- the palette
+    /// filter, the socket's `runnable` flag and the refusal in
+    /// `run_command` -- ask the same question, so they cannot disagree
+    /// about what is offered and what happens when it is chosen.
+    pub fn can_run(&self, id: &str, window: &Window, cx: &App) -> bool {
+        if !RUNNABLE.contains(&id) {
+            return false;
+        }
+        // A command whose core plugin is off is gone from the registry, so
+        // this only matters for an id asked for directly.
+        if let Some(plugin) = scoria_commands::plugin_of(id) {
+            if !self
+                .state
+                .as_ref()
+                .is_none_or(|state| state.core_plugin_enabled(plugin))
+            {
+                return false;
+            }
+        }
+        if TableCommand::from_id(id).is_some() {
+            return self.mode.is_editing() && self.editor.read(cx).in_table();
+        }
+        if EDITOR_ONLY.contains(&id) {
+            return self.mode.is_editing() && self.note_has_keys(window, cx);
+        }
+        true
+    }
+
     fn note_has_keys(&self, window: &Window, cx: &App) -> bool {
         self.modal == Modal::None
             && (self.editor.read(cx).focus_handle_ref().is_focused(window)
@@ -9581,8 +9662,12 @@ impl Workspace {
     }
 
     /// Every command in the registry with the hotkeys `hotkeys.json` leaves
-    /// it, and whether [`Workspace::run_command`] can run it today.
-    pub fn list_commands(&self, cx: &App) -> Vec<Value> {
+    /// it, and whether [`Workspace::run_command`] would run it *now*.
+    ///
+    /// `runnable` is the check callback's answer, so it moves with the
+    /// window: an editing command reads false from a reading leaf, which
+    /// is the same thing the palette shows.
+    pub fn list_commands(&self, window: &Window, cx: &App) -> Vec<Value> {
         cx.global::<Commands>()
             .0
             .iter()
@@ -9592,7 +9677,7 @@ impl Workspace {
                     "id": c.id,
                     "name": c.name,
                     "hotkeys": hotkeys,
-                    "runnable": RUNNABLE.contains(&c.id.as_str()),
+                    "runnable": self.can_run(&c.id, window, cx),
                 })
             })
             .collect()
@@ -12671,6 +12756,37 @@ mod tests {
             .iter()
             .map(|e| HistoryEntry::new(e.to_string(), ViewMode::LivePreview))
             .collect()
+    }
+
+    /// `can_run` checks `RUNNABLE` first, so an id only in `EDITOR_ONLY`
+    /// would be filtered twice over and never offered at all.
+    #[test]
+    fn every_editor_only_id_is_runnable() {
+        for id in EDITOR_ONLY {
+            assert!(
+                RUNNABLE.contains(id),
+                "{id} is editor-only but not runnable"
+            );
+        }
+        // The table commands have their own rule in `can_run` and must not
+        // be in the editor-only list as well, or the narrower check never
+        // runs.
+        for id in EDITOR_ONLY {
+            assert!(
+                TableCommand::from_id(id).is_none(),
+                "{id} is both a table command and editor-only"
+            );
+        }
+    }
+
+    /// Neither list may name an id the registry does not have: a typo here
+    /// is a command that silently never appears.
+    #[test]
+    fn both_lists_name_real_commands() {
+        let registry = CommandRegistry::with_known_ids();
+        for id in RUNNABLE.iter().chain(EDITOR_ONLY) {
+            assert!(registry.get(id).is_some(), "{id} is not a known command");
+        }
     }
 
     /// A deleted note leaves the history, so back and forward cannot land
