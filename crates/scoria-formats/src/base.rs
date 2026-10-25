@@ -17,10 +17,10 @@
 //! verbatim *is* what matches. The expression language is parsed elsewhere, by
 //! a crate this one must never depend on.
 //!
-//! There is deliberately no writer here yet. The emitter has a quoting rule and
-//! a key order of its own, both observed and neither reachable through
-//! `serde_yaml::to_string`, and a writer that does not match Obsidian byte for
-//! byte would be worse than none: the vault is the source of truth.
+//! The writer is hand-rolled for the same reason the canvas formatter is:
+//! neither the key order nor the quoting rule is reachable through
+//! `serde_yaml::to_string`. It is proved against the bytes Obsidian actually
+//! wrote, in `tests/base_obsidian.rs`.
 
 use indexmap::IndexMap;
 use serde_yaml::Value;
@@ -72,9 +72,12 @@ pub struct Base {
     pub new_item_template: Option<String>,
 }
 
-/// Why a `.base` did not parse. Obsidian shows each of these in the view, under
-/// the banner `Unable to parse your base file: `, and in every one of these
-/// cases it leaves the file's bytes and its mtime alone.
+/// Why a `.base` did not parse. Obsidian shows each of these in the view under
+/// [`PARSE_ERROR_BANNER`], and in every one of these cases it leaves the
+/// file's bytes and its mtime alone.
+///
+/// The order matters and is observed: a file with both a bad filter group and
+/// a nameless view reports the view, so the views are checked first.
 #[derive(Debug)]
 pub enum BaseError {
     Yaml(serde_yaml::Error),
@@ -92,8 +95,9 @@ pub enum BaseError {
     FilterConjunction,
 }
 
-/// What Obsidian puts before a [`BaseError`] in the view.
-pub const PARSE_ERROR_BANNER: &str = "Unable to parse your base file: ";
+/// What Obsidian puts before a [`BaseError`] in the view, as its own
+/// paragraph above the message — `<p>` and `<p>`, with no space joining them.
+pub const PARSE_ERROR_BANNER: &str = "Unable to parse your base file:";
 
 impl fmt::Display for BaseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -456,6 +460,333 @@ impl PropertyConfig {
             keys.push("displayName".to_string());
         }
         keys
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Writing
+// ---------------------------------------------------------------------------
+//
+// Obsidian builds a plain object in `getSerializable()` and hands it to a YAML
+// emitter, so this does the same: [`Base::to_value`] puts the keys in the
+// observed order and [`emit`] writes them. One emitter covers the modelled
+// keys and the preserved ones alike, which is what makes a plugin's nested
+// unknown value come back re-indented the way the fixture's did.
+
+fn key(name: &str) -> Value {
+    Value::String(name.to_string())
+}
+
+impl Filter {
+    fn to_value(&self) -> Value {
+        let group = |name: &str, items: &[Filter]| {
+            let mut m = serde_yaml::Mapping::new();
+            m.insert(
+                key(name),
+                Value::Sequence(items.iter().map(Filter::to_value).collect()),
+            );
+            Value::Mapping(m)
+        };
+        match self {
+            Filter::Statement(s) => Value::String(s.clone()),
+            Filter::And(items) => group("and", items),
+            Filter::Or(items) => group("or", items),
+            Filter::Not(items) => group("not", items),
+        }
+    }
+}
+
+fn pair_value(property: &str, direction: Option<&str>) -> Value {
+    let mut m = serde_yaml::Mapping::new();
+    m.insert(key("property"), Value::String(property.to_string()));
+    if let Some(d) = direction {
+        m.insert(key("direction"), Value::String(d.to_string()));
+    }
+    Value::Mapping(m)
+}
+
+fn string_map_value(map: &IndexMap<String, String>) -> Value {
+    let mut m = serde_yaml::Mapping::new();
+    for (k, v) in map {
+        m.insert(key(k), Value::String(v.clone()));
+    }
+    Value::Mapping(m)
+}
+
+impl PropertyConfig {
+    fn to_value(&self) -> Value {
+        let mut m = serde_yaml::Mapping::new();
+        for name in self.key_order() {
+            let v = match name.as_str() {
+                "displayName" => Value::String(self.display_name.clone().unwrap_or_default()),
+                other => self.preserved[other].clone(),
+            };
+            m.insert(key(&name), v);
+        }
+        Value::Mapping(m)
+    }
+}
+
+impl View {
+    fn to_value(&self) -> Value {
+        let mut m = serde_yaml::Mapping::new();
+        for name in self.key_order() {
+            let v = match name.as_str() {
+                "type" => Value::String(self.kind.clone()),
+                "name" => Value::String(self.name.clone()),
+                "filters" => self
+                    .filters
+                    .as_ref()
+                    .map(Filter::to_value)
+                    .unwrap_or(Value::Null),
+                "groupBy" => self
+                    .group_by
+                    .as_ref()
+                    .map(|g| pair_value(&g.property, g.direction.as_deref()))
+                    .unwrap_or(Value::Null),
+                "groupOrder" => Value::Sequence(self.group_order.clone()),
+                "order" => Value::Sequence(
+                    self.order
+                        .iter()
+                        .map(|s| Value::String(s.clone()))
+                        .collect(),
+                ),
+                "sort" => Value::Sequence(
+                    self.sort
+                        .iter()
+                        .map(|s| pair_value(&s.property, s.direction.as_deref()))
+                        .collect(),
+                ),
+                "limit" => Value::Number(self.limit.unwrap_or_default().into()),
+                "summaries" => string_map_value(&self.summaries),
+                other => self.preserved[other].clone(),
+            };
+            m.insert(key(&name), v);
+        }
+        Value::Mapping(m)
+    }
+}
+
+impl Base {
+    /// The object Obsidian's serializer would build, keys in its order.
+    fn to_value(&self) -> Value {
+        let mut m = serde_yaml::Mapping::new();
+        for name in self.key_order() {
+            let v = match name.as_str() {
+                // `summaries` is in the preserved map as well, but what is
+                // written is always the re-serialized statements, not the
+                // bytes the file had.
+                "summaries" => string_map_value(self.summaries.as_ref().unwrap()),
+                "filters" => self
+                    .filters
+                    .as_ref()
+                    .map(Filter::to_value)
+                    .unwrap_or(Value::Null),
+                "formulas" => string_map_value(&self.formulas),
+                "properties" => {
+                    let mut p = serde_yaml::Mapping::new();
+                    for (id, cfg) in &self.properties {
+                        if !cfg.is_dropped() {
+                            p.insert(key(id), cfg.to_value());
+                        }
+                    }
+                    Value::Mapping(p)
+                }
+                "views" => Value::Sequence(self.views.iter().map(View::to_value).collect()),
+                "newItemFolder" => Value::String(self.new_item_folder.clone().unwrap_or_default()),
+                "newItemTemplate" => {
+                    Value::String(self.new_item_template.clone().unwrap_or_default())
+                }
+                other => self.preserved[other].clone(),
+            };
+            m.insert(key(&name), v);
+        }
+        Value::Mapping(m)
+    }
+
+    /// The bytes Obsidian writes for this base: LF, no BOM, one trailing
+    /// newline, block style throughout, two-space indentation.
+    ///
+    /// An empty base writes an empty document. Obsidian never has one: a base
+    /// with no views is given a [`DEFAULT_VIEW_TYPE`] / [`DEFAULT_VIEW_NAME`]
+    /// view before it is written, which is the view layer's business and not
+    /// this one's.
+    pub fn to_yaml(&self) -> String {
+        let value = self.to_value();
+        let mut out = String::new();
+        if let Value::Mapping(m) = &value {
+            emit_mapping(m, 0, &mut out);
+        }
+        out
+    }
+}
+
+/// Whether `s` can be written as a plain scalar.
+///
+/// Standard YAML plain-scalar legality, which is what reproduced every quoted
+/// and unquoted value the run observed. The last arm is the one piece that is
+/// inference rather than observation: a statement whose text happens to spell
+/// a number, a boolean or a null has to be quoted or it parses back as that
+/// type, and no fixture had one.
+fn is_plain(s: &str) -> bool {
+    if s.is_empty() || s.trim() != s {
+        return false;
+    }
+    if s.contains('\n') || s.contains(": ") || s.contains(" #") || s.ends_with(':') {
+        return false;
+    }
+    // A plain scalar may not open with an indicator. `-`, `?` and `:` are
+    // indicators only when a space follows, which `trim` has already ruled
+    // out for a one-character string.
+    let first = s.chars().next().unwrap_or(' ');
+    if "[]{},#&*!|>'\"%@`".contains(first) {
+        return false;
+    }
+    if "-?:".contains(first) && s[first.len_utf8()..].starts_with(' ') {
+        return false;
+    }
+    // Would it come back as something other than a string?
+    !matches!(
+        serde_yaml::from_str::<Value>(s),
+        Ok(Value::Null | Value::Bool(_) | Value::Number(_))
+    )
+}
+
+/// A scalar as Obsidian writes it: plain where YAML allows, otherwise quoted —
+/// double quotes, except that a value holding a `"` and no `'` takes single
+/// ones, which is how four of the fixture's statements came back.
+fn scalar(v: &Value) -> String {
+    match v {
+        Value::Null => "null".to_string(),
+        Value::Bool(b) => b.to_string(),
+        Value::Number(n) => number(n),
+        Value::String(s) => {
+            if is_plain(s) {
+                return s.clone();
+            }
+            if s.contains('"') && !s.contains('\'') {
+                return format!("'{s}'");
+            }
+            let mut out = String::with_capacity(s.len() + 2);
+            out.push('"');
+            for c in s.chars() {
+                match c {
+                    '"' => out.push_str("\\\""),
+                    '\\' => out.push_str("\\\\"),
+                    '\n' => out.push_str("\\n"),
+                    '\t' => out.push_str("\\t"),
+                    '\r' => out.push_str("\\r"),
+                    c => out.push(c),
+                }
+            }
+            out.push('"');
+            out
+        }
+        // A mapping or sequence never reaches here: emit handles them.
+        other => serde_yaml::to_string(other)
+            .unwrap_or_default()
+            .trim_end()
+            .to_string(),
+    }
+}
+
+/// A number the way JavaScript prints one, which is what wrote
+/// `imageAspectRatio: 2` for a ratio the UI held as 2.00.
+fn number(n: &serde_yaml::Number) -> String {
+    if let Some(i) = n.as_i64() {
+        return i.to_string();
+    }
+    if let Some(u) = n.as_u64() {
+        return u.to_string();
+    }
+    match n.as_f64() {
+        Some(f) if f.fract() == 0.0 && f.is_finite() => format!("{}", f as i64),
+        Some(f) => format!("{f}"),
+        None => n.to_string(),
+    }
+}
+
+fn is_empty_collection(v: &Value) -> Option<&'static str> {
+    match v {
+        Value::Mapping(m) if m.is_empty() => Some("{}"),
+        Value::Sequence(s) if s.is_empty() => Some("[]"),
+        _ => None,
+    }
+}
+
+fn emit_mapping(m: &serde_yaml::Mapping, indent: usize, out: &mut String) {
+    for (k, v) in m {
+        let name = match k {
+            Value::String(s) => scalar(&Value::String(s.clone())),
+            other => scalar(other),
+        };
+        out.push_str(&" ".repeat(indent));
+        out.push_str(&name);
+        out.push(':');
+        emit_value(v, indent, out);
+    }
+}
+
+/// The value after a `key:` already written at `indent`.
+fn emit_value(v: &Value, indent: usize, out: &mut String) {
+    if let Some(empty) = is_empty_collection(v) {
+        out.push(' ');
+        out.push_str(empty);
+        out.push('\n');
+        return;
+    }
+    match v {
+        Value::Mapping(inner) => {
+            out.push('\n');
+            emit_mapping(inner, indent + 2, out);
+        }
+        Value::Sequence(items) => {
+            out.push('\n');
+            emit_sequence(items, indent + 2, out);
+        }
+        scalar_value => {
+            out.push(' ');
+            out.push_str(&scalar(scalar_value));
+            out.push('\n');
+        }
+    }
+}
+
+/// A block sequence whose `- ` sits at `indent`, which is one level past the
+/// key it belongs to: `views:` at column 0 has its items at 2, and `and:` at 2
+/// has its items at 4.
+fn emit_sequence(items: &[Value], indent: usize, out: &mut String) {
+    for item in items {
+        out.push_str(&" ".repeat(indent));
+        out.push_str("- ");
+        match item {
+            _ if is_empty_collection(item).is_some() => {
+                out.push_str(is_empty_collection(item).unwrap());
+                out.push('\n');
+            }
+            // A mapping in a sequence item puts its first key on the dash's
+            // own line and the rest at the item's text column.
+            Value::Mapping(m) => {
+                let mut first = true;
+                for (k, v) in m {
+                    if !first {
+                        out.push_str(&" ".repeat(indent + 2));
+                    }
+                    first = false;
+                    out.push_str(&scalar(k));
+                    out.push(':');
+                    emit_value(v, indent + 2, out);
+                }
+            }
+            Value::Sequence(inner) => {
+                out.push('\n');
+                emit_sequence(inner, indent + 2, out);
+            }
+            scalar_value => {
+                out.push_str(&scalar(scalar_value));
+                out.push('\n');
+            }
+        }
     }
 }
 

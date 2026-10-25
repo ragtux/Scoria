@@ -12,7 +12,7 @@
 
 use std::path::PathBuf;
 
-use scoria_formats::base::Base;
+use scoria_formats::base::{Base, View, DEFAULT_VIEW_NAME, DEFAULT_VIEW_TYPE};
 
 fn fixture(name: &str) -> String {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -162,4 +162,121 @@ fn what_obsidian_wrote_parses_back_to_the_same_model() {
     assert_eq!(from_in.views, from_out.views);
     assert_eq!(from_in.new_item_folder, from_out.new_item_folder);
     assert_eq!(from_in.new_item_template, from_out.new_item_template);
+}
+
+// ---------------------------------------------------------------------------
+// The writer, byte for byte
+// ---------------------------------------------------------------------------
+//
+// Each pair below is one file the probe wrote into a scratch vault and the
+// bytes Obsidian left in its place. Parsing the first and writing it has to
+// produce the second exactly, which is the whole gate: a base Scoria saves is
+// a base Obsidian would have saved.
+
+/// Every documented key, scrambled, with comments at three depths, flow
+/// collections, four-space indentation and both quoting styles. Nothing was
+/// edited: this is what a close alone does.
+#[test]
+fn an_unedited_close_writes_the_canonical_form() {
+    let base = Base::from_yaml(&fixture("scrambled.in.base")).unwrap();
+    assert_eq!(base.to_yaml(), fixture("scrambled.out.base"));
+}
+
+/// CRLF throughout and a UTF-8 BOM are both dropped, and both files come back
+/// as the same canonical bytes as the LF original — which is the strongest
+/// form this test can take: three different inputs, one output.
+#[test]
+fn line_endings_and_a_bom_are_canonicalized_away() {
+    let crlf = Base::from_yaml(&fixture("crlf.in.base")).unwrap();
+    assert_eq!(crlf.to_yaml(), fixture("crlf.out.base"));
+
+    let bom_text = fixture("bom.in.base");
+    let bom = Base::from_yaml(bom_text.trim_start_matches('\u{feff}')).unwrap();
+    assert_eq!(bom.to_yaml(), fixture("bom.out.base"));
+
+    assert_eq!(fixture("crlf.out.base"), fixture("scrambled.out.base"));
+    assert_eq!(fixture("bom.out.base"), fixture("scrambled.out.base"));
+}
+
+/// A file with no trailing newline gains one, and gains nothing else.
+#[test]
+fn a_missing_trailing_newline_is_added() {
+    let base = Base::from_yaml(&fixture("no-newline.in.base")).unwrap();
+    assert_eq!(base.to_yaml(), fixture("no-newline.out.base"));
+    assert!(!fixture("no-newline.in.base").ends_with('\n'));
+}
+
+/// A file already in the canonical form is written back identically, which is
+/// why Obsidian skips the write for it: the mtime did not move on close.
+#[test]
+fn an_already_canonical_file_is_unchanged() {
+    for name in ["minimal", "layouts", "edited", "default-view"] {
+        let file = format!("{name}.out.base");
+        let base = Base::from_yaml(&fixture(&file)).unwrap();
+        assert_eq!(base.to_yaml(), fixture(&file), "{file} is not idempotent");
+    }
+    assert_eq!(fixture("minimal.in.base"), fixture("minimal.out.base"));
+}
+
+/// A statement the expression parser rejects is not a parse error: the file
+/// is canonicalized like any other and the statement's text is kept intact.
+#[test]
+fn an_unparseable_statement_is_kept_verbatim() {
+    for name in ["broken-filter", "broken-formula", "broken-summary"] {
+        let base = Base::from_yaml(&fixture(&format!("{name}.in.base"))).unwrap();
+        assert_eq!(
+            base.to_yaml(),
+            fixture(&format!("{name}.out.base")),
+            "{name} did not canonicalize the way Obsidian did"
+        );
+    }
+}
+
+/// A view's type changed through the UI: the one edit, and nothing else moves.
+#[test]
+fn a_layout_change_writes_only_its_own_key() {
+    let mut base = Base::from_yaml(&fixture("layout-change.in.base")).unwrap();
+    base.views[0].kind = "kanban".to_string();
+    assert_eq!(base.to_yaml(), fixture("layout-change.out.base"));
+}
+
+/// The view Obsidian gives a base that has none. The emitter does not add it —
+/// that is the view layer's job — but the bytes it writes for one must match.
+#[test]
+fn the_default_view_writes_obsidians_bytes() {
+    let base = Base {
+        views: vec![View {
+            kind: DEFAULT_VIEW_TYPE.to_string(),
+            name: DEFAULT_VIEW_NAME.to_string(),
+            ..View::default()
+        }],
+        ..Base::default()
+    };
+    assert_eq!(base.to_yaml(), fixture("default-view.out.base"));
+}
+
+/// The four files Obsidian refused, and left untouched. Each must be an error
+/// here too: a writer that accepted one would write bytes Obsidian never would.
+#[test]
+fn the_files_obsidian_refused_are_refused_here() {
+    let cases = [
+        ("no-name.in.base", "Missing or invalid \"name\" in view 1"),
+        (
+            "empty-name.in.base",
+            "Missing or invalid \"name\" in view 1",
+        ),
+        (
+            "filter-extra.in.base",
+            "\"filters\" may only have one of an \"and\", \"or\", or \"not\" keys.",
+        ),
+        // Two faults at once — a stray key beside `and` and an empty view
+        // name. Obsidian reports the name, so the views are checked first.
+        ("oddities.in.base", "Missing or invalid \"name\" in view 1"),
+    ];
+    for (file, message) in cases {
+        let err = Base::from_yaml(&fixture(file))
+            .err()
+            .unwrap_or_else(|| panic!("{file} parsed, but Obsidian refused it"));
+        assert_eq!(err.to_string(), message, "{file}");
+    }
 }

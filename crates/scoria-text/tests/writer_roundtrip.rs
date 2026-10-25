@@ -8,7 +8,7 @@
 //! serializer or the config writer that starts touching bytes it did not
 //! change fails here.
 //!
-//! Four properties, one per shape of writing:
+//! Five properties, one per shape of writing:
 //!
 //! - **Opening and saving changes nothing.** A file loaded and written back
 //!   is its own bytes, line endings and byte order mark included.
@@ -21,6 +21,8 @@
 //!   included.
 //! - **A canvas Obsidian saved is written back unchanged**: a `.canvas` in
 //!   Obsidian's own layout comes back byte-identical from the canvas writer.
+//! - **A base Obsidian saved is written back unchanged**: a `.base` in the
+//!   canonical form comes back byte-identical from the base writer.
 //!
 //! The notes are the corpus; set `SCORIA_ROUNDTRIP_VAULT` to a real vault's
 //! path to run the same round trips over it as well (nothing is written to
@@ -1127,4 +1129,114 @@ fn every_canvas_obsidian_saved_is_written_back_byte_identical() {
         );
     }
     assert!(checked >= 3, "only {checked} canvases were round-tripped");
+}
+
+/// Obsidian's canonical form for a `.base`, told apart from a hand-written one
+/// without asking the writer — which would make this test agree with itself.
+///
+/// A base is canonicalized rather than preserved
+/// ([[Specification#Observed Bases write behavior, Obsidian 1.14.5 (installer build 1.13.7)]]),
+/// so everything a person types that Obsidian strips is a tell: a comment, a
+/// CRLF, a byte order mark, a flow collection, a missing or doubled trailing
+/// newline, or an indent that is not a multiple of two.
+fn in_obsidians_base_form(text: &str) -> bool {
+    if text.is_empty() || text.starts_with('\u{feff}') || text.contains('\r') {
+        return false;
+    }
+    if !text.ends_with('\n') || text.ends_with("\n\n") {
+        return false;
+    }
+    text.lines().all(|line| {
+        let indent = line.len() - line.trim_start().len();
+        let body = line.trim_start();
+        indent % 2 == 0 && !body.starts_with('#') && !body.contains(": [") && !body.contains(": {")
+    })
+}
+
+/// The bases Obsidian wrote back in the CDP probe run are always here; a real
+/// vault's own are added when `SCORIA_ROUNDTRIP_VAULT` names one. No vault on
+/// this machine has a `.base` yet, so today the fixtures are the whole corpus
+/// — which is why the floor below is what it is.
+#[test]
+fn every_base_obsidian_saved_is_written_back_byte_identical() {
+    let repo = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
+    let fixtures = repo.join("scoria-formats/tests/base");
+    let mut bases: Vec<PathBuf> = [
+        "scrambled",
+        "minimal",
+        "layouts",
+        "edited",
+        "default-view",
+        "broken-filter",
+        "broken-formula",
+        "broken-summary",
+        "layout-change",
+    ]
+    .iter()
+    .map(|n| fixtures.join(format!("{n}.out.base")))
+    .collect();
+    if let Some(root) = std::env::var_os("SCORIA_ROUNDTRIP_VAULT") {
+        let mut extra = Vec::new();
+        collect_bases(Path::new(&root), &mut extra);
+        extra.sort();
+        bases.extend(extra);
+    }
+    let (mut checked, mut authored_elsewhere, mut empty) = (0, Vec::new(), Vec::new());
+    for path in &bases {
+        let before = std::fs::read_to_string(path).unwrap();
+        // `bases:new-file` writes a zero-byte file, and Obsidian puts YAML in
+        // it only once the base is opened and given its default view, so an
+        // untouched new base is a real vault state with nothing to round trip.
+        if before.trim().is_empty() {
+            empty.push(path.display().to_string());
+            continue;
+        }
+        let base = scoria_formats::base::Base::from_yaml(&before)
+            .unwrap_or_else(|e| panic!("{} did not parse: {e}", path.display()));
+        if !in_obsidians_base_form(&before) {
+            authored_elsewhere.push(path.display().to_string());
+            continue;
+        }
+        assert_eq!(
+            base.to_yaml(),
+            before,
+            "writing {} back changed its bytes",
+            path.display()
+        );
+        checked += 1;
+    }
+    if !authored_elsewhere.is_empty() {
+        eprintln!(
+            "{} bases not in Obsidian's form, which Obsidian itself would rewrite: {}",
+            authored_elsewhere.len(),
+            authored_elsewhere.join(", ")
+        );
+    }
+    if !empty.is_empty() {
+        eprintln!(
+            "{} empty bases, which is what a new one is until it is opened: {}",
+            empty.len(),
+            empty.join(", ")
+        );
+    }
+    assert!(checked >= 9, "only {checked} bases were round-tripped");
+}
+
+fn collect_bases(dir: &Path, out: &mut Vec<PathBuf>) {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            if !path
+                .file_name()
+                .is_some_and(|n| n.to_string_lossy().starts_with('.'))
+            {
+                collect_bases(&path, out);
+            }
+        } else if path.extension().is_some_and(|e| e == "base") {
+            out.push(path);
+        }
+    }
 }
