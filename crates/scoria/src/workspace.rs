@@ -199,6 +199,7 @@ pub const RUNNABLE: &[&str] = &[
     "canvas:new-file",
     "canvas:jump-to-group",
     "canvas:convert-to-file",
+    "bases:new-file",
     "markdown:toggle-preview",
     "markdown:add-metadata-property",
     "markdown:clear-metadata-properties",
@@ -3773,6 +3774,7 @@ impl Workspace {
             "graph:open-local" if self.current.is_none() => {}
             "graph:open-local" => self.show_graph(true, window, cx),
             "canvas:new-file" => self.new_canvas(cx),
+            "bases:new-file" => self.new_base(cx),
             "canvas:jump-to-group" => self.jump_to_group(window, cx),
             "canvas:convert-to-file" => self.convert_card_to_file(cx),
             "markdown:toggle-preview" => self.toggle_mode(&ToggleMode, window, cx),
@@ -5543,6 +5545,39 @@ impl Workspace {
             return;
         };
         let path = state.vault().available_path("", "Untitled", "canvas");
+        match state.create_note(&path, "") {
+            Ok(changes) => {
+                self.after_changes(changes, cx);
+                if self.current.is_some() {
+                    self.new_tab(cx);
+                }
+                self.open_file(path.clone(), None, cx);
+                self.report(format!("Created {path}"), cx);
+            }
+            Err(err) => self.report(err, cx),
+        }
+    }
+
+    /// `bases:new-file`: `Untitled.base` (or the next free number) in the
+    /// vault root as a **zero-byte** file, opened the way a new canvas is.
+    ///
+    /// The empty file is Obsidian's own behaviour, not a shortcut: the probe
+    /// of 2026-10-25 watched `bases:new-file` write nothing at all, because
+    /// the parsed query of an empty file is already one default view, and
+    /// only when that view is closed does Obsidian write `views:` / `- type:
+    /// table` / `name: View` (see [[Specification#Observed Bases write
+    /// behavior, Obsidian 1.14.5 (installer build 1.13.7)]]). So a base
+    /// created here and never opened in Obsidian is byte-identical to one
+    /// Obsidian created and never opened.
+    ///
+    /// Obsidian then opens the new base in its Bases view. Scoria has no such
+    /// view yet, so the tab opens on the "not supported yet" placeholder
+    /// every unhandled kind gets; the file on disk is the right one.
+    fn new_base(&mut self, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let path = state.vault().available_path("", "Untitled", "base");
         match state.create_note(&path, "") {
             Ok(changes) => {
                 self.after_changes(changes, cx);
@@ -7883,9 +7918,10 @@ impl Workspace {
         };
         // The icons are the ones Obsidian's ribbon names: `lucide-file-search`
         // for the switcher, `git-fork` for the graph, `layout-dashboard` for
-        // a new canvas, `calendar`, `files` for a template and `terminal`
-        // for the palette.
-        let items: [(&'static str, &'static str, &'static str, &'static str); 6] = [
+        // a new canvas, `calendar`, `files` for a template, `terminal` for
+        // the palette and `layout-list` for a new base -- in that order,
+        // which is the order the DOM was read in.
+        let items: [(&'static str, &'static str, &'static str, &'static str); 7] = [
             (
                 "ribbon-switcher",
                 "file-search",
@@ -7907,6 +7943,7 @@ impl Workspace {
                 "command-palette:open",
                 "command-palette",
             ),
+            ("ribbon-base", "layout-list", "bases:new-file", "bases"),
         ];
         let buttons: Vec<_> = items
             .into_iter()
@@ -13427,6 +13464,39 @@ mod tests {
         assert!(
             !after.contains("\n\n"),
             "a bare newline reached a CRLF note"
+        );
+    }
+
+    /// A new base is a **zero-byte** file, and the second one is
+    /// `Untitled 1.base`. Obsidian writes nothing into a base it creates --
+    /// the parsed query of an empty file is already one default view -- so an
+    /// untouched base of Scoria's is byte-identical to an untouched base of
+    /// Obsidian's. This is the pair of calls `new_base` makes; the command
+    /// itself needs a window.
+    #[test]
+    fn a_new_base_is_an_empty_file_and_the_next_one_is_numbered() {
+        let (dir, state) = vault();
+        let first = state.vault().available_path("", "Untitled", "base");
+        assert_eq!(first, "Untitled.base");
+        state.create_note(&first, "").unwrap();
+        assert_eq!(fs::read(dir.path().join(&first)).unwrap(), b"");
+        assert_eq!(FileKind::from_path(&first), FileKind::Base);
+
+        let second = state.vault().available_path("", "Untitled", "base");
+        assert_eq!(second, "Untitled 1.base");
+        state.create_note(&second, "").unwrap();
+        assert_eq!(fs::read(dir.path().join(&second)).unwrap(), b"");
+    }
+
+    /// The ribbon's base button runs `bases:new-file`, so the id has to be
+    /// one the workspace will actually run: a button bound to an id outside
+    /// `RUNNABLE` is a button that does nothing.
+    #[test]
+    fn the_ribbon_base_button_runs_a_runnable_command() {
+        assert!(RUNNABLE.contains(&"bases:new-file"));
+        assert!(
+            CommandRegistry::with_known_ids().get("bases:new-file").is_some(),
+            "bases:new-file is not one of Obsidian's own command ids"
         );
     }
 
