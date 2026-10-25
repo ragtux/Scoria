@@ -176,6 +176,31 @@ new pane.",
         "click",
     ),
     act(
+        "scoria_mouse",
+        "\
+Press, move or release the mouse, for the gestures scoria_click cannot make: \
+a drag. `action` is `down`, `move` or `up`, with `x` and `y` in window-local \
+logical pixels as for scoria_click, and `button` is `left`, `right` or \
+`middle`. A `move` that names a `button` is a drag in progress -- that is what \
+tells the app a button is held, and without it a move is only a hover. So a \
+drag-select is `down`, then one or more `move`s naming the same button, then \
+`up`: read `editor.selection` in scoria_state afterwards to see what it \
+caught. A `move` with no `button` is how you hover something, which is the \
+only way to reveal a control that appears on hover, such as a code block's \
+copy button.",
+        "mouse",
+    ),
+    act(
+        "scoria_window",
+        "\
+Read the window's size, scale, title and whether it is active, and optionally \
+resize it (`width`, `height`) or raise it (`activate`). Activate before \
+anything that depends on the window really having focus: a Wayland client \
+cannot write the clipboard without it, so a copy driven while another \
+application holds focus silently does nothing.",
+        "window",
+    ),
+    act(
         "scoria_scroll",
         "\
 Scroll whatever is under `x`,`y` (window-local logical pixels, as for \

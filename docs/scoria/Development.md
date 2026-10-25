@@ -864,8 +864,13 @@ spawns the binary with `--control`, waits for the socket to appear and then
 blocks on `wait_loaded`; it takes screenshots, through `spectacle` into base64
 image content; and it builds its tool input schemas from
 `scoria_control::METHODS` and `params_schema` instead of hand-writing them, so
-a method added to the table above arrives as a tool with the right parameters
-and no second description to keep in step. After any tool that changes state it
+a method's parameters and its tool's parameters are the same list by
+construction and renaming one cannot leave a model calling the old name. The
+*table* of tools is still written by hand, though, and that is a trap worth
+knowing: a method added above does **not** become a tool on its own, and a
+method nobody lists is a method no model can reach. `mouse` sat unexposed that
+way long enough for [[UI parity backlog#Blocked by the harness, not by the code]]
+to record drag-select as unverifiable, when what was missing was the entry. After any tool that changes state it
 calls `wait_idle` before returning, so the next `scoria_state` or screenshot is
 current rather than one frame behind. A tool that fails is `isError: true`
 content, not a JSON-RPC error — only an unknown method or malformed parameters

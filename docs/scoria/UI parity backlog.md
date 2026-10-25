@@ -1622,7 +1622,17 @@ input. Worth checking with a real mouse: gpui's `Interactivity::paint` returns e
 `Visibility::Hidden` *before* it paints mouse listeners, so an `.invisible()` button has no click
 listener in any frame where its group is not hovered.
 
-**Drag-select.** `control.rs`'s `mouse` action always sends `MouseMoveEvent { pressed_button: None }`,
+**Drag-select.** *Unblocked 2026-10-25: the premise was already out of date, and what was missing
+was a tool rather than the event.* `control.rs`'s `mouse` action takes a `button` on a `move` and
+sends it as `pressed_button`, which is what makes the move a drag; what no harness could reach was
+the method itself, because `scoria-mcp`'s tool table is hand-written and never listed it. It does
+now. Driven over the socket: down at the editor's line 1, two moves holding left, up on line 2
+left `editor.selection` at bytes 7..115, and the same gesture across the find panel's query
+replaced the five characters it caught when the next keystroke arrived (`alpha beta gamma` typed
+over as `alpha betaZa`). So both halves are verified -- the editor's own drag-select and the one
+added to `TextInput`. What follows was the state before that.
+
+`control.rs`'s `mouse` action always sends `MouseMoveEvent { pressed_button: None }`,
 so down/move/move/up moves the caret and selects nothing. The drag-select added to `TextInput` is
 therefore unverified, although single, double, triple and shift-click all verified.
 

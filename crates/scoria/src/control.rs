@@ -411,10 +411,10 @@ fn handle(
                 // button is held.
                 "move" => PlatformInput::MouseMove(MouseMoveEvent {
                     position,
-                    pressed_button: request
-                        .opt_str("button")
-                        .map(|_| button)
-                        .filter(|_| request.opt_str("button").is_some()),
+                    // Naming a button is what makes the move a drag; leaving
+                    // it out is a hover, which is how a control that only
+                    // appears under the pointer is revealed.
+                    pressed_button: request.opt_str("button").map(|_| button),
                     modifiers,
                 }),
                 "down" => PlatformInput::MouseDown(MouseDownEvent {
