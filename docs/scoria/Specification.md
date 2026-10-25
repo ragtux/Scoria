@@ -5767,6 +5767,65 @@ tag; whether `inFolder` reaches subfolders; what `escapeHTML` escapes, which
 was never called at all; `timestamp`'s unit; and what a further call on the
 value `relative()` returns does.
 
+## Observed Bases table view, Obsidian 1.14.5 (installer build 1.13.7)
+
+What a `.base` *shows*, as against what it writes. Read off the same two runs
+(`tools/obsidian-probe/results/2026-10-25-bases.json` and `-bases-expr.json`)
+while the table view was being built, and in four places it corrects what the
+write-behavior section above would lead you to assume.
+
+**A column's header.** `properties.<id>.displayName` when the base gives one,
+and the key is the **qualified** id — `properties['note.status']` lands where a
+hand-written `properties.status` matches nothing, even though `order` carries
+the id bare. Failing that it is Obsidian's own label for a `file.*` property,
+not the id's last segment: `order: [file.name, status, formula.ppu]` renders
+`file name`, `status`, `Price per unit`. The properties panel names the whole
+set — `file backlinks`, `file base name`, `created time`, `file embeds`,
+`folder`, `file full name`, `file links`, `modified time`, `file path`,
+`file size`, `file tags`.
+
+**A filter that empties the view leaves the header row drawn.** `BadFilter.base`
+reports "0 results" with `headers: ["file name"]` and the error banner hidden:
+the failure is silent in the view's body, not in its chrome.
+
+**An empty `.base` is one default table of the whole vault.** A zero-byte file
+and `{}` both parse to `views: [{type: table, name: View}]`, and the run's own
+22-note vault rendered 22 rows.
+
+**The no-value group comes first under an ascending `groupBy`.** The copied
+TSV of a view grouped by `status` ascending, sorted by `status` descending,
+is `status\tPrice per unit` then two blank-status rows and then the `todo`
+ones — so grouping orders the rows before the sort does, and the group with no
+value leads.
+
+**Metrics.** The header row is 30 px. The three header boxes of `Layout.base`
+measured x 344/436/524 and w 92/88/487: they abut exactly, the first is flush
+with the pane's left edge, the last stretches far past its text, and 88 px is
+the floor (the layout object carries `minColWidth` and `maxColWidth`). A
+resized column writes `columnSize:` as a px map (`file.name: 232`), and the
+header then measures 232. `rowHeight` is `""` (Short, the default and the key
+absent), `medium`, `tall` or `extra`.
+
+**The two error shapes.** A file that does not parse renders
+`<div class="bases-error"><p>Unable to parse your base file:</p><p>…</p></div>`,
+the second paragraph being the YAML library's own message. A view whose `type`
+is outside the four registered layouts (`table`, `cards`, `list`, `kanban`)
+renders the same block with one paragraph, `Unknown view type: nonsense`, and
+no rows; the file still parses and its bytes are untouched.
+
+**Unprobed, and the cheap probes that would close it.** `groupOrder`'s
+semantics are **not observed at all**: the key appears in the view object's own
+property list and in the published schema, but nothing in either run ever wrote
+one, so the reading that a `null` entry is the no-value group — and the order
+unnamed groups come in — is schema-reading, not observation. Drag a group
+header and read the file. Also unobserved: a grouped table's own DOM, including
+a group header's text; what an empty table renders; a row's measured height at
+each `rowHeight` step; a cell's padding; whether a number cell is right-aligned;
+the `data-property-type` of a Date, List or Link column (only `text`, `number`
+and `checkbox` were ever rendered); how a Link cell with a display text draws;
+and what a base leaf records in `workspace.json`, the showing view index
+included.
+
 ## What building the evaluator settled, 2026-10-25
 
 Implementing `scoria-bases`'s evaluator against the same run turned up eleven
@@ -5832,4 +5891,7 @@ not first-seen.
 `toString()`: it is `String(value.data)`, so a List cell shows `3,1,2` where
 `[3,1,2].toString()` is `3, 1, 2`, and a Link cell shows `Pumice` where its
 `toString()` is `[[Pumice]]`. Matching an implementation to `str` would build
-the wrong `toString`.
+the wrong `toString`. Note what this does *not* settle: those two readings are
+inferred from `str` rather than read off a rendered cell, because neither a
+List nor a Link column was ever rendered. A cell's own rendering is
+[[#Observed Bases table view, Obsidian 1.14.5 (installer build 1.13.7)]].

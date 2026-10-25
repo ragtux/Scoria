@@ -4769,6 +4769,7 @@ dependencies = [
  "notify",
  "rayon",
  "regex",
+ "scoria-bases",
  "scoria-cache",
  "scoria-canvas",
  "scoria-commands",
@@ -4793,6 +4794,7 @@ dependencies = [
  "chrono",
  "indexmap",
  "regex",
+ "scoria-formats",
 ]
 
 [[package]]

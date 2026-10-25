@@ -292,7 +292,9 @@ impl Value {
     }
 }
 
-/// `toString()`, and what a cell renders as text.
+/// `toString()`. **Not** what a cell of a base's table renders — see
+/// [`crate::cell::text_of`], which differs for null, Boolean, List, Tags and
+/// Link, each read off a rendered cell.
 impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

@@ -10,6 +10,7 @@
 
 use crate::assets::{icon, logo};
 use crate::backlinks::{self, Group, Match as PaneMatch, Section};
+use crate::bases::{BasesEvent, BasesView};
 use crate::bookmarks::{BookmarkEvent, BookmarksPane};
 use crate::canvas::menu::tooltip;
 use crate::canvas::{CanvasEvent, CanvasView};
@@ -999,6 +1000,7 @@ enum MainView {
     Editor,
     Graph,
     Canvas,
+    Bases,
     Empty,
 }
 
@@ -1010,6 +1012,7 @@ impl MainView {
             MainView::Editor => "editor",
             MainView::Graph => "graph",
             MainView::Canvas => "canvas",
+            MainView::Bases => "bases",
             MainView::Empty => "nothing",
         }
     }
@@ -1601,6 +1604,7 @@ struct TabGroup {
     editor: Entity<Editor>,
     reading: Entity<ReadingView>,
     canvas: Entity<CanvasView>,
+    bases: Entity<BasesView>,
     /// The `tabs` node this group was restored from, less its children:
     /// `id`, a `dimension` from a dragged divider, and anything unknown.
     node: Map<String, Value>,
@@ -1612,6 +1616,7 @@ impl TabGroup {
         editor: Entity<Editor>,
         reading: Entity<ReadingView>,
         canvas: Entity<CanvasView>,
+        bases: Entity<BasesView>,
         mode: ViewMode,
     ) -> TabGroup {
         let mut node = Map::new();
@@ -1628,6 +1633,7 @@ impl TabGroup {
             editor,
             reading,
             canvas,
+            bases,
             node,
         }
     }
@@ -1679,6 +1685,7 @@ struct GroupView {
     editor: Entity<Editor>,
     reading: Entity<ReadingView>,
     canvas: Entity<CanvasView>,
+    bases: Entity<BasesView>,
 }
 
 /// The payload of a divider drag: which split, and the boundary between
@@ -2265,6 +2272,9 @@ pub struct Workspace {
     /// The active group's canvas view, like `editor` and `reading`; it
     /// shows the open file when that is a `.canvas`.
     canvas: Entity<CanvasView>,
+    /// The active group's Bases view, the same way: it shows the open file
+    /// when that is a `.base`.
+    bases: Entity<BasesView>,
     graph: Entity<GraphView>,
     /// The mode to return to when the graph closes.
     mode_before_graph: ViewMode,
@@ -2374,9 +2384,15 @@ fn view_subscriptions(
     editor: &Entity<Editor>,
     reading: &Entity<ReadingView>,
     canvas: &Entity<CanvasView>,
+    bases: &Entity<BasesView>,
     cx: &mut Context<Workspace>,
 ) -> Vec<Subscription> {
     vec![
+        // A row of a base names a file; activating it opens that file, the
+        // same route a link in the reading view takes.
+        cx.subscribe(bases, |this, _, event: &BasesEvent, cx| match event {
+            BasesEvent::Open(path) => this.open_file(path.clone(), None, cx),
+        }),
         cx.subscribe(
             canvas,
             |this, canvas, event: &CanvasEvent, cx| match event {
@@ -2439,6 +2455,7 @@ impl Workspace {
         let reading = cx.new(ReadingView::new);
         let editor = cx.new(|cx| Editor::new(window, cx));
         let canvas = cx.new(CanvasView::new);
+        let bases = cx.new(BasesView::new);
         let graph = cx.new(GraphView::new);
         let subscriptions = vec![
             // The filter is applied as the pane is drawn; a keystroke only
@@ -2662,12 +2679,13 @@ impl Workspace {
             ),
         ];
         let mut subscriptions = subscriptions;
-        subscriptions.extend(view_subscriptions(&editor, &reading, &canvas, cx));
+        subscriptions.extend(view_subscriptions(&editor, &reading, &canvas, &bases, cx));
         let groups = vec![TabGroup::new(
             0,
             editor.clone(),
             reading.clone(),
             canvas.clone(),
+            bases.clone(),
             ViewMode::Reading,
         )];
         // Closing the window must not lose edits waiting for the autosave.
@@ -2713,6 +2731,7 @@ impl Workspace {
             reading,
             editor,
             canvas,
+            bases,
             graph,
             mode_before_graph: ViewMode::Reading,
             mode: ViewMode::Reading,
@@ -3510,6 +3529,15 @@ impl Workspace {
             for group in &self.groups {
                 group.canvas.update(cx, |c, cx| c.invalidate(&path, cx));
             }
+        }
+        // A base is a view over the whole vault, so any change may change its
+        // rows -- unlike a canvas card, which only its own file touches. The
+        // base's own bytes are not re-read here: a change to the `.base`
+        // itself arrives through `show_file` and reloads the query.
+        for group in &self.groups {
+            group
+                .bases
+                .update(cx, |b, cx| b.invalidate(state.clone(), cx));
         }
         // Back and forward must never land on a file the vault no longer
         // has, whoever removed it; an atomic external save arrives as a
@@ -4438,6 +4466,7 @@ impl Workspace {
             || unpainted(MainView::Reading, &self.reading.focus_handle(cx))
             || unpainted(MainView::Graph, &self.graph.focus_handle(cx))
             || unpainted(MainView::Canvas, &self.canvas.focus_handle(cx))
+            || unpainted(MainView::Bases, &self.bases.focus_handle(cx))
         {
             return true;
         }
@@ -4449,7 +4478,8 @@ impl Workspace {
             ix != self.active_group
                 && (g.editor.read(cx).focus_handle_ref().is_focused(window)
                     || g.reading.focus_handle(cx).is_focused(window)
-                    || g.canvas.focus_handle(cx).is_focused(window))
+                    || g.canvas.focus_handle(cx).is_focused(window)
+                    || g.bases.focus_handle(cx).is_focused(window))
         })
     }
 
@@ -4463,6 +4493,7 @@ impl Workspace {
             MainView::Editor => window.focus(&self.editor.focus_handle(cx), cx),
             MainView::Graph => window.focus(&self.graph.focus_handle(cx), cx),
             MainView::Canvas => window.focus(&self.canvas.focus_handle(cx), cx),
+            MainView::Bases => window.focus(&self.bases.focus_handle(cx), cx),
             MainView::Empty => window.focus(&self.focus_handle, cx),
         }
     }
@@ -4639,6 +4670,9 @@ impl Workspace {
         if kind != FileKind::Canvas {
             self.release_canvas(cx);
         }
+        if kind != FileKind::Base {
+            self.release_bases(cx);
+        }
         match kind {
             FileKind::Canvas => match std::fs::read_to_string(state.vault().absolute(path)) {
                 Ok(text) => {
@@ -4678,6 +4712,44 @@ impl Workspace {
                         let state = state.clone();
                         self.canvas
                             .update(cx, |c, cx| c.load(path, &text, view_state, state, cx));
+                    }
+                    self.status = path.to_string().into();
+                }
+                Err(err) => self.unreadable(path, previous, &err, state, cx),
+            },
+            // A base is drawn by its own view, the way a canvas is. It is
+            // read-only in this cut -- Obsidian writes a base only on an
+            // edit, or on the close that follows one (see
+            // [[Specification#Observed Bases write behavior, Obsidian 1.14.5
+            // (installer build 1.13.7)]]) -- so there are no unsaved edits
+            // to keep, and the canvas arm's three cases collapse to two:
+            // the bytes the view already read, and somebody else's write.
+            FileKind::Base => match std::fs::read_to_string(state.vault().absolute(path)) {
+                Ok(text) => {
+                    // Nothing of a note may show through: the reading view
+                    // is emptied and the editor let go of, as for a canvas.
+                    self.reading.update(cx, |r, cx| {
+                        r.set_note(
+                            None,
+                            reading::build_with("", "", state.as_ref(), state.build_options()),
+                            cx,
+                        )
+                    });
+                    self.release_buffer(cx);
+                    let same = {
+                        let b = self.bases.read(cx);
+                        (b.path() == Some(path)).then(|| b.matches_file(&text))
+                    };
+                    match same {
+                        // Its own read coming back through the watcher, or
+                        // an unrelated event: the view has these bytes.
+                        Some(true) => {}
+                        Some(false) => self.bases.update(cx, |b, cx| b.reload(&text, cx)),
+                        None => {
+                            let state = state.clone();
+                            self.bases
+                                .update(cx, |b, cx| b.load(path, &text, state, cx));
+                        }
                     }
                     self.status = path.to_string().into();
                 }
@@ -4792,6 +4864,14 @@ impl Workspace {
         }
     }
 
+    /// Lets go of the base on screen, if any, the way `release_canvas` lets
+    /// go of a canvas. Nothing is flushed first: the view never writes.
+    fn release_bases(&mut self, cx: &mut Context<Self>) {
+        if self.bases.read(cx).path().is_some() {
+            self.bases.update(cx, |b, cx| b.release(cx));
+        }
+    }
+
     /// Plain text of a cached heading (markup stripped).
     fn heading_text(raw: &str) -> String {
         let doc = scoria_markdown::parse(raw);
@@ -4853,6 +4933,7 @@ impl Workspace {
             self.clear_buffer(cx);
         }
         self.release_canvas(cx);
+        self.release_bases(cx);
         self.reading.update(cx, |r, cx| {
             r.set_note(
                 None,
@@ -5570,9 +5651,9 @@ impl Workspace {
     /// created here and never opened in Obsidian is byte-identical to one
     /// Obsidian created and never opened.
     ///
-    /// Obsidian then opens the new base in its Bases view. Scoria has no such
-    /// view yet, so the tab opens on the "not supported yet" placeholder
-    /// every unhandled kind gets; the file on disk is the right one.
+    /// Obsidian then opens the new base in its Bases view, and so does this:
+    /// `show_file`'s [`FileKind::Base`] arm hands the empty file to
+    /// [`BasesView`], whose parse of no bytes at all is one default view.
     fn new_base(&mut self, cx: &mut Context<Self>) {
         let Some(state) = self.state.clone() else {
             return;
@@ -6337,25 +6418,28 @@ impl Workspace {
         let has_buffer = !self.editor.read(cx).name.is_empty();
         let canvas =
             self.current.is_some() && self.canvas.read(cx).path() == self.current.as_deref();
-        Self::main_view_for(self.mode, has_note, image, has_buffer, canvas)
+        let bases = self.current.is_some() && self.bases.read(cx).path() == self.current.as_deref();
+        Self::main_view_for(self.mode, has_note, image, has_buffer, canvas, bases)
     }
 
     /// The rule itself, over what the views have to show: `has_note` is the
     /// reading view's built note, `image` whether the open file is one,
-    /// `has_buffer` whether the editor's buffer names a file, and `canvas`
-    /// whether the canvas view holds the open file. A canvas has no
-    /// reading or source mode, so it is painted in every mode but the
-    /// graph's.
+    /// `has_buffer` whether the editor's buffer names a file, `canvas`
+    /// whether the canvas view holds the open file and `bases` whether the
+    /// Bases view does. Neither a canvas nor a base has a reading or a
+    /// source mode, so either is painted in every mode but the graph's.
     fn main_view_for(
         mode: ViewMode,
         has_note: bool,
         image: bool,
         has_buffer: bool,
         canvas: bool,
+        bases: bool,
     ) -> MainView {
         match mode {
             ViewMode::Graph => MainView::Graph,
             _ if canvas => MainView::Canvas,
+            _ if bases => MainView::Bases,
             ViewMode::Reading if has_note => MainView::Reading,
             // An image has no source to edit, so it reads the same in the
             // editing modes as it does in the reading view.
@@ -6383,6 +6467,7 @@ impl Workspace {
                 editor: self.editor.clone(),
                 reading: self.reading.clone(),
                 canvas: self.canvas.clone(),
+                bases: self.bases.clone(),
             };
         }
         let tab = g.tabs.get(g.active_tab);
@@ -6399,6 +6484,7 @@ impl Workspace {
             editor: g.editor.clone(),
             reading: g.reading.clone(),
             canvas: g.canvas.clone(),
+            bases: g.bases.clone(),
         }
     }
 
@@ -6698,8 +6784,10 @@ impl Workspace {
         let has_buffer = !view.editor.read(cx).name.is_empty();
         let canvas =
             view.current.is_some() && view.canvas.read(cx).path() == view.current.as_deref();
-        match Self::main_view_for(view.mode, has_note, image, has_buffer, canvas) {
+        let bases = view.current.is_some() && view.bases.read(cx).path() == view.current.as_deref();
+        match Self::main_view_for(view.mode, has_note, image, has_buffer, canvas, bases) {
             MainView::Canvas => view.canvas.clone().into_any_element(),
+            MainView::Bases => view.bases.clone().into_any_element(),
             MainView::Graph if self.graph_group() == Some(view.id) => {
                 self.graph.clone().into_any_element()
             }
@@ -6858,6 +6946,7 @@ impl Workspace {
     fn show_empty(&mut self, state: &Arc<VaultState>, cx: &mut Context<Self>) {
         self.release_buffer(cx);
         self.release_canvas(cx);
+        self.release_bases(cx);
         self.reading.update(cx, |r, cx| {
             r.set_note(
                 None,
@@ -7028,6 +7117,7 @@ impl Workspace {
         self.editor = group.editor.clone();
         self.reading = group.reading.clone();
         self.canvas = group.canvas.clone();
+        self.bases = group.bases.clone();
         let tab = self
             .tabs
             .get(self.active_tab)
@@ -7079,15 +7169,16 @@ impl Workspace {
         let editor = cx.new(|cx| Editor::new(window, cx));
         let reading = cx.new(ReadingView::new);
         let canvas = cx.new(CanvasView::new);
+        let bases = cx.new(BasesView::new);
         self._subscriptions
-            .extend(view_subscriptions(&editor, &reading, &canvas, cx));
+            .extend(view_subscriptions(&editor, &reading, &canvas, &bases, cx));
         let id = self.next_group_id;
         self.next_group_id += 1;
         if let Some(state) = self.state.clone() {
             Self::give_editor_the_vault(&editor, &state, cx);
         }
         self.groups
-            .push(TabGroup::new(id, editor, reading, canvas, mode));
+            .push(TabGroup::new(id, editor, reading, canvas, bases, mode));
         if let Some(state) = self.state.clone() {
             self.apply_app_config(&state, cx);
         }
@@ -9305,6 +9396,7 @@ impl Workspace {
             "reading": self.reading.read(cx).describe(),
             "graph": graph,
             "canvas": self.canvas.read(cx).describe(cx),
+            "bases": self.bases.read(cx).state_json(),
             "status": self.status_text(),
             "status_bar": self.status_bar_text(cx),
             "notices": self.notices.texts(),
@@ -9415,7 +9507,7 @@ impl Workspace {
                 MainView::Canvas => "canvas-editor",
                 _ => "none",
             },
-            "workspace" | "reading" | "graph" | "canvas" | "none" => "none",
+            "workspace" | "reading" | "graph" | "canvas" | "bases" | "none" => "none",
             _ => "input",
         }
     }
@@ -9487,6 +9579,9 @@ impl Workspace {
         }
         if self.canvas.focus_handle(cx).is_focused(window) {
             return "canvas";
+        }
+        if self.bases.focus_handle(cx).is_focused(window) {
+            return "bases";
         }
         if self.switcher.focus_handle(cx).is_focused(window) {
             return "switcher-input";
@@ -9576,6 +9671,7 @@ impl Workspace {
             "reading" => MainView::Reading,
             "graph" => MainView::Graph,
             "canvas" => MainView::Canvas,
+            "bases" => MainView::Bases,
             other => return Err(format!("unknown view: {other}")),
         };
         if wanted != painted {
@@ -9600,13 +9696,13 @@ impl Workspace {
     ///
     /// Obsidian's default status bar is right-aligned only and holds the
     /// Backlinks item and the Word count item, in that order. Both belong
-    /// to the open Markdown view, so a canvas tab and an empty tab show
-    /// neither. The caret position is Scoria's own and sits in front of
-    /// them; the parse and shape numbers behind it are diagnostics and
+    /// to the open Markdown view, so a canvas tab, a base tab and an empty
+    /// tab show neither. The caret position is Scoria's own and sits in
+    /// front of them; the parse and shape numbers behind it are diagnostics and
     /// appear only with `SCORIA_DEBUG_STATUS` set.
     pub fn status_bar_text(&self, cx: &App) -> Option<String> {
         let path = self.current.as_deref()?;
-        if FileKind::from_path(path) == FileKind::Canvas {
+        if matches!(FileKind::from_path(path), FileKind::Canvas | FileKind::Base) {
             return None;
         }
         let (caret, words, chars) = if self.mode.is_editing() {
@@ -12129,11 +12225,17 @@ fn leaf_json(tab: &Tab) -> Value {
 }
 
 /// The Lucide icon Obsidian records on a file's leaf: the dashboard for a
-/// canvas, the plain file otherwise. OBSERVE: what it writes for images,
-/// PDFs and the rest.
+/// canvas, the list layout for a base, the plain file otherwise.
+///
+/// OBSERVE: what it writes for images, PDFs and the rest, and the base's
+/// own leaf icon -- the Bases probe of 2026-10-25 never read a leaf, so
+/// `lucide-layout-list` here is the ribbon button's observed icon (see
+/// [[Specification#Observed Bases write behavior, Obsidian 1.14.5
+/// (installer build 1.13.7)]]) carried over the way the canvas's is.
 fn leaf_icon(path: &str) -> &'static str {
     match FileKind::from_path(path) {
         FileKind::Canvas => "lucide-layout-dashboard",
+        FileKind::Base => "lucide-layout-list",
         _ => "lucide-file",
     }
 }
@@ -12186,10 +12288,16 @@ fn tab_foot(left: bool, theme: &Theme) -> impl IntoElement {
 }
 
 /// The tab strip's name for a file: a note's name without `.md`, and a
-/// canvas without `.canvas` too, which is how Obsidian titles its tabs.
+/// canvas without `.canvas` or a base without `.base` too, which is how
+/// Obsidian titles its tabs -- no view of its own ever shows an extension.
 fn tab_display_name(file_name: &str) -> &str {
     match file_name.rsplit_once('.') {
-        Some((stem, ext)) if ext.eq_ignore_ascii_case("canvas") && !stem.is_empty() => stem,
+        Some((stem, ext))
+            if (ext.eq_ignore_ascii_case("canvas") || ext.eq_ignore_ascii_case("base"))
+                && !stem.is_empty() =>
+        {
+            stem
+        }
         _ => display_name(file_name),
     }
 }
@@ -12201,6 +12309,9 @@ fn leaf_view_type(path: &str) -> &'static str {
         FileKind::Image => "image",
         FileKind::Pdf => "pdf",
         FileKind::Canvas => "canvas",
+        // OBSERVE: unread, like the base's leaf icon; `bases` is the id of
+        // the core plugin that registers the view.
+        FileKind::Base => "bases",
         FileKind::Audio => "audio",
         FileKind::Video => "video",
         _ => "markdown",
@@ -12991,6 +13102,47 @@ mod tests {
         assert_eq!(leaf_json(&restored), written);
     }
 
+    /// A base tab is written as a Bases leaf, not a markdown one: the
+    /// extension never reaches the title, and neither of the markdown
+    /// leaf's `mode`/`source` keys is written. A base has no `viewState`
+    /// of its own -- that is the canvas's viewport, and the Bases probe
+    /// read no leaf at all, so nothing is invented here.
+    #[test]
+    fn a_base_tab_is_written_as_a_bases_leaf() {
+        let tab = Tab {
+            path: Some("Shelf/Books.base".into()),
+            mode: ViewMode::LivePreview,
+            history: Vec::new(),
+            history_ix: 0,
+            leaf: None,
+            view_state: None,
+        };
+        let written = leaf_json(&tab);
+        assert_eq!(written["state"]["type"], json!("bases"));
+        assert_eq!(written["state"]["icon"], json!("lucide-layout-list"));
+        assert_eq!(written["state"]["title"], json!("Books"));
+        assert_eq!(
+            written["state"]["state"],
+            json!({"file": "Shelf/Books.base"})
+        );
+        assert!(written["state"]["state"].get("mode").is_none());
+        assert!(written["state"]["state"].get("viewState").is_none());
+        assert_eq!(tab.title(), "Books", "the strip shows no extension either");
+        assert_eq!(
+            tab_display_name("Books.BASE"),
+            "Books",
+            "the extension is matched without case"
+        );
+        assert_eq!(
+            tab_display_name(".base"),
+            ".base",
+            "a dotfile is its own name"
+        );
+        let known = |_: &str| true;
+        let (_, restored) = tab_from_leaf(&written, ViewMode::Reading, &known).unwrap();
+        assert_eq!(leaf_json(&restored), written);
+    }
+
     #[test]
     fn a_tab_that_moved_to_another_note_gets_a_fresh_leaf() {
         let read = leaf("a1072f377b3d1c69", "Old.md", "source", false);
@@ -13495,7 +13647,9 @@ mod tests {
     fn the_ribbon_base_button_runs_a_runnable_command() {
         assert!(RUNNABLE.contains(&"bases:new-file"));
         assert!(
-            CommandRegistry::with_known_ids().get("bases:new-file").is_some(),
+            CommandRegistry::with_known_ids()
+                .get("bases:new-file")
+                .is_some(),
             "bases:new-file is not one of Obsidian's own command ids"
         );
     }
@@ -13786,6 +13940,32 @@ mod tests {
         );
     }
 
+    /// The socket's own name for the Bases view is `bases`, in all three
+    /// places that name a view: the `state` dump's `focus.name` and the
+    /// painted view, the `focus` method, and the `type` method -- which
+    /// reaches nothing there, because a base has no field of its own.
+    #[test]
+    fn the_socket_calls_the_bases_view_bases() {
+        assert_eq!(MainView::Bases.as_str(), "bases");
+        assert_eq!(
+            Workspace::focus_target("bases", MainView::Bases),
+            Ok(Some(MainView::Bases))
+        );
+        let err = Workspace::focus_target("bases", MainView::Editor).unwrap_err();
+        assert!(err.contains("painting editor, not bases"), "{err}");
+        let err = Workspace::focus_target("editor", MainView::Bases).unwrap_err();
+        assert!(err.contains("painting bases, not editor"), "{err}");
+        assert_eq!(
+            Workspace::typed_text_target("bases", MainView::Bases),
+            "none"
+        );
+        assert_eq!(
+            Workspace::typed_text_target("editor", MainView::Bases),
+            "none",
+            "the editor's handle can hold the focus under a base"
+        );
+    }
+
     /// An editor whose buffer names no file never gets the main area: on
     /// launch over a vault with nothing to open the buffer belongs to
     /// nothing, and anything typed into it would be saved nowhere.
@@ -13793,45 +13973,57 @@ mod tests {
     fn the_main_area_paints_no_editor_without_a_file_behind_it() {
         for mode in [ViewMode::LivePreview, ViewMode::Source] {
             assert_eq!(
-                Workspace::main_view_for(mode, false, false, false, false),
+                Workspace::main_view_for(mode, false, false, false, false, false),
                 MainView::Empty,
                 "{mode:?} with nothing open"
             );
             assert_eq!(
-                Workspace::main_view_for(mode, true, false, true, false),
+                Workspace::main_view_for(mode, true, false, true, false, false),
                 MainView::Editor,
                 "{mode:?} with a note open"
             );
             // The `--synthetic` spike hands the editor a note that is in no
             // vault: the buffer names a file, and that is what mounts it.
             assert_eq!(
-                Workspace::main_view_for(mode, false, false, true, false),
+                Workspace::main_view_for(mode, false, false, true, false, false),
                 MainView::Editor,
                 "{mode:?} with a buffer that belongs to no vault"
             );
             assert_eq!(
-                Workspace::main_view_for(mode, true, true, true, false),
+                Workspace::main_view_for(mode, true, true, true, false, false),
                 MainView::Reading,
                 "{mode:?} over an image"
             );
         }
         assert_eq!(
-            Workspace::main_view_for(ViewMode::Reading, false, false, true, false),
+            Workspace::main_view_for(ViewMode::Reading, false, false, true, false, false),
             MainView::Empty,
             "a buffer is not a built note"
         );
         assert_eq!(
-            Workspace::main_view_for(ViewMode::Graph, false, false, false, false),
+            Workspace::main_view_for(ViewMode::Graph, false, false, false, false, false),
             MainView::Graph,
             "the graph needs no file"
         );
         for mode in [ViewMode::Reading, ViewMode::LivePreview, ViewMode::Source] {
             assert_eq!(
-                Workspace::main_view_for(mode, false, false, false, true),
+                Workspace::main_view_for(mode, false, false, false, true, false),
                 MainView::Canvas,
                 "{mode:?} over a canvas"
             );
+            assert_eq!(
+                Workspace::main_view_for(mode, false, false, false, false, true),
+                MainView::Bases,
+                "{mode:?} over a base"
+            );
         }
+        // The graph is the one view that outranks a file: a canvas or a base
+        // open behind it stays behind it.
+        assert_eq!(
+            Workspace::main_view_for(ViewMode::Graph, false, false, false, false, true),
+            MainView::Graph,
+            "the graph wins over a base"
+        );
     }
 
     /// The socket's `type` reaches the editor only while the main area is

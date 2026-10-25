@@ -318,8 +318,49 @@ uses behave as Obsidian's do.
 | Canvas | done: the view and the writer, see [[#Canvas view, 2026-10-21]] and [[#Canvas writer, 2026-10-19]] |
 | Bases: the format | done: parsed, modelled and written back in Obsidian's own bytes, `scoria-formats::base` |
 | Bases: the expression language | done: the parser and the evaluator, held to 277 parse trees and 1044 evaluated statements, see [[#Bases evaluator, 2026-10-25]] |
-| Bases: the view | not started — the table, cards and list layouts, the toolbar, `bases:*` and an embedded `![[x.base]]` |
+| Bases: the table view | done, read-only: a `.base` opens on its table, see [[#Bases table view, 2026-10-25]]; the ribbon's button creates one |
+| Bases: the rest of the view | not started — the cards, list and kanban layouts, the toolbar, `bases:*` beyond `new-file`, and an embedded `![[x.base]]` |
 | PDF, math, the themes subset, URI and CLI | not started |
+
+### Bases table view, 2026-10-25
+
+A `.base` opens on its table instead of the "not supported yet" placeholder.
+Read-only: the file is drawn, never written. Six pieces, which is also how the
+work was split —
+
+- `scoria-bases::table` resolves a view against the vault: the base's filters
+  and the view's own, the columns of `order`, the cells, `sort`, `groupBy` and
+  `limit`. It reads no vault; the caller hands it one `FileData` per note.
+- `scoria-bases::cell` is what one cell shows, which is **not** `toString()`:
+  null and a boolean are empty, a List joins with a bare `,` while each element
+  keeps its own rendering, a Link is its text.
+- `scoria::bases::rows` is the bridge from the vault's scan and cache to those
+  values, with no disk reads at all — 114 ms over 20 000 notes, against the
+  2 s index gate and the 256 ms the load itself costs.
+- `scoria::bases::view` draws it: a 30 px header row, rows in a reset-not-
+  spliced variable-height list, a disabled checkbox for a boolean, group
+  headers, the parse-error banner.
+- The workspace wires it as it wires the canvas: `MainView::Bases`, a
+  `FileKind::Base` arm in `show_file`, `release_bases`, the socket's `bases`
+  state, a `lucide-layout-list` leaf.
+- `tests/table_conformance.rs` holds the observed rules, and
+  `docs/scoria-demo/Rocks.base` and `Volcanoes.base` are the dogfood.
+
+A base is a view over the *whole vault*, which is the one place it differs from
+every other view in the shell: a canvas card is rebuilt when its own file
+changes, but any change at all may change a base's rows. So `after_changes`
+invalidates every group's base, and the table follows the vault live — adding a
+note that matches takes the demo's table from 8 rows to 9 without reopening it.
+
+What the build settled against the observations is in
+[[Specification#Observed Bases table view, Obsidian 1.14.5 (installer build 1.13.7)]]:
+the header's `displayName` lookup is by the *qualified* id, a `file.*` column's
+header is Obsidian's own label rather than the id's last segment, an empty
+`.base` is one default table of the whole vault, and the no-value group leads
+under an ascending `groupBy`. The one thing nobody should mistake for observed
+is `groupOrder`: it is in the schema and in the view object's own property
+list, but nothing in either probe run ever wrote one, so the implementation's
+ordering is a guess with a probe named for it.
 
 ### Bases evaluator, 2026-10-25
 

@@ -19,15 +19,19 @@
 //! [`FileData`] per row, so the crate stays free of `scoria-vault` and of
 //! gpui.
 
+pub mod cell;
 pub mod context;
 pub mod eval;
 pub mod expr;
 pub mod funcs;
+pub mod table;
 pub mod value;
 
+pub use cell::{Cell, CellKind};
 pub use context::{Context, SimpleContext};
 pub use eval::{eval, eval_str, matches_filter, EvalError, EvalResult, Evaluator, Scope};
 pub use expr::{parse, parse_node, BinaryOp, Expr, Literal, ParseError};
+pub use table::{Column, ColumnSource, Env, Group, Row, RowContext, Table, VIEW_KINDS};
 pub use value::{
     Cmp, DateValue, DurationValue, FileData, LinkValue, RegexpValue, RenderKind, RenderedValue,
     Type, Value,

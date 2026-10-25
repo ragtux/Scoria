@@ -10,6 +10,7 @@
 
 mod assets;
 mod backlinks;
+mod bases;
 mod bookmarks;
 mod canvas;
 mod chooser;
