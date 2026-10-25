@@ -268,8 +268,13 @@ pub struct ListEdit {
 impl ListEdit {
     /// The list with `text` back in the place of the item being edited. An
     /// item typed empty is dropped, the way a pill's remove control drops it;
-    /// a list emptied that way stays a list, since `k: []` is the form
-    /// Obsidian writes for a property with no items.
+    /// removing the last item leaves the key with an empty value rather than
+    /// a list, which is what Obsidian writes for the gesture (see
+    /// [[Specification#Property pills, four open gestures]]):
+    /// `tags:\n  - one\n` emptied a pill at a time ends as `tags:\n`, not
+    /// `tags: []`, and the key is not deleted. The flow `[]` stays the form
+    /// [`render_entry`] gives a value that *is* an empty list, which is how a
+    /// vault's own `k: []` survives an edit to another row.
     fn value(&self, text: &str) -> Value {
         let mut items = self.items.clone();
         let typed = text.trim();
@@ -281,6 +286,9 @@ impl ListEdit {
             *slot = typed.to_string();
         } else {
             items.push(typed.to_string());
+        }
+        if items.is_empty() {
+            return Value::Empty;
         }
         Value::List(items)
     }
@@ -1031,13 +1039,14 @@ mod tests {
                 value: Value::List(vec!["one".into(), "three".into()])
             })
         );
-        // The last item removed leaves the empty list Obsidian writes.
+        // The last item removed leaves the key with an empty value, which is
+        // what Obsidian writes for this gesture -- `tags:`, not `tags: []`.
         let single = list_row("---\ntags:\n  - one\n---\n\nbody\n", PropertyType::Tags);
         assert_eq!(
             remove_item(&single, 0),
             Some(Change::Set {
                 key: "tags".into(),
-                value: Value::List(Vec::new())
+                value: Value::Empty
             })
         );
         assert_eq!(remove_item(&single, 1), None);

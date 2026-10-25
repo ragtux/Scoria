@@ -368,6 +368,10 @@ pub struct GraphView {
     /// The `graph.json` scale the camera has already acted on, so that a
     /// refresh does not keep reinstating a zoom the user has reset away from.
     adopted_scale: Option<f32>,
+    /// The global graph's camera while a local graph is on screen. Obsidian
+    /// keeps the two in separate leaves, each with its own zoom, so switching
+    /// back has to find the global one where it was left.
+    global_camera: Option<(f32, Option<f32>, bool)>,
 }
 
 impl EventEmitter<GraphEvent> for GraphView {}
@@ -434,6 +438,7 @@ impl GraphView {
             user_adjusted: false,
             pinned_scale: None,
             adopted_scale: None,
+            global_camera: None,
         }
     }
 
@@ -448,7 +453,12 @@ impl GraphView {
                 }
             });
         }
-        if adopts_saved_scale(self.config.scale, self.adopted_scale, self.user_adjusted) {
+        // A local graph does not start from `graph.json`: against a file
+        // holding `scale: 8` the global graph opened at 7.926 and the local
+        // one at 1 (see [[Specification#Observed graph.json write behavior]]).
+        if !self.is_local()
+            && adopts_saved_scale(self.config.scale, self.adopted_scale, self.user_adjusted)
+        {
             self.adopted_scale = self.config.scale;
             self.pinned_scale = saved_pin(self.config.scale);
             if let Some(scale) = self.pinned_scale {
@@ -475,9 +485,28 @@ impl GraphView {
 
     pub fn set_local(&mut self, local: bool, cx: &mut Context<Self>) {
         let want = if local { self.current.clone() } else { None };
+        let was_local = self.is_local();
+        // The camera as the outgoing graph leaves it, read before the switch
+        // resets the auto-fit.
+        let camera = (self.scale, self.pinned_scale, self.user_adjusted);
         if self.local != want || (local && self.current.is_none()) {
             self.local = want;
             self.user_adjusted = false;
+            if local {
+                // Opened at 1, centred on the note, whatever zoom the global
+                // graph was left at and whatever `graph.json` pins. The
+                // global camera is put aside rather than thrown away.
+                if !was_local {
+                    self.global_camera = Some(camera);
+                }
+                self.pinned_scale = Some(1.0);
+                self.scale = 1.0;
+            } else if let Some((scale, pinned, adjusted)) = self.global_camera.take() {
+                // Back to the global graph, where its own zoom was left.
+                self.scale = scale;
+                self.pinned_scale = pinned;
+                self.user_adjusted = adjusted;
+            }
             self.rebuild(cx);
         }
     }

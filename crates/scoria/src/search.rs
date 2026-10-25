@@ -1494,17 +1494,25 @@ pub fn run_search(search: &Search, state: &VaultState) -> Vec<FileResult> {
 }
 
 /// Puts results in `order`. The name orders are Obsidian's alphabetical
-/// collation (numeric, locale-aware) with the path breaking a tie; the
-/// time orders sort by the time alone and are stable, so files sharing a
-/// time keep the order they had — which is what Obsidian's rows did when
-/// the sort was switched.
+/// collation (numeric, locale-aware) over a file list that is already in
+/// full-path-descending order, which is what `getVault().getMarkdownFiles()`
+/// returns, so a tie is broken by the path **descending**: a note in a folder
+/// sorts ahead of a root note of the same name, and `notes/apple` ahead of
+/// `apple.md` (see [[Specification#The search collation tie, explained]]).
+/// Z to A swaps the basename groups only — inside a tie the order is
+/// unchanged, so the reversal is of the name comparison alone. The time
+/// orders sort by the time alone and are stable, so files sharing a time keep
+/// the order they had — which is what Obsidian's rows did when the sort was
+/// switched.
 pub fn sort_results(results: &mut [FileResult], order: SortOrder) {
-    let by_name = |a: &FileResult, b: &FileResult| {
-        natural_cmp(&a.name, &b.name).then_with(|| a.path.cmp(&b.path))
-    };
+    let tie = |a: &FileResult, b: &FileResult| b.path.cmp(&a.path);
     match order {
-        SortOrder::Alphabetical => results.sort_by(by_name),
-        SortOrder::AlphabeticalReverse => results.sort_by(|a, b| by_name(b, a)),
+        SortOrder::Alphabetical => {
+            results.sort_by(|a, b| natural_cmp(&a.name, &b.name).then_with(|| tie(a, b)));
+        }
+        SortOrder::AlphabeticalReverse => {
+            results.sort_by(|a, b| natural_cmp(&b.name, &a.name).then_with(|| tie(a, b)));
+        }
         SortOrder::ByModifiedTime => results.sort_by_key(|r| std::cmp::Reverse(r.mtime)),
         SortOrder::ByModifiedTimeReverse => results.sort_by_key(|r| r.mtime),
         SortOrder::ByCreatedTime => results.sort_by_key(|r| std::cmp::Reverse(r.ctime)),
@@ -1676,10 +1684,31 @@ mod tests {
         sort_results(&mut results, SortOrder::AlphabeticalReverse);
         let names: Vec<&str> = results.iter().map(|r| r.name.as_str()).collect();
         assert_eq!(names, vec!["Note 10", "Note 2", "9 needle", "_needle"]);
-        // Same name in two folders: the path decides.
-        let mut same: Vec<FileResult> = ["notes/a.md", "a.md"].iter().map(|p| result(p)).collect();
+        // Same basename: the tie is the full path descending, so a note in a
+        // folder comes ahead of a root note of the same name. This is the
+        // probe's own eight-`apple` case and its observed order.
+        let paths = [
+            "zzz/apple.md",
+            "z/apple.md",
+            "m/n/apple.md",
+            "m/apple.md",
+            "apple.md",
+            "a/b/c/apple.md",
+            "a/apple.md",
+            "APPLE.md",
+        ];
+        let mut same: Vec<FileResult> = paths.iter().map(|p| result(p)).collect();
+        same.sort_by(|x, y| x.path.cmp(&y.path));
         sort_results(&mut same, SortOrder::Alphabetical);
-        assert_eq!(same[0].path, "a.md");
+        let order: Vec<&str> = same.iter().map(|r| r.path.as_str()).collect();
+        assert_eq!(order, paths);
+        let mut mixed: Vec<FileResult> = ["notes/b.md", "b.md", "notes/a.md", "a.md"]
+            .iter()
+            .map(|p| result(p))
+            .collect();
+        sort_results(&mut mixed, SortOrder::AlphabeticalReverse);
+        let order: Vec<&str> = mixed.iter().map(|r| r.path.as_str()).collect();
+        assert_eq!(order, vec!["notes/b.md", "b.md", "notes/a.md", "a.md"]);
     }
 
     #[test]

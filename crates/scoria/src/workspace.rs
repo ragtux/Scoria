@@ -3759,6 +3759,11 @@ impl Workspace {
             "switcher:open" => self.open_switcher("", window, cx),
             "global-search:open" => self.open_search_action(&OpenSearch, window, cx),
             "graph:open" => self.open_graph_action(&OpenGraph, window, cx),
+            // Asked for by id with no file open -- the palette does not offer
+            // it, and `can_run` says so -- this opens nothing, which is what
+            // Obsidian's `checkCallback` does rather than falling back to the
+            // global graph.
+            "graph:open-local" if self.current.is_none() => {}
             "graph:open-local" => self.show_graph(true, window, cx),
             "canvas:new-file" => self.new_canvas(cx),
             "canvas:jump-to-group" => self.jump_to_group(window, cx),
@@ -4299,6 +4304,14 @@ impl Workspace {
         }
         if TableCommand::from_id(id).is_some() {
             return self.mode.is_editing() && self.editor.read(cx).in_table();
+        }
+        // `graph:open-local` is a checkCallback: with every markdown leaf
+        // detached Obsidian does not list the id at all, rather than offer a
+        // command that would open nothing (see [[Specification#`graph:open-
+        // local` is not offered with no file open]]). Only the no-file case
+        // was observed, so that is all this refuses.
+        if id == "graph:open-local" {
+            return self.current.is_some();
         }
         if EDITOR_ONLY.contains(&id) {
             return self.mode.is_editing() && self.note_has_keys(window, cx);

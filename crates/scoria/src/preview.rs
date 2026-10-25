@@ -37,6 +37,10 @@ pub struct Decor {
     pub code_block: bool,
     /// Inside the frontmatter.
     pub frontmatter: bool,
+    /// The line is a checked task: its text is struck through and muted, the
+    /// way Obsidian styles `.cm-line.HyperMD-task-line` of a done item (see
+    /// [[Specification#A checked task is struck through and muted]]).
+    pub task_done: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -209,7 +213,13 @@ pub fn touches(touch: &[Range<usize>], range: &Range<usize>) -> bool {
 /// selections on this line (collapsed cursors included), line-relative;
 /// any construct one of them touches keeps its source.
 pub fn display_line(line: &str, spans: &[HighlightSpan], touch: &[Range<usize>]) -> DisplayLine {
-    let (scale, decor) = line_block(spans);
+    let (scale, mut decor) = line_block(spans);
+    decor.task_done = spans.iter().any(|s| {
+        s.kind == HighlightKind::Task
+            && line
+                .get(s.range.clone())
+                .is_some_and(|t| t.as_bytes().get(1).is_some_and(|b| *b != b' '))
+    });
     let mut hides: Vec<(Range<usize>, Cow<'static, str>, HighlightKind)> = Vec::new();
     for (ix, span) in spans.iter().enumerate() {
         let revealed = touches(touch, &span.range);
@@ -232,9 +242,11 @@ pub fn display_line(line: &str, spans: &[HighlightSpan], touch: &[Range<usize>])
                 }
             };
         match k {
-            HighlightKind::Heading(h) if h.underline => {
-                hides.push((r.clone(), "".into(), k));
-            }
+            // A setext underline is *not* hidden: the `=====` or `-----` row
+            // keeps its characters and its own line, at body size and weight
+            // (see [[Specification#The setext underline row stays, at body
+            // size]]). Its size is `line_block`'s business; there is nothing
+            // to hide here, and the arm below finds no hash run on it.
             HighlightKind::Heading(_) => {
                 let hashes = t.bytes().take_while(|&b| b == b'#').count();
                 let ws = t[hashes..]
@@ -522,6 +534,25 @@ mod tests {
     }
 
     #[test]
+    fn a_checked_task_marks_its_line_done() {
+        // The styling is the element's, but the flag is this module's: the
+        // line of a done item is muted and struck through, an open one is not,
+        // and `[X]` counts the same as `[x]`.
+        assert!(!render("- [ ] open", None).decor.task_done);
+        assert!(render("- [x] done", None).decor.task_done);
+        assert!(render("- [X] done", None).decor.task_done);
+        // A revealed line keeps the flag: the cursor shows the source, it
+        // does not reopen the task.
+        assert!(render("- [x] done", Some(0..0)).decor.task_done);
+        // Only `[x]` and `[X]` were observed, and any other non-space marker
+        // follows the rule the checkbox glyph and the reading view already
+        // use (`reading::view`, `item.task.is_some_and(|c| c != ' ')`), so
+        // the three agree rather than each guessing.
+        assert!(render("- [/] partial", None).decor.task_done);
+        assert!(!render("plain line", None).decor.task_done);
+    }
+
+    #[test]
     fn block_markers_render() {
         let h = render("## Title", None);
         assert_eq!(h.text, "Title");
@@ -567,33 +598,35 @@ mod tests {
     }
 
     #[test]
-    fn a_setext_underline_is_markup() {
+    fn a_setext_underline_stays_at_body_size() {
+        // Obsidian keeps the underline row's characters and gives the row
+        // body size, where the title line above it is heading-sized.
         let src = "Setext title\n============\n";
         let title = render_at(src, 0, None);
         assert_eq!(title.text, "Setext title");
         assert_eq!(title.scale, heading_scale(1));
         let underline = render_at(src, 1, None);
-        assert_eq!(underline.text, "");
+        assert_eq!(underline.text, "============");
         assert_eq!(underline.scale, 1.0);
-        // The cursor on the underline brings it back.
+        // Nothing is hidden, so the cursor on the row changes nothing.
         assert_eq!(render_at(src, 1, Some(0..0)).text, "============");
         let h2 = render_at("Setext two\n---\n", 1, None);
-        assert_eq!(h2.text, "");
+        assert_eq!(h2.text, "---");
         assert_eq!(h2.scale, 1.0);
         // A title that is itself a run of the underline character: the
-        // parser marks which row is the markup, so the title row is still
-        // a heading and only the row below it goes.
+        // parser marks which row is the markup, so the title row is the
+        // heading and the row below it is body-sized.
         let title = render_at("==\n==\n", 0, None);
         assert_eq!(title.text, "==");
         assert_eq!(title.scale, heading_scale(1));
         let underline = render_at("==\n==\n", 1, None);
-        assert_eq!(underline.text, "");
+        assert_eq!(underline.text, "==");
         assert_eq!(underline.scale, 1.0);
         // The same for the level 2 shape, whose title reads as a break.
         let title = render_at("--\n--\n", 0, None);
         assert_eq!(title.text, "--");
         assert_eq!(title.scale, heading_scale(2));
-        assert_eq!(render_at("--\n--\n", 1, None).text, "");
+        assert_eq!(render_at("--\n--\n", 1, None).text, "--");
     }
 
     #[test]

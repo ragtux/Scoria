@@ -46,6 +46,10 @@ actions!(
         Up,
         Down,
         Clear,
+        /// A chord the field eats so it reaches nothing else. Obsidian's
+        /// inputs swallow Ctrl+E rather than letting the workspace toggle
+        /// reading view with the keyboard in a field.
+        Swallow,
     ]
 );
 
@@ -65,7 +69,13 @@ pub fn bind_keys(cx: &mut App) {
         KeyBinding::new("ctrl-shift-left", SelectWordLeft, ctx),
         KeyBinding::new("ctrl-shift-right", SelectWordRight, ctx),
         KeyBinding::new("ctrl-a", SelectAll, ctx),
-        KeyBinding::new("ctrl-e", End, ctx),
+        // Obsidian swallows Ctrl+E inside a text input: it neither moves the
+        // caret to the end of the field nor toggles reading view (see
+        // [[Specification#Ctrl+E inside a text input does nothing]]). Binding
+        // it to End was a divergence, and leaving it unbound is another --
+        // the chord would reach the workspace and toggle the mode -- so the
+        // field eats it.
+        KeyBinding::new("ctrl-e", Swallow, ctx),
         KeyBinding::new("backspace", Backspace, ctx),
         KeyBinding::new("delete", Delete, ctx),
         KeyBinding::new("ctrl-backspace", DeleteWordBackward, ctx),
@@ -398,6 +408,9 @@ impl TextInput {
         cx.notify();
     }
 
+    /// Eats a chord that must not reach the workspace, changing nothing.
+    fn swallow(&mut self, _: &Swallow, _: &mut Window, _: &mut Context<Self>) {}
+
     fn end(&mut self, _: &End, _: &mut Window, cx: &mut Context<Self>) {
         self.content.move_to_edge(true, false);
         cx.notify();
@@ -706,6 +719,7 @@ impl Render for TextInput {
             .on_action(cx.listener(Self::cancel))
             .on_action(cx.listener(Self::up))
             .on_action(cx.listener(Self::down))
+            .on_action(cx.listener(Self::swallow))
             .w_full()
             .h(px(30.))
             .pl(self.pad_left)

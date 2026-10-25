@@ -4210,7 +4210,16 @@ impl Editor {
 // Element
 
 /// Styles one flattened highlight segment on top of the base text style.
-fn run_for(kinds: &[HighlightKind], base: &TextStyle, len: usize, p: &Palette) -> TextRun {
+/// `done` marks a checked task's line, whose text is muted and struck
+/// through; the checkbox glyph keeps its own colour and is left unstruck,
+/// since it stands in for Obsidian's `<input>` rather than for text.
+fn run_for(
+    kinds: &[HighlightKind],
+    base: &TextStyle,
+    len: usize,
+    p: &Palette,
+    done: bool,
+) -> TextRun {
     let mut font = base.font();
     let mut color: Hsla = base.color;
     let mut background_color = None;
@@ -4218,8 +4227,14 @@ fn run_for(kinds: &[HighlightKind], base: &TextStyle, len: usize, p: &Palette) -
     let mut strikethrough = None;
     for kind in kinds {
         match kind {
-            HighlightKind::Heading(_) => {
-                font.weight = FontWeight::BOLD;
+            HighlightKind::Heading(h) => {
+                // The setext underline row is the heading's markup: it keeps
+                // the heading colour and its own line, but body weight and
+                // body size (`line_block`), which is what Obsidian computes
+                // for `cm-formatting-header` — 16 px at 400.
+                if !h.underline {
+                    font.weight = FontWeight::BOLD;
+                }
                 color = p.accent;
             }
             HighlightKind::Wikilink | HighlightKind::Embed | HighlightKind::Link => {
@@ -4260,6 +4275,13 @@ fn run_for(kinds: &[HighlightKind], base: &TextStyle, len: usize, p: &Palette) -
             }
         }
     }
+    if done && !kinds.contains(&HighlightKind::Task) {
+        color = p.muted;
+        strikethrough = Some(StrikethroughStyle {
+            thickness: px(1.),
+            color: Some(color),
+        });
+    }
     TextRun {
         len,
         font,
@@ -4280,12 +4302,16 @@ fn runs_for_display(
     p: &Palette,
 ) -> Vec<TextRun> {
     let flat = flatten(spans);
+    let done = display.decor.task_done;
     let mut runs: Vec<TextRun> = Vec::new();
     let mut push = |run: TextRun| {
         if run.len > 0 {
             runs.push(run);
         }
     };
+    // The stretches no construct covers take the same treatment, which on a
+    // done task is most of the line.
+    let plain = |len: usize| run_for(&[], base, len, p, done);
     for piece in &display.pieces {
         match piece {
             Piece::Copy { source, len, .. } => {
@@ -4298,13 +4324,13 @@ fn runs_for_display(
                         continue;
                     }
                     if start > at {
-                        push(base.to_run(start - at));
+                        push(plain(start - at));
                     }
-                    push(run_for(kinds, base, end - start, p));
+                    push(run_for(kinds, base, end - start, p, done));
                     at = end;
                 }
                 if at < s1 {
-                    push(base.to_run(s1 - at));
+                    push(plain(s1 - at));
                 }
             }
             Piece::Sub {
@@ -4318,7 +4344,7 @@ fn runs_for_display(
                     .find(|(r, _)| r.start <= source.start && source.start < r.end)
                     .map(|(_, k)| k.clone())
                     .unwrap_or_else(|| vec![*kind]);
-                push(run_for(&kinds, base, *len, p));
+                push(run_for(&kinds, base, *len, p, done));
             }
         }
     }
