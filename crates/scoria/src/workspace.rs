@@ -228,6 +228,11 @@ pub const RUNNABLE: &[&str] = &[
     "app:go-back",
     "app:go-forward",
     "app:open-settings",
+    "app:open-help",
+    "app:open-vault",
+    "app:switch-vault",
+    "app:open-another-vault",
+    "app:open-sandbox-vault",
     "app:toggle-left-sidebar",
     "app:toggle-right-sidebar",
     "file-explorer:open",
@@ -12799,6 +12804,64 @@ mod tests {
         let registry = CommandRegistry::with_known_ids();
         for id in RUNNABLE.iter().chain(EDITOR_ONLY) {
             assert!(registry.get(id).is_some(), "{id} is not a known command");
+        }
+    }
+
+    /// The converse of [`every_editor_only_id_is_runnable`], and the one
+    /// that was missing: an id `run_command` answers but `RUNNABLE` does not
+    /// name is a command that works and nothing can reach. `can_run` tests
+    /// `RUNNABLE` first, so the palette leaves the id out, the socket
+    /// reports it as not runnable, `bind_keys` never binds its hotkey and
+    /// `run_command` does not even count it as recent. "Open help" sat that
+    /// way with F1 in `scoria-commands` and no key bound to it.
+    ///
+    /// The ids are read off the match itself rather than listed again here,
+    /// because a list kept by hand is what failed the first time.
+    #[test]
+    fn every_handled_id_is_runnable() {
+        const SOURCE: &str = include_str!("workspace.rs");
+        let body = SOURCE
+            .split_once("pub fn run_command(")
+            .expect("run_command is declared in this file")
+            .1;
+        let mut handled: Vec<String> = Vec::new();
+        // An arm's pattern is the lines at the match's own indentation that
+        // start with an id or carry on an `|` chain, up to the `=>`: a long
+        // chain is wrapped over several lines, and a guard (`if ...`) sits
+        // between the last id and the arrow. An arm's body is indented
+        // past this, so a nested match and a string literal in a call are
+        // both out of reach.
+        let mut pattern = String::new();
+        for line in body.lines() {
+            if line.starts_with("            _ =>") {
+                break;
+            }
+            if !(line.starts_with("            \"") || line.starts_with("            | \"")) {
+                continue;
+            }
+            pattern.push_str(line);
+            let Some((ids, _)) = pattern.split_once("=>") else {
+                continue;
+            };
+            // Every id is quoted, so the odd pieces of a split on the quote
+            // are the ids and the even ones are the `|`s and the guard.
+            handled.extend(ids.split('"').skip(1).step_by(2).map(|id| id.to_string()));
+            pattern.clear();
+        }
+        // A floor, so that a change to the match's shape shows up as a
+        // failure here rather than as a test that quietly checks nothing.
+        assert!(
+            handled.len() >= 95,
+            "only {} arms found; the reader above has stopped matching \
+             run_command's match",
+            handled.len()
+        );
+        for id in &handled {
+            assert!(
+                RUNNABLE.contains(&id.as_str()),
+                "{id} is handled by run_command but not in RUNNABLE, so \
+                 nothing can reach it"
+            );
         }
     }
 
