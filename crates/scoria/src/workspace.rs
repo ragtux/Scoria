@@ -12337,7 +12337,13 @@ impl Render for Workspace {
                         div()
                             .id("settings-frame")
                             .h_full()
-                            .max_w_full()
+                            // Obsidian's modal is `min(90vw, 1100px)`. The
+                            // frame has to carry the width, because a frame
+                            // that only clips leaves the panel laying out at
+                            // its full width with the control column past
+                            // the clip, where nothing can be clicked.
+                            .w(relative(0.9))
+                            .max_w(px(1100.))
                             .on_click(|_, _, cx| cx.stop_propagation())
                             .child(self.settings.clone()),
                     )

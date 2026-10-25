@@ -1778,7 +1778,7 @@ impl SettingsView {
 
     // ----- rendering ----------------------------------------------------
 
-    fn render_nav(&self, theme: &Theme, cx: &mut Context<Self>) -> gpui::Div {
+    fn render_nav(&self, theme: &Theme, cx: &mut Context<Self>) -> gpui::Stateful<gpui::Div> {
         let group_title = |label: &'static str, theme: &Theme| {
             div()
                 .px_3()
@@ -1789,8 +1789,13 @@ impl SettingsView {
                 .child(label.to_uppercase())
         };
         let mut nav = div()
+            .id("settings-nav")
             .flex()
             .flex_col()
+            // A short window clips the tabs below Core plugins, and the
+            // root is `overflow_hidden`: the nav scrolls for the same
+            // reason the content list does.
+            .overflow_y_scroll()
             .w(px(220.))
             .h_full()
             .flex_shrink_0()
@@ -2508,7 +2513,13 @@ impl Render for SettingsView {
             .on_mouse_down_out(cx.listener(|this, _, _, cx| this.dismiss_open_controls(cx)))
             .flex()
             .flex_row()
-            .w(px(1100.))
+            // The frame sets the width; the panel fills it and stops at
+            // Obsidian's 1100 px. The nav is `flex_shrink_0` and the
+            // content column `flex_1().min_w_0()`, so a narrow window
+            // takes the difference out of the content column rather than
+            // pushing it past the window's edge.
+            .w_full()
+            .max_w(px(1100.))
             .h_full()
             .bg(theme.bg)
             .border_1()
