@@ -46,13 +46,18 @@ Reader done, Writer in progress. `scoria-markdown` parses CommonMark (all 652 sp
 GitHub extensions Obsidian uses, and Obsidian's own syntax into one tree with byte spans, and renders
 it to reading-view HTML that matches Obsidian 1.13.7 on 1007 of 1009 corpus notes; the metadata
 cache, the editor and the link rewriter are all built from that tree. The application opens a real
-vault with the three-pane shell: Files, reading view, Backlinks, Outgoing links, Outline, Tags,
-Search, the quick switcher, the graph, the command palette and a Settings modal that writes. Notes
-open in Live Preview or Source mode with find and replace, multiple cursors and autosave; `[[`,
+vault with the three-pane shell: a Files view with Obsidian's header, its six sort orders and its
+keyboard; reading view; Backlinks, Outgoing links, Tags, All properties and Outline, each with its
+own sort, folds and filter kept in `workspace.json`; Search with its sort control and the Copy
+search results modal; the quick switcher, the graph, the command palette and a Settings modal that
+writes. Notes
+open in Live Preview or Source mode with find and replace, multiple cursors, auto-pairing and autosave; `[[`,
 `![[` and `#` autocomplete against the vault's files, aliases, headings, tags and block references; Obsidian's
 sixteen table commands add, move and align rows and columns and tables are edited cell by cell; new note,
 rename, move, copy and delete rewrite links the way Obsidian does, and frontmatter is an editable,
-typed properties table that rewrites only the lines it changes. The main area splits into tab groups
+typed properties table that rewrites only the lines it changes. A `.canvas` opens in a canvas view
+that pans, zooms, selects, moves, resizes, draws edges, groups and undoes, and autosaves in
+Obsidian's bytes. The main area splits into tab groups
 (Split right, Split down, draggable dividers, the focus commands) and `workspace.json` records the
 tree the way Obsidian does, and the Bookmarks pane reads and writes `bookmarks.json` in Obsidian's bytes. Everything is bound through
 Obsidian's command ids, so a vault's `hotkeys.json` applies unchanged.
@@ -154,16 +159,16 @@ at [scoria.cc](https://scoria.cc), whose site is built from `site/` in this repo
 | `scoria-suggest` | Autocompletion: what a line triggers, what the vault offers, and the link accepting one writes |
 | `scoria-templates` | Template placeholders and the moment.js date formats they take |
 | `scoria-formats` | On-disk formats: file kinds, `app.json` and friends, JSON Canvas 1.0, Bases YAML |
-| `scoria-commands` | The 196 command ids and default hotkeys so vault `hotkeys.json` applies unchanged |
+| `scoria-commands` | The 244 command ids and default hotkeys so vault `hotkeys.json` applies unchanged |
 
 ## Roadmap
 
 | Phase | Gate | Status |
 | --- | --- | --- |
 | 1. Spike | 50k-line editor, parser conformance corpus, 2 s vault index | Done |
-| 2. Reader | A daily user browses their real vault with no missing content | Done: Files, reading view, Backlinks, Outgoing links, Outline, Tags, Search, quick switcher, graph, command palette, read-only Settings, file watching |
+| 2. Reader | A daily user browses their real vault with no missing content | Done: Files, reading view, Backlinks, Outgoing links, Outline, Tags, Search, quick switcher, graph, command palette, the Settings modal, file watching |
 | 3. Writer | The vault round-trips byte-identical after a week of mixed use in both apps | In progress: Source mode, Live Preview, find and replace, file operations with link rewriting, properties, autocompletion, table editing, block references, templates, daily notes, tab groups, bookmarks, the round-trip harness and the Settings toggles are done; and every Settings control Obsidian offers as one writes; file recovery is out of phase 3 |
-| 4. Parity | Core plugin parity | Not started: canvas, bases, PDF, math, themes subset, URI and CLI |
+| 4. Parity | Core plugin parity | Started: the canvas view and the canvas writer are done; bases, PDF, math, themes subset, URI and CLI are not |
 | 5. Ecosystem | Native plugin SDK | Not started |
 
 Progress notes, gates and the per-item status live in `docs/scoria/Development.md`.

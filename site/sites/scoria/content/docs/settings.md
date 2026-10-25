@@ -1,6 +1,6 @@
 ---
 title: Settings
-description: The Settings window in Scoria — which tabs it shows, where every value comes from in your .obsidian folder, which settings actually take effect, and why it is read-only for now.
+description: The Settings window in Scoria — which tabs it shows, where every value comes from in your .obsidian folder, which controls write back to your vault, and which settings actually take effect.
 ---
 
 # Settings
@@ -9,11 +9,15 @@ description: The Settings window in Scoria — which tabs it shows, where every 
 `.obsidian` folder, so what you see is your real configuration rather than a set of Scoria
 defaults.
 
-> **Warning** **Settings is read-only.** A banner at the top of the window says so. Nothing
-> you see can be changed from inside Scoria; to change a setting, change it in Obsidian or
-> edit the JSON in `.obsidian/` directly. This is deliberate: Obsidian rewrites an entire
-> settings file on every change, and doing that safely — without dropping keys Scoria does
-> not know about — belongs with the round-trip gate rather than ahead of it.
+**Settings writes.** Every control Obsidian itself offers as one — the toggles, the seven
+dropdowns, the two sliders and the two folder fields — writes its key when you change it.
+A write merges into the file's own JSON, so only the key you changed moves and keys Scoria
+does not know about are left where they are.
+
+A few rows are deliberately read-only, because the control Obsidian offers is one Scoria
+does not have yet: the three font families, spellcheck languages, excluded files, accent
+color, the theme list, and the vault name, vault folder, config folder and language rows,
+which are not settings of the vault at all. Change those in Obsidian or in the JSON.
 
 ## The tabs
 
@@ -59,10 +63,15 @@ are the ones that change how Scoria behaves:
 | Base theme, accent color | `theme`, `accentColor` | The window's colors |
 | Fonts and font size | `interfaceFontFamily`, `textFontFamily`, `monospaceFontFamily`, `baseFontSize` | Typography |
 
-Settings that are **shown but not yet acted on** include spellcheck, auto-pairing of
-brackets and Markdown, Vim mode, inline title, fold heading and fold indent, line numbers,
-indent guides, right-to-left, and `cssTheme`. They are read from your configuration and
-displayed truthfully; the behavior behind them is not implemented.
+So are auto-pairing of brackets and of Markdown (`autoPairBrackets`, `autoPairMarkdown`),
+which take effect on the next keystroke without reopening the note.
+
+Settings that are **shown but not yet acted on** include spellcheck, Vim mode, inline title,
+fold heading and fold indent, line numbers, indent guides, right-to-left, window frame style,
+and `cssTheme`. They are read from your configuration and displayed truthfully, and changing
+one still writes the key for Obsidian to honor; the behavior behind them is not implemented
+here. Each such row says so on its own line — "not in Scoria yet", or "on restart" for the
+theme and the fonts — so you can tell which is which without leaving the window.
 
 ## Core and community plugins
 
@@ -85,16 +94,17 @@ The **Community plugins** tab lists your installed plugins, read from
 Some settings are absent rather than disabled, because the specification does not yet record
 the `app.json` key behind them — and inventing a key would be worse than omitting the row.
 These include: the default file to open, deleting attachments with their note, Mermaid
-support, quick font-size adjustment, zoom level, window frame style, and URI callbacks.
-Obsidian's Keychain tab, and the options tabs of core plugins other than the quick switcher
-and the command palette, are also not shown.
+support, quick font-size adjustment, zoom level, and URI callbacks. Obsidian's Keychain tab,
+and the options tabs of core plugins other than the quick switcher and the command palette,
+are also not shown.
 
 ## Unknown keys are safe
 
-Every config reader carries unrecognised keys through untouched. A setting written by a
-newer Obsidian than the specification covers is read, kept, and still there afterwards —
-which is only meaningful because Scoria does not rewrite these files at all today, and is
-the property that has to hold before it does.
+Every config reader carries unrecognised keys through untouched, and a write merges the one
+changed key into the file's own JSON rather than re-serialising the file. A setting written
+by a newer Obsidian than the specification covers is read, kept, and still there afterwards.
+That is the property that had to hold before Settings was allowed to write at all, and a
+test walks every control to check it.
 
 ## Next
 

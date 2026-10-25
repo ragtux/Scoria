@@ -27,15 +27,15 @@ Things Obsidian does that Scoria intends to do and does not.
 | **PDF viewing and export** | PDFs are recognized as a file kind; there is no viewer and no export |
 | **Audio and video players** | Recognized as file kinds; no player |
 | **Heading folding** | Headings do not collapse |
-| **Code block copy buttons** | Select and copy |
-| **Toggling a task in reading view** | Checkboxes render but are inert there. They toggle in Live Preview |
 
 ### Views
 
 | | |
 |---|---|
-| **Bases** | The Bases YAML format is implemented and round-trips; there is no base view |
+| **Bases** | The Bases YAML format is implemented and round-trips; there is no base view. Canvas has one |
+| **A canvas embedded in a note** | `![[Board.canvas]]` is not drawn; the file opens in a view of its own |
 | **Popout windows** | — |
+| **Stacked tabs** | Tabs and split groups are in; stacking them is not |
 | **Multiple vaults in one window** | Run Scoria once per vault |
 | **Local graph depth beyond 1**, arrows, timelapse, screenshot export | See [the graph](/docs/app/graph/) |
 | **Local graph as a side pane** | The graph is a full view |
@@ -44,9 +44,8 @@ Things Obsidian does that Scoria intends to do and does not.
 
 | | |
 |---|---|
-| **Auto-pairing** | `autoPairBrackets` and `autoPairMarkdown` are read, not acted on |
-| **Bold/italic toggles** | `Ctrl + B` and `Ctrl + I` are registered ids with no behavior — type the asterisks |
 | **File recovery** | Obsidian keeps its snapshots in IndexedDB outside the vault, so it is out of the round-trip work rather than next in it |
+| **Editing properties in reading view** | The reading view's properties table is read-only; Live Preview's is not |
 | **Vim mode** | `vimMode` is read, not implemented |
 | **Line numbers, indent guides, inline title, right-to-left** | Read and shown in Settings, not acted on |
 | **Spellcheck** | — |
@@ -62,8 +61,9 @@ Things Obsidian does that Scoria intends to do and does not.
 | **Pasting or dropping attachments** | Put the file in the folder yourself |
 | **System trash on Windows and macOS** | Implemented on Linux (freedesktop trash with a `.trashinfo` record); elsewhere it falls back to the vault's `.trash/` |
 | **Themes (`cssTheme`)** | Base theme, accent color and fonts are honored; a CSS theme is not. Tier 3 |
-| **Restoring the workspace on launch** | The `main` tree of tab groups is written to `workspace.json` the way Obsidian writes it, but Scoria still opens its own default layout rather than restoring the one it saved |
+| **A few Settings controls** | Most rows write. The font families, spellcheck languages, excluded files, accent color and the theme list do not, because the control Obsidian offers for them is one Scoria has not built |
 | **Search result context menu** | Sorting, copying, collapsing and the keyboard are in; a result has no right-click menu yet. See [search](/docs/app/search/) |
+| **A context menu on a side-pane row** | The Files view's is the only one in the app so far |
 | **Vault-wide search and replace** | Replace works within one note |
 
 ### Markdown edge cases
@@ -86,9 +86,6 @@ other byte alone. This is a difference in Scoria's favor and it is not going to 
 command whose check callback fails, but the effect is more visible here because more commands
 are unimplemented. The [Hotkeys tab](/docs/hotkeys/) still lists all 244 ids so your
 bindings are visible.
-
-**No window-layout restore.** Scoria writes `workspace.json` but opens its own default
-layout every time rather than reading one back, which is also why it starts instantly.
 
 **The default font is Liberation Sans.** Not a taste decision: the pinned GPUI cannot select
 weights from a variable font, so with a single-file variable font nothing renders bold.

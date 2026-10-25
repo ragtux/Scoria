@@ -276,7 +276,7 @@ browse their real vault with no missing content. Passed 2026-10-16, see
 | File watching | done: changed, added, removed and moved files re-index in place, links re-resolve, panes and search refresh, an open note reloads keeping its scroll position |
 | Outline | done: click scrolls to the heading |
 | Tags | done: vault-wide counts merged across inline and frontmatter tags |
-| Search | done: full query grammar with Obsidian's explain labels, results grouped per file with context, click opens at the line; sort options and copy results not yet |
+| Search | done: full query grammar with Obsidian's explain labels, results grouped per file with context, click opens at the line, the header's four controls, the six sort orders and Copy search results, see [[#Search pane, 2026-10-22]] |
 | Quick switcher | done: fuzzy over names, aliases and paths, recent files first, unresolved targets shown as not created; Enter on one creates the note |
 | Graph | done: global and local graphs, filters, color groups, forces and display settings from `graph.json`; zoom, pan, drag, hover, click opens |
 | Command palette | done: Obsidian's command names and hotkeys, pinned commands from `command-palette.json`, this session's recent commands first; lists only the commands Scoria can run |
@@ -1895,8 +1895,9 @@ writes the file's own ending.
 
 Not yet: editing properties in the reading view (Obsidian allows it there
 too), drag-to-reorder, a calendar picker for `date` and `datetime`, value
-autocompletion from other notes, and the Properties core-plugin side panes
-(`properties:open`, `properties:open-local`).
+autocompletion from other notes, and the Properties pane for the current
+file (`properties:open-local`). The vault-wide pane (`properties:open`)
+landed with the All properties tab, see [[#Tags, All properties and Outline panes, 2026-10-22]].
 
 ### File operations, 2026-10-17
 

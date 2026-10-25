@@ -51,6 +51,9 @@ use, so what you read and what the cache believes cannot disagree.
 - **`[[Note#^block-id]]`** opens it scrolled to that block.
 - **A tag** searches the vault for it.
 - **A footnote reference** jumps to the definition.
+- **A task checkbox** toggles it. The edit takes the same path a Live Preview click takes —
+  one undo step, written back by the autosave — and the view rebuilds from that buffer.
+- **A code block's copy button** copies the block and shows a check for a moment.
 - **A link inside an embedded note** works, and opens the note it points at — not the note
   the embed is in.
 
@@ -87,8 +90,7 @@ The gaps, honestly — none of these are in reading view today:
 | Remote images (`https://…`) | Nothing; local images work |
 | Bases (`.base`) | The format round-trips on disk, but there is no base view. A `.canvas` does open, in a canvas view of its own |
 | Heading folding | Headings do not collapse |
-| Toggling a task checkbox | Checkboxes render but are not clickable here — toggle them in [Live Preview](/docs/app/editing/) |
-| Copy buttons on code blocks | Select and copy |
+| Editing a property | The properties table is read-only here; edit it in [Live Preview](/docs/app/editing/) |
 | PDF export | — |
 
 Frontmatter edge cases match Obsidian: a `<script>` in a note is removed, unknown HTML

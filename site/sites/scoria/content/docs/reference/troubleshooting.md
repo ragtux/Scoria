@@ -56,10 +56,14 @@ math](/docs/format/code-math/). MathJax is a later phase.
 
 Likewise HTML in a note shows as text, and remote images do not load.
 
-## A `.canvas` or `.base` file does not open
+## A `.base` file does not open
 
-Also current behavior. The formats are implemented and round-trip on disk, but there is no
-view for either yet. See [what differs](/docs/reference/differences/).
+Also current behavior: the Bases YAML format is implemented and round-trips on disk, but
+there is no base view yet, so the file is listed in Files and the main area says the kind is
+not supported. See [what differs](/docs/reference/differences/).
+
+A `.canvas` does open, in a canvas view of its own. If one does not, that is a bug worth
+[reporting](https://github.com/ragtux/scoria/issues) with the file.
 
 ## A link opened the wrong note
 
@@ -88,8 +92,15 @@ corpus of Obsidian's own output as a test ratchet, and a reproducing note gets a
 
 ## I cannot change a setting
 
-[Settings is read-only.](/docs/settings/) Change it in Obsidian, or edit the JSON in
-`.obsidian/` and reopen the vault. This is deliberate for now, not an oversight.
+Most rows do write — see [Settings](/docs/settings/). The ones that do not are the controls
+Scoria has no equivalent for yet: the three font families, spellcheck languages, excluded
+files, accent color, the theme list, and the vault name, vault folder, config folder and
+language rows, which are not settings of the vault at all. Change those in Obsidian, or edit
+the JSON in `.obsidian/` and reopen the vault.
+
+A row that writes but changes nothing you can see is a different thing, and the row says so
+itself: "not in Scoria yet" means the key is written for Obsidian to honor, and "on restart"
+means the theme or the fonts are read once at startup.
 
 ## A file changed and I did not change it
 

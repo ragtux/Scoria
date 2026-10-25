@@ -117,9 +117,33 @@ In reading view, a click follows it. In Live Preview, a click on a rendered link
 in Source mode, `Ctrl + click` does. A `#Heading` or `#^block-id` link opens the note
 scrolled to that block.
 
+## Completing a link as you type
+
+`[[`, `![[` and `#` open a popup over the editor. It offers the vault's files, their
+aliases, a note's headings after a `#`, the vault's tags, and a note's blocks after a `#^` —
+`[[Note#^` lists that note's blocks and `[[#^` the ones in the note you are editing. An
+empty `[[` lists files and aliases by modification time, newest first.
+
+Three keys accept a row, and they do different things, as in Obsidian:
+
+| Key | Writes |
+|---|---|
+| `Enter` | The finished link, cursor after the `]]` (a trailing space on a tag) |
+| `Tab` | The same link with the cursor left *inside*, so a `#heading` or `\|alias` can follow |
+| `Shift + Enter` | The text as you typed it, ignoring the selected row |
+
+An accepted file is reformatted to your `newLinkFormat`, and display text is added exactly
+when the path part carries a `/` and the target is a note — `[[Sub/Alpha|Alpha]]`, but
+`[[../pic.png]]`. A heading or block pick keeps the path as you typed it and never takes
+display text. Accepting a block that has no id yet writes a six-character id into the
+*target* note, in the place Obsidian writes it, after checking that file is still the bytes
+the insertion was planned against.
+
+Ranking inside a query is Scoria's own fuzzy matcher, so the order can differ from
+Obsidian's; what each row *writes* is what matches.
+
 ## Not yet
 
-- Autocompletion when you type `[[`.
 - `Ctrl + hover` page previews.
 
 ## Next

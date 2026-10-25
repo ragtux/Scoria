@@ -11,11 +11,11 @@ alone on screen.
 
 ```
 ┌─────────────┬────────────────────────────────┬──────────────┐
-│ Files       │                                │ Backlinks    │
+│ Files       │ ▸ Note.md  ▸ Other.md          │ Backlinks    │
 │ Search      │          the open note         │ Outgoing     │
-│             │   (reading, Live Preview or    │ Outline      │
-│  ← left     │          Source mode)          │ Tags         │
-│    dock     │                                │  right dock →│
+│ Bookmarks   │   (reading, Live Preview or    │ Tags         │
+│  ← left     │          Source mode)          │ Properties   │
+│    dock     │                                │ Outline   →  │
 ├─────────────┴────────────────────────────────┴──────────────┤
 │ vault                              412 words, 2310 characters│
 └─────────────────────────────────────────────────────────────┘
@@ -23,13 +23,16 @@ alone on screen.
 
 ## The left dock
 
-Two tabs:
+Three tabs:
 
 - **[Files](/docs/app/files/)** — the folder tree of the vault. The tab Scoria opens on.
 - **[Search](/docs/app/search/)** — vault-wide search with the full query grammar.
+- **Bookmarks** — the tree in your vault's `bookmarks.json`: files, folders, headings,
+  blocks, searches and groups, read and written in Obsidian's bytes.
 
-`Ctrl + Shift + F` opens Search; `file-explorer:open` returns to Files. `Ctrl + E` is not
-involved — toggling the dock itself is `app:toggle-left-sidebar`.
+`Ctrl + Shift + F` opens Search; `file-explorer:open` returns to Files and
+`bookmarks:open` to Bookmarks. `Ctrl + E` is not involved — toggling the dock itself is
+`app:toggle-left-sidebar`.
 
 ## The note
 
@@ -45,21 +48,32 @@ Which one a note opens in follows your vault's settings: `defaultViewMode` decid
 view or editing, and `livePreview` decides which of the two editing modes. See [editing a
 note](/docs/app/editing/).
 
-> **Note** There are no tabs and no split panes. One note is open at a time.
+The middle is a tab strip over one or more tab groups. `Ctrl + T` opens a tab,
+`workspace:split-vertical` (Split right) and `workspace:split-horizontal` (Split down)
+divide the area into groups, the dividers between groups drag, and a tab drags between
+groups or onto a group's edge to make a new one. `Ctrl + Tab` and `Ctrl + 1`…`8` walk the
+tabs, and `editor:focus-left` and its three siblings move between groups. The `main`
+tree is written back to `workspace.json` in the shape Obsidian writes it.
+
+> **Note** Scoria still opens its own default layout rather than restoring the one it
+> saved. Popout windows do not exist here.
 
 ## The right dock
 
-Four tabs, all about the open note except Tags, which is about the whole vault:
+Five tabs, in Obsidian's order. Three are about the open note; Tags and All properties are
+about the whole vault:
 
 - **[Backlinks](/docs/app/panes/)** — notes that link here, and unlinked mentions of this
   note's name or aliases.
 - **[Outgoing links](/docs/app/panes/)** — where this note points, resolved and unresolved.
-- **[Outline](/docs/app/panes/)** — this note's headings; click one to scroll to it.
 - **[Tags](/docs/app/panes/)** — every tag in the vault with its count.
+- **[All properties](/docs/app/panes/)** — every property key in the vault with its type and
+  count.
+- **[Outline](/docs/app/panes/)** — this note's headings; click one to scroll to it.
 
 `app:toggle-right-sidebar` hides and shows the dock. Each tab also has a command of its own
-(`backlink:open`, `outgoing-links:open`, `outline:open`, `tag-pane:open`), so you can bind a
-key straight to the pane you want.
+(`backlink:open`, `outgoing-links:open`, `tag-pane:open`, `properties:open`,
+`outline:open`), so you can bind a key straight to the pane you want.
 
 ## The status bar
 
@@ -101,7 +115,7 @@ Every shortcut in Scoria is an Obsidian command bound from its default hotkey, s
 vault's `hotkeys.json` rebinds or unbinds all of them. The one exception is `Ctrl + Q`,
 which quits.
 
-The 34 commands Scoria can actually run are the ones the command palette offers; the rest
+The 127 commands Scoria can actually run are the ones the command palette offers; the rest
 are still listed in Settings' Hotkeys tab, so you can see your bindings for commands that
 do not do anything yet. The full list is in [commands and
 hotkeys](/docs/reference/commands/).

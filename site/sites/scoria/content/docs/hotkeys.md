@@ -69,8 +69,12 @@ custom.
 
 ## Changing a binding
 
-Not from inside Scoria — [Settings is read-only](/docs/settings/) for now. Rebind in
-Obsidian, or edit `.obsidian/hotkeys.json` and reopen the vault.
+From the Hotkeys tab, the way Obsidian does it: the plus on a row waits for a chord and
+takes the next one you press, the cross on a chip drops that binding, and the rotate button
+restores the command's defaults by removing its entry. Each of those rewrites
+`.obsidian/hotkeys.json` — in the file's own key order, so a vault's bindings do not shuffle
+the first time Scoria writes one — and a chord already bound to another command is marked
+the way Obsidian marks it. Editing the file by hand and reopening the vault still works.
 
 ## Next
 

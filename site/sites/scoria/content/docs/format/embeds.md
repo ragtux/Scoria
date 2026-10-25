@@ -43,7 +43,8 @@ note doing the embedding.
 | Remote image (`https://…`) | **Not loaded yet** |
 | Audio, video | Recognized as a file kind; no player yet |
 | PDF | Recognized; no viewer yet |
-| Canvas, Base | Recognized and round-tripped on disk; no view yet |
+| Canvas | Not drawn inside a note. A `.canvas` opens in a canvas view of its own |
+| Base | Recognized and round-tripped on disk; no view yet |
 
 Size hints are Obsidian's: `|400` sets the width, `|400x300` fits a box. A hint is not an
 alias — Scoria tells them apart the way Obsidian does, described next.

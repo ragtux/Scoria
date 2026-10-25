@@ -71,7 +71,7 @@ phase by phase:
 | 1. Spike | 50k-line editor, parser conformance corpus, 2 s vault index | **Done** |
 | 2. Reader | A daily user browses their real vault with no missing content | **Done** |
 | 3. Writer | The vault round-trips byte-identical after a week of mixed use in both apps | **In progress** |
-| 4. Parity | Core plugin parity | Not started |
+| 4. Parity | Core plugin parity | **Started**: the canvas view and the canvas writer are done; Bases, MathJax, PDF, the themes subset, URI and CLI are not |
 | 5. Ecosystem | Native plugin SDK | Not started |
 
 Note the shape of those gates: each is a claim about a person using the program, not a

@@ -104,6 +104,19 @@ cleared rather than continued; an empty *nested* item outdents instead.
 depending on `useTab`, and any ordered items this unsettles renumber: an item follows its
 previous sibling at its own depth, and one with no previous sibling restarts at 1.
 
+## Auto-pairing
+
+`autoPairBrackets` brings a closer along with `(`, `[`, `{`, `"` and `'`; `autoPairMarkdown`
+does the same for the backtick, `*` and `_`. Typing the closer where one is already waiting
+steps over it instead of doubling it, a `Backspace` between a fresh pair takes both away, and
+with text selected the pair wraps the selection — `~`, `=`, `$` and `%` only ever wrap. Both
+toggles default to on, and changing one in [Settings](/docs/settings/) takes effect on the
+next keystroke without reopening the note.
+
+Every rule here is one that was observed against Obsidian. The characters and positions the
+probe left open are deliberately inert: pairing writes bytes you did not type, so a guessed
+rule would leave a stray `)` in your prose and the vault would keep it.
+
 ## Autocompletion
 
 `[[` and `![[` offer the vault's files, their aliases, their headings and their block
@@ -175,8 +188,6 @@ will not throw away your typing to take the disk's version.
 
 ## Not yet
 
-- **Auto-pairing** of brackets and Markdown markers (`autoPairBrackets`,
-  `autoPairMarkdown` are read but not acted on).
 - **Vim mode** (`vimMode` is read, not implemented).
 - **File recovery.** Obsidian keeps its snapshots outside the vault, so this is deliberately
   out of the round-trip work rather than next in it.

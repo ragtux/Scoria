@@ -24,8 +24,11 @@ What follows is what to expect.
 | `appearance.json` | Base theme, accent color, fonts and font size are read before the window opens |
 | `graph.json` | Filters, color groups, display settings and forces drive the graph view |
 | `core-plugins.json`, `community-plugins.json` | Read and shown in Settings (community plugins are listed, not run) |
-| `app.json` settings | The editor and files settings are honored — see [settings](/docs/settings/) |
-| Canvas and Bases files | Recognized, parsed and round-tripped on disk, but **not drawn yet** |
+| `app.json` settings | The editor and files settings are honored, and Settings writes them back — see [settings](/docs/settings/) |
+| `bookmarks.json` | Read into the Bookmarks pane and written back in Obsidian's bytes |
+| `workspace.json` | The `main` tree of tab groups and the panes' own leaf state are read at restore and written back in place |
+| Canvas files | Opened in a canvas view and saved in Obsidian's bytes |
+| Bases files | Recognized, parsed and round-tripped on disk, but **not drawn yet** |
 
 ## What you will miss
 
@@ -40,11 +43,12 @@ Be realistic about this list before you make Scoria your daily reader.
   typeset math.
 - **HTML in notes.** Shown as text rather than rendered.
 - **Remote images.** A `![](https://…)` does not load; local images do.
-- **Canvas and Bases views.** The formats are implemented, the views are not.
-- **Changing settings in the app.** Settings shows your real configuration and is read-only.
-- **Tabs and split panes.** One note at a time, with back and forward history.
-- **Multiple vaults in one window**, PDF export, heading folding, drag-and-drop in Files,
-  inline title editing, pasting attachments.
+- **The Bases view.** The Bases YAML format is implemented and round-trips; a `.base` does
+  not open. A `.canvas` does, in a canvas view of its own.
+- **A few settings controls.** Most rows write; the font pickers, spellcheck languages,
+  excluded files, accent color and the theme list do not.
+- **Popout windows and multiple vaults in one window**, PDF export, heading folding,
+  drag-and-drop in Files, inline title editing, pasting attachments.
 
 The full list, kept honest, is [what differs from
 Obsidian](/docs/reference/differences/).
@@ -53,9 +57,11 @@ Obsidian](/docs/reference/differences/).
 
 The safe order, in increasing commitment:
 
-1. **Read-only, on your real vault.** Open it in Scoria and browse. Reading writes nothing
-   at all — not a cache, not a settings file, not `workspace.json`. There is no risk here
-   beyond the program crashing, which loses nothing.
+1. **Read-only, on your real vault.** Open it in Scoria and browse. Browsing writes no note
+   and no cache; the one file it can touch is `.obsidian/workspace.json`, on the way out and
+   only if the session changed the layout, with every key Scoria does not know about carried
+   through. There is no risk to a note here beyond the program crashing, which loses
+   nothing.
 
 2. **Edit a scratch copy.** Copy a dozen notes into a new folder, including a couple with
    frontmatter, tables and CRLF line endings if you have them. Edit them in Scoria, then
@@ -90,15 +96,15 @@ a note renders or where a link points, that is a real defect and worth
 
 Not bugs, just differences you will notice in the first ten minutes:
 
-- **It starts immediately.** There is no splash and no window-restore step, because the
-  layout is not restored — Scoria opens its own default three-pane shell every time.
-- **One window, one vault.** Run it twice for two vaults.
-- **There are no tabs.** One note is open at a time, and `Ctrl + Alt + ←` / `→` walk the
-  history of what you have opened. Split panes, stacked tabs and popout windows do not
-  exist here.
-- **Settings is a window you read.** Every value is your real value, pulled from
-  `.obsidian`; none of them are editable yet. To change a setting, change it in Obsidian or
-  edit the JSON.
+- **It starts immediately.** There is no splash: the vault is scanned on a background
+  thread while the window is already up.
+- **One window, one vault.** Run it twice for two vaults. Popout windows do not exist here.
+- **Tabs and splits, but no stacked tabs.** `Ctrl + T` opens a tab, Split right and Split
+  down divide the main area into groups, a tab drags between them, and `Ctrl + Alt + ←` /
+  `→` still walk the history of what you have opened.
+- **Settings writes one key at a time.** Obsidian re-serialises a settings file on every
+  change; Scoria merges the key you changed into the file's own JSON and leaves the rest of
+  the bytes alone.
 
 ## Next
 

@@ -44,8 +44,29 @@ Every other key is kept and available to [property searches](/docs/reference/sea
 and an edge in the graph. When *Paper* is renamed, Scoria rewrites the link text in place
 and leaves the rest of your YAML bytes untouched.
 
-> **Note** Properties are read-only as text today: there is no property editor, so you edit
-> frontmatter as YAML in the note. That is on the writer phase's list.
+## Editing properties
+
+In Live Preview the properties block is a typed table you edit in place. Click a key or a
+value to open a field — typing, the arrows, Home, End, Backspace and Delete go into it,
+`Enter` commits, `Tab` commits a key and moves to its value, `Escape` abandons — and a
+commit is one undo step. The row's glyph opens the type menu (text, list, number, checkbox,
+date, datetime), the `×` removes the property, and *+ Add property* opens an unnamed row
+that writes nothing until it is named. `markdown:add-metadata-property` (`Ctrl + ;`),
+`markdown:clear-metadata-properties` and `editor:toggle-fold-properties` do the same from a
+key, and `propertiesInDocument` chooses the table, nothing, or the raw YAML.
+
+**What a write touches.** Obsidian rewrites the *whole* frontmatter block on any property
+write, which costs you your YAML comments and your flow lists. Scoria writes Obsidian's
+canonical form only for the entries whose **value** actually changed, and compares values
+rather than rendered text — so an untouched `tags: [one, two]` keeps its flow sequence and
+its quoting, and every other byte in the block stays where it was. A ratchet test over the
+1,005 corpus notes with frontmatter pins that down.
+
+Choosing a type writes `.obsidian/types.json`, keeping its key order and its unknown keys.
+
+> **Note** The reading view's table is read-only; Obsidian lets you edit there too.
+> Drag-to-reorder, a calendar picker for `date` and `datetime`, and value autocompletion
+> from other notes are also not here yet.
 
 ## Tags
 

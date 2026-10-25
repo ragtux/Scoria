@@ -44,19 +44,25 @@ recognize are carried through untouched**.
 
 | File | Scoria |
 |---|---|
-| `app.json` | Reads — the editor and files settings |
-| `appearance.json` | Reads — base theme, accent color, fonts, font size |
-| `hotkeys.json` | Reads — your key bindings |
-| `core-plugins.json` | Reads — both the modern map and the legacy array shape |
-| `community-plugins.json` | Reads the list, and each plugin's `manifest.json` |
-| `graph.json` | Reads — filters, color groups, display settings, forces |
-| `switcher.json` | Reads |
+| `app.json` | Reads and writes — the editor and files settings |
+| `appearance.json` | Reads and writes — base theme, accent color, fonts, font size |
+| `hotkeys.json` | Reads and writes — your key bindings, rebindable from the Hotkeys tab |
+| `core-plugins.json` | Reads and writes — both the modern map and the legacy array shape |
+| `community-plugins.json` | Reads and writes the list, and reads each plugin's `manifest.json` |
+| `types.json` | Reads and writes — the property types |
+| `bookmarks.json` | Reads and writes — the Bookmarks pane |
+| `workspace.json` | Reads and writes — the tab-group tree, the panes' leaf state, `lastOpenFiles` |
+| `graph.json` | Reads — filters, color groups, display settings, forces. Not written back |
+| `switcher.json` | Reads and writes |
 | `command-palette.json` | Reads — pinned commands |
-| `workspace.json` | Reads, does not apply, never writes |
 | `themes/`, `snippets/` | Not applied (tier 3) |
 | `plugins/` | Manifests read; plugin code not executed |
 
-Scoria writes **none of these** today. See [settings](/docs/settings/) for why.
+A write merges the one changed key into the file's own JSON rather than re-serialising it,
+so unknown keys and the file's own order survive. The two exceptions are `hotkeys.json` and
+`bookmarks.json`, written whole because *removing* an entry is what restores a default
+there — and each entry Scoria did not touch goes back key for key, unknown keys included.
+See [settings](/docs/settings/).
 
 Which `app.json` keys are read, and which of them actually change behavior, is the table in
 [settings](/docs/settings/).
@@ -80,14 +86,17 @@ Read in full enough detail to reproduce your graph:
 its fields, z-order by array order, and tab-indented output when writing. A canvas
 round-trips through Scoria unchanged.
 
-> **Note** There is no canvas **view** yet. The file is recognized in Files and its format is
-> implemented; opening it does not draw a canvas. That is phase 4.
+A `.canvas` **opens** in a canvas view of its own in the main area: it pans, zooms, selects,
+moves, resizes, draws edges, colors, groups, copies, pastes and undoes, cards are typed
+into, and it autosaves through the same writer — the bytes Obsidian writes on an edited
+save. The menus, controls and commands are Obsidian's. An embed of a canvas inside a note is
+still not drawn.
 
 ## Bases
 
 `.base` files are Obsidian's Bases format, YAML. Scoria implements the top-level keys and the
-recursive filter structure, and round-trips a base file unchanged. As with Canvas, there is
-no base view yet.
+recursive filter structure, and round-trips a base file unchanged. There is no base view
+yet: opening a `.base` says the kind is not supported.
 
 ## What Scoria writes, completely
 
@@ -100,8 +109,17 @@ The whole list:
 3. **Files you create, copy or delete.**
 4. **A `.trashinfo` record and a moved file**, when deleting with `trashOption: system` on
    Linux, or a file moved into `.trash/` with `local`.
+5. **A canvas you edited** — on its own autosave, through the JSON Canvas writer above.
+6. **One key of one file under `.obsidian/`**, when you change something that lives there: a
+   Settings control writes into `app.json`, `appearance.json`, `switcher.json`,
+   `core-plugins.json` or `community-plugins.json`; a rebinding writes `hotkeys.json`; a
+   property type writes `types.json`; a bookmark writes `bookmarks.json`. A config write
+   merges into the file's own JSON, so unknown keys stay exactly where they are.
+7. **`.obsidian/workspace.json`**, on the way out and only if the session changed the
+   layout: the `main` tree of tab groups, each pane's own leaf state and `lastOpenFiles`,
+   with every other key carried through.
 
-Nothing else. No cache, no index, no sidecar, no configuration, no lock file.
+Nothing else. No cache, no index, no sidecar, no lock file.
 
 ## Not a format: Sync and Publish
 

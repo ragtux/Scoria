@@ -49,17 +49,23 @@ Type part of a command's name and press Enter to run it. The order is Obsidian's
 Fuzzy matching is over command *names*, the ones you see — *Toggle reading view*, not
 `markdown:toggle-preview`.
 
-> **Note** The palette lists only the commands Scoria can actually run — 34 of them today.
+> **Note** The palette lists only the commands Scoria can actually run — 127 of them today.
 > This is the same way Obsidian hides a command whose check callback fails, and it means the
 > palette never offers you something that does nothing. Every command id is still listed in
 > Settings' [Hotkeys](/docs/hotkeys/) tab, so you can see and keep bindings for features that
 > are not implemented yet.
 
+The list also narrows with where you are, as Obsidian's does: 37 of those commands need an
+editor on screen with the keyboard in it, the fifteen commands that act on an existing table
+appear only while the cursor is in one, and `graph:open-local` is gone with no file open.
+
 What is in the palette today: the palette and switcher themselves, Search, the graph and
-local graph, toggling reading view and source mode, save, find and find-replace, add cursor
-above and below, back and forward, Settings, both sidebar toggles, Files and reveal-active-file,
-new note (three variants), new folder, move, make a copy, rename, delete, and the four right-dock
-panes.
+local graph, toggling reading view and source mode, save, find and find-replace, the editor's
+formatting and list commands, the heading commands, multiple cursors, the sixteen table
+commands, the three template commands and the three daily-note ones, back and forward,
+Settings, both sidebar toggles, Files and reveal-active-file, new note (three variants), new
+folder, move, make a copy, rename, delete, the tab and tab-group commands, the canvas
+commands, the seven bookmark commands, and the five right-dock panes.
 
 The full list of ids, names and default keys is in [commands and
 hotkeys](/docs/reference/commands/).

@@ -49,11 +49,11 @@ and carried through rather than dropped.
 | `graph.json` | Graph filters, color groups, display settings and forces |
 | `switcher.json` | Quick switcher options |
 | `command-palette.json` | Pinned commands |
-| `workspace.json` | Read, but **not applied**: Scoria opens its own default layout, and never writes this file, so your Obsidian layout is untouched |
+| `workspace.json` | The `main` tree of tab groups, the panes' own leaf state and `lastOpenFiles`, read at startup and written back in place on the way out |
 
 ## What Scoria writes
 
-While you are only reading, nothing at all. When you edit:
+No note at all while you are only reading. The whole list:
 
 - **The note you edited**, and only that one. Autosave fires two seconds after your last
   keystroke, on `Ctrl + S`, when you open another note, when you switch to reading view, and
@@ -61,12 +61,18 @@ While you are only reading, nothing at all. When you edit:
 - **Notes whose links need rewriting**, when you rename or move a file and
   `alwaysUpdateLinks` is on. See [managing notes](/docs/app/manage/).
 - **Files created or deleted** by you, through the Files menu or the commands.
+- **A canvas you edited**, on its own autosave, in the bytes Obsidian writes.
+- **`.obsidian/workspace.json`**, on the way out and only if the session changed the layout.
+- **Files in `.obsidian`**, when you change something that lives in one: a Settings control
+  writes its own key into `app.json`, `appearance.json`, `switcher.json`,
+  `core-plugins.json` or `community-plugins.json`; a rebinding writes `hotkeys.json`; a
+  property type writes `types.json`; a bookmark writes `bookmarks.json`; and the tab-group
+  tree and the panes' own state write `workspace.json`. A config write merges into the
+  file's own JSON, so only the key you changed moves and keys Scoria does not recognise are
+  left exactly where they were.
 
-Nothing else. In particular Scoria does not write `.obsidian` — Settings is read-only at
-present, deliberately, because Obsidian rewrites a whole settings file on every change and
-that is a round-trip hazard worth getting right rather than quickly. It does not write
-`workspace.json`, so your Obsidian layout is never disturbed. It writes no cache, index or
-sidecar file of its own, because it has none.
+Nothing else. Scoria writes no cache, index or sidecar file of its own, because it has
+none.
 
 On save, a file's byte-order mark and its line endings are restored as they were found. A
 note that was CRLF with a BOM is written back CRLF with a BOM.

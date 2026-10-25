@@ -33,11 +33,11 @@ so in place, rather than describing Obsidian's behavior and leaving you to find 
 | Page | What it covers |
 |---|---|
 | [The window](/docs/app/window/) | The three panes, tabs, history, the ribbon, what is where |
-| [The Files view](/docs/app/files/) | The file tree, sort order, what is hidden, the context menu |
+| [The Files view](/docs/app/files/) | The file tree, the header's sort orders, the keyboard, bookmarks |
 | [Reading view](/docs/app/reading-view/) | How a finished note is displayed, and what is not drawn yet |
-| [Editing a note](/docs/app/editing/) | Live Preview and Source mode, smart lists, saving, undo |
+| [Editing a note](/docs/app/editing/) | Live Preview and Source mode, smart lists, auto-pairing, saving, undo |
 | [Find and replace](/docs/app/find/) | The in-note search panel, regex, multiple cursors |
-| [Backlinks and the side panes](/docs/app/panes/) | Backlinks, unlinked mentions, Outgoing links, Outline, Tags |
+| [Backlinks and the side panes](/docs/app/panes/) | Backlinks, unlinked mentions, Outgoing links, Tags, All properties, Outline |
 | [Search](/docs/app/search/) | Searching the whole vault, reading the results, explain |
 | [Switcher and palette](/docs/app/switcher/) | The quick switcher and the command palette |
 | [The graph view](/docs/app/graph/) | The global and local graph, filters, color groups, forces |
@@ -54,15 +54,15 @@ uses, and Obsidian's own syntax. These pages are the syntax reference.
 | [Internal links](/docs/format/links/) | `[[Wikilinks]]`, Markdown links, headings, blocks, aliases |
 | [Embedding files](/docs/format/embeds/) | `![[Embeds]]` of notes, sections, blocks and images |
 | [Callouts](/docs/format/callouts/) | `> [!note]`, the built-in types, folding |
-| [Properties and tags](/docs/format/properties/) | YAML frontmatter, `#tags`, aliases |
+| [Properties and tags](/docs/format/properties/) | YAML frontmatter, the properties editor, `#tags`, aliases |
 | [Block ids and footnotes](/docs/format/blocks/) | `^block-ids`, footnote definitions, inline footnotes |
-| [Tables, code and math](/docs/format/code-math/) | Tables, fenced code, `$math$`, `%%comments%%` |
+| [Tables, code and math](/docs/format/code-math/) | Tables and table editing, fenced code, `$math$`, `%%comments%%` |
 
 ## Settings
 
 | Page | What it covers |
 |---|---|
-| [Settings](/docs/settings/) | The tabs Scoria shows, where each value comes from, why it is read-only |
+| [Settings](/docs/settings/) | The tabs Scoria shows, where each value comes from, which controls write |
 | [Hotkeys](/docs/hotkeys/) | How `hotkeys.json` is applied, rebinding, unbinding |
 
 ## Reference

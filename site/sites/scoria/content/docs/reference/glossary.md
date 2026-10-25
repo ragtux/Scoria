@@ -15,8 +15,8 @@ switcher, and counted in unlinked mentions.
 **Attachment** — a file in the vault that is not a note: an image, audio, video or PDF.
 
 **Backlink** — a link *to* the note you are reading, from somewhere else. Counted per
-occurrence, so a note linking here three times appears three times. See [the side
-panes](/docs/app/panes/).
+occurrence and grouped by the note it comes from, so a note linking here three times is one
+group of three matches. See [the side panes](/docs/app/panes/).
 
 **Base** — a `.base` file, Obsidian's Bases format. The format is implemented; there is no
 view yet.
@@ -30,7 +30,7 @@ a quote. A [block id](/docs/format/blocks/) names one so that it can be linked t
 [callouts](/docs/format/callouts/).
 
 **Canvas** — a `.canvas` file, [JSON Canvas 1.0](https://jsoncanvas.org). The format is
-implemented; there is no view yet.
+implemented and one opens in a canvas view of its own, which autosaves in Obsidian's bytes.
 
 **Clean room** — implementing from an observed and documented specification rather than from
 another program's code. No code, CSS or icons in Scoria come from Obsidian's bundle. See

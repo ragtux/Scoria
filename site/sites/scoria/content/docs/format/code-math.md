@@ -35,9 +35,27 @@ each column wants its widest cell, needs at least its longest unbreakable word, 
 total does not fit, the slack is shared out in proportion. See [reading
 view](/docs/app/reading-view/).
 
-> **Note** Table **cells are not editable** yet. In Live Preview a top-level table renders as
-> a widget; put the cursor in it and you edit the Markdown as text. A table editor is on the
-> writer phase's list.
+### Editing a table
+
+In Live Preview a table stays a grid wherever the cursor is, the way Obsidian's table editor
+does. Click a cell to open a field in it: `Tab` and `Shift + Tab` walk the cells, `Enter`
+drops into the cell below, `Escape` abandons, and the column grows with what is typed.
+Committing a cell replaces that cell's bytes and nothing else — ordinary typing re-pads
+nothing, which is what Obsidian does too. A `|` typed into a cell is written `\|` and a
+newline becomes a space, because either would otherwise restructure the table. In Source
+mode you edit the pipes directly.
+
+Obsidian's sixteen table commands are all here — add, move, duplicate and delete rows and
+columns, set a column's alignment, insert a table — and, like Obsidian's, they are offered
+only while the cursor is in a table. Each **rewrites the whole table**: every cell padded to
+its column's width, outer pipes added, short rows filled out, the delimiter grown to match.
+That is Obsidian's behavior, byte for byte, and one undo step takes it back.
+
+> **Note** The table under the cursor comes from the one Markdown parser rather than from
+> hunting for pipes, so a `|` inside a code span splits a cell here exactly where it splits
+> one in reading view. One consequence: `` | `a|b` | **bold** | `` is a paragraph by GFM's
+> rules, and Scoria leaves it as prose where Obsidian's table editor would rewrite it into a
+> three-column table.
 
 ## Code
 
