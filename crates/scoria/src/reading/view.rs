@@ -8,6 +8,7 @@
 use super::model::{
     Embed, EmbedKind, InlineStyle, LinkTarget, Model, RBlock, RItem, RichText, Segment, TaskMarker,
 };
+use crate::assets::{callout_icon, icon};
 use crate::properties::{Field, Part, Target};
 use crate::properties::{PROPERTIES_FOLD_ID, PROPERTY_ID_BASE};
 use crate::theme::Theme;
@@ -740,6 +741,10 @@ impl<'a> Renderer<'a> {
                                         on_toggle(id, cx)
                                     })
                             })
+                            // The type's Lucide icon, in the callout's own
+                            // colour, which is where Obsidian puts it and
+                            // what Obsidian paints it (see [`callout_icon`]).
+                            .child(icon(callout_icon(kind), 16., color))
                             .child(
                                 div().flex_1().child(
                                     // Where the title holds a link the link
@@ -759,11 +764,22 @@ impl<'a> Renderer<'a> {
                                 ),
                             )
                             .when(foldable, |d| {
-                                d.child(div().text_color(t.text_muted).child(if collapsed {
-                                    "▸"
-                                } else {
-                                    "▾"
-                                }))
+                                // Obsidian's `.callout-fold` holds
+                                // `lucide-chevron-down` collapsed and
+                                // expanded alike, turned a quarter turn when
+                                // collapsed by something that is not a
+                                // transform on that element;
+                                // `chevron-right` is the same drawing
+                                // already turned.
+                                d.child(icon(
+                                    if collapsed {
+                                        "chevron-right"
+                                    } else {
+                                        "chevron-down"
+                                    },
+                                    16.,
+                                    t.text_muted,
+                                ))
                             }),
                     )
                     .when(!collapsed && !children.is_empty(), |d| {

@@ -45,7 +45,9 @@ icons!(
     "bookmark",
     "calendar",
     "case-sensitive",
+    "circle-check",
     "circle-help",
+    "clipboard-list",
     "clock",
     "check",
     "chevron-down",
@@ -63,6 +65,7 @@ icons!(
     "file",
     "file-text",
     "files",
+    "flame",
     "flask-conical",
     "folder-closed",
     "folder-tree",
@@ -72,6 +75,7 @@ icons!(
     "git-fork",
     "heading",
     "image",
+    "info",
     "layers",
     "layout-dashboard",
     "layout-list",
@@ -89,6 +93,7 @@ icons!(
     "pencil",
     "pin",
     "plus",
+    "quote",
     "redo-2",
     "rotate-ccw",
     "search",
@@ -102,9 +107,11 @@ icons!(
     "terminal",
     "text",
     "trash-2",
+    "triangle-alert",
     "type",
     "undo-2",
     "x",
+    "zap",
 );
 
 /// The logo, the one bundled asset that is not a monochrome icon. It is
@@ -166,6 +173,35 @@ pub fn icon(name: &str, size: f32, color: Hsla) -> Svg {
         .text_color(color)
 }
 
+/// The Lucide icon Obsidian draws in a callout's title row, by canonical
+/// callout type (see [`scoria_markdown::canonical_callout_type`]). The
+/// pairing was read from the rendered `.callout-icon svg`'s own class in
+/// Obsidian 1.14.5; the table is in `docs/scoria/Specification.md` under
+/// "The lucide icon and colour of every built-in callout type". Two of the
+/// names Obsidian leaves there are Lucide's older ones, and the drawing is
+/// bundled under its current name instead: `check-circle-2` is
+/// `circle-check`, `alert-triangle` is `triangle-alert`. A type Obsidian
+/// does not know keeps its own name in the DOM but takes `note`'s pencil,
+/// which it already has by the time it arrives here — the canonical type of
+/// anything unrecognized is `note`.
+pub fn callout_icon(kind: &str) -> &'static str {
+    match kind {
+        "abstract" => "clipboard-list",
+        "info" => "info",
+        "todo" => "circle-check",
+        "tip" => "flame",
+        "success" => "check",
+        "question" => "circle-help",
+        "warning" => "triangle-alert",
+        "failure" => "x",
+        "danger" => "zap",
+        "bug" => "bug",
+        "example" => "list",
+        "quote" => "quote",
+        _ => "pencil",
+    }
+}
+
 /// The Scoria mark, `width` pixels wide and in its own colours.
 pub fn logo(width: f32) -> Img {
     img(LOGO.0)
@@ -188,6 +224,55 @@ mod tests {
                 text.contains("viewBox=\"0 0 24 24\""),
                 "{path} is not on Lucide's 24-unit grid"
             );
+        }
+    }
+
+    #[test]
+    fn every_callout_type_draws_the_icon_obsidian_draws() {
+        // The whole of the probe's table, aliases and all, plus a type
+        // Obsidian does not know: it falls back to note's pencil.
+        let table = [
+            ("note", "pencil"),
+            ("abstract", "clipboard-list"),
+            ("summary", "clipboard-list"),
+            ("tldr", "clipboard-list"),
+            ("info", "info"),
+            ("todo", "circle-check"),
+            ("tip", "flame"),
+            ("hint", "flame"),
+            ("important", "flame"),
+            ("success", "check"),
+            ("check", "check"),
+            ("done", "check"),
+            ("question", "circle-help"),
+            ("help", "circle-help"),
+            ("faq", "circle-help"),
+            ("warning", "triangle-alert"),
+            ("caution", "triangle-alert"),
+            ("attention", "triangle-alert"),
+            ("failure", "x"),
+            ("fail", "x"),
+            ("missing", "x"),
+            ("danger", "zap"),
+            ("error", "zap"),
+            ("bug", "bug"),
+            ("example", "list"),
+            ("quote", "quote"),
+            ("cite", "quote"),
+            ("nosuchtype", "pencil"),
+        ];
+        for (written, want) in table {
+            let name = callout_icon(scoria_markdown::canonical_callout_type(written));
+            assert_eq!(name, want, "[!{written}]");
+            let path = format!("icons/{name}.svg");
+            assert!(
+                Assets.load(&path).unwrap().is_some(),
+                "{path} is not bundled"
+            );
+        }
+        // The fold chevron, drawn in both states.
+        for name in ["chevron-down", "chevron-right"] {
+            assert!(Assets.load(&format!("icons/{name}.svg")).unwrap().is_some());
         }
     }
 
