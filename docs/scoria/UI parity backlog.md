@@ -24,7 +24,8 @@ ground the triage is the better source: it was driven against the current code, 
 and its evidence are the ones to act on, and several of its entries narrow a finding the first pass
 stated too widely. What an entry does *not* promise is that the fix is settled: several say plainly
 that the Obsidian behaviour is documented rather than probed, and the probes those wait on are
-collected under [[#Declined until Obsidian is probed]].
+collected under [[#Was declined until Obsidian was probed — all of it now is]], which as of
+2026-10-25 holds the answers rather than the questions.
 
 **Read the `Landed` lines first.** An entry whose first line after the severity reads
 `**Landed <date>**` describes behaviour that has since been fixed; the evidence under it is kept
@@ -100,7 +101,7 @@ bytes it just wrote, so `after_changes` cannot tell a self-write from an externa
 **Obsidian.** Obsidian never scrolls the explorer on its own unless the file-explorer leaf's
 `autoReveal` is on, and both Obsidian-written `workspace.json` fixtures in the repo have it off.
 Saving a note moves nothing. (That last sentence is inference from the fixture, not an observation
-— see [[#Declined until Obsidian is probed]].)
+— see [[#Was declined until Obsidian was probed — all of it now is]].)
 
 **Fix.** Two independent halves. The explorer half landed on 2026-10-21 with the Files header:
 `set_tree` no longer reveals anything and `show_file` calls `FileExplorer::follow`, which only
@@ -1360,106 +1361,213 @@ two only by the pass the campaign never read.
 The final gate: 501 tests pass, clippy is clean across the workspace, and the real-vault Writer gate
 still round-trips 14/14 byte-identical.
 
-## Declined until Obsidian is probed
+## Was declined until Obsidian was probed — all of it now is
 
-These are not deferred for effort. Each one would write bytes into a user's vault, or register a
-command, on a rule nobody has observed in a real Obsidian — which the clean-room rule forbids. They
-are a to-do list for `tools/obsidian-probe/`: each line says what to run and what to read back.
-Everything here is cheap once the harness is up, and each probe closes a fix that is otherwise
-written and tested.
+These were not deferred for effort. Each one would write bytes into a user's vault, or register a
+command, on a rule nobody had observed in a real Obsidian — which the clean-room rule forbids. They
+were a to-do list for `tools/obsidian-probe/`, and on **2026-10-25 every line of it was run**
+against Obsidian 1.14.5 over CDP, in five scripts: `editing-commands.mjs`, `editing-typing.mjs`,
+`footnote-insert.mjs`, `ui-rules.mjs`, `attachment-dropdown.mjs` and `search-collation.mjs`.
 
-- **`editor:set-heading` ("Toggle heading", no level).** `set-heading-0` through `-6` are wired and
-  have unambiguous semantics; the bare toggle's cycle is not recorded anywhere, and the id is in
-  `names.txt`, so it is a real palette entry in 1.14.4. Probe: run it on a plain line, on `#`
-  through `######`, and on a line inside a blockquote, reading the bytes back after each, until the
-  cycle closes.
-- **`editor:cycle-list-checklist` ("Cycle bullet/checkbox").** Specification.md:695-705 says in
-  terms that what this does is unprobed and suspects it is the path to `[?]`, `[-]` and `[>]`.
-  Probe: run it repeatedly on a plain line, a bullet, `- [ ]` and `- [x]`, reading the bytes after
-  each press, and note whether the cycle differs inside a numbered list.
-- **Mod+L on a line with no checkbox.** `editor:toggle-checklist-status` flips an existing checkbox
-  by the observed rule (anything but a space becomes a space) and leaves every other line alone.
-  Both triage passes confirmed that is deliberate, not a defect, but it is still an open question.
-  Probe: press it on a plain paragraph line, on a bullet, and on a multi-line selection of mixed
-  states, and read whether Obsidian inserts `- [ ] ` and what it does to the mixed selection.
-- **The insert-block commands.** `editor:insert-callout`, `insert-codeblock`,
-  `insert-horizontal-rule`, `insert-footnote`, `insert-mathblock` and `insert-tag` are all in
-  `names.txt` — real Obsidian palette entries — but each authors new markup and the exact bytes
-  (fence shape, callout type, how a footnote reference and definition are paired, how many blank
-  lines either side) are unobserved. Probe: run each with the caret on a blank line, mid-paragraph
-  and at end of file, reading the bytes and the resulting caret offset.
-- **`editor:clear-formatting` and the six `editor:toggle-highlight-<colour>` ids.** Also all in
-  `names.txt`, so the ids are observed and only the markup is not: the colour variants write some
-  attribute beside `==`, and clear-formatting has to strip several markers at once. Probe: run one
-  colour variant over a plain word, and clear-formatting over a span carrying two markers.
-- **Alt+Up / Alt+Down for Move line.** The commands are implemented and runnable; the registry gives
-  them no default hotkey and nothing records one in 1.14.4, so leaving them unbound is the current
-  reading of correct parity. Probe: read the Hotkeys tab entry for Move line up. If a binding is
-  there, one line in `default_hotkeys` finishes it.
-- **The markers the formatting toggles write across a multi-line selection.** Scoria wraps
-  `editor:toggle-code` in a single backtick and `toggle-inline-math` in one `$`, which is right
-  inline and probably wrong across lines; `toggle-comments` may have a block form. Also unprobed:
-  the mixed-selection rule for the list and quote toggles (Scoria removes only when every line
-  already has the prefix), numbering an ordered toggle from 1, and skipping blank lines.
-- **Auto-pairing's unprobed rows.** [[Specification#Observed auto-pair behavior, Obsidian 1.14.4]]
-  lists its own gaps and Scoria left every one of them inert: skip-over for the closers the probe
-  did not run, a word-boundary rule for `_ ~ = $ % <`, suppression inside inline code and
-  blockquotes, forward Delete between an empty pair, and whether typing `[[` auto-pairs at all.
-- **Shift+Tab on ragged indentation.** Scoria removes `min(tabSize, leading spaces)`; CodeMirror
-  dedents to the previous multiple. Probe: Shift+Tab on a three-space-indented item in a tabSize-2
-  vault.
-- **`editor:insert-table` with the caret on a non-blank line.** The spec records only the blank-line
-  case. Scoria writes a blank line before the table and leaves exactly one after it, which is a
-  reasoned choice. Probe: run it at the end of and in the middle of a paragraph.
-- **The property pills' remaining gestures.** Per-pill remove and the trailing empty input are
-  observed; Enter-adds-an-item and Backspace-removes-the-previous-pill are not — Specification.md
-  files adding under Unprobed and the reviewer called backspace "pure assumption". Also unprobed:
-  whether the remove × is revealed on hover or always drawn, and whether removing the *last* item
-  leaves `k: []` or clears the key.
-- **Clearing every property.** `markdown:clear-metadata-properties` now runs from reading view and
-  turns `---\nalpha: one\nbeta: two\n---\n\nbody\n` into `\nbody\n`, leaving a blank line where the
-  block was. Probe: clear all properties in Obsidian and read the first byte of the file.
-- **The callout fold chevron in Live Preview.** Scoria's fold is ephemeral, copied from its own
-  reading view. Nobody has recorded whether Obsidian's chevron is ephemeral too or rewrites the
-  source marker (`[!tip]-` ↔ `[!tip]+`). Probe: fold a callout in Live Preview and read the note's
-  bytes.
-- **The setext underline row in Live Preview.** The corpus proves only that the *reading* view drops
-  it. Hiding it, demoting it to body size and the old full-size H1 are all guesses. Probe: open a
-  setext heading in Live Preview and measure the underline row.
-- **Callout type icons.** Every `callout-icon` div in the corpus holds an empty `<svg>`, so the
-  lucide icon per canonical callout type is unknown. Probe: read the icon name out of a rendered
-  callout of each built-in type.
-- **The done-task decoration.** The corpus proves only `task-list-item is-checked`; the strikethrough
-  Scoria now draws comes from this note's own earlier prescription, not from an observation. Probe:
-  read the computed style of a checked task's text.
-- **The empty-state tab.** What Obsidian's "No file is open" tab holds — the four action links, the
-  absent mode switch, the hidden word count — comes from a paraphrase of the help site and appears
-  nowhere in the spec or the probe results, which is why wave 8 closed the data loss and left the UI
-  alone. Probe: open a vault with nothing in it and read the empty tab's DOM.
-- **The view-header title.** Clicking it to rename is three lines of work, but Specification.md
-  :2026-2028 leaves Obsidian's plain-click-on-header behaviour unsettled. Probe: single- and
-  double-click the header title of an open note and read what, if anything, becomes editable.
-- **The attachment-location dropdown.** [[Interaction probes]] records the exact option labels and
-  the strings they store as an unperformed probe, so the row keeps its "not in Scoria yet" tag until
-  someone reads them.
-- **`graph:open-local` with no file open.** Scoria now shows the global graph, which is defensible;
-  whether Obsidian offers the command at all with no active file (a `checkCallback`) is unobserved.
-- **The local graph's camera.** Specification.md:2195-2201 records Obsidian opening a local graph at
-  its own `scale: 1` while `graph.json` held 8; Scoria keeps the global graph's pinned zoom. One
-  probe settles whether that is a finding.
-- **A half-typed query that mixes a real term with an empty one** (`foo OR`, `foo (`). Scoria gates
-  only a wholly empty query, because making an empty term fail to match inside the matcher would
-  also re-filter and re-colour graphs built from Obsidian's own `graph.json`.
-- **The one unexplained row in the search collation capture.** Obsidian put `notes/apple` ahead of
-  `apple.md` on a basename tie; the path tie-break puts `apple.md` first, and the fixture leaves
-  that pair out rather than faking it. (The sibling question — whether a name-only hit shows a `1`
-  flair — is now settled against the backlog's old prediction: Specification.md:2329-2333 says
-  filename hits count as results without adding to the file's flair, which is what Scoria does.)
-- **Ctrl+E inside a text input.** It is End today, the emacs binding every field already has, so
-  Ctrl+E cannot toggle reading view while a field has focus. Nothing records what Obsidian does.
-- **The explorer's context menu and the modal backdrop.** Both still differ from Obsidian in the
-  code, neither is observable through `state`, and the Obsidian menu is still an open probe in
-  [[Interaction probes]].
+So nothing below is waiting on an observation any more. What each entry now holds is the answer and
+the work it unblocks; the observations themselves are in
+[[Specification#Observed editing command behavior, Obsidian 1.14.5 (installer build 1.13.7)]],
+[[Specification#Observed UI rules, Obsidian 1.14.5 (installer build 1.13.7)]] and the two new
+blocks of [[Specification#Observed auto-pair behavior, Obsidian 1.14.4]], with the raw runs under
+`tools/obsidian-probe/results/2026-10-25-*.json`.
+
+Four answers refuted what this note had assumed, so read those first: Mod+L **does** insert a
+checkbox on a line that has none; `editor:set-heading` does nothing at all; the inline formatting
+toggles wrap **each line** of a multi-line selection; and Shift+Tab subtracts one indent unit
+rather than dedenting to the previous multiple.
+
+### Settled by the probes of 2026-10-25 — the editing commands (issue #7)
+
+`tools/obsidian-probe/editing-commands.mjs`, `editing-typing.mjs` and
+`footnote-insert.mjs` answered every editing row below against Obsidian 1.14.4
+(installer build 1.13.7). The observations are in
+[[Specification#Observed editing command behavior, Obsidian 1.14.5 (installer build 1.13.7)]]
+and the two new blocks of
+[[Specification#Observed auto-pair behavior, Obsidian 1.14.4]]; the raw runs are
+`tools/obsidian-probe/results/2026-10-25-editing-commands.json` and
+`-editing-typing.json`. What each one leaves to do:
+
+- **`editor:set-heading` is a no-op in Obsidian** — a palette entry whose
+  check passes and which changes nothing, on every line shape, in both modes,
+  through the palette, a bound hotkey and its own callback. There is no cycle
+  to implement. Scoria does not register the id at all today; registering it
+  as a runnable command that changes nothing is what parity asks for, and it
+  is worth a comment saying so, because it looks like a bug.
+- **`editor:cycle-list-checklist` is bullet → `- [ ]` → `- [x]` → bullet**, a
+  non-list line becoming a bullet first, the marker (`*`, `+`, `1.`) kept, and
+  a custom status discarded on the first press. So it is *not* the path to
+  `[?]`, `[-]` and `[>]` — nothing in Obsidian writes those. New work: the
+  command is unimplemented in Scoria (`RUNNABLE` in `workspace.rs` has no
+  entry for it). The multi-line rule is in the spec, with the two selections
+  where Obsidian's own output oscillates instead of converging; Scoria should
+  implement the converging rule and not copy that.
+- **Mod+L on a line with no checkbox inserts `- [ ] `** — after any list
+  marker, after a blockquote's `> ` and after leading indentation, on an empty
+  line too. This is the one row the backlog had backwards: both triage passes
+  called Scoria's "leave every other line alone" deliberate, and it is a
+  parity gap. `format::checklist_plan` skips those lines today (its own doc
+  comment says the case is unprobed) and needs to add the prefix; the
+  selection rule — flip the status when every line has a box, invert presence
+  when only some do — is in the spec.
+- **The insert-block commands** all have their bytes recorded: callout with
+  `> [!NOTE] Title` / `> Contents` and `NOTE` left selected, codeblock and
+  mathblock wrapping the caret's line, the rule splitting a line only for
+  `insert-horizontal-rule`, `insert-tag` writing a bare `#` with no suggester,
+  and `insert-footnote` numbering by the highest existing *numeric* label plus
+  one with the definition always at the end of the document. None of the six
+  is implemented in Scoria yet; all six are now unblocked.
+- **The six highlight colours write `==🔴word==`** — one colour emoji directly
+  after the opening `==`, which the reader consumes as `data-highlight="red"`
+  and does not show. The emoji per command, and the replace/remove rules, are
+  in the spec. Scoria has `editor:toggle-highlight` (plain `==`) and none of
+  the six colours; the parser also has to learn to swallow a leading colour
+  emoji inside a highlight, or `docs/scoria` notes written in Obsidian will
+  render the emoji.
+- **`editor:clear-formatting`** strips emphasis, highlight, strikethrough,
+  inline code, inline math and a line's `#`/`>`/`-`, leaves wikilinks alone,
+  and does nothing without a selection. Unimplemented in Scoria; unblocked.
+- **Move line up/down are unbound in Obsidian.** The default hotkey table
+  holds 41 ids and neither is among them; the Hotkeys tab shows both rows as
+  `Blank`, and Alt+Up/Alt+Down in the editor do nothing. Scoria's current
+  reading was right — no change, and the question is closed.
+- **The inline formatting toggles wrap *each line* of a multi-line
+  selection.** `one`/`two`/`three` selected whole gives `` `one` ``/`` `two` ``/
+  `` `three` ``, and the same per-line shape for bold, italics,
+  strikethrough, highlight and inline math. `editor:toggle-comments` is the
+  exception: one `%%` pair around the whole selection. So
+  `Buffer::toggle_wrap` is right for comments and wrong for the other six —
+  it wraps the whole selection in one pair. The mixed-selection rule for the
+  list and quote toggles ("remove only when every line already has the
+  prefix"), numbering an ordered toggle from 1 rather than continuing the list
+  above, and skipping blank lines for the bullet and numbered toggles but not
+  the quote toggle, are all confirmed as Scoria has them.
+- **Auto-pairing's open rows** reduce to one rule. A bracket closes when the
+  character *ahead* is whitespace, end of line or a closing bracket; a
+  markdown or quote character needs that **and** whitespace or start of line
+  behind. `_` behaves like `*`; `~ = $ % <` never close. No context suppresses
+  pairing — blockquote, fence body, `$$`, heading, list and task item all pair
+  like a plain line — and the inline-code case is the ahead-character rule,
+  not a context rule. Skip-over is provenance-tracked for *every* closer and
+  survives moving within the line but not leaving it; forward Delete between a
+  pair removes only the closer; `]` inside `[[|]]` skips; an abandoned closer
+  is never removed. Scoria left all of these inert, so each is now a small
+  piece of work with an observed rule behind it.
+- **Shift+Tab removes exactly one indent unit, clamped at zero** — not
+  "dedent to the previous multiple", which is what this entry assumed. A tab
+  counts `tabSize` columns and the result is rewritten as tabs plus spaces;
+  with `useTab: false` the unit is four spaces whatever `tabSize` says.
+  Scoria's `min(tabSize, leading spaces)` is already the right arithmetic for
+  a space-indented line; what it has to add is the tab accounting and the
+  `useTab: false` unit.
+- **`editor:insert-table` on a non-blank line** keeps the line, puts a blank
+  line after it and the table below, and does **not** split the line when the
+  caret is mid-line. Scoria's "blank line before, exactly one after" is
+  right; the mid-line split is the only correction.
+
+### Settled by the probes of 2026-10-25 — the UI rules (issues #8, #19, #41)
+
+`tools/obsidian-probe/ui-rules.mjs`, `attachment-dropdown.mjs` and
+`search-collation.mjs` answered every UI row below against **Obsidian 1.14.5**
+(the probe's own window title; the app had updated itself since the earlier
+passes). The observations are in
+[[Specification#Observed UI rules, Obsidian 1.14.5 (installer build 1.13.7)]]
+and the raw run is `tools/obsidian-probe/results/2026-10-25-ui-rules.json`.
+
+- **The property pills.** Enter in the trailing input adds an item. Backspace
+  takes **two** presses: the first moves focus to the last pill, the second
+  removes it — so "Backspace removes the previous pill" was half right, and
+  the reviewer was right to call it an assumption. The remove × is **always
+  drawn**, not revealed on hover (`display: flex`, `opacity: 1`, 14 px, with
+  the mouse parked away). Removing the last item leaves **`tags:` with an
+  empty value** — not `tags: []`, and the key is not deleted.
+- **Clearing every property** turns `---\nalpha: one\nbeta: two\n---\n\nbody\n`
+  into `\nbody\n`, first byte `0x0A`, from reading view and Live Preview alike
+  — which is exactly what Scoria writes, so that entry is closed with no work.
+  A note that is only frontmatter becomes a **zero-byte file**; worth a test.
+- **The callout fold chevron is ephemeral.** Every click, with a save after
+  each, left the note byte-identical: collapsing `[!tip]+` does not rewrite it
+  to `-`. Scoria's ephemeral fold is parity. New detail to match: a callout
+  with **no** `-` or `+` has no fold affordance at all, and the chevron is
+  `lucide-chevron-down` with `.callout-fold.is-collapsed` for the folded state.
+- **The setext underline row stays, at body size.** 16 px / weight 400 / 24 px
+  tall on its own line, classed `HyperMD-header-line HyperMD-header-line-<n>`,
+  while the heading line above it is the same size the reading view gives
+  `h1`/`h2`. Of the three guesses this entry listed, "demote to body size" is
+  right — and nothing is hidden, the `=====` characters stay visible.
+- **Callout type icons** (issue #19): all 28 built-in types, their lucide icon
+  and their `--callout-color`, are now in the spec table — `note` is
+  `lucide-pencil`, `tip`/`hint`/`important` `lucide-flame`, and an unknown type
+  falls back to note's pair. The corpus's empty `<svg>` was a serialisation
+  artefact; the DOM carries the name in the svg's own class. The Rust half of
+  #19 is unchanged: an `AssetSource` still has to be registered before gpui's
+  `svg()` paints anything, and the icons must be cut from lucide's own source,
+  never Obsidian's bundle.
+- **The done-task decoration** is `text-decoration-line: line-through` plus a
+  muted `rgb(179, 179, 179)` against an unchecked item's `rgb(218, 218, 218)`,
+  in the reading view and on the `.cm-line` in Live Preview. So Scoria's
+  strikethrough is observed behaviour after all; the muted colour is new work.
+- **The empty tab** is titled **"New tab"**, not "No file is open" — the
+  paraphrase this entry rested on was wrong. Four pills: `New note Ctrl + N`,
+  `New base`, `New canvas`, `Go to file Ctrl + O`. No mode switch in the
+  header, but the word count is **not** hidden: the status bar reads
+  `0 properties`, `0 words`, `0 characters`. Wave 8 was right to leave the UI
+  alone; building it is now a specified job.
+- **The view-header title** is `contentEditable="true"` at rest. A single
+  click puts the caret in it at the clicked offset, typing edits in place, and
+  **Enter renames the file**; Escape abandons. So the three lines of work this
+  entry predicted are real, and the gesture is a single click, not a double.
+- **The attachment-location dropdown** (issue #41): four options, each storing
+  a different `attachmentFolderPath` — `Vault folder` → `/`, `Same folder as
+  current file` → `./`, `In subfolder under current folder` → `./Attachments`
+  (revealing a **Subfolder name** row), `In the folder specified below` →
+  `Attachments` (revealing an **Attachment folder path** row). The resolution
+  rule is in the spec: a leading `./` is relative to the note's folder,
+  anything else is vault-absolute, and `/` and `""` both mean the root. The
+  row can lose its `.not_yet()` tag. The whole Files-and-links tab's rows are
+  captured too, which is more than #41 needed and feeds the Settings entries.
+  #41's second half never needed a probe: a click that dismisses a dropdown
+  must not also activate what it lands on, and Escape with a dropdown open
+  must close the popover rather than the modal.
+- **`graph:open-local` with no file open is not offered at all.**
+  `checkCallback(true)` returns undefined and `app.commands.listCommands()`
+  omits the id entirely; running it anyway opens nothing. So Scoria showing
+  the global graph is a parity gap — the command should report that it cannot
+  run, which the "ask each command whether it can run" machinery already
+  supports.
+- **The local graph's camera** is confirmed: with `graph.json` at `scale: 8`
+  the global graph opened at 7.926 and the local graph at **1**, with its own
+  option block. Scoria keeping the global graph's pinned zoom for a local
+  graph is a real finding.
+- **A half-typed query is not handled uniformly.** `foo OR`, `foo -`, `foo )`,
+  `(foo`, `"foo` and `foo "` all match exactly as `foo` does (2 results);
+  **`foo AND` and `foo (` match nothing**, and so do a bare `OR` and a bare
+  `(`. So Scoria gating only a wholly empty query is right for the first group
+  and wrong for the second, and the fix is narrower than this entry feared:
+  two shapes to fail, not "an empty term inside the matcher".
+- **The search collation tie is explained.** The sort is a *stable* sort on
+  the basename over a file list already in **full-path descending** order:
+  eight `apple` notes come back `zzz/`, `z/`, `m/n/`, `m/`, root, `a/b/c/`,
+  `a/`, `APPLE`, which is the path descending and is exactly
+  `app.vault.getMarkdownFiles()`'s own order; Z to A reverses only the
+  basename groups. So the tie-break to implement is full path **descending**,
+  and the fixture no longer has to leave the pair out.
+- **Ctrl+E inside a text input does nothing.** Not End, not a mode toggle: in
+  the search input and in the quick switcher's prompt the value, the caret and
+  the focus were all untouched and the note's mode did not change, while the
+  same chord in the editor toggles reading view. Scoria's Ctrl+E-is-End in a
+  field is a divergence to remove.
+- **The explorer's context menus and the modal backdrop** are both captured:
+  every item of the file-row and folder-row menus with its lucide icon and
+  `data-section`, the four-item menu on empty space, and the backdrop's
+  `rgba(10, 10, 10, 0.4)` at `opacity: 0.85` with the modal at 560 px (prompt
+  700 px), `max-width` 80% of the window, radius 12 px and a three-layer
+  shadow. The delete confirmation's title, text and two button classes are
+  there too.
 
 One group is declined for a different reason and needs no probe: `editor:undo`, `redo`, `copy`,
 `cut`, `paste`, `go-start`, `go-end` and the `move-caret-*` ids are absent from `names.txt`, i.e.

@@ -20,14 +20,28 @@ async function openSocket(url) {
   await new Promise((res, rej) => { ws.onopen = res; ws.onerror = rej; });
   let id = 0;
   const pending = new Map();
+  // Protocol *events* (no `id`), by method name. Drag interception needs
+  // them: Chrome answers a drag gesture with `Input.dragIntercepted`.
+  const listeners = new Map();
   ws.onmessage = (ev) => {
     const m = JSON.parse(ev.data);
     if (m.id && pending.has(m.id)) {
       const { res, rej } = pending.get(m.id);
       pending.delete(m.id);
       m.error ? rej(new Error(JSON.stringify(m.error))) : res(m.result);
+      return;
     }
+    if (m.method && listeners.has(m.method)) for (const fn of listeners.get(m.method)) fn(m.params);
   };
+  const on = (method, fn) => {
+    if (!listeners.has(method)) listeners.set(method, new Set());
+    listeners.get(method).add(fn);
+    return () => listeners.get(method).delete(fn);
+  };
+  const once = (method, timeoutMs = 5000) => new Promise((res, rej) => {
+    const off = on(method, (params) => { off(); clearTimeout(t); res(params); });
+    const t = setTimeout(() => { off(); rej(new Error(method + ' event timeout')); }, timeoutMs);
+  });
   const send = (method, params = {}) =>
     new Promise((res, rej) => {
       const i = ++id;
@@ -35,7 +49,7 @@ async function openSocket(url) {
       ws.send(JSON.stringify({ id: i, method, params }));
       setTimeout(() => { if (pending.has(i)) { pending.delete(i); rej(new Error(method + ' timeout')); } }, 15000);
     });
-  return { ws, send };
+  return { ws, send, on, once };
 }
 
 /** Is this page the vault window, booted? */
@@ -72,7 +86,7 @@ export async function waitForObsidian(timeoutMs = 90000) {
 
 export async function connect() {
   const url = await waitForObsidian();
-  const { ws, send } = await openSocket(url);
+  const { ws, send, on, once } = await openSocket(url);
 
   /** Run `expr` (a function body; may `await`; `app` is in scope) in the renderer, return its value. */
   const evaluate = async (expr) => {
@@ -168,6 +182,62 @@ export async function connect() {
     await mouse('mouseReleased', x2, y2, { button, clickCount: 1 });
   };
 
+  /**
+   * A real HTML5 drag and drop. `Input.dispatchMouseEvent` never raises
+   * `dragstart`, which is why the synthetic-event passes could not establish
+   * what a drop does; `Input.setInterceptDrags` makes Chrome hand the drag
+   * data back as an `Input.dragIntercepted` event, and `Input.dispatchDragEvent`
+   * then plays it into the page the way the compositor would.
+   * Returns the intercepted drag data, so a caller can see what the source
+   * offered (`mimeTypes`, and Obsidian's own payload) even if the drop fails.
+   */
+  const dragAndDrop = async (x1, y1, x2, y2, { steps = 10, pauseMs = 60 } = {}) => {
+    await send('Input.setInterceptDrags', { enabled: true });
+    const intercepted = once('Input.dragIntercepted', 6000);
+    await mouse('mouseMoved', x1, y1);
+    await mouse('mousePressed', x1, y1, { button: 'left', clickCount: 1 });
+    // A few pixels of movement is what starts a drag.
+    for (let i = 1; i <= 4; i++) await mouse('mouseMoved', x1 + i * 3, y1 + i * 2, { button: 'left' });
+    let data;
+    try { ({ data } = await intercepted); }
+    catch (e) {
+      await mouse('mouseReleased', x1, y1, { button: 'left', clickCount: 1 });
+      await send('Input.setInterceptDrags', { enabled: false });
+      return { started: false, error: e.message };
+    }
+    const dispatch = (type, x, y) => send('Input.dispatchDragEvent', { type, x: Math.round(x), y: Math.round(y), data });
+    await dispatch('dragEnter', x1, y1);
+    for (let i = 1; i <= steps; i++) {
+      await dispatch('dragOver', x1 + ((x2 - x1) * i) / steps, y1 + ((y2 - y1) * i) / steps);
+      await sleep(pauseMs);
+    }
+    await dispatch('drop', x2, y2);
+    await send('Input.setInterceptDrags', { enabled: false });
+    return { started: true, data };
+  };
+
+  /** Drag without dropping, so the hover state over a target can be read. */
+  const dragOverOnly = async (x1, y1, x2, y2) => {
+    await send('Input.setInterceptDrags', { enabled: true });
+    const intercepted = once('Input.dragIntercepted', 6000);
+    await mouse('mouseMoved', x1, y1);
+    await mouse('mousePressed', x1, y1, { button: 'left', clickCount: 1 });
+    for (let i = 1; i <= 4; i++) await mouse('mouseMoved', x1 + i * 3, y1 + i * 2, { button: 'left' });
+    let data;
+    try { ({ data } = await intercepted); }
+    catch (e) {
+      await mouse('mouseReleased', x1, y1, { button: 'left', clickCount: 1 });
+      await send('Input.setInterceptDrags', { enabled: false });
+      return { started: false, error: e.message };
+    }
+    await send('Input.dispatchDragEvent', { type: 'dragEnter', x: Math.round(x1), y: Math.round(y1), data });
+    await send('Input.dispatchDragEvent', { type: 'dragOver', x: Math.round(x2), y: Math.round(y2), data });
+    return { started: true, data, finish: async (dropX, dropY) => {
+      await send('Input.dispatchDragEvent', { type: dropX === undefined ? 'dragCancel' : 'drop', x: Math.round(dropX === undefined ? x2 : dropX), y: Math.round(dropY === undefined ? y2 : dropY), data });
+      await send('Input.setInterceptDrags', { enabled: false });
+    } };
+  };
+
   // ---- misc --------------------------------------------------------------
   /** System clipboard text, read through Electron in the renderer. */
   const readClipboard = () => evaluate(`return window.require('electron').clipboard.readText();`);
@@ -219,7 +289,8 @@ export async function connect() {
 
   return {
     send, evaluate, typeChar, typeText, pressKey, KEYS, rect, mouseMove, clickAt, clickElement,
-    rightClickElement, dblClickElement, hover, drag, readClipboard, writeClipboard, openMenuItems,
-    vaultPath, selectInfo, selectSet, quit, close: () => ws.close(),
+    rightClickElement, dblClickElement, hover, drag, dragAndDrop, dragOverOnly,
+    readClipboard, writeClipboard, openMenuItems,
+    vaultPath, selectInfo, selectSet, on, once, quit, close: () => ws.close(),
   };
 }

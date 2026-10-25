@@ -49,11 +49,26 @@ Scripts, each one checklist block of `docs/scoria/Interaction probes.md`:
 | `explorer-keyboard.mjs` | the Files pane's keyboard: what a click on a file, on the open file and on a folder does to focus, and Up, Down, Left, Right, Enter, Space, Home, End, Escape, F2 and Delete on file and folder rows, entering the tree through `reveal-active-file` | fixtures, run |
 | `outgoing-links.mjs` | the Outgoing links pane: its markup and styles, one row per target with a glyph per kind, the subtext under a row, what clicking a heading row and an unresolved row do, the row menu, the unlinked mentions card with its "Link this file" chip and the bytes the chip writes, the two fold keys in `workspace.json`; and the Backlinks pane's rows, hover-only Link button and empty state for comparison | fixtures, run, after-restart |
 | `dock-panes.mjs` | the right dock's Tags, All properties and Outline panes: each pane's markup, computed sizes and colours, header buttons and tooltips, the sort menu and the row order under every entry, the in-pane search filter (and how each pane treats Escape), hover, what a row click opens, the Tags pane's nested-tags toggle, counts and folds, the Outline's current-heading mark in source and reading mode and its auto-scroll toggle, the empty state, and every state key's round trip through `workspace.json` | fixtures, run, after-restart |
+| `editing-commands.mjs` | the editing commands the backlog waited on: the bare `set-heading`, `cycle-list-checklist`, `toggle-checklist-status`, the six insert-block commands, the highlight colours, `clear-formatting`, Move line's hotkey, the formatting toggles across a multi-line selection, `insert-table` on a non-blank line | fixtures, run |
+| `editing-typing.mjs` | the same block's keystroke rows: auto-pairing's open questions (skip-over per closer, the word-boundary rule, context suppression, forward Delete, `[[`), and Shift+Tab on ragged indentation | fixtures, run |
+| `footnote-insert.mjs` | `editor:insert-footnote`'s number and where the definition lands, read from disk with the fixture written before launch — one case per run (`FN_CASE`), because the command only lands once per launch when the probe reaches the file with `openFile` | fixtures, run |
+| `ui-rules.mjs` | the UI rows: the empty tab, the lucide icon per callout type, the callout fold chevron, the setext underline, the done-task decoration, the view-header title, the property pills, clearing every property, `graph:open-local` with no file, the local graph's camera, a half-typed query, Ctrl+E in a field, the explorer's context menus and the modal backdrop | fixtures, run |
+| `attachment-dropdown.mjs` | Settings → Files and links: the attachment-location dropdown's option labels, the string each stores, the dependent rows, and what each stored value resolves to — on its own because the Settings modal has hung this endpoint before | fixtures, run |
+| `search-collation.mjs` | the basename tie in the search pane's sort: several same-basename files at different depths, under every sort order, plus the quick switcher's own order | fixtures, run |
+| `code-copy.mjs` | block 6: hover, real click, clipboard read back; trailing newlines, unicode and CRLF; the icon's revert delay; Tab; the editor's `code-block-flair`; an embedded block; the frontmatter pre | fixtures, run |
+| `heading-fold.mjs` | block 7: the subfolder key, what `{0,0}` is, fold-more/fold-less, source mode, `foldIndent: false`, the reading-view clicks, the edge headings, the link jump, and the cold restart | fixtures, run, after-restart |
+| `explorer-dnd.mjs` | block 5: real drags through `Input.setInterceptDrags`, the drag payload, the drop-zone classes, collisions, folders, multi-select, and F2's inline rename committed with Enter | fixtures, run |
+| `graph-writeback.mjs` | block 9: every control section expanded, every toggle clicked and slider dragged, the write timing polled, the zoom clamps, unknown keys, an external rewrite, and the local graph's own options | fixtures, run |
+| `attachment-paste.mjs` | block 4: a real clipboard image through `nativeImage`, folder creation, `./`, Markdown links, reading view and a canvas, the disk timeline and undo depth, and a real file drop (`FIXTURES` names a directory of source files) | fixtures, run |
+| `raw-html-remote.mjs` | blocks 8 and 10: real anchor clicks (guarded so the frame cannot navigate), which tags survive, the iframe and CSS-background fetches, raw HTML in every container, and the remote-image layout — runs its own HTTP server (`HTTP_PORT`) | fixtures, run |
 | `autopair.mjs` | auto-pairing (predates the runner: start Obsidian yourself with `--remote-debugging-port=9222` on a scratch vault and run it directly) | — |
 
 `results/` keeps the raw JSON of the runs the specification cites, named by
 date. A run is evidence; the interpretation of it lives in
 `docs/scoria/Specification.md`, and the two should be read together.
+
+Most scripts take `ONLY_STEPS=s03,s04` to re-run a step or two, which is how a
+late step gets fixed without paying for the whole block again.
 
 ## cdp.mjs
 
@@ -67,6 +82,8 @@ and returns:
 | `evaluate(body)` | run a function body in the renderer, `app` in scope, returns its value |
 | `typeText`, `typeChar`, `pressKey(name, {ctrl,shift,alt,meta})` | real keystrokes |
 | `rect`, `clickElement`, `rightClickElement`, `dblClickElement`, `hover`, `clickAt`, `drag`, `mouseMove` | real mouse |
+| `dragAndDrop`, `dragOverOnly` | a real HTML5 drag, through `Input.setInterceptDrags` plus `Input.dispatchDragEvent` — `dispatchMouseEvent` never raises `dragstart`, which is why the synthetic passes could not establish a drop. Returns the intercepted payload; `dragOverOnly` hands back a `finish(x, y)` so the hover state over a target can be read before the drop, or `dragCancel`ed |
+| `on`, `once` | protocol *events* by method name, which drag interception needs |
 | `openMenuItems()` | every open `.menu` as labels in order, `---` for separators |
 | `selectInfo`, `selectSet` | a native `<select>`'s options, and setting it with a `change` event |
 | `readClipboard`, `writeClipboard` | the system clipboard via Electron |
@@ -93,5 +110,25 @@ and returns:
 - Obsidian's CSP blocks the renderer's own `fetch` to localhost; read a probe
   server's log from the host.
 - `cp` is aliased to `cp -i` on this machine; the runner uses `command cp -f`.
+- **Seed a note through the vault, not through the editor.** `editor.setValue`
+  leaves the file and the editor disagreeing, and a command that touches the
+  file reloads the editor from disk — which puts the previous case's bytes back
+  underneath the command's own edit. `app.vault.modify` plus a settle, then the
+  caret, then a `seedOk` check that the editor really holds the seed.
+- **A second markdown leaf is poison.** `executeCommandById` acts on the
+  *active* leaf; a probe reading `getLeavesOfType('markdown')[0]` then sees an
+  untouched document and records every command as a no-op that still reports
+  it ran. Reuse one leaf and `setActiveLeaf` it.
+- A file-change event landing after `setCursor` moves the caret under the
+  command. Settle before placing the caret, not after.
+- Clicking an explorer row opens the file and hands focus to CodeMirror, so F2
+  and Ctrl+A go to the note. Enter the tree with
+  `file-explorer:reveal-active-file`.
+- The reading view only builds the sections near the viewport: scroll the whole
+  note and merge, or a long fixture reports a fraction of its elements.
+- A control below the window (the graph's Forces sliders) reports a rect a
+  drag cannot reach. `scrollIntoView` first and check the rect is on screen.
+- localStorage is shared across every vault the app has opened, so filter any
+  dump to the run's own app id before saving it as evidence.
 
 See [[Development#Driving Obsidian over CDP, 2026-10-18]].

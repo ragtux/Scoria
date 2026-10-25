@@ -34,22 +34,31 @@ paragraph of one specification section.
 
 ## Order of work
 
-It is about 8 hours in total, so it is not one sitting. The order below is by
-how much implementation each block unblocks per minute spent; stopping after the
-first three still unblocks three features.
+**Every block of this note has now been run.** Blocks 1-3 went over CDP in
+October 2026 and blocks 4-10 on **2026-10-25**, in six scripts under
+`tools/obsidian-probe/` whose raw runs are in `results/2026-10-25-*.json`. What
+each one found is written into the matching `## Observed ...` section of
+[[Specification]], under a `### The 2026-10-25 pass` heading, and the lines
+they settle are struck from those sections' **Unprobed** paragraphs. The
+estimate below was about 8 hours of hand work; over CDP the seven blocks took
+about twenty minutes of wall clock.
+
+What genuinely stays for a person is aesthetic judgement — how something looks,
+whether an affordance feels right — plus the handful of rows each pass names as
+still unprobed, which are collected in each section rather than here.
 
 | # | Block | Cost | Why here |
 | --- | --- | --- | --- |
 | ~~1~~ | [[#Auto-pair interaction\|Auto-pair]] | ~~50 min~~ **done** | answered over CDP on 2026-10-18; kept below only for the few rows still open |
 | ~~2~~ | [[#Search pane\|Search pane]] | ~~40 min~~ **ported** | run over CDP on 2026-10-19 (`tools/obsidian-probe/search.mjs`, `search-copy-modal.mjs`); what is left is in the section's Unprobed paragraph |
 | ~~3~~ | [[#Properties in reading view — hands-on pass\|Properties in reading view]] | ~~50 min~~ **ported** | run over CDP on 2026-10-19 (`tools/obsidian-probe/properties.mjs`); what is left is in the section's Unprobed paragraph |
-| 4 | [[#Attachment paste\|Attachment paste]] | 50 min | the name template is observed; what is left is folder creation and the paste-vs-API question |
-| 5 | [[#File explorer drag-and-drop and inline rename\|Explorer drag and drop]] | 50 min | drop targets and inline rename commit need a real drag and a real keystroke |
-| 6 | [[#Code-block copy\|Code-block copy]] | 40 min | the copied bytes are the one thing a person must verify by pasting |
-| 7 | [[#Heading fold: the human interaction pass\|Heading fold]] | 55 min | mostly settled; the gap is a cold restart and the subfolder key |
-| 8 | [[#Raw HTML in reading view — human pass\|Raw HTML]] | 55 min | needs a real anchor click, which the probe had to cancel |
-| 9 | [[#Graph view (`.obsidian/graph.json` write-back)\|graph.json write-back]] | 50 min | needs real slider and checkbox input |
-| 10 | [[#Remote images — human pass\|Remote images]] | 50 min | layout and placeholder only; the fetch behaviour is already settled |
+| ~~4~~ | [[#Attachment paste\|Attachment paste]] | ~~50 min~~ **done** | run over CDP on 2026-10-25 (`tools/obsidian-probe/attachment-paste.mjs`): a real clipboard image and a real file drop |
+| ~~5~~ | [[#File explorer drag-and-drop and inline rename\|Explorer drag and drop]] | ~~50 min~~ **done** | run over CDP on 2026-10-25 (`explorer-dnd.mjs`), with `Input.setInterceptDrags` for the drags and F2 for the rename |
+| ~~6~~ | [[#Code-block copy\|Code-block copy]] | ~~40 min~~ **done** | run over CDP on 2026-10-25 (`code-copy.mjs`): hover, real click, clipboard read back through Electron |
+| ~~7~~ | [[#Heading fold: the human interaction pass\|Heading fold]] | ~~55 min~~ **done** | run over CDP on 2026-10-25 (`heading-fold.mjs`), the cold restart included |
+| ~~8~~ | [[#Raw HTML in reading view — human pass\|Raw HTML]] | ~~55 min~~ **done** | run over CDP on 2026-10-25 (`raw-html-remote.mjs`): real anchor clicks, guarded so the frame cannot navigate |
+| ~~9~~ | [[#Graph view (`.obsidian/graph.json` write-back)\|graph.json write-back]] | ~~50 min~~ **done** | run over CDP on 2026-10-25 (`graph-writeback.mjs`): every section expanded, every control driven |
+| ~~10~~ | [[#Remote images — human pass\|Remote images]] | ~~50 min~~ **done** | run over CDP on 2026-10-25 (`raw-html-remote.mjs`), measured rather than eyeballed |
 
 ## How to record a result
 
