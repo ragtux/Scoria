@@ -1,0 +1,11 @@
+[package]
+name = "scoria-bases"
+description = "The Bases expression language: statements parsed into the tree Obsidian parses them into"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]

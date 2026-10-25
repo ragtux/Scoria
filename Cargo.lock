@@ -4787,6 +4787,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "scoria-bases"
+version = "0.3.2"
+
+[[package]]
 name = "scoria-bench"
 version = "0.3.2"
 dependencies = [
