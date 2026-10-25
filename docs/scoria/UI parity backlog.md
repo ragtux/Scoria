@@ -1596,7 +1596,20 @@ Five things could not be settled from outside the process. They are not findings
 they are measurements the socket cannot make, and each needs a human at the desk or a change to the
 state dump.
 
-**The clipboard.** gpui's `write_to_clipboard` is a no-op in a socket-driven session: a Wayland
+**The clipboard.** *Unblocked 2026-10-25 (`69d8063`): it is not a no-op, and the condition it
+needs is the window's own focus.* Driven over the socket with Scoria focused, a click on a Live
+Preview code-block flair and a click on the reading view's copy button each left `wl-paste`
+holding the block's body with exactly one trailing newline off; the empty fence's flair, hovered
+and clicked in the same run, left the clipboard untouched. The same clicks, with the pointer aimed
+the same way while another application held focus, changed nothing at all -- which is the serial
+the paragraph below is about, and the reason roughly 1500 attempts once came back empty. So a
+clipboard assertion is now a thing the harness can make, as long as whoever drives it makes sure
+the window is focused and reads the clipboard rather than a screenshot: the check on the copy
+button reverts at 1000 ms, which is shorter than a screenshot round trip. The reading view's copy
+button is confirmed; the round trip in every text input is still unverified. What follows was the
+state before that.
+
+gpui's `write_to_clipboard` is a no-op in a socket-driven session: a Wayland
 client cannot set or receive a selection without keyboard focus and a real input serial, and
 synthetic events carry none. The control is the editor's own pre-existing copy — Ctrl+A then Ctrl+C
 then Ctrl+V left the note byte-identical, and `wl-paste` never saw anything the app wrote.

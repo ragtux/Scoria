@@ -871,7 +871,7 @@ current rather than one frame behind. A tool that fails is `isError: true`
 content, not a JSON-RPC error — only an unknown method or malformed parameters
 are those.
 
-**Five pitfalls, in the order they are likely to bite.**
+**Six pitfalls, in the order they are likely to bite.**
 
 - **Focus decides where keys go.** `type` routes text to whatever is focused
   and reports which of the editor, a text input or nothing received it; `focus`
@@ -898,6 +898,16 @@ are those.
   reason: KWin honours the xdg-activation token `activate_window()` asks for
   only from a window it can identify, and without it a screenshot can catch
   whatever had focus before.
+- **The clipboard moves only while the window has focus.** A socket-driven
+  click *does* write it -- a click on a code-block flair or the reading view's
+  copy button left `wl-paste` holding the block's body -- but a Wayland client
+  cannot set a selection without focus and a real input serial, so the same
+  click aimed the same way while another application held focus changed
+  nothing at all. `window` with `activate` first, then assert by reading
+  `wl-paste`; the copy button's check reverts at 1000 ms, which is shorter
+  than a screenshot round trip, so a screenshot is the wrong instrument for
+  it. [[UI parity backlog#Blocked by the harness, not by the code]] records
+  what this unblocks.
 
 **The first thing it caught.** Eight readers went over the window looking for
 places where Scoria and Obsidian disagree, and the list is in
