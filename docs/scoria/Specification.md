@@ -759,6 +759,8 @@ background: *Add card*, *Add note from vault*, *Add media from vault*,
 separator, *Snap to grid*, *Snap to objects*, *Read-only*. Ctrl+drag on
 the background draws a rectangle and offers *Add card*, *Add note from
 vault*, *Add media from vault*, *Add web page*, *Create group* for it.
+The item-level lists here were re-observed on 1.14.5 and
+corrected: see [[Specification#Observed canvas menu behavior, Obsidian 1.14.5 (installer build 1.13.7)]].
 The commands are `canvas:new-file` (*Create new canvas*),
 `canvas:jump-to-group`, `canvas:convert-to-file` (*Convert to file...*)
 and `canvas:export-as-image`, none with a default hotkey; the last three
@@ -789,6 +791,138 @@ file* names the note after the card's first line rather than asking.
 **Unprobed:** the exact fit padding of Shift+1, the zoom step of the
 buttons, snap-to-objects' rules, the creation rectangle of a Ctrl+drag,
 and the colour of an uncoloured card's selection ring.
+
+## Observed canvas menu behavior, Obsidian 1.14.5 (installer build 1.13.7)
+
+Observed on 2026-10-25 over CDP — `tools/obsidian-probe/canvas-menus.mjs`, raw
+results in `tools/obsidian-probe/results/2026-10-25-canvas-menus.json` — the
+re-run the menus section above was waiting on, because the 2026-10-21 capture
+read its lists wrong. **1.14.5 nests a menu:** `.menu` holds a `.menu-grabber`
+and a `.menu-scroll`, and the rows sit in `.menu-group` children of that, each
+tagged with a `data-section` (`canvas`, `open`, `action`, `system`, `danger`,
+`create`, `history`, `clipboard`, `selection`). Walking `.menu > *` sees the
+two wrappers and nothing else, and reading `.menu-item-title` alone drops
+every row without one — which is where 2026-10-21's "two adjacent separators"
+came from. The separators are real but paired: of the two DOM nodes at a group
+boundary **one is painted (1 px) and one is `display: none`**, so a parity
+list carries one separator there. Each target is panned to the middle of the
+view and right-clicked on its own DOM rect, with `elementFromPoint` recorded
+first, so a click that lands wrong says so.
+
+**The floating row above the selection**, by what is selected (the tooltip is
+two lines, `Zoom to selection\n(Shift + 2)`):
+
+| selection | items after *Remove*, *Set color*, *Zoom to selection* |
+| --- | --- |
+| text card, coloured or not | *Edit* |
+| Markdown file card | *Edit* |
+| image file card, URL card | — |
+| group, coloured or not | *Align*, *Edit label*, *Set background* |
+| edge with a label | *Line direction*, *Remove label*, *Edit label* |
+| edge with no label | *Line direction*, *Edit label* |
+| several nodes, any mix of cards and groups | *Create group*, *Align* |
+| several edges | *Line direction* |
+| a node and an edge together | — |
+
+*Set color* opens eight swatches: the active default (`#7e7e7e`), the six
+presets, and `canvas-color-picker-custom`. *Line direction* opens
+*Nondirectional*, *Unidirectional*, *Bidirectional* with `mod-checked` on the
+current one. *Align* opens thirteen rows in four painted groups —
+*Align left*, *Align center*, *Align right* | *Align top*, *Align middle*,
+*Align bottom* | *Arrange in a row*, *Arrange in a column*, *Arrange in a
+grid* | *Distribute horizontal spacing*, *Distribute vertical spacing* |
+*Justify horizontally*, *Justify vertically* — and the same thirteen for a
+single group as for several cards. *Set background* opens no menu at all: it
+opens the vault's file suggester ("Type to search...", "No recent files
+found."). *Edit label* on an edge opens no menu either; it focuses the edge's
+own `.canvas-path-label`, which gains `is-editing` and is `contenteditable`.
+
+**The right-click lists.** A card: *Zoom to selection*, *Edit*, *Convert to
+file...*, separator, *Remove* (`danger`). A **Markdown file card**, never
+captured before: *Zoom to selection*, *Swap file...*, *Edit*, *Narrow to
+heading...*, *Narrow to block...* | *Open in new tab*, *Open in new window* |
+*Rename...*, *Move file to...*, *Bookmark...*, *Merge entire file with...* |
+*Open in default app*, *Show in system explorer*, *Reveal file in navigation*
+| *Remove* | *Copy path* (a submenu). An **image file card** is that list
+without *Edit*, *Narrow to…*, *Open in new tab* and *Merge entire file
+with...*. A **URL card**: *Zoom to selection*, *Change URL...*, *Open external
+link*, *Copy URL*, *Reload page*, separator, *Remove*. A **group's label**:
+*Zoom to selection*, *Edit label*, separator, *Remove*. An **edge**: *Edit
+label*, *Follow connection*, separator, *Remove*. The **background**: *Add
+card*, *Add note from vault*, *Add media from vault*, *Add web page*, *Create
+group* | *Undo* | *Paste* | *Snap to grid*, *Snap to objects*, *Read-only*,
+the two snap rows checked. *Undo* is conditional: the row is absent in a
+session where nothing has been edited yet. **Several objects selected**: *Zoom
+to selection*, *Create group*, separator, *Cut*, *Copy*, *Paste*, separator,
+*Delete*.
+
+**What a right-click does to the selection.** On an unselected card it moves
+the selection to that card and shows the card's own list. Inside a
+multi-selection — including a mixed one of a card and an edge — it keeps the
+selection and shows the several-objects list. On the background it clears the
+selection. Two targets answer with no menu of their own: a **group's body** is
+not a hit target at all (`elementFromPoint` is the background there), so the
+background list opens with nothing selected; and a right-click **on an edge's
+label** opens nothing and leaves the selection empty, while the same edge
+right-clicked anywhere else along its path opens the edge list.
+
+**Escape clears the canvas selection.** Worth stating because it invalidates
+evidence: a harness that presses Escape to dismiss one menu before opening the
+next has deselected everything, and every "with several selected" case it then
+records is really a single-card case. The 2026-10-21 captures and three steps
+of this run's first pass went that way; `context-multi-escape` holds both
+orders side by side.
+
+**What Align and Arrange do**, applied to three cards at `(2600,0,160×80)`,
+`(2820,160,240×60)` and `(2660,320,120×140)` — bounding box `x 2600..3060`,
+`y 0..460`. Each entry is one undo step, and undo restored the ragged layout
+exactly every time. *Align left/right* move every `x` to the box's left or to
+`right − width`; *align top/bottom* the same vertically; *align
+center/middle* centre every card on the box's centre (`2830`, `230`).
+*Arrange in a row* puts every card at the box's top and lays them left to
+right with a **20 unit gap**, in the canvas file's node order rather than by
+position; *arrange in a column* is the same down the box's left edge; *arrange
+in a grid* with three cards is identical to the column, so its shape rule
+needs more cards to pin down. *Distribute horizontal spacing* keeps the
+extreme cards and equalises the gaps between the rest, and the gap goes
+negative when the cards are wider than their span (here `(460 − 520)/2 =
+−30`, so the cards overlap); *distribute vertical spacing* likewise (`(460 −
+280)/2 = 90`). *Justify horizontally* sets every card's `x` to the box's left
+and its `width` to the box's width (460); *justify vertically* does it with
+`y` and `height`.
+
+**The quick settings** (the gear in the canvas controls) are *Snap to grid*,
+*Snap to objects* — both checked out of the box — and *Read-only*. The two
+snap rows are app-wide and persist: turning *Snap to grid* off created
+`.obsidian/canvas.json` holding `{\n  "snapToObjects": true,\n  "snapToGrid":
+false\n}`, two-space indented with no trailing newline, in a vault that had no
+such file. *Read-only* is not written there: it is per view. With it on the
+wrapper gains `mod-readonly`, the floating row collapses to *Zoom to
+selection* alone and a card's right-click list is *Zoom to selection* and
+nothing else, while the card menu stays in the DOM.
+
+**Convert to file...** opens a modal titled *File name* holding a
+`textarea.rename-textarea` prefilled `Untitled`, with *Save* and *Cancel*.
+**Enter does not submit it** — the modal stays open and nothing is written;
+*Save* does the work. It writes `Untitled.md` whose bytes are the card's text
+with **no trailing newline** (`Text card`, 9 bytes), and it **replaces** the
+text node rather than editing it: the node id changes to a fresh 16 hex
+characters, `type` becomes `file` with `file: "Untitled.md"`, the geometry is
+kept, and every edge that named the old node is rewritten to the new id with
+its own id and label intact. The canvas file is written on the usual ~2 s
+debounce.
+
+**No menu offers card order.** *Bring to front*, *send to back* and anything
+matching `front|back|raise|lower|order|layer` are absent from the card, group
+and several-objects lists, so `Canvas::raise_selection` has no menu home in
+1.14.5.
+
+**Unprobed:** the *Copy path* submenu of a file card, what *Swap file...*,
+*Narrow to heading...*, *Narrow to block...*, *Merge entire file with...* and
+*Change URL...* write, *Set background*'s suggester beyond its empty state,
+whether *Edit label* on a group focuses the label the way an edge's does (the
+click left focus on the button), and *Arrange in a grid* with more than three
+cards.
 
 ## Observed editing command behavior, Obsidian 1.14.5 (installer build 1.13.7)
 

@@ -60,6 +60,7 @@ Scripts, each one checklist block of `docs/scoria/Interaction probes.md`:
 | `explorer-dnd.mjs` | block 5: real drags through `Input.setInterceptDrags`, the drag payload, the drop-zone classes, collisions, folders, multi-select, and F2's inline rename committed with Enter | fixtures, run |
 | `graph-writeback.mjs` | block 9: every control section expanded, every toggle clicked and slider dragged, the write timing polled, the zoom clamps, unknown keys, an external rewrite, and the local graph's own options | fixtures, run |
 | `attachment-paste.mjs` | block 4: a real clipboard image through `nativeImage`, folder creation, `./`, Markdown links, reading view and a canvas, the disk timeline and undo depth, and a real file drop (`FIXTURES` names a directory of source files) | fixtures, run |
+| `canvas-menus.mjs` | the canvas's menus for #48: the card menu, the floating row per kind of selection, the right-click list per verified target (card, Markdown and image file cards, URL card, group label and body, edge on and off its label, background, several objects), the Set color, Line direction and Align submenus, Align and Arrange applied so the geometry is recorded, the quick settings and where they persist, Read-only, and what Convert to file writes | fixtures, run |
 | `raw-html-remote.mjs` | blocks 8 and 10: real anchor clicks (guarded so the frame cannot navigate), which tags survive, the iframe and CSS-background fetches, raw HTML in every container, and the remote-image layout — runs its own HTTP server (`HTTP_PORT`) | fixtures, run |
 | `autopair.mjs` | auto-pairing (predates the runner: start Obsidian yourself with `--remote-debugging-port=9222` on a scratch vault and run it directly) | — |
 
@@ -128,6 +129,19 @@ and returns:
   note and merge, or a long fixture reports a fraction of its elements.
 - A control below the window (the graph's Forces sliders) reports a rect a
   drag cannot reach. `scrollIntoView` first and check the rect is on screen.
+- **Escape clears the canvas selection.** Pressing it to dismiss a menu before
+  opening the next one deselects everything, so every "with several selected"
+  case recorded afterwards is really a single-card case. Remove the `.menu`
+  nodes instead (`canvas-menus.mjs`'s `dismiss`), and read the selection back
+  either side of the click.
+- A menu's rows are nested in 1.14: `.menu > .menu-scroll > .menu-group >
+  .menu-item[data-section]`. Walking `.menu > *` sees two wrappers and nothing
+  else, and a row without a `.menu-item-title` (a colour swatch row) is
+  dropped by a title-only read. Keep each menu's `outerHTML` as well, so a
+  dropped row can be recovered without re-running.
+- Separators come in pairs at a group boundary, one painted and one
+  `display: none`; record `offsetHeight` per row or the capture reads as two
+  separators in a row.
 - localStorage is shared across every vault the app has opened, so filter any
   dump to the run's own app id before saving it as evidence.
 
