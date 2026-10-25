@@ -28,6 +28,7 @@ crates/scoria-search    search query grammar and matcher, fuzzy search
 crates/scoria-text      editor text model: buffer, selections, undo, edit plans (no gpui)
 crates/scoria-suggest   autocompletion: triggers, candidates, the link an accepted row writes (no gpui)
 crates/scoria-canvas    canvas model: viewport math, edge geometry, hit tests, selection, edits with undo (no gpui)
+crates/scoria-bases     the Bases expression language: statements parsed into Obsidian's own tree (no gpui)
 crates/scoria-bench     spike benchmarks: synthetic vault generator, index timer (bin)
 docs/scoria             Obsidian vault: spec and design notes (dogfooded by Scoria)
 docs/scoria-demo        Obsidian vault: the geology field guide the README recordings are made on

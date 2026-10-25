@@ -159,6 +159,7 @@ at [scoria.cc](https://scoria.cc), whose site is built from `site/` in this repo
 | `scoria-suggest` | Autocompletion: what a line triggers, what the vault offers, and the link accepting one writes |
 | `scoria-templates` | Template placeholders and the moment.js date formats they take |
 | `scoria-formats` | On-disk formats: file kinds, `app.json` and friends, JSON Canvas 1.0, Bases YAML |
+| `scoria-bases` | The Bases expression language: a statement parsed into the tree Obsidian parses it into |
 | `scoria-commands` | The 244 command ids and default hotkeys so vault `hotkeys.json` applies unchanged |
 
 ## Roadmap
