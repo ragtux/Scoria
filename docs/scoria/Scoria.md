@@ -15,6 +15,7 @@ browse a vault, open it in Scoria too. Anything the two apps disagree on here is
 - [[Specification]] — what the app implements and where the full specification lives.
 - [[Development]] — machine setup, build commands, pinned dependencies, and benchmark results.
 - [[Interaction probes]] — the hands-on Obsidian observations the automated probe could not make.
+- [[GPUI Kit]] — the component framework Scoria does not use, and when adopting part of it would pay.
 
 ## Brand colors
 
