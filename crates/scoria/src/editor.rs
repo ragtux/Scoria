@@ -33,16 +33,17 @@ use crate::theme::Theme;
 use crate::workspace::VaultState;
 use gpui::{
     actions, div, fill, point, prelude::*, px, relative, size, AnyElement, App, AvailableSpace,
-    Bounds, ClipboardItem, Context, DispatchPhase, Element, ElementId, ElementInputHandler, Entity,
-    EntityInputHandler, EventEmitter, FocusHandle, Focusable, Font, FontStyle, FontWeight,
-    GlobalElementId, Hitbox, HitboxBehavior, Hsla, InspectorElementId, KeyBinding, LayoutId,
-    MouseButton, MouseDownEvent, MouseMoveEvent, MouseUpEvent, PaintQuad, Pixels, Point,
-    ScrollWheelEvent, SharedString, StrikethroughStyle, Style, Subscription, Task, TextAlign,
-    TextRun, TextStyle, UTF16Selection, UnderlineStyle, Window, WrappedLine,
+    Bounds, ClipboardItem, Context, CursorStyle, DispatchPhase, Element, ElementId,
+    ElementInputHandler, Entity, EntityInputHandler, EventEmitter, FocusHandle, Focusable, Font,
+    FontStyle, FontWeight, GlobalElementId, Hitbox, HitboxBehavior, Hsla, InspectorElementId,
+    KeyBinding, LayoutId, MouseButton, MouseDownEvent, MouseMoveEvent, MouseUpEvent, PaintQuad,
+    Pixels, Point, ScrollWheelEvent, SharedString, StrikethroughStyle, Style, Subscription, Task,
+    TextAlign, TextRun, TextStyle, UTF16Selection, UnderlineStyle, Window, WrappedLine,
 };
 use scoria_formats::config::PropertyTypes;
 use scoria_formats::properties::{self as props, PropertiesInDocument};
 use scoria_markdown::highlight::{flatten, highlight_lines, HighlightKind, HighlightSpan};
+use scoria_markdown::{Block, BlockKind, Document};
 use scoria_suggest::blocks::{self, IdInsertion, Placement};
 use scoria_suggest::{self as suggest, Accept, BlockId, Suggestion};
 use scoria_text::table::{self, TableCommand};
@@ -573,6 +574,10 @@ pub struct Editor {
     /// Live Preview's block widgets with the lines each covers, from the
     /// same parse as the highlights.
     widgets: Arc<Vec<(Range<usize>, Widget)>>,
+    /// Live Preview's code-block flairs by opening line, from that same
+    /// parse. Only Live Preview paints them, which is where Obsidian has
+    /// them: source mode showed none at all.
+    flairs: Arc<Vec<Flair>>,
     /// Height of each widget as last painted, by first line; an unpainted
     /// one is taken as one row per source line.
     widget_heights: HashMap<usize, Pixels>,
@@ -681,6 +686,7 @@ impl Editor {
             thumb_drag: None,
             highlights: Arc::new(vec![Vec::new()]),
             widgets: Arc::new(Vec::new()),
+            flairs: Arc::new(Vec::new()),
             widget_heights: HashMap::new(),
             embed_source: None,
             build_options: BuildOptions::default(),
@@ -724,6 +730,7 @@ impl Editor {
         self.buf.head = 0;
         self.buf.anchor = 0;
         self.widgets = Arc::new(Vec::new());
+        self.flairs = Arc::new(Vec::new());
         self.widget_heights.clear();
         self.scroll_line = 0;
         self.scroll_px = px(0.);
@@ -1753,6 +1760,7 @@ impl Editor {
             .then(|| self.embed_source.clone())
             .flatten();
         let build_options = self.build_options;
+        let live = self.live_preview;
         let path = self.name.to_string();
         self.pending_parse = Some(cx.spawn(async move |this, cx| {
             let result = cx
@@ -1768,11 +1776,24 @@ impl Editor {
                         }
                         None => Vec::new(),
                     };
+                    let flairs = match live {
+                        true => code_flairs(&text, &doc),
+                        false => Vec::new(),
+                    };
                     let elapsed = started.elapsed();
                     let spans = lines.iter().map(Vec::len).sum();
                     let words = text.split_whitespace().count();
                     let chars = text.chars().count();
-                    (lines, elapsed, spans, text.len(), words, chars, widgets)
+                    (
+                        lines,
+                        elapsed,
+                        spans,
+                        text.len(),
+                        words,
+                        chars,
+                        widgets,
+                        flairs,
+                    )
                 })
                 .await;
             this.update(cx, |editor, cx| {
@@ -1794,6 +1815,7 @@ impl Editor {
                     editor.pending_reveal = true;
                 }
                 editor.widgets = Arc::new(widgets);
+                editor.flairs = Arc::new(result.7);
                 editor.stats = ParseStats {
                     parse_ms,
                     spans: result.2,
@@ -3731,6 +3753,96 @@ fn widget_lines(text: &str, widgets: Vec<Widget>) -> Vec<(Range<usize>, Widget)>
         .collect()
 }
 
+/// Obsidian's `span.code-block-flair`: the label at the top right of a
+/// fence's opening line in Live Preview, which is also that block's copy
+/// button -- clicked, it copies the body and raises the "Copied to your
+/// clipboard" notice the reading view's own button never raises. Source
+/// mode draws none at all, and an indented code block, having no fence
+/// line to carry one, gets none either: a note of eight blocks whose only
+/// indented one was the fifth showed seven flairs. Observed 2026-10-25,
+/// `docs/scoria/Specification.md`.
+#[derive(Debug, Clone, PartialEq)]
+struct Flair {
+    /// The line the opening fence is on.
+    line: usize,
+    /// The language's display name, the info string verbatim when there is
+    /// no name for it, empty when the fence carries no info string.
+    label: SharedString,
+    /// What a click writes: the body with `\n` endings and exactly one
+    /// trailing newline removed -- the payload the reading view's own
+    /// button carries, by the same rule.
+    copy: String,
+}
+
+/// The display name a flair shows for an info string. The table behind it
+/// is Prism's, of which six names were read out of a running Obsidian;
+/// anything else is shown verbatim, which is what an unregistered
+/// `scoria-made-up` did.
+fn language_display_name(info: &str) -> SharedString {
+    match info.trim().to_ascii_lowercase().as_str() {
+        "js" => "JavaScript".into(),
+        "ts" => "TypeScript".into(),
+        "python" => "Python".into(),
+        "rust" => "Rust".into(),
+        "c" => "C".into(),
+        "yaml" => "YAML".into(),
+        "" => SharedString::default(),
+        _ => SharedString::from(info.trim().to_string()),
+    }
+}
+
+/// Every fenced code block in `doc`, as the flair its opening line carries.
+/// Nested blocks count: a fence inside a blockquote or a list item has an
+/// opening line of its own.
+fn code_flairs(text: &str, doc: &Document<'_>) -> Vec<Flair> {
+    let starts: Vec<usize> = std::iter::once(0)
+        .chain(text.match_indices('\n').map(|(i, _)| i + 1))
+        .collect();
+    let line_of = |offset: usize| match starts.binary_search(&offset) {
+        Ok(i) => i,
+        Err(i) => i - 1,
+    };
+    let mut out = Vec::new();
+    collect_flairs(&doc.blocks, &line_of, &mut out);
+    out.sort_by_key(|f| f.line);
+    out
+}
+
+fn collect_flairs(blocks: &[Block<'_>], line_of: &dyn Fn(usize) -> usize, out: &mut Vec<Flair>) {
+    for block in blocks {
+        match &block.kind {
+            BlockKind::CodeBlock {
+                fence: Some(_),
+                info,
+                content,
+            } => {
+                // The same normalization the reading model does: Obsidian
+                // renders and copies with `\n` endings whatever the file
+                // holds, and drops exactly one trailing newline.
+                let body = match content.contains('\r') {
+                    true => content.replace("\r\n", "\n"),
+                    false => content.to_string(),
+                };
+                out.push(Flair {
+                    line: line_of(block.span.start),
+                    label: language_display_name(info.as_deref().unwrap_or("")),
+                    copy: body.strip_suffix('\n').unwrap_or(&body).to_string(),
+                });
+            }
+            BlockKind::CodeBlock { .. } => {}
+            BlockKind::BlockQuote { children } | BlockKind::Callout { children, .. } => {
+                collect_flairs(children, line_of, out)
+            }
+            BlockKind::List { items, .. } => {
+                for item in items {
+                    collect_flairs(&item.children, line_of, out);
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
 impl Focusable for Editor {
     fn focus_handle(&self, _cx: &App) -> FocusHandle {
         self.focus_handle.clone()
@@ -4274,6 +4386,8 @@ struct Prepaint {
     /// text and not on something painted over it.
     hitbox: Hitbox,
     widgets: Vec<WidgetPaint>,
+    /// Live Preview's code-block flairs, painted over the lines.
+    flairs: Vec<AnyElement>,
     /// Quote bars, code block bands and rules, behind the text.
     decor: Vec<PaintQuad>,
     line_height: Pixels,
@@ -4351,6 +4465,7 @@ impl Element for EditorElement {
         self.editor.update(cx, |editor, cx| {
             let palette = editor.palette.clone();
             let highlights = editor.highlights.clone();
+            let flairs = editor.flairs.clone();
             let count = editor.line_count();
             let scroll_line = editor.scroll_line.min(count - 1);
             let mut scroll_px = editor.scroll_px;
@@ -4439,6 +4554,7 @@ impl Element for EditorElement {
             );
             let mut lines: Vec<(VisibleLine, Shaped)> = Vec::new();
             let mut widgets: Vec<WidgetPaint> = Vec::new();
+            let mut flair_elements: Vec<AnyElement> = Vec::new();
             let mut decor_quads = Vec::new();
             let mut selection_quads = Vec::new();
             let mut cursor_quads = Vec::new();
@@ -4532,6 +4648,63 @@ impl Element for EditorElement {
                             Bounds::new(point(content_x, y + rh / 2.), size(content_width, px(1.))),
                             palette.border,
                         ));
+                    }
+                    if let Ok(ix) = flairs.binary_search_by_key(&line, |f| f.line) {
+                        let flair = &flairs[ix];
+                        let label = flair.label.clone();
+                        let payload = flair.copy.clone();
+                        let entity = entity.clone();
+                        let mut element = div()
+                            .id(("code-flair", line))
+                            .px(px(8.))
+                            .py(px(4.))
+                            .rounded(px(4.))
+                            .font_family(theme.ui_font.clone())
+                            .text_size(px(theme.base_font_size * 0.8))
+                            .text_color(palette.muted)
+                            .cursor(CursorStyle::Arrow)
+                            .hover(|s| s.bg(theme.bg_secondary))
+                            // The editor's own window listener runs ahead
+                            // of this element and would put the caret on
+                            // the fence line; Obsidian's flair leaves the
+                            // caret where it was, so the mouse stops here.
+                            .block_mouse_except_scroll()
+                            .on_mouse_down(MouseButton::Left, move |_, _, cx| {
+                                // An empty fence copies nothing at all, the
+                                // same rule the reading view's button
+                                // follows -- and with nothing copied there
+                                // is nothing to announce.
+                                if payload.is_empty() {
+                                    return;
+                                }
+                                cx.write_to_clipboard(ClipboardItem::new_string(payload.clone()));
+                                entity.update(cx, |_, cx| {
+                                    cx.emit(EditorEvent::Reported(
+                                        "Copied to your clipboard".into(),
+                                    ))
+                                });
+                            })
+                            .child(label)
+                            .into_any_element();
+                        let measured = element.layout_as_root(
+                            size(AvailableSpace::MinContent, AvailableSpace::MinContent),
+                            window,
+                            cx,
+                        );
+                        // Obsidian's rule is `right: 6px; top: 6px` against
+                        // a line box with padding of its own, which comes
+                        // out very nearly centred on the fence line: its
+                        // flair is 26 px tall on a 29 px line. Centring it
+                        // here is that picture without the padding.
+                        element.prepaint_at(
+                            point(
+                                content_x + content_width - measured.width - px(6.),
+                                y + (rh - measured.height).max(px(0.)) / 2.,
+                            ),
+                            window,
+                            cx,
+                        );
+                        flair_elements.push(element);
                     }
                 }
                 let range = editor.buf.line_range(line);
@@ -4692,6 +4865,7 @@ impl Element for EditorElement {
                 lines,
                 hitbox,
                 widgets,
+                flairs: flair_elements,
                 decor: decor_quads,
                 line_height: lh,
                 font_size,
@@ -4757,6 +4931,10 @@ impl Element for EditorElement {
             }
             for w in prepaint.widgets.iter_mut() {
                 w.element.paint(window, cx);
+            }
+            // Over the lines: a flair sits on its fence line's text.
+            for flair in prepaint.flairs.iter_mut() {
+                flair.paint(window, cx);
             }
             for cursor in prepaint.cursors.drain(..) {
                 window.paint_quad(cursor);
@@ -4862,6 +5040,68 @@ mod tests {
         let doc = scoria_markdown::parse(src);
         let lines = highlight_lines(&doc);
         preview::display_line(src.lines().next().unwrap_or(""), &lines[0], &[])
+    }
+
+    /// Every flair in `src`, as `(line, label, copied)`.
+    fn flairs(src: &str) -> Vec<(usize, String, String)> {
+        let doc = scoria_markdown::parse(src);
+        code_flairs(src, &doc)
+            .into_iter()
+            .map(|f| (f.line, f.label.to_string(), f.copy))
+            .collect()
+    }
+
+    #[test]
+    fn a_flair_per_fence_with_obsidians_label() {
+        // The six display names that were read out of a running Obsidian,
+        // an unregistered info string kept verbatim, and a fence with none
+        // at all, whose flair is there with an empty label.
+        let src = "```js\nconst CASE_LANG = 1;\n```\n\n```scoria-made-up\nunregistered info\n```\n\n```\nno info string\n```\n";
+        assert_eq!(
+            flairs(src),
+            vec![
+                (0, "JavaScript".into(), "const CASE_LANG = 1;".into()),
+                (4, "scoria-made-up".into(), "unregistered info".into()),
+                (8, String::new(), "no info string".into()),
+            ]
+        );
+        for (info, want) in [
+            ("ts", "TypeScript"),
+            ("python", "Python"),
+            ("rust", "Rust"),
+            ("c", "C"),
+            ("yaml", "YAML"),
+            ("YAML", "YAML"),
+        ] {
+            assert_eq!(language_display_name(info), want, "{info}");
+        }
+    }
+
+    #[test]
+    fn an_indented_block_has_no_flair_and_a_nested_fence_has_one() {
+        // A note of eight blocks whose only indented one was the fifth
+        // showed seven flairs, so the fence line is what carries it.
+        assert_eq!(flairs("    four space indented\n    second line\n"), vec![]);
+        assert_eq!(
+            flairs("> ```\n> in a blockquote\n> ```\n"),
+            vec![(0, String::new(), "in a blockquote".into())]
+        );
+        assert_eq!(
+            flairs("- item\n\n  ```js\n  in a list\n  ```\n"),
+            vec![(2, "JavaScript".into(), "in a list".into())]
+        );
+        // A CRLF file's block copies as LF, and exactly one trailing
+        // newline comes off -- the rule the reading view's button follows.
+        assert_eq!(
+            flairs("```\r\none\r\ntwo\r\n\r\n```\r\n"),
+            vec![(0, String::new(), "one\ntwo\n".into())]
+        );
+        // An empty fence carries a flair that copies nothing; the click
+        // path writes nothing rather than emptying the clipboard.
+        assert_eq!(
+            flairs("```\n```\n"),
+            vec![(0, String::new(), String::new())]
+        );
     }
 
     #[test]

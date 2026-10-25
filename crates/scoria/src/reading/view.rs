@@ -265,13 +265,14 @@ impl ReadingView {
     }
 
     /// Shows the check on a code block's copy button for as long as
-    /// Obsidian shows its own: back to the copy icon somewhere between 400
-    /// and 900 ms after the click.
+    /// Obsidian shows its own: sampled every 100 ms from the click, its
+    /// icon is `lucide-check` through 900 ms and back to `lucide-copy` at
+    /// 1000.
     fn flash_copied(&mut self, id: usize, cx: &mut Context<Self>) {
         self.copied = Some(id);
         self.flash = Some(cx.spawn(async move |this, cx| {
             cx.background_executor()
-                .timer(Duration::from_millis(700))
+                .timer(Duration::from_millis(1000))
                 .await;
             this.update(cx, |view, cx| {
                 view.copied = None;
@@ -658,17 +659,32 @@ impl<'a> Renderer<'a> {
                             .right_0()
                             .m(px(6.))
                             .px_2()
-                            .py_1()
+                            .py(px(6.))
                             .rounded_sm()
                             .invisible()
                             .group_hover("code-block", |s| s.visible())
                             .cursor_pointer()
-                            .font_family(t.text_font.clone())
-                            .text_size(px(base * 0.8))
-                            .text_color(t.text_muted)
                             .hover(|s| s.bg(t.bg_secondary))
-                            .child(if copied { "\u{2713}" } else { "\u{2750}" })
+                            // `lucide-copy`, and `lucide-check` for as long
+                            // as the check shows. A 16 px icon in this box
+                            // is the 31.98 x 27.97 px button Obsidian paints.
+                            .child(icon(
+                                if copied { "check" } else { "copy" },
+                                16.,
+                                t.text_muted,
+                            ))
                             .on_click(move |_, _, cx| {
+                                // An empty fence's button writes nothing at
+                                // all -- a click on one in Obsidian left the
+                                // clipboard holding what it already had, so
+                                // an empty body is not copied as an empty
+                                // string. Whether its check still flashes is
+                                // unobserved; flashing one for a copy that
+                                // did not happen would be a lie, so it does
+                                // not.
+                                if payload.is_empty() {
+                                    return;
+                                }
                                 cx.write_to_clipboard(ClipboardItem::new_string(payload.clone()));
                                 if let Some(on_copy) = &on_copy {
                                     on_copy(id, cx);
