@@ -26,6 +26,14 @@ stated too widely. What an entry does *not* promise is that the fix is settled: 
 that the Obsidian behaviour is documented rather than probed, and the probes those wait on are
 collected under [[#Declined until Obsidian is probed]].
 
+**Read the `Landed` lines first.** An entry whose first line after the severity reads
+`**Landed <date>**` describes behaviour that has since been fixed; the evidence under it is kept
+because the Obsidian half is still the record of what was observed, but the **Scoria** paragraph
+describes a binary that no longer exists. Thirty-four entries are marked so far, twenty-five of
+them on 2026-10-24. Before acting on an unmarked entry, check the behaviour in the running app:
+several of the ones marked that day turned out to have been fixed already, by work that landed
+after this audit was written.
+
 The vocabulary is unchanged. *bug* is behaviour Scoria gets wrong on its own terms; *parity-gap* is
 behaviour that works but does not match Obsidian; *missing-feature* is something Obsidian has that
 Scoria has not built. Severity is the reviewer's, not the author's.
@@ -74,6 +82,11 @@ four small entries they carried closed nine of them, so **52 remain** — plus o
 
 *medium, bug, small*
 
+**Landed 2026-10-24** (`6dc12d5`): `is_own_write` recognises the app's own save coming back
+through the watcher -- every change to the open file a modification, the editor on that file, the
+text on disk the text in the buffer -- and refreshes the panes instead of re-entering `show_file`.
+A content check, not an mtime stamp, so a real external write still reloads.
+
 **Scoria.** Confirmed twice, most recently against the finished binary with a sentinel status so the
 new toast notices could not mask the result: append to an unrelated file from a shell, so
 `after_changes` sets `status = "zzz.md changed"`; type one character into the open note; at t+3 s
@@ -100,6 +113,10 @@ content check, not an mtime stamp, so a genuine external write is never swallowe
 
 *medium, bug, small*
 
+**Landed 2026-10-24** (`ca2a63e`): the rename prompt validates the stem it was typed with
+`validate_renamed_file` before the extension goes back on, so `/` is refused by the
+forbidden-character rule and an empty box reads as empty rather than as a leading dot.
+
 **Scoria.** F2 on a note, type `Sub/Renamed`, Enter: no error, the file becomes `Sub/Renamed.md`
 and a `Sub/` directory that did not exist is created. F2 then Ctrl+A then Backspace then Enter
 leaves the modal open with "File name must not start with a dot.". `bad?name` is refused with a
@@ -123,6 +140,9 @@ itself.
 
 *low, bug, small*
 
+**Landed 2026-10-24** (`0593de9`): `detach_current` clears the explorer's highlight, at all four
+places a file goes away underneath the window.
+
 **Scoria.** Delete the open note: `file.path` is null but `explorer.active` is still the dead path,
 painted with `bg_active`. Recreate the path from a shell and the watcher re-reveals it, so the row
 comes back highlighted with no file open. `delete_now` clears `self.current` and calls
@@ -139,6 +159,9 @@ a rescan.
 
 *low, bug, small*
 
+**Landed 2026-10-24** (`0593de9`): the two folder call sites go through `reveal_folder`, which
+scrolls without claiming the row is the open file.
+
 **Scoria.** With `Welcome.md` open, `file-explorer:new-folder` + "Archive" + Enter leaves
 `explorer.active` on `Archive` while `file.path` is still `Welcome.md`, and a forced tree rebuild
 does not repair it. `PendingOp::NewFolder` calls `explorer.reveal`, and `reveal` sets `active`.
@@ -152,6 +175,10 @@ file row.
 ### Rename surfaces a raw OS error with the absolute host path
 
 *low, bug, small*
+
+**Landed 2026-10-24** (`ca2a63e`): a 255-byte length rule keeps `ENAMETOOLONG` from being reached
+at all, and `OpError::user_message` gives a dialog the action, the file's name and the reason in
+words. The full `Display`, path and errno included, is still what a log gets.
 
 **Scoria.** F2, clear, 300 `L` characters, Enter: the modal shows
 `rename /tmp/.../vault/Welcome.md: File name too long (os error 36)` — the machine's filesystem path
@@ -167,6 +194,11 @@ call at ops.rs:253 already has `from`), and add a 255-byte-per-segment check to
 ### File-operation feedback is Scoria's wording, and fires even when nothing was rewritten
 
 *low, parity-gap, medium*
+
+**Landed 2026-10-24** (`d885d8c`): `apply_rename` emits exactly `Updated {n} link{s} in {m}
+file{s}.` and only when links moved; the "Deleted" and "Copied" reports are gone. The
+changed-on-disk notice is kept deliberately -- Obsidian never skips, so it has no counterpart,
+and silence would leave a stale link with no sign of it.
 
 **Scoria.** Half of this is now fixed: the notice layer means `show_file`'s "reading view built"
 line can no longer overwrite the report — a rename sampled at t=0,1,2,3 s keeps saying
@@ -185,6 +217,10 @@ with no "Renamed X to Y" prefix. Drop the "Deleted" and "Copied" reports.
 ### Non-markdown rows show the extension inline instead of as a tag
 
 *low, parity-gap, small*
+
+**Landed** (`e778ba4`): `Row` carries `name` (the stem) and `tag` (the upper-cased extension),
+rendered as Obsidian's `nav-file-tag` at the row's right end. The state dump's `name` is the stem
+alone rather than stem+ext as the fix below suggested.
 
 **Scoria.** `explorer.rows` reports `{"path":"cover.png","name":"cover.png"}` — the whole filename
 is the row's single label — and the row is painted `text_muted` entirely, because `display_name`
@@ -264,6 +300,10 @@ rather than only text.
 
 *low, bug, small*
 
+**Landed 2026-10-24** (`7ebc6e2`): `Editor::widget_is_hidden` gives the properties widget no room
+at all under `hidden`, in the prepaint and in `height_of` alike. The leftover was
+`measured.height.max(line_height)` on an element the renderer draws as empty.
+
 **Scoria.** The reading view honours the setting exactly — with it `hidden`, a note with no
 frontmatter and a note with two properties both put their first clickable content in the band
 82..106, a zero-pixel difference. Live Preview does not: the same two notes give first content at
@@ -283,6 +323,10 @@ views share, so the leftover height is in the editor's own widget accounting
 ### A block jump lands on the wrong block after a `%%comment%%` or a footnote definition
 
 *medium, bug, small*
+
+**Landed 2026-10-24** (`cb2c021`): `Builder::blocks_with_starts` builds `blocks` and `starts`
+together at the top level so neither can drop a block the other kept, and the appended Footnotes
+section gets a start of its own.
 
 **Scoria.** `Model.starts` has one entry per **parsed** block while `Model.blocks` is a `filter_map`
 that drops comments and footnote definitions, so `block_at` and `scroll_to_block` index two
@@ -382,6 +426,10 @@ a sibling header row above the list — a sibling, never a list item, so block i
 
 *medium, bug, medium*
 
+**Landed 2026-10-24** (`cb2c021`): the model records each definition's offset in
+`Model.footnotes`, and `LinkTarget::Footnote(n)` reveals it through the path every heading jump
+takes -- the Footnotes block in reading, the definition's own line while editing.
+
 **Scoria.** Now driven directly, contrary to the first pass's note that it was unreachable: 60 hits
 across two x clusters on the `[^1]` and `[^2]` glyphs all take `reading.scroll` from `{item:0}` to
 `{item:48}`, the clamped list end, past the whole Footnotes section — so the footnote number is
@@ -419,6 +467,11 @@ with the fold-persistence fix above, since both want the same per-path store.
 ### The reading model is rebuilt for every file in every mode, and the status bar says so
 
 *low, bug, medium*
+
+**Half landed 2026-10-24** (`48e76a2`): nothing about a build time reaches the status bar any
+more -- the "reading view built in N ms" suffix is behind `SCORIA_DEBUG_STATUS`. The work
+itself is unchanged: `show_file` still calls `reading::build_with` for every markdown open in
+every mode, so an editing session still pays for a view it is not showing.
 
 **Scoria.** Opening three notes in each of live, source and reading gives the same work and the same
 wording in all three: "Specification.md · reading view built in 2.9 ms",
@@ -515,6 +568,10 @@ on failure.
 
 *medium, bug, small*
 
+**Landed 2026-10-24** (`7ebc6e2`): the corrective reveal is armed when a widget's measured height
+differs from whatever the reveal was computed from -- `previous.unwrap_or(line_height *
+lines.len())` -- rather than only when a previous height existed.
+
 **Scoria.** Click Outline row 7 of Specification.md in Live Preview (offset 34938): the cursor goes
 to line 432 but the scroll stops at line 392 with `visible_lines [392,425]`, so the heading the user
 asked for is below the fold — and it stays there, byte-identical at +1 s, +2 s and +3 s. A second
@@ -537,6 +594,11 @@ guess, and silence once measured. This is the remaining half of the reveal work 
 
 *medium, bug, small*
 
+**Landed**: held by the `if !self.config_dirty` guard in `set_state` together with the panel's
+debounced `schedule_save`, which the write-back entry below added. Verified 2026-10-24: with
+`showTags` and `showAttachments` on, a note written from a shell left both on and `graph.json`
+untouched.
+
 **Scoria.** With `showTags: false` in `graph.json`: the graph shows 11 nodes, clicking the Tags chip
 gives 14, and writing any note into the vault gives 12 — 11 plus the new note, with tags off again.
 Repeated with a second note: 15 after a click, 13 after the write. `set_state` reassigns
@@ -556,6 +618,9 @@ write is immediately re-read and undone.
 
 *medium, bug, small*
 
+**Landed 2026-10-24** (`604ec0e`): `wheel_zoom_factor(dy) = (dy * 0.004).exp()` -- the delta is no
+longer negated, so wheel-up zooms in, the direction `Ctrl+=` goes.
+
 **Scoria.** `scroll dy:-4` takes the graph scale 0.932 → 1.413 (zoom in) and `dy:+4` takes it back
 (zoom out). The control in the same session: `dy:+3` in the editor scrolls *up*, so `dy > 0` is
 wheel-up — and `ctrl-=` (Zoom in) raises the scale. So the wheel disagrees both with the editor's
@@ -569,6 +634,10 @@ own convention and with the keyboard command.
 ### A local graph centred on a file the filters hide renders nothing at all
 
 *medium, bug, small*
+
+**Landed 2026-10-24** (`89ea6a7`): the centre is added to the index whatever the filters say, as
+Obsidian's `localFile` is independent of them, and an edge whose target is the centre is kept for
+the same reason.
 
 **Scoria.** With an unlinked `lonely.png` open, `graph:open-local` gives `{local: true, nodes: 0}` —
 a view named after a file, with the file not in it. Toggling the Attachments chip flips it 1/0/1/0,
@@ -586,6 +655,9 @@ is better than the empty canvas it used to paint but still not Obsidian's unavai
 ### `graph.json` is never created and never written back
 
 *medium, parity-gap, medium*
+
+**Landed**: `GraphView::schedule_save`/`save_now` write the file, debounced, whole when it does
+not exist and merged when it does.
 
 **Scoria.** Byte-identical through ~15 chip clicks, several wheel zooms, a local graph and a quit:
 md5 `41ffa915…` before and after, mtime unchanged, and with the file deleted it is never created.
@@ -664,6 +736,9 @@ Create event uses, keeping the muted colour.
 ### "Open graph view" while a local graph is on screen closes the graph
 
 *low, bug, small*
+
+**Landed 2026-10-24** (`89ea6a7`): the toggle asks `!self.graph.read(cx).is_local()`, so asking
+for the global graph from a local one gives the global graph.
 
 **Scoria.** With a local graph up, `graph:open` leaves graph mode entirely — `file.mode` goes back
 to "live" and `graph.open` to false — so the user who asked for the global graph gets the editor
@@ -861,6 +936,12 @@ returning "0 results" when it is true.
 
 *low, parity-gap, large*
 
+**Landed 2026-10-24** (`39c58bc`), the first half: `Workspace::can_run` is the check callback --
+implemented, plugin on, a table command needs the cursor in a table, an `EDITOR_ONLY` id needs the
+note with the keyboard -- and the palette filter and the socket's `runnable` flag both read it.
+The second half is open: `workspace:close` and the two splits have landed since this was written,
+`editor:toggle-fold` waits on folding and `app:reload` is a deliberate omission.
+
 **Scoria.** Running an editor-only command in reading view now says why — "Insert table: only
 available while editing" — and the three properties ids that Obsidian really does run from a preview
 leaf were exempted again in wave 5. What did not change is the list itself: `open_palette` still
@@ -883,6 +964,10 @@ which a palette-only filter would leave silently inert.
 
 *low, bug, small*
 
+**Landed 2026-10-24** (`43803d7`): `offers` and `offers_unresolved` read all three keys.
+`showAllFileTypes` gates `FileKind::Other` *behind* the vault-wide `showUnsupportedFiles`, since a
+file the vault does not list cannot be offered here either.
+
 **Scoria.** With `{"showExistingOnly": true, "showAttachments": false}` written and the app
 relaunched, the switcher still offers an unresolved target for the query `Nonexistent` and still
 offers `pic.png` for `pic`. `set_state` reads only `app().show_unsupported_files`, the unresolved
@@ -902,6 +987,9 @@ unresolved block behind `show_existing_only != Some(true)`. Call `set_state` aga
 
 *medium, bug, small*
 
+**Landed 2026-10-24** (`539384e`): the frame carries the width,
+`w(relative(0.9)).max_w(px(1100.))`, and the panel is `w_full().max_w(px(1100.))`.
+
 **Scoria.** At 900×800: the nav column still works (clicks at x=60 and x=140 switch tabs), but a
 sweep of x = 700, 760, 780, 800, 810, 820, 830, 845 across six row heights left `app.json`
 byte-identical and `modal.menu`/`modal.editing` null every time, and x ≥ 860 is the backdrop, which
@@ -920,6 +1008,8 @@ so the content column absorbs the shrink and the controls come back inside the w
 ### The Settings nav column does not scroll
 
 *low, bug, small*
+
+**Landed 2026-10-24** (`539384e`): `.id("settings-nav")` and `.overflow_y_scroll()`.
 
 **Scoria.** At 1400×320, the nav shows general through core-plugins and everything below is clipped:
 y = 284, 300 and 316 land on the backdrop and close the modal, and a wheel event over the nav leaves
@@ -952,6 +1042,10 @@ names in `state.modal.rows` — see [[#Blocked by the harness, not by the code]]
 
 *low, bug, medium*
 
+**Landed 2026-10-24** (`95b4071`): `write_config_with` returns `VaultError::Unparseable` rather
+than replacing, for the merging write and the whole-file one alike, and the window names the
+files it is standing in for on the way in. Valid JSON of the wrong shape still merges.
+
 **Scoria.** With `app.json` holding `{"readableLineLength": false, "myPluginData": {"keep": "this"},}`
 — a trailing comma — the app launches with no warning anywhere in `state`, and one toggle click
 rewrites the file to exactly `{"readableLineLength": false}`. `myPluginData` is gone, and the
@@ -970,6 +1064,11 @@ are the vault's values.
 ### Core-plugin toggles write the file and change nothing in the app
 
 *low, parity-gap, medium*
+
+**Landed 2026-10-24** (`1bb40b6`): `scoria_commands::plugin_of` maps an id to its plugin and
+`retain_enabled` drops a disabled plugin's commands from the registry, which is what the palette
+lists and what the keys are bound from. The dock tabs follow the same flag and `run_command`
+refuses an id whose plugin is off.
 
 **Scoria.** Turning off Files, Graph view, Command palette and Daily notes wrote
 `core-plugins.json` correctly — key order and every untouched key preserved — and nothing changed:
@@ -1067,6 +1166,10 @@ window opens; then the two remaining controls, each after a probe of what its me
 
 *medium, parity-gap, medium*
 
+**Landed 2026-10-24** (`de99e7c`): `HistoryEntry` carries the path, the mode and the offset -- the
+caret while editing, the top block in Reading -- written just before every navigation away and
+kept current by `set_mode`.
+
 **Scoria.** Open a note in Reading, open another in Source, go back: the first comes back in
 *source*. Scroll likewise — a note scrolled to editor line 400 comes back at line 0. The reading
 view also loses its place on any mode switch or revisit, which the editor does not. (The graph half
@@ -1084,6 +1187,11 @@ its line.
 ### Status bar shows parse timings where Obsidian shows the backlink count
 
 *medium, parity-gap, small*
+
+**Landed 2026-10-24** (`48e76a2`): the right half is `{n} backlink{s} · {words} words, {chars}
+characters`, with `Ln, Col` in front of it while editing and nothing at all with no file open.
+The parse, span and shape numbers and the "reading view built in" suffix are behind
+`SCORIA_DEBUG_STATUS`.
 
 **Scoria.** At rest the left half reads "Welcome.md · reading view built in 0.0 ms" — in every mode,
 including Source, where no reading view is on screen — and on an empty vault "0 files, 0 notes
@@ -1103,6 +1211,9 @@ open.
 ### Renaming with an empty name reports "File name must not start with a dot."
 
 *low, bug, small*
+
+**Landed 2026-10-24** (`ca2a63e`): the stem is checked before the extension goes back on, so an
+empty box reads as empty.
 
 **Scoria.** `workspace:edit-file-title`, Ctrl+A, Backspace, Enter: `modal.error` is "File name must
 not start with a dot." with an empty query — byte-identical to the pre-campaign observation.
@@ -1381,7 +1492,10 @@ listener in any frame where its group is not hovered.
 so down/move/move/up moves the caret and selects nothing. The drag-select added to `TextInput` is
 therefore unverified, although single, double, triple and shift-click all verified.
 
-**Rendered rows in the Settings modal.** `state.modal` reports the tab, the open dropdown by config
+**Rendered rows in the Settings modal.** *Unblocked 2026-10-24 (`ffe5394`, protocol 2):
+`state.modal.rows` now carries the open tab's rows — name, description, control kind and value, and
+the honesty tag — and the Hotkeys tab reports commands with their ids and bound chords. What follows
+was the state before that.* `state.modal` reports the tab, the open dropdown by config
 key, the open text field by config key and the hotkey filter — enough to settle most of the
 subsystem by clicking a coordinate grid and watching for a state change or a byte change in
 `.obsidian/*.json` — but `modal.rows` is empty for this modal, so no row's text can be read. Every
@@ -1397,6 +1511,7 @@ status-bar string is unreadable for five seconds after any notice fires. The way
 how the autosave-reveal entry was settled: set a sentinel from a non-notice path (touch an unrelated
 file, so `after_changes` writes "<path> changed"), let the notices drain, then act and re-read.
 
-**The window title.** The socket's `window` method answers width, height, scale and active, with no
+**The window title.** *Unblocked 2026-10-24 (`ffe5394`): `window` and `state.window` both carry
+`title` now.* The socket's `window` method answers width, height, scale and active, with no
 title field, and the machine has no `wmctrl`, `xdotool` or `xprop`. Adding `title` to that method is
 one line and would close the last could-not-test in the shell subsystem.
