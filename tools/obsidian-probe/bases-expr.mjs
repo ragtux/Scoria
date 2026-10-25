@@ -263,7 +263,8 @@ await step('e01-surface', async (p) => {
   await openBase('Main.base');
   return c.evaluate(`
     const v = app.workspace.activeLeaf.view; const ctl = v.controller;
-    const src = (f) => { try { return String(f).slice(0, 4000); } catch (e) { return 'ERR:' + e.message; } };
+    // A function's name and arity, never its body (clean room, see CLAUDE.md).
+    const src = (f) => { try { return typeof f === 'function' ? 'fn ' + (f.name || '(anonymous)') + '/' + f.length : String(f); } catch (e) { return 'ERR:' + e.message; } };
     const protoSrc = (o) => { if (!o) return null; const pr = Object.getPrototypeOf(o); if (!pr) return null;
       const r = {}; for (const k of Object.getOwnPropertyNames(pr)) { try { if (typeof pr[k] === 'function') r[k] = src(pr[k]); } catch { r[k] = 'ERR'; } } return r; };
     const shapeOf = (o) => o && typeof o === 'object' ? { ctor: o.constructor && o.constructor.name, own: Object.keys(o).slice(0, 40), proto: Object.getOwnPropertyNames(Object.getPrototypeOf(o) || {}).slice(0, 60) } : typeof o;
@@ -516,7 +517,9 @@ await step('e08-methods', async (p) => {
         for (const k of Object.getOwnPropertyNames(pr || {})) {
           let fn; try { fn = pr[k]; } catch { continue; }
           if (typeof fn !== 'function' || k === 'constructor') { rec.methods[k] = { notAFunction: typeof fn }; continue; }
-          rec.methods[k] = { arity: fn.length, src: String(fn).slice(0, 700) };
+          // The name and the arity, never the body: Obsidian's own source
+          // must not land in this repository (clean room, see CLAUDE.md).
+          rec.methods[k] = { arity: fn.length };
         }
         rec.calls = {};
         for (const k of Object.keys(rec.methods)) {

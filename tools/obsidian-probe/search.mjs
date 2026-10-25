@@ -348,8 +348,8 @@ async function run() {
       return { tag: el.tagName, how: sortHow, cls: el.className, value: el.value ?? null, selectedIndex: el.selectedIndex ?? null,
         options: el.options ? Array.from(el.options).map(o => ({ value: o.value, text: o.textContent, selected: o.selected })) : null,
         settingName: setting ? (setting.querySelector('.setting-item-name') || {}).textContent : null, html: el.outerHTML.slice(0, 1500), domSortOrder: dom.sortOrder,
-        componentKeys: d ? Object.keys(d) : null, setSortOrderSrc: v.setSortOrder ? v.setSortOrder.toString().slice(0, 300) : null,
-        domChangedSrc: dom.changed ? dom.changed.toString().slice(0, 1500) : null, startSearchSrc: v.startSearch ? v.startSearch.toString().slice(0, 1200) : null };`);
+        componentKeys: d ? Object.keys(d) : null, setSortOrderSrc: v.setSortOrder ? 'fn/' + v.setSortOrder.length : null,
+        domChangedSrc: dom.changed ? 'fn/' + dom.changed.length : null, startSearchSrc: v.startSearch ? 'fn/' + v.startSearch.length : null };`);
     if (r.tag && r.tag !== 'SELECT') {
       // custom dropdown: open it for real and record what it shows
       await c.clickElement('[data-cdp="sort-dropdown"]'); await sleep(400);
@@ -436,7 +436,7 @@ async function run() {
     r.menus = await c.evaluate(MENU_DUMP);
     r.labels = await c.openMenuItems();
     r.popups = await c.evaluate(`return Array.from(document.querySelectorAll('.menu, .popover, .modal-container, .suggestion-container, .tooltip')).map(e => ({ cls: e.className, text: e.textContent.trim().slice(0, 300) }));`);
-    r.onCopyResultsClickSrc = await c.evaluate(`${VIEW} return v.onCopyResultsClick ? v.onCopyResultsClick.toString().slice(0, 1500) : null;`);
+    r.onCopyResultsClickSrc = await c.evaluate(`${VIEW} return v.onCopyResultsClick ? 'fn/' + v.onCopyResultsClick.length : null;`);
     await c.pressKey('Escape'); await sleep(200);
     r.menusAfterEscape = await c.evaluate(`return document.querySelectorAll('.menu').length;`);
     return r;
@@ -593,7 +593,7 @@ async function run() {
     await c.pressKey('ArrowDown'); await sleep(120); await c.pressKey('ArrowDown'); await sleep(120); await c.pressKey('ArrowDown'); await sleep(120); await rec('before-shift-enter');
     await c.pressKey('Enter', { shift: true }); await sleep(700);
     r.afterShiftEnter = await c.evaluate(LEAVES);
-    r.handlerSrc = await c.evaluate(`${VIEW} const p = Object.getPrototypeOf(v); const o = {}; for (const n of ['onKeyEnterInFocus', 'onKeyArrowLeftInFocus', 'onKeyArrowRightInFocus', 'onKeyArrowDownInFocus']) o[n] = typeof p[n] === 'function' ? p[n].toString().slice(0, 500) : null; return o;`);
+    r.handlerSrc = await c.evaluate(`${VIEW} const p = Object.getPrototypeOf(v); const o = {}; for (const n of ['onKeyEnterInFocus', 'onKeyArrowLeftInFocus', 'onKeyArrowRightInFocus', 'onKeyArrowDownInFocus']) o[n] = typeof p[n] === 'function' ? 'fn/' + p[n].length : null; return o;`);
     // did any Enter variant create a file or a popout window? (vault bytes from disk; floating split from the workspace)
     r.vaultFilesAfter = listVaultFiles();
     r.newVaultFiles = r.vaultFilesAfter.filter(f => !(f in FIX));

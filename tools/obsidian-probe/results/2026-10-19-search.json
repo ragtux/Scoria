@@ -690,9 +690,9 @@
       "measureOptionEl",
       "changeCallback"
      ],
-     "setSortOrderSrc": "function(e){var t=this.dom;t.sortOrder=e,t.changed()}",
-     "domChangedSrc": "function(){for(var e=[],c=0;c<arguments.length;c++)e[c]=arguments[c];r=this,o=e;var p=Date.now();return i?n?a=s=p+t:l!==_l()&&s<=p&&(l.clearTimeout(i),l=_l(),i=l.setTimeout(u,0)):(l=_l(),s=p+t,i=l.setTimeout(u,t)),h}",
-     "startSearchSrc": "function(){var e=this;this.stopSearch();var t=this,n=t.app,i=t.dom,r=t.searchInfoEl;i.emptyResults(),this.dom.setFocusedItem(null);try{var o=this.searchComponent.getValue(),a=new NL(n,o,this.matchingCase);if(!a.matcher)return;this.searchQuery=a,this.renderSearchInfo(a.matcher,r);var s=!1,l=function(){e.resultCountEl.setText(C2.labelResultCount({count:i.getMatchCount()}))},c=this.queue.start({onStop:l});this.infoEl.show(),VL(n,a.requiredInputs,c,(function(t,n){return y(e,void 0,void 0,(function(){var e;return b(this,(function(r){switch(r.label){case 0:return(e=a.match(t,n))?i.addResult(t,e,n):i.removeResult(t),!s||i.el.isShown()?[3,2]:[4,new Promise((function(e){return i.el.onNodeInserted(e,!0)}))];case 1:r.sent(),r.label=2;case 2:return[2]}}))}))}),(function(){s=i.el.isShown(),l()}))}catch(e){r.createDiv({cls:\"search-info\",text:e.message}),console.log(e)}this.app.workspace.requestSaveLayout(),this.requestSaveSearch()}",
+     "setSortOrderSrc": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+     "domChangedSrc": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+     "startSearchSrc": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
      "note": "native <select>: options read from its <option> children; the native popup is not in the DOM so it was not opened (see needs_human)"
     },
     "05-install-counters": {
@@ -3033,7 +3033,7 @@
        "text": "Copy search resultsBookmark..."
       }
      ],
-     "onCopyResultsClickSrc": "function(e){e.preventDefault(),new x2(this.app,this.dom).open()}",
+     "onCopyResultsClickSrc": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
      "menusAfterEscape": 0
     },
     "09-copy-results": {
@@ -3649,10 +3649,10 @@
       ]
      },
      "handlerSrc": {
-      "onKeyEnterInFocus": "function(e){var t=this.dom.focusedItem;t&&(t instanceof XW||t instanceof KW)&&t.onResultClick(e)}",
-      "onKeyArrowLeftInFocus": "function(e){var t;if(!this.searchComponent.inputEl.isActiveElement()){e.preventDefault();var n=this.dom.focusedItem;if(n instanceof KW)n.setCollapse(!0,!0);else if(n.parent instanceof KW){n.parent.setCollapse(!0,!0);for(var i=n;null===(t=i.parent)||void 0===t?void 0:t.collapsed;)i=i.parent;this.dom.setFocusedItem(i)}else n===this.dom.infinityScroll.rootEl&&this.dom.setCollapseAll(!0)}}",
-      "onKeyArrowRightInFocus": "function(e){this.searchComponent.inputEl.isActiveElement()||(e.preventDefault(),this.dom.focusedItem===this.dom.infinityScroll.rootEl?this.dom.setCollapseAll(!1):this.dom.focusedItem instanceof KW&&this.dom.focusedItem.setCollapse(!1,!0))}",
-      "onKeyArrowDownInFocus": "function(e){e.defaultPrevented||(e.preventDefault(),cE(),this.dom.changeFocusedItem(\"forwards\"))}"
+      "onKeyEnterInFocus": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "onKeyArrowLeftInFocus": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "onKeyArrowRightInFocus": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "onKeyArrowDownInFocus": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
      },
      "vaultFilesAfter": [
       "9 needle.md",

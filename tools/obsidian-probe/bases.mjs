@@ -320,7 +320,9 @@ const modelDump = () => c.evaluate(`
 // hunting them through the menus.
 await step('s01-registrations', async () => c.evaluate(`
   const inst = app.internalPlugins.plugins.bases.instance;
-  const src = (f) => { try { return String(f); } catch (e) { return 'ERR:' + e.message; } };
+  // A function's name and arity, never its body: Obsidian's own source must
+  // not land in this repository (clean room, see CLAUDE.md).
+  const src = (f) => { try { return typeof f === 'function' ? 'fn ' + (f.name || '(anonymous)') + '/' + f.length : String(f); } catch (e) { return 'ERR:' + e.message; } };
   const regs = inst.getRegistrations ? inst.getRegistrations() : null;
   const dumpReg = (r) => {
     const o = { keys: Object.keys(r) };
@@ -361,7 +363,9 @@ await step('s02-open-no-write', async (p) => {
 // writer: Scoria has to reproduce it, so it is recorded verbatim.
 await step('s03-writer-source', async () => c.evaluate(`
   const v = app.workspace.activeLeaf.view; const q = v.query;
-  const src = (f) => { try { return String(f); } catch (e) { return 'ERR:' + e.message; } };
+  // A function's name and arity, never its body: Obsidian's own source must
+  // not land in this repository (clean room, see CLAUDE.md).
+  const src = (f) => { try { return typeof f === 'function' ? 'fn ' + (f.name || '(anonymous)') + '/' + f.length : String(f); } catch (e) { return 'ERR:' + e.message; } };
   const protoSrc = (o, cap = 6000) => {
     if (!o) return null;
     const pr = Object.getPrototypeOf(o); if (!pr) return null;
@@ -584,8 +588,10 @@ await step('s13-commands', async (p) => {
   await c.writeClipboard('SENTINEL-BEFORE-COPY');
   p.copyTableListed = await c.evaluate(`
     const cmd = app.commands.commands['bases:copy-table'];
+    // Which callbacks a command has, never their source: Obsidian's own code
+    // must not land in this repository (clean room, see CLAUDE.md).
     return { name: cmd.name, hasCheckCallback: !!cmd.checkCallback, hasEditorCallback: !!cmd.editorCallback,
-      src: String(cmd.checkCallback || cmd.callback || cmd.editorCheckCallback || cmd.editorCallback || '').slice(0, 2000) };`);
+      hasCallback: !!cmd.callback, hasEditorCheckCallback: !!cmd.editorCheckCallback };`);
   p.copyTableRan = await c.evaluate(`return app.commands.executeCommandById('bases:copy-table');`);
   await sleep(4000);
   p.copyTableNotices = await c.evaluate(`return Array.from(document.querySelectorAll('.notice')).map(e => e.textContent);`);

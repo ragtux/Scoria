@@ -57,43 +57,43 @@
      "ok": true,
      "ms": 3729,
      "controllerProto": {
-      "constructor": "function t(t,n,i,r){var o=e.call(this)||this;o.currentFile=null,o.query=null,o.results=new Map,o.errors=new Set,o.searchQuery=null,o.ctx=null,o.viewEstates={},o.groupFolds=null,o.error=null,o.events=new b1,o.displayMenu=null,o.requestNotifyView=Gl(o.notifyView.bind(o),50),o.relevantProperties=new Set,o.queryState=\"\",o.app=t,o.plugin=n,o.currentFile=r;var a=(o.viewHeaderEl=i.createDiv({cls:\"bases-header\"})).createDiv({cls:\"bases-toolbar\"});o.viewMenu=o.addChild(new v1(t,o,a)),o.resultsMenu=new o1(t,a),o.sortMenu=new c1(o,a),o.groupMenu=o.addChild(new ZJ(o,a)),o.filterMenu=new MJ(o,a),o.propertyMenu=o.addChild(new AJ(o,a)),Qy.isPhone&&(o.displayMenu=new M$(o,a));var s=i.createDiv(\"bases-search-row\");o.searchMenu=o.addChild(new s1(t,o,a,s)),o.newItemMenu=o.addChild(new i1(t,a.createDiv(\"bases-toolbar-item bases-toolbar-new-item-menu\"))),o.errorEl=i.createDiv(\"bases-error\"),o.viewContainerEl=i.createDiv(\"bases-view\"),o.viewContainerEl.addEventListener(\"keydown\",(function(e){if(!e.isComposing)if(\"PageUp\"===e.key&&mS.isModifier(e,\"Mod\")&&e.shiftKey){e.preventDefault();var t=(i=o.getQueryViewNames()).indexOf(o.viewName),n=i[(t+i.length-1)%i.length];o.selectView(n),o.view.focus()}else if(\"PageDown\"===e.key&&mS.isModifier(e,\"Mod\")&&e.shiftKey){e.preventDefault();t=(i=o.getQueryViewNames()).indexOf(o.viewName);var i,r=i[(t+1)%i.length];o.selectView(r),o.view.focus()}}));var l=function(e){return y(o,void 0,void 0,(function(){var n,i,r,o,a;return b(this,(function(s){switch(s.label){case 0:n=function(e){var n,r,o,a,s;return b(this,(function(l){switch(l.label){case 0:return n=new YQ(i.ctx,e),r=L$(t,i.query,i.getViewConfig(),n),o=r.frontmatter,a=r.folder,[4,i.app.fileManager.processFrontMatter(e,(function(e){mB(e,o)}))];case 1:return l.sent(),a?(s=t.vault.getFolderByPath(a))&&FI(e,s)?[4,LI(t,[e],s)]:[3,3]:[3,3];case 2:l.sent(),l.label=3;case 3:return[2]}}))},i=this,r=0,o=e,s.label=1;case 1:return r<o.length?(a=o[r],[5,n(a)]):[3,4];case 2:s.sent(),s.label=3;case 3:return r++,[3,1];case 4:return[2]}}))}))};return o.app.dragManager.handleDrop(o.viewContainerEl,(function(e,n,i){if(n){var r=[];if(\"file\"===n.type||\"link\"===n.type)r.push(n.file);else if(\"files\"===n.type)for(var a=0,s=n.files;a<s.length;a++){(h=s[a])instanceof eI&&r.push(h)}else if(\"bookmarks\"===n.type)for(var c=0,u=n.items;c<u.length;c++){var h,p=u[c];if(\"file\"===p.item.type)(h=o.app.vault.getFileByPath(p.item.path))&&r.push(h)}if(0!==r.length)return i||l(r),{hoverClass:\"is-being-dragged-over\",hoverEl:o.viewContainerEl,dropEffect:\"copy\"}}else if(_L(e.dataTransfer)){if(!i){var d=L$(t,o.query,o.getViewConfig()).folder,f=d?t.vault.getFolderByPath(d):null;y(o,void 0,void 0,(function(){var t;return b(this,(function(n){switch(n.label){case 0:return[4,this.app.importAttachments(GL(e.dataTransfer,\"drop\",!0),f)];case 1:return t=n.sent(),l(t),[2]}}))}))}return{dropEffect:\"copy\",hoverEl:o.viewContainerEl,hoverClass:\"is-being-dragged-over\"}}}),!0),o.mockContext=new m$(t,{}),o.queue=new Gj(t,o),o.addChild(o.queue),new ResizeObserver((function(){return o.onResize()})).observe(o.viewContainerEl),o}",
-      "onload": "function(){this.registerEvent(this.app.metadataTypeManager.on(\"changed\",this.requestNotifyView.bind(this))),this.registerEvent(this.app.vault.on(\"config-changed\",this.onConfigChanged,this))}",
-      "onConfigChanged": "function(e){\"userIgnoreFilters\"===e&&(this.queryState=\"\",this.update())}",
-      "setEphemeralState": "function(e){if(e&&Object.hasOwn(e,\"views\")){var t=this.viewEstates=e.views;Object.hasOwn(t,this.viewName)&&this.view.setEphemeralState(t[this.viewName])}}",
-      "getEphemeralState": "function(){var e,t=this.viewEstates;return t[this.viewName]=null===(e=this.view)||void 0===e?void 0:e.getEphemeralState(),{views:t}}",
-      "onResize": "function(){var e;null===(e=this.view)||void 0===e||e.onResize()}",
-      "promptForAddView": "function(){this.viewMenu.promptForAddView()}",
-      "selectView": "function(e){if(this.viewName!==e){var t=this.viewEstates;this.view&&(t[this.viewName]=this.view.getEphemeralState()),this.viewName=e,\"view\"===this.error&&this.clearError(),this.update(),this.view&&Object.hasOwn(t,this.viewName)&&this.view.setEphemeralState(t[this.viewName]),this.events.trigger(\"view-changed\")}}",
-      "setQuery": "function(e){this.clearError(),e instanceof Error?this.displayError(\"query\",e):(this.query&&e.toString()===this.query.toString()||(this.query=e,this.groupFolds=null),this.update())}",
-      "setQueryAndView": "function(e,t){var n=this.viewName;this.viewName=t,this.setQuery(e),n!==t&&this.events.trigger(\"view-changed\")}",
-      "getActiveBasesViewOfType": "function(e){return this.view instanceof e?this.view:null}",
-      "getQueryViewNames": "function(){var e,t;return(null===(t=null===(e=this.query)||void 0===e?void 0:e.views)||void 0===t?void 0:t.map((function(e){return e.name})))||[]}",
+      "constructor": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "onload": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "onConfigChanged": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "setEphemeralState": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "getEphemeralState": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "onResize": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "promptForAddView": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "selectView": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "setQuery": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "setQueryAndView": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "getActiveBasesViewOfType": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "getQueryViewNames": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
       "getCurrentFile": "function(){return this.currentFile}",
-      "getGroupFolds": "function(){var e,t,n,i;return null!==(e=this.groupFolds)&&void 0!==e||(this.groupFolds=this.loadGroupFolds()),null!==(t=(n=this.groupFolds)[i=this.viewName])&&void 0!==t?t:n[i]=new Set}",
-      "loadGroupFolds": "function(){var e,t,n=Object.create(null),i=null===(t=null===(e=this.query)||void 0===e?void 0:e.file)||void 0===t?void 0:t.path;if(!i)return n;var r=this.app.loadLocalStorage(y1+i);if(!r)return n;var o=this.getQueryViewNames();for(var a in r){var s=r[a];$b(s)&&o.contains(a)&&(n[a]=new Set(s))}return n}",
-      "saveGroupFolds": "function(){var e,t,n=null===(t=null===(e=this.query)||void 0===e?void 0:e.file)||void 0===t?void 0:t.path;if(n&&this.groupFolds){var i=Object.create(null);for(var r in this.groupFolds){var o=Array.from(this.groupFolds[r]);o.length>0&&(i[r]=o)}this.app.saveLocalStorage(y1+n,Object.isEmpty(i)?null:i)}}",
-      "getViewConfig": "function(){return this.query.getViewConfig(this.viewName)}",
-      "getSearchQuery": "function(){return this.searchQuery||null}",
-      "updateSearchQuery": "function(e){this.searchQuery!==e&&(this.searchQuery=e||null,this.query&&this.requestNotifyView())}",
-      "updateCurrentFile": "function(e){if(e!==this.currentFile&&(this.currentFile=e,this.query)){var t=this.getViewConfig(),n=this.ctx=this.buildBasesContext(null==t?void 0:t.filters);this.runQuery(n)}}",
-      "update": "function(){var e,t,n=this.query,i=this.viewName;if(n){var r=n.getViewConfig(i);if(!r)return this.displayError(\"view\",new Error(m1.msgErrorViewNotFound({view:i}))),this.viewMenu.setView(i,\"lucide-file-question\"),this.queryState=\"\",void this.events.trigger(\"view-changed\");i||(this.viewName=i=r.name,this.events.trigger(\"view-changed\"));var o=this.plugin.getRegistration(r.type);if(this.viewMenu.setView(r.name,(null==o?void 0:o.icon)||\"lucide-file-question\"),r.type!==(null===(e=this.view)||void 0===e?void 0:e.type)){this.view&&(this.removeChild(this.view),this.view=null,this.viewContainerEl.empty());var a=this.plugin.getViewFactory(r.type);if(!a)return void this.displayError(\"view\",new Error(m1.msgErrorUnknownViewType({viewtype:r.type})));this.view=a(this,this.viewContainerEl),this.addChild(this.view),this.events.trigger(\"view-changed\")}this.view&&(this.view.config=r),this.viewContainerEl.dataset.viewType=(null===(t=this.view)||void 0===t?void 0:t.type)||\"\",this.viewContainerEl.dataset.viewName=this.viewName||\"\",this.viewContainerEl.toggleClass(\"is-grouped\",!!r.groupBy);var s=n.formulas,l={};if(s)for(var c in s)s.hasOwnProperty(c)&&(l[c]=s[c].toString());var u=this.ctx=this.buildBasesContext(null==r?void 0:r.filters),h=JSON.stringify({filter:u.filter,formulas:l});h!==this.queryState?(this.queryState=h,this.runQuery(u)):this.requestNotifyView()}}",
-      "buildBasesContext": "function(e){var t=this.app,n=this.query,i=n.filters,r=n.formulas,o=JQ.and(i,e);return new GQ(t,o,r,this.currentFile)}",
-      "clear": "function(){this.query=null,this.queryState=null,this.viewName=\"\",this.queue.stop(),this.view&&(this.removeChild(this.view),this.view=null,this.viewContainerEl.empty()),this.events.trigger(\"view-changed\")}",
-      "displayError": "function(e,t){this.error=e,this.viewContainerEl.hide(),this.viewHeaderEl.toggle(\"query\"!==e),this.filterMenu.setEnabled(!1),this.propertyMenu.setEnabled(!1),this.groupMenu.setEnabled(!1);var n=this.errorEl;n.empty(),\"query\"===e&&n.createEl(\"p\",{text:m1.msgErrorUnableToParse()}),n.createEl(\"p\",{text:t.message}),n.show()}",
-      "clearError": "function(){this.error=null,this.viewContainerEl.show(),this.viewHeaderEl.show(),this.errorEl.empty(),this.errorEl.hide(),this.filterMenu.setEnabled(!0),this.propertyMenu.setEnabled(!0),this.groupMenu.setEnabled(!0)}",
-      "notifyView": "function(){var e,t,n=this,i=n.app,r=n.query,o=n.view;if(r&&!this.initialScan){var a=Array.from(this.errors);this.errors.clear();for(var s=0,l=a;s<l.length;s++){var c=l[s];new zT(c)}var u=r.getViewConfig(this.viewName);if(u){var h=zJ(i,u,Array.from(this.results.values())),p=this.applySearchQuery(h,u.getOrder()),d=h.length,f=p.length;p.sort((function(e,t){return BT(e.file.path,t.file.path)})),this.evaluateRelevantProperties(p);var v=this.getProperties();o&&(o.allProperties=v,o.data=new UJ(i,u,v,p),o.onDataUpdated()),this.mockContext=new m$(i,null!==(t=null===(e=this.ctx)||void 0===e?void 0:e.formulas)&&void 0!==t?t:{});var g=function(e){for(var t in e.formulas)if(e.formulas[t]instanceof SQ)return!0;return!1}(r);this.filterMenu.updateQuery(r,u),this.propertyMenu.updateQuery(g),this.newItemMenu.updateQuery(this,r,u,this.results),this.sortMenu.updateQuery(u),this.groupMenu.updateQuery(u),this.resultsMenu.updateQuery(o,u,d),this.displayMenu&&(this.displayMenu.updateQuery(u,g),this.viewMenu.setResultCount(this.resultsMenu.shownCount,this.resultsMenu.isLimited)),this.searchMenu.updateCount(f)}}}",
-      "evaluateRelevantProperties": "function(e){for(var t=this.relevantProperties=new Set,n=0,i=e;n<i.length;n++)for(var r=0,o=i[n].getPropertyKeys();r<o.length;r++){var a=o[r];t.add(a.toLowerCase())}}",
-      "getAllGroups": "function(){var e,t=null===(e=this.query)||void 0===e?void 0:e.getViewConfig(this.viewName),n=null==t?void 0:t.groupBy;if(!n||!t.groupOrder)return[];var i=WJ(this.app,t,Array.from(this.results.values())),r=i.groups,o=i.unlisted,a=r.map((function(e){return{key:e.key,count:e.entries.length,isVisible:!0}})),s=qJ(o,n.property).map((function(e){return{key:e.key,count:e.entries.length,isVisible:!1}}));return a.concat(s)}",
-      "getProperties": "function(){var e=this.app.metadataTypeManager,t=[];t.push.apply(t,YQ.FILE_PROPERTIES);for(var n=0,i=Array.from(this.relevantProperties);n<i.length;n++){var r=i[n];t.push(_Q(\"note\",e.getPropertyInfo(r).name))}for(var o=0,a=Object.keys(this.query.formulas||{});o<a.length;o++){var s=a[o];t.push(_Q(\"formula\",s))}return t}",
-      "runQuery": "function(e){var t=this,n=this.viewContainerEl;this.queue.stop(),this.errors.clear();var i=this.queue.start();this.initialScan=!0,y(t,void 0,Promise,(function(){var t,r,o,a,s,l,c,u,h,p,d,f;return b(this,(function(v){switch(v.label){case 0:t=new qI({batchSize:10,duration:50,maxDelay:16}),r=!1,v.label=1;case 1:v.trys.push([1,9,10,15]),o=!0,a=M(i.generator()),v.label=2;case 2:return[4,a.next()];case 3:return s=v.sent(),(h=s.done)?[3,8]:(f=s.value,o=!1,l=f,i.runnable.isCancelled()?[2]:n.isShown()?[3,5]:[4,new Promise((function(e){return n.onNodeInserted(e,!0)}))]);case 4:v.sent(),v.label=5;case 5:if(e.local&&e.local.file===l)if(r){if(e.localUsed)return this.runQuery(e.regenerateLocal()),[2]}else r=!0;if(this.removeResult(l),this.app.metadataCache.isUserIgnored(l.path))return[3,7];try{c=new YQ(e,l),(!e.filter||e.filter.test(c))&&this.addResult(l,c)}catch(e){this.errors.add(m1.msgErrorFilterFailedToEvaluate({message:e.message}))}return t.shouldPause()?[4,t.pause()]:[3,7];case 6:v.sent(),v.label=7;case 7:return o=!0,[3,2];case 8:return[3,15];case 9:return u=v.sent(),p={error:u},[3,15];case 10:return v.trys.push([10,,13,14]),o||h||!(d=a.return)?[3,12]:[4,d.call(a)];case 11:v.sent(),v.label=12;case 12:return[3,14];case 13:if(p)throw p.error;return[7];case 14:return[7];case 15:return[2]}}))}))}",
+      "getGroupFolds": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "loadGroupFolds": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "saveGroupFolds": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "getViewConfig": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "getSearchQuery": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "updateSearchQuery": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "updateCurrentFile": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "update": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "buildBasesContext": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "clear": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "displayError": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "clearError": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "notifyView": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "evaluateRelevantProperties": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "getAllGroups": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "getProperties": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "runQuery": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
       "startLoader": "function(){}",
-      "stopLoader": "function(){this.initialScan=!1,this.requestNotifyView()}",
+      "stopLoader": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
       "addResult": "function(e,t){this.results.set(e,t)}",
-      "removeResult": "function(e){var t=this.results;t.has(e)&&(t.delete(e),this.requestNotifyView())}",
-      "getWidgetForIdent": "function(e){switch(e){case\"file.file\":case\"file.path\":return\"file\";case\"file.tags\":return\"tags\";case\"file.ctime\":case\"file.mtime\":return\"date\";case\"file.folder\":return\"folder\";default:var t=this.mockContext.evaluateIdent(e);return t instanceof wK?t.time?\"datetime\":\"date\":P$(t.type)}}",
-      "getEditorLanguageSupport": "function(){return new t1(this.mockContext)}",
-      "applySearchQuery": "function(e,t){var n;if(!(null===(n=this.searchQuery)||void 0===n?void 0:n.trim()))return e;var i=sx(this.searchQuery).tokens;return 0===i.length?e:e.filter((function(e){for(var n=i.slice(),r=0,o=t;r<o.length;r++){var a=o[r];try{var s=e.getValue(a);if(!s||s instanceof lK)continue;for(var l=I$(s).toLowerCase(),c=n.length-1;c>=0;c--)l.includes(n[c])&&n.splice(c,1);if(0===n.length)return!0}catch(e){}}return!1}))}"
+      "removeResult": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "getWidgetForIdent": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "getEditorLanguageSupport": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "applySearchQuery": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
      },
      "ctxShape": {
       "ctor": "e",
@@ -111,17 +111,17 @@
       ]
      },
      "ctxProto": {
-      "constructor": "function e(e,t,n,i){this._local=null,this.app=e,this.filter=t,this.formulas=n,i&&(this._local=new YQ(this,i))}",
-      "regenerateLocal": "function(){var t;return new e(this.app,this.filter,this.formulas,null===(t=this._local)||void 0===t?void 0:t.file)}"
+      "constructor": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "regenerateLocal": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
      },
      "ctxJson": "ERR:Converting circular structure to JSON\n    --> starting at object with constructor 'e'\n    |     property 'appMenuBarManager' -> object with constructor 'e'\n    --- property 'app' closes the circle",
      "mockContextProto": {
-      "constructor": "function e(e,t){this.cachedProps=null,this.app=e,this.formulaResults=new XQ(this,t)}",
-      "cacheProps": "function(){if(this.cachedProps)return this.cachedProps;var e=this.app.metadataTypeManager;this.cachedProps={};for(var t=this.cachedProps,n=0,i=Object.keys(this.app.metadataTypeManager.getAllProperties());n<i.length;n++){var r=i[n],o=e.getPropertyInfo(r);t[o.name]=y$(o.widget)}return t}",
-      "keys": "function(){var e=new Set(Object.keys(this.cacheProps()));return e.add(\"this\"),e.add(\"note\"),e.add(\"file\"),e.add(\"formula\"),Array.from(e)}",
-      "getByIdentifier": "function(e){switch(e.toLowerCase()){case\"this\":return new QQ(this.app,this.app.workspace.getActiveFile(),this);case\"note\":return new yK(this.cacheProps());case\"file\":return new MK(this.app,this.app.workspace.getActiveFile());case\"formula\":return new $Q(this.formulaResults)}var t=this.cacheProps();return e=zI(t,e),Object.hasOwn(t,e)?t[e]:lK.value}",
-      "evaluateFormula": "function(e){if(!(e instanceof SQ))try{return e.getValue(this)}catch(e){}return lK.value}",
-      "evaluateIdent": "function(e){return this.evaluateFormula(MQ.parse(e))}"
+      "constructor": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "cacheProps": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "keys": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "getByIdentifier": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "evaluateFormula": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+      "evaluateIdent": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
      },
      "results": {
       "isMap": true,
@@ -160,8 +160,8 @@
       },
       "firstValueJson": "ERR:Converting circular structure to JSON\n    --> starting at object with constructor 'e'\n    |     property 'appMenuBarManager' -> object with constructor 'e'\n    --- property 'app' closes the circle"
      },
-     "viewConfigGetEvaluatedFormula": "function(e,t){var n,i=null===(n=this.data)||void 0===n?void 0:n[t];if(!i||!String.isString(i))return lK.value;var r=new mQ(i);if(r.formula instanceof SQ)return lK.value;var o=e.queryController.getCurrentFile(),a=new YQ(e.queryController.ctx,o);try{return r.formula.getValue(a)}catch(e){return lK.value}}",
-     "evaluateRelevantProperties": "function(e){for(var t=this.relevantProperties=new Set,n=0,i=e;n<i.length;n++)for(var r=0,o=i[n].getPropertyKeys();r<o.length;r++){var a=o[r];t.add(a.toLowerCase())}}",
+     "viewConfigGetEvaluatedFormula": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
+     "evaluateRelevantProperties": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>",
      "queryState": "\"{\\\"filter\\\":null,\\\"formulas\\\":{}}\""
     },
     "e02-oracle": {
@@ -5549,19 +5549,19 @@
         },
         "toString": {
          "arity": 0,
-         "src": "function(){return this.data}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "keys": {
          "arity": 0,
-         "src": "function(){return e.prototype.keys.call(this).concat([\"length\"])}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "objectAccess": {
          "arity": 1,
-         "src": "function(t){return\"length\"===t.toLowerCase()?new pK(this.data.length):e.prototype.objectAccess.call(this,t)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "renderTo": {
          "arity": 2,
-         "src": "function(e,t){e.setText(this.data)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         }
        },
        "calls": {
@@ -5636,7 +5636,7 @@
         },
         "renderTo": {
          "arity": 2,
-         "src": "function(e,t){isFinite(this.data)||isNaN(this.data)?e.setText(this.toString()):e.setText(\"∞\")}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         }
        },
        "calls": {
@@ -5678,11 +5678,11 @@
         },
         "isTruthy": {
          "arity": 0,
-         "src": "function(){return this.data}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "renderTo": {
          "arity": 1,
-         "src": "function(e){e.createEl(\"input\",{type:\"checkbox\",attr:{disabled:!0}}).checked=this.data}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         }
        },
        "calls": {
@@ -5751,115 +5751,115 @@
         },
         "getNumbers": {
          "arity": 0,
-         "src": "function(){for(var e=[],t=0,n=this.data;t<n.length;t++){var i=n[t];Number.isNumber(i)?e.push(i):i instanceof pK&&e.push(i.data)}return e}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "getDates": {
          "arity": 0,
-         "src": "function(){for(var e=[],t=0,n=this.data;t<n.length;t++){var i=n[t],r=null;\"string\"==typeof i?r=wK.parseFromString(i):i instanceof hK?r=wK.parseFromString(i.data):i instanceof wK&&(r=i),r&&e.push(r.date)}return e}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "toString": {
          "arity": 0,
-         "src": "function(){return this.join(\", \").data}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "isTruthy": {
          "arity": 0,
-         "src": "function(){return this.data.length>0}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "includes": {
          "arity": 1,
-         "src": "function(e){for(var t=this.data,n=0;n<t.length;n++)if(aK.looseEquals(e,this.get(n)))return!0;return!1}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "compare": {
          "arity": 2,
-         "src": "function(e,t){var n=this.data,i=e.data;if(n===i)return!0;if(n.length!==i.length)return!1;for(var r=0;r<n.length;r++){if(n[r]!==i[r])if(!t(this.get(r),e.get(r)))return!1}return!0}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "equals": {
          "arity": 1,
-         "src": "function(e){return this.compare(e,aK.equals)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "looseEquals": {
          "arity": 1,
-         "src": "function(e){return e instanceof t?this.compare(e,aK.looseEquals):1===this.data.length&&aK.looseEquals(this.get(0),e)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "length": {
          "arity": 0,
-         "src": "function(){return this.data.length}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "get": {
          "arity": 1,
-         "src": "function(e){var t=this.data[e];return null==t?lK.value:t instanceof aK?t:this.data[e]=this.lazyEvaluator(e,t)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "slice": {
          "arity": 2,
-         "src": "function(e,n){return new t(this.data.slice(e,n))}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "reverse": {
          "arity": 0,
-         "src": "function(){return new t(this.data.slice().reverse())}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "flatten": {
          "arity": 0,
-         "src": "function(){var e=[],n=function(i){for(var r=0,o=i;r<o.length;r++){var a=o[r];a instanceof t?n(a.data):Array.isArray(a)?n(a):e.push(a)}};return n(this.data),new t(e)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "unique": {
          "arity": 0,
-         "src": "function(){for(var e=this.data,n={},i=function(e){var t=r.get(e),i=t.toString();if(Object.hasOwn(n,i)){var o=n[i];o.some((function(e){return aK.equals(t,e)}))||o.push(t)}else n[i]=[t]},r=this,o=0;o<e.length;o++)i(o);var a=[];for(var s in n){var l=n[s];a.push.apply(a,l)}return new t(a)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "sort": {
          "arity": 0,
-         "src": "function(){var e=this.data.slice();return e.sort((function(e,t){var n=e instanceof uK?e.data:e instanceof aK?e.toString():e,i=t instanceof uK?t.data:t instanceof aK?t.toString():t;return Number.isNumber(n)&&Number.isNumber(i)?n-i:BT(n,i)})),new t(e)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "concat": {
          "arity": 1,
-         "src": "function(e){return new t(this.data.concat(e.data))}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "earliest": {
          "arity": 0,
-         "src": "function(){var e=this.getDates();if(0===e.length)return lK.value;for(var t=e[0],n=0,i=e;n<i.length;n++){var r=i[n];r<t&&(t=r)}return new wK(t)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "latest": {
          "arity": 0,
-         "src": "function(){var e=this.getDates();if(0===e.length)return lK.value;for(var t=e[0],n=0,i=e;n<i.length;n++){var r=i[n];r>t&&(t=r)}return new wK(t)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "sum": {
          "arity": 0,
-         "src": "function(){var e=this.getNumbers();if(0===e.length)return lK.value;var t=e.reduce((function(e,t){return e+t}),0);return new pK(t)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "median": {
          "arity": 0,
-         "src": "function(){var e=this.getNumbers();e.sort((function(e,t){return e-t}));var t=e.length;return 0===t?lK.value:new pK(t%2==0?(e[t/2]+e[t/2-1])/2:e[(t-1)/2])}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "mean": {
          "arity": 0,
-         "src": "function(){var e=this.sum();return e instanceof lK?lK.value:new pK(e.data/this.length())}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "min": {
          "arity": 0,
-         "src": "function(){var e=this.getNumbers();return 0===e.length?lK.value:new pK(Math.min.apply(Math,e))}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "max": {
          "arity": 0,
-         "src": "function(){var e=this.getNumbers();return 0===e.length?lK.value:new pK(Math.max.apply(Math,e))}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "stddev": {
          "arity": 0,
-         "src": "function(){var e=this.getNumbers();if(0===e.length)return lK.value;var t=function(e){var t=e.reduce((function(e,t){return e+t}),0);return t/e.length},n=t(e),i=t(e.map((function(e){return Math.pow(e-n,2)})));return new pK(Math.sqrt(i))}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "join": {
          "arity": 1,
-         "src": "function(e){for(var t=[],n=this.data,i=0;i<n.length;i++){var r=n[i];if(\"string\"==typeof r||\"boolean\"==typeof r||Number.isNumber(r))t.push(String(r));else{var o=this.get(i);t.push(o.toString())}}return new hK(t.join(e))}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "keys": {
          "arity": 0,
-         "src": "function(){return e.prototype.keys.call(this).concat([\"length\"])}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "objectAccess": {
          "arity": 1,
-         "src": "function(t){return\"length\"===t.toLowerCase()?new pK(this.data.length):e.prototype.objectAccess.call(this,t)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "renderTo": {
          "arity": 2,
-         "src": "function(e,t){for(var n=e.createDiv(\"value-list-container\"),i=0,r=this.data.length;i<r;i++){this.get(i).renderTo(n.createSpan(\"value-list-element\"),t),i<r-1&&n.createSpan(\"value-list-gap\").setText(\"\\n\")}}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         }
        },
        "calls": {
@@ -6267,47 +6267,47 @@
         },
         "toString": {
          "arity": 0,
-         "src": "function(){return this.time?(e=this.date,\"\".concat(VI(e),\"T\").concat(HI(e))):VI(this.date);var e}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "printDate": {
          "arity": 0,
-         "src": "function(){return VI(this.date)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "dateOnly": {
          "arity": 0,
-         "src": "function(){return this.time?new t(new Date(this.printDate()+\"T00:00:00\"),!1):this}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "printTime": {
          "arity": 0,
-         "src": "function(){return HI(this.date)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "relative": {
          "arity": 0,
-         "src": "function(){return window.moment(this.date).fromNow()}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "isTruthy": {
          "arity": 0,
-         "src": "function(){return!0}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "equals": {
          "arity": 1,
-         "src": "function(e){return this.time===e.time&&this.date.getTime()===e.date.getTime()}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "looseEquals": {
          "arity": 1,
-         "src": "function(e){if(e instanceof hK){var n=t.parseFromString(e.data);n&&(e=n)}return e instanceof t&&(this.time&&e.time?this.date.getTime()===e.date.getTime():this.dateOnly().date.getTime()===e.dateOnly().date.getTime())}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "keys": {
          "arity": 0,
-         "src": "function(){return e.prototype.keys.call(this).concat([\"year\",\"month\",\"day\",\"hour\",\"minute\",\"second\",\"millisecond\",\"timestamp\"])}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "objectAccess": {
          "arity": 1,
-         "src": "function(t){var n=this.date;switch(t.toLowerCase()){case\"year\":return new pK(n.getFullYear());case\"month\":return new pK(n.getMonth()+1);case\"day\":return new pK(n.getDate());case\"hour\":return new pK(n.getHours());case\"minute\":return new pK(n.getMinutes());case\"second\":return new pK(n.getSeconds());case\"millisecond\":return new pK(n.getMilliseconds());case\"timestamp\":return new pK(n.getTime())}return e.prototype.objectAccess.call(this,t)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "renderTo": {
          "arity": 1,
-         "src": "function(e){e.setText(window.moment(this.date).format(this.time?\"L LT\":\"L\"))}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         }
        },
        "calls": {
@@ -6461,27 +6461,27 @@
         },
         "toString": {
          "arity": 0,
-         "src": "function(){return\"[[\".concat(this.data).concat(this.display?\"|\"+this.display:\"\",\"]]\")}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "isTruthy": {
          "arity": 0,
-         "src": "function(){return!0}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "equals": {
          "arity": 1,
-         "src": "function(e){return this.data===e.data&&this.sourcePath===e.sourcePath&&aK.equals(this.display,e.display)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "looseEquals": {
          "arity": 1,
-         "src": "function(e){if(e instanceof t){var n=this.resolve(),i=e.resolve();return n&&i?n===i:this.data===e.data}if(e instanceof hK){var r=t.parseFromString(this.app,e.data,\"\");if(r)return this.looseEquals(r)}return e instanceof MK&&this.resolve()===e.file}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "renderTo": {
          "arity": 2,
-         "src": "function(e,t){t.renderFileLink(this.data,this.display,e)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "resolve": {
          "arity": 0,
-         "src": "function(){var e=($T||($T=!0,queueMicrotask((function(){QT++,$T=!1}))),QT);return this.resolvedTick!==e&&(this.resolvedFile=this.app.metadataCache.getFirstLinkpathDest(zm(this.data),this.sourcePath),this.resolvedTick=e),this.resolvedFile}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         }
        },
        "calls": {
@@ -6582,51 +6582,51 @@
         },
         "toString": {
          "arity": 0,
-         "src": "function(){return this.file.path}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "isTruthy": {
          "arity": 0,
-         "src": "function(){return!0}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "equals": {
          "arity": 1,
-         "src": "function(e){return this.file===e.file}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "looseEquals": {
          "arity": 1,
-         "src": "function(e){return e instanceof hK&&this.file.path===e.data}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "getLinks": {
          "arity": 0,
-         "src": "function(){if(this._cachedLinks)return this._cachedLinks;var e=this.app,t=this.file,n=[];return e.metadataCache.iterateRefsForFile(t,(function(i){n.push(xK.fromReference(e,t.path,i))})),this._cachedLinks=new fK(n)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "getBacklinks": {
          "arity": 0,
-         "src": "function(){if(this._cachedBacklinks)return this._cachedBacklinks;var e=this.app,t=this.file,n=e.metadataCache.resolvedLinks,i=[];for(var r in n)Object.hasOwn(n,r)&&Object.hasOwn(n[r],t.path)&&i.push(new xK(e,r,\"\",new hK(Nl(r))));return this._cachedBacklinks=new fK(i)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "getEmbeds": {
          "arity": 0,
-         "src": "function(){if(this._cachedEmbeds)return this._cachedEmbeds;var e=this.app,t=this.file,n=[],i=e.metadataCache.getFileCache(t);if(i&&i.embeds)for(var r=0,o=i.embeds;r<o.length;r++){var a=o[r];n.push(xK.fromReference(e,t.path,a))}return this._cachedEmbeds=new fK(n)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "getTags": {
          "arity": 0,
-         "src": "function(){if(this._cachedTags)return this._cachedTags;var e=this.app,t=this.file,n=[],i=e.metadataCache.getFileCache(t);if(i){if(i.tags)for(var r=0,o=i.tags;r<o.length;r++){var a=o[r];n.push(a.tag)}var s=bm(i.frontmatter);if(s)for(var l=0,c=s;l<c.length;l++){var u=c[l];n.push(u)}}return this._cachedTags=new mK(qb(n))}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "getProps": {
          "arity": 0,
-         "src": "function(){if(this._cachedProps)return this._cachedProps;var e=this.app,t=this.file,n=e.metadataCache.getFileCache(t);return this._cachedProps=yK.fromFrontMatter(e,t,(null==n?void 0:n.frontmatter)||{})}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "keys": {
          "arity": 0,
-         "src": "function(){return e.prototype.keys.call(this).concat([\"file\",\"name\",\"basename\",\"fullname\",\"path\",\"folder\",\"ext\",\"ctime\",\"mtime\",\"size\",\"links\",\"embeds\",\"backlinks\",\"tags\",\"properties\"])}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "objectAccess": {
          "arity": 1,
-         "src": "function(t){var n=this.file;switch(t.toLowerCase()){case\"file\":return this;case\"name\":return new hK(n.getShortName());case\"basename\":return new hK(n.basename);case\"fullname\":return new hK(n.name);case\"path\":return new hK(n.path);case\"folder\":return new hK(n.parent.path);case\"ext\":return new hK(n.extension);case\"ctime\":return new wK(new Date(n.stat.ctime));case\"mtime\":return new wK(new Date(n.stat.mtime));case\"size\":return new pK(n.stat.size);case\"links\":return this.getLinks();case\"embeds\":return this.getEmbeds();case\"backlinks\":return this.getBacklinks();case\"tags\":return this.getTags();case\"properties\":return this.getProps()}return e.prototype.objectAccess.call(this,t)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "renderTo": {
          "arity": 2,
-         "src": "function(e,t){t.renderFileLink(this.file,null,e)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         }
        },
        "calls": {
@@ -6821,39 +6821,39 @@
         },
         "toString": {
          "arity": 0,
-         "src": "function(){var e={},t=this.data;for(var n in t)Object.hasOwn(t,n)&&(e[n]=this.get(n).toString());return JSON.stringify(e)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "isTruthy": {
          "arity": 0,
-         "src": "function(){return!this.isEmpty()}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "isEmpty": {
          "arity": 0,
-         "src": "function(){return 0===Object.keys(this.data).length}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "equals": {
          "arity": 1,
-         "src": "function(e){var t=this.data,n=e.data;if(t===n)return!0;var i=Object.keys(t),r=Object.keys(n);if(i.length!==r.length)return!1;for(var o=0,a=i;o<a.length;o++){var s=a[o];if(!Object.hasOwn(n,s))return!1}for(var l=0,c=i;l<c.length;l++){s=c[l];if(!aK.equals(this.get(s),e.get(s)))return!1}return!0}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "valuesRaw": {
          "arity": 0,
-         "src": "function(){return Object.values(this.data)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "get": {
          "arity": 1,
-         "src": "function(e){if(!Object.hasOwn(this.data,e))return lK.value;var t=this.data[e];return t instanceof aK?t:this.data[e]=this.lazyEvaluator(e,t)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "getInsensitive": {
          "arity": 1,
-         "src": "function(e){return this.get(zI(this.data,e))}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "keys": {
          "arity": 0,
-         "src": "function(){return Object.keys(this.data)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "objectAccess": {
          "arity": 1,
-         "src": "function(e){return this.getInsensitive(e)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         }
        },
        "calls": {
@@ -7020,11 +7020,11 @@
         },
         "toString": {
          "arity": 0,
-         "src": "function(){return this.regexp.toString()}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "isTruthy": {
          "arity": 0,
-         "src": "function(){return!0}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         }
        },
        "calls": {
@@ -7082,19 +7082,19 @@
         },
         "toString": {
          "arity": 0,
-         "src": "function(){return this.data}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "keys": {
          "arity": 0,
-         "src": "function(){return e.prototype.keys.call(this).concat([\"length\"])}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "objectAccess": {
          "arity": 1,
-         "src": "function(t){return\"length\"===t.toLowerCase()?new pK(this.data.length):e.prototype.objectAccess.call(this,t)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "renderTo": {
          "arity": 2,
-         "src": "function(e,t){e.setText(this.data)}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         }
        },
        "calls": {
@@ -7167,19 +7167,19 @@
         },
         "toString": {
          "arity": 0,
-         "src": "function(){return\"null\"}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "isTruthy": {
          "arity": 0,
-         "src": "function(){return!1}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "equals": {
          "arity": 0,
-         "src": "function(){return!0}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         },
         "renderTo": {
          "arity": 1,
-         "src": "function(e){}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         }
        },
        "calls": {
@@ -7271,7 +7271,7 @@
         },
         "includes": {
          "arity": 1,
-         "src": "function(e){for(var t=0,n=this.data;t<n.length;t++){if(n[t].tagMatches(e))return!0}return!1}"
+         "src": "<removed: Obsidian's own source \u2014 clean room, see CLAUDE.md>"
         }
        },
        "calls": {
