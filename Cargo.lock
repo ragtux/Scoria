@@ -4789,6 +4789,11 @@ dependencies = [
 [[package]]
 name = "scoria-bases"
 version = "0.3.2"
+dependencies = [
+ "chrono",
+ "indexmap",
+ "regex",
+]
 
 [[package]]
 name = "scoria-bench"

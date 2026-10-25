@@ -5621,9 +5621,23 @@ distinction is real**. `duration("1w")` and `duration("1 week")` agree;
 Subtracting two dates gives a Duration, which prints humanized ("10 months",
 "7 days", "a minute", "a few seconds"); its components are **properties, not
 functions** — `days`, `hours`, `minutes`, `seconds`, `milliseconds`, `weeks`,
-`months`, `years`, each fractional (`(now() - when).days` → 296.597990358796).
-`duration("1d") + duration("1d")`, `duration("1d") * 2` and
+`months`, `years`, each fractional (`(now() - when).days` → 296.6033578819444).
+All but `months` and `years` are an exact SI division of the total
+milliseconds; those two are **calendar** quantities, and the eight recorded
+reads pin the rule down exactly. Each read re-evaluated `now()`, so each landed
+on its own millisecond — 25626530121 for `days` through 25626530131 for `years`,
+recoverable from the exact conversions and monotonic in the run's own reading
+order — and `months` is then the duration laid on the calendar **from the Unix
+epoch**: 25626530126 ms after 1970-01-01T00:00:00 is 9 whole months (273 days)
+plus 23.603 days of an October 31 days long, and `9 + 2039330126/2678400000` is
+the recorded `9.761398643219833` to the last bit, where a fixed-length month
+gives 9.7449 (30.436875 days), 9.7513 (365/12) or 9.8868 (30 days). `years` is
+exactly `months / 12`, so a month is worth January 1970's 31 days and a year
+1970's 365. `duration("1d") + duration("1d")`, `duration("1d") * 2` and
 `duration("1d") > duration("1h")` all work. `date("not a date")` is null.
+`relative()` answers a *clock-tagged* value — `lucide-clock "10 months ago"`,
+not a String — and `now().relative()` is "a few seconds ago", so a zero
+difference reads as past.
 
 **There is no lambda, and that is the whole answer.** `=>` does not parse in any
 form — `filter(x => x != "beta")`, `filter((x) => …)`, `map(x => x * 2)`,
@@ -5741,3 +5755,81 @@ are assumed, not shown); how a Duration prints at every magnitude; operator
 behaviour between a List and a scalar; a formula that references another formula
 (`formula.x` inside a formula); and the editor's completion list for Number,
 which `12.` could not reach because it is a valid number literal.
+
+Building the evaluator added to that list, and these are the cheap probes that
+would close it: whether `String.replace` replaces every occurrence or only the
+first (the implementation assumes every, on the strength of a plural in
+Obsidian's own sentence, and it is the riskiest guess in the crate); what
+`[1, "a", 3].mean()` divides by, which is the only thing that separates
+"mean over the numbers" from "mean over the list"; `fullname`'s value on a file
+whose extension is not `.md`; whether `hasTag` matches a parent of a nested
+tag; whether `inFolder` reaches subfolders; what `escapeHTML` escapes, which
+was never called at all; `timestamp`'s unit; and what a further call on the
+value `relative()` returns does.
+
+## What building the evaluator settled, 2026-10-25
+
+Implementing `scoria-bases`'s evaluator against the same run turned up eleven
+things the reading above got wrong or did not say. Every one is from the raw
+results, not from the summary, and where the two disagreed the raw run won.
+
+**One rule runs through every refusal, and it is not the obvious order.** A
+call is checked **minimum arity, then the declared parameter types, then
+maximum arity**. So `"s".contains(/zz/, /zz/, /zz/)` answers the *type* error
+on `value` rather than "too many arguments.", and `date(/zz/, /zz/, /zz/,
+/zz/)` likewise; "too many arguments." is only reachable once the declared
+parameters type-check, which is why `number(/zz/, /zz/)` — whose parameter is
+untyped — does answer it. The same order holds for `join`, `slice`, `map`,
+`sort`, `toFixed`, `hasLink` and `link`.
+
+**The namespaces.**
+
+- `this` is not a File. `this.file.name` is the base file's name, `this.note`
+  an Object and `this.formula` `Formulas[]`, but the completion list for
+  `this.` offers only `file`, `note`, `formula`, `this` and the vault's
+  frontmatter names — **none** of the File properties. So `this` is the base
+  file's own row context, and `this.path` answers nothing where a File would
+  answer a path.
+- `Object.filter` and `Object.map` bind **`key` and `value`**, not `index`:
+  Obsidian's own completion text says so for both.
+- `index` *is* bound inside `reduce`, which the lambda note did not say
+  (`nums.reduce(index, 0)` → 2), and `reduce`'s second argument is required.
+  Nine other accumulator spellings — `accumulator`, `total`, `result`,
+  `previous`, `carry`, `sum`, `current`, `prev`, `a` — bind nothing.
+
+**Types and tags.**
+
+- A **Tags** value names itself `List` in a refusal: `tags.includes()` is
+  `Cannot find function "includes" on type List`. Only its icon is its own.
+- `icon()` and `image()` answer values tagged **`lucide-image`**, a tag the
+  list above omits.
+- `relative()` answers a **clock-tagged** value, not a String.
+- `min()` and `max()` with no arguments answer a *bare* null, with no `icon`
+  at all — unlike every other null, which carries `lucide-file-question`.
+- `Object.toString()` is JSON in which **every value is a string**:
+  `{"density":"1.21","flag":"true","nums":"3, 1, 2"}`, the number, the boolean
+  and the list all quoted.
+- `Link.toString()` is `[[Pumice]]` only without a display; with one it is
+  `[[path|display]]` (`file.links` → `[[Pumice|Pumice]]`).
+
+**The two readings do not always agree.** The claim above that the completion
+list and the brute-force pass agreed holds everywhere but Link: the completion
+list for `linkish.` is the String set alone, with no `asFile()` and no
+`linksTo()`, while the brute-force pass reached both. Where they differ the
+brute force is the one that evaluated something.
+
+**Smaller corrections.** `link()`'s first parameter is named **`self`**, not
+`path` (`Type error in "link", parameter "self"`). `date()` accepts a Date as
+well as a String, although its refusal still says `Expected String`.
+`file.name` is the file name with a `.md` dropped and any other extension kept
+(`Scoria`, but `Main.base`), `basename` is always the stem and `file.size` is
+in bytes. `List.stddev()` is the **population** deviation. `[3,1,2].unique()`
+answers `1,2,3` while `listish.unique()` answers `alpha,beta`, so distinctness
+is by rendered string and the order is a plain JavaScript object's key order,
+not first-seen.
+
+**One trap for anyone reading the raw run.** A step's `str` is not
+`toString()`: it is `String(value.data)`, so a List cell shows `3,1,2` where
+`[3,1,2].toString()` is `3, 1, 2`, and a Link cell shows `Pumice` where its
+`toString()` is `[[Pumice]]`. Matching an implementation to `str` would build
+the wrong `toString`.

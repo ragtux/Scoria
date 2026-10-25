@@ -308,6 +308,58 @@ of mixed use in both apps. The gate run opened on 2026-10-18, see
 | Files header | done: New note, New folder, the six sort orders, Auto-reveal current file and Expand all / Collapse all, see [[#Files header, 2026-10-21]]; the tree takes the keyboard, see [[#Explorer keyboard, 2026-10-21]] |
 | The gate itself | open: the harness passes on the real vault, the week of mixed use has not run, see [[#The gate run opens, 2026-10-18]] |
 
+## Parity (phase 4)
+
+Started 2026-10-21 with the canvas. Gate: the core plugins a vault actually
+uses behave as Obsidian's do.
+
+| Parity item | Status |
+| --- | --- |
+| Canvas | done: the view and the writer, see [[#Canvas view, 2026-10-21]] and [[#Canvas writer, 2026-10-19]] |
+| Bases: the format | done: parsed, modelled and written back in Obsidian's own bytes, `scoria-formats::base` |
+| Bases: the expression language | done: the parser and the evaluator, held to 277 parse trees and 1044 evaluated statements, see [[#Bases evaluator, 2026-10-25]] |
+| Bases: the view | not started — the table, cards and list layouts, the toolbar, `bases:*` and an embedded `![[x.base]]` |
+| PDF, math, the themes subset, URI and CLI | not started |
+
+### Bases evaluator, 2026-10-25
+
+`scoria-bases` evaluates a statement as well as parsing one. The crate reads no
+vault: the host implements a `Context` and fills in a `FileData` per row, so
+nothing here depends on `scoria-vault` or on gpui, and a test builds a row in
+memory.
+
+The ratchet is the point, as it was for the parser. The same CDP run that
+captured 277 parse trees also captured what Obsidian *answered* for each
+statement it evaluated, so `tests/obsidian_values.tsv` holds 1044 of those —
+the statement, the rendered text and the `lucide-*` type tag, or Obsidian's
+exact refusal — and the harness pins the clock to the run's own second and
+rebuilds the run's row. 1166 observations were read and 122 dropped with a
+reason each: the wall clock and `random()`, the values the probe could not
+serialize (a Link or a File alone: `String(value.data)` cannot say which it
+read), and the steps keyed by a label rather than by a statement, which is the
+trap the parser's extractor hit.
+
+Three rules decide most of the behaviour, and all three are observed. **Null
+absorbs**: a missing property is null and null answers every call and every
+access with null, with exactly three exceptions — `isEmpty()` is true,
+`isTruthy()` is false, `toString()` is the String "null". **Comparison coerces
+where arithmetic refuses**: `"3" > 2` is true while `1 + true` is
+`Invalid operator between Number and Boolean`. And **comparison against null is
+three-valued**: `nosuchprop > 1` is null rather than false, where `"abc" > 1`
+*is* false — two failures that are easy to collapse into one and must not be.
+
+What the build itself settled, against the summary written the day before, is
+in [[Specification#What building the evaluator settled, 2026-10-25]]: the
+refusal order every function follows, `this` as the base file's own context
+rather than a File, `key` and `value` as what an Object's `filter` binds, a
+Tags value naming itself `List`, and eight smaller corrections. The one that
+cost real work is the Duration: its properties are fractional *totals*, and
+`months` is the duration laid on the calendar from the Unix epoch, which is the
+only reading that reproduces the recorded `9.761398643219833` — a fixed-length
+month gives 9.7449, 9.7513 or 9.8868.
+
+What is not built: the view. Nothing in the app calls the evaluator yet.
+
 ### The active tab joins the view, 2026-10-22
 
 The tab strip drew its outline as a bottom border, which ran under the active tab

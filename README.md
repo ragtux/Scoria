@@ -169,7 +169,7 @@ at [scoria.cc](https://scoria.cc), whose site is built from `site/` in this repo
 | 1. Spike | 50k-line editor, parser conformance corpus, 2 s vault index | Done |
 | 2. Reader | A daily user browses their real vault with no missing content | Done: Files, reading view, Backlinks, Outgoing links, Outline, Tags, Search, quick switcher, graph, command palette, the Settings modal, file watching |
 | 3. Writer | The vault round-trips byte-identical after a week of mixed use in both apps | In progress: Source mode, Live Preview, find and replace, file operations with link rewriting, properties, autocompletion, table editing, block references, templates, daily notes, tab groups, bookmarks, the round-trip harness and the Settings toggles are done; and every Settings control Obsidian offers as one writes; file recovery is out of phase 3 |
-| 4. Parity | Core plugin parity | Started: the canvas view and the canvas writer are done; bases, PDF, math, themes subset, URI and CLI are not |
+| 4. Parity | Core plugin parity | Started: the canvas view and the canvas writer are done, and a `.base` is parsed, written back and evaluated — its expression language is held to 277 of Obsidian's parse trees and 1044 of its answers; the Bases view, PDF, math, themes subset, URI and CLI are not |
 | 5. Ecosystem | Native plugin SDK | Not started |
 
 Progress notes, gates and the per-item status live in `docs/scoria/Development.md`.
