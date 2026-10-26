@@ -11,6 +11,7 @@ density: 0.1
 vesicularity: 97
 color: golden brown
 floats: false
+cover: "[[kilauea-lava-fountain-dome.jpg]]"
 ---
 
 # Reticulite

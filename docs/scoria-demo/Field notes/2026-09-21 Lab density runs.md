@@ -39,6 +39,14 @@ Bulk density by the film-wrap Archimedes method on the samples from [[2026-03-14
 
 ![[vesicularity-chart.svg|560]]
 
+## Reference densities
+
+The published values these runs are compared against, live out of the vault
+rather than copied in — the rock notes' own `density`, and the dense-rock
+equivalent the base computes from it:
+
+![[Rocks.base]]
+
 ## Notes
 
 - ET-01 is below 1.0 g/cm³ and still sinks: the vesicles are connected, so it fills with water through the film's pinholes within a minute. Re-run with wax.

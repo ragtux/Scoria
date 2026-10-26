@@ -12,6 +12,7 @@ floats: true
 localities:
   - Mount St. Helens
   - Lipari
+cover: "[[pumice-st-helens.jpg]]"
 ---
 
 # Pumice

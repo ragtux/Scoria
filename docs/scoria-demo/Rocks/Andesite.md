@@ -11,6 +11,7 @@ minerals:
   - plagioclase
   - hornblende
   - pyroxene
+cover: "[[paricutin-basaltic-andesite.jpg]]"
 ---
 
 # Andesite

@@ -12,6 +12,7 @@ minerals:
   - pyroxene
   - olivine
 eruption_temperature: 1150
+cover: "[[columnar-basalt-daguoye.jpg]]"
 ---
 
 # Basalt

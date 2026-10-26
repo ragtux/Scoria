@@ -17,6 +17,7 @@ localities:
   - "[[Sunset Crater]]"
   - "[[Parícutin]]"
   - "[[Mount Etna]]"
+cover: "[[scoria-hand-sample.jpg]]"
 ---
 
 # Scoria

@@ -34,4 +34,27 @@ views:
     sort:
       - property: note.vesicularity
         direction: DESC
+  - type: cards
+    name: Gallery
+    order:
+      - file.name
+      - note.composition
+      - note.density
+    sort:
+      - property: note.density
+        direction: DESC
+    image: note.cover
+    cardSize: 260
+    imageAspectRatio: 1.25
+  - type: list
+    name: Index
+    order:
+      - file.name
+      - note.composition
+      - note.silica
+    sort:
+      - property: file.name
+        direction: ASC
+    markers: bullet
+    separator: " — "
 newItemFolder: Rocks

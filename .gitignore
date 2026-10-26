@@ -5,6 +5,7 @@
 /.vscode
 /.idea
 /docs/scoria/.obsidian/workspace.json
+/docs/scoria-demo/.obsidian/workspace.json
 __pycache__/
 
 # Obsidian scratch in the dogfooded vaults: the trash it moves deletions to,

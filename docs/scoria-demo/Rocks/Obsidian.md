@@ -9,6 +9,7 @@ density: 2.4
 color: black, mahogany, snowflake
 hardness: 5.5
 fracture: conchoidal
+cover: "[[obsidian.jpg]]"
 ---
 
 # Obsidian

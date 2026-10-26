@@ -27,3 +27,13 @@ views:
       - property: note.height_m
         direction: DESC
     limit: 3
+  - type: kanban
+    name: Board
+    groupBy:
+      property: note.status
+      direction: ASC
+    order:
+      - file.name
+      - note.landform
+      - note.height_m
+    columnWidth: 300
