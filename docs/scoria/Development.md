@@ -319,8 +319,61 @@ uses behave as Obsidian's do.
 | Bases: the format | done: parsed, modelled and written back in Obsidian's own bytes, `scoria-formats::base` |
 | Bases: the expression language | done: the parser and the evaluator, held to 277 parse trees and 1044 evaluated statements, see [[#Bases evaluator, 2026-10-25]] |
 | Bases: the table view | done, read-only: a `.base` opens on its table, see [[#Bases table view, 2026-10-25]]; the ribbon's button creates one |
-| Bases: the rest of the view | not started — the cards, list and kanban layouts, the toolbar, `bases:*` beyond `new-file`, and an embedded `![[x.base]]` |
+| Bases: the rest of the view | done: the cards, list and kanban layouts, the toolbar's six panels, editing through the table, the five `bases:*` commands beyond `new-file`, and an embedded `![[x.base]]`, see [[#Bases: the rest of the view, 2026-10-25]] |
 | PDF, math, the themes subset, URI and CLI | not started |
+
+### Bases: the rest of the view, 2026-10-25
+
+A `.base` is four layouts over one engine, and the view drew one of them,
+read-only. The rest landed in a day, in one shape: the shell (`bases::view`)
+holds the parsed file, the showing view and the table it resolved to, and each
+layout adds its own methods and its own state to it. Every layout draws the
+**same resolved table**, so `groupBy`, `groupOrder`, `sort` and `limit` are
+answered once in `scoria-bases` and nothing in the app reorders a row.
+
+- `scoria-bases::layout` reads a view's layout keys off its own map and writes
+  them back as Obsidian writes them: an integral number bare, a default
+  dropdown value as an *absent* key, and a layout change keeping the previous
+  layout's keys in place. All three are observed.
+- **cards** is a wrapping grid, **list** a virtualised line per row, **kanban**
+  a column per group with each column virtualising its own cards. A card's
+  image comes from the `image` property, which the engine evaluates beside the
+  cells because it is not one of the columns.
+- **the toolbar** is six panels rather than menus of rows, which is what the
+  run observed, and every write goes through `edit_view`/`edit_base`.
+- **editing through the table** writes the *note's* frontmatter, planned over
+  that note's own bytes, so its CRLF, its BOM and every key the edit did not
+  name survive.
+- **an embedded base** resolves through the same engine on the file's first
+  view, with a per-model cache: one resolve of a 20 001-row view is 66 ms, and
+  a note with two embeds of it builds in 112 ms.
+
+Two decisions are worth keeping. A note is written by the **workspace**, not
+by the view: a base's row is another file, it may be open in a buffer with
+unsaved edits, and a write behind that buffer's back would be thrown away by
+its own next save — so the cell reports the change it wants and the workspace
+guards it, the way the unlinked-mention write does. And `bases::writes` holds
+one implementation of each view write, because the toolbar's panels and the
+column header's menu both write `sort` and `order`; consolidating the two
+copies turned up a checkbox that collapsed a view with no `order` to a single
+column.
+
+The work was split six ways over the files — the layouts, the toolbar, the
+editing, the commands, the embed — which worked because the shell was built
+and frozen first and each piece owned its own file. What it cost is the
+duplication the split invited: four helpers and the scroll-body walk existed
+twice before the consolidating pass moved them into `bases::cells`, and two
+surfaces had grown their own `prepend_sort`.
+
+Almost nothing in this build is a new observation: the runs rendered a table
+and nothing else. [[Specification#What building the rest of the Bases view settled, 2026-10-25]]
+is therefore a list of **readings** rather than of behaviors — what a card's
+title is, what a kanban column's header says, whether a cell can be edited in
+place at all (the one captured cell control is a *disabled* checkbox, which
+argues against it), and three toolbar controls left inert because what each
+writes is not derivable. "Hide all" is the sharpest of those: `order` is
+exactly the shown columns, but an absent `order` shows the implied ones, so a
+list meaning "none" has no spelling. Each is one click of a probe.
 
 ### Bases table view, 2026-10-25
 

@@ -5895,3 +5895,115 @@ the wrong `toString`. Note what this does *not* settle: those two readings are
 inferred from `str` rather than read off a rendered cell, because neither a
 List nor a Link column was ever rendered. A cell's own rendering is
 [[#Observed Bases table view, Obsidian 1.14.5 (installer build 1.13.7)]].
+
+## What building the rest of the Bases view settled, 2026-10-25
+
+The other three layouts, the toolbar, editing through the table, the `bases:*`
+commands and an embedded `![[x.base]]` were built against the same two runs.
+Almost nothing here is a new observation — the runs rendered a table and
+nothing else — so this is the list of **readings**: what the build had to
+decide with no observation behind it, each of them a place where a cheap probe
+would replace a guess. The keys themselves, their ranges and their defaults
+are observed and are in
+[[#Observed Bases write behavior, Obsidian 1.14.5 (installer build 1.13.7)]].
+
+**The two layout keys that describe a box.** `cardSize` is read as a card's
+**width** and `imageAspectRatio` as its image box's **width over height**, so
+the kanban default of 0.5 is a portrait box twice as tall as a card is wide —
+which is also the likeliest reason its default differs from the cards layout's
+1. Both layouts read the key the same way, so a probe that settles one settles
+the other. The reader never clamps a hand-written value and the drawing always
+does, which is the split the sliders imply.
+
+**What a row shows outside a table.** A card, a list line and a kanban card all
+take their **title from the row's first cell** — `order`'s first id, usually
+`file.name` — in the link colour when the column would draw as a link, with
+the file's own name as the fallback for a row whose first cell rendered
+nothing. The body is every other cell with the empty ones left out: stacked
+under the title on a card, joined by `separator` on a line, one indented line
+each under "Indent properties". A click anywhere on a card or a line opens the
+row's file. `markers: number` restarts at 1 **inside each group** and `bullet`
+draws `•`.
+
+**Grouping outside a table.** Every layout takes `Table::groups` as it stands,
+so `groupBy`, `groupOrder`, the direction and the leading no-value group are
+the engine's answer and no layout reorders anything. A grouped cards or list
+view draws the table's own group header between the runs; a kanban column *is*
+a group, its header the key verbatim, "Empty" for the no-value one, and an
+ungrouped board is one unnamed column of every row. **Dragging a card between
+kanban columns is deliberately absent**: nothing is observed about whether such
+a drag exists or what it would write, and a wrong guess rewrites a user's note.
+
+**Metrics, none of them measured.** No cards, list or kanban view was ever
+rendered, so every box is the shell's own: a 30 px group header (the table's
+observed header row reused), 8 px gaps, 16 px grid padding, a 6 px radius on a
+card, 20 px title and 18 px value lines in a kanban card, a 20 px marker
+column. The same goes for the toolbar — a 30 px bar, 8 px padding, 22 px
+buttons, five control icons in an order of Scoria's choosing, and a panel
+anchored at the pointer because no button box was ever measured.
+
+**What the toolbar does not write, and why.** Three observed controls are drawn
+inert or left out because what each writes is not derivable: **"Hide all"** is
+unresolvable as written — `order` is exactly the shown columns, but an *absent*
+`order` shows the implied ones, so a list that means "none" has no spelling;
+**"Add formula"** never had its dialog opened; and **"Export CSV..."** never
+had its file, location or dialect read. *Summarize...* and anything touching
+`summaries` are out for the same reason, the Configure view page's name field
+is drawn as text because renaming was never driven, the list layout's "Indent
+properties" is read but never written, and **nothing anywhere writes or clears
+`groupOrder`** — a `groupOrder` the file carries survives a `groupBy` change
+untouched. The filter panel's **operator combobox** is the one structural
+omission: a rule's shape was read but never its operator strings, so the panel
+offers the expression mode the `filer-expression-mode-toggle` switches into
+rather than inventing statement text. Each is a probe of one click.
+
+**Two deliberate divergences from 1.14.5.** The Configure view page's Layout
+combobox marks the view's **real** layout as selected, where 1.14.5 always
+marks Table — that is a bug, not a key. And a control writes only when its
+value differs, so opening a panel never writes the file.
+
+**What a sort or an `order` edit writes.** *Sort Z → A* prepending
+`{property, direction: DESC}` is the only insertion into `sort` the run pinned
+down; *Sort A → Z* and the sort panel's own add row are read as its mirror and
+prepend too. Either drops an entry the list already had for that property,
+because otherwise clicking twice leaves a second entry that can never win and
+the file grows on every click. *Clear sort* clears that column's entries only.
+Neither the header menu nor the properties panel will **empty `order`**: an
+empty list is omitted by the serializer and the implied columns come straight
+back, so the last column is kept instead. Conversely, checking a box on a view
+with **no** `order` materializes the implied ids *and* the new one — appending
+the id alone would collapse the view to a single column. Ids are written as the
+caller spells them: the header menu uses the column's own id, a panel uses what
+its picker produced, which is qualified the way the observed `image` picker's
+is.
+
+**Editing a cell at all is a reading, and the one observation argues against
+it**: the single cell control the run captured is a *disabled* checkbox. The
+gesture is therefore the conventional one — a click on a frontmatter cell opens
+a field holding what the note really has, Enter commits, Escape cancels, a
+press outside or opening another cell commits, a click on an editable checkbox
+flips the property, and a click on a `file.*` or `formula.*` cell opens the
+note instead, those two having no bytes in it to write. A last column that
+`columnSize` names is drawn at that width rather than stretching, which the
+fixture's one sized column (its first) could not settle.
+
+**The two unprobed commands.** `bases:change-view` is read as a suggester over
+the view names and `bases:add-item` as a new note in the base's
+`newItemFolder` from its `newItemTemplate`, opened in a new tab, writing
+nothing into the `.base`. `View 2` is observed for a base's second view; `View
+3`, `View 4`, ... by position is the reading of that one datum, and a name
+already taken is stepped past byte for byte.
+
+**An embedded base.** Everything but the rows is a reading, the embed being in
+the write-behavior section's own unprobed list: the shell's note-embed box with
+the view name as its title, **no toolbar**, always the file's **first** view
+(a leaf remembers an index and an embed has nowhere to), a cap of 50 rows with
+a line counting the rest, a row click opening that row's file, and a cards,
+list or kanban base drawing the same table rows under its own name. What *is*
+observed is the rows themselves, and both error shapes reach an embed
+unchanged.
+
+**One wording, used in one more place than it was observed.** A view that
+resolves to no rows draws "0 results", which is what `BadFilter.base` reports;
+where Obsidian puts that count, and what an empty table's body looks like, were
+never read.
