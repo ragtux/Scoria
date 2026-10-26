@@ -51,6 +51,18 @@ pub enum BasesEvent {
     /// Something the view has to say, as a Notice — "Copied to your
     /// clipboard" and the rest.
     Report(String),
+    /// A cell was typed into: set `key` to `value` in the **note** the row
+    /// stands for.
+    ///
+    /// The view does not write it. A base's row is another file, and no view
+    /// in this shell writes a file it does not hold — the workspace does,
+    /// because only it can see whether that note is open in a buffer with
+    /// unsaved edits, which a write behind its back would throw away.
+    SetProperty {
+        path: String,
+        key: String,
+        value: String,
+    },
 }
 
 pub struct BasesView {
@@ -283,11 +295,6 @@ impl BasesView {
     pub(super) fn vault(&self) -> Option<&Arc<VaultState>> {
         self.state.as_ref()
     }
-
-    pub(super) fn error(&self) -> Option<&str> {
-        self.error.as_deref()
-    }
-
     // ----- what the layouts do -----------------------------------------------
 
     /// Opens the file a row names, which is the workspace's to do.
@@ -298,6 +305,24 @@ impl BasesView {
     /// Says something as a Notice.
     pub(super) fn report(&mut self, message: impl Into<String>, cx: &mut Context<Self>) {
         cx.emit(BasesEvent::Report(message.into()));
+    }
+
+    /// Asks the workspace to set a property of the note a row stands for,
+    /// which is what a cell typed into does. See
+    /// [`BasesEvent::SetProperty`] for why the view does not write it
+    /// itself.
+    pub(super) fn set_property(
+        &mut self,
+        path: &str,
+        key: &str,
+        value: &str,
+        cx: &mut Context<Self>,
+    ) {
+        cx.emit(BasesEvent::SetProperty {
+            path: path.to_string(),
+            key: key.to_string(),
+            value: value.to_string(),
+        });
     }
 
     /// Shows another of the base's views, as the views menu and
@@ -467,12 +492,16 @@ impl BasesView {
             .into_any_element()
     }
 
-    /// A view that resolved to no rows at all.
+    /// A view that resolved to no rows at all, which every layout draws
+    /// through here.
     ///
-    /// **Unprobed**: the run never rendered an empty table, so neither the
-    /// wording nor the box is observed. This is the shell's own `pane-empty` —
-    /// 13 px faint, centred, padded `24px 16px` — which is what the outline
-    /// pane draws for the same situation.
+    /// The **wording is observed**: `BadFilter.base` — whose only filter is
+    /// `density >>> 1` — "reports 0 results" with its header row still drawn
+    /// and the error banner hidden, so a view that empties says how many
+    /// results it has rather than that something went wrong. **Unprobed**:
+    /// where that count sits and what it looks like. The box is the shell's
+    /// own `pane-empty` — 13 px faint, centred, padded `24px 16px` — which is
+    /// what the outline pane draws for the same situation.
     pub(super) fn render_empty(&self, theme: &Theme) -> AnyElement {
         div()
             .flex_1()
@@ -484,7 +513,7 @@ impl BasesView {
             .px(px(16.))
             .text_size(px(FONT_UI_SMALL))
             .text_color(theme.text_faint)
-            .child(SharedString::from("No results"))
+            .child(SharedString::from("0 results"))
             .into_any_element()
     }
 }

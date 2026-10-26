@@ -1207,12 +1207,16 @@ impl<'a> Renderer<'a> {
             }
             // `![[x.base]]`: the base's own drawing is `bases::embed`, which
             // takes the view resolved by the same engine the open view uses.
+            // Every click inside it is an internal link by vault path — the
+            // title opens the `.base`, a row opens the file that row came
+            // from — which is how every other embed opens its target.
             EmbedKind::Base(base) => {
                 let on_link = self.on_link.clone();
-                let link = embed.link.clone();
-                crate::bases::embed::render(base, t, move |window, cx| {
-                    on_link(LinkTarget::Internal(link.clone()), window, cx)
-                })
+                let open: crate::bases::embed::OpenPath =
+                    Rc::new(move |path: &str, window: &mut Window, cx: &mut App| {
+                        on_link(LinkTarget::Internal(path.to_string()), window, cx)
+                    });
+                crate::bases::embed::render(base, t, open)
             }
             EmbedKind::Missing => div()
                 .my_1()

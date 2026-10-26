@@ -116,6 +116,7 @@ fn non_empty(value: Option<&str>) -> Option<&str> {
 /// `run_command` as well, which is what answers the hotkey path: a palette
 /// filter alone would leave the key silently inert.
 pub const EDITOR_ONLY: &[&str] = &[
+    "bases:insert",
     "bookmarks:bookmark-current-heading",
     "bookmarks:bookmark-current-section",
     "editor:add-cursor-above",
@@ -153,6 +154,19 @@ pub const EDITOR_ONLY: &[&str] = &[
     "insert-current-date",
     "insert-current-time",
     "insert-template",
+];
+
+/// The ids that need a base on screen, which is Obsidian's `checkCallback`
+/// for them: with no base showing each is filtered out of the palette
+/// rather than listed and refused, and asked for by id it does nothing.
+///
+/// `bases:insert` is not one of them — it runs in a note, not in a base, and
+/// is in [`EDITOR_ONLY`] instead.
+pub const BASE_ONLY: &[&str] = &[
+    "bases:add-item",
+    "bases:add-view",
+    "bases:change-view",
+    "bases:copy-table",
 ];
 
 /// Command ids the workspace can run today; the palette lists only these,
@@ -201,6 +215,11 @@ pub const RUNNABLE: &[&str] = &[
     "canvas:jump-to-group",
     "canvas:convert-to-file",
     "bases:new-file",
+    "bases:add-view",
+    "bases:insert",
+    "bases:copy-table",
+    "bases:change-view",
+    "bases:add-item",
     "markdown:toggle-preview",
     "markdown:add-metadata-property",
     "markdown:clear-metadata-properties",
@@ -1382,6 +1401,8 @@ enum ChooserPurpose {
     Template,
     CanvasFile,
     CanvasGroup,
+    /// `bases:change-view`: the showing base's views, by index.
+    BasesView,
 }
 
 /// How Obsidian names a split's axis: a `vertical` split lays its children
@@ -2401,6 +2422,9 @@ fn view_subscriptions(
             BasesEvent::Open(path) => this.open_file(path.clone(), None, cx),
             BasesEvent::Edited => this.schedule_save(cx),
             BasesEvent::Report(message) => this.report(message.clone(), cx),
+            BasesEvent::SetProperty { path, key, value } => {
+                this.set_note_property(path.clone(), key.clone(), value.clone(), cx)
+            }
         }),
         cx.subscribe(
             canvas,
@@ -2672,6 +2696,18 @@ impl Workspace {
                         ChooserPurpose::CanvasGroup => {
                             this.modal = Modal::None;
                             this.canvas.update(cx, |c, cx| c.jump_to_group(value, cx));
+                            this.focus_main(window, cx);
+                            cx.notify();
+                        }
+                        ChooserPurpose::BasesView => {
+                            this.modal = Modal::None;
+                            // The row carries the view's index into
+                            // `base.views`, which is what the Bases view
+                            // switches on; a name would not do, since
+                            // nothing stops two views sharing one.
+                            if let Ok(ix) = value.parse::<usize>() {
+                                this.bases.update(cx, |b, cx| b.switch_view(ix, cx));
+                            }
                             this.focus_main(window, cx);
                             cx.notify();
                         }
@@ -3812,6 +3848,11 @@ impl Workspace {
             "graph:open-local" => self.show_graph(true, window, cx),
             "canvas:new-file" => self.new_canvas(cx),
             "bases:new-file" => self.new_base(cx),
+            "bases:add-view" => self.add_base_view(cx),
+            "bases:insert" => self.insert_base(window, cx),
+            "bases:copy-table" => self.copy_base_table(window, cx),
+            "bases:change-view" => self.change_base_view(window, cx),
+            "bases:add-item" => self.add_base_item(cx),
             "canvas:jump-to-group" => self.jump_to_group(window, cx),
             "canvas:convert-to-file" => self.convert_card_to_file(cx),
             "markdown:toggle-preview" => self.toggle_mode(&ToggleMode, window, cx),
@@ -4361,6 +4402,14 @@ impl Workspace {
         }
         if EDITOR_ONLY.contains(&id) {
             return self.mode.is_editing() && self.note_has_keys(window, cx);
+        }
+        // A base's own commands need one on screen. `bases:copy-table` is
+        // offered while a base leaf is active even when the keyboard is
+        // elsewhere -- that is the case the probe ran, and it is the one that
+        // answers "Unable to copy to your clipboard" -- so this asks only
+        // that the base be showing.
+        if BASE_ONLY.contains(&id) {
+            return self.main_view(cx) == MainView::Bases;
         }
         true
     }
@@ -5680,6 +5729,264 @@ impl Workspace {
             }
             Err(err) => self.report(err, cx),
         }
+    }
+
+    /// `bases:add-view`: appends a view to the showing base and shows it.
+    ///
+    /// Observed: the appended view is named `View 2` and Obsidian opens its
+    /// Configure view page. The name and the write are
+    /// [`BasesView::add_view`]'s; the Configure view page is the toolbar's
+    /// views panel, which this cannot open yet, so the new view is only
+    /// shown. Nothing is announced — Obsidian raises no Notice for it, and
+    /// the autosave the edit schedules says the file was written.
+    ///
+    /// With no base showing it does nothing at all, the way Obsidian's own
+    /// check callback keeps the command off the palette.
+    fn add_base_view(&mut self, cx: &mut Context<Self>) {
+        if self.main_view(cx) != MainView::Bases {
+            return;
+        }
+        self.bases.update(cx, |b, cx| b.add_view(cx));
+    }
+
+    /// `bases:change-view`: a chooser over the showing base's own views,
+    /// which shows the one picked.
+    ///
+    /// **Unprobed**: the command was never driven, so only its palette name
+    /// — "Bases: Switch view..." — is observed. The ellipsis is Obsidian's
+    /// mark for a command that opens a suggester, so this is the chooser
+    /// `canvas:jump-to-group` opens, over the view names, and the
+    /// placeholder and the empty line are this app's rather than observed.
+    fn change_base_view(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if self.main_view(cx) != MainView::Bases {
+            return;
+        }
+        let rows: Vec<ChooserRow> = self
+            .bases
+            .read(cx)
+            .view_names()
+            .into_iter()
+            .enumerate()
+            .map(|(ix, label)| ChooserRow {
+                label,
+                value: ix.to_string(),
+            })
+            .collect();
+        // A base that did not parse has no views to switch between, and a
+        // chooser of nothing is not what the command does.
+        if rows.is_empty() {
+            return;
+        }
+        self.chooser_purpose = ChooserPurpose::BasesView;
+        self.modal = Modal::Chooser;
+        self.chooser.update(cx, |c, cx| {
+            c.open(
+                rows,
+                "Type name of a view...",
+                "No views in this base",
+                window,
+                cx,
+            )
+        });
+        cx.notify();
+    }
+
+    /// `bases:copy-table`: the showing view's visible columns on the
+    /// clipboard as TSV.
+    ///
+    /// Observed: the bytes are one header row of display names, tabs between
+    /// the cells and no trailing newline
+    /// (`status\tPrice per unit\ntodo\t0.02\ntodo\t0.06`), and the notice is
+    /// "Copied to your clipboard". The command **needs the view focused**:
+    /// run from the palette with the keyboard elsewhere it reports success
+    /// and shows "Unable to copy to your clipboard" instead, with nothing
+    /// copied. Both outcomes are here, on the rule that the keyboard has to
+    /// be in the base; which branch the palette itself lands in is this
+    /// app's business rather than Obsidian's, since closing a modal here
+    /// hands the keyboard back to the main area.
+    ///
+    /// With no base showing it does nothing at all, and says nothing.
+    fn copy_base_table(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if self.main_view(cx) != MainView::Bases {
+            return;
+        }
+        let Some(text) = self.bases.read(cx).table_tsv() else {
+            return;
+        };
+        if self.modal != Modal::None || !self.bases.focus_handle(cx).is_focused(window) {
+            self.report("Unable to copy to your clipboard", cx);
+            return;
+        }
+        cx.write_to_clipboard(ClipboardItem::new_string(text));
+        self.report("Copied to your clipboard", cx);
+    }
+
+    /// `bases:insert`: another zero-byte base, and `![[Untitled 1.base]]` at
+    /// the cursor.
+    ///
+    /// Observed: the file is a second `Untitled.base` — `Untitled 1.base` in
+    /// the probe, because `Untitled.base` was already there — created the
+    /// same way `bases:new-file` creates one, and the embed lands **on a
+    /// line of its own** at the cursor. So the line is broken where the
+    /// cursor sits: a newline goes before the embed when anything precedes
+    /// it on that line, and after it when anything follows.
+    ///
+    /// This is the one `bases:*` command that runs in a note rather than in
+    /// a base, which is why it is guarded like every other editor command.
+    fn insert_base(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if !self.editing_or_report("bases:insert", window, cx) {
+            return;
+        }
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let path = state.vault().available_path("", "Untitled", "base");
+        let changes = match state.create_note(&path, "") {
+            Ok(changes) => changes,
+            Err(err) => return self.report(err, cx),
+        };
+        self.after_changes(changes, cx);
+        // The link is the file's own name with its extension, the way a
+        // non-markdown file is always linked; the new base is in the vault
+        // root, as `bases:new-file`'s is.
+        let name = path.rsplit('/').next().unwrap_or(&path).to_string();
+        let (before, after) = {
+            let editor = self.editor.read(cx);
+            let text = editor.text();
+            let at = editor.selection();
+            let head = &text[..at.start.min(text.len())];
+            let tail = &text[at.end.min(text.len())..];
+            (
+                !head.rsplit('\n').next().unwrap_or(head).is_empty(),
+                !tail.split('\n').next().unwrap_or(tail).is_empty(),
+            )
+        };
+        let insert = format!(
+            "{}![[{name}]]{}",
+            if before { "\n" } else { "" },
+            if after { "\n" } else { "" }
+        );
+        self.editor
+            .update(cx, |e, cx| e.insert_at_cursors(&insert, window, cx));
+        cx.notify();
+    }
+
+    /// `bases:add-item`: a new note for the showing base to pick up.
+    ///
+    /// **Unprobed**: the command was never driven. What the base carries for
+    /// it is `newItemFolder` and `newItemTemplate` — two keys the published
+    /// schema never mentions — so the reading is a new `Untitled.md` in that
+    /// folder from that template, opened; the base keeps the tab it is in
+    /// and the note takes a new one. The template is read the way a daily
+    /// note's is, placeholders and all, and nothing is written into the
+    /// `.base` itself.
+    ///
+    /// A base that names no folder gets the one it is in, which is where a
+    /// note it queries is most likely to belong.
+    fn add_base_item(&mut self, cx: &mut Context<Self>) {
+        if self.main_view(cx) != MainView::Bases {
+            return;
+        }
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let Some(item) = self.bases.read(cx).new_item() else {
+            return;
+        };
+        let folder = item.folder.unwrap_or_else(|| {
+            self.bases
+                .read(cx)
+                .path()
+                .and_then(|p| p.rsplit_once('/'))
+                .map(|(dir, _)| dir.to_string())
+                .unwrap_or_default()
+        });
+        let path = state.vault().available_path(&folder, "Untitled", "md");
+        let text = match item.template.as_deref() {
+            Some(template) => self.daily_template_text(&state, template, &path, cx),
+            None => String::new(),
+        };
+        match state.create_note(&path, &text) {
+            Ok(changes) => {
+                self.after_changes(changes, cx);
+                self.open_in_new_tab(path.clone(), None, cx);
+                self.report(format!("Created {path}"), cx);
+            }
+            Err(err) => self.report(err, cx),
+        }
+    }
+
+    /// A cell of a base was typed into: sets `key` to `value` in the note
+    /// that row stands for.
+    ///
+    /// The base view asks for this rather than writing the note itself,
+    /// because a base's row is **another file**: it may be open in a buffer
+    /// with unsaved edits, and a write behind that buffer's back would be
+    /// thrown away by the buffer's own next save. So the guard is the one the
+    /// unlinked-mention write uses — a buffer holding this note must have
+    /// exactly the bytes on disk, or nothing is written and the user is told
+    /// why — and the change is planned over the note's own text, which keeps
+    /// its line endings, its BOM and every key the edit did not name.
+    fn set_note_property(
+        &mut self,
+        path: String,
+        key: String,
+        value: String,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let absolute = match state.vault().write_path(&path) {
+            Ok(absolute) => absolute,
+            Err(err) => {
+                self.report(format!("{path} not written: {err}"), cx);
+                return;
+            }
+        };
+        let on_disk = match std::fs::read_to_string(&absolute) {
+            Ok(text) => text,
+            Err(err) => {
+                self.report(format!("Could not read {path}: {err}"), cx);
+                return;
+            }
+        };
+        // Any group's editor may be holding the note, not just the active
+        // one, and a buffer that differs from the disk is unsaved work.
+        if self.buffer_differs(&path, &on_disk, cx) {
+            self.report(format!("{path} has unsaved edits; {key} not set"), cx);
+            return;
+        }
+        let written = {
+            let types = state.property_types();
+            crate::bases::edit::write_property(&on_disk, &key, &value, &types)
+        };
+        // An unchanged value writes nothing at all, which is what keeps a
+        // committed field from touching a file it did not change.
+        let Some(written) = written else {
+            return;
+        };
+        if let Err(err) = scoria_vault::write_no_follow(&absolute, written.as_bytes()) {
+            self.report(format!("Could not write {path}: {err}"), cx);
+            return;
+        }
+        self.report(format!("{key} set in {path}"), cx);
+        // The index is what every base resolves against, so the table comes
+        // back through the same path an outside edit would take.
+        self.files_changed(vec![absolute], cx);
+    }
+
+    /// Whether any group's editor holds `path` with bytes that are not
+    /// `on_disk` — that is, with unsaved edits a write would discard.
+    fn buffer_differs(&self, path: &str, on_disk: &str, cx: &mut Context<Self>) -> bool {
+        let mine = {
+            let editor = self.editor.read(cx);
+            editor.name.as_ref() == path && editor.text() != on_disk
+        };
+        mine || self.groups.iter().any(|group| {
+            let editor = group.editor.read(cx);
+            editor.name.as_ref() == path && editor.text() != on_disk
+        })
     }
 
     /// Writes the base view's file now if the view changed it, through the

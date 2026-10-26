@@ -12,11 +12,53 @@ use scoria_markdown::{
     canonical_callout_type, html::has_scheme, html::percent_decode, parse, plain_text, Alignment,
     Block, BlockKind, Document, Fold, Inline, InlineKind, LinkKind, ListItem, ListKind, Subpath,
 };
+use std::cell::RefCell;
 use std::ops::Range;
 use std::path::PathBuf;
 
 /// Embedded notes nest at most this deep; Obsidian stops at a similar depth.
 pub const MAX_EMBED_DEPTH: usize = 4;
+
+/// The bases resolved while building one model, so none is resolved twice.
+///
+/// Resolving a `.base` runs a view over the **whole vault** — every note of it
+/// becomes a row candidate — where every other embed reads one file, so a note
+/// that embeds the same base twice, or embeds it again inside an embedded
+/// note, must not pay for it twice. Keyed case-insensitively, the way every
+/// other vault path comparison is. A miss is remembered too: a base that
+/// answered nothing is not asked again either.
+///
+/// This is a cost guard, not a recursion guard: a base's rows are notes, and a
+/// note inside a base is a row rather than an embed, so resolving one never
+/// builds another model and nothing can recurse through it.
+#[derive(Default)]
+struct BaseCache {
+    seen: RefCell<Vec<(String, Option<Box<crate::bases::EmbeddedBase>>)>>,
+}
+
+impl BaseCache {
+    fn resolve(
+        &self,
+        path: &str,
+        vault: &dyn EmbedSource,
+    ) -> Option<Box<crate::bases::EmbeddedBase>> {
+        // The borrow ends before the resolve: nothing is held across it.
+        if let Some(hit) = self
+            .seen
+            .borrow()
+            .iter()
+            .find(|(p, _)| p.eq_ignore_ascii_case(path))
+            .map(|(_, base)| base.clone())
+        {
+            return hit;
+        }
+        let resolved = vault.base(path).map(Box::new);
+        self.seen
+            .borrow_mut()
+            .push((path.to_string(), resolved.clone()));
+        resolved
+    }
+}
 
 /// What the model builder needs from the vault to resolve embeds.
 pub trait EmbedSource {
@@ -240,6 +282,7 @@ pub fn build_with(
     opts: BuildOptions,
 ) -> Model {
     let doc = parse(text);
+    let bases = BaseCache::default();
     let mut b = Builder {
         vault,
         source_path,
@@ -249,6 +292,7 @@ pub fn build_with(
         next_id: 0,
         footnotes: FootnoteState::default(),
         line_starts: None,
+        bases: &bases,
     };
     b.footnotes.definitions = collect_definitions(&doc.blocks);
     let (mut blocks, mut starts) = b.blocks_with_starts(&doc.blocks);
@@ -286,6 +330,7 @@ pub(crate) fn build_section(
         Subpath::Headings(names) => section(&doc.blocks, names)?.to_vec(),
         Subpath::Block(id) => vec![block_by_id(&doc.blocks, id)?.clone()],
     };
+    let bases = BaseCache::default();
     let mut b = Builder {
         vault,
         source_path,
@@ -295,6 +340,7 @@ pub(crate) fn build_section(
         next_id: 0,
         footnotes: FootnoteState::default(),
         line_starts: None,
+        bases: &bases,
     };
     b.footnotes.definitions = collect_definitions(&doc.blocks);
     let (mut blocks, mut starts) = b.blocks_with_starts(&selected);
@@ -328,6 +374,7 @@ pub fn build_widgets(
     vault: &dyn EmbedSource,
     opts: BuildOptions,
 ) -> Vec<Widget> {
+    let bases = BaseCache::default();
     let mut b = Builder {
         vault,
         source_path,
@@ -337,6 +384,7 @@ pub fn build_widgets(
         next_id: 0,
         footnotes: FootnoteState::default(),
         line_starts: None,
+        bases: &bases,
     };
     b.footnotes.definitions = collect_definitions(&doc.blocks);
     let mut out = Vec::new();
@@ -380,12 +428,19 @@ pub fn build_widgets(
 }
 
 /// Builds the model of an embedded note or section with the given nesting.
+///
+/// Eight arguments, because an embed is built from the whole nesting it sits
+/// in: the file it came from, its blocks, how deep it is, the id counter and
+/// the base cache it shares with every sibling, the vault, and the options.
+/// Bundling them into a struct would only move the same list one line down.
+#[allow(clippy::too_many_arguments)]
 fn build_embedded(
     source_path: &str,
     doc: &Document<'_>,
     blocks: &[Block<'_>],
     depth: usize,
     next_id: &mut usize,
+    bases: &BaseCache,
     vault: &dyn EmbedSource,
     opts: BuildOptions,
 ) -> Vec<RBlock> {
@@ -398,6 +453,7 @@ fn build_embedded(
         next_id: *next_id,
         footnotes: FootnoteState::default(),
         line_starts: None,
+        bases,
     };
     b.footnotes.definitions = collect_definitions(&doc.blocks);
     let mut out = b.blocks(blocks, false);
@@ -434,6 +490,9 @@ fn collect_definitions(blocks: &[Block<'_>]) -> Vec<String> {
 
 struct Builder<'v> {
     vault: &'v dyn EmbedSource,
+    /// Shared with every nested builder of the same model, so an embedded
+    /// base is resolved once however many times the note names it.
+    bases: &'v BaseCache,
     source_path: &'v str,
     /// The whole note, so the properties block can carry file byte spans.
     text: &'v str,
@@ -878,9 +937,13 @@ impl<'v> Builder<'v> {
                 }
                 // A base nests no further: its rows are notes, and a note
                 // inside one is a row rather than an embed, so the depth
-                // guard above has nothing to count here.
-                FileKind::Base => match self.vault.base(&path) {
-                    Some(base) => EmbedKind::Base(Box::new(base)),
+                // guard above has nothing to count here — and a note that
+                // embeds a base listing that same note still terminates,
+                // because a row is cells rather than another model. The cache
+                // is the cost guard instead: a view over the whole vault is
+                // the one embed worth never resolving twice.
+                FileKind::Base => match self.bases.resolve(&path, self.vault) {
+                    Some(base) => EmbedKind::Base(base),
                     None => EmbedKind::Missing,
                 },
                 other => EmbedKind::Unsupported(other),
@@ -923,6 +986,7 @@ impl<'v> Builder<'v> {
             &selected,
             self.depth + 1,
             &mut next_id,
+            self.bases,
             self.vault,
             self.opts,
         );
@@ -1216,6 +1280,9 @@ mod tests {
 
     struct Stub {
         files: HashMap<&'static str, &'static str>,
+        /// How many times [`EmbedSource::base`] was asked, so a test can see
+        /// that one model resolves a base once however often it is embedded.
+        base_calls: std::cell::Cell<usize>,
     }
 
     impl EmbedSource for Stub {
@@ -1236,6 +1303,25 @@ mod tests {
         fn absolute(&self, path: &str) -> PathBuf {
             PathBuf::from("/vault").join(path)
         }
+        /// A base of the stub's own: one named view and no rows, because
+        /// what the rows hold is `scoria-bases`'s business and not the
+        /// model's. `Broken.base` is a file that exists and still answers
+        /// nothing, which is the other way an embed comes out `Missing`.
+        fn base(&self, path: &str) -> Option<crate::bases::EmbeddedBase> {
+            self.base_calls.set(self.base_calls.get() + 1);
+            if path == "Broken.base" {
+                return None;
+            }
+            self.files
+                .contains_key(path)
+                .then(|| crate::bases::EmbeddedBase {
+                    path: path.to_string(),
+                    view_name: Some("View".to_string()),
+                    layout: scoria_bases::Layout::default(),
+                    table: None,
+                    error: None,
+                })
+        }
     }
 
     fn stub() -> Stub {
@@ -1248,7 +1334,21 @@ mod tests {
                 ),
                 ("Loop.md", "![[Loop]]"),
                 ("pic.png", ""),
+                ("Main.base", ""),
+                ("Broken.base", ""),
+                ("Nester.md", "![[Main.base]]"),
             ]),
+            base_calls: std::cell::Cell::new(0),
+        }
+    }
+
+    fn first_embed(block: &RBlock) -> &Embed {
+        match block {
+            RBlock::Paragraph(segs) => match &segs[0] {
+                Segment::Embed(embed) => embed,
+                other => panic!("not an embed: {other:?}"),
+            },
+            other => panic!("not a paragraph: {other:?}"),
         }
     }
 
@@ -1399,6 +1499,48 @@ mod tests {
         assert_eq!(depth, MAX_EMBED_DEPTH - 1);
     }
 
+    #[test]
+    fn an_embedded_base_is_its_own_kind_wherever_it_is_written() {
+        let stub = stub();
+        // The same base twice, and once more inside an embedded note.
+        let m = build(
+            "Self.md",
+            "![[Main.base]]\n\n![[Nester]]\n\n![[Main.base]]",
+            &stub,
+        );
+        for ix in [0, 2] {
+            match &first_embed(&m.blocks[ix]).kind {
+                EmbedKind::Base(base) => {
+                    assert_eq!(base.path, "Main.base");
+                    assert_eq!(base.view_name.as_deref(), Some("View"));
+                }
+                other => panic!("{other:?}"),
+            }
+        }
+        // A base inside an embedded note is a base there too: the note's own
+        // depth bounds the nesting, and the base below it adds none.
+        let EmbedKind::Note { blocks, .. } = &first_embed(&m.blocks[1]).kind else {
+            panic!("the middle embed is a note")
+        };
+        assert!(matches!(first_embed(&blocks[0]).kind, EmbedKind::Base(_)));
+        // And the view over the whole vault was resolved exactly once.
+        assert_eq!(stub.base_calls.get(), 1);
+    }
+
+    #[test]
+    fn a_base_nothing_answers_for_is_missing_rather_than_empty() {
+        let stub = stub();
+        let m = build("Self.md", "![[Nope.base]]\n\n![[Broken.base]]", &stub);
+        // A link that resolves to no file at all, and a file that exists and
+        // still answers no base: both are the embed's `Missing`.
+        assert!(matches!(first_embed(&m.blocks[0]).kind, EmbedKind::Missing));
+        assert!(matches!(first_embed(&m.blocks[1]).kind, EmbedKind::Missing));
+        // The miss is remembered too, so a second mention asks nothing again.
+        let m = build("Self.md", "![[Broken.base]]\n\n![[Broken.base]]", &stub);
+        assert!(matches!(first_embed(&m.blocks[1]).kind, EmbedKind::Missing));
+        assert_eq!(stub.base_calls.get(), 2, "once per model, not per embed");
+    }
+
     /// `blocks` drops a comment block; `starts` has to drop exactly the
     /// same one, or every jump past it lands a block out.
     #[test]
@@ -1535,6 +1677,7 @@ mod tests {
     fn task_markers_carry_the_line_and_stop_at_an_embed() {
         let vault = Stub {
             files: HashMap::from([("Tasks.md", "- [ ] inner\n")]),
+            base_calls: std::cell::Cell::new(0),
         };
         let m = build(
             "Self.md",

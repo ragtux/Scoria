@@ -7,6 +7,10 @@
 //! cell typed into, [`commands`] is what the `bases:*` commands do to the
 //! showing view, and [`embed`] is an `![[x.base]]` inside a note.
 //!
+//! [`writes`] is what a control writes into a view — `sort`, `groupBy`,
+//! `order` and `limit` — in one place, because the toolbar's panels and the
+//! column header's own menu both write them and must write the same bytes.
+//!
 //! [`rows`] is the bridge: it turns the vault's own index and cache into the
 //! `FileData` values `scoria-bases` evaluates against, so nothing below this
 //! module knows what a vault is. [`cells`] is what one cell draws, shared by
@@ -28,6 +32,7 @@ pub mod rows;
 pub mod table;
 pub mod toolbar;
 pub mod view;
+pub mod writes;
 
 pub use embed::{resolve as resolve_embed, EmbeddedBase};
 pub use view::{BasesEvent, BasesView};

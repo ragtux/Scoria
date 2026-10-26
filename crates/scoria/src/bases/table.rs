@@ -25,12 +25,22 @@
 //! and a variable-height [`gpui::list`] must be **reset** when the data
 //! changes — a splice lands at the end — so every rebuild goes through
 //! [`BasesView::rebuild`](crate::bases::BasesView).
+//!
+//! The header is also where the table is **written through**: a right-click
+//! on one opens the column's context menu and the right edge of one drags the
+//! column wider, both of which live in [`edit`](crate::bases::edit) because
+//! what they write is observed there. A cell typed into writes the note, not
+//! the base, and that is in the same module.
 
-use crate::bases::cells::{cell_text, checkbox, renders_as_link, CELL_PAD};
+use crate::bases::cells::{
+    cell_text, checkbox, group_header, lines_for, renders_as_link, row_of, Line, CELL_PAD,
+};
+use crate::bases::edit::{editable_key, ColumnDrag};
 use crate::bases::view::BasesView;
-use crate::theme::{Theme, FONT_UI_SMALL, FONT_UI_SMALLER};
+use crate::theme::{Theme, FONT_UI_SMALL};
 use gpui::{
-    div, list, prelude::*, px, AnyElement, Context, ListAlignment, ListState, SharedString, Window,
+    div, list, prelude::*, px, AnyElement, Context, DragMoveEvent, ListAlignment, ListState,
+    MouseButton, MouseDownEvent, SharedString, Window,
 };
 use scoria_bases::{CellKind, Column, Row, Table, TableLayout, Value};
 use serde_json::{json, Value as Json};
@@ -60,15 +70,19 @@ pub const MIN_COLUMN_WIDTH: f32 = 88.;
 /// a field of the layout, but no column ever reached it in the run.
 pub const MAX_COLUMN_WIDTH: f32 = 400.;
 
-/// One line of the scroll body. A group header is not a row, which is why the
-/// list is variable-height.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Line {
-    /// A `groupBy` header, by index into [`Table::groups`].
-    Group(usize),
-    /// A row: its group, and its index inside that group — or `None` and an
-    /// index into [`Table::rows`] when the view does not group.
-    Row { group: Option<usize>, ix: usize },
+/// How wide the grab area at a header's right edge is. **Unprobed**: that a
+/// header drag resizes the column is observed, but the grip itself was never
+/// measured. 6 px is the narrowest target the rest of the shell uses.
+pub const GRIP_WIDTH: f32 = 6.;
+
+/// A header drag in flight: the column whose right edge is moving and the
+/// width it is at. Only the drawing uses it; `columnSize` is written once, at
+/// the end of the drag, by
+/// [`BasesView::finish_column_resize`](crate::bases::BasesView).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct ColumnResize {
+    pub column: usize,
+    pub width: f32,
 }
 
 /// What the table layout keeps between renders.
@@ -79,6 +93,17 @@ pub struct TableState {
     pub widths: Vec<f32>,
     /// The height of one row, from the view's `rowHeight`.
     pub row_height: f32,
+    /// Whether the last column stretches to the rest of the width.
+    ///
+    /// Observed for an **unsized** last column: the third header of
+    /// `Layout.base` came out 487 px, far wider than its text. A column the
+    /// view's `columnSize` names is drawn at the width it names — "a resized
+    /// column writes `columnSize` as a px map (`file.name: 232`), and the
+    /// header then measures 232" — so a sized last column does not stretch.
+    /// **Unprobed**: the fixture's sized column was its first.
+    pub stretch_last: bool,
+    /// A header drag in flight, which the widths already follow.
+    pub resize: Option<ColumnResize>,
     pub list: ListState,
 }
 
@@ -88,6 +113,8 @@ impl Default for TableState {
             lines: Vec::new(),
             widths: Vec::new(),
             row_height: ROW_HEIGHT,
+            stretch_last: true,
+            resize: None,
             list: ListState::new(0, ListAlignment::Top, px(400.)),
         }
     }
@@ -100,6 +127,8 @@ impl TableState {
             "lines": self.lines.len(),
             "widths": self.widths,
             "row_height": self.row_height,
+            "stretch_last": self.stretch_last,
+            "resize": self.resize.map(|r| json!({ "column": r.column, "width": r.width })),
         })
     }
 }
@@ -117,22 +146,53 @@ impl BasesView {
             scoria_bases::Layout::Table(table) => table.clone(),
             _ => TableLayout::default(),
         };
-        let (lines, widths) = match self.table() {
+        let (lines, widths, stretch_last) = match self.table() {
             Some(table) => (
                 lines_for(table, grouped),
                 column_widths(&table.columns, &layout),
+                stretches_last(&table.columns, &layout),
             ),
-            None => (Vec::new(), Vec::new()),
+            None => (Vec::new(), Vec::new(), true),
         };
         self.table_state.lines = lines;
         self.table_state.widths = widths;
+        self.table_state.stretch_last = stretch_last;
         self.table_state.row_height = ROW_HEIGHT * layout.row_height.mult();
+        // A rebuild under a header drag — the watcher re-resolving the table
+        // while a column is being pulled wider — must not snap the edge back
+        // to the width the file still has.
+        if let Some(resize) = self.table_state.resize {
+            if let Some(slot) = self.table_state.widths.get_mut(resize.column) {
+                *slot = resize.width;
+            }
+        }
+        // An open cell field is kept only while the line it opened on still
+        // stands for the same note: a rebuild re-flattens the body, so a row
+        // can move or go away under it.
+        if let Some(edit) = self.editing.cell.as_ref() {
+            let still_there = self
+                .table_state
+                .lines
+                .get(edit.line)
+                .copied()
+                .and_then(|line| self.table().and_then(|t| row_of(t, line)))
+                .is_some_and(|row| row.file.path == edit.path);
+            if !still_there {
+                self.editing.cell = None;
+            }
+        }
         let count = self.table_state.lines.len();
         self.table_state.list.reset(count);
     }
 
     /// The header row over the virtualised body, or the empty state when the
-    /// view resolved to no rows at all.
+    /// view resolved to no rows at all, and the column menu over both.
+    ///
+    /// Header and body share one box so a header drag keeps being followed
+    /// once the pointer has left the 30 px header:
+    /// [`gpui::InteractiveElement::on_drag_move`] reports every move while the
+    /// drag that started on a grip is alive, and the box's own left edge is
+    /// the table's, which is what the width is measured from.
     pub(super) fn render_table(
         &mut self,
         theme: &Theme,
@@ -141,7 +201,7 @@ impl BasesView {
         let Some(table) = self.table() else {
             return Vec::new();
         };
-        let header = self.render_header(table, theme);
+        let header = self.render_header(table, theme, cx);
         let body = if self.table_state.lines.is_empty() {
             self.render_empty(theme)
         } else {
@@ -158,13 +218,41 @@ impl BasesView {
                 )
                 .into_any_element()
         };
-        vec![header, body]
+        let mut body = vec![div()
+            .flex()
+            .flex_col()
+            .flex_1()
+            .min_h(px(0.))
+            .w_full()
+            .on_drag_move(
+                cx.listener(|this, event: &DragMoveEvent<ColumnDrag>, _, cx| {
+                    let column = event.drag(cx).column;
+                    this.resize_column(column, event.event.position.x, event.bounds.left(), cx);
+                }),
+            )
+            .on_mouse_up(
+                MouseButton::Left,
+                cx.listener(|this, _, _, cx| this.finish_column_resize(cx)),
+            )
+            .on_mouse_up_out(
+                MouseButton::Left,
+                cx.listener(|this, _, _, cx| this.finish_column_resize(cx)),
+            )
+            .child(header)
+            .child(body)
+            .into_any_element()];
+        body.extend(self.render_header_menu(theme, cx));
+        body
     }
 
-    /// The header row: one box per column, abutting, the last one taking the
-    /// rest of the width, over a hairline.
-    fn render_header(&self, table: &Table, theme: &Theme) -> AnyElement {
+    /// The header row: one box per column, abutting, an unsized last column
+    /// taking the rest of the width, over a hairline.
+    ///
+    /// Each header is also its own target: a right-click opens the column's
+    /// context menu and the 6 px at its right edge drag the column wider.
+    fn render_header(&self, table: &Table, theme: &Theme, cx: &mut Context<Self>) -> AnyElement {
         let last = table.columns.len().saturating_sub(1);
+        let stretch_last = self.table_state.stretch_last;
         div()
             .flex()
             .flex_row()
@@ -181,6 +269,8 @@ impl BasesView {
                     .copied()
                     .unwrap_or(MIN_COLUMN_WIDTH);
                 let mut cell = div()
+                    .id(("bases-header", ix))
+                    .relative()
                     .flex()
                     .flex_row()
                     .items_center()
@@ -189,8 +279,14 @@ impl BasesView {
                     .overflow_hidden()
                     .text_size(px(FONT_UI_SMALL))
                     .text_color(theme.text_muted)
-                    .when(ix > 0, |d| d.border_l_1().border_color(theme.border));
-                cell = if ix == last {
+                    .when(ix > 0, |d| d.border_l_1().border_color(theme.border))
+                    .on_mouse_down(
+                        MouseButton::Right,
+                        cx.listener(move |this, event: &MouseDownEvent, _, cx| {
+                            this.open_header_menu(ix, event.position, cx)
+                        }),
+                    );
+                cell = if ix == last && stretch_last {
                     cell.flex_1().min_w(px(width))
                 } else {
                     cell.flex_shrink_0().w(px(width))
@@ -202,6 +298,23 @@ impl BasesView {
                         .overflow_hidden()
                         .text_ellipsis()
                         .child(SharedString::from(col.display.clone())),
+                )
+                .child(
+                    div()
+                        .id(("bases-header-grip", ix))
+                        .absolute()
+                        .top(px(0.))
+                        .right(px(0.))
+                        .w(px(GRIP_WIDTH))
+                        .h_full()
+                        .cursor_col_resize()
+                        .on_drag(ColumnDrag { column: ix }, |drag, _, _, cx| {
+                            cx.stop_propagation();
+                            cx.new(|_| drag.clone())
+                        })
+                        // The press that starts the drag is not a press on
+                        // the header, which would open its menu.
+                        .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation()),
                 )
             }))
             .into_any_element()
@@ -222,7 +335,7 @@ impl BasesView {
                     return div().into_any_element();
                 };
                 let (key, rows) = (group.key.clone(), group.rows.len());
-                self.render_group(ix, key.as_deref(), rows, &theme)
+                group_header(ix, key.as_deref(), rows, &theme)
             }
             Line::Row { .. } => {
                 let Some(row) = row_of(table, line).cloned() else {
@@ -233,48 +346,14 @@ impl BasesView {
         }
     }
 
-    /// A `groupBy` header.
+    /// One row: a cell per column.
     ///
-    /// **Unprobed**: no grouped table's DOM was captured, so the shape here is
-    /// the shell's own — the key at the row height in muted 13 px with the
-    /// group's size as a faint flair, the way the search view labels a file.
-    /// A group with no key is Obsidian's "no value for this property" group,
-    /// and the word it uses for one was never read; "Empty" is what the
-    /// property editor writes for a blank value.
-    fn render_group(&self, ix: usize, key: Option<&str>, rows: usize, theme: &Theme) -> AnyElement {
-        div()
-            .id(("bases-group", ix))
-            .flex()
-            .flex_row()
-            .items_center()
-            .w_full()
-            .h(px(HEADER_HEIGHT))
-            .px(px(CELL_PAD))
-            .gap(px(8.))
-            .bg(theme.bg_secondary)
-            .border_b_1()
-            .border_color(theme.border)
-            .child(
-                div()
-                    .min_w_0()
-                    .whitespace_nowrap()
-                    .overflow_hidden()
-                    .text_ellipsis()
-                    .text_size(px(FONT_UI_SMALL))
-                    .text_color(theme.text)
-                    .child(SharedString::from(key.unwrap_or("Empty").to_string())),
-            )
-            .child(
-                div()
-                    .flex_shrink_0()
-                    .text_size(px(FONT_UI_SMALLER))
-                    .text_color(theme.text_faint)
-                    .child(SharedString::from(rows.to_string())),
-            )
-            .into_any_element()
-    }
-
-    /// One row: a cell per column, activating the file it came from.
+    /// What a click on a cell does is this build's reading, and **unprobed**:
+    /// a cell the frontmatter owns opens the field over it, and every other
+    /// cell — a `file.*` the filesystem owns, a `formula.*` that is computed —
+    /// activates the file, which is what the read-only first cut did for all
+    /// of them. The cursor says which is which, so a cell that refuses is
+    /// drawn as refusing rather than dropping the click.
     fn render_row(
         &self,
         ix: usize,
@@ -282,9 +361,16 @@ impl BasesView {
         theme: &Theme,
         cx: &mut Context<Self>,
     ) -> AnyElement {
-        let path = row.file.path.clone();
         let last = row.cells.len().saturating_sub(1);
         let columns: Vec<Column> = self.table().map(|t| t.columns.clone()).unwrap_or_default();
+        // The column of this row a field is open over, if any.
+        let open = self
+            .editing
+            .cell
+            .as_ref()
+            .filter(|edit| edit.line == ix)
+            .map(|edit| edit.column);
+        let field = self.editing.field.clone();
         div()
             .id(("bases-row", ix))
             .flex()
@@ -293,9 +379,7 @@ impl BasesView {
             .h(px(self.table_state.row_height))
             .border_b_1()
             .border_color(theme.border)
-            .cursor_pointer()
             .hover(|s| s.bg(theme.bg_alt))
-            .on_click(cx.listener(move |this, _, _, cx| this.open(path.clone(), cx)))
             .children(row.cells.iter().enumerate().map(|(c, cell)| {
                 let width = self
                     .table_state
@@ -303,8 +387,11 @@ impl BasesView {
                     .get(c)
                     .copied()
                     .unwrap_or(MIN_COLUMN_WIDTH);
-                let link = columns.get(c).is_some_and(|col| renders_as_link(col, cell));
+                let column = columns.get(c);
+                let link = column.is_some_and(|col| renders_as_link(col, cell));
+                let editable = column.and_then(editable_key).is_some();
                 let mut box_ = div()
+                    .id(SharedString::from(format!("bases-cell-{ix}-{c}")))
                     .flex()
                     .flex_row()
                     .items_center()
@@ -313,10 +400,39 @@ impl BasesView {
                     .overflow_hidden()
                     .text_size(px(FONT_UI_SMALL))
                     .when(c > 0, |d| d.border_l_1().border_color(theme.border));
-                box_ = if c == last {
+                box_ = if c == last && self.table_state.stretch_last {
                     box_.flex_1().min_w(px(width))
                 } else {
                     box_.flex_shrink_0().w(px(width))
+                };
+                // A field is open over this very cell: it draws instead of the
+                // value, and a press anywhere else commits it, the way the
+                // property editor's own field closes.
+                if open == Some(c) {
+                    if let Some(field) = field.clone() {
+                        return box_
+                            .px(px(0.))
+                            .on_mouse_down_out(
+                                cx.listener(|this, _, _, cx| this.commit_cell_edit(cx)),
+                            )
+                            .child(field);
+                    }
+                }
+                let path = row.file.path.clone();
+                box_ = match (editable, cell.kind) {
+                    // A boolean has no text to type, so the click flips it.
+                    (true, CellKind::Checkbox) => box_.cursor_pointer().on_click(
+                        cx.listener(move |this, _, _, cx| this.toggle_checkbox_cell(ix, c, cx)),
+                    ),
+                    (true, _) => {
+                        box_.cursor_text()
+                            .on_click(cx.listener(move |this, _, window, cx| {
+                                this.start_cell_edit(ix, c, window, cx)
+                            }))
+                    }
+                    (false, _) => box_
+                        .cursor_pointer()
+                        .on_click(cx.listener(move |this, _, _, cx| this.open(path.clone(), cx))),
                 };
                 match cell.kind {
                     // A boolean is a disabled checkbox, so there is no text
@@ -349,37 +465,6 @@ impl BasesView {
     }
 }
 
-/// The scroll body of a resolved table: group headers interleaved with rows
-/// when the view groups, and the flat rows when it does not.
-///
-/// A view with no `groupBy` still has one group holding the same rows, so the
-/// caller says whether the view groups rather than this guessing from the
-/// shape; a grouped view whose groups came back empty falls back to the flat
-/// rows so nothing disappears.
-pub fn lines_for(table: &Table, grouped: bool) -> Vec<Line> {
-    if grouped && !table.groups.is_empty() {
-        let mut out = Vec::with_capacity(table.rows.len() + table.groups.len());
-        for (g, group) in table.groups.iter().enumerate() {
-            out.push(Line::Group(g));
-            out.extend((0..group.rows.len()).map(|ix| Line::Row { group: Some(g), ix }));
-        }
-        out
-    } else {
-        (0..table.rows.len())
-            .map(|ix| Line::Row { group: None, ix })
-            .collect()
-    }
-}
-
-/// The row a line points at, through its group when it has one.
-pub fn row_of(table: &Table, line: Line) -> Option<&Row> {
-    match line {
-        Line::Group(_) => None,
-        Line::Row { group: Some(g), ix } => table.groups.get(g)?.rows.get(ix),
-        Line::Row { group: None, ix } => table.rows.get(ix),
-    }
-}
-
 /// How wide each column is drawn.
 ///
 /// `columnSize` is observed — a header drag wrote `columnSize:` /
@@ -402,6 +487,21 @@ pub fn column_widths(columns: &[Column], layout: &TableLayout) -> Vec<f32> {
                 .clamp(MIN_COLUMN_WIDTH, MAX_COLUMN_WIDTH),
         })
         .collect()
+}
+
+/// Whether the last column takes the rest of the width.
+///
+/// An unsized last column does, observed: the third header of `Layout.base`
+/// came out 487 px wide. A column `columnSize` names is drawn at the width it
+/// names — the resized `file.name` measured exactly its 232 — so a last
+/// column the map names keeps that width instead of stretching, which is what
+/// makes a header drag on the last column do anything at all. **Unprobed**:
+/// the fixture's one sized column was its first.
+pub fn stretches_last(columns: &[Column], layout: &TableLayout) -> bool {
+    match columns.last() {
+        Some(col) => layout.width_of(&col.id).is_none(),
+        None => true,
+    }
 }
 
 #[cfg(test)]
@@ -544,6 +644,24 @@ mod tests {
             &layout,
         );
         assert_eq!(widths, vec![232.]);
+    }
+
+    #[test]
+    fn only_an_unsized_last_column_stretches() {
+        let columns = [
+            column("file.name", "file name", ColumnSource::File("name".into())),
+            column("status", "status", ColumnSource::Property("status".into())),
+        ];
+        let mut layout = TableLayout::default();
+        assert!(stretches_last(&columns, &layout));
+        layout.column_size.insert("file.name".to_string(), 232.);
+        assert!(
+            stretches_last(&columns, &layout),
+            "a sized column that is not the last one changes nothing"
+        );
+        layout.column_size.insert("status".to_string(), 120.);
+        assert!(!stretches_last(&columns, &layout));
+        assert!(stretches_last(&[], &layout));
     }
 
     #[test]
