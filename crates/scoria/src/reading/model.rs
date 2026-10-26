@@ -26,6 +26,16 @@ pub trait EmbedSource {
     fn read(&self, path: &str) -> Option<String>;
     /// Absolute path of a vault file, for images.
     fn absolute(&self, path: &str) -> PathBuf;
+    /// An embedded `![[x.base]]`, resolved on its first view.
+    ///
+    /// A base is a view over the whole vault rather than over one file, so
+    /// this needs the index and the cache and not just the bytes — which is
+    /// why it is its own method rather than a `read` the builder parses. The
+    /// default answers nothing, which is what a source with no vault behind
+    /// it (a test's stub) has to answer.
+    fn base(&self, _path: &str) -> Option<crate::bases::EmbeddedBase> {
+        None
+    }
 }
 
 /// Formatting that applies to a run of text; several may apply at once.
@@ -96,6 +106,10 @@ pub enum EmbedKind {
         title: String,
         blocks: Vec<RBlock>,
     },
+    /// A `.base`, resolved on its first view. Boxed because the resolved
+    /// table is far larger than any other embed's payload and every `RBlock`
+    /// would otherwise carry the room for one.
+    Base(Box<crate::bases::EmbeddedBase>),
     /// The target file does not exist.
     Missing,
     /// The target exists but Scoria cannot render it inline yet.
@@ -862,6 +876,13 @@ impl<'v> Builder<'v> {
                         self.note_embed(&path, parsed.subpath.as_ref(), &wikilink_display(&parsed))
                     }
                 }
+                // A base nests no further: its rows are notes, and a note
+                // inside one is a row rather than an embed, so the depth
+                // guard above has nothing to count here.
+                FileKind::Base => match self.vault.base(&path) {
+                    Some(base) => EmbedKind::Base(Box::new(base)),
+                    None => EmbedKind::Missing,
+                },
                 other => EmbedKind::Unsupported(other),
             },
         };

@@ -31,8 +31,9 @@
 use crate::workspace::VaultState;
 use indexmap::IndexMap;
 use scoria_bases::funcs::time::parse_date;
-use scoria_bases::{DateValue, Env, FileData, LinkValue, Value};
+use scoria_bases::{DateValue, Env, FileData, LinkValue, Table, Value};
 use scoria_cache::{all_tags, CachedMetadata, LinkCache, MetadataCache};
+use scoria_formats::base::Base;
 use scoria_formats::config::PropertyTypes;
 use scoria_formats::properties::{reserved_type, PropertyType};
 use scoria_formats::FileKind;
@@ -40,9 +41,58 @@ use scoria_vault::VaultFile;
 use std::collections::HashSet;
 use std::sync::Arc;
 
+/// A `.base` resolved against the vault: the parsed file, the table the
+/// showing view resolves to, and the message a parse failure answered.
+///
+/// Both the view and an embedded `![[x.base]]` go through
+/// [`resolve`], so the two cannot disagree about what a file means.
+pub struct Resolved {
+    /// `None` only when the file failed to parse, in which case nothing is
+    /// drawn but the banner — and nothing is ever written back.
+    pub base: Option<Base>,
+    pub table: Option<Table>,
+    pub error: Option<String>,
+}
+
+/// Parses `text` and resolves its `view_ix`th view against the vault.
+///
+/// With no vault — a test, or a view that has not been handed one yet — the
+/// file still parses and the table comes out empty: the engine reads its rows
+/// from [`Env::files`], and an empty one is a vault with no notes.
+pub fn resolve(
+    state: Option<&VaultState>,
+    path: Option<&str>,
+    text: &str,
+    view_ix: usize,
+) -> Resolved {
+    match Base::from_yaml(text) {
+        Err(e) => Resolved {
+            base: None,
+            table: None,
+            error: Some(e.to_string()),
+        },
+        Ok(base) => {
+            let env = match (state, path) {
+                (Some(state), Some(path)) => env_for(state, path),
+                _ => Env {
+                    files: Vec::new(),
+                    base_file: None,
+                    now: chrono::Local::now().naive_local(),
+                },
+            };
+            let table = scoria_bases::table::build(&base, view_ix, &env);
+            Resolved {
+                base: Some(base),
+                table: Some(table),
+                error: None,
+            }
+        }
+    }
+}
+
 /// Every note of the vault as a row candidate, with the base file's own
 /// [`FileData`] for `this`.
-pub fn env_for(state: &Arc<VaultState>, base_path: &str) -> Env {
+pub fn env_for(state: &VaultState, base_path: &str) -> Env {
     let vault = state.vault();
     let cache = state.cache();
     let types = state.property_types();
@@ -65,7 +115,7 @@ pub fn env_for(state: &Arc<VaultState>, base_path: &str) -> Env {
 
 /// One file of the vault as a [`FileData`], by its vault-relative path.
 /// Paths compare case-insensitively, as everywhere else in the vault.
-pub fn file_data(state: &Arc<VaultState>, path: &str) -> Option<Arc<FileData>> {
+pub fn file_data(state: &VaultState, path: &str) -> Option<Arc<FileData>> {
     let vault = state.vault();
     let cache = state.cache();
     let types = state.property_types();

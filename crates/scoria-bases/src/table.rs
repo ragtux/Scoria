@@ -80,6 +80,12 @@ pub struct Column {
 pub struct Row {
     pub file: Arc<FileData>,
     pub cells: Vec<Cell>,
+    /// What the layout's `image` property answers for this row, when the
+    /// view names one — the cards and kanban layouts' own key, and the only
+    /// value a layout reads that is not one of the columns. `None` means the
+    /// view names no image property; a named property that answers nothing
+    /// is a cell with no text.
+    pub image: Option<Cell>,
 }
 
 /// A `groupBy` group, in the order the view shows them.
@@ -507,6 +513,17 @@ fn implied_columns(base: &Base, rows: &[Arc<FileData>]) -> Vec<Column> {
         .collect()
 }
 
+/// The property the view's layout draws as a row's image, when its layout
+/// has an `image` key and the view sets it. Only the cards and kanban
+/// layouts have one.
+fn image_property(view: &View) -> Option<String> {
+    match crate::layout::Layout::of(view) {
+        crate::layout::Layout::Cards(cards) => cards.image,
+        crate::layout::Layout::Kanban(kanban) => kanban.image,
+        _ => None,
+    }
+}
+
 /// Resolves one of a base's views against the vault.
 ///
 /// `view_ix` indexes `base.views`; a base with no views has one default view,
@@ -587,6 +604,10 @@ pub fn build(base: &Base, view_ix: usize, env: &Env) -> Table {
     };
 
     let group_source = view.group_by.as_ref().map(|g| source_of(&g.property));
+    // The cards and kanban layouts' `image` key names a property that is not
+    // one of the columns, so its value is evaluated beside the cells rather
+    // than looked up among them.
+    let image_source = image_property(view).map(|id| source_of(&id));
     let sort_sources: Vec<ColumnSource> =
         view.sort.iter().map(|s| source_of(&s.property)).collect();
 
@@ -602,6 +623,9 @@ pub fn build(base: &Base, view_ix: usize, env: &Env) -> Table {
                 .iter()
                 .map(|col| crate::cell::of(value_of(&col.source, &ctx)))
                 .collect();
+            let image = image_source
+                .as_ref()
+                .map(|s| crate::cell::of(value_of(s, &ctx)));
             Keyed {
                 // A sort or group key that refuses is null here: it orders,
                 // it does not empty the view the way a filter does.
@@ -612,7 +636,7 @@ pub fn build(base: &Base, view_ix: usize, env: &Env) -> Table {
                 group_key: group_source
                     .as_ref()
                     .map(|s| value_of(s, &ctx).unwrap_or(Value::Null)),
-                row: Row { file, cells },
+                row: Row { file, cells, image },
             }
         })
         .collect();

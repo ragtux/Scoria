@@ -1205,6 +1205,15 @@ impl<'a> Renderer<'a> {
                     .children(self.blocks(blocks, false))
                     .into_any_element()
             }
+            // `![[x.base]]`: the base's own drawing is `bases::embed`, which
+            // takes the view resolved by the same engine the open view uses.
+            EmbedKind::Base(base) => {
+                let on_link = self.on_link.clone();
+                let link = embed.link.clone();
+                crate::bases::embed::render(base, t, move |window, cx| {
+                    on_link(LinkTarget::Internal(link.clone()), window, cx)
+                })
+            }
             EmbedKind::Missing => div()
                 .my_1()
                 .text_color(t.text_muted)

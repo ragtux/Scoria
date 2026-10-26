@@ -1,17 +1,33 @@
 //! The Bases view: draws a `.base` file.
 //!
-//! `view` owns the element — the header row, the rows, scrolling, the empty
-//! and error states — over the table the `scoria-bases` crate resolves.
-//! `rows` is the bridge: it turns the vault's own index and cache into the
-//! `FileData` values that crate evaluates against, so nothing below this
-//! module knows what a vault is.
+//! [`view`] is the shell — the parsed file, the showing view, the table it
+//! resolved to, the error states and the writes — and each layout draws
+//! itself: [`table`], [`cards`], [`list`] and [`kanban`], the four layouts
+//! Obsidian registers. [`toolbar`] is the chrome above them, [`edit`] is a
+//! cell typed into, [`commands`] is what the `bases:*` commands do to the
+//! showing view, and [`embed`] is an `![[x.base]]` inside a note.
 //!
-//! The view is **read-only** in this first cut: a `.base` is drawn, never
-//! written. Obsidian writes one on a toolbar change or a view close, and
-//! `scoria_formats::base` already serializes those bytes; nothing here calls
-//! it yet.
+//! [`rows`] is the bridge: it turns the vault's own index and cache into the
+//! `FileData` values `scoria-bases` evaluates against, so nothing below this
+//! module knows what a vault is. [`cells`] is what one cell draws, shared by
+//! every layout.
+//!
+//! **Writing.** Obsidian writes a base on a toolbar change and canonicalizes
+//! it on close, and never writes one that failed to parse; `scoria_formats::base`
+//! serializes those bytes and [`view::BasesView::file_contents`] is what the
+//! workspace's save path asks for.
 
+pub mod cards;
+pub mod cells;
+pub mod commands;
+pub mod edit;
+pub mod embed;
+pub mod kanban;
+pub mod list;
 pub mod rows;
+pub mod table;
+pub mod toolbar;
 pub mod view;
 
+pub use embed::{resolve as resolve_embed, EmbeddedBase};
 pub use view::{BasesEvent, BasesView};

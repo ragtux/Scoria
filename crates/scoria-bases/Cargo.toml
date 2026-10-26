@@ -15,3 +15,6 @@ scoria-formats = { workspace = true }
 chrono = { workspace = true }
 indexmap = { workspace = true }
 regex = { workspace = true }
+# A view's layout keys are the file's own YAML values, which is the type
+# `scoria-formats` keeps them in; reading one needs no other parser.
+serde_yaml = { workspace = true }

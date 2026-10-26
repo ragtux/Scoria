@@ -949,6 +949,13 @@ impl reading::EmbedSource for VaultState {
     fn absolute(&self, path: &str) -> PathBuf {
         self.vault().absolute(path)
     }
+
+    /// An embedded `![[x.base]]`: the file resolved against this vault, on
+    /// its first view. The whole index and cache are behind it, which is why
+    /// the reading model asks for this rather than for the bytes.
+    fn base(&self, path: &str) -> Option<crate::bases::EmbeddedBase> {
+        crate::bases::resolve_embed(self, path)
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -2392,6 +2399,8 @@ fn view_subscriptions(
         // same route a link in the reading view takes.
         cx.subscribe(bases, |this, _, event: &BasesEvent, cx| match event {
             BasesEvent::Open(path) => this.open_file(path.clone(), None, cx),
+            BasesEvent::Edited => this.schedule_save(cx),
+            BasesEvent::Report(message) => this.report(message.clone(), cx),
         }),
         cx.subscribe(
             canvas,
@@ -5487,6 +5496,7 @@ impl Workspace {
             return;
         };
         self.flush_canvas_save(&state, cx);
+        self.flush_bases_save(&state, cx);
         let (dirty, name) = {
             let editor = self.editor.read(cx);
             (editor.is_dirty(), editor.name.to_string())
@@ -5670,6 +5680,60 @@ impl Workspace {
             }
             Err(err) => self.report(err, cx),
         }
+    }
+
+    /// Writes the base view's file now if the view changed it, through the
+    /// same checks as the canvas's save: the path is checked for links, and a
+    /// file that is not the bytes the view read or last wrote is left alone,
+    /// since someone else wrote it.
+    ///
+    /// The bytes are `Base::to_yaml` — Obsidian's own canonical form, which
+    /// is what it writes on a toolbar change and on close — and a base that
+    /// failed to parse answers no contents at all, so a broken file is never
+    /// written over.
+    fn flush_bases_save(&mut self, state: &Arc<VaultState>, cx: &mut Context<Self>) {
+        let (dirty, path) = {
+            let bases = self.bases.read(cx);
+            (bases.is_dirty(), bases.path().map(str::to_string))
+        };
+        let Some(path) = path.filter(|_| dirty) else {
+            return;
+        };
+        let absolute = match state.vault().write_path(&path) {
+            Ok(absolute) => absolute,
+            Err(err) => {
+                self.report(format!("{path} not saved: {err}"), cx);
+                return;
+            }
+        };
+        match std::fs::read_to_string(&absolute) {
+            Ok(on_disk) if self.bases.read(cx).matches_file(&on_disk) => {}
+            Ok(_) => {
+                self.report(
+                    format!("{path} changed on disk; not overwritten, your edits are still here"),
+                    cx,
+                );
+                return;
+            }
+            Err(err) => {
+                self.report(
+                    format!("Could not read {path}: {err}; not overwritten, your edits are kept"),
+                    cx,
+                );
+                return;
+            }
+        }
+        let Some(contents) = self.bases.read(cx).file_contents() else {
+            return;
+        };
+        match scoria_vault::write_no_follow(&absolute, contents.as_bytes()) {
+            Ok(()) => {
+                self.bases.update(cx, |b, _| b.mark_saved(contents));
+                self.report(format!("{path} saved"), cx);
+            }
+            Err(err) => self.report(format!("Could not save {path}: {err}"), cx),
+        }
+        cx.notify();
     }
 
     /// Writes the canvas view's file now if it has unsaved edits, through
