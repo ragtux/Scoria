@@ -44,11 +44,13 @@ use crate::bases::rows;
 use crate::bases::table::{
     column_widths, stretches_last, HEADER_HEIGHT, MIN_COLUMN_WIDTH, ROW_HEIGHT,
 };
+use crate::reading::model::{EmbedKind, RBlock, Segment};
 use crate::theme::{Theme, FONT_UI_SMALL};
 use crate::workspace::VaultState;
 use gpui::{div, prelude::*, px, AnyElement, App, SharedString, Window};
 use scoria_bases::{CellKind, Column, Layout, Row, Table, TableLayout, Value};
 use scoria_formats::base::PARSE_ERROR_BANNER;
+use serde_json::{json, Value as Json};
 use std::rc::Rc;
 
 /// How many rows an embedded base draws.
@@ -397,6 +399,71 @@ fn error_block(banner: bool, message: &str, theme: &Theme) -> AnyElement {
                 })),
         )
         .into_any_element()
+}
+
+/// Every embedded base in a built note, in document order, as the control
+/// socket reports them.
+///
+/// An embed draws no chrome a state dump could otherwise name — it has no
+/// path of its own in the reading view and no toolbar — so this walk is how
+/// `![[x.base]]` is checked from outside the app without a screenshot.
+pub fn describe_all(blocks: &[RBlock]) -> Vec<Json> {
+    let mut out = Vec::new();
+    walk(blocks, &mut out);
+    out
+}
+
+fn walk(blocks: &[RBlock], out: &mut Vec<Json>) {
+    for block in blocks {
+        match block {
+            RBlock::Paragraph(segments) => {
+                for segment in segments {
+                    if let Segment::Embed(embed) = segment {
+                        if let EmbedKind::Base(base) = &embed.kind {
+                            out.push(describe(base));
+                        }
+                        if let EmbedKind::Note { blocks, .. } = &embed.kind {
+                            walk(blocks, out);
+                        }
+                    }
+                }
+            }
+            RBlock::Quote(children) | RBlock::Callout { children, .. } => walk(children, out),
+            RBlock::List { items, .. } => {
+                for item in items {
+                    walk(&item.children, out);
+                }
+            }
+            RBlock::Footnotes(notes) => {
+                for (_, body) in notes {
+                    walk(body, out);
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+/// One embedded base, as the socket reports it.
+fn describe(base: &EmbeddedBase) -> Json {
+    json!({
+        "path": base.path,
+        "view_name": base.view_name,
+        "layout": base.layout.kind(),
+        "error": base.error,
+        "unknown_kind": base.table.as_ref().and_then(|t| t.unknown_kind.clone()),
+        "columns": base
+            .table
+            .iter()
+            .flat_map(|t| t.columns.iter())
+            .map(|c| c.display.clone())
+            .collect::<Vec<_>>(),
+        "rows": base.table.as_ref().map_or(0, |t| t.rows.len()),
+        "drawn": base
+            .table
+            .as_ref()
+            .map_or(0, |t| t.rows.len().min(EMBED_ROWS)),
+    })
 }
 
 #[cfg(test)]

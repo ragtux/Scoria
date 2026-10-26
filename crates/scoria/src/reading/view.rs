@@ -374,6 +374,9 @@ impl ReadingView {
                 "item": top.item_ix,
                 "offset": f32::from(top.offset_in_item),
             },
+            // An embedded base draws no chrome of its own, so this is the
+            // only way one is visible from outside the app.
+            "bases": crate::bases::embed::describe_all(&self.model.blocks),
         })
     }
 

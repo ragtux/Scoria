@@ -4795,6 +4795,7 @@ dependencies = [
  "indexmap",
  "regex",
  "scoria-formats",
+ "serde_yaml",
 ]
 
 [[package]]
