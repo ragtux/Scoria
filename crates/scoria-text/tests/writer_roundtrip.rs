@@ -170,7 +170,7 @@ fn drive_session(buf: &mut TextBuffer, at: usize, note: &Path) {
     step(buf, "typing a list item");
     buf.indent(true, 4, true);
     step(buf, "Tab");
-    buf.outdent(4, true);
+    buf.outdent(true, 4, true);
     step(buf, "Shift+Tab");
     buf.newline(4, true);
     step(buf, "Enter on an item");

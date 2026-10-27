@@ -26,5 +26,6 @@ pub use buffer::{
     char_class, next_grapheme_boundary, prev_grapheme_boundary, Cursor, Cursors, EditKind,
     FileText, Sel, TextBuffer,
 };
+pub use format::BlockInsert;
 pub use format::{LinePrefix, LinkSyntax};
 pub use plan::{indent_plan, newline_plan, shifted};

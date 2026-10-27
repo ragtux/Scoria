@@ -10,7 +10,8 @@ use scoria_formats::properties::Property;
 use scoria_formats::FileKind;
 use scoria_markdown::{
     canonical_callout_type, html::has_scheme, html::percent_decode, parse, plain_text, Alignment,
-    Block, BlockKind, Document, Fold, Inline, InlineKind, LinkKind, ListItem, ListKind, Subpath,
+    Block, BlockKind, Document, Fold, HighlightColor, Inline, InlineKind, LinkKind, ListItem,
+    ListKind, Subpath,
 };
 use std::cell::RefCell;
 use std::ops::Range;
@@ -87,6 +88,9 @@ pub struct InlineStyle {
     pub italic: bool,
     pub strike: bool,
     pub highlight: bool,
+    /// One of the six colours a `==🔴word==` highlight names, or none for
+    /// the plain `==word==`.
+    pub highlight_color: Option<HighlightColor>,
     pub code: bool,
     pub link: bool,
     pub tag: bool,
@@ -804,7 +808,15 @@ impl<'v> Builder<'v> {
             InlineKind::Emphasis(c) => self.wrap(acc, c, |s| s.italic = true),
             InlineKind::Strong(c) => self.wrap(acc, c, |s| s.bold = true),
             InlineKind::Strikethrough(c) => self.wrap(acc, c, |s| s.strike = true),
-            InlineKind::Highlight(c) => self.wrap(acc, c, |s| s.highlight = true),
+            InlineKind::Highlight { color, children } => {
+                let saved = acc.style;
+                acc.style.highlight = true;
+                acc.style.highlight_color = *color;
+                for c in children {
+                    self.inline(c, acc);
+                }
+                acc.style = saved;
+            }
             InlineKind::Link {
                 destination,
                 kind,

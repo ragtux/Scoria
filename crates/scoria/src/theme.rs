@@ -266,6 +266,28 @@ impl Theme {
         theme
     }
 
+    /// The wash behind a `==🔴word==` highlight: Obsidian paints the
+    /// theme's `--color-<name>` at 0.3 alpha — red was read back as
+    /// `oklch(0.659737 0.216875 23.8105 / 0.3)` on the dark theme, which is
+    /// its `#fb464c`; the other five are the same tokens the canvas presets
+    /// use, at the same alpha.
+    pub fn highlight_color(&self, color: scoria_markdown::HighlightColor) -> Hsla {
+        use scoria_markdown::HighlightColor as C;
+        let presets = &self.canvas.presets;
+        let mut c = match color {
+            C::Red => presets[0],
+            C::Orange => presets[1],
+            C::Yellow => presets[2],
+            C::Green => presets[3],
+            // `--color-blue`: not a canvas preset (cyan is), so its own
+            // pair of values.
+            C::Blue => rgb(if self.dark { 0x027aff } else { 0x086ddd }).into(),
+            C::Purple => presets[5],
+        };
+        c.a = 0.3;
+        c
+    }
+
     /// Obsidian's default callout colors by canonical type.
     pub fn callout_color(&self, kind: &str) -> Hsla {
         let c = match kind {

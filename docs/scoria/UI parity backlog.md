@@ -1396,6 +1396,14 @@ rather than dedenting to the previous multiple.
 
 ### Settled by the probes of 2026-10-25 — the editing commands (issue #7)
 
+**Landed 2026-10-26**: every row below is implemented — the six insert-block commands, the
+checklist cycle, Mod+L on a line without a box, the six highlight colours (parser, reader and
+command), `editor:clear-formatting`, the no-op `editor:set-heading`, per-line inline toggles,
+the one auto-pair rule with provenance-tracked skip-over, Shift+Tab's column arithmetic and the
+four-space unit under `useTab: false`. See
+[[Development#The settled editing commands, 2026-10-26]]; the rows are kept as the record of what
+was observed.
+
 `tools/obsidian-probe/editing-commands.mjs`, `editing-typing.mjs` and
 `footnote-insert.mjs` answered every editing row below against Obsidian 1.14.4
 (installer build 1.13.7). The observations are in

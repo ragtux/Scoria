@@ -246,13 +246,61 @@ pub fn outdent_width(ws: &str, tab_size: u8) -> usize {
         .count()
 }
 
-/// The indentation unit for Tab (`useTab`, `tabSize`).
+/// The indentation unit for Tab (`useTab`, `tabSize`): a tab, or four
+/// spaces whatever `tabSize` says — with `useTab: false` Obsidian was
+/// observed inserting four spaces under `tabSize: 2` (Specification.md,
+/// "Observed editing command behavior").
 pub fn indent_unit(use_tab: bool, tab_size: u8) -> String {
+    let _ = tab_size;
     if use_tab {
         "\t".to_string()
     } else {
-        " ".repeat(tab_size.max(1) as usize)
+        " ".repeat(4)
     }
+}
+
+/// The display columns of an indentation string: a tab counts `tab_size`
+/// columns, a space one.
+fn indent_columns(ws: &str, tab_size: u8) -> usize {
+    ws.bytes()
+        .map(|b| {
+            if b == b'\t' {
+                tab_size.max(1) as usize
+            } else {
+                1
+            }
+        })
+        .sum()
+}
+
+/// `columns` of indentation written back: tabs then spaces with
+/// `use_tab`, spaces alone otherwise.
+fn indent_string(columns: usize, use_tab: bool, tab_size: u8) -> String {
+    if use_tab {
+        let t = tab_size.max(1) as usize;
+        format!("{}{}", "\t".repeat(columns / t), " ".repeat(columns % t))
+    } else {
+        " ".repeat(columns)
+    }
+}
+
+/// What Shift+Tab does to this line's indentation: one unit of display
+/// columns is taken off, clamped at zero, and the rest is written back as
+/// tabs then spaces (`use_tab`) or spaces. The unit is `tab_size` columns
+/// with `use_tab`, four without, as [`indent_unit`]. `None` when the line
+/// has no indentation to give up.
+pub fn outdent_edit(line: &str, use_tab: bool, tab_size: u8) -> Option<(Range<usize>, String)> {
+    let p = parse_prefix(line);
+    let ws = if p.marker.is_some() {
+        p.list_indent.clone()
+    } else {
+        p.indent.clone()
+    };
+    let old = &line[ws.clone()];
+    let unit = if use_tab { tab_size.max(1) as usize } else { 4 };
+    let columns = indent_columns(old, tab_size).saturating_sub(unit);
+    let new = indent_string(columns, use_tab, tab_size);
+    (new != old).then_some((ws, new))
 }
 
 /// Where an indentation step goes on this line: after the quote markers
@@ -534,7 +582,35 @@ mod tests {
         assert_eq!(outdent_range("- a", 4), None);
         assert_eq!(outdent_range("  text", 4), Some(0..2));
         assert_eq!(indent_unit(true, 4), "\t");
-        assert_eq!(indent_unit(false, 2), "  ");
+        // Four spaces whatever the width: observed under `tabSize: 2`.
+        assert_eq!(indent_unit(false, 2), "    ");
+    }
+
+    /// Shift+Tab removes one unit of display columns, clamped at zero, a
+    /// tab counting `tabSize` columns and the rest written back as tabs
+    /// then spaces (Specification.md, "Observed editing command behavior").
+    #[test]
+    fn shift_tab_removes_one_unit_of_columns() {
+        let sp = |n: usize| format!("{}- b", " ".repeat(n));
+        // `tabSize: 2`, `useTab: true`.
+        assert_eq!(outdent_edit(&sp(3), true, 2), Some((0..3, " ".into())));
+        assert_eq!(outdent_edit(&sp(2), true, 2), Some((0..2, "".into())));
+        assert_eq!(outdent_edit(&sp(1), true, 2), Some((0..1, "".into())));
+        assert_eq!(outdent_edit(&sp(5), true, 2), Some((0..5, "\t ".into())));
+        assert_eq!(outdent_edit("\t- b", true, 2), Some((0..1, "".into())));
+        assert_eq!(outdent_edit("\t - b", true, 2), Some((0..2, " ".into())));
+        assert_eq!(outdent_edit("   plain", true, 2), Some((0..3, " ".into())));
+        assert_eq!(outdent_edit("- a", true, 2), None);
+        // `tabSize: 4`, `useTab: true`.
+        assert_eq!(outdent_edit(&sp(3), true, 4), Some((0..3, "".into())));
+        assert_eq!(outdent_edit(&sp(5), true, 4), Some((0..5, " ".into())));
+        assert_eq!(outdent_edit("\t - b", true, 4), Some((0..2, " ".into())));
+        assert_eq!(outdent_edit("   plain", true, 4), Some((0..3, "".into())));
+        // `useTab: false`: the unit is four columns whatever `tabSize` says.
+        assert_eq!(outdent_edit(&sp(3), false, 2), Some((0..3, "".into())));
+        assert_eq!(outdent_edit(&sp(5), false, 2), Some((0..5, " ".into())));
+        // After a quote marker the list's own indentation is what goes.
+        assert_eq!(outdent_edit("> \t- a", true, 4), Some((2..3, "".into())));
     }
 
     /// Shift+Tab, and Enter on an empty nested item, give back exactly what

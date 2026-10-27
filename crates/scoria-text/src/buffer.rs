@@ -11,6 +11,7 @@ use crate::format;
 use crate::lists;
 use crate::plan::{indent_plan, newline_plan, shifted};
 use crate::table;
+use scoria_markdown::HighlightColor;
 use std::ops::Range;
 use std::time::{Duration, Instant};
 use unicode_segmentation::GraphemeCursor;
@@ -191,6 +192,13 @@ pub struct TextBuffer {
     pub extra: Vec<Sel>,
     /// IME composition range, absolute.
     pub marked: Option<Range<usize>>,
+    /// Offsets of the closers auto-pairing planted that the cursor has not
+    /// yet left the line of: typing the same character over one steps past
+    /// it instead of doubling it (Specification.md, "Observed auto-pair
+    /// behavior": skip-over is provenance-tracked). Edits shift them,
+    /// leaving a line forgets them, and a planted closer typed over or
+    /// deleted drops out of the text and the list together.
+    planted: Vec<usize>,
     history: History,
     dirty: bool,
     /// A fingerprint of the bytes last known to be on disk: what was
@@ -256,6 +264,7 @@ impl TextBuffer {
         self.marked = None;
         self.goal = None;
         self.extra.clear();
+        self.planted.clear();
         self.dirty = false;
         self.disk = fingerprint(raw);
         self.history = History::default();
@@ -697,10 +706,20 @@ impl TextBuffer {
     /// ordinary way.
     pub fn type_pair(&mut self, typed: char, opts: autopair::Options) -> bool {
         let cursors = self.cursors();
+        // A planted closer is forgotten once the cursor is on another line.
+        let line = self.cursor_at(self.head).line;
+        let planted = std::mem::take(&mut self.planted);
+        self.planted = planted
+            .into_iter()
+            .filter(|&at| self.cursor_at(at).line == line)
+            .collect();
         let acts: Vec<autopair::Act> = cursors
             .sels
             .iter()
-            .map(|sel| autopair::act(&self.text, sel.range(), typed, opts))
+            .map(|sel| {
+                let planted = sel.is_empty() && self.planted.contains(&sel.head);
+                autopair::act(&self.text, sel.range(), typed, opts, planted)
+            })
             .collect();
         if acts.iter().all(|a| *a == autopair::Act::Insert) {
             return false;
@@ -772,7 +791,23 @@ impl TextBuffer {
             EditKind::Typing
         };
         self.apply_edits(edits, after, kind);
+        // Each closer written sits right after its cursor.
+        let closers: Vec<usize> = self
+            .cursors()
+            .sels
+            .iter()
+            .zip(&acts)
+            .filter(|(_, a)| matches!(a, autopair::Act::Close(_)))
+            .map(|(s, _)| s.head)
+            .collect();
+        self.planted.extend(closers);
         true
+    }
+
+    /// Forgets the closers auto-pairing planted: the cursor has left the
+    /// line, so typing one again writes it rather than stepping over it.
+    pub fn forget_planted(&mut self) {
+        self.planted.clear();
     }
 
     /// Deletes at every cursor: the selection, or what `range` gives for a
@@ -832,6 +867,23 @@ impl TextBuffer {
         kind: EditKind,
     ) {
         let before = self.cursors();
+        // The planted closers move with the text; one inside a replaced
+        // range is gone.
+        self.planted = self
+            .planted
+            .iter()
+            .filter_map(|&at| {
+                let mut moved = at as isize;
+                for (r, new) in &edits {
+                    if at >= r.end {
+                        moved += new.len() as isize - r.len() as isize;
+                    } else if at > r.start || (at == r.start && !r.is_empty()) {
+                        return None;
+                    }
+                }
+                Some(moved as usize)
+            })
+            .collect();
         // Back to front, so earlier offsets stay valid while later text
         // moves; of two edits at one offset the replacement goes before
         // the insertion.
@@ -922,6 +974,7 @@ impl TextBuffer {
     fn finish_history_step(&mut self) {
         self.marked = None;
         self.goal = None;
+        self.planted.clear();
         self.dirty = true;
     }
 
@@ -1043,6 +1096,7 @@ impl TextBuffer {
             &self.line_starts,
             lines,
             &unit,
+            use_tab,
             tab_size,
             true,
             smart_indent_list,
@@ -1051,16 +1105,18 @@ impl TextBuffer {
         self.edit_many(edits, head, Some(anchor))
     }
 
-    /// Shift+Tab: removes one indentation step from the selected lines, a
-    /// tab or `tab_size` spaces as Tab put there, renumbering the ordered
-    /// lists it touches.
-    pub fn outdent(&mut self, tab_size: u8, smart_indent_list: bool) -> bool {
+    /// Shift+Tab: removes one indentation unit of display columns from the
+    /// selected lines, clamped at zero and written back as tabs then
+    /// spaces (see [`lists::outdent_edit`]), renumbering the ordered lists
+    /// it touches.
+    pub fn outdent(&mut self, use_tab: bool, tab_size: u8, smart_indent_list: bool) -> bool {
         let lines = self.selected_lines();
         let edits = indent_plan(
             &self.text,
             &self.line_starts,
             lines,
             "",
+            use_tab,
             tab_size,
             false,
             smart_indent_list,
@@ -1071,47 +1127,88 @@ impl TextBuffer {
 
     /// A formatting toggle (`editor:toggle-bold` and the rest): every
     /// selection is wrapped in `marker`, or loses the marker it is already
-    /// wrapped in, as one undo step. An empty selection gets the pair with
-    /// the caret between the halves; the selection stays on the text it
-    /// was on.
+    /// wrapped in, as one undo step. A selection over several lines is
+    /// wrapped line by line, blank lines left out, except by the comment
+    /// toggle, which puts one `%%` pair around the whole of it. A bare
+    /// caret takes the word it is on, or gets the pair with the caret
+    /// between the halves when it is on none; the selection stays on the
+    /// text it was on.
     pub fn toggle_wrap(&mut self, marker: &str) -> bool {
+        self.toggle_wrap_colored(marker, None)
+    }
+
+    /// [`TextBuffer::toggle_wrap`] for `==`, with the colour one of the
+    /// `editor:toggle-highlight-<colour>` commands carries: see
+    /// [`format::toggle_wrap_colored`].
+    pub fn toggle_wrap_colored(&mut self, marker: &str, color: Option<HighlightColor>) -> bool {
         let cursors = self.cursors();
         let m = marker.len();
+        let opener = format!("{marker}{}", color.map_or("", HighlightColor::emoji));
         let mut edits: Vec<(Range<usize>, String)> = Vec::new();
         let mut after = Vec::with_capacity(cursors.sels.len());
         // `apply_edits` wants the selections in post-edit coordinates, and
-        // every earlier selection's markers have moved the later ones.
+        // every earlier piece's markers have moved the later ones.
         let mut delta: isize = 0;
         let mut floor = 0;
         for sel in &cursors.sels {
-            let range = sel.range();
             let reversed = sel.head < sel.anchor;
-            let shift = |at: usize| (at as isize + delta) as usize;
-            let (start, end) = match format::toggle_wrap(&self.text, range.clone(), marker, floor) {
-                format::Toggle::Strip(open, close) => {
-                    let ends = (shift(open.start), shift(close.start) - m);
-                    floor = close.end;
-                    delta -= 2 * m as isize;
-                    edits.push((open, String::new()));
-                    edits.push((close, String::new()));
-                    ends
-                }
-                format::Toggle::Wrap(r) => {
-                    let ends = (shift(r.start) + m, shift(r.end) + m);
-                    floor = r.end;
-                    delta += 2 * m as isize;
-                    // One edit over the whole selection rather than an
-                    // insertion at each end, for the reason `type_pair`
-                    // gives: two markers at one offset would land in
-                    // whichever order the sort chose.
-                    let mut new = String::with_capacity(r.len() + 2 * m);
-                    new.push_str(marker);
-                    new.push_str(&self.text[r.clone()]);
-                    new.push_str(marker);
-                    edits.push((r, new));
-                    ends
-                }
-            };
+            let pieces = self.wrap_pieces(sel.range(), marker);
+            // One line keeps the selection on its text; several keep it on
+            // the whole of the wrapped text, markers included, so that a
+            // second press finds a pair inside each line's part.
+            let outer = pieces.len() > 1;
+            let mut first: Option<usize> = None;
+            let mut last = 0;
+            for range in pieces {
+                let shift = |at: usize| (at as isize + delta) as usize;
+                let (start, end) = match format::toggle_wrap_colored(
+                    &self.text,
+                    range.clone(),
+                    marker,
+                    color,
+                    floor,
+                ) {
+                    format::Toggle::Strip(open, close) => {
+                        let ends = (shift(open.start), shift(close.start) - open.len());
+                        floor = close.end;
+                        delta -= (open.len() + close.len()) as isize;
+                        edits.push((open, String::new()));
+                        edits.push((close, String::new()));
+                        ends
+                    }
+                    format::Toggle::Wrap(r) => {
+                        let ends = if outer {
+                            (shift(r.start), shift(r.end) + opener.len() + m)
+                        } else {
+                            (shift(r.start) + opener.len(), shift(r.end) + opener.len())
+                        };
+                        floor = r.end;
+                        delta += (opener.len() + m) as isize;
+                        // One edit over the whole piece rather than an
+                        // insertion at each end, for the reason
+                        // `type_pair` gives: two markers at one offset
+                        // would land in whichever order the sort chose.
+                        let mut new = String::with_capacity(r.len() + opener.len() + m);
+                        new.push_str(&opener);
+                        new.push_str(&self.text[r.clone()]);
+                        new.push_str(marker);
+                        edits.push((r, new));
+                        ends
+                    }
+                    format::Toggle::Recolor(emoji, with) => {
+                        let grow = with.len() as isize - emoji.len() as isize;
+                        let inner_start = (shift(emoji.end) as isize + grow) as usize;
+                        let inner_end = (shift(range.end.max(emoji.end)) as isize + grow) as usize;
+                        floor = range.end.max(emoji.end);
+                        delta += grow;
+                        edits.push((emoji, with.to_string()));
+                        (inner_start, inner_end)
+                    }
+                };
+                first.get_or_insert(start);
+                last = end;
+            }
+            let (start, end) = (first.unwrap_or(sel.range().start), last);
             after.push(Sel {
                 anchor: if reversed { end } else { start },
                 head: if reversed { start } else { end },
@@ -1129,14 +1226,97 @@ impl TextBuffer {
         true
     }
 
-    /// `editor:toggle-checklist-status`: flips the checkbox on each
-    /// selected line that has one. The three bytes are replaced by three,
-    /// so nothing moves under the cursor.
+    /// The pieces a toggle treats `range` as: the whole of it for the
+    /// comment toggle; otherwise its part on each line, blank lines left
+    /// out; and for a bare caret the word under it, unless the caret is
+    /// between a pair of the marker, which the toggle takes out again.
+    fn wrap_pieces(&self, range: Range<usize>, marker: &str) -> Vec<Range<usize>> {
+        if range.is_empty() {
+            let between = matches!(
+                format::toggle_wrap(&self.text, range.clone(), marker, 0),
+                format::Toggle::Strip(..)
+            );
+            if between {
+                return vec![range];
+            }
+            let word = self.word_at(range.start);
+            let on_word = self.class_at(word.start).is_some_and(|c| c != 0);
+            return vec![if on_word { word } else { range }];
+        }
+        if marker == "%%" {
+            return vec![range];
+        }
+        let first = self.cursor_at(range.start).line;
+        let last = self.cursor_at(range.end).line;
+        if first == last {
+            return vec![range];
+        }
+        (first..=last)
+            .filter_map(|l| {
+                let lr = self.line_range(l);
+                let piece = range.start.max(lr.start)..range.end.min(lr.end);
+                (piece.start < piece.end && !self.text[piece.clone()].trim().is_empty())
+                    .then_some(piece)
+            })
+            .collect()
+    }
+
+    /// `editor:toggle-checklist-status` (Mod+L): a checkbox on every
+    /// selected line that has none, or the one it has flipped; see
+    /// [`format::checklist_plan`]. The caret moves with the inserted text.
     pub fn toggle_checklist(&mut self) -> bool {
         let lines = self.selected_lines();
         let edits = format::checklist_plan(&self.text, &self.line_starts, lines);
-        let (head, anchor) = (self.head, self.anchor);
+        let (head, anchor) = (shifted(self.head, &edits), shifted(self.anchor, &edits));
         self.edit_many(edits, head, Some(anchor))
+    }
+
+    /// `editor:cycle-list-checklist`: bullet → `[ ]` → `[x]` → bullet on
+    /// the selected lines; see [`format::cycle_checklist_plan`].
+    pub fn cycle_checklist(&mut self) -> bool {
+        let lines = self.selected_lines();
+        let edits = format::cycle_checklist_plan(&self.text, &self.line_starts, lines);
+        let (head, anchor) = (shifted(self.head, &edits), shifted(self.anchor, &edits));
+        self.edit_many(edits, head, Some(anchor))
+    }
+
+    /// One of the six insert-block commands at the primary caret; the
+    /// selection is ignored, as Obsidian ignores it. See
+    /// [`format::block_insert_plan`].
+    pub fn insert_block(&mut self, kind: format::BlockInsert) -> bool {
+        let (edits, sel) =
+            format::block_insert_plan(&self.text, &self.line_starts, self.head, kind);
+        self.edit_many(edits, sel.end, Some(sel.start))
+    }
+
+    /// `editor:clear-formatting`: the markers inside every selection go,
+    /// line prefixes included; see [`format::clear_formatting_plan`]. A
+    /// bare caret changes nothing.
+    pub fn clear_formatting(&mut self) -> bool {
+        let cursors = self.cursors();
+        let mut edits: Vec<(Range<usize>, String)> = Vec::new();
+        let mut after = Vec::with_capacity(cursors.sels.len());
+        for sel in &cursors.sels {
+            let own = format::clear_formatting_plan(&self.text, &self.line_starts, sel.range());
+            edits.extend(own);
+            after.push(*sel);
+        }
+        if edits.is_empty() {
+            return false;
+        }
+        let after = Cursors {
+            sels: after
+                .into_iter()
+                .map(|s| Sel {
+                    anchor: shifted(s.anchor, &edits),
+                    head: shifted(s.head, &edits),
+                    goal: None,
+                })
+                .collect(),
+            primary: cursors.primary,
+        };
+        self.apply_edits(edits, after, EditKind::Other);
+        true
     }
 
     /// `editor:set-heading-<n>`: rewrites the selected lines' leading
@@ -1394,15 +1574,31 @@ mod tests {
     /// two-space vault one Shift+Tab used to undo both Tabs.
     #[test]
     fn tab_and_shift_tab_round_trip_at_the_configured_width() {
+        // `useTab: true`, `tabSize: 2`: a tab in, a tab out.
+        let mut buf = TextBuffer::from_file("- a\n- b\n");
+        buf.set_cursor(7, None);
+        buf.indent(true, 2, true);
+        buf.indent(true, 2, true);
+        assert_eq!(buf.line_text(1), "\t\t- b");
+        buf.outdent(true, 2, true);
+        assert_eq!(buf.line_text(1), "\t- b");
+        buf.outdent(true, 2, true);
+        assert_eq!(buf.line_text(1), "- b");
+        // `useTab: false`: four spaces whatever `tabSize` says, both ways.
         let mut buf = TextBuffer::from_file("- a\n- b\n");
         buf.set_cursor(7, None);
         buf.indent(false, 2, true);
         buf.indent(false, 2, true);
+        assert_eq!(buf.line_text(1), "        - b");
+        buf.outdent(false, 2, true);
         assert_eq!(buf.line_text(1), "    - b");
-        buf.outdent(2, true);
-        assert_eq!(buf.line_text(1), "  - b");
-        buf.outdent(2, true);
+        buf.outdent(false, 2, true);
         assert_eq!(buf.line_text(1), "- b");
+        // Ragged spaces under `useTab: true` come back as tabs then spaces.
+        let mut buf = TextBuffer::from_file("     - b\n");
+        buf.set_cursor(7, None);
+        buf.outdent(true, 2, true);
+        assert_eq!(buf.line_text(0), "\t - b");
     }
 
     /// Enter on an empty nested item outdents it by one step too.
@@ -1584,17 +1780,71 @@ mod tests {
         assert_eq!(buf.selection(), 0..5);
     }
 
+    /// With no selection an inline toggle takes the word under the caret
+    /// (`one two` at ch 4 gives `one **two**`); a caret between an empty
+    /// pair takes the pair out again.
     #[test]
-    fn a_toggle_with_no_selection_leaves_the_caret_between_the_markers() {
-        let mut buf = TextBuffer::from_file("ab\n");
-        buf.set_cursor(1, None);
+    fn a_toggle_with_no_selection_takes_the_word_under_the_caret() {
+        let mut buf = TextBuffer::from_file("one two\n");
+        buf.set_cursor(4, None);
+        assert!(buf.toggle_wrap("**"));
+        assert_eq!(buf.text(), "one **two**\n");
+        assert_eq!(buf.selection(), 6..9);
+        // On whitespace there is no word: the pair goes in empty.
+        let mut buf = TextBuffer::from_file("a  b\n");
+        buf.set_cursor(2, None);
         assert!(buf.toggle_wrap("=="));
-        assert_eq!(buf.text(), "a====b\n");
-        assert_eq!(buf.cursor().col, 3);
-        // And again, which takes the empty pair back out.
+        assert_eq!(buf.text(), "a ==== b\n");
+        assert_eq!(buf.cursor().col, 4);
         assert!(buf.toggle_wrap("=="));
-        assert_eq!(buf.text(), "ab\n");
-        assert_eq!(buf.cursor().col, 1);
+        assert_eq!(buf.text(), "a  b\n");
+        assert_eq!(buf.cursor().col, 2);
+    }
+
+    /// A selection over several lines is wrapped line by line, blank lines
+    /// left out, except by the comment toggle; twice restores the bytes.
+    #[test]
+    fn a_multi_line_selection_is_wrapped_per_line() {
+        for (marker, once) in [
+            ("`", "`one`\n\n`two`\n`three`\n"),
+            ("$", "$one$\n\n$two$\n$three$\n"),
+            ("**", "**one**\n\n**two**\n**three**\n"),
+            ("%%", "%%one\n\ntwo\nthree%%\n"),
+        ] {
+            let mut buf = TextBuffer::from_file("one\n\ntwo\nthree\n");
+            buf.set_cursor(14, Some(0));
+            assert!(buf.toggle_wrap(marker), "{marker}");
+            assert_eq!(buf.text(), once, "{marker}");
+            assert!(buf.toggle_wrap(marker), "{marker} again");
+            assert_eq!(buf.text(), "one\n\ntwo\nthree\n", "{marker} restored");
+            assert_eq!(buf.selection(), 0..14, "{marker} selection");
+        }
+        // Mid-line edges take the markers at the selection's edges.
+        let mut buf = TextBuffer::from_file("one\ntwo\nthree\n");
+        buf.set_cursor(10, Some(1));
+        assert!(buf.toggle_wrap("`"));
+        assert_eq!(buf.text(), "o`ne`\n`two`\n`th`ree\n");
+    }
+
+    /// The six colour commands, through the buffer: the wrap and its undo.
+    #[test]
+    fn a_colour_highlight_wraps_with_its_emoji_and_recolours_in_place() {
+        let mut buf = TextBuffer::from_file("word\n");
+        buf.set_cursor(4, Some(0));
+        assert!(buf.toggle_wrap_colored("==", Some(HighlightColor::Red)));
+        assert_eq!(buf.text(), "==\u{1f534}word==\n");
+        assert_eq!(buf.selection(), 6..10);
+        assert!(buf.toggle_wrap_colored("==", Some(HighlightColor::Blue)));
+        assert_eq!(buf.text(), "==\u{1f535}word==\n");
+        assert_eq!(buf.selection(), 6..10);
+        assert!(buf.toggle_wrap_colored("==", Some(HighlightColor::Blue)));
+        assert_eq!(buf.text(), "word\n");
+        assert_eq!(buf.selection(), 0..4);
+        // Per line, as the plain toggles.
+        let mut buf = TextBuffer::from_file("one\ntwo\n");
+        buf.set_cursor(7, Some(0));
+        assert!(buf.toggle_wrap_colored("==", Some(HighlightColor::Yellow)));
+        assert_eq!(buf.text(), "==\u{1f7e1}one==\n==\u{1f7e1}two==\n");
     }
 
     #[test]
@@ -1625,12 +1875,56 @@ mod tests {
         assert_eq!(buf.text(), "- [x] a\n- [ ] b\n- [ ] c\n");
     }
 
+    /// Mod+L on a line without a checkbox adds one, and the caret moves
+    /// with the inserted text: `plain text` at ch 3 ends at ch 9.
     #[test]
-    fn a_line_without_a_checkbox_is_left_alone() {
-        let mut buf = TextBuffer::from_file("plain\n");
-        buf.set_cursor(0, None);
-        assert!(!buf.toggle_checklist());
-        assert_eq!(buf.text(), "plain\n");
+    fn a_line_without_a_checkbox_gains_one_under_the_caret() {
+        let mut buf = TextBuffer::from_file("plain text\n");
+        buf.set_cursor(3, None);
+        assert!(buf.toggle_checklist());
+        assert_eq!(buf.text(), "- [ ] plain text\n");
+        assert_eq!(buf.cursor(), Cursor { line: 0, col: 9 });
+        assert!(buf.toggle_checklist());
+        assert_eq!(buf.text(), "- [x] plain text\n");
+        assert!(buf.toggle_checklist());
+        assert_eq!(buf.text(), "- [ ] plain text\n");
+    }
+
+    #[test]
+    fn the_cycle_command_and_the_insert_blocks_go_through_the_buffer() {
+        let mut buf = TextBuffer::from_file("item\n");
+        buf.set_cursor(2, None);
+        assert!(buf.cycle_checklist());
+        assert_eq!(buf.text(), "- item\n");
+        assert_eq!(buf.cursor().col, 4);
+        assert!(buf.cycle_checklist());
+        assert_eq!(buf.text(), "- [ ] item\n");
+        assert!(buf.undo());
+        assert_eq!(buf.text(), "- item\n");
+
+        let mut buf = TextBuffer::from_file("alpha beta\n");
+        buf.set_cursor(5, Some(0));
+        assert!(buf.insert_block(format::BlockInsert::Callout));
+        assert_eq!(buf.text(), "> [!NOTE]\n> alpha beta\n");
+        assert_eq!(buf.selection(), 4..8);
+        assert_eq!(&buf.text()[buf.selection()], "NOTE");
+
+        let mut buf = TextBuffer::from_file("body text");
+        buf.set_cursor(9, None);
+        assert!(buf.insert_block(format::BlockInsert::Footnote));
+        assert_eq!(buf.text(), "body text[^1]\n\n[^1]: \n");
+        assert_eq!(buf.head, 13);
+    }
+
+    #[test]
+    fn clear_formatting_needs_a_selection_and_keeps_it() {
+        let mut buf = TextBuffer::from_file("**bold** _it_\n");
+        buf.set_cursor(3, None);
+        assert!(!buf.clear_formatting());
+        buf.set_cursor(13, Some(0));
+        assert!(buf.clear_formatting());
+        assert_eq!(buf.text(), "bold it\n");
+        assert_eq!(buf.selection(), 0..7);
     }
 
     #[test]

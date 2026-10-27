@@ -306,6 +306,7 @@ of mixed use in both apps. The gate run opened on 2026-10-18, see
 | Tab groups | done: Split right, Split down, the four focus commands, draggable dividers and `workspace.json`'s `main` tree, see [[#Tab groups, 2026-10-20]]; tabs drag between groups and onto split edges, see [[#Dragging tabs, 2026-10-21]]; the strip's hover is Obsidian's inner box, see [[#Tab hover, 2026-10-22]] |
 | Bookmarks | done: the pane, the seven commands and `bookmarks.json` in Obsidian's bytes, see [[#Bookmarks, 2026-10-20]] |
 | Files header | done: New note, New folder, the six sort orders, Auto-reveal current file and Expand all / Collapse all, see [[#Files header, 2026-10-21]]; the tree takes the keyboard, see [[#Explorer keyboard, 2026-10-21]] |
+| Editing commands | done: the insert-block commands, the checklist cycle, Mod+L on a line without a box, the six highlight colours, Clear formatting, per-line inline toggles, the one auto-pair rule and Shift+Tab's column arithmetic, all to the 2026-10-25 probes, see [[#The settled editing commands, 2026-10-26]] |
 | The gate itself | open: the harness passes on the real vault, the week of mixed use has not run, see [[#The gate run opens, 2026-10-18]] |
 
 ## Parity (phase 4)
@@ -323,6 +324,65 @@ uses behave as Obsidian's do.
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | not started |
+
+### The settled editing commands, 2026-10-26
+
+The backlog's "Settled by the probes of 2026-10-25 — the editing commands"
+entry held thirteen answers and no code. All of it is implemented now, to the
+bytes in
+[[Specification#Observed editing command behavior, Obsidian 1.14.5 (installer build 1.13.7)]]
+and the 2026-10-25 block of
+[[Specification#Observed auto-pair behavior, Obsidian 1.14.4]]; each shape in
+those tables is a unit test in `scoria-text`, and the whole set was driven once
+through the release binary over the control socket on a scratch vault, which
+read back the same bytes.
+
+- **Fourteen command ids join `RUNNABLE`**: `editor:insert-callout`,
+  `-codeblock`, `-mathblock`, `-horizontal-rule`, `-tag` and `-footnote`
+  (`format::block_insert_plan`); `editor:cycle-list-checklist`
+  (`cycle_checklist_plan`); the six `editor:toggle-highlight-<colour>`
+  commands; `editor:clear-formatting` (`clear_formatting_plan`, which walks
+  the one parser's tree, so `snake_case` and the inside of a code span are
+  safe); and `editor:set-heading`, registered as a command that runs and
+  changes nothing, with a comment saying that this is what Obsidian does.
+- **Mod+L inserts `- [ ] `** on a line without a checkbox — after a list
+  marker, a `> `, leading whitespace — and the caret moves with it; over a
+  selection the decision is taken once (flip all, add to all, or invert
+  each), blank lines ignored. The "no checkbox to toggle" notice is gone.
+- **The cycle** is bullet → `[ ]` → `[x]` → bullet, the marker kept, a
+  custom status discarded on the first press. Over a selection with a line
+  that is not a list item every line is pulled back to a bullet; otherwise
+  each line advances one step — the converging rule where Obsidian's own
+  output oscillates.
+- **Highlight colours** write one emoji after the opening `==`. The parser's
+  `Highlight` node now carries `color: Option<HighlightColor>`, taking the
+  emoji off its first text node, so the reading view paints `<mark
+  data-highlight="red">` without showing it; the HTML renderer writes the
+  attribute. The wash is the theme's `--color-<name>` at 0.3 alpha; only red
+  was measured (`oklch(0.659737 0.216875 23.8105 / 0.3)`, the dark theme's
+  `#fb464c`), the other five take the canvas preset tokens. Live Preview
+  still shows the emoji in the source text; whether Obsidian's does is
+  unprobed.
+- **Inline toggles wrap each line** of a multi-line selection (blank lines
+  skipped, mid-line edges kept), `toggle-comments` excepted; a bare caret
+  takes the word under it. After a multi-line wrap the selection covers the
+  wrapped text, markers included, so a second press strips every line.
+- **Auto-pairing is the one rule**: a bracket closes when the character
+  ahead is whitespace, the end of the line or a closing bracket; a quote or
+  marker needs that and whitespace or the start of the line behind. No
+  context suppresses it. Skip-over is provenance: `TextBuffer::planted`
+  holds the closers the editor wrote, shifted by every edit, dropped by
+  undo, by a vertical move or a click (`forget_planted`) and by any edit
+  that lands on them, so `x|)` typed `)` writes `x))` and `[[Ty|]]` plus
+  `]` `]` steps out. The old unmatched-opener scan is gone.
+- **Shift+Tab** takes one unit of display columns off, a tab counting
+  `tabSize`, and writes the rest back as tabs then spaces (`useTab`) or
+  spaces; with `useTab: false` the unit — for Tab too — is four spaces
+  whatever `tabSize` says, as observed. Enter on an empty nested item keeps
+  its own one-step rule, which the probes did not touch.
+
+What this build decided on its own is listed in
+[[Specification#What building the editing commands settled, 2026-10-26]].
 
 ### Math, 2026-10-26
 

@@ -180,8 +180,13 @@ pub enum InlineKind<'a> {
     Emphasis(Vec<Inline<'a>>),
     Strong(Vec<Inline<'a>>),
     Strikethrough(Vec<Inline<'a>>),
-    /// `==text==`
-    Highlight(Vec<Inline<'a>>),
+    /// `==text==`, or `==🔴text==`: a colour emoji directly after the
+    /// opening pair names one of Obsidian's six highlight colours and is
+    /// not part of the text.
+    Highlight {
+        color: Option<HighlightColor>,
+        children: Vec<Inline<'a>>,
+    },
     Link {
         destination: Cow<'a, str>,
         title: Option<Cow<'a, str>>,
@@ -215,6 +220,67 @@ pub enum InlineKind<'a> {
     FootnoteReference(Cow<'a, str>),
     /// `^[text]`
     InlineFootnote(Vec<Inline<'a>>),
+}
+
+/// The six colours `editor:toggle-highlight-<colour>` writes, each as one
+/// emoji directly after the opening `==`. The reader consumes the emoji
+/// and renders `<mark data-highlight="red">`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum HighlightColor {
+    Red,
+    Orange,
+    Yellow,
+    Green,
+    Blue,
+    Purple,
+}
+
+impl HighlightColor {
+    pub const ALL: [HighlightColor; 6] = [
+        HighlightColor::Red,
+        HighlightColor::Orange,
+        HighlightColor::Yellow,
+        HighlightColor::Green,
+        HighlightColor::Blue,
+        HighlightColor::Purple,
+    ];
+
+    /// The emoji the colour is written as.
+    pub fn emoji(self) -> &'static str {
+        match self {
+            HighlightColor::Red => "\u{1f534}",
+            HighlightColor::Orange => "\u{1f7e0}",
+            HighlightColor::Yellow => "\u{1f7e1}",
+            HighlightColor::Green => "\u{1f7e2}",
+            HighlightColor::Blue => "\u{1f535}",
+            HighlightColor::Purple => "\u{1f7e3}",
+        }
+    }
+
+    /// The `data-highlight` value, which is also the command id's suffix.
+    pub fn name(self) -> &'static str {
+        match self {
+            HighlightColor::Red => "red",
+            HighlightColor::Orange => "orange",
+            HighlightColor::Yellow => "yellow",
+            HighlightColor::Green => "green",
+            HighlightColor::Blue => "blue",
+            HighlightColor::Purple => "purple",
+        }
+    }
+
+    pub fn from_name(name: &str) -> Option<HighlightColor> {
+        HighlightColor::ALL.into_iter().find(|c| c.name() == name)
+    }
+
+    /// The colour `text` starts with, if it starts with one of the six
+    /// emoji, and how many bytes that emoji takes.
+    pub fn leading(text: &str) -> Option<(HighlightColor, usize)> {
+        HighlightColor::ALL
+            .into_iter()
+            .find(|c| text.starts_with(c.emoji()))
+            .map(|c| (c, c.emoji().len()))
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -273,7 +339,7 @@ pub fn walk_inlines<'a, 'b>(inlines: &'b [Inline<'a>], f: &mut impl FnMut(&'b In
             InlineKind::Emphasis(children)
             | InlineKind::Strong(children)
             | InlineKind::Strikethrough(children)
-            | InlineKind::Highlight(children)
+            | InlineKind::Highlight { children, .. }
             | InlineKind::Link { children, .. }
             | InlineKind::Image { children, .. }
             | InlineKind::InlineFootnote(children) => walk_inlines(children, f),
@@ -318,7 +384,7 @@ fn push_plain_text(inlines: &[Inline<'_>], out: &mut String) {
             InlineKind::Emphasis(c)
             | InlineKind::Strong(c)
             | InlineKind::Strikethrough(c)
-            | InlineKind::Highlight(c)
+            | InlineKind::Highlight { children: c, .. }
             | InlineKind::Link { children: c, .. }
             | InlineKind::Image { children: c, .. }
             | InlineKind::InlineFootnote(c) => push_plain_text(c, out),

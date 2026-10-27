@@ -59,7 +59,7 @@ use scoria_formats::{validate_renamed_file, FileKind};
 use scoria_markdown::Subpath;
 use scoria_templates as templates;
 use scoria_text::table::TableCommand;
-use scoria_text::{LinePrefix, LinkSyntax};
+use scoria_text::{BlockInsert, LinePrefix, LinkSyntax};
 use scoria_vault::{FileChange, TrashOption, Vault, VaultError, VaultRegistry};
 use serde_json::{json, Map, Value};
 use std::collections::{HashMap, HashSet};
@@ -122,15 +122,24 @@ pub const EDITOR_ONLY: &[&str] = &[
     "bookmarks:bookmark-current-section",
     "editor:add-cursor-above",
     "editor:add-cursor-below",
+    "editor:clear-formatting",
+    "editor:cycle-list-checklist",
     "editor:delete-paragraph",
     "editor:follow-link",
     "editor:indent-list",
+    "editor:insert-callout",
+    "editor:insert-codeblock",
     "editor:insert-embed",
+    "editor:insert-footnote",
+    "editor:insert-horizontal-rule",
     "editor:insert-link",
+    "editor:insert-mathblock",
     "editor:insert-table",
+    "editor:insert-tag",
     "editor:insert-wikilink",
     "editor:open-link-in-new-leaf",
     "editor:open-link-in-new-split",
+    "editor:set-heading",
     "editor:set-heading-0",
     "editor:set-heading-1",
     "editor:set-heading-2",
@@ -147,6 +156,12 @@ pub const EDITOR_ONLY: &[&str] = &[
     "editor:toggle-code",
     "editor:toggle-comments",
     "editor:toggle-highlight",
+    "editor:toggle-highlight-blue",
+    "editor:toggle-highlight-green",
+    "editor:toggle-highlight-orange",
+    "editor:toggle-highlight-purple",
+    "editor:toggle-highlight-red",
+    "editor:toggle-highlight-yellow",
     "editor:toggle-inline-math",
     "editor:toggle-italics",
     "editor:toggle-numbered-list",
@@ -191,6 +206,21 @@ pub const RUNNABLE: &[&str] = &[
     "editor:toggle-bullet-list",
     "editor:toggle-numbered-list",
     "editor:toggle-checklist-status",
+    "editor:cycle-list-checklist",
+    "editor:toggle-highlight-red",
+    "editor:toggle-highlight-orange",
+    "editor:toggle-highlight-yellow",
+    "editor:toggle-highlight-green",
+    "editor:toggle-highlight-blue",
+    "editor:toggle-highlight-purple",
+    "editor:clear-formatting",
+    "editor:insert-callout",
+    "editor:insert-codeblock",
+    "editor:insert-mathblock",
+    "editor:insert-horizontal-rule",
+    "editor:insert-tag",
+    "editor:insert-footnote",
+    "editor:set-heading",
     "editor:set-heading-0",
     "editor:set-heading-1",
     "editor:set-heading-2",
@@ -3961,13 +3991,59 @@ impl Workspace {
             }
             "editor:toggle-checklist-status" => {
                 if self.editing_or_report(id, window, cx) {
-                    let flipped = self
-                        .editor
+                    self.editor
                         .update(cx, |e, cx| e.toggle_checklist(window, cx));
-                    if !flipped {
-                        self.report("There is no checkbox to toggle", cx);
+                }
+            }
+            "editor:cycle-list-checklist" => {
+                if self.editing_or_report(id, window, cx) {
+                    self.editor
+                        .update(cx, |e, cx| e.cycle_checklist(window, cx));
+                }
+            }
+            // The six colours write one emoji after the opening `==`.
+            "editor:toggle-highlight-red"
+            | "editor:toggle-highlight-orange"
+            | "editor:toggle-highlight-yellow"
+            | "editor:toggle-highlight-green"
+            | "editor:toggle-highlight-blue"
+            | "editor:toggle-highlight-purple" => {
+                if self.editing_or_report(id, window, cx) {
+                    let color = id
+                        .rsplit('-')
+                        .next()
+                        .and_then(scoria_markdown::HighlightColor::from_name);
+                    self.editor
+                        .update(cx, |e, cx| e.toggle_highlight(color, window, cx));
+                }
+            }
+            "editor:clear-formatting" => {
+                if self.editing_or_report(id, window, cx) {
+                    self.editor
+                        .update(cx, |e, cx| e.clear_formatting(window, cx));
+                }
+            }
+            "editor:insert-callout"
+            | "editor:insert-codeblock"
+            | "editor:insert-mathblock"
+            | "editor:insert-horizontal-rule"
+            | "editor:insert-tag"
+            | "editor:insert-footnote" => {
+                if self.editing_or_report(id, window, cx) {
+                    if let Some(kind) = BlockInsert::from_id(id) {
+                        self.editor
+                            .update(cx, |e, cx| e.insert_block(kind, window, cx));
                     }
                 }
+            }
+            // "Toggle heading" is a real palette entry whose check passes
+            // and which changes nothing: twelve line shapes, three ways of
+            // running it and ten presses in a row all came back
+            // byte-identical (Specification.md, "Observed editing command
+            // behavior"). Registering the id and doing nothing is parity;
+            // it is not a bug here.
+            "editor:set-heading" => {
+                self.editing_or_report(id, window, cx);
             }
             "editor:set-heading-0"
             | "editor:set-heading-1"

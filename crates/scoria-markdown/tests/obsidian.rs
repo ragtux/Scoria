@@ -159,6 +159,37 @@ fn highlight_strikethrough_and_math() {
     assert!(matches!(&doc.blocks[0].kind, BlockKind::Math { content } if content == "x\n"));
 }
 
+/// `editor:toggle-highlight-red` writes `==🔴word==`; the reader takes
+/// the emoji as the colour and does not show it (Specification.md,
+/// "Observed editing command behavior").
+#[test]
+fn a_colour_emoji_inside_a_highlight_is_the_colour() {
+    assert_eq!(
+        html("==\u{1f534}word== and ==\u{1f7e3}two words=="),
+        "<p><mark data-highlight=\"red\">word</mark> and <mark data-highlight=\"purple\">two words</mark></p>\n"
+    );
+    assert_eq!(
+        html("==plain=="),
+        "<p><mark data-highlight=\"\">plain</mark></p>\n"
+    );
+    // Anywhere but directly after the opening pair the emoji is text.
+    assert_eq!(
+        html("==a \u{1f534}b=="),
+        "<p><mark data-highlight=\"\">a \u{1f534}b</mark></p>\n"
+    );
+    let doc = parse("==\u{1f7e1}hi==");
+    let BlockKind::Paragraph { content } = &doc.blocks[0].kind else {
+        panic!("a paragraph");
+    };
+    let InlineKind::Highlight { color, children } = &content[0].kind else {
+        panic!("a highlight");
+    };
+    assert_eq!(*color, Some(scoria_markdown::HighlightColor::Yellow));
+    // The text node's span starts after the emoji.
+    assert_eq!(children[0].span, Span::new(6, 8));
+    assert!(matches!(&children[0].kind, InlineKind::Text(t) if t == "hi"));
+}
+
 #[test]
 fn comments() {
     assert_eq!(plain_html("a %%hidden%% b"), "<p>a  b</p>\n");

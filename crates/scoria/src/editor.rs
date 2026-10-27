@@ -49,8 +49,8 @@ use scoria_suggest::blocks::{self, IdInsertion, Placement};
 use scoria_suggest::{self as suggest, Accept, BlockId, Suggestion};
 use scoria_text::table::{self, TableCommand};
 use scoria_text::{
-    autopair, find, shifted, wrap, Cursor, Cursors, EditKind, LinePrefix, LinkSyntax, Sel,
-    TextBuffer,
+    autopair, find, shifted, wrap, BlockInsert, Cursor, Cursors, EditKind, LinePrefix, LinkSyntax,
+    Sel, TextBuffer,
 };
 use std::collections::{HashMap, HashSet};
 use std::ops::Range;
@@ -929,15 +929,47 @@ impl Editor {
         }
     }
 
-    /// `editor:toggle-checklist-status`: flips the checkbox on every
-    /// selected line that has one, writing the same bytes a click on the
-    /// rendered checkbox writes. False when no selected line has one.
-    pub fn toggle_checklist(&mut self, window: &mut Window, cx: &mut Context<Self>) -> bool {
-        if !self.buf.toggle_checklist() {
-            return false;
+    /// `editor:toggle-checklist-status` (Mod+L): a checkbox on every
+    /// selected line that has none, or the one it has flipped, writing
+    /// the same bytes a click on the rendered checkbox writes.
+    pub fn toggle_checklist(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if self.buf.toggle_checklist() {
+            self.after_edit(Some(window), cx);
         }
-        self.after_edit(Some(window), cx);
-        true
+    }
+
+    /// `editor:cycle-list-checklist`: bullet, `[ ]`, `[x]`, bullet.
+    pub fn cycle_checklist(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if self.buf.cycle_checklist() {
+            self.after_edit(Some(window), cx);
+        }
+    }
+
+    /// `editor:toggle-highlight-<colour>`: a highlight with its colour
+    /// emoji after the opening `==`.
+    pub fn toggle_highlight(
+        &mut self,
+        color: Option<scoria_markdown::HighlightColor>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if self.buf.toggle_wrap_colored("==", color) {
+            self.after_edit(Some(window), cx);
+        }
+    }
+
+    /// `editor:clear-formatting`: the markers inside the selection go.
+    pub fn clear_formatting(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if self.buf.clear_formatting() {
+            self.after_edit(Some(window), cx);
+        }
+    }
+
+    /// One of the six insert-block commands at the caret.
+    pub fn insert_block(&mut self, kind: BlockInsert, window: &mut Window, cx: &mut Context<Self>) {
+        if self.buf.insert_block(kind) {
+            self.after_edit(Some(window), cx);
+        }
     }
 
     /// `editor:set-heading-<n>`: rewrites the selected lines' `#`s.
@@ -989,7 +1021,8 @@ impl Editor {
             self.buf
                 .indent(self.use_tab, self.tab_size, self.smart_indent_list)
         } else {
-            self.buf.outdent(self.tab_size, self.smart_indent_list)
+            self.buf
+                .outdent(self.use_tab, self.tab_size, self.smart_indent_list)
         };
         if moved {
             self.after_edit(Some(window), cx);
@@ -1871,6 +1904,7 @@ impl Editor {
             self.buf.anchor = self.buf.head;
         }
         self.buf.marked = None;
+        self.buf.forget_planted();
         // A cursor move refreshes a popup that is open, and closes it once
         // the cursor has left the query.
         self.update_suggest(false, cx);
@@ -2130,6 +2164,10 @@ impl Editor {
         if self.suggest_step(-1, cx) {
             return;
         }
+        // Leaving the line forgets the closers auto-pairing planted on it:
+        // coming back and typing one writes it (Specification.md,
+        // "Observed auto-pair behavior").
+        self.buf.forget_planted();
         self.vertical(-1, false, window, cx);
     }
 
@@ -2137,6 +2175,7 @@ impl Editor {
         if self.suggest_step(1, cx) {
             return;
         }
+        self.buf.forget_planted();
         self.vertical(1, false, window, cx);
     }
 
@@ -2424,7 +2463,10 @@ impl Editor {
         if self.table_field.is_some() && self.step_table_cell(-1, 0, window, cx) {
             return;
         }
-        if self.buf.outdent(self.tab_size, self.smart_indent_list) {
+        if self
+            .buf
+            .outdent(self.use_tab, self.tab_size, self.smart_indent_list)
+        {
             self.after_edit(Some(window), cx);
         }
     }

@@ -2017,7 +2017,10 @@ impl<'a> Renderer<'a> {
             h.color = Some(t.text_muted);
         }
         if s.highlight {
-            h.background_color = Some(t.highlight_bg);
+            h.background_color = Some(match s.highlight_color {
+                Some(c) => t.highlight_color(c),
+                None => t.highlight_bg,
+            });
         }
         if s.code {
             h.background_color = Some(t.code_bg);

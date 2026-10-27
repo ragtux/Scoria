@@ -108,6 +108,25 @@ pub(crate) fn parse_inlines<'a>(cx: &InlineContext<'a, '_>, lines: &[Span]) -> V
     nodes
 }
 
+/// The colour emoji a highlight opens with, taken off its first text node:
+/// `==🔴word==` is a red highlight of `word`, and the emoji is not shown.
+fn take_highlight_color(children: &mut Vec<Inline<'_>>) -> Option<HighlightColor> {
+    let first = children.first_mut()?;
+    let InlineKind::Text(text) = &mut first.kind else {
+        return None;
+    };
+    let (color, len) = HighlightColor::leading(text)?;
+    match text {
+        Cow::Borrowed(t) => *t = &t[len..],
+        Cow::Owned(t) => t.drain(..len).for_each(drop),
+    }
+    first.span.start += len;
+    if text.is_empty() {
+        children.remove(0);
+    }
+    Some(color)
+}
+
 /// Joins adjacent text nodes so escapes and entities do not fragment runs.
 fn merge_text(nodes: &mut Vec<Inline<'_>>) {
     let mut i = 0;
@@ -116,7 +135,7 @@ fn merge_text(nodes: &mut Vec<Inline<'_>>) {
             InlineKind::Emphasis(c)
             | InlineKind::Strong(c)
             | InlineKind::Strikethrough(c)
-            | InlineKind::Highlight(c)
+            | InlineKind::Highlight { children: c, .. }
             | InlineKind::Link { children: c, .. }
             | InlineKind::Image { children: c, .. }
             | InlineKind::InlineFootnote(c) => merge_text(c),
@@ -673,11 +692,15 @@ impl<'a, 'o, 'c> Parser<'a, 'o, 'c> {
                         span: self.span(cs, ce),
                     };
                     // Wrap the nodes between the delimiters.
-                    let children: Vec<Inline<'a>> = self.nodes.drain(o_node + 1..c_node).collect();
+                    let mut children: Vec<Inline<'a>> =
+                        self.nodes.drain(o_node + 1..c_node).collect();
                     let span = self.span(oe, cs);
                     let kind = match (ch, use_count) {
                         (b'~', _) => InlineKind::Strikethrough(children),
-                        (b'=', _) => InlineKind::Highlight(children),
+                        (b'=', _) => {
+                            let color = take_highlight_color(&mut children);
+                            InlineKind::Highlight { color, children }
+                        }
                         (_, 2) => InlineKind::Strong(children),
                         _ => InlineKind::Emphasis(children),
                     };

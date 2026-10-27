@@ -466,13 +466,16 @@ impl<'r, 'a> Renderer<'r, 'a> {
             InlineKind::Emphasis(c) => self.wrap("em", c),
             InlineKind::Strong(c) => self.wrap("strong", c),
             InlineKind::Strikethrough(c) => self.wrap("del", c),
-            InlineKind::Highlight(c) => {
+            InlineKind::Highlight { color, children } => {
                 if self.obsidian() {
-                    self.out.push_str("<mark data-highlight=\"\">");
-                    self.inlines(c);
+                    self.out.push_str("<mark data-highlight=\"");
+                    self.out
+                        .push_str(color.map(HighlightColor::name).unwrap_or(""));
+                    self.out.push_str("\">");
+                    self.inlines(children);
                     self.out.push_str("</mark>");
                 } else {
-                    self.wrap("mark", c);
+                    self.wrap("mark", children);
                 }
             }
             InlineKind::Link {

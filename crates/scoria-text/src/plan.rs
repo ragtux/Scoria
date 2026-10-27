@@ -65,11 +65,15 @@ pub fn newline_plan(
 /// step of `unit` added after each line's quote markers, or one `tab_size`
 /// step removed, plus (with `renumber`) the new numbers of the ordered items
 /// the change unsettled, all in pre-edit coordinates for one undo step.
+// The two indent settings and the two switches are what the one command
+// takes; a struct for them would be read by exactly two callers.
+#[allow(clippy::too_many_arguments)]
 pub fn indent_plan(
     text: &str,
     line_starts: &[usize],
     lines: Range<usize>,
     unit: &str,
+    use_tab: bool,
     tab_size: u8,
     indent: bool,
     renumber: bool,
@@ -88,10 +92,10 @@ pub fn indent_plan(
             let at = line_starts[l] + lists::indent_point(lt);
             edits.push((at..at, unit.to_string()));
             deltas.insert(l, unit.len() as isize);
-        } else if let Some(r) = lists::outdent_range(lt, tab_size) {
+        } else if let Some((r, new)) = lists::outdent_edit(lt, use_tab, tab_size) {
             let start = line_starts[l];
-            edits.push((start + r.start..start + r.end, String::new()));
-            deltas.insert(l, -(r.len() as isize));
+            deltas.insert(l, new.len() as isize - r.len() as isize);
+            edits.push((start + r.start..start + r.end, new));
         }
     }
     if !renumber || edits.is_empty() {
@@ -115,10 +119,10 @@ pub fn indent_plan(
                     let at = lists::indent_point(lt);
                     format!("{}{}{}", &lt[..at], unit, &lt[at..])
                 }
-                Some(d) => {
-                    let n = (-*d) as usize;
-                    let r = lists::outdent_range(lt, tab_size).unwrap_or(0..0);
-                    format!("{}{}", &lt[..r.start], &lt[r.start + n..])
+                Some(_) => {
+                    let (r, new) =
+                        lists::outdent_edit(lt, use_tab, tab_size).unwrap_or((0..0, String::new()));
+                    format!("{}{}{}", &lt[..r.start], new, &lt[r.end..])
                 }
                 None => lt.to_string(),
             }
@@ -202,18 +206,18 @@ mod tests {
     #[test]
     fn tab_and_shift_tab_renumber_ordered_lists() {
         let text = "1. a\n2. b\n3. c\n";
-        let edits = indent_plan(text, &line_starts(text), 1..2, "\t", 4, true, true);
+        let edits = indent_plan(text, &line_starts(text), 1..2, "\t", true, 4, true, true);
         assert_eq!(apply_many(text, edits), "1. a\n\t1. b\n2. c\n");
         let text = "1. a\n\t1. b\n2. c\n";
-        let edits = indent_plan(text, &line_starts(text), 1..2, "", 4, false, true);
+        let edits = indent_plan(text, &line_starts(text), 1..2, "", true, 4, false, true);
         assert_eq!(apply_many(text, edits), "1. a\n2. b\n3. c\n");
         // Without smart lists only the indentation changes.
         let text = "1. a\n2. b\n3. c\n";
-        let edits = indent_plan(text, &line_starts(text), 1..2, "  ", 4, true, false);
+        let edits = indent_plan(text, &line_starts(text), 1..2, "  ", true, 4, true, false);
         assert_eq!(apply_many(text, edits), "1. a\n  2. b\n3. c\n");
         // A selection over two items indents both; numbers follow.
         let text = "1. a\n2. b\n3. c\n4. d\n";
-        let edits = indent_plan(text, &line_starts(text), 1..3, "\t", 4, true, true);
+        let edits = indent_plan(text, &line_starts(text), 1..3, "\t", true, 4, true, true);
         assert_eq!(apply_many(text, edits), "1. a\n\t1. b\n\t2. c\n2. d\n");
     }
 

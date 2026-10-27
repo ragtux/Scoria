@@ -6430,3 +6430,58 @@ KaTeX-compatible, so the syntax accepted is KaTeX's.
   `\newcommand` defined in one formula and used in another (KaTeX's macros
   are per formula), and AMS or physics extensions MathJax loads on demand.
   Each shows as an error, above.
+
+## What building the editing commands settled, 2026-10-26
+
+The commands were conformed to
+[[#Observed editing command behavior, Obsidian 1.14.5 (installer build 1.13.7)]]
+and the 2026-10-25 block of [[#Observed auto-pair behavior, Obsidian 1.14.4]];
+what follows is this build's own reading where the run did not reach.
+
+- **The cycle over mixed list lines.** Obsidian oscillates on a selection of
+  list lines that differ only in their checkbox. Scoria advances each line
+  one step on its own (`- a` / `- [ ] b` → `- [ ] a` / `- [x] b`), which
+  converges; the observed normalisation — a line that is not a list item
+  pulls every line back to a bullet — is kept as it is.
+- **Mod+L over a selection** follows the observed three rows; the inverting
+  third row is implemented as observed, since one press of it is what was
+  measured and a second press is the user's.
+- **The plain `editor:toggle-highlight` over a coloured highlight** takes the
+  whole highlight off, emoji included. OBSERVE: whether Obsidian strips it or
+  only drops the colour.
+- **A colour emoji in Live Preview** stays visible in the source text; the
+  reading view consumes it. OBSERVE: whether Obsidian's Live Preview hides
+  the emoji inside the rendered mark.
+- **The highlight washes** are `--color-<name>` at 0.3 alpha. Red was read
+  back; the other five use the same tokens the canvas presets use (and
+  `--color-blue`, `#027aff` dark / `#086ddd` light). OBSERVE: the five
+  computed values.
+- **The selection after a toggle.** One line keeps the selection on its text
+  (the toggle then undoes itself); several lines leave it over the whole
+  wrapped text, markers included, so that the second press finds a pair in
+  every line's part. OBSERVE: where Obsidian's selection lands after a
+  multi-line wrap.
+- **A bare caret on whitespace** gets an empty pair with the caret between
+  the halves; on a word it takes the word, as observed, and leaves the word
+  selected.
+- **`insert-horizontal-rule` at the start of a non-blank line** inserts
+  `\n\n---\n` at the caret like any other mid-line position, giving two blank
+  lines, the rule and the line. OBSERVE: ch 0 of a non-blank line.
+- **`insert-footnote` when the document already ends in blank lines** adds
+  only the newlines needed for one blank line before the definition.
+  OBSERVE: a document ending in `\n\n`.
+- **`clear-formatting` and line prefixes.** A line's `#`s, `> ` and list
+  marker go when the selection covers them from the line's start; a quoted
+  list item loses both. Indentation stays. A selection that starts inside the
+  line leaves its prefix.
+- **Skip-over's "leaving the line"** is a vertical move or a click; moving
+  within the line by any means keeps the planted closer, and any edit that
+  lands on the closer, or an undo, forgets it. A planted closer is also
+  forgotten lazily when the caret is found on another line at the next
+  keystroke, which covers moves the editor makes without a hook.
+- **Enter on an empty nested item** keeps the previous one-step outdent
+  (`lists::outdent_width`): the Shift+Tab rows did not probe Enter.
+- **Tab with `useTab: false`** inserts four spaces whatever `tabSize` says,
+  as the calibration row observed under `tabSize: 2`; the same unit serves a
+  plain line and a list item. OBSERVE: Tab on a plain line under
+  `useTab: false, tabSize: 2`.

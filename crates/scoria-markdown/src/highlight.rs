@@ -306,8 +306,8 @@ fn collect_inlines(inlines: &[Inline<'_>], out: &mut Vec<(Span, HighlightKind)>)
                 collect_inlines(c, out);
                 Some(HighlightKind::Strikethrough)
             }
-            InlineKind::Highlight(c) => {
-                collect_inlines(c, out);
+            InlineKind::Highlight { children, .. } => {
+                collect_inlines(children, out);
                 Some(HighlightKind::Highlight)
             }
             InlineKind::Link { kind, children, .. } => {

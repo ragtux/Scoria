@@ -8,6 +8,7 @@
 //! read the bytes without a window.
 
 use crate::lists::{self, Marker};
+use scoria_markdown::HighlightColor;
 use std::ops::Range;
 
 /// One line of `text`, without its newline.
@@ -50,12 +51,21 @@ fn marker_at(text: &str, at: usize, marker: &str) -> bool {
 /// What a formatting toggle does to one selection.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Toggle {
-    /// The marker is already there: strip these two ranges, the opener and
-    /// the closer.
+    /// The marker is already there: strip these two ranges, the opener
+    /// (with a highlight's colour emoji) and the closer.
     Strip(Range<usize>, Range<usize>),
     /// Wrap this range in the marker; empty for a bare caret, which then
     /// gets the pair with the caret between the halves.
     Wrap(Range<usize>),
+    /// A highlight is already there in another colour: replace this range
+    /// (the old emoji, or empty just after the opening `==`) with the new
+    /// one.
+    Recolor(Range<usize>, &'static str),
+}
+
+/// The colour emoji at `at`, if one of the six is there.
+fn color_at(text: &str, at: usize) -> Option<(HighlightColor, usize)> {
+    text.get(at..).and_then(HighlightColor::leading)
 }
 
 /// What `editor:toggle-bold` and the other wrapping toggles do to the
@@ -67,47 +77,445 @@ pub enum Toggle {
 /// same character, so italics inside `**bold**` adds a third `*` rather
 /// than eating one of the two that make the bold.
 pub fn toggle_wrap(text: &str, sel: Range<usize>, marker: &str, floor: usize) -> Toggle {
-    let m = marker.len();
-    let inner = sel.len() >= 2 * m
-        && marker_at(text, sel.start, marker)
-        && marker_at(text, sel.end - m, marker)
-        && (sel.len() == 2 * m || !marker_at(text, sel.start + m, marker));
-    if inner {
-        return Toggle::Strip(sel.start..sel.start + m, sel.end - m..sel.end);
-    }
-    let outer = sel.start >= floor + m
-        && marker_at(text, sel.start - m, marker)
-        && marker_at(text, sel.end, marker)
-        && !(sel.start >= 2 * m && marker_at(text, sel.start - 2 * m, marker))
-        && !marker_at(text, sel.end + m, marker);
-    if outer {
-        return Toggle::Strip(sel.start - m..sel.start, sel.end..sel.end + m);
-    }
-    Toggle::Wrap(sel)
+    toggle_wrap_colored(text, sel, marker, None, floor)
 }
 
-/// The three bytes `editor:toggle-checklist-status` writes on each of
-/// `lines` that already carries a checkbox: anything but a space becomes a
-/// space, as the click on a rendered checkbox does (Specification.md,
-/// "Observed task checkbox behavior"). Lines without a checkbox are left
-/// alone: what Obsidian does to those is unprobed.
+/// [`toggle_wrap`] for the highlight commands, which carry a colour: the
+/// six `editor:toggle-highlight-<colour>` commands write one emoji
+/// directly after the opening `==`. The same colour again removes the
+/// whole highlight, a different one replaces the emoji in place, and a
+/// colour over a plain `==word==` inserts it, whether the selection is the
+/// inner word or spans the marks. The plain toggle over a coloured
+/// highlight takes the highlight off, emoji included.
+pub fn toggle_wrap_colored(
+    text: &str,
+    sel: Range<usize>,
+    marker: &str,
+    color: Option<HighlightColor>,
+    floor: usize,
+) -> Toggle {
+    let m = marker.len();
+    let colored = marker == "==";
+    // How many bytes of colour emoji sit at `at`; none for the other
+    // markers, whose pairs carry nothing.
+    let emoji_len = |at: usize| -> usize {
+        if colored {
+            color_at(text, at).map_or(0, |(_, n)| n)
+        } else {
+            0
+        }
+    };
+    // `open` is the opener's range, emoji included; `close` the closer's.
+    let found: Option<(Range<usize>, Range<usize>)> = (|| {
+        // The markers inside the selection: `[==🔴word==]`.
+        if sel.len() >= 2 * m
+            && marker_at(text, sel.start, marker)
+            && marker_at(text, sel.end - m, marker)
+            && (sel.len() == 2 * m || !marker_at(text, sel.start + m, marker))
+        {
+            let e = emoji_len(sel.start + m);
+            if sel.start + m + e <= sel.end - m {
+                return Some((sel.start..sel.start + m + e, sel.end - m..sel.end));
+            }
+        }
+        // The markers just outside it: `==🔴[word]==` or `==[🔴word]==`.
+        if !marker_at(text, sel.end, marker) || marker_at(text, sel.end + m, marker) {
+            return None;
+        }
+        let start = if sel.is_empty() {
+            sel.start
+        } else {
+            sel.start + emoji_len(sel.start)
+        };
+        for pre in [0, 4] {
+            if pre > 0 && !colored {
+                break;
+            }
+            if start < floor + m + pre {
+                continue;
+            }
+            let open_start = start - m - pre;
+            if !marker_at(text, open_start, marker)
+                || (pre > 0 && emoji_len(open_start + m) != pre)
+                || (open_start >= m && marker_at(text, open_start - m, marker))
+            {
+                continue;
+            }
+            return Some((open_start..start, sel.end..sel.end + m));
+        }
+        None
+    })();
+    let Some((open, close)) = found else {
+        return Toggle::Wrap(sel);
+    };
+    let old = if colored {
+        color_at(text, open.start + m).map(|(c, _)| c)
+    } else {
+        None
+    };
+    match color {
+        Some(c) if old != Some(c) => Toggle::Recolor(open.start + m..open.end, c.emoji()),
+        _ => Toggle::Strip(open, close),
+    }
+}
+
+/// What a line is to the two checklist commands.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ListState {
+    /// Not a list item.
+    Plain,
+    /// A list item with no checkbox.
+    Bullet,
+    /// `[ ]`.
+    Open,
+    /// Any other status: `[x]`, `[X]`, `[?]`, which the commands all treat
+    /// as checked, as the rendered click does.
+    Checked,
+}
+
+fn list_state(lt: &str, p: &lists::Prefix) -> ListState {
+    match (&p.marker, &p.task) {
+        (None, _) => ListState::Plain,
+        (Some(_), None) => ListState::Bullet,
+        (Some(_), Some(t)) if lt.as_bytes()[t.start + 1] == b' ' => ListState::Open,
+        _ => ListState::Checked,
+    }
+}
+
+/// The edit that puts a checkbox on a line without one: `[ ] ` after the
+/// list marker's space, or `- [ ] ` where a marker would go — after the
+/// indentation and any `> `.
+fn add_checkbox(lt: &str, p: &lists::Prefix) -> (Range<usize>, String) {
+    match &p.marker {
+        Some(Marker::Bullet { range, .. }) | Some(Marker::Ordered { range, .. }) => {
+            let end = range.end;
+            if lt.as_bytes().get(end) == Some(&b' ') {
+                (end + 1..end + 1, "[ ] ".to_string())
+            } else {
+                (end..end, " [ ]".to_string())
+            }
+        }
+        None => (p.content..p.content, "- [ ] ".to_string()),
+    }
+}
+
+/// The edit that takes a line's checkbox off, the space after it too.
+fn remove_checkbox(p: &lists::Prefix) -> (Range<usize>, String) {
+    let t = p.task.clone().expect("the line has a checkbox");
+    (t, String::new())
+}
+
+/// The edit that writes `[x]` or `[ ]` over a line's checkbox.
+fn set_checkbox(p: &lists::Prefix, checked: bool) -> (Range<usize>, String) {
+    let t = p.task.clone().expect("the line has a checkbox");
+    let with = if checked { "[x]" } else { "[ ]" };
+    (t.start..t.start + 3, with.to_string())
+}
+
+/// What `editor:toggle-checklist-status` (Mod+L) writes on `lines`
+/// (Specification.md, "Observed editing command behavior"). One line
+/// gains `- [ ] ` when it has no checkbox — after a list marker, a `> `
+/// and leading whitespace — and flips the one it has otherwise, any
+/// status but a space counting as checked. Over a selection the decision
+/// is taken once, blank lines ignored: every line has a box, check them
+/// all unless all are checked; no line has one, add one to all; some do,
+/// invert each line's.
 pub fn checklist_plan(
     text: &str,
     line_starts: &[usize],
     lines: Range<usize>,
 ) -> Vec<(Range<usize>, String)> {
-    let mut edits = Vec::new();
-    for l in lines {
+    let at = |l: usize, (r, s): (Range<usize>, String)| {
+        let start = line_starts[l];
+        (start + r.start..start + r.end, s)
+    };
+    if lines.len() == 1 {
+        let l = lines.start;
         let lt = line_text(text, line_starts, l);
-        let Some(task) = lists::parse_prefix(lt).task else {
-            continue;
+        let p = lists::parse_prefix(lt);
+        let edit = match list_state(lt, &p) {
+            ListState::Plain | ListState::Bullet => add_checkbox(lt, &p),
+            ListState::Open => set_checkbox(&p, true),
+            ListState::Checked => set_checkbox(&p, false),
         };
-        let checked = lt.as_bytes()[task.start + 1] != b' ';
-        let with = if checked { "[ ]" } else { "[x]" };
-        let at = line_starts[l] + task.start;
-        edits.push((at..at + 3, with.to_string()));
+        return vec![at(l, edit)];
     }
-    edits
+    let touched: Vec<(usize, &str, lists::Prefix)> = lines
+        .filter_map(|l| {
+            let lt = line_text(text, line_starts, l);
+            (!lt.trim().is_empty()).then(|| (l, lt, lists::parse_prefix(lt)))
+        })
+        .collect();
+    let states: Vec<ListState> = touched.iter().map(|(_, lt, p)| list_state(lt, p)).collect();
+    let has_box = |s: &ListState| matches!(s, ListState::Open | ListState::Checked);
+    let all = states.iter().all(has_box);
+    let none = !states.iter().any(has_box);
+    let all_checked = states.iter().all(|s| *s == ListState::Checked);
+    touched
+        .iter()
+        .zip(&states)
+        .map(|((l, lt, p), state)| {
+            let edit = if all {
+                set_checkbox(p, !all_checked)
+            } else if none || !has_box(state) {
+                add_checkbox(lt, p)
+            } else {
+                remove_checkbox(p)
+            };
+            at(*l, edit)
+        })
+        .collect()
+}
+
+/// What `editor:cycle-list-checklist` writes on `lines`: bullet → `[ ]`
+/// → `[x]` → bullet, a line that is not a list item becoming a bullet
+/// first, the marker kept as written and a custom status discarded on the
+/// first press. Over a selection (blank lines ignored) a line that is not
+/// a list item pulls every line back to a bullet with it; otherwise each
+/// line advances one step. Obsidian's own output oscillates for a
+/// selection of list lines that differ only in their checkbox; this is
+/// the converging rule instead.
+pub fn cycle_checklist_plan(
+    text: &str,
+    line_starts: &[usize],
+    lines: Range<usize>,
+) -> Vec<(Range<usize>, String)> {
+    let at = |l: usize, (r, s): (Range<usize>, String)| {
+        let start = line_starts[l];
+        (start + r.start..start + r.end, s)
+    };
+    let single = lines.len() == 1;
+    let touched: Vec<(usize, &str, lists::Prefix)> = lines
+        .filter_map(|l| {
+            let lt = line_text(text, line_starts, l);
+            (single || !lt.trim().is_empty()).then(|| (l, lt, lists::parse_prefix(lt)))
+        })
+        .collect();
+    let states: Vec<ListState> = touched.iter().map(|(_, lt, p)| list_state(lt, p)).collect();
+    let normalise = !single && states.contains(&ListState::Plain);
+    touched
+        .iter()
+        .zip(&states)
+        .filter_map(|((l, lt, p), state)| {
+            let edit = match (normalise, state) {
+                (_, ListState::Plain) => (p.content..p.content, "- ".to_string()),
+                (true, ListState::Bullet) => return None,
+                (true, _) => remove_checkbox(p),
+                (false, ListState::Bullet) => add_checkbox(lt, p),
+                (false, ListState::Open) => set_checkbox(p, true),
+                (false, ListState::Checked) => remove_checkbox(p),
+            };
+            Some(at(*l, edit))
+        })
+        .collect()
+}
+
+/// The six insert-block commands.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BlockInsert {
+    /// `editor:insert-callout`.
+    Callout,
+    /// `editor:insert-codeblock`.
+    CodeBlock,
+    /// `editor:insert-mathblock`.
+    MathBlock,
+    /// `editor:insert-horizontal-rule`.
+    HorizontalRule,
+    /// `editor:insert-tag`: a bare `#`, no suggester.
+    Tag,
+    /// `editor:insert-footnote`.
+    Footnote,
+}
+
+impl BlockInsert {
+    pub fn from_id(id: &str) -> Option<BlockInsert> {
+        Some(match id {
+            "editor:insert-callout" => BlockInsert::Callout,
+            "editor:insert-codeblock" => BlockInsert::CodeBlock,
+            "editor:insert-mathblock" => BlockInsert::MathBlock,
+            "editor:insert-horizontal-rule" => BlockInsert::HorizontalRule,
+            "editor:insert-tag" => BlockInsert::Tag,
+            "editor:insert-footnote" => BlockInsert::Footnote,
+            _ => return None,
+        })
+    }
+}
+
+/// The number `editor:insert-footnote` uses: the highest numeric label in
+/// the document plus one, a named label not taking a number.
+pub fn next_footnote_number(text: &str) -> u64 {
+    let re = regex::Regex::new(r"\[\^(\d+)\]").expect("a valid pattern");
+    re.captures_iter(text)
+        .filter_map(|c| c[1].parse::<u64>().ok())
+        .max()
+        .unwrap_or(0)
+        + 1
+}
+
+/// What one of the insert-block commands writes at `caret`, and the
+/// selection it leaves, in post-edit coordinates. The selection is
+/// ignored by all six: the caret's line is what they act on. All but
+/// `insert-callout` leave a bare caret.
+pub fn block_insert_plan(
+    text: &str,
+    line_starts: &[usize],
+    caret: usize,
+    kind: BlockInsert,
+) -> (Vec<(Range<usize>, String)>, Range<usize>) {
+    let line = line_starts.partition_point(|&s| s <= caret) - 1;
+    let lr = line_starts[line]..line_starts.get(line + 1).map_or(text.len(), |n| n - 1);
+    let lt = &text[lr.clone()];
+    let blank = lt.trim().is_empty();
+    match kind {
+        BlockInsert::Callout => {
+            let (new, note) = if blank {
+                (
+                    "\n> [!NOTE] Title\n> Contents\n".to_string(),
+                    lr.start + 1 + 4,
+                )
+            } else {
+                (format!("> [!NOTE]\n> {lt}"), lr.start + 4)
+            };
+            (vec![(lr, new)], note..note + 4)
+        }
+        BlockInsert::CodeBlock | BlockInsert::MathBlock => {
+            let fence = if kind == BlockInsert::CodeBlock {
+                "```"
+            } else {
+                "$$"
+            };
+            let (new, at) = if blank {
+                (format!("{fence}\n\n{fence}"), lr.start + fence.len() + 1)
+            } else {
+                (format!("{fence}\n{lt}\n{fence}"), caret + fence.len() + 1)
+            };
+            (vec![(lr, new)], at..at)
+        }
+        BlockInsert::HorizontalRule => {
+            let new = if blank { "\n---\n" } else { "\n\n---\n" };
+            let at = caret + new.len();
+            (vec![(caret..caret, new.to_string())], at..at)
+        }
+        BlockInsert::Tag => (vec![(caret..caret, "#".to_string())], caret + 1..caret + 1),
+        BlockInsert::Footnote => {
+            let n = next_footnote_number(text);
+            let reference = format!("[^{n}]");
+            let trailing = text.len() - text.trim_end_matches('\n').len();
+            let definition = format!("{}[^{n}]: \n", "\n".repeat(2usize.saturating_sub(trailing)));
+            let at = caret + reference.len();
+            // At the very end the two insertions are one, so they cannot
+            // land in the wrong order.
+            let edits = if caret == text.len() {
+                vec![(caret..caret, format!("{reference}{definition}"))]
+            } else {
+                vec![
+                    (caret..caret, reference),
+                    (text.len()..text.len(), definition),
+                ]
+            };
+            (edits, at..at)
+        }
+    }
+}
+
+/// What `editor:clear-formatting` removes from `sel`: the markers of
+/// emphasis, strong, strikethrough, highlight (colour emoji included),
+/// inline code and inline math that lie inside the selection, the `#` of
+/// a tag, and the `#`s, `> ` and list marker of a line whose prefix the
+/// selection covers. Links are not formatting and are left alone. Empty
+/// without a selection.
+pub fn clear_formatting_plan(
+    text: &str,
+    line_starts: &[usize],
+    sel: Range<usize>,
+) -> Vec<(Range<usize>, String)> {
+    use scoria_markdown::{walk_blocks, walk_inlines, BlockKind, InlineKind};
+    if sel.is_empty() {
+        return Vec::new();
+    }
+    let mut cuts: Vec<Range<usize>> = Vec::new();
+    let mut cut = |r: Range<usize>| {
+        if r.start >= sel.start && r.end <= sel.end && !r.is_empty() {
+            cuts.push(r);
+        }
+    };
+    let doc = scoria_markdown::parse(text);
+    let mut inline_lists: Vec<&[scoria_markdown::Inline<'_>]> = Vec::new();
+    walk_blocks(&doc.blocks, &mut |b| match &b.kind {
+        BlockKind::Paragraph { content } | BlockKind::Heading { content, .. } => {
+            inline_lists.push(content)
+        }
+        BlockKind::Callout { title, .. } => inline_lists.push(title),
+        BlockKind::Table { header, rows, .. } => {
+            for c in header.iter().chain(rows.iter().flatten()) {
+                inline_lists.push(&c.content);
+            }
+        }
+        _ => {}
+    });
+    for inlines in inline_lists {
+        walk_inlines(inlines, &mut |i| {
+            let (s, e) = (i.span.start, i.span.end);
+            let run = |at: usize, ch: u8| text[at..].bytes().take_while(|&b| b == ch).count();
+            match &i.kind {
+                InlineKind::Emphasis(_) => {
+                    cut(s..s + 1);
+                    cut(e - 1..e);
+                }
+                InlineKind::Strong(_) | InlineKind::Strikethrough(_) => {
+                    cut(s..s + 2);
+                    cut(e - 2..e);
+                }
+                InlineKind::Highlight { .. } => {
+                    let emoji = color_at(text, s + 2).map_or(0, |(_, n)| n);
+                    cut(s..s + 2 + emoji);
+                    cut(e - 2..e);
+                }
+                InlineKind::Code(_) => {
+                    let n = run(s, b'`');
+                    cut(s..s + n);
+                    cut(e - n..e);
+                }
+                InlineKind::Math { display, .. } => {
+                    let n = if *display { 2 } else { 1 };
+                    cut(s..s + n);
+                    cut(e - n..e);
+                }
+                InlineKind::Tag(_) => cut(s..s + 1),
+                _ => {}
+            }
+        });
+    }
+    // The prefix of each line the selection covers from its start.
+    let first = line_starts.partition_point(|&s| s <= sel.start) - 1;
+    let last = line_starts.partition_point(|&s| s < sel.end).max(first + 1) - 1;
+    for l in first..=last {
+        let start = line_starts[l];
+        if start < sel.start {
+            continue;
+        }
+        let lt = line_text(text, line_starts, l);
+        let p = lists::parse_prefix(lt);
+        let mut end = p.quotes.end;
+        if let Some(span) = marker_span(lt, &p) {
+            end = span.end;
+        }
+        if let Some(t) = &p.task {
+            end = t.end;
+        }
+        let (heading, _) = heading_at(&lt[end..]);
+        end += heading.end;
+        if start + end <= sel.end {
+            cuts.push(start + p.indent.start..start + end);
+            // The indentation is kept; only what follows it goes.
+            if let Some(last) = cuts.last_mut() {
+                last.start = start + p.quotes.start.min(end);
+            }
+        }
+    }
+    cuts.sort_by_key(|r| r.start);
+    cuts.dedup();
+    cuts.into_iter().map(|r| (r, String::new())).collect()
 }
 
 /// Where a heading's `#`s sit on `line`: after the indentation and any
@@ -424,14 +832,223 @@ mod tests {
         assert_eq!(toggle_wrap(text, 3..4, "*", 3), Toggle::Wrap(3..4));
     }
 
+    /// Mod+L on one line: the probe's table (Specification.md, "Observed
+    /// editing command behavior").
     #[test]
-    fn checkbox_flips_to_the_two_observed_states() {
-        let text = "- [ ] a\n- [x] b\n- [?] c\n- plain\ntext\n";
-        let s = starts(text);
-        let edits = checklist_plan(text, &s, 0..5);
+    fn mod_l_adds_a_checkbox_or_flips_the_one_there() {
+        let one = |line: &str| {
+            let text = format!("{line}\n");
+            let s = starts(&text);
+            let out = apply(&text, checklist_plan(&text, &s, 0..1));
+            out.trim_end_matches('\n').to_string()
+        };
+        assert_eq!(one("plain text"), "- [ ] plain text");
+        assert_eq!(one("- bullet"), "- [ ] bullet");
+        assert_eq!(one("1. ordered"), "1. [ ] ordered");
+        assert_eq!(one("> quoted"), "> - [ ] quoted");
+        assert_eq!(one("# heading"), "- [ ] # heading");
+        assert_eq!(one("    indented"), "    - [ ] indented");
+        assert_eq!(one(""), "- [ ] ");
+        assert_eq!(one("- [ ] open"), "- [x] open");
+        assert_eq!(one("- [x] done"), "- [ ] done");
+        assert_eq!(one("- [?] q"), "- [ ] q");
+        assert_eq!(one("- [-] dash"), "- [ ] dash");
+        assert_eq!(one("* star"), "* [ ] star");
+    }
+
+    /// Mod+L over a selection decides once, blank lines ignored.
+    #[test]
+    fn mod_l_over_a_selection_decides_for_the_whole_of_it() {
+        let all = |text: &str| {
+            let s = starts(text);
+            apply(text, checklist_plan(text, &s, 0..s.len() - 1))
+        };
+        // Every line has a box: check all unless all are checked.
+        assert_eq!(all("- [ ] a\n- [x] b\n"), "- [x] a\n- [x] b\n");
+        assert_eq!(all("- [x] a\n- [x] b\n"), "- [ ] a\n- [ ] b\n");
+        assert_eq!(all("- [ ] a\n\n- [ ] b\n"), "- [x] a\n\n- [x] b\n");
+        // No line has one: add one to all.
+        assert_eq!(all("- a\n- b\n"), "- [ ] a\n- [ ] b\n");
+        assert_eq!(all("a\nb\n"), "- [ ] a\n- [ ] b\n");
+        // Some do: invert each line's.
+        assert_eq!(all("- [ ] a\n- b\n"), "- a\n- [ ] b\n");
+    }
+
+    /// The cycle on one line, and the normalising first press over a
+    /// selection that holds a line that is not a list item.
+    #[test]
+    fn the_cycle_goes_bullet_box_checked_bullet() {
+        let cycle = |line: &str, presses: usize| {
+            let mut text = format!("{line}\n");
+            for _ in 0..presses {
+                let s = starts(&text);
+                text = apply(&text, cycle_checklist_plan(&text, &s, 0..1));
+            }
+            text.trim_end_matches('\n').to_string()
+        };
+        for (start, first, second, third) in [
+            (
+                "plain text",
+                "- plain text",
+                "- [ ] plain text",
+                "- [x] plain text",
+            ),
+            ("- bullet", "- [ ] bullet", "- [x] bullet", "- bullet"),
+            ("- [ ] open", "- [x] open", "- open", "- [ ] open"),
+            ("- [x] done", "- done", "- [ ] done", "- [x] done"),
+            ("- [?] q", "- q", "- [ ] q", "- [x] q"),
+            ("> quoted", "> - quoted", "> - [ ] quoted", "> - [x] quoted"),
+            ("", "- ", "- [ ] ", "- [x] "),
+            ("* star", "* [ ] star", "* [x] star", "* star"),
+            (
+                "1. ordered",
+                "1. [ ] ordered",
+                "1. [x] ordered",
+                "1. ordered",
+            ),
+            ("\t- two", "\t- [ ] two", "\t- [x] two", "\t- two"),
+        ] {
+            assert_eq!(cycle(start, 1), first, "{start:?} once");
+            assert_eq!(cycle(start, 2), second, "{start:?} twice");
+            assert_eq!(cycle(start, 3), third, "{start:?} three times");
+        }
+        let all = |text: &str| {
+            let s = starts(text);
+            apply(text, cycle_checklist_plan(text, &s, 0..s.len() - 1))
+        };
+        assert_eq!(all("a\nb\n"), "- a\n- b\n");
+        assert_eq!(all("- a\n- b\n"), "- [ ] a\n- [ ] b\n");
+        assert_eq!(all("a\n- b\n"), "- a\n- b\n");
+        assert_eq!(all("a\n- [ ] b\n"), "- a\n- b\n");
+        assert_eq!(all("a\n- b\n- [ ] c\n"), "- a\n- b\n- c\n");
+        // Scoria's converging rule where Obsidian oscillates: each list
+        // line advances on its own.
+        assert_eq!(all("- a\n- [ ] b\n"), "- [ ] a\n- [x] b\n");
+        assert_eq!(all("- a\n\n- [x] b\n"), "- [ ] a\n\n- b\n");
+    }
+
+    /// The six insert-block commands, on a blank line and a non-blank one.
+    #[test]
+    fn the_insert_block_commands_write_their_observed_shapes() {
+        let run = |text: &str, caret: usize, kind: BlockInsert| {
+            let s = starts(text);
+            let (edits, sel) = block_insert_plan(text, &s, caret, kind);
+            (apply(text, edits), sel)
+        };
+        // Callout.
+        let (out, sel) = run("", 0, BlockInsert::Callout);
+        assert_eq!(out, "\n> [!NOTE] Title\n> Contents\n");
+        assert_eq!(&out[sel.clone()], "NOTE");
+        assert_eq!(sel, 5..9);
+        let (out, sel) = run("alpha beta\n", 3, BlockInsert::Callout);
+        assert_eq!(out, "> [!NOTE]\n> alpha beta\n");
+        assert_eq!(sel, 4..8);
+        // Code block and math block.
+        let (out, sel) = run("\n", 0, BlockInsert::CodeBlock);
+        assert_eq!(out, "```\n\n```\n");
+        assert_eq!(sel, 4..4);
+        let (out, sel) = run("hello world\n", 5, BlockInsert::CodeBlock);
+        assert_eq!(out, "```\nhello world\n```\n");
+        assert_eq!(sel, 9..9);
+        let (out, sel) = run("x\n", 1, BlockInsert::MathBlock);
+        assert_eq!(out, "$$\nx\n$$\n");
+        assert_eq!(sel, 4..4);
+        // Horizontal rule.
+        let (out, sel) = run("", 0, BlockInsert::HorizontalRule);
+        assert_eq!(out, "\n---\n");
+        assert_eq!(sel, 5..5);
+        let (out, sel) = run("hello world", 11, BlockInsert::HorizontalRule);
+        assert_eq!(out, "hello world\n\n---\n");
+        assert_eq!(sel, 17..17);
+        let (out, _) = run("hello world", 5, BlockInsert::HorizontalRule);
+        assert_eq!(out, "hello\n\n---\n world");
+        // Tag.
+        let (out, sel) = run("ab", 1, BlockInsert::Tag);
+        assert_eq!(out, "a#b");
+        assert_eq!(sel, 2..2);
+        // Footnote: max plus one, the definition at the very end.
+        let (out, sel) = run("body text", 9, BlockInsert::Footnote);
+        assert_eq!(out, "body text[^1]\n\n[^1]: \n");
+        assert_eq!(sel, 13..13);
+        let (out, _) = run("a[^2] b\n\n[^2]: two\n", 7, BlockInsert::Footnote);
+        assert_eq!(out, "a[^2] b[^3]\n\n[^2]: two\n\n[^3]: \n");
+        let (out, _) = run("a[^note] b\n\n[^note]: named\n", 10, BlockInsert::Footnote);
+        assert!(out.starts_with("a[^note] b[^1]\n"));
+        let (out, _) = run("# Head\npara one\npara two\n", 11, BlockInsert::Footnote);
+        assert_eq!(out, "# Head\npara[^1] one\npara two\n\n[^1]: \n");
+    }
+
+    /// `editor:clear-formatting`: the probe's table.
+    #[test]
+    fn clear_formatting_strips_markers_and_prefixes_but_not_links() {
+        let clear = |text: &str, sel: Range<usize>| {
+            let s = starts(text);
+            apply(text, clear_formatting_plan(text, &s, sel))
+        };
+        let whole = |text: &str| clear(text, 0..text.len());
+        assert_eq!(whole("**bold _italic_ text**"), "bold italic text");
         assert_eq!(
-            apply(text, edits),
-            "- [x] a\n- [ ] b\n- [ ] c\n- plain\ntext\n"
+            clear("**bold _italic_ text**", 7..16),
+            "**bold italic text**"
+        );
+        assert_eq!(whole("**==both==** tail"), "both tail");
+        assert_eq!(whole("~~gone~~ and `code`"), "gone and code");
+        assert_eq!(whole("## Heading text"), "Heading text");
+        assert_eq!(whole("> quoted text"), "quoted text");
+        assert_eq!(whole("- **bold** item"), "bold item");
+        assert_eq!(whole("$x^2$ #tag"), "x^2 tag");
+        assert_eq!(whole("**one**\n_two_\n==three=="), "one\ntwo\nthree");
+        assert_eq!(whole("see [[Other|alias]] end"), "see [[Other|alias]] end");
+        assert_eq!(whole("nothing to clear"), "nothing to clear");
+        assert_eq!(whole("==\u{1f534}red== `x`"), "red x");
+        // A bare caret changes nothing.
+        assert_eq!(clear("**bold**", 3..3), "**bold**");
+    }
+
+    /// The highlight colours: a colour wraps with its emoji, the same
+    /// colour again strips the whole highlight, another replaces the
+    /// emoji, and a colour over a plain highlight inserts one.
+    #[test]
+    fn highlight_colours_write_an_emoji_after_the_opening_pair() {
+        use HighlightColor::{Blue, Red};
+        let red = Some(Red);
+        assert_eq!(
+            toggle_wrap_colored("word", 0..4, "==", red, 0),
+            Toggle::Wrap(0..4)
+        );
+        let text = "==\u{1f534}word==";
+        // The same colour, inner word or the whole span: strip.
+        assert_eq!(
+            toggle_wrap_colored(text, 6..10, "==", red, 0),
+            Toggle::Strip(0..6, 10..12)
+        );
+        assert_eq!(
+            toggle_wrap_colored(text, 0..12, "==", red, 0),
+            Toggle::Strip(0..6, 10..12)
+        );
+        // A selection that starts on the emoji is the inner text too.
+        assert_eq!(
+            toggle_wrap_colored(text, 2..10, "==", red, 0),
+            Toggle::Strip(0..6, 10..12)
+        );
+        // Another colour replaces the emoji in place.
+        assert_eq!(
+            toggle_wrap_colored(text, 6..10, "==", Some(Blue), 0),
+            Toggle::Recolor(2..6, Blue.emoji())
+        );
+        // A colour over a plain highlight inserts the emoji.
+        assert_eq!(
+            toggle_wrap_colored("==word==", 2..6, "==", red, 0),
+            Toggle::Recolor(2..2, Red.emoji())
+        );
+        assert_eq!(
+            toggle_wrap_colored("==word==", 0..8, "==", red, 0),
+            Toggle::Recolor(2..2, Red.emoji())
+        );
+        // The plain toggle takes a coloured highlight off whole.
+        assert_eq!(
+            toggle_wrap_colored(text, 6..10, "==", None, 0),
+            Toggle::Strip(0..6, 10..12)
         );
     }
 
