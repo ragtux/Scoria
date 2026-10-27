@@ -18,6 +18,7 @@ mod control;
 mod copy_results;
 mod editor;
 mod explorer;
+mod fold;
 mod graph;
 mod help;
 mod math;

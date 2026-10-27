@@ -74,6 +74,21 @@ pub struct DisplayLine {
 pub type MathPlaceholder<'a> = dyn Fn(&str, bool) -> Option<String> + 'a;
 
 impl DisplayLine {
+    /// The `…` a folded line shows after its text, Obsidian's
+    /// `cm-foldPlaceholder`: display text only, mapping to the end of the
+    /// source line, so a click on it lands after the heading.
+    pub fn with_fold_placeholder(mut self, source_len: usize) -> DisplayLine {
+        let display = self.text.len();
+        self.text.push('\u{2026}');
+        self.pieces.push(Piece::Sub {
+            display,
+            source: source_len..source_len,
+            len: '\u{2026}'.len_utf8(),
+            kind: HighlightKind::Comment,
+        });
+        self
+    }
+
     /// The source line unchanged (source mode, or nothing to hide).
     pub fn verbatim(text: &str, scale: f32, decor: Decor) -> DisplayLine {
         DisplayLine {

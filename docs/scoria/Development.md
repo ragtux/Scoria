@@ -306,6 +306,7 @@ of mixed use in both apps. The gate run opened on 2026-10-18, see
 | Tab groups | done: Split right, Split down, the four focus commands, draggable dividers and `workspace.json`'s `main` tree, see [[#Tab groups, 2026-10-20]]; tabs drag between groups and onto split edges, see [[#Dragging tabs, 2026-10-21]]; the strip's hover is Obsidian's inner box, see [[#Tab hover, 2026-10-22]] |
 | Bookmarks | done: the pane, the seven commands and `bookmarks.json` in Obsidian's bytes, see [[#Bookmarks, 2026-10-20]] |
 | Files header | done: New note, New folder, the six sort orders, Auto-reveal current file and Expand all / Collapse all, see [[#Files header, 2026-10-21]]; the tree takes the keyboard, see [[#Explorer keyboard, 2026-10-21]] |
+| Folding | done: headings and list parents fold in Live Preview and source mode, headings collapse in the reading view, the five `editor:*fold*` commands run, and the record lives outside the vault, see [[#Folding, 2026-10-26]] |
 | Editing commands | done: the insert-block commands, the checklist cycle, Mod+L on a line without a box, the six highlight colours, Clear formatting, per-line inline toggles, the one auto-pair rule and Shift+Tab's column arithmetic, all to the 2026-10-25 probes, see [[#The settled editing commands, 2026-10-26]] |
 | The gate itself | open: the harness passes on the real vault, the week of mixed use has not run, see [[#The gate run opens, 2026-10-18]] |
 
@@ -324,6 +325,67 @@ uses behave as Obsidian's do.
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | not started |
+
+### Folding, 2026-10-26
+
+Four backlog entries said the same thing from four sides: no heading or list
+folding in the editor, no heading folds in the reading view, `foldHeading`
+with no consumer, and `editor:toggle-fold-properties` a no-op from a preview
+leaf. All four are closed, to
+[[Specification#Observed heading fold behavior, Obsidian 1.14.4]] and its
+2026-10-25 pass; the extents in both tables are unit tests in
+`crates/scoria/src/fold.rs`, and the commands, the hover indicators, the
+reading-view chevron, the mode-switch hand-over and the relaunch were driven
+through the release binary on the probe's own note.
+
+- **`fold.rs`** holds the model: `foldables` walks the one parse for the
+  lines that fold — top-level headings through the line before the next of
+  the same or a higher level, trailing blanks included and the last one to
+  the end of the file; list items with lines under them, the blank line
+  after excluded; nothing in a blockquote or callout, no setext underline,
+  no heading on an unterminated last line. A fold is remembered by a
+  `FoldKey` (kind, text, which of the lines with that text), resolved
+  against the foldables after every parse: an edit above a heading moves
+  its fold with it, an edit to the heading's text re-keys it by line, a
+  heading that goes takes its fold away. `fold-more` and `fold-less` walk
+  outward and back, as observed.
+- **The editor** keeps `folds`, the resolved `hidden` runs and the
+  foldables from each parse. Hidden lines take no height, prepaint steps
+  over them, a vertical move passes them, and the folded line shows `…`
+  (a display-only piece of the `DisplayLine`) in Live Preview and source
+  mode alike. The indicator is a chevron 15 px left of a heading line and
+  10 px left of a list line, shown on hover and always while folded; a
+  mouse-down on it toggles. A fold command leaves the caret where it is,
+  as CodeMirror does, so `fold-less` from inside a folded section still
+  finds it; a caret that *arrives* in a fold — a link, a search hit, an
+  outline row, an edit — opens it. Only the parse of the current text
+  settles the folds: a stale parse's foldables would drop them.
+- **The reading view** collapses a heading's section — the blocks after it
+  to the next heading of the same or a higher level return empty, so they
+  are absent rather than hidden — behind Obsidian's
+  `heading-collapse-indicator`: a chevron 28 px into the left margin,
+  revealed on hover, that only its own click toggles; the heading's text
+  and the space beside it do nothing, as observed. The heading is drawn by
+  the view itself so its margins sit outside the box the chevron is placed
+  in, and the box reaches into the margin so hovering the chevron counts.
+  List folds do not collapse anything here; they ride along in the key set.
+- **The two views share one set.** A mode switch hands the keys and the
+  properties fold across, so the editor's fold collapses the same section
+  in reading view and a section collapsed there is folded on the way back.
+- **The record** is Obsidian's `{"folds":[{"from","to"}],"lines"}`, per
+  note, in `note-fold/<vault id>.json` under Scoria's configuration folder
+  (`~/.config/scoria`, where `scoria.json` lives) and never in the vault.
+  It is written on leaving a note and on quit, read as a note opens, and the
+  editor re-derives each `from` line's extent from the heading — a stored
+  `to` is advisory, as observed. A rename carries the record with the
+  note. `{0,0}` is the properties fold, kept and restored with the rest.
+- **`foldHeading` and `foldIndent`** gate the two kinds at parse time; with
+  `foldHeading` off the reading view draws no chevron.
+- **`editor:toggle-fold-properties`** from a preview leaf now folds the
+  reading view's own properties block.
+
+What this build decided on its own is listed in
+[[Specification#What building folding settled, 2026-10-26]].
 
 ### The settled editing commands, 2026-10-26
 

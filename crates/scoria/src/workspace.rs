@@ -18,6 +18,7 @@ use crate::chooser::{Chooser, ChooserEvent, Row as ChooserRow};
 use crate::copy_results::{CopyResults, CopyResultsEvent};
 use crate::editor::{Editor, EditorEvent};
 use crate::explorer::{display_name, kind_name, ExplorerEvent, FileExplorer, FileTree, SortOrder};
+use crate::fold;
 use crate::graph::{GraphEvent, GraphView};
 use crate::help::HelpWindow;
 use crate::mentions::{Finder, Name};
@@ -125,6 +126,9 @@ pub const EDITOR_ONLY: &[&str] = &[
     "editor:clear-formatting",
     "editor:cycle-list-checklist",
     "editor:delete-paragraph",
+    "editor:fold-all",
+    "editor:fold-less",
+    "editor:fold-more",
     "editor:follow-link",
     "editor:indent-list",
     "editor:insert-callout",
@@ -155,6 +159,7 @@ pub const EDITOR_ONLY: &[&str] = &[
     "editor:toggle-checklist-status",
     "editor:toggle-code",
     "editor:toggle-comments",
+    "editor:toggle-fold",
     "editor:toggle-highlight",
     "editor:toggle-highlight-blue",
     "editor:toggle-highlight-green",
@@ -166,6 +171,7 @@ pub const EDITOR_ONLY: &[&str] = &[
     "editor:toggle-italics",
     "editor:toggle-numbered-list",
     "editor:toggle-strikethrough",
+    "editor:unfold-all",
     "editor:unindent-list",
     "insert-current-date",
     "insert-current-time",
@@ -221,6 +227,11 @@ pub const RUNNABLE: &[&str] = &[
     "editor:insert-tag",
     "editor:insert-footnote",
     "editor:set-heading",
+    "editor:toggle-fold",
+    "editor:fold-all",
+    "editor:unfold-all",
+    "editor:fold-more",
+    "editor:fold-less",
     "editor:set-heading-0",
     "editor:set-heading-1",
     "editor:set-heading-2",
@@ -2318,6 +2329,9 @@ pub struct Workspace {
     modal: Modal,
     /// Command ids run this session, most recent first.
     recent_commands: Vec<String>,
+    /// The notes' fold records, kept outside the vault; opened for the
+    /// vault's root the first time a note needs one.
+    fold_store: Option<(PathBuf, fold::FoldStore)>,
     left_visible: bool,
     right_visible: bool,
     /// Each sidebar's width in logical pixels, `workspace.json`'s
@@ -2815,6 +2829,7 @@ impl Workspace {
             pending: None,
             modal: Modal::None,
             recent_commands: Vec::new(),
+            fold_store: None,
             left_visible: true,
             right_visible: true,
             left_width: SIDEBAR_WIDTH as f64,
@@ -3000,6 +3015,7 @@ impl Workspace {
                 r.set_readable_line_length(readable);
                 r.set_property_types(state.property_types().clone());
                 r.set_properties_in_document(properties);
+                r.set_fold_headings(state.app().fold_heading.unwrap_or(true));
                 cx.notify();
             });
             group.editor.update(cx, |e, cx| {
@@ -3945,7 +3961,36 @@ impl Workspace {
             }
             "editor:toggle-fold-properties" => {
                 if self.note_has_keys(window, cx) {
-                    self.editor.update(cx, |e, cx| e.toggle_properties_fold(cx));
+                    if self.mode.is_editing() {
+                        self.editor.update(cx, |e, cx| e.toggle_properties_fold(cx));
+                    } else {
+                        self.reading
+                            .update(cx, |r, cx| r.toggle_properties_fold(cx));
+                    }
+                }
+            }
+            // The five fold commands pass their check only with a markdown
+            // view focused in an editing mode, as observed; none has a
+            // default hotkey.
+            "editor:toggle-fold" => {
+                if self.editing_or_report(id, window, cx) {
+                    self.editor.update(cx, |e, cx| e.toggle_fold(cx));
+                }
+            }
+            "editor:fold-all" => {
+                if self.editing_or_report(id, window, cx) {
+                    self.editor.update(cx, |e, cx| e.fold_all(cx));
+                }
+            }
+            "editor:unfold-all" => {
+                if self.editing_or_report(id, window, cx) {
+                    self.editor.update(cx, |e, cx| e.unfold_all(cx));
+                }
+            }
+            "editor:fold-more" | "editor:fold-less" => {
+                if self.editing_or_report(id, window, cx) {
+                    let more = id == "editor:fold-more";
+                    self.editor.update(cx, |e, cx| e.fold_step(more, cx));
                 }
             }
             "editor:insert-table" => {
@@ -4595,6 +4640,12 @@ impl Workspace {
                 }
             }
         }
+        // The fold is shared: the editor's fold collapses the same section
+        // in reading view, and a section collapsed there is folded on the
+        // way back.
+        if mode.is_editing() != self.mode.is_editing() {
+            self.sync_folds(mode.is_editing(), cx);
+        }
         self.mode = mode;
         if mode.is_editing() {
             self.editor.update(cx, |e, cx| {
@@ -4603,6 +4654,103 @@ impl Workspace {
         }
         self.focus_main(window, cx);
         cx.notify();
+    }
+
+    /// Hands the folds across: to the editor when `to_editor`, else to the
+    /// reading view, the properties fold with them.
+    fn sync_folds(&mut self, to_editor: bool, cx: &mut Context<Self>) {
+        if to_editor {
+            let (keys, props) = {
+                let r = self.reading.read(cx);
+                (r.fold_keys(), r.properties_folded())
+            };
+            self.editor.update(cx, |e, cx| {
+                e.set_fold_keys(keys, cx);
+                e.set_properties_folded(props, cx);
+            });
+        } else {
+            let (keys, props) = {
+                let e = self.editor.read(cx);
+                (e.fold_keys(), e.properties_folded())
+            };
+            self.reading.update(cx, |r, cx| {
+                r.set_fold_keys(keys, cx);
+                r.set_properties_folded(props, cx);
+            });
+        }
+    }
+
+    /// The fold store of the vault at `root`, opened on first use. The
+    /// root is passed in because the first note opens while `self.state`
+    /// is still being installed.
+    fn fold_store(&mut self, root: &Path) -> Option<&mut fold::FoldStore> {
+        if self.fold_store.as_ref().is_none_or(|(r, _)| r != root) {
+            self.fold_store = Some((root.to_path_buf(), fold::FoldStore::open(root)));
+        }
+        self.fold_store.as_mut().map(|(_, s)| s)
+    }
+
+    /// Writes the open note's folds to the store: on leaving it, on quit.
+    /// The reading view's are handed to the editor first, which is what
+    /// knows the extents.
+    fn save_folds(&mut self, path: &str, cx: &mut Context<Self>) {
+        if FileKind::from_path(path) != FileKind::Markdown {
+            return;
+        }
+        if self.editor.read(cx).name.as_ref() != path {
+            return;
+        }
+        if !self.mode.is_editing() {
+            self.sync_folds(true, cx);
+        }
+        let Some(record) = self.editor.read(cx).fold_record() else {
+            return;
+        };
+        let Some(root) = self.state.as_ref().map(|s| s.root.clone()) else {
+            return;
+        };
+        if let Some(store) = self.fold_store(&root) {
+            store.put(path, record);
+        }
+    }
+
+    /// Restores a note's folds from the store as it opens: the editor takes
+    /// the `from` lines, and the reading view the keys they come to.
+    fn restore_folds(
+        &mut self,
+        path: &str,
+        text: &str,
+        state: &Arc<VaultState>,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(record) = self
+            .fold_store(&state.root)
+            .and_then(|s| s.get(path).cloned())
+        else {
+            return;
+        };
+        let (headings, lists) = {
+            let app = state.app();
+            (
+                app.fold_heading.unwrap_or(true),
+                app.fold_indent.unwrap_or(true),
+            )
+        };
+        let doc = scoria_markdown::parse(text);
+        let foldables = fold::foldables(&doc, text, fold::FoldOptions { headings, lists });
+        let froms = record
+            .folds
+            .iter()
+            .filter(|r| **r != fold::PROPERTIES_RANGE)
+            .map(|r| r.from);
+        let keys = fold::Folds::from_record(&foldables, froms).keys();
+        let props = record.folds.contains(&fold::PROPERTIES_RANGE);
+        self.editor
+            .update(cx, |e, cx| e.set_fold_record(&record, cx));
+        self.reading.update(cx, |r, cx| {
+            r.set_fold_keys(keys, cx);
+            r.set_properties_folded(props, cx);
+        });
     }
 
     /// Asks for the keyboard to be put back on the main area at the next
@@ -4820,6 +4968,11 @@ impl Workspace {
 
     fn show_file(&mut self, path: &str, state: &Arc<VaultState>, cx: &mut Context<Self>) {
         let previous = self.current.replace(path.to_string());
+        if let Some(prev) = previous.clone() {
+            if prev != path {
+                self.save_folds(&prev, cx);
+            }
+        }
         if let Some(gone) = self.detached.take() {
             // The buffer was kept because its edits exist nowhere else. There
             // is no file to save them to, and resurrecting one the user
@@ -4961,7 +5114,8 @@ impl Workspace {
                         self.editor.update(cx, |e, cx| e.reload(text, cx));
                     } else {
                         self.editor
-                            .update(cx, |e, cx| e.set_text(path.to_string(), text, cx));
+                            .update(cx, |e, cx| e.set_text(path.to_string(), text.clone(), cx));
+                        self.restore_folds(path, &text, state, cx);
                     }
                     // Nothing about a build time reaches Obsidian's status
                     // bar; the number is still there to be read with
@@ -6839,6 +6993,14 @@ impl Workspace {
             .iter()
             .map(|(a, b)| (a.as_str(), b.as_str()))
             .collect();
+        // A note's fold record follows it to its new path.
+        if let Some(root) = self.state.as_ref().map(|s| s.root.clone()) {
+            if let Some(store) = self.fold_store(&root) {
+                for (from, to) in &renamed {
+                    store.rename(from, to);
+                }
+            }
+        }
         for entry in &mut self.history {
             if let Some(new) = renamed.get(entry.path.as_str()) {
                 entry.path = new.to_string();
@@ -9755,6 +9917,9 @@ impl Workspace {
     /// note's unsaved edits and the layout.
     pub fn on_quit(&mut self, cx: &mut Context<Self>) {
         self.flush_save(cx);
+        if let Some(path) = self.current.clone() {
+            self.save_folds(&path, cx);
+        }
         self.save_layout(cx);
     }
 

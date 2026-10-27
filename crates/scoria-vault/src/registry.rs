@@ -163,8 +163,9 @@ impl VaultRegistry {
 }
 
 /// The folder `scoria.json` lives under: `$SCORIA_CONFIG_DIR` when set,
-/// otherwise the desktop's per-user configuration folder.
-fn config_dir() -> Option<PathBuf> {
+/// otherwise the desktop's per-user configuration folder. Everything
+/// Scoria keeps outside a vault goes under it.
+pub fn config_dir() -> Option<PathBuf> {
     if let Some(dir) = std::env::var_os("SCORIA_CONFIG_DIR") {
         return Some(PathBuf::from(dir));
     }

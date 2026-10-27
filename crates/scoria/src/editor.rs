@@ -21,6 +21,7 @@
 //! changes nothing but the edited bytes (the round trips in
 //! `scoria-text/tests/writer_roundtrip.rs` hold that over the corpus).
 
+use crate::fold::{self, Foldable};
 use crate::math::SpaceWidths;
 use crate::preview::{self, DisplayLine, Piece};
 use crate::properties::{self, Field, Part, Target};
@@ -605,6 +606,18 @@ pub struct Editor {
     /// model builder's counters, so they only mean anything for the note
     /// that produced them.
     callout_folds: HashSet<usize>,
+    /// The lines that can fold, from the same parse as the highlights.
+    foldables: Arc<Vec<Foldable>>,
+    /// The heading and list folds of this note, by key; resolved against
+    /// `foldables` after every parse.
+    folds: fold::Folds,
+    /// The hidden line runs the folds come to, `(first, last)` inclusive.
+    hidden: Vec<(usize, usize)>,
+    /// A record restored from the store before the first parse delivered
+    /// the foldables it is resolved against.
+    pending_folds: Option<Vec<usize>>,
+    /// The line under the pointer, for the fold indicator it reveals.
+    hover_line: Option<usize>,
     /// The property whose type menu is open.
     property_menu: Option<String>,
     /// The table cell being typed into. Like a properties field, the keys
@@ -702,6 +715,11 @@ impl Editor {
             property_field: None,
             properties_folded: false,
             callout_folds: HashSet::new(),
+            foldables: Arc::new(Vec::new()),
+            folds: fold::Folds::default(),
+            hidden: Vec::new(),
+            pending_folds: None,
+            hover_line: None,
             property_menu: None,
             table_field: None,
             suggest: None,
@@ -734,6 +752,12 @@ impl Editor {
         // Fold ids are per-note counters, so another note's would collapse
         // whichever callout happened to land on the same number.
         self.callout_folds.clear();
+        self.foldables = Arc::new(Vec::new());
+        self.folds = fold::Folds::default();
+        self.hidden.clear();
+        self.pending_folds = None;
+        self.hover_line = None;
+        self.properties_folded = false;
         self.buf.head = 0;
         self.buf.anchor = 0;
         self.widgets = Arc::new(Vec::new());
@@ -1194,6 +1218,8 @@ impl Editor {
             "scroll": {"line": self.scroll_line, "px": f32::from(self.scroll_px)},
             "visible_lines": [first, last],
             "line_count": self.buf.line_count(),
+            "folds": self.folds.record(&self.foldables).iter().map(|(from, to)| serde_json::json!({"from": from, "to": to})).collect::<Vec<_>>(),
+            "foldable_lines": self.foldables.iter().map(|f| f.line).collect::<Vec<_>>(),
             "field": self.field_kind(),
             "parsing": self.is_parsing(),
             "find": {
@@ -1369,7 +1395,7 @@ impl Editor {
     /// What `line` shows: its source, or Live Preview's rendering of it.
     fn display_for(&self, line: usize) -> DisplayLine {
         let text = self.buf.line_text(line);
-        if self.live_preview {
+        let display = if self.live_preview {
             let spans = self.highlights.get(line).map(Vec::as_slice).unwrap_or(&[]);
             // An inline formula is shaped as a placeholder the width it
             // typesets to, at the body size: a heading's scale is applied
@@ -1382,6 +1408,199 @@ impl Editor {
             preview::display_line_with(text, spans, &self.touches_on_line(line), &math)
         } else {
             DisplayLine::verbatim(text, 1.0, Default::default())
+        };
+        // A folded line shows `…` after its text in both editing modes:
+        // raw source mode was observed folding exactly like Live Preview.
+        if self.folds.is_folded(line) {
+            return display.with_fold_placeholder(text.len());
+        }
+        display
+    }
+
+    // ----- folding --------------------------------------------------------------
+
+    /// `foldHeading` and `foldIndent`, read from the vault's `app.json`
+    /// as each parse starts; both default to on.
+    fn fold_options(&self) -> fold::FoldOptions {
+        let Some(state) = &self.suggest_vault else {
+            return fold::FoldOptions::default();
+        };
+        let app = state.app();
+        fold::FoldOptions {
+            headings: app.fold_heading.unwrap_or(true),
+            lists: app.fold_indent.unwrap_or(true),
+        }
+    }
+
+    /// Settles the folds against the current foldables and recomputes the
+    /// hidden lines.
+    fn refresh_folds(&mut self) {
+        self.hidden = self.folds.resolve(&self.foldables);
+    }
+
+    /// A cursor that arrived inside a fold — a link into the section, a
+    /// search hit, an edit — opens what hides it, the way a link into a
+    /// folded section was observed expanding it. A fold command that closes
+    /// around the caret leaves the caret where it is, as CodeMirror's does:
+    /// fold-less from inside the folded section still finds that section.
+    fn unfold_at_cursor(&mut self) {
+        let line = self.buf.cursor_at(self.buf.head).line;
+        if fold::is_hidden(&self.hidden, line) && self.folds.unfold_hiding(&self.foldables, line) {
+            self.refresh_folds();
+        }
+    }
+
+    fn line_hidden(&self, line: usize) -> bool {
+        fold::is_hidden(&self.hidden, line)
+    }
+
+    /// The foldable starting on `line`, if one does.
+    fn foldable_at(&self, line: usize) -> Option<&Foldable> {
+        self.foldables.iter().find(|f| f.line == line)
+    }
+
+    /// `editor:toggle-fold`: folds or unfolds the caret's line. Obsidian's
+    /// command reports success on a line that starts no fold and changes
+    /// nothing, which is what this does too.
+    pub fn toggle_fold(&mut self, cx: &mut Context<Self>) {
+        let line = self.buf.cursor_at(self.buf.head).line;
+        self.toggle_fold_at(line, cx);
+    }
+
+    /// Folds or unfolds the foldable starting on `line`: the command on
+    /// the caret's line, or a click on a line's indicator.
+    fn toggle_fold_at(&mut self, line: usize, cx: &mut Context<Self>) {
+        if self.folds.toggle(&self.foldables, line) {
+            self.refresh_folds();
+            cx.notify();
+        }
+    }
+
+    /// `editor:fold-all`.
+    pub fn fold_all(&mut self, cx: &mut Context<Self>) {
+        self.folds.fold_all(&self.foldables);
+        self.refresh_folds();
+        cx.notify();
+    }
+
+    /// `editor:unfold-all`.
+    pub fn unfold_all(&mut self, cx: &mut Context<Self>) {
+        self.folds.unfold_all();
+        self.refresh_folds();
+        cx.notify();
+    }
+
+    /// `editor:fold-more` and `editor:fold-less`: one enclosing level out
+    /// from the caret's section, or the outermost one back.
+    pub fn fold_step(&mut self, more: bool, cx: &mut Context<Self>) {
+        let line = self.buf.cursor_at(self.buf.head).line;
+        let changed = if more {
+            self.folds.fold_more(&self.foldables, line)
+        } else {
+            self.folds.fold_less(&self.foldables, line)
+        };
+        if changed {
+            self.refresh_folds();
+            cx.notify();
+        }
+    }
+
+    /// The folds by key, for the reading view to take over on a mode
+    /// switch.
+    pub fn fold_keys(&self) -> Vec<fold::FoldKey> {
+        self.folds.keys()
+    }
+
+    /// The reading view's folds, on a switch back to editing.
+    pub fn set_fold_keys(&mut self, keys: Vec<fold::FoldKey>, cx: &mut Context<Self>) {
+        self.folds = fold::Folds::from_keys(keys);
+        self.pending_folds = None;
+        self.refresh_folds();
+        cx.notify();
+    }
+
+    /// The note's fold record for the store: the full extents, as the
+    /// editor keeps them, plus `{0,0}` for a folded properties block.
+    /// `None` while the first parse has not delivered the foldables a
+    /// restored record is resolved against, so a note left at once keeps
+    /// the record it was opened with.
+    pub fn fold_record(&self) -> Option<fold::Record> {
+        if self.pending_folds.is_some() {
+            return None;
+        }
+        let mut folds: Vec<fold::FoldRange> = self
+            .folds
+            .record(&self.foldables)
+            .into_iter()
+            .map(|(from, to)| fold::FoldRange { from, to })
+            .collect();
+        if self.properties_folded {
+            folds.insert(0, fold::PROPERTIES_RANGE);
+        }
+        Some(fold::Record {
+            folds,
+            lines: self.buf.line_count(),
+        })
+    }
+
+    /// Restores a note's record: each `from` line that starts a fold folds
+    /// once the parse has said which lines do.
+    pub fn set_fold_record(&mut self, record: &fold::Record, cx: &mut Context<Self>) {
+        self.properties_folded = record.folds.contains(&fold::PROPERTIES_RANGE);
+        let froms: Vec<usize> = record
+            .folds
+            .iter()
+            .filter(|r| **r != fold::PROPERTIES_RANGE)
+            .map(|r| r.from)
+            .collect();
+        // Before the first parse there is nothing to resolve against: the
+        // `from` lines wait for it. (A note with nothing foldable keeps
+        // them waiting, which costs nothing.)
+        if self.foldables.is_empty() {
+            self.pending_folds = Some(froms);
+        } else {
+            self.folds = fold::Folds::from_record(&self.foldables, froms);
+            self.refresh_folds();
+        }
+        cx.notify();
+    }
+
+    pub fn properties_folded(&self) -> bool {
+        self.properties_folded
+    }
+
+    pub fn set_properties_folded(&mut self, on: bool, cx: &mut Context<Self>) {
+        if self.properties_folded != on {
+            self.properties_folded = on;
+            cx.notify();
+        }
+    }
+
+    /// The line under window point `position`, from the last frame.
+    fn line_at_point(&self, position: Point<Pixels>) -> Option<usize> {
+        let layout = &self.layout;
+        if !layout.bounds.contains(&position) {
+            return None;
+        }
+        let y = position.y - layout.bounds.origin.y;
+        layout
+            .visible
+            .iter()
+            .find(|v| y >= v.top && y < v.top + v.height())
+            .map(|v| v.line)
+    }
+
+    /// Remembers the hovered line, which is where the fold indicator shows.
+    fn hover_at(&mut self, position: Point<Pixels>, cx: &mut Context<Self>) {
+        let line = self.line_at_point(position);
+        if line != self.hover_line {
+            // Only a change that moves an indicator is worth a frame.
+            let affects = |l: Option<usize>| l.is_some_and(|l| self.foldable_at(l).is_some());
+            let repaint = affects(line) || affects(self.hover_line);
+            self.hover_line = line;
+            if repaint {
+                cx.notify();
+            }
         }
     }
 
@@ -1456,6 +1675,9 @@ impl Editor {
     /// folded widget's height sits on its first line; its other lines are
     /// not on screen at all.
     fn height_of(&self, window: &mut Window, line: usize) -> Pixels {
+        if self.line_hidden(line) {
+            return px(0.);
+        }
         if let Some((lines, widget)) = self.folded_widget(line) {
             if line != lines.start || self.widget_is_hidden(widget) {
                 return px(0.);
@@ -1761,6 +1983,8 @@ impl Editor {
     }
 
     fn after_edit(&mut self, window: Option<&mut Window>, cx: &mut Context<Self>) {
+        // An edit never happens out of sight.
+        self.unfold_at_cursor();
         self.request_parse(cx);
         self.refresh_matches(cx);
         self.update_suggest(true, cx);
@@ -1810,6 +2034,7 @@ impl Editor {
         let build_options = self.build_options;
         let live = self.live_preview;
         let path = self.name.to_string();
+        let fold_options = self.fold_options();
         self.pending_parse = Some(cx.spawn(async move |this, cx| {
             let result = cx
                 .background_executor()
@@ -1817,6 +2042,7 @@ impl Editor {
                     let started = Instant::now();
                     let doc = scoria_markdown::parse(&text);
                     let lines = highlight_lines(&doc);
+                    let foldables = fold::foldables(&doc, &text, fold_options);
                     let widgets = match &widget_source {
                         Some(source) => {
                             let built = build_widgets(&path, &doc, source.as_ref(), build_options);
@@ -1841,6 +2067,7 @@ impl Editor {
                         chars,
                         widgets,
                         flairs,
+                        foldables,
                     )
                 })
                 .await;
@@ -1864,6 +2091,18 @@ impl Editor {
                 }
                 editor.widgets = Arc::new(widgets);
                 editor.flairs = Arc::new(result.7);
+                // Unlike the decorations, a stale set of foldables is worse
+                // than none: resolving the folds against another text's
+                // lines would drop them. Only the parse of the current text
+                // settles them, and a record waiting for the first parse
+                // waits for that one.
+                if editor.generation == generation {
+                    editor.foldables = Arc::new(result.8);
+                    if let Some(froms) = editor.pending_folds.take() {
+                        editor.folds = fold::Folds::from_record(&editor.foldables, froms);
+                    }
+                    editor.refresh_folds();
+                }
                 editor.stats = ParseStats {
                     parse_ms,
                     spans: result.2,
@@ -2005,12 +2244,16 @@ impl Editor {
         let mut row = start_row;
         let mut rows = shaped.rows();
         let mut remaining = delta;
+        // The lines a fold hides are not on screen, so a vertical step
+        // passes over them.
+        let above = |l: usize| (0..l).rev().find(|&c| !self.line_hidden(c));
+        let below = |l: usize| (l + 1..self.line_count()).find(|&c| !self.line_hidden(c));
         while remaining != 0 {
             if remaining < 0 {
                 if row > 0 {
                     row -= 1;
-                } else if line > 0 {
-                    line -= 1;
+                } else if let Some(prev) = above(line) {
+                    line = prev;
                     rows = self.rows_of(window, line);
                     row = rows - 1;
                 } else {
@@ -2020,8 +2263,8 @@ impl Editor {
             } else {
                 if row + 1 < rows {
                     row += 1;
-                } else if line + 1 < self.line_count() {
-                    line += 1;
+                } else if let Some(next) = below(line) {
+                    line = next;
                     rows = self.rows_of(window, line);
                     row = 0;
                 } else {
@@ -4571,6 +4814,11 @@ impl Element for EditorElement {
                 font_size,
                 SpaceWidths::measure(window.text_system(), &text_style.font(), font_size),
             ));
+            // A cursor sent into a fold from outside (a link, a search hit,
+            // an outline row) opens it before anything is laid out.
+            if editor.pending_reveal {
+                editor.unfold_at_cursor();
+            }
             let palette = editor.palette.clone();
             let highlights = editor.highlights.clone();
             let flairs = editor.flairs.clone();
@@ -4669,7 +4917,15 @@ impl Element for EditorElement {
             let mut cursor_top = px(0.);
             let mut y = bounds.origin.y - scroll_px;
             let mut line = scroll_line;
+            let hidden = editor.hidden.clone();
+            let foldables = editor.foldables.clone();
+            let hover_line = editor.hover_line;
             while line < count && y < bounds.bottom_left().y {
+                if let Some(end) = fold::hidden_end(&hidden, line) {
+                    // Inside a fold: these lines are not on screen at all.
+                    line = end + 1;
+                    continue;
+                }
                 if let Some((wlines, widget)) = editor.folded_widget(line) {
                     let wlines = wlines.clone();
                     if line != wlines.start || editor.widget_is_hidden(widget) {
@@ -4808,6 +5064,53 @@ impl Element for EditorElement {
                             point(
                                 content_x + content_width - measured.width - px(6.),
                                 y + (rh - measured.height).max(px(0.)) / 2.,
+                            ),
+                            window,
+                            cx,
+                        );
+                        flair_elements.push(element);
+                    }
+                }
+                // The fold indicator: Obsidian's `cm-fold-indicator`, a
+                // hover-revealed chevron at `left: -15px` on a heading line
+                // and `-10px` on a list line, shown whenever the line is
+                // folded. Mouse-down rather than click, blocking the mouse,
+                // for the reason the callout chevron gives.
+                if let Some(f) = foldables.iter().find(|f| f.line == line) {
+                    let folded = editor.folds.is_folded(line);
+                    if folded || hover_line == Some(line) {
+                        let entity = entity.clone();
+                        let offset = match f.kind {
+                            fold::FoldKind::Heading(_) => px(15.),
+                            fold::FoldKind::List => px(10.),
+                        };
+                        let glyph = if folded {
+                            "chevron-right"
+                        } else {
+                            "chevron-down"
+                        };
+                        let mut element = div()
+                            .id(("fold-indicator", line))
+                            .size(px(16.))
+                            .flex()
+                            .items_center()
+                            .justify_center()
+                            .cursor(CursorStyle::PointingHand)
+                            .block_mouse_except_scroll()
+                            .on_mouse_down(MouseButton::Left, move |_, _, cx| {
+                                entity.update(cx, |e, cx| e.toggle_fold_at(line, cx));
+                            })
+                            .child(crate::assets::icon(glyph, 14., palette.muted))
+                            .into_any_element();
+                        element.layout_as_root(
+                            size(AvailableSpace::MinContent, AvailableSpace::MinContent),
+                            window,
+                            cx,
+                        );
+                        element.prepaint_at(
+                            point(
+                                content_x - offset - px(8.),
+                                y + (rh - px(16.)).max(px(0.)) / 2.,
                             ),
                             window,
                             cx,
@@ -5098,10 +5401,15 @@ impl Element for EditorElement {
         });
         let editor = self.editor.clone();
         window.on_mouse_event(move |event: &MouseMoveEvent, phase, window, cx| {
-            if phase == DispatchPhase::Bubble && event.pressed_button == Some(MouseButton::Left) {
+            if phase != DispatchPhase::Bubble {
+                return;
+            }
+            if event.pressed_button == Some(MouseButton::Left) {
                 editor.update(cx, |editor, cx| {
                     editor.mouse_drag(event.position, window, cx)
                 });
+            } else if event.pressed_button.is_none() {
+                editor.update(cx, |editor, cx| editor.hover_at(event.position, cx));
             }
         });
         let editor = self.editor.clone();

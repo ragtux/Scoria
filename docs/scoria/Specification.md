@@ -6485,3 +6485,45 @@ what follows is this build's own reading where the run did not reach.
   as the calibration row observed under `tabSize: 2`; the same unit serves a
   plain line and a list item. OBSERVE: Tab on a plain line under
   `useTab: false, tabSize: 2`.
+
+## What building folding settled, 2026-10-26
+
+The editor, the reading view and the record were conformed to
+[[#Observed heading fold behavior, Obsidian 1.14.4]] and
+[[#The 2026-10-25 pass: the cold restart and the rest of the block]]; what
+follows is this build's own reading where the run did not reach.
+
+- **A fold's identity across edits** is its line's kind and text and which
+  of the lines with that text it is; an edit to the folded heading's text
+  keeps the fold by its line. CodeMirror's folds are positional; the
+  difference shows only when a folded heading is retyped as another
+  heading's text, which keeps the fold here.
+- **The caret inside a fold.** A fold command leaves the caret where it is
+  (so `fold-less` from inside a folded section still finds it, as
+  observed); a caret that arrives in a fold by a link, a search hit, an
+  outline row or an edit opens the fold. OBSERVE: what Obsidian does to a
+  caret already inside a section when `editor:toggle-fold` folds it, and
+  whether typing inside a fold unfolds it.
+- **The indicator is shown while folded**, not only on hover, since the
+  placeholder `…` alone does not say where to click. OBSERVE: the folded
+  line's `cm-fold-indicator` opacity when not hovered.
+- **List folds in the reading view** collapse nothing: Obsidian's reading
+  view list collapse was not probed. The keys are carried so a switch to the
+  editor and back keeps them.
+- **The record's home** is `note-fold/<vault id>.json` under Scoria's
+  configuration folder, one file per vault with a map by vault-relative
+  path, the per-note value in Obsidian's own shape. Obsidian's is
+  `localStorage`, which has no file to match.
+- **A fold is saved on leaving the note and on quit**, read as the note
+  opens, and the stored `to` is ignored in favour of the heading's extent
+  (observed). A note left before its first parse has settled keeps the
+  record it was opened with.
+- **The reading-view chevron** sits 28 px into the left margin, centred on
+  the heading's line box; Obsidian's is at `left: 31.99px` of a container
+  whose padding was not measured. OBSERVE: the offset from the heading
+  text.
+- **`fold-all` with the caret inside a section** folds everything and
+  leaves the caret in place, which is what the observed run reported (three
+  rendered lines, the caret unrecorded).
+- **`foldHeading: false`** removes the reading view's chevron entirely
+  rather than keeping a hidden, clickable one.

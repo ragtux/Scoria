@@ -9,6 +9,7 @@ use super::model::{
     Embed, EmbedKind, InlineStyle, LinkTarget, Model, RBlock, RItem, RichText, Segment, TaskMarker,
 };
 use crate::assets::{callout_icon, icon};
+use crate::fold::{self, FoldKey};
 use crate::math::{self, FormulaElement, Inline, Overlay, SpaceWidths};
 use crate::properties::{Field, Part, Target};
 use crate::properties::{PROPERTIES_FOLD_ID, PROPERTY_ID_BASE};
@@ -214,6 +215,15 @@ pub struct ReadingView {
     list: ListState,
     /// Callouts whose fold state the reader flipped, by title id.
     toggled: HashSet<usize>,
+    /// The note's heading and list folds, by key — the same keys the
+    /// editor keeps, handed across on a mode switch. Only the heading ones
+    /// collapse anything here; the list ones ride along so a switch to the
+    /// editor and back loses nothing.
+    folds: Vec<FoldKey>,
+    /// `foldHeading`: with it off the indicator is not drawn.
+    fold_headings: bool,
+    /// Per top-level block: inside a collapsed heading's section.
+    hidden: Vec<bool>,
     readable_line_length: bool,
     properties_in_document: PropertiesInDocument,
     /// The vault's `types.json`, for the type each property row shows.
@@ -243,6 +253,9 @@ impl ReadingView {
             model: Arc::new(Model::default()),
             list: ListState::new(0, ListAlignment::Top, px(1200.)),
             toggled: HashSet::new(),
+            folds: Vec::new(),
+            fold_headings: true,
+            hidden: Vec::new(),
             readable_line_length: true,
             properties_in_document: PropertiesInDocument::default(),
             property_types: PropertyTypes::default(),
@@ -279,9 +292,97 @@ impl ReadingView {
             // every autosave, so clearing them unconditionally collapsed an
             // expanded callout 1.5 s after any save of the note being read.
             self.toggled.clear();
+            self.folds.clear();
         }
+        self.recompute_hidden();
         self.copied = None;
         cx.notify();
+    }
+
+    // ----- heading folds --------------------------------------------------------
+
+    /// Every top-level heading: its block index, level and key.
+    fn headings(&self) -> Vec<(usize, u8, FoldKey)> {
+        let heads: Vec<(usize, u8, &str)> = self
+            .model
+            .blocks
+            .iter()
+            .enumerate()
+            .filter_map(|(ix, b)| match b {
+                RBlock::Heading { level, plain, .. } => Some((ix, *level, plain.as_str())),
+                _ => None,
+            })
+            .collect();
+        let keys = fold::heading_keys(heads.iter().map(|(_, l, t)| (*l, *t)));
+        heads
+            .into_iter()
+            .zip(keys)
+            .map(|((ix, level, _), key)| (ix, level, key))
+            .collect()
+    }
+
+    /// Marks the blocks a collapsed heading hides: from the block after it
+    /// to the one before the next heading of the same or a higher level —
+    /// absent from the view, as Obsidian's are absent from the DOM.
+    fn recompute_hidden(&mut self) {
+        let heads = self.headings();
+        let mut hidden = vec![false; self.model.blocks.len()];
+        for (i, (ix, level, key)) in heads.iter().enumerate() {
+            if !self.folds.contains(key) {
+                continue;
+            }
+            let end = heads[i + 1..]
+                .iter()
+                .find(|(_, l, _)| l <= level)
+                .map(|(next, _, _)| *next)
+                .unwrap_or(hidden.len());
+            for h in hidden.iter_mut().take(end).skip(ix + 1) {
+                *h = true;
+            }
+        }
+        self.hidden = hidden;
+    }
+
+    fn toggle_heading(&mut self, key: FoldKey, cx: &mut Context<Self>) {
+        match self.folds.iter().position(|k| *k == key) {
+            Some(at) => {
+                self.folds.remove(at);
+            }
+            None => self.folds.push(key),
+        }
+        self.recompute_hidden();
+        cx.notify();
+    }
+
+    /// The folds by key, for the editor to take over on a mode switch.
+    pub fn fold_keys(&self) -> Vec<FoldKey> {
+        self.folds.clone()
+    }
+
+    pub fn set_fold_keys(&mut self, keys: Vec<FoldKey>, cx: &mut Context<Self>) {
+        self.folds = keys;
+        self.recompute_hidden();
+        cx.notify();
+    }
+
+    pub fn set_fold_headings(&mut self, on: bool) {
+        self.fold_headings = on;
+    }
+
+    pub fn properties_folded(&self) -> bool {
+        self.toggled.contains(&PROPERTIES_FOLD_ID)
+    }
+
+    pub fn set_properties_folded(&mut self, on: bool, cx: &mut Context<Self>) {
+        if on != self.properties_folded() {
+            self.toggle_callout(PROPERTIES_FOLD_ID, cx);
+        }
+    }
+
+    /// `editor:toggle-fold-properties` run from a preview leaf, which
+    /// Obsidian honours.
+    pub fn toggle_properties_fold(&mut self, cx: &mut Context<Self>) {
+        self.toggle_callout(PROPERTIES_FOLD_ID, cx);
     }
 
     /// Scrolls so the top-level block `ix` is at the top of the view.
@@ -291,6 +392,26 @@ impl ReadingView {
     }
 
     pub fn scroll_to_block(&mut self, ix: usize, cx: &mut Context<Self>) {
+        // A jump into a collapsed section expands it, as a link into a
+        // folded section was observed doing in the editor.
+        if self.hidden.get(ix).copied().unwrap_or(false) {
+            let heads = self.headings();
+            let hiding: Vec<FoldKey> = heads
+                .iter()
+                .enumerate()
+                .filter(|(i, (at, level, _))| {
+                    let end = heads[i + 1..]
+                        .iter()
+                        .find(|(_, l, _)| l <= level)
+                        .map(|(next, _, _)| *next)
+                        .unwrap_or(self.model.blocks.len());
+                    *at < ix && ix < end
+                })
+                .map(|(_, (_, _, key))| key.clone())
+                .collect();
+            self.folds.retain(|k| !hiding.contains(k));
+            self.recompute_hidden();
+        }
         if ix < self.model.blocks.len() {
             self.list.scroll_to(ListOffset {
                 item_ix: ix,
@@ -422,6 +543,10 @@ impl ReadingView {
         let Some(block) = model.blocks.get(ix) else {
             return div().into_any_element();
         };
+        if self.hidden.get(ix).copied().unwrap_or(false) {
+            // Collapsed content takes no room at all.
+            return div().into_any_element();
+        }
         // The block's inner width: the view minus its padding, capped at the
         // readable line length.
         let mut available = f32::from(self.width) - 64.;
@@ -455,12 +580,15 @@ impl ReadingView {
                 view.update(cx, |v, cx| v.flash_copied(id, cx));
             }
         });
-        let on_task: TaskHandler = Rc::new(move |marker, cx| {
-            view.update(cx, |v, cx| {
-                if let Some(path) = v.path.clone() {
-                    cx.emit(TaskToggled { path, marker });
-                }
-            });
+        let on_task: TaskHandler = Rc::new({
+            let view = view.clone();
+            move |marker, cx| {
+                view.update(cx, |v, cx| {
+                    if let Some(path) = v.path.clone() {
+                        cx.emit(TaskToggled { path, marker });
+                    }
+                });
+            }
         });
         let host = ReadingHost {
             properties: self.properties_in_document,
@@ -482,7 +610,77 @@ impl ReadingView {
             on_toggle,
         )
         .with_reading_host(&host);
-        let inner = r.block(block, false);
+        let mut inner = r.block(block, false);
+        // A heading carries Obsidian's `heading-collapse-indicator`: a
+        // chevron in the margin to its left, shown on hover or while
+        // collapsed, that only its own click toggles (the heading's text
+        // and the space beside it were observed doing nothing). `foldHeading`
+        // off hides the affordance. The heading is drawn here rather than
+        // by the renderer so that its margins sit outside the box the
+        // chevron is placed in.
+        if let RBlock::Heading { level, text, .. } = block {
+            if self.fold_headings {
+                if let Some((_, _, key)) = self.headings().into_iter().find(|(at, _, _)| *at == ix)
+                {
+                    let collapsed = self.folds.contains(&key);
+                    let base = theme.base_font_size;
+                    let (size, weight, line_height) = crate::theme::heading_style(*level);
+                    let top = match level {
+                        1 => 1.0,
+                        2 => 2.5,
+                        _ => 1.5,
+                    };
+                    let line_px = base * size * line_height;
+                    let view = view.clone();
+                    // The box reaches 28 px into the left margin, where the
+                    // chevron sits, so that hovering the chevron itself
+                    // counts as hovering the heading; the padding puts the
+                    // text back where it was.
+                    inner = div()
+                        .mt(px(base * top))
+                        .mb(px(base))
+                        .ml(px(-28.))
+                        .pl(px(28.))
+                        .relative()
+                        .group("heading")
+                        .child(
+                            div()
+                                .text_size(px(base * size))
+                                .line_height(px(line_px))
+                                .font_weight(FontWeight(weight))
+                                .child(r.rich_at(text, base * size)),
+                        )
+                        .child(
+                            div()
+                                .id(("heading-fold", ix))
+                                .absolute()
+                                .left(px(0.))
+                                .top(px((line_px - 16.) / 2.))
+                                .size(px(16.))
+                                .flex()
+                                .items_center()
+                                .justify_center()
+                                .cursor_pointer()
+                                .when(!collapsed, |d| d.invisible())
+                                .group_hover("heading", |s| s.visible())
+                                .on_mouse_down(gpui::MouseButton::Left, move |_, _, cx| {
+                                    let key = key.clone();
+                                    view.update(cx, |v, cx| v.toggle_heading(key, cx));
+                                })
+                                .child(icon(
+                                    if collapsed {
+                                        "chevron-right"
+                                    } else {
+                                        "chevron-down"
+                                    },
+                                    16.,
+                                    theme.text_muted,
+                                )),
+                        )
+                        .into_any_element();
+                }
+            }
+        }
         let last = ix + 1 == model.blocks.len();
         div()
             .w_full()
@@ -1874,7 +2072,7 @@ impl<'a> Renderer<'a> {
 
     /// Inline content set at `size` pixels: one `InteractiveText`, with
     /// inline formulas typeset over placeholders when the text has any.
-    fn rich_at(&self, text: &RichText, size: f32) -> AnyElement {
+    pub(crate) fn rich_at(&self, text: &RichText, size: f32) -> AnyElement {
         // Each `$x$` run, typeset in text style. A formula that does not
         // parse stays as its source, in the error red (`highlight`).
         let formulas: Vec<(Range<usize>, Arc<scoria_math::Formula>)> = text

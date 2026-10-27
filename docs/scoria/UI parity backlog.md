@@ -30,8 +30,8 @@ collected under [[#Was declined until Obsidian was probed — all of it now is]]
 **Read the `Landed` lines first.** An entry whose first line after the severity reads
 `**Landed <date>**` describes behaviour that has since been fixed; the evidence under it is kept
 because the Obsidian half is still the record of what was observed, but the **Scoria** paragraph
-describes a binary that no longer exists. Thirty-five entries are marked so far, twenty-five of
-them on 2026-10-24. Before acting on an unmarked entry, check the behaviour in the running app:
+describes a binary that no longer exists. Thirty-eight entries are marked so far, twenty-five of
+them on 2026-10-24 and three (the folding ones) on 2026-10-26. Before acting on an unmarked entry, check the behaviour in the running app:
 several of the ones marked that day turned out to have been fixed already, by work that landed
 after this audit was written.
 
@@ -240,6 +240,9 @@ state dump is unchanged.
 
 *medium, missing-feature, large*
 
+**Landed 2026-10-26**: `crates/scoria/src/fold.rs` plus the editor's hidden lines, placeholder,
+indicators and the five commands; see [[Development#Folding, 2026-10-26]].
+
 **Scoria.** `editor:toggle-fold`, `fold-all`, `unfold-all`, `fold-less` and `fold-more` are all
 registered with `"runnable": false`; Ctrl+P then "fold" offers only the properties fold and fuzzy
 noise. No fold indicator is reachable anywhere. This is also the open remainder of the source
@@ -387,6 +390,10 @@ store it outside the vault, the way Obsidian does.
 
 *low, bug, small*
 
+**Landed 2026-10-26**: the command arm branches on the mode and folds the reading view's own
+properties block from a preview leaf. The `PropertiesHost` half (editing properties from reading
+view) is still open.
+
 **Scoria.** Two thirds of this is now fixed: the gate moved from `mode.is_editing()` to
 `note_has_keys()`, and `markdown:clear-metadata-properties` really does edit and autosave from
 reading view. What is left is the fold: the command flips the hidden editor's `properties_folded`
@@ -449,6 +456,10 @@ arrow are separate cosmetic follow-ups.
 ### Headings cannot be folded; `foldHeading` has no consumer
 
 *medium, parity-gap, medium*
+
+**Landed 2026-10-26**: the reading view collapses a heading's section behind a hover-revealed
+chevron, shares the fold with the editor and persists it outside the vault; `foldHeading` gates
+the chevron. See [[Development#Folding, 2026-10-26]].
 
 **Scoria.** `RBlock::Heading` renders as a bare styled div with no `.id()`, no hover state and no
 click handler, and the model records no section extent. Click sweeps over heading rows and the left
