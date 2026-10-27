@@ -15,6 +15,7 @@ members = [
     "crates/scoria-bases",
     "crates/scoria-suggest",
     "crates/scoria-templates",
+    "crates/scoria-pdf",
     "crates/scoria-bench",
 ]
 
@@ -39,6 +40,7 @@ scoria-canvas = { path = "crates/scoria-canvas" }
 scoria-bases = { path = "crates/scoria-bases" }
 scoria-suggest = { path = "crates/scoria-suggest" }
 scoria-templates = { path = "crates/scoria-templates" }
+scoria-pdf = { path = "crates/scoria-pdf" }
 
 anyhow = "1"
 thiserror = "2"
@@ -57,9 +59,16 @@ tempfile = "3"
 rayon = "1"
 regex = "1"
 notify = "8"
+# Pure Rust PDF rasterizer for the PDF view and `![[x.pdf]]` embeds. The default
+# features embed the 14 standard fonts and the CMaps, so a PDF without its own
+# fonts renders the same on every machine without touching system fonts.
+hayro = "0.8"
 # Already in the tree through gpui; crates/scoria/build.rs compiles the icon
 # and VERSIONINFO into scoria.exe with it, and does nothing off Windows.
 embed-resource = "3"
+# Already in the tree through gpui; the app wraps a rendered PDF page in one
+# of its frames to hand gpui the texture.
+image = "0.25"
 # Already in the tree through gpui; the app needs it for the local civil
 # date a daily note is named after and a template's `{{date}}` renders.
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }

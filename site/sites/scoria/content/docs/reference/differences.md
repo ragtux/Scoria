@@ -24,7 +24,7 @@ Things Obsidian does that Scoria intends to do and does not.
 | **HTML in notes** | Parsed, shown as literal text |
 | **Remote images** | `![](https://…)` does not load. Local images do |
 | **Mermaid diagrams** | Not rendered |
-| **PDF viewing and export** | PDFs are recognized as a file kind; there is no viewer and no export |
+| **PDF viewing and export** | A PDF opens in a viewer with Obsidian's toolbar, sidebar and find bar, and `![[x.pdf]]` embeds it; the text cannot be selected or copied, and there is no export |
 | **Audio and video players** | Recognized as file kinds; no player |
 | **Heading folding** | Headings do not collapse |
 

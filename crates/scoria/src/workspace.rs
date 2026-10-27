@@ -23,6 +23,7 @@ use crate::help::HelpWindow;
 use crate::mentions::{Finder, Name};
 use crate::palette::{CommandPalette, PaletteCommand, PaletteEvent};
 use crate::panes::{self, PaneSort};
+use crate::pdf::view::{PdfEvent, PdfView};
 use crate::prompt::{Prompt, PromptEvent, PromptSpec};
 use crate::reading::{self, LinkTarget, ReadingEvent, ReadingView, TaskMarker, TaskToggled};
 use crate::search::{CopyEntry, SearchEvent, SearchPane};
@@ -1027,6 +1028,7 @@ enum MainView {
     Graph,
     Canvas,
     Bases,
+    Pdf,
     Empty,
 }
 
@@ -1039,6 +1041,7 @@ impl MainView {
             MainView::Graph => "graph",
             MainView::Canvas => "canvas",
             MainView::Bases => "bases",
+            MainView::Pdf => "pdf",
             MainView::Empty => "nothing",
         }
     }
@@ -1364,7 +1367,9 @@ struct Tab {
     /// kept current by the view's [`CanvasEvent::Viewport`] while the tab
     /// is on screen, and written back into the leaf. It lives here rather
     /// than being read from the view when the layout is written, because a
-    /// tab that is not live has no view holding it.
+    /// tab that is not live has no view holding it. A PDF tab has none: its
+    /// leaf is the file alone (observed), and the PDF view remembers its
+    /// own place for the session.
     view_state: Option<Value>,
 }
 
@@ -1633,6 +1638,7 @@ struct TabGroup {
     reading: Entity<ReadingView>,
     canvas: Entity<CanvasView>,
     bases: Entity<BasesView>,
+    pdf: Entity<PdfView>,
     /// The `tabs` node this group was restored from, less its children:
     /// `id`, a `dimension` from a dragged divider, and anything unknown.
     node: Map<String, Value>,
@@ -1645,6 +1651,7 @@ impl TabGroup {
         reading: Entity<ReadingView>,
         canvas: Entity<CanvasView>,
         bases: Entity<BasesView>,
+        pdf: Entity<PdfView>,
         mode: ViewMode,
     ) -> TabGroup {
         let mut node = Map::new();
@@ -1662,6 +1669,7 @@ impl TabGroup {
             reading,
             canvas,
             bases,
+            pdf,
             node,
         }
     }
@@ -1714,6 +1722,7 @@ struct GroupView {
     reading: Entity<ReadingView>,
     canvas: Entity<CanvasView>,
     bases: Entity<BasesView>,
+    pdf: Entity<PdfView>,
 }
 
 /// The payload of a divider drag: which split, and the boundary between
@@ -2303,6 +2312,9 @@ pub struct Workspace {
     /// The active group's Bases view, the same way: it shows the open file
     /// when that is a `.base`.
     bases: Entity<BasesView>,
+    /// The active group's PDF view, the same way: it shows the open file
+    /// when that is a `.pdf`.
+    pdf: Entity<PdfView>,
     graph: Entity<GraphView>,
     /// The mode to return to when the graph closes.
     mode_before_graph: ViewMode,
@@ -2413,9 +2425,13 @@ fn view_subscriptions(
     reading: &Entity<ReadingView>,
     canvas: &Entity<CanvasView>,
     bases: &Entity<BasesView>,
+    pdf: &Entity<PdfView>,
     cx: &mut Context<Workspace>,
 ) -> Vec<Subscription> {
     vec![
+        cx.subscribe(pdf, |this, _, event: &PdfEvent, cx| match event {
+            PdfEvent::Report(message) => this.report(message.clone(), cx),
+        }),
         // A row of a base names a file; activating it opens that file, the
         // same route a link in the reading view takes.
         cx.subscribe(bases, |this, _, event: &BasesEvent, cx| match event {
@@ -2489,6 +2505,7 @@ impl Workspace {
         let editor = cx.new(|cx| Editor::new(window, cx));
         let canvas = cx.new(CanvasView::new);
         let bases = cx.new(BasesView::new);
+        let pdf = cx.new(PdfView::new);
         let graph = cx.new(GraphView::new);
         let subscriptions = vec![
             // The filter is applied as the pane is drawn; a keystroke only
@@ -2724,13 +2741,16 @@ impl Workspace {
             ),
         ];
         let mut subscriptions = subscriptions;
-        subscriptions.extend(view_subscriptions(&editor, &reading, &canvas, &bases, cx));
+        subscriptions.extend(view_subscriptions(
+            &editor, &reading, &canvas, &bases, &pdf, cx,
+        ));
         let groups = vec![TabGroup::new(
             0,
             editor.clone(),
             reading.clone(),
             canvas.clone(),
             bases.clone(),
+            pdf.clone(),
             ViewMode::Reading,
         )];
         // Closing the window must not lose edits waiting for the autosave.
@@ -2777,6 +2797,7 @@ impl Workspace {
             editor,
             canvas,
             bases,
+            pdf,
             graph,
             mode_before_graph: ViewMode::Reading,
             mode: ViewMode::Reading,
@@ -3583,6 +3604,23 @@ impl Workspace {
             group
                 .bases
                 .update(cx, |b, cx| b.invalidate(state.clone(), cx));
+        }
+        // A changed `.pdf` is forgotten by the cache every drawing shares --
+        // the embeds and the canvas cards read it afresh on their next
+        // frame -- and every view holding it reloads, keeping its page and
+        // zoom. The view never writes, so the change is always somebody
+        // else's.
+        for change in &changes.files {
+            let path = change.path();
+            if FileKind::from_path(path) != FileKind::Pdf {
+                continue;
+            }
+            crate::pdf::documents(cx).invalidate(&state.vault().absolute(path), cx);
+            for group in &self.groups {
+                if group.pdf.read(cx).path() == Some(path) {
+                    group.pdf.update(cx, |p, cx| p.reload(cx));
+                }
+            }
         }
         // Back and forward must never land on a file the vault no longer
         // has, whoever removed it; an atomic external save arrives as a
@@ -4525,6 +4563,7 @@ impl Workspace {
             || unpainted(MainView::Graph, &self.graph.focus_handle(cx))
             || unpainted(MainView::Canvas, &self.canvas.focus_handle(cx))
             || unpainted(MainView::Bases, &self.bases.focus_handle(cx))
+            || unpainted(MainView::Pdf, &self.pdf.focus_handle(cx))
         {
             return true;
         }
@@ -4537,7 +4576,8 @@ impl Workspace {
                 && (g.editor.read(cx).focus_handle_ref().is_focused(window)
                     || g.reading.focus_handle(cx).is_focused(window)
                     || g.canvas.focus_handle(cx).is_focused(window)
-                    || g.bases.focus_handle(cx).is_focused(window))
+                    || g.bases.focus_handle(cx).is_focused(window)
+                    || g.pdf.focus_handle(cx).is_focused(window))
         })
     }
 
@@ -4552,6 +4592,7 @@ impl Workspace {
             MainView::Graph => window.focus(&self.graph.focus_handle(cx), cx),
             MainView::Canvas => window.focus(&self.canvas.focus_handle(cx), cx),
             MainView::Bases => window.focus(&self.bases.focus_handle(cx), cx),
+            MainView::Pdf => window.focus(&self.pdf.focus_handle(cx), cx),
             MainView::Empty => window.focus(&self.focus_handle, cx),
         }
     }
@@ -4731,6 +4772,9 @@ impl Workspace {
         if kind != FileKind::Base {
             self.release_bases(cx);
         }
+        if kind != FileKind::Pdf {
+            self.release_pdf(cx);
+        }
         match kind {
             FileKind::Canvas => match std::fs::read_to_string(state.vault().absolute(path)) {
                 Ok(text) => {
@@ -4854,6 +4898,31 @@ impl Workspace {
                 }
                 Err(err) => self.unreadable(path, previous, &err, state, cx),
             },
+            // A PDF is drawn by its own view, like a canvas and a base. The
+            // view never writes, so a change to the file is always somebody
+            // else's: `after_changes` forgets the parsed file and reloads
+            // every view holding it before this arrives, and what reaches
+            // here for the file already on screen is a tab switch back to
+            // it, which keeps the page and zoom the view is on. A file the
+            // view showed earlier this session comes back to its page: the
+            // view remembers, since the leaf records nothing but the file.
+            FileKind::Pdf => {
+                // Nothing of a note may show through: the reading view is
+                // emptied and the editor let go of, as for a canvas.
+                self.reading.update(cx, |r, cx| {
+                    r.set_note(
+                        None,
+                        reading::build_with("", "", state.as_ref(), state.build_options()),
+                        cx,
+                    )
+                });
+                self.release_buffer(cx);
+                if self.pdf.read(cx).path() != Some(path) {
+                    let absolute = state.vault().absolute(path);
+                    self.pdf.update(cx, |p, cx| p.load(path, absolute, cx));
+                }
+                self.status = path.to_string().into();
+            }
             FileKind::Image => {
                 let model = reading::build_with(
                     path,
@@ -4930,6 +4999,14 @@ impl Workspace {
         }
     }
 
+    /// Lets go of the PDF on screen, if any, the same way. Nothing is
+    /// flushed first: the view never writes.
+    fn release_pdf(&mut self, cx: &mut Context<Self>) {
+        if self.pdf.read(cx).path().is_some() {
+            self.pdf.update(cx, |p, cx| p.release(cx));
+        }
+    }
+
     /// Plain text of a cached heading (markup stripped).
     fn heading_text(raw: &str) -> String {
         let doc = scoria_markdown::parse(raw);
@@ -4992,6 +5069,7 @@ impl Workspace {
         }
         self.release_canvas(cx);
         self.release_bases(cx);
+        self.release_pdf(cx);
         self.reading.update(cx, |r, cx| {
             r.set_note(
                 None,
@@ -5346,6 +5424,22 @@ impl Workspace {
         state: &Arc<VaultState>,
         cx: &mut Context<Self>,
     ) {
+        // `[[doc.pdf#page=3]]`: the link parser reads `page=3` as a heading,
+        // and the PDF view reads it as a page. Every `#` part is put back
+        // and parsed as pdf.js's hash.
+        if FileKind::from_path(path) == FileKind::Pdf {
+            if let Subpath::Headings(names) = subpath {
+                let raw = names.join("#");
+                // Observed: `#page=99` on a five-page file, `#page=0` and
+                // `#page=abc` leave the view where it is.
+                if let Some(page) = scoria_pdf::parse_subpath(&raw).page {
+                    if self.pdf.read(cx).path() == Some(path) {
+                        self.pdf.update(cx, |p, cx| p.go_to_page(page, false, cx));
+                    }
+                }
+            }
+            return;
+        }
         let cache = state.cache();
         let Some(meta) = cache.file(path) else {
             return;
@@ -6790,15 +6884,17 @@ impl Workspace {
         let canvas =
             self.current.is_some() && self.canvas.read(cx).path() == self.current.as_deref();
         let bases = self.current.is_some() && self.bases.read(cx).path() == self.current.as_deref();
-        Self::main_view_for(self.mode, has_note, image, has_buffer, canvas, bases)
+        let pdf = self.current.is_some() && self.pdf.read(cx).path() == self.current.as_deref();
+        Self::main_view_for(self.mode, has_note, image, has_buffer, canvas, bases, pdf)
     }
 
     /// The rule itself, over what the views have to show: `has_note` is the
     /// reading view's built note, `image` whether the open file is one,
     /// `has_buffer` whether the editor's buffer names a file, `canvas`
-    /// whether the canvas view holds the open file and `bases` whether the
-    /// Bases view does. Neither a canvas nor a base has a reading or a
-    /// source mode, so either is painted in every mode but the graph's.
+    /// whether the canvas view holds the open file, `bases` whether the
+    /// Bases view does and `pdf` whether the PDF view does. None of a
+    /// canvas, a base or a PDF has a reading or a source mode, so any of
+    /// them is painted in every mode but the graph's.
     fn main_view_for(
         mode: ViewMode,
         has_note: bool,
@@ -6806,11 +6902,13 @@ impl Workspace {
         has_buffer: bool,
         canvas: bool,
         bases: bool,
+        pdf: bool,
     ) -> MainView {
         match mode {
             ViewMode::Graph => MainView::Graph,
             _ if canvas => MainView::Canvas,
             _ if bases => MainView::Bases,
+            _ if pdf => MainView::Pdf,
             ViewMode::Reading if has_note => MainView::Reading,
             // An image has no source to edit, so it reads the same in the
             // editing modes as it does in the reading view.
@@ -6839,6 +6937,7 @@ impl Workspace {
                 reading: self.reading.clone(),
                 canvas: self.canvas.clone(),
                 bases: self.bases.clone(),
+                pdf: self.pdf.clone(),
             };
         }
         let tab = g.tabs.get(g.active_tab);
@@ -6856,6 +6955,7 @@ impl Workspace {
             reading: g.reading.clone(),
             canvas: g.canvas.clone(),
             bases: g.bases.clone(),
+            pdf: g.pdf.clone(),
         }
     }
 
@@ -7156,9 +7256,11 @@ impl Workspace {
         let canvas =
             view.current.is_some() && view.canvas.read(cx).path() == view.current.as_deref();
         let bases = view.current.is_some() && view.bases.read(cx).path() == view.current.as_deref();
-        match Self::main_view_for(view.mode, has_note, image, has_buffer, canvas, bases) {
+        let pdf = view.current.is_some() && view.pdf.read(cx).path() == view.current.as_deref();
+        match Self::main_view_for(view.mode, has_note, image, has_buffer, canvas, bases, pdf) {
             MainView::Canvas => view.canvas.clone().into_any_element(),
             MainView::Bases => view.bases.clone().into_any_element(),
+            MainView::Pdf => view.pdf.clone().into_any_element(),
             MainView::Graph if self.graph_group() == Some(view.id) => {
                 self.graph.clone().into_any_element()
             }
@@ -7318,6 +7420,7 @@ impl Workspace {
         self.release_buffer(cx);
         self.release_canvas(cx);
         self.release_bases(cx);
+        self.release_pdf(cx);
         self.reading.update(cx, |r, cx| {
             r.set_note(
                 None,
@@ -7489,6 +7592,7 @@ impl Workspace {
         self.reading = group.reading.clone();
         self.canvas = group.canvas.clone();
         self.bases = group.bases.clone();
+        self.pdf = group.pdf.clone();
         let tab = self
             .tabs
             .get(self.active_tab)
@@ -7541,15 +7645,17 @@ impl Workspace {
         let reading = cx.new(ReadingView::new);
         let canvas = cx.new(CanvasView::new);
         let bases = cx.new(BasesView::new);
-        self._subscriptions
-            .extend(view_subscriptions(&editor, &reading, &canvas, &bases, cx));
+        let pdf = cx.new(PdfView::new);
+        self._subscriptions.extend(view_subscriptions(
+            &editor, &reading, &canvas, &bases, &pdf, cx,
+        ));
         let id = self.next_group_id;
         self.next_group_id += 1;
         if let Some(state) = self.state.clone() {
             Self::give_editor_the_vault(&editor, &state, cx);
         }
         self.groups
-            .push(TabGroup::new(id, editor, reading, canvas, bases, mode));
+            .push(TabGroup::new(id, editor, reading, canvas, bases, pdf, mode));
         if let Some(state) = self.state.clone() {
             self.apply_app_config(&state, cx);
         }
@@ -9768,6 +9874,7 @@ impl Workspace {
             "graph": graph,
             "canvas": self.canvas.read(cx).describe(cx),
             "bases": self.bases.read(cx).state_json(),
+            "pdf": self.pdf.read(cx).state_json(cx),
             "status": self.status_text(),
             "status_bar": self.status_bar_text(cx),
             "notices": self.notices.texts(),
@@ -9878,7 +9985,7 @@ impl Workspace {
                 MainView::Canvas => "canvas-editor",
                 _ => "none",
             },
-            "workspace" | "reading" | "graph" | "canvas" | "bases" | "none" => "none",
+            "workspace" | "reading" | "graph" | "canvas" | "bases" | "pdf" | "none" => "none",
             _ => "input",
         }
     }
@@ -9953,6 +10060,12 @@ impl Workspace {
         }
         if self.bases.focus_handle(cx).is_focused(window) {
             return "bases";
+        }
+        if let Some(field) = self.pdf.read(cx).focused_field(window, cx) {
+            return field;
+        }
+        if self.pdf.focus_handle(cx).is_focused(window) {
+            return "pdf";
         }
         if self.switcher.focus_handle(cx).is_focused(window) {
             return "switcher-input";
@@ -10043,6 +10156,7 @@ impl Workspace {
             "graph" => MainView::Graph,
             "canvas" => MainView::Canvas,
             "bases" => MainView::Bases,
+            "pdf" => MainView::Pdf,
             other => return Err(format!("unknown view: {other}")),
         };
         if wanted != painted {
@@ -12596,9 +12710,11 @@ fn leaf_json(tab: &Tab) -> Value {
 }
 
 /// The Lucide icon Obsidian records on a file's leaf: the dashboard for a
-/// canvas, the list layout for a base, the plain file otherwise.
+/// canvas, the list layout for a base, the text file for a PDF (observed:
+/// `tools/obsidian-probe/results/2026-10-26-pdf.json`), the plain file
+/// otherwise.
 ///
-/// OBSERVE: what it writes for images, PDFs and the rest, and the base's
+/// OBSERVE: what it writes for images and the rest, and the base's
 /// own leaf icon -- the Bases probe of 2026-10-25 never read a leaf, so
 /// `lucide-layout-list` here is the ribbon button's observed icon (see
 /// [[Specification#Observed Bases write behavior, Obsidian 1.14.5
@@ -12607,6 +12723,7 @@ fn leaf_icon(path: &str) -> &'static str {
     match FileKind::from_path(path) {
         FileKind::Canvas => "lucide-layout-dashboard",
         FileKind::Base => "lucide-layout-list",
+        FileKind::Pdf => "lucide-file-text",
         _ => "lucide-file",
     }
 }
@@ -12659,12 +12776,16 @@ fn tab_foot(left: bool, theme: &Theme) -> impl IntoElement {
 }
 
 /// The tab strip's name for a file: a note's name without `.md`, and a
-/// canvas without `.canvas` or a base without `.base` too, which is how
-/// Obsidian titles its tabs -- no view of its own ever shows an extension.
+/// canvas without `.canvas`, a base without `.base` or a PDF without
+/// `.pdf` too, which is how Obsidian titles its tabs -- no view of its own
+/// ever shows an extension (the PDF's is observed: `doc.pdf` is the tab
+/// "doc" and the leaf's `title` "doc").
 fn tab_display_name(file_name: &str) -> &str {
     match file_name.rsplit_once('.') {
         Some((stem, ext))
-            if (ext.eq_ignore_ascii_case("canvas") || ext.eq_ignore_ascii_case("base"))
+            if (ext.eq_ignore_ascii_case("canvas")
+                || ext.eq_ignore_ascii_case("base")
+                || ext.eq_ignore_ascii_case("pdf"))
                 && !stem.is_empty() =>
         {
             stem
@@ -13514,6 +13635,52 @@ mod tests {
         assert_eq!(leaf_json(&restored), written);
     }
 
+    /// A PDF tab is written as Obsidian's `pdf` leaf, which is the file
+    /// alone: observed, `state.state` is `{"file": ..}` before and after
+    /// scrolling, zooming and a quit, the icon is `lucide-file-text` and
+    /// the title drops the extension. Where the view is in the file never
+    /// reaches the leaf, and a leaf read with extra keys is written back as
+    /// read.
+    #[test]
+    fn a_pdf_tab_is_written_as_a_file_only_pdf_leaf() {
+        let tab = Tab {
+            path: Some("Papers/Field.pdf".into()),
+            mode: ViewMode::LivePreview,
+            history: Vec::new(),
+            history_ix: 0,
+            leaf: None,
+            view_state: None,
+        };
+        let written = leaf_json(&tab);
+        assert_eq!(written["state"]["type"], json!("pdf"));
+        assert_eq!(written["state"]["icon"], json!("lucide-file-text"));
+        assert_eq!(written["state"]["title"], json!("Field"));
+        assert_eq!(
+            written["state"]["state"],
+            json!({"file": "Papers/Field.pdf"})
+        );
+        assert!(written["state"]["state"].get("mode").is_none());
+        assert_eq!(tab.title(), "Field", "the strip shows no extension either");
+        assert_eq!(tab_display_name("Field.PDF"), "Field");
+        let known = |_: &str| true;
+        let (_, restored) = tab_from_leaf(&written, ViewMode::Reading, &known).unwrap();
+        assert_eq!(restored.view_state, None);
+        assert_eq!(leaf_json(&restored), written);
+        // A leaf somebody else wrote with keys of its own keeps them.
+        let read = json!({
+            "id": "0f6c3a9d2b1e4c5a",
+            "type": "leaf",
+            "state": {
+                "type": "pdf",
+                "state": {"file": "Papers/Field.pdf", "mystery": true},
+                "icon": "lucide-file-text",
+                "title": "Field"
+            }
+        });
+        let (_, restored) = tab_from_leaf(&read, ViewMode::Reading, &known).unwrap();
+        assert_eq!(leaf_json(&restored), read, "never moved: written as read");
+    }
+
     #[test]
     fn a_tab_that_moved_to_another_note_gets_a_fresh_leaf() {
         let read = leaf("a1072f377b3d1c69", "Old.md", "source", false);
@@ -14337,6 +14504,21 @@ mod tests {
         );
     }
 
+    /// The socket's name for the PDF view is `pdf`, the same three ways;
+    /// its page box is a field of its own, so `type` reaches it the way it
+    /// reaches any input.
+    #[test]
+    fn the_socket_calls_the_pdf_view_pdf() {
+        assert_eq!(MainView::Pdf.as_str(), "pdf");
+        assert_eq!(
+            Workspace::focus_target("pdf", MainView::Pdf),
+            Ok(Some(MainView::Pdf))
+        );
+        let err = Workspace::focus_target("pdf", MainView::Editor).unwrap_err();
+        assert!(err.contains("painting editor, not pdf"), "{err}");
+        assert_eq!(Workspace::typed_text_target("pdf", MainView::Pdf), "none");
+    }
+
     /// An editor whose buffer names no file never gets the main area: on
     /// launch over a vault with nothing to open the buffer belongs to
     /// nothing, and anything typed into it would be saved nowhere.
@@ -14344,54 +14526,64 @@ mod tests {
     fn the_main_area_paints_no_editor_without_a_file_behind_it() {
         for mode in [ViewMode::LivePreview, ViewMode::Source] {
             assert_eq!(
-                Workspace::main_view_for(mode, false, false, false, false, false),
+                Workspace::main_view_for(mode, false, false, false, false, false, false),
                 MainView::Empty,
                 "{mode:?} with nothing open"
             );
             assert_eq!(
-                Workspace::main_view_for(mode, true, false, true, false, false),
+                Workspace::main_view_for(mode, true, false, true, false, false, false),
                 MainView::Editor,
                 "{mode:?} with a note open"
             );
             // The `--synthetic` spike hands the editor a note that is in no
             // vault: the buffer names a file, and that is what mounts it.
             assert_eq!(
-                Workspace::main_view_for(mode, false, false, true, false, false),
+                Workspace::main_view_for(mode, false, false, true, false, false, false),
                 MainView::Editor,
                 "{mode:?} with a buffer that belongs to no vault"
             );
             assert_eq!(
-                Workspace::main_view_for(mode, true, true, true, false, false),
+                Workspace::main_view_for(mode, true, true, true, false, false, false),
                 MainView::Reading,
                 "{mode:?} over an image"
             );
         }
         assert_eq!(
-            Workspace::main_view_for(ViewMode::Reading, false, false, true, false, false),
+            Workspace::main_view_for(ViewMode::Reading, false, false, true, false, false, false),
             MainView::Empty,
             "a buffer is not a built note"
         );
         assert_eq!(
-            Workspace::main_view_for(ViewMode::Graph, false, false, false, false, false),
+            Workspace::main_view_for(ViewMode::Graph, false, false, false, false, false, false),
             MainView::Graph,
             "the graph needs no file"
         );
         for mode in [ViewMode::Reading, ViewMode::LivePreview, ViewMode::Source] {
             assert_eq!(
-                Workspace::main_view_for(mode, false, false, false, true, false),
+                Workspace::main_view_for(mode, false, false, false, true, false, false),
                 MainView::Canvas,
                 "{mode:?} over a canvas"
             );
             assert_eq!(
-                Workspace::main_view_for(mode, false, false, false, false, true),
+                Workspace::main_view_for(mode, false, false, false, false, true, false),
                 MainView::Bases,
                 "{mode:?} over a base"
             );
+            assert_eq!(
+                Workspace::main_view_for(mode, false, false, false, false, false, true),
+                MainView::Pdf,
+                "{mode:?} over a PDF"
+            );
         }
+        assert_eq!(
+            Workspace::main_view_for(ViewMode::Graph, false, false, false, false, false, true),
+            MainView::Graph,
+            "the graph wins over a PDF"
+        );
         // The graph is the one view that outranks a file: a canvas or a base
         // open behind it stays behind it.
         assert_eq!(
-            Workspace::main_view_for(ViewMode::Graph, false, false, false, false, true),
+            Workspace::main_view_for(ViewMode::Graph, false, false, false, false, true, false),
             MainView::Graph,
             "the graph wins over a base"
         );

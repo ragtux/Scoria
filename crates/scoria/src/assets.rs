@@ -33,10 +33,12 @@ macro_rules! icons {
 icons!(
     "align-left",
     "archive",
+    "arrow-down",
     "arrow-down-left",
     "arrow-left",
     "arrow-left-right",
     "arrow-right",
+    "arrow-up",
     "arrow-up-narrow-wide",
     "arrow-up-right",
     "book-open",
@@ -87,8 +89,10 @@ icons!(
     "links-coming-in",
     "links-going-out",
     "list",
+    "list-start",
     "maximize",
     "minus",
+    "move-horizontal",
     "move-vertical",
     "palette",
     "panel-left",
@@ -97,6 +101,7 @@ icons!(
     "pin",
     "plus",
     "quote",
+    "rectangle-vertical",
     "redo-2",
     "rotate-ccw",
     "search",
@@ -116,6 +121,8 @@ icons!(
     "undo-2",
     "x",
     "zap",
+    "zoom-in",
+    "zoom-out",
 );
 
 /// The logo, the one bundled asset that is not a monochrome icon. It is

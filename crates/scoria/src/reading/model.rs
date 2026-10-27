@@ -152,11 +152,46 @@ pub enum EmbedKind {
     /// table is far larger than any other embed's payload and every `RBlock`
     /// would otherwise carry the room for one.
     Base(Box<crate::bases::EmbeddedBase>),
+    /// A `.pdf`: the path and the subpath, nothing read. The pages come
+    /// from the document cache when the embed is drawn (`pdf::embed`).
+    Pdf(crate::pdf::embed::PdfEmbed),
     /// The target file does not exist.
     Missing,
     /// The target exists but Scoria cannot render it inline yet.
     Unsupported(FileKind),
     TooDeep,
+}
+
+/// Calls `f` on every embed in `blocks`, in document order, descending into
+/// embedded notes, quotes, callouts, lists and footnotes: the walk the
+/// control socket's dumps and the canvas's dependency lists share.
+pub fn each_embed<'a>(blocks: &'a [RBlock], f: &mut dyn FnMut(&'a Embed)) {
+    for block in blocks {
+        match block {
+            RBlock::Paragraph(segments) => {
+                for segment in segments {
+                    if let Segment::Embed(embed) = segment {
+                        f(embed);
+                        if let EmbedKind::Note { blocks, .. } = &embed.kind {
+                            each_embed(blocks, f);
+                        }
+                    }
+                }
+            }
+            RBlock::Quote(children) | RBlock::Callout { children, .. } => each_embed(children, f),
+            RBlock::List { items, .. } => {
+                for item in items {
+                    each_embed(&item.children, f);
+                }
+            }
+            RBlock::Footnotes(notes) => {
+                for (_, body) in notes {
+                    each_embed(body, f);
+                }
+            }
+            _ => {}
+        }
+    }
 }
 
 /// Where a task's `[ ]` marker sits in the note: a zero-based line and the
@@ -946,6 +981,21 @@ impl<'v> Builder<'v> {
                     Some(base) => EmbedKind::Base(base),
                     None => EmbedKind::Missing,
                 },
+                // A PDF is resolved and nothing more: the file is parsed by
+                // the document cache when the embed is drawn, off the UI
+                // thread. The subpath (`#page=3&height=400`) is the link's
+                // own, not a heading, so it is read from the raw link text.
+                FileKind::Pdf => {
+                    let id = self.next_id;
+                    self.next_id += 1;
+                    EmbedKind::Pdf(crate::pdf::embed::PdfEmbed::new(
+                        id,
+                        path.clone(),
+                        self.vault.absolute(&path),
+                        link,
+                        height,
+                    ))
+                }
                 other => EmbedKind::Unsupported(other),
             },
         };
@@ -1334,6 +1384,7 @@ mod tests {
                 ),
                 ("Loop.md", "![[Loop]]"),
                 ("pic.png", ""),
+                ("Field.pdf", ""),
                 ("Main.base", ""),
                 ("Broken.base", ""),
                 ("Nester.md", "![[Main.base]]"),
@@ -1525,6 +1576,47 @@ mod tests {
         assert!(matches!(first_embed(&blocks[0]).kind, EmbedKind::Base(_)));
         // And the view over the whole vault was resolved exactly once.
         assert_eq!(stub.base_calls.get(), 1);
+    }
+
+    #[test]
+    fn a_pdf_embed_carries_its_subpath_and_reads_nothing() {
+        use crate::pdf::embed::DEFAULT_HEIGHT;
+        let m = build(
+            "Self.md",
+            "![[Field.pdf]]\n\n![[Field.pdf#page=2]]\n\n![[Field.pdf#height=200|300x150]]\n\n\
+             ![](Field.pdf#page=3)\n\n![[Nope.pdf]]",
+            &stub(),
+        );
+        let pdf = |ix: usize| match &first_embed(&m.blocks[ix]).kind {
+            EmbedKind::Pdf(pdf) => pdf.clone(),
+            other => panic!("{other:?}"),
+        };
+        // The stub never read `Field.pdf` (it has no text to read): the
+        // model carries the path and the subpath and nothing else.
+        let plain = pdf(0);
+        assert_eq!(plain.path, "Field.pdf");
+        assert_eq!(plain.absolute, PathBuf::from("/vault/Field.pdf"));
+        assert_eq!((plain.page, plain.height), (None, None));
+        assert_eq!(plain.box_height(), DEFAULT_HEIGHT);
+        // `#page=2` is the link's own subpath, not a heading: zero-based.
+        assert_eq!(pdf(1).page, Some(1));
+        // `#height=` wins over the alias size; the alias is still the alt.
+        let sized = pdf(2);
+        assert_eq!(sized.height, Some(200.0));
+        assert_eq!(first_embed(&m.blocks[2]).width, Some(300.0));
+        // The markdown image form reads the same subpath.
+        assert_eq!(pdf(3).page, Some(2));
+        // Every embed has an id of its own, so two of one file scroll apart.
+        assert_ne!(pdf(0).id, pdf(1).id);
+        assert!(matches!(first_embed(&m.blocks[4]).kind, EmbedKind::Missing));
+    }
+
+    #[test]
+    fn each_embed_walks_into_embedded_notes() {
+        let m = build("Self.md", "![[Nester]]\n\n> ![[Field.pdf]]", &stub());
+        let mut seen = Vec::new();
+        each_embed(&m.blocks, &mut |embed| seen.push(embed.link.clone()));
+        assert_eq!(seen, vec!["Nester", "Main.base", "Field.pdf"]);
     }
 
     #[test]

@@ -167,6 +167,13 @@ enum Content {
     },
     /// An image file card: the file, fitted inside the card.
     Image(PathBuf),
+    /// A `.pdf` file card: its pages fitted to the card's width and
+    /// scrolling inside it, opened at the node's `#page=`. The file is
+    /// parsed by the document cache when the card is drawn, not here.
+    Pdf {
+        absolute: PathBuf,
+        page: Option<usize>,
+    },
     /// A file Scoria does not draw inside a card: its name and kind.
     Placeholder {
         name: String,
@@ -275,6 +282,9 @@ impl Cards {
         // text card shows a text icon, a note card its name; an image stays
         // an image and a group keeps its background (it is the group). Its
         // label is the view's. A link card keeps Scoria's address card.
+        // OBSERVE: whether a PDF card keeps its pages when zoomed out the
+        // way an image does, or shows its name the way a note does; it
+        // shows its name here.
         let zoomed_out = (scale as f64).log2() <= ZOOM_THRESHOLD;
         let keeps_content = matches!(entry.content, Content::Image(_))
             || matches!(node.kind, NodeType::Group | NodeType::Link);
@@ -304,6 +314,25 @@ impl Cards {
                     .size_full()
                     .object_fit(ObjectFit::Contain)
                     .into_any_element(),
+                // The same pages a note embed draws, filling the card: the
+                // zoom reaches them through the card's width.
+                Content::Pdf { absolute, page } => {
+                    // "Open" in the card's toolbar opens the file, through
+                    // the same link handler a card's links use.
+                    let path = node.file.clone().unwrap_or_default();
+                    let open: crate::pdf::embed::OpenPath = {
+                        let handler = self.on_link.clone();
+                        let source = path.clone();
+                        Rc::new(move |target: &str, window: &mut Window, cx: &mut App| {
+                            if let Some(handler) = &handler {
+                                handler(&source, LinkTarget::Internal(target.into()), window, cx);
+                            }
+                        })
+                    };
+                    crate::pdf::embed::render_card(
+                        absolute, &path, *page, &node.id, scale, theme, open,
+                    )
+                }
                 Content::Placeholder { name, kind } => Cards::placeholder(
                     kind_icon(*kind),
                     name,
@@ -447,6 +476,15 @@ impl Cards {
                         }
                     }
                     FileKind::Image => Content::Image(vault.absolute(&path)),
+                    // The node's `subpath` is the link's (`#page=2`), read
+                    // the way an embed's is.
+                    FileKind::Pdf => Content::Pdf {
+                        absolute: vault.absolute(&path),
+                        page: node
+                            .subpath
+                            .as_deref()
+                            .and_then(|s| scoria_pdf::parse_subpath(s).page),
+                    },
                     kind => Content::Placeholder {
                         name: path.rsplit('/').next().unwrap_or(&path).to_string(),
                         kind,
@@ -715,8 +753,8 @@ fn kind_label(kind: FileKind) -> &'static str {
     }
 }
 
-/// The vault files a built model shows besides its own: embedded notes by
-/// path and embedded images by file name.
+/// The vault files a built model shows besides its own: embedded notes and
+/// PDFs by path and embedded images by file name.
 fn collect_deps(blocks: &[RBlock], out: &mut Vec<Dep>) {
     for block in blocks {
         match block {
@@ -729,6 +767,7 @@ fn collect_deps(blocks: &[RBlock], out: &mut Vec<Dep>) {
                                 collect_deps(blocks, out);
                             }
                             EmbedKind::Image(path) => out.extend(Dep::name(path)),
+                            EmbedKind::Pdf(pdf) => out.push(Dep::path(&pdf.path)),
                             _ => {}
                         }
                     }
@@ -1165,5 +1204,56 @@ mod tests {
         assert!(deps.contains(&Dep::path("Other.md")), "{deps:?}");
         assert!(deps.contains(&Dep::path("Third.md")), "{deps:?}");
         assert!(deps.contains(&Dep::Name("pic.png".into())), "{deps:?}");
+    }
+
+    #[test]
+    fn an_embedded_pdf_is_a_dependency_by_path() {
+        let stub = Stub(vec![
+            ("Main.md", "![[Field.pdf#page=2]]\n"),
+            ("docs/Field.pdf", ""),
+        ]);
+        let model = build_with(
+            "Main.md",
+            "![[Field.pdf#page=2]]\n",
+            &stub,
+            BuildOptions::default(),
+        );
+        let mut deps = Vec::new();
+        collect_deps(&model.blocks, &mut deps);
+        assert!(deps.contains(&Dep::path("docs/Field.pdf")), "{deps:?}");
+    }
+
+    /// A `.pdf` file node is a PDF card with the node's `#page=`, and the
+    /// file is listed as its dependency; the card reads nothing of it (the
+    /// file here is empty and would not parse).
+    #[test]
+    fn a_pdf_file_node_is_a_pdf_card_opened_at_its_page() {
+        use std::fs;
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        fs::create_dir_all(root.join(".obsidian")).unwrap();
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(root.join("docs/Field.pdf"), "").unwrap();
+        let state = Arc::new(VaultState::load(&root.to_path_buf()).unwrap());
+        let cards = Cards::new();
+
+        let mut node = Node::new("n", NodeType::File, 0., 0., 400., 300.);
+        node.file = Some("docs/Field.pdf".into());
+        node.subpath = Some("#page=2".into());
+        let (content, title, deps) = cards.build(&node, &state);
+        match content {
+            Content::Pdf { absolute, page } => {
+                assert_eq!(absolute, root.join("docs/Field.pdf"));
+                assert_eq!(page, Some(1));
+            }
+            _ => panic!("not a PDF card"),
+        }
+        assert_eq!(title, "Field.pdf");
+        assert!(deps.contains(&Dep::path("docs/Field.pdf")), "{deps:?}");
+
+        // Without a subpath the card opens at the first page.
+        node.subpath = None;
+        let (content, _, _) = cards.build(&node, &state);
+        assert!(matches!(content, Content::Pdf { page: None, .. }));
     }
 }

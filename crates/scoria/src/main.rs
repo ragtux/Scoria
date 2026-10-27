@@ -23,6 +23,7 @@ mod help;
 mod mentions;
 mod palette;
 mod panes;
+mod pdf;
 mod preview;
 mod prompt;
 mod properties;
@@ -295,6 +296,7 @@ pub fn bind_all_keys(cx: &mut App, registry: &CommandRegistry) {
     text_input::bind_keys(cx);
     graph::bind_keys(cx);
     canvas::view::bind_keys(cx);
+    pdf::view::bind_keys(cx);
     explorer::bind_keys(cx);
     settings::bind_keys(cx);
     help::bind_keys(cx);

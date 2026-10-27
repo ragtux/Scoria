@@ -21,6 +21,7 @@ use gpui::{
 };
 use scoria_formats::config::PropertyTypes;
 use scoria_formats::properties::{PropertiesInDocument, Property, PropertyType};
+use scoria_formats::FileKind;
 use scoria_markdown::Alignment;
 use serde_json::{json, Value};
 use std::collections::HashSet;
@@ -377,6 +378,9 @@ impl ReadingView {
             // An embedded base draws no chrome of its own, so this is the
             // only way one is visible from outside the app.
             "bases": crate::bases::embed::describe_all(&self.model.blocks),
+            // And an embedded PDF likewise: its pages are images and its
+            // box has no title, so the dump is what names it.
+            "pdfs": crate::pdf::embed::describe_all(&self.model.blocks),
         })
     }
 
@@ -1220,6 +1224,41 @@ impl<'a> Renderer<'a> {
                         on_link(LinkTarget::Internal(path.to_string()), window, cx)
                     });
                 crate::bases::embed::render(base, t, open)
+            }
+            // `![[x.pdf]]`: the pages are drawn by `pdf::embed`, which asks
+            // the document cache for them when it is painted; the model
+            // carried only the path and the subpath. A click opens the file
+            // by vault path, as every other embed's target is opened.
+            EmbedKind::Pdf(pdf) => {
+                let on_link = self.on_link.clone();
+                let open: crate::pdf::embed::OpenPath =
+                    Rc::new(move |path: &str, window: &mut Window, cx: &mut App| {
+                        on_link(LinkTarget::Internal(path.to_string()), window, cx)
+                    });
+                crate::pdf::embed::render(pdf, t, self.available, open)
+            }
+            // A missing attachment is Obsidian's `file-embed
+            // mod-empty-attachment` box (observed on `![[missing.pdf]]`,
+            // `tools/obsidian-probe/results/2026-10-26-pdf.json` s08): a
+            // block padded 8 px with an 8 px radius on the alternate
+            // ground, 14 px muted text saying `“missing.pdf” could not be
+            // found.` A missing note keeps the shell's own line.
+            EmbedKind::Missing
+                if FileKind::from_path(scoria_markdown::parse_linktext(&embed.link).path)
+                    != FileKind::Markdown =>
+            {
+                div()
+                    .my_1()
+                    .p(px(8.))
+                    .rounded(px(8.))
+                    .bg(t.bg_alt)
+                    .text_size(px(14.))
+                    .text_color(t.text_muted)
+                    .child(SharedString::from(format!(
+                        "\u{201c}{}\u{201d} could not be found.",
+                        embed.link
+                    )))
+                    .into_any_element()
             }
             EmbedKind::Missing => div()
                 .my_1()

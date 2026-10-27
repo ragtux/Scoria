@@ -6007,3 +6007,388 @@ unchanged.
 resolves to no rows draws "0 results", which is what `BadFilter.base` reports;
 where Obsidian puts that count, and what an empty table's body looks like, were
 never read.
+
+## Observed PDF view behavior, Obsidian 1.14.5 (installer build 1.13.7)
+
+Observed on 2026-10-26 over CDP on a scratch vault
+(`tools/obsidian-probe/pdf.mjs`; raw results in
+`tools/obsidian-probe/results/2026-10-26-pdf.json`, 36 steps over five
+launches, screenshots beside the run). `document.title` said 1.14.5, the user
+agent `obsidian/1.13.7`. Window 1024 by 800 CSS px at a device pixel ratio of
+1.45; the leaf was 680 px wide with the left sidebar open, 980 with it
+collapsed. Fixtures: `doc.pdf` (typst 0.14.2, five A4 pages, page 3
+landscape, a two-level outline, a 40 pt sentence per page), `small.pdf` (one
+US letter page), `broken.pdf` (a `%PDF-1.4` header and 191 bytes of junk),
+`Embeds.md` with eleven embeds and four links, `Board.canvas` with two file
+cards and a text card, `Tall.md` with the embed 40 paragraphs down.
+
+**One warning first.** pdf.js keeps a per-document record in
+`localStorage['pdfjs.history']` (shared by every vault this Obsidian opens),
+keyed by the PDF's fingerprint, and the first pass of this run left a 90°
+rotation in it; every later open of `doc.pdf` — leaf, embed, canvas card —
+came back rotated until the entry was stripped. The `b` steps of the results
+file are the clean pass and are what this section reads; the first pass is
+kept as evidence of the history itself. An implementer who ignores this
+record will differ from Obsidian on every re-open.
+
+### The leaf, and what persists where
+
+The view type is `pdf`, registered for the extension `pdf` in
+`app.viewRegistry.typeByExtension`; the embed registry has `pdf` too. There
+is no PDF core plugin, no PDF setting (the only Settings row matching "PDF"
+is the hotkey for `workspace:export-pdf`), no vault config key, and no
+command whose id contains `pdf` other than `workspace:export-pdf`. The tab
+icon is `lucide-file-text`, the tab's `aria-label` and the view header title
+are the basename (`doc`), and the Files pane tags the row `PDF`.
+
+The leaf record is the whole of what `workspace.json` carries, exactly:
+
+```json
+{"id":"24f2def7e86c6422","type":"leaf","state":{"type":"pdf","state":{"file":"doc.pdf"},"icon":"lucide-file-text","title":"doc"}}
+```
+
+`leaf.view.getState()` is `{"file":"doc.pdf"}` and stays so after
+scrolling, zooming, rotating and `requestSaveLayout()`; nothing about page
+or zoom is ever written to the vault. Page, zoom, scroll offset, rotation,
+sidebar and spread live in `localStorage['pdfjs.history']`, shape
+`{"files":[{"fingerprint":"c150ba4f803124202a289f715c5f156b","page":3,"zoom":150,"scrollLeft":-4,"scrollTop":539,"rotation":0,"sidebarView":0}]}`
+(`zoom` is `"page-width"`, `"page-height"` or a percent number;
+`spreadMode` appears only once set; `scrollTop`/`scrollLeft` are pdf.js's
+in-page destination offsets in PDF units, not pixels). The entry is
+rewritten on every scroll and zoom. Two more keys: `pdfjs.sidebarView`
+(`"0"`, `"1"` thumbnails, `"2"` outline — the last sidebar view, global) and
+`<appId>-pdfjs-search-settings`
+(`{"highlightAll":false,"caseSensitive":true,"matchDiacritics":false,"entireWord":false}`).
+"Adapt to theme" also survived a re-open in the same session; where it is
+stored was not found.
+
+**Restart fidelity.** Quit at page 3, scale 1.5, scrollTop 3514; after
+relaunch the leaf came back active at page 3 with the same in-page offset
+(`location.top` 539 before, 543 after) but at `page-width`, scale 0.559 —
+the page and rotation and sidebar come back through the history, the zoom
+level does not: every open starts at `page-width`. A same-session re-open
+after rotating showed the same: page 3 and rotation 90 kept, zoom reset.
+`lastOpenFiles` listed `doc.pdf` like any file.
+
+### The view's markup
+
+`.view-content` (flex column, `--pdf-background` `#1C1C1C` dark / `#ffffff`
+light) holds `.pdf-toolbar` then `.pdf-container` > `.pdf-content-container`
+> `.pdf-viewer-container` (absolute, `overflow:auto`, the scrolling box;
+`tabindex` via its text layers) > `.pdfViewer` > `.page` × N, plus
+`.pdf-sidebar-container` and `.pdf-findbar.pdf-toolbar.mod-hidden`. The
+view header has the Bookmark and More options actions only. The pdf.js
+`PDFViewer` is at `view.viewer.child.pdfViewer.pdfViewer`; its owner
+`view.viewer.child.pdfViewer` carries `subpath`, `height`, `isEmbed`,
+`applySubpath`, `pdfSidebar`, `toolbar`, `findBar`, `pdfOutlineViewer`,
+`pageInvert`, `pageBackground`. `textLayerMode` is on (`.textLayer` per page,
+opacity 0.2, `span.textLayerNode` with transparent text); the annotation
+layers are present and hidden.
+
+**Toolbar.** 38.69 px tall, full width, `padding: 4px 12px`, flex, background
+`--pdf-background`, text `rgb(218,218,218)` dark / `rgb(34,34,34)` light.
+`.pdf-toolbar-left` (gap 4) in order: *Toggle sidebar* (`lucide-layout-list`),
+*Sidebar options* (`lucide-chevron-down`), a 12 px `.pdf-toolbar-spacer`,
+*Zoom out* (`lucide-zoom-out`), a `.pdf-toolbar-divider` 1 by 16 px
+(`#333333` dark, `#e4e4e4` light), *Zoom in* (`lucide-zoom-in`), *Display
+options* (`lucide-chevron-down`), a spacer, `input.pdf-page-input`
+(`type=number`, `max=5`, 52 by 30, `padding: 4px 8px`, radius 5, 13 px,
+background `rgb(46,46,46)` with a 0.69 px `#333333` border dark / white with
+`#e4e4e4` light, value right-aligned), `span.pdf-page-numbers` "of 5" (13 px).
+Every button is a 28 by 24 `.clickable-icon` (`padding: 4px 6px`, radius 4,
+16 px icon) in `rgb(179,179,179)` dark / `rgb(92,92,92)` light; the sidebar
+toggle while open is `is-active`: accent text `rgb(166,138,249)` on the
+accent at 10 % alpha. `.pdf-toolbar-right` (gap 4) is empty in a leaf; in an
+embed and on a canvas card it holds a spacer and *Open*
+(`lucide-more-vertical`), and on a canvas card also *Save current position
+in document* (`lucide-file-symlink`). There is no zoom `<select>`, no
+rotation button and no find button.
+
+**Pages.** `.pdfViewer` carries `--scale-factor` = scale × 4/3 (0.791 →
+1.0550, 1 → 1.3333, 1.5 → 2). A `.page` is the PDF size × `--scale-factor`
+(the A4 page 628 by 888 CSS px at 0.791) inside a 4.14 px transparent
+border, so page boxes are 636.27 by 896.27 and abut with no gap (8.28 px
+between canvases). The `.canvasWrapper` carries `--pdf-shadow`:
+`0 0 0 1px #333333` dark, `0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px
+rgba(0,0,0,0.1)` light; the page itself has no background, no radius. The
+landscape page is 896.27 by 636.27 and centred. The canvas bitmap is 909 by
+1287 for the 628 by 888 page (DPR 1.45). The `::selection` on the text layer
+is the accent at 0.33 alpha. Page 1 starts at the top of the scroll box with
+no top margin; the viewer opened with `scrollLeft` 15.9.
+
+### Zoom
+
+The default on every open is `currentScaleValue = "page-width"` (0.791 at
+668 px of client width; 1.169 at 968 after collapsing the left sidebar — the
+scale follows a resize at once; 0.615 at 528 with the PDF sidebar open).
+*Zoom in* from 0.791 gives 0.9, 1, 1.1, 1.3, 1.5, 1.7; *Zoom out* gives 0.7,
+0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.1 (pdf.js's ×1.1 step rounded out to a tenth,
+floor 0.1); after a step `currentScaleValue` is the number as a string.
+Setting 10 holds (ceiling 10). *Display options* is a `.menu`: **Fit width**
+(`lucide-move-horizontal`, checked by default), **Fit height**
+(`lucide-move-vertical`), ---, **Single page** (`lucide-rectangle-vertical`,
+checked), **Two-page (odd)** (`rectangle-vertical-double`, not a Lucide
+name), **Two-page (even)**, ---, **Adapt to theme** (`lucide-palette`). Fit
+height sets `currentScaleValue` to `page-height` (0.584 here, the same scale
+pdf.js's `page-fit` gives; the A4 page then 467.51 by 659.52, centred).
+Two-page (odd) sets `spreadMode` 1 and wraps pages in `.pdfViewer >
+.spread` pairs at half the width (0.396, pages 318 by 448); (even) sets 2
+and puts page 1 alone on the right. Adapt to theme adds `mod-themed` to
+`.pdf-container`, sets the owner's `pageInvert` true and `pageBackground`
+`#1C1C1C`; the canvas has no CSS filter, so the inversion is in pdf.js's
+render. `Ctrl+=`, `Ctrl+-`, `Ctrl+0` are Obsidian's window zoom
+(`webFrame` 1 → 1.1 / 0.91 / 1), not the viewer's; `Ctrl+wheel` zooms the
+viewer (100 units down: 0.791 → 0.5; 100 up: → 1.1).
+
+### Keyboard, scrolling and the page number
+
+With the viewer focused (a click on a page focuses its `.textLayer`): Down /
+Up scroll 40 px; PageDown, Space / PageUp, Shift+Space scroll 566 px in a
+672 px box; Home / End go to 0 / the end (page 5, 3550); **Right / Left go
+to the next / previous page's top** (896 per page) — they and Escape are the
+only keys in `view.scope` (`ArrowLeft`, `ArrowRight`, `Escape`, no
+modifiers). `j`, `k`, `n`, `p`, `r`, `Shift+r`, `Ctrl+e` do nothing; `Ctrl+a`
+selects nothing; `Ctrl+f` opens the find bar; `Ctrl+p` and `Ctrl+o` open
+Obsidian's own modals from inside the viewer.
+
+A 900-unit wheel scrolls 900 px. `currentPageNumber` is pdf.js's: the page
+the largest fraction of which is visible, earlier page on a tie — at
+scrollTop 886 (10 px above page 2's top) it is already 2, at 538 (60 % down
+page 1) still 1, 10 px above page 3's top already 3. `openLinkText` and
+the page input land on a page's `offsetTop` exactly (page tops 0, 896,
+1793, 2429, 3325 at 0.791).
+
+**Page input.** Typing a number and Enter goes to that page's top; `99`,
+`0` and `abc` leave the page alone and the input is put back to the current
+page; blurring with a changed value also commits. The label is `of N`.
+
+### Sidebar
+
+*Toggle sidebar* adds `sidebarOpen` to `.pdf-content-container`;
+`.pdf-sidebar-container` is 140 px wide, absolute at the left, background
+`--pdf-sidebar-background` (`#1C1C1C` / `#ffffff`), with a 3 px
+`.pdf-sidebar-resizer` at its right edge; the viewer container moves right
+by 140 and `page-width` recomputes. It has no tabs: `.pdf-sidebar-content`
+holds `.pdf-thumbnail-view` (padding 12) and `.pdf-outline-view` (padding 8,
+`hidden` class when not shown), and `data-view` 1 / 2 says which. *Sidebar
+options* is a `.menu`: **Thumbnails** (`lucide-layout-grid`, checked),
+**Table of contents** (`lucide-list`), ---, **Reveal page in table of
+contents** (`lucide-list-start`). A thumbnail is `a[href="#page=N"] >
+.thumbnail[data-page-number][data-page-label][data-loaded] >
+img.thumbnailImage` (a PNG data URL) with `--thumbnail-width: 98px;
+--thumbnail-height: 138px` (69 for the landscape page), a 7.59 px border
+(transparent; white at 6.7 % on `.selected`), radius 4, so 113 by 153 per
+box; clicking one goes to that page and moves `selected`. The outline is
+Obsidian's tree: `.tree-item.is-collapsed > .tree-item-self.mod-collapsible
+.is-clickable` (24.88 px, `padding: 4px 8px 4px 24px`, margin-bottom 2,
+radius 8, 13 px `rgb(179,179,179)`) with `.collapse-icon > svg.right-triangle`
+(10 px, `rgb(102,102,102)`), `.tree-item-inner` ("1 One") and
+`.tree-item-flair` (the page number, 12 px, `rgb(102,102,102)`); children
+start collapsed. Clicking "3 Three" went to page 3; no row was marked
+current after the click or after *Reveal page in table of contents*. The
+open state and the view survive a re-open through the history entry's
+`sidebarView`.
+
+### Find bar
+
+Only `Ctrl+f` opens it. `.pdf-findbar.pdf-toolbar` (42.67 px, padding 6,
+gap 4, 13 px) is inserted above the viewer container, which shrinks by the
+`--findbar-height: 42px` set on `.pdf-content-container` (class
+`findbarOpen`). Right-aligned `.pdf-search-wrapper`: the count
+`span.pdf-toolbar-label.pdf-find-results-count` ("1 of 3 matches",
+`rgb(179,179,179)`, hidden while empty), a `.search-input-container
+.global-search-input-container` with `input[type=search]` placeholder
+`Search...` (300 by 30, `padding: 4px 8px 4px 30px`, background
+`rgb(46,46,46)`, border `rgb(85,85,85)`, radius 5), its clear button, the
+`.input-right-decorator` *Match case* (icon `uppercase-lowercase-a`), two
+`button.pdf-toolbar-button` *Shift + F3* (`lucide-arrow-up`) and *F3*
+(`lucide-arrow-down`), `.pdf-findbar-settings-btn` *Search settings*
+(`lucide-sliders-horizontal`) and *Close* (`lucide-x`). Typing searches as
+you type: `three` gave "1 of 3 matches", scrolled to page 3 and wrapped the
+hit in `.highlight.selected.appended` (`rgb(138,92,245)`); Enter and the
+down button step to "2 of 3", "3 of 3"; the up button steps back. A query
+with no hit empties the count and gives the input a `rgba(251,70,76,0.6)`
+border and 2 px ring. Escape and Close hide the bar (`mod-hidden`), clear
+the highlights and return focus to the body. *Search settings* toggles an
+inline `.pdf-findbar-settings` panel (absolute, 200 px, radius 8, border
+`#333333`, padding `4px 8px`) of three `.setting-item.mod-toggle` rows (27
+px, 13 px names) **Highlight all**, **Match diacritics**, **Whole words**
+with `.checkbox-container.mod-small` 34 by 19 toggles; the settings key is
+written as above. Match case caught a `THREE` search as case-sensitive;
+the three panel toggles were not confirmed to take (the clicks did not
+flip them in this run).
+
+### Links and `#page=`
+
+`openLinkText('doc.pdf#page=N')` into an existing pdf leaf reuses that leaf
+(no new tab) and scrolls to page N's top. Out of range (`99`, `0`, `-1`)
+leaves the view where it is; `abc` goes to page 1; a bare `doc.pdf` while
+at page 3 stays at 3; `#height=300` and `#foo` left it at page 1 where
+`#page=abc` had put it, so they are not separated from "ignored";
+`#page=3&height=200` goes to page 3. `openLinkText(..., true)` opens a
+second pdf leaf. In reading view the links render as `a.internal-link`
+(`href` = `data-href` = `doc.pdf#page=4`, `target=_blank`,
+`rel="noopener nofollow"`; the Markdown `[text](doc.pdf#page=2)` the same);
+a plain click **navigates the note's own leaf** to the PDF (the markdown
+leaf is gone, the leaf count unchanged) at the linked page; Ctrl+click and
+middle click open a new tab at that page. Hovering `[[doc.pdf]]` for 1.5 s
+with page-preview on opened `.popover.hover-popover` (451 by 401, radius 8,
+border `#333333`) holding a `.pdf-embed.is-loaded` 450 by 400 with its
+toolbar `display:none` and the five pages at `page-width`.
+
+### Embeds
+
+Reading view: `span.internal-embed.pdf-embed.is-loaded[src][alt]` inside
+the paragraph; Live Preview: `div.internal-embed.pdf-embed.is-loaded
+[tabindex=-1][contenteditable=false]` placed directly in `.cm-content` —
+there is no `.cm-embed-block` wrapper. `alt` is the link text:
+`doc.pdf`, `doc.pdf > page=3`, `alias text`; `![](doc.pdf)` has no `alt`,
+`![alt](doc.pdf#page=2)` has `alt="alt"`. The box is the line's full width
+(604.43 at readable line width), `border: 0.69px solid #333333`, radius 4,
+transparent background, `overflow:hidden`, a flex column of the same
+`.pdf-toolbar` (with *Open* on the right) over `.pdf-container`; each
+embed owns a full `PDFViewer` with its own hidden sidebar and find bar, at
+`page-width` (0.745 at 591 px). **Height** is an inline style and, in
+every case measured, this:
+
+| embed | inline height | what it is |
+| --- | --- | --- |
+| `![[doc.pdf]]`, `![[doc.pdf\|alias text]]`, `![](doc.pdf)` | `873.843px` | toolbar 38.69 + page 1 at page-width 834 + borders |
+| `![[doc.pdf#page=3]]`, `![alt](doc.pdf#page=2)` | `873.843px` | the same — sized from page 1, not the target page |
+| `![[small.pdf]]` | `802.824px` | toolbar + the letter page's 764 |
+| `![[doc.pdf#height=300]]` | `338px` once loaded (`300px` before) | `height=` + the toolbar |
+| `![[doc.pdf#page=2&height=200]]` | `200px` in every pass | `height=` as the whole box |
+| `![[broken.pdf]]` | none; computed 800 px | the stylesheet's default |
+
+So the default is "one page tall", and whether the toolbar is added on top
+of `height=` differed between the two `height=` cases; this run did not
+isolate why. `#page=2` embeds sit exactly on page 2's top (scrollTop 844 =
+its offset); the two `#page=3` embeds sat 353 px below page 3's top in
+every pass, with the input reading 4 — page 3 is the landscape page, and
+the cause was not isolated. `![[missing.pdf]]` is
+`span.internal-embed.is-loaded.file-embed.mod-empty-attachment` with the
+text `“missing.pdf” could not be found.` (padding 8, radius 8, background
+`rgb(35,35,35)`, `rgb(179,179,179)`, 14 px, 37 px tall). `![[broken.pdf]]`
+builds the full chrome with `0` in the input and `of 0`, no pages, no
+error text, no notice. Source mode shows the text with the usual
+`cm-formatting-embed` / `cm-hmd-embed cm-hmd-internal-link` spans and no
+widget.
+
+Embeds build lazily in both modes: in `Tall.md` the embed element did not
+exist until the view was scrolled to it, and only the two pages near the
+viewport got a canvas; in Live Preview the off-screen embeds of `Embeds.md`
+are not in the DOM either. A wheel over an embed scrolls the embed's pages
+(300 units → inner scrollTop 300, the note unmoved); once the embed is at
+its end the next wheel scrolls the note. The embed's page input works like
+the leaf's (3 Enter → page 3's top), and nothing about an embed reaches the
+note's `getState()` (`{file, mode, source}`), its ephemeral state
+(`{scroll}`) or `workspace.json`. *Open* in an embed's toolbar opens a
+`.menu`: **Open in new tab** (`lucide-file-plus`), **Open to the right**
+(`lucide-separator-vertical`), **Open in new window**
+(`lucide-picture-in-picture-2`), ---, Rename..., Move file to...,
+Bookmark..., ---, Copy path, ---, Open in default app, Show in system
+explorer, Reveal file in navigation; *Open in new tab* from the embed
+opened a pdf leaf at the embed's current position.
+
+### Canvas
+
+A `file` node for `doc.pdf` (600 by 500) renders
+`.canvas-node-content.pdf-embed.is-loaded` with the same inline one-page
+height (`868.186px`, clipped by the card), the toolbar with *Open* and
+*Save current position in document* on the right, the pages at
+`page-width` for the card (0.74 at 587 px), and the `.canvas-node-label`
+`doc.pdf` above the card (`rgb(102,102,102)`, 15 px). `"subpath":
+"#page=2"` puts the card's viewer on page 2 (scrollTop 840 = its offset).
+A text card `![[doc.pdf#page=4]]` renders the markdown embed of the
+previous section inside `.canvas-node-content.markdown-embed`, with *Open*
+but no save button. A wheel over the card pans the canvas (300 units → 279
+canvas units), never the pages, toolbar included; a click selects the
+card; a double-click on the pdf card leaves it `is-focused` and opens
+nothing (a double-click on the text card enters its edit mode). *Save
+current position in document*, clicked with the card's viewer at page 3,
+opened no menu, showed no notice and changed neither the node's `subpath`
+nor the file. *Open* → *Open in new tab* opened a pdf leaf at page 1;
+*Open to the right* split; *Open in new window* opened a popout.
+
+### Menus, selection and copy
+
+Right-click on a page with no selection, on the text, on the toolbar, in
+the gap between pages and in the margin opens no menu. The tab header
+menu is the generic file one (Close, Close others, Close all, ---, Pin,
+Link with tab..., ---, Move to new window, Split right, Split down, Open in
+new window, ---, Rename..., Move file to..., Bookmark..., ---, Copy path,
+---, Open version history, Open linked view, ---, Open in default app, Show
+in system explorer, Reveal file in navigation, ---, Delete file); More
+options is the same without the Close and Pin groups. A drag across the 40
+pt sentence selects `This is page one.`; right-click on it opens **Copy**,
+**Copy as quote**, **Copy link to selection** (all `lucide-copy`, section
+`selection`), which write exactly:
+
+```
+This is page one.
+> This is page one.\n\n[[doc.pdf#page=1&selection=8,0,8,17|doc, page 1]]
+[[doc.pdf#page=1&selection=8,0,8,17|doc, page 1]]
+```
+
+`selection=a,b,c,d` is start node, start offset, end node, end offset in
+pdf.js's text-layer numbering; the alias is `<basename>, page <n>`.
+`Ctrl+c` copies the plain text; a selection across lines reads with `\n`
+in `getSelection()` but copies as one space-joined line.
+
+### Panes and the broken file
+
+With the pdf leaf active the Outline pane shows `No headings found.`, the
+Backlinks pane `Linked mentions 13` (the eight `doc.pdf` embeds and four
+links of `Embeds.md`, and `Tall.md`), Outgoing links `Links 0`. `small.pdf`
+opens at `page-width` 0.770 with `of 1`. `broken.pdf` opens as a normal pdf
+leaf (`{"type":"pdf","state":{"file":"broken.pdf"}}`, tab `broken`) whose
+toolbar reads `0` `of 0`, with `.pdfViewer` empty, no `pdfDocument`, no
+error element, no notice, and nothing more after three seconds.
+
+### Not observed
+
+Whether the toolbar is added to `height=` (the two cases disagree); why a
+`#page=` embed onto the landscape page lands 353 px low; where "Adapt to
+theme" persists; the three find-settings toggles taking effect; Shift+Enter
+in the find bar (no movement seen, possibly the harness); a click on the
+`[text](doc.pdf#page=2)` link (the click missed; it renders like a
+wikilink); any effect of *Save current position in document*; whether
+`#foo` or `#height=300` on a link resets the page or is ignored;
+`#page=2.7`; the page count label with page labels; a password-protected
+PDF; printing/export; what the viewer does under a narrow leaf (below 300
+px); the light theme's thumbnail and outline colours beyond the custom
+properties; the first pass's `display:none` text layer under the stale
+rotation.
+
+## What building the PDF view settled, 2026-10-26
+
+The view, the embed and the canvas card were conformed to
+[[#Observed PDF view behavior, Obsidian 1.14.5 (installer build 1.13.7)]];
+what follows is this build's own reading where the run did not reach, each
+marked `OBSERVE:` in the code.
+
+- **What is written.** Nothing about a page, a zoom or a scroll offset
+  reaches the vault, as observed; pdf.js's `localStorage['pdfjs.history']`
+  is outside the vault and is not reproduced. A tab's page and zoom are
+  remembered in memory for the session, which is the observable equivalent
+  of Obsidian's leaf staying alive behind a tab.
+- **Fit height.** pdf.js pads a `page-fit` scale by 5 px; the one observation
+  (0.584 at 683 px) implies 27. The observed value is used.
+- **The embed's height.** One page tall by default (toolbar plus the first
+  page at page-width), `#height=` plus the toolbar when given, which matches
+  the `#height=300` case; the `#page=2&height=200` case measured 200 and was
+  not isolated.
+- **The viewer's ground** between and beside the pages is the shell's
+  secondary background; the box of an embed is transparent as observed.
+- **A loading file** draws the broken file's chrome (`0` `of 0`) until the
+  pages are known; Obsidian's loading frame was not captured.
+- **The outline's empty state** says "No outline available"; unprobed.
+- **Inert by design**, with the menus saying so: Two-page (odd/even), Adapt
+  to theme, Search settings' three toggles, the sidebar resizer, the embed's
+  *Open* menu (the button opens the file in the tab), *Save current position
+  in document*, the alias size hint (`|300`) which stands in for `#height=`
+  only when there is none.
+- **Not drawn at all**: a text layer, so no selection, no copy strings and no
+  highlight of a find match (find scrolls to the page); the hover popover;
+  the `rectangle-vertical-double` icon, which is not Lucide's (the single
+  rectangle stands in).

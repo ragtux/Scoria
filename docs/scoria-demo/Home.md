@@ -21,6 +21,7 @@ A working notebook on **scoria** and the family of volcanic rocks it belongs to:
 > - [[#Processes]] — vesiculation, viscosity, classification and jointing
 > - [[#Field notes]] — dated traverses and lab runs, written from the [[Field note|template]]
 > - [[Rock cycle.canvas|Rock cycle]] — the whole thing drawn as a canvas
+> - [[Field card]] — the two-page PDF that goes in the sample bag
 
 ## Rocks
 

@@ -19,7 +19,7 @@ What follows is what to expect.
 | Wikilinks, embeds, aliases | Resolved by Obsidian's rules, including the ambiguous-basename order |
 | Tags | Merged from inline `#tags` and the `tags` property, case-insensitively |
 | Frontmatter | Parsed, shown as properties in reading view, and its links counted as links |
-| Attachments | Images, audio, video and PDFs are recognized and shown in Files |
+| Attachments | Images, audio, video and PDFs are recognized and shown in Files; images and PDFs open and embed |
 | `hotkeys.json` | Applied command by command. Your bindings are your bindings |
 | `appearance.json` | Base theme, accent color, fonts and font size are read before the window opens |
 | `graph.json` | Filters, color groups, display settings and forces drive the graph view |

@@ -29,9 +29,11 @@ crates/scoria-text      editor text model: buffer, selections, undo, edit plans 
 crates/scoria-suggest   autocompletion: triggers, candidates, the link an accepted row writes (no gpui)
 crates/scoria-canvas    canvas model: viewport math, edge geometry, hit tests, selection, edits with undo (no gpui)
 crates/scoria-bases     the Bases expression language: statements parsed into Obsidian's own tree (no gpui)
+crates/scoria-pdf       PDF rendering on hayro: pages to RGBA, outline, title, page text, the #page= subpath (no gpui)
 crates/scoria-bench     spike benchmarks: synthetic vault generator, index timer (bin)
 docs/scoria             Obsidian vault: spec and design notes (dogfooded by Scoria)
 docs/scoria-demo        Obsidian vault: the geology field guide the README recordings are made on
+tools/demo-vault        the typst source of the PDF that vault embeds
 docs/img                brand art; scoria_v3_fixed.svg is the logo every other copy is cut from
 docs/img/app            README screenshots and recordings, made by tools/readme-recording over the control socket
 site                    scoria.cc: the informational site and the manual (static, node)

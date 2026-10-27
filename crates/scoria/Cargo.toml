@@ -29,6 +29,7 @@ scoria-templates.workspace = true
 scoria-text.workspace = true
 scoria-bases.workspace = true
 scoria-canvas.workspace = true
+scoria-pdf.workspace = true
 anyhow.workspace = true
 async-channel.workspace = true
 indexmap.workspace = true
@@ -41,6 +42,9 @@ serde_yaml.workspace = true
 chrono.workspace = true
 gpui.workspace = true
 gpui_platform.workspace = true
+# Already in the tree through gpui; a rendered PDF page is handed to gpui as
+# one of its `image` frames.
+image.workspace = true
 
 [build-dependencies]
 embed-resource.workspace = true

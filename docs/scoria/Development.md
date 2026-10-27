@@ -320,7 +320,84 @@ uses behave as Obsidian's do.
 | Bases: the expression language | done: the parser and the evaluator, held to 277 parse trees and 1044 evaluated statements, see [[#Bases evaluator, 2026-10-25]] |
 | Bases: the table view | done, read-only: a `.base` opens on its table, see [[#Bases table view, 2026-10-25]]; the ribbon's button creates one |
 | Bases: the rest of the view | done: the cards, list and kanban layouts, the toolbar's six panels, editing through the table, the five `bases:*` commands beyond `new-file`, and an embedded `![[x.base]]`, see [[#Bases: the rest of the view, 2026-10-25]] |
-| PDF, math, the themes subset, URI and CLI | not started |
+| PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
+| Math, the themes subset, URI and CLI | not started |
+
+### PDF view, 2026-10-26
+
+A `.pdf` opened on the "not supported yet" placeholder; it now opens in a
+viewer, and `![[x.pdf]]` draws the same viewer inside a note. Four pieces,
+built in parallel and joined on a shell that was written first:
+
+- `scoria-pdf` rasterizes pages with [hayro](https://github.com/LaurenzV/hayro)
+  0.8, a pure-Rust PDF renderer (Apache/MIT; its own test suite is the pdf.js
+  and PDFBox corpora). `Document::open` parses the bytes, `render(page,
+  scale)` gives straight RGBA over white, `outline()` walks `/Outlines`
+  through named destinations and GoTo actions, `title()` decodes the Info
+  dictionary, `page_text()` is a text-only `Device` for find, and
+  `parse_subpath` reads `#page=3&height=400`. `Document` is `Send + Sync`;
+  nothing panics on garbage, truncations or an empty file. A text-only A4
+  page renders in 3–5 ms at 1x and 10–12 ms at 2x in release. The fixtures
+  are typst output (`tests/fixtures/pages.typ`) plus two hand-written PDFs
+  for a rotated and a blank page.
+- `scoria::pdf::documents` is the one place a file is parsed and a page
+  rendered: an app-wide cache filled on the background executor, answering
+  "not yet" until the work lands and refreshing the windows then. A page is
+  an `ImageSource::Custom` closure, so an `img` asks for its page on first
+  paint and nothing renders for a page nobody drew; rendered pages are
+  bounded at 256 MB and the least recently drawn are let go, telling gpui to
+  drop the texture too.
+- `scoria::pdf::view` is the leaf: the 38 px toolbar, the 140 px sidebar
+  with thumbnails and the outline tree, the find bar, pdf.js's zoom ladder
+  and its page-number rule, Right/Left paging, `#page=` from links and the
+  socket, and `state.pdf` on the control socket.
+- `scoria::pdf::embed` is the same viewer in a box: one page tall by
+  default, `#height=` otherwise, lazily built, scrolling its own pages until
+  it runs out and then the note's; the canvas's file card draws it too, at
+  the node's `subpath` page. Live Preview needed nothing: an embed-only
+  paragraph already renders through the reading renderer.
+
+Nothing of the chrome was guessed: `tools/obsidian-probe/pdf.mjs` ran 36
+steps against Obsidian 1.14.5 first, and
+[[Specification#Observed PDF view behavior, Obsidian 1.14.5 (installer build 1.13.7)]]
+is what the view was conformed to. Three of its findings shaped the build.
+**The leaf is file-only**: `workspace.json` carries
+`{"type":"pdf","state":{"file":"doc.pdf"}}` and never a page or a zoom; those
+live in pdf.js's own `localStorage['pdfjs.history']`, outside the vault, so
+Scoria writes nothing either and keeps a tab's page and zoom in memory for
+the session only (the same reasoning that put file recovery outside phase
+3). **There is no zoom select and no rotate**: two step buttons on a ×1.1
+ladder rounded to tenths, and a Display options menu; `Ctrl+=` is the
+window's zoom, not the viewer's, so it is not bound here. **An embed is a
+whole viewer**, toolbar included, sized to its first page — which is why
+the embed and the leaf share one drawing rather than the embed being a
+picture of a page.
+
+The probe cost one trap worth recording: pdf.js's history is keyed by the
+document's fingerprint and shared across vaults, and a rotation left in it
+by the first pass came back on every later open of the same fixture, in
+leaves, embeds and canvas cards alike. The clean `b` steps of the results
+file are what the spec reads. [[Specification#What building the PDF view settled, 2026-10-26]]
+lists what is this build's reading rather than an observation.
+
+Not built, and said so in the menus: two-page spreads, Adapt to theme, the
+find bar's settings toggles, text selection with its three copy strings
+(there is no text layer), the sidebar resizer, the hover popover, the
+embed's *Open* menu (the button opens the file), *Save current position in
+document* on a canvas card (the probe saw it do nothing), match
+highlighting, and password-protected files (`Error::Encrypted`).
+
+On the method: the split was five agents — the probe, the crate, the view,
+the embeds, and this write-up — with the renderer's API frozen in the brief
+and the cache written before the view and the embeds started, so the two
+could build against the same thing without waiting on each other. Two
+things went wrong that the next split should know. An agent that starts a
+long command in the background ends its turn when the command does not,
+and nothing wakes it; long commands belong in the foreground with a
+timeout. And a usage limit cut all three builders off at once mid-run;
+each resumed from its transcript without losing work, but a shared icon
+file was deleted by one and restored by another in the gap, which is the
+kind of thing a frozen file list prevents.
 
 ### Bases: the rest of the view, 2026-10-25
 
