@@ -30,6 +30,7 @@ scoria-text.workspace = true
 scoria-bases.workspace = true
 scoria-canvas.workspace = true
 scoria-pdf.workspace = true
+scoria-math.workspace = true
 anyhow.workspace = true
 async-channel.workspace = true
 indexmap.workspace = true

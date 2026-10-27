@@ -41,7 +41,13 @@ Two things raise it: crystals, which make the magma a suspension, and bubbles at
 
 ## Measuring it
 
-In the lab, with a concentric-cylinder viscometer on a remelted sample. In the field, from how fast a flow moves down a known slope in a channel of known depth (the Jeffreys equation), or from the thickness and spacing of pāhoehoe ropes.
+In the lab, with a concentric-cylinder viscometer on a remelted sample. In the field, from how fast a flow moves down a known slope in a channel of known depth, with the Jeffreys equation for a broad sheet of lava:
+
+$$
+\eta = \frac{\rho\, g\, h^{2} \sin\theta}{3v}
+$$
+
+where $\rho$ is the lava's density, $h$ the flow's depth, $\theta$ the slope and $v$ the surface velocity; or from the thickness and spacing of pāhoehoe ropes.
 
 ## See also
 

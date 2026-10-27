@@ -91,9 +91,20 @@ $$
 $$
 ```
 
-> **Warning** Math is **parsed but not typeset**. In reading view you see the formula's
-> source text, not rendered mathematics. In Live Preview the surrounding dollar signs are
-> hidden. MathJax is a later phase.
+Math is typeset natively, with no browser and no JavaScript: a KaTeX-compatible engine
+written in Rust lays the formula out, and Scoria draws it in the text's colour and size with
+KaTeX's own fonts. Inline math sits on the line's baseline inside the sentence; a `$$` block is
+centred and, when it is wider than the note, scrolls sideways. In Live Preview the formula is
+rendered until the cursor enters it, when its source and dollars come back, exactly as the
+other inline markup behaves. `\textcolor` and `\color` keep their colours; everything else
+takes the theme's text colour.
+
+> **Note** The syntax is **KaTeX's**, not MathJax's. Nearly everything written in a note works
+> identically — fractions, roots, sums and integrals with limits, matrices and the `aligned`,
+> `cases` and `array` environments, Greek, `\mathbb` and friends, `\text`, stretchy
+> delimiters, accents, `\ce` chemistry. What MathJax accepts and KaTeX does not — a few
+> AMS extensions, `\newcommand` across formulas, `\require` — shows the formula's **source
+> in red**, which is also what a formula with a syntax error looks like, in Obsidian too.
 
 The delimiter rules are Obsidian's, and they are stricter than you might expect:
 

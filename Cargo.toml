@@ -16,6 +16,7 @@ members = [
     "crates/scoria-suggest",
     "crates/scoria-templates",
     "crates/scoria-pdf",
+    "crates/scoria-math",
     "crates/scoria-bench",
 ]
 
@@ -41,6 +42,7 @@ scoria-bases = { path = "crates/scoria-bases" }
 scoria-suggest = { path = "crates/scoria-suggest" }
 scoria-templates = { path = "crates/scoria-templates" }
 scoria-pdf = { path = "crates/scoria-pdf" }
+scoria-math = { path = "crates/scoria-math" }
 
 anyhow = "1"
 thiserror = "2"
@@ -63,6 +65,19 @@ notify = "8"
 # features embed the 14 standard fonts and the CMaps, so a PDF without its own
 # fonts renders the same on every machine without touching system fonts.
 hayro = "0.8"
+# RaTeX: a KaTeX-compatible TeX math engine in pure Rust, for `$x$` and `$$x$$`.
+# The parser and layout crates hand back a display list in em units that the
+# app paints with gpui; `ratex-katex-fonts` embeds the KaTeX faces (SIL OFL)
+# the metrics belong to. Pinned together: the four crates share a version.
+ratex-parser = "0.1.15"
+ratex-layout = "0.1.15"
+ratex-types = "0.1.15"
+ratex-font = "0.1.15"
+ratex-katex-fonts = "0.1.15"
+# Rasterizes the KaTeX glyphs for the app to paint as images: gpui's own font
+# database prunes a face with no `m` glyph (every KaTeX size face) and cannot
+# tell the KaTeX italics from the uprights (no italic flag in the files).
+ab_glyph = "0.2"
 # Already in the tree through gpui; crates/scoria/build.rs compiles the icon
 # and VERSIONINFO into scoria.exe with it, and does nothing off Windows.
 embed-resource = "3"

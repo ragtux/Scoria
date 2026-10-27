@@ -6392,3 +6392,41 @@ marked `OBSERVE:` in the code.
   highlight of a find match (find scrolls to the page); the hover popover;
   the `rectangle-vertical-double` icon, which is not Lucide's (the single
   rectangle stands in).
+
+## What building math rendering settled, 2026-10-26
+
+Math was not probed against Obsidian for this build; what follows is the
+build's own reading of MathJax's documented behaviour and of how Obsidian
+styles its output, each to be checked in a later pass. The engine is
+KaTeX-compatible, so the syntax accepted is KaTeX's.
+
+- **Delimiters** are unchanged: the parser's `$x$` and `$$x$$` rules in
+  [[#Parser notes]] decide what is math; the engine only sees the inside.
+- **Inline math** (`$x$`) is set in TeX text style at the surrounding font
+  size, in the text colour, on the text's baseline, and takes exactly the
+  width the engine gives it plus a slack smaller than a narrow no-break
+  space. A formula taller than the font grows its line in Live Preview; in
+  the reading view it draws over the line above or below (gpui lays the
+  paragraph's lines out at one line height). OBSERVE: whether Obsidian's
+  inline MathJax grows the line box in reading view (it should, as an inline
+  SVG with `vertical-align`).
+- **Display math** (`$$x$$`, on its own lines or on one line) is set in
+  display style, centred in the note's width, with half an em above and
+  below, and scrolls sideways when wider than the note. OBSERVE: MathJax's
+  display container has `margin: 1em 0` in its own stylesheet; Obsidian's
+  theme may override it.
+- **`$$x$$` inside a paragraph** breaks the paragraph into text, the block
+  and text. In a heading or a table cell it stays inline, in display style.
+- **Colour.** Black (the engine's default) is repainted in the theme's text
+  colour; `\color` and `\textcolor` keep theirs. OBSERVE: Obsidian's math
+  inherits `color` the same way.
+- **Errors.** A formula the engine rejects shows its source in
+  `--text-error` red (`#e93147`), the text font, in place: inline in the
+  reading view, centred as a block. In Live Preview it falls back to the
+  pre-math behaviour, source in the accent colour with the dollars hidden.
+  OBSERVE: MathJax renders `merror` as the source in red with the message
+  as a `title` tooltip; the message is not shown here.
+- **What does not parse here but does in Obsidian**: `\require{...}`,
+  `\newcommand` defined in one formula and used in another (KaTeX's macros
+  are per formula), and AMS or physics extensions MathJax loads on demand.
+  Each shows as an error, above.

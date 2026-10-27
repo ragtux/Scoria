@@ -321,7 +321,100 @@ uses behave as Obsidian's do.
 | Bases: the table view | done, read-only: a `.base` opens on its table, see [[#Bases table view, 2026-10-25]]; the ribbon's button creates one |
 | Bases: the rest of the view | done: the cards, list and kanban layouts, the toolbar's six panels, editing through the table, the five `bases:*` commands beyond `new-file`, and an embedded `![[x.base]]`, see [[#Bases: the rest of the view, 2026-10-25]] |
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
-| Math, the themes subset, URI and CLI | not started |
+| Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
+| The themes subset, URI and CLI | not started |
+
+### Math, 2026-10-26
+
+`$x$` and `$$x$$` showed their TeX in the accent colour; they are now typeset.
+The engine is [RaTeX](https://github.com/erweixin/RaTeX) 0.1.15 (MIT), a
+KaTeX-compatible TeX math engine in pure Rust that was chosen over the
+alternatives on crates.io for coverage: the whole of KaTeX's math syntax plus
+mhchem, with a display list as output rather than an image. Obsidian uses
+MathJax, which accepts more (`\require`, `\newcommand` living across
+formulas, some AMS extensions); where the two disagree the formula fails to
+parse here and is shown the way a syntax error is shown there.
+
+- `scoria-math` (no gpui) wraps the engine: `typeset(tex, display)` parses,
+  lays out in display or text style and flattens RaTeX's `DisplayList` into
+  a `Formula` of glyphs, rules, rectangles and paths in em units, with the
+  baseline at `y = height`. Every result, errors included, is cached
+  process-wide behind a mutex, because a frame asks for the same formula
+  several times and the views have no state of their own to keep it in. The
+  KaTeX faces (SIL OFL, twenty TrueType files, 590 KB) come through
+  `ratex-katex-fonts`; `Face` names the family, weight and style, and
+  `rasterize` draws a character of one at a device size and subpixel offset
+  with `ab_glyph`. A glyph is named by the character, not a glyph id: RaTeX
+  lays bold and script letters out by their Unicode mathematical
+  alphanumeric code points, but KaTeX's files keep those glyphs at the ASCII
+  letter, and `katex_ttf_glyph_char` undoes that. Black, the engine's
+  default, becomes "the text colour"; a `\textcolor` keeps its own.
+- The faces are **not** registered with gpui's text system, and the first
+  build did exactly that and drew nonsense: gpui's cosmic-text backend drops
+  any face whose cmap has no `m` when a family is loaded (a guard against
+  icon fonts), which is every KaTeX size face, AMS, Caligraphic and Script,
+  so big operators, matrix parentheses and `\mathbb{R}` fell back to Inter;
+  and the KaTeX italic files set no italic bit (`fontdb` reads every one as
+  `Normal`, angle 0), so the family matcher handed `KaTeX_Main` regular out
+  as the italic file and digits and `\text` came out slanted. Both are
+  properties of the files and the backend, not of this code. Registering
+  them would also have put twenty `KaTeX_*` families in the Settings font
+  pickers.
+- `scoria::math` paints a `Formula`: each glyph as a bitmap (the text colour
+  with coverage as alpha, straight BGRA as gpui takes images), snapped to a
+  quarter device pixel horizontally and a whole one vertically and placed so
+  its pixels land on the grid one to one, cached per face, character, size,
+  subpixel variant and colour; quads for rules and boxes; `PathBuilder` fill
+  or stroke for radicals, stretched delimiters and wide accents. Rules are
+  never thinner than a device pixel. A `FormulaElement` is the fixed-size
+  element the reading view's `$$` block and the Live Preview widget lay out.
+- **Inline math is the hard part**: gpui shapes text and nothing else, so a
+  line has no slot for an element. An inline formula is therefore laid out
+  as a run of no-break spaces (figure space, no-break space, narrow no-break
+  space, measured in the text font at the size in force) at least as wide as
+  the formula, which wraps, selects and maps clicks like text; the formula
+  is painted over the run afterwards, on the row's baseline and centred in
+  the run's slack, which is under the narrowest of the three spaces. In the
+  reading view `Renderer::rich_at` rebuilds the paragraph string with the
+  placeholders, carries the other runs and the links across the edits, and
+  wraps the `InteractiveText` in an `Overlay` element that reads the
+  `TextLayout` after prepaint for where each placeholder landed. In Live
+  Preview `preview::display_line_with` takes a placeholder provider and
+  substitutes the whole `$...$` span (the Sub piece maps every source byte
+  of the formula to the placeholder's start, so a click lands inside the
+  construct and reveals it); `DisplayLine::math` records each formula's
+  display range, `shape_display` grows the row for a formula taller than the
+  font's ascent and descent, and the paint pass draws the formulas after the
+  text. The editor measures the three spaces at the start of every prepaint,
+  so the first frame already has placeholders. A formula that does not parse
+  falls back to the old behaviour there (dollars hidden, source in the
+  accent colour); in the reading view the source is shown in MathJax's error
+  red.
+- `$$x$$` on one line inside a paragraph is display math: the reading model
+  splits the paragraph at it (`Segment::Math`) and draws it as a centred
+  block, as MathJax's `display="true"` container does; in a heading, a table
+  cell or Live Preview's line it stays inline, in display style.
+- A `$$` block wider than the note scrolls sideways, as MathJax's container
+  does, instead of wrapping or clipping.
+
+Seen over the control socket on a scratch note and on the demo vault's
+`Vesiculation` and `Magma viscosity` notes, which now carry a formula each:
+inline fractions, sums with limits and `\sqrt{2}` on the baseline in the
+reading view, in a heading at the heading's size and in list items; a `$$`
+block centred with a full-height integral and matrix parentheses from the
+size faces and `\mathbb{R}` from the AMS face; `aligned` rows; a one-line
+`$$...$$` splitting its paragraph; both error forms in red; the same note in
+Live Preview with the matrix line and the wide line grown to hold their
+formulas; the cursor placed inside `$e^{i\pi}$` bringing its source and
+dollars back; a click on the rendered `\sqrt{2}` landing on its opening
+dollar; the dark theme painting the formulas in its text colour.
+
+Not probed against Obsidian, and said so in `Specification.md`: the error
+rendering (MathJax's `merror` is remembered as red source text; the message
+is in a tooltip there and shown nowhere here), the vertical margins of a
+display block, whether an inline formula grows its line in Live Preview the
+way it does here, and a one-line `$$x$$` in Live Preview, which stays on its
+line here in display style where Obsidian's CodeMirror shows a block widget.
 
 ### PDF view, 2026-10-26
 

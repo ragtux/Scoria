@@ -58,7 +58,9 @@ rename, move, copy and delete rewrite links the way Obsidian does, and frontmatt
 typed properties table that rewrites only the lines it changes. A `.canvas` opens in a canvas view
 that pans, zooms, selects, moves, resizes, draws edges, groups and undoes, and autosaves in
 Obsidian's bytes. A `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, and
-`![[x.pdf]]` embeds and canvas file cards draw the same viewer. The main area splits into tab groups
+`![[x.pdf]]` embeds and canvas file cards draw the same viewer. `$x$` and `$$x$$` are typeset with a
+KaTeX-compatible engine in Rust and painted in the text's own colour, inline in reading view and
+Live Preview and as centred blocks. The main area splits into tab groups
 (Split right, Split down, draggable dividers, the focus commands) and `workspace.json` records the
 tree the way Obsidian does, and the Bookmarks pane reads and writes `bookmarks.json` in Obsidian's bytes. Everything is bound through
 Obsidian's command ids, so a vault's `hotkeys.json` applies unchanged.
@@ -170,7 +172,7 @@ at [scoria.cc](https://scoria.cc), whose site is built from `site/` in this repo
 | 1. Spike | 50k-line editor, parser conformance corpus, 2 s vault index | Done |
 | 2. Reader | A daily user browses their real vault with no missing content | Done: Files, reading view, Backlinks, Outgoing links, Outline, Tags, Search, quick switcher, graph, command palette, the Settings modal, file watching |
 | 3. Writer | The vault round-trips byte-identical after a week of mixed use in both apps | In progress: Source mode, Live Preview, find and replace, file operations with link rewriting, properties, autocompletion, table editing, block references, templates, daily notes, tab groups, bookmarks, the round-trip harness and the Settings toggles are done; and every Settings control Obsidian offers as one writes; file recovery is out of phase 3 |
-| 4. Parity | Core plugin parity | Started: the canvas view and the canvas writer are done, and a `.base` is parsed, written back, evaluated — its expression language is held to 277 of Obsidian's parse trees and 1044 of its answers — and opens in all four of its layouts with its toolbar; a `.pdf` opens in a viewer and embeds; math, the themes subset, URI and CLI are not started |
+| 4. Parity | Core plugin parity | Started: the canvas view and the canvas writer are done, and a `.base` is parsed, written back, evaluated — its expression language is held to 277 of Obsidian's parse trees and 1044 of its answers — and opens in all four of its layouts with its toolbar; a `.pdf` opens in a viewer and embeds; `$x$` and `$$x$$` are typeset (KaTeX's syntax, where Obsidian's MathJax takes more); the themes subset, URI and CLI are not started |
 | 5. Ecosystem | Native plugin SDK | Not started |
 
 Progress notes, gates and the per-item status live in `docs/scoria/Development.md`.

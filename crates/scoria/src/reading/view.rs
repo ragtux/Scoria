@@ -9,15 +9,16 @@ use super::model::{
     Embed, EmbedKind, InlineStyle, LinkTarget, Model, RBlock, RItem, RichText, Segment, TaskMarker,
 };
 use crate::assets::{callout_icon, icon};
+use crate::math::{self, FormulaElement, Inline, Overlay, SpaceWidths};
 use crate::properties::{Field, Part, Target};
 use crate::properties::{PROPERTIES_FOLD_ID, PROPERTY_ID_BASE};
 use crate::theme::Theme;
 use gpui::{
     actions, canvas, div, img, list, prelude::*, px, AnyElement, App, ClipboardItem, Context,
-    EventEmitter, FocusHandle, Focusable, Font, FontStyle, FontWeight, HighlightStyle, Hsla,
-    InteractiveText, KeyBinding, ListAlignment, ListOffset, ListState, MouseButton, ObjectFit,
-    Pixels, SharedString, StrikethroughStyle, StyledText, Task, TextRun, UnderlineStyle, Window,
-    WindowTextSystem,
+    ElementId, EventEmitter, FocusHandle, Focusable, Font, FontStyle, FontWeight, HighlightStyle,
+    Hsla, InteractiveText, KeyBinding, ListAlignment, ListOffset, ListState, MouseButton,
+    ObjectFit, Pixels, SharedString, StrikethroughStyle, StyledText, Task, TextRun, UnderlineStyle,
+    Window, WindowTextSystem,
 };
 use scoria_formats::config::PropertyTypes;
 use scoria_formats::properties::{PropertiesInDocument, Property, PropertyType};
@@ -742,7 +743,7 @@ impl<'a> Renderer<'a> {
                     .text_size(px(base * size))
                     .line_height(px(base * size * line_height))
                     .font_weight(FontWeight(weight))
-                    .child(self.rich(text))
+                    .child(self.rich_at(text, base * size))
                     .into_any_element()
             }
             RBlock::ThematicBreak => div()
@@ -1045,15 +1046,7 @@ impl<'a> Renderer<'a> {
                     )
                     .into_any_element()
             }
-            RBlock::Math(text) => div()
-                .mb(gap)
-                .px_3()
-                .py_2()
-                .font_family(t.mono_font.clone())
-                .text_color(t.accent)
-                .text_center()
-                .child(SharedString::from(text.clone()))
-                .into_any_element(),
+            RBlock::Math(text) => self.math_block(text, gap),
             RBlock::Footnotes(notes) => div()
                 .mt(px(base * 2.))
                 .pt(px(base))
@@ -1158,8 +1151,45 @@ impl<'a> Renderer<'a> {
 
     fn segment(&self, segment: &Segment) -> AnyElement {
         match segment {
-            Segment::Text(text) => self.rich(text).into_any_element(),
+            Segment::Text(text) => self.rich(text),
             Segment::Embed(embed) => self.embed(embed),
+            // Display math inside a paragraph is a block of its own; the
+            // paragraph's own gap follows the paragraph, not this.
+            Segment::Math(tex) => self.math_block(tex, px(0.)),
+        }
+    }
+
+    /// `$$...$$`: the formula typeset in display style, centred, at the
+    /// body size, and wide formulas scroll sideways rather than wrap, as
+    /// MathJax's display container does. A formula that does not parse
+    /// shows its source in the error red, the way MathJax's error output
+    /// does.
+    fn math_block(&self, tex: &str, gap: Pixels) -> AnyElement {
+        let t = self.theme;
+        let base = t.base_font_size;
+        let tex = tex.trim();
+        match math::typeset(tex, true) {
+            Ok(formula) => div()
+                .id(ElementId::Name(format!("math-block:{tex}").into()))
+                .mb(gap)
+                .py(px(base * 0.5))
+                .w_full()
+                .overflow_x_scroll()
+                .flex()
+                .flex_row()
+                .child(div().mx_auto().flex_shrink_0().child(FormulaElement::new(
+                    formula,
+                    px(base),
+                    t.text,
+                )))
+                .into_any_element(),
+            Err(_) => div()
+                .mb(gap)
+                .py(px(base * 0.5))
+                .text_color(math::error_color())
+                .text_center()
+                .child(SharedString::from(tex.to_string()))
+                .into_any_element(),
         }
     }
 
@@ -1837,32 +1867,137 @@ impl<'a> Renderer<'a> {
             .into_any_element()
     }
 
-    fn rich(&self, text: &RichText) -> InteractiveText {
-        let t = self.theme;
-        let highlights: Vec<_> = text
+    /// Inline content at the body size.
+    fn rich(&self, text: &RichText) -> AnyElement {
+        self.rich_at(text, self.theme.base_font_size)
+    }
+
+    /// Inline content set at `size` pixels: one `InteractiveText`, with
+    /// inline formulas typeset over placeholders when the text has any.
+    fn rich_at(&self, text: &RichText, size: f32) -> AnyElement {
+        // Each `$x$` run, typeset in text style. A formula that does not
+        // parse stays as its source, in the error red (`highlight`).
+        let formulas: Vec<(Range<usize>, Arc<scoria_math::Formula>)> = text
             .runs
+            .iter()
+            .filter(|(_, s)| s.math)
+            .filter_map(|(r, _)| {
+                let tex = text.text.get(r.clone())?;
+                math::typeset(tex, false).ok().map(|f| (r.clone(), f))
+            })
+            .collect();
+        if formulas.is_empty() {
+            return self
+                .interactive(text, &text.text, &text.runs, &text.links)
+                .into_any_element();
+        }
+        let t = self.theme;
+        let em = px(size);
+        let font = Font {
+            family: t.text_font.clone(),
+            features: Default::default(),
+            fallbacks: None,
+            weight: FontWeight::NORMAL,
+            style: FontStyle::Normal,
+        };
+        let spaces = SpaceWidths::measure(&self.text_system, &font, em);
+        // Rebuild the string with a placeholder where each formula was,
+        // and carry the other runs and the links across the edits.
+        let mut edits: Vec<(Range<usize>, usize)> = Vec::new();
+        let mut shaped = String::with_capacity(text.text.len());
+        let mut inlines = Vec::new();
+        let mut at = 0;
+        for (range, formula) in &formulas {
+            shaped.push_str(&text.text[at..range.start]);
+            let (placeholder, slot) = spaces.placeholder(math::width_px(formula, em));
+            let start = shaped.len();
+            shaped.push_str(&placeholder);
+            inlines.push(Inline {
+                range: start..shaped.len(),
+                formula: formula.clone(),
+                slot,
+            });
+            edits.push((range.clone(), placeholder.len()));
+            at = range.end;
+        }
+        shaped.push_str(&text.text[at..]);
+        let remap = |offset: usize| -> usize {
+            let mut shift = 0isize;
+            for (range, len) in &edits {
+                if offset <= range.start {
+                    break;
+                }
+                if offset < range.end {
+                    // Inside a formula: its start.
+                    return (range.start as isize + shift) as usize;
+                }
+                shift += *len as isize - range.len() as isize;
+            }
+            (offset as isize + shift) as usize
+        };
+        let runs: Vec<(Range<usize>, InlineStyle)> = text
+            .runs
+            .iter()
+            .filter(|(r, s)| !(s.math && formulas.iter().any(|(f, _)| f == r)))
+            .map(|(r, s)| (remap(r.start)..remap(r.end), *s))
+            .collect();
+        let links: Vec<(Range<usize>, LinkTarget)> = text
+            .links
+            .iter()
+            .map(|(r, l)| (remap(r.start)..remap(r.end), l.clone()))
+            .collect();
+        let (interactive, layout) = self.interactive_with_layout(text, &shaped, &runs, &links);
+        Overlay::new(interactive.into_any_element(), layout, inlines, em, t.text).into_any_element()
+    }
+
+    fn interactive(
+        &self,
+        text: &RichText,
+        string: &str,
+        runs: &[(Range<usize>, InlineStyle)],
+        links: &[(Range<usize>, LinkTarget)],
+    ) -> InteractiveText {
+        self.interactive_with_layout(text, string, runs, links).0
+    }
+
+    /// The `InteractiveText` of `string` styled by `runs`, and its layout
+    /// handle, which reports where each byte landed once the text has been
+    /// laid out.
+    fn interactive_with_layout(
+        &self,
+        text: &RichText,
+        string: &str,
+        runs: &[(Range<usize>, InlineStyle)],
+        links: &[(Range<usize>, LinkTarget)],
+    ) -> (InteractiveText, gpui::TextLayout) {
+        let t = self.theme;
+        let highlights: Vec<_> = runs
             .iter()
             .map(|(range, style)| (range.clone(), self.highlight(*style)))
             .collect();
-        let mono: Vec<_> = text
-            .runs
+        let mono: Vec<_> = runs
             .iter()
-            .filter(|(_, s)| s.code || s.math || s.html)
+            .filter(|(_, s)| s.code || s.html)
             .map(|(range, _)| (range.clone(), t.mono_font.clone()))
             .collect();
         let mut styled =
-            StyledText::new(SharedString::from(text.text.clone())).with_highlights(highlights);
+            StyledText::new(SharedString::from(string.to_string())).with_highlights(highlights);
         if !mono.is_empty() {
             styled = styled.with_font_family_overrides(mono);
         }
-        let ranges: Vec<_> = text.links.iter().map(|(r, _)| r.clone()).collect();
-        let targets: Vec<LinkTarget> = text.links.iter().map(|(_, l)| l.clone()).collect();
+        let layout = styled.layout().clone();
+        let ranges: Vec<_> = links.iter().map(|(r, _)| r.clone()).collect();
+        let targets: Vec<LinkTarget> = links.iter().map(|(_, l)| l.clone()).collect();
         let on_link = self.on_link.clone();
-        InteractiveText::new(("rich", text.id), styled).on_click(ranges, move |ix, window, cx| {
-            if let Some(target) = targets.get(ix).cloned() {
-                on_link(target, window, cx);
-            }
-        })
+        let interactive = InteractiveText::new(("rich", text.id), styled).on_click(
+            ranges,
+            move |ix, window, cx| {
+                if let Some(target) = targets.get(ix).cloned() {
+                    on_link(target, window, cx);
+                }
+            },
+        );
+        (interactive, layout)
     }
 
     fn highlight(&self, s: InlineStyle) -> HighlightStyle {
@@ -1888,7 +2023,8 @@ impl<'a> Renderer<'a> {
             h.background_color = Some(t.code_bg);
         }
         if s.math {
-            h.color = Some(t.accent);
+            // Only a formula that failed to typeset is still text here.
+            h.color = Some(math::error_color());
         }
         if s.html {
             h.color = Some(t.text_muted);

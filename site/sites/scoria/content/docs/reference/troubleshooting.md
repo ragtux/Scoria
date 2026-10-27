@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting
-description: The failures people actually hit with Scoria — it will not start, nothing renders bold, math shows as source, a link went to the wrong note, a file changed unexpectedly — and what to do about each.
+description: The failures people actually hit with Scoria — it will not start, nothing renders bold, a formula shows in red, a link went to the wrong note, a file changed unexpectedly — and what to do about each.
 ---
 
 # Troubleshooting
@@ -49,12 +49,16 @@ Set a font with real static Bold faces in `appearance.json`:
 Liberation Sans is the default for exactly this reason. Any family with separate Regular and
 Bold files works.
 
-## Math shows as `$x^2$` instead of mathematics
+## A formula shows its source in red
 
-That is current behavior, not a bug: math is parsed but not typeset. See [tables, code and
-math](/docs/format/code-math/). MathJax is a later phase.
+The formula did not parse. Scoria typesets math with a KaTeX-compatible engine, and Obsidian
+with MathJax; the two agree on nearly all of what people write, but a MathJax-only command
+(`\require`, a `\newcommand` defined in another formula, a few AMS extensions) is a parse
+error here, and a parse error is shown the way MathJax shows one — the source, in red. A
+formula that is red in Obsidian too simply has a typo. See [tables, code and
+math](/docs/format/code-math/).
 
-Likewise HTML in a note shows as text, and remote images do not load.
+HTML in a note shows as text, and remote images do not load.
 
 ## A `.base` file does not open
 

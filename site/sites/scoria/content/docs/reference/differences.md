@@ -20,7 +20,7 @@ Things Obsidian does that Scoria intends to do and does not.
 
 | | |
 |---|---|
-| **Math** | `$x$` and `$$x$$` are parsed but **not typeset** — you see the TeX source. In Live Preview the dollars are hidden and the source is centred in the accent color |
+| **Math** | Typeset with a KaTeX-compatible engine rather than MathJax: the common syntax renders alike, a MathJax-only command shows its source in red. No `\newcommand` across formulas, no `\require` |
 | **HTML in notes** | Parsed, shown as literal text |
 | **Remote images** | `![](https://…)` does not load. Local images do |
 | **Mermaid diagrams** | Not rendered |

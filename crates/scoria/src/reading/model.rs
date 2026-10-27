@@ -127,6 +127,9 @@ pub struct RichText {
 pub enum Segment {
     Text(RichText),
     Embed(Embed),
+    /// `$$x$$` written inside a paragraph: display math, drawn as its own
+    /// centred block the way MathJax's `display="true"` container is.
+    Math(String),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -718,8 +721,31 @@ impl<'v> Builder<'v> {
     fn segments(&mut self, content: &[Inline<'_>]) -> Vec<Segment> {
         let mut out = Vec::new();
         let mut acc = RichBuilder::default();
-        for inline in content {
+        let is_display_math =
+            |inline: &Inline<'_>| matches!(inline.kind, InlineKind::Math { display: true, .. });
+        for (ix, inline) in content.iter().enumerate() {
             match &inline.kind {
+                // The space on either side of a display block inside a
+                // paragraph is the block's margin, not text to set: an HTML
+                // renderer collapses it at the block's edge.
+                InlineKind::Text(t)
+                    if ix
+                        .checked_sub(1)
+                        .is_some_and(|p| is_display_math(&content[p]))
+                        || content.get(ix + 1).is_some_and(is_display_math) =>
+                {
+                    let mut t: &str = t;
+                    if ix
+                        .checked_sub(1)
+                        .is_some_and(|p| is_display_math(&content[p]))
+                    {
+                        t = t.trim_start();
+                    }
+                    if content.get(ix + 1).is_some_and(is_display_math) {
+                        t = t.trim_end();
+                    }
+                    acc.push(t);
+                }
                 InlineKind::Wikilink { body, embed: true } => {
                     self.flush(&mut acc, &mut out);
                     let embed = self.wikilink_embed(body);
@@ -737,6 +763,13 @@ impl<'v> Builder<'v> {
                     let dest = percent_decode(destination).into_owned();
                     let embed = self.embed(&dest, alt, None, None);
                     out.push(Segment::Embed(embed));
+                }
+                InlineKind::Math {
+                    content,
+                    display: true,
+                } => {
+                    self.flush(&mut acc, &mut out);
+                    out.push(Segment::Math(content.to_string()));
                 }
                 _ => self.inline(inline, &mut acc),
             }
@@ -1935,5 +1968,45 @@ mod tests {
             }
             other => panic!("{other:?}"),
         }
+    }
+
+    #[test]
+    fn display_math_in_a_paragraph_is_its_own_segment() {
+        let opts = BuildOptions::default();
+        let m = build_with("A.md", "Inline $x$ then $$y$$ and after.", &stub(), opts);
+        let RBlock::Paragraph(segments) = &m.blocks[0] else {
+            panic!("{:?}", m.blocks[0])
+        };
+        // The space on either side of the block is its margin, not text.
+        let texts: Vec<_> = segments
+            .iter()
+            .map(|s| match s {
+                Segment::Text(t) => format!("text:{}", t.text),
+                Segment::Math(tex) => format!("math:{tex}"),
+                Segment::Embed(_) => "embed".to_string(),
+            })
+            .collect();
+        assert_eq!(
+            texts,
+            vec!["text:Inline x then", "math:y", "text:and after."]
+        );
+        // Inline math is a styled run holding the TeX, for the view to
+        // typeset over a placeholder.
+        let Segment::Text(first) = &segments[0] else {
+            unreachable!()
+        };
+        assert_eq!(
+            first.runs,
+            vec![(
+                7..8,
+                InlineStyle {
+                    math: true,
+                    ..InlineStyle::default()
+                }
+            )]
+        );
+        // The block form is a block.
+        let m = build_with("A.md", "$$\nz\n$$", &stub(), BuildOptions::default());
+        assert_eq!(m.blocks[0], RBlock::Math("z".to_string()));
     }
 }

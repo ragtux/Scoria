@@ -21,6 +21,7 @@
 //! changes nothing but the edited bytes (the round trips in
 //! `scoria-text/tests/writer_roundtrip.rs` hold that over the corpus).
 
+use crate::math::SpaceWidths;
 use crate::preview::{self, DisplayLine, Piece};
 use crate::properties::{self, Field, Part, Target};
 use crate::reading::model::{build_widgets, BuildOptions, EmbedSource, LinkTarget, RBlock, Widget};
@@ -581,6 +582,11 @@ pub struct Editor {
     /// Height of each widget as last painted, by first line; an unpainted
     /// one is taken as one row per source line.
     widget_heights: HashMap<usize, Pixels>,
+    /// The no-break spaces inline math is shaped as, measured in the text
+    /// font at the font size they were measured for; `None` before the
+    /// first frame, when nothing has been measured and inline math shows
+    /// its source with the dollars hidden.
+    spaces: Option<(Pixels, SpaceWidths)>,
     /// Resolves embeds for the widgets; `None` before a vault is open.
     embed_source: Option<Arc<dyn EmbedSource + Send + Sync>>,
     build_options: BuildOptions,
@@ -688,6 +694,7 @@ impl Editor {
             widgets: Arc::new(Vec::new()),
             flairs: Arc::new(Vec::new()),
             widget_heights: HashMap::new(),
+            spaces: None,
             embed_source: None,
             build_options: BuildOptions::default(),
             property_types: PropertyTypes::default(),
@@ -1331,7 +1338,15 @@ impl Editor {
         let text = self.buf.line_text(line);
         if self.live_preview {
             let spans = self.highlights.get(line).map(Vec::as_slice).unwrap_or(&[]);
-            preview::display_line(text, spans, &self.touches_on_line(line))
+            // An inline formula is shaped as a placeholder the width it
+            // typesets to, at the body size: a heading's scale is applied
+            // to the shaped line, placeholder included.
+            let math = |tex: &str, block: bool| -> Option<String> {
+                let (size, spaces) = self.spaces.as_ref()?;
+                let formula = scoria_math::typeset(tex, block).ok()?;
+                Some(spaces.placeholder(crate::math::width_px(&formula, *size)).0)
+            };
+            preview::display_line_with(text, spans, &self.touches_on_line(line), &math)
         } else {
             DisplayLine::verbatim(text, 1.0, Default::default())
         }
@@ -4386,6 +4401,25 @@ fn shape_display(
         .ok()
         .and_then(|lines| lines.into_iter().next())
         .unwrap_or_default();
+    // A line with a tall inline formula (a fraction, a sum with limits)
+    // grows to hold it, the way CodeMirror's line grows around an inline
+    // widget; every wrapped row of the line shares the height.
+    let mut row_height = row_height;
+    if !display.math.is_empty() {
+        let layout = &line.unwrapped_layout;
+        let mut extra = px(0.);
+        for m in &display.math {
+            if let Ok(formula) = scoria_math::typeset(&m.tex, m.block) {
+                extra = extra.max(crate::math::inline_overflow(
+                    &formula,
+                    size,
+                    layout.ascent,
+                    layout.descent,
+                ));
+            }
+        }
+        row_height += extra;
+    }
     Shaped {
         display,
         line,
@@ -4489,6 +4523,12 @@ impl Element for EditorElement {
         // built from the reading renderer) can be laid out with the app
         // at hand while its lines are read.
         self.editor.update(cx, |editor, cx| {
+            // Measured before any line is shaped, so this frame's inline
+            // formulas already have placeholders.
+            editor.spaces = Some((
+                font_size,
+                SpaceWidths::measure(window.text_system(), &text_style.font(), font_size),
+            ));
             let palette = editor.palette.clone();
             let highlights = editor.highlights.clone();
             let flairs = editor.flairs.clone();
@@ -4928,6 +4968,8 @@ impl Element for EditorElement {
         );
         let line_height = prepaint.line_height;
         let content_x = prepaint.content_x;
+        let font_size = prepaint.font_size;
+        let text_color = self.editor.read(cx).palette.text;
         window.with_content_mask(Some(gpui::ContentMask { bounds }), |window| {
             for quad in prepaint.decor.drain(..) {
                 window.paint_quad(quad);
@@ -4954,6 +4996,36 @@ impl Element for EditorElement {
                     window,
                     cx,
                 );
+                // Inline formulas over their placeholders, on the text
+                // baseline and centred in the placeholder's slack, in the
+                // text colour: rendered math is not markup.
+                for m in &shaped.display.math {
+                    let Ok(formula) = scoria_math::typeset(&m.tex, m.block) else {
+                        continue;
+                    };
+                    let em = font_size * shaped.display.scale;
+                    let rh = visible.row_height;
+                    let layout = &shaped.line.unwrapped_layout;
+                    let Some(start) = shaped.line.position_for_index(m.display.start, rh) else {
+                        continue;
+                    };
+                    let width = crate::math::width_px(&formula, em);
+                    let end_x = shaped
+                        .line
+                        .position_for_index(m.display.end, rh)
+                        .filter(|end| end.y == start.y)
+                        .map(|end| end.x)
+                        .unwrap_or(start.x + width);
+                    let slack = (end_x - start.x - width).max(px(0.));
+                    let baseline = point(
+                        origin.x + start.x + slack / 2.,
+                        origin.y
+                            + start.y
+                            + (rh - layout.ascent - layout.descent) / 2.
+                            + layout.ascent,
+                    );
+                    crate::math::paint(&formula, baseline, em, text_color, window);
+                }
             }
             for w in prepaint.widgets.iter_mut() {
                 w.element.paint(window, cx);

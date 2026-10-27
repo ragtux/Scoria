@@ -20,6 +20,7 @@ mod editor;
 mod explorer;
 mod graph;
 mod help;
+mod math;
 mod mentions;
 mod palette;
 mod panes;

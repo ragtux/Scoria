@@ -22,9 +22,11 @@ Vesiculation is the formation of gas bubbles in a magma as it rises and the pres
 
 Vesicularity is the volume fraction of vesicles:
 
-**Φ = 1 − ρ_bulk / ρ_DRE**
+$$
+\Phi = 1 - \frac{\rho_\text{bulk}}{\rho_\text{DRE}}
+$$
 
-where ρ_bulk is the density of the clast with its vesicles and ρ_DRE the [[Glossary#^dre|dense-rock equivalent]]. Bulk density comes from weighing the clast in air and in water after sealing it in wax or film; DRE comes from a powdered sample in a pycnometer, or from the composition.
+where $\rho_\text{bulk}$ is the density of the clast with its vesicles and $\rho_\text{DRE}$ the [[Glossary#^dre|dense-rock equivalent]]. Bulk density comes from weighing the clast in air and in water after sealing it in wax or film; DRE comes from a powdered sample in a pycnometer, or from the composition.
 
 ![[vesicularity-chart.svg|560]]
 *Bulk density against vesicularity for a DRE of 2.8 g/cm³, with the rocks of this vault placed on it.*

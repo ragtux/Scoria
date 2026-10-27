@@ -39,8 +39,8 @@ Be realistic about this list before you make Scoria your daily reader.
   Dataview or Templater, Scoria is not yet a place you can work.
 - **Themes.** `appearance.json`'s base theme and accent color are honored, but a CSS theme
   is not. A variable-level subset of Obsidian's CSS custom properties is a later phase.
-- **Rendered math.** `$x$` and `$$x$$` are parsed and show as their source text, not as
-  typeset math.
+- **MathJax's extras.** Math is typeset, but with KaTeX's syntax; a MathJax-only command
+  shows its source in red. See [tables, code and math](/docs/format/code-math/).
 - **HTML in notes.** Shown as text rather than rendered.
 - **Remote images.** A `![](https://…)` does not load; local images do.
 - **The Bases view.** The Bases YAML format is implemented and round-trips; a `.base` does

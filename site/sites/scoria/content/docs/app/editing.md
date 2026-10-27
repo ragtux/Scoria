@@ -38,8 +38,9 @@ its source so you can edit it.
 - **Tasks** render as checkboxes, and a click toggles one.
 - **Quotes** show a bar per level; **callouts** fold the `[!type]` into the title.
 - **Comments** (`%%…%%`) and **block ids** (`^id`) are hidden.
-- **Inline math** loses its dollar signs (the formula itself is not typeset — see
-  [tables, code and math](/docs/format/code-math/)).
+- **Inline math** is typeset in place, on the line's baseline; the source and its dollar
+  signs return while the cursor is inside it (see [tables, code and
+  math](/docs/format/code-math/)).
 - **Emphasis, strong, strike and highlight** drop their delimiters.
 
 ### Block widgets

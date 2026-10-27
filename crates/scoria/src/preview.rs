@@ -43,6 +43,18 @@ pub struct Decor {
     pub task_done: bool,
 }
 
+/// An inline formula drawn over its placeholder: `$x$` (or a one-line
+/// `$$x$$`, `block`) substituted by a run of no-break spaces the width of
+/// the typeset formula, which the editor paints on top of after the text.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct InlineMath {
+    /// The placeholder's bytes in the display text.
+    pub display: Range<usize>,
+    /// The TeX between the dollars.
+    pub tex: String,
+    pub block: bool,
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct DisplayLine {
     pub text: String,
@@ -51,7 +63,15 @@ pub struct DisplayLine {
     /// Font size multiplier (headings).
     pub scale: f32,
     pub decor: Decor,
+    /// Formulas standing in for runs of the display text.
+    pub math: Vec<InlineMath>,
 }
+
+/// Lays out an inline formula for the display text: given the TeX and
+/// whether it is `$$`-delimited, the placeholder text to shape in its
+/// place, or `None` to show the source with its dollars hidden (the
+/// formula does not parse, or nothing can measure a placeholder yet).
+pub type MathPlaceholder<'a> = dyn Fn(&str, bool) -> Option<String> + 'a;
 
 impl DisplayLine {
     /// The source line unchanged (source mode, or nothing to hide).
@@ -65,6 +85,7 @@ impl DisplayLine {
             }],
             scale,
             decor,
+            math: Vec::new(),
         }
     }
 
@@ -212,8 +233,21 @@ pub fn touches(touch: &[Range<usize>], range: &Range<usize>) -> bool {
 /// Builds the Live Preview text of `line`. `touch` holds the parts of the
 /// selections on this line (collapsed cursors included), line-relative;
 /// any construct one of them touches keeps its source.
+#[cfg(test)]
 pub fn display_line(line: &str, spans: &[HighlightSpan], touch: &[Range<usize>]) -> DisplayLine {
+    display_line_with(line, spans, touch, &|_, _| None)
+}
+
+/// [`display_line`] with inline math typeset: `math` answers the
+/// placeholder each formula is shaped as.
+pub fn display_line_with(
+    line: &str,
+    spans: &[HighlightSpan],
+    touch: &[Range<usize>],
+    math: &MathPlaceholder<'_>,
+) -> DisplayLine {
     let (scale, mut decor) = line_block(spans);
+    let mut formulas: Vec<(Range<usize>, String, bool)> = Vec::new();
     decor.task_done = spans.iter().any(|s| {
         s.kind == HighlightKind::Task
             && line
@@ -408,13 +442,23 @@ pub fn display_line(line: &str, spans: &[HighlightSpan], touch: &[Range<usize>])
                 }
             }
             HighlightKind::Math => {
-                // `$x$` and `$$x$$` lose their dollars; a block's lines are
-                // a widget when it is not being edited, so only the
-                // delimiters on this line go.
+                // `$x$` and `$$x$$` on one line are typeset over a
+                // placeholder when they can be, and otherwise lose their
+                // dollars; a block's lines are a widget when it is not being
+                // edited, so only the delimiters on this line go.
                 let n = t.bytes().take_while(|&b| b == b'$').count().min(2);
                 if n > 0 && t.len() >= 2 * n && t.ends_with(&t[..n]) {
-                    hides.push((r.start..r.start + n, "".into(), k));
-                    hides.push((r.end - n..r.end, "".into(), k));
+                    let tex = &t[n..t.len() - n];
+                    match math(tex, n == 2).filter(|p| !p.is_empty()) {
+                        Some(placeholder) => {
+                            hides.push((r.clone(), placeholder.into(), k));
+                            formulas.push((r.clone(), tex.to_string(), n == 2));
+                        }
+                        None => {
+                            hides.push((r.start..r.start + n, "".into(), k));
+                            hides.push((r.end - n..r.end, "".into(), k));
+                        }
+                    }
                 }
             }
             HighlightKind::CodeBlock
@@ -464,11 +508,30 @@ pub fn display_line(line: &str, spans: &[HighlightSpan], touch: &[Range<usize>])
         });
         text.push_str(&line[at..]);
     }
+    let math = formulas
+        .into_iter()
+        .filter_map(|(source, tex, block)| {
+            pieces.iter().find_map(|p| match p {
+                Piece::Sub {
+                    display,
+                    source: s,
+                    len,
+                    kind: HighlightKind::Math,
+                } if *s == source => Some(InlineMath {
+                    display: *display..display + len,
+                    tex: tex.clone(),
+                    block,
+                }),
+                _ => None,
+            })
+        })
+        .collect();
     DisplayLine {
         text,
         pieces,
         scale,
         decor,
+        math,
     }
 }
 
@@ -502,6 +565,39 @@ mod tests {
         assert_eq!(render("**b** *c*", Some(5..5)).text, "**b** c");
         assert_eq!(render("**b** *c*", Some(0..0)).text, "**b** c");
         assert_eq!(render("**b** *c*", Some(6..6)).text, "b *c*");
+    }
+
+    #[test]
+    fn inline_math_is_shaped_as_its_placeholder() {
+        let src = "so $x^2$ and $$y$$ or $a";
+        let doc = scoria_markdown::parse(src);
+        let lines = highlight_lines(&doc);
+        // The placeholder is whatever the measurer answers; a formula it
+        // declines keeps the dollar-hiding fallback.
+        let math = |tex: &str, block: bool| match (tex, block) {
+            ("x^2", false) => Some("\u{a0}\u{a0}".to_string()),
+            ("y", true) => None,
+            _ => panic!("unexpected {tex:?}"),
+        };
+        let d = display_line_with(src, &lines[0], &[], &math);
+        assert_eq!(d.text, "so \u{a0}\u{a0} and y or $a");
+        assert_eq!(
+            d.math,
+            vec![InlineMath {
+                display: 3..7,
+                tex: "x^2".into(),
+                block: false
+            }]
+        );
+        // The whole `$x^2$` maps onto the placeholder: a click lands at
+        // its start, which reveals the source.
+        assert_eq!(d.to_source(4), 3);
+        assert_eq!(d.to_display(5), 3);
+        assert_eq!(d.to_display(8), 7);
+        // Touched, the source shows and nothing is typeset.
+        let d = display_line_with(src, &lines[0], std::slice::from_ref(&(5..5)), &math);
+        assert_eq!(d.text, "so $x^2$ and y or $a");
+        assert!(d.math.is_empty());
     }
 
     #[test]
