@@ -144,6 +144,77 @@ fn callouts() {
     );
 }
 
+/// A callout's first body line gets the same block rules as any other line.
+///
+/// The header is taken off the quote while parsing, not lifted out of the body
+/// paragraph afterwards. It matters because the table and setext rules both ask
+/// how many lines the open paragraph holds, and a header still sitting in it
+/// made the answer one too many -- so a table or a `---` underline on the line
+/// after the header used to come out as literal text. Observed against
+/// Obsidian 1.14.4 (tools/probe-gen, 2026-10-29).
+#[test]
+fn callout_body_starts_a_block_on_its_first_line() {
+    fn first_child(src: &str) -> BlockKind<'_> {
+        let doc = parse(src);
+        let BlockKind::Callout { children, .. } = doc.blocks.into_iter().next().unwrap().kind
+        else {
+            panic!("expected a callout for {src:?}")
+        };
+        children.into_iter().next().expect("a body block").kind
+    }
+
+    // A table, with and without a title, a fold marker, or a space after `>`.
+    for src in [
+        "> [!note]\n> | a | b |\n> |---|---|",
+        "> [!note] Title\n> | a | b |\n> |---|---|",
+        "> [!tip]- Folded\n> | a | b |\n> |---|---|",
+        ">[!note]\n>| a | b |\n>|---|---|",
+    ] {
+        let BlockKind::Table { header, .. } = first_child(src) else {
+            panic!("expected a table for {src:?}, got {:?}", first_child(src))
+        };
+        assert_eq!(header.len(), 2, "{src:?}");
+    }
+
+    // A setext underline, which reads the same paragraph-line count.
+    for (src, level) in [
+        ("> [!note]\n> text\n> ---", 2u8),
+        ("> [!note]\n> text\n> ===", 1),
+    ] {
+        let BlockKind::Heading {
+            level: got, setext, ..
+        } = first_child(src)
+        else {
+            panic!("expected a heading for {src:?}")
+        };
+        assert_eq!((got, setext), (level, true), "{src:?}");
+    }
+
+    // And a list, which asks whether it may interrupt a paragraph.
+    assert!(matches!(
+        first_child("> [!note]\n> - a\n> - b"),
+        BlockKind::List { .. }
+    ));
+
+    // Taking the header early must not cost the body its lazy continuation:
+    // an unprefixed line still belongs to the callout.
+    let BlockKind::Callout { children, .. } = parse("> [!note]\ncontent").blocks.remove(0).kind
+    else {
+        panic!("callout")
+    };
+    assert_eq!(children.len(), 1);
+    assert!(matches!(children[0].kind, BlockKind::Paragraph { .. }));
+
+    // A header with nothing after it still has no body, so no content div.
+    assert!(!html("> [!note]").contains("callout-content"));
+
+    // The header belongs to the quote's first block and nowhere else.
+    assert!(matches!(
+        parse("> text\n> [!note]").blocks[0].kind,
+        BlockKind::BlockQuote { .. }
+    ));
+}
+
 #[test]
 fn highlight_strikethrough_and_math() {
     assert_eq!(

@@ -100,10 +100,28 @@ struct RawLine {
     pad: u8,
 }
 
+/// A callout's `> [!type]+ Title` line, taken off the quote's first line while
+/// parsing.
+///
+/// Keeping it here rather than leaving it as the first line of the body
+/// paragraph is what lets a table or a setext underline on the *next* line be
+/// seen at all: both of those rules ask how many lines the open paragraph has,
+/// and a header still sitting in it makes the answer one too many. That is why
+/// `> [!note]` followed by a table row used to render as literal pipes.
+#[derive(Debug)]
+struct CalloutHeader<'a> {
+    callout_type: &'a str,
+    fold: Option<Fold>,
+    title: Span,
+}
+
 #[derive(Debug)]
 enum NodeKind<'a> {
     Document,
-    BlockQuote,
+    BlockQuote {
+        /// Set when this quote's first line was a callout header.
+        header: Option<CalloutHeader<'a>>,
+    },
     List {
         kind: ListKind,
         items: Vec<RawItem<'a>>,
@@ -209,7 +227,7 @@ impl<'a> Node<'a> {
     fn can_contain(&self, child_is_item: bool) -> bool {
         match self.kind {
             NodeKind::Document
-            | NodeKind::BlockQuote
+            | NodeKind::BlockQuote { .. }
             | NodeKind::Item { .. }
             | NodeKind::FootnoteDefinition { .. } => !child_is_item,
             NodeKind::List { .. } => child_is_item,
@@ -565,13 +583,30 @@ impl<'a, 'o> BlockParser<'a, 'o> {
             NodeKind::HtmlBlock { lines, .. } => RawKind::HtmlBlock {
                 content: self.join_raw_lines(&lines),
             },
-            NodeKind::BlockQuote => {
-                let mut children = node.children;
-                if let Some((callout, callout_id)) = self.callout_from(&mut children) {
-                    id = callout_id;
-                    callout
-                } else {
-                    RawKind::BlockQuote { children }
+            NodeKind::BlockQuote { header } => {
+                let children = node.children;
+                match header {
+                    None => RawKind::BlockQuote { children },
+                    Some(header) => {
+                        let mut title = header.title;
+                        if self.opts.block_ids {
+                            let mut title_lines = vec![title];
+                            if let Some((bid, whole)) = self.take_block_id(&mut title_lines) {
+                                id = Some(bid);
+                                title = if whole {
+                                    Span::new(title.start, title.start)
+                                } else {
+                                    title_lines[0]
+                                };
+                            }
+                        }
+                        RawKind::Callout {
+                            callout_type: header.callout_type,
+                            fold: header.fold,
+                            title,
+                            children,
+                        }
+                    }
                 }
             }
             NodeKind::List {
@@ -678,59 +713,6 @@ impl<'a, 'o> BlockParser<'a, 'o> {
 
     /// Converts a blockquote's children into a callout if the first line is a
     /// header; a ` ^id` at the end of the header becomes the callout's block id.
-    fn callout_from(
-        &self,
-        children: &mut Vec<RawBlock<'a>>,
-    ) -> Option<(RawKind<'a>, Option<BlockId<'a>>)> {
-        if !self.opts.callouts {
-            return None;
-        }
-        let first = children.first_mut()?;
-        let RawKind::Paragraph { lines } = &mut first.kind else {
-            return None;
-        };
-        let line = *lines.first()?;
-        let text = line.of(self.src);
-        let (callout_type, fold, title_offset) = parse_callout_header_raw(text)?;
-        let title_start = line.start + title_offset;
-        let title_text = &self.src[title_start..line.end];
-        let trimmed_start = title_start + (title_text.len() - title_text.trim_start().len());
-        let trimmed_end = trimmed_start + title_text.trim().len();
-        let mut title = Span::new(trimmed_start, trimmed_end);
-        let mut block_id = None;
-        if self.opts.block_ids {
-            let mut title_lines = vec![title];
-            if let Some((bid, whole)) = self.take_block_id(&mut title_lines) {
-                block_id = Some(bid);
-                title = if whole {
-                    Span::new(trimmed_start, trimmed_start)
-                } else {
-                    title_lines[0]
-                };
-            }
-        }
-        let fold = match fold {
-            Some(true) => Some(Fold::Collapsed),
-            Some(false) => Some(Fold::Expanded),
-            None => None,
-        };
-        lines.remove(0);
-        if lines.is_empty() {
-            children.remove(0);
-        } else {
-            first.span.start = lines[0].start;
-        }
-        Some((
-            RawKind::Callout {
-                callout_type,
-                fold,
-                title,
-                children: std::mem::take(children),
-            },
-            block_id,
-        ))
-    }
-
     /// Parses one link reference definition from the start of the paragraph
     /// lines; returns how many lines it consumed.
     fn extract_reference_definition(&mut self, lines: &[Span]) -> Option<usize> {
@@ -825,6 +807,22 @@ impl<'a, 'o> BlockParser<'a, 'o> {
             return;
         }
 
+        // The same laziness one step earlier. A callout whose header line has
+        // just been taken has no open paragraph to continue, but Obsidian still
+        // draws an unprefixed next line into the body, so open the paragraph
+        // the header used to stand in for.
+        if !self.all_closed
+            && !self.blank
+            && matches!(self.tip().kind, NodeKind::BlockQuote { header: Some(_) })
+            && !self.tip().has_children()
+        {
+            self.add_child(NodeKind::Paragraph { lines: Vec::new() }, self.offset);
+            self.advance_next_nonspace();
+            self.add_line();
+            self.extend_open_spans(self.open.len());
+            return;
+        }
+
         self.close_unmatched_blocks();
         let blank = self.blank;
         let tip_idx = self.open.len() - 1;
@@ -833,7 +831,7 @@ impl<'a, 'o> BlockParser<'a, 'o> {
         }
         let tip = &self.open[tip_idx];
         let last_line_blank = blank
-            && !(matches!(tip.kind, NodeKind::BlockQuote)
+            && !(matches!(tip.kind, NodeKind::BlockQuote { .. })
                 || matches!(tip.kind, NodeKind::FencedCode { .. })
                 || (matches!(tip.kind, NodeKind::Item { .. })
                     && !tip.has_children()
@@ -902,7 +900,7 @@ impl<'a, 'o> BlockParser<'a, 'o> {
         let src = self.src;
         match &self.open[i].kind {
             NodeKind::Document => Continue::Matched,
-            NodeKind::BlockQuote => {
+            NodeKind::BlockQuote { .. } => {
                 if !self.indented && self.byte(self.next_nonspace) == Some(b'>') {
                     self.advance_next_nonspace();
                     self.advance_offset(1, false);
@@ -1053,8 +1051,50 @@ impl<'a, 'o> BlockParser<'a, 'o> {
                 self.last_matched += 1;
             }
             self.close_unmatched_blocks();
-            self.add_child(NodeKind::BlockQuote, start);
+            self.add_child(NodeKind::BlockQuote { header: None }, start);
             return Some(Start::Container);
+        }
+
+        // Callout header: `[!type]` as the first line of a quote. This runs on
+        // the next pass through, after the `>` prefix above has been consumed,
+        // and consumes the whole line so that nothing downstream ever sees the
+        // header as body content. See [`CalloutHeader`] for why that matters.
+        if self.opts.callouts
+            && !self.indented
+            && c == b'['
+            && container == self.open.len() - 1
+            && matches!(
+                &self.open[container].kind,
+                NodeKind::BlockQuote { header: None }
+            )
+            // The header belongs to the quote's first block, exactly as the
+            // old post-hoc reading required: `> text` then `> [!note]` is not
+            // a callout, and neither is a header after a heading.
+            && !self.open[container].has_children()
+        {
+            if let Some((callout_type, fold, title_offset)) = parse_callout_header_raw(self.rest())
+            {
+                let title_start = self.next_nonspace + title_offset;
+                let text = &self.src[title_start..self.line.end];
+                let lead = text.len() - text.trim_start().len();
+                let title = Span::new(title_start + lead, title_start + lead + text.trim().len());
+                let fold = match fold {
+                    Some(true) => Some(Fold::Collapsed),
+                    Some(false) => Some(Fold::Expanded),
+                    None => None,
+                };
+                let NodeKind::BlockQuote { header } = &mut self.open[container].kind else {
+                    unreachable!()
+                };
+                *header = Some(CalloutHeader {
+                    callout_type,
+                    fold,
+                    title,
+                });
+                self.offset = self.line.end;
+                self.line_consumed = true;
+                return Some(Start::Leaf);
+            }
         }
 
         // ATX heading.
