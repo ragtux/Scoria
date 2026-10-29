@@ -4650,8 +4650,8 @@ Its exact padding and the switcher's hover shape are still to be read over CDP; 
 `app:open-help` from Help and `app:open-settings` from the gear.
 
 **The vault switcher.** `app:open-vault` ("Manage vaults") and `app:switch-vault` drop a menu up from
-the name: every vault this machine has opened, most recent first with a check on the one showing (a
-folder that is gone is listed faint and says so when clicked), a hairline, then "Open vault..."
+the name: every vault this machine has opened whose folder is still there, in the registry
+document's own order with a check on the one showing, a hairline, then "Open vault..."
 (`app:open-another-vault`, the desktop's folder picker) and "Open sandbox vault"
 (`app:open-sandbox-vault`). A click outside closes it. The list is Obsidian's `obsidian.json`
 document — `{"vaults": {<16 hex digits>: {"path", "ts", "open"}}}`, `ts` in Unix milliseconds,
@@ -4661,8 +4661,28 @@ document — `{"vaults": {<16 hex digits>: {"path", "ts", "open"}}}`, `ts` in Un
 sandbox, which is a fresh `Scoria Sandbox <ms>` folder under the temporary directory holding a
 `Welcome.md` and an `Another note.md`, opened on `Welcome`. Switching puts the vault that was open
 away as quitting would (the note's edits and `workspace.json` written if the session changed them),
-closes every tab group, and restores the next vault from its own `workspace.json`. The menu's rows
-are Scoria's reading of the screenshot; Obsidian's own vault switcher is still to be probed.
+closes every tab group, and restores the next vault from its own `workspace.json`.
+
+Obsidian's own switcher was read over CDP on 2026-10-29
+(`tools/obsidian-probe/vault-switcher.mjs`, `results/2026-10-29-vault-switcher.json`), with a
+registry holding six vaults — two of them folders named `vault` under different parents, one of them
+a folder that had been deleted. The footer is `.workspace-sidedock-vault-profile` around a
+`.workspace-drawer-vault-switcher` (a `.workspace-drawer-vault-switcher-icon` and the
+`.workspace-drawer-vault-name`) and a `.workspace-drawer-vault-actions`. Clicking it opens a plain
+`.menu` whose vault rows are `.menu-item tappable`, each an empty `.menu-item-icon`, then a
+`.menu-item-title` holding **the folder's name alone** — no path, no `aria-label`, no icon — and on
+the open vault a trailing `.menu-item-icon.mod-checked` drawing `lucide-check`. Three things follow
+from the run: two vaults that share a folder name are two identical rows, and Obsidian neither
+disambiguates them nor hangs the path off them; a vault whose folder is gone is left out of the menu
+altogether, though the document Obsidian read at launch still carried its entry; and the order is the document's key order,
+not recency — the open vault was the fourth of six rows, where its key sat, and the newest `ts` was
+third. Under a `.menu-separator` comes a single row, "Manage vaults..." with the `open-vault` icon,
+which raises Obsidian's own vault-manager window (running `app:open-vault` left `.modal-container`
+absent). Scoria matches the rows, the omission and the order; it has no vault-manager window, so its
+tail is its own two rows, and it keeps the folder's path as the row's tooltip. A machine that has
+opened dozens of vaults has a list taller than the window, which would carry the rows under the
+hairline off the bottom edge whichever way the menu is snapped: the menu is capped at the window's
+height less 96 px and scrolls, the way Obsidian's own menus scroll inside their `.menu-scroll`.
 
 **The Help window.** `app:open-help` and the footer's Help open a window of Obsidian's shape rather
 than the browser (seen in a screenshot of 1.14.4, 2026-10-21): the mark, the name, "Version x.y.z",
