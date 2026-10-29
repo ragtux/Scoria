@@ -287,6 +287,14 @@ fn eval_inner(
 ) -> bool {
     match node {
         Node::All(children) => {
+            // A group with no term holds no matcher, so nothing matches it.
+            // Vacuous truth here is the bug behind `foo OR`, which parses as
+            // `foo` OR an empty right-hand side: an empty `All` answering
+            // true listed the whole vault. `Node::Any(vec![])` already
+            // answers false, and this is the same rule for the other side.
+            if children.is_empty() {
+                return false;
+            }
             let mut local = MatchSet::default();
             for c in children {
                 if !eval(c, file, scope, case_sensitive, &mut local) {
@@ -877,9 +885,61 @@ mod tests {
         assert_eq!(names("path:projects"), Some(vec![]));
     }
 
+    /// A query with no term holds no matcher, so it matches no file. The
+    /// pane never asks — `Query::is_empty` gates it, the way Obsidian's
+    /// `startSearch` returns before adding a result — but the answer must
+    /// still be "nothing": an empty `All` answering true by vacuous truth is
+    /// what made `foo OR` list the whole vault.
     #[test]
-    fn empty_query_matches_everything_without_ranges() {
-        assert_eq!(run(""), Some(vec![]));
-        assert_eq!(names(""), Some(vec![]));
+    fn an_empty_query_holds_no_matcher() {
+        assert_eq!(run(""), None);
+        assert_eq!(names(""), None);
+        assert_eq!(run("()"), None);
+    }
+
+    /// The ten half-typed shapes of `docs/scoria/Specification.md`, "A
+    /// half-typed query: tolerated, or nothing at all", over the vault that
+    /// section was observed on: two notes holding `foo`, two without it.
+    /// Obsidian is not uniform — a dangling `OR` or `-`, a stray `)`, a
+    /// leading `(` and an unclosed quote all match as if they were not
+    /// there, while a dangling `AND` and an unclosed trailing `(` match
+    /// nothing. Each row asserts the files returned rather than the parse
+    /// tree: two of these shapes parse cleanly and went wrong only here.
+    #[test]
+    fn half_typed_queries_match_as_obsidian_does() {
+        // `and` sits in a note that also holds `foo`, so a query that read
+        // the dangling `AND` as an ordinary word would match it.
+        let vault = [
+            ("apple.md", "apple and foo at the root\n"),
+            ("notes/apple.md", "apple in a folder, with foo in it\n"),
+            ("kiwi.md", "kiwi, and nothing else\n"),
+            ("mango.md", "mango, a plain note\n"),
+        ];
+        let results = |q: &str| -> Vec<&'static str> {
+            let search = Search::new(q).unwrap();
+            if search.is_empty() {
+                // No matcher: the pane returns before listing anything.
+                return Vec::new();
+            }
+            let mut out = Vec::new();
+            for (path, content) in vault.iter().copied() {
+                let file = SearchFile {
+                    path,
+                    content,
+                    ..Default::default()
+                };
+                if search.matches(&file).is_some() {
+                    out.push(path);
+                }
+            }
+            out
+        };
+        let as_foo = vec!["apple.md", "notes/apple.md"];
+        for q in ["foo", "foo OR", "foo -", "foo )", "(foo", "\"foo", "foo \""] {
+            assert_eq!(results(q), as_foo, "{q:?} should match as foo does");
+        }
+        for q in ["foo AND", "foo (", "OR", "("] {
+            assert_eq!(results(q), Vec::<&str>::new(), "{q:?} should match nothing");
+        }
     }
 }

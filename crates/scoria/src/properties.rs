@@ -341,10 +341,26 @@ impl Field {
         self.cursor += clean.len();
     }
 
-    pub fn backspace(&mut self) {
-        if let Some(prev) = self.prev_boundary() {
-            self.text.replace_range(prev..self.cursor, "");
-            self.cursor = prev;
+    /// Backspace. In the trailing input of a list value this is not a
+    /// character delete at all but the first or second half of Obsidian's
+    /// two-press pill gesture, so the press reports what it meant and the
+    /// caller — which owns the selected pill and can write the file — acts
+    /// on it. Everywhere else it takes the character before the caret and
+    /// reports [`PillStep::Text`]. `selected` is the pill an earlier press
+    /// selected, if any.
+    ///
+    /// See [`pill_step`] for the gesture itself.
+    #[must_use]
+    pub fn backspace(&mut self, selected: Option<usize>) -> PillStep {
+        match pill_step(self, selected) {
+            PillStep::Text => {
+                if let Some(prev) = self.prev_boundary() {
+                    self.text.replace_range(prev..self.cursor, "");
+                    self.cursor = prev;
+                }
+                PillStep::Text
+            }
+            step => step,
         }
     }
 
@@ -489,6 +505,55 @@ pub fn value_field(row: &Row) -> Field {
             Part::Value,
             row.edit_text.clone(),
         )
+    }
+}
+
+/// What a Backspace in a list value means.
+///
+/// Obsidian takes **two** presses to remove a pill: with the trailing input
+/// focused and empty the first moves focus to the last pill and changes
+/// nothing, and the second removes that pill and writes the file (see
+/// [[Specification#The property pills]]). Repeating walks backwards a pill at
+/// a time, and once the list is empty focus is back in the input and further
+/// presses do nothing.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PillStep {
+    /// Not the gesture: the press belongs to the field's own text, and
+    /// [`Field::backspace`] has taken the character before the caret.
+    Text,
+    /// Focus moves to the pill at this index. Nothing is written — this is
+    /// the first of the two presses.
+    Select(usize),
+    /// The selected pill goes, through the same [`remove_item`] change its
+    /// own remove control makes. This is the second press.
+    Remove(usize),
+    /// Nothing left to select: the list is empty and the input has focus, so
+    /// the press does nothing at all.
+    Nothing,
+}
+
+/// What a Backspace means for `field`, given the pill an earlier press
+/// selected. The gesture belongs to the trailing input alone: a caret with
+/// text before it, and a field opened on an existing pill rather than on the
+/// input after them, both take the character.
+pub fn pill_step(field: &Field, selected: Option<usize>) -> PillStep {
+    let Some(list) = field.list.as_ref() else {
+        return PillStep::Text;
+    };
+    // The trailing input is the item past the last one, and it has to be
+    // empty: a half-typed item's Backspace is a character delete, and so is
+    // one inside a pill the reader opened to edit.
+    if field.cursor > 0 || !field.text.is_empty() || list.index < list.items.len() {
+        return PillStep::Text;
+    }
+    match selected {
+        // A pill is already selected, so this is the second press.
+        Some(ix) if ix < list.items.len() => PillStep::Remove(ix),
+        // The first press selects the last pill, if there is one.
+        _ => match list.items.len().checked_sub(1) {
+            Some(last) => PillStep::Select(last),
+            None => PillStep::Nothing,
+        },
     }
 }
 
@@ -776,14 +841,20 @@ mod tests {
         f.left();
         f.insert("X");
         assert_eq!((f.text.as_str(), f.cursor), ("abXc", 3));
-        f.backspace();
+        assert_eq!(f.backspace(None), PillStep::Text);
         assert_eq!((f.text.as_str(), f.cursor), ("abc", 2));
         f.delete();
         assert_eq!((f.text.as_str(), f.cursor), ("ab", 2));
         f.home();
         assert_eq!(f.cursor, 0);
-        f.backspace();
-        assert_eq!(f.text, "ab", "backspace at the start does nothing");
+        // A scalar value has no pills behind it, so there is nothing for the
+        // caret to step out into: the press is still a character delete, and
+        // with nothing before the caret it takes nothing.
+        assert_eq!(f.backspace(None), PillStep::Text);
+        assert_eq!(
+            f.text, "ab",
+            "backspace at the start of a scalar field does nothing"
+        );
         f.end();
         f.delete();
         assert_eq!(f.text, "ab", "delete at the end does nothing");
@@ -794,7 +865,7 @@ mod tests {
         let mut f = Field::new(Target::New, Part::Key, "Ä✓");
         f.left();
         assert_eq!(f.cursor, 2, "caret sits before the ✓, not inside it");
-        f.backspace();
+        assert_eq!(f.backspace(None), PillStep::Text);
         assert_eq!(f.text, "✓");
     }
 
@@ -1050,6 +1121,135 @@ mod tests {
             })
         );
         assert_eq!(remove_item(&single, 1), None);
+    }
+
+    /// `changes` planned against the note and applied to its bytes, which is
+    /// what the editor does with a committed field or a removed pill.
+    fn apply(text: &mut String, changes: &[Change]) {
+        let block = parse_block(text);
+        let mut edits = scoria_formats::properties::plan(text, &block, changes).expect("a plan");
+        edits.sort_by_key(|e| e.start);
+        for e in edits.into_iter().rev() {
+            text.replace_range(e.start..e.end, &e.text);
+        }
+    }
+
+    /// One Backspace in the trailing input of `ty`'s list, driven the way the
+    /// editor drives it: the step decides, a removal goes through
+    /// [`remove_item`] and the planner, and the input is rebuilt from the row
+    /// as it then stands — the old field's snapshot of the items is stale
+    /// and committing it would write the removed item back.
+    fn press_backspace(
+        text: &mut String,
+        ty: PropertyType,
+        selected: &mut Option<usize>,
+    ) -> PillStep {
+        let row = list_row(text, ty);
+        let mut field = row.append_field();
+        let step = field.backspace(*selected);
+        match step {
+            PillStep::Select(ix) => *selected = Some(ix),
+            PillStep::Remove(ix) => {
+                *selected = None;
+                let change = remove_item(&row, ix).expect("the selected pill is in the list");
+                apply(text, &[change]);
+            }
+            PillStep::Text | PillStep::Nothing => *selected = None,
+        }
+        step
+    }
+
+    /// Obsidian's two-press Backspace: the first press selects the last pill
+    /// and writes nothing, the second removes it, and repeating walks
+    /// backwards a pill at a time.
+    #[test]
+    fn a_backspace_in_the_input_selects_a_pill_before_it_removes_it() {
+        let start = "---\ntags:\n  - one\n  - two\n---\n\nbody\n";
+        let mut text = start.to_string();
+        let mut selected = None;
+
+        assert_eq!(
+            press_backspace(&mut text, PropertyType::Tags, &mut selected),
+            PillStep::Select(1),
+            "the first press takes the last pill"
+        );
+        assert_eq!(selected, Some(1));
+        assert_eq!(text, start, "and changes nothing in the file");
+
+        assert_eq!(
+            press_backspace(&mut text, PropertyType::Tags, &mut selected),
+            PillStep::Remove(1),
+            "the second press removes the selected pill"
+        );
+        assert_eq!(text, "---\ntags:\n  - one\n---\n\nbody\n");
+        assert_eq!(selected, None, "focus is back in the input");
+
+        // Walking backwards: the same two presses take the pill before it.
+        assert_eq!(
+            press_backspace(&mut text, PropertyType::Tags, &mut selected),
+            PillStep::Select(0)
+        );
+        assert_eq!(text, "---\ntags:\n  - one\n---\n\nbody\n");
+        assert_eq!(
+            press_backspace(&mut text, PropertyType::Tags, &mut selected),
+            PillStep::Remove(0)
+        );
+    }
+
+    /// The end of the walk: the key stays, with an empty value — `tags:`,
+    /// not `tags: []` and not a removed key — and further presses do
+    /// nothing at all.
+    #[test]
+    fn the_last_pill_removed_leaves_the_key_with_an_empty_value() {
+        let mut text = "---\ntags:\n  - one\n---\n\nbody\n".to_string();
+        let mut selected = None;
+        assert_eq!(
+            press_backspace(&mut text, PropertyType::Tags, &mut selected),
+            PillStep::Select(0)
+        );
+        assert_eq!(
+            press_backspace(&mut text, PropertyType::Tags, &mut selected),
+            PillStep::Remove(0)
+        );
+        assert_eq!(text, "---\ntags:\n---\n\nbody\n");
+        let block = parse_block(&text);
+        assert_eq!(block.entries.len(), 1, "the key is not deleted");
+        assert_eq!(block.entries[0].key, "tags");
+        assert_eq!(block.entries[0].value, Value::Empty);
+
+        // The list is empty, so the input keeps focus and the press does
+        // nothing however often it is pressed.
+        for _ in 0..3 {
+            assert_eq!(
+                press_backspace(&mut text, PropertyType::Tags, &mut selected),
+                PillStep::Nothing
+            );
+            assert_eq!(selected, None);
+            assert_eq!(text, "---\ntags:\n---\n\nbody\n");
+        }
+    }
+
+    /// The gesture belongs to the empty trailing input alone: with something
+    /// typed into it, and inside a pill opened for editing, Backspace is the
+    /// character delete it always was.
+    #[test]
+    fn a_backspace_with_text_in_hand_is_still_a_character_delete() {
+        let row = list_row("---\ntags:\n  - one\n---\n\nbody\n", PropertyType::Tags);
+
+        let mut typed = row.append_field();
+        typed.insert("two");
+        assert_eq!(typed.backspace(None), PillStep::Text);
+        assert_eq!(typed.text, "tw");
+        assert_eq!(pill_step(&typed, None), PillStep::Text);
+
+        // A pill the reader opened holds its item, and emptying it is not
+        // the input's gesture: the spec settles the input only.
+        let mut pill = row.item_field(0);
+        for _ in 0..3 {
+            assert_eq!(pill.backspace(None), PillStep::Text);
+        }
+        assert_eq!(pill.text, "");
+        assert_eq!(pill.backspace(None), PillStep::Text);
     }
 
     #[test]

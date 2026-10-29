@@ -326,6 +326,218 @@ uses behave as Obsidian's do.
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | not started |
 
+### The explorer's context menus, 2026-10-28
+
+The UI-rules pass of the same day captured the file-explorer menus but did not
+build them, and filed an entry saying nine of the items were commands Scoria
+has not got. Auditing that before building turned out to matter: **four** are.
+`ExplorerEvent::OpenInNewTab` and `Workspace::open_in_new_tab` were already
+there for Ctrl+click, tab groups had landed so "Open to the right" is a split
+with a file of its own, `cx.write_to_clipboard` was already used in three
+places, and `Search::set_query` behind `show_search` makes "Search in folder"
+two lines. So the job was mostly drawing after all.
+
+- **The model is a list, not a drawing.** `menu_items(&Target)` returns one
+  `MenuItem` per row -- label, lucide icon, `Section`, and the
+  `ExplorerEvent` it emits -- and `separators_above` puts a separator wherever
+  the section changes, with **two** above `Danger` for the empty section
+  Obsidian emits there. Nothing writes a separator down one at a time, so the
+  menus cannot drift out of the shape the capture recorded, and both are a
+  unit test that reads as the spec's own table. `Target` is `File`, `Folder`
+  or `Blank`, which is also the whole of what the right-click has to decide.
+- **The empty space below the last row** is Obsidian's third menu, the four
+  `action-primary` items rooted at the vault. `uniform_list` hands an event
+  outside every row straight through, so the list is wrapped in a div that
+  takes the right-click, and a row's own handler calls `cx.stop_propagation()`
+  so exactly one of the two menus opens.
+- **Five icons** were cut from Lucide's source: `clipboard`, `folder-open`,
+  `folder-search`, `separator-vertical` and `pen-line`. Two names in the
+  capture are Obsidian's older aliases and resolve to drawings under current
+  names -- `lucide-edit` is `square-pen`, already bundled, and `lucide-edit-3`
+  is `pen-line` -- both read out of Lucide's own `aliases` metadata rather
+  than guessed, the same trap the callout icons hit with `check-circle-2`.
+- **Four new handlers.** "Open to the right" factored `split` into
+  `split_beside`, where `None` duplicates the active tab (what a split is) and
+  `Some(path)` is a fresh tab on that file with no history or view state to
+  inherit; the flush and stash stay *above* the tab construction, because the
+  `view_state` a split copies is the one the stash just wrote. "Copy path"
+  writes the vault-relative path and shows no notice, because Obsidian shows
+  none. "Open in default app" is one `std::process::Command` per platform and
+  adds no crate. "Search in folder" writes `path:"<folder>/"`, the trailing
+  slash keeping `Notes/` from also matching `Notes archive/`. `new_canvas` and
+  `new_base` grew a `folder` argument; the commands still pass the vault root.
+- **Obsidian's file row has no creation items.** Scoria's offered "New note"
+  and "New folder" on a file -- the one thing in these menus that was wrong
+  rather than missing. A test asserts no file-row item begins with "New ".
+- **The socket reports the menu.** `state.docks.left.explorer.menu` carries
+  the target, its path and the rows a reader would see, `"---"` per separator.
+  Without it a harness could right-click and not read back what came up, which
+  is what had kept these menus untestable from outside the process -- the same
+  fix `state.modal.rows` got on 2026-10-24.
+
+Driven through the release binary in a headless sway session, so nothing on
+the desktop was touched. The three menus read back exactly as the capture
+records them. The file menu's rows were then mapped by *effect* rather than by
+guessing their geometry -- clicking every third pixel down the menu and
+recording what changed -- which produced the bands below, and they are the
+menu: nine items, every separator where Obsidian has one, and the doubled
+separator above Rename visibly twice the width of the singles.
+
+```
++  6..+ 33  a tab opened        Open in new tab
++ 36..+ 60  a group appeared    Open to the right
++ 63..+ 69  -                   separator
++ 72..+ 99  a file was copied   Make a copy
++102..+156  a prompt opened     Move file to... / Bookmark...
++159..+165  -                   separator
++168..+195  (menu closed only)  Copy path
++198..+204  -                   separator
++207..+234  (menu closed only)  Open in default app
++237..+252  -                   separator x2   <- 16 px against 7
++255..+297  a prompt opened     Rename... / Delete
+```
+
+Two rows show only that the click landed. "Copy path" is the clipboard
+limitation the backlog already records under
+[[UI parity backlog#Blocked by the harness, not by the code]]: a Wayland
+client cannot own the selection without a real input serial, and a headless
+session driven by synthetic events has none, so `wl-paste` reads back empty
+however the handler behaves. "Open in default app" has no desktop handler to
+answer it there. Both are pinned by unit tests on the string each produces
+rather than by the harness.
+
+What is left out, and why, is
+[[UI parity backlog#Five context-menu items wait on features Scoria has not got]].
+Two payloads the capture never recorded are marked OBSERVE in the spec: what
+Obsidian's "Copy path" actually writes, and what its "Search in folder" puts
+in the box.
+
+### The settled UI rules, 2026-10-28
+
+The backlog's "Settled by the probes of 2026-10-25 — the UI rules" entry held
+fifteen answers and, it said, no code. That turned out to be half wrong: the
+entry had gone stale, and eleven of its fifteen items had been built by the
+work of the week after it was written without anyone striking them off. So this
+pass began with a verification sweep rather than with code, and the sweep is
+the reason it is worth writing down — it found three bugs that the stale text
+had been hiding, one of them bad enough that it had been quietly wrong for
+every vault.
+
+What was already there, verified item by item against the running tree: the
+callout icons for all 28 types, the ephemeral fold chevron and the absent
+affordance on a callout with no `-` or `+`, the setext underline at body size,
+the struck-through and muted done task, clearing every property down to
+`\nbody\n`, Ctrl+E swallowed inside a text input, `graph:open-local` not
+offered with no file open, the local graph's own scale 1, the collation tie
+broken by the full path descending, and three of the four property-pill
+gestures. Six of those eleven had no test pinning them, which is how an entry
+like this goes stale in the first place.
+
+- **The vacuous `All`**, the worst of what the sweep found. `foo OR` matched
+  *every note in the vault*: the dangling branch parsed to a `Query::All([])`,
+  and `eval`'s `All` arm returned true with no children to check, so the `Any`
+  above it was satisfied by everything. `Any([])` already answered false, so
+  the asymmetry was the bug. It is fixed in the matcher rather than in
+  `Search::is_empty`, because `foo (` and `foo AND` do hold a matcher —
+  Obsidian runs the search and prints "No matches found.", a real zero and not
+  a gated pane — and because every other consumer of a `Search` inherited the
+  same default. One of them was doing so visibly: a graph colour group with an
+  empty query coloured every note in the graph. That now reads the empty query
+  explicitly, the way the graph's search filter already did, so the behaviour
+  is stated where it happens instead of falling out of the matcher.
+  A dangling `-` no longer searches for a literal hyphen either, and `foo (`
+  keeps its empty group instead of having it flattened away. All ten of the
+  spec's shapes are a fixture now, asserting the match outcome rather than the
+  parse tree, since two of the three bugs parsed fine and failed at eval.
+  Whether `AND` is an operator at all is still unprobed and deliberately not
+  implemented: the probe vault's `foo` notes contain no `and`, so the observed
+  zero is consistent with "dangling operator" and with "ordinary word that
+  matches nothing", and only the trailing shape is built.
+- **The callout colours were the light theme's, in both themes.**
+  `Theme::callout_color` took `&self` and never read `self.dark`, so every
+  callout but `quote` was the wrong colour on the theme Obsidian ships. The
+  values it needed were all already in the tree — `--callout-color` is a
+  `--color-<name>` token, the same six the canvas presets and the highlight
+  washes draw from — so the hue is picked by type now and the value comes from
+  the theme. `CanvasColors`' own doc comment had claimed those presets were
+  "the ones `Theme::callout_color` has for the same hues" since the canvas
+  landed; it is true as of this pass. A fourth test locks the callout hues and
+  the highlight washes to one source so they cannot drift apart again, and it
+  caught the light blue being `0x086dff` here and `0x086ddd` in
+  `highlight_color` for the one token — the spec records `#086ddd`.
+- **The property pills take Backspace twice.** The gesture is a pure state
+  machine (`PillStep` in `properties.rs`), and `Field::backspace` returns it
+  as a `#[must_use]` rather than offering a plain delete beside it: the old bug
+  was exactly a key path taking the character route and skipping the gesture,
+  so now no caller can. Press one selects the last pill and writes nothing,
+  press two issues the existing `remove_item` change, and the walk backwards
+  rebuilds the trailing input from the row as it then stands — `ListEdit`'s
+  items are a pre-removal snapshot, and committing one would write the removed
+  item back. Enter now leaves the input open the way Obsidian does, with the
+  bytes it writes unchanged, and the remove control is `lucide-x` instead of a
+  `×` character.
+- **The empty tab** is Obsidian's: `New tab` wherever its name is shown — the
+  tab strip had it, the view header and the window title still said "No file is
+  open" — four pills (`New note Ctrl + N`, `New base`, `New canvas`,
+  `Go to file Ctrl + O`) each running the command it names through the existing
+  registry, so `hotkeys.json` applies and a pill whose plugin is off is left
+  out; no mode switch in the header; and a status bar that reads `0 properties`,
+  `0 words`, `0 characters` rather than nothing. The `self.report("No file is
+  open")` status messages are a different string for a different thing and were
+  left alone. The logo stays above the pills, where Obsidian has pills only.
+- **The view-header title renames in place.** A single click puts the caret at
+  the clicked offset, typing edits while the file keeps its name, Enter commits
+  through the existing `rename_with_links`, Escape abandons. It is not a
+  `TextInput`: that paints its own bordered box and exposes no way to place a
+  caret, so the title has a small model of its own (`title_field.rs`) and the
+  header paints a shaped line in a `canvas` so a click maps to a byte offset.
+  The resting look is unchanged plain header text. Two gpui traps showed up
+  and are worth remembering: a `canvas` host has no intrinsic height, so the
+  title vanished until it was given one, and a focus handle only joins the
+  dispatch tree with the frame that paints it, so the first click needs
+  `window.on_next_frame` — the same rule as
+  [[#The frame, the type and the icons, 2026-10-20]].
+- **Both location dropdowns** are selects now rather than text fields. The
+  attachment one writes the four shapes Obsidian writes (`/`, `./`,
+  `./Attachments`, `Attachments`) and reveals Subfolder name or Attachment
+  folder path off the *selected option*, so the dependent row appears the
+  moment the option is picked and all three are absent at the default
+  settings; the first pick on an empty `app.json` leaves exactly
+  `{"attachmentFolderPath": "/"}`. Where each shape sends a file is
+  `scoria_vault::ops::attachment_path` — a leading `./` is relative to the
+  note's folder, anything else is vault-absolute, `/` and `""` are both the
+  root — with the spec's six rows as tests. It has no caller: Scoria creates
+  no attachments yet, which is also why all three rows keep their
+  `not_yet()` tag. `Honored::No` is "not read at all yet: the value is written
+  for Obsidian", and a resolver with no caller honours nothing; the tag the row
+  shows reads "not in Scoria yet", and that is still true. It comes off with
+  the first caller.
+- **A click that dismisses a dropdown is spent on the dismissal**, and Escape
+  over an open list closes the list rather than the modal. Both are pure
+  decision functions (`popover_swallows_click`, `escape_closes`) called by
+  every clickable in the modal, so the next control added cannot forget them.
+- **The spec gained two corrections and lost one wrong row.** "Default location
+  for new notes" was recorded as "the same four values as attachments"; the
+  2026-10-25 capture itself holds that row as *three* options over
+  `newFileLocation`'s own enum (`root`, `current`, `folder`), which is what
+  `Specification.md` says now. The half-typed-query prose that ended "Scoria
+  gating only a wholly empty query is right for the first group and wrong for
+  the second" is now the record of what was built, with the `AND` question
+  marked OBSERVE. The callout table says which of its values were read and
+  which are the same token's light value rather than an observation.
+
+Left undone on purpose, each for a stated reason: the reading view's pills
+still have no remove control, because `PropertiesHost` is built only by
+`EditorElement` and a dead × is worse than its absence (the handoff is an
+event beside `TaskToggled` plus one subscription, written down in
+`reading/view.rs`); the explorer's context menus stay a short subset, because
+the captured menu wants `Open in new window`, `Merge entire file with...`,
+`Open version history`, `Open in default app` and `Show in system explorer`,
+commands Scoria has not got, and listing a row that cannot run is the thing
+the palette refuses to do; the empty tab's header has no Bookmark or More
+options, which no view header in the app has yet; and the `.inline-title` in
+the note body is a separate element and a separate job.
+
 ### Folding, 2026-10-26
 
 Four backlog entries said the same thing from four sides: no heading or list

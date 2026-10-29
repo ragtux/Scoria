@@ -13,6 +13,10 @@
 //! the root when that folder does not exist), with subfolders created for a
 //! `folder/Name` link; a file trashed locally lands flat in `.trash/`, a
 //! folder with its contents, and a name already there gets ` 2`, ` 3`, ...
+//! A new attachment goes where `attachmentFolderPath` says: a leading `./`
+//! is relative to the note's own folder, anything else is vault-absolute,
+//! and `/` and `""` both mean the root ([`attachment_path`], observed on
+//! 1.14.5).
 
 use crate::{FileChange, Vault};
 use scoria_formats::validate_file_name;
@@ -119,6 +123,42 @@ fn join(folder: &str, name: &str) -> String {
     } else {
         format!("{folder}/{name}")
     }
+}
+
+/// The folder a new attachment goes into: what `attachmentFolderPath` names
+/// for a note at `note`, as a vault-relative path (`""` at the root).
+///
+/// A leading `./` is relative to the note's own folder, anything else is a
+/// vault-absolute path, and `/` and `""` both mean the vault root — observed
+/// of `fileManager.getAvailablePathForAttachment` for a root note and one in
+/// `Sub/` (Obsidian 1.14.5, the 2026-10-25 `ui-rules` probe; see
+/// `Specification#The attachment-location dropdown`). A folder that does not
+/// exist is not a fallback: a paste creates the whole chain, which the same
+/// probe saw for `att/deep/new`.
+///
+/// One observed case is deliberately left out, because it needs the file
+/// list rather than the two strings: a setting naming an existing **file**
+/// resolves to the vault root.
+pub fn attachment_folder(setting: Option<&str>, note: &str) -> String {
+    let setting = setting.unwrap_or("");
+    match setting.strip_prefix("./") {
+        Some(under) => {
+            let under = under.trim_matches('/');
+            let folder = folder_of(note);
+            if under.is_empty() {
+                folder.to_string()
+            } else {
+                join(folder, under)
+            }
+        }
+        None => setting.trim_matches('/').to_string(),
+    }
+}
+
+/// The path the attachment `name` lands at, for a note at `note` under
+/// `attachmentFolderPath`.
+pub fn attachment_path(setting: Option<&str>, note: &str, name: &str) -> String {
+    join(&attachment_folder(setting, note), name)
 }
 
 /// Checks every segment of a new path the way Obsidian's rename does.
@@ -545,6 +585,68 @@ mod tests {
             "Deep/Also Missing.md"
         );
         assert_eq!(v.new_note_path("Note.md", ""), "Note.md");
+    }
+
+    /// Every row of the spec's resolution table, asked of a note at the
+    /// root and of `Sub/Nested.md`, which is how the probe asked Obsidian.
+    #[test]
+    fn an_attachment_lands_where_the_setting_says() {
+        let table = [
+            ("", "photo.png", "photo.png"),
+            ("/", "photo.png", "photo.png"),
+            ("./", "photo.png", "Sub/photo.png"),
+            (
+                "./Attachments",
+                "Attachments/photo.png",
+                "Sub/Attachments/photo.png",
+            ),
+            (
+                "Attachments",
+                "Attachments/photo.png",
+                "Attachments/photo.png",
+            ),
+            (
+                "att/deep/new",
+                "att/deep/new/photo.png",
+                "att/deep/new/photo.png",
+            ),
+        ];
+        for (setting, from_root, from_subfolder) in table {
+            assert_eq!(
+                attachment_path(Some(setting), "Target.md", "photo.png"),
+                from_root,
+                "{setting:?} from a root note"
+            );
+            assert_eq!(
+                attachment_path(Some(setting), "Sub/Nested.md", "photo.png"),
+                from_subfolder,
+                "{setting:?} from Sub/Nested.md"
+            );
+        }
+    }
+
+    /// The key is absent until something sets it, and then it is the root,
+    /// as `""` is. The folder on its own is what a caller creating the
+    /// chain needs.
+    #[test]
+    fn an_absent_attachment_folder_is_the_vault_root() {
+        assert_eq!(
+            attachment_path(None, "Sub/Nested.md", "photo.png"),
+            "photo.png"
+        );
+        assert_eq!(attachment_folder(None, "Sub/Nested.md"), "");
+        assert_eq!(
+            attachment_folder(Some("./"), "Sub/Deep/Note.md"),
+            "Sub/Deep"
+        );
+        assert_eq!(
+            attachment_folder(Some("./Attachments/"), "Sub/Nested.md"),
+            "Sub/Attachments"
+        );
+        assert_eq!(
+            attachment_folder(Some("/Attachments/"), "Note.md"),
+            "Attachments"
+        );
     }
 
     #[test]

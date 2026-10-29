@@ -139,6 +139,10 @@ pub enum PropertyAction {
 pub(crate) struct PropertiesHost {
     /// The field being typed into, when it belongs to this block.
     pub field: Option<Field>,
+    /// The pill a Backspace selected, by item index in `field`'s row: the
+    /// first of the two presses that remove it moves focus there, and the
+    /// pill is drawn focused until the second press takes it.
+    pub selected_pill: Option<usize>,
     /// `propertiesInDocument`: `Hidden` draws nothing at all.
     pub mode: PropertiesInDocument,
     /// The key whose type menu is open, if any.
@@ -1969,10 +1973,16 @@ impl<'a> Renderer<'a> {
     /// keeps after the pills.
     ///
     /// In Live Preview each pill is its own affordance — clicking it opens
-    /// that item alone, and its `×` drops that item — which is the markup
-    /// a real Obsidian was observed to draw (`div.multi-select-pill` with
-    /// its own `div.multi-select-pill-remove-button`). The reading view
-    /// passes no host and draws the same pills read-only.
+    /// that item alone, and its remove button drops that item — which is
+    /// the markup a real Obsidian was observed to draw
+    /// (`div.multi-select-pill` with its own
+    /// `div.multi-select-pill-remove-button` holding a `lucide-x`). The
+    /// reading view passes no host and draws the same pills read-only,
+    /// without that button: Obsidian draws one there as well — its
+    /// reading view edits properties too, which is the gap
+    /// [`Renderer::properties`] records — and in Scoria nothing in the
+    /// reading view can write the note, so the affordance waits on that
+    /// path rather than being drawn dead.
     fn property_pills(
         &self,
         row: &crate::properties::Row,
@@ -1981,6 +1991,10 @@ impl<'a> Renderer<'a> {
     ) -> AnyElement {
         let t = self.theme;
         let on_action = self.properties_host.map(|h| h.on_action.clone());
+        // The pill a Backspace selected, drawn focused until the second
+        // press removes it. It belongs to the open field's row, so it only
+        // means anything while a field of this row is open.
+        let selected = open.and_then(|_| self.properties_host.and_then(|h| h.selected_pill));
         // A click inside the open field is not a click on the cell behind
         // it, which would commit this item and open a fresh one.
         let item_field = |field: &Field| {
@@ -2007,6 +2021,14 @@ impl<'a> Renderer<'a> {
                     .px_1p5()
                     .rounded_sm()
                     .bg(t.code_bg)
+                    // The border is the pill's own colour until the pill is
+                    // the selected one, so taking focus moves nothing.
+                    .border_1()
+                    .border_color(if selected == Some(ix) {
+                        t.border_focus
+                    } else {
+                        t.code_bg
+                    })
                     .child(self.rich(item))
                     .when_some(on_action.clone(), |d, on_action| {
                         let key = row.key.clone();
@@ -2029,9 +2051,18 @@ impl<'a> Renderer<'a> {
                             .child(
                                 div()
                                     .id(("property-pill-remove", item.id))
+                                    .flex()
+                                    .items_center()
                                     .cursor_pointer()
-                                    .text_color(t.text_faint)
-                                    .child(SharedString::from("\u{00d7}"))
+                                    // Obsidian's `.multi-select-pill-remove-button`
+                                    // holds a `lucide-x`, 14 px wide, and it
+                                    // is always drawn rather than revealed on
+                                    // hover.
+                                    .child(crate::assets::icon(
+                                        "x",
+                                        t.base_font_size * 0.875,
+                                        t.text_faint,
+                                    ))
                                     .on_mouse_down(
                                         gpui::MouseButton::Left,
                                         move |_, window, cx| {
@@ -2052,7 +2083,12 @@ impl<'a> Renderer<'a> {
             );
         }
         if let Some((_, field)) = open.filter(|(at, _)| *at >= items.len()) {
-            cells.push(item_field(field));
+            // A selected pill has the focus, so the input does not: it is
+            // empty by then (the gesture only starts from an empty one), so
+            // dropping its caret leaves nothing of it to draw.
+            if selected.is_none() {
+                cells.push(item_field(field));
+            }
         }
         div()
             .flex_1()
