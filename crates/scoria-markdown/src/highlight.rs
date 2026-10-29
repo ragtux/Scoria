@@ -262,7 +262,9 @@ fn collect_blocks(
                     HighlightKind::Callout,
                 ));
                 collect_quote_markers(src, block.span, lines, quote_depth, out);
-                collect_inlines(title, out);
+                for run in crate::inline_runs(title) {
+                    collect_inlines(run, out);
+                }
                 collect_blocks(src, children, lines, quote_depth + 1, out);
             }
             BlockKind::List { items, .. } => {

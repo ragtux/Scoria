@@ -100,10 +100,28 @@ struct RawLine {
     pad: u8,
 }
 
+/// A callout's `> [!type]+ Title` line, taken off the quote's first line while
+/// parsing.
+///
+/// Keeping it here rather than leaving it as the first line of the body
+/// paragraph is what lets a table or a setext underline on the *next* line be
+/// seen at all: both of those rules ask how many lines the open paragraph has,
+/// and a header still sitting in it makes the answer one too many. That is why
+/// `> [!note]` followed by a table row used to render as literal pipes.
+#[derive(Debug)]
+struct CalloutHeader<'a> {
+    callout_type: &'a str,
+    fold: Option<Fold>,
+    title: Span,
+}
+
 #[derive(Debug)]
 enum NodeKind<'a> {
     Document,
-    BlockQuote,
+    BlockQuote {
+        /// Set when this quote's first line was a callout header.
+        header: Option<CalloutHeader<'a>>,
+    },
     List {
         kind: ListKind,
         items: Vec<RawItem<'a>>,
@@ -209,7 +227,7 @@ impl<'a> Node<'a> {
     fn can_contain(&self, child_is_item: bool) -> bool {
         match self.kind {
             NodeKind::Document
-            | NodeKind::BlockQuote
+            | NodeKind::BlockQuote { .. }
             | NodeKind::Item { .. }
             | NodeKind::FootnoteDefinition { .. } => !child_is_item,
             NodeKind::List { .. } => child_is_item,
@@ -286,27 +304,26 @@ pub(crate) struct BlockParser<'a, 'o> {
 }
 
 impl<'a, 'o> BlockParser<'a, 'o> {
+    /// Parses one span of `src` as blocks, with every span in the result still
+    /// an offset into `src` rather than into the slice.
+    ///
+    /// A callout's title is block-parsed by Obsidian -- `[!note] # h` really
+    /// does make a heading inside `.callout-title-inner` -- and that title is
+    /// a contiguous span of the header line, so it goes through this parser
+    /// rather than a reduced copy of it. Feeding the line span directly is what
+    /// keeps the offsets absolute: parsing `&src[span]` as its own document
+    /// would renumber every position in it.
+    pub(crate) fn parse_span(src: &'a str, span: Span, opts: &'o Options) -> Vec<RawBlock<'a>> {
+        let mut p = BlockParser::new(src, opts);
+        p.incorporate_line(span);
+        while p.open.len() > 1 {
+            p.finalize();
+        }
+        p.open.pop().unwrap().children
+    }
+
     pub(crate) fn parse(src: &'a str, opts: &'o Options) -> BlockOutput<'a> {
-        let mut p = BlockParser {
-            src,
-            opts,
-            open: vec![Node::new(NodeKind::Document, 0, 0)],
-            line: Span::default(),
-            line_number: 0,
-            offset: 0,
-            column: 0,
-            next_nonspace: 0,
-            next_nonspace_column: 0,
-            indent: 0,
-            indented: false,
-            blank: false,
-            partially_consumed_tab: false,
-            all_closed: true,
-            last_matched: 0,
-            line_consumed: false,
-            link_definitions: HashMap::new(),
-            footnote_labels: Vec::new(),
-        };
+        let mut p = BlockParser::new(src, opts);
         let mut body_start = 0;
         if opts.frontmatter {
             if let Some(fm) = crate::extract_frontmatter(src) {
@@ -350,6 +367,29 @@ impl<'a, 'o> BlockParser<'a, 'o> {
             blocks: doc.children,
             link_definitions: p.link_definitions,
             footnote_labels: p.footnote_labels,
+        }
+    }
+
+    fn new(src: &'a str, opts: &'o Options) -> BlockParser<'a, 'o> {
+        BlockParser {
+            src,
+            opts,
+            open: vec![Node::new(NodeKind::Document, 0, 0)],
+            line: Span::default(),
+            line_number: 0,
+            offset: 0,
+            column: 0,
+            next_nonspace: 0,
+            next_nonspace_column: 0,
+            indent: 0,
+            indented: false,
+            blank: false,
+            partially_consumed_tab: false,
+            all_closed: true,
+            last_matched: 0,
+            line_consumed: false,
+            link_definitions: HashMap::new(),
+            footnote_labels: Vec::new(),
         }
     }
 
@@ -565,13 +605,30 @@ impl<'a, 'o> BlockParser<'a, 'o> {
             NodeKind::HtmlBlock { lines, .. } => RawKind::HtmlBlock {
                 content: self.join_raw_lines(&lines),
             },
-            NodeKind::BlockQuote => {
-                let mut children = node.children;
-                if let Some((callout, callout_id)) = self.callout_from(&mut children) {
-                    id = callout_id;
-                    callout
-                } else {
-                    RawKind::BlockQuote { children }
+            NodeKind::BlockQuote { header } => {
+                let children = node.children;
+                match header {
+                    None => RawKind::BlockQuote { children },
+                    Some(header) => {
+                        let mut title = header.title;
+                        if self.opts.block_ids {
+                            let mut title_lines = vec![title];
+                            if let Some((bid, whole)) = self.take_block_id(&mut title_lines) {
+                                id = Some(bid);
+                                title = if whole {
+                                    Span::new(title.start, title.start)
+                                } else {
+                                    title_lines[0]
+                                };
+                            }
+                        }
+                        RawKind::Callout {
+                            callout_type: header.callout_type,
+                            fold: header.fold,
+                            title,
+                            children,
+                        }
+                    }
                 }
             }
             NodeKind::List {
@@ -678,59 +735,6 @@ impl<'a, 'o> BlockParser<'a, 'o> {
 
     /// Converts a blockquote's children into a callout if the first line is a
     /// header; a ` ^id` at the end of the header becomes the callout's block id.
-    fn callout_from(
-        &self,
-        children: &mut Vec<RawBlock<'a>>,
-    ) -> Option<(RawKind<'a>, Option<BlockId<'a>>)> {
-        if !self.opts.callouts {
-            return None;
-        }
-        let first = children.first_mut()?;
-        let RawKind::Paragraph { lines } = &mut first.kind else {
-            return None;
-        };
-        let line = *lines.first()?;
-        let text = line.of(self.src);
-        let (callout_type, fold, title_offset) = parse_callout_header_raw(text)?;
-        let title_start = line.start + title_offset;
-        let title_text = &self.src[title_start..line.end];
-        let trimmed_start = title_start + (title_text.len() - title_text.trim_start().len());
-        let trimmed_end = trimmed_start + title_text.trim().len();
-        let mut title = Span::new(trimmed_start, trimmed_end);
-        let mut block_id = None;
-        if self.opts.block_ids {
-            let mut title_lines = vec![title];
-            if let Some((bid, whole)) = self.take_block_id(&mut title_lines) {
-                block_id = Some(bid);
-                title = if whole {
-                    Span::new(trimmed_start, trimmed_start)
-                } else {
-                    title_lines[0]
-                };
-            }
-        }
-        let fold = match fold {
-            Some(true) => Some(Fold::Collapsed),
-            Some(false) => Some(Fold::Expanded),
-            None => None,
-        };
-        lines.remove(0);
-        if lines.is_empty() {
-            children.remove(0);
-        } else {
-            first.span.start = lines[0].start;
-        }
-        Some((
-            RawKind::Callout {
-                callout_type,
-                fold,
-                title,
-                children: std::mem::take(children),
-            },
-            block_id,
-        ))
-    }
-
     /// Parses one link reference definition from the start of the paragraph
     /// lines; returns how many lines it consumed.
     fn extract_reference_definition(&mut self, lines: &[Span]) -> Option<usize> {
@@ -825,6 +829,22 @@ impl<'a, 'o> BlockParser<'a, 'o> {
             return;
         }
 
+        // The same laziness one step earlier. A callout whose header line has
+        // just been taken has no open paragraph to continue, but Obsidian still
+        // draws an unprefixed next line into the body, so open the paragraph
+        // the header used to stand in for.
+        if !self.all_closed
+            && !self.blank
+            && matches!(self.tip().kind, NodeKind::BlockQuote { header: Some(_) })
+            && !self.tip().has_children()
+        {
+            self.add_child(NodeKind::Paragraph { lines: Vec::new() }, self.offset);
+            self.advance_next_nonspace();
+            self.add_line();
+            self.extend_open_spans(self.open.len());
+            return;
+        }
+
         self.close_unmatched_blocks();
         let blank = self.blank;
         let tip_idx = self.open.len() - 1;
@@ -833,7 +853,7 @@ impl<'a, 'o> BlockParser<'a, 'o> {
         }
         let tip = &self.open[tip_idx];
         let last_line_blank = blank
-            && !(matches!(tip.kind, NodeKind::BlockQuote)
+            && !(matches!(tip.kind, NodeKind::BlockQuote { .. })
                 || matches!(tip.kind, NodeKind::FencedCode { .. })
                 || (matches!(tip.kind, NodeKind::Item { .. })
                     && !tip.has_children()
@@ -902,7 +922,7 @@ impl<'a, 'o> BlockParser<'a, 'o> {
         let src = self.src;
         match &self.open[i].kind {
             NodeKind::Document => Continue::Matched,
-            NodeKind::BlockQuote => {
+            NodeKind::BlockQuote { .. } => {
                 if !self.indented && self.byte(self.next_nonspace) == Some(b'>') {
                     self.advance_next_nonspace();
                     self.advance_offset(1, false);
@@ -927,6 +947,23 @@ impl<'a, 'o> BlockParser<'a, 'o> {
                     }
                 } else if self.indent >= content_indent {
                     self.advance_offset(content_indent, true);
+                    Continue::Matched
+                } else if self.opts.quirks
+                    && !self.indented
+                    && self.byte(self.next_nonspace) == Some(b'>')
+                    && self
+                        .open
+                        .get(i + 1)
+                        .is_some_and(|open| matches!(open.kind, NodeKind::BlockQuote { .. }))
+                {
+                    // A quote that `try_block_starts` kept inside this item
+                    // keeps its later lines there too. Those lines carry the
+                    // item's own indentation no more than the first one did, so
+                    // the test above rejects them and the quote would restart
+                    // as a sibling of the whole list -- `- item` / `> quote` /
+                    // `> more` put "more" in a second blockquote outside the
+                    // item. Match without consuming: the quote's own arm takes
+                    // the `>` on the next turn of the loop.
                     Continue::Matched
                 } else {
                     Continue::NotMatched
@@ -1053,8 +1090,50 @@ impl<'a, 'o> BlockParser<'a, 'o> {
                 self.last_matched += 1;
             }
             self.close_unmatched_blocks();
-            self.add_child(NodeKind::BlockQuote, start);
+            self.add_child(NodeKind::BlockQuote { header: None }, start);
             return Some(Start::Container);
+        }
+
+        // Callout header: `[!type]` as the first line of a quote. This runs on
+        // the next pass through, after the `>` prefix above has been consumed,
+        // and consumes the whole line so that nothing downstream ever sees the
+        // header as body content. See [`CalloutHeader`] for why that matters.
+        if self.opts.callouts
+            && !self.indented
+            && c == b'['
+            && container == self.open.len() - 1
+            && matches!(
+                &self.open[container].kind,
+                NodeKind::BlockQuote { header: None }
+            )
+            // The header belongs to the quote's first block, exactly as the
+            // old post-hoc reading required: `> text` then `> [!note]` is not
+            // a callout, and neither is a header after a heading.
+            && !self.open[container].has_children()
+        {
+            if let Some((callout_type, fold, title_offset)) = parse_callout_header_raw(self.rest())
+            {
+                let title_start = self.next_nonspace + title_offset;
+                let text = &self.src[title_start..self.line.end];
+                let lead = text.len() - text.trim_start().len();
+                let title = Span::new(title_start + lead, title_start + lead + text.trim().len());
+                let fold = match fold {
+                    Some(true) => Some(Fold::Collapsed),
+                    Some(false) => Some(Fold::Expanded),
+                    None => None,
+                };
+                let NodeKind::BlockQuote { header } = &mut self.open[container].kind else {
+                    unreachable!()
+                };
+                *header = Some(CalloutHeader {
+                    callout_type,
+                    fold,
+                    title,
+                });
+                self.offset = self.line.end;
+                self.line_consumed = true;
+                return Some(Start::Leaf);
+            }
         }
 
         // ATX heading.
@@ -1582,15 +1661,19 @@ fn trim_span(src: &str, span: Span) -> Span {
 }
 
 /// Parses `[!type]- Title`; returns the type, fold flag, and byte offset of the title.
-fn parse_callout_header_raw(line: &str) -> Option<(&str, Option<bool>, usize)> {
+pub(crate) fn parse_callout_header_raw(line: &str) -> Option<(&str, Option<bool>, usize)> {
     let lead = line.len() - line.trim_start().len();
     let rest = line[lead..].strip_prefix("[!")?;
     let close = rest.find(']')?;
-    // Obsidian trims the type, so `[! bad]` is a `bad` callout.
-    let ty = rest[..close].trim();
-    if ty.is_empty() || ty.contains('[') {
+    let raw = &rest[..close];
+    // Obsidian wants *something* between the brackets and then trims it, so
+    // `[! bad]` is a `bad` callout and `[! ]` is one with an empty type (an
+    // empty `data-callout` and no default title), while a bare `[!]` is not a
+    // callout at all. Observed against 1.14.4 (tools/probe-gen, 2026-10-29).
+    if raw.is_empty() || raw.contains('[') {
         return None;
     }
+    let ty = raw.trim();
     let after = &rest[close + 1..];
     let (fold, skip) = match after.as_bytes().first() {
         Some(b'-') => (Some(true), 1),

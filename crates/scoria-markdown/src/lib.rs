@@ -209,7 +209,7 @@ fn lower_block<'a>(cx: &InlineContext<'a, '_>, raw: RawBlock<'a>) -> Block<'a> {
             title: if title.is_empty() {
                 Vec::new()
             } else {
-                inline::parse_inlines(cx, &[title])
+                lower_blocks(cx, block::BlockParser::parse_span(cx.src, title, cx.opts))
             },
             children: lower_blocks(cx, children),
         },
@@ -263,20 +263,37 @@ pub fn canonical_callout_type(name: &str) -> &'static str {
 
 /// Parses a callout header such as `[!tip]- Title` (the leading `> ` already stripped).
 /// Returns `(type, fold, title)`; fold is `Some(true)` for `-` (collapsed), `Some(false)` for `+`.
+///
+/// Delegates to the block parser's own scanner rather than repeating the rule:
+/// the two used to disagree about `[! bad]`, and a header the editor reads
+/// differently from the reading view is the one bug this crate exists to
+/// prevent.
 pub fn parse_callout_header(line: &str) -> Option<(&str, Option<bool>, &str)> {
-    let rest = line.trim_start().strip_prefix("[!")?;
-    let close = rest.find(']')?;
-    let ty = &rest[..close];
-    if ty.is_empty() || ty.contains(char::is_whitespace) {
-        return None;
+    let (ty, fold, title_offset) = crate::block::parse_callout_header_raw(line)?;
+    Some((ty, fold, line[title_offset..].trim()))
+}
+
+/// The title Obsidian shows for a callout whose header carries none: the type
+/// with each `-` turned into a space, lowercased, and its first character
+/// upper-cased.
+///
+/// So `[!note]` shows "Note", `[!bad-type-two]` shows "Bad type two" and
+/// `[!NOTE-X]` shows "Note x". `_` is not touched, so `[!bad_type]` shows
+/// "Bad_type", and an empty type (which `[! ]` has) shows nothing. Observed
+/// against Obsidian 1.14.4 (tools/probe-gen, 2026-10-29).
+///
+/// Shared so that the reading view and Live Preview cannot drift apart on it,
+/// which they had: Live Preview used to leave the tail of the type as written.
+pub fn callout_default_title(callout_type: &str) -> String {
+    let spaced = callout_type.replace('-', " ");
+    let mut chars = spaced.chars();
+    match chars.next() {
+        None => String::new(),
+        Some(first) => first
+            .to_uppercase()
+            .chain(chars.map(|c| c.to_ascii_lowercase()))
+            .collect(),
     }
-    let after = &rest[close + 1..];
-    let (fold, after) = match after.as_bytes().first() {
-        Some(b'-') => (Some(true), &after[1..]),
-        Some(b'+') => (Some(false), &after[1..]),
-        _ => (None, after),
-    };
-    Some((ty, fold, after.trim()))
 }
 
 #[cfg(test)]
@@ -297,7 +314,13 @@ mod tests {
             parse_callout_header("[!note] Plain"),
             Some(("note", None, "Plain"))
         );
-        assert_eq!(parse_callout_header("[! bad]"), None);
+        // The type is trimmed, so this is a `bad` callout; it used to be None
+        // here and a `bad` callout in the block parser.
+        assert_eq!(parse_callout_header("[! bad]"), Some(("bad", None, "")));
+        // Something must sit between the brackets, but it may be whitespace.
+        assert_eq!(parse_callout_header("[! ]"), Some(("", None, "")));
+        assert_eq!(parse_callout_header("[!   ] T"), Some(("", None, "T")));
+        assert_eq!(parse_callout_header("[!]"), None);
         assert_eq!(parse_callout_header("not a callout"), None);
     }
 

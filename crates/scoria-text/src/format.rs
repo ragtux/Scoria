@@ -445,7 +445,11 @@ pub fn clear_formatting_plan(
         BlockKind::Paragraph { content } | BlockKind::Heading { content, .. } => {
             inline_lists.push(content)
         }
-        BlockKind::Callout { title, .. } => inline_lists.push(title),
+        // A callout's title is block-parsed, so its inlines come out of the
+        // block tree rather than straight off the field.
+        BlockKind::Callout { title, .. } => {
+            inline_lists.extend(scoria_markdown::inline_runs(title))
+        }
         BlockKind::Table { header, rows, .. } => {
             for c in header.iter().chain(rows.iter().flatten()) {
                 inline_lists.push(&c.content);

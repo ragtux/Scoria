@@ -288,16 +288,11 @@ impl<'r, 'a> Renderer<'r, 'a> {
                     "\"><div class=\"callout-title\"><div class=\"callout-title-inner\">",
                 );
                 if title.is_empty() {
-                    let mut chars = callout_type.chars();
-                    if let Some(first) = chars.next() {
-                        let shown: String = first
-                            .to_uppercase()
-                            .chain(chars.map(|c| c.to_ascii_lowercase()))
-                            .collect();
-                        escape_html(&shown, &mut self.out);
-                    }
+                    escape_html(&crate::callout_default_title(callout_type), &mut self.out);
                 } else {
-                    self.inlines(title);
+                    // Tight, so the usual one-paragraph title renders as bare
+                    // text while a heading or a list in it renders as itself.
+                    self.blocks(title, true);
                 }
                 self.out.push_str("</div></div>");
                 if !children.is_empty() {

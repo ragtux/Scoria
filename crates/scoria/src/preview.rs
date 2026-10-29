@@ -436,10 +436,11 @@ pub fn display_line_with(
                         }
                         let title_empty = t[end..].trim().is_empty();
                         if title_empty {
-                            let ty = &t[open + 2..open + close];
-                            let mut name: String =
-                                ty.chars().take(1).flat_map(char::to_uppercase).collect();
-                            name.push_str(ty.get(1..).unwrap_or(""));
+                            // Shared with the reading view: this used to leave
+                            // the tail of the type as written, so `[!NOTE]`
+                            // read "NOTE" here and "Note" there.
+                            let name =
+                                scoria_markdown::callout_default_title(&t[open + 2..open + close]);
                             hides.push((r.start + open..r.start + end, name.into(), k));
                         } else {
                             let ws = t[end..].bytes().take_while(|&b| b == b' ').count();

@@ -118,7 +118,11 @@ fn callouts() {
     };
     assert_eq!(*callout_type, "tip");
     assert_eq!(*fold, Some(Fold::Collapsed));
-    assert_eq!(scoria_markdown::plain_text(title), "Fold me");
+    // The title is a block tree now; one paragraph, in the ordinary case.
+    assert_eq!(
+        scoria_markdown::plain_text(scoria_markdown::inline_runs(title)[0]),
+        "Fold me"
+    );
     assert_eq!(children.len(), 2);
     assert!(matches!(children[0].kind, BlockKind::Paragraph { .. }));
     assert!(matches!(children[1].kind, BlockKind::List { .. }));
@@ -142,6 +146,278 @@ fn callouts() {
         html("> [!warning]"),
         "<div data-callout-metadata=\"\" data-callout-fold=\"\" data-callout=\"warning\" class=\"callout\"><div class=\"callout-title\"><div class=\"callout-title-inner\">Warning</div></div></div>\n"
     );
+}
+
+/// A callout's title is block-parsed, not inline-parsed.
+///
+/// Obsidian runs the title through the block parser, so a heading, a list or a
+/// quote written as a title renders as one inside `.callout-title-inner` --
+/// which is also why `[!note] -` is not a fold marker: the space ends the
+/// header and the lone `-` becomes an empty list. The ordinary one-paragraph
+/// title still renders as bare text, with no `<p>`. Observed against Obsidian
+/// 1.14.4 (tools/probe-gen, 2026-10-29).
+#[test]
+fn a_callout_title_is_block_parsed() {
+    fn title_blocks(src: &str) -> Vec<BlockKind<'_>> {
+        let doc = parse(src);
+        let BlockKind::Callout { title, .. } = doc.blocks.into_iter().next().unwrap().kind else {
+            panic!("expected a callout for {src:?}")
+        };
+        title.into_iter().map(|b| b.kind).collect()
+    }
+
+    assert!(matches!(
+        title_blocks("> [!note] # heading\n> body").as_slice(),
+        [BlockKind::Heading { level: 1, .. }]
+    ));
+    assert!(matches!(
+        title_blocks("> [!note] 1. item\n> body").as_slice(),
+        [BlockKind::List { .. }]
+    ));
+    assert!(matches!(
+        title_blocks("> [!note] > quote\n> body").as_slice(),
+        [BlockKind::BlockQuote { .. }]
+    ));
+    // A spaced `-` or `+` is title content, not a fold marker, and a lone list
+    // marker makes a list with one empty item.
+    for src in ["> [!note] -\n> body", "> [!note] +\n> body"] {
+        let doc = parse(src);
+        let BlockKind::Callout { fold, title, .. } = &doc.blocks[0].kind else {
+            panic!("callout")
+        };
+        assert_eq!(*fold, None, "{src:?}");
+        assert!(matches!(title[0].kind, BlockKind::List { .. }), "{src:?}");
+    }
+    // The fold markers that *are* markers still are.
+    let doc = parse("> [!note]- t\n> body");
+    let BlockKind::Callout { fold, .. } = &doc.blocks[0].kind else {
+        panic!("callout")
+    };
+    assert_eq!(*fold, Some(Fold::Collapsed));
+
+    // Rendering: an ordinary title stays bare, a heading title becomes an h1,
+    // and the spans stay absolute in the source despite the nested parse.
+    let rendered = html("> [!note] Hi\n> there");
+    assert!(
+        rendered.contains("callout-title-inner\">Hi</div>"),
+        "{rendered}"
+    );
+    assert!(!rendered.contains("<p>Hi"), "{rendered}");
+    assert!(html("> [!note] # h\n> b").contains("<h1 data-heading=\"h\">"));
+
+    let src = "> [!note] # h\n> b";
+    let BlockKind::Callout { title, .. } = &parse(src).blocks[0].kind else {
+        panic!("callout")
+    };
+    let BlockKind::Heading { content, .. } = &title[0].kind else {
+        panic!("heading")
+    };
+    // `h` sits at byte 12 of the whole document, not byte 2 of the title.
+    assert_eq!(&src[content[0].span.start..content[0].span.end], "h");
+    assert_eq!(content[0].span.start, 12);
+}
+
+/// A quote kept inside a list item keeps *all* of its lines there.
+///
+/// The quirk that puts `> quote` directly after a list item's text inside that
+/// item only ever matched the first such line; the rest carried no more of the
+/// item's indentation than the first did, so they restarted the quote as a
+/// sibling of the whole list. Nothing to do with callouts -- it shows up with a
+/// plain quote -- but it is why a callout nested in a list item of a callout
+/// lost its body. Observed against Obsidian 1.14.4 (tools/probe-gen,
+/// 2026-10-29).
+#[test]
+fn a_quote_in_a_list_item_keeps_its_later_lines() {
+    fn item_children(src: &str) -> Vec<BlockKind<'_>> {
+        let doc = parse(src);
+        let BlockKind::List { items, .. } = doc.blocks.into_iter().next().unwrap().kind else {
+            panic!("expected a list for {src:?}")
+        };
+        items
+            .into_iter()
+            .next()
+            .expect("an item")
+            .children
+            .into_iter()
+            .map(|b| b.kind)
+            .collect()
+    }
+
+    // One quote inside the item, holding both lines -- not a second quote
+    // outside the list.
+    let kinds = item_children("- item\n> quote\n> more");
+    assert!(
+        matches!(
+            kinds.as_slice(),
+            [BlockKind::Paragraph { .. }, BlockKind::BlockQuote { .. }]
+        ),
+        "{kinds:?}"
+    );
+    let [_, BlockKind::BlockQuote { children }] = kinds.as_slice() else {
+        unreachable!()
+    };
+    assert_eq!(
+        children.len(),
+        1,
+        "both lines in one paragraph: {children:?}"
+    );
+    assert_eq!(
+        html("- item\n> quote\n> more")
+            .matches("<blockquote")
+            .count(),
+        1
+    );
+
+    // The same for a callout, whose body used to be left behind.
+    let kinds = item_children("- item\n> [!tip] t\n> a\n> b");
+    let [_, BlockKind::Callout { children, .. }] = kinds.as_slice() else {
+        panic!("expected a callout in the item: {kinds:?}")
+    };
+    assert_eq!(children.len(), 1, "{children:?}");
+
+    // And nested one level further: a callout in a list item of a callout.
+    let doc = parse("> [!note]\n> - item\n> > [!tip] nested\n> > body");
+    let BlockKind::Callout { children, .. } = doc.blocks.into_iter().next().unwrap().kind else {
+        panic!("outer callout")
+    };
+    // Just the list -- no stray quote trailing it inside the outer callout.
+    assert_eq!(children.len(), 1, "{children:?}");
+    assert!(matches!(children[0].kind, BlockKind::List { .. }));
+    let rendered = html("> [!note]\n> - item\n> > [!tip] nested\n> > body");
+    assert!(!rendered.contains("<blockquote"), "{rendered}");
+    assert_eq!(rendered.matches("callout-content").count(), 2, "{rendered}");
+}
+
+/// What counts as a callout type, and the title derived from one.
+///
+/// Observed against Obsidian 1.14.4 (tools/probe-gen, 2026-10-29): the type
+/// must have *something* between the brackets, which is then trimmed, and the
+/// default title turns `-` into a space but leaves `_` alone.
+#[test]
+fn callout_type_and_its_default_title() {
+    fn title(src: &str) -> String {
+        let doc = parse(src);
+        let BlockKind::Callout { .. } = doc.blocks[0].kind else {
+            panic!("expected a callout for {src:?}")
+        };
+        let rendered = html(src);
+        let inner = rendered
+            .split("callout-title-inner\">")
+            .nth(1)
+            .and_then(|t| t.split("</div>").next())
+            .unwrap_or_default();
+        inner.to_string()
+    }
+
+    // Whitespace between the brackets is a callout with an empty type; a bare
+    // `[!]` is not a callout at all.
+    for src in ["> [! ]\n> body", "> [!   ]\n> body"] {
+        let BlockKind::Callout { callout_type, .. } = parse(src).blocks.remove(0).kind else {
+            panic!("expected a callout for {src:?}")
+        };
+        assert_eq!(callout_type, "", "{src:?}");
+        // An empty type has no default title, and shows an empty `data-callout`.
+        assert_eq!(title(src), "");
+        assert!(html(src).contains("data-callout=\"\""), "{src:?}");
+    }
+    assert!(matches!(
+        parse("> [!]\n> body").blocks[0].kind,
+        BlockKind::BlockQuote { .. }
+    ));
+    // The type is trimmed, so this is a `bad` callout.
+    let BlockKind::Callout { callout_type, .. } = parse("> [! bad]\n> b").blocks.remove(0).kind
+    else {
+        panic!("callout")
+    };
+    assert_eq!(callout_type, "bad");
+
+    // `-` becomes a space, the whole thing is lowercased, the first character
+    // is upper-cased, and `_` is left alone.
+    assert_eq!(title("> [!note]\n> b"), "Note");
+    assert_eq!(title("> [!TIP]\n> b"), "Tip");
+    assert_eq!(title("> [!bad-type-two]\n> b"), "Bad type two");
+    assert_eq!(title("> [!NOTE-X]\n> b"), "Note x");
+    assert_eq!(title("> [!bad_type]\n> b"), "Bad_type");
+    // A title that is written out is used as written, not derived.
+    assert_eq!(title("> [!bad-type] Kept-as-is\n> b"), "Kept-as-is");
+
+    // The derivation is shared, so the helper and the renderer cannot drift.
+    assert_eq!(
+        scoria_markdown::callout_default_title("bad-type-two"),
+        "Bad type two"
+    );
+    assert_eq!(scoria_markdown::callout_default_title(""), "");
+}
+
+/// A callout's first body line gets the same block rules as any other line.
+///
+/// The header is taken off the quote while parsing, not lifted out of the body
+/// paragraph afterwards. It matters because the table and setext rules both ask
+/// how many lines the open paragraph holds, and a header still sitting in it
+/// made the answer one too many -- so a table or a `---` underline on the line
+/// after the header used to come out as literal text. Observed against
+/// Obsidian 1.14.4 (tools/probe-gen, 2026-10-29).
+#[test]
+fn callout_body_starts_a_block_on_its_first_line() {
+    fn first_child(src: &str) -> BlockKind<'_> {
+        let doc = parse(src);
+        let BlockKind::Callout { children, .. } = doc.blocks.into_iter().next().unwrap().kind
+        else {
+            panic!("expected a callout for {src:?}")
+        };
+        children.into_iter().next().expect("a body block").kind
+    }
+
+    // A table, with and without a title, a fold marker, or a space after `>`.
+    for src in [
+        "> [!note]\n> | a | b |\n> |---|---|",
+        "> [!note] Title\n> | a | b |\n> |---|---|",
+        "> [!tip]- Folded\n> | a | b |\n> |---|---|",
+        ">[!note]\n>| a | b |\n>|---|---|",
+    ] {
+        let BlockKind::Table { header, .. } = first_child(src) else {
+            panic!("expected a table for {src:?}, got {:?}", first_child(src))
+        };
+        assert_eq!(header.len(), 2, "{src:?}");
+    }
+
+    // A setext underline, which reads the same paragraph-line count.
+    for (src, level) in [
+        ("> [!note]\n> text\n> ---", 2u8),
+        ("> [!note]\n> text\n> ===", 1),
+    ] {
+        let BlockKind::Heading {
+            level: got, setext, ..
+        } = first_child(src)
+        else {
+            panic!("expected a heading for {src:?}")
+        };
+        assert_eq!((got, setext), (level, true), "{src:?}");
+    }
+
+    // And a list, which asks whether it may interrupt a paragraph.
+    assert!(matches!(
+        first_child("> [!note]\n> - a\n> - b"),
+        BlockKind::List { .. }
+    ));
+
+    // Taking the header early must not cost the body its lazy continuation:
+    // an unprefixed line still belongs to the callout.
+    let BlockKind::Callout { children, .. } = parse("> [!note]\ncontent").blocks.remove(0).kind
+    else {
+        panic!("callout")
+    };
+    assert_eq!(children.len(), 1);
+    assert!(matches!(children[0].kind, BlockKind::Paragraph { .. }));
+
+    // A header with nothing after it still has no body, so no content div.
+    assert!(!html("> [!note]").contains("callout-content"));
+
+    // The header belongs to the quote's first block and nowhere else.
+    assert!(matches!(
+        parse("> text\n> [!note]").blocks[0].kind,
+        BlockKind::BlockQuote { .. }
+    ));
 }
 
 #[test]

@@ -80,8 +80,12 @@ pub enum BlockKind<'a> {
         /// The type as written, for example `TIP`; see [`crate::canonical_callout_type`].
         callout_type: &'a str,
         fold: Option<Fold>,
-        /// Inline content of the title; empty when the header has no title.
-        title: Vec<Inline<'a>>,
+        /// The title, block-parsed: Obsidian runs a callout's title through
+        /// the block parser, so `[!note] # h` really is a heading and
+        /// `[!note] 1. x` really is a list. Almost always one paragraph, and
+        /// empty when the header has no title of its own. See
+        /// [`crate::inline_runs`] for reading the inlines out of it.
+        title: Vec<Block<'a>>,
         children: Vec<Block<'a>>,
     },
     List {
@@ -369,6 +373,44 @@ pub fn walk_blocks<'a, 'b>(blocks: &'b [Block<'a>], f: &mut impl FnMut(&'b Block
 
 /// Collects the plain text of inline content, as Obsidian does for heading
 /// text and link display text: formatting is dropped, code and text kept.
+/// Every run of inline content in `blocks`, in document order, descending
+/// into quotes, callouts (their titles included), list items and table cells.
+///
+/// A callout's title is a block tree, while most things that want a title want
+/// the inlines in it: the links to cache, the text to show, the spans to
+/// format. This is how they get them without each walking blocks themselves.
+pub fn inline_runs<'a, 'b>(blocks: &'b [Block<'a>]) -> Vec<&'b [Inline<'a>]> {
+    let mut out = Vec::new();
+    fn walk<'a, 'b>(blocks: &'b [Block<'a>], out: &mut Vec<&'b [Inline<'a>]>) {
+        for block in blocks {
+            match &block.kind {
+                BlockKind::Paragraph { content } | BlockKind::Heading { content, .. } => {
+                    out.push(content)
+                }
+                BlockKind::Callout {
+                    title, children, ..
+                } => {
+                    walk(title, out);
+                    walk(children, out);
+                }
+                BlockKind::Table { header, rows, .. } => {
+                    for cell in header.iter().chain(rows.iter().flatten()) {
+                        out.push(&cell.content);
+                    }
+                }
+                BlockKind::List { items, .. } => {
+                    for item in items {
+                        walk(&item.children, out);
+                    }
+                }
+                _ => walk(block.children(), out),
+            }
+        }
+    }
+    walk(blocks, &mut out);
+    out
+}
+
 pub fn plain_text(inlines: &[Inline<'_>]) -> String {
     let mut out = String::new();
     push_plain_text(inlines, &mut out);

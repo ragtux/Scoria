@@ -7,6 +7,7 @@ members = [
     "crates/scoria-cache",
     "crates/scoria-formats",
     "crates/scoria-mcp",
+    "crates/scoria-llm-mcp",
     "crates/scoria-commands",
     "crates/scoria-control",
     "crates/scoria-search",
