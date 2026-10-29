@@ -1728,13 +1728,22 @@ frontmatter case is the odd one: `pre.frontmatter.language-yaml` computes to
 button, and a synthetic click on it copies the raw YAML. The one inline
 `<code>` in the note had no sibling button.
 
-Prism classes on the rendered block:
+Prism classes on the rendered block. The language is the info string's first
+word, **lowercased**; a word holding anything but `[A-Za-z0-9_-]` does not
+resolve, and then the `pre` carries `language-none` while the `code` keeps the
+raw word beside it. Unregistered is not the same as unresolvable:
+`scoria-made-up` is a name Prism has not got but could have, and keeps its own
+class, while `c#` and `C++` -- real languages, and common fence words -- do
+not. Probed 2026-10-29.
 
 | Fence | `pre` class | `code` class |
 | --- | --- | --- |
 | ```` ```js ```` | `language-js` | `language-js is-loaded` |
 | `~~~python` | `language-python` | `language-python is-loaded` |
 | ```` ```scoria-made-up ```` (unregistered) | `language-scoria-made-up` | `language-scoria-made-up is-loaded` |
+| ```` ```JS ```` (uppercase) | `language-js` | `language-js is-loaded` |
+| ```` ```foo bar ```` | `language-foo` | `language-foo is-loaded` |
+| ```` ```c# ````, `f#`, `C++`, `.net`, `{python}` | `language-none` | `language-c# language-none is-loaded` |
 | ```` ``` ```` with no info string | *(none)* | *(none)* |
 | 4-space indented block | *(none)* | *(none)* |
 | Frontmatter | `frontmatter language-yaml` | — |

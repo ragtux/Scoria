@@ -148,6 +148,82 @@ fn callouts() {
     );
 }
 
+/// A fence's info string resolves to a highlighter language.
+///
+/// The language is the first word, lowercased; a word holding anything but
+/// `[A-Za-z0-9_-]` does not resolve, and then the `pre` carries
+/// `language-none` while the `code` keeps the raw word beside it. Observed
+/// against Obsidian 1.14.4 (tools/probe-gen, 2026-10-29).
+#[test]
+fn a_fence_info_string_resolves_to_a_language() {
+    let classes = |src: &str| {
+        let out = html(src);
+        let pre = out
+            .split("<pre")
+            .nth(1)
+            .and_then(|t| t.split('>').next())
+            .unwrap_or("")
+            .to_string();
+        let code = out
+            .split("<code")
+            .nth(1)
+            .and_then(|t| t.split('>').next())
+            .unwrap_or("")
+            .to_string();
+        (pre, code)
+    };
+    let fence = |info: &str| format!("```{info}\ncode line\n```");
+
+    // Resolves: lowercased, on both elements.
+    assert_eq!(
+        classes(&fence("rust")),
+        (
+            " class=\"language-rust\"".into(),
+            " class=\"language-rust\"".into()
+        )
+    );
+    assert_eq!(
+        classes(&fence("JS")),
+        (
+            " class=\"language-js\"".into(),
+            " class=\"language-js\"".into()
+        )
+    );
+    // Unregistered but resolvable keeps its own name.
+    assert_eq!(
+        classes(&fence("scoria-made-up")),
+        (
+            " class=\"language-scoria-made-up\"".into(),
+            " class=\"language-scoria-made-up\"".into()
+        )
+    );
+    // The first word only.
+    assert_eq!(classes(&fence("foo bar")).0, " class=\"language-foo\"");
+
+    // Does not resolve: `language-none` on the pre, the raw word kept on the
+    // code. These are real fence words, not curiosities.
+    for info in ["c#", "f#", "C++", ".net", "{python}", "a~b"] {
+        let (pre, code) = classes(&fence(info));
+        assert_eq!(pre, " class=\"language-none\"", "{info}");
+        assert_eq!(
+            code,
+            format!(" class=\"language-{info} language-none\""),
+            "{info}"
+        );
+    }
+
+    // No info string, no class at all.
+    assert_eq!(classes(&fence("")), (String::new(), String::new()));
+
+    // CommonMark has neither rule: the word goes on the `code` as written, and
+    // the `pre` carries nothing.
+    let cm = render_html_with(
+        &scoria_markdown::parse_with(&fence("C#"), &scoria_markdown::Options::commonmark()),
+        &HtmlOptions::commonmark(),
+    );
+    assert!(cm.contains("<pre><code class=\"language-C#\">"), "{cm}");
+}
+
 /// Obsidian's underscore emphasis is looser than CommonMark's.
 ///
 /// An underscore run may *open* inside a word, which CommonMark forbids, and a

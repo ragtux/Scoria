@@ -247,16 +247,37 @@ impl<'r, 'a> Renderer<'r, 'a> {
                     .as_deref()
                     .and_then(|i| i.split_whitespace().next())
                     .unwrap_or("");
+                // Obsidian resolves the info string's first word to a
+                // highlighter language: the token is lowercased, and a token
+                // holding anything but `[A-Za-z0-9_-]` resolves to `none` --
+                // which is what `c#`, `f#`, `C++` and `.net` all do -- with the
+                // raw token kept on the `<code>` beside `language-none`.
+                // CommonMark has neither rule, and puts the token on the
+                // `<code>` as written. Observed against Obsidian 1.14.4
+                // (tools/probe-gen, 2026-10-29).
+                let obsidian = self.obsidian();
+                let resolves = !lang.is_empty()
+                    && lang
+                        .bytes()
+                        .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-');
+                let lowered = lang.to_ascii_lowercase();
                 self.out.push_str("<pre");
-                if self.obsidian() && !lang.is_empty() {
+                if obsidian && !lang.is_empty() {
                     self.out.push_str(" class=\"language-");
-                    escape_html(lang, &mut self.out);
+                    escape_html(if resolves { &lowered } else { "none" }, &mut self.out);
                     self.out.push('"');
                 }
                 self.out.push_str("><code");
                 if !lang.is_empty() {
                     self.out.push_str(" class=\"language-");
-                    escape_html(lang, &mut self.out);
+                    match (obsidian, resolves) {
+                        (true, true) => escape_html(&lowered, &mut self.out),
+                        (true, false) => {
+                            escape_html(lang, &mut self.out);
+                            self.out.push_str(" language-none");
+                        }
+                        (false, _) => escape_html(lang, &mut self.out),
+                    }
                     self.out.push('"');
                 }
                 self.out.push('>');
