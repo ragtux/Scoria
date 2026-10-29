@@ -326,6 +326,29 @@ uses behave as Obsidian's do.
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | not started |
 
+### The vault switcher, 2026-10-29
+
+Reported as a bug: the switcher's menu was "showing duplicate vault paths" — two
+dozen rows all reading `vault`. The registry was innocent; its 43 entries were 43
+distinct folders, most of them scratch vaults a probe or an agent session had opened
+under `/tmp`, and a row is the folder's name. So the question was what Obsidian does
+with a list like that, which [[Specification#Observed shell typography and chrome, Obsidian 1.14.4 (installer build 1.13.7)]]
+had been guessing at since 2026-10-21. `tools/obsidian-probe/vault-switcher.mjs` registered two vaults
+named `vault` under different parents and one whose folder had been deleted, opened
+the menu and read it (`results/2026-10-29-vault-switcher.json`).
+
+Obsidian draws the duplicates exactly as Scoria did: a row is a `.menu-item-title`
+holding the folder's name, with no path, no `aria-label` and no icon, so two vaults
+named `vault` are two identical rows. What it does differently is drop a vault whose
+folder is gone — Scoria listed it faint — and list the rows in the registry
+document's key order rather than by recency, which the spec had claimed and
+`VaultRegistry::vaults` had sorted for. Both are now matched: the sort is gone (a
+vault keeps the place it was first opened in, a new one goes last), missing folders
+are filtered out of the menu but kept in `scoria.json`, and the path stays as the
+row's tooltip, which Obsidian has no equivalent of. Obsidian's tail row is a single
+"Manage vaults..." opening its vault-manager window; Scoria has no such window and
+keeps its own "Open vault..." and "Open sandbox vault".
+
 ### The explorer's context menus, 2026-10-28
 
 The UI-rules pass of the same day captured the file-explorer menus but did not

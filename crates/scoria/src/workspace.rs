@@ -9469,8 +9469,13 @@ impl Workspace {
     /// name behind a `chevrons-up-down` switcher on the left, Help and
     /// Settings on the right, above a hairline. It is part of the sidebar,
     /// so it collapses with it, and it stays whether the ribbon shows or not.
-    fn render_vault_profile(&self, theme: &Theme, cx: &mut Context<Self>) -> gpui::Div {
-        let menu = self.render_vault_menu(theme, cx);
+    fn render_vault_profile(
+        &self,
+        theme: &Theme,
+        window: &Window,
+        cx: &mut Context<Self>,
+    ) -> gpui::Div {
+        let menu = self.render_vault_menu(theme, window, cx);
         let button = |id: &'static str, name: &'static str, command: &'static str| {
             icon_button(id, name, theme).on_click(
                 cx.listener(move |this, _, window, cx| this.run_command(command, window, cx)),
@@ -9532,22 +9537,31 @@ impl Workspace {
     }
 
     /// The vault switcher's menu, dropped up from the footer: every vault
-    /// this machine has opened, most recent first with a check on the one
-    /// showing, then "Open vault..." and "Open sandbox vault". A folder
-    /// that is gone is listed faint rather than dropped, since the list is
-    /// the user's. A click outside closes it.
-    fn render_vault_menu(&self, theme: &Theme, cx: &mut Context<Self>) -> Option<gpui::AnyElement> {
+    /// this machine has opened whose folder is still there, in the
+    /// registry's own order with a check on the one showing, then
+    /// "Open vault..." and "Open sandbox vault". A folder that is gone is
+    /// left out rather than listed faint, and the row is the folder's name
+    /// alone however many vaults share it — both are what Obsidian's own
+    /// switcher does (probe of 2026-10-29); the path is the row's tooltip.
+    /// A click outside closes it.
+    fn render_vault_menu(
+        &self,
+        theme: &Theme,
+        window: &Window,
+        cx: &mut Context<Self>,
+    ) -> Option<gpui::AnyElement> {
         if !self.vault_menu_open {
             return None;
         }
         let current = self.state.as_ref().map(|s| s.root.clone());
         let registry = VaultRegistry::open().ok().flatten();
-        let known: Vec<(String, PathBuf, bool)> = registry
+        let known: Vec<(String, PathBuf)> = registry
             .as_ref()
             .map(|r| {
                 r.vaults()
                     .into_iter()
-                    .map(|(_, e)| (e.name(), e.path.clone(), e.path.is_dir()))
+                    .filter(|(_, e)| e.path.is_dir())
+                    .map(|(_, e)| (e.name(), e.path.clone()))
                     .collect()
             })
             .unwrap_or_default();
@@ -9573,12 +9587,19 @@ impl Workspace {
                 .items_center()
                 .children(on.then(|| icon("check", 14., theme.text_muted)))
         };
+        // A machine that has opened dozens of vaults has a menu taller than
+        // the window, and the rows under the hairline are then off the
+        // bottom edge however the menu is snapped: cap it at the window and
+        // scroll, as Obsidian's own menus do inside their `.menu-scroll`.
+        let tallest = (window.viewport_size().height - px(96.)).max(px(160.));
         let mut list = div()
             .id("vault-menu")
             .flex()
             .flex_col()
             .min_w(px(240.))
             .max_w(px(360.))
+            .max_h(tallest)
+            .overflow_y_scroll()
             .py_1()
             .bg(theme.bg_secondary)
             .border_1()
@@ -9601,18 +9622,17 @@ impl Workspace {
                     .child("No vaults opened yet"),
             );
         }
-        for (ix, (name, path, present)) in known.into_iter().enumerate() {
+        for (ix, (name, path)) in known.into_iter().enumerate() {
             let showing = current.as_deref() == Some(path.as_path());
             let tooltip = crate::canvas::menu::tooltip(path.display().to_string());
             list = list.child(
                 item(("vault-menu-item", ix).into(), theme)
-                    .when(!present, |d| d.text_color(theme.text_faint))
                     .tooltip(tooltip)
                     .on_click(cx.listener(move |this, _, window, cx| {
                         this.vault_menu_open = false;
                         if showing {
                             cx.notify();
-                        } else if present {
+                        } else if path.is_dir() {
                             this.load_vault(path.clone(), window, cx);
                         } else {
                             this.report(format!("{} is not a folder any more", path.display()), cx);
@@ -14123,7 +14143,7 @@ impl Render for Workspace {
                     }),
             )
             .child(div().flex_1().overflow_hidden().child(left_body))
-            .child(self.render_vault_profile(&theme, cx))
+            .child(self.render_vault_profile(&theme, window, cx))
             .child(self.dock_handle(true, &theme));
 
         let status_items = self.status_bar_items(cx);

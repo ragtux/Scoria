@@ -94,16 +94,18 @@ impl VaultRegistry {
         &self.path
     }
 
-    /// The vaults, most recently opened first.
+    /// The vaults in the document's own order, which is the order the
+    /// switcher lists them in: a vault keeps the place it was first opened
+    /// in and a new one goes last, whatever `ts` says. Obsidian's switcher
+    /// does the same — the menu of a registry whose entries were out of
+    /// recency order listed them in key order, with the open vault fourth
+    /// of six rather than first (probe of 2026-10-29).
     pub fn vaults(&self) -> Vec<(&str, &VaultEntry)> {
-        let mut all: Vec<_> = self
-            .doc
+        self.doc
             .vaults
             .iter()
             .map(|(id, entry)| (id.as_str(), entry))
-            .collect();
-        all.sort_by_key(|(_, entry)| std::cmp::Reverse(entry.ts));
-        all
+            .collect()
     }
 
     /// The entry for `root`, if the folder is on the list.
@@ -246,7 +248,7 @@ mod tests {
     }
 
     #[test]
-    fn opening_again_keeps_the_id_moves_it_to_the_front_and_clears_the_others() {
+    fn opening_again_keeps_the_id_and_the_place_and_clears_the_others() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("scoria.json");
         let mut reg = VaultRegistry::load(&path).unwrap();
@@ -255,6 +257,8 @@ mod tests {
         assert_ne!(a, b);
         let again = reg.record_open(&dir.path().join("A"), 3);
         assert_eq!(again, a);
+        // Reopening A does not move it: the list keeps the document's order,
+        // the order the vaults were first opened in.
         let listed = reg.vaults();
         assert_eq!(listed.len(), 2);
         assert_eq!(listed[0].0, a);
@@ -283,7 +287,9 @@ mod tests {
         .unwrap();
         let mut reg = VaultRegistry::load(&path).unwrap();
         let (one, two) = (format!("{V}/one"), format!("{V}/two"));
-        assert_eq!(reg.vaults()[0].1.path, Path::new(&two));
+        // Key order, not recency: `two` is the newer `ts` and still second.
+        assert_eq!(reg.vaults()[0].1.path, Path::new(&one));
+        assert_eq!(reg.vaults()[1].1.path, Path::new(&two));
         assert_eq!(reg.find(Path::new(&one)).unwrap().0, "d9bdd8d517a88dd3");
         reg.record_open(Path::new(&two), 1792400000000);
         reg.save().unwrap();
@@ -300,6 +306,19 @@ mod tests {
             !text.contains(&format!(r#""{one}","ts":1792091578741,"open""#)),
             "one lost open: {text}"
         );
+    }
+
+    #[test]
+    fn a_new_vault_goes_last_and_an_old_one_stays_where_it_is() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("scoria.json");
+        let mut reg = VaultRegistry::load(&path).unwrap();
+        let a = reg.record_open(&dir.path().join("A"), 10);
+        let b = reg.record_open(&dir.path().join("B"), 20);
+        reg.record_open(&dir.path().join("A"), 30);
+        let c = reg.record_open(&dir.path().join("C"), 40);
+        let ids: Vec<&str> = reg.vaults().into_iter().map(|(id, _)| id).collect();
+        assert_eq!(ids, vec![a.as_str(), b.as_str(), c.as_str()]);
     }
 
     #[test]
