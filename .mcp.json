@@ -6,6 +6,13 @@
         "SCORIA_MCP_BIN": "nix-shell --run \"target/release/scoria {args}\"",
         "SCORIA_MCP_REPO": "."
       }
+    },
+    "scoria-llm": {
+      "command": "target/release/scoria-llm-mcp",
+      "env": {
+        "SCORIA_LLM_URL": "http://misco.tail.ragtux.com:8080/v1",
+        "SCORIA_LLM_MODEL": "qwen3.6-35b-a3b-code"
+      }
     }
   }
 }

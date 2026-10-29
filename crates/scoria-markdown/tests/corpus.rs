@@ -11,7 +11,10 @@
 //! The pass count is a ratchet: raise `MIN_PASSING` when it grows.
 //! `CORPUS_VERBOSE=1` prints the first difference of every failing note;
 //! `CORPUS_NOTE=<path substring>` prints the full canonical forms of one note;
-//! `CORPUS_DUMP=<dir>` writes `<dir>/<note>.want` and `.got` for failing notes.
+//! `CORPUS_DUMP=<dir>` writes `<dir>/<note>.want` and `.got` for failing notes;
+//! `CORPUS_DIR=<dir>` runs the whole comparison over another `vault/` +
+//! `expected/` pair instead, which is how `tools/probe-gen` triages candidate
+//! probes. Both ratchets are off for such a run.
 
 use scoria_markdown::{parse, render_html};
 use std::collections::HashMap;
@@ -20,8 +23,23 @@ use std::path::{Path, PathBuf};
 
 const MIN_PASSING: usize = 1007;
 
+/// `tests/corpus`, or whatever `CORPUS_DIR` names. A staging corpus of
+/// candidate probes (`tools/probe-gen`) is the same `vault/` + `expected/`
+/// pair, and triaging one must use this comparator rather than a second
+/// implementation of it: canonicalizing Obsidian's HTML is subtle enough that
+/// a second one would disagree with the gate it is meant to predict.
 fn corpus_dir() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/corpus")
+    match std::env::var_os("CORPUS_DIR") {
+        Some(dir) => PathBuf::from(dir),
+        None => Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/corpus"),
+    }
+}
+
+/// Whether this run is over a staging corpus. Such a run has its own note
+/// count and no history, so neither gate below applies to it: it is a report,
+/// not a ratchet.
+fn staging() -> bool {
+    std::env::var_os("CORPUS_DIR").is_some()
 }
 
 fn notes(dir: &Path, out: &mut Vec<PathBuf>) {
@@ -723,7 +741,11 @@ fn obsidian_corpus() {
     let mut paths = Vec::new();
     notes(&vault, &mut paths);
     paths.sort();
-    assert!(paths.len() >= 1000, "corpus has {} notes", paths.len());
+    assert!(
+        staging() || paths.len() >= 1000,
+        "corpus has {} notes",
+        paths.len()
+    );
 
     let verbose = std::env::var_os("CORPUS_VERBOSE").is_some();
     let focus = std::env::var("CORPUS_NOTE").ok();
@@ -801,7 +823,7 @@ fn obsidian_corpus() {
     }
     eprintln!("corpus: {passed}/{} passing", paths.len());
     assert!(
-        passed >= MIN_PASSING,
+        staging() || passed >= MIN_PASSING,
         "{passed} passing, below the ratchet of {MIN_PASSING}"
     );
 }

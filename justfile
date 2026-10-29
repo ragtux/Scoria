@@ -34,7 +34,7 @@ roundtrip vault:
 check:
     cargo check -p scoria
 
-# Release build of every binary: scoria, scoria-mcp, scoria-bench
+# Release build of every binary: scoria, scoria-mcp, scoria-llm-mcp, scoria-bench
 build:
     cargo build --release --workspace
     @echo "binaries in $CARGO_TARGET_DIR/release"
@@ -43,6 +43,21 @@ build:
 mcp:
     cargo build --release -p scoria-mcp
     @echo "$CARGO_TARGET_DIR/release/scoria-mcp"
+
+# Release build of the local-model MCP server, the other entry in .mcp.json
+llm-mcp:
+    cargo build --release -p scoria-llm-mcp
+    @echo "$CARGO_TARGET_DIR/release/scoria-llm-mcp"
+
+# Candidate OFM probes for one AREA (see probe-areas): generate, render, triage
+probe AREA ROUNDS="3":
+    tools/probe-gen/probe_gen.py generate --area {{AREA}} --rounds {{ROUNDS}}
+    tools/probe-gen/probe_gen.py render
+    tools/probe-gen/probe_gen.py triage
+
+# The syntax areas `probe` can generate for
+probe-areas:
+    tools/probe-gen/probe_gen.py areas
 
 # Remove the build output
 clean:
