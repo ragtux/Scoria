@@ -45,6 +45,7 @@ import re
 import secrets
 import shutil
 import subprocess
+import tempfile
 import sys
 import time
 import urllib.error
@@ -574,22 +575,39 @@ def cmd_render(args):
     if not config.exists():
         die(f"{config} does not exist; open Obsidian once, or use --manual")
     backup = config.read_bytes()
+    log = Path(tempfile.mkstemp(prefix="probe-gen-obsidian-", suffix=".log")[1])
     try:
-        register(config, vault)
-        note("launching Obsidian; the plugin renders and closes the window")
-        subprocess.Popen(
-            ["obsidian"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            start_new_session=True,
-        )
-        deadline = time.time() + args.timeout
-        while time.time() < deadline and not done.exists():
-            time.sleep(0.5)
+        for attempt in (1, 2):
+            # A previous instance lingers for seconds after its window closes,
+            # and a launch during that window is handed to the dying instance,
+            # which then opens *its* vault. Wait for it to go, as
+            # tools/obsidian-probe/run-block.sh does.
+            for _ in range(40):
+                if not obsidian_running():
+                    break
+                time.sleep(0.5)
+            time.sleep(2)
+            register(config, vault)
+            note(f"launching Obsidian (attempt {attempt}); it renders and closes")
+            with log.open("ab") as handle:
+                subprocess.Popen(
+                    ["obsidian"], stdout=handle, stderr=handle, start_new_session=True
+                )
+            deadline = time.time() + args.timeout
+            while time.time() < deadline and not done.exists():
+                time.sleep(0.5)
+            if done.exists():
+                break
+            note(f"no {done.name} after {args.timeout} s")
+            if obsidian_running():
+                subprocess.run(["pkill", "-f", PGREP], check=False)
         if not done.exists():
+            note(f"Obsidian's own output is in {log}")
             die(
-                f"no {done} after {args.timeout} s. Obsidian may be asking to "
-                f"trust the plugin: run with --manual and click through it once."
+                "the render never finished. Two usual causes: Obsidian is "
+                "asking to trust the plugin (run with --manual and click "
+                "through it once), or a stale instance held the single-instance "
+                "lock."
             )
         summary = json.loads((expected / "render-summary.json").read_text())
         note(f"rendered {summary['rendered']} notes in {summary['millis']} ms")
@@ -601,6 +619,7 @@ def cmd_render(args):
             time.sleep(2)
         config.write_bytes(backup)
         note("obsidian.json restored")
+        log.unlink(missing_ok=True)
     print(f"next: {me()} triage --staging {staging}")
 
 

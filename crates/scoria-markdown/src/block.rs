@@ -926,6 +926,23 @@ impl<'a, 'o> BlockParser<'a, 'o> {
                 } else if self.indent >= content_indent {
                     self.advance_offset(content_indent, true);
                     Continue::Matched
+                } else if self.opts.quirks
+                    && !self.indented
+                    && self.byte(self.next_nonspace) == Some(b'>')
+                    && self
+                        .open
+                        .get(i + 1)
+                        .is_some_and(|open| matches!(open.kind, NodeKind::BlockQuote { .. }))
+                {
+                    // A quote that `try_block_starts` kept inside this item
+                    // keeps its later lines there too. Those lines carry the
+                    // item's own indentation no more than the first one did, so
+                    // the test above rejects them and the quote would restart
+                    // as a sibling of the whole list -- `- item` / `> quote` /
+                    // `> more` put "more" in a second blockquote outside the
+                    // item. Match without consuming: the quote's own arm takes
+                    // the `>` on the next turn of the loop.
+                    Continue::Matched
                 } else {
                     Continue::NotMatched
                 }

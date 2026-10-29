@@ -144,6 +144,77 @@ fn callouts() {
     );
 }
 
+/// A quote kept inside a list item keeps *all* of its lines there.
+///
+/// The quirk that puts `> quote` directly after a list item's text inside that
+/// item only ever matched the first such line; the rest carried no more of the
+/// item's indentation than the first did, so they restarted the quote as a
+/// sibling of the whole list. Nothing to do with callouts -- it shows up with a
+/// plain quote -- but it is why a callout nested in a list item of a callout
+/// lost its body. Observed against Obsidian 1.14.4 (tools/probe-gen,
+/// 2026-10-29).
+#[test]
+fn a_quote_in_a_list_item_keeps_its_later_lines() {
+    fn item_children(src: &str) -> Vec<BlockKind<'_>> {
+        let doc = parse(src);
+        let BlockKind::List { items, .. } = doc.blocks.into_iter().next().unwrap().kind else {
+            panic!("expected a list for {src:?}")
+        };
+        items
+            .into_iter()
+            .next()
+            .expect("an item")
+            .children
+            .into_iter()
+            .map(|b| b.kind)
+            .collect()
+    }
+
+    // One quote inside the item, holding both lines -- not a second quote
+    // outside the list.
+    let kinds = item_children("- item\n> quote\n> more");
+    assert!(
+        matches!(
+            kinds.as_slice(),
+            [BlockKind::Paragraph { .. }, BlockKind::BlockQuote { .. }]
+        ),
+        "{kinds:?}"
+    );
+    let [_, BlockKind::BlockQuote { children }] = kinds.as_slice() else {
+        unreachable!()
+    };
+    assert_eq!(
+        children.len(),
+        1,
+        "both lines in one paragraph: {children:?}"
+    );
+    assert_eq!(
+        html("- item\n> quote\n> more")
+            .matches("<blockquote")
+            .count(),
+        1
+    );
+
+    // The same for a callout, whose body used to be left behind.
+    let kinds = item_children("- item\n> [!tip] t\n> a\n> b");
+    let [_, BlockKind::Callout { children, .. }] = kinds.as_slice() else {
+        panic!("expected a callout in the item: {kinds:?}")
+    };
+    assert_eq!(children.len(), 1, "{children:?}");
+
+    // And nested one level further: a callout in a list item of a callout.
+    let doc = parse("> [!note]\n> - item\n> > [!tip] nested\n> > body");
+    let BlockKind::Callout { children, .. } = doc.blocks.into_iter().next().unwrap().kind else {
+        panic!("outer callout")
+    };
+    // Just the list -- no stray quote trailing it inside the outer callout.
+    assert_eq!(children.len(), 1, "{children:?}");
+    assert!(matches!(children[0].kind, BlockKind::List { .. }));
+    let rendered = html("> [!note]\n> - item\n> > [!tip] nested\n> > body");
+    assert!(!rendered.contains("<blockquote"), "{rendered}");
+    assert_eq!(rendered.matches("callout-content").count(), 2, "{rendered}");
+}
+
 /// What counts as a callout type, and the title derived from one.
 ///
 /// Observed against Obsidian 1.14.4 (tools/probe-gen, 2026-10-29): the type

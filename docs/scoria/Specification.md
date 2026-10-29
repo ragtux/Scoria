@@ -109,7 +109,11 @@ Blocks:
 - `- [ ]` with nothing after the bracket is plain text, not a task.
 - A list marker indented four or more columns inside a list is a sibling
   item; CommonMark would make it a lazy continuation line.
-- A `>` line directly after a list item's text stays inside that item.
+- A `>` line directly after a list item's text stays inside that item, and so
+  do the quoted lines after it: `- item` / `> quote` / `> more` puts both
+  quoted lines in one blockquote inside the item, not a second blockquote after
+  the list. This is also what keeps the body of a callout nested in a list item
+  of another callout.
 - A callout header needs *something* between its brackets, which is then
   trimmed: `[! bad]` is a `bad` callout, `[! ]` and `[!   ]` are callouts with
   an empty type (an empty `data-callout`, and no title to derive), and a bare
@@ -139,9 +143,6 @@ in this section, the parser does not match these yet:
 - A `^blockid` as a callout's only body line is consumed as the block id,
   leaving an empty `.callout-content`. The parser renders it as a paragraph of
   literal text.
-- A callout nested in a list item of another callout keeps its body in
-  Obsidian. The parser closes the nested callout at its title and leaves the
-  body behind it in a stray blockquote.
 
 Inlines:
 
