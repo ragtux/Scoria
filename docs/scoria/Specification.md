@@ -155,6 +155,26 @@ in this section, the parser does not match these yet:
   line break before it is kept, so `> [!note]` / `> body` / `> ^id` renders
   `<p>body<br></p>`. The parser drops the break with the id. Also left alone:
   the stray `<br>` is an artifact of Obsidian's own stripping.
+**Observed, not yet reproduced** — asterisk and `=` runs of four or more,
+probed 2026-10-29 the same way. These are the whole of what keeps
+`edge/Probe Inlines.md` from passing, and they look like artifacts of
+Obsidian's own delimiter scanner rather than a rule:
+
+| source | Obsidian |
+| --- | --- |
+| `****a****` | `*<strong>*a**</strong>` |
+| `*****a*****` | `<strong>*</strong>a<strong>*</strong>` |
+| `***a**b*` | `<strong>*a</strong>b*` |
+| `*a **b* c**` | `<em>a **b</em> c**` |
+| `==== four` | all literal; but `==== four ==x===y==` gives `=<mark>= four ==x</mark>=y==` |
+
+A run of four leaves its first character literal and opens at the second, and
+`==` behaves the same way, so the two share whatever the mechanism is. A run of
+five instead resolves inside itself. The parser follows CommonMark's
+rule-of-three here, which nests where Obsidian splits. Pinning the real rule
+wants a systematic sweep of run lengths three to eight, with and without a
+partner run.
+
 **Observed, not yet reproduced** — link nesting, probed 2026-10-29 the same
 way:
 
@@ -184,8 +204,12 @@ Inlines:
   or `(`. Tags may contain emoji and any non-ASCII letters.
 - `~~~x~~~` and `===x===` delimit with their first two characters; the third
   stays inside. `***x***` nests strong outside em.
-- A single `_` cannot close before a letter or digit, so `snake_case_name`
-  stays plain while `a_b_ ` emphasizes `b`.
+- Underscore emphasis is looser than CommonMark's. A run may *open* inside a
+  word, which CommonMark forbids, and a run of two or more may close there as
+  well: `a_b_` is `a<em>b</em>`, `x__y__z` is `x<strong>y</strong>z`. A single
+  `_` still cannot close before a letter or digit, which is what keeps
+  `snake_case_name`, `CONST_NAME_HERE` and `a_b_c` plain. Behind
+  `Options::quirks`; the CommonMark suite keeps the spec's own rule.
 - A backtick run without a closer retries one backtick shorter.
 - Legacy entities decode without a semicolon (`&copy` is ©).
 - One-letter URL schemes autolink (`<a://b>`); bare `https://`, `http://`,

@@ -148,6 +148,53 @@ fn callouts() {
     );
 }
 
+/// Obsidian's underscore emphasis is looser than CommonMark's.
+///
+/// An underscore run may *open* inside a word, which CommonMark forbids, and a
+/// run of two or more may close there as well. A single `_` still cannot close
+/// before an alphanumeric, and that is what keeps ordinary identifiers out of
+/// it. Observed against Obsidian 1.14.4 (tools/probe-gen, 2026-10-29).
+#[test]
+fn underscore_emphasis_opens_inside_a_word() {
+    // Emphasised, where CommonMark leaves all four literal.
+    assert_eq!(html("a_b_"), "<p>a<em>b</em></p>\n");
+    assert_eq!(html("__a__b"), "<p><strong>a</strong>b</p>\n");
+    assert_eq!(html("a__b__"), "<p>a<strong>b</strong></p>\n");
+    assert_eq!(html("x__y__z"), "<p>x<strong>y</strong>z</p>\n");
+
+    // A single `_` cannot close before an alphanumeric, so identifiers and
+    // ordinary prose are untouched -- the whole reason this is safe.
+    for src in [
+        "snake_case_word",
+        "a_b_c",
+        "_a_b",
+        "mid_dle",
+        "CONST_NAME_HERE",
+        "a_b_c_d_e",
+        "file_name.txt",
+        "a_1_b",
+        "1_2_3",
+    ] {
+        assert_eq!(html(src), format!("<p>{src}</p>\n"), "{src}");
+    }
+
+    // The ordinary forms still work.
+    assert_eq!(html("_both_"), "<p><em>both</em></p>\n");
+    assert_eq!(html("__dunder__"), "<p><strong>dunder</strong></p>\n");
+
+    // CommonMark mode keeps CommonMark's rule: this is a parse-level quirk, so
+    // it needs `Options::commonmark`, not just the plain renderer.
+    let cm = |src: &str| {
+        render_html_with(
+            &scoria_markdown::parse_with(src, &scoria_markdown::Options::commonmark()),
+            &HtmlOptions::commonmark(),
+        )
+    };
+    assert_eq!(cm("a_b_"), "<p>a_b_</p>\n");
+    assert_eq!(cm("x__y__z"), "<p>x__y__z</p>\n");
+    assert_eq!(cm("_both_"), "<p><em>both</em></p>\n");
+}
+
 /// A link ends at the first child that is a link of its own.
 ///
 /// Obsidian never nests `<a>`: it closes the outer link there and does not
