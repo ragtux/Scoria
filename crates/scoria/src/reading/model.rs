@@ -839,10 +839,25 @@ impl<'v> Builder<'v> {
                     let shown = plain_text(children);
                     let shown = shown.strip_prefix("mailto:").unwrap_or(&shown).to_string();
                     acc.styled(|s| s.link = true, |a| a.push(&shown));
+                    acc.link(start, target);
                 } else {
-                    self.wrap(acc, children, |s| s.link = true);
+                    // The same rule the HTML renderer follows: Obsidian ends a
+                    // link at the first child that is a link of its own, and
+                    // what comes after that child is not part of it. Without
+                    // this the trailing text of `[md [[Links]] link](url)`
+                    // would still be clickable through to the outer link.
+                    let split = children
+                        .iter()
+                        .position(scoria_markdown::html::renders_as_anchor);
+                    let head = split.unwrap_or(children.len());
+                    self.wrap(acc, &children[..head], |s| s.link = true);
+                    acc.link(start, target);
+                    if let Some(at) = split {
+                        for child in &children[at..] {
+                            self.inline(child, acc);
+                        }
+                    }
                 }
-                acc.link(start, target);
             }
             InlineKind::Image {
                 destination,

@@ -128,6 +128,20 @@ fn escape_external_href(s: &str, out: &mut String) {
     }
 }
 
+/// Whether this inline renders as an `<a>`, and so cannot sit inside one.
+///
+/// A nested markdown link is deliberately not counted: Obsidian resolves that
+/// case in the parser instead, keeping the outer link and leaving the inner one
+/// as literal text, which `scoria-markdown` does not do yet (see the link
+/// nesting entry in `docs/scoria/Specification.md`).
+pub fn renders_as_anchor(inline: &Inline<'_>) -> bool {
+    match &inline.kind {
+        InlineKind::Wikilink { embed, .. } => !*embed,
+        InlineKind::Tag(_) => true,
+        _ => false,
+    }
+}
+
 /// Whether `dest` starts with a URL scheme such as `https:` or `mailto:`.
 pub fn has_scheme(dest: &str) -> bool {
     let b = dest.as_bytes();
@@ -627,8 +641,7 @@ impl<'r, 'a> Renderer<'r, 'a> {
             }
             self.out
                 .push_str(" target=\"_blank\" rel=\"noopener nofollow\">");
-            self.inlines(children);
-            self.out.push_str("</a>");
+            self.anchor_body(children);
             return;
         }
         let mut shown = plain_text(children);
@@ -656,10 +669,39 @@ impl<'r, 'a> Renderer<'r, 'a> {
         self.out.push_str("\" target=\"_blank\">");
         if kind == LinkKind::Autolink {
             escape_html(&shown, &mut self.out);
+            self.out.push_str("</a>");
         } else {
-            self.inlines(children);
+            self.anchor_body(children);
         }
-        self.out.push_str("</a>");
+    }
+
+    /// Renders a link's children and closes it, ending the anchor early when a
+    /// child renders as an anchor of its own.
+    ///
+    /// Obsidian never nests `<a>`: it closes the link at the first such child
+    /// and does not reopen it, so the text *after* that child is not part of
+    /// the link. `[md [[Links]] link](url)` gives `<a>md </a>`, then the
+    /// wikilink's own anchor, then a bare ` link`; with two wikilinks the text
+    /// between them is bare as well. A tag counts, since a tag is an anchor
+    /// too; an embed or an image does not, being a `<span>`. Observed against
+    /// Obsidian 1.14.4 (tools/probe-gen, 2026-10-29).
+    fn anchor_body(&mut self, children: &'r [Inline<'a>]) {
+        let split = if self.obsidian() {
+            children.iter().position(renders_as_anchor)
+        } else {
+            None
+        };
+        match split {
+            None => {
+                self.inlines(children);
+                self.out.push_str("</a>");
+            }
+            Some(at) => {
+                self.inlines(&children[..at]);
+                self.out.push_str("</a>");
+                self.inlines(&children[at..]);
+            }
+        }
     }
 
     fn wrap(&mut self, tag: &str, children: &'r [Inline<'a>]) {

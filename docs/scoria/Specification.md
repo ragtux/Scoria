@@ -132,6 +132,12 @@ Blocks:
   delimiter row or a setext underline on the line after the header is read as a
   table or a heading, exactly as it would be anywhere else — the header is not
   one of the body paragraph's lines.
+- A link ends at the first child that is a link of its own, because an `<a>`
+  never nests: `[md [[Links]] link](url)` renders the anchor around `md `
+  (trailing space included), the wikilink as a sibling anchor, and ` link` as
+  bare text outside both. Once closed it stays closed, so with two wikilinks
+  inside one link text the run between them is bare as well. A tag ends a link
+  too, being an anchor; an embed or an image does not, being a `<span>`.
 - Frontmatter renders as a hidden `pre.frontmatter`; `<script>` is removed;
   unknown elements are unwrapped; raw `<a>` gains `target` and `rel`.
 
@@ -149,6 +155,23 @@ in this section, the parser does not match these yet:
   line break before it is kept, so `> [!note]` / `> body` / `> ^id` renders
   `<p>body<br></p>`. The parser drops the break with the id. Also left alone:
   the stray `<br>` is an artifact of Obsidian's own stripping.
+**Observed, not yet reproduced** — link nesting, probed 2026-10-29 the same
+way:
+
+- A link whose text holds a *markdown* link keeps the outer link and leaves the
+  inner one as literal text: `[a [b](f) c](e)` is one anchor reading
+  `a [b](f) c`. The parser nests them instead, which is why the rule above
+  counts only wikilinks and tags.
+- A wikilink nested deeper than the link's own children still ends the anchor,
+  and the formatting around it reopens outside: `[md **[[Links]]** link](url)`
+  gives `<a>md <strong></strong></a><strong><a>Links</a></strong> link`, the
+  way an HTML parser re-opens formatting elements across a closed `<a>`. The
+  parser only splits on a direct child.
+- `[[[Links]] md](url)` resolves as a wikilink whose body is `[Links`, with the
+  rest of the line literal; the parser reads it as a markdown link.
+
+**Observed, not yet reproduced** — callouts, continued:
+
 - Not an Obsidian behavior but a deliberate divergence in Scoria: the reading
   view paints a callout title as one run of rich text, so a title that
   block-parses to a heading or a list shows its *text* without that block's

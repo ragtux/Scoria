@@ -148,6 +148,56 @@ fn callouts() {
     );
 }
 
+/// A link ends at the first child that is a link of its own.
+///
+/// Obsidian never nests `<a>`: it closes the outer link there and does not
+/// reopen it, so the text after that child is not part of the link. A tag
+/// counts, being an anchor too; an embed or an image does not, being a
+/// `<span>`. Observed against Obsidian 1.14.4 (tools/probe-gen, 2026-10-29).
+#[test]
+fn a_link_ends_at_a_link_inside_it() {
+    // `md ` keeps its trailing space inside the anchor, the wikilink is a
+    // sibling anchor, and ` link` is outside both.
+    let rendered = html("[md [[Links]] link](https://e.com)");
+    assert!(
+        rendered.contains(r#">md </a><a data-href="Links""#),
+        "{rendered}"
+    );
+    assert!(rendered.ends_with("Links</a> link</p>\n"), "{rendered}");
+    // Never two anchors deep.
+    assert_eq!(rendered.matches("<a ").count(), 2, "{rendered}");
+
+    // Once closed it stays closed: the text between two wikilinks is bare too.
+    let two = html("[md [[Links]] a [[Other]] b](https://e.com)");
+    assert!(two.ends_with("Other</a> b</p>\n"), "{two}");
+    assert!(two.contains("</a> a <a"), "{two}");
+
+    // A tag is an anchor, so it ends the link as well.
+    let tag = html("[md #tag link](https://e.com)");
+    // `r##` because the string itself contains `"#`.
+    assert!(tag.contains(r##">md </a><a href="#tag""##), "{tag}");
+
+    // An embed and an image are spans, so the link continues through them.
+    for src in [
+        "[md ![[pic.png]] link](https://e.com)",
+        "[md ![alt](a.png) link](https://e.com)",
+    ] {
+        let out = html(src);
+        assert!(out.contains(" link</a>"), "{src}: {out}");
+    }
+
+    // Nothing to split: the ordinary link is untouched.
+    assert_eq!(html("[plain](https://e.com)").matches("</a>").count(), 1);
+    // The split is Obsidian's rule, so CommonMark output is left as it was and
+    // still nests. Wikilinks do not occur in the CommonMark suite.
+    assert_eq!(
+        plain_html("[md [[Links]] link](https://e.com)")
+            .matches("</a>")
+            .count(),
+        2
+    );
+}
+
 /// A callout's title is block-parsed, not inline-parsed.
 ///
 /// Obsidian runs the title through the block parser, so a heading, a list or a

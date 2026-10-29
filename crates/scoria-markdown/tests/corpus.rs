@@ -21,7 +21,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-const MIN_PASSING: usize = 1007;
+const MIN_PASSING: usize = 1008;
 
 /// `tests/corpus`, or whatever `CORPUS_DIR` names. A staging corpus of
 /// candidate probes (`tools/probe-gen`) is the same `vault/` + `expected/`
