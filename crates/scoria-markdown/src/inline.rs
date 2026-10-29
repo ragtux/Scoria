@@ -562,10 +562,27 @@ impl<'a, 'o, 'c> Parser<'a, 'o, 'c> {
         let end = start + n;
         let (left, right, before_punct, after_punct) = self.flanking(start, end);
         let (can_open, can_close) = if ch == b'_' {
-            (
-                left && (!right || before_punct),
-                right && (!left || after_punct),
-            )
+            if self.cx.opts.quirks {
+                // Obsidian drops CommonMark's bar on an underscore run
+                // *opening* inside a word, and for a run of two or more it
+                // drops the bar on closing there too. So `a_b_` is
+                // `a<em>b</em>` and `x__y__z` is `x<strong>y</strong>z`, while
+                // `a_b_c`, `snake_case_word` and `CONST_NAME_HERE` stay literal
+                // -- a single `_` still cannot close before an alphanumeric,
+                // which is what keeps ordinary identifiers out of it. Observed
+                // against Obsidian 1.14.4 (tools/probe-gen, 2026-10-29).
+                let can_close = if n >= 2 {
+                    right
+                } else {
+                    right && (!left || after_punct)
+                };
+                (left, can_close)
+            } else {
+                (
+                    left && (!right || before_punct),
+                    right && (!left || after_punct),
+                )
+            }
         } else {
             (left, right)
         };

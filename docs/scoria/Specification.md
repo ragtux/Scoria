@@ -132,6 +132,12 @@ Blocks:
   delimiter row or a setext underline on the line after the header is read as a
   table or a heading, exactly as it would be anywhere else — the header is not
   one of the body paragraph's lines.
+- A link ends at the first child that is a link of its own, because an `<a>`
+  never nests: `[md [[Links]] link](url)` renders the anchor around `md `
+  (trailing space included), the wikilink as a sibling anchor, and ` link` as
+  bare text outside both. Once closed it stays closed, so with two wikilinks
+  inside one link text the run between them is bare as well. A tag ends a link
+  too, being an anchor; an embed or an image does not, being a `<span>`.
 - Frontmatter renders as a hidden `pre.frontmatter`; `<script>` is removed;
   unknown elements are unwrapped; raw `<a>` gains `target` and `rel`.
 
@@ -149,6 +155,43 @@ in this section, the parser does not match these yet:
   line break before it is kept, so `> [!note]` / `> body` / `> ^id` renders
   `<p>body<br></p>`. The parser drops the break with the id. Also left alone:
   the stray `<br>` is an artifact of Obsidian's own stripping.
+**Observed, not yet reproduced** — asterisk and `=` runs of four or more,
+probed 2026-10-29 the same way. These are the whole of what keeps
+`edge/Probe Inlines.md` from passing, and they look like artifacts of
+Obsidian's own delimiter scanner rather than a rule:
+
+| source | Obsidian |
+| --- | --- |
+| `****a****` | `*<strong>*a**</strong>` |
+| `*****a*****` | `<strong>*</strong>a<strong>*</strong>` |
+| `***a**b*` | `<strong>*a</strong>b*` |
+| `*a **b* c**` | `<em>a **b</em> c**` |
+| `==== four` | all literal; but `==== four ==x===y==` gives `=<mark>= four ==x</mark>=y==` |
+
+A run of four leaves its first character literal and opens at the second, and
+`==` behaves the same way, so the two share whatever the mechanism is. A run of
+five instead resolves inside itself. The parser follows CommonMark's
+rule-of-three here, which nests where Obsidian splits. Pinning the real rule
+wants a systematic sweep of run lengths three to eight, with and without a
+partner run.
+
+**Observed, not yet reproduced** — link nesting, probed 2026-10-29 the same
+way:
+
+- A link whose text holds a *markdown* link keeps the outer link and leaves the
+  inner one as literal text: `[a [b](f) c](e)` is one anchor reading
+  `a [b](f) c`. The parser nests them instead, which is why the rule above
+  counts only wikilinks and tags.
+- A wikilink nested deeper than the link's own children still ends the anchor,
+  and the formatting around it reopens outside: `[md **[[Links]]** link](url)`
+  gives `<a>md <strong></strong></a><strong><a>Links</a></strong> link`, the
+  way an HTML parser re-opens formatting elements across a closed `<a>`. The
+  parser only splits on a direct child.
+- `[[[Links]] md](url)` resolves as a wikilink whose body is `[Links`, with the
+  rest of the line literal; the parser reads it as a markdown link.
+
+**Observed, not yet reproduced** — callouts, continued:
+
 - Not an Obsidian behavior but a deliberate divergence in Scoria: the reading
   view paints a callout title as one run of rich text, so a title that
   block-parses to a heading or a list shows its *text* without that block's
@@ -161,8 +204,12 @@ Inlines:
   or `(`. Tags may contain emoji and any non-ASCII letters.
 - `~~~x~~~` and `===x===` delimit with their first two characters; the third
   stays inside. `***x***` nests strong outside em.
-- A single `_` cannot close before a letter or digit, so `snake_case_name`
-  stays plain while `a_b_ ` emphasizes `b`.
+- Underscore emphasis is looser than CommonMark's. A run may *open* inside a
+  word, which CommonMark forbids, and a run of two or more may close there as
+  well: `a_b_` is `a<em>b</em>`, `x__y__z` is `x<strong>y</strong>z`. A single
+  `_` still cannot close before a letter or digit, which is what keeps
+  `snake_case_name`, `CONST_NAME_HERE` and `a_b_c` plain. Behind
+  `Options::quirks`; the CommonMark suite keeps the spec's own rule.
 - A backtick run without a closer retries one backtick shorter.
 - Legacy entities decode without a semicolon (`&copy` is ©).
 - One-letter URL schemes autolink (`<a://b>`); bare `https://`, `http://`,
@@ -1681,13 +1728,22 @@ frontmatter case is the odd one: `pre.frontmatter.language-yaml` computes to
 button, and a synthetic click on it copies the raw YAML. The one inline
 `<code>` in the note had no sibling button.
 
-Prism classes on the rendered block:
+Prism classes on the rendered block. The language is the info string's first
+word, **lowercased**; a word holding anything but `[A-Za-z0-9_-]` does not
+resolve, and then the `pre` carries `language-none` while the `code` keeps the
+raw word beside it. Unregistered is not the same as unresolvable:
+`scoria-made-up` is a name Prism has not got but could have, and keeps its own
+class, while `c#` and `C++` -- real languages, and common fence words -- do
+not. Probed 2026-10-29.
 
 | Fence | `pre` class | `code` class |
 | --- | --- | --- |
 | ```` ```js ```` | `language-js` | `language-js is-loaded` |
 | `~~~python` | `language-python` | `language-python is-loaded` |
 | ```` ```scoria-made-up ```` (unregistered) | `language-scoria-made-up` | `language-scoria-made-up is-loaded` |
+| ```` ```JS ```` (uppercase) | `language-js` | `language-js is-loaded` |
+| ```` ```foo bar ```` | `language-foo` | `language-foo is-loaded` |
+| ```` ```c# ````, `f#`, `C++`, `.net`, `{python}` | `language-none` | `language-c# language-none is-loaded` |
 | ```` ``` ```` with no info string | *(none)* | *(none)* |
 | 4-space indented block | *(none)* | *(none)* |
 | Frontmatter | `frontmatter language-yaml` | — |

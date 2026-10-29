@@ -148,6 +148,179 @@ fn callouts() {
     );
 }
 
+/// A fence's info string resolves to a highlighter language.
+///
+/// The language is the first word, lowercased; a word holding anything but
+/// `[A-Za-z0-9_-]` does not resolve, and then the `pre` carries
+/// `language-none` while the `code` keeps the raw word beside it. Observed
+/// against Obsidian 1.14.4 (tools/probe-gen, 2026-10-29).
+#[test]
+fn a_fence_info_string_resolves_to_a_language() {
+    let classes = |src: &str| {
+        let out = html(src);
+        let pre = out
+            .split("<pre")
+            .nth(1)
+            .and_then(|t| t.split('>').next())
+            .unwrap_or("")
+            .to_string();
+        let code = out
+            .split("<code")
+            .nth(1)
+            .and_then(|t| t.split('>').next())
+            .unwrap_or("")
+            .to_string();
+        (pre, code)
+    };
+    let fence = |info: &str| format!("```{info}\ncode line\n```");
+
+    // Resolves: lowercased, on both elements.
+    assert_eq!(
+        classes(&fence("rust")),
+        (
+            " class=\"language-rust\"".into(),
+            " class=\"language-rust\"".into()
+        )
+    );
+    assert_eq!(
+        classes(&fence("JS")),
+        (
+            " class=\"language-js\"".into(),
+            " class=\"language-js\"".into()
+        )
+    );
+    // Unregistered but resolvable keeps its own name.
+    assert_eq!(
+        classes(&fence("scoria-made-up")),
+        (
+            " class=\"language-scoria-made-up\"".into(),
+            " class=\"language-scoria-made-up\"".into()
+        )
+    );
+    // The first word only.
+    assert_eq!(classes(&fence("foo bar")).0, " class=\"language-foo\"");
+
+    // Does not resolve: `language-none` on the pre, the raw word kept on the
+    // code. These are real fence words, not curiosities.
+    for info in ["c#", "f#", "C++", ".net", "{python}", "a~b"] {
+        let (pre, code) = classes(&fence(info));
+        assert_eq!(pre, " class=\"language-none\"", "{info}");
+        assert_eq!(
+            code,
+            format!(" class=\"language-{info} language-none\""),
+            "{info}"
+        );
+    }
+
+    // No info string, no class at all.
+    assert_eq!(classes(&fence("")), (String::new(), String::new()));
+
+    // CommonMark has neither rule: the word goes on the `code` as written, and
+    // the `pre` carries nothing.
+    let cm = render_html_with(
+        &scoria_markdown::parse_with(&fence("C#"), &scoria_markdown::Options::commonmark()),
+        &HtmlOptions::commonmark(),
+    );
+    assert!(cm.contains("<pre><code class=\"language-C#\">"), "{cm}");
+}
+
+/// Obsidian's underscore emphasis is looser than CommonMark's.
+///
+/// An underscore run may *open* inside a word, which CommonMark forbids, and a
+/// run of two or more may close there as well. A single `_` still cannot close
+/// before an alphanumeric, and that is what keeps ordinary identifiers out of
+/// it. Observed against Obsidian 1.14.4 (tools/probe-gen, 2026-10-29).
+#[test]
+fn underscore_emphasis_opens_inside_a_word() {
+    // Emphasised, where CommonMark leaves all four literal.
+    assert_eq!(html("a_b_"), "<p>a<em>b</em></p>\n");
+    assert_eq!(html("__a__b"), "<p><strong>a</strong>b</p>\n");
+    assert_eq!(html("a__b__"), "<p>a<strong>b</strong></p>\n");
+    assert_eq!(html("x__y__z"), "<p>x<strong>y</strong>z</p>\n");
+
+    // A single `_` cannot close before an alphanumeric, so identifiers and
+    // ordinary prose are untouched -- the whole reason this is safe.
+    for src in [
+        "snake_case_word",
+        "a_b_c",
+        "_a_b",
+        "mid_dle",
+        "CONST_NAME_HERE",
+        "a_b_c_d_e",
+        "file_name.txt",
+        "a_1_b",
+        "1_2_3",
+    ] {
+        assert_eq!(html(src), format!("<p>{src}</p>\n"), "{src}");
+    }
+
+    // The ordinary forms still work.
+    assert_eq!(html("_both_"), "<p><em>both</em></p>\n");
+    assert_eq!(html("__dunder__"), "<p><strong>dunder</strong></p>\n");
+
+    // CommonMark mode keeps CommonMark's rule: this is a parse-level quirk, so
+    // it needs `Options::commonmark`, not just the plain renderer.
+    let cm = |src: &str| {
+        render_html_with(
+            &scoria_markdown::parse_with(src, &scoria_markdown::Options::commonmark()),
+            &HtmlOptions::commonmark(),
+        )
+    };
+    assert_eq!(cm("a_b_"), "<p>a_b_</p>\n");
+    assert_eq!(cm("x__y__z"), "<p>x__y__z</p>\n");
+    assert_eq!(cm("_both_"), "<p><em>both</em></p>\n");
+}
+
+/// A link ends at the first child that is a link of its own.
+///
+/// Obsidian never nests `<a>`: it closes the outer link there and does not
+/// reopen it, so the text after that child is not part of the link. A tag
+/// counts, being an anchor too; an embed or an image does not, being a
+/// `<span>`. Observed against Obsidian 1.14.4 (tools/probe-gen, 2026-10-29).
+#[test]
+fn a_link_ends_at_a_link_inside_it() {
+    // `md ` keeps its trailing space inside the anchor, the wikilink is a
+    // sibling anchor, and ` link` is outside both.
+    let rendered = html("[md [[Links]] link](https://e.com)");
+    assert!(
+        rendered.contains(r#">md </a><a data-href="Links""#),
+        "{rendered}"
+    );
+    assert!(rendered.ends_with("Links</a> link</p>\n"), "{rendered}");
+    // Never two anchors deep.
+    assert_eq!(rendered.matches("<a ").count(), 2, "{rendered}");
+
+    // Once closed it stays closed: the text between two wikilinks is bare too.
+    let two = html("[md [[Links]] a [[Other]] b](https://e.com)");
+    assert!(two.ends_with("Other</a> b</p>\n"), "{two}");
+    assert!(two.contains("</a> a <a"), "{two}");
+
+    // A tag is an anchor, so it ends the link as well.
+    let tag = html("[md #tag link](https://e.com)");
+    // `r##` because the string itself contains `"#`.
+    assert!(tag.contains(r##">md </a><a href="#tag""##), "{tag}");
+
+    // An embed and an image are spans, so the link continues through them.
+    for src in [
+        "[md ![[pic.png]] link](https://e.com)",
+        "[md ![alt](a.png) link](https://e.com)",
+    ] {
+        let out = html(src);
+        assert!(out.contains(" link</a>"), "{src}: {out}");
+    }
+
+    // Nothing to split: the ordinary link is untouched.
+    assert_eq!(html("[plain](https://e.com)").matches("</a>").count(), 1);
+    // The split is Obsidian's rule, so CommonMark output is left as it was and
+    // still nests. Wikilinks do not occur in the CommonMark suite.
+    assert_eq!(
+        plain_html("[md [[Links]] link](https://e.com)")
+            .matches("</a>")
+            .count(),
+        2
+    );
+}
+
 /// A callout's title is block-parsed, not inline-parsed.
 ///
 /// Obsidian runs the title through the block parser, so a heading, a list or a
