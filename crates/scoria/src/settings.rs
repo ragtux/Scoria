@@ -275,6 +275,12 @@ struct Typed {
     read: fn(&VaultState) -> String,
     /// The file with this setting set to `value`.
     write: fn(&VaultState, &str) -> SettingChange,
+    /// Which option a stored value that is none of `options`' own values
+    /// stands for, for the one key that stores a shape rather than an enum:
+    /// `attachmentFolderPath` writes `./Attachments` for its subfolder
+    /// option, but `./Pictures` is that same option with another name typed
+    /// into the row it reveals.
+    shape: Option<fn(&str) -> usize>,
 }
 
 impl Typed {
@@ -285,11 +291,18 @@ impl Typed {
         self.options
             .iter()
             .position(|(_, v)| *v == value)
+            .or_else(|| self.shape.map(|shape| shape(&value)))
             .unwrap_or(0)
     }
 
     fn label(&self, state: &VaultState) -> &'static str {
         self.options[self.selected(state)].0
+    }
+
+    /// What the selected option writes, which is how a dependent row is
+    /// keyed off the option rather than off the stored string's shape.
+    fn value(&self, state: &VaultState) -> &'static str {
+        self.options[self.selected(state)].1
     }
 }
 
@@ -327,6 +340,7 @@ macro_rules! app_choice {
                 next.$field = Some(value.to_string());
                 SettingChange::App(next)
             },
+            shape: None,
         };
     };
 }
@@ -349,6 +363,7 @@ macro_rules! appearance_choice {
                 next.$field = Some(value.to_string());
                 SettingChange::Appearance(next)
             },
+            shape: None,
         };
     };
 }
@@ -416,6 +431,45 @@ appearance_choice!(
     ]
 );
 
+/// The four attachment locations, each storing a different *shape* of
+/// `attachmentFolderPath` rather than an enum: the `<select>`'s own values
+/// (`root`, `current`, `subfolder`, `folder`) never reach the file. Picking
+/// an option writes at once, so with an empty `app.json` the first pick
+/// leaves exactly `{"attachmentFolderPath": "/"}` — which is why `read`
+/// hands back the stored string as it stands, `""` and all, rather than
+/// filling in the default: an absent key is not the `/` the first option
+/// writes. Observed on Obsidian 1.14.5; see
+/// [[Specification#The attachment-location dropdown]].
+const ATTACHMENT_LOCATION: Typed = Typed {
+    key: "attachmentFolderPath",
+    options: &[
+        ("Vault folder", "/"),
+        ("Same folder as current file", "./"),
+        ("In subfolder under current folder", "./Attachments"),
+        ("In the folder specified below", "Attachments"),
+    ],
+    read: |state| {
+        state
+            .app()
+            .attachment_folder_path
+            .clone()
+            .unwrap_or_default()
+    },
+    write: |state, value| {
+        let mut next = state.app().clone();
+        next.attachment_folder_path = Some(value.to_string());
+        SettingChange::App(next)
+    },
+    // A name typed into either dependent row leaves the shape the option
+    // chose, so the shape is what the row is read back from.
+    shape: Some(|value| match value {
+        "" | "/" => 0,
+        "./" => 1,
+        v if v.starts_with("./") => 2,
+        _ => 3,
+    }),
+};
+
 /// `livePreview` is a two-option dropdown over a boolean key, so it reads
 /// and writes `true` and `false` as the strings its options name.
 const LIVE_PREVIEW: Typed = Typed {
@@ -427,6 +481,7 @@ const LIVE_PREVIEW: Typed = Typed {
         next.live_preview = Some(value == "true");
         SettingChange::App(next)
     },
+    shape: None,
 };
 
 /// Every dropdown that writes.
@@ -438,6 +493,7 @@ const TYPED_ALL: &[Typed] = &[
     TRASH_OPTION,
     BASE_COLOR_SCHEME,
     LIVE_PREVIEW,
+    ATTACHMENT_LOCATION,
 ];
 
 /// A slider: the key, the range Obsidian's own control offers, and the
@@ -462,13 +518,17 @@ struct TextField {
     /// What Obsidian shows in the empty field, which is also what it writes
     /// for some of them when the field is cleared.
     placeholder: &'static str,
+    /// What the typed name is stored behind: empty for a field that is the
+    /// whole value, `./` for the Subfolder name row, which is one half of
+    /// `attachmentFolderPath`.
+    prefix: &'static str,
     read: fn(&VaultState) -> String,
     write: fn(&VaultState, &str) -> SettingChange,
 }
 
 impl TextField {
     fn same(&self, other: &TextField) -> bool {
-        self.key == other.key
+        self.key == other.key && self.prefix == other.prefix
     }
 }
 
@@ -501,6 +561,7 @@ const TAB_SIZE: Number = Number {
 const NEW_FILE_FOLDER: TextField = TextField {
     key: "newFileFolderPath",
     placeholder: "Example: folder 1/folder 2",
+    prefix: "",
     read: |state| state.app().new_file_folder_path.clone().unwrap_or_default(),
     write: |state, value| {
         let mut next = state.app().clone();
@@ -515,6 +576,7 @@ const NEW_FILE_FOLDER: TextField = TextField {
 const ATTACHMENT_FOLDER: TextField = TextField {
     key: "attachmentFolderPath",
     placeholder: "Attachments",
+    prefix: "",
     read: |state| {
         state
             .app()
@@ -534,11 +596,41 @@ const ATTACHMENT_FOLDER: TextField = TextField {
     },
 };
 
+/// The other half of `attachmentFolderPath`: the name under the note's own
+/// folder, which the subfolder option reveals a row for. Typing
+/// `Attachments` into it stored `./Attachments`, so the row holds what
+/// follows the `./` and writes the prefix back. Clearing this one is
+/// unprobed; it writes the placeholder, as its sibling row does.
+const SUBFOLDER_NAME: TextField = TextField {
+    key: "attachmentFolderPath",
+    placeholder: "Attachments",
+    prefix: "./",
+    read: |state| {
+        state
+            .app()
+            .attachment_folder_path
+            .as_deref()
+            .and_then(|v| v.strip_prefix(SUBFOLDER_NAME.prefix))
+            .unwrap_or_default()
+            .to_string()
+    },
+    write: |state, value| {
+        let mut next = state.app().clone();
+        let value = if value.is_empty() {
+            SUBFOLDER_NAME.placeholder
+        } else {
+            value
+        };
+        next.attachment_folder_path = Some(format!("{}{value}", SUBFOLDER_NAME.prefix));
+        SettingChange::App(next)
+    },
+};
+
 /// Every slider and text field that writes, for the tests that walk them.
 #[cfg(test)]
 const NUMBERS: &[Number] = &[FONT_SIZE, TAB_SIZE];
 #[cfg(test)]
-const TEXTS: &[TextField] = &[NEW_FILE_FOLDER, ATTACHMENT_FOLDER];
+const TEXTS: &[TextField] = &[NEW_FILE_FOLDER, ATTACHMENT_FOLDER, SUBFOLDER_NAME];
 
 /// A config file with one setting changed, for the workspace to write.
 #[derive(Clone, Debug, PartialEq)]
@@ -688,6 +780,38 @@ impl Honored {
             Honored::OnRestart => Some("on restart"),
             Honored::No => Some("not in Scoria yet"),
         }
+    }
+}
+
+/// Whether an open dropdown swallows this click, which closes it and spends
+/// the click: the one gesture does not also do what it landed on. The next
+/// click, with nothing open, goes through.
+fn popover_swallows_click(menu: &mut Option<&'static str>) -> bool {
+    menu.take().is_some()
+}
+
+/// What Escape closes, innermost first.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Escape {
+    /// The chord capture waiting for the next key press.
+    Capture,
+    /// An open dropdown's option list.
+    Popover,
+    /// The modal itself, when nothing inside it is open.
+    Modal,
+}
+
+/// Escape takes the innermost thing open: the chord capture, then an open
+/// dropdown, and the modal only when neither is. Obsidian's dropdown is a
+/// native `<select>`, so Escape over an open option list closes the list
+/// and leaves the dialog where it was.
+fn escape_closes(capturing: bool, popover_open: bool) -> Escape {
+    if capturing {
+        Escape::Capture
+    } else if popover_open {
+        Escape::Popover
+    } else {
+        Escape::Modal
     }
 }
 
@@ -1066,15 +1190,23 @@ impl SettingsView {
     }
 
     fn close_action(&mut self, _: &Close, window: &mut Window, cx: &mut Context<Self>) {
-        // Escape while a chord is being captured backs out of the capture,
-        // not the modal.
-        if self.capturing.take().is_some() {
-            self.focus_tab(window, cx);
-            cx.notify();
-            return;
+        match escape_closes(self.capturing.is_some(), self.menu.is_some()) {
+            // Escape while a chord is being captured backs out of the
+            // capture, not the modal.
+            Escape::Capture => {
+                self.capturing = None;
+                self.focus_tab(window, cx);
+                cx.notify();
+            }
+            Escape::Popover => {
+                self.menu = None;
+                cx.notify();
+            }
+            Escape::Modal => {
+                self.dismiss_open_controls(cx);
+                cx.emit(SettingsEvent::Close);
+            }
         }
-        self.dismiss_open_controls(cx);
-        cx.emit(SettingsEvent::Close);
     }
 
     // ----- hotkeys ----------------------------------------------------------
@@ -1193,6 +1325,23 @@ impl SettingsView {
         } else if had_menu {
             cx.notify();
         }
+    }
+
+    /// Whether this click was spent closing an open dropdown, and so must
+    /// not also do whatever it landed on.
+    ///
+    /// Obsidian's dropdown is a native `<select>`, whose option list is the
+    /// platform's own window: the click that dismisses it never reaches the
+    /// page, so the toggle under it does not flip. Scoria's popover is part
+    /// of the same window, so the rule has to be spelled out — every
+    /// clickable in the modal asks this first, the popover's own option rows
+    /// excepted, since a click there is the pick.
+    fn click_dismissed_a_popover(&mut self, cx: &mut Context<Self>) -> bool {
+        if !popover_swallows_click(&mut self.menu) {
+            return false;
+        }
+        cx.notify();
+        true
     }
 
     /// Makes the change a click on a control asks for, after the text
@@ -1544,13 +1693,6 @@ impl SettingsView {
 
     fn files_items(state: &VaultState) -> Vec<Item> {
         let app = &state.app();
-        let attachments = app.attachment_folder_path.as_deref().unwrap_or("/");
-        let (attachment_location, attachment_path, subfolder) = match attachments {
-            "/" | "" => ("Vault folder", "", ""),
-            "./" => ("Same folder as current file", "", ""),
-            p if p.starts_with("./") => ("In subfolder under current folder", "", &p[2..]),
-            p => ("In the folder specified below", p, ""),
-        };
         let excluded = app
             .user_ignore_filters
             .as_ref()
@@ -1573,7 +1715,23 @@ impl SettingsView {
                 NEW_FILE_LOCATION,
             ),
         ];
-        if app.new_file_location.as_deref() == Some("folder") {
+        // Both location dropdowns reveal a row for the option that needs a
+        // name typed into it, and hide it for the options that do not —
+        // keyed off the selected option rather than off the stored string,
+        // so the row appears the moment the option is picked.
+        //
+        // The attachment rows keep their `not_yet()` tag even though the
+        // probe settled their labels and stored values and the dropdown now
+        // writes the four shapes Obsidian writes. `Honored::No` is "not read
+        // at all yet: the value is written for Obsidian", and that is still
+        // exactly the case: `scoria_vault::ops::attachment_path` knows where
+        // each shape sends a file, but nothing calls it, because Scoria
+        // creates no attachments. A function with no caller honours nothing,
+        // and the tag the row shows reads "not in Scoria yet", which would be
+        // a lie to take off here. It comes off with the first caller.
+        // Contrast "Default location for new notes" above, which carries no
+        // tag because `Vault::new_note_folder` really does read it.
+        if NEW_FILE_LOCATION.value(state) == "folder" {
             items.push(field(
                 "Folder to create new notes in",
                 "Newly created notes will appear in this folder.",
@@ -1582,15 +1740,16 @@ impl SettingsView {
             ));
         }
         items.push(
-            dropdown(
+            choice(
                 "Default location for new attachments",
                 "Where newly added attachments are placed.",
-                attachment_location,
+                state,
+                ATTACHMENT_LOCATION,
             )
             .not_yet(),
         );
-        if !attachment_path.is_empty() {
-            items.push(
+        match ATTACHMENT_LOCATION.value(state) {
+            "Attachments" => items.push(
                 field(
                     "Attachment folder path",
                     "Place newly created attachment files, such as images created via drag-and-drop or audio recordings, in this folder.",
@@ -1598,14 +1757,17 @@ impl SettingsView {
                     ATTACHMENT_FOLDER,
                 )
                 .not_yet(),
-            );
-        }
-        if !subfolder.is_empty() {
-            items.push(text(
-                "Subfolder name",
-                "If your file is in “vault/folder”, and you set subfolder name to “attachments”, attachments will be saved to “vault/folder/attachments”.",
-                subfolder.to_string(),
-            ).not_yet());
+            ),
+            "./Attachments" => items.push(
+                field(
+                    "Subfolder name",
+                    "If your file is in “vault/folder”, and you set subfolder name to “attachments”, attachments will be saved to “vault/folder/attachments”.",
+                    state,
+                    SUBFOLDER_NAME,
+                )
+                .not_yet(),
+            ),
+            _ => {}
         }
         items.extend([
             heading("Links"),
@@ -1877,7 +2039,12 @@ impl SettingsView {
             .text_color(if active { theme.text } else { theme.text_muted })
             .when(active, |d| d.bg(theme.bg_active))
             .hover(|s| s.bg(theme.bg_alt))
-            .on_click(cx.listener(move |this, _, window, cx| this.select_tab(tab, window, cx)))
+            .on_click(cx.listener(move |this, _, window, cx| {
+                if this.click_dismissed_a_popover(cx) {
+                    return;
+                }
+                this.select_tab(tab, window, cx)
+            }))
             .child(tab.name())
     }
 
@@ -1915,6 +2082,9 @@ impl SettingsView {
                     .id(SharedString::from(format!("settings-toggle-{}", item.name)))
                     .cursor_pointer()
                     .on_click(cx.listener(move |this, _, window, cx| {
+                        if this.click_dismissed_a_popover(cx) {
+                            return;
+                        }
                         this.toggle_flag(flag.clone(), window, cx)
                     }))
                     .child(toggle)
@@ -1952,10 +2122,15 @@ impl SettingsView {
                                 // click; this one has to survive it, or the
                                 // menu would shut again as the click bubbles.
                                 cx.stop_propagation();
+                                // A click with a popover open is spent
+                                // closing it — this one's own second click
+                                // included, which is how the property type
+                                // menu closes too.
+                                if this.click_dismissed_a_popover(cx) {
+                                    return;
+                                }
                                 this.commit_field(cx);
-                                // A second click closes it, as the property
-                                // type menu does.
-                                this.menu = (this.menu != Some(typed.key)).then_some(typed.key);
+                                this.menu = Some(typed.key);
                                 cx.notify();
                             }))
                             .child(shown),
@@ -2050,6 +2225,9 @@ impl SettingsView {
                         // be read as a click away from the field it just
                         // opened, closing it again on the same frame.
                         cx.stop_propagation();
+                        if this.click_dismissed_a_popover(cx) {
+                            return;
+                        }
                         this.edit_field(field, window, cx)
                     }))
                     .into_any_element()
@@ -2126,6 +2304,9 @@ impl SettingsView {
                                     theme.bg_active
                                 })
                                 .on_click(cx.listener(move |this, _, window, cx| {
+                                    if this.click_dismissed_a_popover(cx) {
+                                        return;
+                                    }
                                     this.set_number(number, step, window, cx)
                                 }))
                         }),
@@ -2562,6 +2743,9 @@ impl Render for SettingsView {
                                     .text_color(theme.text_muted)
                                     .hover(|s| s.bg(theme.bg_alt))
                                     .on_click(cx.listener(|this, _, _, cx| {
+                                        if this.click_dismissed_a_popover(cx) {
+                                            return;
+                                        }
                                         this.dismiss_open_controls(cx);
                                         cx.emit(SettingsEvent::Close)
                                     }))
@@ -2803,7 +2987,14 @@ mod tests {
         }
         for field in TEXTS {
             let written = one_key(&(field.write)(&state, "Journal"), field.key, field.key);
-            assert_eq!(written, serde_json::json!("Journal"));
+            // Every field but the Subfolder name row is the whole value;
+            // that one is the half after the `./` it writes back.
+            assert_eq!(
+                written,
+                serde_json::json!(format!("{}Journal", field.prefix)),
+                "{}",
+                field.key
+            );
         }
     }
 
@@ -2836,12 +3027,226 @@ mod tests {
             panic!("wrote the wrong file");
         };
         assert_eq!(app.attachment_folder_path.as_deref(), Some("Attachments"));
+        // The Subfolder name row is the same key behind a `./`, so an empty
+        // one leaves the value the subfolder option itself writes. Obsidian
+        // clearing this row is unprobed; the sibling's rule is the guess.
+        let change = (SUBFOLDER_NAME.write)(&state, "");
+        let SettingChange::App(app) = &change else {
+            panic!("wrote the wrong file");
+        };
+        assert_eq!(app.attachment_folder_path.as_deref(), Some("./Attachments"));
         // The other field keeps an empty string, as Obsidian does for it.
         let change = (NEW_FILE_FOLDER.write)(&state, "");
         let SettingChange::App(app) = &change else {
             panic!("wrote the wrong file");
         };
         assert_eq!(app.new_file_folder_path.as_deref(), Some(""));
+    }
+
+    /// Every row the Files and links tab builds, as a name and what its
+    /// control shows, for the tests that check which dependent row an
+    /// option reveals.
+    fn files_rows(state: &VaultState) -> Vec<(String, String)> {
+        SettingsView::files_items(state)
+            .into_iter()
+            .map(|item| {
+                let value = match &item.control {
+                    Control::Dropdown(v)
+                    | Control::Text(v)
+                    | Control::Slider(v)
+                    | Control::Button(v) => v.to_string(),
+                    Control::Toggle(on) => on.to_string(),
+                    Control::None => String::new(),
+                };
+                (item.name.to_string(), value)
+            })
+            .collect()
+    }
+
+    fn row(state: &VaultState, name: &str) -> Option<String> {
+        files_rows(state)
+            .into_iter()
+            .find(|(n, _)| n == name)
+            .map(|(_, v)| v)
+    }
+
+    /// The spec's option table, row by row: the label each of the four
+    /// options shows, the `attachmentFolderPath` it writes, and the one
+    /// dependent row it reveals.
+    #[test]
+    fn each_attachment_location_writes_its_shape_and_reveals_its_row() {
+        let (dir, mut state) = vault();
+        let table = [
+            ("Vault folder", "/", None),
+            ("Same folder as current file", "./", None),
+            (
+                "In subfolder under current folder",
+                "./Attachments",
+                Some(("Subfolder name", "Attachments")),
+            ),
+            (
+                "In the folder specified below",
+                "Attachments",
+                Some(("Attachment folder path", "Attachments")),
+            ),
+        ];
+        assert_eq!(
+            ATTACHMENT_LOCATION.options.len(),
+            table.len(),
+            "the dropdown has four options"
+        );
+        for (ix, (label, value, dependent)) in table.into_iter().enumerate() {
+            assert_eq!(ATTACHMENT_LOCATION.options[ix], (label, value));
+            state
+                .apply_setting(&(ATTACHMENT_LOCATION.write)(&state, value))
+                .unwrap();
+            state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+            assert_eq!(
+                state.app().attachment_folder_path.as_deref(),
+                Some(value),
+                "{label} wrote the wrong value"
+            );
+            assert_eq!(
+                row(&state, "Default location for new attachments").as_deref(),
+                Some(label),
+                "{label} is not what the row shows"
+            );
+            for name in ["Attachment folder path", "Subfolder name"] {
+                let shown = row(&state, name);
+                match dependent {
+                    Some((revealed, text)) if revealed == name => {
+                        assert_eq!(shown.as_deref(), Some(text), "{label} revealed {name}")
+                    }
+                    _ => assert!(shown.is_none(), "{label} revealed {name}: {shown:?}"),
+                }
+            }
+        }
+    }
+
+    /// The three dependent rows are the ones Obsidian builds but does not
+    /// show at the default settings, and a vault with no `app.json` is that
+    /// default.
+    #[test]
+    fn the_dependent_rows_are_hidden_until_an_option_reveals_them() {
+        let (dir, state) = vault();
+        assert_eq!(ATTACHMENT_LOCATION.label(&state), "Vault folder");
+        assert_eq!(NEW_FILE_LOCATION.label(&state), "Vault folder");
+        for hidden in [
+            "Attachment folder path",
+            "Subfolder name",
+            "Folder to create new notes in",
+        ] {
+            assert!(row(&state, hidden).is_none(), "{hidden} was built");
+        }
+        // An absent key is not the `/` the first option writes — which is
+        // what makes the first pick of that option write at all, rather
+        // than read as the value already there.
+        assert_eq!((ATTACHMENT_LOCATION.read)(&state), "");
+        assert_ne!(
+            (ATTACHMENT_LOCATION.read)(&state),
+            ATTACHMENT_LOCATION.options[0].1
+        );
+        state
+            .apply_setting(&(ATTACHMENT_LOCATION.write)(&state, "/"))
+            .unwrap();
+        let written = std::fs::read_to_string(dir.path().join(".obsidian/app.json")).unwrap();
+        assert_eq!(
+            serde_json::from_str::<Value>(&written).unwrap(),
+            json!({ "attachmentFolderPath": "/" }),
+            "the first pick left {written}"
+        );
+    }
+
+    /// A name typed into either dependent row leaves a value that is none
+    /// of the four the options write, and that value has to come back as
+    /// the option it was typed under.
+    #[test]
+    fn a_typed_attachment_path_reads_back_into_the_row_it_came_from() {
+        let (dir, mut state) = vault();
+        let table = [
+            (
+                ATTACHMENT_FOLDER,
+                "att/deep/new",
+                "att/deep/new",
+                "In the folder specified below",
+                "Attachment folder path",
+            ),
+            (
+                SUBFOLDER_NAME,
+                "Pictures",
+                "./Pictures",
+                "In subfolder under current folder",
+                "Subfolder name",
+            ),
+        ];
+        for (field, typed, stored, label, name) in table {
+            state.apply_setting(&(field.write)(&state, typed)).unwrap();
+            state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+            assert_eq!(state.app().attachment_folder_path.as_deref(), Some(stored));
+            assert_eq!(
+                row(&state, "Default location for new attachments").as_deref(),
+                Some(label),
+                "{stored} showed the wrong option"
+            );
+            assert_eq!(row(&state, name).as_deref(), Some(typed));
+        }
+    }
+
+    /// "Default location for new notes" is the three-option dropdown over
+    /// `newFileLocation` the 2026-10-25 capture recorded — `root`, `current`
+    /// and `folder` — and only `folder` reveals the folder row. The spec's
+    /// Files-and-links table calls it "the same four values as attachments",
+    /// which the same capture contradicts.
+    #[test]
+    fn each_new_note_location_reveals_only_its_own_row() {
+        let (dir, mut state) = vault();
+        assert_eq!(
+            NEW_FILE_LOCATION.options,
+            &[
+                ("Vault folder", "root"),
+                ("Same folder as current file", "current"),
+                ("In the folder specified below", "folder"),
+            ][..]
+        );
+        for (label, value) in NEW_FILE_LOCATION.options {
+            state
+                .apply_setting(&(NEW_FILE_LOCATION.write)(&state, value))
+                .unwrap();
+            state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+            assert_eq!(
+                row(&state, "Default location for new notes").as_deref(),
+                Some(*label)
+            );
+            assert_eq!(
+                row(&state, "Folder to create new notes in").is_some(),
+                *value == "folder",
+                "{label} and its folder row"
+            );
+        }
+    }
+
+    /// A click with a dropdown open is spent closing it: Obsidian's native
+    /// `<select>` swallows the first outside click, so the toggle under the
+    /// option list does not flip.
+    #[test]
+    fn a_click_with_a_dropdown_open_is_spent_closing_it() {
+        let mut menu = Some(ATTACHMENT_LOCATION.key);
+        assert!(popover_swallows_click(&mut menu));
+        assert_eq!(menu, None, "the click closed the popover");
+        assert!(
+            !popover_swallows_click(&mut menu),
+            "the next click goes through"
+        );
+    }
+
+    /// Escape takes the innermost thing open, so a dropdown closes without
+    /// taking the modal with it.
+    #[test]
+    fn escape_closes_the_innermost_thing_open() {
+        assert_eq!(escape_closes(false, false), Escape::Modal);
+        assert_eq!(escape_closes(false, true), Escape::Popover);
+        assert_eq!(escape_closes(true, false), Escape::Capture);
+        assert_eq!(escape_closes(true, true), Escape::Capture);
     }
 
     #[test]

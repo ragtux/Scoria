@@ -24,7 +24,7 @@
 use crate::fold::{self, Foldable};
 use crate::math::SpaceWidths;
 use crate::preview::{self, DisplayLine, Piece};
-use crate::properties::{self, Field, Part, Target};
+use crate::properties::{self, Field, Part, PillStep, Target};
 use crate::reading::model::{build_widgets, BuildOptions, EmbedSource, LinkTarget, RBlock, Widget};
 use crate::reading::view::{LinkHandler, Renderer, ToggleHandler};
 use crate::reading::view::{PropertiesHost, PropertyAction};
@@ -599,6 +599,12 @@ pub struct Editor {
     /// editor's keys go to the field instead of the document, and the
     /// document changes once on commit rather than per keystroke.
     property_field: Option<Field>,
+    /// The pill a Backspace in the open list field selected, by item index.
+    /// Obsidian's Backspace takes two presses — the first moves focus from
+    /// the trailing input to the last pill, the second removes it — so the
+    /// selection between them lives here. It belongs to `property_field`
+    /// and goes with it, and anything but another Backspace clears it.
+    selected_pill: Option<usize>,
     /// Whether the properties block is collapsed.
     properties_folded: bool,
     /// Callouts whose fold state the reader flipped, by title id — the same
@@ -713,6 +719,7 @@ impl Editor {
             property_types: PropertyTypes::default(),
             properties_in_document: PropertiesInDocument::default(),
             property_field: None,
+            selected_pill: None,
             properties_folded: false,
             callout_folds: HashSet::new(),
             foldables: Arc::new(Vec::new()),
@@ -2563,7 +2570,7 @@ impl Editor {
         // them to it. It carries a caret and no selection, so there is
         // nothing for Ctrl+A to take; what it must not do is select the
         // document behind the field, which the next Ctrl+X would delete.
-        if self.active_field().is_some() {
+        if self.field_kind().is_some() {
             return;
         }
         self.buf.select_all();
@@ -2573,8 +2580,14 @@ impl Editor {
     // ----- editing actions -------------------------------------------------------
 
     fn backspace(&mut self, _: &Backspace, window: &mut Window, cx: &mut Context<Self>) {
+        // A properties field has the pill gesture behind it, so it takes the
+        // press through its own path.
+        if self.property_field.is_some() {
+            self.backspace_property_field(window, cx);
+            return;
+        }
         if let Some(f) = self.active_field() {
-            f.backspace();
+            let _ = f.backspace(None);
             cx.notify();
             return;
         }
@@ -2637,8 +2650,11 @@ impl Editor {
         if self.accept_suggestion(Accept::Whole, window, cx) {
             return;
         }
-        // Enter in a properties field commits it, as Obsidian's does.
-        if self.commit_property_field(Some(window), cx) {
+        // Enter in a properties field commits it, as Obsidian's does, and in
+        // a list's trailing input leaves that input focused for the next
+        // item.
+        if self.property_field.is_some() {
+            self.enter_property_field(window, cx);
             return;
         }
         // In a table cell it commits and drops into the cell below, or just
@@ -2727,7 +2743,7 @@ impl Editor {
     }
 
     fn copy(&mut self, _: &Copy, _: &mut Window, cx: &mut Context<Self>) {
-        if self.active_field().is_some() {
+        if self.field_kind().is_some() {
             return;
         }
         let ranges = self.buf.copy_ranges();
@@ -2737,7 +2753,7 @@ impl Editor {
     }
 
     fn cut(&mut self, _: &Cut, window: &mut Window, cx: &mut Context<Self>) {
-        if self.active_field().is_some() {
+        if self.field_kind().is_some() {
             return;
         }
         let ranges = self.buf.copy_ranges();
@@ -3597,6 +3613,7 @@ impl Editor {
     /// `body\n`).
     pub fn clear_properties(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         self.property_field = None;
+        self.selected_pill = None;
         let Some(block) = self.properties() else {
             return;
         };
@@ -3619,6 +3636,9 @@ impl Editor {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
+        // A click is not a Backspace: whatever pill one selected, it loses
+        // the selection.
+        self.selected_pill = None;
         match action {
             PropertyAction::Edit { target, part } => {
                 self.property_menu = None;
@@ -3719,7 +3739,14 @@ impl Editor {
     /// a field was open.
     /// The field the keys go to while one is open: a property row's, or a
     /// table cell's.
+    ///
+    /// Taking the field drops a selected pill: the selection is a step in
+    /// the two-press Backspace gesture and survives nothing else, so typing
+    /// or moving the caret puts focus back in the input. The gates that only
+    /// ask whether a field is open go through [`Editor::field_kind`] instead,
+    /// to leave the selection alone.
     fn active_field(&mut self) -> Option<&mut Field> {
+        self.selected_pill = None;
         match self.property_field.as_mut() {
             Some(f) => Some(f),
             None => self.table_field.as_mut().map(|c| &mut c.field),
@@ -3849,11 +3876,75 @@ impl Editor {
         self.table_field.is_some()
     }
 
+    /// Enter in a properties field. It commits, and in the trailing input of
+    /// a list value Obsidian keeps that input focused so the next item can be
+    /// typed straight away — "Enter in the trailing input adds an item", with
+    /// the caret still there afterwards. The bytes are the commit's alone: a
+    /// freshly opened input writes nothing until it is typed into.
+    fn enter_property_field(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let again = match self.property_field.as_ref() {
+            Some(field) => match (field.key(), field.list.as_ref()) {
+                (Some(key), Some(list)) if list.index >= list.items.len() => Some(key.to_string()),
+                _ => None,
+            },
+            None => None,
+        };
+        self.commit_property_field(Some(window), cx);
+        // The row is read after the commit: its list has just grown by the
+        // item that was typed, and the new input appends after it.
+        if let Some(row) =
+            again.and_then(|key| self.property_rows().into_iter().find(|row| row.key == key))
+        {
+            self.property_field = Some(row.append_field());
+        }
+        cx.notify();
+    }
+
+    /// Backspace in a properties field: Obsidian's two-press pill gesture in
+    /// the trailing input of a list value, and a character delete anywhere
+    /// else. The first press moves focus to the last pill and writes
+    /// nothing, the second removes it through the same change the pill's own
+    /// remove control makes, and repeating walks backwards a pill at a time;
+    /// with the list empty the input has focus again and the press does
+    /// nothing (see [`properties::PillStep`]).
+    fn backspace_property_field(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let selected = self.selected_pill;
+        let Some(field) = self.property_field.as_mut() else {
+            return;
+        };
+        let key = field.key().map(str::to_string);
+        let step = field.backspace(selected);
+        self.selected_pill = match step {
+            PillStep::Select(ix) => Some(ix),
+            _ => None,
+        };
+        if let (PillStep::Remove(index), Some(key)) = (step, key) {
+            let change = self
+                .property_rows()
+                .into_iter()
+                .find(|row| row.key == key)
+                .and_then(|row| properties::remove_item(&row, index));
+            if let Some(change) = change {
+                self.apply_property_changes(&[change], Some(window), cx);
+            }
+            // The field carries the list as it was before the removal, so it
+            // is rebuilt from the row as it now stands: committing the stale
+            // snapshot would write the removed item back.
+            self.property_field = self
+                .property_rows()
+                .into_iter()
+                .find(|row| row.key == key)
+                .map(|row| row.append_field());
+        }
+        cx.notify();
+    }
+
     fn commit_property_field(
         &mut self,
         window: Option<&mut Window>,
         cx: &mut Context<Self>,
     ) -> bool {
+        self.selected_pill = None;
         let Some(field) = self.property_field.take() else {
             return false;
         };
@@ -3870,6 +3961,7 @@ impl Editor {
 
     /// Drops the open field without writing it.
     fn cancel_property_field(&mut self, cx: &mut Context<Self>) -> bool {
+        self.selected_pill = None;
         let had = self.property_field.take().is_some();
         if had {
             cx.notify();
@@ -4876,6 +4968,7 @@ impl Element for EditorElement {
             // drawn with its caret, and clicks come back as actions.
             let properties_host = PropertiesHost {
                 field: editor.property_field.clone(),
+                selected_pill: editor.selected_pill,
                 mode: editor.properties_in_document,
                 menu: editor.property_menu.clone(),
                 on_action: Rc::new({

@@ -454,20 +454,269 @@ pub enum ExplorerEvent {
     NewFolder {
         parent: String,
     },
+    /// "New canvas" and "New base" from a folder row, which take the folder
+    /// the click was on rather than the vault root the commands use.
+    NewCanvas {
+        folder: String,
+    },
+    NewBase {
+        folder: String,
+    },
     Rename(String),
     Move(String),
     Duplicate(String),
     Delete(String),
     /// "Bookmark...": a file or folder for the Bookmarks pane.
     Bookmark(String),
+    /// "Open to the right": a new tab group beside the active one showing
+    /// this file.
+    OpenToRight(String),
+    /// "Copy path": the vault-relative path onto the clipboard.
+    CopyPath(String),
+    /// "Open in default app": hand the file to the desktop.
+    OpenInDefaultApp(String),
+    /// "Search in folder": the Search pane scoped to this folder.
+    SearchInFolder(String),
     /// Escape in the tree: the keyboard goes back to the main area.
     LeaveFocus,
 }
 
-/// The right-click menu over a row.
+/// Obsidian's `data-section` on a menu item. Items are grouped by it in the
+/// order below, and a separator is drawn wherever the section changes — which
+/// is how the captured menus get their separators without any being written
+/// down one at a time ([[Specification#The file explorer's context menus]]).
+/// [`Section::Danger`] takes **two**: Obsidian emits an empty section before
+/// it, and both menus were captured with the two consecutive separators that
+/// leaves.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Section {
+    /// The folder row's and the empty space's creation items.
+    ActionPrimary,
+    /// The file row's "Open in..." items.
+    Open,
+    Action,
+    /// Obsidian leaves "Copy path" with no section at all.
+    Unsectioned,
+    System,
+    Danger,
+}
+
+/// One row of a context menu: what Obsidian draws, and what Scoria emits when
+/// it is clicked.
+struct MenuItem {
+    label: &'static str,
+    icon: &'static str,
+    section: Section,
+    event: ExplorerEvent,
+}
+
+/// What was right-clicked.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum Target {
+    /// A file row, by vault-relative path.
+    File(String),
+    /// A folder row; `""` is the vault root.
+    Folder(String),
+    /// The empty space below the last row, which Obsidian gives the four
+    /// `action-primary` items alone, rooted at the vault.
+    Blank,
+}
+
+/// The menu for a target, in Obsidian's order.
+///
+/// Four of the captured items are left out rather than drawn dead, because
+/// Scoria has no command behind them: **Open in new window** (no second
+/// window), **Merge entire file with...** (no merge), **Open version history**
+/// (no file history) and **Show in system explorer** (selecting a file in the
+/// desktop's file manager wants the D-Bus `FileManager1.ShowItems` call). A
+/// folder's **Make a copy** is out for the same reason: `Vault::duplicate`
+/// copies one file, and a folder needs a recursive copy with link rewriting.
+/// Listing a row that cannot run is what the command palette refuses to do,
+/// and the menu refuses it too; the gaps are entries in
+/// `docs/scoria/UI parity backlog.md`. Dropping the only item of a section
+/// drops its separator with it, so the `view` section's separator is absent
+/// here where the capture has it.
+///
+/// Obsidian's file row has no creation items at all — Scoria's menu used to
+/// offer "New note" and "New folder" on a file, which is the one thing here
+/// that was wrong rather than missing.
+fn menu_items(target: &Target) -> Vec<MenuItem> {
+    use ExplorerEvent as E;
+    use Section as S;
+    let item = |label, icon, section, event| MenuItem {
+        label,
+        icon,
+        section,
+        event,
+    };
+    match target {
+        Target::File(path) => vec![
+            item(
+                "Open in new tab",
+                "file-plus",
+                S::Open,
+                E::OpenInNewTab(path.clone()),
+            ),
+            item(
+                "Open to the right",
+                "separator-vertical",
+                S::Open,
+                E::OpenToRight(path.clone()),
+            ),
+            item(
+                "Make a copy",
+                "files",
+                S::Action,
+                E::Duplicate(path.clone()),
+            ),
+            item(
+                "Move file to...",
+                "folder-tree",
+                S::Action,
+                E::Move(path.clone()),
+            ),
+            item(
+                "Bookmark...",
+                "bookmark",
+                S::Action,
+                E::Bookmark(path.clone()),
+            ),
+            item(
+                "Copy path",
+                "clipboard",
+                S::Unsectioned,
+                E::CopyPath(path.clone()),
+            ),
+            item(
+                "Open in default app",
+                "arrow-up-right",
+                S::System,
+                E::OpenInDefaultApp(path.clone()),
+            ),
+            item("Rename...", "pen-line", S::Danger, E::Rename(path.clone())),
+            item("Delete", "trash-2", S::Danger, E::Delete(path.clone())),
+        ],
+        Target::Folder(folder) => vec![
+            // Obsidian draws `lucide-edit` here, which is the current
+            // `square-pen`; `lucide-edit-3` on Rename is `pen-line`. Both
+            // renames come from Lucide's own alias data, not a guess.
+            item(
+                "New note",
+                "square-pen",
+                S::ActionPrimary,
+                E::NewNote {
+                    folder: folder.clone(),
+                },
+            ),
+            item(
+                "New folder",
+                "folder-open",
+                S::ActionPrimary,
+                E::NewFolder {
+                    parent: folder.clone(),
+                },
+            ),
+            item(
+                "New canvas",
+                "layout-dashboard",
+                S::ActionPrimary,
+                E::NewCanvas {
+                    folder: folder.clone(),
+                },
+            ),
+            item(
+                "New base",
+                "layout-list",
+                S::ActionPrimary,
+                E::NewBase {
+                    folder: folder.clone(),
+                },
+            ),
+            item(
+                "Move folder to...",
+                "folder-tree",
+                S::Action,
+                E::Move(folder.clone()),
+            ),
+            item(
+                "Search in folder",
+                "folder-search",
+                S::Action,
+                E::SearchInFolder(folder.clone()),
+            ),
+            item(
+                "Bookmark...",
+                "bookmark",
+                S::Action,
+                E::Bookmark(folder.clone()),
+            ),
+            item(
+                "Copy path",
+                "clipboard",
+                S::Unsectioned,
+                E::CopyPath(folder.clone()),
+            ),
+            item(
+                "Rename...",
+                "pen-line",
+                S::Danger,
+                E::Rename(folder.clone()),
+            ),
+            item("Delete", "trash-2", S::Danger, E::Delete(folder.clone())),
+        ],
+        Target::Blank => vec![
+            item(
+                "New note",
+                "square-pen",
+                S::ActionPrimary,
+                E::NewNote {
+                    folder: String::new(),
+                },
+            ),
+            item(
+                "New folder",
+                "folder-open",
+                S::ActionPrimary,
+                E::NewFolder {
+                    parent: String::new(),
+                },
+            ),
+            item(
+                "New canvas",
+                "layout-dashboard",
+                S::ActionPrimary,
+                E::NewCanvas {
+                    folder: String::new(),
+                },
+            ),
+            item(
+                "New base",
+                "layout-list",
+                S::ActionPrimary,
+                E::NewBase {
+                    folder: String::new(),
+                },
+            ),
+        ],
+    }
+}
+
+/// How many separators sit above `item` given the section above it: one
+/// wherever the section changes, and two above [`Section::Danger`] for the
+/// empty section Obsidian puts there.
+fn separators_above(previous: Option<Section>, section: Section) -> usize {
+    match previous {
+        None => 0,
+        Some(p) if p == section => 0,
+        Some(_) if section == Section::Danger => 2,
+        Some(_) => 1,
+    }
+}
+
+/// The right-click menu, over a row or over the empty space below them.
 struct Menu {
     position: Point<Pixels>,
-    row: Row,
+    target: Target,
 }
 
 pub struct FileExplorer {
@@ -782,7 +1031,30 @@ impl FileExplorer {
             "any_expanded": self.tree.any_expanded(),
             "rows": shown,
             "rows_total": if total > shown.len() { Some(total) } else { None },
+            "menu": self.menu.as_ref().map(Self::describe_menu),
         })
+    }
+
+    /// The open context menu as the socket sees it: what it was opened on and
+    /// the rows a reader would see, `"---"` per separator. Without this a
+    /// harness can right-click but cannot read back what came up, which is
+    /// what kept the menus untestable from outside the process.
+    fn describe_menu(menu: &Menu) -> Value {
+        let (target, path) = match &menu.target {
+            Target::File(path) => ("file", path.as_str()),
+            Target::Folder(path) => ("folder", path.as_str()),
+            Target::Blank => ("blank", ""),
+        };
+        let mut items: Vec<Value> = Vec::new();
+        let mut previous = None;
+        for item in menu_items(&menu.target) {
+            for _ in 0..separators_above(previous, item.section) {
+                items.push(json!("---"));
+            }
+            previous = Some(item.section);
+            items.push(json!(item.label));
+        }
+        json!({ "target": target, "path": path, "items": items })
     }
 
     /// A click on a folder toggles it and puts the keyboard on it; a click
@@ -811,9 +1083,23 @@ impl FileExplorer {
 
     fn open_menu(&mut self, ix: usize, position: Point<Pixels>, cx: &mut Context<Self>) {
         if let Some(row) = self.tree.row(ix).cloned() {
-            self.menu = Some(Menu { position, row });
+            let target = match row.is_folder {
+                true => Target::Folder(row.path),
+                false => Target::File(row.path),
+            };
+            self.menu = Some(Menu { position, target });
             cx.notify();
         }
+    }
+
+    /// A right-click on the empty space below the last row: Obsidian's
+    /// four-item menu, rooted at the vault.
+    fn open_blank_menu(&mut self, position: Point<Pixels>, cx: &mut Context<Self>) {
+        self.menu = Some(Menu {
+            position,
+            target: Target::Blank,
+        });
+        cx.notify();
     }
 
     fn close_menu(&mut self, cx: &mut Context<Self>) {
@@ -825,55 +1111,7 @@ impl FileExplorer {
     fn render_menu(&mut self, cx: &mut Context<Self>) -> Option<gpui::AnyElement> {
         let menu = self.menu.as_ref()?;
         let theme = cx.global::<Theme>().clone();
-        let row = menu.row.clone();
-        let folder = if row.is_folder {
-            row.path.clone()
-        } else {
-            row.path
-                .rsplit_once('/')
-                .map(|(dir, _)| dir.to_string())
-                .unwrap_or_default()
-        };
-        let items: Vec<(&'static str, ExplorerEvent)> = if row.is_folder {
-            vec![
-                (
-                    "New note",
-                    ExplorerEvent::NewNote {
-                        folder: folder.clone(),
-                    },
-                ),
-                (
-                    "New folder",
-                    ExplorerEvent::NewFolder {
-                        parent: folder.clone(),
-                    },
-                ),
-                ("Rename...", ExplorerEvent::Rename(row.path.clone())),
-                ("Move folder to...", ExplorerEvent::Move(row.path.clone())),
-                ("Bookmark...", ExplorerEvent::Bookmark(row.path.clone())),
-                ("Delete", ExplorerEvent::Delete(row.path.clone())),
-            ]
-        } else {
-            vec![
-                (
-                    "New note",
-                    ExplorerEvent::NewNote {
-                        folder: folder.clone(),
-                    },
-                ),
-                (
-                    "New folder",
-                    ExplorerEvent::NewFolder {
-                        parent: folder.clone(),
-                    },
-                ),
-                ("Rename...", ExplorerEvent::Rename(row.path.clone())),
-                ("Move file to...", ExplorerEvent::Move(row.path.clone())),
-                ("Make a copy", ExplorerEvent::Duplicate(row.path.clone())),
-                ("Bookmark...", ExplorerEvent::Bookmark(row.path.clone())),
-                ("Delete", ExplorerEvent::Delete(row.path.clone())),
-            ]
-        };
+        let items = menu_items(&menu.target);
         let mut list = div()
             .id("explorer-menu")
             .flex()
@@ -889,11 +1127,26 @@ impl FileExplorer {
             .text_color(theme.text)
             .occlude()
             .on_mouse_down_out(cx.listener(|this, _, _, cx| this.close_menu(cx)));
-        for (ix, (label, event)) in items.into_iter().enumerate() {
-            let event = std::cell::Cell::new(Some(event));
+        let mut previous: Option<Section> = None;
+        for (ix, item) in items.into_iter().enumerate() {
+            for n in 0..separators_above(previous, item.section) {
+                list = list.child(
+                    div()
+                        .id(("explorer-menu-separator", ix * 2 + n))
+                        .my_1()
+                        .h(px(1.))
+                        .w_full()
+                        .bg(theme.border),
+                );
+            }
+            previous = Some(item.section);
+            let event = std::cell::Cell::new(Some(item.event));
             list = list.child(
                 div()
                     .id(("explorer-menu-item", ix))
+                    .flex()
+                    .items_center()
+                    .gap_2()
                     .px_3()
                     .py_1()
                     .cursor_pointer()
@@ -904,7 +1157,8 @@ impl FileExplorer {
                             cx.emit(event);
                         }
                     }))
-                    .child(label),
+                    .child(crate::assets::icon(item.icon, 16., theme.text_muted))
+                    .child(item.label),
             );
         }
         Some(
@@ -1165,6 +1419,10 @@ impl FileExplorer {
                         .on_mouse_down(
                             MouseButton::Right,
                             cx.listener(move |this, event: &gpui::MouseDownEvent, _, cx| {
+                                // The empty space below the rows has its own
+                                // right-click; without this the row's menu
+                                // would open and then be replaced by that one.
+                                cx.stop_propagation();
                                 this.open_menu(ix, event.position, cx)
                             }),
                         )
@@ -1228,13 +1486,27 @@ impl Render for FileExplorer {
             .on_action(cx.listener(Self::rename_focused))
             .on_action(cx.listener(Self::delete_focused))
             .child(header)
+            // The list is wrapped so that the space below the last row
+            // takes a right-click of its own: `uniform_list` hands an event
+            // outside every row straight through, and a row's own handler
+            // stops propagation so only one of the two menus opens.
             .child(
-                uniform_list("file-explorer", count, cx.processor(Self::render_rows))
-                    .track_scroll(&self.scroll)
+                div()
                     .flex_1()
                     .w_full()
                     .min_h(px(0.))
-                    .px_1(),
+                    .on_mouse_down(
+                        MouseButton::Right,
+                        cx.listener(|this, event: &gpui::MouseDownEvent, _, cx| {
+                            this.open_blank_menu(event.position, cx)
+                        }),
+                    )
+                    .child(
+                        uniform_list("file-explorer", count, cx.processor(Self::render_rows))
+                            .track_scroll(&self.scroll)
+                            .size_full()
+                            .px_1(),
+                    ),
             )
             .children(menu)
     }
@@ -1512,5 +1784,199 @@ mod tests {
         let mut rebuilt = FileTree::new(&files, &[], false);
         rebuilt.expand_folders(&expanded);
         assert_eq!(rebuilt.len(), 6);
+    }
+}
+
+#[cfg(test)]
+mod menu_tests {
+    use super::*;
+    use gpui::AssetSource;
+
+    /// The path an event acts on. The match is exhaustive on purpose: a new
+    /// [`ExplorerEvent`] will not compile until it says which row it carries,
+    /// which is what keeps a menu from ever acting on the wrong one.
+    fn payload(event: &ExplorerEvent) -> Option<&str> {
+        match event {
+            ExplorerEvent::Open(p)
+            | ExplorerEvent::OpenInNewTab(p)
+            | ExplorerEvent::Rename(p)
+            | ExplorerEvent::Move(p)
+            | ExplorerEvent::Duplicate(p)
+            | ExplorerEvent::Delete(p)
+            | ExplorerEvent::Bookmark(p)
+            | ExplorerEvent::OpenToRight(p)
+            | ExplorerEvent::CopyPath(p)
+            | ExplorerEvent::OpenInDefaultApp(p)
+            | ExplorerEvent::SearchInFolder(p) => Some(p),
+            ExplorerEvent::NewNote { folder }
+            | ExplorerEvent::NewCanvas { folder }
+            | ExplorerEvent::NewBase { folder } => Some(folder),
+            ExplorerEvent::NewFolder { parent } => Some(parent),
+            ExplorerEvent::NewNoteFromHeader | ExplorerEvent::LeaveFocus => None,
+        }
+    }
+
+    /// The menu as a reader sees it: a `---` per separator, then each item's
+    /// label. Comparing this against the spec's own table is the point.
+    fn drawn(target: &Target) -> Vec<String> {
+        let mut out = Vec::new();
+        let mut previous = None;
+        for item in menu_items(target) {
+            for _ in 0..separators_above(previous, item.section) {
+                out.push("---".to_string());
+            }
+            previous = Some(item.section);
+            out.push(item.label.to_string());
+        }
+        out
+    }
+
+    /// [[Specification#The file explorer's context menus]], the file-row
+    /// table, minus the four items Scoria has no command for -- Open in new
+    /// window, Merge entire file with..., Open version history and Show in
+    /// system explorer. Dropping Open version history empties the `view`
+    /// section, so the separator the capture has around it is gone too; every
+    /// other separator is where Obsidian put it, including the pair above
+    /// Rename.
+    #[test]
+    fn the_file_rows_menu_is_obsidians_order_without_the_rows_it_cannot_run() {
+        assert_eq!(
+            drawn(&Target::File("Notes/Plan.md".into())),
+            [
+                "Open in new tab",
+                "Open to the right",
+                "---",
+                "Make a copy",
+                "Move file to...",
+                "Bookmark...",
+                "---",
+                "Copy path",
+                "---",
+                "Open in default app",
+                "---",
+                "---",
+                "Rename...",
+                "Delete",
+            ]
+        );
+    }
+
+    /// The folder-row table, minus "Make a copy" (no recursive folder copy)
+    /// and "Show in system explorer". A folder gets no "Open in default app":
+    /// the capture has that item on the file row only.
+    #[test]
+    fn the_folder_rows_menu_is_obsidians_order() {
+        assert_eq!(
+            drawn(&Target::Folder("Notes".into())),
+            [
+                "New note",
+                "New folder",
+                "New canvas",
+                "New base",
+                "---",
+                "Move folder to...",
+                "Search in folder",
+                "Bookmark...",
+                "---",
+                "Copy path",
+                "---",
+                "---",
+                "Rename...",
+                "Delete",
+            ]
+        );
+    }
+
+    /// "The empty space below the last row gives only the four
+    /// `action-primary` items" -- so no separators at all, and every one of
+    /// them rooted at the vault.
+    #[test]
+    fn the_empty_space_offers_the_four_creation_items_at_the_root() {
+        assert_eq!(
+            drawn(&Target::Blank),
+            ["New note", "New folder", "New canvas", "New base"]
+        );
+        for item in menu_items(&Target::Blank) {
+            assert_eq!(
+                payload(&item.event),
+                Some(""),
+                "{} was not rooted at the vault",
+                item.label
+            );
+        }
+    }
+
+    /// Obsidian's file row has no creation items. Scoria's menu used to open
+    /// with "New note" and "New folder" on a file, which is the one thing in
+    /// the captured menus that was wrong rather than merely missing.
+    #[test]
+    fn a_file_row_offers_nothing_that_creates_a_file() {
+        for item in menu_items(&Target::File("Plan.md".into())) {
+            assert!(
+                !item.label.starts_with("New "),
+                "a file row offered {}",
+                item.label
+            );
+        }
+    }
+
+    /// Every item carries the folder or file it was opened on, so a menu can
+    /// never act on the wrong row.
+    #[test]
+    fn every_item_carries_the_row_it_was_opened_on() {
+        for (target, want) in [
+            (Target::Folder("Notes/Deep".into()), "Notes/Deep"),
+            (
+                Target::File("Notes/Deep/Plan.md".into()),
+                "Notes/Deep/Plan.md",
+            ),
+        ] {
+            for item in menu_items(&target) {
+                assert_eq!(
+                    payload(&item.event),
+                    Some(want),
+                    "{} acts on the wrong row",
+                    item.label
+                );
+            }
+        }
+    }
+
+    /// A separator where the section changes, two above `danger`, none at the
+    /// top, and none between two items of one section.
+    #[test]
+    fn a_separator_falls_where_the_section_changes() {
+        assert_eq!(separators_above(None, Section::Open), 0);
+        assert_eq!(separators_above(Some(Section::Open), Section::Open), 0);
+        assert_eq!(separators_above(Some(Section::Open), Section::Action), 1);
+        assert_eq!(
+            separators_above(Some(Section::Action), Section::Unsectioned),
+            1
+        );
+        assert_eq!(separators_above(Some(Section::System), Section::Danger), 2);
+        assert_eq!(separators_above(Some(Section::Danger), Section::Danger), 0);
+    }
+
+    /// The icon of every item in every menu is bundled and is the name
+    /// Obsidian leaves in its DOM, or Lucide's current spelling of it where
+    /// Obsidian's is an old alias: `lucide-edit` is `square-pen` and
+    /// `lucide-edit-3` is `pen-line`, both from Lucide's own alias data.
+    #[test]
+    fn every_menu_icon_is_bundled() {
+        let targets = [
+            Target::File("Plan.md".into()),
+            Target::Folder("Notes".into()),
+            Target::Blank,
+        ];
+        for target in targets {
+            for item in menu_items(&target) {
+                let path = format!("icons/{}.svg", item.icon);
+                assert!(
+                    crate::assets::Assets.load(&path).unwrap().is_some(),
+                    "{} wants {path}, which is not bundled",
+                    item.label
+                );
+            }
+        }
     }
 }

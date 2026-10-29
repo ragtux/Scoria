@@ -30,25 +30,28 @@ use crate::reading::{self, LinkTarget, ReadingEvent, ReadingView, TaskMarker, Ta
 use crate::search::{CopyEntry, SearchEvent, SearchPane};
 use crate::settings::{self, SettingChange, SettingsEvent, SettingsView};
 use crate::switcher::{QuickSwitcher, SwitcherEvent};
-use crate::text_input::{InputEvent, TextInput};
+use crate::text_input::{self, InputEvent, TextInput};
 use crate::theme::{
     Theme, FONT_UI_SMALL, FONT_UI_SMALLER, HEADER_HEIGHT, ICON_SIZE, RIBBON_WIDTH, SIDEBAR_WIDTH,
     TAB_CURVE,
 };
+use crate::title_field::{self, TitleField};
 use crate::watch;
 use gpui::{
-    actions, anchored, canvas, deferred, div, point, prelude::*, px, relative, rgb, rgba,
-    transparent_black, Action, Anchor, App, BoxShadow, ClickEvent, ClipboardItem, Context,
-    CursorStyle, Decorations, DragMoveEvent, Entity, FocusHandle, Focusable, FontWeight, Global,
-    HighlightStyle, HitboxBehavior, Hsla, KeyBinding, MouseButton, PathBuilder, Pixels, ResizeEdge,
-    ScrollHandle, SharedString, StyledText, Subscription, Task, Tiling, Window, WindowControlArea,
+    actions, anchored, canvas, deferred, div, fill, point, prelude::*, px, relative, rgb, rgba,
+    size, transparent_black, Action, Anchor, App, Bounds, BoxShadow, ClickEvent, ClipboardItem,
+    Context, CursorStyle, Decorations, DragMoveEvent, ElementInputHandler, Entity,
+    EntityInputHandler, FocusHandle, Focusable, FontWeight, Global, HighlightStyle, HitboxBehavior,
+    Hsla, KeyBinding, MouseButton, MouseDownEvent, PathBuilder, Pixels, ResizeEdge, ScrollHandle,
+    ShapedLine, SharedString, StyledText, Subscription, Task, TextAlign, Tiling, UTF16Selection,
+    Window, WindowControlArea,
 };
 use rayon::prelude::*;
 use scoria_cache::{
     basename, frontmatter_aliases, index_markdown, CachedMetadata, LinkFormat, MetadataCache,
     PropertyEntry,
 };
-use scoria_commands::{keystroke, CommandRegistry};
+use scoria_commands::{hotkey_label, keystroke, CommandRegistry};
 use scoria_formats::bookmarks::{Bookmark, Bookmarks};
 use scoria_formats::config::{
     self as config, AppConfig, AppearanceConfig, CommandPaletteConfig, CorePlugins,
@@ -1429,13 +1432,7 @@ impl Tab {
     /// The tab's title as the strip shows it: the note's name, or Obsidian's
     /// "New tab" for one with nothing in it.
     fn title(&self) -> SharedString {
-        match (&self.path, self.mode) {
-            (Some(p), _) => tab_display_name(p.rsplit('/').next().unwrap_or(p))
-                .to_string()
-                .into(),
-            (None, ViewMode::Graph) => "Graph view".into(),
-            (None, _) => "New tab".into(),
-        }
+        leaf_title(self.path.as_deref(), self.mode)
     }
 }
 
@@ -1766,6 +1763,53 @@ struct GroupView {
     pdf: Entity<PdfView>,
 }
 
+/// The view-header title being renamed in place.
+///
+/// Obsidian's `.view-header-title` is editable in its resting state, so a
+/// single click is all it takes to start typing in it: the title changes
+/// under the pointer while the file keeps its old name, and only Enter
+/// renames the file (see
+/// [[Specification#The view-header title is an inline rename field]]).
+/// The text is the name without its extension, as the rename prompt's box
+/// holds it, so both commit through the same path and the same validator.
+struct TitleEdit {
+    /// The group whose header holds the field.
+    group: u64,
+    /// The file the field opened on. The edit is dropped if that leaf moves
+    /// on, so a commit can only ever rename the file the title showed.
+    path: String,
+    field: TitleField,
+    /// The composition the platform's input method has in the field, if
+    /// any: the bytes it will replace with the committed text.
+    marked: Option<Range<usize>>,
+}
+
+/// Where a group's header title was last painted and how its text was
+/// shaped: what a click is measured against to find the offset it landed
+/// on, and what the input method is told when it asks where the text is.
+#[derive(Clone)]
+struct TitleLayout {
+    bounds: Bounds<Pixels>,
+    line: ShapedLine,
+    line_height: Pixels,
+    scroll_x: Pixels,
+}
+
+/// What a header title works out before it paints.
+struct TitlePrepaint {
+    line: ShapedLine,
+    cursor_x: Pixels,
+    /// The selection's two edges in the shaped line, when there is one.
+    selection_x: Option<Range<Pixels>>,
+    scroll_x: Pixels,
+    line_height: Pixels,
+    /// An edit is open on this group, so the platform's input method is
+    /// pointed at the field.
+    editing: bool,
+    /// The field has the keyboard, so it carries a caret.
+    caret: bool,
+}
+
 /// The payload of a divider drag: which split, and the boundary between
 /// which two of its children.
 #[derive(Debug, Clone)]
@@ -2067,6 +2111,102 @@ for the command palette, and Ctrl+E to flip between editing and reading.\n\n\
         root.join("Another note.md"),
         "# Another note\n\nIt links back to [[Welcome]], which the backlinks pane shows.\n",
     )
+}
+
+/// What an empty tab offers, in Obsidian's order: the element's id, the
+/// label on the pill and the command it runs. Obsidian draws each as a
+/// `div.text-icon-button.tappable.mod-pill.empty-state-action`; what is
+/// observed and has to match is the text and that the pill runs the
+/// command it names (see [[Specification#The empty tab]]).
+const EMPTY_TAB_ACTIONS: [(&str, &str, &str); 4] = [
+    ("empty-new-note", "New note", "file-explorer:new-file"),
+    ("empty-new-base", "New base", "bases:new-file"),
+    ("empty-new-canvas", "New canvas", "canvas:new-file"),
+    ("empty-go-to-file", "Go to file", "switcher:open"),
+];
+
+/// The path a file or folder at `from` takes when the name a rename field
+/// holds becomes `value`, or the reason the filesystem would refuse it.
+///
+/// A rename field holds the stem, so the name that will be asked for does
+/// not exist yet and both have to be checked, or an empty field is refused
+/// for starting with a dot and a very long one reaches `rename` and comes
+/// back as an errno and an absolute path. The rename prompt's box and the
+/// view header's inline field both come through here, so there is one
+/// validator and one way a name becomes a path.
+fn renamed_path(from: &str, value: &str, is_folder: bool) -> Result<String, String> {
+    let folder = from.rsplit_once('/').map(|(d, _)| d).unwrap_or("");
+    let name = from.rsplit('/').next().unwrap_or(from);
+    let ext = if is_folder {
+        None
+    } else {
+        name.rsplit_once('.')
+            .map(|(_, e)| e)
+            .filter(|_| basename(name) != name)
+    };
+    validate_renamed_file(value, ext).map_err(|err| err.to_string())?;
+    let new_name = match ext {
+        Some(ext) => format!("{value}.{ext}"),
+        None => value.to_string(),
+    };
+    Ok(if folder.is_empty() {
+        new_name
+    } else {
+        format!("{folder}/{new_name}")
+    })
+}
+
+/// Whether the view header carries the mode switch. An empty tab's header
+/// holds the two navigation buttons and nothing else -- no mode switch,
+/// since there is nothing to read or edit (see
+/// [[Specification#The empty tab]]) -- and the graph has its own toggle.
+fn header_shows_mode_switch(current: &Option<String>, mode: ViewMode) -> bool {
+    current.is_some() && mode != ViewMode::Graph
+}
+
+/// What the status bar reads while an empty tab is active, item by item.
+/// It is not hidden there (observed, [[Specification#The empty tab]]): the
+/// items stay and read as zero.
+const EMPTY_TAB_STATUS: [&str; 3] = ["0 properties", "0 words", "0 characters"];
+
+/// One pill of the empty tab.
+struct EmptyAction {
+    id: &'static str,
+    label: &'static str,
+    /// The command's first hotkey as the Hotkeys tab writes it, or `None`
+    /// for a command with none: `New note Ctrl + N` carries one, `New base`
+    /// does not. It comes from the registry, so `hotkeys.json` applies and
+    /// a rebound command says so.
+    hotkey: Option<String>,
+    command: &'static str,
+}
+
+impl EmptyAction {
+    /// The pill's text: the label, then the hotkey when there is one.
+    fn text(&self) -> String {
+        match &self.hotkey {
+            Some(keys) => format!("{} {keys}", self.label),
+            None => self.label.to_string(),
+        }
+    }
+}
+
+/// The pills an empty tab draws. A command the registry does not have is
+/// left out rather than drawn dead: the registry holds the commands of the
+/// core plugins that are on, so turning Bases off takes "New base" with it.
+fn empty_tab_actions(registry: &CommandRegistry) -> Vec<EmptyAction> {
+    EMPTY_TAB_ACTIONS
+        .iter()
+        .filter_map(|(id, label, command)| {
+            let known = registry.get(command)?;
+            Some(EmptyAction {
+                id,
+                label,
+                hotkey: known.hotkeys.first().map(hotkey_label),
+                command,
+            })
+        })
+        .collect()
 }
 
 fn icon_button(id: &'static str, name: &str, theme: &Theme) -> gpui::Stateful<gpui::Div> {
@@ -2397,6 +2537,15 @@ pub struct Workspace {
     /// Where each tab was on the last drag move, by group and index: what
     /// a strip measures the pointer against to find the nearest boundary.
     tab_bounds: HashMap<(u64, usize), gpui::Bounds<gpui::Pixels>>,
+    /// The keyboard while the view-header title is being typed into. It is
+    /// its own handle rather than the workspace's, so the title only takes
+    /// the keys while a click has put the caret in it.
+    title_focus: FocusHandle,
+    /// The header title being renamed in place, if any.
+    title_edit: Option<TitleEdit>,
+    /// Where each group's header title was painted and how it was shaped,
+    /// left by the last frame: what a click on a title is measured against.
+    title_layout: HashMap<u64, TitleLayout>,
     /// `workspace.json` as it was read at load, `None` when the vault has
     /// none; what the quit write is merged into.
     layout: Option<Value>,
@@ -2630,6 +2779,16 @@ impl Workspace {
                     ExplorerEvent::Duplicate(path) => this.duplicate(path, cx),
                     ExplorerEvent::Delete(path) => this.start_delete(path, window, cx),
                     ExplorerEvent::Bookmark(path) => this.start_bookmark_path(path, window, cx),
+                    ExplorerEvent::NewCanvas { folder } => this.new_canvas(folder, cx),
+                    ExplorerEvent::NewBase { folder } => this.new_base(folder, cx),
+                    ExplorerEvent::OpenToRight(path) => {
+                        this.open_to_right(path.clone(), window, cx)
+                    }
+                    ExplorerEvent::CopyPath(path) => this.copy_path(path, cx),
+                    ExplorerEvent::OpenInDefaultApp(path) => this.open_in_default_app(path, cx),
+                    ExplorerEvent::SearchInFolder(folder) => {
+                        this.search_in_folder(folder, window, cx)
+                    }
                     ExplorerEvent::LeaveFocus => this.focus_main(window, cx),
                 },
             ),
@@ -2862,6 +3021,9 @@ impl Workspace {
             tab_drop: None,
             drop_bar: None,
             tab_bounds: HashMap::new(),
+            title_focus: cx.focus_handle(),
+            title_edit: None,
+            title_layout: HashMap::new(),
             layout: None,
             layout_restored: false,
             last_open_files: Vec::new(),
@@ -3930,8 +4092,8 @@ impl Workspace {
             // global graph.
             "graph:open-local" if self.current.is_none() => {}
             "graph:open-local" => self.show_graph(true, window, cx),
-            "canvas:new-file" => self.new_canvas(cx),
-            "bases:new-file" => self.new_base(cx),
+            "canvas:new-file" => self.new_canvas("", cx),
+            "bases:new-file" => self.new_base("", cx),
             "bases:add-view" => self.add_base_view(cx),
             "bases:insert" => self.insert_base(window, cx),
             "bases:copy-table" => self.copy_base_table(window, cx),
@@ -5966,6 +6128,63 @@ impl Workspace {
     /// Shows a message that goes away on its own, the way Obsidian's
     /// Notice does. Everything a command has to say comes through here;
     /// the status bar keeps only what stays true.
+    /// The explorer menu's "Copy path": the **vault-relative** path, which is
+    /// the only path the rest of the app speaks and the one the vault is the
+    /// source of truth for. Silent, because Obsidian shows no notice for it
+    /// and a notice Obsidian does not show is a divergence of its own. The
+    /// capture records the item but not its payload, so the shape of the
+    /// string is marked OBSERVE in
+    /// [[Specification#The file explorer's context menus]].
+    fn copy_path(&mut self, path: &str, cx: &mut Context<Self>) {
+        cx.write_to_clipboard(ClipboardItem::new_string(path.to_string()));
+    }
+
+    /// The explorer menu's "Open in default app": the file handed to the
+    /// desktop, one command per platform and no crate for it, so the
+    /// dependency tree is unchanged. The child is spawned and let go -- the
+    /// handler it starts outlives this process on every platform -- and only a
+    /// failure to spawn is reported, since nothing after that is Scoria's to
+    /// know.
+    fn open_in_default_app(&mut self, path: &str, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let absolute = state.vault().absolute(path);
+        let mut command = if cfg!(target_os = "macos") {
+            std::process::Command::new("open")
+        } else if cfg!(target_os = "windows") {
+            // `start` is a shell builtin rather than a program, and its first
+            // quoted argument is the window title, not the file.
+            let mut c = std::process::Command::new("cmd");
+            c.args(["/C", "start", ""]);
+            c
+        } else {
+            std::process::Command::new("xdg-open")
+        };
+        if let Err(err) = command
+            .arg(&absolute)
+            .stdin(std::process::Stdio::null())
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .spawn()
+        {
+            self.report(format!("Could not open {path}: {err}"), cx);
+        }
+    }
+
+    /// The explorer menu's "Search in folder": the Search pane scoped with the
+    /// `path:` operator the query grammar already has. The trailing slash
+    /// keeps `Notes/` from also matching `Notes archive/`. What Obsidian puts
+    /// in its own box here was not captured, so the query is marked OBSERVE in
+    /// [[Specification#The file explorer's context menus]].
+    fn search_in_folder(&mut self, folder: &str, window: &mut Window, cx: &mut Context<Self>) {
+        let query = match folder.is_empty() {
+            true => String::new(),
+            false => format!("path:\"{folder}/\""),
+        };
+        self.show_search(&query, Some(window), cx);
+    }
+
     fn report(&mut self, message: impl Into<SharedString>, cx: &mut Context<Self>) {
         let id = self.notices.push(message.into());
         cx.spawn(async move |this, cx| {
@@ -6000,15 +6219,16 @@ impl Workspace {
     }
 
     /// `canvas:new-file`: `Untitled.canvas` (or the next free number) in
-    /// the vault root as an empty file, which is what Obsidian writes until
+    /// `folder` (the vault root for the command, the clicked folder for the
+    /// explorer's menu) as an empty file, which is what Obsidian writes until
     /// something is put in the canvas (see [[Specification#Observed canvas
     /// write behavior]]), opened the way a new note is: in a new tab unless
     /// the active one is empty.
-    fn new_canvas(&mut self, cx: &mut Context<Self>) {
+    fn new_canvas(&mut self, folder: &str, cx: &mut Context<Self>) {
         let Some(state) = self.state.clone() else {
             return;
         };
-        let path = state.vault().available_path("", "Untitled", "canvas");
+        let path = state.vault().available_path(folder, "Untitled", "canvas");
         match state.create_note(&path, "") {
             Ok(changes) => {
                 self.after_changes(changes, cx);
@@ -6022,8 +6242,8 @@ impl Workspace {
         }
     }
 
-    /// `bases:new-file`: `Untitled.base` (or the next free number) in the
-    /// vault root as a **zero-byte** file, opened the way a new canvas is.
+    /// `bases:new-file`: `Untitled.base` (or the next free number) in
+    /// `folder` as a **zero-byte** file, opened the way a new canvas is.
     ///
     /// The empty file is Obsidian's own behaviour, not a shortcut: the probe
     /// of 2026-10-25 watched `bases:new-file` write nothing at all, because
@@ -6037,11 +6257,11 @@ impl Workspace {
     /// Obsidian then opens the new base in its Bases view, and so does this:
     /// `show_file`'s [`FileKind::Base`] arm hands the empty file to
     /// [`BasesView`], whose parse of no bytes at all is one default view.
-    fn new_base(&mut self, cx: &mut Context<Self>) {
+    fn new_base(&mut self, folder: &str, cx: &mut Context<Self>) {
         let Some(state) = self.state.clone() else {
             return;
         };
-        let path = state.vault().available_path("", "Untitled", "base");
+        let path = state.vault().available_path(folder, "Untitled", "base");
         match state.create_note(&path, "") {
             Ok(changes) => {
                 self.after_changes(changes, cx);
@@ -6643,38 +6863,15 @@ impl Workspace {
         let value = value.trim();
         match op {
             PendingOp::Rename(from) => {
-                let is_folder = self
-                    .state
-                    .as_ref()
-                    .map(|s| s.vault().absolute(&from).is_dir())
-                    .unwrap_or(false);
-                let folder = from.rsplit_once('/').map(|(d, _)| d).unwrap_or("");
-                let name = from.rsplit('/').next().unwrap_or(&from);
-                let ext = if is_folder {
-                    None
-                } else {
-                    name.rsplit_once('.')
-                        .map(|(_, e)| e)
-                        .filter(|_| basename(name) != name)
-                };
-                // The box holds the stem, so the name the filesystem will be
-                // asked for does not exist yet; both have to be checked, or
-                // an empty box is refused for starting with a dot and a very
-                // long one reaches `rename` and comes back as an errno and
-                // an absolute path.
-                if let Err(err) = validate_renamed_file(value, ext) {
-                    self.prompt
-                        .update(cx, |p, cx| p.set_error(err.to_string(), cx));
-                    return;
-                }
-                let new_name = match ext {
-                    Some(ext) => format!("{value}.{ext}"),
-                    None => value.to_string(),
-                };
-                let to = if folder.is_empty() {
-                    new_name
-                } else {
-                    format!("{folder}/{new_name}")
+                // The box holds the stem, which is what `renamed_path`
+                // takes -- the same path and the same validator the view
+                // header's inline rename field commits through.
+                let to = match self.renamed_path(&from, value) {
+                    Ok(to) => to,
+                    Err(err) => {
+                        self.prompt.update(cx, |p, cx| p.set_error(err, cx));
+                        return;
+                    }
                 };
                 self.rename_with_links(&from, &to, window, cx);
             }
@@ -7384,12 +7581,9 @@ impl Workspace {
     /// group, which they make active first.
     fn render_header(&self, view: &GroupView, theme: &Theme, cx: &mut Context<Self>) -> gpui::Div {
         let id = view.id;
-        let title: SharedString = match &view.current {
-            Some(p) => tab_display_name(p.rsplit('/').next().unwrap_or(p))
-                .to_string()
-                .into(),
-            None => "No file is open".into(),
-        };
+        // The leaf's name, the same string its tab carries: "New tab" with
+        // nothing open, not "No file is open".
+        let title = leaf_title(view.current.as_deref(), view.mode);
         let crumbs: SharedString = view
             .current
             .as_deref()
@@ -7450,12 +7644,11 @@ impl Workspace {
                     .gap_1()
                     .whitespace_nowrap()
                     .overflow_hidden()
-                    .text_ellipsis()
                     .when(!crumbs.is_empty(), |d| {
                         d.child(div().text_color(theme.text_muted).child(crumbs.clone()))
                             .child(div().text_color(theme.text_muted).child("/"))
                     })
-                    .child(div().text_color(title_color).child(title.clone())),
+                    .child(self.render_title(view, title.clone(), title_color, theme, cx)),
             )
             .child(
                 div()
@@ -7470,7 +7663,7 @@ impl Workspace {
                                 this.open_graph_action(&OpenGraph, window, cx)
                             })),
                     )
-                    .when(view.mode != ViewMode::Graph, |d| {
+                    .when(header_shows_mode_switch(&view.current, view.mode), |d| {
                         d.child(icon_button("mode", mode_icon, theme).on_click(cx.listener(
                             move |this, _, window, cx| {
                                 this.activate_group(id, cx);
@@ -7481,10 +7674,397 @@ impl Workspace {
             )
     }
 
+    /// The view header's title, Obsidian's `.view-header-title`: a field
+    /// that is editable where it stands, so a single click starts an edit
+    /// (see [[Specification#The view-header title is an inline rename
+    /// field]]).
+    ///
+    /// The text is painted as a shaped line rather than put in a div, for
+    /// two reasons: a click has to be measured against the glyphs to land
+    /// the caret where the pointer was, and an open edit draws its caret
+    /// and selection in the same place. A leaf with no file is not
+    /// renamed, so "New tab" is drawn and clicks on it do nothing.
+    fn render_title(
+        &self,
+        view: &GroupView,
+        title: SharedString,
+        color: Hsla,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> gpui::AnyElement {
+        let id = view.id;
+        let editing = self.title_edit.as_ref().is_some_and(|e| e.group == id);
+        let read_entity = cx.entity();
+        let paint_entity = cx.entity();
+        let read_focus = self.title_focus.clone();
+        let paint_focus = self.title_focus.clone();
+        let mut selection_color = theme.accent;
+        selection_color.a = if theme.dark { 0.35 } else { 0.25 };
+        let caret_color = theme.text;
+        let body = canvas(
+            move |bounds, window, cx| {
+                let style = window.text_style();
+                let font_size = style.font_size.to_pixels(window.rem_size());
+                let line_height = window.line_height();
+                let ws = read_entity.read(cx);
+                let edit = ws.title_edit.as_ref().filter(|e| e.group == id);
+                let text: SharedString = match edit {
+                    Some(edit) => edit.field.text().to_string().into(),
+                    None => title.clone(),
+                };
+                let cursor = edit.map(|e| e.field.cursor()).unwrap_or(0);
+                let selection = edit.map(|e| e.field.selection()).filter(|s| !s.is_empty());
+                let mut run = style.to_run(text.len());
+                run.color = color;
+                let line = window
+                    .text_system()
+                    .shape_line(text.clone(), font_size, &[run], None);
+                let cursor_x = if text.is_empty() {
+                    px(0.)
+                } else {
+                    line.x_for_index(cursor)
+                };
+                let selection_x =
+                    selection.map(|s| line.x_for_index(s.start)..line.x_for_index(s.end));
+                // A title too long for the header scrolls to keep the
+                // caret in view, the way the crate's other field does.
+                let width = bounds.size.width;
+                let mut scroll_x = ws
+                    .title_layout
+                    .get(&id)
+                    .map(|l| l.scroll_x)
+                    .unwrap_or(px(0.));
+                if cursor_x - scroll_x > width - px(2.) {
+                    scroll_x = cursor_x - width + px(2.);
+                }
+                if cursor_x - scroll_x < px(0.) {
+                    scroll_x = cursor_x;
+                }
+                if line.width < width {
+                    scroll_x = px(0.);
+                }
+                TitlePrepaint {
+                    line,
+                    cursor_x,
+                    selection_x,
+                    scroll_x,
+                    line_height,
+                    editing: edit.is_some(),
+                    caret: edit.is_some() && read_focus.is_focused(window),
+                }
+            },
+            move |bounds, prepaint: TitlePrepaint, window, cx| {
+                // The platform's input method is pointed at the field only
+                // while one is open: the title is not a tab stop, and
+                // nothing types into it until a click puts a caret there.
+                if prepaint.editing {
+                    window.handle_input(
+                        &paint_focus,
+                        ElementInputHandler::new(bounds, paint_entity.clone()),
+                        cx,
+                    );
+                }
+                let y = bounds.origin.y + (bounds.size.height - prepaint.line_height) / 2.;
+                let origin = point(bounds.origin.x - prepaint.scroll_x, y);
+                window.with_content_mask(Some(gpui::ContentMask { bounds }), |window| {
+                    if let Some(selection) = &prepaint.selection_x {
+                        window.paint_quad(fill(
+                            Bounds::from_corners(
+                                point(origin.x + selection.start, y),
+                                point(origin.x + selection.end, y + prepaint.line_height),
+                            ),
+                            selection_color,
+                        ));
+                    }
+                    let _ = prepaint.line.paint(
+                        origin,
+                        prepaint.line_height,
+                        TextAlign::Left,
+                        None,
+                        window,
+                        cx,
+                    );
+                    if prepaint.caret {
+                        window.paint_quad(fill(
+                            Bounds::new(
+                                point(origin.x + prepaint.cursor_x, y + px(2.)),
+                                size(px(1.5), prepaint.line_height - px(4.)),
+                            ),
+                            caret_color,
+                        ));
+                    }
+                });
+                paint_entity.update(cx, |ws, _| {
+                    ws.title_layout.insert(
+                        id,
+                        TitleLayout {
+                            bounds,
+                            line: prepaint.line,
+                            line_height: prepaint.line_height,
+                            scroll_x: prepaint.scroll_x,
+                        },
+                    );
+                });
+            },
+        )
+        .size_full();
+        let mut host = div()
+            .id(("view-title", id))
+            .flex_1()
+            .min_w_0()
+            // The canvas has no size of its own, so the row's height is
+            // given here; the line is centred in it when it paints.
+            .h(px(HEADER_HEIGHT))
+            .flex()
+            .items_center()
+            .overflow_hidden()
+            .text_size(px(FONT_UI_SMALL))
+            .text_color(color)
+            .child(body);
+        if let Some(path) = view.current.clone() {
+            host = host.cursor_text().on_mouse_down(
+                MouseButton::Left,
+                cx.listener(move |this, event: &MouseDownEvent, window, cx| {
+                    this.title_clicked(id, path.clone(), event, window, cx)
+                }),
+            );
+        }
+        if !editing {
+            return host.into_any_element();
+        }
+        // The keys only come here while a field is open, and they are the
+        // crate's own field keys: the same context, so the same bindings.
+        host.track_focus(&self.title_focus)
+            .key_context("TextInput")
+            .on_action(cx.listener(|this, _: &text_input::Left, _, cx| {
+                this.with_title_field(cx, |f| f.step(false, false))
+            }))
+            .on_action(cx.listener(|this, _: &text_input::Right, _, cx| {
+                this.with_title_field(cx, |f| f.step(true, false))
+            }))
+            .on_action(cx.listener(|this, _: &text_input::SelectLeft, _, cx| {
+                this.with_title_field(cx, |f| f.step(false, true))
+            }))
+            .on_action(cx.listener(|this, _: &text_input::SelectRight, _, cx| {
+                this.with_title_field(cx, |f| f.step(true, true))
+            }))
+            .on_action(cx.listener(|this, _: &text_input::WordLeft, _, cx| {
+                this.with_title_field(cx, |f| f.step_word(false, false))
+            }))
+            .on_action(cx.listener(|this, _: &text_input::WordRight, _, cx| {
+                this.with_title_field(cx, |f| f.step_word(true, false))
+            }))
+            .on_action(cx.listener(|this, _: &text_input::SelectWordLeft, _, cx| {
+                this.with_title_field(cx, |f| f.step_word(false, true))
+            }))
+            .on_action(cx.listener(|this, _: &text_input::SelectWordRight, _, cx| {
+                this.with_title_field(cx, |f| f.step_word(true, true))
+            }))
+            .on_action(cx.listener(|this, _: &text_input::Home, _, cx| {
+                this.with_title_field(cx, |f| f.move_to_edge(false, false))
+            }))
+            .on_action(cx.listener(|this, _: &text_input::End, _, cx| {
+                this.with_title_field(cx, |f| f.move_to_edge(true, false))
+            }))
+            .on_action(cx.listener(|this, _: &text_input::SelectHome, _, cx| {
+                this.with_title_field(cx, |f| f.move_to_edge(false, true))
+            }))
+            .on_action(cx.listener(|this, _: &text_input::SelectEnd, _, cx| {
+                this.with_title_field(cx, |f| f.move_to_edge(true, true))
+            }))
+            .on_action(cx.listener(|this, _: &text_input::SelectAll, _, cx| {
+                this.with_title_field(cx, |f| f.select_all())
+            }))
+            .on_action(cx.listener(|this, _: &text_input::Backspace, _, cx| {
+                this.with_title_field(cx, |f| f.backspace())
+            }))
+            .on_action(cx.listener(|this, _: &text_input::Delete, _, cx| {
+                this.with_title_field(cx, |f| f.delete())
+            }))
+            .on_action(
+                cx.listener(|this, _: &text_input::DeleteWordBackward, _, cx| {
+                    this.with_title_field(cx, |f| f.delete_word_back())
+                }),
+            )
+            .on_action(cx.listener(|this, _: &text_input::Clear, _, cx| {
+                this.with_title_field(cx, |f| {
+                    f.select_all();
+                    f.insert("");
+                })
+            }))
+            .on_action(cx.listener(|this, _: &text_input::Copy, _, cx| this.title_copy(false, cx)))
+            .on_action(cx.listener(|this, _: &text_input::Cut, _, cx| this.title_copy(true, cx)))
+            .on_action(cx.listener(|this, _: &text_input::Paste, _, cx| this.title_paste(cx)))
+            .on_action(
+                cx.listener(|this, _: &text_input::Submit, window, cx| {
+                    this.commit_title(window, cx)
+                }),
+            )
+            .on_action(
+                cx.listener(|this, _: &text_input::Cancel, window, cx| {
+                    this.cancel_title(window, cx)
+                }),
+            )
+            // Ctrl+E in a field is swallowed rather than toggling the mode
+            // behind it, as it is in every other field here.
+            .on_action(cx.listener(|_, _: &text_input::Swallow, _, _| {}))
+            .into_any_element()
+    }
+
+    /// A click on a view-header title: Obsidian's focuses the field and
+    /// puts the caret at the offset the pointer landed on, and a double
+    /// click takes the word it landed in -- no modal and no menu at any
+    /// point. A click past the end of the text is a click on the header,
+    /// not on the title, and changes nothing.
+    fn title_clicked(
+        &mut self,
+        group: u64,
+        path: String,
+        event: &MouseDownEvent,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(layout) = self.title_layout.get(&group).cloned() else {
+            return;
+        };
+        let x = event.position.x - layout.bounds.origin.x + layout.scroll_x;
+        if x > layout.line.width + px(4.) {
+            return;
+        }
+        // A click in another group's header makes that group active first,
+        // so the edit always belongs to the leaf the keyboard is in.
+        self.activate_group(group, cx);
+        // The field holds the name the header shows, which is the name
+        // without its extension -- the same stem the rename prompt's box
+        // holds, so both commit the same way.
+        let name = leaf_title(Some(&path), ViewMode::Reading).to_string();
+        let mut edit = match self.title_edit.take() {
+            Some(edit) if edit.group == group && edit.path == path => edit,
+            _ => TitleEdit {
+                group,
+                path,
+                field: TitleField::new(name),
+                marked: None,
+            },
+        };
+        let mut at = layout
+            .line
+            .closest_index_for_x(x)
+            .min(edit.field.text().len());
+        while !edit.field.text().is_char_boundary(at) {
+            at -= 1;
+        }
+        edit.field
+            .click(at, event.click_count, event.modifiers.shift);
+        self.title_edit = Some(edit);
+        // The field's focus handle only joins the dispatch tree with the
+        // frame that paints it, and the click that opens one lands before
+        // that frame: a field that was not there yet takes the keyboard on
+        // the next frame instead.
+        let focus = self.title_focus.clone();
+        window.focus(&focus, cx);
+        window.on_next_frame(move |window, cx| window.focus(&focus, cx));
+        cx.notify();
+    }
+
+    /// Applies an editing key to the open title field.
+    fn with_title_field(&mut self, cx: &mut Context<Self>, f: impl FnOnce(&mut TitleField)) {
+        if let Some(edit) = self.title_edit.as_mut() {
+            f(&mut edit.field);
+            edit.marked = None;
+            cx.notify();
+        }
+    }
+
+    fn title_copy(&mut self, cut: bool, cx: &mut Context<Self>) {
+        let Some(edit) = self.title_edit.as_mut() else {
+            return;
+        };
+        let range = edit.field.selection();
+        if range.is_empty() {
+            return;
+        }
+        let text = edit.field.text()[range.clone()].to_string();
+        cx.write_to_clipboard(ClipboardItem::new_string(text));
+        if cut {
+            edit.field.replace(range, "");
+            edit.marked = None;
+            cx.notify();
+        }
+    }
+
+    fn title_paste(&mut self, cx: &mut Context<Self>) {
+        let Some(text) = cx.read_from_clipboard().and_then(|item| item.text()) else {
+            return;
+        };
+        self.with_title_field(cx, |f| f.insert(&text));
+    }
+
+    /// Enter in the view-header title: the file takes the typed name. The
+    /// field holds the stem, so this goes through the same path the rename
+    /// prompt's box does -- one validator, one rename, one link rewrite.
+    /// A name the filesystem would refuse leaves the field open and says
+    /// why, rather than losing what was typed.
+    fn commit_title(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(edit) = self.title_edit.take() else {
+            return;
+        };
+        let value = edit.field.text().trim().to_string();
+        let to = match self.renamed_path(&edit.path, &value) {
+            Ok(to) => to,
+            Err(err) => {
+                self.title_edit = Some(edit);
+                self.report(err, cx);
+                return;
+            }
+        };
+        // The keyboard goes back to the view before the rename, which may
+        // put the "Update links?" prompt up and want it for itself.
+        self.focus_main(window, cx);
+        self.rename_with_links(&edit.path, &to, window, cx);
+        cx.notify();
+    }
+
+    /// Escape in the view-header title: the edit is abandoned and nothing
+    /// is renamed, as Obsidian's does.
+    fn cancel_title(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if self.title_edit.take().is_none() {
+            return;
+        }
+        self.focus_main(window, cx);
+        cx.notify();
+    }
+
+    /// The file group `id` shows, wherever that group's fields live.
+    fn group_current(&self, id: u64) -> Option<&str> {
+        let ix = self.group_ix(id)?;
+        if ix == self.active_group {
+            return self.current.as_deref();
+        }
+        let group = &self.groups[ix];
+        group.tabs.get(group.active_tab)?.path.as_deref()
+    }
+
+    /// [`renamed_path`] for a vault path, which is asked whether it is a
+    /// folder.
+    fn renamed_path(&self, from: &str, value: &str) -> Result<String, String> {
+        let is_folder = self
+            .state
+            .as_ref()
+            .map(|s| s.vault().absolute(from).is_dir())
+            .unwrap_or(false);
+        renamed_path(from, value, is_folder)
+    }
+
     /// What a group's area paints, by the same rule as [`Workspace::main_view`]
     /// over that group's own views. There is one graph view; a second group
     /// showing the graph says where it is instead.
-    fn render_group_main(&self, view: &GroupView, theme: &Theme, cx: &App) -> gpui::AnyElement {
+    fn render_group_main(
+        &self,
+        view: &GroupView,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> gpui::AnyElement {
         let has_note = view.reading.read(cx).path.is_some();
         let image = view
             .current
@@ -7512,7 +8092,10 @@ impl Workspace {
                 .into_any_element(),
             MainView::Reading => view.reading.clone().into_any_element(),
             MainView::Editor => Self::render_editor(&view.editor, view.detached.clone(), theme),
-            MainView::Empty => Self::render_no_file(view.current.as_deref(), theme),
+            MainView::Empty => match view.current.as_deref() {
+                Some(path) => Self::render_unsupported_file(path, theme),
+                None => self.render_empty_tab(theme, cx),
+            },
         }
     }
 
@@ -7554,21 +8137,14 @@ impl Workspace {
             .into_any_element()
     }
 
-    /// Shown in place of a view that has nothing to show: no open file, or
-    /// one whose kind no view can draw.
-    fn render_no_file(current: Option<&str>, theme: &Theme) -> gpui::AnyElement {
-        // An empty tab is the one blank canvas the window has, so it is
-        // where the mark goes. A file Scoria cannot open yet is an error
-        // message, not a front door, and gets the line on its own.
-        let empty = current.is_none();
-        let message: SharedString = match current {
-            Some(path) => format!(
-                "{:?} files are not supported yet",
-                FileKind::from_path(path)
-            )
-            .into(),
-            None => "No file is open".into(),
-        };
+    /// A file whose kind no view can draw: an error message, not a front
+    /// door, so it gets the line on its own.
+    fn render_unsupported_file(path: &str, theme: &Theme) -> gpui::AnyElement {
+        let message: SharedString = format!(
+            "{:?} files are not supported yet",
+            FileKind::from_path(path)
+        )
+        .into();
         div()
             .size_full()
             .flex()
@@ -7577,8 +8153,68 @@ impl Workspace {
             .items_center()
             .justify_center()
             .text_color(theme.text_muted)
-            .when(empty, |d| d.child(logo(104.)))
             .child(message)
+            .into_any_element()
+    }
+
+    /// The empty tab: the four pills Obsidian offers there, each running
+    /// the command it names, under Scoria's mark -- an empty tab is the one
+    /// blank canvas the window has, so it is where the mark goes. The body
+    /// is the same however the tab came to be empty, a fresh vault and the
+    /// last tab closing alike, because both leave a tab with no file.
+    fn render_empty_tab(&self, theme: &Theme, cx: &mut Context<Self>) -> gpui::AnyElement {
+        let registry = cx.global::<Commands>().0.clone();
+        let pills: Vec<_> =
+            empty_tab_actions(&registry)
+                .into_iter()
+                .map(|action| {
+                    let command = action.command;
+                    // Obsidian's `mod-pill`: fully rounded, the label in the
+                    // UI size with the hotkey behind it at muted strength.
+                    div()
+                        .id(action.id)
+                        .flex()
+                        .flex_row()
+                        .items_center()
+                        .gap(px(6.))
+                        .px(px(14.))
+                        .py(px(6.))
+                        .rounded(px(14.))
+                        .bg(theme.bg_alt)
+                        .border_1()
+                        .border_color(theme.border)
+                        .cursor_pointer()
+                        .hover(|s| s.bg(theme.bg_active))
+                        .text_size(px(FONT_UI_SMALL))
+                        .child(div().text_color(theme.text).child(action.label))
+                        .children(
+                            action
+                                .hotkey
+                                .map(|keys| div().text_color(theme.text_faint).child(keys)),
+                        )
+                        .on_click(cx.listener(move |this, _, window, cx| {
+                            this.run_command(command, window, cx)
+                        }))
+                })
+                .collect();
+        div()
+            .size_full()
+            .flex()
+            .flex_col()
+            .gap_5()
+            .items_center()
+            .justify_center()
+            .text_color(theme.text_muted)
+            .child(logo(104.))
+            .child(
+                div()
+                    .flex()
+                    .flex_row()
+                    .flex_wrap()
+                    .justify_center()
+                    .gap(px(8.))
+                    .children(pills),
+            )
             .into_any_element()
     }
 
@@ -7906,21 +8542,65 @@ impl Workspace {
     /// had is halved between the two, or moves to the split that now wraps
     /// them (see [[Specification#Observed tab group behavior]]).
     fn split(&mut self, direction: SplitDirection, window: &mut Window, cx: &mut Context<Self>) {
+        self.split_beside(None, direction, window, cx);
+    }
+
+    /// The explorer menu's "Open to the right": a new group beside the active
+    /// one showing `path`, which is [`Workspace::split`] with a file of its
+    /// own. The group it leaves behind keeps whatever it was showing, which is
+    /// the difference from a split.
+    fn open_to_right(&mut self, path: String, window: &mut Window, cx: &mut Context<Self>) {
+        self.split_beside(Some(path), SplitDirection::Vertical, window, cx);
+    }
+
+    /// What the two share. `None` duplicates the active tab -- the same note,
+    /// mode, history and view state, which is what a split is; `Some(path)` is
+    /// a fresh tab on that file, with no history and no view state to inherit,
+    /// opened in the vault's default view mode the way any first open is.
+    ///
+    /// The order here matters and is the order [`Workspace::split`] had: the
+    /// save is flushed and the group stashed *before* the tab is built, so the
+    /// `view_state` it copies is the one the stash just wrote.
+    fn split_beside(
+        &mut self,
+        path: Option<String>,
+        direction: SplitDirection,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         self.flush_save(cx);
         self.stash_active_group();
         let from = self.active_group_id();
-        let tab = Tab {
-            path: self.current.clone(),
-            mode: self.mode,
-            history: self.history.clone(),
-            history_ix: self.history_ix,
-            leaf: None,
-            view_state: self
-                .tabs
-                .get(self.active_tab)
-                .and_then(|t| t.view_state.clone()),
+        let (tab, mode_before_graph) = match path {
+            None => (
+                Tab {
+                    path: self.current.clone(),
+                    mode: self.mode,
+                    history: self.history.clone(),
+                    history_ix: self.history_ix,
+                    leaf: None,
+                    view_state: self
+                        .tabs
+                        .get(self.active_tab)
+                        .and_then(|t| t.view_state.clone()),
+                },
+                self.mode_before_graph,
+            ),
+            Some(path) => {
+                let mode = self.default_mode();
+                (
+                    Tab {
+                        path: Some(path),
+                        mode,
+                        history: Vec::new(),
+                        history_ix: 0,
+                        leaf: None,
+                        view_state: None,
+                    },
+                    mode,
+                )
+            }
         };
-        let mode_before_graph = self.mode_before_graph;
         let id = self.new_group(tab.mode, window, cx);
         self.place_beside(from, id, direction, true);
         let Some(ix) = self.group_ix(id) else {
@@ -8273,6 +8953,9 @@ impl Workspace {
         }
         let was_active = ix == self.active_group;
         let active_id = self.active_group_id();
+        // Nothing paints this group's header again, so its title's shaped
+        // line goes with it.
+        self.title_layout.remove(&id);
         if was_active {
             self.flush_save(cx);
             self.stash_active_group();
@@ -10118,6 +10801,23 @@ impl Workspace {
             "pdf": self.pdf.read(cx).state_json(cx),
             "status": self.status_text(),
             "status_bar": self.status_bar_text(cx),
+            "status_bar_items": self.status_bar_items(cx),
+            // The empty tab's pills, by the text they carry, while that is
+            // what the main area shows.
+            "empty_tab": (self.current.is_none() && self.main_view(cx) == MainView::Empty).then(|| {
+                empty_tab_actions(&cx.global::<Commands>().0)
+                    .iter()
+                    .map(EmptyAction::text)
+                    .collect::<Vec<String>>()
+            }),
+            // The view header's title while it is being renamed in place,
+            // so a driver can see the typed name before Enter commits it.
+            "view_title": self.title_edit.as_ref().map(|edit| json!({
+                "group": edit.group,
+                "file": edit.path,
+                "text": edit.field.text(),
+                "cursor": edit.field.cursor(),
+            })),
             "notices": self.notices.texts(),
             "focus": {
                 "name": self.focus_name(window, cx),
@@ -10308,6 +11008,11 @@ impl Workspace {
         if self.pdf.focus_handle(cx).is_focused(window) {
             return "pdf";
         }
+        // The view header's inline rename field, which takes typed text
+        // through the workspace's own input handler.
+        if self.title_focus.is_focused(window) {
+            return "view-title";
+        }
         if self.switcher.focus_handle(cx).is_focused(window) {
             return "switcher-input";
         }
@@ -10418,19 +11123,41 @@ impl Workspace {
         cx.notify();
     }
 
-    /// The status bar's right half, or `None` when it carries nothing.
+    /// The status bar's items, left to right, for what a leaf holds.
     ///
     /// Obsidian's default status bar is right-aligned only and holds the
     /// Backlinks item and the Word count item, in that order. Both belong
-    /// to the open Markdown view, so a canvas tab, a base tab and an empty
-    /// tab show neither. The caret position is Scoria's own and sits in
-    /// front of them; the parse and shape numbers behind it are diagnostics and
-    /// appear only with `SCORIA_DEBUG_STATUS` set.
-    pub fn status_bar_text(&self, cx: &App) -> Option<String> {
-        let path = self.current.as_deref()?;
+    /// to the open Markdown view, so a canvas tab and a base tab show
+    /// neither. An **empty** tab is not a blank status bar, though: with
+    /// one active Obsidian's reads `0 properties`, `0 words`,
+    /// `0 characters` (see [[Specification#The empty tab]]), so the items
+    /// stay and read as zero. The caret position is Scoria's own and sits
+    /// in front of them; the parse and shape numbers behind it are
+    /// diagnostics and appear only with `SCORIA_DEBUG_STATUS` set.
+    fn status_items(
+        current: Option<&str>,
+        caret: &str,
+        backlinks: usize,
+        words: usize,
+        chars: usize,
+    ) -> Vec<String> {
+        let Some(path) = current else {
+            return EMPTY_TAB_STATUS
+                .iter()
+                .map(|item| item.to_string())
+                .collect();
+        };
         if matches!(FileKind::from_path(path), FileKind::Canvas | FileKind::Base) {
-            return None;
+            return Vec::new();
         }
+        vec![format!(
+            "{caret}{backlinks} backlink{}  ·  {words} words, {chars} characters",
+            plural(backlinks)
+        )]
+    }
+
+    /// The items [`Workspace::status_items`] gives the open leaf.
+    pub fn status_bar_items(&self, cx: &App) -> Vec<String> {
         let (caret, words, chars) = if self.mode.is_editing() {
             let editor = self.editor.read(cx);
             let cursor = editor.cursor();
@@ -10465,10 +11192,14 @@ impl Workspace {
             .first()
             .map(|section| section.count)
             .unwrap_or(0);
-        Some(format!(
-            "{caret}{backlinks} backlink{}  ·  {words} words, {chars} characters",
-            plural(backlinks)
-        ))
+        Self::status_items(self.current.as_deref(), &caret, backlinks, words, chars)
+    }
+
+    /// The same items as one string, for the socket's state dump: the
+    /// separator is the one the bar itself puts between them.
+    pub fn status_bar_text(&self, cx: &App) -> Option<String> {
+        let items = self.status_bar_items(cx);
+        (!items.is_empty()).then(|| items.join("  ·  "))
     }
 
     /// The title the desktop shows, as the last paint set it: empty until
@@ -13035,6 +13766,22 @@ fn tab_display_name(file_name: &str) -> &str {
     }
 }
 
+/// What a leaf showing `path` in `mode` is called, which is the one string
+/// the tab strip, the view header and the window title all show: the file's
+/// display name, Obsidian's "New tab" for a leaf of type `empty` and
+/// "Graph view" for the graph (see [[Specification#The empty tab]] -- both
+/// the empty leaf's display text and its view-header title read "New tab",
+/// not "No file is open").
+fn leaf_title(path: Option<&str>, mode: ViewMode) -> SharedString {
+    match (path, mode) {
+        (Some(p), _) => tab_display_name(p.rsplit('/').next().unwrap_or(p))
+            .to_string()
+            .into(),
+        (None, ViewMode::Graph) => "Graph view".into(),
+        (None, _) => "New tab".into(),
+    }
+}
+
 /// The leaf view type Obsidian gives a file of this kind.
 fn leaf_view_type(path: &str) -> &'static str {
     match FileKind::from_path(path) {
@@ -13048,6 +13795,149 @@ fn leaf_view_type(path: &str) -> &'static str {
         FileKind::Audio => "audio",
         FileKind::Video => "video",
         _ => "markdown",
+    }
+}
+
+/// Where typed or composed text lands in the title field: the range the
+/// platform named, else the composition it has open, else the selection --
+/// so a keystroke with text selected replaces it.
+fn title_input_range(edit: &TitleEdit, range_utf16: Option<Range<usize>>) -> Range<usize> {
+    let text = edit.field.text();
+    range_utf16
+        .map(|r| title_field::utf16_to_byte(text, r.start)..title_field::utf16_to_byte(text, r.end))
+        .or_else(|| edit.marked.clone())
+        .unwrap_or_else(|| edit.field.selection())
+}
+
+/// Typed, composed and pasted text while the view header's title is being
+/// renamed in place. Text comes in through GPUI's input handler so IME
+/// composition and dead keys work, as they do in the crate's other field.
+///
+/// The handler is registered by the title's own element against the title's
+/// own focus handle (see [`Workspace::render_title`]), so it only ever sees
+/// text meant for that field; with no field open every method answers as an
+/// empty one would.
+impl EntityInputHandler for Workspace {
+    fn text_for_range(
+        &mut self,
+        range_utf16: Range<usize>,
+        adjusted_range: &mut Option<Range<usize>>,
+        _window: &mut Window,
+        _cx: &mut Context<Self>,
+    ) -> Option<String> {
+        let edit = self.title_edit.as_ref()?;
+        let text = edit.field.text();
+        let start = title_field::utf16_to_byte(text, range_utf16.start);
+        let end = title_field::utf16_to_byte(text, range_utf16.end);
+        adjusted_range.replace(
+            title_field::byte_to_utf16(text, start)..title_field::byte_to_utf16(text, end),
+        );
+        Some(text[start..end].to_string())
+    }
+
+    fn selected_text_range(
+        &mut self,
+        _ignore_disabled_input: bool,
+        _window: &mut Window,
+        _cx: &mut Context<Self>,
+    ) -> Option<UTF16Selection> {
+        let edit = self.title_edit.as_ref()?;
+        let text = edit.field.text();
+        let selection = edit.field.selection();
+        Some(UTF16Selection {
+            range: title_field::byte_to_utf16(text, selection.start)
+                ..title_field::byte_to_utf16(text, selection.end),
+            reversed: edit.field.reversed(),
+        })
+    }
+
+    fn marked_text_range(
+        &self,
+        _window: &mut Window,
+        _cx: &mut Context<Self>,
+    ) -> Option<Range<usize>> {
+        let edit = self.title_edit.as_ref()?;
+        let marked = edit.marked.clone()?;
+        let text = edit.field.text();
+        Some(
+            title_field::byte_to_utf16(text, marked.start)
+                ..title_field::byte_to_utf16(text, marked.end),
+        )
+    }
+
+    fn unmark_text(&mut self, _window: &mut Window, _cx: &mut Context<Self>) {
+        if let Some(edit) = self.title_edit.as_mut() {
+            edit.marked = None;
+        }
+    }
+
+    fn replace_text_in_range(
+        &mut self,
+        range_utf16: Option<Range<usize>>,
+        new_text: &str,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(edit) = self.title_edit.as_mut() else {
+            return;
+        };
+        let range = title_input_range(edit, range_utf16);
+        edit.field.replace(range, new_text);
+        edit.marked = None;
+        cx.notify();
+    }
+
+    fn replace_and_mark_text_in_range(
+        &mut self,
+        range_utf16: Option<Range<usize>>,
+        new_text: &str,
+        new_selected_range: Option<Range<usize>>,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(edit) = self.title_edit.as_mut() else {
+            return;
+        };
+        let range = title_input_range(edit, range_utf16);
+        let landed = edit.field.replace(range.clone(), new_text);
+        let marked = range.start..range.start + landed;
+        if let Some(selected) = new_selected_range {
+            let at = marked.start + title_field::utf16_to_byte(new_text, selected.end);
+            edit.field.move_to(at, false);
+        }
+        edit.marked = Some(marked);
+        cx.notify();
+    }
+
+    fn bounds_for_range(
+        &mut self,
+        range_utf16: Range<usize>,
+        element_bounds: Bounds<Pixels>,
+        _window: &mut Window,
+        _cx: &mut Context<Self>,
+    ) -> Option<Bounds<Pixels>> {
+        let edit = self.title_edit.as_ref()?;
+        let layout = self.title_layout.get(&edit.group)?;
+        let text = edit.field.text();
+        let start = title_field::utf16_to_byte(text, range_utf16.start);
+        let end = title_field::utf16_to_byte(text, range_utf16.end);
+        let x0 = element_bounds.origin.x - layout.scroll_x;
+        Some(Bounds::from_corners(
+            point(x0 + layout.line.x_for_index(start), element_bounds.origin.y),
+            point(
+                x0 + layout.line.x_for_index(end),
+                element_bounds.origin.y + layout.line_height,
+            ),
+        ))
+    }
+
+    fn character_index_for_point(
+        &mut self,
+        _point: gpui::Point<Pixels>,
+        _window: &mut Window,
+        _cx: &mut Context<Self>,
+    ) -> Option<usize> {
+        None
     }
 }
 
@@ -13069,6 +13959,18 @@ impl Render for Workspace {
         {
             self.focus_main(window, cx);
         }
+        // A title edit belongs to the file whose header it opened on: if
+        // that leaf moved on -- another tab, another file, the rename
+        // itself -- the field goes with it rather than committing a name to
+        // whatever is on screen now.
+        if let Some(edit) = &self.title_edit {
+            if self.group_current(edit.group) != Some(edit.path.as_str()) {
+                self.title_edit = None;
+                if self.title_focus.is_focused(window) {
+                    self.focus_main(window, cx);
+                }
+            }
+        }
         // A drag that ended anywhere but on a drop zone just stops: gpui
         // drops it on the mouse up and redraws, and this is where the zones
         // learn to go away.
@@ -13083,12 +13985,10 @@ impl Render for Workspace {
             window.request_animation_frame();
         }
         let theme = cx.global::<Theme>().clone();
-        let title: SharedString = match &self.current {
-            Some(p) => tab_display_name(p.rsplit('/').next().unwrap_or(p))
-                .to_string()
-                .into(),
-            None => "No file is open".into(),
-        };
+        // The active leaf's name, which is the window title's first part:
+        // "New tab" with nothing open, as Obsidian's reads
+        // (`New tab - <vault> - Obsidian 1.14.5`).
+        let title = leaf_title(self.current.as_deref(), self.mode);
 
         let main_body: gpui::AnyElement = if let Some(loading) = &self.loading {
             div()
@@ -13101,10 +14001,7 @@ impl Render for Workspace {
             self.render_layout(&tree, &mut Vec::new(), &theme, cx)
         };
 
-        let wanted_title: SharedString = match &self.current {
-            Some(_) => format!("{title} - {} - Scoria", self.vault_name).into(),
-            None => format!("{} - Scoria", self.vault_name).into(),
-        };
+        let wanted_title: SharedString = format!("{title} - {} - Scoria", self.vault_name).into();
         if self.window_title != wanted_title {
             window.set_window_title(&wanted_title);
             self.window_title = wanted_title;
@@ -13229,7 +14126,7 @@ impl Render for Workspace {
             .child(self.render_vault_profile(&theme, cx))
             .child(self.dock_handle(true, &theme));
 
-        let status_items = self.status_bar_text(cx);
+        let status_items = self.status_bar_items(cx);
         // Obsidian's status bar is a tab in the window's bottom right
         // corner rather than a bar across it: the sidebar colour, a border
         // on its open sides, an 8 px top left corner, the smaller UI size.
@@ -13261,7 +14158,7 @@ impl Render for Workspace {
                     .overflow_hidden()
                     .child(self.status.clone()),
             )
-            .children(status_items.map(|text| {
+            .children(status_items.into_iter().map(|text| {
                 div()
                     .px(px(4.))
                     .whitespace_nowrap()
@@ -13952,6 +14849,194 @@ mod tests {
         let graph = leaf_json(&Tab::empty(ViewMode::Graph));
         assert_eq!(graph["state"]["type"], json!("graph"));
         assert_eq!(graph["state"]["icon"], json!("lucide-git-fork"));
+    }
+
+    /// An empty leaf is called "New tab" wherever its name is shown: the
+    /// tab strip, the view header and the window title all ask for the one
+    /// string, so none of them can read "No file is open" (see
+    /// [[Specification#The empty tab]]).
+    #[test]
+    fn an_empty_leaf_is_called_new_tab_wherever_its_name_is_shown() {
+        for mode in [
+            ViewMode::Reading,
+            ViewMode::LivePreview,
+            ViewMode::Source,
+            ViewMode::Reading,
+        ] {
+            assert_eq!(leaf_title(None, mode), "New tab");
+            assert_eq!(Tab::empty(mode).title(), "New tab");
+        }
+        assert_eq!(leaf_title(None, ViewMode::Graph), "Graph view");
+        assert_eq!(
+            leaf_title(Some("Folder/Note.md"), ViewMode::LivePreview),
+            "Note"
+        );
+    }
+
+    /// The empty tab's four pills, in Obsidian's order and with the text it
+    /// draws on them: the hotkeys come from the registry, so `New note` and
+    /// `Go to file` carry the chords their commands are bound to and the
+    /// other two carry none.
+    #[test]
+    fn the_empty_tab_offers_obsidians_four_pills() {
+        let registry = CommandRegistry::with_known_ids();
+        let actions = empty_tab_actions(&registry);
+        let mod_key = if cfg!(target_os = "macos") {
+            "Cmd"
+        } else {
+            "Ctrl"
+        };
+        let texts: Vec<String> = actions.iter().map(EmptyAction::text).collect();
+        assert_eq!(
+            texts,
+            [
+                format!("New note {mod_key} + N"),
+                "New base".to_string(),
+                "New canvas".to_string(),
+                format!("Go to file {mod_key} + O"),
+            ]
+        );
+        let commands: Vec<&str> = actions.iter().map(|a| a.command).collect();
+        assert_eq!(
+            commands,
+            [
+                "file-explorer:new-file",
+                "bases:new-file",
+                "canvas:new-file",
+                "switcher:open"
+            ]
+        );
+        // Each pill runs its command, so each has to be one the workspace
+        // will actually run.
+        for action in &actions {
+            assert!(
+                RUNNABLE.contains(&action.command),
+                "{} is not runnable",
+                action.command
+            );
+        }
+    }
+
+    /// A pill whose command the registry does not have is not drawn: the
+    /// registry holds the commands of the core plugins that are on, so
+    /// turning Bases off takes "New base" with it rather than leaving a
+    /// pill that does nothing.
+    #[test]
+    fn a_pill_for_a_disabled_plugin_is_left_out() {
+        let mut registry = CommandRegistry::with_known_ids();
+        registry.retain_enabled(|plugin| plugin != "bases");
+        let labels: Vec<&str> = empty_tab_actions(&registry)
+            .iter()
+            .map(|a| a.label)
+            .collect();
+        assert_eq!(labels, ["New note", "New canvas", "Go to file"]);
+    }
+
+    /// The status bar is not hidden on an empty tab: with one active
+    /// Obsidian's reads `0 properties`, `0 words`, `0 characters`. A canvas
+    /// and a base show nothing, and a note keeps the items it had.
+    #[test]
+    fn an_empty_tabs_status_bar_reads_zero_rather_than_nothing() {
+        assert_eq!(
+            Workspace::status_items(None, "", 0, 0, 0),
+            ["0 properties", "0 words", "0 characters"]
+        );
+        assert!(Workspace::status_items(Some("Board.canvas"), "", 0, 0, 0).is_empty());
+        assert!(Workspace::status_items(Some("Table.base"), "", 0, 0, 0).is_empty());
+        assert_eq!(
+            Workspace::status_items(Some("Note.md"), "Ln 1, Col 1  ·  ", 1, 12, 60),
+            ["Ln 1, Col 1  ·  1 backlink  ·  12 words, 60 characters"]
+        );
+    }
+
+    /// The empty tab's header carries the two navigation buttons and no
+    /// mode switch: there is nothing to read or edit. The graph keeps its
+    /// own toggle instead, as it already did.
+    #[test]
+    fn the_empty_tabs_header_has_no_mode_switch() {
+        for mode in [
+            ViewMode::Reading,
+            ViewMode::LivePreview,
+            ViewMode::Source,
+            ViewMode::Graph,
+        ] {
+            assert!(
+                !header_shows_mode_switch(&None, mode),
+                "an empty tab in {mode:?} must not offer the mode switch"
+            );
+        }
+        assert!(header_shows_mode_switch(
+            &Some("Note.md".to_string()),
+            ViewMode::Reading
+        ));
+        assert!(!header_shows_mode_switch(
+            &Some("Note.md".to_string()),
+            ViewMode::Graph
+        ));
+    }
+
+    /// Reaching the empty tab by closing every tab gives the same view as
+    /// a fresh vault's: [`Workspace::close_tab`] pushes a [`Tab::empty`] in
+    /// the default mode, and every one of those is the same leaf -- no
+    /// file, the "New tab" name, the empty main view and the zeroed status
+    /// bar -- however the window got there.
+    #[test]
+    fn closing_every_tab_leaves_the_tab_a_fresh_vault_opens_with() {
+        let fresh = Tab::empty(ViewMode::Reading);
+        for mode in [ViewMode::LivePreview, ViewMode::Source, ViewMode::Reading] {
+            let closed = Tab::empty(mode);
+            assert_eq!(closed.path, fresh.path);
+            assert_eq!(closed.title(), fresh.title());
+            assert_eq!(
+                Workspace::main_view_for(closed.mode, false, false, false, false, false, false),
+                MainView::Empty
+            );
+            assert_eq!(
+                Workspace::status_items(closed.path.as_deref(), "", 0, 0, 0),
+                Workspace::status_items(fresh.path.as_deref(), "", 0, 0, 0)
+            );
+            assert!(!header_shows_mode_switch(&closed.path, closed.mode));
+        }
+    }
+
+    /// Enter in the view-header title renames the file the field opened on,
+    /// through the path the rename prompt's box commits through: the field
+    /// holds the stem, so the extension goes back on and the name is
+    /// checked before the filesystem is asked for it. The gesture the probe
+    /// recorded: `Props` clicked at offset 3 and typed `X` reads `ProXps`
+    /// while the file is still `Props.md`, and Enter asks for `ProXps.md`.
+    #[test]
+    fn the_header_titles_commit_asks_for_the_path_the_rename_prompt_would() {
+        let mut field = TitleField::new("Props");
+        field.click(3, 1, false);
+        field.insert("X");
+        assert_eq!(
+            field.text(),
+            "ProXps",
+            "the title changed, the file has not"
+        );
+        assert_eq!(
+            renamed_path("Props.md", field.text().trim(), false).as_deref(),
+            Ok("ProXps.md")
+        );
+        assert_eq!(
+            renamed_path("Folder/Props.md", "New name", false).as_deref(),
+            Ok("Folder/New name.md")
+        );
+        assert_eq!(
+            renamed_path("Folder/Board.canvas", "Board 2", false).as_deref(),
+            Ok("Folder/Board 2.canvas")
+        );
+        // A folder has no extension to put back.
+        assert_eq!(
+            renamed_path("Folder", "Renamed", true).as_deref(),
+            Ok("Renamed")
+        );
+        // And a name the filesystem would refuse never gets there: the
+        // field stays open on the error instead.
+        assert!(renamed_path("Props.md", "", false).is_err());
+        assert!(renamed_path("Props.md", "a/b", false).is_err());
+        assert!(renamed_path("Props.md", &"x".repeat(300), false).is_err());
     }
 
     /// Obsidian's `main` after "Split right" on A, then B opened in the new

@@ -1711,10 +1711,18 @@ fn build(state: &VaultState, config: &GraphConfig, local: Option<&str>) -> Built
         }
     }
 
-    // Color groups: first matching query wins.
+    // Color groups: first matching query wins. A group with an empty query is
+    // dropped here rather than asked, the same way the search filter above
+    // drops one: a group nobody has typed a query into yet paints nothing.
+    // Until 2026-10-28 this was not stated anywhere and the group coloured
+    // every note in the graph, because an `All` node with no children used to
+    // be vacuously true in the matcher. That default is gone, so saying it
+    // here is what keeps the behaviour deliberate -- and it keeps
+    // `groups.is_empty()` below meaning "nothing to colour".
     let groups: Vec<(Search, Hsla)> = config
         .color_groups
         .iter()
+        .filter(|g| !g.query.trim().is_empty())
         .filter_map(|g| {
             let search = Search::new(&g.query).ok()?;
             let rgb = g.color.rgb;

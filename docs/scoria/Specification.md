@@ -2239,6 +2239,17 @@ the `.callout` in the probe's default dark theme.
 An unknown type keeps its own `data-callout` (`[!nosuchtype]` renders
 `data-callout="nosuchtype"`) and falls back to note's icon and colour.
 
+Every value above is a `--color-<name>` token — the same six the canvas presets
+and the highlight washes draw from, plus `--color-blue` (`#027aff` dark /
+`#086ddd` light) for the `note` group, which is not a canvas preset. Scoria
+picks the hue here and takes the value from the theme, so the three lookups
+cannot drift apart; until 2026-10-28 `Theme::callout_color` ignored the theme
+and answered the light values in both, which made every callout but `quote` the
+wrong colour on the dark theme Obsidian ships. OBSERVE: the light theme's
+computed `--callout-color` per type — only the dark column above was read, and
+the light column Scoria draws is that token's light value rather than an
+observation.
+
 ### The callout fold chevron is ephemeral
 
 Folding in Live Preview **does not touch the file**. `> [!tip] plain`,
@@ -2417,8 +2428,25 @@ vault where two notes contain `foo`:
 
 So Obsidian is not uniform: a dangling `OR`, `-`, `)`, a leading `(` and an
 unclosed quote all match as if they were not there, while a dangling `AND` and
-an unclosed trailing `(` make the whole query match nothing. Scoria gating only
-a wholly empty query is right for the first group and wrong for the second.
+an unclosed trailing `(` make the whole query match nothing.
+
+Built on 2026-10-28. Both of the second group parse to a group holding no term
+at all, which the matcher now fails: an `All` node with no children used to be
+vacuously *true*, so `foo OR` matched every note in the vault — the dangling
+branch became an empty `All` under the `Any`, and the whole vault satisfied it.
+`Any` with no children already answered false, so the asymmetry was the bug;
+fixing it in the matcher rather than in `Search::is_empty` is deliberate,
+because `foo (` and `foo AND` do hold a matcher — Obsidian runs the search and
+prints "No matches found.", which is a real zero and not a gated pane. A
+dangling `-` no longer searches for a literal hyphen either.
+
+What stays unprobed is whether `AND` is an operator at all. The observation
+above is consistent with two readings — `AND` as a dangling operator, or `AND`
+as an ordinary word that happens to appear in neither note — because the probe
+vault's two `foo` notes contain no `and`. Only the trailing shape is
+implemented, so `a AND b` is still three terms with `AND` among them. OBSERVE:
+whether `a AND b` matches the notes holding both words and nothing else, and
+what the explain panel prints for `foo AND` and `foo (`.
 
 ### The search collation tie, explained
 
@@ -2504,6 +2532,22 @@ consecutive separators before Rename in both menus — an empty section.
 **The empty space below the last row** gives only the four `action-primary`
 items: New note, New folder, New canvas, New base.
 
+Two payloads the capture did not record, both decided when the menus were
+built on 2026-10-28 and both still worth a probe. **OBSERVE: what "Copy path"
+puts on the clipboard** — Scoria writes the vault-relative path
+(`Notes/Plan.md`), which is the only path the rest of the app speaks, but
+Obsidian may well write the absolute one. **OBSERVE: what "Search in folder"
+puts in the search box** — Scoria writes `path:"<folder>/"`, with the trailing
+slash so that `Notes/` does not also match `Notes archive/`. Neither the item's
+payload nor the resulting query string was read out of Obsidian, only the menu
+row itself.
+
+Two Lucide names in the tables above are Obsidian's older aliases, and the
+bundled drawing is under the current name instead: `lucide-edit` is
+`square-pen` and `lucide-edit-3` is `pen-line`, both from Lucide's own
+`aliases` metadata rather than from a guess. The same already held for
+`check-circle-2`, `alert-triangle` and `help-circle` in the callout table.
+
 ### The modal backdrop
 
 Read from the quick switcher and from the delete confirmation, in a 1024×800
@@ -2564,7 +2608,7 @@ Obsidian builds but does not show at the default settings:
 | Default file to open | dropdown: `""` Last opened, `new` New note, … |
 | File to open | *(hidden)* |
 | Always focus new tabs | toggle, on |
-| Default location for new notes | dropdown, same four values as attachments |
+| Default location for new notes | dropdown of **three**: `root` Vault folder, `current` Same folder as current file, `folder` In the folder specified below — the same labels as the attachment dropdown bar its subfolder option, but storing `newFileLocation`'s own enum rather than a path |
 | Folder to create new notes in | text, placeholder `Example: folder 1/folder 2` *(hidden)* |
 | Default location for new attachments | dropdown (above) |
 | Attachment folder path | text, placeholder `Attachments` *(hidden)* |

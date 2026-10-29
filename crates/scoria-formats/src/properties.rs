@@ -1207,6 +1207,49 @@ mod tests {
         );
     }
 
+    /// A note that is *only* frontmatter becomes a zero-byte file when every
+    /// property goes, which is what Obsidian 1.14.5 writes for
+    /// `markdown:clear-metadata-properties` (see
+    /// [[Specification#Clearing every property leaves a blank line]]): the
+    /// block is the whole file, so removing it leaves nothing at all rather
+    /// than a bare pair of fences or a stray newline.
+    #[test]
+    fn a_note_that_is_only_frontmatter_clears_to_a_zero_byte_file() {
+        // The probe's own note.
+        assert_eq!(
+            applied(
+                "---\nalpha: one\n---\n",
+                &[Change::Remove {
+                    key: "alpha".into()
+                }]
+            ),
+            ""
+        );
+        // Several properties, cleared in one plan, and a block whose closing
+        // fence ends the file without a trailing newline.
+        assert_eq!(
+            applied(
+                "---\nalpha: one\nbeta: two\n---\n",
+                &[
+                    Change::Remove {
+                        key: "alpha".into()
+                    },
+                    Change::Remove { key: "beta".into() }
+                ]
+            ),
+            ""
+        );
+        assert_eq!(
+            applied(
+                "---\nalpha: one\n---",
+                &[Change::Remove {
+                    key: "alpha".into()
+                }]
+            ),
+            ""
+        );
+    }
+
     #[test]
     fn removing_everything_but_adding_one_keeps_the_block() {
         assert_eq!(

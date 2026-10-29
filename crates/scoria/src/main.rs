@@ -36,6 +36,7 @@ mod suggest;
 mod switcher;
 mod text_input;
 mod theme;
+mod title_field;
 mod watch;
 mod workspace;
 

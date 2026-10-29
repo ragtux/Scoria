@@ -30,8 +30,11 @@ collected under [[#Was declined until Obsidian was probed — all of it now is]]
 **Read the `Landed` lines first.** An entry whose first line after the severity reads
 `**Landed <date>**` describes behaviour that has since been fixed; the evidence under it is kept
 because the Obsidian half is still the record of what was observed, but the **Scoria** paragraph
-describes a binary that no longer exists. Thirty-eight entries are marked so far, twenty-five of
-them on 2026-10-24 and three (the folding ones) on 2026-10-26. Before acting on an unmarked entry, check the behaviour in the running app:
+describes a binary that no longer exists. Forty entries are marked so far, twenty-five of
+them on 2026-10-24, three (the folding ones) on 2026-10-26 and two on
+2026-10-28 — the pass of 2026-10-28 also found that eleven unmarked items of
+the UI-rules entry had been built without anyone striking them off, which is
+the clearest warning this file can give about acting on an unmarked entry. Before acting on an unmarked entry, check the behaviour in the running app:
 several of the ones marked that day turned out to have been fixed already, by work that landed
 after this audit was written.
 
@@ -75,7 +78,7 @@ Most of the 50 are the same large gaps the first pass had already filed — no t
 Hotkeys tab, the graph controls panel — and they are not duplicated below. What the triage added is
 twenty entries nobody had filed before and fresh evidence on a dozen more; both are folded into the
 sections that follow, so the sections held **61 open entries** in total; the five large builds of 2026-10-20 and the
-four small entries they carried closed nine of them, so **52 remain** — plus one filed after the frame work of the same evening, below; the Files header of 2026-10-21 closed one more and halved two, and the explorer keyboard the same day closed the halved header entry.
+four small entries they carried closed nine of them, so **52 remain** — plus one filed after the frame work of the same evening, below; the Files header of 2026-10-21 closed one more and halved two, and the explorer keyboard the same day closed the halved header entry. The UI-rules pass of 2026-10-28 closed two more and filed two of its own (the explorer's context menus and the reading view's property pills), both of them work its own build deliberately left.
 
 ## Files view and file operations
 
@@ -233,6 +236,84 @@ in a sibling `.nav-file-tag`: `cover.png` is "cover" plus a "png" chip.
 **Fix.** Give Row a `stem` and `ext` beside `name`, render the stem in `theme.text` and the extension
 as a small rounded chip, keep sorting on the stem, and keep `describe`'s `name` as stem+ext so the
 state dump is unchanged.
+
+### The explorer's context menus are a short subset, with no icons and no sections
+
+*low, parity-gap, large* · **Filed:** 2026-10-28
+
+**Landed 2026-10-28**, the same day it was filed, and this entry's own estimate
+of what was blocked was wrong: it said nine of the captured items were commands
+Scoria has not got. Four are. `OpenInNewTab` and `Workspace::open_in_new_tab`
+already existed, tab groups make "Open to the right" a split with a file of its
+own, `cx.write_to_clipboard` is used in three other places, and
+`Search::set_query` plus `show_search` make "Search in folder" two lines -- so
+the split this entry asked for was much the smaller half. All three menus are
+built, with Obsidian's sections, separators and lucide icons; `Section` and
+`menu_items` in `explorer.rs` are the model, and the separators fall out of
+where the section changes, including the doubled one above `danger`. Five icons
+were cut from Lucide's own source (`clipboard`, `folder-open`, `folder-search`,
+`separator-vertical`, `pen-line`). See
+[[Development#The explorer's context menus, 2026-10-28]].
+
+What is still left out, and why, is
+[[#Five context-menu items wait on features Scoria has not got]] -- four items
+plus a folder's "Make a copy". Obsidian's file row has no creation items;
+Scoria's used to offer "New note" and "New folder" there, which was the one
+thing in these menus that was wrong rather than merely missing, and it is gone.
+
+**Obsidian.** The file-row menu is fifteen items in six `data-section`s with a lucide icon each, the
+folder-row menu is fourteen in five, and the empty space below the last row gives four
+`action-primary` items; both menus carry two consecutive separators before Rename, i.e. an empty
+section. Every item, its icon and its section are in
+[[Specification#The file explorer's context menus]], captured 2026-10-25.
+
+**Scoria.** `explorer.rs` builds six items for a file row (New note, Rename..., Move file to...,
+Make a copy, Bookmark..., Delete) and five for a folder, with no icons, no sections and no
+separators, and nothing at all on empty space.
+
+**Fix.** Done as described below, bar the count: six of the nine named here turned out to be
+buildable, and `picture-in-picture-2`, `git-merge` and `history` were never fetched because their
+items are the ones still missing. What the paragraph got right is the rule — the menu got the
+sections, separators and icons it can honour, and the items it cannot run were filed rather than
+drawn dead. *Nine of the
+captured items are commands Scoria has not got* — `Open in new window`, `Merge entire file with...`,
+`Open version history`, `Open in default app`, `Show in system explorer` and the three `Open in...`
+rows beyond `-leaf` — and listing a row that cannot run is the thing the command palette refuses to
+do ([[#Settled by the probes of 2026-10-25 — the UI rules (issues #8, #19, #41)]], last paragraph).
+So this wants splitting: give the menu the sections, separators and lucide icons it can honour for
+the items that already work, and file the missing commands as their own entries rather than drawing
+dead rows. Nine icons would need cutting from lucide's own source first (`separator-vertical`,
+`picture-in-picture-2`, `git-merge`, `clipboard`, `history`, `edit-3`, `edit`, `folder-open`,
+`folder-search`).
+
+### Five context-menu items wait on features Scoria has not got
+
+*low, missing-feature, large* · **Filed:** 2026-10-28
+
+**Obsidian.** The captured menus
+([[Specification#The file explorer's context menus]]) hold five rows the
+2026-10-28 build left out rather than draw dead, each with its section:
+
+| Item | Menu | What it needs |
+| --- | --- | --- |
+| Open in new window | file, `open` | a second window; `open-link-in-new-window` is unrunnable for the same reason |
+| Merge entire file with... | file, `action` | a merge, and a chooser to merge with |
+| Open version history | file, `view` | file history, which is Obsidian Sync's and which Scoria has no store for |
+| Show in system explorer | file and folder, `system` | selecting a file *in* the desktop's file manager: the D-Bus `org.freedesktop.FileManager1.ShowItems` call, with opening the containing folder as the fallback where nothing answers it |
+| Make a copy | **folder**, `action` | a recursive folder copy; `Vault::duplicate` is one file (it splits the name on its extension), and a folder copy has to rewrite the links of every note it copies |
+
+**Scoria.** Each row is absent, which is deliberate: the menu lists only what
+it can run. Dropping the only item of a section drops that section's separator
+with it, so the file menu has no `view` separator where the capture has one.
+
+**Fix.** Four jobs in rising order of size. *Show in system explorer* is the
+nearest: a D-Bus call with an `xdg-open` on the parent folder as the fallback,
+beside the `open_in_default_app` that landed. *Make a copy* on a folder is a
+`scoria-vault` job -- walk the folder, copy it to `available_path`, and run the
+copied notes through the link rewriting a move already uses. *Open in new
+window* waits on multi-window, which also unblocks `open-link-in-new-window`.
+*Merge entire file with...* and *Open version history* are features rather than
+menu rows, and want entries of their own if they are ever wanted at all.
 
 ## Live Preview
 
@@ -566,6 +647,29 @@ show.
 real Obsidian, and the app's first asset pipeline (an embedded `AssetSource` wired in `main.rs`).
 `explorer.rs`, `search.rs` and `settings.rs` draw the same text triangles, so the chevron should
 change with them, not alone.
+
+### The reading view's property pills have no remove control, and the block is read-only
+
+*low, missing-feature, medium* · **Filed:** 2026-10-28
+
+**Obsidian.** Obsidian edits properties in reading view as well as in Live Preview, and the reading
+view's own DOM carries the control: a tag pill is `div.multi-select-pill[tabindex=0]` holding
+`div.multi-select-pill-content > span` **and** a `div.multi-select-pill-remove-button` with a
+`lucide-x` ([[Specification#Observed properties-in-reading-view behavior, Obsidian 1.14.4]]).
+
+**Scoria.** Every property affordance is gated on a `PropertiesHost`, and `PropertiesHost` is built
+only by `EditorElement`; the reading view passes `None`, so its whole properties block is
+read-only and the pills draw no ×. The editor's pills got theirs on 2026-10-28; this is the half
+that was deliberately left, because `ReadingView` holds a built `Model` rather than a buffer, and a
+× that does nothing would be worse than none.
+
+**Fix.** The write path, in two files. In `reading/view.rs`, an event beside `TaskToggled` —
+`PropertyItemRemoved { path, key, index }` with an `EventEmitter` impl — emitted by a properties
+host (or a narrower remove handler) the way `on_task` emits `TaskToggled`. In `workspace.rs`, one
+subscription beside the `TaskToggled` one calling a `remove_property_item` that mirrors
+`toggle_task`: read the note, `scoria_cache::note_properties`, `properties::rows` +
+`properties::remove_item`, `scoria_formats::properties::plan`, write, refresh. The removal itself
+needs nothing new — `properties::remove_item` is already the editor's.
 
 ### Raw and inline HTML is literal source; remote images render as a link
 
@@ -1112,6 +1216,15 @@ the Files/Graph/Backlinks panes is the larger half and can follow.
 
 *low, parity-gap, medium*
 
+**Landed 2026-10-28**: `ATTACHMENT_LOCATION` is a real four-option `Typed`
+dropdown writing `/`, `./`, `./Attachments` and `Attachments`, and the
+Subfolder name / Attachment folder path rows appear off the selected option.
+The resolution rule is `scoria_vault::ops::attachment_path`, with the spec's
+six rows as tests. The row keeps its `not_yet()` tag even so: nothing in
+Scoria creates an attachment, so the value really is written for Obsidian and
+nothing else, which is what `Honored::No` means. The tag comes off with the
+first caller. See [[Development#The settled UI rules, 2026-10-28]].
+
 **Scoria.** Clicks down the whole row band leave `modal.menu` null and `app.json` byte-identical, and
 no "Attachment folder path" or "Subfolder name" row ever appears. The row is built with
 `dropdown(...).not_yet()`, and `dropdown` is a display-only control with no `Typed` behind it, unlike
@@ -1131,6 +1244,13 @@ included. Keep the `.not_yet()` tag until the labels and stored values are probe
 ### A click that dismisses a dropdown also activates whatever it lands on
 
 *low, parity-gap, small*
+
+**Landed 2026-10-28**: `popover_swallows_click` and `escape_closes` are pure
+decision functions that every clickable in the modal asks first, so a click
+that dismisses a dropdown is spent on the dismissal and Escape over an open
+list closes the list rather than the modal. Both are unit-tested, and routing
+every control through them is what keeps the next control added from
+forgetting. See [[Development#The settled UI rules, 2026-10-28]].
 
 **Scoria.** Open the `newFileLocation` menu, then click the "Always focus new tabs" toggle: the menu
 closes **and** `focusNewTab` flips, in one click. Escape with a dropdown open closes the whole modal
@@ -1503,6 +1623,43 @@ and the two new blocks of
 
 ### Settled by the probes of 2026-10-25 — the UI rules (issues #8, #19, #41)
 
+**Landed 2026-10-28.** All of it, and the entry was already stale when it was
+read: eleven of the fifteen items below had been built by the work of the week
+after it was written. Verifying that first is what made the pass worth running
+— it turned up three bugs nobody had filed, and six landed items with no test
+pinning them. See [[Development#The settled UI rules, 2026-10-28]].
+
+Built this pass: the four-option attachment dropdown and its dependent rows
+(#41), the three-option new-notes dropdown, `scoria_vault::ops::attachment_path`
+for the resolution rule, the click-dismiss and Escape popover rules (#41's
+second half), the empty tab's four pills and its `0 properties / 0 words /
+0 characters` status bar, `New tab` in the view header and the window title,
+the view-header inline rename, the two-press Backspace on the property pills,
+Enter leaving the pill input open, the `lucide-x` remove control, and the
+callout colours.
+
+Already built, verified item by item against the running tree rather than
+taken on trust: the 28 callout icons, the ephemeral fold chevron and the absent
+affordance without `-` or `+`, the setext underline at body size, the
+struck-through and muted done task, clearing every property, Ctrl+E swallowed
+in a text input, `graph:open-local` not offered with no file, the local graph's
+own scale 1, the collation tie, and three of the four pill gestures.
+
+Three bugs the stale text had hidden, all fixed: `foo OR` matched **every note
+in the vault** (an `All` node with no children was vacuously true in the
+matcher, which also meant an empty-query graph colour group coloured the whole
+graph); a dangling `-` searched for a literal hyphen; `foo (` was flattened
+back to `foo`. And `Theme::callout_color` took `&self` but never read
+`self.dark`, so every callout but `quote` drew the light theme's colour on the
+dark theme Obsidian ships.
+
+Not built, each for a reason given in the Development entry: the reading
+view's pills still have no remove control, the explorer's context menus stay a
+subset, the empty tab's header has no Bookmark or More options, and
+`.inline-title` is untouched. **As with every entry here, read the Obsidian
+half below as the record of what was observed; the "Scoria" halves describe a
+binary that no longer exists.**
+
 `tools/obsidian-probe/ui-rules.mjs`, `attachment-dropdown.mjs` and
 `search-collation.mjs` answered every UI row below against **Obsidian 1.14.5**
 (the probe's own window title; the app had updated itself since the earlier
@@ -1535,10 +1692,11 @@ and the raw run is `tools/obsidian-probe/results/2026-10-25-ui-rules.json`.
   and their `--callout-color`, are now in the spec table — `note` is
   `lucide-pencil`, `tip`/`hint`/`important` `lucide-flame`, and an unknown type
   falls back to note's pair. The corpus's empty `<svg>` was a serialisation
-  artefact; the DOM carries the name in the svg's own class. The Rust half of
-  #19 is unchanged: an `AssetSource` still has to be registered before gpui's
-  `svg()` paints anything, and the icons must be cut from lucide's own source,
-  never Obsidian's bundle.
+  artefact; the DOM carries the name in the svg's own class. *Superseded
+  2026-10-28: the Rust half was already done — `Assets` is registered and
+  `assets::callout_icon` carries the whole table, cut from lucide's own source.
+  What was still wrong was the colour, not the icon: `Theme::callout_color`
+  answered the light theme's values in both themes.*
 - **The done-task decoration** is `text-decoration-line: line-through` plus a
   muted `rgb(179, 179, 179)` against an unchecked item's `rgb(218, 218, 218)`,
   in the reading view and on the `.cm-line` in Live Preview. So Scoria's
@@ -1580,7 +1738,14 @@ and the raw run is `tools/obsidian-probe/results/2026-10-25-ui-rules.json`.
   **`foo AND` and `foo (` match nothing**, and so do a bare `OR` and a bare
   `(`. So Scoria gating only a wholly empty query is right for the first group
   and wrong for the second, and the fix is narrower than this entry feared:
-  two shapes to fail, not "an empty term inside the matcher".
+  two shapes to fail, not "an empty term inside the matcher". *Landed
+  2026-10-28, and narrower was not the whole story: `foo OR` was matching every
+  note in the vault, because an `All` node with no children was vacuously true.
+  Fixed in the matcher, where every other consumer of a `Search` inherited it
+  too. All ten shapes are a fixture now. Whether `AND` is an operator rather
+  than a word is still unprobed — the probe vault's `foo` notes hold no `and`,
+  so the observed zero does not tell the two apart — and only the trailing
+  shape is implemented.*
 - **The search collation tie is explained.** The sort is a *stable* sort on
   the basename over a file list already in **full-path descending** order:
   eight `apple` notes come back `zzz/`, `z/`, `m/n/`, `m/`, root, `a/b/c/`,

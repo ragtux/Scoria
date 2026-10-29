@@ -94,8 +94,8 @@ pub struct Theme {
 /// The canvas view's palette. Obsidian paints the view over its primary
 /// background, cards over the secondary one, and its preset colours are the
 /// `--color-red` .. `--color-purple` tokens the callouts use too, so the
-/// values below are the ones [`Theme::callout_color`] has for the same
-/// hues plus `--color-yellow` and `--color-cyan`.
+/// values below are the ones [`Theme::callout_color`] draws for the same
+/// hues plus `--color-yellow`.
 #[derive(Debug, Clone)]
 pub struct CanvasColors {
     /// `--canvas-background`: the view's ground and every card's fill.
@@ -288,18 +288,29 @@ impl Theme {
         c
     }
 
-    /// Obsidian's default callout colors by canonical type.
+    /// Obsidian's default callout colors by canonical type. `--callout-color`
+    /// is a `--color-<name>` token, the same six the canvas presets and the
+    /// highlight washes draw from, so the hue is picked here and the theme's
+    /// own value comes from [`CanvasColors::presets`] — which is what makes
+    /// the dark theme's callouts the dark theme's colours. The table of
+    /// observed values is in `docs/scoria/Specification.md` under "The lucide
+    /// icon and colour of every built-in callout type"; it was read in the
+    /// default dark theme, and the light column is the same tokens' light
+    /// values. `--color-blue` is not a canvas preset, so it keeps its own
+    /// pair, exactly as [`Theme::highlight_color`] has it.
     pub fn callout_color(&self, kind: &str) -> Hsla {
-        let c = match kind {
-            "abstract" | "tip" => 0x00bfbc,
-            "success" => 0x08b94e,
-            "question" | "warning" => 0xec7500,
-            "failure" | "danger" | "bug" => 0xe93147,
-            "example" => 0x7852ee,
-            "quote" => 0x9e9e9e,
-            _ => 0x086dff,
-        };
-        rgb(c).into()
+        let presets = &self.canvas.presets;
+        match kind {
+            "abstract" | "tip" => presets[4],
+            "success" => presets[3],
+            "question" | "warning" => presets[1],
+            "failure" | "danger" | "bug" => presets[0],
+            "example" => presets[5],
+            // Obsidian's grey is a flat value in both themes.
+            "quote" => rgb(0x9e9e9e).into(),
+            // `note`, `info`, `todo` and anything Obsidian does not know.
+            _ => rgb(if self.dark { 0x027aff } else { 0x086ddd }).into(),
+        }
     }
 }
 
@@ -315,5 +326,127 @@ fn first_font(list: Option<&str>) -> Option<SharedString> {
         None
     } else {
         Some(first.to_string().into())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The whole of the probe's `--callout-color` table, aliases and all, read
+    /// in Obsidian 1.14.5's default dark theme. Before this test
+    /// [`Theme::callout_color`] ignored `self.dark` and answered the light
+    /// theme's values in both themes, so every callout but `quote` was the
+    /// wrong colour on the theme Obsidian ships.
+    #[test]
+    fn every_callout_type_takes_obsidians_dark_color() {
+        let theme = Theme::dark();
+        let table = [
+            ("note", 0x027aff),
+            ("abstract", 0x53dfdd),
+            ("summary", 0x53dfdd),
+            ("tldr", 0x53dfdd),
+            ("info", 0x027aff),
+            ("todo", 0x027aff),
+            ("tip", 0x53dfdd),
+            ("hint", 0x53dfdd),
+            ("important", 0x53dfdd),
+            ("success", 0x44cf6e),
+            ("check", 0x44cf6e),
+            ("done", 0x44cf6e),
+            ("question", 0xe9973f),
+            ("help", 0xe9973f),
+            ("faq", 0xe9973f),
+            ("warning", 0xe9973f),
+            ("caution", 0xe9973f),
+            ("attention", 0xe9973f),
+            ("failure", 0xfb464c),
+            ("fail", 0xfb464c),
+            ("missing", 0xfb464c),
+            ("danger", 0xfb464c),
+            ("error", 0xfb464c),
+            ("bug", 0xfb464c),
+            ("example", 0xa882ff),
+            ("quote", 0x9e9e9e),
+            ("cite", 0x9e9e9e),
+            // An unknown type falls back to note's pair, which it reaches as
+            // `note` by way of the canonical type.
+            ("nosuchtype", 0x027aff),
+        ];
+        for (written, want) in table {
+            let kind = scoria_markdown::canonical_callout_type(written);
+            assert_eq!(
+                theme.callout_color(kind),
+                rgb(want).into(),
+                "[!{written}] on the dark theme"
+            );
+        }
+    }
+
+    /// The light theme's callouts are the same tokens' light values. These
+    /// were never probed, so the assertion is the set the app already drew,
+    /// unchanged by routing the lookup through the presets -- except
+    /// `--color-blue`, which was `0x086dff` here and `0x086ddd` in
+    /// [`Theme::highlight_color`] for the same token. The spec records
+    /// `#086ddd`, so the odd one out was a typo.
+    #[test]
+    fn the_light_theme_keeps_the_light_tokens() {
+        let theme = Theme::light();
+        for (kind, want) in [
+            ("abstract", 0x00bfbc),
+            ("tip", 0x00bfbc),
+            ("success", 0x08b94e),
+            ("question", 0xec7500),
+            ("warning", 0xec7500),
+            ("failure", 0xe93147),
+            ("danger", 0xe93147),
+            ("bug", 0xe93147),
+            ("example", 0x7852ee),
+            ("quote", 0x9e9e9e),
+            ("note", 0x086ddd),
+        ] {
+            assert_eq!(theme.callout_color(kind), rgb(want).into(), "[!{kind}]");
+        }
+    }
+
+    /// The two themes may not answer the same colour for a hue that has one,
+    /// which is the bug this pair of tests was written for.
+    #[test]
+    fn the_themes_disagree_where_obsidian_does() {
+        for kind in [
+            "note", "abstract", "success", "warning", "failure", "example",
+        ] {
+            assert_ne!(
+                Theme::dark().callout_color(kind),
+                Theme::light().callout_color(kind),
+                "[!{kind}] is the same in both themes"
+            );
+        }
+        // Grey is the exception: one value for both.
+        assert_eq!(
+            Theme::dark().callout_color("quote"),
+            Theme::light().callout_color("quote")
+        );
+    }
+
+    /// The callout hues and the highlight washes read the same tokens, so the
+    /// two lookups may not drift apart again: the wash is the callout colour
+    /// at 0.3 alpha, blue included.
+    #[test]
+    fn a_highlight_wash_is_its_callout_color_at_a_third_alpha() {
+        use scoria_markdown::HighlightColor as C;
+        for theme in [Theme::dark(), Theme::light()] {
+            for (color, kind) in [
+                (C::Red, "failure"),
+                (C::Orange, "warning"),
+                (C::Green, "success"),
+                (C::Purple, "example"),
+                (C::Blue, "note"),
+            ] {
+                let mut want = theme.callout_color(kind);
+                want.a = 0.3;
+                assert_eq!(theme.highlight_color(color), want, "{color:?}");
+            }
+        }
     }
 }
