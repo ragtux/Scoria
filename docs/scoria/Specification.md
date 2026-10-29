@@ -27,7 +27,7 @@ with the command inventory and bundle evidence.
 | Wikilinks and embeds are not parsed inside code spans; `[[` needs `]]` on the same line | `scoria-markdown/tests/obsidian.rs` |
 | Tags need a non-numeric character; `# Heading` is not a tag; `#` after an alphanumeric is not a tag | `scoria-markdown/tests/obsidian.rs` |
 | Block ids: ` ^id` at the end of a paragraph or list item, or `^id` alone on a line after a table, list, or code block | `scoria-markdown/tests/obsidian.rs` |
-| Callouts: `> [!type]-` or `+` on the first quoted line; title is the rest of the line; built-in types and aliases | `scoria-markdown::canonical_callout_type` |
+| Callouts: `> [!type]-` or `+` on the first quoted line; title is the rest of the line, or derived from the type; built-in types and aliases | `scoria-markdown::canonical_callout_type`, `scoria-markdown::callout_default_title` |
 | `==highlight==`, `~~strike~~` need exactly two delimiters; `$x$` needs no space inside and no digit after; `%%` comments hide inline and block text | `scoria-markdown/tests/obsidian.rs` |
 | Reading-view hooks: `internal-link` with `data-href`, `tag`, `internal-embed` with `src`/`alt`, `callout` with `data-callout`/`data-callout-fold`, `task-list-item` with `data-task`, `data-heading` | `scoria-markdown::render_html` |
 | Cache record: links, embeds, tags, headings, sections with Obsidian's type names, list items with Obsidian's `parent` encoding, blocks, footnotes, frontmatter links with key paths | `scoria-cache::index_markdown` |
@@ -110,10 +110,38 @@ Blocks:
 - A list marker indented four or more columns inside a list is a sibling
   item; CommonMark would make it a lazy continuation line.
 - A `>` line directly after a list item's text stays inside that item.
-- The callout type is trimmed, so `[! bad]` is a `bad` callout; `[!tip]Title`
-  without a space is an ordinary quote.
+- A callout header needs *something* between its brackets, which is then
+  trimmed: `[! bad]` is a `bad` callout, `[! ]` and `[!   ]` are callouts with
+  an empty type (an empty `data-callout`, and no title to derive), and a bare
+  `[!]` is not a callout at all. `[!tip]Title` without a space is an ordinary
+  quote.
+- A callout header with no title of its own shows the type with each `-` turned
+  into a space, the whole lowercased and the first character upper-cased:
+  `[!note]` shows "Note", `[!bad-type-two]` shows "Bad type two", `[!NOTE-X]`
+  shows "Note x". `_` is not touched, so `[!bad_type]` shows "Bad_type".
+- A callout's first body line takes the ordinary block rules. A table's
+  delimiter row or a setext underline on the line after the header is read as a
+  table or a heading, exactly as it would be anywhere else — the header is not
+  one of the body paragraph's lines.
 - Frontmatter renders as a hidden `pre.frontmatter`; `<script>` is removed;
   unknown elements are unwrapped; raw `<a>` gains `target` and `rel`.
+
+**Observed, not yet reproduced** — callouts, probed 2026-10-29 against Obsidian
+1.14.4 (installer build 1.13.7) with `tools/probe-gen`. Unlike everything else
+in this section, the parser does not match these yet:
+
+- The callout *title* is block-parsed, not inline-parsed. `> [!note] # h` puts
+  an `<h1>` inside `.callout-title-inner`, `1. item` an `<ol>`, and `> quote` a
+  nested blockquote. This is also why `[!note] -` is not a fold marker — the
+  space ends the header, and the lone `-` becomes an empty `<ul>` in the title.
+  The parser renders the title's inlines only, so each of these comes out as
+  text.
+- A `^blockid` as a callout's only body line is consumed as the block id,
+  leaving an empty `.callout-content`. The parser renders it as a paragraph of
+  literal text.
+- A callout nested in a list item of another callout keeps its body in
+  Obsidian. The parser closes the nested callout at its title and leaves the
+  body behind it in a stray blockquote.
 
 Inlines:
 

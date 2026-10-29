@@ -144,6 +144,67 @@ fn callouts() {
     );
 }
 
+/// What counts as a callout type, and the title derived from one.
+///
+/// Observed against Obsidian 1.14.4 (tools/probe-gen, 2026-10-29): the type
+/// must have *something* between the brackets, which is then trimmed, and the
+/// default title turns `-` into a space but leaves `_` alone.
+#[test]
+fn callout_type_and_its_default_title() {
+    fn title(src: &str) -> String {
+        let doc = parse(src);
+        let BlockKind::Callout { .. } = doc.blocks[0].kind else {
+            panic!("expected a callout for {src:?}")
+        };
+        let rendered = html(src);
+        let inner = rendered
+            .split("callout-title-inner\">")
+            .nth(1)
+            .and_then(|t| t.split("</div>").next())
+            .unwrap_or_default();
+        inner.to_string()
+    }
+
+    // Whitespace between the brackets is a callout with an empty type; a bare
+    // `[!]` is not a callout at all.
+    for src in ["> [! ]\n> body", "> [!   ]\n> body"] {
+        let BlockKind::Callout { callout_type, .. } = parse(src).blocks.remove(0).kind else {
+            panic!("expected a callout for {src:?}")
+        };
+        assert_eq!(callout_type, "", "{src:?}");
+        // An empty type has no default title, and shows an empty `data-callout`.
+        assert_eq!(title(src), "");
+        assert!(html(src).contains("data-callout=\"\""), "{src:?}");
+    }
+    assert!(matches!(
+        parse("> [!]\n> body").blocks[0].kind,
+        BlockKind::BlockQuote { .. }
+    ));
+    // The type is trimmed, so this is a `bad` callout.
+    let BlockKind::Callout { callout_type, .. } = parse("> [! bad]\n> b").blocks.remove(0).kind
+    else {
+        panic!("callout")
+    };
+    assert_eq!(callout_type, "bad");
+
+    // `-` becomes a space, the whole thing is lowercased, the first character
+    // is upper-cased, and `_` is left alone.
+    assert_eq!(title("> [!note]\n> b"), "Note");
+    assert_eq!(title("> [!TIP]\n> b"), "Tip");
+    assert_eq!(title("> [!bad-type-two]\n> b"), "Bad type two");
+    assert_eq!(title("> [!NOTE-X]\n> b"), "Note x");
+    assert_eq!(title("> [!bad_type]\n> b"), "Bad_type");
+    // A title that is written out is used as written, not derived.
+    assert_eq!(title("> [!bad-type] Kept-as-is\n> b"), "Kept-as-is");
+
+    // The derivation is shared, so the helper and the renderer cannot drift.
+    assert_eq!(
+        scoria_markdown::callout_default_title("bad-type-two"),
+        "Bad type two"
+    );
+    assert_eq!(scoria_markdown::callout_default_title(""), "");
+}
+
 /// A callout's first body line gets the same block rules as any other line.
 ///
 /// The header is taken off the quote while parsing, not lifted out of the body

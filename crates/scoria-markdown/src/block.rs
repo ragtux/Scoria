@@ -1622,15 +1622,19 @@ fn trim_span(src: &str, span: Span) -> Span {
 }
 
 /// Parses `[!type]- Title`; returns the type, fold flag, and byte offset of the title.
-fn parse_callout_header_raw(line: &str) -> Option<(&str, Option<bool>, usize)> {
+pub(crate) fn parse_callout_header_raw(line: &str) -> Option<(&str, Option<bool>, usize)> {
     let lead = line.len() - line.trim_start().len();
     let rest = line[lead..].strip_prefix("[!")?;
     let close = rest.find(']')?;
-    // Obsidian trims the type, so `[! bad]` is a `bad` callout.
-    let ty = rest[..close].trim();
-    if ty.is_empty() || ty.contains('[') {
+    let raw = &rest[..close];
+    // Obsidian wants *something* between the brackets and then trims it, so
+    // `[! bad]` is a `bad` callout and `[! ]` is one with an empty type (an
+    // empty `data-callout` and no default title), while a bare `[!]` is not a
+    // callout at all. Observed against 1.14.4 (tools/probe-gen, 2026-10-29).
+    if raw.is_empty() || raw.contains('[') {
         return None;
     }
+    let ty = raw.trim();
     let after = &rest[close + 1..];
     let (fold, skip) = match after.as_bytes().first() {
         Some(b'-') => (Some(true), 1),
