@@ -821,7 +821,10 @@ fn first_text(blocks: &[Block<'_>]) -> Option<String> {
             }
             BlockKind::Callout {
                 title, children, ..
-            } => first_inline_line(title).or_else(|| first_text(children)),
+            } => scoria_markdown::inline_runs(title)
+                .first()
+                .and_then(|run| first_inline_line(run))
+                .or_else(|| first_text(children)),
             BlockKind::List { items, .. } => {
                 items.iter().find_map(|item| first_text(&item.children))
             }

@@ -294,7 +294,11 @@ impl<'a> Indexer<'a> {
             BlockKind::Callout {
                 title, children, ..
             } => {
-                self.inlines(title);
+                // The title is a block tree; its inlines still carry the links
+                // and tags a title can hold.
+                for run in scoria_markdown::inline_runs(title) {
+                    self.inlines(run);
+                }
                 self.blocks(children);
             }
             BlockKind::List { items, .. } => self.list(items, None),

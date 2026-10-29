@@ -118,7 +118,11 @@ fn callouts() {
     };
     assert_eq!(*callout_type, "tip");
     assert_eq!(*fold, Some(Fold::Collapsed));
-    assert_eq!(scoria_markdown::plain_text(title), "Fold me");
+    // The title is a block tree now; one paragraph, in the ordinary case.
+    assert_eq!(
+        scoria_markdown::plain_text(scoria_markdown::inline_runs(title)[0]),
+        "Fold me"
+    );
     assert_eq!(children.len(), 2);
     assert!(matches!(children[0].kind, BlockKind::Paragraph { .. }));
     assert!(matches!(children[1].kind, BlockKind::List { .. }));
@@ -142,6 +146,75 @@ fn callouts() {
         html("> [!warning]"),
         "<div data-callout-metadata=\"\" data-callout-fold=\"\" data-callout=\"warning\" class=\"callout\"><div class=\"callout-title\"><div class=\"callout-title-inner\">Warning</div></div></div>\n"
     );
+}
+
+/// A callout's title is block-parsed, not inline-parsed.
+///
+/// Obsidian runs the title through the block parser, so a heading, a list or a
+/// quote written as a title renders as one inside `.callout-title-inner` --
+/// which is also why `[!note] -` is not a fold marker: the space ends the
+/// header and the lone `-` becomes an empty list. The ordinary one-paragraph
+/// title still renders as bare text, with no `<p>`. Observed against Obsidian
+/// 1.14.4 (tools/probe-gen, 2026-10-29).
+#[test]
+fn a_callout_title_is_block_parsed() {
+    fn title_blocks(src: &str) -> Vec<BlockKind<'_>> {
+        let doc = parse(src);
+        let BlockKind::Callout { title, .. } = doc.blocks.into_iter().next().unwrap().kind else {
+            panic!("expected a callout for {src:?}")
+        };
+        title.into_iter().map(|b| b.kind).collect()
+    }
+
+    assert!(matches!(
+        title_blocks("> [!note] # heading\n> body").as_slice(),
+        [BlockKind::Heading { level: 1, .. }]
+    ));
+    assert!(matches!(
+        title_blocks("> [!note] 1. item\n> body").as_slice(),
+        [BlockKind::List { .. }]
+    ));
+    assert!(matches!(
+        title_blocks("> [!note] > quote\n> body").as_slice(),
+        [BlockKind::BlockQuote { .. }]
+    ));
+    // A spaced `-` or `+` is title content, not a fold marker, and a lone list
+    // marker makes a list with one empty item.
+    for src in ["> [!note] -\n> body", "> [!note] +\n> body"] {
+        let doc = parse(src);
+        let BlockKind::Callout { fold, title, .. } = &doc.blocks[0].kind else {
+            panic!("callout")
+        };
+        assert_eq!(*fold, None, "{src:?}");
+        assert!(matches!(title[0].kind, BlockKind::List { .. }), "{src:?}");
+    }
+    // The fold markers that *are* markers still are.
+    let doc = parse("> [!note]- t\n> body");
+    let BlockKind::Callout { fold, .. } = &doc.blocks[0].kind else {
+        panic!("callout")
+    };
+    assert_eq!(*fold, Some(Fold::Collapsed));
+
+    // Rendering: an ordinary title stays bare, a heading title becomes an h1,
+    // and the spans stay absolute in the source despite the nested parse.
+    let rendered = html("> [!note] Hi\n> there");
+    assert!(
+        rendered.contains("callout-title-inner\">Hi</div>"),
+        "{rendered}"
+    );
+    assert!(!rendered.contains("<p>Hi"), "{rendered}");
+    assert!(html("> [!note] # h\n> b").contains("<h1 data-heading=\"h\">"));
+
+    let src = "> [!note] # h\n> b";
+    let BlockKind::Callout { title, .. } = &parse(src).blocks[0].kind else {
+        panic!("callout")
+    };
+    let BlockKind::Heading { content, .. } = &title[0].kind else {
+        panic!("heading")
+    };
+    // `h` sits at byte 12 of the whole document, not byte 2 of the title.
+    assert_eq!(&src[content[0].span.start..content[0].span.end], "h");
+    assert_eq!(content[0].span.start, 12);
 }
 
 /// A quote kept inside a list item keeps *all* of its lines there.

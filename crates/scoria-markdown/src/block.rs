@@ -304,27 +304,26 @@ pub(crate) struct BlockParser<'a, 'o> {
 }
 
 impl<'a, 'o> BlockParser<'a, 'o> {
+    /// Parses one span of `src` as blocks, with every span in the result still
+    /// an offset into `src` rather than into the slice.
+    ///
+    /// A callout's title is block-parsed by Obsidian -- `[!note] # h` really
+    /// does make a heading inside `.callout-title-inner` -- and that title is
+    /// a contiguous span of the header line, so it goes through this parser
+    /// rather than a reduced copy of it. Feeding the line span directly is what
+    /// keeps the offsets absolute: parsing `&src[span]` as its own document
+    /// would renumber every position in it.
+    pub(crate) fn parse_span(src: &'a str, span: Span, opts: &'o Options) -> Vec<RawBlock<'a>> {
+        let mut p = BlockParser::new(src, opts);
+        p.incorporate_line(span);
+        while p.open.len() > 1 {
+            p.finalize();
+        }
+        p.open.pop().unwrap().children
+    }
+
     pub(crate) fn parse(src: &'a str, opts: &'o Options) -> BlockOutput<'a> {
-        let mut p = BlockParser {
-            src,
-            opts,
-            open: vec![Node::new(NodeKind::Document, 0, 0)],
-            line: Span::default(),
-            line_number: 0,
-            offset: 0,
-            column: 0,
-            next_nonspace: 0,
-            next_nonspace_column: 0,
-            indent: 0,
-            indented: false,
-            blank: false,
-            partially_consumed_tab: false,
-            all_closed: true,
-            last_matched: 0,
-            line_consumed: false,
-            link_definitions: HashMap::new(),
-            footnote_labels: Vec::new(),
-        };
+        let mut p = BlockParser::new(src, opts);
         let mut body_start = 0;
         if opts.frontmatter {
             if let Some(fm) = crate::extract_frontmatter(src) {
@@ -368,6 +367,29 @@ impl<'a, 'o> BlockParser<'a, 'o> {
             blocks: doc.children,
             link_definitions: p.link_definitions,
             footnote_labels: p.footnote_labels,
+        }
+    }
+
+    fn new(src: &'a str, opts: &'o Options) -> BlockParser<'a, 'o> {
+        BlockParser {
+            src,
+            opts,
+            open: vec![Node::new(NodeKind::Document, 0, 0)],
+            line: Span::default(),
+            line_number: 0,
+            offset: 0,
+            column: 0,
+            next_nonspace: 0,
+            next_nonspace_column: 0,
+            indent: 0,
+            indented: false,
+            blank: false,
+            partially_consumed_tab: false,
+            all_closed: true,
+            last_matched: 0,
+            line_consumed: false,
+            link_definitions: HashMap::new(),
+            footnote_labels: Vec::new(),
         }
     }
 

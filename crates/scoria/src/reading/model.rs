@@ -646,22 +646,26 @@ impl<'v> Builder<'v> {
                 children,
             } => {
                 let title = if title.is_empty() {
-                    let mut chars = callout_type.chars();
-                    let shown: String = chars
-                        .next()
-                        .map(|f| {
-                            f.to_uppercase()
-                                .chain(chars.map(|c| c.to_ascii_lowercase()))
-                                .collect()
-                        })
-                        .unwrap_or_default();
+                    // Shared with the reading view's HTML and with Live
+                    // Preview: this was a fourth copy of the derivation, and
+                    // the only one that still left `-` in place, so a
+                    // `[!bad-type]` callout read "Bad-type" here.
                     RichText {
                         id: self.id(),
-                        text: shown,
+                        text: scoria_markdown::callout_default_title(callout_type),
                         ..RichText::default()
                     }
                 } else {
-                    self.rich(title)
+                    // The title is block-parsed; this view paints one run of
+                    // rich text, so flatten the tree's inlines into it. A
+                    // heading or a list written as a title therefore shows its
+                    // text without the block styling Obsidian gives it -- see
+                    // the callout block in docs/scoria/Specification.md.
+                    let flat: Vec<Inline<'_>> = scoria_markdown::inline_runs(title)
+                        .into_iter()
+                        .flat_map(|run| run.iter().cloned())
+                        .collect();
+                    self.rich(&flat)
                 };
                 RBlock::Callout {
                     kind: canonical_callout_type(callout_type),

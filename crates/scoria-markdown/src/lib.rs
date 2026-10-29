@@ -209,7 +209,7 @@ fn lower_block<'a>(cx: &InlineContext<'a, '_>, raw: RawBlock<'a>) -> Block<'a> {
             title: if title.is_empty() {
                 Vec::new()
             } else {
-                inline::parse_inlines(cx, &[title])
+                lower_blocks(cx, block::BlockParser::parse_span(cx.src, title, cx.opts))
             },
             children: lower_blocks(cx, children),
         },

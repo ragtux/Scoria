@@ -123,6 +123,11 @@ Blocks:
   into a space, the whole lowercased and the first character upper-cased:
   `[!note]` shows "Note", `[!bad-type-two]` shows "Bad type two", `[!NOTE-X]`
   shows "Note x". `_` is not touched, so `[!bad_type]` shows "Bad_type".
+- A callout's title is block-parsed, not inline-parsed: `[!note] # h` puts an
+  `<h1>` inside `.callout-title-inner`, `[!note] 1. item` an `<ol>`, and
+  `[!note] > quote` a nested blockquote. This is also why `[!note] -` is not a
+  fold marker — the space ends the header, and the lone `-` becomes a list with
+  one empty item. The ordinary one-paragraph title renders bare, with no `<p>`.
 - A callout's first body line takes the ordinary block rules. A table's
   delimiter row or a setext underline on the line after the header is read as a
   table or a heading, exactly as it would be anywhere else — the header is not
@@ -134,15 +139,20 @@ Blocks:
 1.14.4 (installer build 1.13.7) with `tools/probe-gen`. Unlike everything else
 in this section, the parser does not match these yet:
 
-- The callout *title* is block-parsed, not inline-parsed. `> [!note] # h` puts
-  an `<h1>` inside `.callout-title-inner`, `1. item` an `<ol>`, and `> quote` a
-  nested blockquote. This is also why `[!note] -` is not a fold marker — the
-  space ends the header, and the lone `-` becomes an empty `<ul>` in the title.
-  The parser renders the title's inlines only, so each of these comes out as
-  text.
 - A `^blockid` as a callout's only body line is consumed as the block id,
-  leaving an empty `.callout-content`. The parser renders it as a paragraph of
-  literal text.
+  leaving a `.callout-content` that is present but empty. The parser renders it
+  as a paragraph of literal text. Matching it needs the renderer to know the
+  body had a non-blank line even though it produced no block, and a block id
+  with nothing to identify has no effect on a real vault, so this is left
+  alone deliberately.
+- A `^id` on its own line at the end of a callout body is consumed, but the
+  line break before it is kept, so `> [!note]` / `> body` / `> ^id` renders
+  `<p>body<br></p>`. The parser drops the break with the id. Also left alone:
+  the stray `<br>` is an artifact of Obsidian's own stripping.
+- Not an Obsidian behavior but a deliberate divergence in Scoria: the reading
+  view paints a callout title as one run of rich text, so a title that
+  block-parses to a heading or a list shows its *text* without that block's
+  styling. `render_html` matches Obsidian; the painted view does not yet.
 
 Inlines:
 

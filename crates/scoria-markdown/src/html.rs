@@ -290,7 +290,9 @@ impl<'r, 'a> Renderer<'r, 'a> {
                 if title.is_empty() {
                     escape_html(&crate::callout_default_title(callout_type), &mut self.out);
                 } else {
-                    self.inlines(title);
+                    // Tight, so the usual one-paragraph title renders as bare
+                    // text while a heading or a list in it renders as itself.
+                    self.blocks(title, true);
                 }
                 self.out.push_str("</div></div>");
                 if !children.is_empty() {
