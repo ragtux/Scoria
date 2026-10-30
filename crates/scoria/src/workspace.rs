@@ -641,6 +641,9 @@ impl VaultState {
                     .replace_config("hotkeys.json", overrides)
                     .map_err(|e| e.to_string())?;
             }
+            // Not a vault's setting at all; `Workspace::change_setting`
+            // writes it to `scoria.json` before it gets here.
+            SettingChange::Frame(_) => {}
         }
         Ok(())
     }
@@ -3250,6 +3253,16 @@ impl Workspace {
     }
 
     fn change_setting(&mut self, change: SettingChange, cx: &mut Context<Self>) {
+        // The frame style is the machine's, not the vault's: it is written
+        // beside the vault list and read on the next start, so the vault's
+        // config is not touched and nothing is re-applied now.
+        if let SettingChange::Frame(value) = &change {
+            if let Err(err) = crate::write_frame_style(value) {
+                self.report(format!("{} could not be written: {err}", change.file()), cx);
+            }
+            cx.notify();
+            return;
+        }
         let Some(state) = self.state.clone() else {
             return;
         };

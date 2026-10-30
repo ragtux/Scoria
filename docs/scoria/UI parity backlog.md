@@ -456,7 +456,7 @@ ranges painted through the existing highlight path, and a Copy action joining th
 
 *medium, bug, small*
 
-**Landed 2026-10-26**: `set_note` clears `toggled` and `folds` only when the note changes (`same_note`), so a fold survives the watcher's reload after an autosave. Persistence across a relaunch, the way Obsidian keeps it, is still open.
+**Landed 2026-10-26**: `set_note` clears `toggled` and `folds` only when the note changes (`same_note`), so a fold survives the watcher's reload after an autosave. **The rest landed 2026-10-27** (`1808961`): `crates/scoria/src/fold.rs`'s `FoldStore` keeps every note's fold record outside the vault in `note-fold/<vault id>.json` under Scoria's configuration folder, the way Obsidian's `localStorage` key does, and `Workspace::restore_folds` gives the reading view its keys back as a note opens. Verified 2026-10-30; nothing of this entry is open.
 
 **Scoria.** Expand a collapsed callout in the reading view, then write the note's own bytes back
 unchanged: 1.5 s later the callout is collapsed again. `ReadingView::set_note` computes
@@ -963,6 +963,13 @@ outline rows before building theirs.
 
 *low, parity-gap, small*
 
+**Settled 2026-10-30, by decision rather than by a build.** The label already never changes
+(`Workspace::toggle_tag_folds` is documented as such and the button is drawn with one label), which
+is the parity point; the inert first click is a flag in Obsidian that starts out of step with its
+rows -- a defect, not a behaviour -- and Scoria does not reproduce it. The outline's match colour
+stays the accent until a probe reads `suggestion-highlight`'s computed style; that single
+measurement is all that is left, and it is listed in [[Interaction probes]] rather than here.
+
 **Scoria.** "Expand all" folds every tag on its first click and opens them on the second, and the
 outline's search matches are drawn in the accent colour.
 
@@ -1072,8 +1079,10 @@ returning "0 results" when it is true.
 **Landed 2026-10-24** (`39c58bc`), the first half: `Workspace::can_run` is the check callback --
 implemented, plugin on, a table command needs the cursor in a table, an `EDITOR_ONLY` id needs the
 note with the keyboard -- and the palette filter and the socket's `runnable` flag both read it.
-The second half is open: `workspace:close` and the two splits have landed since this was written,
-`editor:toggle-fold` waits on folding and `app:reload` is a deliberate omission.
+**The second half closed 2026-10-30 on inspection**: `workspace:close`, the two splits and (since
+folding landed on 2026-10-27) `editor:toggle-fold` are all in `RUNNABLE` and dispatched in
+`run_command`; `app:reload` is the one id still absent, and that is deliberate -- Scoria has no
+renderer to reload. Nothing of this entry is open.
 
 **Scoria.** Running an editor-only command in reading view now says why — "Insert table: only
 available while editing" — and the three properties ids that Obsidian really does run from a preview
@@ -1309,6 +1318,15 @@ in Obsidian's own config directory, outside the vault
 The hidden frame's title row also has a tab-list button (`lucide-chevron-down`) at the right end of
 the tab strip, and the view header has a bookmark action and a "More options" menu beside the mode
 toggle; the Files pane header has its five buttons (#24).
+
+**Landed 2026-10-30, the store**: the "Window frame style" row is a real dropdown
+(`settings.rs` `FRAME_STYLE`, the three options and stored strings of the 2026-10-20 probe) and a
+pick is `SettingChange::Frame`, which `Workspace::change_setting` writes to the `frame` key of
+`scoria.json` beside the vault list -- where Obsidian's own `obsidian.json` keeps its `frame` -- and
+never to the vault; `main.rs` reads it on the next start, under `--frame` and `SCORIA_FRAME`, which
+now override it for one run. The row keeps its "on restart" tag because the open window keeps the
+frame it was opened with. The two header controls are the half still open; see the probe of the
+same day below.
 
 **Scoria.** Since [[Development#The frame, the type and the icons, 2026-10-20]] the window draws
 Obsidian's hidden frame by default and `--frame native` / `SCORIA_FRAME=native` asks for the

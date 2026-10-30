@@ -473,6 +473,25 @@ appearance_choice!(
 /// filling in the default: an absent key is not the `/` the first option
 /// writes. Observed on Obsidian 1.14.5; see
 /// [[Specification#The attachment-location dropdown]].
+/// Settings → Interface → "Window frame style". The labels and the stored
+/// strings are 1.14.5's (`tools/obsidian-probe/results/2026-10-20-frame-
+/// setting-key.json`): `hidden` is the default on Linux and Windows. The
+/// value is not a vault's: it is read from and written to `scoria.json`
+/// through `crate::stored_frame_style` and `SettingChange::Frame`.
+const FRAME_STYLE: Typed = Typed {
+    key: "frame",
+    options: &[
+        ("Hidden (default)", "hidden"),
+        ("Obsidian frame", "custom"),
+        ("Native frame", "native"),
+    ],
+    read: |_| crate::stored_frame_style(),
+    write: |_, value| SettingChange::Frame(value.to_string()),
+    shape: None,
+    label_of: None,
+    local: None,
+};
+
 const ATTACHMENT_LOCATION: Typed = Typed {
     key: "attachmentFolderPath",
     options: &[
@@ -839,6 +858,10 @@ pub enum SettingChange {
     DailyNotes(DailyNotesConfig),
     /// `templates.json`: the Templates tab's three rows.
     Templates(TemplatesConfig),
+    /// The window frame style, which is not a vault's: it goes to the
+    /// `frame` key of `scoria.json` beside the vault list, where Obsidian's
+    /// `obsidian.json` keeps its own.
+    Frame(String),
 }
 
 impl SettingChange {
@@ -853,6 +876,7 @@ impl SettingChange {
             SettingChange::Hotkeys(_) => "hotkeys.json",
             SettingChange::DailyNotes(_) => "daily-notes.json",
             SettingChange::Templates(_) => "templates.json",
+            SettingChange::Frame(_) => scoria_vault::registry::FILE_NAME,
         }
     }
 }
@@ -1751,16 +1775,17 @@ impl SettingsView {
                 NATIVE_MENUS,
             ).not_yet(),
             // Obsidian keeps this one outside the vault: changing it wrote
-            // nothing under `.obsidian` (probed 2026-10-20), so Scoria takes
-            // it from `--frame` or `SCORIA_FRAME` until a per-user store
-            // exists.
-            dropdown(
+            // nothing under `.obsidian` (probed 2026-10-20), so the pick
+            // goes to `scoria.json` beside the vault list, and the next
+            // start reads it; `--frame` and `SCORIA_FRAME` override it for
+            // one run.
+            choice(
                 "Window frame style",
                 "Determines the styling of the title bar of Obsidian windows. Requires a full restart to take effect.",
-                crate::frame_style_label(),
+                state,
+                FRAME_STYLE,
             )
-            .on_restart()
-            .not_yet(),
+            .on_restart(),
         ]
     }
 
@@ -3891,6 +3916,39 @@ mod tests {
         std::fs::write(root.join("Note.md"), "# Note\n").unwrap();
         let state = VaultState::load(&root.to_path_buf()).unwrap();
         (dir, state)
+    }
+
+    /// The frame style is the one dropdown whose value is the machine's,
+    /// not the vault's: its options are 1.14.5's three, a pick is a
+    /// `SettingChange::Frame` bound for `scoria.json`, and the row is tagged
+    /// "on restart" because the window keeps the frame it opened with.
+    #[test]
+    fn the_frame_style_dropdown_writes_to_the_registry_not_the_vault() {
+        let (_dir, state) = vault();
+        assert_eq!(
+            FRAME_STYLE.options,
+            &[
+                ("Hidden (default)", "hidden"),
+                ("Obsidian frame", "custom"),
+                ("Native frame", "native"),
+            ]
+        );
+        for (_, value) in FRAME_STYLE.options {
+            match (FRAME_STYLE.write)(&state, value) {
+                SettingChange::Frame(v) => assert_eq!(v, *value),
+                other => panic!("{value} wrote {}", other.file()),
+            }
+        }
+        assert_eq!(
+            SettingChange::Frame("native".into()).file(),
+            scoria_vault::registry::FILE_NAME
+        );
+        let row = SettingsView::interface_items(&state)
+            .into_iter()
+            .find(|i| i.name.as_ref() == "Window frame style")
+            .expect("the Interface tab has the row");
+        assert_eq!(row.typed, Some(FRAME_STYLE));
+        assert_eq!(row.honored, Honored::OnRestart);
     }
 
     /// Every toggle in the modal, with how far Scoria gets with it.
