@@ -789,28 +789,15 @@ impl VaultState {
             .map_err(|e| e.user_message())
     }
 
-    /// Copies a file next to itself as `Name 1.ext` and indexes the copy.
+    /// Copies a file or folder next to itself (`Name 1.ext`, `Name 1`) and
+    /// indexes the copy.
     pub fn duplicate(&self, path: &str) -> Result<(String, Changes), String> {
-        let (target, from, to) = {
-            let vault = self.vault();
-            let (folder, name) = match path.rsplit_once('/') {
-                Some((d, n)) => (d, n),
-                None => ("", path),
-            };
-            let (stem, ext) = match name.rsplit_once('.') {
-                Some((s, e)) if !s.is_empty() => (s, e),
-                _ => (name, ""),
-            };
-            let target = vault.available_path(folder, stem, ext);
-            let to = vault.write_path(&target).map_err(|e| e.to_string())?;
-            (target.clone(), vault.absolute(path), to)
-        };
-        std::fs::copy(&from, &to).map_err(|e| format!("Could not copy {path}: {e}"))?;
-        let files = self
+        let (target, files) = self
             .vault
             .write()
             .unwrap_or_else(|e| e.into_inner())
-            .refresh_path(&to);
+            .duplicate(path)
+            .map_err(|e| e.user_message())?;
         Ok((target, self.absorb(files)))
     }
 
@@ -6887,9 +6874,23 @@ impl Workspace {
         let Some(state) = self.state.clone() else {
             return;
         };
+        let is_folder = state.vault().absolute(path).is_dir();
         match state.duplicate(path) {
             // Nothing is reported for a copy that worked either; the new
-            // file opening is the feedback.
+            // file opening, or the new folder showing in the tree, is the
+            // feedback.
+            Ok((copy, changes)) if is_folder => {
+                // An empty folder's copy changes no file, and
+                // `after_changes` would leave the tree as it was.
+                if changes.files.is_empty() {
+                    self.refresh_vault_views(cx);
+                } else {
+                    self.after_changes(changes, cx);
+                }
+                self.left_tab = LeftTab::Files;
+                self.explorer.update(cx, |e, cx| e.reveal_folder(&copy, cx));
+                cx.notify();
+            }
             Ok((copy, changes)) => {
                 self.after_changes(changes, cx);
                 self.open_file(copy, None, cx);
