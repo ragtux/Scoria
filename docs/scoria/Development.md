@@ -372,6 +372,19 @@ with the integration done here. What landed:
 - **The window frame style has a store**: the `frame` key of `scoria.json`,
   beside the vault list, where Obsidian's `obsidian.json` keeps its own.
 
+Three more landed on the probe's own evidence, later the same day: **every
+remaining core-plugin options tab** (Backlinks, Canvas, Page preview, Note
+composer, Unique note creator, File recovery and Web viewer, each with its own
+config type and `SettingChange`, every row tagged "not in Scoria yet" because
+nothing reads these keys yet, and the rows whose key the probe never reached
+drawing but writing nothing); **the editor's context menu**, which places the
+caret and builds its rows from the selection the way the probe recorded, as an
+extension of `file_menu` rather than a second widget; and **selection and copy
+in the reading view**, an anchor and a head over a document-order walk of the
+note's runs, with the handlers hung off each run of text because gpui can only
+answer "which byte is under this point" for text that has been prepainted, and
+`list` measures items it never paints.
+
 **The probe is the part worth keeping.** Three entries had been filed as
 "nobody has observed Obsidian", so `tools/obsidian-probe/editor-menus.mjs` went
 and looked: the editor's right-click menu, the view header's actions, and every
