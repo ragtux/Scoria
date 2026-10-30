@@ -18,6 +18,7 @@ use crate::chooser::{Chooser, ChooserEvent, Row as ChooserRow};
 use crate::copy_results::{CopyResults, CopyResultsEvent};
 use crate::editor::{Editor, EditorEvent};
 use crate::explorer::{display_name, kind_name, ExplorerEvent, FileExplorer, FileTree, SortOrder};
+use crate::file_menu::{self, Pick};
 use crate::fold;
 use crate::graph::{GraphEvent, GraphView};
 use crate::help::HelpWindow;
@@ -2583,6 +2584,9 @@ pub struct Workspace {
     /// Where the pointer was when a pane's sort button was clicked: the
     /// menu opens there, its top-right corner at the click, as Obsidian's does.
     sort_menu_at: gpui::Point<Pixels>,
+    /// The file menu a Backlinks or Outgoing links row opened, while it is
+    /// up: where, and on which file.
+    file_menu: Option<file_menu::Menu>,
     /// The Backlinks pane's search filter (`searchQuery`).
     backlink_filter: Entity<TextInput>,
     /// Every tag in the vault as a tree, sorted the way the Tags pane is.
@@ -2795,6 +2799,9 @@ impl Workspace {
                     }
                     ExplorerEvent::CopyPath(path) => this.copy_path(path, cx),
                     ExplorerEvent::OpenInDefaultApp(path) => this.open_in_default_app(path, cx),
+                    ExplorerEvent::ShowInSystemExplorer(path) => {
+                        this.show_in_system_explorer(path, cx)
+                    }
                     ExplorerEvent::SearchInFolder(folder) => {
                         this.search_in_folder(folder, window, cx)
                     }
@@ -3049,6 +3056,7 @@ impl Workspace {
             backlink_state: BacklinkState::default(),
             outgoing_state: OutgoingState::default(),
             sort_menu_at: point(px(0.), px(0.)),
+            file_menu: None,
             backlink_filter,
             tag_tree: Vec::new(),
             tag_state: TagPaneState::default(),
@@ -4376,18 +4384,16 @@ impl Workspace {
                 self.explorer.update(cx, |e, cx| e.focus_tree(window, cx));
                 cx.notify();
             }
-            "file-explorer:reveal-active-file" => {
-                self.leave_search_field(window, cx);
-                self.left_visible = true;
-                self.left_tab = LeftTab::Files;
-                match self.current.clone() {
-                    Some(current) => self
-                        .explorer
-                        .update(cx, |e, cx| e.reveal_and_focus(&current, window, cx)),
-                    None => self.explorer.update(cx, |e, cx| e.focus_tree(window, cx)),
+            "file-explorer:reveal-active-file" => match self.current.clone() {
+                Some(current) => self.reveal_in_navigation(&current, window, cx),
+                None => {
+                    self.leave_search_field(window, cx);
+                    self.left_visible = true;
+                    self.left_tab = LeftTab::Files;
+                    self.explorer.update(cx, |e, cx| e.focus_tree(window, cx));
+                    cx.notify();
                 }
-                cx.notify();
-            }
+            },
             "file-explorer:new-file"
             | "file-explorer:new-file-in-current-tab"
             | "file-explorer:new-file-in-new-pane" => {
@@ -6214,6 +6220,45 @@ impl Workspace {
         {
             self.report(format!("Could not open {path}: {err}"), cx);
         }
+    }
+
+    /// The file menu's "Show in system explorer": the file or folder selected
+    /// in the desktop's file manager, through the command lines
+    /// [`file_menu::reveal_commands`] lists for the platform. The D-Bus call
+    /// waits for the file manager's reply, so the whole run is off the UI
+    /// thread, and only a failure to start anything comes back as a notice.
+    fn show_in_system_explorer(&mut self, path: &str, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let absolute = state.vault().absolute(path);
+        let path = path.to_string();
+        cx.spawn(async move |this, cx| {
+            let result = cx
+                .background_executor()
+                .spawn(async move { file_menu::show_in_system_explorer(&absolute) })
+                .await;
+            if let Err(err) = result {
+                this.update(cx, |ws, cx| {
+                    ws.report(format!("Could not show {path}: {err}"), cx)
+                })
+                .ok();
+            }
+        })
+        .detach();
+    }
+
+    /// The file menu's "Reveal file in navigation", and what
+    /// `file-explorer:reveal-active-file` does with the open note: the Files
+    /// view shown and expanded to `path`, its row ringed and given the
+    /// keyboard.
+    fn reveal_in_navigation(&mut self, path: &str, window: &mut Window, cx: &mut Context<Self>) {
+        self.leave_search_field(window, cx);
+        self.left_visible = true;
+        self.left_tab = LeftTab::Files;
+        self.explorer
+            .update(cx, |e, cx| e.reveal_and_focus(path, window, cx));
+        cx.notify();
     }
 
     /// The explorer menu's "Search in folder": the Search pane scoped with the
@@ -10776,6 +10821,10 @@ impl Workspace {
                 RightTab::Properties => "properties",
             }),
         );
+        right.insert(
+            "file_menu".into(),
+            json!(self.file_menu.as_ref().map(file_menu::describe)),
+        );
         put_capped(
             &mut right,
             "outline",
@@ -11548,6 +11597,78 @@ impl Workspace {
         self.render_sections(RightTab::Outgoing, "", theme, cx)
     }
 
+    /// A right click on a Backlinks or Outgoing links row that stands for a
+    /// file -- a Links row, a mentions group, or a match, which belongs to
+    /// its group's file: the file menu, in the list Obsidian gives rows away
+    /// from the Files view ([`file_menu::Target::Linked`]).
+    fn open_file_menu(
+        &mut self,
+        path: String,
+        position: gpui::Point<Pixels>,
+        cx: &mut Context<Self>,
+    ) {
+        self.file_menu = Some(file_menu::Menu {
+            position,
+            target: file_menu::Target::Linked(path),
+        });
+        cx.notify();
+    }
+
+    fn close_file_menu(&mut self, cx: &mut Context<Self>) {
+        if self.file_menu.take().is_some() {
+            cx.notify();
+        }
+    }
+
+    /// What a pick on that menu does: the handlers the explorer's events
+    /// already route to, plus the two rows the explorer's menu has no twin
+    /// of. "Open in new window" is not offered (no second window).
+    fn file_menu_pick(
+        &mut self,
+        pick: Pick,
+        path: String,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        match pick {
+            Pick::OpenInNewTab => self.open_in_new_tab(path, None, cx),
+            Pick::OpenToRight => self.open_to_right(path, window, cx),
+            Pick::Rename => self.start_rename(&path, window, cx),
+            Pick::Move => self.start_move(&path, window, cx),
+            Pick::Bookmark => self.start_bookmark_path(&path, window, cx),
+            Pick::CopyPath => self.copy_path(&path, cx),
+            Pick::OpenInDefaultApp => self.open_in_default_app(&path, cx),
+            Pick::ShowInSystemExplorer => self.show_in_system_explorer(&path, cx),
+            Pick::RevealInNavigation => self.reveal_in_navigation(&path, window, cx),
+            // The Files view's own rows, which a linked row's menu never
+            // lists.
+            Pick::Duplicate
+            | Pick::Delete
+            | Pick::NewNote
+            | Pick::NewFolder
+            | Pick::NewCanvas
+            | Pick::NewBase
+            | Pick::SearchInFolder => {}
+        }
+    }
+
+    /// The open file menu, drawn over everything else at the click.
+    fn render_file_menu(
+        &mut self,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> Option<gpui::AnyElement> {
+        let menu = self.file_menu.as_ref()?;
+        let path = menu.target.path().to_string();
+        Some(file_menu::render(
+            menu,
+            theme,
+            cx,
+            |this, cx| this.close_file_menu(cx),
+            move |this, pick, window, cx| this.file_menu_pick(pick, path.clone(), window, cx),
+        ))
+    }
+
     /// "Change sort order" for the Backlinks pane: the six orders in three
     /// pairs, a check against the one in force.
     fn render_backlink_sort_menu(
@@ -11764,6 +11885,7 @@ impl Workspace {
                 let path = group.path.clone();
                 let link = group.link.clone();
                 let resolved = path.is_some();
+                let menu_path = path.clone();
                 // The fold triangle (a mentions group) or the link's glyph
                 // (a Links row) sits in the row's 24px left gutter.
                 let gutter: gpui::AnyElement = if flat {
@@ -11838,6 +11960,17 @@ impl Workspace {
                                 this.open_file(path, None, cx);
                             }
                         }))
+                        // A row that stands for a file takes the file menu;
+                        // a link nothing stands behind has no file to offer.
+                        .when_some(menu_path, |d, menu_path| {
+                            d.on_mouse_down(
+                                MouseButton::Right,
+                                cx.listener(move |this, event: &MouseDownEvent, _, cx| {
+                                    cx.stop_propagation();
+                                    this.open_file_menu(menu_path.clone(), event.position, cx);
+                                }),
+                            )
+                        })
                         .child(gutter)
                         .child(
                             div()
@@ -11930,6 +12063,7 @@ impl Workspace {
         cx: &mut Context<Self>,
     ) -> gpui::Stateful<gpui::Div> {
         let path = group.path.clone();
+        let menu_path = path.clone();
         let offset = m.offset;
         let highlights: Vec<(Range<usize>, HighlightStyle)> = m
             .ranges
@@ -12042,6 +12176,16 @@ impl Workspace {
                     }
                 }
             }))
+            // A match belongs to its group's file, and takes that file's menu.
+            .when_some(menu_path, |d, menu_path| {
+                d.on_mouse_down(
+                    MouseButton::Right,
+                    cx.listener(move |this, event: &MouseDownEvent, _, cx| {
+                        cx.stop_propagation();
+                        this.open_file_menu(menu_path.clone(), event.position, cx);
+                    }),
+                )
+            })
             .child(
                 div()
                     .text_size(px(FONT_UI_SMALLER))
@@ -13039,6 +13183,9 @@ impl Workspace {
             )
             .child(div().flex_1().overflow_hidden().child(body))
             .child(self.dock_handle(false, theme))
+            // The Backlinks and Outgoing links rows' file menu, positioned
+            // at the click and drawn over everything else.
+            .children(self.render_file_menu(theme, cx))
     }
 }
 
