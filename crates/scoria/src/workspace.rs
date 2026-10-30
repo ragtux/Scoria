@@ -58,9 +58,10 @@ use scoria_cache::{
 use scoria_commands::{hotkey_label, keystroke, CommandRegistry};
 use scoria_formats::bookmarks::{Bookmark, Bookmarks};
 use scoria_formats::config::{
-    self as config, AppConfig, AppearanceConfig, CommandPaletteConfig, CorePlugins,
-    DailyNotesConfig, Hotkeys, PluginManifest, PropertyTypes, SwitcherConfig, TemplatesConfig,
-    CORE_PLUGINS,
+    self as config, AppConfig, AppearanceConfig, BacklinkConfig, CanvasConfig,
+    CommandPaletteConfig, CorePlugins, DailyNotesConfig, Hotkeys, NoteComposerConfig,
+    PagePreviewConfig, PluginManifest, PropertyTypes, SwitcherConfig, TemplatesConfig,
+    WebviewerConfig, CORE_PLUGINS,
 };
 use scoria_formats::properties::PropertiesInDocument;
 use scoria_formats::{validate_renamed_file, FileKind};
@@ -398,6 +399,14 @@ pub struct VaultState {
     templates: RwLock<TemplatesConfig>,
     /// The Daily notes plugin's settings.
     daily_notes: RwLock<DailyNotesConfig>,
+    /// The option files of the other core plugins with an options tab. Each
+    /// is written from its tab and read back by it; nothing else in the app
+    /// reads them yet, which is what their rows' tags say.
+    backlink: RwLock<BacklinkConfig>,
+    canvas: RwLock<CanvasConfig>,
+    page_preview: RwLock<PagePreviewConfig>,
+    note_composer: RwLock<NoteComposerConfig>,
+    webviewer: RwLock<WebviewerConfig>,
     pub plugin_manifests: Vec<PluginManifest>,
     pub palette: CommandPaletteConfig,
     /// `types.json`: the type assigned to each property name.
@@ -489,6 +498,35 @@ impl VaultState {
         let daily_notes = vault.daily_notes_config();
         note("daily-notes.json", daily_notes.as_ref().err());
         let daily_notes = daily_notes.unwrap_or_default();
+        let backlink = vault.backlink_config();
+        note("backlink.json", backlink.as_ref().err());
+        let backlink = backlink.unwrap_or_default();
+        let canvas = vault.canvas_config();
+        note("canvas.json", canvas.as_ref().err());
+        let canvas = canvas.unwrap_or_default();
+        let page_preview = vault.page_preview_config();
+        note("page-preview.json", page_preview.as_ref().err());
+        let page_preview = page_preview.unwrap_or_default();
+        let note_composer = vault.note_composer_config();
+        note("note-composer.json", note_composer.as_ref().err());
+        let note_composer = note_composer.unwrap_or_default();
+        // These two are read but not kept: no row of the Unique note
+        // creator or File recovery tab has an observed key, so there is
+        // nothing to show from the file and nothing that writes it. A file
+        // that will not parse is still worth knowing about -- the window
+        // reports it and a write to it would be refused -- which is the
+        // whole of what reading them does.
+        note(
+            "zk-prefixer.json",
+            vault.zk_prefixer_config().as_ref().err(),
+        );
+        note(
+            "file-recovery.json",
+            vault.file_recovery_config().as_ref().err(),
+        );
+        let webviewer = vault.webviewer_config();
+        note("webviewer.json", webviewer.as_ref().err());
+        let webviewer = webviewer.unwrap_or_default();
         let property_types = vault.property_types();
         note("types.json", property_types.as_ref().err());
         let property_types = property_types.unwrap_or_default();
@@ -525,6 +563,11 @@ impl VaultState {
             switcher: RwLock::new(switcher),
             templates: RwLock::new(templates),
             daily_notes: RwLock::new(daily_notes),
+            backlink: RwLock::new(backlink),
+            canvas: RwLock::new(canvas),
+            page_preview: RwLock::new(page_preview),
+            note_composer: RwLock::new(note_composer),
+            webviewer: RwLock::new(webviewer),
             plugin_manifests,
             palette,
             property_types: RwLock::new(property_types),
@@ -600,6 +643,26 @@ impl VaultState {
         self.switcher.read().unwrap_or_else(|e| e.into_inner())
     }
 
+    pub fn backlink(&self) -> RwLockReadGuard<'_, BacklinkConfig> {
+        self.backlink.read().unwrap_or_else(|e| e.into_inner())
+    }
+
+    pub fn canvas_options(&self) -> RwLockReadGuard<'_, CanvasConfig> {
+        self.canvas.read().unwrap_or_else(|e| e.into_inner())
+    }
+
+    pub fn page_preview(&self) -> RwLockReadGuard<'_, PagePreviewConfig> {
+        self.page_preview.read().unwrap_or_else(|e| e.into_inner())
+    }
+
+    pub fn note_composer(&self) -> RwLockReadGuard<'_, NoteComposerConfig> {
+        self.note_composer.read().unwrap_or_else(|e| e.into_inner())
+    }
+
+    pub fn webviewer(&self) -> RwLockReadGuard<'_, WebviewerConfig> {
+        self.webviewer.read().unwrap_or_else(|e| e.into_inner())
+    }
+
     /// Writes a setting the Settings window changed and keeps the config in
     /// hand in step. The file is written first: the vault is the source of
     /// truth, so a change that cannot reach disk does not count.
@@ -624,6 +687,29 @@ impl VaultState {
             SettingChange::Templates(config) => {
                 self.write_config("templates.json", config)?;
                 *self.templates.write().unwrap_or_else(|e| e.into_inner()) = config.clone();
+            }
+            SettingChange::Backlink(config) => {
+                self.write_config("backlink.json", config)?;
+                *self.backlink.write().unwrap_or_else(|e| e.into_inner()) = config.clone();
+            }
+            SettingChange::Canvas(config) => {
+                self.write_config("canvas.json", config)?;
+                *self.canvas.write().unwrap_or_else(|e| e.into_inner()) = config.clone();
+            }
+            SettingChange::PagePreview(config) => {
+                self.write_config("page-preview.json", config)?;
+                *self.page_preview.write().unwrap_or_else(|e| e.into_inner()) = config.clone();
+            }
+            SettingChange::NoteComposer(config) => {
+                self.write_config("note-composer.json", config)?;
+                *self
+                    .note_composer
+                    .write()
+                    .unwrap_or_else(|e| e.into_inner()) = config.clone();
+            }
+            SettingChange::Webviewer(config) => {
+                self.write_config("webviewer.json", config)?;
+                *self.webviewer.write().unwrap_or_else(|e| e.into_inner()) = config.clone();
             }
             SettingChange::CorePlugins(config) => {
                 self.write_config("core-plugins.json", config)?;

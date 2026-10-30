@@ -492,6 +492,226 @@ pub struct DailyNotesConfig {
 /// What a daily note is named when the format is empty or absent.
 pub const DAILY_NOTE_DEFAULT_FORMAT: &str = "YYYY-MM-DD";
 
+// The other core-plugin option files Obsidian 1.14.5 writes from its own
+// options tabs, observed on 2026-10-30 (`tools/obsidian-probe/results/
+// 2026-10-30-editor-menus.json`, step `s04-plugin-tabs`: every toggle
+// clicked twice, every dropdown walked through its options and back, the
+// `.obsidian` folder diffed after each click).
+//
+// Each is sparse and appears only once a control writes, each field is
+// named exactly as Obsidian names it, and the fields are declared in the
+// order Obsidian's own first write put them in. A row whose key the probe
+// could not reach -- a file suggester, a slider, a textarea, a button --
+// has no field here, and Scoria writes nothing for it rather than guessing
+// a name; `scoria::settings::plugin_items` draws those rows tagged.
+
+/// `backlink.json`: the Backlinks plugin's one option, off when absent.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct BacklinkConfig {
+    /// "Show backlinks at the bottom of notes".
+    #[serde(
+        default,
+        rename = "backlinkInDocument",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub backlink_in_document: Option<bool>,
+    #[serde(flatten)]
+    pub extra: Map<String, Value>,
+}
+
+/// `canvas.json`: the Canvas plugin's options.
+///
+/// Obsidian's first write held both snap keys at once
+/// (`{"snapToObjects": true, "snapToGrid": false}`), with each dropdown's
+/// key appended as it was picked. Two rows of the tab are not here: the
+/// folder name the `folder` option reveals, and the zoom threshold slider,
+/// neither of whose key the probe observed.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct CanvasConfig {
+    /// "Snap to objects", on when absent.
+    #[serde(
+        default,
+        rename = "snapToObjects",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub snap_to_objects: Option<bool>,
+    /// "Snap to grid", on when absent.
+    #[serde(
+        default,
+        rename = "snapToGrid",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub snap_to_grid: Option<bool>,
+    /// "Default location for new canvas files": `root`, `current`, `folder`.
+    #[serde(
+        default,
+        rename = "newFileLocation",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub new_file_location: Option<String>,
+    /// "Default mouse wheel behavior": `pan` or `zoom`.
+    #[serde(
+        default,
+        rename = "defaultWheelBehavior",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub default_wheel_behavior: Option<String>,
+    /// "Default Ctrl + Drag behavior": `menu`, `card`, `note`, `media`,
+    /// `webpage` or `group`.
+    #[serde(
+        default,
+        rename = "defaultModDragBehavior",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub default_mod_drag_behavior: Option<String>,
+    /// "Show card names": `always`, `hover` or `never`.
+    #[serde(
+        default,
+        rename = "cardLabelVisibility",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub card_label_visibility: Option<String>,
+    #[serde(flatten)]
+    pub extra: Map<String, Value>,
+}
+
+/// `page-preview.json`: one key per surface the hover preview can be made
+/// to require Ctrl on, each named after the surface rather than after the
+/// row. Every surface is on when absent but Reading view, which is off.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct PagePreviewConfig {
+    /// "Search, Backlinks, and Outgoing links".
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub search: Option<bool>,
+    /// "Reading view".
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub preview: Option<bool>,
+    /// "Editing view".
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub editor: Option<bool>,
+    /// "Tab header".
+    #[serde(
+        default,
+        rename = "tab-header",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub tab_header: Option<bool>,
+    /// "Files".
+    #[serde(
+        default,
+        rename = "file-explorer",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub file_explorer: Option<bool>,
+    /// "Properties view".
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub properties: Option<bool>,
+    /// "Bookmarks".
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bookmarks: Option<bool>,
+    /// "Outline".
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub outline: Option<bool>,
+    /// "Bases".
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bases: Option<bool>,
+    /// "Graph view".
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub graph: Option<bool>,
+    #[serde(flatten)]
+    pub extra: Map<String, Value>,
+}
+
+/// `note-composer.json`: the Note composer plugin's options.
+///
+/// The tab's "Template file location" row is a file suggester whose key the
+/// probe did not reach, so it has no field here.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct NoteComposerConfig {
+    /// "Confirm file merge", on when absent.
+    #[serde(
+        default,
+        rename = "askBeforeMerging",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub ask_before_merging: Option<bool>,
+    /// "Text after extraction": `link`, `embed` or `none`.
+    #[serde(
+        default,
+        rename = "replacementText",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub replacement_text: Option<String>,
+    #[serde(flatten)]
+    pub extra: Map<String, Value>,
+}
+
+/// `zk-prefixer.json`: the Unique note creator plugin's options.
+///
+/// Every one of its three rows is a text field or a file suggester and none
+/// of their keys was observed, so nothing is modelled: the type exists so
+/// the file survives a read and a write byte for byte.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct ZkPrefixerConfig {
+    #[serde(flatten)]
+    pub extra: Map<String, Value>,
+}
+
+/// `file-recovery.json`: the File recovery plugin's options.
+///
+/// Both of its fields are `type=number` inputs and its other two rows are
+/// buttons; no key was observed, so nothing is modelled here either.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct FileRecoveryConfig {
+    #[serde(flatten)]
+    pub extra: Map<String, Value>,
+}
+
+/// `webviewer.json`: the Web viewer plugin's options.
+///
+/// Obsidian's first write held both toggle keys at once; picking a search
+/// engine appended `searchEngine`, and picking `custom` also wrote
+/// `customSearchEngine` with the DuckDuckGo URL already in the field. The
+/// homepage, the saved-page folder, the ad-blocking rules textarea and the
+/// update-frequency slider had no observed key.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct WebviewerConfig {
+    /// "Open external links", on when absent.
+    #[serde(
+        default,
+        rename = "openExternalURLs",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub open_external_urls: Option<bool>,
+    /// "Enable ad blocker", on when absent.
+    #[serde(
+        default,
+        rename = "enableAdblocking",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub enable_adblocking: Option<bool>,
+    /// "Search engine": `duckduckgo`, `brave`, `bing`, `google` or `custom`.
+    #[serde(
+        default,
+        rename = "searchEngine",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub search_engine: Option<String>,
+    /// "Custom search engine": a URL with `%s` where the query goes.
+    #[serde(
+        default,
+        rename = "customSearchEngine",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub custom_search_engine: Option<String>,
+    #[serde(flatten)]
+    pub extra: Map<String, Value>,
+}
+
+/// What the Web viewer tab's "Custom search engine" row shows, and what
+/// picking `custom` wrote with the field untouched.
+pub const WEBVIEWER_DEFAULT_SEARCH_URL: &str = "https://duckduckgo.com/?q=%s";
+
 /// `plugins/<id>/manifest.json` of an installed community plugin.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct PluginManifest {
@@ -663,6 +883,103 @@ mod tests {
         assert!(CorePlugins::is_enabled_or_default(None, plugin));
         let off: CorePlugins = serde_json::from_str(r#"{"graph":false}"#).unwrap();
         assert!(!CorePlugins::is_enabled_or_default(Some(&off), plugin));
+    }
+
+    /// Every core-plugin options file: the keys Obsidian 1.14.5 writes read
+    /// into their own fields, an unknown key comes back where it was, and
+    /// the bytes round trip exactly. The files the probe saw are the input,
+    /// each with one key Obsidian has never written appended.
+    #[test]
+    fn core_plugin_option_files_round_trip_with_an_unknown_key() {
+        macro_rules! round_trip {
+            ($ty:ty, $text:literal) => {{
+                let cfg: $ty = serde_json::from_str($text).unwrap();
+                assert_eq!(
+                    cfg.extra["someFutureKey"],
+                    serde_json::json!({ "nested": [1, 2] }),
+                    "{} dropped the unknown key",
+                    stringify!($ty)
+                );
+                let back: Value =
+                    serde_json::from_str(&serde_json::to_string(&cfg).unwrap()).unwrap();
+                assert_eq!(
+                    back,
+                    serde_json::from_str::<Value>($text).unwrap(),
+                    "{} did not round trip",
+                    stringify!($ty)
+                );
+                cfg
+            }};
+        }
+
+        let backlink = round_trip!(
+            BacklinkConfig,
+            r#"{"backlinkInDocument":true,"someFutureKey":{"nested":[1,2]}}"#
+        );
+        assert_eq!(backlink.backlink_in_document, Some(true));
+
+        let canvas = round_trip!(
+            CanvasConfig,
+            r#"{"snapToObjects":true,"snapToGrid":false,"newFileLocation":"folder","defaultWheelBehavior":"zoom","defaultModDragBehavior":"group","cardLabelVisibility":"never","someFutureKey":{"nested":[1,2]}}"#
+        );
+        assert_eq!(canvas.snap_to_objects, Some(true));
+        assert_eq!(canvas.snap_to_grid, Some(false));
+        assert_eq!(canvas.new_file_location.as_deref(), Some("folder"));
+        assert_eq!(canvas.default_wheel_behavior.as_deref(), Some("zoom"));
+        assert_eq!(canvas.default_mod_drag_behavior.as_deref(), Some("group"));
+        assert_eq!(canvas.card_label_visibility.as_deref(), Some("never"));
+
+        let preview = round_trip!(
+            PagePreviewConfig,
+            r#"{"search":true,"preview":false,"editor":true,"tab-header":false,"file-explorer":true,"properties":false,"bookmarks":true,"outline":false,"bases":true,"graph":false,"someFutureKey":{"nested":[1,2]}}"#
+        );
+        assert_eq!(preview.search, Some(true));
+        assert_eq!(preview.tab_header, Some(false));
+        assert_eq!(preview.file_explorer, Some(true));
+        assert_eq!(preview.graph, Some(false));
+
+        let composer = round_trip!(
+            NoteComposerConfig,
+            r#"{"askBeforeMerging":false,"replacementText":"embed","someFutureKey":{"nested":[1,2]}}"#
+        );
+        assert_eq!(composer.ask_before_merging, Some(false));
+        assert_eq!(composer.replacement_text.as_deref(), Some("embed"));
+
+        // Neither of these models a key, so every key in the file is an
+        // unknown one -- which is exactly what has to survive.
+        let zk = round_trip!(
+            ZkPrefixerConfig,
+            r#"{"folder":"Zettels","format":"YYYYMMDDHHmm","someFutureKey":{"nested":[1,2]}}"#
+        );
+        assert_eq!(zk.extra["folder"], serde_json::json!("Zettels"));
+        let recovery = round_trip!(
+            FileRecoveryConfig,
+            r#"{"minutes":5,"days":7,"someFutureKey":{"nested":[1,2]}}"#
+        );
+        assert_eq!(recovery.extra["minutes"], serde_json::json!(5));
+
+        let web = round_trip!(
+            WebviewerConfig,
+            r#"{"openExternalURLs":false,"enableAdblocking":false,"searchEngine":"custom","customSearchEngine":"https://duckduckgo.com/?q=%s","someFutureKey":{"nested":[1,2]}}"#
+        );
+        assert_eq!(web.open_external_urls, Some(false));
+        assert_eq!(web.enable_adblocking, Some(false));
+        assert_eq!(web.search_engine.as_deref(), Some("custom"));
+        assert_eq!(
+            web.custom_search_engine.as_deref(),
+            Some(WEBVIEWER_DEFAULT_SEARCH_URL)
+        );
+
+        // A file none of them has ever been written to is all defaults and
+        // serializes to nothing at all, the way the sparse files do.
+        assert_eq!(
+            serde_json::to_string(&CanvasConfig::default()).unwrap(),
+            "{}"
+        );
+        assert_eq!(
+            serde_json::to_string(&PagePreviewConfig::default()).unwrap(),
+            "{}"
+        );
     }
 
     #[test]

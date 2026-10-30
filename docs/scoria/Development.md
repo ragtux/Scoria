@@ -326,6 +326,76 @@ uses behave as Obsidian's do.
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | not started |
 
+### Eight backlog entries, and the probe that unblocked three, 2026-10-30
+
+A pass over what was left of [[UI parity backlog]], run as parallel worktrees
+with the integration done here. What landed:
+
+- **The local graph's Depth and direction options.** `localJumps`,
+  `localBacklinks`, `localForelinks` and `localInterlinks` on `GraphView`, the
+  Filters section drawing the Depth slider and three toggles in local mode, and
+  a `local_subgraph` that records each node's BFS depth, walks out to
+  `localJumps` hops and follows an edge only in the directions the flags allow.
+  With Neighbor links off it keeps only edges whose endpoints differ by one
+  depth, which hides the neighbour-to-neighbour edge. The options live for the
+  session: Scoria writes no localgraph leaf, so there is nowhere to persist
+  them.
+- **Inline HTML as styles.** A tag stack in `RichBuilder` maps the measured
+  subset onto runs, with four new `InlineStyle` flags (`underline`, `kbd`,
+  `sup`, `sub`); an unclosed opener runs to the end of its paragraph, which is
+  what the sanitizer capture records. A block of nothing but comments and
+  `<script>` elements now draws nothing at all. `<pre>` is deliberately not
+  promoted: Obsidian wraps it and gives it a copy button only with a `<code>`
+  child, and the reading view's code block does the opposite on both counts, so
+  the model promotion waits on two changes in the view.
+- **Markdown image size hints and embeds outside a paragraph.** One
+  `alias_parts` helper serves both spellings, so `![a|100](p.png)` and
+  `![[p.png|100]]` cannot disagree again; an embed in a heading or a table cell
+  falls through to the link arm rather than showing its own brackets.
+- **The reading view's property pills** got their remove control, through one
+  narrow sink (`ReadingHost::on_remove_item`) rather than the whole
+  `PropertiesHost`. The workspace takes the event the way it takes
+  `TaskToggled`, through the editor's buffer, so a pill writes the same bytes
+  whichever view was clicked.
+- **The file menu became `file_menu.rs`**, drawn once for every view that
+  raises it, and the Backlinks and Outgoing links rows raise it now. **Show in
+  system explorer** came with it (the D-Bus `FileManager1.ShowItems` call, with
+  `xdg-open` on the parent folder as the fallback), and **Make a copy** on a
+  folder: `Vault::duplicate` walks what the scanner would index and copies every
+  file's bytes verbatim, rewriting no link, because what Obsidian does to a
+  copied folder's links is unobserved.
+- **The inline title.** `showInlineTitle` had no reader; the note's name now
+  sits above its first block at h1 size in both views, as a *sibling* of the
+  reading view's list so block indices and folds keep their meaning, and the
+  editor reserves the same height above line 0 so a mode switch does not move
+  the text.
+- **The window frame style has a store**: the `frame` key of `scoria.json`,
+  beside the vault list, where Obsidian's `obsidian.json` keeps its own.
+
+**The probe is the part worth keeping.** Three entries had been filed as
+"nobody has observed Obsidian", so `tools/obsidian-probe/editor-menus.mjs` went
+and looked: the editor's right-click menu, the view header's actions, and every
+core plugin's options tab with each toggle flipped twice, each dropdown walked,
+and the `.obsidian` files diffed after every click, so each control's key is
+observed rather than guessed. Both write-ups are in [[Specification]]. Three
+things in it are worth remembering: a right click **places the caret** and the
+rows are built from the selection as it stood; the **reading view has no text
+menu at all**, only a link raises one; and the view header's **Bookmark action
+has a zero rect** in the ordinary state, so it is hidden rather than missing.
+
+**Driving the running app is what found the unfiled bug.** With everything
+merged, the app was opened on the real vault over the control socket: the
+inline title draws at one height in both modes, a scroll down and back returns
+to an exact top, and the new Backlinks row menu matches the capture row for
+row. Then Escape, which closes no context menu in Scoria and never has --
+two passes of reading the code had missed it, and it is filed now.
+
+**One integration trap, twice.** Several worktrees share one
+`CARGO_TARGET_DIR`, and cargo's path-source metadata hashes do not include the
+checkout path, so a build in one checkout is handed another's stale artifacts:
+twice this showed up as `cargo` insisting a function that plainly exists is
+missing. `touch` the files you edited, and check your new tests appear by name.
+
 ### The Daily notes and Templates options tabs, 2026-10-30
 
 The backlog's "Every core-plugin options tab but two shows one 'Options not

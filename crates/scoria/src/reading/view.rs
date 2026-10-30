@@ -28,7 +28,7 @@ use scoria_formats::properties::{PropertiesInDocument, Property, PropertyType};
 use scoria_formats::FileKind;
 use scoria_markdown::Alignment;
 use serde_json::{json, Value};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::ops::Range;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -43,15 +43,18 @@ actions!(
         ScrollLineUp,
         ScrollToTop,
         ScrollToBottom,
+        SelectAll,
+        Copy,
     ]
 );
 
-/// Binds the reading view's scrolling keys in its own context; call once at
-/// startup. Obsidian's reading view is a DOM scroller with no commands of its
-/// own, so this is the browser's set of page-scrolling keys rather than a
-/// probed Obsidian binding: the page keys and Space for a page, the arrows
-/// for a line, Home and End (plain and with Ctrl, which a document scroller
-/// treats alike) for the ends.
+/// Binds the reading view's scrolling and selection keys in its own context;
+/// call once at startup. Obsidian's reading view is a DOM scroller with no
+/// commands of its own, so this is the browser's set of page-scrolling keys
+/// rather than a probed Obsidian binding: the page keys and Space for a page,
+/// the arrows for a line, Home and End (plain and with Ctrl, which a document
+/// scroller treats alike) for the ends, and the selection pair every document
+/// has — Ctrl+A for the whole note, Ctrl+C for what is selected.
 pub fn bind_keys(cx: &mut App) {
     let ctx = Some("ReadingView");
     cx.bind_keys([
@@ -65,6 +68,8 @@ pub fn bind_keys(cx: &mut App) {
         KeyBinding::new("ctrl-home", ScrollToTop, ctx),
         KeyBinding::new("end", ScrollToBottom, ctx),
         KeyBinding::new("ctrl-end", ScrollToBottom, ctx),
+        KeyBinding::new("ctrl-a", SelectAll, ctx),
+        KeyBinding::new("ctrl-c", Copy, ctx),
     ]);
 }
 
@@ -134,6 +139,349 @@ pub(crate) fn header_height(base: f32, title: bool) -> f32 {
         } else {
             0.
         }
+}
+
+// ----- selection ---------------------------------------------------------------
+
+/// A place in the reading view's text: which top-level block it belongs to,
+/// which [`RichText`] inside that block, and a byte offset into that run's
+/// own string. Obsidian's reading view is a DOM document, so a position
+/// there is a text node and an offset; this is the same triple over the
+/// model the view paints.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct ReadingPos {
+    /// Index into [`Model::blocks`].
+    pub block: usize,
+    /// [`RichText::id`], unique within one model.
+    pub rich: usize,
+    /// Byte offset into that run's text.
+    pub offset: usize,
+}
+
+/// One [`RichText`] of a note, in document order: what a selection can
+/// cover, and what copying it joins.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct Run<'a> {
+    pub block: usize,
+    pub rich: usize,
+    pub text: &'a str,
+    /// What separates this run from the one before it when a selection is
+    /// joined into plain text: a newline for a new line of the document,
+    /// or a tab between the cells of one table row, which is what copying
+    /// a table out of a browser gives.
+    pub before: &'static str,
+}
+
+/// Every [`RichText`] of `model`, in document order, with the top-level
+/// block each belongs to. This is the order a selection is read in and the
+/// order copying joins, so it walks the model the way the renderer draws
+/// it: an embedded note's blocks where the embed sits, a callout's title
+/// before its children, a table's header row before its body.
+///
+/// Blocks with no inline model carry nothing here and so cannot be
+/// selected: a code block (which has a copy button of its own), raw HTML,
+/// a display formula, and the properties block, whose rows are built by
+/// the properties module rather than held in the model.
+pub(crate) fn runs(model: &Model) -> Vec<Run<'_>> {
+    let mut out = Vec::new();
+    for (ix, block) in model.blocks.iter().enumerate() {
+        collect_runs(std::slice::from_ref(block), ix, &mut out);
+    }
+    out
+}
+
+fn collect_runs<'a>(blocks: &'a [RBlock], block: usize, out: &mut Vec<Run<'a>>) {
+    let push = |text: &'a RichText, before: &'static str, out: &mut Vec<Run<'a>>| {
+        out.push(Run {
+            block,
+            rich: text.id,
+            text: &text.text,
+            before,
+        });
+    };
+    for b in blocks {
+        match b {
+            // The renderer lays a paragraph's segments out in a column, so
+            // every text segment of one starts a line of its own.
+            RBlock::Paragraph(segments) => {
+                for segment in segments {
+                    match segment {
+                        Segment::Text(text) => push(text, "\n", out),
+                        Segment::Embed(embed) => {
+                            if let EmbedKind::Note { blocks, .. } = &embed.kind {
+                                collect_runs(blocks, block, out);
+                            }
+                        }
+                        Segment::Math(_) => {}
+                    }
+                }
+            }
+            RBlock::Heading { text, .. } => push(text, "\n", out),
+            RBlock::Quote(children) => collect_runs(children, block, out),
+            RBlock::Callout {
+                title, children, ..
+            } => {
+                push(title, "\n", out);
+                collect_runs(children, block, out);
+            }
+            RBlock::List { items, .. } => {
+                for item in items {
+                    collect_runs(&item.children, block, out);
+                }
+            }
+            RBlock::Table { header, rows, .. } => {
+                for row in std::iter::once(header).chain(rows.iter()) {
+                    for (at, cell) in row.iter().enumerate() {
+                        push(cell, if at == 0 { "\n" } else { "\t" }, out);
+                    }
+                }
+            }
+            RBlock::Footnotes(notes) => {
+                for (_, body) in notes {
+                    collect_runs(body, block, out);
+                }
+            }
+            RBlock::Properties(_)
+            | RBlock::ThematicBreak
+            | RBlock::Code { .. }
+            | RBlock::Html(_)
+            | RBlock::Math(_) => {}
+        }
+    }
+}
+
+/// Where `pos` sits in `runs`, by block and run id.
+fn run_index(runs: &[Run<'_>], pos: ReadingPos) -> Option<usize> {
+    runs.iter()
+        .position(|r| r.block == pos.block && r.rich == pos.rich)
+}
+
+/// The two ends of a selection in document order, lowest first. `None`
+/// when either end names a run this model does not have, which is what an
+/// anchor left over from another note looks like.
+pub(crate) fn ordered(
+    runs: &[Run<'_>],
+    anchor: ReadingPos,
+    head: ReadingPos,
+) -> Option<(ReadingPos, ReadingPos)> {
+    let a = run_index(runs, anchor)?;
+    let b = run_index(runs, head)?;
+    Some(if (a, anchor.offset) <= (b, head.offset) {
+        (anchor, head)
+    } else {
+        (head, anchor)
+    })
+}
+
+/// The byte range selected inside each run the selection covers, as indices
+/// into `runs`, in document order. Runs with nothing of them selected are
+/// left out, so an empty selection yields nothing at all.
+pub(crate) fn selected_ranges(
+    runs: &[Run<'_>],
+    anchor: ReadingPos,
+    head: ReadingPos,
+) -> Vec<(usize, Range<usize>)> {
+    let Some((start, end)) = ordered(runs, anchor, head) else {
+        return Vec::new();
+    };
+    let (first, last) = match (run_index(runs, start), run_index(runs, end)) {
+        (Some(a), Some(b)) => (a, b),
+        _ => return Vec::new(),
+    };
+    let mut out = Vec::new();
+    for (at, run) in runs.iter().enumerate().take(last + 1).skip(first) {
+        let text = run.text;
+        let from = if at == first {
+            floor_boundary(text, start.offset)
+        } else {
+            0
+        };
+        let to = if at == last {
+            floor_boundary(text, end.offset)
+        } else {
+            text.len()
+        };
+        if from < to {
+            out.push((at, from..to));
+        }
+    }
+    out
+}
+
+/// The plain text a selection yields: the selected part of each run in
+/// document order, joined by the separation the reader sees — a newline
+/// between the lines of the document, a tab between the cells of one table
+/// row. Obsidian's reading view is DOM, so this is what a copy out of the
+/// browser gives, without the markers the source carries.
+pub(crate) fn selected_text(runs: &[Run<'_>], anchor: ReadingPos, head: ReadingPos) -> String {
+    let mut out = String::new();
+    for (n, (at, range)) in selected_ranges(runs, anchor, head).into_iter().enumerate() {
+        if n > 0 {
+            out.push_str(runs[at].before);
+        }
+        out.push_str(&runs[at].text[range]);
+    }
+    out
+}
+
+/// Anchor and head covering every run of the note, for Ctrl+A. `None` when
+/// the note has no selectable text at all.
+pub(crate) fn whole_note(runs: &[Run<'_>]) -> Option<(ReadingPos, ReadingPos)> {
+    let first = runs.first()?;
+    let last = runs.last()?;
+    Some((
+        ReadingPos {
+            block: first.block,
+            rich: first.rich,
+            offset: 0,
+        },
+        ReadingPos {
+            block: last.block,
+            rich: last.rich,
+            offset: last.text.len(),
+        },
+    ))
+}
+
+/// The word around `offset`, the range a double-click takes: a run of
+/// alphanumerics, underscores and apostrophes, or the run of whitespace or
+/// punctuation that is there instead, so a press always takes something.
+pub(crate) fn word_at(text: &str, offset: usize) -> Range<usize> {
+    let at = floor_boundary(text, offset);
+    if text.is_empty() {
+        return 0..0;
+    }
+    let wordish = |c: char| c.is_alphanumeric() || c == '_' || c == '\'';
+    // A press at the very end of the text takes the word before it.
+    let probe = if at == text.len() {
+        text[..at].chars().next_back()
+    } else {
+        text[at..].chars().next()
+    };
+    let word = probe.is_some_and(wordish);
+    let like = |c: char| wordish(c) == word;
+    let start = text[..at]
+        .char_indices()
+        .rev()
+        .take_while(|(_, c)| like(*c))
+        .map(|(i, _)| i)
+        .last()
+        .unwrap_or(at);
+    let end = text[at..]
+        .char_indices()
+        .take_while(|(_, c)| like(*c))
+        .map(|(i, c)| at + i + c.len_utf8())
+        .last()
+        .unwrap_or(at);
+    start..end
+}
+
+/// The largest char boundary at or below `at`, so an offset that came from
+/// a hit test against a shaped string can never slice a run apart.
+fn floor_boundary(text: &str, at: usize) -> usize {
+    let mut at = at.min(text.len());
+    while at > 0 && !text.is_char_boundary(at) {
+        at -= 1;
+    }
+    at
+}
+
+/// One end of a selection, for the control socket's state dump.
+fn describe_pos(pos: ReadingPos) -> Value {
+    json!({"block": pos.block, "rich": pos.rich, "offset": pos.offset})
+}
+
+/// What the reader did over a run of text.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum SelectGesture {
+    /// Left button down: the anchor and the head go here.
+    Press,
+    /// Moved with the left button down: the head follows.
+    Drag,
+    /// Double-click: the word under the pointer.
+    Word,
+    /// Triple-click: the whole run, which is Obsidian's paragraph.
+    Line,
+}
+
+/// Told which run a gesture landed on and the byte offset in it.
+pub type SelectHandler = Rc<dyn Fn(SelectGesture, usize, usize, &mut Window, &mut App)>;
+
+/// Lets the text the renderer draws be selected. Only the reading view sets
+/// one; Live Preview's widgets sit behind the editor's own selection, so
+/// they pass none and the runs take no mouse of their own.
+pub(crate) struct SelectHost {
+    /// The selected byte range of each [`RichText`], by id, painted as a
+    /// wash behind the text.
+    pub ranges: Rc<HashMap<usize, Range<usize>>>,
+    pub color: Hsla,
+    pub on_select: SelectHandler,
+}
+
+/// The byte offset a point fell on in a laid-out run: the exact one when
+/// the point is inside the text, and the nearest otherwise — past the end
+/// of a wrapped line, or in the gap a short last line leaves.
+fn index_at(layout: &gpui::TextLayout, position: gpui::Point<Pixels>) -> usize {
+    match layout.index_for_position(position) {
+        Ok(at) | Err(at) => at,
+    }
+}
+
+/// The wash behind selected text: the accent at the alpha the editor's own
+/// selection uses, so the two views look alike.
+pub(crate) fn selection_color(theme: &Theme) -> Hsla {
+    let mut color = theme.accent;
+    color.a = if theme.dark { 0.35 } else { 0.25 };
+    color
+}
+
+/// Merges a selection's wash into a text's style runs: the pieces the
+/// selection covers gain its background, and any run it starts or ends
+/// inside is split, so the list stays sorted and non-overlapping the way
+/// `StyledText::with_highlights` needs it.
+pub(crate) fn with_selection(
+    highlights: Vec<(Range<usize>, HighlightStyle)>,
+    text: &str,
+    selection: Range<usize>,
+    color: Hsla,
+) -> Vec<(Range<usize>, HighlightStyle)> {
+    let len = text.len();
+    // The offsets came from a hit test, and over a paragraph with inline
+    // formulas the string laid out is not the run's own, so both ends are
+    // walked back to a boundary the string can be cut on.
+    let selection = floor_boundary(text, selection.start)..floor_boundary(text, selection.end);
+    if selection.is_empty() {
+        return highlights;
+    }
+    let mut cuts: Vec<usize> = vec![0, len, selection.start, selection.end];
+    for (range, _) in &highlights {
+        cuts.push(range.start.min(len));
+        cuts.push(range.end.min(len));
+    }
+    cuts.retain(|at| *at <= len);
+    cuts.sort_unstable();
+    cuts.dedup();
+    let mut out = Vec::with_capacity(cuts.len());
+    for pair in cuts.windows(2) {
+        let (from, to) = (pair[0], pair[1]);
+        let base = highlights
+            .iter()
+            .find(|(range, _)| range.start <= from && to <= range.end)
+            .map(|(_, style)| *style);
+        let inside = selection.start <= from && to <= selection.end;
+        let Some(mut style) = base.or(if inside {
+            Some(HighlightStyle::default())
+        } else {
+            None
+        }) else {
+            continue;
+        };
+        if inside {
+            style.background_color = Some(color);
+        }
+        out.push((from..to, style));
+    }
+    out
 }
 
 /// Something the reader did to a property row. Live Preview turns each into
@@ -319,6 +667,17 @@ pub struct ReadingView {
     flash: Option<Task<()>>,
     /// Width of the view as last painted; tables lay their columns out for it.
     width: Pixels,
+    /// The reader's text selection: where the drag started and where it is
+    /// now, each a block, a run and a byte offset. Dropped when the note
+    /// changes.
+    selection: Option<(ReadingPos, ReadingPos)>,
+    /// Whether a press landed on text and the button has not come up yet,
+    /// so a move extends the selection.
+    dragging: bool,
+    /// The selected byte range of each run, by [`RichText::id`]: derived
+    /// from `selection` whenever it changes, because the painted blocks ask
+    /// for it on every frame.
+    selected: Rc<HashMap<usize, Range<usize>>>,
 }
 
 impl EventEmitter<ReadingEvent> for ReadingView {}
@@ -349,6 +708,9 @@ impl ReadingView {
             copied: None,
             flash: None,
             width: px(900.),
+            selection: None,
+            dragging: false,
+            selected: Rc::new(HashMap::new()),
         }
     }
 
@@ -393,7 +755,119 @@ impl ReadingView {
         }
         self.recompute_hidden();
         self.copied = None;
+        // A selection names runs of the model that has just been replaced,
+        // so it goes even on a reload: the ids a rebuild hands out are not
+        // the ones the reader pressed on.
+        self.selection = None;
+        self.dragging = false;
+        self.selected = Rc::new(HashMap::new());
         cx.notify();
+    }
+
+    // ----- selection ------------------------------------------------------------
+
+    /// Stores a selection and derives the per-run ranges the blocks paint.
+    fn set_selection(
+        &mut self,
+        selection: Option<(ReadingPos, ReadingPos)>,
+        cx: &mut Context<Self>,
+    ) {
+        let model = self.model.clone();
+        let runs = runs(&model);
+        let mut ranges = HashMap::new();
+        let selection = selection.filter(|(a, h)| ordered(&runs, *a, *h).is_some());
+        if let Some((anchor, head)) = selection {
+            for (at, range) in selected_ranges(&runs, anchor, head) {
+                ranges.insert(runs[at].rich, range);
+            }
+        }
+        self.selection = selection;
+        self.selected = Rc::new(ranges);
+        cx.notify();
+    }
+
+    /// What the reader did over a run of text.
+    fn gesture(&mut self, gesture: SelectGesture, pos: ReadingPos, cx: &mut Context<Self>) {
+        match gesture {
+            SelectGesture::Press => {
+                self.dragging = true;
+                self.set_selection(Some((pos, pos)), cx);
+            }
+            SelectGesture::Drag => {
+                // A drag fires for every move the pointer makes, and most
+                // of them are still on the byte the last one landed on.
+                if self.dragging {
+                    if let Some((anchor, head)) = self.selection {
+                        if head != pos {
+                            self.set_selection(Some((anchor, pos)), cx);
+                        }
+                    }
+                }
+            }
+            SelectGesture::Word | SelectGesture::Line => {
+                let model = self.model.clone();
+                let runs = runs(&model);
+                let Some(at) = runs
+                    .iter()
+                    .position(|r| r.block == pos.block && r.rich == pos.rich)
+                else {
+                    return;
+                };
+                let range = if gesture == SelectGesture::Word {
+                    word_at(runs[at].text, pos.offset)
+                } else {
+                    0..runs[at].text.len()
+                };
+                self.dragging = false;
+                self.set_selection(
+                    Some((
+                        ReadingPos {
+                            offset: range.start,
+                            ..pos
+                        },
+                        ReadingPos {
+                            offset: range.end,
+                            ..pos
+                        },
+                    )),
+                    cx,
+                );
+            }
+        }
+    }
+
+    /// A press that landed on no text at all: the selection goes, the way a
+    /// click on a browser's margin drops one.
+    fn clear_selection(&mut self, cx: &mut Context<Self>) {
+        if self.selection.is_some() {
+            self.set_selection(None, cx);
+        }
+        self.dragging = false;
+    }
+
+    /// The plain text of the selection, empty when there is none.
+    pub fn selected_text(&self) -> String {
+        let Some((anchor, head)) = self.selection else {
+            return String::new();
+        };
+        selected_text(&runs(&self.model), anchor, head)
+    }
+
+    fn select_all(&mut self, _: &SelectAll, _: &mut Window, cx: &mut Context<Self>) {
+        let model = self.model.clone();
+        let whole = whole_note(&runs(&model));
+        self.dragging = false;
+        self.set_selection(whole, cx);
+    }
+
+    /// Ctrl+C: the selection as plain text. With nothing selected the
+    /// clipboard is left alone, as a copy out of a browser with no
+    /// selection writes nothing.
+    fn copy(&mut self, _: &Copy, _: &mut Window, cx: &mut Context<Self>) {
+        let text = self.selected_text();
+        if !text.is_empty() {
+            cx.write_to_clipboard(ClipboardItem::new_string(text));
+        }
     }
 
     // ----- heading folds --------------------------------------------------------
@@ -594,6 +1068,20 @@ impl ReadingView {
                 "item": top.item_ix,
                 "offset": f32::from(top.offset_in_item),
             },
+            // The reader's text selection, the way `editor.selection`
+            // reports the editor's: the two ends as the view holds them,
+            // in document order, and the plain text they cover. `null`
+            // with nothing selected.
+            "selection": self.selection.and_then(|(anchor, head)| {
+                let runs = runs(&self.model);
+                let (start, end) = ordered(&runs, anchor, head)?;
+                Some(json!({
+                    "anchor": describe_pos(start),
+                    "head": describe_pos(end),
+                    "runs": selected_ranges(&runs, start, end).len(),
+                    "text": selected_text(&runs, start, end),
+                }))
+            }),
             // An embedded base draws no chrome of its own, so this is the
             // only way one is visible from outside the app.
             "bases": crate::bases::embed::describe_all(&self.model.blocks),
@@ -718,6 +1206,30 @@ impl ReadingView {
             on_remove_item: Some(on_remove_item),
             on_menu: Some(on_menu),
         };
+        // Selection: the runs of this block take the mouse themselves, so
+        // the press lands on the text it hit rather than being fitted to a
+        // bounding box afterwards, and the ranges already selected ride in
+        // to be painted.
+        let select = SelectHost {
+            ranges: self.selected.clone(),
+            color: selection_color(&theme),
+            on_select: Rc::new({
+                let view = view.clone();
+                move |gesture, rich, offset, _window, cx| {
+                    view.update(cx, |v, cx| {
+                        v.gesture(
+                            gesture,
+                            ReadingPos {
+                                block: ix,
+                                rich,
+                                offset,
+                            },
+                            cx,
+                        )
+                    });
+                }
+            }),
+        };
         let r = Renderer::new(
             &theme,
             _window.text_system().clone(),
@@ -731,7 +1243,8 @@ impl ReadingView {
             on_link,
             on_toggle,
         )
-        .with_reading_host(&host);
+        .with_reading_host(&host)
+        .with_selection(&select);
         let mut inner = r.block(block, false);
         // A heading carries Obsidian's `heading-collapse-indicator`: a
         // chevron in the margin to its left, shown on hover or while
@@ -865,6 +1378,26 @@ impl Render for ReadingView {
             .on_action(cx.listener(Self::scroll_line_up))
             .on_action(cx.listener(Self::scroll_to_top))
             .on_action(cx.listener(Self::scroll_to_bottom))
+            .on_action(cx.listener(Self::select_all))
+            .on_action(cx.listener(Self::copy))
+            // A left press anywhere in the view drops the selection; a
+            // press that landed on a run puts one back, because the run's
+            // own handler is a bubble listener and so runs after this
+            // capture one. A right press leaves the selection alone, so a
+            // context menu can still act on it.
+            .capture_any_mouse_down(cx.listener(|this, event: &gpui::MouseDownEvent, _, cx| {
+                if event.button == MouseButton::Left {
+                    this.clear_selection(cx);
+                }
+            }))
+            .on_mouse_up(
+                MouseButton::Left,
+                cx.listener(|this, _, _, _| this.dragging = false),
+            )
+            .on_mouse_up_out(
+                MouseButton::Left,
+                cx.listener(|this, _, _, _| this.dragging = false),
+            )
             .size_full()
             .font_family(theme.text_font.clone())
             .text_size(px(base))
@@ -919,6 +1452,9 @@ pub(crate) struct Renderer<'a> {
     table_host: Option<&'a TableHost>,
     /// Set by the reading view for the affordances only it draws.
     reading_host: Option<&'a ReadingHost>,
+    /// Set by the reading view so its text can be selected and the
+    /// selection painted.
+    select: Option<&'a SelectHost>,
     on_link: LinkHandler,
     on_toggle: ToggleHandler,
     text_system: Arc<WindowTextSystem>,
@@ -946,11 +1482,20 @@ impl<'a> Renderer<'a> {
             properties_host,
             table_host,
             reading_host: None,
+            select: None,
             on_link,
             on_toggle,
             text_system,
             available: available.max(100.),
         }
+    }
+
+    /// Makes the text selectable: each run takes the mouse and paints the
+    /// part of it the selection covers. Live Preview leaves it unset — the
+    /// editor's own selection is drawn over its source lines.
+    pub(crate) fn with_selection(mut self, host: &'a SelectHost) -> Renderer<'a> {
+        self.select = Some(host);
+        self
     }
 
     /// The reading view's own settings and handlers. Live Preview leaves
@@ -2280,7 +2825,8 @@ impl<'a> Renderer<'a> {
         if formulas.is_empty() {
             let (interactive, layout) =
                 self.interactive_with_layout(text, &text.text, &text.runs, &text.links);
-            return self.with_link_menu(interactive.into_any_element(), layout, text.links.clone());
+            let element = self.selectable(interactive.into_any_element(), text, &layout);
+            return self.with_link_menu(element, layout, text.links.clone());
         }
         let t = self.theme;
         let em = px(size);
@@ -2346,7 +2892,8 @@ impl<'a> Renderer<'a> {
             t.text,
         )
         .into_any_element();
-        self.with_link_menu(overlay, layout, links)
+        let element = self.selectable(overlay, text, &layout);
+        self.with_link_menu(element, layout, links)
     }
 
     /// The text element with a right click on a link raising the host's
@@ -2372,6 +2919,52 @@ impl<'a> Renderer<'a> {
         .into_any_element()
     }
 
+    /// Wraps a run of text so a press, a drag or a multiple click over it
+    /// reaches the view with the byte offset it landed on. A layout can
+    /// only be asked where a point fell once it has been laid out *and*
+    /// prepainted, which is why the handlers hang here rather than on the
+    /// view's root: gpui registers an element's mouse listeners while
+    /// painting it, by when the text inside has both.
+    fn selectable(
+        &self,
+        element: AnyElement,
+        text: &RichText,
+        layout: &gpui::TextLayout,
+    ) -> AnyElement {
+        let Some(host) = self.select else {
+            return element;
+        };
+        let id = text.id;
+        div()
+            .child(element)
+            .on_mouse_down(MouseButton::Left, {
+                let (on_select, layout) = (host.on_select.clone(), layout.clone());
+                move |event: &gpui::MouseDownEvent, window, cx| {
+                    let gesture = match event.click_count {
+                        0 | 1 => SelectGesture::Press,
+                        2 => SelectGesture::Word,
+                        _ => SelectGesture::Line,
+                    };
+                    on_select(gesture, id, index_at(&layout, event.position), window, cx);
+                }
+            })
+            .on_mouse_move({
+                let (on_select, layout) = (host.on_select.clone(), layout.clone());
+                move |event: &gpui::MouseMoveEvent, window, cx| {
+                    if event.pressed_button == Some(MouseButton::Left) {
+                        on_select(
+                            SelectGesture::Drag,
+                            id,
+                            index_at(&layout, event.position),
+                            window,
+                            cx,
+                        );
+                    }
+                }
+            })
+            .into_any_element()
+    }
+
     /// The `InteractiveText` of `string` styled by `runs`, and its layout
     /// handle, which reports where each byte landed once the text has been
     /// laid out.
@@ -2392,6 +2985,16 @@ impl<'a> Renderer<'a> {
             .filter(|(_, s)| s.code || s.kbd || s.html)
             .map(|(range, _)| (range.clone(), t.mono_font.clone()))
             .collect();
+        // The selection is a background behind whatever styles the runs
+        // already carry, so it is merged into the same highlight list the
+        // model's own styles build rather than drawn as a quad of its own.
+        let highlights = match self
+            .select
+            .and_then(|h| h.ranges.get(&text.id).map(|range| (range.clone(), h.color)))
+        {
+            Some((range, color)) => with_selection(highlights, string, range, color),
+            None => highlights,
+        };
         let mut styled =
             StyledText::new(SharedString::from(string.to_string())).with_highlights(highlights);
         if !mono.is_empty() {
@@ -2578,9 +3181,14 @@ impl Element for LinkMenu {
 #[cfg(test)]
 mod tests {
     use super::{
-        header_height, inline_title, line_distance, page_distance, same_note, shown_title,
-        HEADER_TOP, LINE_HEIGHT,
+        header_height, inline_title, line_distance, ordered, page_distance, runs, same_note,
+        selected_ranges, selected_text, shown_title, whole_note, with_selection, word_at,
+        ReadingPos, HEADER_TOP, LINE_HEIGHT,
     };
+    use crate::reading::model::{build, EmbedSource, Model};
+    use gpui::{hsla, HighlightStyle};
+    use std::ops::Range;
+    use std::path::PathBuf;
 
     #[test]
     fn a_page_is_the_viewport_less_a_strip_of_overlap() {
@@ -2668,5 +3276,194 @@ mod tests {
         );
         // It scales with the body font, as an em-sized heading does.
         assert!(header_height(20., true) > with);
+    }
+
+    // ----- selection ------------------------------------------------------------
+
+    /// A vault with nothing in it: the model builder wants a source, and
+    /// these notes have no embeds to resolve.
+    struct NoVault;
+
+    impl EmbedSource for NoVault {
+        fn resolve(&self, _: &str, _: &str) -> Option<String> {
+            None
+        }
+        fn read(&self, _: &str) -> Option<String> {
+            None
+        }
+        fn absolute(&self, path: &str) -> PathBuf {
+            PathBuf::from(path)
+        }
+    }
+
+    fn model(text: &str) -> Model {
+        build("Note.md", text, &NoVault)
+    }
+
+    /// The position `offset` bytes into the `n`th run of the note.
+    fn at(model: &Model, n: usize, offset: usize) -> ReadingPos {
+        let runs = runs(model);
+        let run = &runs[n];
+        ReadingPos {
+            block: run.block,
+            rich: run.rich,
+            offset,
+        }
+    }
+
+    fn texts(model: &Model) -> Vec<String> {
+        runs(model).iter().map(|r| r.text.to_string()).collect()
+    }
+
+    #[test]
+    fn the_runs_of_a_note_are_its_inline_text_in_document_order() {
+        let m = model("# Title\n\nfirst para\n\n- one\n- two\n\n```\ncode\n```\n\n> quoted\n");
+        assert_eq!(
+            texts(&m),
+            ["Title", "first para", "one", "two", "quoted"],
+            "a code block carries no inline model, so it cannot be selected"
+        );
+        // Every run knows the top-level block it was drawn in, and the
+        // blocks only ever move forwards.
+        let blocks: Vec<usize> = runs(&m).iter().map(|r| r.block).collect();
+        assert!(blocks.windows(2).all(|p| p[0] <= p[1]), "{blocks:?}");
+        assert_eq!(blocks[0], 0);
+        // The two list items share their block and have ids of their own.
+        assert_eq!(blocks[2], blocks[3]);
+        assert_ne!(runs(&m)[2].rich, runs(&m)[3].rich);
+    }
+
+    #[test]
+    fn a_callouts_title_comes_before_its_body() {
+        let m = model("> [!note] Heads up\n> the body\n");
+        assert_eq!(texts(&m), ["Heads up", "the body"]);
+    }
+
+    #[test]
+    fn an_anchor_below_the_head_is_ordered_for_painting() {
+        let m = model("one\n\ntwo\n");
+        let r = runs(&m);
+        let (first, second) = (at(&m, 0, 2), at(&m, 1, 1));
+        assert_eq!(ordered(&r, second, first), Some((first, second)));
+        assert_eq!(ordered(&r, first, second), Some((first, second)));
+        // Inside one run it is the offsets that order the pair.
+        let (low, high) = (at(&m, 0, 1), at(&m, 0, 3));
+        assert_eq!(ordered(&r, high, low), Some((low, high)));
+        // An end naming a run this note has not got is no selection at
+        // all, which is what an anchor left over from another note is.
+        let stray = ReadingPos {
+            block: 0,
+            rich: usize::MAX,
+            offset: 0,
+        };
+        assert_eq!(ordered(&r, stray, first), None);
+        assert_eq!(ordered(&r, first, stray), None);
+    }
+
+    #[test]
+    fn a_selection_across_blocks_copies_a_line_for_each() {
+        let m = model("# Heading\n\nfirst para\n\nsecond para\n");
+        let r = runs(&m);
+        let (from, to) = (at(&m, 0, 3), at(&m, 2, 6));
+        assert_eq!(selected_text(&r, from, to), "ding\nfirst para\nsecond");
+        // The same selection dragged the other way copies the same text.
+        assert_eq!(selected_text(&r, to, from), "ding\nfirst para\nsecond");
+        // Three runs are touched: the first and last partly, the middle
+        // one whole.
+        assert_eq!(
+            selected_ranges(&r, from, to),
+            vec![(0, 3..7), (1, 0..10), (2, 0..6)]
+        );
+    }
+
+    #[test]
+    fn a_tables_cells_copy_tab_separated_and_its_rows_by_line() {
+        let m = model("| a | b |\n| - | - |\n| c | d |\n");
+        let r = runs(&m);
+        let (from, to) = whole_note(&r).unwrap();
+        assert_eq!(selected_text(&r, from, to), "a\tb\nc\td");
+    }
+
+    #[test]
+    fn select_all_takes_the_whole_note_and_a_note_with_no_text_nothing() {
+        let m = model("alpha\n\nbeta\n");
+        let r = runs(&m);
+        let (from, to) = whole_note(&r).unwrap();
+        assert_eq!(from, at(&m, 0, 0));
+        assert_eq!(to, at(&m, 1, 4));
+        assert_eq!(selected_text(&r, from, to), "alpha\nbeta");
+        // A note that is nothing but a code block has no selectable run,
+        // so Ctrl+A selects nothing rather than panicking on an end.
+        let bare = model("```\ncode\n```\n");
+        assert!(runs(&bare).is_empty());
+        assert_eq!(whole_note(&runs(&bare)), None);
+    }
+
+    #[test]
+    fn an_empty_selection_covers_no_runs_and_copies_nothing() {
+        let m = model("alpha\n\nbeta\n");
+        let r = runs(&m);
+        let caret = at(&m, 0, 2);
+        assert_eq!(selected_ranges(&r, caret, caret), Vec::new());
+        assert_eq!(selected_text(&r, caret, caret), "");
+        // Two ends in different runs that still cover no bytes: the end of
+        // one run and the start of the next. Nothing is copied, so no
+        // stray newline is either.
+        assert_eq!(selected_text(&r, at(&m, 0, 5), at(&m, 1, 0)), "");
+    }
+
+    #[test]
+    fn an_offset_past_a_runs_text_is_clamped_rather_than_slicing_it() {
+        let m = model("héllo\n");
+        let r = runs(&m);
+        // Past the end.
+        assert_eq!(selected_text(&r, at(&m, 0, 0), at(&m, 0, 99)), "héllo");
+        // Inside the two bytes of the é: the cut walks back to the
+        // boundary below it.
+        assert_eq!(selected_text(&r, at(&m, 0, 0), at(&m, 0, 2)), "h");
+    }
+
+    #[test]
+    fn a_double_click_takes_the_word_under_it() {
+        assert_eq!(word_at("the quick brown", 4), 4..9);
+        assert_eq!(word_at("the quick brown", 7), 4..9);
+        // A press at the very end takes the word before it.
+        assert_eq!(word_at("the quick brown", 15), 10..15);
+        // Spaces and punctuation are a run of their own, so a press always
+        // takes something.
+        assert_eq!(word_at("a, b", 1), 1..3);
+        assert_eq!(word_at("", 0), 0..0);
+        // An apostrophe is part of the word, as a browser's word select
+        // treats one.
+        assert_eq!(word_at("don't stop", 2), 0..5);
+    }
+
+    #[test]
+    fn the_selection_wash_splits_the_style_runs_it_overlaps() {
+        let bold = HighlightStyle {
+            font_weight: Some(gpui::FontWeight::BOLD),
+            ..Default::default()
+        };
+        let wash = hsla(0.5, 0.5, 0.5, 0.3);
+        // "plain bold plain" with the bold run at 6..10, selected from
+        // inside it to the middle of the plain tail.
+        let out = with_selection(vec![(6..10, bold)], "plain bold plain", 8..14, wash);
+        let ranges: Vec<Range<usize>> = out.iter().map(|(r, _)| r.clone()).collect();
+        assert_eq!(ranges, vec![6..8, 8..10, 10..14]);
+        assert_eq!(out[0].1.background_color, None, "outside the selection");
+        assert_eq!(out[1].1.background_color, Some(wash));
+        assert_eq!(
+            out[1].1.font_weight, bold.font_weight,
+            "the wash is behind the style the model gave the run"
+        );
+        assert_eq!(out[2].1.background_color, Some(wash));
+        // Sorted and non-overlapping, which is what
+        // `StyledText::with_highlights` needs of its list.
+        assert!(out.windows(2).all(|p| p[0].0.end <= p[1].0.start));
+        // An empty selection leaves the runs exactly as they were.
+        assert_eq!(
+            with_selection(vec![(6..10, bold)], "plain bold plain", 3..3, wash),
+            vec![(6..10, bold)]
+        );
     }
 }
