@@ -300,8 +300,8 @@ pub fn stored_frame_style() -> String {
 /// Writes the frame style to `scoria.json` and remembers it. The window
 /// keeps the frame it opened with; the next start reads the file.
 pub fn write_frame_style(value: &str) -> Result<(), String> {
-    let Some(mut registry) = scoria_vault::registry::VaultRegistry::open()
-        .map_err(|e| e.to_string())?
+    let Some(mut registry) =
+        scoria_vault::registry::VaultRegistry::open().map_err(|e| e.to_string())?
     else {
         return Err("no configuration folder to keep it in".into());
     };
