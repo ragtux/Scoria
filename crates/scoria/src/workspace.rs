@@ -3175,6 +3175,7 @@ impl Workspace {
     /// writes.
     fn apply_app_config(&mut self, state: &VaultState, cx: &mut Context<Self>) {
         let readable = state.app().readable_line_length.unwrap_or(true);
+        let inline_title = state.app().show_inline_title.unwrap_or(true);
         let properties =
             PropertiesInDocument::from_config(state.app().properties_in_document.as_deref());
         let (smart, use_tab, tab_size) = (
@@ -3191,6 +3192,7 @@ impl Workspace {
         for group in &self.groups {
             group.reading.update(cx, |r, cx| {
                 r.set_readable_line_length(readable);
+                r.set_show_inline_title(inline_title);
                 r.set_property_types(state.property_types().clone());
                 r.set_properties_in_document(properties);
                 r.set_fold_headings(state.app().fold_heading.unwrap_or(true));
@@ -3199,6 +3201,7 @@ impl Workspace {
             group.editor.update(cx, |e, cx| {
                 e.set_link_options(link_options);
                 e.set_readable_line_length(readable);
+                e.set_show_inline_title(inline_title);
                 e.set_indent_options(smart, use_tab, tab_size);
                 e.set_property_types(state.property_types().clone());
                 e.set_properties_in_document(properties);

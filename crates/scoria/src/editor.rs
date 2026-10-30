@@ -643,6 +643,9 @@ pub struct Editor {
     /// An edit arrived while a parse was running; parse again when it lands.
     parse_queued: bool,
     readable_line_length: bool,
+    /// `showInlineTitle`: the note's name at h1 size above its first line,
+    /// in the header the view reserves above line 0 (see `header_height`).
+    show_inline_title: bool,
     /// Live Preview: markers hidden and constructs rendered in place,
     /// except where the cursor is.
     live_preview: bool,
@@ -739,6 +742,7 @@ impl Editor {
             pending_parse: None,
             parse_queued: false,
             readable_line_length: true,
+            show_inline_title: true,
             live_preview: false,
             smart_indent_list: true,
             use_tab: true,
@@ -841,6 +845,38 @@ impl Editor {
 
     pub fn set_readable_line_length(&mut self, on: bool) {
         self.readable_line_length = on;
+    }
+
+    pub fn set_show_inline_title(&mut self, on: bool) {
+        self.show_inline_title = on;
+    }
+
+    /// The inline title over the text, if the setting and the file give one.
+    fn inline_title(&self) -> Option<&str> {
+        crate::reading::view::shown_title(self.show_inline_title, Some(&self.name))
+    }
+
+    /// The header the view reserves above line 0: the top padding, and the
+    /// inline title when there is one — the same height the reading view's
+    /// header row has, so the first line sits at one y in both modes. For
+    /// the scroll maths it belongs to line 0: `height_of(0)` includes it,
+    /// and `scroll_px == 0` on line 0 is the very top of the note. Before
+    /// the first frame the font size is unknown and the header is nothing.
+    fn header_height(&self) -> Pixels {
+        px(crate::reading::view::header_height(
+            f32::from(self.layout.font_size),
+            self.inline_title().is_some(),
+        ))
+    }
+
+    /// The top of the row `row_px` into `line`, in the line's own scroll
+    /// space: line 0's rows sit under the header.
+    fn row_top(&self, line: usize, row_px: Pixels) -> Pixels {
+        if line == 0 {
+            row_px + self.header_height()
+        } else {
+            row_px
+        }
     }
 
     /// Switches between Live Preview and Source mode. Widgets are only
@@ -1680,8 +1716,18 @@ impl Editor {
 
     /// Height of `line` on screen: its wrapped rows at its row height. A
     /// folded widget's height sits on its first line; its other lines are
-    /// not on screen at all.
+    /// not on screen at all. Line 0 carries the header above it as well.
     fn height_of(&self, window: &mut Window, line: usize) -> Pixels {
+        let lead = if line == 0 {
+            self.header_height()
+        } else {
+            px(0.)
+        };
+        lead + self.own_height_of(window, line)
+    }
+
+    /// `height_of` without the header: the line's own rows.
+    fn own_height_of(&self, window: &mut Window, line: usize) -> Pixels {
         if self.line_hidden(line) {
             return px(0.);
         }
@@ -1854,7 +1900,15 @@ impl Editor {
         };
         let (row, _) = shaped.row_and_x(c.col);
         let rh = shaped.row_height;
-        let row_px = rh * row as f32;
+        // The row's top in its line's scroll space; line 0's first row
+        // brings the header above it into view too, so the document start
+        // shows the inline title.
+        let row_px = self.row_top(c.line, rh * row as f32);
+        let row_px = if c.line == 0 && row == 0 {
+            px(0.)
+        } else {
+            row_px
+        };
         let center = std::mem::take(&mut self.pending_center);
         if center {
             self.scroll_row_to(c.line, row_px, (h - rh) / 2., window);
@@ -1887,7 +1941,8 @@ impl Editor {
     }
 
     /// Scrolls so the row `row_px` into `line` sits `need` pixels under the
-    /// top of the view, walking back over the lines above it.
+    /// top of the view, walking back over the lines above it. `row_px` is
+    /// in the line's scroll space: for line 0, under the header.
     fn scroll_row_to(
         &mut self,
         line: usize,
@@ -4825,6 +4880,8 @@ struct Prepaint {
     widgets: Vec<WidgetPaint>,
     /// Live Preview's code-block flairs, painted over the lines.
     flairs: Vec<AnyElement>,
+    /// The inline title, when the top of the note is in view.
+    header: Option<AnyElement>,
     /// Quote bars, code block bands and rules, behind the text.
     decor: Vec<PaintQuad>,
     line_height: Pixels,
@@ -5010,6 +5067,50 @@ impl Element for EditorElement {
             let mut cursor_top = px(0.);
             let mut y = bounds.origin.y - scroll_px;
             let mut line = scroll_line;
+            // The header above line 0: the top padding and, with
+            // `showInlineTitle`, the note's name as an h1 — what the
+            // reading view's header row holds, at the same height, so the
+            // text does not move on a mode switch. It scrolls with the
+            // text as part of line 0, which is why `scroll_px` on that line
+            // is measured from the header's top, not the line's.
+            let title = editor
+                .inline_title()
+                .map(|t| SharedString::from(t.to_string()));
+            let header_h = px(crate::reading::view::header_height(
+                f32::from(font_size),
+                title.is_some(),
+            ));
+            let lead = if scroll_line == 0 { header_h } else { px(0.) };
+            let mut header = None;
+            if scroll_line == 0 {
+                if let Some(title) = title {
+                    let (scale, weight, line_height) = crate::theme::heading_style(1);
+                    let h1 = font_size * scale;
+                    let mut element = div()
+                        .w(content_width)
+                        .text_size(h1)
+                        .line_height(h1 * line_height)
+                        .font_weight(FontWeight(weight))
+                        .text_color(palette.text)
+                        .child(title)
+                        .into_any_element();
+                    element.layout_as_root(
+                        size(
+                            AvailableSpace::Definite(content_width),
+                            AvailableSpace::MinContent,
+                        ),
+                        window,
+                        cx,
+                    );
+                    element.prepaint_at(
+                        point(content_x, y + px(crate::reading::view::HEADER_TOP)),
+                        window,
+                        cx,
+                    );
+                    header = Some(element);
+                }
+                y += header_h;
+            }
             let hidden = editor.hidden.clone();
             let foldables = editor.foldables.clone();
             let hover_line = editor.hover_line;
@@ -5044,8 +5145,8 @@ impl Element for EditorElement {
                         cx,
                     );
                     let height = measured.height.max(lh);
-                    if line == scroll_line && scroll_px >= height {
-                        scroll_px = px(0.);
+                    if line == scroll_line && scroll_px - lead >= height {
+                        scroll_px = lead;
                         y = bounds.origin.y;
                     }
                     element.prepaint_at(point(content_x, y), window, cx);
@@ -5079,9 +5180,9 @@ impl Element for EditorElement {
                 let rows = shaped.rows();
                 let rh = shaped.row_height;
                 let height = shaped.height();
-                if line == scroll_line && scroll_px >= height {
-                    scroll_px = (height - rh).max(px(0.));
-                    y = bounds.origin.y - scroll_px;
+                if line == scroll_line && scroll_px - lead >= height {
+                    scroll_px = lead + (height - rh).max(px(0.));
+                    y = bounds.origin.y - scroll_px + lead;
                 }
                 if live {
                     let d = shaped.display.decor;
@@ -5348,16 +5449,17 @@ impl Element for EditorElement {
                 size(px(SCROLLBAR_WIDTH), bounds.size.height),
             );
             // The part of the first line scrolled off the top moves the
-            // thumb between lines, so it does not step.
+            // thumb between lines, so it does not step. Line 0's extent
+            // includes the header.
             let first = lines
                 .first()
                 .filter(|(v, _)| v.line == scroll_line)
-                .map(|(v, _)| v.row_height * v.rows as f32)
+                .map(|(v, _)| v.row_height * v.rows as f32 + lead)
                 .or_else(|| {
                     widgets
                         .first()
                         .filter(|w| w.visible.line == scroll_line)
-                        .map(|w| w.bounds.size.height)
+                        .map(|w| w.bounds.size.height + lead)
                 })
                 .filter(|height| *height > px(0.))
                 .map_or(scroll_line as f32, |height| {
@@ -5370,6 +5472,7 @@ impl Element for EditorElement {
                 hitbox,
                 widgets,
                 flairs: flair_elements,
+                header,
                 decor: decor_quads,
                 line_height: lh,
                 font_size,
@@ -5411,6 +5514,9 @@ impl Element for EditorElement {
         window.with_content_mask(Some(gpui::ContentMask { bounds }), |window| {
             for quad in prepaint.decor.drain(..) {
                 window.paint_quad(quad);
+            }
+            if let Some(header) = prepaint.header.as_mut() {
+                header.paint(window, cx);
             }
             for quad in prepaint.selection.drain(..) {
                 window.paint_quad(quad);
@@ -5708,5 +5814,28 @@ mod tests {
         let d = display("plain line");
         assert_eq!(source_index(&d, 4), 4);
         assert_eq!(source_index(&d, d.text.len()), 10);
+    }
+
+    #[test]
+    fn the_editor_reserves_the_reading_views_header_above_line_zero() {
+        use crate::reading::view::{header_height, HEADER_TOP};
+        // The reading view's header row and the editor's lead above line 0
+        // come from the same function, so a mode switch leaves the first
+        // line where it was: 24 px of padding, and under `showInlineTitle`
+        // an h1 line (31.07 px at 16 px) with its 12.944 px margin.
+        let base = 16.;
+        let with_title = header_height(base, true);
+        let without = header_height(base, false);
+        assert_eq!(without, HEADER_TOP);
+        assert!((with_title - 68.0096).abs() < 0.01, "{with_title}");
+        // A scroll position on line 0 is measured from the header's top: the
+        // row `r` of the first line starts `header + r * line height` in,
+        // and the very top of the note is `scroll_px == 0` whether or not a
+        // title is shown, so toggling the setting at the top keeps it there.
+        let row_height = base * 1.5;
+        let row_top = |header: f32, row: usize| header + row_height * row as f32;
+        assert_eq!(row_top(with_title, 0), with_title);
+        assert_eq!(row_top(without, 0), HEADER_TOP);
+        assert!(row_top(with_title, 1) - row_top(with_title, 0) == row_height);
     }
 }

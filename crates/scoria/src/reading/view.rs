@@ -93,6 +93,47 @@ pub(crate) fn same_note(current: Option<&str>, next: Option<&str>) -> bool {
     next.is_some() && current == next
 }
 
+/// The space above the first block in both views: the pane body's top
+/// padding, with the inline title inside it when one is shown.
+pub(crate) const HEADER_TOP: f32 = 24.;
+
+/// The inline title a note shows above its first block: the basename
+/// without its extension. Only a markdown note has one; the image a
+/// synthetic model embeds, or a file no view can draw, shows none.
+pub(crate) fn inline_title(path: &str) -> Option<&str> {
+    if !FileKind::from_path(path).is_markdown() {
+        return None;
+    }
+    let name = path.rsplit('/').next().unwrap_or(path);
+    Some(name.rsplit_once('.').map_or(name, |(stem, _)| stem))
+}
+
+/// The title the header row shows: none unless `showInlineTitle` is on and
+/// a note is open.
+pub(crate) fn shown_title(show: bool, path: Option<&str>) -> Option<&str> {
+    if !show {
+        return None;
+    }
+    path.and_then(inline_title)
+}
+
+/// Height of the header row above the first block, in pixels, for a body
+/// font of `base` pixels: the top padding, plus the title when there is
+/// one. Obsidian's `.inline-title` is an h1 — 1.618em at weight 700 on a
+/// 1.2 line, 25.888 px / 31.07 px at the 16 px default — with a 0.5em
+/// margin below it, the 12.944 px measured. The editor reserves the same
+/// height above its first line, so a mode switch does not move the text.
+pub(crate) fn header_height(base: f32, title: bool) -> f32 {
+    let (size, _, line_height) = crate::theme::heading_style(1);
+    let h1 = base * size;
+    HEADER_TOP
+        + if title {
+            h1 * line_height + h1 * 0.5
+        } else {
+            0.
+        }
+}
+
 /// Something the reader did to a property row. The reading view raises none
 /// of these; Live Preview turns each into a document edit.
 #[derive(Debug, Clone, PartialEq)]
@@ -229,6 +270,8 @@ pub struct ReadingView {
     /// Per top-level block: inside a collapsed heading's section.
     hidden: Vec<bool>,
     readable_line_length: bool,
+    /// `showInlineTitle`: the note's name at h1 size above its first block.
+    show_inline_title: bool,
     properties_in_document: PropertiesInDocument,
     /// The vault's `types.json`, for the type each property row shows.
     property_types: PropertyTypes,
@@ -261,6 +304,7 @@ impl ReadingView {
             fold_headings: true,
             hidden: Vec::new(),
             readable_line_length: true,
+            show_inline_title: true,
             properties_in_document: PropertiesInDocument::default(),
             property_types: PropertyTypes::default(),
             copied: None,
@@ -273,8 +317,18 @@ impl ReadingView {
         self.readable_line_length = on;
     }
 
+    pub fn set_show_inline_title(&mut self, on: bool) {
+        self.show_inline_title = on;
+    }
+
     pub fn set_properties_in_document(&mut self, mode: PropertiesInDocument) {
         self.properties_in_document = mode;
+    }
+
+    /// The inline title over the blocks, if the setting and the file give
+    /// one.
+    pub fn inline_title(&self) -> Option<&str> {
+        shown_title(self.show_inline_title, self.path.as_deref())
     }
 
     pub fn set_property_types(&mut self, types: PropertyTypes) {
@@ -692,7 +746,6 @@ impl ReadingView {
             .flex_row()
             .justify_center()
             .px(px(32.))
-            .when(ix == 0, |d| d.pt(px(24.)))
             .when(last, |d| d.pb(px(120.)))
             .child(
                 div()
@@ -709,6 +762,36 @@ impl Render for ReadingView {
         let theme = cx.global::<Theme>().clone();
         let base = theme.base_font_size;
         let view = cx.entity().downgrade();
+        // Obsidian's `div.mod-header`: the inline title, the note's basename
+        // at h1 size, above the properties block. A sibling of the list
+        // rather than its first item, so block indices, `scroll_to_block`
+        // and the folds keep their meaning; it holds the top padding the
+        // first block used to carry, so the blocks sit where they did.
+        let title = self
+            .inline_title()
+            .map(|t| SharedString::from(t.to_string()));
+        let (size, weight, line_height) = crate::theme::heading_style(1);
+        let h1 = base * size;
+        let header = div()
+            .w_full()
+            .flex()
+            .flex_row()
+            .justify_center()
+            .px(px(32.))
+            .pt(px(HEADER_TOP))
+            .child(
+                div()
+                    .w_full()
+                    .when(self.readable_line_length, |d| d.max_w(px(700.)))
+                    .children(title.map(|title| {
+                        div()
+                            .text_size(px(h1))
+                            .line_height(px(h1 * line_height))
+                            .font_weight(FontWeight(weight))
+                            .mb(px(h1 * 0.5))
+                            .child(title)
+                    })),
+            );
         div()
             .key_context("ReadingView")
             .track_focus(&self.focus_handle)
@@ -724,12 +807,17 @@ impl Render for ReadingView {
             .line_height(px(base * LINE_HEIGHT))
             .text_color(theme.text)
             .relative()
+            .flex()
+            .flex_col()
+            .child(header)
             .child(
                 list(self.list.clone(), move |ix, window, cx| {
                     view.update(cx, |this, cx| this.render_block(ix, window, cx))
                         .unwrap_or_else(|_| div().into_any_element())
                 })
-                .size_full(),
+                .w_full()
+                .flex_1()
+                .min_h(px(0.)),
             )
             .child(
                 // Records the painted width; a change lays the blocks out again.
@@ -2286,7 +2374,10 @@ impl<'a> Renderer<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::{line_distance, page_distance, same_note, LINE_HEIGHT};
+    use super::{
+        header_height, inline_title, line_distance, page_distance, same_note, shown_title,
+        HEADER_TOP, LINE_HEIGHT,
+    };
 
     #[test]
     fn a_page_is_the_viewport_less_a_strip_of_overlap() {
@@ -2334,5 +2425,45 @@ mod tests {
         assert!(!same_note(None, Some("Notes/A.md")));
         // Clearing the view twice is not a reload of a note.
         assert!(!same_note(None, None));
+    }
+
+    #[test]
+    fn the_inline_title_is_a_notes_basename_without_its_extension() {
+        assert_eq!(inline_title("Folder/Note.md"), Some("Note"));
+        assert_eq!(inline_title("Note.md"), Some("Note"));
+        // Only the extension comes off: a dotted name keeps its dots.
+        assert_eq!(inline_title("Notes/v1.2 release.md"), Some("v1.2 release"));
+        assert_eq!(inline_title("Notes/README.MD"), Some("README"));
+        // An image opens through the reading view with a synthetic model,
+        // and a file no view draws comes through with no path at all:
+        // neither is a note, so neither gets a title.
+        assert_eq!(inline_title("Attachments/photo.png"), None);
+        assert_eq!(inline_title("Board.canvas"), None);
+        assert_eq!(inline_title("Paper.pdf"), None);
+    }
+
+    #[test]
+    fn the_title_shows_only_with_the_setting_on_and_a_note_open() {
+        // What `set_note` + `showInlineTitle` come to.
+        assert_eq!(shown_title(true, Some("Folder/Note.md")), Some("Note"));
+        assert_eq!(shown_title(true, None), None);
+        assert_eq!(shown_title(false, Some("Folder/Note.md")), None);
+        assert_eq!(shown_title(true, Some("Folder/photo.jpg")), None);
+    }
+
+    #[test]
+    fn the_header_is_the_top_padding_plus_an_h1_line_and_its_margin() {
+        // Without a title the row is only the padding the first block used
+        // to carry.
+        assert_eq!(header_height(16., false), HEADER_TOP);
+        // With one: Obsidian's 25.888 px h1 on a 31.07 px line with a
+        // 12.944 px margin below, at the 16 px default.
+        let with = header_height(16., true);
+        assert!(
+            (with - (HEADER_TOP + 31.0656 + 12.944)).abs() < 0.01,
+            "{with}"
+        );
+        // It scales with the body font, as an em-sized heading does.
+        assert!(header_height(20., true) > with);
     }
 }
