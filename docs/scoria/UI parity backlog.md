@@ -466,7 +466,28 @@ a definition resolves to that block rather than past the end.
 
 *high, missing-feature, large*
 
-**Landed 2026-10-25, the scrolling half** (`c95d250`): PageDown/PageUp, Space/Shift+Space, Up/Down, Home/End and Ctrl+Home/Ctrl+End are bound in the `ReadingView` context and scroll the list. Selection and copy are still open.
+**Landed 2026-10-25, the scrolling half** (`c95d250`): PageDown/PageUp, Space/Shift+Space, Up/Down, Home/End and Ctrl+Home/Ctrl+End are bound in the `ReadingView` context and scroll the list.
+
+**The rest landed 2026-10-30.** A selection is an anchor and a head, each
+`{block, rich, offset}`, ordered over a document-order walk of every `RichText`
+in the note rather than by id, since ids come off a build counter. A press,
+drag, double click (a word) and triple click (a run) hang off each run of text
+rather than off the view's root, because gpui can only be asked where a point
+fell once the text has been laid out *and* prepainted, and `list` measures items
+it never paints. Offsets are exact (`TextLayout::index_for_position`, taking the
+nearest byte as well as a hit), walked back to a char boundary before any slice.
+The wash goes through the existing highlight path, splitting any style run it
+starts or ends inside, so selected bold stays bold. `Ctrl+A` takes the note,
+`Ctrl+C` copies plain text with runs joined by newlines and a table row's cells
+by tabs, and `reading.selection` reports it all on the control socket.
+
+Not selectable, having no inline model: code blocks (which keep their own copy
+button), raw HTML, display math and the properties block. **Known limits**: a
+paragraph with inline `$x$` lays out a placeholder-substituted string, so an
+offset inside such a run is in the shaped string's space and can be off by the
+difference between the TeX source and its placeholder; Shift+click to extend and
+keyboard-driven selection are not built; and the clipboard *write* is unasserted
+(reading it back would clobber what the user has on theirs).
 
 **Scoria.** Focus is `{reading, [Workspace, ReadingView]}` and every key is inert. PageDown,
 PageUp, Down, Up, Home, End, Ctrl+Home, Ctrl+End and Space all leave `reading.scroll` at
@@ -1414,6 +1435,26 @@ arguably better as it is — decide it deliberately rather than by accident.
 ### Right-clicking in the editor does nothing: no context menu, no caret placement
 
 *low, missing-feature, large*
+
+**Landed 2026-10-30**, on the probe of the same day
+([[Specification#Observed editor context menu and view header actions, Obsidian 1.14.5 (installer build 1.13.7)]]).
+A right click places the caret, keeps a selection it lands inside and moves the
+caret when it lands outside -- and the rows follow the probe's mixed behaviour
+exactly: the Search row is built from the selection *at the click*, Cut and Copy
+from the one that *survived* it, so a click outside a selection carries
+`Search for "…"` with Cut and Copy drawn disabled. The menu is `file_menu`
+extended, not a second widget: a new `Target::Editor`, three new sections and a
+`disabled` flag the renderer draws greyed and inert. A wikilink wraps the text
+rows in the whole file menu; a dangling link reads as plain text, since Rename
+and Move would have no file. The reading view gets **no** text menu, as
+observed -- only a link raises one.
+
+Rows left out for want of a command, rather than drawn dead: the **Format,
+Paragraph and Insert submenus** (never opened in the probe, so their contents
+are unobserved and were not guessed -- OBSERVE), *Extract current selection...*
+(no note composer), *Edit link* and *Edit tag* (no inline rename), *Open in new
+window* and *Start presentation*. Dropping the last empties the `view` section,
+so the capture's two consecutive separators are one here.
 
 **Scoria.** A right click leaves `modal` at `{kind: "none", rows: []}`, the selection untouched and
 the caret where it was; `editor:context-menu` answers "Show context menu under cursor: not available
