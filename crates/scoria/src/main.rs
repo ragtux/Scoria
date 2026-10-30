@@ -37,6 +37,7 @@ mod switcher;
 mod text_input;
 mod theme;
 mod title_field;
+mod vaults;
 mod watch;
 mod workspace;
 
@@ -303,6 +304,7 @@ pub fn bind_all_keys(cx: &mut App, registry: &CommandRegistry) {
     explorer::bind_keys(cx);
     settings::bind_keys(cx);
     help::bind_keys(cx);
+    vaults::bind_keys(cx);
     prompt::bind_keys(cx);
     copy_results::bind_keys(cx);
     cx.bind_keys([KeyBinding::new("ctrl-q", Quit, None)]);

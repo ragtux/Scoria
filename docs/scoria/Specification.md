@@ -4649,11 +4649,12 @@ Its exact padding and the switcher's hover shape are still to be read over CDP; 
 40 px tall, padded 8 px, its buttons the ribbon's 28 by 24, and runs `app:open-vault` from the name,
 `app:open-help` from Help and `app:open-settings` from the gear.
 
-**The vault switcher.** `app:open-vault` ("Manage vaults") and `app:switch-vault` drop a menu up from
-the name: every vault this machine has opened whose folder is still there, in the registry
-document's own order with a check on the one showing, a hairline, then "Open vault..."
-(`app:open-another-vault`, the desktop's folder picker) and "Open sandbox vault"
-(`app:open-sandbox-vault`). A click outside closes it. The list is Obsidian's `obsidian.json`
+**The vault switcher.** The footer's name, and `app:switch-vault` ("Change vault..."), drop a menu up
+from the name: every vault this machine has opened whose folder is still there, in the registry
+document's own order with a check on the one showing, a hairline, then "Manage vaults..."
+(`app:open-vault`, the vault manager below). A click outside closes it, and so does a second click on
+the footer's own row — the menu closes on a mouse *down* outside itself, so the row's click handler
+has to leave its own press alone or the press closes the menu the click reopens. The list is Obsidian's `obsidian.json`
 document — `{"vaults": {<16 hex digits>: {"path", "ts", "open"}}}`, `ts` in Unix milliseconds,
 `open` on the vault a window shows — written as `scoria.json` under `~/.config/scoria` (Linux),
 `%APPDATA%\scoria` (Windows) or `~/Library/Application Support/scoria` (macOS), or
@@ -4674,15 +4675,57 @@ a folder that had been deleted. The footer is `.workspace-sidedock-vault-profile
 the open vault a trailing `.menu-item-icon.mod-checked` drawing `lucide-check`. Three things follow
 from the run: two vaults that share a folder name are two identical rows, and Obsidian neither
 disambiguates them nor hangs the path off them; a vault whose folder is gone is left out of the menu
-altogether, though the document Obsidian read at launch still carried its entry; and the order is the document's key order,
+altogether; and the order is the document's key order,
 not recency — the open vault was the fourth of six rows, where its key sat, and the newest `ts` was
 third. Under a `.menu-separator` comes a single row, "Manage vaults..." with the `open-vault` icon,
-which raises Obsidian's own vault-manager window (running `app:open-vault` left `.modal-container`
-absent). Scoria matches the rows, the omission and the order; it has no vault-manager window, so its
-tail is its own two rows, and it keeps the folder's path as the row's tooltip. A machine that has
+which raises Obsidian's vault-manager window. Scoria matches the rows, the omission, the order and
+that tail, drawing the one row with Lucide's `folder-open` (Obsidian's `open-vault` icon is its own),
+and it keeps the folder's path as the row's tooltip. A machine that has
 opened dozens of vaults has a list taller than the window, which would carry the rows under the
 hairline off the bottom edge whichever way the menu is snapped: the menu is capped at the window's
 height less 96 px and scrolls, the way Obsidian's own menus scroll inside their `.menu-scroll`.
+
+**The vault manager.** "Manage vaults..." and `app:open-vault` ("Manage vaults") raise a window of
+its own rather than a modal: in Obsidian it is `app://obsidian.md/starter.html`, 800 by 650, body
+`starter`, the same window the app shows when it is started with no vault. It was read over CDP on
+2026-10-29 (`tools/obsidian-probe/vault-manager.mjs`,
+`results/2026-10-29-vault-manager.json`), with the same registry fixture as the switcher run.
+`.starter-screen-inner` is a `.recent-vaults` column 280 px wide beside a 520 px `.splash`.
+
+A row of the list is a `.recent-vaults-list-item` whose `aria-label` is the vault's **full path**
+(tooltip to the right), holding a `.recent-vaults-list-item-name` with the folder's name, a
+`.recent-vaults-list-item-path` with the **parent folder's** path (which wraps to a second line
+rather than eliding), and a `.recent-vaults-list-item-option-button` ("More options",
+`lucide-more-vertical`) at the right. Clicking the row opens that vault.
+
+Two things the run settled. The list is **`ts` descending**, most recently opened first — not the
+switcher menu's key order: the six rows came back in exactly the order the document's `ts` values
+rank them, with equal `ts` keeping the document's order. And a vault whose folder is gone is left out
+here too; by the time the window was up, Obsidian had also dropped that entry from `obsidian.json`
+altogether. Scoria leaves the entry in `scoria.json` and only drops the row — a vault on an unplugged
+drive should not be forgotten — which is the one deliberate difference.
+
+The ellipsis opens a `.menu` of seven rows: "Copy vault ID" (`lucide-copy`), a separator, "Rename
+vault..." (`lucide-edit-3`) and "Move vault..." (`lucide-folder-tree`), a separator, "Reveal vault in
+system explorer" (`lucide-folder-open`), a separator, and "Remove from list"
+(`.is-warning`, `lucide-x`). Scoria draws three of them — Copy vault ID, Reveal vault in system
+explorer, Remove from list — in that order with their separators; Rename and Move rename and move the
+user's folder on disk and are not built yet.
+
+The `.splash` is the mark (90 px), the name, "Version x.y.z", then a `.setting-group` of rows, each a
+`.setting-item-name` over a `.setting-item-description` with a button on the right: "Create new
+vault" / "Create a new Obsidian vault under a folder." / an accent `mod-cta` **Create**; "Open folder
+as vault" / "Choose an existing folder of Markdown files." / **Open**; "Open vault from Obsidian
+Sync" / "Set up a synced vault with existing remote vault." / **Sign in**; and a language dropdown
+with a help icon. Scoria keeps the first two with Obsidian's wording (its own name in the first), puts
+"Open sandbox vault" (`app:open-sandbox-vault`) where Sync is, and has no language row: it is English
+only. **Create** asks the desktop where the vault goes and what it is called, then makes the folder
+and the `.obsidian` in it; **Open** is the folder picker `app:open-another-vault` uses. Whatever is
+picked loads into the workspace window and the manager closes. Escape closes it, and raising it again
+while it is up brings the one window forward, as the Help window does.
+
+`app:switch-vault` ("Change vault...") raised neither a menu nor a window in Obsidian in the same run,
+though it reported itself as run; Scoria gives it the switcher's menu.
 
 **The Help window.** `app:open-help` and the footer's Help open a window of Obsidian's shape rather
 than the browser (seen in a screenshot of 1.14.4, 2026-10-21): the mark, the name, "Version x.y.z",

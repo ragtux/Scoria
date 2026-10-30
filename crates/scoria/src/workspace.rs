@@ -36,6 +36,7 @@ use crate::theme::{
     TAB_CURVE,
 };
 use crate::title_field::{self, TitleField};
+use crate::vaults::VaultManager;
 use crate::watch;
 use gpui::{
     actions, anchored, canvas, deferred, div, fill, point, prelude::*, px, relative, rgb, rgba,
@@ -2446,10 +2447,18 @@ pub struct Workspace {
     record_vault: bool,
     /// The vault switcher's menu, dropped up from the sidebar's footer.
     vault_menu_open: bool,
+    /// Whether the pointer is over the switcher row. The menu closes on a
+    /// mouse *down* outside itself, which a click on the row is: without
+    /// this the press would close the menu and the click that ends the
+    /// same press would open it again, leaving it stuck open under a
+    /// flicker. The out-handler leaves the row's own press to the row.
+    vault_switcher_hovered: bool,
     /// The group whose tab-list menu (the strip's `chevron-down`) is open.
     tab_list_menu: Option<u64>,
     /// The Help window while one is up; a stale handle means it was closed.
     help_window: Option<gpui::WindowHandle<HelpWindow>>,
+    /// The vault manager while one is up, the same way.
+    vault_window: Option<gpui::WindowHandle<VaultManager>>,
     loading: Option<SharedString>,
     explorer: Entity<FileExplorer>,
     search: Entity<SearchPane>,
@@ -2971,8 +2980,10 @@ impl Workspace {
             vault_name: "No vault".into(),
             record_vault: true,
             vault_menu_open: false,
+            vault_switcher_hovered: false,
             tab_list_menu: None,
             help_window: None,
+            vault_window: None,
             loading: None,
             explorer,
             search,
@@ -3062,7 +3073,12 @@ impl Workspace {
         ws
     }
 
-    fn load_vault(&mut self, root: PathBuf, window: &mut Window, cx: &mut Context<Self>) {
+    pub(crate) fn load_vault(
+        &mut self,
+        root: PathBuf,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         self.load_vault_with(root, true, window, cx);
     }
 
@@ -4573,7 +4589,11 @@ impl Workspace {
                 self.show_right_tab("properties", cx);
             }
             "app:open-help" => self.open_help(window, cx),
-            "app:open-vault" | "app:switch-vault" => self.toggle_vault_menu(cx),
+            // "Manage vaults" raises the vault manager; Obsidian's does
+            // the same (its `app:open-vault` left no menu and no modal
+            // behind, and raised `starter.html` — probe of 2026-10-29).
+            "app:open-vault" => self.open_vault_manager(window, cx),
+            "app:switch-vault" => self.toggle_vault_menu(cx),
             "app:open-another-vault" => self.open_another_vault(window, cx),
             "app:open-sandbox-vault" => self.open_sandbox_vault(window, cx),
             _ => {
@@ -4583,10 +4603,34 @@ impl Workspace {
         }
     }
 
-    /// "Manage vaults" and "Switch vault": the switcher's menu, up from the
-    /// sidebar's footer, listing every vault this machine has opened.
+    /// "Change vault..." and the footer's name: the switcher's menu, up
+    /// from the sidebar's footer, listing every vault this machine has
+    /// opened. Obsidian's own `app:switch-vault` raised neither a menu nor
+    /// a window in the probe of 2026-10-29; Scoria gives it the menu the
+    /// footer opens.
     fn toggle_vault_menu(&mut self, cx: &mut Context<Self>) {
         self.vault_menu_open = !self.vault_menu_open;
+        cx.notify();
+    }
+
+    /// "Manage vaults" and the menu's "Manage vaults...": the vault
+    /// manager window, brought forward if it is already up.
+    fn open_vault_manager(&mut self, window: &Window, cx: &mut Context<Self>) {
+        self.vault_menu_open = false;
+        if let Some(handle) = self.vault_window {
+            let up = handle
+                .update(cx, |_, window, _| window.activate_window())
+                .is_ok();
+            if up {
+                cx.notify();
+                return;
+            }
+        }
+        let main = window.window_handle();
+        match VaultManager::open(cx.weak_entity(), main, cx) {
+            Ok(handle) => self.vault_window = Some(handle),
+            Err(err) => self.report(format!("Could not open the vault manager: {err}"), cx),
+        }
         cx.notify();
     }
 
@@ -9505,6 +9549,9 @@ impl Workspace {
                     .cursor_pointer()
                     .hover(|s| s.bg(theme.bg_alt))
                     .when(self.vault_menu_open, |d| d.bg(theme.bg_alt))
+                    .on_hover(cx.listener(|this, over: &bool, _, _| {
+                        this.vault_switcher_hovered = *over;
+                    }))
                     .on_click(cx.listener(|this, _, _, cx| this.toggle_vault_menu(cx)))
                     // The menu's anchor is this box, pinned at the row's
                     // top-left corner: an absolute element left to the
@@ -9539,11 +9586,12 @@ impl Workspace {
     /// The vault switcher's menu, dropped up from the footer: every vault
     /// this machine has opened whose folder is still there, in the
     /// registry's own order with a check on the one showing, then
-    /// "Open vault..." and "Open sandbox vault". A folder that is gone is
-    /// left out rather than listed faint, and the row is the folder's name
-    /// alone however many vaults share it — both are what Obsidian's own
-    /// switcher does (probe of 2026-10-29); the path is the row's tooltip.
-    /// A click outside closes it.
+    /// "Manage vaults...". A folder that is gone is left out rather than
+    /// listed faint, and the row is the folder's name alone however many
+    /// vaults share it — both are what Obsidian's own switcher does
+    /// (probe of 2026-10-29); the path is the row's tooltip. A click
+    /// outside closes it, and so does a second click on the footer's own
+    /// row.
     fn render_vault_menu(
         &self,
         theme: &Theme,
@@ -9609,7 +9657,14 @@ impl Workspace {
             .text_size(px(FONT_UI_SMALL))
             .text_color(theme.text)
             .occlude()
+            // A press on the switcher row is a press outside the menu, and
+            // the click that ends it toggles: closing here as well would
+            // close and reopen the menu in one press. The row's own
+            // handler does the closing when the press is its.
             .on_mouse_down_out(cx.listener(|this, _, _, cx| {
+                if this.vault_switcher_hovered {
+                    return;
+                }
                 this.vault_menu_open = false;
                 cx.notify();
             }));
@@ -9649,23 +9704,26 @@ impl Workspace {
                     ),
             );
         }
-        list = list
-            .child(div().my_1().h(px(1.)).bg(theme.border))
-            .child(
-                item("vault-menu-open".into(), theme)
+        // Obsidian's tail is a single row under the separator, "Manage
+        // vaults...", which raises the vault manager (probe of
+        // 2026-10-29). Scoria's own "Open vault..." and "Open sandbox
+        // vault" moved into that window, where Obsidian keeps the same
+        // two; they are still commands, and still in the palette.
+        list =
+            list.child(div().my_1().h(px(1.)).bg(theme.border)).child(
+                item("vault-menu-manage".into(), theme)
                     .on_click(cx.listener(|this, _, window, cx| {
-                        this.run_command("app:open-another-vault", window, cx)
+                        this.run_command("app:open-vault", window, cx)
                     }))
-                    .child(check(false, theme))
-                    .child("Open vault..."),
-            )
-            .child(
-                item("vault-menu-sandbox".into(), theme)
-                    .on_click(cx.listener(|this, _, window, cx| {
-                        this.run_command("app:open-sandbox-vault", window, cx)
-                    }))
-                    .child(check(false, theme))
-                    .child("Open sandbox vault"),
+                    .child(
+                        div()
+                            .w(px(16.))
+                            .flex_shrink_0()
+                            .flex()
+                            .items_center()
+                            .child(icon("folder-open", 14., theme.text_muted)),
+                    )
+                    .child("Manage vaults..."),
             );
         Some(
             deferred(

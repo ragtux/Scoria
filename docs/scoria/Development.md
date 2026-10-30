@@ -326,6 +326,47 @@ uses behave as Obsidian's do.
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | not started |
 
+### The vault manager, and a menu that would not close, 2026-10-29
+
+Two reports against the switcher that had landed that morning: its menu stayed open
+when the footer row was clicked a second time (it flickered and came back), and
+"Manage vaults..." should raise a window to pick a vault from, the way Obsidian's
+does.
+
+**The menu that would not close** is the ordering of two handlers. The menu closes on
+`on_mouse_down_out`, and a click on the footer row *is* a mouse down outside the menu:
+the press closed it, then the click that ended the same press ran the row's toggle and
+opened it again. Anything built this way has the bug, so the fix is the one a row with
+a menu hanging off it needs: the row tracks its own hover, and the out-handler returns
+without closing while the pointer is on the row, leaving the press to the row's own
+toggle. The flicker was the frame between the two.
+
+**The window** had never been read, only inferred: the switcher probe knew only that
+`app:open-vault` left no modal behind. It leaves no modal because it opens a *window* —
+`app://obsidian.md/starter.html`, a CDP page target of its own with no `app` in it, so
+`cdp.mjs`'s `connect()` (which waits for a booted vault window) cannot see it.
+`tools/obsidian-probe/vault-manager.mjs` drives the vault window to open it, attaches to
+the new target by hand, and reads it (`results/2026-10-29-vault-manager.json`).
+
+Three findings shaped the build. A row is the folder's **name over its parent folder's
+path**, with the full path as the tooltip — not the full path twice. The list is **`ts`
+descending**, which is *not* the switcher menu's order: the same registry draws its rows
+in document key order in the menu and most-recent-first in the window, and the second
+probe run proved it by sorting the file on disk six ways and matching only that one. And
+the ellipsis is a seven-row menu; Scoria draws the three that do not move the user's
+folders about (Copy vault ID, Reveal vault in system explorer, Remove from list) and
+leaves "Rename vault..." and "Move vault..." for their own change.
+
+Where Obsidian offers Sync, Scoria's third row is the sandbox vault, so the two rows the
+switcher's tail used to carry both live in the window now; the menu's tail is Obsidian's
+single "Manage vaults...". Obsidian had also pruned the missing vault's entry from
+`obsidian.json` by the time the window was up; Scoria drops the row and keeps the entry,
+on the grounds that a vault on an unplugged drive should not be forgotten.
+
+There is no input automation on this desktop, so the ellipsis menu could not be clicked
+to check where it lands: the window was built once with the first row's menu forced open
+behind a throwaway environment variable, screenshotted, and the hook taken out again.
+
 ### The vault switcher, 2026-10-29
 
 Reported as a bug: the switcher's menu was "showing duplicate vault paths" — two
@@ -346,8 +387,8 @@ document's key order rather than by recency, which the spec had claimed and
 vault keeps the place it was first opened in, a new one goes last), missing folders
 are filtered out of the menu but kept in `scoria.json`, and the path stays as the
 row's tooltip, which Obsidian has no equivalent of. Obsidian's tail row is a single
-"Manage vaults..." opening its vault-manager window; Scoria has no such window and
-keeps its own "Open vault..." and "Open sandbox vault".
+"Manage vaults..." opening its vault-manager window, which Scoria did not have then;
+it does now, and the tail matches — see the next note.
 
 ### The explorer's context menus, 2026-10-28
 
