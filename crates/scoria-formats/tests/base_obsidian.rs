@@ -280,3 +280,30 @@ fn the_files_obsidian_refused_are_refused_here() {
         assert_eq!(err.to_string(), message, "{file}");
     }
 }
+
+/// Property ids on the way out, observed on 1.14.5 on 2026-10-30
+/// (`tools/obsidian-probe/bases-ids.mjs`, raw run in
+/// `results/2026-10-30-bases-ids.json`). `ids.in.base` carries every
+/// id-bearing key in both spellings; `ids.out.base` is what one API edit
+/// (`setLimit(7)` on the first view) made Obsidian write. `note.` is stripped
+/// from `order`, `sort`, `groupBy` and a view's `summaries`; the keys of
+/// `properties`, `image` and `columnSize` keep whatever spelling they had,
+/// and `file.` and `formula.` ids are never touched.
+#[test]
+fn note_ids_are_written_bare_where_obsidian_writes_them_bare() {
+    let mut base = Base::from_yaml(&fixture("ids.in.base")).unwrap();
+    base.views[0].limit = Some(7);
+    assert_eq!(base.to_yaml(), fixture("ids.out.base"));
+
+    // The model keeps the file's spelling; only the writer strips.
+    assert_eq!(base.views[0].order[1], "note.status");
+    assert_eq!(base.views[0].sort[0].property, "note.price");
+    let out = Base::from_yaml(&fixture("ids.out.base")).unwrap();
+    assert_eq!(out.views[0].order[1], "status");
+    assert!(out.properties.contains_key("note.price"));
+    assert!(out.properties.contains_key("status"));
+    assert_eq!(
+        out.views[1].preserved["image"],
+        serde_yaml::Value::String("note.cover".to_string())
+    );
+}

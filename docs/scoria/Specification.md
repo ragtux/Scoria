@@ -5586,8 +5586,14 @@ config's own fields, in file order, appended at the end. That last loop is
 where unknown keys *and* every layout key live, which is why a layout key
 written by the UI lands after a plugin's unknown key rather than among the
 documented ones. `groupBy`, `order`, `sort` and the keys of `summaries` are
-passed through a property-id normalizer; a hand-written bare `status` came back
-`status`, so it does not qualify ids that are already written bare.
+passed through a property-id normalizer that **strips `note.`**: the loader
+qualifies a bare `status` to `note.status` in memory, and the serializer writes
+it bare again, so a hand-written `note.price` comes back `price` and a bare
+`status` comes back `status`. `file.` and `formula.` ids pass through, and the
+keys of `properties` keep whatever spelling they had (`note.price` and a bare
+`status` side by side both survived a save). Observed on 1.14.5 on 2026-10-30
+(`bases-ids.mjs`), after the same build rewrote the demo vault's `Rocks.base`
+that way; the 2026-10-25 run had no qualified id in those keys to see it.
 
 **A property's key order** is its own unknown keys first, then `displayName`
 (`unknownPropKey` came back before `displayName`, which the fixture had second).
@@ -5624,7 +5630,7 @@ opens that view's settings.
 | Layout | Key | Control | Values / range | Default |
 | --- | --- | --- | --- | --- |
 | `table` | `rowHeight` | dropdown | `""` Short, `medium`, `tall`, `extra` (Extra tall) | `""` (key absent) |
-| `table` | `columnSize` | a header drag | a map of property id to integer px (`columnSize:` / `  file.name: 232`) | absent |
+| `table` | `columnSize` | a header drag | a map of property id to integer px (`columnSize:` / `  file.name: 232`), keyed by the **qualified** id: a drag on the column `order` names `status` wrote `note.status: 239`, updating the file's `note.status: 150` in place, and the file's `note.status: 150` had sized that column when `order` said `note.status`. Keys are written as they are, never normalized | absent |
 | `cards` | `cardSize` | slider | 50 to 800 step 10 | 200 |
 | `cards`, `kanban` | `image` | property picker | a property id, written qualified (`note.aliases`, `formula.ppu`) | absent |
 | `cards`, `kanban` | `imageFit` | dropdown | `""` Cover, `contain` | `""` (key absent) |

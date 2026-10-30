@@ -326,6 +326,53 @@ uses behave as Obsidian's do.
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | not started |
 
+### Bases property ids, 2026-10-30
+
+Obsidian 1.14.5 rewrote the demo vault's `Rocks.base` while it was open there:
+every `note.composition`, `note.silica` and `note.density` in `order` and `sort`
+came back bare, `properties` kept its `note.silica` key, and a header drag had
+written `columnSize` keyed `note.silica` beside an `order` that now said
+`silica`. The 2026-10-25 probe never saw this because none of its fixtures put
+a qualified id in `order` or `sort`; `layout::qualify` was built on what it did
+see — a bare `status` came back `status`, the image picker wrote `note.aliases`
+— and wrote `note.x` for every id the UI added.
+
+`tools/obsidian-probe/bases-ids.mjs` asks the question directly: one base with
+every id-bearing key in both spellings, opened, saved through `setLimit(7)`,
+then a drag on the `status` column. The answers, all from the one file
+(`results/2026-10-30-bases-ids.json`, fixtures `ids.in.base` / `ids.out.base`):
+
+- The loader qualifies in memory: the `Bare` view's `order: [file.name, status,
+  price]` was `["file.name", "note.status", "note.price"]` in `q.views[2].order`.
+- The serializer strips `note.` from `order`, `sort[].property`,
+  `groupBy.property` and the keys of a view's `summaries`. `file.` and
+  `formula.` ids pass through. The top-level `summaries` is keyed by summary
+  name and is not an id map at all.
+- The keys of `properties` are written as they are: `note.price` and a bare
+  `status` both survived. So does `image: note.cover`.
+- `columnSize` is keyed by the qualified id and never normalized: the fixture's
+  `note.status: 150` sized the status column (150 px measured) while `order`
+  said `note.status` and again after it said `status`, and the drag wrote
+  `note.status: 239` in place.
+
+Scoria now does the same, at the writer rather than the model.
+`scoria_formats::base::written_id` strips `note.` in `View::to_value` for the
+four keys, so the model keeps the file's spelling (the toolbar still adds
+`note.x` through `qualify`, as Obsidian holds it) and the bytes come out as
+Obsidian's. `TableLayout::width_of` looks an id up qualified first and as
+written second, which is what makes `order: silica` find `note.silica: 90`;
+`set_column_size` writes the qualified key and `clear_column_size` drops both
+spellings. The demo vault's `Rocks.base` and `Volcanoes.base` were normalized to the
+bare ids by hand so Obsidian stops rewriting them, which
+`the_demo_vaults_bases_are_the_bytes_obsidian_writes` now insists on; the sorts
+and widths that Obsidian session added to `Rocks.base` are in a stash, not in
+the file, because `the_demo_vaults_rock_table_shows_the_rocks` reads the
+committed view as "densest first".
+
+Unprobed: whether a `columnSize` key written bare (`status: 150`, as an older
+Scoria or a hand would write) sizes its column in Obsidian. `width_of` honours
+it either way.
+
 ### Settings in a window of its own, 2026-10-30
 
 Asked for: Settings should come up in a real window. Obsidian's does not — its

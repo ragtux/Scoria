@@ -15,12 +15,12 @@ views:
     name: All rocks
     order:
       - file.name
-      - note.composition
-      - note.silica
-      - note.density
+      - composition
+      - silica
+      - density
       - formula.dre
     sort:
-      - property: note.density
+      - property: density
         direction: DESC
   - type: table
     name: Vesicular
@@ -29,19 +29,19 @@ views:
         - density < 1.5
     order:
       - file.name
-      - note.density
-      - note.vesicularity
+      - density
+      - vesicularity
     sort:
-      - property: note.vesicularity
+      - property: vesicularity
         direction: DESC
   - type: cards
     name: Gallery
     order:
       - file.name
-      - note.composition
-      - note.density
+      - composition
+      - density
     sort:
-      - property: note.density
+      - property: density
         direction: DESC
     image: note.cover
     cardSize: 260
@@ -50,8 +50,8 @@ views:
     name: Index
     order:
       - file.name
-      - note.composition
-      - note.silica
+      - composition
+      - silica
     sort:
       - property: file.name
         direction: ASC

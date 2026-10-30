@@ -496,9 +496,29 @@ impl Filter {
     }
 }
 
+/// The property id the writer puts in `order`, `sort`, `groupBy` and a view's
+/// `summaries`: a `note.`-qualified id loses its namespace, every other id is
+/// written as it is.
+///
+/// Observed on Obsidian 1.14.5 (`tools/obsidian-probe/bases-ids.mjs`,
+/// 2026-10-30): the loader qualifies a bare `status` to `note.status` in
+/// memory, and the serializer strips it again on the way out, so a file that
+/// said `note.price` comes back saying `price`. `file.` and `formula.` ids,
+/// the keys of `properties`, `image` and `columnSize` are all written with
+/// the spelling they have.
+pub fn written_id(id: &str) -> &str {
+    match id.strip_prefix("note.") {
+        Some(rest) if !rest.is_empty() => rest,
+        _ => id,
+    }
+}
+
 fn pair_value(property: &str, direction: Option<&str>) -> Value {
     let mut m = serde_yaml::Mapping::new();
-    m.insert(key("property"), Value::String(property.to_string()));
+    m.insert(
+        key("property"),
+        Value::String(written_id(property).to_string()),
+    );
     if let Some(d) = direction {
         m.insert(key("direction"), Value::String(d.to_string()));
     }
@@ -548,7 +568,7 @@ impl View {
                 "order" => Value::Sequence(
                     self.order
                         .iter()
-                        .map(|s| Value::String(s.clone()))
+                        .map(|s| Value::String(written_id(s).to_string()))
                         .collect(),
                 ),
                 "sort" => Value::Sequence(
@@ -558,7 +578,15 @@ impl View {
                         .collect(),
                 ),
                 "limit" => Value::Number(self.limit.unwrap_or_default().into()),
-                "summaries" => string_map_value(&self.summaries),
+                // Keyed by property id, unlike the top-level `summaries`,
+                // which is keyed by summary name and written as it is.
+                "summaries" => {
+                    let mut m = serde_yaml::Mapping::new();
+                    for (k, v) in &self.summaries {
+                        m.insert(key(written_id(k)), Value::String(v.clone()));
+                    }
+                    Value::Mapping(m)
+                }
                 other => self.preserved[other].clone(),
             };
             m.insert(key(&name), v);
