@@ -96,7 +96,10 @@ fn now_millis() -> i64 {
     chrono::Utc::now().timestamp_millis()
 }
 
-fn now() -> templates::Stamp {
+/// The local clock as a [`templates::Stamp`]: what a daily note is named
+/// after, what `{{date}}` expands to, and what the Settings rows render a
+/// format's sample from.
+pub(crate) fn now() -> templates::Stamp {
     let local = chrono::Local::now();
     let naive = local.naive_local();
     templates::Stamp {
@@ -610,6 +613,14 @@ impl VaultState {
             SettingChange::Switcher(config) => {
                 self.write_config("switcher.json", config)?;
                 *self.switcher.write().unwrap_or_else(|e| e.into_inner()) = config.clone();
+            }
+            SettingChange::DailyNotes(config) => {
+                self.write_config("daily-notes.json", config)?;
+                *self.daily_notes.write().unwrap_or_else(|e| e.into_inner()) = config.clone();
+            }
+            SettingChange::Templates(config) => {
+                self.write_config("templates.json", config)?;
+                *self.templates.write().unwrap_or_else(|e| e.into_inner()) = config.clone();
             }
             SettingChange::CorePlugins(config) => {
                 self.write_config("core-plugins.json", config)?;

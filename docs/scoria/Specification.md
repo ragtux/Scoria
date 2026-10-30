@@ -65,7 +65,7 @@ with the command inventory and bundle evidence.
 | Bases top-level keys and recursive filters | `scoria-formats::base` |
 | Command ids, palette names and default hotkeys as Obsidian 1.14.4 registers them; `hotkeys.json` entries replace the defaults and an empty list unbinds; labels read `Ctrl + Shift + F` | `scoria-commands` |
 | Command palette: fuzzy over names, pinned ids from `command-palette.json` first, then this session's recent commands, then registration order; commands that cannot run are not listed | `scoria::palette` |
-| Settings tabs, rows and defaults as Obsidian 1.14.4 shows them; `switcher.json`, `command-palette.json` and plugin manifests round-trip | `scoria::settings`, `scoria-formats::config` |
+| Settings tabs, rows and defaults as Obsidian 1.14.4 shows them, and the Daily notes and Templates tabs as 1.14.5 does (see [[#Observed Daily notes and Templates tabs, Obsidian 1.14.5]]); `switcher.json`, `command-palette.json`, `daily-notes.json`, `templates.json` and plugin manifests round-trip | `scoria::settings`, `scoria-formats::config` |
 | Settings toggles write: a click sets the key Obsidian writes in `app.json`, `appearance.json`, `switcher.json`, `core-plugins.json` or `community-plugins.json`, changing nothing else in the file, and the running app follows what it can (readable line length, smart lists, indentation, properties in document, strict line breaks, show all file types); a vault with no `core-plugins.json` gets the whole default map rather than a one-key file | `scoria::settings`, `scoria::workspace::Workspace::change_setting` |
 | Each settings row says how far it gets in Scoria: untagged means the app follows it at once, "on restart" the theme and fonts, "not in Scoria yet" a value written only for Obsidian to read. A Scoria divergence: Obsidian has no such tags, and shows every setting as live | `scoria::settings::Honored` |
 | Settings opens in a window of its own, the way the vault manager and Help do, and the vault behind it stays live. A Scoria divergence: Obsidian draws Settings as a modal (`.modal.mod-settings`, no `.modal-bg`) that owns the keyboard until it closes | `scoria::settings::SettingsWindow` |
@@ -657,6 +657,42 @@ emptied field writes `""` rather than dropping the key.
 **Unprobed:** the option *labels* each dropdown shows, and the min, max and
 step of the two sliders — the run drove the keys rather than the controls,
 so it settled what is written and not what the tab reads.
+
+### Observed Daily notes and Templates tabs, Obsidian 1.14.5
+
+Driven over CDP on 2026-10-30 (`tools/obsidian-probe/plugin-options.mjs`,
+run in `results/2026-10-30-plugin-options.json`): each tab's rows read off
+`app.setting.activeTab.containerEl`, then every control driven and the
+plugin's file read back after each change. Neither tab has a toggle; there
+is no "Open daily note on startup" row in this build.
+
+**Daily notes** (`daily-notes.json`):
+
+| Row | Control | Description | Writes |
+| --- | --- | --- | --- |
+| Date format | dropdown: `YYYY-MM-DD`, `YYYY.MM.DD`, `YYYY/MM/DD`, `YYYY/MM/YYYY-MM-DD`, `custom`; each preset is labelled with today in that format (`2026-10-30`, `2026.10.30`, `2026/10/30`, `2026/10/2026-10-30`), the last `Custom` | Choose how daily note are named in your vault. *(sic)* | a preset writes `format` as the pattern, the default included (`{"format": "YYYY-MM-DD"}` from no file); `Custom` writes nothing and shows the next row |
+| Custom format | text, placeholder `YYYY-MM-DD`; hidden (`display: none`) unless the dropdown is on Custom | For more syntax, refer to [format reference](https://momentjs.com/docs/#/displaying/format/)<br>Your current syntax looks like this: **2026-10-30** — the sample re-renders as you type (`YYYY-MM-DD dddd` → `2026-10-30 Friday`) | `format` verbatim; cleared writes `"format": ""` and the sample falls back to the placeholder's |
+| New file location | text, placeholder `Example: folder 1/folder 2` | New daily notes will be placed here. | `folder` verbatim; cleared writes `""` |
+| Template file location | a file suggester (no `<select>`, `.checkbox-container`, `input[type=text]` or `button` in the row; its placeholder went unobserved) | Choose the file to use as a template. | `template` (from the config type; the suggester itself was not driven) |
+
+**Templates** (`templates.json`):
+
+| Row | Control | Description | Writes |
+| --- | --- | --- | --- |
+| Template folder location | text, placeholder `Example: folder 1/folder 2` | Files in this folder will be available as templates. | `folder` verbatim; cleared writes `""` |
+| Date format | text, placeholder `YYYY-MM-DD` | {{date}} in the template file will be replaced with this value.<br>You can also use {{date:YYYY-MM-DD}} to override the format once.<br>For more syntax, refer to [format reference](https://momentjs.com/docs/#/displaying/format/)<br>Your current syntax looks like this: **2026-10-30** | `dateFormat` verbatim; cleared writes `""` |
+| Time format | text, placeholder `HH:mm` | the same with `{{time}}`, `{{time:HH:mm}}` and a sample of `08:52` | `timeFormat` verbatim; cleared writes `""` |
+
+**The files.** Neither exists until a control writes. Each write is the whole
+object, two-space indented, keys in the order they were first written, no
+trailing newline: `{\n  "format": "YYYY-MM-DD dddd",\n  "folder": "Journal"\n}`.
+A cleared field keeps its key as `""`; nothing removes a key.
+
+Scoria shows both tabs with these rows (`scoria::settings::plugin_items`):
+every field is a `TextField` on the plugin's config type, the dropdown is a
+`Typed` whose labels are rendered from today, and "Custom" is a pick the view
+remembers rather than a value it writes. Template file location is a plain
+text field here, since Scoria has no file suggester in Settings yet.
 
 ## Observed canvas write behavior, Obsidian 1.14.4 (installer build 1.13.7)
 

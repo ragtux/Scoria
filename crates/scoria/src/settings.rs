@@ -40,9 +40,11 @@ use gpui::{
 };
 use scoria_commands::{hotkey_label, keystroke, Command};
 use scoria_formats::config::{
-    AppConfig, AppearanceConfig, CorePlugins, Hotkey, Hotkeys, SwitcherConfig, CORE_PLUGINS,
+    AppConfig, AppearanceConfig, CorePlugins, DailyNotesConfig, Hotkey, Hotkeys, SwitcherConfig,
+    TemplatesConfig, CORE_PLUGINS, DAILY_NOTE_DEFAULT_FORMAT,
 };
 use scoria_search::fuzzy_match;
+use scoria_templates as templates;
 use serde_json::{json, Value};
 use std::ops::Range;
 use std::sync::Arc;
@@ -289,6 +291,14 @@ struct Typed {
     /// option, but `./Pictures` is that same option with another name typed
     /// into the row it reveals.
     shape: Option<fn(&str) -> usize>,
+    /// Renders an option's label from its written value, for the one
+    /// dropdown whose labels are today's date in each format; `None` falls
+    /// back to the option's static label.
+    label_of: Option<fn(&'static str) -> Option<String>>,
+    /// The option that is a pick rather than a value: picking it writes
+    /// nothing, and the view remembers it (`SettingsView::local_pick`) so
+    /// the rows it reveals stay until another option is picked.
+    local: Option<&'static str>,
 }
 
 impl Typed {
@@ -303,8 +313,19 @@ impl Typed {
             .unwrap_or(0)
     }
 
+    /// The selected option's static label, which the tests read back.
+    #[cfg(test)]
     fn label(&self, state: &VaultState) -> &'static str {
         self.options[self.selected(state)].0
+    }
+
+    /// Option `ix`'s label as the control shows it: rendered through
+    /// `label_of` when there is one, else the static label.
+    fn option_label(&self, ix: usize) -> String {
+        let (label, value) = self.options[ix];
+        self.label_of
+            .and_then(|render| render(value))
+            .unwrap_or_else(|| label.to_string())
     }
 
     /// What the selected option writes, which is how a dependent row is
@@ -349,6 +370,8 @@ macro_rules! app_choice {
                 SettingChange::App(next)
             },
             shape: None,
+            label_of: None,
+            local: None,
         };
     };
 }
@@ -372,6 +395,8 @@ macro_rules! appearance_choice {
                 SettingChange::Appearance(next)
             },
             shape: None,
+            label_of: None,
+            local: None,
         };
     };
 }
@@ -476,6 +501,8 @@ const ATTACHMENT_LOCATION: Typed = Typed {
         v if v.starts_with("./") => 2,
         _ => 3,
     }),
+    label_of: None,
+    local: None,
 };
 
 /// `livePreview` is a two-option dropdown over a boolean key, so it reads
@@ -490,6 +517,8 @@ const LIVE_PREVIEW: Typed = Typed {
         SettingChange::App(next)
     },
     shape: None,
+    label_of: None,
+    local: None,
 };
 
 /// Every dropdown that writes.
@@ -502,6 +531,7 @@ const TYPED_ALL: &[Typed] = &[
     BASE_COLOR_SCHEME,
     LIVE_PREVIEW,
     ATTACHMENT_LOCATION,
+    DAILY_FORMAT,
 ];
 
 /// A slider: the key, the range Obsidian's own control offers, and the
@@ -638,7 +668,161 @@ const SUBFOLDER_NAME: TextField = TextField {
 #[cfg(test)]
 const NUMBERS: &[Number] = &[FONT_SIZE, TAB_SIZE];
 #[cfg(test)]
-const TEXTS: &[TextField] = &[NEW_FILE_FOLDER, ATTACHMENT_FOLDER, SUBFOLDER_NAME];
+const TEXTS: &[TextField] = &[
+    NEW_FILE_FOLDER,
+    ATTACHMENT_FOLDER,
+    SUBFOLDER_NAME,
+    DAILY_CUSTOM_FORMAT,
+    DAILY_FOLDER,
+    DAILY_TEMPLATE,
+    TEMPLATES_FOLDER,
+    TEMPLATES_DATE,
+    TEMPLATES_TIME,
+];
+
+// ----- the Daily notes and Templates tabs ------------------------------------
+//
+// Observed on 1.14.5 on 2026-10-30 (`tools/obsidian-probe/plugin-options.mjs`,
+// run in `results/2026-10-30-plugin-options.json`): each field writes its own
+// key into the plugin's file as a verbatim string, an emptied field writes
+// `""` rather than dropping the key, and the file is `{\n  "key": "value"\n}`
+// with no trailing newline — the shape `write_config` already produces for
+// `switcher.json`. There is no toggle on either tab: the Daily notes tab is a
+// dropdown and three fields, the Templates tab three fields.
+
+/// The format a daily note is named by, as the Date format dropdown and the
+/// Custom format field both read it: the file's value, or Obsidian's default
+/// when the key is absent. An empty string is kept as one — the probe's
+/// cleared field read back empty over its `YYYY-MM-DD` placeholder.
+fn daily_format(state: &VaultState) -> String {
+    state
+        .daily_notes()
+        .format
+        .clone()
+        .unwrap_or_else(|| DAILY_NOTE_DEFAULT_FORMAT.to_string())
+}
+
+fn write_daily_format(state: &VaultState, value: &str) -> SettingChange {
+    let mut next = state.daily_notes().clone();
+    next.format = Some(value.to_string());
+    SettingChange::DailyNotes(next)
+}
+
+/// The Daily notes tab's "Date format" dropdown. Its four presets are labelled
+/// with today's date in that format (`2026-10-30`, `2026.10.30`, ...), which
+/// [`Typed::label_of`] renders; picking one writes the pattern itself as
+/// `format`. The fifth, "Custom", writes nothing and reveals the Custom format
+/// field — it is a pick the view remembers, not a value the file can hold —
+/// and a stored format that is none of the four presets selects it.
+const DAILY_FORMAT: Typed = Typed {
+    key: "format",
+    // The static labels are the patterns; `label_of` shows today in each.
+    options: &[
+        ("YYYY-MM-DD", "YYYY-MM-DD"),
+        ("YYYY.MM.DD", "YYYY.MM.DD"),
+        ("YYYY/MM/DD", "YYYY/MM/DD"),
+        ("YYYY/MM/YYYY-MM-DD", "YYYY/MM/YYYY-MM-DD"),
+        ("Custom", DAILY_FORMAT_CUSTOM),
+    ],
+    read: daily_format,
+    write: write_daily_format,
+    shape: Some(|_| 4),
+    label_of: Some(|value| {
+        (value != DAILY_FORMAT_CUSTOM).then(|| templates::format(value, &crate::workspace::now()))
+    }),
+    local: Some(DAILY_FORMAT_CUSTOM),
+};
+
+/// The dropdown's fifth option: Obsidian's `<select>` carries it as `custom`.
+const DAILY_FORMAT_CUSTOM: &str = "custom";
+
+/// "Custom format": the same key as the dropdown, typed rather than picked.
+const DAILY_CUSTOM_FORMAT: TextField = TextField {
+    key: "format",
+    placeholder: "YYYY-MM-DD",
+    prefix: "",
+    read: daily_format,
+    write: write_daily_format,
+};
+
+/// "New file location" on the Daily notes tab.
+const DAILY_FOLDER: TextField = TextField {
+    key: "folder",
+    placeholder: "Example: folder 1/folder 2",
+    prefix: "",
+    read: |state| state.daily_notes().folder.clone().unwrap_or_default(),
+    write: |state, value| {
+        let mut next = state.daily_notes().clone();
+        next.folder = Some(value.to_string());
+        SettingChange::DailyNotes(next)
+    },
+};
+
+/// "Template file location" on the Daily notes tab. Obsidian's control is a
+/// file suggester rather than a plain field, and its placeholder went
+/// unprobed; the path typed here is what the suggester would store.
+const DAILY_TEMPLATE: TextField = TextField {
+    key: "template",
+    placeholder: "",
+    prefix: "",
+    read: |state| state.daily_notes().template.clone().unwrap_or_default(),
+    write: |state, value| {
+        let mut next = state.daily_notes().clone();
+        next.template = Some(value.to_string());
+        SettingChange::DailyNotes(next)
+    },
+};
+
+/// "Template folder location" on the Templates tab.
+const TEMPLATES_FOLDER: TextField = TextField {
+    key: "folder",
+    placeholder: "Example: folder 1/folder 2",
+    prefix: "",
+    read: |state| state.templates().folder.clone().unwrap_or_default(),
+    write: |state, value| {
+        let mut next = state.templates().clone();
+        next.folder = Some(value.to_string());
+        SettingChange::Templates(next)
+    },
+};
+
+/// "Date format" on the Templates tab: what `{{date}}` expands to.
+const TEMPLATES_DATE: TextField = TextField {
+    key: "dateFormat",
+    placeholder: templates::DEFAULT_DATE_FORMAT,
+    prefix: "",
+    read: |state| state.templates().date_format.clone().unwrap_or_default(),
+    write: |state, value| {
+        let mut next = state.templates().clone();
+        next.date_format = Some(value.to_string());
+        SettingChange::Templates(next)
+    },
+};
+
+/// "Time format" on the Templates tab: what `{{time}}` expands to.
+const TEMPLATES_TIME: TextField = TextField {
+    key: "timeFormat",
+    placeholder: templates::DEFAULT_TIME_FORMAT,
+    prefix: "",
+    read: |state| state.templates().time_format.clone().unwrap_or_default(),
+    write: |state, value| {
+        let mut next = state.templates().clone();
+        next.time_format = Some(value.to_string());
+        SettingChange::Templates(next)
+    },
+};
+
+/// The sample a format row shows under itself — "Your current syntax looks
+/// like this: 2026-10-30" — rendered from today for the pattern in the file,
+/// or for the placeholder when the field is empty, as Obsidian does.
+fn format_sample(pattern: &str, placeholder: &str) -> String {
+    let pattern = if pattern.is_empty() {
+        placeholder
+    } else {
+        pattern
+    };
+    templates::format(pattern, &crate::workspace::now())
+}
 
 /// A config file with one setting changed, for the workspace to write.
 #[derive(Clone, Debug, PartialEq)]
@@ -651,6 +835,10 @@ pub enum SettingChange {
     /// `hotkeys.json` whole: the map in the file's order with one entry
     /// added, changed or removed.
     Hotkeys(Hotkeys),
+    /// `daily-notes.json`: the Daily notes tab's three rows.
+    DailyNotes(DailyNotesConfig),
+    /// `templates.json`: the Templates tab's three rows.
+    Templates(TemplatesConfig),
 }
 
 impl SettingChange {
@@ -663,6 +851,8 @@ impl SettingChange {
             SettingChange::CorePlugins(_) => "core-plugins.json",
             SettingChange::CommunityPlugins(_) => "community-plugins.json",
             SettingChange::Hotkeys(_) => "hotkeys.json",
+            SettingChange::DailyNotes(_) => "daily-notes.json",
+            SettingChange::Templates(_) => "templates.json",
         }
     }
 }
@@ -755,7 +945,7 @@ fn toggled_core_plugin(config: Option<&CorePlugins>, id: &str, was_on: bool) -> 
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 enum Control {
     None,
     Toggle(bool),
@@ -940,9 +1130,15 @@ fn field(name: &str, desc: &str, state: &VaultState, field: TextField) -> Item {
 /// A dropdown that writes: what it shows and what a pick writes both come
 /// from `typed`, so a row cannot show one key and write another.
 fn choice(name: &str, desc: &str, state: &VaultState, typed: Typed) -> Item {
+    choice_at(name, desc, typed, typed.selected(state))
+}
+
+/// [`choice`] showing option `ix`, for the dropdown whose selection is not
+/// only the file's: the Daily notes tab's "Custom" is picked, not stored.
+fn choice_at(name: &str, desc: &str, typed: Typed, ix: usize) -> Item {
     Item {
         typed: Some(typed),
-        ..item(name, desc, Control::Dropdown(typed.label(state).into()))
+        ..item(name, desc, Control::Dropdown(typed.option_label(ix).into()))
     }
 }
 
@@ -1014,6 +1210,10 @@ pub struct SettingsView {
     /// view's, not the row's.
     editing: Option<TextField>,
     field: Entity<TextInput>,
+    /// The dropdown whose [`Typed::local`] option was picked, by the key it
+    /// writes: a pick the file cannot hold (the Daily notes tab's "Custom"),
+    /// kept here so the rows it reveals stay until another option is picked.
+    local_pick: Option<&'static str>,
     _subscriptions: Vec<Subscription>,
 }
 
@@ -1061,6 +1261,7 @@ impl SettingsView {
             capturing: None,
             menu: None,
             editing: None,
+            local_pick: None,
             field,
             _subscriptions: subscriptions,
         };
@@ -1426,7 +1627,7 @@ impl SettingsView {
             Tab::Hotkeys => Vec::new(),
             Tab::CorePlugins => Self::core_plugin_items(state),
             Tab::CommunityPlugins => Self::community_plugin_items(state),
-            Tab::Plugin(id) => Self::plugin_items(state, &self.all_commands, id),
+            Tab::Plugin(id) => Self::plugin_items(state, &self.all_commands, id, self.local_pick),
         }
     }
 
@@ -1905,8 +2106,87 @@ impl SettingsView {
         items
     }
 
-    fn plugin_items(state: &VaultState, commands: &[Command], id: &str) -> Vec<Item> {
+    fn plugin_items(
+        state: &VaultState,
+        commands: &[Command],
+        id: &str,
+        local_pick: Option<&'static str>,
+    ) -> Vec<Item> {
         match id {
+            // The two tabs' rows, labels and placeholders are 1.14.5's, see
+            // the note above `DAILY_FORMAT`.
+            "daily-notes" => {
+                // "Custom" is selected when it was picked, or when the file
+                // holds a format that is none of the four presets.
+                let custom = local_pick == Some(DAILY_FORMAT.key)
+                    || DAILY_FORMAT.value(state) == DAILY_FORMAT_CUSTOM;
+                let mut items = vec![choice_at(
+                    "Date format",
+                    "Choose how daily note are named in your vault.",
+                    DAILY_FORMAT,
+                    if custom {
+                        4
+                    } else {
+                        DAILY_FORMAT.selected(state)
+                    },
+                )];
+                if custom {
+                    items.push(field(
+                        "Custom format",
+                        &format!(
+                            "For more syntax, refer to format reference\nYour current syntax looks like this: {}",
+                            format_sample(&daily_format(state), DAILY_CUSTOM_FORMAT.placeholder)
+                        ),
+                        state,
+                        DAILY_CUSTOM_FORMAT,
+                    ));
+                }
+                items.push(field(
+                    "New file location",
+                    "New daily notes will be placed here.",
+                    state,
+                    DAILY_FOLDER,
+                ));
+                items.push(field(
+                    "Template file location",
+                    "Choose the file to use as a template.",
+                    state,
+                    DAILY_TEMPLATE,
+                ));
+                items
+            }
+            "templates" => {
+                let t = state.templates();
+                let date = t.date_format.clone().unwrap_or_default();
+                let time = t.time_format.clone().unwrap_or_default();
+                drop(t);
+                vec![
+                    field(
+                        "Template folder location",
+                        "Files in this folder will be available as templates.",
+                        state,
+                        TEMPLATES_FOLDER,
+                    ),
+                    field(
+                        "Date format",
+                        &format!(
+                            "{{{{date}}}} in the template file will be replaced with this value.\nYou can also use {{{{date:YYYY-MM-DD}}}} to override the format once.\nFor more syntax, refer to format reference\nYour current syntax looks like this: {}",
+                            format_sample(&date, TEMPLATES_DATE.placeholder)
+                        ),
+                        state,
+                        TEMPLATES_DATE,
+                    ),
+                    field(
+                        "Time format",
+                        &format!(
+                            "{{{{time}}}} in the template file will be replaced with this value.\nYou can also use {{{{time:HH:mm}}}} to override the format once.\nFor more syntax, refer to format reference\nYour current syntax looks like this: {}",
+                            format_sample(&time, TEMPLATES_TIME.placeholder)
+                        ),
+                        state,
+                        TEMPLATES_TIME,
+                    ),
+                ]
+            }
             "switcher" => {
                 let s = &state.switcher();
                 vec![
@@ -2125,7 +2405,7 @@ impl SettingsView {
                 let Some(typed) = item.typed else {
                     return shown.into_any_element();
                 };
-                let selected = self.state.as_ref().map(|s| typed.selected(s)).unwrap_or(0);
+                let selected = self.selected_of(typed);
                 let open = self.menu == Some(typed.key);
                 div()
                     .relative()
@@ -2168,27 +2448,25 @@ impl SettingsView {
                                 .rounded_md()
                                 .shadow_lg()
                                 .py_1()
-                                .children(typed.options.iter().enumerate().map(
-                                    |(ix, (label, _))| {
-                                        div()
-                                            .id(SharedString::from(format!(
-                                                "settings-option-{}-{ix}",
-                                                typed.key
-                                            )))
-                                            .px_3()
-                                            .py_1()
-                                            .text_size(px(12.))
-                                            .cursor_pointer()
-                                            .when(ix == selected, |d| d.bg(theme.bg_active))
-                                            .hover(|s| s.bg(theme.bg_alt))
-                                            .text_color(theme.text)
-                                            .child(SharedString::from(label.to_string()))
-                                            .on_click(cx.listener(move |this, _, window, cx| {
-                                                cx.stop_propagation();
-                                                this.pick(typed, ix, window, cx)
-                                            }))
-                                    },
-                                )),
+                                .children(typed.options.iter().enumerate().map(|(ix, _)| {
+                                    div()
+                                        .id(SharedString::from(format!(
+                                            "settings-option-{}-{ix}",
+                                            typed.key
+                                        )))
+                                        .px_3()
+                                        .py_1()
+                                        .text_size(px(12.))
+                                        .cursor_pointer()
+                                        .when(ix == selected, |d| d.bg(theme.bg_active))
+                                        .hover(|s| s.bg(theme.bg_alt))
+                                        .text_color(theme.text)
+                                        .child(SharedString::from(typed.option_label(ix)))
+                                        .on_click(cx.listener(move |this, _, window, cx| {
+                                            cx.stop_propagation();
+                                            this.pick(typed, ix, window, cx)
+                                        }))
+                                })),
                         ))
                     })
                     .into_any_element()
@@ -2408,6 +2686,21 @@ impl SettingsView {
         });
     }
 
+    /// The option a dropdown shows: the one picked and remembered when it
+    /// is the control's local option, else the one the file names.
+    fn selected_of(&self, typed: Typed) -> usize {
+        if self.local_pick == Some(typed.key) {
+            if let Some(ix) = typed
+                .options
+                .iter()
+                .position(|(_, v)| Some(*v) == typed.local)
+            {
+                return ix;
+            }
+        }
+        self.state.as_ref().map(|s| typed.selected(s)).unwrap_or(0)
+    }
+
     /// Writes the option a dropdown's row names. The value comes from the
     /// same table the control reads through, so the two cannot drift.
     fn pick(&mut self, typed: Typed, option: usize, window: &Window, cx: &mut Context<Self>) {
@@ -2419,6 +2712,13 @@ impl SettingsView {
             let Some((_, value)) = typed.options.get(option) else {
                 return;
             };
+            // The pick the file cannot hold: remembered, not written.
+            if typed.local == Some(*value) {
+                this.local_pick = Some(typed.key);
+                cx.notify();
+                return;
+            }
+            this.local_pick = None;
             if (typed.read)(&state) != *value {
                 cx.emit(SettingsEvent::Changed(Box::new((typed.write)(
                     &state, value,
@@ -3034,10 +3334,15 @@ mod tests {
         let (_dir, state) = vault();
         for typed in TYPED_ALL {
             for (label, value) in typed.options {
+                if typed.local == Some(*value) {
+                    continue;
+                }
                 let change = (typed.write)(&state, value);
                 let json = match &change {
                     SettingChange::App(c) => serde_json::to_value(c).unwrap(),
                     SettingChange::Appearance(c) => serde_json::to_value(c).unwrap(),
+                    SettingChange::DailyNotes(c) => serde_json::to_value(c).unwrap(),
+                    SettingChange::Templates(c) => serde_json::to_value(c).unwrap(),
                     other => panic!("{} wrote {other:?}", typed.key),
                 };
                 let object = json.as_object().expect("an object");
@@ -3071,6 +3376,9 @@ mod tests {
         let (dir, mut state) = vault();
         for typed in TYPED_ALL {
             for (ix, (label, value)) in typed.options.iter().enumerate() {
+                if typed.local == Some(*value) {
+                    continue;
+                }
                 state.apply_setting(&(typed.write)(&state, value)).unwrap();
                 state = VaultState::load(&dir.path().to_path_buf()).unwrap();
                 assert_eq!(
@@ -3091,6 +3399,8 @@ mod tests {
             let json = match change {
                 SettingChange::App(c) => serde_json::to_value(c).unwrap(),
                 SettingChange::Appearance(c) => serde_json::to_value(c).unwrap(),
+                SettingChange::DailyNotes(c) => serde_json::to_value(c).unwrap(),
+                SettingChange::Templates(c) => serde_json::to_value(c).unwrap(),
                 other => panic!("{what} wrote {other:?}"),
             };
             let object = json.as_object().expect("an object");
@@ -3134,6 +3444,99 @@ mod tests {
             state = VaultState::load(&dir.path().to_path_buf()).unwrap();
             assert_eq!((field.read)(&state), "Folder With Space", "{}", field.key);
         }
+    }
+
+    /// The Daily notes and Templates tabs, as 1.14.5 shows them
+    /// (`tools/obsidian-probe/results/2026-10-30-plugin-options.json`): the
+    /// row names in order, the Custom format row hidden behind a preset and
+    /// shown for a stored format that is none of them, the placeholders,
+    /// and a preset pick writing `format` alone.
+    #[test]
+    fn the_daily_notes_and_templates_tabs_show_obsidians_rows() {
+        let (dir, mut state) = vault();
+        let names = |items: &[Item]| items.iter().map(|i| i.name.to_string()).collect::<Vec<_>>();
+
+        let daily = SettingsView::plugin_items(&state, &[], "daily-notes", None);
+        assert_eq!(
+            names(&daily),
+            ["Date format", "New file location", "Template file location"]
+        );
+        assert_eq!(
+            daily[0].control,
+            Control::Dropdown(templates::format("YYYY-MM-DD", &crate::workspace::now()).into())
+        );
+        assert_eq!(
+            daily[1].field.map(|f| f.placeholder),
+            Some("Example: folder 1/folder 2")
+        );
+        assert!(daily.iter().all(|i| i.honored == Honored::Live));
+
+        // "Custom" picked: the row appears, nothing is written.
+        let picked = SettingsView::plugin_items(&state, &[], "daily-notes", Some(DAILY_FORMAT.key));
+        assert_eq!(
+            names(&picked),
+            [
+                "Date format",
+                "Custom format",
+                "New file location",
+                "Template file location"
+            ]
+        );
+        assert_eq!(picked[0].control, Control::Dropdown("Custom".into()));
+        assert_eq!(picked[1].field.map(|f| f.placeholder), Some("YYYY-MM-DD"));
+        assert!(picked[1]
+            .desc
+            .ends_with(&templates::format("YYYY-MM-DD", &crate::workspace::now())));
+        assert!(!dir.path().join(".obsidian/daily-notes.json").exists());
+
+        // A preset written: `format` alone, and the row hides again.
+        state
+            .apply_setting(&(DAILY_FORMAT.write)(&state, "YYYY.MM.DD"))
+            .unwrap();
+        assert_eq!(
+            std::fs::read_to_string(dir.path().join(".obsidian/daily-notes.json")).unwrap(),
+            "{\n  \"format\": \"YYYY.MM.DD\"\n}"
+        );
+        state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        assert_eq!(DAILY_FORMAT.selected(&state), 1);
+        assert_eq!(
+            names(&SettingsView::plugin_items(
+                &state,
+                &[],
+                "daily-notes",
+                None
+            ))
+            .len(),
+            3
+        );
+
+        // A format typed that is none of the presets selects Custom on its own.
+        state
+            .apply_setting(&(DAILY_CUSTOM_FORMAT.write)(&state, "YYYY-MM-DD dddd"))
+            .unwrap();
+        state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        assert_eq!(DAILY_FORMAT.selected(&state), 4);
+        let shown = SettingsView::plugin_items(&state, &[], "daily-notes", None);
+        assert_eq!(shown[1].name.as_ref(), "Custom format");
+        assert_eq!(shown[1].control, Control::Text("YYYY-MM-DD dddd".into()));
+
+        let templates = SettingsView::plugin_items(&state, &[], "templates", None);
+        assert_eq!(
+            names(&templates),
+            ["Template folder location", "Date format", "Time format"]
+        );
+        assert_eq!(
+            templates[1].field.map(|f| f.placeholder),
+            Some("YYYY-MM-DD")
+        );
+        assert_eq!(templates[2].field.map(|f| f.placeholder), Some("HH:mm"));
+        state
+            .apply_setting(&(TEMPLATES_TIME.write)(&state, "HH:mm:ss"))
+            .unwrap();
+        assert_eq!(
+            std::fs::read_to_string(dir.path().join(".obsidian/templates.json")).unwrap(),
+            "{\n  \"timeFormat\": \"HH:mm:ss\"\n}"
+        );
     }
 
     /// Obsidian writes the placeholder rather than an empty string when the
@@ -3500,7 +3903,7 @@ mod tests {
             SettingsView::files_items(state),
             SettingsView::core_plugin_items(state),
             SettingsView::community_plugin_items(state),
-            SettingsView::plugin_items(state, &[], "switcher"),
+            SettingsView::plugin_items(state, &[], "switcher", None),
         ];
         tabs.into_iter()
             .flatten()

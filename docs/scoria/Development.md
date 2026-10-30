@@ -326,6 +326,50 @@ uses behave as Obsidian's do.
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | not started |
 
+### The Daily notes and Templates options tabs, 2026-10-30
+
+The backlog's "Every core-plugin options tab but two shows one 'Options not
+shown yet' row". The configs were there (`DailyNotesConfig`, `TemplatesConfig`,
+both round-tripping byte-exact), the rows were not, and neither were the
+labels: the project rule is Obsidian's exact strings, observed, and the
+Specification had none for these two tabs.
+
+`tools/obsidian-probe/plugin-options.mjs` read both tabs off
+`app.setting.activeTab.containerEl` and drove every control, reading the
+plugin's file after each (`results/2026-10-30-plugin-options.json`, and
+[[Specification#Observed Daily notes and Templates tabs, Obsidian 1.14.5]]).
+Two things it settled that a guess would have got wrong:
+
+- **"Date format" is a dropdown, not a field**, with four presets labelled by
+  today's date in each (`2026-10-30`, `2026.10.30`, ...) and a fifth, Custom,
+  that writes nothing and reveals a "Custom format" field. A preset writes the
+  pattern as `format`, the default included: picking `YYYY-MM-DD` on a vault
+  with no `daily-notes.json` creates `{"format": "YYYY-MM-DD"}`.
+- **There is no toggle.** The "Open daily note on startup" row (`autorun`) the
+  backlog entry named is not in 1.14.5's tab, so Scoria does not draw one.
+
+The rows are the existing `TextField` and `Typed` shapes on the two config
+types, with two additions to `Typed`. `label_of` renders an option's label
+from its value, which is what makes the four presets read as dates rather
+than patterns (and keeps `every_dropdown_writes_its_own_key_and_nothing_else`
+true, since the write is still the static value). `local` names the option
+that is a pick rather than a value: `pick` remembers it in
+`SettingsView::local_pick` instead of writing it, `selected_of` shows it, and
+`plugin_items` reveals the Custom format row for it — or for a stored format
+that is none of the presets, which `shape` maps to the same option. The
+descriptions carry Obsidian's "Your current syntax looks like this:" sample,
+rendered from `workspace::now()` through `scoria_templates::format`, falling
+back to the placeholder's pattern when the field is empty, as Obsidian's does.
+
+`SettingChange` grew `DailyNotes` and `Templates`; `apply_setting` writes
+`daily-notes.json` / `templates.json` through the same `write_config` the
+switcher uses, whose bytes already match (two-space, no trailing newline),
+and updates the `RwLock` the daily-note and template commands read from, so
+every row is live and none is tagged.
+
+Left as Obsidian has it only in shape: "Template file location" is a file
+suggester there and a text field here, and its placeholder was not observed.
+
 ### Bases property ids, 2026-10-30
 
 Obsidian 1.14.5 rewrote the demo vault's `Rocks.base` while it was open there:

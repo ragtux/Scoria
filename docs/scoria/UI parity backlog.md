@@ -432,6 +432,8 @@ a definition resolves to that block rather than past the end.
 
 *high, missing-feature, large*
 
+**Landed 2026-10-25, the scrolling half** (`c95d250`): PageDown/PageUp, Space/Shift+Space, Up/Down, Home/End and Ctrl+Home/Ctrl+End are bound in the `ReadingView` context and scroll the list. Selection and copy are still open.
+
 **Scoria.** Focus is `{reading, [Workspace, ReadingView]}` and every key is inert. PageDown,
 PageUp, Down, Up, Home, End, Ctrl+Home, Ctrl+End and Space all leave `reading.scroll` at
 `{item:0, offset:0.0}`, while a wheel event in the same session moves it to `{item:2}` — so the list
@@ -453,6 +455,8 @@ ranges painted through the existing highlight path, and a Copy action joining th
 ### Every reload throws away the reader's folds
 
 *medium, bug, small*
+
+**Landed 2026-10-26**: `set_note` clears `toggled` and `folds` only when the note changes (`same_note`), so a fold survives the watcher's reload after an autosave. Persistence across a relaunch, the way Obsidian keeps it, is still open.
 
 **Scoria.** Expand a collapsed callout in the reading view, then write the note's own bytes back
 unchanged: 1.5 s later the callout is collapsed again. `ReadingView::set_note` computes
@@ -1161,6 +1165,8 @@ list already does.
 ### Every core-plugin options tab but two shows one "Options not shown yet" row
 
 *medium, missing-feature, medium*
+
+**Landed 2026-10-30**: the Daily notes and Templates tabs draw Obsidian 1.14.5's rows and write `daily-notes.json` / `templates.json`, see [[Development#The Daily notes and Templates options tabs, 2026-10-30]]. The other core plugins' tabs still show the placeholder row.
 
 **Scoria.** `plugin_items` matches only `switcher` and `command-palette`; everything else falls to a
 catch-all returning the single row "Options not shown yet — Scoria does not read this plugin's
