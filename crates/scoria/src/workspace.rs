@@ -26,7 +26,9 @@ use crate::palette::{CommandPalette, PaletteCommand, PaletteEvent};
 use crate::panes::{self, PaneSort};
 use crate::pdf::view::{PdfEvent, PdfView};
 use crate::prompt::{Prompt, PromptEvent, PromptSpec};
-use crate::reading::{self, LinkTarget, ReadingEvent, ReadingView, TaskMarker, TaskToggled};
+use crate::reading::{
+    self, LinkTarget, PropertyItemRemoved, ReadingEvent, ReadingView, TaskMarker, TaskToggled,
+};
 use crate::search::{CopyEntry, SearchEvent, SearchPane};
 use crate::settings::{self, SettingChange, SettingsEvent, SettingsView};
 use crate::switcher::{QuickSwitcher, SwitcherEvent};
@@ -2669,6 +2671,9 @@ fn view_subscriptions(
         }),
         cx.subscribe(reading, |this, _, event: &TaskToggled, cx| {
             this.toggle_task(&event.path, event.marker, cx)
+        }),
+        cx.subscribe(reading, |this, _, event: &PropertyItemRemoved, cx| {
+            this.remove_property_item(&event.path, &event.key, event.index, cx)
         }),
         cx.subscribe(editor, |this, _, event: &EditorEvent, cx| match event {
             EditorEvent::Edited => {
@@ -6048,10 +6053,51 @@ impl Workspace {
         }) {
             return;
         }
+        self.rebuild_reading_from_editor(path, &state, cx);
+    }
+
+    /// A pill's remove control a reader clicked in the reading view. The
+    /// edit takes the path [`Self::toggle_task`] takes: the editor's buffer,
+    /// which still holds the note, as one undo step the autosave writes back
+    /// with the file's own BOM and line endings, and the reader is rebuilt
+    /// from that buffer.
+    fn remove_property_item(
+        &mut self,
+        path: &str,
+        key: &str,
+        index: usize,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        // A click that outlived the note it was made in must write nothing:
+        // the key and index belong to that note's block.
+        if self.current.as_deref() != Some(path) || self.editor.read(cx).name.as_ref() != path {
+            return;
+        }
+        if !self
+            .editor
+            .update(cx, |e, cx| e.remove_property_item(key, index, None, cx))
+        {
+            return;
+        }
+        self.rebuild_reading_from_editor(path, &state, cx);
+    }
+
+    /// Rebuilds the reading view from the editor's buffer after an edit made
+    /// on the reader's behalf — which the autosave has not written yet, so
+    /// the file is behind — and the word and character counts with it.
+    fn rebuild_reading_from_editor(
+        &mut self,
+        path: &str,
+        state: &VaultState,
+        cx: &mut Context<Self>,
+    ) {
         let text = self.editor.read(cx).text().to_string();
         self.words = text.split_whitespace().count();
         self.chars = text.chars().count();
-        let model = reading::build_with(path, &text, state.as_ref(), state.build_options());
+        let model = reading::build_with(path, &text, state, state.build_options());
         self.reading
             .update(cx, |r, cx| r.set_note(Some(path.to_string()), model, cx));
         cx.notify();

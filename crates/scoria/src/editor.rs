@@ -3629,6 +3629,33 @@ impl Editor {
         cx.notify();
     }
 
+    /// Drops item `index` of the list property `key`, as one undo step.
+    ///
+    /// Both rendered views remove a pill through here — Live Preview from
+    /// its own remove control, the reading view by way of the workspace —
+    /// so the pill writes the same bytes whichever one was clicked. Returns
+    /// false, and writes nothing, when the row has no such item: a reading
+    /// view built before the note changed can name a pill that is gone.
+    pub fn remove_property_item(
+        &mut self,
+        key: &str,
+        index: usize,
+        window: Option<&mut Window>,
+        cx: &mut Context<Self>,
+    ) -> bool {
+        self.property_field = None;
+        let change = self
+            .property_rows()
+            .into_iter()
+            .find(|r| r.key == key)
+            .and_then(|row| properties::remove_item(&row, index));
+        let Some(change) = change else {
+            return false;
+        };
+        self.apply_property_changes(&[change], window, cx);
+        true
+    }
+
     /// What the reader did to a property row.
     fn property_action(
         &mut self,
@@ -3676,12 +3703,7 @@ impl Editor {
                 cx.notify();
             }
             PropertyAction::RemoveItem { key, index } => {
-                self.property_field = None;
-                if let Some(row) = self.property_rows().into_iter().find(|r| r.key == key) {
-                    if let Some(change) = properties::remove_item(&row, index) {
-                        self.apply_property_changes(&[change], Some(window), cx);
-                    }
-                }
+                self.remove_property_item(&key, index, Some(window), cx);
             }
             PropertyAction::Toggle { key } => {
                 let on = self
