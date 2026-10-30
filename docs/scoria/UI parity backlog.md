@@ -290,6 +290,18 @@ dead rows. Nine icons would need cutting from lucide's own source first (`separa
 
 *low, missing-feature, large* · **Filed:** 2026-10-28
 
+**Two of the five landed 2026-10-30.** *Show in system explorer* is in the file, folder and Links
+menus: the D-Bus `org.freedesktop.FileManager1.ShowItems` call through `dbus-send`, with `xdg-open`
+on the parent folder as the fallback, `open -R` on macOS and `explorer /select,` on Windows, one
+platform table with the file-URL escaping tested beside it. *Make a copy* is a folder row:
+`Vault::duplicate` takes a file or a folder, the copy is a sibling on the first free name (a folder's
+name is never split on a dot), and a folder's copy walks what the scanner would index and copies
+every file's bytes verbatim. **No link is rewritten** -- this entry assumed a folder copy must
+rewrite the links of the notes it copies, and that is unobserved; a byte-identical copy loses
+nothing, so it waits for a probe. OBSERVE: what Obsidian does to the links of a copied folder's
+notes. Three items are still out: *Open in new window* (no second window), *Merge entire file
+with...* and *Open version history*.
+
 **Obsidian.** The captured menus
 ([[Specification#The file explorer's context menus]]) hold five rows the
 2026-10-28 build left out rather than draw dead, each with its section:
@@ -365,6 +377,17 @@ and the cursor maths, which is an `editor.rs` project of its own.
 ### HTML other than an `<img>`-only block is still raw muted source
 
 *medium, parity-gap, medium*
+
+**Half landed 2026-10-30, the inline half** (in the reading model, which Live Preview's widgets
+share): `InlineStyle` gained `underline`, `kbd`, `sup` and `sub`, and a tag stack in `RichBuilder`
+maps `<b>/<strong>`, `<i>/<em>`, `<s>/<del>/<strike>`, `<mark>`, `<u>`, `<kbd>`, `<sup>`, `<sub>`
+and `<a href>` onto runs, drops `<span>/<div>/<font>/<center>/<small>/<p>` keeping their content,
+turns `<br>` into a line break and leaves everything else -- `<script>`, an unknown tag, a
+malformed token -- as the muted source it was. An unclosed opener runs to the end of its paragraph,
+as the sanitizer capture records. Still open: **HTML blocks** (`RBlock::Html`: `<div>`, `<pre>`,
+`<details>`, a comment on its own line), `sup`/`sub` drawn at body size because a gpui text run
+cannot shift its baseline, Live Preview's own source transform (`<b>` still shows as source while
+editing), and `<ins>/<samp>/<var>/<tt>/<big>`.
 
 **Scoria.** An HTML block that holds nothing but `<img>` tags now resolves and renders as an image
 widget in both views. Everything else — comments, `<div>`, `<pre>`, `<a>`, inline `<u>`, `<sup>`,
@@ -500,6 +523,17 @@ workspace turns into the same `properties::plan` write the editor uses.
 
 *medium, parity-gap, medium*
 
+**Landed 2026-10-30**: `showInlineTitle` has a reader in both views, set from `apply_app_config`.
+The reading view draws the note's basename at h1 size in a header row that is a *sibling* of the
+list, never an item, so block indices, `scroll_to_block` and the folds keep their meaning, and it
+carries the 24 px top padding the first block used to hold. The editor reserves the same height
+above line 0 from the same `header_height`, so the first line sits at one y in both modes and a mode
+switch does not move the text; for the scroll maths the header belongs to line 0. Only a markdown
+note gets one -- not the image a synthetic model embeds, nor a file no view can draw. The h1
+metrics are the reading view's own `heading_style(1)`, not a fresh measurement of Obsidian's
+`.inline-title`. Click-to-rename on the inline title is **not** built, and the entry's own note
+stands: what a plain click on the *view header* title does was never settled.
+
 **Scoria.** `show_inline_title` occurs exactly twice in the workspace: the Settings row and the
 serde field. Live, with it true and the properties block hidden, a note whose whole body is one
 embed puts that embed at y 82..106 — the pane header plus the list's first-block padding — with no
@@ -590,6 +624,11 @@ under Workspace shell.
 
 *low, bug, small*
 
+**Landed 2026-10-30**: one `alias_parts` helper splits an alias for both spellings -- every
+`|`-separated part that parses as `W` or `WxH` claims the size, the rest stays the alt -- and
+`wikilink_embed` and the markdown-image arm both call it, so `![alt|100](pic.png)` and
+`![[pic.png|100]]` cannot disagree again.
+
 **Scoria.** With a real 400×300 PNG in the vault, `![alt|100](pic.png)` and `![alt](pic.png)` lay
 out identically (click band 404..428) while `![[pic.png|100]]` shrinks to 180..204. The
 markdown-image branch strips everything after `|` from the alt and then calls `self.embed(..)` with
@@ -606,6 +645,11 @@ part that parses as `W` or `WxH` claim the size and keep the rest as the alt —
 ### An embed inside a heading, a table cell or a callout title renders as literal `![[Name]]`
 
 *low, bug, small*
+
+**Landed 2026-10-30**, the cheapest correct step this entry names: the embed arm of `rich()` falls
+through to the non-embed one, so an embed in a heading or a table cell is readable and clickable
+rather than showing its own brackets. Drawing the embedded picture *in* the cell still wants the
+inline-embed run the entry describes, and is open.
 
 **Scoria.** `InlineKind::Wikilink { embed: true }` pushes the three literal pieces `"![["`, the
 display text and `"]]"` into the builder as plain unstyled text and never attaches a link, while the
@@ -656,6 +700,14 @@ change with them, not alone.
 
 *low, missing-feature, medium* · **Filed:** 2026-10-28
 
+**Landed 2026-10-30**: the reading view hands the renderer one narrow sink,
+`ReadingHost::on_remove_item`, which takes `PropertyAction::RemoveItem` and nothing else and raises
+`PropertyItemRemoved`; the workspace takes that the way it takes `TaskToggled`, through the editor's
+buffer and `Editor::remove_property_item`, so a pill removed in either view writes the same bytes in
+one undo step and the file's BOM and line endings come through untouched. A canvas card passes no
+sink and draws no control, having no note to write. Still read-only in reading view, and still the
+gap with Obsidian: the key and value fields, the type menu and the "Add property" row.
+
 **Obsidian.** Obsidian edits properties in reading view as well as in Live Preview, and the reading
 view's own DOM carries the control: a tag pill is `div.multi-select-pill[tabindex=0]` holding
 `div.multi-select-pill-content > span` **and** a `div.multi-select-pill-remove-button` with a
@@ -678,6 +730,10 @@ needs nothing new — `properties::remove_item` is already the editor's.
 ### Raw and inline HTML is literal source; remote images render as a link
 
 *medium, parity-gap, large*
+
+**Half landed 2026-10-30**: the inline subset is mapped onto styles -- see the Live Preview entry
+above for exactly which tags and what is left. Remote images are untouched: `![remote](https://…)`
+is still an External link rather than a fetched `<img>`, and `EmbedKind::Remote` does not exist.
 
 **Scoria.** `line one<br>line two`, `<u>underlined</u>` and `<sup>2</sup>` all appear as their tags;
 `![remote](https://…)` becomes a link-styled run with an External target, so clicking it would open
@@ -888,6 +944,18 @@ asking which graph is showing; `graph:open-local` is not a toggle, so the pair i
 
 *low, parity-gap, medium*
 
+**Landed 2026-10-30**: `GraphView` carries Obsidian's four options (`localJumps: 1`,
+`localBacklinks: true`, `localForelinks: true`, `localInterlinks: false`), the Filters section draws
+the Depth slider and the "Incoming links" / "Outgoing links" / "Neighbor links" toggles in the
+probe's order when the graph is local, and `local_subgraph` records each kept node's BFS depth,
+walks out to `localJumps` hops, follows an edge only in the directions the flags allow, and with
+interlinks off keeps only edges whose endpoints differ by one depth -- which hides the
+neighbour-to-neighbour edge. The options live for the session: Scoria writes no localgraph leaf, so
+there is nowhere to persist them, and the control socket reports them instead. The slider's range is
+1..5 step 1, which is **not** observed -- the probe's `localControls` records no min, max or step for
+it. OBSERVE: that range, and what Obsidian's interlinks rule does at depth 2 (only the depth-1 case
+was probed).
+
 **Scoria.** The local graph of a note with two forward links, one of which also links the other,
 keeps the neighbour-to-neighbour edge and every one-hop neighbour in either direction. Depth is the
 literal `if depth >= 1 { continue; }`, and `grep` for `local_jumps`, `interlink`, `forelink` or
@@ -931,6 +999,14 @@ rewrites the matched range to `[[Name]]` through the text crate's edit plan.
 
 *low, missing-feature, medium*
 
+**Landed 2026-10-30**: the explorer's menu became `crates/scoria/src/file_menu.rs`, drawn once for
+every view that raises it, and every Backlinks and Outgoing links row that stands for a file raises
+it -- the probe's list for a Links row, which differs from the explorer's (Rename sits with Move and
+Bookmark under one separator, there is no Make a copy and no Delete, and "Reveal file in navigation"
+is extra). "Open in new window" is left out, as everywhere else. The row icons are the explorer's for
+the same labels: the 2026-10-22 probe read the labels and separators but not the icons, and
+"Reveal file in navigation" has no explorer twin, so its `folder-open` is marked OBSERVE in the code.
+
 **Scoria.** A right click on a Links row, a mentions group row or a match does nothing;
 the app has no file context menu anywhere yet (the Files view's is a separate entry).
 
@@ -941,6 +1017,25 @@ Open in default app, Show in system explorer, Reveal file in navigation.
 
 **Fix.** Build the file menu once (the Files view needs the same one) on
 `canvas::menu::context_menu`, and hang it off every row that stands for a file.
+
+### Escape does not close a context menu
+
+*low, bug, small* · **Filed:** 2026-10-30
+
+**Obsidian.** Escape closes an open context menu. Every probe run relies on it: `ui-rules.mjs` and
+`outgoing-links.mjs` both press Escape between captures to take one menu down before raising the
+next, and the captures that follow are of a window with no menu in it.
+
+**Scoria.** Neither menu closes on Escape. The explorer's and the workspace's file menus are both
+dismissed by `on_mouse_down_out` alone, with no key binding and no action; a press on the running
+app answers `handled: false` and the menu stays. Verified in the app on 2026-10-30, with the file
+menu open on a Backlinks row. This is not new -- the explorer's menu has behaved this way since it
+was built on 2026-10-28 -- and it is one gesture, not two: a click elsewhere does close it.
+
+**Fix.** One Escape action bound while a menu is open, closing it and spending the press, in
+`file_menu` so both hosts get it at once. Key dispatch has a trap worth remembering here: an action
+runs before `capture_key_down`, so a menu that wants Escape before anything else wants
+`capture_action`.
 
 ### Tags, All properties and Outline rows have no context menu and no keyboard
 
