@@ -1,7 +1,14 @@
-//! The Settings modal (`app:open-settings`, Ctrl+,): the tabs Obsidian
+//! The Settings window (`app:open-settings`, Ctrl+,): the tabs Obsidian
 //! 1.14.4 shows (General, Appearance, Interface, Editor, Files and links,
 //! Hotkeys, Core plugins, Community plugins, then one per enabled core
 //! plugin with options) with every value read from `.obsidian/`.
+//!
+//! Obsidian draws Settings as a modal over the workspace. Scoria gives it
+//! a window of its own, the way it does the vault manager and Help: the
+//! vault behind it stays readable and usable while a setting is changed,
+//! and the panel is sized and moved by the desktop rather than by a
+//! backdrop. [`SettingsView`] is the panel, held by the workspace so its
+//! state outlives the window; [`SettingsWindow`] is the window around it.
 //!
 //! Toggles write. Each one carries a [`Flag`] naming the key Obsidian
 //! writes, what that key means when it is absent, and how to read and set
@@ -24,11 +31,12 @@ use crate::assets::logo;
 use crate::palette::hotkey_chip;
 use crate::text_input::{InputEvent, TextInput};
 use crate::theme::Theme;
-use crate::workspace::{Commands, VaultState};
+use crate::workspace::{Commands, VaultState, Workspace};
 use gpui::{
-    actions, deferred, div, prelude::*, px, rgb, uniform_list, App, Context, Entity, EventEmitter,
-    FocusHandle, Focusable, FontWeight, KeyBinding, KeyDownEvent, Keystroke, SharedString,
-    Subscription, UniformListScrollHandle, Window,
+    actions, deferred, div, prelude::*, px, rgb, size, uniform_list, App, Bounds, Context, Entity,
+    EventEmitter, FocusHandle, Focusable, FontWeight, KeyBinding, KeyDownEvent, Keystroke,
+    SharedString, Subscription, TitlebarOptions, UniformListScrollHandle, WeakEntity, Window,
+    WindowBackgroundAppearance, WindowBounds, WindowDecorations, WindowHandle, WindowOptions,
 };
 use scoria_commands::{hotkey_label, keystroke, Command};
 use scoria_formats::config::{
@@ -1207,6 +1215,14 @@ impl SettingsView {
                 cx.emit(SettingsEvent::Close);
             }
         }
+    }
+
+    /// Closes the window from its frame, where the panel's own key handler
+    /// is out of reach: an open field is written first, as every other way
+    /// out writes it.
+    fn close_from_frame(&mut self, cx: &mut Context<Self>) {
+        self.dismiss_open_controls(cx);
+        cx.emit(SettingsEvent::Close);
     }
 
     // ----- hotkeys ----------------------------------------------------------
@@ -2694,19 +2710,14 @@ impl Render for SettingsView {
             .on_mouse_down_out(cx.listener(|this, _, _, cx| this.dismiss_open_controls(cx)))
             .flex()
             .flex_row()
-            // The frame sets the width; the panel fills it and stops at
-            // Obsidian's 1100 px. The nav is `flex_shrink_0` and the
-            // content column `flex_1().min_w_0()`, so a narrow window
-            // takes the difference out of the content column rather than
-            // pushing it past the window's edge.
-            .w_full()
-            .max_w(px(1100.))
-            .h_full()
+            // The panel fills its window, which the desktop sizes: no
+            // border, rounding or shadow of its own, because the frame
+            // around it is the real one. The nav is `flex_shrink_0` and the
+            // content column `flex_1().min_w_0()`, so a narrow window takes
+            // the difference out of the content column rather than pushing
+            // it past the window's edge.
+            .size_full()
             .bg(theme.bg)
-            .border_1()
-            .border_color(theme.border)
-            .rounded_lg()
-            .shadow_lg()
             .overflow_hidden()
             .child(self.render_nav(&theme, cx))
             .child(
@@ -2819,6 +2830,114 @@ fn hotkey_from_keystroke(stroke: &Keystroke) -> Option<Hotkey> {
         modifiers.push("Shift".into());
     }
     Some(Hotkey { modifiers, key })
+}
+
+/// The Settings window's size. Obsidian's modal is `min(90vw, 1100px)`
+/// wide and `80vh` tall; a window of its own opens at that width and a
+/// height to match, centered on the screen, and the desktop takes it from
+/// there.
+pub const WINDOW_SIZE: (f32, f32) = (1100., 720.);
+
+/// The Settings window's root view: the frame around [`SettingsView`].
+///
+/// The panel itself belongs to the workspace, which keeps it between
+/// openings and listens to it for the settings it writes, so this holds
+/// nothing but the handle to it.
+pub struct SettingsWindow {
+    view: Entity<SettingsView>,
+    focus_handle: FocusHandle,
+    /// Takes this window down with the workspace that opened it. The panel
+    /// writes through the workspace, so one left behind by a closed
+    /// workspace would show a vault that is gone and write nothing.
+    _workspace_gone: Option<Subscription>,
+}
+
+impl SettingsWindow {
+    /// Opens the window on `tab`, with the workspace's own panel inside it.
+    pub fn open(
+        view: Entity<SettingsView>,
+        tab: Option<Tab>,
+        workspace: WeakEntity<Workspace>,
+        cx: &mut App,
+    ) -> anyhow::Result<WindowHandle<SettingsWindow>> {
+        let (w, h) = WINDOW_SIZE;
+        let bounds = Bounds::centered(None, size(px(w), px(h)), cx);
+        let handle = cx.open_window(
+            WindowOptions {
+                window_bounds: Some(WindowBounds::Windowed(bounds)),
+                titlebar: Some(TitlebarOptions {
+                    title: Some("Settings".into()),
+                    ..Default::default()
+                }),
+                app_id: Some("scoria".into()),
+                // The desktop's own frame, as the vault manager and Help
+                // windows have: a dialog has no tab strip to put window
+                // buttons in.
+                window_decorations: Some(WindowDecorations::Server),
+                window_background: WindowBackgroundAppearance::Opaque,
+                window_min_size: Some(size(px(640.), px(480.))),
+                ..Default::default()
+            },
+            move |window, cx| {
+                view.update(cx, |view, cx| view.open(tab, window, cx));
+                // A text field is written on the way out of it, and the
+                // title bar's close is a way out the panel never sees.
+                let open_field = view.downgrade();
+                window.on_window_should_close(cx, move |_, cx| {
+                    open_field
+                        .update(cx, |view, cx| view.dismiss_open_controls(cx))
+                        .ok();
+                    true
+                });
+                cx.new(|cx| SettingsWindow {
+                    view,
+                    focus_handle: cx.focus_handle(),
+                    _workspace_gone: None,
+                })
+            },
+        )?;
+        if let Some(workspace) = workspace.upgrade() {
+            let window = handle;
+            let gone = cx.observe_release(&workspace, move |_, cx| {
+                window
+                    .update(cx, |_, window, _| window.remove_window())
+                    .ok();
+            });
+            handle
+                .update(cx, |root, _, _| root._workspace_gone = Some(gone))
+                .ok();
+        }
+        Ok(handle)
+    }
+
+    /// Escape with nothing inside the panel focused still closes the
+    /// window, through the panel so an open field is written first.
+    fn close(&mut self, _: &Close, _: &mut Window, cx: &mut Context<Self>) {
+        self.view.update(cx, |view, cx| view.close_from_frame(cx));
+    }
+}
+
+impl Focusable for SettingsWindow {
+    fn focus_handle(&self, _cx: &App) -> FocusHandle {
+        self.focus_handle.clone()
+    }
+}
+
+impl Render for SettingsWindow {
+    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        let theme = cx.global::<Theme>().clone();
+        div()
+            .id("settings-window")
+            .key_context("Settings")
+            .track_focus(&self.focus_handle)
+            .on_action(cx.listener(Self::close))
+            .size_full()
+            .bg(theme.bg)
+            .font_family(theme.ui_font.clone())
+            .text_size(px(crate::theme::FONT_UI_MEDIUM))
+            .text_color(theme.text)
+            .child(self.view.clone())
+    }
 }
 
 #[cfg(test)]

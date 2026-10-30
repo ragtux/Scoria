@@ -326,6 +326,60 @@ uses behave as Obsidian's do.
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | not started |
 
+### Settings in a window of its own, 2026-10-30
+
+Asked for: Settings should come up in a real window. Obsidian's does not — its
+Settings is `.modal.mod-settings`, a modal over the workspace that owns the keyboard
+until it closes (and, oddly, has no `.modal-bg`; see the Specification's note). This is
+a deliberate divergence, taken on the grounds that the vault manager and Help are
+already windows and that a settings panel is a thing you keep open beside the vault
+rather than in front of it.
+
+`SettingsView` stays where it was, on the workspace: it is the panel, it holds the open
+tab, the open dropdown and the field being typed into, and the workspace still listens
+to it for every `SettingChange` it writes. What moved is the frame around it.
+`SettingsWindow` is a root view holding that one entity, opened with the desktop's own
+decorations at 1100x720 — Obsidian's modal width, and a height to match — and the panel
+lost the border, rounding, shadow and `max_w` it wore as a modal, because the frame
+around it is now a real one. `Modal::Settings` is gone from the workspace's modal enum
+altogether, which is the point of the change: `hotkeys_live` and `note_has_keys` are
+both `self.modal == Modal::None`, so with Settings out of that enum the vault behind it
+keeps its hotkeys and its focus.
+
+Three things had to be kept whole across the move:
+
+- **The socket's contract.** `state.modal.kind` has said `"settings"` since protocol 2,
+  with the open tab's rows under it, and a caller should not have to learn that it is a
+  window now. `describe_modal` reports `"settings"` when the window is up — the handle
+  is checked with `WindowHandle::read`, so one left behind by a window the desktop
+  closed reads as gone — and `focus_name` answers `"settings"` for the same reason: the
+  focus is in another window and is not the workspace's to report.
+- **Input.** `Ctl::input` is the window a caller is driving: the Settings window while
+  it is up, the workspace's own otherwise. Keys, typing, clicks, the mouse, the wheel
+  and `wait_idle`'s frame chain all go through it, and so does `window`'s activation
+  and the size it reports back, since click coordinates are window-local and a
+  screenshot captures whatever is in front. A resize still sizes the app's own window.
+- **The window's lifetime.** The panel writes through the workspace, so a Settings
+  window outliving it would show a vault that is gone and write nothing; worse, gpui
+  quits on Linux only when the *last* window closes, so the orphan would keep the
+  process alive with no workspace in it. `SettingsWindow` holds a release subscription
+  on the `Workspace` entity and takes itself down with it. Verified by closing the main
+  window with a KWin script while Settings was up: both windows went and the process
+  exited.
+
+Checked on the real app over the socket: `app:open-settings` raises the window and a
+second one raises the same window rather than a second; a click at window-local
+coordinates switches tabs; Escape and the panel's × close it and the editor takes focus
+back in the main window; a toggle clicked in the window wrote `readableLineLength:false`
+into the test vault's `app.json` and changed nothing else; and a dropdown's options
+still paint over the rows below them.
+
+Left as it was: a write that fails still reports into the workspace's notice corner,
+which is now behind the Settings window rather than under its backdrop. The dropdowns
+are still the panel's own popovers, clipped by the window as they were by the modal —
+Obsidian's are native `<select>` popups, which the platform draws in a window of their
+own and never clips.
+
 ### The vault manager, and a menu that would not close, 2026-10-29
 
 Two reports against the switcher that had landed that morning: its menu stayed open

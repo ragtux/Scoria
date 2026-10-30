@@ -68,6 +68,7 @@ with the command inventory and bundle evidence.
 | Settings tabs, rows and defaults as Obsidian 1.14.4 shows them; `switcher.json`, `command-palette.json` and plugin manifests round-trip | `scoria::settings`, `scoria-formats::config` |
 | Settings toggles write: a click sets the key Obsidian writes in `app.json`, `appearance.json`, `switcher.json`, `core-plugins.json` or `community-plugins.json`, changing nothing else in the file, and the running app follows what it can (readable line length, smart lists, indentation, properties in document, strict line breaks, show all file types); a vault with no `core-plugins.json` gets the whole default map rather than a one-key file | `scoria::settings`, `scoria::workspace::Workspace::change_setting` |
 | Each settings row says how far it gets in Scoria: untagged means the app follows it at once, "on restart" the theme and fonts, "not in Scoria yet" a value written only for Obsidian to read. A Scoria divergence: Obsidian has no such tags, and shows every setting as live | `scoria::settings::Honored` |
+| Settings opens in a window of its own, the way the vault manager and Help do, and the vault behind it stays live. A Scoria divergence: Obsidian draws Settings as a modal (`.modal.mod-settings`, no `.modal-bg`) that owns the keyboard until it closes | `scoria::settings::SettingsWindow` |
 
 ## Parser notes
 

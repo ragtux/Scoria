@@ -1112,6 +1112,13 @@ unresolved block behind `show_existing_only != Some(true)`. Call `set_state` aga
 
 ## Settings
 
+*Settings moved out of the workspace into a window of its own on 2026-10-30
+(see Development's [[Development#Settings in a window of its own, 2026-10-30]]).
+The two entries below landed against the modal, so their `#settings-frame`,
+backdrop and viewport-width details describe a frame that no longer exists;
+what they fixed — the control column inside the window, a scrolling nav — is
+still in the panel.*
+
 ### On a window narrower than about 1180 px no control in the modal can be clicked
 
 *medium, bug, small*

@@ -28,7 +28,7 @@ use crate::pdf::view::{PdfEvent, PdfView};
 use crate::prompt::{Prompt, PromptEvent, PromptSpec};
 use crate::reading::{self, LinkTarget, ReadingEvent, ReadingView, TaskMarker, TaskToggled};
 use crate::search::{CopyEntry, SearchEvent, SearchPane};
-use crate::settings::{self, SettingChange, SettingsEvent, SettingsView};
+use crate::settings::{self, SettingChange, SettingsEvent, SettingsView, SettingsWindow};
 use crate::switcher::{QuickSwitcher, SwitcherEvent};
 use crate::text_input::{self, InputEvent, TextInput};
 use crate::theme::{
@@ -594,7 +594,7 @@ impl VaultState {
         self.switcher.read().unwrap_or_else(|e| e.into_inner())
     }
 
-    /// Writes a setting the Settings modal changed and keeps the config in
+    /// Writes a setting the Settings window changed and keeps the config in
     /// hand in step. The file is written first: the vault is the source of
     /// truth, so a change that cannot reach disk does not count.
     pub fn apply_setting(&self, change: &SettingChange) -> Result<(), String> {
@@ -1338,7 +1338,6 @@ enum Modal {
     None,
     Switcher,
     Palette,
-    Settings,
     Prompt,
     /// The template chooser.
     Chooser,
@@ -2459,6 +2458,10 @@ pub struct Workspace {
     help_window: Option<gpui::WindowHandle<HelpWindow>>,
     /// The vault manager while one is up, the same way.
     vault_window: Option<gpui::WindowHandle<VaultManager>>,
+    /// The Settings window while one is up, the same way. Settings is a
+    /// window rather than a modal, so the vault behind it stays live; the
+    /// panel inside it is `settings`, which the workspace keeps either way.
+    settings_window: Option<gpui::WindowHandle<SettingsWindow>>,
     loading: Option<SharedString>,
     explorer: Entity<FileExplorer>,
     search: Entity<SearchPane>,
@@ -2902,8 +2905,8 @@ impl Workspace {
             cx.subscribe_in(
                 &settings,
                 window,
-                |this, _, event: &SettingsEvent, window, cx| match event {
-                    SettingsEvent::Close => this.close_modal(window, cx),
+                |this, _, event: &SettingsEvent, _window, cx| match event {
+                    SettingsEvent::Close => this.close_settings(cx),
                     SettingsEvent::Changed(change) => {
                         this.change_setting(change.as_ref().clone(), cx)
                     }
@@ -2984,6 +2987,7 @@ impl Workspace {
             tab_list_menu: None,
             help_window: None,
             vault_window: None,
+            settings_window: None,
             loading: None,
             explorer,
             search,
@@ -3207,8 +3211,8 @@ impl Workspace {
         }
     }
 
-    /// Writes a setting the Settings modal changed, then applies it. The
-    /// modal redraws from the vault's config either way, so a write that
+    /// Writes a setting the Settings window changed, then applies it. The
+    /// panel redraws from the vault's config either way, so a write that
     /// fails leaves the control as it was and says so in the status bar.
     /// Rebuilds the command registry and every key bound from it: the
     /// commands of a core plugin that is off are not in it, and
@@ -4015,17 +4019,64 @@ impl Workspace {
         self.settings.update(cx, |s, cx| s.open_menu(key, cx));
     }
 
-    /// Opens the Settings modal, on `tab` when given (`--settings` on the command line).
+    /// Opens the Settings window, on `tab` when given (`--settings` on the
+    /// command line), and brings it forward if it is already up.
+    ///
+    /// Obsidian's Settings is a modal; Scoria's is a window of its own, so
+    /// this takes nothing away from the workspace: the vault behind it
+    /// keeps its keys and its focus.
     pub fn open_settings(
         &mut self,
         tab: Option<settings::Tab>,
-        window: &mut Window,
+        _window: &mut Window,
         cx: &mut Context<Self>,
     ) {
         self.close_editor_suggest(cx);
-        self.modal = Modal::Settings;
-        self.settings.update(cx, |s, cx| s.open(tab, window, cx));
+        self.vault_menu_open = false;
+        let view = self.settings.clone();
+        if let Some(handle) = self.settings_window {
+            let raised = handle
+                .update(cx, |_, window, cx| {
+                    view.update(cx, |s, cx| s.open(tab, window, cx));
+                    window.activate_window();
+                })
+                .is_ok();
+            if raised {
+                cx.notify();
+                return;
+            }
+        }
+        match SettingsWindow::open(view, tab, cx.weak_entity(), cx) {
+            Ok(handle) => self.settings_window = Some(handle),
+            Err(err) => self.report(format!("Could not open Settings: {err}"), cx),
+        }
         cx.notify();
+    }
+
+    /// Takes the Settings window down, from its own Escape or its ×.
+    fn close_settings(&mut self, cx: &mut Context<Self>) {
+        if let Some(handle) = self.settings_window.take() {
+            handle
+                .update(cx, |_, window, _| window.remove_window())
+                .ok();
+        }
+        cx.notify();
+    }
+
+    /// Whether the Settings window is up. A handle left behind by a window
+    /// the desktop closed reads as gone, which is what makes this the test
+    /// rather than `settings_window.is_some()`.
+    pub fn settings_up(&self, cx: &App) -> bool {
+        self.settings_window
+            .is_some_and(|handle| handle.read(cx).is_ok())
+    }
+
+    /// The Settings window, for the control socket: input goes there while
+    /// it is up, since that is the window a caller is looking at.
+    pub fn settings_window(&self, cx: &App) -> Option<gpui::AnyWindowHandle> {
+        self.settings_up(cx)
+            .then(|| self.settings_window.map(Into::into))
+            .flatten()
     }
 
     /// A modal going up takes the autocompletion popup down with it: the
@@ -10915,13 +10966,17 @@ impl Workspace {
     /// itself says about its query and rows.
     fn describe_modal(&self, rows: usize, cx: &App) -> Value {
         let mut modal = Map::new();
+        // Settings is a window rather than a modal, but it is still the
+        // thing in front of the caller, and the socket's contract has said
+        // "settings" here since before it moved out of the workspace.
+        let settings_up = self.settings_up(cx);
         modal.insert(
             "kind".into(),
             json!(match self.modal {
+                _ if settings_up => "settings",
                 Modal::None => "none",
                 Modal::Switcher => "switcher",
                 Modal::Palette => "palette",
-                Modal::Settings => "settings",
                 Modal::Prompt => "prompt",
                 Modal::CopyResults => "copy-results",
                 Modal::Chooser => "chooser",
@@ -10934,12 +10989,12 @@ impl Workspace {
         modal.insert("error".into(), Value::Null);
         modal.insert("rows".into(), Value::Array(Vec::new()));
         let view = match self.modal {
+            _ if settings_up => Some(self.settings.read(cx).describe(rows, cx)),
             Modal::Switcher => Some(self.switcher.read(cx).describe(rows, cx)),
             Modal::Palette => Some(self.palette.read(cx).describe(rows, cx)),
             Modal::Prompt => Some(self.prompt.read(cx).describe(rows, cx)),
             Modal::CopyResults => Some(self.copy_results.read(cx).describe()),
             Modal::Chooser => Some(self.chooser.read(cx).describe(rows, cx)),
-            Modal::Settings => Some(self.settings.read(cx).describe(rows, cx)),
             Modal::None => None,
         };
         if let Some(Value::Object(view)) = view {
@@ -11044,10 +11099,14 @@ impl Workspace {
     /// A name for whatever has focus, for the state dump and to decide
     /// where typed text goes. Only handles this shell can reach are named
     /// by handle; the find panel's two fields belong to the editor, which
-    /// is asked, and the Settings fields are named from the dispatch path.
-    /// `explorer` never comes back: the file tree's rows are painted
-    /// without a focus handle, so the keyboard is never in it.
+    /// is asked. `explorer` never comes back: the file tree's rows are
+    /// painted without a focus handle, so the keyboard is never in it.
     pub fn focus_name(&self, window: &Window, cx: &App) -> &'static str {
+        // Settings has a window of its own, so its focus is not this
+        // window's to report: that it is up is what the caller is after.
+        if self.settings_up(cx) {
+            return "settings";
+        }
         if window.focused(cx).is_none() {
             return "none";
         }
@@ -11116,9 +11175,6 @@ impl Workspace {
                 return name;
             }
         }
-        if self.settings.focus_handle(cx).is_focused(window) {
-            return "settings";
-        }
         if self.explorer.focus_handle(cx).is_focused(window) {
             return "explorer";
         }
@@ -11129,10 +11185,6 @@ impl Workspace {
         // them apart; the editor holds the two handles and can.
         if let Some(name) = self.editor.read(cx).find_focus(window, cx) {
             return name;
-        }
-        let stack = context_names(window);
-        if stack.iter().any(|c| c == "Settings") {
-            return "settings";
         }
         "unknown"
     }
@@ -14279,37 +14331,6 @@ impl Render for Workspace {
                         .into_any_element(),
                 )
             }
-            Modal::Settings => Some(
-                div()
-                    .id("settings-backdrop")
-                    .occlude()
-                    .absolute()
-                    .inset_0()
-                    .bg(rgba(0x00000080))
-                    .map(|d| corners.apply(d))
-                    .flex()
-                    .flex_row()
-                    .justify_center()
-                    .items_center()
-                    .py(px(40.))
-                    .px(px(40.))
-                    .on_click(cx.listener(|this, _, window, cx| this.close_modal(window, cx)))
-                    .child(
-                        div()
-                            .id("settings-frame")
-                            .h_full()
-                            // Obsidian's modal is `min(90vw, 1100px)`. The
-                            // frame has to carry the width, because a frame
-                            // that only clips leaves the panel laying out at
-                            // its full width with the control column past
-                            // the clip, where nothing can be clicked.
-                            .w(relative(0.9))
-                            .max_w(px(1100.))
-                            .on_click(|_, _, cx| cx.stop_propagation())
-                            .child(self.settings.clone()),
-                    )
-                    .into_any_element(),
-            ),
         };
         // Obsidian reports an outcome with a Notice in the corner rather
         // than in the status bar, and the probe notes put it bottom right.
