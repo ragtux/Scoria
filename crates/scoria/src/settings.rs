@@ -40,8 +40,9 @@ use gpui::{
 };
 use scoria_commands::{hotkey_label, keystroke, Command};
 use scoria_formats::config::{
-    AppConfig, AppearanceConfig, CorePlugins, DailyNotesConfig, Hotkey, Hotkeys, SwitcherConfig,
-    TemplatesConfig, CORE_PLUGINS, DAILY_NOTE_DEFAULT_FORMAT,
+    AppConfig, AppearanceConfig, BacklinkConfig, CanvasConfig, CorePlugins, DailyNotesConfig,
+    Hotkey, Hotkeys, NoteComposerConfig, PagePreviewConfig, SwitcherConfig, TemplatesConfig,
+    WebviewerConfig, CORE_PLUGINS, DAILY_NOTE_DEFAULT_FORMAT, WEBVIEWER_DEFAULT_SEARCH_URL,
 };
 use scoria_search::fuzzy_match;
 use scoria_templates as templates;
@@ -252,12 +253,61 @@ flags!(
     SHOW_ALL_FILE_TYPES, "showAllFileTypes", show_all_file_types, false, false;
 );
 
+flags!(
+    BacklinkFlag,
+    BacklinkConfig,
+    BACKLINK_IN_DOCUMENT, "backlinkInDocument", backlink_in_document, false, false;
+);
+
+flags!(
+    CanvasFlag,
+    CanvasConfig,
+    SNAP_TO_GRID, "snapToGrid", snap_to_grid, true, false;
+    SNAP_TO_OBJECTS, "snapToObjects", snap_to_objects, true, false;
+);
+
+// The Page preview tab's ten toggles. Obsidian names each key after the
+// surface the preview pops up over, not after the row's label, and Reading
+// view is the one that is off when its key is absent.
+flags!(
+    PagePreviewFlag,
+    PagePreviewConfig,
+    PREVIEW_SEARCH, "search", search, true, false;
+    PREVIEW_READING, "preview", preview, false, false;
+    PREVIEW_EDITING, "editor", editor, true, false;
+    PREVIEW_TAB_HEADER, "tab-header", tab_header, true, false;
+    PREVIEW_FILES, "file-explorer", file_explorer, true, false;
+    PREVIEW_PROPERTIES, "properties", properties, true, false;
+    PREVIEW_BOOKMARKS, "bookmarks", bookmarks, true, false;
+    PREVIEW_OUTLINE, "outline", outline, true, false;
+    PREVIEW_BASES, "bases", bases, true, false;
+    PREVIEW_GRAPH, "graph", graph, true, false;
+);
+
+flags!(
+    NoteComposerFlag,
+    NoteComposerConfig,
+    ASK_BEFORE_MERGING, "askBeforeMerging", ask_before_merging, true, false;
+);
+
+flags!(
+    WebviewerFlag,
+    WebviewerConfig,
+    OPEN_EXTERNAL_URLS, "openExternalURLs", open_external_urls, true, false;
+    ENABLE_ADBLOCKING, "enableAdblocking", enable_adblocking, true, false;
+);
+
 /// What a toggle writes.
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum Flag {
     App(AppFlag),
     Appearance(AppearanceFlag),
     Switcher(SwitcherFlag),
+    Backlink(BacklinkFlag),
+    Canvas(CanvasFlag),
+    PagePreview(PagePreviewFlag),
+    NoteComposer(NoteComposerFlag),
+    Webviewer(WebviewerFlag),
     /// A core plugin in `core-plugins.json`, with what a vault without the
     /// file does.
     CorePlugin(&'static str, bool),
@@ -551,6 +601,12 @@ const TYPED_ALL: &[Typed] = &[
     LIVE_PREVIEW,
     ATTACHMENT_LOCATION,
     DAILY_FORMAT,
+    CANVAS_NEW_FILE_LOCATION,
+    CANVAS_WHEEL_BEHAVIOR,
+    CANVAS_MOD_DRAG_BEHAVIOR,
+    CANVAS_CARD_LABELS,
+    COMPOSER_REPLACEMENT_TEXT,
+    WEB_SEARCH_ENGINE,
 ];
 
 /// A slider: the key, the range Obsidian's own control offers, and the
@@ -697,6 +753,7 @@ const TEXTS: &[TextField] = &[
     TEMPLATES_FOLDER,
     TEMPLATES_DATE,
     TEMPLATES_TIME,
+    WEB_CUSTOM_SEARCH_ENGINE,
 ];
 
 // ----- the Daily notes and Templates tabs ------------------------------------
@@ -843,6 +900,212 @@ fn format_sample(pattern: &str, placeholder: &str) -> String {
     templates::format(pattern, &crate::workspace::now())
 }
 
+// ----- the other core-plugin options tabs ------------------------------------
+//
+// Backlinks, Canvas, Page preview, Note composer, Unique note creator, File
+// recovery and Web viewer, observed on 1.14.5 on 2026-10-30
+// (`tools/obsidian-probe/results/2026-10-30-editor-menus.json`, step
+// `s04-plugin-tabs`): every row read, every toggle clicked twice, every
+// dropdown walked through its options and back, and `.obsidian` diffed after
+// each click. Every name, description, option label and stored string below
+// is that run's, character for character. See
+// [[Specification#Observed core-plugin options tabs, Obsidian 1.14.5
+// (installer build 1.13.7)]].
+//
+// Some rows wrote nothing the probe could see, because the control is a file
+// suggester, a textarea, a `type=number` field or a button and none of them
+// was driven: the Canvas tab's folder name and zoom threshold, every row of
+// the Unique note creator and File recovery tabs, and the Web viewer tab's
+// homepage, saved-page folder, ad-blocking rules and update frequency. Those
+// rows are drawn and tagged, and they write nothing at all — a key guessed
+// from the row's name would be a key Obsidian never wrote.
+
+/// The Canvas tab's "Default location for new canvas files". The same three
+/// labels and strings as the Files and links tab's own `newFileLocation`
+/// dropdown, in `canvas.json` rather than `app.json`.
+const CANVAS_NEW_FILE_LOCATION: Typed = Typed {
+    key: "newFileLocation",
+    options: &[
+        ("Vault folder", "root"),
+        ("Same folder as current file", "current"),
+        ("In the folder specified below", "folder"),
+    ],
+    read: |state| {
+        state
+            .canvas_options()
+            .new_file_location
+            .clone()
+            .filter(|v| !v.is_empty())
+            .unwrap_or_else(|| "root".to_string())
+    },
+    write: |state, value| {
+        let mut next = state.canvas_options().clone();
+        next.new_file_location = Some(value.to_string());
+        SettingChange::Canvas(next)
+    },
+    shape: None,
+    label_of: None,
+    local: None,
+};
+
+/// "Default mouse wheel behavior".
+const CANVAS_WHEEL_BEHAVIOR: Typed = Typed {
+    key: "defaultWheelBehavior",
+    options: &[("Pan", "pan"), ("Zoom", "zoom")],
+    read: |state| {
+        state
+            .canvas_options()
+            .default_wheel_behavior
+            .clone()
+            .filter(|v| !v.is_empty())
+            .unwrap_or_else(|| "pan".to_string())
+    },
+    write: |state, value| {
+        let mut next = state.canvas_options().clone();
+        next.default_wheel_behavior = Some(value.to_string());
+        SettingChange::Canvas(next)
+    },
+    shape: None,
+    label_of: None,
+    local: None,
+};
+
+/// "Default Ctrl + Drag behavior". The row is named with Ctrl on Linux and
+/// Windows; the key and its six strings are the same everywhere.
+const CANVAS_MOD_DRAG_BEHAVIOR: Typed = Typed {
+    key: "defaultModDragBehavior",
+    options: &[
+        ("Show menu", "menu"),
+        ("Add card", "card"),
+        ("Add note from vault", "note"),
+        ("Add media from vault", "media"),
+        ("Add web page", "webpage"),
+        ("Create group", "group"),
+    ],
+    read: |state| {
+        state
+            .canvas_options()
+            .default_mod_drag_behavior
+            .clone()
+            .filter(|v| !v.is_empty())
+            .unwrap_or_else(|| "menu".to_string())
+    },
+    write: |state, value| {
+        let mut next = state.canvas_options().clone();
+        next.default_mod_drag_behavior = Some(value.to_string());
+        SettingChange::Canvas(next)
+    },
+    shape: None,
+    label_of: None,
+    local: None,
+};
+
+/// "Show card names".
+const CANVAS_CARD_LABELS: Typed = Typed {
+    key: "cardLabelVisibility",
+    options: &[
+        ("Always", "always"),
+        ("On hover", "hover"),
+        ("Never", "never"),
+    ],
+    read: |state| {
+        state
+            .canvas_options()
+            .card_label_visibility
+            .clone()
+            .filter(|v| !v.is_empty())
+            .unwrap_or_else(|| "always".to_string())
+    },
+    write: |state, value| {
+        let mut next = state.canvas_options().clone();
+        next.card_label_visibility = Some(value.to_string());
+        SettingChange::Canvas(next)
+    },
+    shape: None,
+    label_of: None,
+    local: None,
+};
+
+/// The Note composer tab's "Text after extraction".
+const COMPOSER_REPLACEMENT_TEXT: Typed = Typed {
+    key: "replacementText",
+    options: &[
+        ("Link to new file", "link"),
+        ("Embed new file", "embed"),
+        ("None", "none"),
+    ],
+    read: |state| {
+        state
+            .note_composer()
+            .replacement_text
+            .clone()
+            .filter(|v| !v.is_empty())
+            .unwrap_or_else(|| "link".to_string())
+    },
+    write: |state, value| {
+        let mut next = state.note_composer().clone();
+        next.replacement_text = Some(value.to_string());
+        SettingChange::NoteComposer(next)
+    },
+    shape: None,
+    label_of: None,
+    local: None,
+};
+
+/// The Web viewer tab's "Search engine". Picking `custom` also wrote
+/// `customSearchEngine` in Obsidian, with whatever the field below held —
+/// the DuckDuckGo URL, in the probe's fresh vault. Here the pick writes its
+/// own key alone and the field below writes the other, which is the rule
+/// every other control in this window follows: one row, one key.
+const WEB_SEARCH_ENGINE: Typed = Typed {
+    key: "searchEngine",
+    options: &[
+        ("DuckDuckGo", "duckduckgo"),
+        ("Brave", "brave"),
+        ("Bing", "bing"),
+        ("Google", "google"),
+        ("Custom", "custom"),
+    ],
+    read: |state| {
+        state
+            .webviewer()
+            .search_engine
+            .clone()
+            .filter(|v| !v.is_empty())
+            .unwrap_or_else(|| "duckduckgo".to_string())
+    },
+    write: |state, value| {
+        let mut next = state.webviewer().clone();
+        next.search_engine = Some(value.to_string());
+        SettingChange::Webviewer(next)
+    },
+    shape: None,
+    label_of: None,
+    local: None,
+};
+
+/// The Web viewer tab's "Custom search engine": the one row of these tabs
+/// that is a plain text field with an observed key. Obsidian shows the
+/// DuckDuckGo URL as both the value and the placeholder of an untouched
+/// field, so an absent key reads as that URL.
+const WEB_CUSTOM_SEARCH_ENGINE: TextField = TextField {
+    key: "customSearchEngine",
+    placeholder: WEBVIEWER_DEFAULT_SEARCH_URL,
+    prefix: "",
+    read: |state| {
+        state
+            .webviewer()
+            .custom_search_engine
+            .clone()
+            .unwrap_or_else(|| WEBVIEWER_DEFAULT_SEARCH_URL.to_string())
+    },
+    write: |state, value| {
+        let mut next = state.webviewer().clone();
+        next.custom_search_engine = Some(value.to_string());
+        SettingChange::Webviewer(next)
+    },
+};
+
 /// A config file with one setting changed, for the workspace to write.
 #[derive(Clone, Debug, PartialEq)]
 pub enum SettingChange {
@@ -858,6 +1121,17 @@ pub enum SettingChange {
     DailyNotes(DailyNotesConfig),
     /// `templates.json`: the Templates tab's three rows.
     Templates(TemplatesConfig),
+    /// `backlink.json`: the Backlinks tab's one toggle.
+    Backlink(BacklinkConfig),
+    /// `canvas.json`: the Canvas tab's four dropdowns and two toggles.
+    Canvas(CanvasConfig),
+    /// `page-preview.json`: the Page preview tab's ten toggles.
+    PagePreview(PagePreviewConfig),
+    /// `note-composer.json`: the Note composer tab's dropdown and toggle.
+    NoteComposer(NoteComposerConfig),
+    /// `webviewer.json`: the Web viewer tab's two toggles, its search
+    /// engine dropdown and the custom engine field.
+    Webviewer(WebviewerConfig),
     /// The window frame style, which is not a vault's: it goes to the
     /// `frame` key of `scoria.json` beside the vault list, where Obsidian's
     /// `obsidian.json` keeps its own.
@@ -876,6 +1150,11 @@ impl SettingChange {
             SettingChange::Hotkeys(_) => "hotkeys.json",
             SettingChange::DailyNotes(_) => "daily-notes.json",
             SettingChange::Templates(_) => "templates.json",
+            SettingChange::Backlink(_) => "backlink.json",
+            SettingChange::Canvas(_) => "canvas.json",
+            SettingChange::PagePreview(_) => "page-preview.json",
+            SettingChange::NoteComposer(_) => "note-composer.json",
+            SettingChange::Webviewer(_) => "webviewer.json",
             SettingChange::Frame(_) => scoria_vault::registry::FILE_NAME,
         }
     }
@@ -887,6 +1166,11 @@ impl Flag {
             Flag::App(flag) => flag.is_on(&state.app()),
             Flag::Appearance(flag) => flag.is_on(&state.appearance()),
             Flag::Switcher(flag) => flag.is_on(&state.switcher()),
+            Flag::Backlink(flag) => flag.is_on(&state.backlink()),
+            Flag::Canvas(flag) => flag.is_on(&state.canvas_options()),
+            Flag::PagePreview(flag) => flag.is_on(&state.page_preview()),
+            Flag::NoteComposer(flag) => flag.is_on(&state.note_composer()),
+            Flag::Webviewer(flag) => flag.is_on(&state.webviewer()),
             Flag::CorePlugin(id, default_on) => {
                 core_plugin_enabled(state.core_plugins().as_ref(), id, *default_on)
             }
@@ -900,6 +1184,15 @@ impl Flag {
             Flag::App(flag) => SettingChange::App(flag.toggled(&state.app())),
             Flag::Appearance(flag) => SettingChange::Appearance(flag.toggled(&state.appearance())),
             Flag::Switcher(flag) => SettingChange::Switcher(flag.toggled(&state.switcher())),
+            Flag::Backlink(flag) => SettingChange::Backlink(flag.toggled(&state.backlink())),
+            Flag::Canvas(flag) => SettingChange::Canvas(flag.toggled(&state.canvas_options())),
+            Flag::PagePreview(flag) => {
+                SettingChange::PagePreview(flag.toggled(&state.page_preview()))
+            }
+            Flag::NoteComposer(flag) => {
+                SettingChange::NoteComposer(flag.toggled(&state.note_composer()))
+            }
+            Flag::Webviewer(flag) => SettingChange::Webviewer(flag.toggled(&state.webviewer())),
             Flag::CorePlugin(id, _) => SettingChange::CorePlugins(toggled_core_plugin(
                 state.core_plugins().as_ref(),
                 id,
@@ -2251,6 +2544,280 @@ impl SettingsView {
                 }
                 items
             }
+            // The one row of the Backlinks tab. The key is observed and the
+            // toggle writes it, but nothing in Scoria reads it: the
+            // backlinks pane is a pane, never a block at the foot of a
+            // note, so the row is tagged.
+            "backlink" => {
+                let b = &state.backlink();
+                vec![toggle(
+                    "Show backlinks at the bottom of notes",
+                    "Make backlinks visible in new tabs by default.",
+                    BACKLINK_IN_DOCUMENT.is_on(b),
+                    Flag::Backlink(BACKLINK_IN_DOCUMENT),
+                )
+                .not_yet()]
+            }
+            "canvas" => {
+                let c = &state.canvas_options();
+                let mut items = vec![choice(
+                    "Default location for new canvas files",
+                    "",
+                    state,
+                    CANVAS_NEW_FILE_LOCATION,
+                )
+                .not_yet()];
+                // Obsidian hides this row for the other two options and
+                // reveals it for `folder`, as its twin on the Files and
+                // links tab does. No key was observed for it, so it shows
+                // what the file holds -- nothing -- and writes nothing.
+                if CANVAS_NEW_FILE_LOCATION.value(state) == "folder" {
+                    items.push(
+                        text(
+                            "Folder to create new canvas files in",
+                            "Newly created canvas files will appear under this folder.",
+                            "",
+                        )
+                        .not_yet(),
+                    );
+                }
+                items.push(
+                    choice(
+                        "Default mouse wheel behavior",
+                        "",
+                        state,
+                        CANVAS_WHEEL_BEHAVIOR,
+                    )
+                    .not_yet(),
+                );
+                items.push(
+                    choice(
+                        "Default Ctrl + Drag behavior",
+                        "",
+                        state,
+                        CANVAS_MOD_DRAG_BEHAVIOR,
+                    )
+                    .not_yet(),
+                );
+                items.push(choice("Show card names", "", state, CANVAS_CARD_LABELS).not_yet());
+                items.push(
+                    toggle(
+                        "Snap to grid",
+                        "Snap cards to the background grid when moving and resizing.",
+                        SNAP_TO_GRID.is_on(c),
+                        Flag::Canvas(SNAP_TO_GRID),
+                    )
+                    .not_yet(),
+                );
+                items.push(
+                    toggle(
+                        "Snap to objects",
+                        "Snap cards to nearby objects when moving and resizing.",
+                        SNAP_TO_OBJECTS.is_on(c),
+                        Flag::Canvas(SNAP_TO_OBJECTS),
+                    )
+                    .not_yet(),
+                );
+                // Obsidian's slider runs -0.7 to 2.4 in steps of 0.01 at 0.
+                // No key was observed, so the row shows that 0 and does
+                // nothing; `Number` is whole numbers anyway.
+                items.push(
+                    item(
+                        "Zoom threshold for hiding card content",
+                        "Lower values will increase performance but hide card content sooner when zooming out.",
+                        Control::Slider("0".into()),
+                    )
+                    .not_yet(),
+                );
+                items
+            }
+            // One toggle per surface the hover preview pops up over, under a
+            // heading with no control of its own. Scoria has no hover
+            // preview yet, so every row is tagged.
+            "page-preview" => {
+                let p = &state.page_preview();
+                let row = |name: &str, flag: PagePreviewFlag| {
+                    toggle(name, "", flag.is_on(p), Flag::PagePreview(flag)).not_yet()
+                };
+                vec![
+                    heading("Require Ctrl to trigger page preview on hover"),
+                    row("Search, Backlinks, and Outgoing links", PREVIEW_SEARCH),
+                    row("Reading view", PREVIEW_READING),
+                    row("Editing view", PREVIEW_EDITING),
+                    row("Tab header", PREVIEW_TAB_HEADER),
+                    row("Files", PREVIEW_FILES),
+                    row("Properties view", PREVIEW_PROPERTIES),
+                    row("Bookmarks", PREVIEW_BOOKMARKS),
+                    row("Outline", PREVIEW_OUTLINE),
+                    row("Bases", PREVIEW_BASES),
+                    row("Graph view", PREVIEW_GRAPH),
+                ]
+            }
+            "note-composer" => {
+                let c = &state.note_composer();
+                vec![
+                    choice(
+                        "Text after extraction",
+                        "What to show in place of the selected text after extracting it.",
+                        state,
+                        COMPOSER_REPLACEMENT_TEXT,
+                    )
+                    .not_yet(),
+                    // A file suggester, drawn as a plain text field the way
+                    // the Daily notes tab draws its own template path. That
+                    // one writes `template`, a key `DailyNotesConfig`
+                    // already carried; this tab's went unobserved, so the
+                    // row is empty and writes nothing.
+                    text(
+                        "Template file location",
+                        "Template file to use when merging or extracting. Available variables: {{content}}, {{fromTitle}}, {{newTitle}}, {{date:FORMAT}}, e.g. {{date:YYYY-MM-DD}}.",
+                        "",
+                    )
+                    .not_yet(),
+                    toggle(
+                        "Confirm file merge",
+                        "Prompt before merge two files.",
+                        ASK_BEFORE_MERGING.is_on(c),
+                        Flag::NoteComposer(ASK_BEFORE_MERGING),
+                    )
+                    .not_yet(),
+                ]
+            }
+            // Three rows, no key for any of them: two are text fields the
+            // probe did not type into and one is a file suggester. They are
+            // drawn and tagged, and none of them writes. The format row's
+            // description ends in the sample Obsidian renders from the
+            // pattern in the field, which is its placeholder here.
+            "zk-prefixer" => vec![
+                text(
+                    "New file location",
+                    "The folder path to create the new unique note in.",
+                    "",
+                )
+                .not_yet(),
+                text(
+                    "Template file location",
+                    "The file path to use as template.",
+                    "",
+                )
+                .not_yet(),
+                text(
+                    "Unique prefix format",
+                    &format!(
+                        "For more syntax, refer to format reference\nYour current syntax looks like this: {}",
+                        format_sample("", "YYYYMMDDHHmm")
+                    ),
+                    "",
+                )
+                .not_yet(),
+            ],
+            // Two `type=number` fields and two buttons, none of whose key
+            // the probe observed; the buttons are inert, as every button in
+            // this window is.
+            "file-recovery" => vec![
+                text(
+                    "Snapshot interval",
+                    "Minimal interval in minutes between two snapshots.",
+                    "5",
+                )
+                .not_yet(),
+                text(
+                    "History length",
+                    "Number of days the snapshots are kept for.",
+                    "7",
+                )
+                .not_yet(),
+                item(
+                    "Snapshots",
+                    "View and restore saved snapshots.",
+                    Control::Button("View".into()),
+                )
+                .not_yet(),
+                item(
+                    "Clear history",
+                    "Delete all snapshots.",
+                    Control::Button("Clear".into()),
+                )
+                .not_yet(),
+            ],
+            "webviewer" => {
+                let w = &state.webviewer();
+                vec![
+                    toggle(
+                        "Open external links",
+                        "Open links in Obsidian rather than the system default.",
+                        OPEN_EXTERNAL_URLS.is_on(w),
+                        Flag::Webviewer(OPEN_EXTERNAL_URLS),
+                    )
+                    .not_yet(),
+                    // Obsidian's row has no placeholder at all, and the key
+                    // went unobserved.
+                    text(
+                        "Homepage",
+                        "What page to view when a web viewer is opened",
+                        "",
+                    )
+                    .not_yet(),
+                    text(
+                        "Saved page folder",
+                        "Websites saved as markdown will be placed here.",
+                        "",
+                    )
+                    .not_yet(),
+                    choice(
+                        "Search engine",
+                        "Search engine used when searching from the address bar.",
+                        state,
+                        WEB_SEARCH_ENGINE,
+                    )
+                    .not_yet(),
+                    field(
+                        "Custom search engine",
+                        "Search engine used when searching from the address bar.",
+                        state,
+                        WEB_CUSTOM_SEARCH_ENGINE,
+                    )
+                    .not_yet(),
+                    toggle(
+                        "Enable ad blocker",
+                        "If enabled, the filter lists below will be applied to all web viewer tabs.",
+                        ENABLE_ADBLOCKING.is_on(w),
+                        Flag::Webviewer(ENABLE_ADBLOCKING),
+                    )
+                    .not_yet(),
+                    // A textarea in Obsidian, holding its two EasyList URLs
+                    // one per line. No key was observed and this window has
+                    // no multi-line control, so the row shows the lists it
+                    // ships with and writes nothing.
+                    text(
+                        "Ad blocking rules",
+                        "One ad block list URL per line. Shared by all vaults.",
+                        "https://easylist.to/easylist/easylist.txt\nhttps://easylist.to/easylist/easyprivacy.txt",
+                    )
+                    .not_yet(),
+                    item(
+                        "Ad block update frequency",
+                        "Days between updating filter lists. 0 indicates disabled. Shared by all vaults.",
+                        Control::Slider("4".into()),
+                    )
+                    .not_yet(),
+                    item("Web viewer data", "", Control::Button("Clear web viewer data".into()))
+                        .not_yet(),
+                ]
+            }
+            // Obsidian's Sync tab had no `.setting-item` rows at all in the
+            // probe, because the vault was not signed in: its options are
+            // the remote vault's, and there was none. Scoria has no Sync, so
+            // there is nothing to draw either way -- but the placeholder
+            // ("Scoria does not read this plugin's settings file yet") would
+            // say the wrong thing, since there is no settings file and no
+            // row to read from one. This says what is actually true.
+            "sync" => vec![item(
+                "Sync",
+                "Obsidian Sync is a paid service of Obsidian's, and Scoria does not speak it. Obsidian shows this tab's options only once a vault is signed in.",
+                Control::None,
+            )
+            .not_yet()],
             _ => vec![item(
                 "Options not shown yet",
                 "Scoria does not read this plugin's settings file yet.",
@@ -3368,6 +3935,9 @@ mod tests {
                     SettingChange::Appearance(c) => serde_json::to_value(c).unwrap(),
                     SettingChange::DailyNotes(c) => serde_json::to_value(c).unwrap(),
                     SettingChange::Templates(c) => serde_json::to_value(c).unwrap(),
+                    SettingChange::Canvas(c) => serde_json::to_value(c).unwrap(),
+                    SettingChange::NoteComposer(c) => serde_json::to_value(c).unwrap(),
+                    SettingChange::Webviewer(c) => serde_json::to_value(c).unwrap(),
                     other => panic!("{} wrote {other:?}", typed.key),
                 };
                 let object = json.as_object().expect("an object");
@@ -3426,6 +3996,9 @@ mod tests {
                 SettingChange::Appearance(c) => serde_json::to_value(c).unwrap(),
                 SettingChange::DailyNotes(c) => serde_json::to_value(c).unwrap(),
                 SettingChange::Templates(c) => serde_json::to_value(c).unwrap(),
+                SettingChange::Canvas(c) => serde_json::to_value(c).unwrap(),
+                SettingChange::NoteComposer(c) => serde_json::to_value(c).unwrap(),
+                SettingChange::Webviewer(c) => serde_json::to_value(c).unwrap(),
                 other => panic!("{what} wrote {other:?}"),
             };
             let object = json.as_object().expect("an object");
@@ -3561,6 +4134,388 @@ mod tests {
         assert_eq!(
             std::fs::read_to_string(dir.path().join(".obsidian/templates.json")).unwrap(),
             "{\n  \"timeFormat\": \"HH:mm:ss\"\n}"
+        );
+    }
+
+    /// The row names of a plugin tab, in order.
+    fn plugin_rows(state: &VaultState, id: &str) -> Vec<String> {
+        SettingsView::plugin_items(state, &[], id, None)
+            .into_iter()
+            .map(|i| i.name.to_string())
+            .collect()
+    }
+
+    /// Every toggle of a tab written through [`VaultState::apply_setting`],
+    /// one at a time, each from a freshly loaded state so the row's own read
+    /// decides what the click writes. Returns the file as it ended up.
+    fn flip_every_toggle(dir: &tempfile::TempDir, id: &str, file: &str) -> String {
+        let mut state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        let count = SettingsView::plugin_items(&state, &[], id, None).len();
+        for ix in 0..count {
+            let items = SettingsView::plugin_items(&state, &[], id, None);
+            let Some(flag) = items[ix].flag.clone() else {
+                continue;
+            };
+            let was = flag.is_on(&state);
+            state.apply_setting(&flag.toggled(&state)).unwrap();
+            state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+            let items = SettingsView::plugin_items(&state, &[], id, None);
+            assert_eq!(
+                items[ix].control,
+                Control::Toggle(!was),
+                "{} did not read back its own click",
+                items[ix].name
+            );
+        }
+        std::fs::read_to_string(dir.path().join(".obsidian").join(file)).unwrap()
+    }
+
+    /// The Backlinks tab: one toggle, off by default, writing
+    /// `backlinkInDocument` into `backlink.json`, and tagged because
+    /// nothing in Scoria reads that key.
+    #[test]
+    fn the_backlinks_tab_shows_one_toggle_that_writes_backlink_in_document() {
+        let (dir, state) = vault();
+        let items = SettingsView::plugin_items(&state, &[], "backlink", None);
+        assert_eq!(
+            plugin_rows(&state, "backlink"),
+            ["Show backlinks at the bottom of notes"]
+        );
+        assert_eq!(
+            items[0].desc.as_ref(),
+            "Make backlinks visible in new tabs by default."
+        );
+        assert_eq!(items[0].control, Control::Toggle(false), "off by default");
+        assert_eq!(items[0].honored, Honored::No);
+        assert!(!dir.path().join(".obsidian/backlink.json").exists());
+        assert_eq!(
+            flip_every_toggle(&dir, "backlink", "backlink.json"),
+            "{\n  \"backlinkInDocument\": true\n}"
+        );
+    }
+
+    /// The Canvas tab: Obsidian's eight rows in order, with the folder row
+    /// hidden until `folder` is picked, each dropdown writing the string
+    /// Obsidian writes, and both snap toggles writing their own key.
+    #[test]
+    fn the_canvas_tab_shows_obsidians_rows_and_writes_its_observed_keys() {
+        let (dir, mut state) = vault();
+        assert_eq!(
+            plugin_rows(&state, "canvas"),
+            [
+                "Default location for new canvas files",
+                "Default mouse wheel behavior",
+                "Default Ctrl + Drag behavior",
+                "Show card names",
+                "Snap to grid",
+                "Snap to objects",
+                "Zoom threshold for hiding card content",
+            ]
+        );
+        let items = SettingsView::plugin_items(&state, &[], "canvas", None);
+        assert_eq!(items[0].control, Control::Dropdown("Vault folder".into()));
+        assert_eq!(items[1].control, Control::Dropdown("Pan".into()));
+        assert_eq!(items[2].control, Control::Dropdown("Show menu".into()));
+        assert_eq!(items[3].control, Control::Dropdown("Always".into()));
+        assert_eq!(
+            items[4].control,
+            Control::Toggle(true),
+            "snap to grid is on"
+        );
+        assert_eq!(items[5].control, Control::Toggle(true));
+        // The slider has no key, so it has no `Number` and writes nothing.
+        assert_eq!(items[6].control, Control::Slider("0".into()));
+        assert!(items[6].number.is_none());
+        assert!(items.iter().all(|i| i.honored == Honored::No));
+
+        // Every option of every dropdown: written, reloaded, read back, and
+        // the one key it wrote is the one Obsidian wrote.
+        for typed in [
+            CANVAS_NEW_FILE_LOCATION,
+            CANVAS_WHEEL_BEHAVIOR,
+            CANVAS_MOD_DRAG_BEHAVIOR,
+            CANVAS_CARD_LABELS,
+        ] {
+            for (label, value) in typed.options {
+                state.apply_setting(&(typed.write)(&state, value)).unwrap();
+                state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+                assert_eq!(typed.label(&state), *label, "{}", typed.key);
+                assert_eq!((typed.read)(&state), *value, "{}", typed.key);
+            }
+        }
+        // `folder` is the option that reveals the folder row, as its twin on
+        // the Files and links tab does.
+        state
+            .apply_setting(&(CANVAS_NEW_FILE_LOCATION.write)(&state, "folder"))
+            .unwrap();
+        state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        let rows = plugin_rows(&state, "canvas");
+        assert_eq!(rows[1], "Folder to create new canvas files in");
+        assert_eq!(rows.len(), 8);
+        let revealed = SettingsView::plugin_items(&state, &[], "canvas", None);
+        assert!(revealed[1].field.is_none(), "no key was observed for it");
+        assert_eq!(
+            revealed[1].desc.as_ref(),
+            "Newly created canvas files will appear under this folder."
+        );
+
+        let file = flip_every_toggle(&dir, "canvas", "canvas.json");
+        let json: Value = serde_json::from_str(&file).unwrap();
+        assert_eq!(json["snapToGrid"], json!(false));
+        assert_eq!(json["snapToObjects"], json!(false));
+        assert_eq!(json["newFileLocation"], json!("folder"));
+        assert_eq!(json["defaultWheelBehavior"], json!("zoom"));
+        assert_eq!(json["defaultModDragBehavior"], json!("group"));
+        assert_eq!(json["cardLabelVisibility"], json!("never"));
+        assert_eq!(
+            json.as_object().map(|o| o.len()),
+            Some(6),
+            "a row with no observed key wrote one anyway: {file}"
+        );
+    }
+
+    /// The Page preview tab: a heading with no control and ten toggles, each
+    /// writing the key named after its surface rather than after its row.
+    #[test]
+    fn the_page_preview_tab_writes_one_key_per_surface() {
+        let (dir, state) = vault();
+        let items = SettingsView::plugin_items(&state, &[], "page-preview", None);
+        assert_eq!(
+            plugin_rows(&state, "page-preview"),
+            [
+                "Require Ctrl to trigger page preview on hover",
+                "Search, Backlinks, and Outgoing links",
+                "Reading view",
+                "Editing view",
+                "Tab header",
+                "Files",
+                "Properties view",
+                "Bookmarks",
+                "Outline",
+                "Bases",
+                "Graph view",
+            ]
+        );
+        assert!(items[0].heading, "the first row is the heading");
+        assert_eq!(items[0].control, Control::None);
+        // Reading view is the one surface that is off when its key is absent.
+        assert_eq!(items[2].control, Control::Toggle(false));
+        for row in &items[1..] {
+            assert_eq!(row.honored, Honored::No, "{}", row.name);
+            assert!(row.desc.is_empty(), "{} has a description", row.name);
+        }
+
+        let file = flip_every_toggle(&dir, "page-preview", "page-preview.json");
+        let json: Value = serde_json::from_str(&file).unwrap();
+        for (key, want) in [
+            ("search", false),
+            ("preview", true),
+            ("editor", false),
+            ("tab-header", false),
+            ("file-explorer", false),
+            ("properties", false),
+            ("bookmarks", false),
+            ("outline", false),
+            ("bases", false),
+            ("graph", false),
+        ] {
+            assert_eq!(json[key], json!(want), "{key} in {file}");
+        }
+        assert_eq!(json.as_object().map(|o| o.len()), Some(10));
+    }
+
+    /// The Note composer tab: the dropdown writes `replacementText`, the
+    /// toggle `askBeforeMerging`, and the template row -- a file suggester
+    /// whose key went unobserved -- writes nothing at all.
+    #[test]
+    fn the_note_composer_tab_writes_the_two_keys_the_probe_saw() {
+        let (dir, mut state) = vault();
+        assert_eq!(
+            plugin_rows(&state, "note-composer"),
+            [
+                "Text after extraction",
+                "Template file location",
+                "Confirm file merge",
+            ]
+        );
+        let items = SettingsView::plugin_items(&state, &[], "note-composer", None);
+        assert_eq!(
+            items[0].control,
+            Control::Dropdown("Link to new file".into())
+        );
+        assert_eq!(
+            items[1].desc.as_ref(),
+            "Template file to use when merging or extracting. Available variables: {{content}}, {{fromTitle}}, {{newTitle}}, {{date:FORMAT}}, e.g. {{date:YYYY-MM-DD}}."
+        );
+        assert!(
+            items[1].field.is_none() && items[1].typed.is_none(),
+            "the template row would write a key nobody observed"
+        );
+        assert_eq!(items[2].control, Control::Toggle(true), "on by default");
+        assert!(items.iter().all(|i| i.honored == Honored::No));
+
+        for (label, value) in COMPOSER_REPLACEMENT_TEXT.options {
+            state
+                .apply_setting(&(COMPOSER_REPLACEMENT_TEXT.write)(&state, value))
+                .unwrap();
+            state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+            assert_eq!(COMPOSER_REPLACEMENT_TEXT.label(&state), *label);
+        }
+        let file = flip_every_toggle(&dir, "note-composer", "note-composer.json");
+        let json: Value = serde_json::from_str(&file).unwrap();
+        assert_eq!(json["askBeforeMerging"], json!(false));
+        assert_eq!(json["replacementText"], json!("none"));
+        assert_eq!(json.as_object().map(|o| o.len()), Some(2));
+    }
+
+    /// The Unique note creator and File recovery tabs: Obsidian's rows,
+    /// every one of them tagged and inert, because the probe reached none of
+    /// their keys. Nothing either tab can be clicked on writes a file.
+    #[test]
+    fn the_unique_note_creator_and_file_recovery_tabs_write_nothing() {
+        let (dir, state) = vault();
+        assert_eq!(
+            plugin_rows(&state, "zk-prefixer"),
+            [
+                "New file location",
+                "Template file location",
+                "Unique prefix format",
+            ]
+        );
+        assert_eq!(
+            plugin_rows(&state, "file-recovery"),
+            [
+                "Snapshot interval",
+                "History length",
+                "Snapshots",
+                "Clear history",
+            ]
+        );
+        let zk = SettingsView::plugin_items(&state, &[], "zk-prefixer", None);
+        assert_eq!(
+            zk[2].desc.as_ref(),
+            format!(
+                "For more syntax, refer to format reference\nYour current syntax looks like this: {}",
+                templates::format("YYYYMMDDHHmm", &crate::workspace::now())
+            )
+        );
+        let recovery = SettingsView::plugin_items(&state, &[], "file-recovery", None);
+        assert_eq!(recovery[0].control, Control::Text("5".into()));
+        assert_eq!(recovery[1].control, Control::Text("7".into()));
+        assert_eq!(recovery[2].control, Control::Button("View".into()));
+        assert_eq!(recovery[3].control, Control::Button("Clear".into()));
+        for row in zk.iter().chain(recovery.iter()) {
+            assert_eq!(row.honored, Honored::No, "{}", row.name);
+            assert!(
+                row.flag.is_none()
+                    && row.typed.is_none()
+                    && row.field.is_none()
+                    && row.number.is_none(),
+                "{} writes a key nobody observed",
+                row.name
+            );
+        }
+        assert!(!dir.path().join(".obsidian/zk-prefixer.json").exists());
+        assert!(!dir.path().join(".obsidian/file-recovery.json").exists());
+    }
+
+    /// The Web viewer tab: Obsidian's nine rows, the four keys the probe saw
+    /// written, and the five rows it did not see a key for drawn and inert.
+    #[test]
+    fn the_web_viewer_tab_writes_the_four_keys_the_probe_saw() {
+        let (dir, mut state) = vault();
+        assert_eq!(
+            plugin_rows(&state, "webviewer"),
+            [
+                "Open external links",
+                "Homepage",
+                "Saved page folder",
+                "Search engine",
+                "Custom search engine",
+                "Enable ad blocker",
+                "Ad blocking rules",
+                "Ad block update frequency",
+                "Web viewer data",
+            ]
+        );
+        let items = SettingsView::plugin_items(&state, &[], "webviewer", None);
+        assert_eq!(items[0].control, Control::Toggle(true));
+        assert_eq!(items[3].control, Control::Dropdown("DuckDuckGo".into()));
+        // An untouched field reads as the URL Obsidian shows in it.
+        assert_eq!(
+            items[4].control,
+            Control::Text(WEBVIEWER_DEFAULT_SEARCH_URL.into())
+        );
+        assert_eq!(items[5].control, Control::Toggle(true));
+        assert_eq!(
+            items[6].control,
+            Control::Text(
+                "https://easylist.to/easylist/easylist.txt\nhttps://easylist.to/easylist/easyprivacy.txt".into()
+            )
+        );
+        assert_eq!(items[7].control, Control::Slider("4".into()));
+        assert_eq!(
+            items[8].control,
+            Control::Button("Clear web viewer data".into())
+        );
+        for ix in [1, 2, 6, 7, 8] {
+            assert!(
+                items[ix].field.is_none() && items[ix].number.is_none(),
+                "{} writes a key nobody observed",
+                items[ix].name
+            );
+        }
+        assert!(items.iter().all(|i| i.honored == Honored::No));
+
+        for (label, value) in WEB_SEARCH_ENGINE.options {
+            state
+                .apply_setting(&(WEB_SEARCH_ENGINE.write)(&state, value))
+                .unwrap();
+            state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+            assert_eq!(WEB_SEARCH_ENGINE.label(&state), *label);
+        }
+        state
+            .apply_setting(&(WEB_CUSTOM_SEARCH_ENGINE.write)(
+                &state,
+                "https://example.com/?q=%s",
+            ))
+            .unwrap();
+        let file = flip_every_toggle(&dir, "webviewer", "webviewer.json");
+        let json: Value = serde_json::from_str(&file).unwrap();
+        assert_eq!(json["openExternalURLs"], json!(false));
+        assert_eq!(json["enableAdblocking"], json!(false));
+        assert_eq!(json["searchEngine"], json!("custom"));
+        assert_eq!(
+            json["customSearchEngine"],
+            json!("https://example.com/?q=%s")
+        );
+        assert_eq!(json.as_object().map(|o| o.len()), Some(4), "{file}");
+    }
+
+    /// Sync's tab had no rows at all in Obsidian, because the probe's vault
+    /// was not signed in. The placeholder arm would claim Scoria does not
+    /// read a settings file this plugin has not got, so the tab says what is
+    /// true instead — and is tagged, like every row that changes nothing.
+    #[test]
+    fn the_sync_tab_says_why_it_has_no_options() {
+        let (_dir, state) = vault();
+        let items = SettingsView::plugin_items(&state, &[], "sync", None);
+        assert_eq!(items.len(), 1);
+        assert_eq!(items[0].name.as_ref(), "Sync");
+        assert_eq!(items[0].control, Control::None);
+        assert_eq!(items[0].honored, Honored::No);
+        // Every tab Obsidian lists now builds rows of its own; the
+        // placeholder is left for a plugin that grows an options tab later.
+        for (id, _) in PLUGIN_TABS {
+            let rows = plugin_rows(&state, id);
+            assert!(
+                rows != ["Options not shown yet"],
+                "{id} still shows the placeholder"
+            );
+        }
+        assert_eq!(
+            plugin_rows(&state, "not-a-plugin"),
+            ["Options not shown yet"]
         );
     }
 
@@ -3962,6 +4917,11 @@ mod tests {
             SettingsView::core_plugin_items(state),
             SettingsView::community_plugin_items(state),
             SettingsView::plugin_items(state, &[], "switcher", None),
+            SettingsView::plugin_items(state, &[], "backlink", None),
+            SettingsView::plugin_items(state, &[], "canvas", None),
+            SettingsView::plugin_items(state, &[], "page-preview", None),
+            SettingsView::plugin_items(state, &[], "note-composer", None),
+            SettingsView::plugin_items(state, &[], "webviewer", None),
         ];
         tabs.into_iter()
             .flatten()
@@ -4001,6 +4961,38 @@ mod tests {
             ],
             "a toggle claims Scoria reads it"
         );
+        // And the other way round: every toggle the new options tabs added
+        // is tagged, because nothing in the app reads one of their keys.
+        // `grep -rn snapToGrid crates/` and its friends find the key in
+        // `scoria-formats` and in this file and nowhere else.
+        let tagged: Vec<String> = toggles(&state)
+            .into_iter()
+            .filter(|(_, honored)| *honored == Honored::No)
+            .map(|(name, _)| name)
+            .collect();
+        for name in [
+            "Show backlinks at the bottom of notes",
+            "Snap to grid",
+            "Snap to objects",
+            "Search, Backlinks, and Outgoing links",
+            "Reading view",
+            "Editing view",
+            "Tab header",
+            "Files",
+            "Properties view",
+            "Bookmarks",
+            "Outline",
+            "Bases",
+            "Graph view",
+            "Confirm file merge",
+            "Open external links",
+            "Enable ad blocker",
+        ] {
+            assert!(
+                tagged.iter().any(|n| n == name),
+                "{name} is untagged, so something must read its key"
+            );
+        }
     }
 
     /// Every tab builds, and the ones that write carry a flag.

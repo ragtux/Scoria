@@ -635,6 +635,15 @@ impl<'v> Builder<'v> {
                     copy: body.strip_suffix('\n').unwrap_or(&body).to_string(),
                 }
             }
+            // A block of nothing but comments and scripts draws nothing at
+            // all. Obsidian's sanitizer takes a `<script>` out whole --
+            // element and script text, with the text after it kept
+            // ([[Specification#Sanitizer, 26 single-construct cases]]) --
+            // and a comment is a comment node, which no DOM paints. Showing
+            // either as muted source is the one case where the fallback is
+            // not merely plain but wrong. (The comment half is the DOM's
+            // definition rather than a probe's reading; no case covers it.)
+            BlockKind::HtmlBlock { content } if html_block_is_invisible(content) => return None,
             BlockKind::HtmlBlock { content } => match html_images(content) {
                 // Obsidian resolves a raw `<img src>` like a wikilink target
                 // and renders the run of them as one block, so they go
@@ -1406,6 +1415,61 @@ fn size_hint(s: &str) -> Option<(f32, Option<f32>)> {
         return None;
     }
     Some((w, h))
+}
+
+/// Whether an HTML block would paint nothing: comments and `<script>`
+/// elements, and the whitespace between them, and nothing else. An
+/// unterminated comment or script swallows the rest of the block, as a
+/// parser reading to the end of input does.
+fn html_block_is_invisible(content: &str) -> bool {
+    let mut rest = content.trim();
+    let mut seen = false;
+    while !rest.is_empty() {
+        if let Some(after) = rest.strip_prefix("<!--") {
+            rest = match after.find("-->") {
+                Some(end) => &after[end + 3..],
+                // An unclosed comment runs to the end of the block.
+                None => "",
+            };
+        } else if let Some(after) = script_open(rest) {
+            rest = match find_ignore_ascii_case(after, "</script") {
+                // Past the closing tag's own `>`, which may carry
+                // whitespace before it (`</script >`).
+                Some(end) => match after[end..].find('>') {
+                    Some(gt) => &after[end + gt + 1..],
+                    None => "",
+                },
+                None => "",
+            };
+        } else {
+            return false;
+        }
+        seen = true;
+        rest = rest.trim_start();
+    }
+    seen
+}
+
+/// The text after `<script ...>` when `rest` opens a script element.
+fn script_open(rest: &str) -> Option<&str> {
+    let after = rest
+        .get(..7)
+        .filter(|t| t.eq_ignore_ascii_case("<script"))?;
+    let after = &rest[after.len()..];
+    if !after.starts_with([' ', '\t', '\n', '\r', '/', '>']) {
+        return None;
+    }
+    // Past the open tag, whose attributes may hold a `>` only inside
+    // quotes; `split_tag` is the one place that rule lives.
+    split_tag(after).map(|(_, tail)| tail)
+}
+
+/// `haystack.find(needle)` ignoring ASCII case, for a lower-case `needle`.
+fn find_ignore_ascii_case(haystack: &str, needle: &str) -> Option<usize> {
+    haystack
+        .as_bytes()
+        .windows(needle.len())
+        .position(|w| w.eq_ignore_ascii_case(needle.as_bytes()))
 }
 
 /// A raw `<img>` of an HTML block, with the attributes Obsidian honours.
@@ -2185,17 +2249,64 @@ mod tests {
 
     #[test]
     fn other_html_blocks_stay_source() {
-        // A comment, a script and a remote image all reach the builder as
-        // the same `HtmlBlock`, and none of them is something the renderer
-        // can draw, so they keep their raw text and never fold their lines.
+        // A remote image and a mixed block reach the builder as the same
+        // `HtmlBlock` and are not something the renderer can draw, so they
+        // keep their raw text and never fold their lines. (A comment and a
+        // script used to be in this list; they draw nothing at all now --
+        // see the test below.)
         for src in [
-            "<!-- a comment -->\n",
-            "<script>window.x = 1</script>\n",
             "<img src=\"https://e.com/a.png\">\n",
             "<img src=\"pic.png\" width=\"50%\">\n",
             "<div>mixed</div>\n<img src=\"pic.png\">\n",
         ] {
             assert!(widgets(src, &stub()).is_empty(), "{src:?} became a widget");
+            let m = build("Self.md", src, &stub());
+            assert!(
+                matches!(&m.blocks[0], RBlock::Html(_)),
+                "{src:?} -> {:?}",
+                m.blocks[0]
+            );
+        }
+    }
+
+    /// Obsidian's sanitizer takes a `<script>` out whole and keeps what
+    /// follows it, and no DOM paints a comment node: either one drawn as
+    /// muted source is the one case where that fallback is wrong rather
+    /// than merely plain.
+    #[test]
+    fn a_comment_or_script_block_draws_nothing() {
+        for src in [
+            "<!-- a comment -->\n",
+            "<!-- one --> <!-- two -->\n",
+            "<script>window.x = 1</script>\n",
+            "<script type=\"text/javascript\">a > b;</script>\n",
+            "<script>a</script>\n<!-- and a comment -->\n",
+            // Unterminated: the rest of the block goes with it, as a
+            // parser reading to the end of its input does.
+            "<!-- never closed\n",
+            "<script>never closed\n",
+            // The closing tag may carry whitespace before its `>`.
+            "<script>x</script >\n",
+        ] {
+            let m = build("Self.md", src, &stub());
+            assert!(m.blocks.is_empty(), "{src:?} -> {:?}", m.blocks);
+            assert!(widgets(src, &stub()).is_empty(), "{src:?} became a widget");
+        }
+        // The text after a script is its own block and still renders, and
+        // the block offsets stay in step with the blocks kept.
+        let m = build("Self.md", "<script>x</script>\n\nafter\n", &stub());
+        assert_eq!(m.blocks.len(), 1);
+        assert!(
+            matches!(&m.blocks[0], RBlock::Paragraph(_)),
+            "{:?}",
+            m.blocks[0]
+        );
+        assert_eq!(m.starts.len(), 1);
+        // Anything else in the block keeps the whole thing as source.
+        for src in [
+            "<!-- a comment --><div>x</div>\n",
+            "<div>x</div>\n<!-- a comment -->\n",
+        ] {
             let m = build("Self.md", src, &stub());
             assert!(
                 matches!(&m.blocks[0], RBlock::Html(_)),

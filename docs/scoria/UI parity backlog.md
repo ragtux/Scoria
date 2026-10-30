@@ -383,7 +383,10 @@ share): `InlineStyle` gained `underline`, `kbd`, `sup` and `sub`, and a tag stac
 maps `<b>/<strong>`, `<i>/<em>`, `<s>/<del>/<strike>`, `<mark>`, `<u>`, `<kbd>`, `<sup>`, `<sub>`
 and `<a href>` onto runs, drops `<span>/<div>/<font>/<center>/<small>/<p>` keeping their content,
 turns `<br>` into a line break and leaves everything else -- `<script>`, an unknown tag, a
-malformed token -- as the muted source it was. An unclosed opener runs to the end of its paragraph,
+malformed token -- as the muted source it was. **A first slice of the block half landed the same
+day**: a block of nothing but comments and `<script>` elements draws nothing at all, which is what
+the sanitizer capture and the DOM both say, instead of showing its own source; a block holding
+anything else is untouched. An unclosed opener runs to the end of its paragraph,
 as the sanitizer capture records. Still open: **HTML blocks** (`RBlock::Html`: `<div>`, `<pre>`,
 `<details>`, a comment on its own line), `sup`/`sub` drawn at body size because a gpui text run
 cannot shift its baseline, Live Preview's own source transform (`<b>` still shows as source while
@@ -403,6 +406,14 @@ records the measured subset: `<a>` kept with `target`/`rel`, `<pre>`, and `<b>/<
 **Fix.** The reading renderer's `RBlock::Html` arm plus the inline path. `RichText` runs are flat
 `(range, style)` pairs with no nesting, so `<sup>`, `<sub>` and `<kbd>` need new `InlineStyle` flags
 rather than only text.
+
+**`<pre>` is the next block worth taking, and it wants two changes in the view first.** A raw
+`<pre>` is observed to render as a real `<pre>` with literal content inside `div.el-pre`, wrapping
+(`white-space: pre-wrap`), and with a copy button **only** when it has a `<code>` child. Promoting
+it to `RBlock::Code` in the model alone would get both of those wrong: the reading view's code block
+sets `whitespace_nowrap` and scrolls sideways, and it draws the copy button unconditionally. So the
+view needs a wrapping variant and a "no copy button" case before the model promotion is worth
+making; doing the model half on its own would trade one wrong rendering for another.
 
 ### `propertiesInDocument: hidden` still leaves a 44 px gap in Live Preview
 
@@ -1270,7 +1281,25 @@ list already does.
 
 *medium, missing-feature, medium*
 
-**Landed 2026-10-30**: the Daily notes and Templates tabs draw Obsidian 1.14.5's rows and write `daily-notes.json` / `templates.json`, see [[Development#The Daily notes and Templates options tabs, 2026-10-30]]. The other core plugins' tabs still show the placeholder row.
+**Landed 2026-10-30, whole.** The Daily notes and Templates tabs came first (see
+[[Development#The Daily notes and Templates options tabs, 2026-10-30]]); the probe of the same day
+([[Specification#Observed core-plugin options tabs, Obsidian 1.14.5 (installer build 1.13.7)]])
+then settled every other tab, and all seven landed: Backlinks, Canvas, Page preview, Note composer,
+Unique note creator, File recovery and Web viewer, each with its own `#[serde(flatten)] extra`
+config type in `scoria-formats`, loaded by `VaultState` and written through its own `SettingChange`.
+Only twelve core plugins have a tab at all. Sync gets a row of its own saying it is a paid Obsidian
+service Scoria does not speak, rather than the placeholder, which would have been false twice over.
+
+**Every new row is tagged "not in Scoria yet", and that is the honest part**: the values are written
+for the vault, which Obsidian reads, but no Scoria behaviour reads one of these keys yet. The
+ratchet test now runs in both directions -- a toggle may lose its tag only when something really
+reads the key.
+
+The rows with no observed key are drawn and write **nothing**, rather than guessing: the canvas
+folder name and zoom threshold, all three Unique note creator rows, all four File recovery rows, the
+Note composer template path, and the Web viewer homepage, saved-page folder, ad-block rules and
+update frequency. OBSERVE: each of those keys needs a probe that drives a file suggester, types into
+a `type=number` field, edits a textarea or drags a slider.
 
 **Scoria.** `plugin_items` matches only `switcher` and `command-palette`; everything else falls to a
 catch-all returning the single row "Options not shown yet — Scoria does not read this plugin's
