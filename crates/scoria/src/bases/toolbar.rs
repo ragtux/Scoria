@@ -2224,21 +2224,22 @@ mod tests {
 
     #[test]
     fn a_sort_added_from_the_panel_goes_to_the_head_of_the_list() {
-        // Observed: *Sort Z → A* prepends `{property, direction: DESC}`.
+        // Observed: *Sort Z → A* prepends `{property, direction: DESC}`; the
+        // model holds `note.status` and the writer strips it (2026-10-30).
         let mut base = base_of(
             "views:\n  - type: table\n    name: V\n    sort:\n      - property: file.name\n        direction: ASC\n",
         );
         prepend_sort(&mut base.views[0], "note.status", "DESC");
         assert_eq!(
             yaml_of(&base),
-            "views:\n  - type: table\n    name: V\n    sort:\n      - property: note.status\n        direction: DESC\n      - property: file.name\n        direction: ASC\n"
+            "views:\n  - type: table\n    name: V\n    sort:\n      - property: status\n        direction: DESC\n      - property: file.name\n        direction: ASC\n"
         );
     }
 
     #[test]
     fn a_sort_entry_keeps_the_bare_id_the_file_wrote() {
-        // The writer "does not qualify ids that are already written bare", so
-        // changing a direction must not rewrite the property.
+        // The writer strips `note.` and never adds it, so changing a direction
+        // must not rewrite the property.
         let mut base =
             base_of("views:\n  - type: table\n    name: V\n    sort:\n      - property: status\n");
         set_sort_direction(&mut base.views[0], 0, "DESC");
@@ -2266,7 +2267,7 @@ mod tests {
         set_group_property(&mut base.views[0], "note.status");
         assert_eq!(
             yaml_of(&base),
-            "views:\n  - type: table\n    name: V\n    groupBy:\n      property: note.status\n      direction: ASC\n    groupOrder:\n      - todo\n"
+            "views:\n  - type: table\n    name: V\n    groupBy:\n      property: status\n      direction: ASC\n    groupOrder:\n      - todo\n"
         );
     }
 
@@ -2305,7 +2306,7 @@ mod tests {
         toggle_property(&mut base.views[0], &shown, "note.status");
         assert_eq!(
             yaml_of(&base),
-            "views:\n  - type: table\n    name: V\n    order:\n      - file.name\n      - note.status\n"
+            "views:\n  - type: table\n    name: V\n    order:\n      - file.name\n      - status\n"
         );
         toggle_property(
             &mut base.views[0],
@@ -2314,7 +2315,7 @@ mod tests {
         );
         assert_eq!(
             yaml_of(&base),
-            "views:\n  - type: table\n    name: V\n    order:\n      - note.status\n"
+            "views:\n  - type: table\n    name: V\n    order:\n      - status\n"
         );
     }
 
@@ -2327,7 +2328,7 @@ mod tests {
         toggle_property(&mut base.views[0], &shown, "note.status");
         assert_eq!(
             yaml_of(&base),
-            "views:\n  - type: table\n    name: V\n    order:\n      - note.phase\n"
+            "views:\n  - type: table\n    name: V\n    order:\n      - phase\n"
         );
     }
 

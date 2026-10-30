@@ -528,9 +528,7 @@ enum Target {
 /// Scoria has no command behind them: **Open in new window** (no second
 /// window), **Merge entire file with...** (no merge), **Open version history**
 /// (no file history) and **Show in system explorer** (selecting a file in the
-/// desktop's file manager wants the D-Bus `FileManager1.ShowItems` call). A
-/// folder's **Make a copy** is out for the same reason: `Vault::duplicate`
-/// copies one file, and a folder needs a recursive copy with link rewriting.
+/// desktop's file manager wants the D-Bus `FileManager1.ShowItems` call).
 /// Listing a row that cannot run is what the command palette refuses to do,
 /// and the menu refuses it too; the gaps are entries in
 /// `docs/scoria/UI parity backlog.md`. Dropping the only item of a section
@@ -631,6 +629,12 @@ fn menu_items(target: &Target) -> Vec<MenuItem> {
                 E::NewBase {
                     folder: folder.clone(),
                 },
+            ),
+            item(
+                "Make a copy",
+                "files",
+                S::Action,
+                E::Duplicate(folder.clone()),
             ),
             item(
                 "Move folder to...",
@@ -1861,9 +1865,9 @@ mod menu_tests {
         );
     }
 
-    /// The folder-row table, minus "Make a copy" (no recursive folder copy)
-    /// and "Show in system explorer". A folder gets no "Open in default app":
-    /// the capture has that item on the file row only.
+    /// The folder-row table, minus "Show in system explorer". A folder gets
+    /// no "Open in default app": the capture has that item on the file row
+    /// only.
     #[test]
     fn the_folder_rows_menu_is_obsidians_order() {
         assert_eq!(
@@ -1874,6 +1878,7 @@ mod menu_tests {
                 "New canvas",
                 "New base",
                 "---",
+                "Make a copy",
                 "Move folder to...",
                 "Search in folder",
                 "Bookmark...",

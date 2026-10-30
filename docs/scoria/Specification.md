@@ -65,9 +65,10 @@ with the command inventory and bundle evidence.
 | Bases top-level keys and recursive filters | `scoria-formats::base` |
 | Command ids, palette names and default hotkeys as Obsidian 1.14.4 registers them; `hotkeys.json` entries replace the defaults and an empty list unbinds; labels read `Ctrl + Shift + F` | `scoria-commands` |
 | Command palette: fuzzy over names, pinned ids from `command-palette.json` first, then this session's recent commands, then registration order; commands that cannot run are not listed | `scoria::palette` |
-| Settings tabs, rows and defaults as Obsidian 1.14.4 shows them; `switcher.json`, `command-palette.json` and plugin manifests round-trip | `scoria::settings`, `scoria-formats::config` |
+| Settings tabs, rows and defaults as Obsidian 1.14.4 shows them, and the Daily notes and Templates tabs as 1.14.5 does (see [[#Observed Daily notes and Templates tabs, Obsidian 1.14.5]]); `switcher.json`, `command-palette.json`, `daily-notes.json`, `templates.json` and plugin manifests round-trip | `scoria::settings`, `scoria-formats::config` |
 | Settings toggles write: a click sets the key Obsidian writes in `app.json`, `appearance.json`, `switcher.json`, `core-plugins.json` or `community-plugins.json`, changing nothing else in the file, and the running app follows what it can (readable line length, smart lists, indentation, properties in document, strict line breaks, show all file types); a vault with no `core-plugins.json` gets the whole default map rather than a one-key file | `scoria::settings`, `scoria::workspace::Workspace::change_setting` |
 | Each settings row says how far it gets in Scoria: untagged means the app follows it at once, "on restart" the theme and fonts, "not in Scoria yet" a value written only for Obsidian to read. A Scoria divergence: Obsidian has no such tags, and shows every setting as live | `scoria::settings::Honored` |
+| Settings opens in a window of its own, the way the vault manager and Help do, and the vault behind it stays live. A Scoria divergence: Obsidian draws Settings as a modal (`.modal.mod-settings`, no `.modal-bg`) that owns the keyboard until it closes | `scoria::settings::SettingsWindow` |
 
 ## Parser notes
 
@@ -656,6 +657,42 @@ emptied field writes `""` rather than dropping the key.
 **Unprobed:** the option *labels* each dropdown shows, and the min, max and
 step of the two sliders — the run drove the keys rather than the controls,
 so it settled what is written and not what the tab reads.
+
+### Observed Daily notes and Templates tabs, Obsidian 1.14.5
+
+Driven over CDP on 2026-10-30 (`tools/obsidian-probe/plugin-options.mjs`,
+run in `results/2026-10-30-plugin-options.json`): each tab's rows read off
+`app.setting.activeTab.containerEl`, then every control driven and the
+plugin's file read back after each change. Neither tab has a toggle; there
+is no "Open daily note on startup" row in this build.
+
+**Daily notes** (`daily-notes.json`):
+
+| Row | Control | Description | Writes |
+| --- | --- | --- | --- |
+| Date format | dropdown: `YYYY-MM-DD`, `YYYY.MM.DD`, `YYYY/MM/DD`, `YYYY/MM/YYYY-MM-DD`, `custom`; each preset is labelled with today in that format (`2026-10-30`, `2026.10.30`, `2026/10/30`, `2026/10/2026-10-30`), the last `Custom` | Choose how daily note are named in your vault. *(sic)* | a preset writes `format` as the pattern, the default included (`{"format": "YYYY-MM-DD"}` from no file); `Custom` writes nothing and shows the next row |
+| Custom format | text, placeholder `YYYY-MM-DD`; hidden (`display: none`) unless the dropdown is on Custom | For more syntax, refer to [format reference](https://momentjs.com/docs/#/displaying/format/)<br>Your current syntax looks like this: **2026-10-30** — the sample re-renders as you type (`YYYY-MM-DD dddd` → `2026-10-30 Friday`) | `format` verbatim; cleared writes `"format": ""` and the sample falls back to the placeholder's |
+| New file location | text, placeholder `Example: folder 1/folder 2` | New daily notes will be placed here. | `folder` verbatim; cleared writes `""` |
+| Template file location | a file suggester (no `<select>`, `.checkbox-container`, `input[type=text]` or `button` in the row; its placeholder went unobserved) | Choose the file to use as a template. | `template` (from the config type; the suggester itself was not driven) |
+
+**Templates** (`templates.json`):
+
+| Row | Control | Description | Writes |
+| --- | --- | --- | --- |
+| Template folder location | text, placeholder `Example: folder 1/folder 2` | Files in this folder will be available as templates. | `folder` verbatim; cleared writes `""` |
+| Date format | text, placeholder `YYYY-MM-DD` | {{date}} in the template file will be replaced with this value.<br>You can also use {{date:YYYY-MM-DD}} to override the format once.<br>For more syntax, refer to [format reference](https://momentjs.com/docs/#/displaying/format/)<br>Your current syntax looks like this: **2026-10-30** | `dateFormat` verbatim; cleared writes `""` |
+| Time format | text, placeholder `HH:mm` | the same with `{{time}}`, `{{time:HH:mm}}` and a sample of `08:52` | `timeFormat` verbatim; cleared writes `""` |
+
+**The files.** Neither exists until a control writes. Each write is the whole
+object, two-space indented, keys in the order they were first written, no
+trailing newline: `{\n  "format": "YYYY-MM-DD dddd",\n  "folder": "Journal"\n}`.
+A cleared field keeps its key as `""`; nothing removes a key.
+
+Scoria shows both tabs with these rows (`scoria::settings::plugin_items`):
+every field is a `TextField` on the plugin's config type, the dropdown is a
+`Typed` whose labels are rendered from today, and "Custom" is a pick the view
+remembers rather than a value it writes. Template file location is a plain
+text field here, since Scoria has no file suggester in Settings yet.
 
 ## Observed canvas write behavior, Obsidian 1.14.4 (installer build 1.13.7)
 
@@ -5585,8 +5622,14 @@ config's own fields, in file order, appended at the end. That last loop is
 where unknown keys *and* every layout key live, which is why a layout key
 written by the UI lands after a plugin's unknown key rather than among the
 documented ones. `groupBy`, `order`, `sort` and the keys of `summaries` are
-passed through a property-id normalizer; a hand-written bare `status` came back
-`status`, so it does not qualify ids that are already written bare.
+passed through a property-id normalizer that **strips `note.`**: the loader
+qualifies a bare `status` to `note.status` in memory, and the serializer writes
+it bare again, so a hand-written `note.price` comes back `price` and a bare
+`status` comes back `status`. `file.` and `formula.` ids pass through, and the
+keys of `properties` keep whatever spelling they had (`note.price` and a bare
+`status` side by side both survived a save). Observed on 1.14.5 on 2026-10-30
+(`bases-ids.mjs`), after the same build rewrote the demo vault's `Rocks.base`
+that way; the 2026-10-25 run had no qualified id in those keys to see it.
 
 **A property's key order** is its own unknown keys first, then `displayName`
 (`unknownPropKey` came back before `displayName`, which the fixture had second).
@@ -5623,7 +5666,7 @@ opens that view's settings.
 | Layout | Key | Control | Values / range | Default |
 | --- | --- | --- | --- | --- |
 | `table` | `rowHeight` | dropdown | `""` Short, `medium`, `tall`, `extra` (Extra tall) | `""` (key absent) |
-| `table` | `columnSize` | a header drag | a map of property id to integer px (`columnSize:` / `  file.name: 232`) | absent |
+| `table` | `columnSize` | a header drag | a map of property id to integer px (`columnSize:` / `  file.name: 232`), keyed by the **qualified** id: a drag on the column `order` names `status` wrote `note.status: 239`, updating the file's `note.status: 150` in place, and the file's `note.status: 150` had sized that column when `order` said `note.status`. Keys are written as they are, never normalized | absent |
 | `cards` | `cardSize` | slider | 50 to 800 step 10 | 200 |
 | `cards`, `kanban` | `image` | property picker | a property id, written qualified (`note.aliases`, `formula.ppu`) | absent |
 | `cards`, `kanban` | `imageFit` | dropdown | `""` Cover, `contain` | `""` (key absent) |
@@ -6729,3 +6772,185 @@ follows is this build's own reading where the run did not reach.
   rendered lines, the caret unrecorded).
 - **`foldHeading: false`** removes the reading view's chevron entirely
   rather than keeping a hidden, clickable one.
+
+## Observed editor context menu and view header actions, Obsidian 1.14.5 (installer build 1.13.7)
+
+Run on 2026-10-30 over CDP (`tools/obsidian-probe/editor-menus.mjs`, raw run in
+`results/2026-10-30-editor-menus.json`) on a two-note scratch vault with every core plugin on.
+Rows are read off the `.menu` DOM: title, the icon's lucide class, `data-section`, `is-disabled`
+and whether the row opens a submenu. Submenu *contents* were not opened — OBSERVE.
+
+**A right click in the editor places the caret.** With the caret at `{0,0}` a right click on
+the word `plain` left it at `{0,30}`, in Live Preview and in Source mode alike, and the two modes
+raised the same menu row for row. With `paragraph with` selected, a right click *inside* the
+selection kept the caret at its head, added "Search for “paragraph with”" and "Extract current
+selection..." and enabled Cut and Copy; a right click *outside* the selection moved the caret to the
+click (`{0,35}`), and the menu it raised still carried the Search row but had Cut and Copy
+disabled — the rows are built from the selection as it was, and the caret is placed as well. (The
+selection read back empty after Escape closed the menu in both cases.)
+
+**The plain menu** (right click on text with no selection, on an external markdown link, or on a
+task checkbox in Live Preview):
+
+| Row | Icon | Section |
+| --- | --- | --- |
+| Add link | `lucide-link` | `selection-link` |
+| Add external link | `lucide-external-link` | `selection-link` |
+| --- | | |
+| Format ▸ | `lucide-paintbrush` | `selection.format` |
+| Paragraph ▸ | `lucide-pilcrow` | — |
+| Insert ▸ | `lucide-list-plus` | — |
+| --- | | |
+| Cut | `lucide-scissors` | `clipboard`, disabled with no selection |
+| Copy | `lucide-copy` | `clipboard`, disabled with no selection |
+| Paste | `lucide-clipboard-check` | `clipboard` |
+| Paste as plain text | `lucide-clipboard-type` | `clipboard` |
+| Select all | `lucide-box-select` | `clipboard` |
+
+With a selection, two rows join the `selection` section before Format: **Search for “<text>”**
+(`lucide-search`) and **Extract current selection...** (`lucide-git-branch-plus`).
+
+**On a tag** the Format row is replaced by **Edit tag** (`lucide-text-cursor-input`, `selection`);
+the rest is the plain menu. **On a wikilink** the menu is the plain one with Format replaced by
+**Edit link** (`lucide-text-cursor-input`) and the file menu around it:
+
+```
+Open in new tab · Open to the right · Open in new window        (open)
+---
+Add link · Add external link                                     (selection-link)
+---
+Edit link · Paragraph ▸ · Insert ▸
+---
+Cut · Copy · Paste · Paste as plain text · Select all            (clipboard)
+---
+Copy path ▸                                                      (lucide-clipboard)
+---
+Rename... · Move file to... · Bookmark...                        (action; lucide-edit-3, lucide-folder-tree, lucide-bookmark)
+---
+Start presentation                                               (view; lucide-monitor)
+---
+---                                                              (an empty section between two separators)
+Open in default app · Show in system explorer · Reveal file in navigation   (system; both arrows lucide-arrow-up-right, the last lucide-folder-open)
+```
+
+Open in new tab is `lucide-file-plus`, Open to the right `lucide-separator-vertical`, Open in new
+window `lucide-picture-in-picture-2`.
+
+**The reading view has no text menu.** A right click on plain text raised nothing; a right click
+on a drag-made selection (`First paragraph with a few plain words`) raised nothing either. A
+right click on a wikilink raised the file menu alone: the three Open rows, ---, Rename... / Move
+file to... / Bookmark..., ---, **Copy** (`lucide-copy`, `clipboard`), ---, Start presentation,
+---, Copy path ▸, ---, the three system rows. Note Copy path sits after Start presentation here
+and before Rename in the editor's.
+
+**The view header** of a markdown leaf, left to right: Navigate back and Navigate forward
+(`clickable-icon`, `lucide-arrow-left` / `lucide-arrow-right`, 27.97 × 23.99 px), the title
+container (`view-header-title-container mod-at-start mod-fade mod-at-end`), then the actions:
+**Bookmark** (`clickable-icon view-action mod-bookmark`, `lucide-bookmark`) — in the DOM but with
+a **zero rect**, so hidden in this state (OBSERVE: when it shows; a bookmarked file is the likely
+case), the mode toggle (`lucide-book-open` while editing, aria `Current view: editing⏎Click to
+read⏎Ctrl+Click to open to the right`), and **More options** (`lucide-more-vertical`).
+
+**The More options menu**, while editing:
+
+```
+Backlinks in document · Reading view · Source mode            (pane; links-coming-in, lucide-book-open, lucide-code-2)
+---
+Split right · Split down · Open in new window                 (open; lucide-separator-vertical, lucide-separator-horizontal, lucide-picture-in-picture-2)
+---
+Rename... · Move file to... · Bookmark... · Merge entire file with... · Publish current file · Add file property · Export to PDF...
+                                                              (action; lucide-edit-3, lucide-folder-tree, lucide-bookmark, lucide-git-merge, lucide-send, lucide-plus-circle, lucide-file-down)
+---
+Find... · Replace...                                          (find; both lucide-file-search)
+---
+Copy path ▸                                                   (lucide-clipboard)
+---
+Start presentation · Open version history · Open linked view ▸   (view; lucide-monitor, lucide-history; the submenu lucide-link)
+---
+Open in default app · Show in system explorer · Reveal file in navigation   (system)
+---
+---
+Delete file                                                   (danger; lucide-trash-2)
+```
+
+In reading view the `pane` section read "Backlinks in document", "Reading view" and no Source
+mode row; every other row was the same.
+
+## Observed core-plugin options tabs, Obsidian 1.14.5 (installer build 1.13.7)
+
+The same run (`editor-menus.mjs` step `s04`, with every core plugin on in `core-plugins.json`).
+`app.setting.pluginTabs` listed twelve tabs, in this order: Quick switcher, Sync, Backlinks, Canvas,
+Page preview, Daily notes, Templates, Note composer, Command palette, Unique note creator, File
+recovery, Web viewer — every other core plugin has no options tab. Each tab's rows were read, every
+toggle clicked twice and every dropdown walked through its options and back, and the `.obsidian`
+files diffed after each click. The Daily notes, Templates, Quick switcher and Command palette tabs
+match the earlier runs and are not repeated here. Sync's tab had no `.setting-item` rows (not
+signed in). A `combobox-button mod-file` is the file picker Obsidian uses where a template path is
+chosen; a `type=number` input is a plain text field constrained to digits.
+
+**Backlinks** → `backlink.json`. One row, "Show backlinks at the bottom of notes" ("Make backlinks
+visible in new tabs by default."), a toggle off by default, writing `backlinkInDocument`.
+
+**Canvas** → `canvas.json`, written with keys in first-write order:
+
+| Row | Description | Control | Key and values |
+| --- | --- | --- | --- |
+| Default location for new canvas files | — | dropdown | `newFileLocation`: `root` "Vault folder" (default), `current` "Same folder as current file", `folder` "In the folder specified below" |
+| Folder to create new canvas files in | Newly created canvas files will appear under this folder. | text, placeholder `Example: folder 1/folder 2` | hidden unless `folder` is picked; key not probed (OBSERVE) |
+| Default mouse wheel behavior | — | dropdown | `defaultWheelBehavior`: `pan` "Pan" (default), `zoom` "Zoom" |
+| Default Ctrl + Drag behavior | — | dropdown | `defaultModDragBehavior`: `menu` "Show menu" (default), `card` "Add card", `note` "Add note from vault", `media` "Add media from vault", `webpage` "Add web page", `group` "Create group" |
+| Show card names | — | dropdown | `cardLabelVisibility`: `always` "Always" (default), `hover` "On hover", `never` "Never" |
+| Snap to grid | Snap cards to the background grid when moving and resizing. | toggle, on | `snapToGrid` |
+| Snap to objects | Snap cards to nearby objects when moving and resizing. | toggle, on | `snapToObjects` |
+| Zoom threshold for hiding card content | Lower values will increase performance but hide card content sooner when zooming out. | slider 0, min −0.7, max 2.4, step 0.01 | key not probed (OBSERVE) |
+
+The first toggle click wrote both snap keys at once (`{"snapToObjects": true, "snapToGrid": false}`).
+
+**Page preview** → `page-preview.json`. A heading "Require Ctrl to trigger page preview on hover"
+with no control, then one toggle per surface, no descriptions; each writes a key under its own
+name:
+
+| Row | Default | Key |
+| --- | --- | --- |
+| Search, Backlinks, and Outgoing links | on | `search` |
+| Reading view | off | `preview` |
+| Editing view | on | `editor` |
+| Tab header | on | `tab-header` |
+| Files | on | `file-explorer` |
+| Properties view | on | `properties` |
+| Bookmarks | on | `bookmarks` |
+| Outline | on | `outline` |
+| Bases | on | `bases` |
+| Graph view | on | `graph` |
+
+**Note composer** → `note-composer.json`: "Text after extraction" ("What to show in place of the
+selected text after extracting it."), a dropdown `replacementText` with `link` "Link to new file"
+(default), `embed` "Embed new file", `none` "None"; "Template file location" ("Template file to use
+when merging or extracting. Available variables: {{content}}, {{fromTitle}}, {{newTitle}}"), a file
+picker; "Confirm file merge" ("Prompt before merge two files."), a toggle on by default writing
+`askBeforeMerging`.
+
+**Unique note creator** → `zk-prefixer.json` (keys not probed, OBSERVE): "New file location" ("The
+folder path to create the new unique note in.", text, placeholder `Example: folder 1/folder 2`),
+"Template file location" ("The file path to use as template.", file picker), "Unique prefix format"
+("For more syntax, refer to format reference. Your current syntax looks like this: 202610301041",
+text, placeholder `YYYYMMDDHHmm`).
+
+**File recovery** → `file-recovery.json` (keys not probed, OBSERVE): "Snapshot interval" ("Minimal
+interval in minutes between two snapshots.", number field, `5`), "History length" ("Number of days
+the snapshots are kept for.", number field, `7`), "Snapshots" ("View and restore saved snapshots.",
+a "View" button), "Clear history" ("Delete all snapshots.", a "Clear" button).
+
+**Web viewer** → `webviewer.json`: "Open external links" ("Open links in Obsidian rather than the
+system default.", toggle on, `openExternalURLs`), "Homepage" ("What page to view when a web viewer
+is opened", text), "Saved page folder" ("Websites saved as markdown will be placed here.", text,
+placeholder `Example: folder 1/folder 2`), "Search engine" ("Search engine used when searching from
+the address bar.", dropdown `searchEngine`: `duckduckgo` "DuckDuckGo" (default), `brave` "Brave",
+`bing` "Bing", `google` "Google", `custom` "Custom"), "Custom search engine" (same description,
+text, `https://duckduckgo.com/?q=%s` as value and placeholder; picking `custom` also wrote
+`customSearchEngine` with that string), "Enable ad blocker" ("If enabled, the filter lists below
+will be applied to all web viewer tabs.", toggle on, `enableAdblocking`), "Ad blocking rules" ("One
+ad block list URL per line. Shared by all vaults.", textarea), "Ad block update frequency" ("Days
+between updating filter lists. 0 indicates disabled. Shared by all vaults.", slider 4, 0..24 step
+1), "Web viewer data" (a "Clear web viewer data" button). The first toggle click wrote both toggle
+keys at once.

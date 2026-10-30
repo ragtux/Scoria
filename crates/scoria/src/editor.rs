@@ -909,7 +909,7 @@ impl Editor {
     }
 
     /// `autoPairBrackets` and `autoPairMarkdown`, read from the vault's
-    /// `app.json` as each character is typed. The Settings modal writes
+    /// `app.json` as each character is typed. The Settings window writes
     /// the config through the same lock, so a toggle takes effect on the
     /// next keystroke without the note being reopened.
     fn auto_pair(&self) -> autopair::Options {
