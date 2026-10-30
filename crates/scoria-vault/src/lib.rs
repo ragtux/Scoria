@@ -9,9 +9,10 @@ pub use registry::{VaultEntry, VaultRegistry};
 use scoria_cache::LinkResolver;
 use scoria_formats::bookmarks::Bookmarks;
 use scoria_formats::config::{
-    AppConfig, AppearanceConfig, CommandPaletteConfig, CommunityPlugins, CorePlugins,
-    DailyNotesConfig, GraphConfig, Hotkeys, PluginManifest, PropertyTypes, SwitcherConfig,
-    TemplatesConfig, DEFAULT_CONFIG_DIR,
+    AppConfig, AppearanceConfig, BacklinkConfig, CanvasConfig, CommandPaletteConfig,
+    CommunityPlugins, CorePlugins, DailyNotesConfig, FileRecoveryConfig, GraphConfig, Hotkeys,
+    NoteComposerConfig, PagePreviewConfig, PluginManifest, PropertyTypes, SwitcherConfig,
+    TemplatesConfig, WebviewerConfig, ZkPrefixerConfig, DEFAULT_CONFIG_DIR,
 };
 use scoria_formats::FileKind;
 use serde::de::DeserializeOwned;
@@ -559,6 +560,36 @@ impl Vault {
 
     pub fn daily_notes_config(&self) -> Result<DailyNotesConfig, VaultError> {
         Ok(self.read_config("daily-notes.json")?.unwrap_or_default())
+    }
+
+    /// The Backlinks plugin's settings; like every other core plugin's
+    /// file, it appears only once one of its controls writes.
+    pub fn backlink_config(&self) -> Result<BacklinkConfig, VaultError> {
+        Ok(self.read_config("backlink.json")?.unwrap_or_default())
+    }
+
+    pub fn canvas_config(&self) -> Result<CanvasConfig, VaultError> {
+        Ok(self.read_config("canvas.json")?.unwrap_or_default())
+    }
+
+    pub fn page_preview_config(&self) -> Result<PagePreviewConfig, VaultError> {
+        Ok(self.read_config("page-preview.json")?.unwrap_or_default())
+    }
+
+    pub fn note_composer_config(&self) -> Result<NoteComposerConfig, VaultError> {
+        Ok(self.read_config("note-composer.json")?.unwrap_or_default())
+    }
+
+    pub fn zk_prefixer_config(&self) -> Result<ZkPrefixerConfig, VaultError> {
+        Ok(self.read_config("zk-prefixer.json")?.unwrap_or_default())
+    }
+
+    pub fn file_recovery_config(&self) -> Result<FileRecoveryConfig, VaultError> {
+        Ok(self.read_config("file-recovery.json")?.unwrap_or_default())
+    }
+
+    pub fn webviewer_config(&self) -> Result<WebviewerConfig, VaultError> {
+        Ok(self.read_config("webviewer.json")?.unwrap_or_default())
     }
 
     /// Manifests of the community plugins installed under `plugins/`, sorted
