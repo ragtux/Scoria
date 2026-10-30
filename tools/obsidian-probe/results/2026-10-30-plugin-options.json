@@ -1,0 +1,363 @@
+{
+ "vault": "/tmp/scoria-probe-vault.0LEvfA",
+ "startedAt": "2026-10-30T13:51:56.025Z",
+ "tabs": {
+  "daily-notes": {
+   "file": "daily-notes.json",
+   "open": {
+    "tabId": "daily-notes",
+    "tabName": "Daily notes",
+    "navItems": []
+   },
+   "rows": [
+    {
+     "name": "Date format",
+     "description": "Choose how daily note are named in your vault.",
+     "descriptionText": "Choose how daily note are named in your vault.",
+     "heading": false,
+     "control": {
+      "kind": "dropdown",
+      "value": "YYYY-MM-DD",
+      "options": [
+       {
+        "value": "YYYY-MM-DD",
+        "label": "2026-10-30"
+       },
+       {
+        "value": "YYYY.MM.DD",
+        "label": "2026.10.30"
+       },
+       {
+        "value": "YYYY/MM/DD",
+        "label": "2026/10/30"
+       },
+       {
+        "value": "YYYY/MM/YYYY-MM-DD",
+        "label": "2026/10/2026-10-30"
+       },
+       {
+        "value": "custom",
+        "label": "Custom"
+       }
+      ]
+     },
+     "hidden": false,
+     "classes": "setting-item",
+     "controlClasses": "setting-item-control"
+    },
+    {
+     "name": "Custom format",
+     "description": "For more syntax, refer to <a href=\"https://momentjs.com/docs/#/displaying/format/\" target=\"_blank\" rel=\"noopener\">format reference</a><br>Your current syntax looks like this: <b class=\"u-pop\">2026-10-30</b>",
+     "descriptionText": "For more syntax, refer to format referenceYour current syntax looks like this: 2026-10-30",
+     "heading": false,
+     "control": {
+      "kind": "text",
+      "value": "YYYY-MM-DD",
+      "placeholder": "YYYY-MM-DD",
+      "classes": ""
+     },
+     "hidden": false,
+     "classes": "setting-item",
+     "controlClasses": "setting-item-control"
+    },
+    {
+     "name": "New file location",
+     "description": "New daily notes will be placed here.",
+     "descriptionText": "New daily notes will be placed here.",
+     "heading": false,
+     "control": {
+      "kind": "text",
+      "value": "",
+      "placeholder": "Example: folder 1/folder 2",
+      "classes": ""
+     },
+     "hidden": false,
+     "classes": "setting-item",
+     "controlClasses": "setting-item-control"
+    },
+    {
+     "name": "Template file location",
+     "description": "Choose the file to use as a template.",
+     "descriptionText": "Choose the file to use as a template.",
+     "heading": false,
+     "control": {
+      "kind": "none"
+     },
+     "hidden": false,
+     "classes": "setting-item",
+     "controlClasses": "setting-item-control"
+    }
+   ],
+   "fileBefore": null,
+   "typed": {
+    "Custom format": {
+     "fieldValue": "YYYY-MM-DD dddd",
+     "description": "For more syntax, refer to format referenceYour current syntax looks like this: 2026-10-30 Friday",
+     "before": null,
+     "after": "{\n  \"format\": \"YYYY-MM-DD dddd\"\n}",
+     "changed": true
+    },
+    "New file location": {
+     "fieldValue": "Journal",
+     "description": "New daily notes will be placed here.",
+     "before": "{\n  \"format\": \"YYYY-MM-DD dddd\"\n}",
+     "after": "{\n  \"format\": \"YYYY-MM-DD dddd\",\n  \"folder\": \"Journal\"\n}",
+     "changed": true
+    }
+   },
+   "toggled": {},
+   "cleared": {
+    "Custom format": {
+     "fieldValue": "",
+     "description": "For more syntax, refer to format referenceYour current syntax looks like this: 2026-10-30",
+     "before": "{\n  \"format\": \"YYYY-MM-DD dddd\",\n  \"folder\": \"Journal\"\n}",
+     "after": "{\n  \"format\": \"\",\n  \"folder\": \"Journal\"\n}",
+     "changed": true
+    },
+    "New file location": {
+     "fieldValue": "",
+     "description": "New daily notes will be placed here.",
+     "before": "{\n  \"format\": \"\",\n  \"folder\": \"Journal\"\n}",
+     "after": "{\n  \"format\": \"\",\n  \"folder\": \"\"\n}",
+     "changed": true
+    }
+   },
+   "rowsAfter": [
+    {
+     "name": "Date format",
+     "description": "Choose how daily note are named in your vault.",
+     "descriptionText": "Choose how daily note are named in your vault.",
+     "heading": false,
+     "control": {
+      "kind": "dropdown",
+      "value": "YYYY-MM-DD",
+      "options": [
+       {
+        "value": "YYYY-MM-DD",
+        "label": "2026-10-30"
+       },
+       {
+        "value": "YYYY.MM.DD",
+        "label": "2026.10.30"
+       },
+       {
+        "value": "YYYY/MM/DD",
+        "label": "2026/10/30"
+       },
+       {
+        "value": "YYYY/MM/YYYY-MM-DD",
+        "label": "2026/10/2026-10-30"
+       },
+       {
+        "value": "custom",
+        "label": "Custom"
+       }
+      ]
+     },
+     "hidden": false,
+     "classes": "setting-item",
+     "controlClasses": "setting-item-control"
+    },
+    {
+     "name": "Custom format",
+     "description": "For more syntax, refer to <a href=\"https://momentjs.com/docs/#/displaying/format/\" target=\"_blank\" rel=\"noopener\">format reference</a><br>Your current syntax looks like this: <b class=\"u-pop\">2026-10-30</b>",
+     "descriptionText": "For more syntax, refer to format referenceYour current syntax looks like this: 2026-10-30",
+     "heading": false,
+     "control": {
+      "kind": "text",
+      "value": "",
+      "placeholder": "YYYY-MM-DD",
+      "classes": ""
+     },
+     "hidden": false,
+     "classes": "setting-item",
+     "controlClasses": "setting-item-control"
+    },
+    {
+     "name": "New file location",
+     "description": "New daily notes will be placed here.",
+     "descriptionText": "New daily notes will be placed here.",
+     "heading": false,
+     "control": {
+      "kind": "text",
+      "value": "",
+      "placeholder": "Example: folder 1/folder 2",
+      "classes": ""
+     },
+     "hidden": false,
+     "classes": "setting-item",
+     "controlClasses": "setting-item-control"
+    },
+    {
+     "name": "Template file location",
+     "description": "Choose the file to use as a template.",
+     "descriptionText": "Choose the file to use as a template.",
+     "heading": false,
+     "control": {
+      "kind": "none"
+     },
+     "hidden": false,
+     "classes": "setting-item",
+     "controlClasses": "setting-item-control"
+    }
+   ],
+   "fileAfter": "{\n  \"format\": \"\",\n  \"folder\": \"\"\n}"
+  },
+  "templates": {
+   "file": "templates.json",
+   "open": {
+    "tabId": "templates",
+    "tabName": "Templates",
+    "navItems": []
+   },
+   "rows": [
+    {
+     "name": "Template folder location",
+     "description": "Files in this folder will be available as templates.",
+     "descriptionText": "Files in this folder will be available as templates.",
+     "heading": false,
+     "control": {
+      "kind": "text",
+      "value": "",
+      "placeholder": "Example: folder 1/folder 2",
+      "classes": ""
+     },
+     "hidden": false,
+     "classes": "setting-item",
+     "controlClasses": "setting-item-control"
+    },
+    {
+     "name": "Date format",
+     "description": "{{date}} in the template file will be replaced with this value.<br>You can also use {{date:YYYY-MM-DD}} to override the format once.<br>For more syntax, refer to <a href=\"https://momentjs.com/docs/#/displaying/format/\" target=\"_blank\">format reference</a><br>Your current syntax looks like this: <b class=\"u-pop\">2026-10-30</b>",
+     "descriptionText": "{{date}} in the template file will be replaced with this value.You can also use {{date:YYYY-MM-DD}} to override the format once.For more syntax, refer to format referenceYour current syntax looks like this: 2026-10-30",
+     "heading": false,
+     "control": {
+      "kind": "text",
+      "value": "",
+      "placeholder": "YYYY-MM-DD",
+      "classes": ""
+     },
+     "hidden": false,
+     "classes": "setting-item",
+     "controlClasses": "setting-item-control"
+    },
+    {
+     "name": "Time format",
+     "description": "{{time}} in the template file will be replaced with this value.<br>You can also use {{time:HH:mm}} to override the format once.<br>For more syntax, refer to <a href=\"https://momentjs.com/docs/#/displaying/format/\" target=\"_blank\">format reference</a><br>Your current syntax looks like this: <b class=\"u-pop\">08:52</b>",
+     "descriptionText": "{{time}} in the template file will be replaced with this value.You can also use {{time:HH:mm}} to override the format once.For more syntax, refer to format referenceYour current syntax looks like this: 08:52",
+     "heading": false,
+     "control": {
+      "kind": "text",
+      "value": "",
+      "placeholder": "HH:mm",
+      "classes": ""
+     },
+     "hidden": false,
+     "classes": "setting-item",
+     "controlClasses": "setting-item-control"
+    }
+   ],
+   "fileBefore": null,
+   "typed": {
+    "Template folder location": {
+     "fieldValue": "Templates",
+     "description": "Files in this folder will be available as templates.",
+     "before": null,
+     "after": "{\n  \"folder\": \"Templates\"\n}",
+     "changed": true
+    },
+    "Date format": {
+     "fieldValue": "DD.MM.YYYY",
+     "description": "{{date}} in the template file will be replaced with this value.You can also use {{date:YYYY-MM-DD}} to override the format once.For more syntax, refer to format referenceYour current syntax looks like this: 30.10.2026",
+     "before": "{\n  \"folder\": \"Templates\"\n}",
+     "after": "{\n  \"folder\": \"Templates\",\n  \"dateFormat\": \"DD.MM.YYYY\"\n}",
+     "changed": true
+    },
+    "Time format": {
+     "fieldValue": "HH:mm:ss",
+     "description": "{{time}} in the template file will be replaced with this value.You can also use {{time:HH:mm}} to override the format once.For more syntax, refer to format referenceYour current syntax looks like this: 08:52:07",
+     "before": "{\n  \"folder\": \"Templates\",\n  \"dateFormat\": \"DD.MM.YYYY\"\n}",
+     "after": "{\n  \"folder\": \"Templates\",\n  \"dateFormat\": \"DD.MM.YYYY\",\n  \"timeFormat\": \"HH:mm:ss\"\n}",
+     "changed": true
+    }
+   },
+   "toggled": {},
+   "cleared": {
+    "Template folder location": {
+     "fieldValue": "",
+     "description": "Files in this folder will be available as templates.",
+     "before": "{\n  \"folder\": \"Templates\",\n  \"dateFormat\": \"DD.MM.YYYY\",\n  \"timeFormat\": \"HH:mm:ss\"\n}",
+     "after": "{\n  \"folder\": \"\",\n  \"dateFormat\": \"DD.MM.YYYY\",\n  \"timeFormat\": \"HH:mm:ss\"\n}",
+     "changed": true
+    },
+    "Date format": {
+     "fieldValue": "",
+     "description": "{{date}} in the template file will be replaced with this value.You can also use {{date:YYYY-MM-DD}} to override the format once.For more syntax, refer to format referenceYour current syntax looks like this: 2026-10-30",
+     "before": "{\n  \"folder\": \"\",\n  \"dateFormat\": \"DD.MM.YYYY\",\n  \"timeFormat\": \"HH:mm:ss\"\n}",
+     "after": "{\n  \"folder\": \"\",\n  \"dateFormat\": \"\",\n  \"timeFormat\": \"HH:mm:ss\"\n}",
+     "changed": true
+    },
+    "Time format": {
+     "fieldValue": "",
+     "description": "{{time}} in the template file will be replaced with this value.You can also use {{time:HH:mm}} to override the format once.For more syntax, refer to format referenceYour current syntax looks like this: 08:52",
+     "before": "{\n  \"folder\": \"\",\n  \"dateFormat\": \"\",\n  \"timeFormat\": \"HH:mm:ss\"\n}",
+     "after": "{\n  \"folder\": \"\",\n  \"dateFormat\": \"\",\n  \"timeFormat\": \"\"\n}",
+     "changed": true
+    }
+   },
+   "rowsAfter": [
+    {
+     "name": "Template folder location",
+     "description": "Files in this folder will be available as templates.",
+     "descriptionText": "Files in this folder will be available as templates.",
+     "heading": false,
+     "control": {
+      "kind": "text",
+      "value": "",
+      "placeholder": "Example: folder 1/folder 2",
+      "classes": ""
+     },
+     "hidden": false,
+     "classes": "setting-item",
+     "controlClasses": "setting-item-control"
+    },
+    {
+     "name": "Date format",
+     "description": "{{date}} in the template file will be replaced with this value.<br>You can also use {{date:YYYY-MM-DD}} to override the format once.<br>For more syntax, refer to <a href=\"https://momentjs.com/docs/#/displaying/format/\" target=\"_blank\">format reference</a><br>Your current syntax looks like this: <b class=\"u-pop\">2026-10-30</b>",
+     "descriptionText": "{{date}} in the template file will be replaced with this value.You can also use {{date:YYYY-MM-DD}} to override the format once.For more syntax, refer to format referenceYour current syntax looks like this: 2026-10-30",
+     "heading": false,
+     "control": {
+      "kind": "text",
+      "value": "",
+      "placeholder": "YYYY-MM-DD",
+      "classes": ""
+     },
+     "hidden": false,
+     "classes": "setting-item",
+     "controlClasses": "setting-item-control"
+    },
+    {
+     "name": "Time format",
+     "description": "{{time}} in the template file will be replaced with this value.<br>You can also use {{time:HH:mm}} to override the format once.<br>For more syntax, refer to <a href=\"https://momentjs.com/docs/#/displaying/format/\" target=\"_blank\">format reference</a><br>Your current syntax looks like this: <b class=\"u-pop\">08:52</b>",
+     "descriptionText": "{{time}} in the template file will be replaced with this value.You can also use {{time:HH:mm}} to override the format once.For more syntax, refer to format referenceYour current syntax looks like this: 08:52",
+     "heading": false,
+     "control": {
+      "kind": "text",
+      "value": "",
+      "placeholder": "HH:mm",
+      "classes": ""
+     },
+     "hidden": false,
+     "classes": "setting-item",
+     "controlClasses": "setting-item-control"
+    }
+   ],
+   "fileAfter": "{\n  \"folder\": \"\",\n  \"dateFormat\": \"\",\n  \"timeFormat\": \"\"\n}"
+  }
+ },
+ "version": {
+  "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+  "title": "New tab - scoria-probe-vault.0LEvfA - Obsidian 1.14.5"
+ },
+ "finishedAt": "2026-10-30T13:52:14.088Z"
+}

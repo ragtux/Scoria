@@ -96,7 +96,18 @@ pub struct InlineStyle {
     pub tag: bool,
     pub math: bool,
     pub footnote: bool,
+    /// Raw HTML the model cannot map onto a style: drawn as muted source.
     pub html: bool,
+    /// `<u>`: underlined in the text colour, where a link is underlined in
+    /// the link colour.
+    pub underline: bool,
+    /// `<kbd>`: drawn the way inline code is.
+    pub kbd: bool,
+    /// `<sup>` and `<sub>`. A gpui text run cannot shift its baseline or
+    /// change its size, so for now these carry the markup's meaning without
+    /// a look of their own.
+    pub sup: bool,
+    pub sub: bool,
 }
 
 impl InlineStyle {
@@ -766,10 +777,11 @@ impl<'v> Builder<'v> {
                     ..
                 } if !has_scheme(destination) => {
                     self.flush(&mut acc, &mut out);
-                    let alt = plain_text(children);
-                    let alt = alt.split('|').next().unwrap_or("").trim_end().to_string();
+                    // `![alt|100](pic.png)` sizes the picture the way
+                    // `![[pic.png|100]]` does: the alt is read as an alias.
+                    let (alt, width, height) = alias_parts(&plain_text(children));
                     let dest = percent_decode(destination).into_owned();
-                    let embed = self.embed(&dest, alt, None, None);
+                    let embed = self.embed(&dest, alt.unwrap_or_default(), width, height);
                     out.push(Segment::Embed(embed));
                 }
                 InlineKind::Math {
@@ -808,7 +820,7 @@ impl<'v> Builder<'v> {
             InlineKind::SoftBreak if self.opts.strict_line_breaks => acc.push(" "),
             InlineKind::SoftBreak | InlineKind::HardBreak => acc.push("\n"),
             InlineKind::Code(c) => acc.styled(|s| s.code = true, |a| a.push(c)),
-            InlineKind::Html(h) => acc.styled(|s| s.html = true, |a| a.push(h)),
+            InlineKind::Html(h) => acc.html(h),
             InlineKind::Emphasis(c) => self.wrap(acc, c, |s| s.italic = true),
             InlineKind::Strong(c) => self.wrap(acc, c, |s| s.bold = true),
             InlineKind::Strikethrough(c) => self.wrap(acc, c, |s| s.strike = true),
@@ -876,22 +888,26 @@ impl<'v> Builder<'v> {
                 acc.styled(|s| s.link = true, |a| a.push(&shown));
                 acc.link(start, LinkTarget::External(destination.to_string()));
             }
+            // An embed reaches this walk only where a block-level embed has
+            // no room -- a heading, a table cell, a callout title -- since
+            // `segments()` takes the paragraph case first. Obsidian draws
+            // the embedded content inline there; until `RichText` can carry
+            // an inline embed, the link to it is the readable, clickable
+            // stand-in, never the raw `![[...]]`.
             InlineKind::Wikilink { body, embed } => {
                 let link = scoria_markdown::parse_linktext(body);
                 let target = scoria_markdown::link_target(body).to_string();
                 let shown = match link.alias {
+                    // `![[pic.png|200]]`: the size hint is not display text.
+                    Some(a) if *embed => {
+                        alias_parts(a).0.unwrap_or_else(|| wikilink_display(&link))
+                    }
                     Some(a) => a.to_string(),
                     None => wikilink_display(&link),
                 };
                 let start = acc.len();
-                if *embed {
-                    acc.push("![[");
-                    acc.push(&shown);
-                    acc.push("]]");
-                } else {
-                    acc.styled(|s| s.link = true, |a| a.push(&shown));
-                    acc.link(start, LinkTarget::Internal(target));
-                }
+                acc.styled(|s| s.link = true, |a| a.push(&shown));
+                acc.link(start, LinkTarget::Internal(target));
             }
             InlineKind::Tag(name) => {
                 let start = acc.len();
@@ -1001,21 +1017,7 @@ impl<'v> Builder<'v> {
     fn wikilink_embed(&mut self, body: &str) -> Embed {
         let link = scoria_markdown::parse_linktext(body);
         let target = scoria_markdown::link_target(body);
-        let mut width = None;
-        let mut height = None;
-        let mut alt = None;
-        if let Some(a) = link.alias {
-            for part in a.split('|').map(str::trim) {
-                match size_hint(part) {
-                    Some((w, h)) => {
-                        width = Some(w);
-                        height = h;
-                    }
-                    None if alt.is_none() && !part.is_empty() => alt = Some(part.to_string()),
-                    None => {}
-                }
-            }
-        }
+        let (alt, width, height) = alias_parts(link.alias.unwrap_or(""));
         let alt = alt.unwrap_or_else(|| wikilink_display(&link));
         self.embed(target, alt, width, height)
     }
@@ -1122,14 +1124,133 @@ impl<'v> Builder<'v> {
 #[derive(Default)]
 struct RichBuilder {
     text: String,
+    /// The style the Markdown nesting gives the next text; `wrap` and
+    /// `styled` save and restore it around their children.
     style: InlineStyle,
+    /// The raw HTML tags open at this point, innermost last. Kept apart from
+    /// `style` because a tag's extent is not a Markdown node's: `*a <b>b*
+    /// c</b>` closes the emphasis before the bold, and the overlay keeps
+    /// each from restoring over the other.
+    html: Vec<HtmlOpen>,
     runs: Vec<(Range<usize>, InlineStyle)>,
     links: Vec<(Range<usize>, LinkTarget)>,
+}
+
+/// One open raw HTML tag.
+struct HtmlOpen {
+    name: HtmlTag,
+    /// For `<a href>`: where its text started and what it points at,
+    /// recorded as a link when the tag closes.
+    link: Option<(usize, LinkTarget)>,
+}
+
+/// The inline HTML tags the reading model maps onto its own styles: the
+/// part of the raw-HTML subset the spec records Obsidian keeping that a
+/// flat `RichText` can carry. Anything else stays muted source.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum HtmlTag {
+    Bold,
+    Italic,
+    Strike,
+    Highlight,
+    Underline,
+    Kbd,
+    Sup,
+    Sub,
+    Anchor,
+    /// `<span>`, `<div>`, `<font>`, ...: dropped, content kept.
+    Transparent,
+}
+
+impl HtmlTag {
+    fn from_name(name: &str) -> Option<HtmlTag> {
+        Some(match name.to_ascii_lowercase().as_str() {
+            "b" | "strong" => HtmlTag::Bold,
+            "i" | "em" => HtmlTag::Italic,
+            "s" | "del" | "strike" => HtmlTag::Strike,
+            "mark" => HtmlTag::Highlight,
+            "u" => HtmlTag::Underline,
+            "kbd" => HtmlTag::Kbd,
+            "sup" => HtmlTag::Sup,
+            "sub" => HtmlTag::Sub,
+            "a" => HtmlTag::Anchor,
+            "span" | "div" | "font" | "center" | "small" | "p" => HtmlTag::Transparent,
+            _ => return None,
+        })
+    }
+
+    fn apply(self, s: &mut InlineStyle) {
+        match self {
+            HtmlTag::Bold => s.bold = true,
+            HtmlTag::Italic => s.italic = true,
+            HtmlTag::Strike => s.strike = true,
+            HtmlTag::Highlight => s.highlight = true,
+            HtmlTag::Underline => s.underline = true,
+            HtmlTag::Kbd => s.kbd = true,
+            HtmlTag::Sup => s.sup = true,
+            HtmlTag::Sub => s.sub = true,
+            // The link style belongs to an anchor with somewhere to go, so
+            // `open_tag` sets it on the entry instead.
+            HtmlTag::Anchor | HtmlTag::Transparent => {}
+        }
+    }
+}
+
+/// One inline HTML token as the parser hands it over: a whole tag, or a
+/// comment, declaration or CDATA section.
+enum HtmlToken<'a> {
+    Open {
+        name: &'a str,
+        attrs: &'a str,
+    },
+    Close(&'a str),
+    /// `<!-- -->`, `<!DOCTYPE>`, `<![CDATA[ ]]>`, `<?php ?>`: nothing shown.
+    Comment,
+}
+
+fn html_token(raw: &str) -> Option<HtmlToken<'_>> {
+    let inner = raw.strip_prefix('<')?.strip_suffix('>')?;
+    if inner.starts_with(['!', '?']) {
+        return Some(HtmlToken::Comment);
+    }
+    let (closing, rest) = match inner.strip_prefix('/') {
+        Some(rest) => (true, rest),
+        None => (false, inner),
+    };
+    let name_len = rest
+        .bytes()
+        .take_while(|b| b.is_ascii_alphanumeric())
+        .count();
+    if name_len == 0 {
+        return None;
+    }
+    let (name, attrs) = rest.split_at(name_len);
+    Some(if closing {
+        HtmlToken::Close(name)
+    } else {
+        HtmlToken::Open {
+            name,
+            attrs: attrs.trim().trim_end_matches('/'),
+        }
+    })
 }
 
 impl RichBuilder {
     fn len(&self) -> usize {
         self.text.len()
+    }
+
+    /// The style the next text takes: the Markdown style with every open
+    /// HTML tag laid over it.
+    fn effective(&self) -> InlineStyle {
+        let mut s = self.style;
+        for open in &self.html {
+            open.name.apply(&mut s);
+            if open.link.is_some() {
+                s.link = true;
+            }
+        }
+        s
     }
 
     fn push(&mut self, s: &str) {
@@ -1139,16 +1260,87 @@ impl RichBuilder {
         let start = self.text.len();
         self.text.push_str(s);
         let end = self.text.len();
-        if self.style.is_plain() {
+        let style = self.effective();
+        if style.is_plain() {
             return;
         }
-        if let Some((range, style)) = self.runs.last_mut() {
-            if *style == self.style && range.end == start {
+        if let Some((range, last)) = self.runs.last_mut() {
+            if *last == style && range.end == start {
                 range.end = end;
                 return;
             }
         }
-        self.runs.push((start..end, self.style));
+        self.runs.push((start..end, style));
+    }
+
+    /// One inline HTML token. The tags the model understands become style,
+    /// a break or a link; a comment vanishes; a closer with nothing open to
+    /// close is ignored; and a tag outside the subset keeps its source,
+    /// muted, which is what every raw tag was before.
+    fn html(&mut self, raw: &str) {
+        match html_token(raw) {
+            Some(HtmlToken::Comment) => {}
+            Some(HtmlToken::Open { name, .. }) if name.eq_ignore_ascii_case("br") => {
+                self.push("\n")
+            }
+            Some(HtmlToken::Open { name, attrs }) => match HtmlTag::from_name(name) {
+                Some(tag) => self.open_tag(tag, attrs),
+                None => self.styled(|s| s.html = true, |a| a.push(raw)),
+            },
+            Some(HtmlToken::Close(name)) => match HtmlTag::from_name(name) {
+                Some(tag) => self.close_tag(tag),
+                None => self.styled(|s| s.html = true, |a| a.push(raw)),
+            },
+            None => self.styled(|s| s.html = true, |a| a.push(raw)),
+        }
+    }
+
+    fn open_tag(&mut self, name: HtmlTag, attrs: &str) {
+        let mut link = None;
+        if name == HtmlTag::Anchor {
+            // Obsidian keeps a raw anchor's href as written -- no vault
+            // resolution, so even `href="Note.md"` is external -- and drops
+            // a `javascript:` one altogether, leaving plain text.
+            let href = html_attrs(attrs)
+                .into_iter()
+                .flatten()
+                .find(|(n, _)| n == "href")
+                .map(|(_, v)| v)
+                .filter(|v| {
+                    !v.is_empty()
+                        && !v
+                            .trim_start()
+                            .to_ascii_lowercase()
+                            .starts_with("javascript:")
+                });
+            link = href.map(|href| (self.text.len(), LinkTarget::External(href)));
+        }
+        self.html.push(HtmlOpen { name, link });
+    }
+
+    /// Closes the innermost open tag of this name and whatever was opened
+    /// inside it; a closer with no opener is dropped.
+    fn close_tag(&mut self, name: HtmlTag) {
+        let Some(at) = self.html.iter().rposition(|o| o.name == name) else {
+            return;
+        };
+        let closed: Vec<HtmlOpen> = self.html.drain(at..).collect();
+        for open in closed {
+            if let Some((start, target)) = open.link {
+                self.link(start, target);
+            }
+        }
+    }
+
+    /// The end of the text closes every tag still open, the way Obsidian
+    /// closes `start <b>bold never closed` at the end of its paragraph.
+    fn close_all(&mut self) {
+        let open: Vec<HtmlOpen> = std::mem::take(&mut self.html);
+        for open in open {
+            if let Some((start, target)) = open.link {
+                self.link(start, target);
+            }
+        }
     }
 
     fn styled(&mut self, f: impl FnOnce(&mut InlineStyle), body: impl FnOnce(&mut RichBuilder)) {
@@ -1165,7 +1357,8 @@ impl RichBuilder {
         }
     }
 
-    fn finish(self, id: usize) -> RichText {
+    fn finish(mut self, id: usize) -> RichText {
+        self.close_all();
         RichText {
             id,
             text: self.text,
@@ -1173,6 +1366,29 @@ impl RichBuilder {
             links: self.links,
         }
     }
+}
+
+/// The `|`-separated parts of an embed's alias, which is the alias of
+/// `![[pic.png|alt|200x100]]` and the alt of `![alt|200x100](pic.png)`
+/// alike: every part that reads as `W` or `WxH` claims the size (the last
+/// one wins), and the parts that do not stay the alt, `|`-joined again.
+/// Both spellings go through here so they cannot disagree.
+fn alias_parts(alias: &str) -> (Option<String>, Option<f32>, Option<f32>) {
+    let mut width = None;
+    let mut height = None;
+    let mut alt: Vec<&str> = Vec::new();
+    for part in alias.split('|').map(str::trim) {
+        match size_hint(part) {
+            Some((w, h)) => {
+                width = Some(w);
+                height = h;
+            }
+            None if !part.is_empty() => alt.push(part),
+            None => {}
+        }
+    }
+    let alt = (!alt.is_empty()).then(|| alt.join("|"));
+    (alt, width, height)
 }
 
 /// `200` or `200x100` → `(width, Some(height))`.
@@ -1987,6 +2203,215 @@ mod tests {
                 m.blocks[0]
             );
         }
+    }
+
+    #[test]
+    fn markdown_image_size_hints_match_the_wikilink_form() {
+        let m = build(
+            "Self.md",
+            "![a|100](pic.png)\n\n![a|200x100](pic.png)\n\n![a](pic.png)\n\n\
+             ![a|wide](pic.png)\n\n![[pic.png|wide|100]]",
+            &stub(),
+        );
+        let e = |ix: usize| {
+            let e = first_embed(&m.blocks[ix]);
+            assert!(matches!(e.kind, EmbedKind::Image(_)), "{e:?}");
+            (e.alt.as_str(), e.width, e.height)
+        };
+        assert_eq!(e(0), ("a", Some(100.), None));
+        assert_eq!(e(1), ("a", Some(200.), Some(100.)));
+        assert_eq!(e(2), ("a", None, None));
+        // A part that is not a size stays in the alt rather than vanishing.
+        assert_eq!(e(3), ("a|wide", None, None));
+        // The wikilink spelling goes through the same split.
+        assert_eq!(e(4), ("wide", Some(100.), None));
+    }
+
+    #[test]
+    fn an_embed_outside_a_paragraph_is_a_link_not_its_brackets() {
+        let m = build(
+            "Self.md",
+            "# See ![[pic.png|200]]\n\n| a |\n| --- |\n| ![[Other]] |",
+            &stub(),
+        );
+        let link = InlineStyle {
+            link: true,
+            ..InlineStyle::default()
+        };
+        match &m.blocks[0] {
+            RBlock::Heading { text, .. } => {
+                assert_eq!(text.text, "See pic.png");
+                assert_eq!(text.runs, vec![(4..11, link)]);
+                assert_eq!(
+                    text.links,
+                    vec![(4..11, LinkTarget::Internal("pic.png".into()))]
+                );
+            }
+            other => panic!("{other:?}"),
+        }
+        match &m.blocks[1] {
+            RBlock::Table { rows, .. } => {
+                let cell = &rows[0][0];
+                assert_eq!(cell.text, "Other");
+                assert_eq!(cell.runs, vec![(0..5, link)]);
+                assert_eq!(
+                    cell.links,
+                    vec![(0..5, LinkTarget::Internal("Other".into()))]
+                );
+            }
+            other => panic!("{other:?}"),
+        }
+    }
+
+    /// The style of the run holding `word`, or plain when no run does.
+    fn style_at(t: &RichText, word: &str) -> InlineStyle {
+        let at = t
+            .text
+            .find(word)
+            .unwrap_or_else(|| panic!("{word:?} not in {:?}", t.text));
+        t.runs
+            .iter()
+            .find(|(r, _)| r.contains(&at))
+            .map(|(_, s)| *s)
+            .unwrap_or_default()
+    }
+
+    fn only(f: fn(&mut InlineStyle)) -> InlineStyle {
+        let mut s = InlineStyle::default();
+        f(&mut s);
+        s
+    }
+
+    #[test]
+    fn inline_html_tags_become_styles() {
+        let m = build(
+            "Self.md",
+            "a <b>b</b> <strong>s</strong> <i>i</i> <em>e</em> <s>x</s> <del>d</del> \
+             <STRIKE>k</STRIKE> <mark>m</mark> <u>u</u> <kbd>K</kbd> <sup>2</sup> <sub>0</sub>",
+            &stub(),
+        );
+        let t = para_text(&m.blocks[0]);
+        assert_eq!(t.text, "a b s i e x d k m u K 2 0");
+        assert_eq!(style_at(t, "a"), InlineStyle::default());
+        assert_eq!(style_at(t, "b"), only(|s| s.bold = true));
+        assert_eq!(style_at(t, "s"), only(|s| s.bold = true));
+        assert_eq!(style_at(t, "i"), only(|s| s.italic = true));
+        assert_eq!(style_at(t, "e"), only(|s| s.italic = true));
+        assert_eq!(style_at(t, "x"), only(|s| s.strike = true));
+        assert_eq!(style_at(t, "d"), only(|s| s.strike = true));
+        assert_eq!(style_at(t, "k"), only(|s| s.strike = true));
+        assert_eq!(style_at(t, "m"), only(|s| s.highlight = true));
+        assert_eq!(style_at(t, "u"), only(|s| s.underline = true));
+        assert_eq!(style_at(t, "K"), only(|s| s.kbd = true));
+        assert_eq!(style_at(t, "2"), only(|s| s.sup = true));
+        assert_eq!(style_at(t, "0"), only(|s| s.sub = true));
+        assert!(t.runs.iter().all(|(_, s)| !s.html), "{:?}", t.runs);
+    }
+
+    #[test]
+    fn inline_html_nests_drops_wrappers_and_ignores_a_stray_closer() {
+        let m = build(
+            "Self.md",
+            "<u><b>x</b>y</u></b>z<!-- gone --><span class=\"c\">w</span><div>v</div>\
+             <font color=\"red\">f</font><center>c</center><small>s</small><p>p</p>",
+            &stub(),
+        );
+        let t = para_text(&m.blocks[0]);
+        assert_eq!(t.text, "xyzwvfcsp");
+        assert_eq!(
+            t.runs,
+            vec![
+                (
+                    0..1,
+                    only(|s| {
+                        s.underline = true;
+                        s.bold = true;
+                    })
+                ),
+                (1..2, only(|s| s.underline = true)),
+            ]
+        );
+    }
+
+    #[test]
+    fn a_br_is_a_line_break() {
+        let m = build("Self.md", "one<br>two<br/>three<br />four<BR>five", &stub());
+        let t = para_text(&m.blocks[0]);
+        assert_eq!(t.text, "one\ntwo\nthree\nfour\nfive");
+        assert!(t.runs.is_empty(), "{:?}", t.runs);
+    }
+
+    #[test]
+    fn a_raw_anchor_is_an_external_link_kept_as_written() {
+        // Obsidian resolves nothing in a raw href, so `Other.md` is not an
+        // internal link, and a `javascript:` href is dropped to plain text.
+        let m = build(
+            "Self.md",
+            "see <a href=\"Other.md\">the note</a> and <a href='javascript:alert(1)'>no</a> \
+             <a>bare</a>",
+            &stub(),
+        );
+        let t = para_text(&m.blocks[0]);
+        assert_eq!(t.text, "see the note and no bare");
+        assert_eq!(t.runs, vec![(4..12, only(|s| s.link = true))]);
+        assert_eq!(
+            t.links,
+            vec![(4..12, LinkTarget::External("Other.md".into()))]
+        );
+    }
+
+    #[test]
+    fn an_unclosed_tag_runs_to_the_end_of_its_paragraph() {
+        // The spec's `start <b>bold never closed`: closed at the end of its
+        // paragraph, nothing leaking into the next block.
+        let m = build(
+            "Self.md",
+            "start <b>bold never closed\n\n<a href=\"https://e.com\">open link\n\nplain",
+            &stub(),
+        );
+        let t = para_text(&m.blocks[0]);
+        assert_eq!(t.text, "start bold never closed");
+        assert_eq!(t.runs, vec![(6..23, only(|s| s.bold = true))]);
+        let t = para_text(&m.blocks[1]);
+        assert_eq!(
+            t.links,
+            vec![(0..9, LinkTarget::External("https://e.com".into()))]
+        );
+        assert!(para_text(&m.blocks[2]).runs.is_empty());
+    }
+
+    #[test]
+    fn inline_html_outside_the_subset_stays_muted_source() {
+        let m = build("Self.md", "a <script>x</script> b <q>c</q> <b", &stub());
+        let t = para_text(&m.blocks[0]);
+        assert_eq!(t.text, "a <script>x</script> b <q>c</q> <b");
+        let source: Vec<&str> = t
+            .runs
+            .iter()
+            .filter(|(_, s)| s.html)
+            .map(|(r, _)| &t.text[r.clone()])
+            .collect();
+        assert_eq!(source, vec!["<script>", "</script>", "<q>", "</q>"]);
+        assert!(t.runs.iter().all(|(_, s)| *s == only(|s| s.html = true)));
+    }
+
+    #[test]
+    fn html_styles_overlay_markdown_nesting() {
+        // The emphasis closes before the bold and the bold after it; each
+        // extent is its own, so neither restores over the other.
+        let m = build("Self.md", "*a <b>b* c</b> d", &stub());
+        let t = para_text(&m.blocks[0]);
+        assert_eq!(t.text, "a b c d");
+        assert_eq!(style_at(t, "a"), only(|s| s.italic = true));
+        assert_eq!(
+            style_at(t, "b"),
+            only(|s| {
+                s.italic = true;
+                s.bold = true;
+            })
+        );
+        assert_eq!(style_at(t, "c"), only(|s| s.bold = true));
+        assert_eq!(style_at(t, "d"), InlineStyle::default());
     }
 
     #[test]

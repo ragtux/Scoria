@@ -864,7 +864,7 @@ impl<'a> Renderer<'a> {
         let mut max = vec![0f32; count];
         let mut min = vec![0f32; count];
         let mut fold = |ix: usize, cell: &RichText, bold: bool| {
-            let mono = cell.runs.iter().any(|(_, s)| s.code);
+            let mono = cell.runs.iter().any(|(_, s)| s.code || s.kbd);
             let longest_line = cell
                 .text
                 .lines()
@@ -2211,7 +2211,7 @@ impl<'a> Renderer<'a> {
             .collect();
         let mono: Vec<_> = runs
             .iter()
-            .filter(|(_, s)| s.code || s.html)
+            .filter(|(_, s)| s.code || s.kbd || s.html)
             .map(|(range, _)| (range.clone(), t.mono_font.clone()))
             .collect();
         let mut styled =
@@ -2256,9 +2256,22 @@ impl<'a> Renderer<'a> {
                 None => t.highlight_bg,
             });
         }
-        if s.code {
+        // `<kbd>` wears inline code's look, the box Obsidian themes it with.
+        if s.code || s.kbd {
             h.background_color = Some(t.code_bg);
         }
+        // `<u>`: underlined in the text colour; a link's own underline below
+        // takes over when both apply.
+        if s.underline {
+            h.underline = Some(UnderlineStyle {
+                thickness: px(1.),
+                color: None,
+                wavy: false,
+            });
+        }
+        // `s.sup` and `s.sub` have no look yet: a gpui text run cannot be
+        // raised, lowered or shrunk on its own, so the text sits at body
+        // size with the tags dropped.
         if s.math {
             // Only a formula that failed to typeset is still text here.
             h.color = Some(math::error_color());

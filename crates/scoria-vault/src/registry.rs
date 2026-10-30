@@ -48,6 +48,13 @@ impl VaultEntry {
 struct Document {
     #[serde(default)]
     vaults: IndexMap<String, VaultEntry>,
+    /// The "Window frame style" of Settings → Interface: `hidden`, `custom`
+    /// or `native`. Obsidian keeps the choice in its own `obsidian.json`
+    /// beside the vault list rather than under any vault's `.obsidian`
+    /// (changing it wrote nothing there, probed 2026-10-20), and so does
+    /// Scoria. Absent means `hidden`, the default on Linux and Windows.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    frame: Option<String>,
     #[serde(flatten)]
     extra: Map<String, Value>,
 }
@@ -152,6 +159,16 @@ impl VaultRegistry {
     /// Drops the entry with `id`, which does not touch the folder.
     pub fn forget(&mut self, id: &str) -> bool {
         self.doc.vaults.shift_remove(id).is_some()
+    }
+
+    /// The stored window frame style, if one was ever chosen.
+    pub fn frame(&self) -> Option<&str> {
+        self.doc.frame.as_deref()
+    }
+
+    /// Records the window frame style; `None` drops the key.
+    pub fn set_frame(&mut self, frame: Option<&str>) {
+        self.doc.frame = frame.map(str::to_string);
     }
 
     /// Writes the document back, making the folder it lives in.
@@ -327,5 +344,31 @@ mod tests {
         let path = dir.path().join("scoria.json");
         std::fs::write(&path, "not json").unwrap();
         assert!(VaultRegistry::load(&path).is_err());
+    }
+
+    #[test]
+    fn the_frame_style_lives_beside_the_vaults_and_an_absent_key_stays_absent() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("scoria.json");
+        let mut reg = VaultRegistry::load(&path).unwrap();
+        assert_eq!(reg.frame(), None);
+        reg.record_open(&dir.path().join("A"), 1);
+        reg.save().unwrap();
+        let text = std::fs::read_to_string(&path).unwrap();
+        assert!(!text.contains("frame"), "{text}");
+
+        reg.set_frame(Some("native"));
+        reg.save().unwrap();
+        let text = std::fs::read_to_string(&path).unwrap();
+        assert!(text.contains("\"frame\":\"native\""), "{text}");
+        let again = VaultRegistry::load(&path).unwrap();
+        assert_eq!(again.frame(), Some("native"));
+        assert_eq!(again.vaults().len(), 1);
+
+        let mut again = again;
+        again.set_frame(None);
+        again.save().unwrap();
+        let text = std::fs::read_to_string(&path).unwrap();
+        assert!(!text.contains("frame"), "{text}");
     }
 }
