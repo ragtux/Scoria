@@ -383,7 +383,10 @@ share): `InlineStyle` gained `underline`, `kbd`, `sup` and `sub`, and a tag stac
 maps `<b>/<strong>`, `<i>/<em>`, `<s>/<del>/<strike>`, `<mark>`, `<u>`, `<kbd>`, `<sup>`, `<sub>`
 and `<a href>` onto runs, drops `<span>/<div>/<font>/<center>/<small>/<p>` keeping their content,
 turns `<br>` into a line break and leaves everything else -- `<script>`, an unknown tag, a
-malformed token -- as the muted source it was. An unclosed opener runs to the end of its paragraph,
+malformed token -- as the muted source it was. **A first slice of the block half landed the same
+day**: a block of nothing but comments and `<script>` elements draws nothing at all, which is what
+the sanitizer capture and the DOM both say, instead of showing its own source; a block holding
+anything else is untouched. An unclosed opener runs to the end of its paragraph,
 as the sanitizer capture records. Still open: **HTML blocks** (`RBlock::Html`: `<div>`, `<pre>`,
 `<details>`, a comment on its own line), `sup`/`sub` drawn at body size because a gpui text run
 cannot shift its baseline, Live Preview's own source transform (`<b>` still shows as source while
@@ -403,6 +406,14 @@ records the measured subset: `<a>` kept with `target`/`rel`, `<pre>`, and `<b>/<
 **Fix.** The reading renderer's `RBlock::Html` arm plus the inline path. `RichText` runs are flat
 `(range, style)` pairs with no nesting, so `<sup>`, `<sub>` and `<kbd>` need new `InlineStyle` flags
 rather than only text.
+
+**`<pre>` is the next block worth taking, and it wants two changes in the view first.** A raw
+`<pre>` is observed to render as a real `<pre>` with literal content inside `div.el-pre`, wrapping
+(`white-space: pre-wrap`), and with a copy button **only** when it has a `<code>` child. Promoting
+it to `RBlock::Code` in the model alone would get both of those wrong: the reading view's code block
+sets `whitespace_nowrap` and scrolls sideways, and it draws the copy button unconditionally. So the
+view needs a wrapping variant and a "no copy button" case before the model promotion is worth
+making; doing the model half on its own would trade one wrong rendering for another.
 
 ### `propertiesInDocument: hidden` still leaves a 44 px gap in Live Preview
 
