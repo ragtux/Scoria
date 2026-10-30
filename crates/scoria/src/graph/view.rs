@@ -21,6 +21,7 @@ use scoria_formats::config::{GraphColor, GraphColorGroup, GraphConfig};
 use scoria_formats::FileKind;
 use scoria_search::{Search, SearchFile};
 use serde_json::{json, Value};
+use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -71,9 +72,11 @@ impl Section {
     }
 }
 
-/// The panel's sliders: each owns one `graph.json` number.
+/// The panel's sliders: each owns one `graph.json` number, bar `Depth`,
+/// which owns the local graph's `localJumps` (see [`LocalOptions`]).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Slider {
+    Depth,
     TextFade,
     NodeSize,
     LineSize,
@@ -86,6 +89,7 @@ enum Slider {
 impl Slider {
     fn label(self) -> &'static str {
         match self {
+            Slider::Depth => "Depth",
             Slider::TextFade => "Text fade threshold",
             Slider::NodeSize => "Node size",
             Slider::LineSize => "Link thickness",
@@ -98,6 +102,7 @@ impl Slider {
 
     fn key(self) -> &'static str {
         match self {
+            Slider::Depth => "localJumps",
             Slider::TextFade => "textFadeMultiplier",
             Slider::NodeSize => "nodeSizeMultiplier",
             Slider::LineSize => "lineSizeMultiplier",
@@ -109,8 +114,11 @@ impl Slider {
     }
 
     /// Minimum, maximum and step, as Obsidian's range inputs have them.
+    /// The probe that recorded the others did not read Depth's; 1 to 5 is
+    /// from memory of the control, not observed.
     fn range(self) -> (f32, f32, f32) {
         match self {
+            Slider::Depth => (1.0, 5.0, 1.0),
             Slider::TextFade => (-3.0, 3.0, 0.1),
             Slider::NodeSize => (0.1, 5.0, 0.1),
             Slider::LineSize => (0.1, 5.0, 0.1),
@@ -128,9 +136,15 @@ impl Slider {
         )
     }
 
-    fn get(self, config: &GraphConfig) -> f32 {
+    /// The slider lives in the leaf's own options, not in `graph.json`.
+    fn is_local(self) -> bool {
+        matches!(self, Slider::Depth)
+    }
+
+    fn get(self, config: &GraphConfig, local: &LocalOptions) -> f32 {
         let d = Forces::default();
         match self {
+            Slider::Depth => local.jumps as f32,
             Slider::TextFade => config.text_fade_multiplier.unwrap_or(0.0),
             Slider::NodeSize => config.node_size_multiplier.unwrap_or(1.0),
             Slider::LineSize => config.line_size_multiplier.unwrap_or(1.0),
@@ -141,8 +155,12 @@ impl Slider {
         }
     }
 
-    fn set(self, config: &mut GraphConfig, value: f32) {
+    fn set(self, config: &mut GraphConfig, local: &mut LocalOptions, value: f32) {
         let slot = match self {
+            Slider::Depth => {
+                local.jumps = value.round().max(1.0) as u32;
+                return;
+            }
             Slider::TextFade => &mut config.text_fade_multiplier,
             Slider::NodeSize => &mut config.node_size_multiplier,
             Slider::LineSize => &mut config.line_size_multiplier,
@@ -308,6 +326,47 @@ pub struct Node {
     pub color: Option<Hsla>,
 }
 
+/// The options a `localgraph` leaf keeps in its own state and never in
+/// `graph.json`: the Depth slider and the three direction toggles at the top
+/// of its Filters section, with the values Obsidian opens a local graph at.
+/// Scoria writes no `localgraph` leaf, so these last the session.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct LocalOptions {
+    /// `localJumps`: how many hops out from the centre the walk goes.
+    pub jumps: u32,
+    /// `localBacklinks`, "Incoming links": the walk follows links into a node.
+    pub backlinks: bool,
+    /// `localForelinks`, "Outgoing links": the walk follows links out of a node.
+    pub forelinks: bool,
+    /// `localInterlinks`, "Neighbor links": edges between two nodes neither
+    /// of which the walk reached through the other are drawn too.
+    pub interlinks: bool,
+}
+
+impl Default for LocalOptions {
+    fn default() -> Self {
+        LocalOptions {
+            jumps: 1,
+            backlinks: true,
+            forelinks: true,
+            interlinks: false,
+        }
+    }
+}
+
+impl LocalOptions {
+    /// The options under the keys the leaf state uses, for the control
+    /// socket's state dump.
+    fn describe(&self) -> Value {
+        json!({
+            "localJumps": self.jumps,
+            "localBacklinks": self.backlinks,
+            "localForelinks": self.forelinks,
+            "localInterlinks": self.interlinks,
+        })
+    }
+}
+
 /// Nodes and edges ready for layout, built off the UI thread.
 struct Built {
     nodes: Vec<Node>,
@@ -357,6 +416,8 @@ pub struct GraphView {
     drag: Option<Drag>,
     /// Local graph centered on this path, else the global graph.
     local: Option<String>,
+    /// The local graph's own Filters rows; untouched by the global graph.
+    local_options: LocalOptions,
     current: Option<String>,
     generation: u64,
     building: bool,
@@ -432,6 +493,7 @@ impl GraphView {
             hovered: None,
             drag: None,
             local: None,
+            local_options: LocalOptions::default(),
             current: None,
             generation: 0,
             building: false,
@@ -522,6 +584,7 @@ impl GraphView {
     pub fn describe(&self) -> Value {
         json!({
             "local": self.is_local(),
+            "local_options": self.local_options.describe(),
             "nodes": self.nodes.len(),
             "scale": self.scale,
             "offset": [self.offset.x, self.offset.y],
@@ -564,11 +627,12 @@ impl GraphView {
         let generation = self.generation;
         let config = self.config.clone();
         let local = self.local.clone();
+        let local_options = self.local_options;
         self.building = true;
         cx.spawn(async move |this, cx| {
             let built = cx
                 .background_executor()
-                .spawn(async move { build(&state, &config, local.as_deref()) })
+                .spawn(async move { build(&state, &config, local.as_deref(), &local_options) })
                 .await;
             this.update(cx, |view, cx| {
                 if view.generation != generation {
@@ -893,7 +957,21 @@ impl GraphView {
     }
 
     /// One of the Filters toggles, or Display's Arrows: the key, flipped.
+    /// The local graph's three direction toggles flip its own options and
+    /// write nothing, the way Obsidian keeps them out of `graph.json`.
     fn toggle_flag(&mut self, key: &str, cx: &mut Context<Self>) {
+        let local_slot = match key {
+            "localBacklinks" => Some(&mut self.local_options.backlinks),
+            "localForelinks" => Some(&mut self.local_options.forelinks),
+            "localInterlinks" => Some(&mut self.local_options.interlinks),
+            _ => None,
+        };
+        if let Some(slot) = local_slot {
+            *slot = !*slot;
+            self.rebuild(cx);
+            cx.notify();
+            return;
+        }
         let (slot, default): (&mut Option<bool>, bool) = match key {
             "showTags" => (&mut self.config.show_tags, false),
             "showAttachments" => (&mut self.config.show_attachments, false),
@@ -922,10 +1000,16 @@ impl GraphView {
         let width = f32::from(track.size.width).max(1.0);
         let t = (f32::from(x) - f32::from(track.left())) / width;
         let value = slider.value_at(t);
-        if slider.get(&self.config) == value {
+        if slider.get(&self.config, &self.local_options) == value {
             return;
         }
-        slider.set(&mut self.config, value);
+        slider.set(&mut self.config, &mut self.local_options, value);
+        if slider.is_local() {
+            // Depth changes which nodes there are, and belongs to no file.
+            self.rebuild(cx);
+            cx.notify();
+            return;
+        }
         self.config_dirty = true;
         if slider.is_force() {
             self.apply_forces(cx);
@@ -949,6 +1033,7 @@ impl GraphView {
     /// "Restore default settings".
     fn restore_defaults(&mut self, cx: &mut Context<Self>) {
         self.config = restored_defaults(&self.config);
+        self.local_options = LocalOptions::default();
         self.editing_group = None;
         self.search.update(cx, |input, cx| input.set_text("", cx));
         self.rebuild(cx);
@@ -1111,7 +1196,7 @@ impl GraphView {
     }
 
     fn slider_row(&self, slider: Slider, theme: &Theme, cx: &mut Context<Self>) -> gpui::Div {
-        let value = slider.get(&self.config);
+        let value = slider.get(&self.config, &self.local_options);
         let t = slider.fraction(value);
         let entity = cx.entity();
         let (track_color, fill_color, knob_color) = (theme.bg_active, theme.accent, theme.text);
@@ -1164,7 +1249,9 @@ impl GraphView {
                     if phase == DispatchPhase::Bubble && e.read(cx).slider_drag == Some(slider) {
                         e.update(cx, |view, cx| {
                             view.slider_drag = None;
-                            view.schedule_save(cx);
+                            if !slider.is_local() {
+                                view.schedule_save(cx);
+                            }
                         });
                     }
                 });
@@ -1281,12 +1368,28 @@ impl GraphView {
                 .into_any_element();
         }
         let c = &self.config;
-        let filters: Vec<gpui::AnyElement> = vec![
-            div()
-                .px_2()
-                .py(px(3.))
-                .child(self.search.clone())
-                .into_any_element(),
+        let local = self.is_local();
+        let mut filters: Vec<gpui::AnyElement> = vec![div()
+            .px_2()
+            .py(px(3.))
+            .child(self.search.clone())
+            .into_any_element()];
+        // The local graph's panel is the global one plus Depth and the three
+        // direction toggles under the search box, and without Orphans, whose
+        // key its option set drops (every node it shows hangs off the centre).
+        if local {
+            let o = &self.local_options;
+            filters.extend([
+                self.slider_row(Slider::Depth, theme, cx).into_any_element(),
+                self.flag_row("Incoming links", "localBacklinks", o.backlinks, theme, cx)
+                    .into_any_element(),
+                self.flag_row("Outgoing links", "localForelinks", o.forelinks, theme, cx)
+                    .into_any_element(),
+                self.flag_row("Neighbor links", "localInterlinks", o.interlinks, theme, cx)
+                    .into_any_element(),
+            ]);
+        }
+        filters.extend([
             self.flag_row("Tags", "showTags", c.show_tags.unwrap_or(false), theme, cx)
                 .into_any_element(),
             self.flag_row(
@@ -1305,15 +1408,19 @@ impl GraphView {
                 cx,
             )
             .into_any_element(),
-            self.flag_row(
-                "Orphans",
-                "showOrphans",
-                c.show_orphans.unwrap_or(true),
-                theme,
-                cx,
-            )
-            .into_any_element(),
-        ];
+        ]);
+        if !local {
+            filters.push(
+                self.flag_row(
+                    "Orphans",
+                    "showOrphans",
+                    c.show_orphans.unwrap_or(true),
+                    theme,
+                    cx,
+                )
+                .into_any_element(),
+            );
+        }
         let mut groups: Vec<gpui::AnyElement> = c
             .color_groups
             .iter()
@@ -1537,7 +1644,12 @@ fn frame(
 }
 
 /// Builds the node and edge lists for the current filters.
-fn build(state: &VaultState, config: &GraphConfig, local: Option<&str>) -> Built {
+fn build(
+    state: &VaultState,
+    config: &GraphConfig,
+    local: Option<&str>,
+    local_options: &LocalOptions,
+) -> Built {
     let cache = state.cache();
     let vault = state.vault();
     let texts = state.texts();
@@ -1756,7 +1868,8 @@ fn build(state: &VaultState, config: &GraphConfig, local: Option<&str>) -> Built
     let mut edges: Vec<(u32, u32)> = edge_set.into_iter().collect();
     edges.sort();
 
-    // Local graph: the center and its neighbors at depth 1 in either direction.
+    // Local graph: the centre and what the Depth and direction options
+    // reach from it.
     if let Some(center) = local {
         // Added above whether the filters kept it or not, so the only way
         // this misses is a centre that is not a vault path at all.
@@ -1767,31 +1880,72 @@ fn build(state: &VaultState, config: &GraphConfig, local: Option<&str>) -> Built
                 neighbors: Vec::new(),
             };
         };
-        let mut keep: HashSet<usize> = HashSet::new();
-        let mut queue: VecDeque<(usize, usize)> = VecDeque::new();
-        queue.push_back((c, 0));
-        keep.insert(c);
-        while let Some((n, depth)) = queue.pop_front() {
-            if depth >= 1 {
-                continue;
-            }
-            for &(a, b) in &edges {
-                let (a, b) = (a as usize, b as usize);
-                let other = if a == n {
-                    b
-                } else if b == n {
-                    a
-                } else {
-                    continue;
-                };
-                if keep.insert(other) {
-                    queue.push_back((other, depth + 1));
-                }
-            }
-        }
+        let (keep, edges) = local_subgraph(&edges, c, local_options);
         return finish(nodes, edges, Some(keep), true);
     }
     finish(nodes, edges, None, show_orphans)
+}
+
+/// The local graph's nodes and edges around `center`, from the directed
+/// edge list: `(from, to)` is a link in `from` that points at `to`.
+///
+/// Nodes come from a breadth-first walk out to `options.jumps` hops, which
+/// leaves a node along a link out of it only with Outgoing links on and
+/// along a link into it only with Incoming links on; each node keeps the
+/// depth it was first reached at.
+///
+/// Edges: with Neighbor links on, every edge between two kept nodes. With it
+/// off, the rule chosen here keeps an edge only between a node at depth d and
+/// one at depth d + 1 -- an edge the walk itself could have crossed. That
+/// hides the link between two neighbours of the centre (both at depth 1),
+/// and at depth 2 the link between two second-hop nodes, while keeping every
+/// edge that joins one hop to the next whether or not it was the one that
+/// found the node, so a second-hop note linked from two neighbours shows
+/// both links. The direction toggles decide which nodes are reached, not
+/// which of the edges between reached nodes are drawn: a neighbour's link
+/// back into the centre is drawn with Incoming links off. What Obsidian does
+/// with the edges of a depth-2 graph is not observed; the depth-1 case, the
+/// one the controls are about, is.
+fn local_subgraph(
+    edges: &[(u32, u32)],
+    center: usize,
+    options: &LocalOptions,
+) -> (HashSet<usize>, Vec<(u32, u32)>) {
+    let mut out: HashMap<usize, Vec<usize>> = HashMap::new();
+    let mut inc: HashMap<usize, Vec<usize>> = HashMap::new();
+    for &(a, b) in edges {
+        out.entry(a as usize).or_default().push(b as usize);
+        inc.entry(b as usize).or_default().push(a as usize);
+    }
+    let mut depth: HashMap<usize, usize> = HashMap::new();
+    let mut queue: VecDeque<(usize, usize)> = VecDeque::new();
+    depth.insert(center, 0);
+    queue.push_back((center, 0));
+    while let Some((n, d)) = queue.pop_front() {
+        if d >= options.jumps as usize {
+            continue;
+        }
+        let forward = options.forelinks.then(|| out.get(&n)).flatten();
+        let backward = options.backlinks.then(|| inc.get(&n)).flatten();
+        for &other in forward.into_iter().chain(backward).flatten() {
+            if let Entry::Vacant(slot) = depth.entry(other) {
+                slot.insert(d + 1);
+                queue.push_back((other, d + 1));
+            }
+        }
+    }
+    let kept = edges
+        .iter()
+        .copied()
+        .filter(|&(a, b)| {
+            let (Some(&da), Some(&db)) = (depth.get(&(a as usize)), depth.get(&(b as usize)))
+            else {
+                return false;
+            };
+            options.interlinks || da.abs_diff(db) == 1
+        })
+        .collect();
+    (depth.into_keys().collect(), kept)
 }
 
 /// Drops nodes outside `keep` and, unless `show_orphans`, nodes without
@@ -2446,5 +2600,111 @@ mod tests {
     fn an_element_with_no_size_yet_is_not_framed() {
         assert!(frame(0.0, 600.0, (-10.0, -10.0, 10.0, 10.0), None).is_none());
         assert!(frame(800.0, 0.0, (-10.0, -10.0, 10.0, 10.0), Some(4.0)).is_none());
+    }
+
+    /// Centre 0 links to 1 and 3; 1 links to 3 (two neighbours linked to
+    /// each other), to 2 and to 5; 2 links to 5 (two second-hop nodes linked
+    /// to each other); 4 links into the centre.
+    const LOCAL_EDGES: [(u32, u32); 7] = [(0, 1), (0, 3), (1, 3), (1, 2), (1, 5), (2, 5), (4, 0)];
+
+    fn local(options: LocalOptions) -> (Vec<usize>, Vec<(u32, u32)>) {
+        let (keep, edges) = local_subgraph(&LOCAL_EDGES, 0, &options);
+        let mut keep: Vec<usize> = keep.into_iter().collect();
+        keep.sort();
+        (keep, edges)
+    }
+
+    #[test]
+    fn depth_one_keeps_the_neighbours_in_both_directions() {
+        let (keep, edges) = local(LocalOptions::default());
+        assert_eq!(keep, [0, 1, 3, 4]);
+        assert_eq!(edges, [(0, 1), (0, 3), (4, 0)]);
+    }
+
+    #[test]
+    fn depth_two_walks_one_hop_further() {
+        let (keep, edges) = local(LocalOptions {
+            jumps: 2,
+            ..LocalOptions::default()
+        });
+        assert_eq!(keep, [0, 1, 2, 3, 4, 5]);
+        // The hop edges stay; the links between two depth-1 nodes and
+        // between two depth-2 nodes go.
+        assert_eq!(edges, [(0, 1), (0, 3), (1, 2), (1, 5), (4, 0)]);
+    }
+
+    #[test]
+    fn incoming_links_alone_keep_only_what_points_at_the_centre() {
+        let (keep, edges) = local(LocalOptions {
+            forelinks: false,
+            ..LocalOptions::default()
+        });
+        assert_eq!(keep, [0, 4]);
+        assert_eq!(edges, [(4, 0)]);
+    }
+
+    #[test]
+    fn outgoing_links_alone_keep_only_what_the_centre_points_at() {
+        let (keep, edges) = local(LocalOptions {
+            backlinks: false,
+            ..LocalOptions::default()
+        });
+        assert_eq!(keep, [0, 1, 3]);
+        assert_eq!(edges, [(0, 1), (0, 3)]);
+    }
+
+    #[test]
+    fn neighbor_links_off_hides_the_edge_between_two_neighbours() {
+        let (_, edges) = local(LocalOptions::default());
+        assert!(!edges.contains(&(1, 3)), "{edges:?}");
+        // Through `finish`, the degrees count only the edges drawn.
+        let nodes = (0..6)
+            .map(|i| node(&format!("{i}.md"), NodeKind::Note))
+            .collect();
+        let (keep, edges) = local_subgraph(&LOCAL_EDGES, 0, &LocalOptions::default());
+        let built = finish(nodes, edges, Some(keep), true);
+        let degrees: Vec<(&str, usize)> = built
+            .nodes
+            .iter()
+            .map(|n| (n.id.as_str(), n.degree))
+            .collect();
+        assert_eq!(
+            degrees,
+            [("0.md", 3), ("1.md", 1), ("3.md", 1), ("4.md", 1)]
+        );
+    }
+
+    #[test]
+    fn neighbor_links_on_keeps_the_edge_between_two_neighbours() {
+        let (keep, edges) = local(LocalOptions {
+            interlinks: true,
+            ..LocalOptions::default()
+        });
+        assert_eq!(keep, [0, 1, 3, 4]);
+        assert_eq!(edges, [(0, 1), (0, 3), (1, 3), (4, 0)]);
+        // At depth 2 the second-hop pair's link is drawn too.
+        let (_, edges) = local(LocalOptions {
+            jumps: 2,
+            interlinks: true,
+            ..LocalOptions::default()
+        });
+        assert_eq!(edges.len(), LOCAL_EDGES.len());
+    }
+
+    #[test]
+    fn a_local_graph_opens_with_obsidians_defaults() {
+        let d = LocalOptions::default();
+        assert_eq!(
+            d.describe(),
+            json!({
+                "localJumps": 1,
+                "localBacklinks": true,
+                "localForelinks": true,
+                "localInterlinks": false,
+            })
+        );
+        assert_eq!(Slider::Depth.key(), "localJumps");
+        assert_eq!(Slider::Depth.value_at(0.3), 2.0);
+        assert_eq!(Slider::Depth.value_at(1.0), 5.0);
     }
 }
