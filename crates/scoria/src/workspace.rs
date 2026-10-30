@@ -18,6 +18,7 @@ use crate::chooser::{Chooser, ChooserEvent, Row as ChooserRow};
 use crate::copy_results::{CopyResults, CopyResultsEvent};
 use crate::editor::{Editor, EditorEvent};
 use crate::explorer::{display_name, kind_name, ExplorerEvent, FileExplorer, FileTree, SortOrder};
+use crate::file_menu::{self, Pick};
 use crate::fold;
 use crate::graph::{GraphEvent, GraphView};
 use crate::help::HelpWindow;
@@ -26,9 +27,11 @@ use crate::palette::{CommandPalette, PaletteCommand, PaletteEvent};
 use crate::panes::{self, PaneSort};
 use crate::pdf::view::{PdfEvent, PdfView};
 use crate::prompt::{Prompt, PromptEvent, PromptSpec};
-use crate::reading::{self, LinkTarget, ReadingEvent, ReadingView, TaskMarker, TaskToggled};
+use crate::reading::{
+    self, LinkTarget, PropertyItemRemoved, ReadingEvent, ReadingView, TaskMarker, TaskToggled,
+};
 use crate::search::{CopyEntry, SearchEvent, SearchPane};
-use crate::settings::{self, SettingChange, SettingsEvent, SettingsView};
+use crate::settings::{self, SettingChange, SettingsEvent, SettingsView, SettingsWindow};
 use crate::switcher::{QuickSwitcher, SwitcherEvent};
 use crate::text_input::{self, InputEvent, TextInput};
 use crate::theme::{
@@ -96,7 +99,10 @@ fn now_millis() -> i64 {
     chrono::Utc::now().timestamp_millis()
 }
 
-fn now() -> templates::Stamp {
+/// The local clock as a [`templates::Stamp`]: what a daily note is named
+/// after, what `{{date}}` expands to, and what the Settings rows render a
+/// format's sample from.
+pub(crate) fn now() -> templates::Stamp {
     let local = chrono::Local::now();
     let naive = local.naive_local();
     templates::Stamp {
@@ -594,7 +600,7 @@ impl VaultState {
         self.switcher.read().unwrap_or_else(|e| e.into_inner())
     }
 
-    /// Writes a setting the Settings modal changed and keeps the config in
+    /// Writes a setting the Settings window changed and keeps the config in
     /// hand in step. The file is written first: the vault is the source of
     /// truth, so a change that cannot reach disk does not count.
     pub fn apply_setting(&self, change: &SettingChange) -> Result<(), String> {
@@ -610,6 +616,14 @@ impl VaultState {
             SettingChange::Switcher(config) => {
                 self.write_config("switcher.json", config)?;
                 *self.switcher.write().unwrap_or_else(|e| e.into_inner()) = config.clone();
+            }
+            SettingChange::DailyNotes(config) => {
+                self.write_config("daily-notes.json", config)?;
+                *self.daily_notes.write().unwrap_or_else(|e| e.into_inner()) = config.clone();
+            }
+            SettingChange::Templates(config) => {
+                self.write_config("templates.json", config)?;
+                *self.templates.write().unwrap_or_else(|e| e.into_inner()) = config.clone();
             }
             SettingChange::CorePlugins(config) => {
                 self.write_config("core-plugins.json", config)?;
@@ -630,6 +644,9 @@ impl VaultState {
                     .replace_config("hotkeys.json", overrides)
                     .map_err(|e| e.to_string())?;
             }
+            // Not a vault's setting at all; `Workspace::change_setting`
+            // writes it to `scoria.json` before it gets here.
+            SettingChange::Frame(_) => {}
         }
         Ok(())
     }
@@ -789,28 +806,15 @@ impl VaultState {
             .map_err(|e| e.user_message())
     }
 
-    /// Copies a file next to itself as `Name 1.ext` and indexes the copy.
+    /// Copies a file or folder next to itself (`Name 1.ext`, `Name 1`) and
+    /// indexes the copy.
     pub fn duplicate(&self, path: &str) -> Result<(String, Changes), String> {
-        let (target, from, to) = {
-            let vault = self.vault();
-            let (folder, name) = match path.rsplit_once('/') {
-                Some((d, n)) => (d, n),
-                None => ("", path),
-            };
-            let (stem, ext) = match name.rsplit_once('.') {
-                Some((s, e)) if !s.is_empty() => (s, e),
-                _ => (name, ""),
-            };
-            let target = vault.available_path(folder, stem, ext);
-            let to = vault.write_path(&target).map_err(|e| e.to_string())?;
-            (target.clone(), vault.absolute(path), to)
-        };
-        std::fs::copy(&from, &to).map_err(|e| format!("Could not copy {path}: {e}"))?;
-        let files = self
+        let (target, files) = self
             .vault
             .write()
             .unwrap_or_else(|e| e.into_inner())
-            .refresh_path(&to);
+            .duplicate(path)
+            .map_err(|e| e.user_message())?;
         Ok((target, self.absorb(files)))
     }
 
@@ -1338,7 +1342,6 @@ enum Modal {
     None,
     Switcher,
     Palette,
-    Settings,
     Prompt,
     /// The template chooser.
     Chooser,
@@ -2459,6 +2462,10 @@ pub struct Workspace {
     help_window: Option<gpui::WindowHandle<HelpWindow>>,
     /// The vault manager while one is up, the same way.
     vault_window: Option<gpui::WindowHandle<VaultManager>>,
+    /// The Settings window while one is up, the same way. Settings is a
+    /// window rather than a modal, so the vault behind it stays live; the
+    /// panel inside it is `settings`, which the workspace keeps either way.
+    settings_window: Option<gpui::WindowHandle<SettingsWindow>>,
     loading: Option<SharedString>,
     explorer: Entity<FileExplorer>,
     search: Entity<SearchPane>,
@@ -2583,6 +2590,9 @@ pub struct Workspace {
     /// Where the pointer was when a pane's sort button was clicked: the
     /// menu opens there, its top-right corner at the click, as Obsidian's does.
     sort_menu_at: gpui::Point<Pixels>,
+    /// The file menu a Backlinks or Outgoing links row opened, while it is
+    /// up: where, and on which file.
+    file_menu: Option<file_menu::Menu>,
     /// The Backlinks pane's search filter (`searchQuery`).
     backlink_filter: Entity<TextInput>,
     /// Every tag in the vault as a tree, sorted the way the Tags pane is.
@@ -2669,6 +2679,9 @@ fn view_subscriptions(
         }),
         cx.subscribe(reading, |this, _, event: &TaskToggled, cx| {
             this.toggle_task(&event.path, event.marker, cx)
+        }),
+        cx.subscribe(reading, |this, _, event: &PropertyItemRemoved, cx| {
+            this.remove_property_item(&event.path, &event.key, event.index, cx)
         }),
         cx.subscribe(editor, |this, _, event: &EditorEvent, cx| match event {
             EditorEvent::Edited => {
@@ -2795,6 +2808,9 @@ impl Workspace {
                     }
                     ExplorerEvent::CopyPath(path) => this.copy_path(path, cx),
                     ExplorerEvent::OpenInDefaultApp(path) => this.open_in_default_app(path, cx),
+                    ExplorerEvent::ShowInSystemExplorer(path) => {
+                        this.show_in_system_explorer(path, cx)
+                    }
                     ExplorerEvent::SearchInFolder(folder) => {
                         this.search_in_folder(folder, window, cx)
                     }
@@ -2902,8 +2918,8 @@ impl Workspace {
             cx.subscribe_in(
                 &settings,
                 window,
-                |this, _, event: &SettingsEvent, window, cx| match event {
-                    SettingsEvent::Close => this.close_modal(window, cx),
+                |this, _, event: &SettingsEvent, _window, cx| match event {
+                    SettingsEvent::Close => this.close_settings(cx),
                     SettingsEvent::Changed(change) => {
                         this.change_setting(change.as_ref().clone(), cx)
                     }
@@ -2984,6 +3000,7 @@ impl Workspace {
             tab_list_menu: None,
             help_window: None,
             vault_window: None,
+            settings_window: None,
             loading: None,
             explorer,
             search,
@@ -3049,6 +3066,7 @@ impl Workspace {
             backlink_state: BacklinkState::default(),
             outgoing_state: OutgoingState::default(),
             sort_menu_at: point(px(0.), px(0.)),
+            file_menu: None,
             backlink_filter,
             tag_tree: Vec::new(),
             tag_state: TagPaneState::default(),
@@ -3210,8 +3228,8 @@ impl Workspace {
         }
     }
 
-    /// Writes a setting the Settings modal changed, then applies it. The
-    /// modal redraws from the vault's config either way, so a write that
+    /// Writes a setting the Settings window changed, then applies it. The
+    /// panel redraws from the vault's config either way, so a write that
     /// fails leaves the control as it was and says so in the status bar.
     /// Rebuilds the command registry and every key bound from it: the
     /// commands of a core plugin that is off are not in it, and
@@ -3238,6 +3256,16 @@ impl Workspace {
     }
 
     fn change_setting(&mut self, change: SettingChange, cx: &mut Context<Self>) {
+        // The frame style is the machine's, not the vault's: it is written
+        // beside the vault list and read on the next start, so the vault's
+        // config is not touched and nothing is re-applied now.
+        if let SettingChange::Frame(value) = &change {
+            if let Err(err) = crate::write_frame_style(value) {
+                self.report(format!("{} could not be written: {err}", change.file()), cx);
+            }
+            cx.notify();
+            return;
+        }
         let Some(state) = self.state.clone() else {
             return;
         };
@@ -4018,17 +4046,64 @@ impl Workspace {
         self.settings.update(cx, |s, cx| s.open_menu(key, cx));
     }
 
-    /// Opens the Settings modal, on `tab` when given (`--settings` on the command line).
+    /// Opens the Settings window, on `tab` when given (`--settings` on the
+    /// command line), and brings it forward if it is already up.
+    ///
+    /// Obsidian's Settings is a modal; Scoria's is a window of its own, so
+    /// this takes nothing away from the workspace: the vault behind it
+    /// keeps its keys and its focus.
     pub fn open_settings(
         &mut self,
         tab: Option<settings::Tab>,
-        window: &mut Window,
+        _window: &mut Window,
         cx: &mut Context<Self>,
     ) {
         self.close_editor_suggest(cx);
-        self.modal = Modal::Settings;
-        self.settings.update(cx, |s, cx| s.open(tab, window, cx));
+        self.vault_menu_open = false;
+        let view = self.settings.clone();
+        if let Some(handle) = self.settings_window {
+            let raised = handle
+                .update(cx, |_, window, cx| {
+                    view.update(cx, |s, cx| s.open(tab, window, cx));
+                    window.activate_window();
+                })
+                .is_ok();
+            if raised {
+                cx.notify();
+                return;
+            }
+        }
+        match SettingsWindow::open(view, tab, cx.weak_entity(), cx) {
+            Ok(handle) => self.settings_window = Some(handle),
+            Err(err) => self.report(format!("Could not open Settings: {err}"), cx),
+        }
         cx.notify();
+    }
+
+    /// Takes the Settings window down, from its own Escape or its ×.
+    fn close_settings(&mut self, cx: &mut Context<Self>) {
+        if let Some(handle) = self.settings_window.take() {
+            handle
+                .update(cx, |_, window, _| window.remove_window())
+                .ok();
+        }
+        cx.notify();
+    }
+
+    /// Whether the Settings window is up. A handle left behind by a window
+    /// the desktop closed reads as gone, which is what makes this the test
+    /// rather than `settings_window.is_some()`.
+    pub fn settings_up(&self, cx: &App) -> bool {
+        self.settings_window
+            .is_some_and(|handle| handle.read(cx).is_ok())
+    }
+
+    /// The Settings window, for the control socket: input goes there while
+    /// it is up, since that is the window a caller is looking at.
+    pub fn settings_window(&self, cx: &App) -> Option<gpui::AnyWindowHandle> {
+        self.settings_up(cx)
+            .then(|| self.settings_window.map(Into::into))
+            .flatten()
     }
 
     /// A modal going up takes the autocompletion popup down with it: the
@@ -4379,18 +4454,16 @@ impl Workspace {
                 self.explorer.update(cx, |e, cx| e.focus_tree(window, cx));
                 cx.notify();
             }
-            "file-explorer:reveal-active-file" => {
-                self.leave_search_field(window, cx);
-                self.left_visible = true;
-                self.left_tab = LeftTab::Files;
-                match self.current.clone() {
-                    Some(current) => self
-                        .explorer
-                        .update(cx, |e, cx| e.reveal_and_focus(&current, window, cx)),
-                    None => self.explorer.update(cx, |e, cx| e.focus_tree(window, cx)),
+            "file-explorer:reveal-active-file" => match self.current.clone() {
+                Some(current) => self.reveal_in_navigation(&current, window, cx),
+                None => {
+                    self.leave_search_field(window, cx);
+                    self.left_visible = true;
+                    self.left_tab = LeftTab::Files;
+                    self.explorer.update(cx, |e, cx| e.focus_tree(window, cx));
+                    cx.notify();
                 }
-                cx.notify();
-            }
+            },
             "file-explorer:new-file"
             | "file-explorer:new-file-in-current-tab"
             | "file-explorer:new-file-in-new-pane" => {
@@ -6051,10 +6124,51 @@ impl Workspace {
         }) {
             return;
         }
+        self.rebuild_reading_from_editor(path, &state, cx);
+    }
+
+    /// A pill's remove control a reader clicked in the reading view. The
+    /// edit takes the path [`Self::toggle_task`] takes: the editor's buffer,
+    /// which still holds the note, as one undo step the autosave writes back
+    /// with the file's own BOM and line endings, and the reader is rebuilt
+    /// from that buffer.
+    fn remove_property_item(
+        &mut self,
+        path: &str,
+        key: &str,
+        index: usize,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        // A click that outlived the note it was made in must write nothing:
+        // the key and index belong to that note's block.
+        if self.current.as_deref() != Some(path) || self.editor.read(cx).name.as_ref() != path {
+            return;
+        }
+        if !self
+            .editor
+            .update(cx, |e, cx| e.remove_property_item(key, index, None, cx))
+        {
+            return;
+        }
+        self.rebuild_reading_from_editor(path, &state, cx);
+    }
+
+    /// Rebuilds the reading view from the editor's buffer after an edit made
+    /// on the reader's behalf — which the autosave has not written yet, so
+    /// the file is behind — and the word and character counts with it.
+    fn rebuild_reading_from_editor(
+        &mut self,
+        path: &str,
+        state: &VaultState,
+        cx: &mut Context<Self>,
+    ) {
         let text = self.editor.read(cx).text().to_string();
         self.words = text.split_whitespace().count();
         self.chars = text.chars().count();
-        let model = reading::build_with(path, &text, state.as_ref(), state.build_options());
+        let model = reading::build_with(path, &text, state, state.build_options());
         self.reading
             .update(cx, |r, cx| r.set_note(Some(path.to_string()), model, cx));
         cx.notify();
@@ -6217,6 +6331,45 @@ impl Workspace {
         {
             self.report(format!("Could not open {path}: {err}"), cx);
         }
+    }
+
+    /// The file menu's "Show in system explorer": the file or folder selected
+    /// in the desktop's file manager, through the command lines
+    /// [`file_menu::reveal_commands`] lists for the platform. The D-Bus call
+    /// waits for the file manager's reply, so the whole run is off the UI
+    /// thread, and only a failure to start anything comes back as a notice.
+    fn show_in_system_explorer(&mut self, path: &str, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let absolute = state.vault().absolute(path);
+        let path = path.to_string();
+        cx.spawn(async move |this, cx| {
+            let result = cx
+                .background_executor()
+                .spawn(async move { file_menu::show_in_system_explorer(&absolute) })
+                .await;
+            if let Err(err) = result {
+                this.update(cx, |ws, cx| {
+                    ws.report(format!("Could not show {path}: {err}"), cx)
+                })
+                .ok();
+            }
+        })
+        .detach();
+    }
+
+    /// The file menu's "Reveal file in navigation", and what
+    /// `file-explorer:reveal-active-file` does with the open note: the Files
+    /// view shown and expanded to `path`, its row ringed and given the
+    /// keyboard.
+    fn reveal_in_navigation(&mut self, path: &str, window: &mut Window, cx: &mut Context<Self>) {
+        self.leave_search_field(window, cx);
+        self.left_visible = true;
+        self.left_tab = LeftTab::Files;
+        self.explorer
+            .update(cx, |e, cx| e.reveal_and_focus(path, window, cx));
+        cx.notify();
     }
 
     /// The explorer menu's "Search in folder": the Search pane scoped with the
@@ -6890,9 +7043,23 @@ impl Workspace {
         let Some(state) = self.state.clone() else {
             return;
         };
+        let is_folder = state.vault().absolute(path).is_dir();
         match state.duplicate(path) {
             // Nothing is reported for a copy that worked either; the new
-            // file opening is the feedback.
+            // file opening, or the new folder showing in the tree, is the
+            // feedback.
+            Ok((copy, changes)) if is_folder => {
+                // An empty folder's copy changes no file, and
+                // `after_changes` would leave the tree as it was.
+                if changes.files.is_empty() {
+                    self.refresh_vault_views(cx);
+                } else {
+                    self.after_changes(changes, cx);
+                }
+                self.left_tab = LeftTab::Files;
+                self.explorer.update(cx, |e, cx| e.reveal_folder(&copy, cx));
+                cx.notify();
+            }
             Ok((copy, changes)) => {
                 self.after_changes(changes, cx);
                 self.open_file(copy, None, cx);
@@ -10779,6 +10946,10 @@ impl Workspace {
                 RightTab::Properties => "properties",
             }),
         );
+        right.insert(
+            "file_menu".into(),
+            json!(self.file_menu.as_ref().map(file_menu::describe)),
+        );
         put_capped(
             &mut right,
             "outline",
@@ -10918,13 +11089,17 @@ impl Workspace {
     /// itself says about its query and rows.
     fn describe_modal(&self, rows: usize, cx: &App) -> Value {
         let mut modal = Map::new();
+        // Settings is a window rather than a modal, but it is still the
+        // thing in front of the caller, and the socket's contract has said
+        // "settings" here since before it moved out of the workspace.
+        let settings_up = self.settings_up(cx);
         modal.insert(
             "kind".into(),
             json!(match self.modal {
+                _ if settings_up => "settings",
                 Modal::None => "none",
                 Modal::Switcher => "switcher",
                 Modal::Palette => "palette",
-                Modal::Settings => "settings",
                 Modal::Prompt => "prompt",
                 Modal::CopyResults => "copy-results",
                 Modal::Chooser => "chooser",
@@ -10937,12 +11112,12 @@ impl Workspace {
         modal.insert("error".into(), Value::Null);
         modal.insert("rows".into(), Value::Array(Vec::new()));
         let view = match self.modal {
+            _ if settings_up => Some(self.settings.read(cx).describe(rows, cx)),
             Modal::Switcher => Some(self.switcher.read(cx).describe(rows, cx)),
             Modal::Palette => Some(self.palette.read(cx).describe(rows, cx)),
             Modal::Prompt => Some(self.prompt.read(cx).describe(rows, cx)),
             Modal::CopyResults => Some(self.copy_results.read(cx).describe()),
             Modal::Chooser => Some(self.chooser.read(cx).describe(rows, cx)),
-            Modal::Settings => Some(self.settings.read(cx).describe(rows, cx)),
             Modal::None => None,
         };
         if let Some(Value::Object(view)) = view {
@@ -11047,10 +11222,14 @@ impl Workspace {
     /// A name for whatever has focus, for the state dump and to decide
     /// where typed text goes. Only handles this shell can reach are named
     /// by handle; the find panel's two fields belong to the editor, which
-    /// is asked, and the Settings fields are named from the dispatch path.
-    /// `explorer` never comes back: the file tree's rows are painted
-    /// without a focus handle, so the keyboard is never in it.
+    /// is asked. `explorer` never comes back: the file tree's rows are
+    /// painted without a focus handle, so the keyboard is never in it.
     pub fn focus_name(&self, window: &Window, cx: &App) -> &'static str {
+        // Settings has a window of its own, so its focus is not this
+        // window's to report: that it is up is what the caller is after.
+        if self.settings_up(cx) {
+            return "settings";
+        }
         if window.focused(cx).is_none() {
             return "none";
         }
@@ -11119,9 +11298,6 @@ impl Workspace {
                 return name;
             }
         }
-        if self.settings.focus_handle(cx).is_focused(window) {
-            return "settings";
-        }
         if self.explorer.focus_handle(cx).is_focused(window) {
             return "explorer";
         }
@@ -11132,10 +11308,6 @@ impl Workspace {
         // them apart; the editor holds the two handles and can.
         if let Some(name) = self.editor.read(cx).find_focus(window, cx) {
             return name;
-        }
-        let stack = context_names(window);
-        if stack.iter().any(|c| c == "Settings") {
-            return "settings";
         }
         "unknown"
     }
@@ -11551,6 +11723,78 @@ impl Workspace {
         self.render_sections(RightTab::Outgoing, "", theme, cx)
     }
 
+    /// A right click on a Backlinks or Outgoing links row that stands for a
+    /// file -- a Links row, a mentions group, or a match, which belongs to
+    /// its group's file: the file menu, in the list Obsidian gives rows away
+    /// from the Files view ([`file_menu::Target::Linked`]).
+    fn open_file_menu(
+        &mut self,
+        path: String,
+        position: gpui::Point<Pixels>,
+        cx: &mut Context<Self>,
+    ) {
+        self.file_menu = Some(file_menu::Menu {
+            position,
+            target: file_menu::Target::Linked(path),
+        });
+        cx.notify();
+    }
+
+    fn close_file_menu(&mut self, cx: &mut Context<Self>) {
+        if self.file_menu.take().is_some() {
+            cx.notify();
+        }
+    }
+
+    /// What a pick on that menu does: the handlers the explorer's events
+    /// already route to, plus the two rows the explorer's menu has no twin
+    /// of. "Open in new window" is not offered (no second window).
+    fn file_menu_pick(
+        &mut self,
+        pick: Pick,
+        path: String,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        match pick {
+            Pick::OpenInNewTab => self.open_in_new_tab(path, None, cx),
+            Pick::OpenToRight => self.open_to_right(path, window, cx),
+            Pick::Rename => self.start_rename(&path, window, cx),
+            Pick::Move => self.start_move(&path, window, cx),
+            Pick::Bookmark => self.start_bookmark_path(&path, window, cx),
+            Pick::CopyPath => self.copy_path(&path, cx),
+            Pick::OpenInDefaultApp => self.open_in_default_app(&path, cx),
+            Pick::ShowInSystemExplorer => self.show_in_system_explorer(&path, cx),
+            Pick::RevealInNavigation => self.reveal_in_navigation(&path, window, cx),
+            // The Files view's own rows, which a linked row's menu never
+            // lists.
+            Pick::Duplicate
+            | Pick::Delete
+            | Pick::NewNote
+            | Pick::NewFolder
+            | Pick::NewCanvas
+            | Pick::NewBase
+            | Pick::SearchInFolder => {}
+        }
+    }
+
+    /// The open file menu, drawn over everything else at the click.
+    fn render_file_menu(
+        &mut self,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> Option<gpui::AnyElement> {
+        let menu = self.file_menu.as_ref()?;
+        let path = menu.target.path().to_string();
+        Some(file_menu::render(
+            menu,
+            theme,
+            cx,
+            |this, cx| this.close_file_menu(cx),
+            move |this, pick, window, cx| this.file_menu_pick(pick, path.clone(), window, cx),
+        ))
+    }
+
     /// "Change sort order" for the Backlinks pane: the six orders in three
     /// pairs, a check against the one in force.
     fn render_backlink_sort_menu(
@@ -11767,6 +12011,7 @@ impl Workspace {
                 let path = group.path.clone();
                 let link = group.link.clone();
                 let resolved = path.is_some();
+                let menu_path = path.clone();
                 // The fold triangle (a mentions group) or the link's glyph
                 // (a Links row) sits in the row's 24px left gutter.
                 let gutter: gpui::AnyElement = if flat {
@@ -11841,6 +12086,17 @@ impl Workspace {
                                 this.open_file(path, None, cx);
                             }
                         }))
+                        // A row that stands for a file takes the file menu;
+                        // a link nothing stands behind has no file to offer.
+                        .when_some(menu_path, |d, menu_path| {
+                            d.on_mouse_down(
+                                MouseButton::Right,
+                                cx.listener(move |this, event: &MouseDownEvent, _, cx| {
+                                    cx.stop_propagation();
+                                    this.open_file_menu(menu_path.clone(), event.position, cx);
+                                }),
+                            )
+                        })
                         .child(gutter)
                         .child(
                             div()
@@ -11933,6 +12189,7 @@ impl Workspace {
         cx: &mut Context<Self>,
     ) -> gpui::Stateful<gpui::Div> {
         let path = group.path.clone();
+        let menu_path = path.clone();
         let offset = m.offset;
         let highlights: Vec<(Range<usize>, HighlightStyle)> = m
             .ranges
@@ -12045,6 +12302,16 @@ impl Workspace {
                     }
                 }
             }))
+            // A match belongs to its group's file, and takes that file's menu.
+            .when_some(menu_path, |d, menu_path| {
+                d.on_mouse_down(
+                    MouseButton::Right,
+                    cx.listener(move |this, event: &MouseDownEvent, _, cx| {
+                        cx.stop_propagation();
+                        this.open_file_menu(menu_path.clone(), event.position, cx);
+                    }),
+                )
+            })
             .child(
                 div()
                     .text_size(px(FONT_UI_SMALLER))
@@ -13042,6 +13309,9 @@ impl Workspace {
             )
             .child(div().flex_1().overflow_hidden().child(body))
             .child(self.dock_handle(false, theme))
+            // The Backlinks and Outgoing links rows' file menu, positioned
+            // at the click and drawn over everything else.
+            .children(self.render_file_menu(theme, cx))
     }
 }
 
@@ -14282,37 +14552,6 @@ impl Render for Workspace {
                         .into_any_element(),
                 )
             }
-            Modal::Settings => Some(
-                div()
-                    .id("settings-backdrop")
-                    .occlude()
-                    .absolute()
-                    .inset_0()
-                    .bg(rgba(0x00000080))
-                    .map(|d| corners.apply(d))
-                    .flex()
-                    .flex_row()
-                    .justify_center()
-                    .items_center()
-                    .py(px(40.))
-                    .px(px(40.))
-                    .on_click(cx.listener(|this, _, window, cx| this.close_modal(window, cx)))
-                    .child(
-                        div()
-                            .id("settings-frame")
-                            .h_full()
-                            // Obsidian's modal is `min(90vw, 1100px)`. The
-                            // frame has to carry the width, because a frame
-                            // that only clips leaves the panel laying out at
-                            // its full width with the control column past
-                            // the clip, where nothing can be clicked.
-                            .w(relative(0.9))
-                            .max_w(px(1100.))
-                            .on_click(|_, _, cx| cx.stop_propagation())
-                            .child(self.settings.clone()),
-                    )
-                    .into_any_element(),
-            ),
         };
         // Obsidian reports an outcome with a Notice in the corner rather
         // than in the status bar, and the probe notes put it bottom right.

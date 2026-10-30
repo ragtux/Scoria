@@ -134,8 +134,9 @@ pub(crate) fn header_height(base: f32, title: bool) -> f32 {
         }
 }
 
-/// Something the reader did to a property row. The reading view raises none
-/// of these; Live Preview turns each into a document edit.
+/// Something the reader did to a property row. Live Preview turns each into
+/// a document edit; the reading view raises only [`PropertyAction::RemoveItem`],
+/// which the workspace turns into the same edit.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PropertyAction {
     /// Start typing in a row's key or value.
@@ -175,8 +176,9 @@ pub enum PropertyAction {
 }
 
 /// Lets the properties block be edited. The reading view passes `None` and
-/// draws the rows read-only; Live Preview passes the open field and a sink
-/// for what the reader does.
+/// draws the rows read-only, but for the pills' remove control, which
+/// [`ReadingHost::on_remove_item`] takes; Live Preview passes the open field
+/// and a sink for what the reader does.
 pub(crate) struct PropertiesHost {
     /// The field being typed into, when it belongs to this block.
     pub field: Option<Field>,
@@ -234,6 +236,12 @@ pub(crate) struct ReadingHost {
     pub copied: Option<usize>,
     pub on_copy: CopyHandler,
     pub on_task: TaskHandler,
+    /// The one property affordance the reading view has: a pill's remove
+    /// control, handed [`PropertyAction::RemoveItem`] and nothing else. The
+    /// rest of the block stays read-only, with no [`PropertiesHost`] to
+    /// open a field or a menu. `None` draws no control at all, for a host
+    /// with no way to write the note (a canvas card).
+    pub on_remove_item: Option<PropertyHandler>,
 }
 
 pub enum ReadingEvent {
@@ -251,6 +259,19 @@ pub struct TaskToggled {
     pub path: String,
     /// Where the three bytes `[`, status, `]` are in it.
     pub marker: TaskMarker,
+}
+
+/// A reader clicked the remove control of a list property's pill. As with
+/// [`TaskToggled`], the reading view writes nothing itself: the workspace
+/// makes the edit the same pill makes in Live Preview.
+pub struct PropertyItemRemoved {
+    /// The note the reading view was showing, so an event that outlived
+    /// its note writes nothing.
+    pub path: String,
+    /// The property the pill belongs to.
+    pub key: String,
+    /// The pill's index among the list's items.
+    pub index: usize,
 }
 
 pub struct ReadingView {
@@ -285,6 +306,7 @@ pub struct ReadingView {
 
 impl EventEmitter<ReadingEvent> for ReadingView {}
 impl EventEmitter<TaskToggled> for ReadingView {}
+impl EventEmitter<PropertyItemRemoved> for ReadingView {}
 
 impl Focusable for ReadingView {
     fn focus_handle(&self, _cx: &App) -> FocusHandle {
@@ -648,11 +670,27 @@ impl ReadingView {
                 });
             }
         });
+        let on_remove_item: PropertyHandler = Rc::new({
+            let view = view.clone();
+            move |action, _window, cx| {
+                // The block is read-only but for this one gesture; a host
+                // that handed anything else over would be a bug, and it is
+                // ignored rather than written.
+                if let PropertyAction::RemoveItem { key, index } = action {
+                    view.update(cx, |v, cx| {
+                        if let Some(path) = v.path.clone() {
+                            cx.emit(PropertyItemRemoved { path, key, index });
+                        }
+                    });
+                }
+            }
+        });
         let host = ReadingHost {
             properties: self.properties_in_document,
             copied: self.copied,
             on_copy,
             on_task,
+            on_remove_item: Some(on_remove_item),
         };
         let r = Renderer::new(
             &theme,
@@ -952,7 +990,7 @@ impl<'a> Renderer<'a> {
         let mut max = vec![0f32; count];
         let mut min = vec![0f32; count];
         let mut fold = |ix: usize, cell: &RichText, bold: bool| {
-            let mono = cell.runs.iter().any(|(_, s)| s.code);
+            let mono = cell.runs.iter().any(|(_, s)| s.code || s.kbd);
             let longest_line = cell
                 .text
                 .lines()
@@ -1614,9 +1652,11 @@ impl<'a> Renderer<'a> {
 
     /// The properties block: a foldable "Properties" heading and one row per
     /// property, each with its type glyph, its key and its value. Links and
-    /// tags inside a value are clickable; nothing here is editable, which is
-    /// the one way the reading view differs from Obsidian's (it edits
-    /// properties in reading view too).
+    /// tags inside a value are clickable. Without a [`PropertiesHost`] the
+    /// rows are not editable, bar a list pill's remove control, which the
+    /// reading view takes through [`ReadingHost::on_remove_item`]; the fields,
+    /// type menu and add-row control are the way the reading view still
+    /// differs from Obsidian's (it edits properties in reading view too).
     fn properties(&self, entries: &[Property]) -> AnyElement {
         let t = self.theme;
         let base = t.base_font_size;
@@ -2065,12 +2105,11 @@ impl<'a> Renderer<'a> {
     /// the markup a real Obsidian was observed to draw
     /// (`div.multi-select-pill` with its own
     /// `div.multi-select-pill-remove-button` holding a `lucide-x`). The
-    /// reading view passes no host and draws the same pills read-only,
-    /// without that button: Obsidian draws one there as well — its
-    /// reading view edits properties too, which is the gap
-    /// [`Renderer::properties`] records — and in Scoria nothing in the
-    /// reading view can write the note, so the affordance waits on that
-    /// path rather than being drawn dead.
+    /// reading view passes no properties host, so a click on the pill
+    /// itself opens nothing there, but it draws the same remove button —
+    /// Obsidian draws one in its reading view too — and routes it through
+    /// [`ReadingHost::on_remove_item`] to the workspace, which writes the
+    /// note.
     fn property_pills(
         &self,
         row: &crate::properties::Row,
@@ -2079,6 +2118,11 @@ impl<'a> Renderer<'a> {
     ) -> AnyElement {
         let t = self.theme;
         let on_action = self.properties_host.map(|h| h.on_action.clone());
+        // The remove control is drawn for whichever host can take the item
+        // away: Live Preview's sink, or the reading view's narrower one.
+        let remove = on_action
+            .clone()
+            .or_else(|| self.reading_host.and_then(|h| h.on_remove_item.clone()));
         // The pill a Backspace selected, drawn focused until the second
         // press removes it. It belongs to the open field's row, so it only
         // means anything while a field of this row is open.
@@ -2120,10 +2164,9 @@ impl<'a> Renderer<'a> {
                     .child(self.rich(item))
                     .when_some(on_action.clone(), |d, on_action| {
                         let key = row.key.clone();
-                        let remove = on_action.clone();
-                        let remove_key = row.key.clone();
-                        d.cursor_text()
-                            .on_mouse_down(gpui::MouseButton::Left, move |_, window, cx| {
+                        d.cursor_text().on_mouse_down(
+                            gpui::MouseButton::Left,
+                            move |_, window, cx| {
                                 // The cell behind opens the append input;
                                 // this pill opens itself instead.
                                 cx.stop_propagation();
@@ -2135,37 +2178,37 @@ impl<'a> Renderer<'a> {
                                     window,
                                     cx,
                                 );
-                            })
-                            .child(
-                                div()
-                                    .id(("property-pill-remove", item.id))
-                                    .flex()
-                                    .items_center()
-                                    .cursor_pointer()
-                                    // Obsidian's `.multi-select-pill-remove-button`
-                                    // holds a `lucide-x`, 14 px wide, and it
-                                    // is always drawn rather than revealed on
-                                    // hover.
-                                    .child(crate::assets::icon(
-                                        "x",
-                                        t.base_font_size * 0.875,
-                                        t.text_faint,
-                                    ))
-                                    .on_mouse_down(
-                                        gpui::MouseButton::Left,
-                                        move |_, window, cx| {
-                                            cx.stop_propagation();
-                                            remove(
-                                                PropertyAction::RemoveItem {
-                                                    key: remove_key.clone(),
-                                                    index: ix,
-                                                },
-                                                window,
-                                                cx,
-                                            );
+                            },
+                        )
+                    })
+                    .when_some(remove.clone(), |d, remove| {
+                        let key = row.key.clone();
+                        d.child(
+                            div()
+                                .id(("property-pill-remove", item.id))
+                                .flex()
+                                .items_center()
+                                .cursor_pointer()
+                                // Obsidian's `.multi-select-pill-remove-button`
+                                // holds a `lucide-x`, 14 px wide, and it is
+                                // always drawn rather than revealed on hover.
+                                .child(crate::assets::icon(
+                                    "x",
+                                    t.base_font_size * 0.875,
+                                    t.text_faint,
+                                ))
+                                .on_mouse_down(gpui::MouseButton::Left, move |_, window, cx| {
+                                    cx.stop_propagation();
+                                    remove(
+                                        PropertyAction::RemoveItem {
+                                            key: key.clone(),
+                                            index: ix,
                                         },
-                                    ),
-                            )
+                                        window,
+                                        cx,
+                                    );
+                                }),
+                        )
                     })
                     .into_any_element(),
             );
@@ -2299,7 +2342,7 @@ impl<'a> Renderer<'a> {
             .collect();
         let mono: Vec<_> = runs
             .iter()
-            .filter(|(_, s)| s.code || s.html)
+            .filter(|(_, s)| s.code || s.kbd || s.html)
             .map(|(range, _)| (range.clone(), t.mono_font.clone()))
             .collect();
         let mut styled =
@@ -2344,9 +2387,22 @@ impl<'a> Renderer<'a> {
                 None => t.highlight_bg,
             });
         }
-        if s.code {
+        // `<kbd>` wears inline code's look, the box Obsidian themes it with.
+        if s.code || s.kbd {
             h.background_color = Some(t.code_bg);
         }
+        // `<u>`: underlined in the text colour; a link's own underline below
+        // takes over when both apply.
+        if s.underline {
+            h.underline = Some(UnderlineStyle {
+                thickness: px(1.),
+                color: None,
+                wavy: false,
+            });
+        }
+        // `s.sup` and `s.sub` have no look yet: a gpui text run cannot be
+        // raised, lowered or shrunk on its own, so the text sits at body
+        // size with the tags dropped.
         if s.math {
             // Only a formula that failed to typeset is still text here.
             h.color = Some(math::error_color());

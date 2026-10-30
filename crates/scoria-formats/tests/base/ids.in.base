@@ -1,0 +1,56 @@
+properties:
+  note.price:
+    displayName: Price
+  status:
+    displayName: Status
+  formula.ppu:
+    displayName: Per unit
+formulas:
+  ppu: price / density
+filters:
+  and:
+    - type == "rock"
+views:
+  - type: table
+    name: Qualified
+    order:
+      - file.name
+      - note.status
+      - note.price
+      - note.density
+      - formula.ppu
+      - file.ext
+    sort:
+      - property: note.price
+        direction: DESC
+      - property: formula.ppu
+        direction: ASC
+      - property: file.name
+        direction: ASC
+    groupBy:
+      property: note.status
+      direction: ASC
+    summaries:
+      note.price: Average
+      formula.ppu: Sum
+    columnSize:
+      file.name: 120
+      note.status: 150
+      note.price: 160
+  - type: cards
+    name: Pics
+    order:
+      - file.name
+      - note.status
+    image: note.cover
+  - type: table
+    name: Bare
+    order:
+      - file.name
+      - status
+      - price
+    sort:
+      - property: price
+        direction: DESC
+    columnSize:
+      status: 150

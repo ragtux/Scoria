@@ -16,7 +16,9 @@
 //! A new attachment goes where `attachmentFolderPath` says: a leading `./`
 //! is relative to the note's own folder, anything else is vault-absolute,
 //! and `/` and `""` both mean the root ([`attachment_path`], observed on
-//! 1.14.5).
+//! 1.14.5). "Make a copy" puts the copy beside the original as `Name 1.md`
+//! for a file and `Name 1` for a folder, the next free number either way
+//! ([`Vault::duplicate`]).
 
 use crate::{FileChange, Vault};
 use scoria_formats::validate_file_name;
@@ -273,6 +275,48 @@ impl Vault {
         Ok(())
     }
 
+    /// Copies a file or folder next to itself and returns the copy's vault
+    /// path with the changes the index needs. The copy takes the first free
+    /// name [`Vault::available_path`] gives the original's: `Name 1.ext`,
+    /// `Name 2.ext`, ... for a file (the number goes before the extension)
+    /// and `Name 1`, `Name 2`, ... for a folder, whose name is never split
+    /// on a dot.
+    ///
+    /// A folder copy takes what the scanner would index -- every regular
+    /// file and folder under it, dot-prefixed entries and links left out, as
+    /// in [`Vault::rescan`] -- and copies each file's bytes verbatim. No link
+    /// is rewritten: what Obsidian does to the links of the notes in a copied
+    /// folder is unobserved, and a byte-identical copy loses nothing. The
+    /// copy is a sibling of the original, so it can never land inside the
+    /// folder it is copying.
+    pub fn duplicate(&mut self, path: &str) -> Result<(String, Vec<FileChange>), OpError> {
+        let path = path.trim_matches('/');
+        let from_abs = self.entry_path(path)?;
+        let meta = std::fs::metadata(&from_abs).map_err(|_| OpError::NotFound(path.to_string()))?;
+        let (folder, name) = match path.rsplit_once('/') {
+            Some((d, n)) => (d, n),
+            None => ("", path),
+        };
+        let (stem, ext) = match name.rsplit_once('.') {
+            Some((s, e)) if !s.is_empty() && !meta.is_dir() => (s, e),
+            _ => (name, ""),
+        };
+        let target = self.available_path(folder, stem, ext);
+        let to_abs = self.write_path(&target)?;
+        let copied = if meta.is_dir() {
+            copy_indexed_tree(&from_abs, &to_abs)
+        } else {
+            std::fs::copy(&from_abs, &to_abs)
+                .map(|_| ())
+                .map_err(io("copy", &from_abs))
+        };
+        // Whatever landed before a failure is on disk, and the list has to
+        // say so either way.
+        let changes = self.refresh_path(&to_abs);
+        copied?;
+        Ok((target, changes))
+    }
+
     /// Files under `path` when it is a folder, or `path` itself when it is a
     /// file in the list.
     fn files_under(&self, path: &str) -> Vec<String> {
@@ -387,6 +431,41 @@ impl Vault {
         let target_abs = self.entry_path(&target)?;
         std::fs::rename(&abs, &target_abs).map_err(io("move to .trash", &abs))
     }
+}
+
+/// Copies the folder `from` to `to`, which does not exist yet, as the
+/// scanner sees it: regular files and folders, with dot-prefixed entries
+/// skipped and links neither followed nor copied. Every file's bytes are
+/// copied as they are. (The trash's `copy_tree` below is the other thing:
+/// it takes everything, because a trashed folder must come back whole.)
+fn copy_indexed_tree(from: &Path, to: &Path) -> Result<(), OpError> {
+    let walker = walkdir::WalkDir::new(from)
+        .follow_links(false)
+        .into_iter()
+        .filter_entry(|e| !(e.depth() > 0 && e.file_name().to_string_lossy().starts_with('.')));
+    for entry in walker {
+        let entry = entry.map_err(|e| OpError::Io {
+            action: "read",
+            path: e
+                .path()
+                .map(Path::to_path_buf)
+                .unwrap_or_else(|| from.to_path_buf()),
+            source: e
+                .into_io_error()
+                .unwrap_or_else(|| std::io::Error::other("walk")),
+        })?;
+        let rel = entry
+            .path()
+            .strip_prefix(from)
+            .expect("entry under the folder");
+        let dest = to.join(rel);
+        if entry.file_type().is_dir() {
+            std::fs::create_dir_all(&dest).map_err(io("create folder", &dest))?;
+        } else if entry.file_type().is_file() {
+            std::fs::copy(entry.path(), &dest).map_err(io("copy", entry.path()))?;
+        }
+    }
+    Ok(())
 }
 
 /// Moves `abs` to the freedesktop.org trash (`$XDG_DATA_HOME/Trash`), writing
@@ -558,6 +637,104 @@ mod tests {
         assert!(paths(&v).contains(&"New/Nested/N.md"));
         assert!(v.folders().contains(&"Untitled".to_string()));
         assert!(v.folders().contains(&"New/Nested".to_string()));
+    }
+
+    /// A folder's copy is a sibling named by the same rule as a file's --
+    /// `Sub 1`, then `Sub 2` -- holding every file and folder the scanner
+    /// would index, byte for byte, with the dot-files the scanner skips left
+    /// behind and nothing of the original touched.
+    #[test]
+    fn a_folder_copy_is_a_byte_identical_sibling() {
+        let (dir, mut v) = vault();
+        let r = dir.path();
+        fs::create_dir_all(r.join("Sub/Empty")).unwrap();
+        fs::write(r.join("Sub/Deep/D.md"), "# D\r\n[[S]] and ![[pic.png]]\r\n").unwrap();
+        fs::write(
+            r.join("Sub/pic.png"),
+            [0x89u8, b'P', b'N', b'G', 0, 1, 2, 0xff],
+        )
+        .unwrap();
+        fs::write(r.join("Sub/board.canvas"), "{\"nodes\":[]}").unwrap();
+        fs::write(r.join("Sub/.hidden"), "h").unwrap();
+        v.rescan().unwrap();
+        let originals = [
+            "Sub/S.md",
+            "Sub/Deep/D.md",
+            "Sub/pic.png",
+            "Sub/board.canvas",
+        ];
+        let before: Vec<Vec<u8>> = originals
+            .iter()
+            .map(|p| fs::read(r.join(p)).unwrap())
+            .collect();
+
+        let (copy, changes) = v.duplicate("Sub").unwrap();
+        assert_eq!(copy, "Sub 1");
+        assert!(
+            !copy.starts_with("Sub/"),
+            "the copy is a sibling, never inside the original"
+        );
+        for (p, bytes) in originals.iter().zip(&before) {
+            let copied = format!("Sub 1{}", &p["Sub".len()..]);
+            assert_eq!(&fs::read(r.join(&copied)).unwrap(), bytes, "{copied}");
+            assert_eq!(&fs::read(r.join(p)).unwrap(), bytes, "{p} was touched");
+        }
+        assert!(r.join("Sub 1/Empty").is_dir(), "empty folders come along");
+        assert!(
+            !r.join("Sub 1/.hidden").exists(),
+            "what the scanner skips is not copied"
+        );
+        let mut added: Vec<&str> = changes
+            .iter()
+            .map(|c| {
+                assert!(matches!(c, FileChange::Added(_)), "{c:?}");
+                c.path()
+            })
+            .collect();
+        added.sort();
+        assert_eq!(
+            added,
+            [
+                "Sub 1/Deep/D.md",
+                "Sub 1/S.md",
+                "Sub 1/board.canvas",
+                "Sub 1/pic.png"
+            ]
+        );
+        assert!(v.folders().contains(&"Sub 1/Deep".to_string()));
+        assert!(v.folders().contains(&"Sub 1/Empty".to_string()));
+        assert_eq!(
+            fs::read_dir(r.join("Sub")).unwrap().count(),
+            6,
+            "the original holds what it held"
+        );
+
+        let (second, _) = v.duplicate("Sub").unwrap();
+        assert_eq!(second, "Sub 2", "the next free number");
+        assert!(r.join("Sub 2/Deep/D.md").is_file());
+        let (nested, _) = v.duplicate("Sub/Deep").unwrap();
+        assert_eq!(nested, "Sub/Deep 1", "a nested folder copies beside itself");
+        assert!(r.join("Sub/Deep 1/D.md").is_file());
+    }
+
+    /// A file's copy puts the number before the extension; a folder's name
+    /// is never split on a dot.
+    #[test]
+    fn a_file_copy_numbers_the_stem() {
+        let (dir, mut v) = vault();
+        let r = dir.path();
+        let (copy, changes) = v.duplicate("Sub/S.md").unwrap();
+        assert_eq!(copy, "Sub/S 1.md");
+        assert_eq!(changes, vec![FileChange::Added("Sub/S 1.md".into())]);
+        assert_eq!(fs::read(r.join("Sub/S 1.md")).unwrap(), b"s");
+        assert_eq!(v.duplicate("Sub/S.md").unwrap().0, "Sub/S 2.md");
+        assert_eq!(v.duplicate("Sub/pic.png").unwrap().0, "Sub/pic 1.png");
+        fs::create_dir(r.join("v1.0")).unwrap();
+        assert_eq!(v.duplicate("v1.0").unwrap().0, "v1.0 1");
+        assert!(matches!(
+            v.duplicate("Missing.md"),
+            Err(OpError::NotFound(p)) if p == "Missing.md"
+        ));
     }
 
     #[test]
