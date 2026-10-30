@@ -1,0 +1,544 @@
+{
+ "basesIds": {
+  "fixtures": {
+   "startedAt": "2026-10-30T13:41:05.038Z",
+   "steps": {
+    "fixtures": {
+     "ok": true,
+     "ms": 1,
+     "vaultFiles": [
+      ".obsidian",
+      "Basalt.md",
+      "Ids.base",
+      "Pumice.md",
+      "Scoria.md",
+      "pic.png"
+     ]
+    }
+   },
+   "order": [
+    "fixtures"
+   ],
+   "elapsedMs": 1
+  },
+  "run": {
+   "startedAt": "2026-10-30T13:41:06.291Z",
+   "steps": {
+    "s01-open": {
+     "ok": true,
+     "ms": 4534,
+     "before": "properties:\n  note.price:\n    displayName: Price\n  status:\n    displayName: Status\n  formula.ppu:\n    displayName: Per unit\nformulas:\n  ppu: price / density\nfilters:\n  and:\n    - type == \"rock\"\nviews:\n  - type: table\n    name: Qualified\n    order:\n      - file.name\n      - note.status\n      - note.price\n      - note.density\n      - formula.ppu\n      - file.ext\n    sort:\n      - property: note.price\n        direction: DESC\n      - property: formula.ppu\n        direction: ASC\n      - property: file.name\n        direction: ASC\n    groupBy:\n      property: note.status\n      direction: ASC\n    summaries:\n      note.price: Average\n      formula.ppu: Sum\n    columnSize:\n      file.name: 120\n      note.status: 150\n      note.price: 160\n  - type: cards\n    name: Pics\n    order:\n      - file.name\n      - note.status\n    image: note.cover\n  - type: table\n    name: Bare\n    order:\n      - file.name\n      - status\n      - price\n    sort:\n      - property: price\n        direction: DESC\n    columnSize:\n      status: 150\n",
+     "model": {
+      "viewType": "bases",
+      "serializable": {
+       "filters": {
+        "and": [
+         "type == \"rock\""
+        ]
+       },
+       "formulas": {
+        "ppu": "price / density"
+       },
+       "properties": {
+        "note.price": {
+         "displayName": "Price"
+        },
+        "status": {
+         "displayName": "Status"
+        },
+        "formula.ppu": {
+         "displayName": "Per unit"
+        }
+       },
+       "views": [
+        {
+         "type": "table",
+         "name": "Qualified",
+         "groupBy": {
+          "property": "status",
+          "direction": "ASC"
+         },
+         "order": [
+          "file.name",
+          "status",
+          "price",
+          "density",
+          "formula.ppu",
+          "file.ext"
+         ],
+         "sort": [
+          {
+           "property": "price",
+           "direction": "DESC"
+          },
+          {
+           "property": "formula.ppu",
+           "direction": "ASC"
+          },
+          {
+           "property": "file.name",
+           "direction": "ASC"
+          }
+         ],
+         "summaries": {
+          "price": "Average",
+          "formula.ppu": "Sum"
+         },
+         "columnSize": {
+          "file.name": 120,
+          "note.status": 150,
+          "note.price": 160
+         }
+        },
+        {
+         "type": "cards",
+         "name": "Pics",
+         "order": [
+          "file.name",
+          "status"
+         ],
+         "image": "note.cover"
+        },
+        {
+         "type": "table",
+         "name": "Bare",
+         "order": [
+          "file.name",
+          "status",
+          "price"
+         ],
+         "sort": [
+          {
+           "property": "price",
+           "direction": "DESC"
+          }
+         ],
+         "columnSize": {
+          "status": 150
+         }
+        }
+       ]
+      },
+      "toString": "filters:\n  and:\n    - type == \"rock\"\nformulas:\n  ppu: price / density\nproperties:\n  note.price:\n    displayName: Price\n  status:\n    displayName: Status\n  formula.ppu:\n    displayName: Per unit\nviews:\n  - type: table\n    name: Qualified\n    groupBy:\n      property: status\n      direction: ASC\n    order:\n      - file.name\n      - status\n      - price\n      - density\n      - formula.ppu\n      - file.ext\n    sort:\n      - property: price\n        direction: DESC\n      - property: formula.ppu\n        direction: ASC\n      - property: file.name\n        direction: ASC\n    summaries:\n      price: Average\n      formula.ppu: Sum\n    columnSize:\n      file.name: 120\n      note.status: 150\n      note.price: 160\n  - type: cards\n    name: Pics\n    order:\n      - file.name\n      - status\n    image: note.cover\n  - type: table\n    name: Bare\n    order:\n      - file.name\n      - status\n      - price\n    sort:\n      - property: price\n        direction: DESC\n    columnSize:\n      status: 150\n",
+      "viewName": "Qualified",
+      "views": [
+       {
+        "name": "Qualified",
+        "type": "table",
+        "order": [
+         "file.name",
+         "note.status",
+         "note.price",
+         "note.density",
+         "formula.ppu",
+         "file.ext"
+        ],
+        "sort": [
+         {
+          "property": "note.price",
+          "direction": "DESC"
+         },
+         {
+          "property": "formula.ppu",
+          "direction": "ASC"
+         },
+         {
+          "property": "file.name",
+          "direction": "ASC"
+         }
+        ],
+        "groupBy": {
+         "property": "note.status",
+         "direction": "ASC"
+        },
+        "keys": [
+         "query",
+         "type",
+         "name",
+         "order",
+         "sort",
+         "groupBy",
+         "summaries",
+         "data"
+        ]
+       },
+       {
+        "name": "Pics",
+        "type": "cards",
+        "order": [
+         "file.name",
+         "note.status"
+        ],
+        "sort": null,
+        "groupBy": null,
+        "keys": [
+         "query",
+         "type",
+         "name",
+         "order",
+         "data",
+         "groupOrder"
+        ]
+       },
+       {
+        "name": "Bare",
+        "type": "table",
+        "order": [
+         "file.name",
+         "note.status",
+         "note.price"
+        ],
+        "sort": [
+         {
+          "property": "note.price",
+          "direction": "DESC"
+         }
+        ],
+        "groupBy": null,
+        "keys": [
+         "query",
+         "type",
+         "name",
+         "order",
+         "sort",
+         "data",
+         "groupOrder"
+        ]
+       }
+      ]
+     },
+     "afterOpen": "properties:\n  note.price:\n    displayName: Price\n  status:\n    displayName: Status\n  formula.ppu:\n    displayName: Per unit\nformulas:\n  ppu: price / density\nfilters:\n  and:\n    - type == \"rock\"\nviews:\n  - type: table\n    name: Qualified\n    order:\n      - file.name\n      - note.status\n      - note.price\n      - note.density\n      - formula.ppu\n      - file.ext\n    sort:\n      - property: note.price\n        direction: DESC\n      - property: formula.ppu\n        direction: ASC\n      - property: file.name\n        direction: ASC\n    groupBy:\n      property: note.status\n      direction: ASC\n    summaries:\n      note.price: Average\n      formula.ppu: Sum\n    columnSize:\n      file.name: 120\n      note.status: 150\n      note.price: 160\n  - type: cards\n    name: Pics\n    order:\n      - file.name\n      - note.status\n    image: note.cover\n  - type: table\n    name: Bare\n    order:\n      - file.name\n      - status\n      - price\n    sort:\n      - property: price\n        direction: DESC\n    columnSize:\n      status: 150\n",
+     "rewrittenOnOpen": false,
+     "headers": [
+      {
+       "text": "file name",
+       "w": 120,
+       "prop": null,
+       "attrs": "class=bases-table-header"
+      },
+      {
+       "text": "status",
+       "w": 150,
+       "prop": null,
+       "attrs": "class=bases-table-header"
+      },
+      {
+       "text": "Price",
+       "w": 160,
+       "prop": null,
+       "attrs": "class=bases-table-header"
+      },
+      {
+       "text": "density",
+       "w": 80,
+       "prop": null,
+       "attrs": "class=bases-table-header"
+      },
+      {
+       "text": "Per unit",
+       "w": 148,
+       "prop": null,
+       "attrs": "class=bases-table-header"
+      },
+      {
+       "text": "file extension",
+       "w": 117,
+       "prop": null,
+       "attrs": "class=bases-table-header"
+      }
+     ]
+    },
+    "s02-save": {
+     "ok": true,
+     "ms": 2611,
+     "before": "properties:\n  note.price:\n    displayName: Price\n  status:\n    displayName: Status\n  formula.ppu:\n    displayName: Per unit\nformulas:\n  ppu: price / density\nfilters:\n  and:\n    - type == \"rock\"\nviews:\n  - type: table\n    name: Qualified\n    order:\n      - file.name\n      - note.status\n      - note.price\n      - note.density\n      - formula.ppu\n      - file.ext\n    sort:\n      - property: note.price\n        direction: DESC\n      - property: formula.ppu\n        direction: ASC\n      - property: file.name\n        direction: ASC\n    groupBy:\n      property: note.status\n      direction: ASC\n    summaries:\n      note.price: Average\n      formula.ppu: Sum\n    columnSize:\n      file.name: 120\n      note.status: 150\n      note.price: 160\n  - type: cards\n    name: Pics\n    order:\n      - file.name\n      - note.status\n    image: note.cover\n  - type: table\n    name: Bare\n    order:\n      - file.name\n      - status\n      - price\n    sort:\n      - property: price\n        direction: DESC\n    columnSize:\n      status: 150\n",
+     "setter": {
+      "ok": true
+     },
+     "wrote": true,
+     "after": "filters:\n  and:\n    - type == \"rock\"\nformulas:\n  ppu: price / density\nproperties:\n  note.price:\n    displayName: Price\n  status:\n    displayName: Status\n  formula.ppu:\n    displayName: Per unit\nviews:\n  - type: table\n    name: Qualified\n    groupBy:\n      property: status\n      direction: ASC\n    order:\n      - file.name\n      - status\n      - price\n      - density\n      - formula.ppu\n      - file.ext\n    sort:\n      - property: price\n        direction: DESC\n      - property: formula.ppu\n        direction: ASC\n      - property: file.name\n        direction: ASC\n    limit: 7\n    summaries:\n      price: Average\n      formula.ppu: Sum\n    columnSize:\n      file.name: 120\n      note.status: 150\n      note.price: 160\n  - type: cards\n    name: Pics\n    order:\n      - file.name\n      - status\n    image: note.cover\n  - type: table\n    name: Bare\n    order:\n      - file.name\n      - status\n      - price\n    sort:\n      - property: price\n        direction: DESC\n    columnSize:\n      status: 150\n",
+     "model": {
+      "viewType": "bases",
+      "serializable": {
+       "filters": {
+        "and": [
+         "type == \"rock\""
+        ]
+       },
+       "formulas": {
+        "ppu": "price / density"
+       },
+       "properties": {
+        "note.price": {
+         "displayName": "Price"
+        },
+        "status": {
+         "displayName": "Status"
+        },
+        "formula.ppu": {
+         "displayName": "Per unit"
+        }
+       },
+       "views": [
+        {
+         "type": "table",
+         "name": "Qualified",
+         "groupBy": {
+          "property": "status",
+          "direction": "ASC"
+         },
+         "order": [
+          "file.name",
+          "status",
+          "price",
+          "density",
+          "formula.ppu",
+          "file.ext"
+         ],
+         "sort": [
+          {
+           "property": "price",
+           "direction": "DESC"
+          },
+          {
+           "property": "formula.ppu",
+           "direction": "ASC"
+          },
+          {
+           "property": "file.name",
+           "direction": "ASC"
+          }
+         ],
+         "limit": 7,
+         "summaries": {
+          "price": "Average",
+          "formula.ppu": "Sum"
+         },
+         "columnSize": {
+          "file.name": 120,
+          "note.status": 150,
+          "note.price": 160
+         }
+        },
+        {
+         "type": "cards",
+         "name": "Pics",
+         "order": [
+          "file.name",
+          "status"
+         ],
+         "image": "note.cover"
+        },
+        {
+         "type": "table",
+         "name": "Bare",
+         "order": [
+          "file.name",
+          "status",
+          "price"
+         ],
+         "sort": [
+          {
+           "property": "price",
+           "direction": "DESC"
+          }
+         ],
+         "columnSize": {
+          "status": 150
+         }
+        }
+       ]
+      },
+      "toString": "filters:\n  and:\n    - type == \"rock\"\nformulas:\n  ppu: price / density\nproperties:\n  note.price:\n    displayName: Price\n  status:\n    displayName: Status\n  formula.ppu:\n    displayName: Per unit\nviews:\n  - type: table\n    name: Qualified\n    groupBy:\n      property: status\n      direction: ASC\n    order:\n      - file.name\n      - status\n      - price\n      - density\n      - formula.ppu\n      - file.ext\n    sort:\n      - property: price\n        direction: DESC\n      - property: formula.ppu\n        direction: ASC\n      - property: file.name\n        direction: ASC\n    limit: 7\n    summaries:\n      price: Average\n      formula.ppu: Sum\n    columnSize:\n      file.name: 120\n      note.status: 150\n      note.price: 160\n  - type: cards\n    name: Pics\n    order:\n      - file.name\n      - status\n    image: note.cover\n  - type: table\n    name: Bare\n    order:\n      - file.name\n      - status\n      - price\n    sort:\n      - property: price\n        direction: DESC\n    columnSize:\n      status: 150\n",
+      "viewName": "Qualified",
+      "views": [
+       {
+        "name": "Qualified",
+        "type": "table",
+        "order": [
+         "file.name",
+         "note.status",
+         "note.price",
+         "note.density",
+         "formula.ppu",
+         "file.ext"
+        ],
+        "sort": [
+         {
+          "property": "note.price",
+          "direction": "DESC"
+         },
+         {
+          "property": "formula.ppu",
+          "direction": "ASC"
+         },
+         {
+          "property": "file.name",
+          "direction": "ASC"
+         }
+        ],
+        "groupBy": {
+         "property": "note.status",
+         "direction": "ASC"
+        },
+        "keys": [
+         "query",
+         "type",
+         "name",
+         "order",
+         "sort",
+         "groupBy",
+         "summaries",
+         "data",
+         "limit"
+        ]
+       },
+       {
+        "name": "Pics",
+        "type": "cards",
+        "order": [
+         "file.name",
+         "note.status"
+        ],
+        "sort": null,
+        "groupBy": null,
+        "keys": [
+         "query",
+         "type",
+         "name",
+         "order",
+         "data",
+         "groupOrder"
+        ]
+       },
+       {
+        "name": "Bare",
+        "type": "table",
+        "order": [
+         "file.name",
+         "note.status",
+         "note.price"
+        ],
+        "sort": [
+         {
+          "property": "note.price",
+          "direction": "DESC"
+         }
+        ],
+        "groupBy": null,
+        "keys": [
+         "query",
+         "type",
+         "name",
+         "order",
+         "sort",
+         "data",
+         "groupOrder"
+        ]
+       }
+      ]
+     },
+     "headers": [
+      {
+       "text": "file name",
+       "w": 120,
+       "prop": null,
+       "attrs": "class=bases-table-header"
+      },
+      {
+       "text": "status",
+       "w": 150,
+       "prop": null,
+       "attrs": "class=bases-table-header"
+      },
+      {
+       "text": "Price",
+       "w": 160,
+       "prop": null,
+       "attrs": "class=bases-table-header"
+      },
+      {
+       "text": "density",
+       "w": 80,
+       "prop": null,
+       "attrs": "class=bases-table-header"
+      },
+      {
+       "text": "Per unit",
+       "w": 148,
+       "prop": null,
+       "attrs": "class=bases-table-header"
+      },
+      {
+       "text": "file extension",
+       "w": 117,
+       "prop": null,
+       "attrs": "class=bases-table-header"
+      }
+     ]
+    },
+    "s03-drag-status": {
+     "ok": true,
+     "ms": 3121,
+     "before": "filters:\n  and:\n    - type == \"rock\"\nformulas:\n  ppu: price / density\nproperties:\n  note.price:\n    displayName: Price\n  status:\n    displayName: Status\n  formula.ppu:\n    displayName: Per unit\nviews:\n  - type: table\n    name: Qualified\n    groupBy:\n      property: status\n      direction: ASC\n    order:\n      - file.name\n      - status\n      - price\n      - density\n      - formula.ppu\n      - file.ext\n    sort:\n      - property: price\n        direction: DESC\n      - property: formula.ppu\n        direction: ASC\n      - property: file.name\n        direction: ASC\n    limit: 7\n    summaries:\n      price: Average\n      formula.ppu: Sum\n    columnSize:\n      file.name: 120\n      note.status: 150\n      note.price: 160\n  - type: cards\n    name: Pics\n    order:\n      - file.name\n      - status\n    image: note.cover\n  - type: table\n    name: Bare\n    order:\n      - file.name\n      - status\n      - price\n    sort:\n      - property: price\n        direction: DESC\n    columnSize:\n      status: 150\n",
+     "resizer": {
+      "x": 611.9934921264648,
+      "y": 133.0280065536499,
+      "count": 6
+     },
+     "wrote": true,
+     "after": "filters:\n  and:\n    - type == \"rock\"\nformulas:\n  ppu: price / density\nproperties:\n  note.price:\n    displayName: Price\n  status:\n    displayName: Status\n  formula.ppu:\n    displayName: Per unit\nviews:\n  - type: table\n    name: Qualified\n    groupBy:\n      property: status\n      direction: ASC\n    order:\n      - file.name\n      - status\n      - price\n      - density\n      - formula.ppu\n      - file.ext\n    sort:\n      - property: price\n        direction: DESC\n      - property: formula.ppu\n        direction: ASC\n      - property: file.name\n        direction: ASC\n    limit: 7\n    summaries:\n      price: Average\n      formula.ppu: Sum\n    columnSize:\n      file.name: 120\n      note.status: 239\n      note.price: 160\n  - type: cards\n    name: Pics\n    order:\n      - file.name\n      - status\n    image: note.cover\n  - type: table\n    name: Bare\n    order:\n      - file.name\n      - status\n      - price\n    sort:\n      - property: price\n        direction: DESC\n    columnSize:\n      status: 150\n",
+     "headers": [
+      {
+       "text": "file name",
+       "w": 120,
+       "prop": null,
+       "attrs": "class=bases-table-header"
+      },
+      {
+       "text": "status",
+       "w": 239,
+       "prop": null,
+       "attrs": "class=bases-table-header"
+      },
+      {
+       "text": "Price",
+       "w": 160,
+       "prop": null,
+       "attrs": "class=bases-table-header"
+      },
+      {
+       "text": "density",
+       "w": 80,
+       "prop": null,
+       "attrs": "class=bases-table-header"
+      },
+      {
+       "text": "Per unit",
+       "w": 148,
+       "prop": null,
+       "attrs": "class=bases-table-header"
+      }
+     ]
+    },
+    "s04-close": {
+     "ok": true,
+     "ms": 4513,
+     "final": "filters:\n  and:\n    - type == \"rock\"\nformulas:\n  ppu: price / density\nproperties:\n  note.price:\n    displayName: Price\n  status:\n    displayName: Status\n  formula.ppu:\n    displayName: Per unit\nviews:\n  - type: table\n    name: Qualified\n    groupBy:\n      property: status\n      direction: ASC\n    order:\n      - file.name\n      - status\n      - price\n      - density\n      - formula.ppu\n      - file.ext\n    sort:\n      - property: price\n        direction: DESC\n      - property: formula.ppu\n        direction: ASC\n      - property: file.name\n        direction: ASC\n    limit: 7\n    summaries:\n      price: Average\n      formula.ppu: Sum\n    columnSize:\n      file.name: 120\n      note.status: 239\n      note.price: 160\n  - type: cards\n    name: Pics\n    order:\n      - file.name\n      - status\n    image: note.cover\n  - type: table\n    name: Bare\n    order:\n      - file.name\n      - status\n      - price\n    sort:\n      - property: price\n        direction: DESC\n    columnSize:\n      status: 150\n"
+    }
+   },
+   "order": [
+    "s01-open",
+    "s02-save",
+    "s03-drag-status",
+    "s04-close"
+   ],
+   "elapsedMs": 14827,
+   "vault": "/tmp/scoria-probe-vault.bK78J5",
+   "version": {
+    "title": "New tab - scoria-probe-vault.bK78J5 - Obsidian 1.14.5",
+    "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36"
+   }
+  }
+ }
+}

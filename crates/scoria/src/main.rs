@@ -257,18 +257,6 @@ fn parse_args() -> Args {
     args
 }
 
-/// The "Window frame style" the app was started with, as Obsidian's
-/// Interface tab labels it: "Hidden (default)", "Obsidian frame" or
-/// "Native frame". Obsidian keeps the choice outside the vault, so it is an
-/// argument here (`--frame hidden|native`, or `SCORIA_FRAME`).
-pub fn frame_style_label() -> &'static str {
-    match frame_style().as_str() {
-        "native" => "Native frame",
-        "custom" => "Obsidian frame",
-        _ => "Hidden (default)",
-    }
-}
-
 /// Whether the window is opened without the desktop's own title bar, which
 /// is what Obsidian's "Hidden" frame style means and its default on Linux
 /// and Windows. Answered once: the window asks on the way up, and the
@@ -278,7 +266,12 @@ pub fn hidden_frame() -> bool {
     *HIDDEN.get_or_init(|| frame_style() != "native")
 }
 
-/// `--frame`'s value, `SCORIA_FRAME`'s, or `hidden`.
+/// The "Window frame style" this process runs with: `--frame`'s value,
+/// `SCORIA_FRAME`'s, the one stored in `scoria.json`, or `hidden`. Obsidian
+/// keeps the choice beside its vault list rather than under any vault, so
+/// the stored value is the registry's (`VaultRegistry::frame`); the flag
+/// and the variable are a way to try the other style for one run without
+/// changing what the next run gets.
 fn frame_style() -> String {
     let mut it = std::env::args().skip(1);
     while let Some(a) = it.next() {
@@ -288,7 +281,47 @@ fn frame_style() -> String {
             }
         }
     }
-    std::env::var("SCORIA_FRAME").unwrap_or_else(|_| "hidden".into())
+    if let Ok(v) = std::env::var("SCORIA_FRAME") {
+        return v;
+    }
+    stored_frame_style()
+}
+
+/// The frame style `scoria.json` holds, or `hidden`: what the Settings
+/// dropdown shows, since the file is what the next start reads. Read once
+/// and kept in step by [`remember_frame_style`], so the Interface tab does
+/// not open the file on every frame.
+pub fn stored_frame_style() -> String {
+    stored_frame()
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .clone()
+}
+
+/// Writes the frame style to `scoria.json` and remembers it. The window
+/// keeps the frame it opened with; the next start reads the file.
+pub fn write_frame_style(value: &str) -> Result<(), String> {
+    let Some(mut registry) =
+        scoria_vault::registry::VaultRegistry::open().map_err(|e| e.to_string())?
+    else {
+        return Err("no configuration folder to keep it in".into());
+    };
+    registry.set_frame((value != "hidden").then_some(value));
+    registry.save().map_err(|e| e.to_string())?;
+    *stored_frame().lock().unwrap_or_else(|e| e.into_inner()) = value.to_string();
+    Ok(())
+}
+
+fn stored_frame() -> &'static std::sync::Mutex<String> {
+    static STORED: std::sync::OnceLock<std::sync::Mutex<String>> = std::sync::OnceLock::new();
+    STORED.get_or_init(|| {
+        let stored = scoria_vault::registry::VaultRegistry::open()
+            .ok()
+            .flatten()
+            .and_then(|r| r.frame().map(str::to_string))
+            .unwrap_or_else(|| "hidden".into());
+        std::sync::Mutex::new(stored)
+    })
 }
 
 /// Every key binding in the app, from scratch: the views' own and the

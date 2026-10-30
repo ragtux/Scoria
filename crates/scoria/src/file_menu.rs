@@ -112,9 +112,7 @@ impl Target {
 /// Three of the captured items are left out rather than drawn dead, because
 /// Scoria has no command behind them: **Open in new window** (no second
 /// window), **Merge entire file with...** (no merge) and **Open version
-/// history** (no file history). A folder's **Make a copy** is out for the
-/// same reason: `Vault::duplicate` copies one file, and a folder needs a
-/// recursive copy with link rewriting. Listing a row that cannot run is what
+/// history** (no file history). Listing a row that cannot run is what
 /// the command palette refuses to do, and the menu refuses it too; the gaps
 /// are entries in `docs/scoria/UI parity backlog.md`. Dropping the only item
 /// of a section drops its separator with it, so the `view` section's
@@ -173,6 +171,7 @@ pub fn items(target: &Target) -> Vec<Item> {
                 P::NewCanvas,
             ),
             item("New base", "layout-list", S::ActionPrimary, P::NewBase),
+            item("Make a copy", "files", S::Action, P::Duplicate),
             item("Move folder to...", "folder-tree", S::Action, P::Move),
             item(
                 "Search in folder",
@@ -513,10 +512,9 @@ mod tests {
         );
     }
 
-    /// The folder-row table, minus "Make a copy" (no recursive folder copy).
-    /// A folder gets no "Open in default app": the capture has that item on
-    /// the file row only, and "Show in system explorer" is its whole
-    /// `system` section.
+    /// The folder-row table, whole. A folder gets no "Open in default app":
+    /// the capture has that item on the file row only, and "Show in system
+    /// explorer" is its whole `system` section.
     #[test]
     fn the_folder_rows_menu_is_obsidians_order() {
         assert_eq!(
@@ -527,6 +525,7 @@ mod tests {
                 "New canvas",
                 "New base",
                 "---",
+                "Make a copy",
                 "Move folder to...",
                 "Search in folder",
                 "Bookmark...",

@@ -43,7 +43,7 @@
 //! reads [`INDENT_PROPERTIES_KEY`], the plain spelling, and nothing writes it.
 
 use indexmap::IndexMap;
-use scoria_formats::base::View;
+use scoria_formats::base::{written_id, View};
 use serde_yaml::{Mapping, Value};
 
 /// The four layouts Obsidian registers, in the order the Configure view
@@ -267,8 +267,9 @@ pub struct TableLayout {
     pub row_height: RowHeight,
     /// `columnSize`: a property id to its width in px, as a header drag
     /// writes it (`columnSize:` / `  file.name: 232`). The ids are the ones
-    /// `order` carries, so a bare `status` and a qualified `note.status` are
-    /// two different entries, exactly as the file has them.
+    /// `order` carries in memory, which is the qualified one; the map is kept
+    /// exactly as the file has it, and [`TableLayout::width_of`] answers for
+    /// either spelling.
     pub column_size: IndexMap<String, f64>,
 }
 
@@ -281,9 +282,17 @@ impl TableLayout {
     }
 
     /// The width `columnSize` gives `id`, when it names one above zero.
+    ///
+    /// `order` may say `status` while `columnSize` says `note.status`: the
+    /// writer strips the namespace from `order` and a header drag writes
+    /// the qualified id (observed 2026-10-30, see [`qualify`]). So the id is
+    /// looked up qualified first and as written second, which also keeps a
+    /// bare key a hand or an older Scoria wrote.
     pub fn width_of(&self, id: &str) -> Option<f32> {
         self.column_size
-            .get(id)
+            .get(&qualify(id))
+            .or_else(|| self.column_size.get(id))
+            .or_else(|| self.column_size.get(written_id(id)))
             .copied()
             .filter(|w| *w > 0.)
             .map(|w| w as f32)
@@ -448,15 +457,18 @@ pub fn set_row_height(view: &mut View, h: RowHeight) {
     }
 }
 
-/// `columnSize.<id>`, as a header drag writes it: an integer number of px.
-/// The map keeps its own key order, and a new id is appended.
+/// `columnSize.<id>`, as a header drag writes it: an integer number of px
+/// under the **qualified** id — a drag on the column `order` names `status`
+/// wrote `note.status: 239`, and updated the fixture's `note.status: 150` in
+/// place (Obsidian 1.14.5, 2026-10-30). The map keeps its own key order, and
+/// a new id is appended.
 pub fn set_column_size(view: &mut View, id: &str, width: f64) {
     let width = width.round().max(1.);
     let mut map = match view.preserved.get("columnSize").and_then(Value::as_mapping) {
         Some(m) => m.clone(),
         None => Mapping::new(),
     };
-    map.insert(Value::from(id.to_string()), number(width));
+    map.insert(Value::from(qualify(id)), number(width));
     view.preserved
         .insert("columnSize".to_string(), Value::Mapping(map));
 }
@@ -468,7 +480,9 @@ pub fn clear_column_size(view: &mut View, id: &str) {
         return;
     };
     let mut map = map.clone();
+    map.remove(Value::from(qualify(id)));
     map.remove(Value::from(id.to_string()));
+    map.remove(Value::from(written_id(id).to_string()));
     if map.is_empty() {
         drop_key(view, "columnSize");
     } else {
@@ -538,11 +552,17 @@ pub fn number(v: f64) -> Value {
     }
 }
 
-/// The property-id normalizer Obsidian runs `groupBy`, `order`, `sort` and
-/// the keys of `summaries` through, and which the `image` picker writes with:
-/// a bare id keeps its spelling (a hand-written `status` came back `status`),
-/// and an id this build is writing for the first time is qualified `note.`
-/// unless it already names a namespace.
+/// The property id as Obsidian holds it in memory: a bare `status` is
+/// `note.status`, and an id that already names a namespace is left alone.
+///
+/// This is the spelling the model carries and the one `columnSize` and
+/// `image` are written with (`note.status: 239` after a header drag,
+/// `note.aliases` from the image picker). It is **not** what `order`, `sort`,
+/// `groupBy` and a view's `summaries` are written with: the writer strips
+/// `note.` from those on the way out (`scoria_formats::base::written_id`), so
+/// a file that said `note.price` comes back saying `price`, and a bare
+/// `status` stays `status`. Observed on 1.14.5, 2026-10-30
+/// (`tools/obsidian-probe/bases-ids.mjs`).
 pub fn qualify(id: &str) -> String {
     const NAMESPACES: &[&str] = &["file.", "note.", "formula."];
     if NAMESPACES.iter().any(|n| id.starts_with(n)) {
@@ -802,5 +822,32 @@ mod tests {
         assert_eq!(kind_icon("cards"), Some("layout-grid"));
         assert_eq!(kind_label("map"), None);
         assert_eq!(LAYOUTS.len(), 4);
+    }
+
+    /// `order` says `status`, `columnSize` says `note.status`, and a drag on
+    /// that column writes the qualified key (1.14.5, 2026-10-30).
+    #[test]
+    fn a_column_width_is_found_under_either_spelling_and_written_qualified() {
+        let text = "views:\n  - type: table\n    name: T\n    order:\n      - file.name\n      - status\n    columnSize:\n      file.name: 120\n      note.status: 150\n      price: 90\n";
+        let mut base = Base::from_yaml(text).unwrap();
+        let layout = TableLayout::of(&base.views[0]);
+        assert_eq!(layout.width_of("status"), Some(150.));
+        assert_eq!(layout.width_of("note.status"), Some(150.));
+        assert_eq!(layout.width_of("price"), Some(90.));
+        assert_eq!(layout.width_of("note.price"), Some(90.));
+        assert_eq!(layout.width_of("file.name"), Some(120.));
+        assert_eq!(layout.width_of("density"), None);
+
+        set_column_size(&mut base.views[0], "status", 239.);
+        let layout = TableLayout::of(&base.views[0]);
+        assert_eq!(layout.column_size.get("note.status"), Some(&239.));
+        assert_eq!(layout.column_size.len(), 3, "updated in place, not added");
+        assert!(base.to_yaml().contains(
+            "columnSize:\n      file.name: 120\n      note.status: 239\n      price: 90\n"
+        ));
+
+        clear_column_size(&mut base.views[0], "price");
+        clear_column_size(&mut base.views[0], "status");
+        assert_eq!(TableLayout::of(&base.views[0]).column_size.len(), 1);
     }
 }

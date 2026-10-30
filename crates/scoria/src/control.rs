@@ -15,9 +15,9 @@
 
 use crate::workspace::{context_names, ViewMode, Workspace};
 use gpui::{
-    point, prelude::*, px, size, App, AsyncApp, Keystroke, Modifiers, MouseButton, MouseDownEvent,
-    MouseMoveEvent, MouseUpEvent, Pixels, PlatformInput, Point, ScrollDelta, ScrollWheelEvent,
-    TouchPhase, Window, WindowHandle,
+    point, prelude::*, px, size, AnyWindowHandle, App, AsyncApp, Keystroke, Modifiers, MouseButton,
+    MouseDownEvent, MouseMoveEvent, MouseUpEvent, Pixels, PlatformInput, Point, ScrollDelta,
+    ScrollWheelEvent, TouchPhase, Window, WindowHandle,
 };
 use scoria_control::net::{UnixListener, UnixStream};
 use scoria_control::{Request, Response};
@@ -219,6 +219,31 @@ impl Ctl<'_> {
             Err(error) => Err(error.to_string()),
         }
     }
+
+    /// The window a caller is driving: the Settings window while it is up,
+    /// since Settings is a window of its own rather than a modal over the
+    /// workspace, and the workspace's own otherwise. Coordinates are
+    /// window-local, so this is also the window a click is aimed at.
+    fn input_window(&mut self) -> AnyWindowHandle {
+        let main = self.win;
+        self.cx
+            .update(|cx| main.read(cx).ok().and_then(|ws| ws.settings_window(cx)))
+            .unwrap_or_else(|| main.into())
+    }
+
+    /// Runs `f` against [`Ctl::input_window`]. Every event a user would
+    /// raise goes through here rather than [`Ctl::window`], which is the
+    /// workspace's own window whatever is in front of it.
+    fn input<R>(
+        &mut self,
+        f: impl FnOnce(&mut Window, &mut App) -> Result<R, String>,
+    ) -> Result<R, String> {
+        let target = self.input_window();
+        match self.cx.update_window(target, |_, window, cx| f(window, cx)) {
+            Ok(result) => result,
+            Err(error) => Err(error.to_string()),
+        }
+    }
 }
 
 /// Answers one request. `Ok(None)` means the reply is deferred: the handler
@@ -326,7 +351,7 @@ fn handle(
                 .iter()
                 .map(|name| Keystroke::parse(name).map_err(|error| error.to_string()))
                 .collect::<Result<Vec<_>, String>>()?;
-            ctl.window(|window, cx| {
+            ctl.input(|window, cx| {
                 let handled = strokes
                     .into_iter()
                     .map(|stroke| window.dispatch_keystroke(stroke, cx))
@@ -348,7 +373,7 @@ fn handle(
                 // delivering it re-enters whatever view is focused, which
                 // may be the workspace itself.
                 "input" => ctl
-                    .window(|window, cx| {
+                    .input(|window, cx| {
                         let typed = Keystroke {
                             key_char: Some(text.to_string()),
                             ..Keystroke::default()
@@ -365,7 +390,7 @@ fn handle(
             let button = button(request.opt_str("button"))?;
             let modifiers = modifiers(request)?;
             let click_count = request.opt_usize("count").unwrap_or(1);
-            ctl.window(|window, cx| {
+            ctl.input(|window, cx| {
                 // The move goes first so gpui's hover state and the hitboxes
                 // an `on_click` was registered against agree on what is under
                 // the pointer when the press lands.
@@ -432,7 +457,7 @@ fn handle(
                 }),
                 other => return Err(format!("unknown mouse action: {other}")),
             };
-            ctl.window(|window, cx| {
+            ctl.input(|window, cx| {
                 window.dispatch_event(event, cx);
                 Ok(json!({"ok": true}))
             })
@@ -448,7 +473,7 @@ fn handle(
                 other => return Err(format!("unknown scroll unit: {other}")),
             };
             let modifiers = modifiers(request)?;
-            ctl.window(|window, cx| {
+            ctl.input(|window, cx| {
                 window.dispatch_event(
                     PlatformInput::ScrollWheel(ScrollWheelEvent {
                         position,
@@ -501,11 +526,11 @@ fn handle(
             let activate = request.bool_param("activate", false);
             let width = request.opt_f32("width");
             let height = request.opt_f32("height");
-            let result = ctl.window(|window, _| {
-                if activate {
-                    window.activate_window();
-                }
-                if width.is_some() || height.is_some() {
+            // A resize is the app's window being sized; activation and the
+            // size reported back are the front window's, which is what a
+            // screenshot captures and what click coordinates are local to.
+            if width.is_some() || height.is_some() {
+                ctl.window(|window, _| {
                     let now = window.viewport_size();
                     let width = width.unwrap_or_else(|| f32::from(now.width));
                     let height = height.unwrap_or_else(|| f32::from(now.height));
@@ -516,6 +541,12 @@ fn handle(
                         return Err(format!("{width}x{height} is not a window size"));
                     }
                     window.resize(size(px(width), px(height)));
+                    Ok(())
+                })?;
+            }
+            let result = ctl.input(|window, _| {
+                if activate {
+                    window.activate_window();
                 }
                 // The window's origin is always zero on Wayland, so only the
                 // size is worth reporting.
@@ -684,7 +715,9 @@ fn wait_idle(
     let drawn = Rc::new(Cell::new(0usize));
     let done = Rc::new(Cell::new(false));
     let (counter, stop) = (drawn.clone(), done.clone());
-    ctl.window(move |window, _| {
+    // The front window, so a wait after a click in Settings waits for the
+    // frames that click asked for.
+    ctl.input(move |window, _| {
         chain_frames(frames, counter, stop, window);
         Ok(())
     })?;

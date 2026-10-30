@@ -8,32 +8,32 @@ views:
   - type: table
     name: By status
     groupBy:
-      property: note.status
+      property: status
       direction: ASC
     order:
       - file.name
-      - note.landform
-      - note.height_m
-      - note.erupted
+      - landform
+      - height_m
+      - erupted
     sort:
-      - property: note.height_m
+      - property: height_m
         direction: DESC
   - type: table
     name: Tallest
     order:
       - file.name
-      - note.height_m
+      - height_m
     sort:
-      - property: note.height_m
+      - property: height_m
         direction: DESC
     limit: 3
   - type: kanban
     name: Board
     groupBy:
-      property: note.status
+      property: status
       direction: ASC
     order:
       - file.name
-      - note.landform
-      - note.height_m
+      - landform
+      - height_m
     columnWidth: 300

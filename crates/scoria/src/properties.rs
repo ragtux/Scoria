@@ -1123,6 +1123,37 @@ mod tests {
         assert_eq!(remove_item(&single, 1), None);
     }
 
+    /// The reading view's remove control reaches the editor by way of the
+    /// workspace and plans [`remove_item`] against the note as it stands,
+    /// with the vault's assigned types: the bytes written are the item's
+    /// line and nothing else, so a BOM and CRLF endings come through
+    /// untouched and the other properties are not rewritten.
+    #[test]
+    fn a_pill_removed_in_the_reading_view_rewrites_only_its_line() {
+        let text =
+            "\u{feff}---\r\ntitle: Hi\r\ntags:\r\n  - one\r\n  - two\r\n  - three\r\n---\r\nbody\r\n";
+        let props = scoria_cache::note_properties(text).expect("a block");
+        let types = PropertyTypes::default();
+        let mut id = 0;
+        let rows = rows(
+            &props.entries,
+            |key| type_of(key, &props.entries, &types),
+            &mut id,
+        );
+        let row = rows.iter().find(|r| r.key == "tags").expect("the tags row");
+        let change = remove_item(row, 1).expect("the second pill");
+        let mut edits = scoria_formats::properties::plan(text, &props, &[change]).expect("a plan");
+        edits.sort_by_key(|e| e.start);
+        let mut out = text.to_string();
+        for e in edits.into_iter().rev() {
+            out.replace_range(e.start..e.end, &e.text);
+        }
+        assert_eq!(
+            out,
+            "\u{feff}---\r\ntitle: Hi\r\ntags:\r\n  - one\r\n  - three\r\n---\r\nbody\r\n"
+        );
+    }
+
     /// `changes` planned against the note and applied to its bytes, which is
     /// what the editor does with a committed field or a removed pill.
     fn apply(text: &mut String, changes: &[Change]) {
