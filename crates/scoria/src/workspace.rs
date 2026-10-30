@@ -2676,6 +2676,9 @@ fn view_subscriptions(
                 this.link_in_new_tab = true;
                 this.follow_link(target.clone(), cx);
             }
+            ReadingEvent::ContextMenu { target, position } => {
+                this.open_reading_menu(target.clone(), *position, cx)
+            }
         }),
         cx.subscribe(reading, |this, _, event: &TaskToggled, cx| {
             this.toggle_task(&event.path, event.marker, cx)
@@ -2696,6 +2699,12 @@ fn view_subscriptions(
             EditorEvent::PropertyTypeAssigned { key, ty } => {
                 this.assign_property_type(key.clone(), *ty, cx)
             }
+            EditorEvent::ContextMenu {
+                position,
+                selection,
+                selected,
+                link,
+            } => this.open_editor_menu(*position, selection.clone(), *selected, link.clone(), cx),
             EditorEvent::Reported(message) => this.report(message.clone(), cx),
         }),
     ]
@@ -11044,6 +11053,11 @@ impl Workspace {
             "tabs": tabs,
             "groups": groups,
             "docks": {"left": Value::Object(left), "right": Value::Object(right)},
+            // The one open file menu, whichever view raised it: the panes'
+            // rows, the editor's text or a link in the reading view. It is
+            // reported under `docks.right.file_menu` as well, where the
+            // panes' menu was read before the editor had one.
+            "file_menu": self.file_menu.as_ref().map(file_menu::describe),
             "modal": self.describe_modal(rows, cx),
             "editor": self.editor.read(cx).describe(text, cx),
             "reading": self.reading.read(cx).describe(),
@@ -11723,10 +11737,11 @@ impl Workspace {
         self.render_sections(RightTab::Outgoing, "", theme, cx)
     }
 
-    /// A right click on a Backlinks or Outgoing links row that stands for a
-    /// file -- a Links row, a mentions group, or a match, which belongs to
-    /// its group's file: the file menu, in the list Obsidian gives rows away
-    /// from the Files view ([`file_menu::Target::Linked`]).
+    /// A right click on something that stands for a file away from the
+    /// Files view -- a Backlinks or Outgoing links row (a Links row, a
+    /// mentions group, or a match, which belongs to its group's file), or a
+    /// link in the reading view: the file menu, in the list Obsidian gives
+    /// rows away from the Files view ([`file_menu::Target::Linked`]).
     fn open_file_menu(
         &mut self,
         path: String,
@@ -11746,16 +11761,81 @@ impl Workspace {
         }
     }
 
+    /// The vault file a wikilink's text resolves to, from the note it was
+    /// written in; `None` for a dangling link.
+    fn link_path(&self, body: &str) -> Option<String> {
+        let state = self.state.as_ref()?;
+        let source = self.current.clone().unwrap_or_default();
+        state.cache().resolve(body, &source).map(str::to_string)
+    }
+
+    /// A right click in the editor, which has placed the caret already: the
+    /// editor's context menu, at the click. What it landed in decides the
+    /// rows — a wikilink that names a file wraps the file menu around them,
+    /// a tag reads as a tag, and everything else (plain text, an external
+    /// link, a dangling wikilink) is the plain menu.
+    fn open_editor_menu(
+        &mut self,
+        position: gpui::Point<Pixels>,
+        selection: String,
+        selected: bool,
+        link: Option<LinkTarget>,
+        cx: &mut Context<Self>,
+    ) {
+        let spot = match link {
+            // A link to a note that is not there yet names no file for
+            // Rename, Move or Copy path to act on, so it reads as text.
+            Some(LinkTarget::Internal(body)) => match self.link_path(&body) {
+                Some(path) => file_menu::Spot::Link(path),
+                None => file_menu::Spot::Text,
+            },
+            Some(LinkTarget::Tag(tag)) => file_menu::Spot::Tag(tag),
+            // An external link raised the plain menu in the probe, and a
+            // footnote reference was not probed; both read as text.
+            _ => file_menu::Spot::Text,
+        };
+        self.file_menu = Some(file_menu::Menu {
+            position,
+            target: file_menu::Target::Editor(file_menu::EditorClick {
+                spot,
+                selection,
+                selected,
+            }),
+        });
+        cx.notify();
+    }
+
+    /// A right click on a link in the reading view: the file menu, the one
+    /// menu that view raises. A link to a note that is not there yet names
+    /// no file, so it raises nothing rather than a menu of rows that would
+    /// act on nothing.
+    fn open_reading_menu(
+        &mut self,
+        target: LinkTarget,
+        position: gpui::Point<Pixels>,
+        cx: &mut Context<Self>,
+    ) {
+        let LinkTarget::Internal(body) = target else {
+            return;
+        };
+        let Some(path) = self.link_path(&body) else {
+            return;
+        };
+        self.open_file_menu(path, position, cx);
+    }
+
     /// What a pick on that menu does: the handlers the explorer's events
     /// already route to, plus the two rows the explorer's menu has no twin
-    /// of. "Open in new window" is not offered (no second window).
+    /// of, plus the editor menu's own rows. "Open in new window" is not
+    /// offered (no second window).
     fn file_menu_pick(
         &mut self,
         pick: Pick,
-        path: String,
+        target: &file_menu::Target,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
+        let path = target.path().to_string();
         match pick {
             Pick::OpenInNewTab => self.open_in_new_tab(path, None, cx),
             Pick::OpenToRight => self.open_to_right(path, window, cx),
@@ -11766,8 +11846,34 @@ impl Workspace {
             Pick::OpenInDefaultApp => self.open_in_default_app(&path, cx),
             Pick::ShowInSystemExplorer => self.show_in_system_explorer(&path, cx),
             Pick::RevealInNavigation => self.reveal_in_navigation(&path, window, cx),
-            // The Files view's own rows, which a linked row's menu never
-            // lists.
+            // The editor menu's rows, which act on the editor rather than
+            // on a path. The menu only offers them where a right click in
+            // the text raised it, so the editor they reach is the one that
+            // was clicked.
+            Pick::AddLink => self
+                .editor
+                .update(cx, |e, cx| e.insert_link(LinkSyntax::Wikilink, window, cx)),
+            Pick::AddExternalLink => self
+                .editor
+                .update(cx, |e, cx| e.insert_link(LinkSyntax::Markdown, window, cx)),
+            // The text the row was labelled with, which is the selection as
+            // it stood at the click -- not whatever is selected now, which
+            // the click may have taken away.
+            Pick::SearchForSelection => {
+                if let file_menu::Target::Editor(click) = target {
+                    let query = click.selection.clone();
+                    self.show_search(&query, Some(window), cx);
+                }
+            }
+            Pick::Cut => self.editor.update(cx, |e, cx| e.cut_selection(window, cx)),
+            Pick::Copy => self.editor.update(cx, |e, cx| e.copy_selection(cx)),
+            // One paste: the clipboard is read as text and written
+            // verbatim, so there is no formatting for the plain row to drop.
+            Pick::Paste | Pick::PastePlain => self
+                .editor
+                .update(cx, |e, cx| e.paste_clipboard(window, cx)),
+            Pick::SelectAll => self.editor.update(cx, |e, cx| e.select_all_text(cx)),
+            // The Files view's own rows, which no menu drawn here lists.
             Pick::Duplicate
             | Pick::Delete
             | Pick::NewNote
@@ -11778,20 +11884,22 @@ impl Workspace {
         }
     }
 
-    /// The open file menu, drawn over everything else at the click.
+    /// The open file menu, drawn over everything else at the click. It is
+    /// the editor's and the reading view's menu as well as the panes', so
+    /// it is drawn at the workspace's root rather than inside a dock.
     fn render_file_menu(
         &mut self,
         theme: &Theme,
         cx: &mut Context<Self>,
     ) -> Option<gpui::AnyElement> {
         let menu = self.file_menu.as_ref()?;
-        let path = menu.target.path().to_string();
+        let target = menu.target.clone();
         Some(file_menu::render(
             menu,
             theme,
             cx,
             |this, cx| this.close_file_menu(cx),
-            move |this, pick, window, cx| this.file_menu_pick(pick, path.clone(), window, cx),
+            move |this, pick, window, cx| this.file_menu_pick(pick, &target, window, cx),
         ))
     }
 
@@ -13309,9 +13417,6 @@ impl Workspace {
             )
             .child(div().flex_1().overflow_hidden().child(body))
             .child(self.dock_handle(false, theme))
-            // The Backlinks and Outgoing links rows' file menu, positioned
-            // at the click and drawn over everything else.
-            .children(self.render_file_menu(theme, cx))
     }
 }
 
@@ -14634,6 +14739,11 @@ impl Render for Workspace {
             .child(status_bar)
             .children(controls)
             .children(overlay)
+            // One file menu for every view that raises it -- the Backlinks
+            // and Outgoing links rows, the editor's text, a link in the
+            // reading view -- positioned at the click and drawn over
+            // everything else, so no dock's clipping can cut it off.
+            .children(self.render_file_menu(&theme, cx))
             .children(notices);
         client_frame(content.into_any_element(), &theme, window)
     }

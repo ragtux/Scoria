@@ -12,13 +12,31 @@
 //! captured against Obsidian's on 2026-10-28 and is the one the Files view
 //! had; a change here moves every menu at once, which is the point.
 //!
+//! The editor raises it too, on a right click in the text
+//! ([`Target::Editor`]): Obsidian's editor menu is the same list widget,
+//! with the clipboard rows and — over a wikilink — the whole file menu
+//! wrapped around them
+//! ([[Specification#Observed editor context menu and view header actions, Obsidian 1.14.5 (installer build 1.13.7)]]).
+//! Three of its rows open **submenus** — Format, Paragraph and Insert, and
+//! "Copy path" has one of its own — and the probe never opened them, so
+//! what they hold is unobserved. A menu here lists only what it can run and
+//! never draws a dead row, so those rows are left out rather than guessed,
+//! even where Scoria has the commands behind them; they await a probe that
+//! opens each submenu and reads it. The reading view has no text menu at
+//! all: a right click there raises the file menu on a link and nothing
+//! anywhere else, which is what Obsidian does.
+//!
 //! "Show in system explorer" is also here, as the command lines that select
 //! a file in the desktop's file manager, so the one platform table has a test
 //! beside it.
 
 use crate::theme::Theme;
-use gpui::{anchored, deferred, div, prelude::*, px, AnyElement, Context, Pixels, Point, Window};
+use gpui::{
+    anchored, deferred, div, prelude::*, px, AnyElement, Context, Pixels, Point, SharedString,
+    Window,
+};
 use serde_json::{json, Value};
+use std::ops::Range;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
@@ -35,6 +53,15 @@ pub enum Section {
     ActionPrimary,
     /// The file row's "Open in..." items.
     Open,
+    /// `selection-link`: the editor menu's two link-making rows, which
+    /// Obsidian draws whether or not anything is selected.
+    SelectionLink,
+    /// `selection`: the editor menu's rows built from what is selected,
+    /// and the Format / Edit link / Edit tag row that sits with them.
+    Selection,
+    /// `clipboard`: the editor menu's Cut, Copy, Paste, Paste as plain text
+    /// and Select all.
+    Clipboard,
     Action,
     /// Obsidian leaves "Copy path" with no section at all.
     Unsectioned,
@@ -65,15 +92,38 @@ pub enum Pick {
     NewCanvas,
     NewBase,
     SearchInFolder,
+    // ----- the editor menu's rows ------------------------------------------
+    /// "Add link": the wikilink shape around the selection
+    /// (`editor:insert-wikilink`). Obsidian's own label for that command is
+    /// "Add internal link", and the row wears `lucide-link`, so the pairing
+    /// is read off the icon and the label rather than observed directly.
+    AddLink,
+    /// "Add external link": the Markdown link shape (`editor:insert-link`),
+    /// the row Obsidian wears `lucide-external-link` on.
+    AddExternalLink,
+    /// Search for “<selection>”: the Search pane, the selected text as its
+    /// query, the way a folder row's "Search in folder" opens it.
+    SearchForSelection,
+    Cut,
+    Copy,
+    Paste,
+    /// "Paste as plain text". Scoria's clipboard is read as text and pasted
+    /// verbatim, with no HTML or Markdown conversion on the way in, so this
+    /// is the same paste — which is what the row promises.
+    PastePlain,
+    SelectAll,
 }
 
 /// One row of a context menu: what Obsidian draws, and what a click reports.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Item {
-    pub label: &'static str,
+    pub label: SharedString,
     pub icon: &'static str,
     pub section: Section,
     pub pick: Pick,
+    /// Drawn greyed and inert, the way Obsidian draws Cut and Copy with
+    /// nothing selected (`is-disabled` on the row).
+    pub disabled: bool,
 }
 
 /// What was right-clicked. Paths are vault-relative, folders without a
@@ -94,16 +144,77 @@ pub enum Target {
     /// and "Reveal file in navigation" added at the end
     /// ([[Specification#Observed outgoing links pane behavior, Obsidian 1.14.4 (installer build 1.13.7)]]).
     Linked(String),
+    /// A right click in the editor's text, in either editing mode: the
+    /// probe raised the same rows in Live Preview and in Source mode.
+    Editor(EditorClick),
+}
+
+/// A right click in the editor: what it landed on, and the selection as it
+/// stood when it arrived.
+///
+/// The two selection fields are not one field twice. Obsidian built the
+/// Search row from the selection **as it was at the click** and left Cut and
+/// Copy to the selection that **survived** it: a right click outside a
+/// selection moves the caret, which takes the selection away, and the menu
+/// it raised still carried "Search for “…”" while Cut and Copy were drawn
+/// disabled.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EditorClick {
+    pub spot: Spot,
+    /// The text selected when the click arrived, empty with no selection.
+    /// It is what names the Search row.
+    pub selection: String,
+    /// Whether a selection survived the click: a click inside one keeps it,
+    /// a click anywhere else collapses it. Cut and Copy follow this.
+    pub selected: bool,
+}
+
+/// What a right click in the editor landed on.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Spot {
+    /// Plain text — and an external Markdown link, and a task checkbox in
+    /// Live Preview, both of which raised the plain menu too.
+    Text,
+    /// A tag. Obsidian puts "Edit tag" where the plain menu's Format row
+    /// sits; both are left out here (Format is a submenu, Edit tag has no
+    /// command behind it), so a tag's rows are the plain menu's. The name
+    /// rides along for the probe-shaped row to come.
+    Tag(String),
+    /// A wikilink that resolves to this vault file: the file menu's rows
+    /// wrap the text rows.
+    Link(String),
 }
 
 impl Target {
     /// The path every item of the menu acts on; the vault root for
-    /// [`Target::Blank`].
+    /// [`Target::Blank`], and nothing for an editor click that is not on a
+    /// link to a file.
     pub fn path(&self) -> &str {
         match self {
             Target::File(p) | Target::Folder(p) | Target::Linked(p) => p,
             Target::Blank => "",
+            Target::Editor(click) => match &click.spot {
+                Spot::Link(path) => path,
+                Spot::Text | Spot::Tag(_) => "",
+            },
         }
+    }
+}
+
+/// Where a right click in the editor leaves the caret: `None` to keep the
+/// selection as it is, `Some(at)` to collapse the caret onto the click.
+///
+/// Observed: with the caret at the document start a right click on a word
+/// moved it to that word; a right click *inside* a selection kept the
+/// selection; a right click *outside* one moved the caret to the click.
+/// A click exactly on either end of the selection was not probed — it is
+/// taken as inside, the way a pointer landing on the edge of the painted
+/// highlight reads (OBSERVE).
+pub fn right_click_caret(selection: &Range<usize>, at: usize) -> Option<usize> {
+    if !selection.is_empty() && selection.start <= at && at <= selection.end {
+        None
+    } else {
+        Some(at)
     }
 }
 
@@ -124,12 +235,6 @@ impl Target {
 pub fn items(target: &Target) -> Vec<Item> {
     use Pick as P;
     use Section as S;
-    let item = |label, icon, section, pick| Item {
-        label,
-        icon,
-        section,
-        pick,
-    };
     match target {
         Target::File(_) => vec![
             item("Open in new tab", "file-plus", S::Open, P::OpenInNewTab),
@@ -236,7 +341,113 @@ pub fn items(target: &Target) -> Vec<Item> {
                 P::RevealInNavigation,
             ),
         ],
+        Target::Editor(click) => editor_items(click),
     }
+}
+
+/// One row, enabled.
+fn item(label: &'static str, icon: &'static str, section: Section, pick: Pick) -> Item {
+    Item {
+        label: SharedString::new_static(label),
+        icon,
+        section,
+        pick,
+        disabled: false,
+    }
+}
+
+/// The editor menu for a click, in Obsidian's order.
+///
+/// Four of the captured rows open submenus nobody has read — **Format**,
+/// **Paragraph**, **Insert** and, on a wikilink, **Copy path** — so the
+/// three text ones are left out whole and Copy path keeps the one flat row
+/// the rest of Scoria's menus give it. Five more are left out for want of a
+/// command: **Extract current selection...** (no note composer), **Edit
+/// link** and **Edit tag** (no inline rename of a link or a tag), **Open in
+/// new window** (no second window) and **Start presentation** (no
+/// presentation mode). Dropping the only row of a section drops its
+/// separator with it, which is why the pair the capture has between Start
+/// presentation and the system rows is one separator here.
+fn editor_items(click: &EditorClick) -> Vec<Item> {
+    use Pick as P;
+    use Section as S;
+    let on_link = matches!(click.spot, Spot::Link(_));
+    let mut out = Vec::new();
+    if on_link {
+        out.push(item(
+            "Open in new tab",
+            "file-plus",
+            S::Open,
+            P::OpenInNewTab,
+        ));
+        out.push(item(
+            "Open to the right",
+            "separator-vertical",
+            S::Open,
+            P::OpenToRight,
+        ));
+    }
+    out.push(item("Add link", "link", S::SelectionLink, P::AddLink));
+    out.push(item(
+        "Add external link",
+        "external-link",
+        S::SelectionLink,
+        P::AddExternalLink,
+    ));
+    if !click.selection.is_empty() {
+        // Obsidian quotes the selected text in curly quotes.
+        out.push(Item {
+            label: format!("Search for \u{201c}{}\u{201d}", click.selection).into(),
+            icon: "search",
+            section: S::Selection,
+            pick: P::SearchForSelection,
+            disabled: false,
+        });
+    }
+    // `lucide-box-select` is Lucide's deprecated alias of `square-dashed`,
+    // from its own alias data, the way `lucide-edit-3` is `pen-line`.
+    for (label, icon, pick, needs_selection) in [
+        ("Cut", "scissors", P::Cut, true),
+        ("Copy", "copy", P::Copy, true),
+        ("Paste", "clipboard-check", P::Paste, false),
+        (
+            "Paste as plain text",
+            "clipboard-type",
+            P::PastePlain,
+            false,
+        ),
+        ("Select all", "square-dashed", P::SelectAll, false),
+    ] {
+        out.push(Item {
+            disabled: needs_selection && !click.selected,
+            ..item(label, icon, S::Clipboard, pick)
+        });
+    }
+    if on_link {
+        out.push(item("Copy path", "clipboard", S::Unsectioned, P::CopyPath));
+        out.push(item("Rename...", "pen-line", S::Action, P::Rename));
+        out.push(item("Move file to...", "folder-tree", S::Action, P::Move));
+        out.push(item("Bookmark...", "bookmark", S::Action, P::Bookmark));
+        out.push(item(
+            "Open in default app",
+            "arrow-up-right",
+            S::System,
+            P::OpenInDefaultApp,
+        ));
+        out.push(item(
+            "Show in system explorer",
+            "arrow-up-right",
+            S::System,
+            P::ShowInSystemExplorer,
+        ));
+        out.push(item(
+            "Reveal file in navigation",
+            "folder-open",
+            S::System,
+            P::RevealInNavigation,
+        ));
+    }
+    out
 }
 
 /// How many separators sit above an item given the section above it: one
@@ -284,12 +495,33 @@ pub fn describe(menu: &Menu) -> Value {
         Target::Folder(_) => "folder",
         Target::Blank => "blank",
         Target::Linked(_) => "linked",
+        Target::Editor(click) => match click.spot {
+            Spot::Text => "editor",
+            Spot::Tag(_) => "editor-tag",
+            Spot::Link(_) => "editor-link",
+        },
     };
-    json!({
+    let items = items(&menu.target);
+    let disabled: Vec<String> = items
+        .iter()
+        .filter(|i| i.disabled)
+        .map(|i| i.label.to_string())
+        .collect();
+    let mut value = json!({
         "target": target,
         "path": menu.target.path(),
         "items": drawn(&menu.target),
-    })
+        "disabled": disabled,
+    });
+    // What the editor's menu was built from, which no other target has.
+    if let Target::Editor(click) = &menu.target {
+        value["selection"] = json!(click.selection);
+        value["selected"] = json!(click.selected);
+        if let Spot::Tag(tag) = &click.spot {
+            value["tag"] = json!(tag);
+        }
+    }
+    value
 }
 
 /// The menu drawn at its position over everything else: a press outside it
@@ -339,6 +571,9 @@ pub fn render<V: 'static>(
         let pick = item.pick;
         let on_close = on_close.clone();
         let on_pick = on_pick.clone();
+        // Obsidian's `is-disabled` row: greyed, no hover, and a click on it
+        // closes nothing and does nothing.
+        let faded = theme.text_faint;
         list = list.child(
             div()
                 .id(("file-menu-item", ix))
@@ -347,13 +582,24 @@ pub fn render<V: 'static>(
                 .gap_2()
                 .px_3()
                 .py_1()
-                .cursor_pointer()
-                .hover(|s| s.bg(theme.bg_alt))
-                .on_click(cx.listener(move |this, _, window, cx| {
-                    on_close(this, cx);
-                    on_pick(this, pick, window, cx);
-                }))
-                .child(crate::assets::icon(item.icon, 16., theme.text_muted))
+                .when(item.disabled, |d| d.text_color(faded))
+                .when(!item.disabled, |d| {
+                    d.cursor_pointer()
+                        .hover(|s| s.bg(theme.bg_alt))
+                        .on_click(cx.listener(move |this, _, window, cx| {
+                            on_close(this, cx);
+                            on_pick(this, pick, window, cx);
+                        }))
+                })
+                .child(crate::assets::icon(
+                    item.icon,
+                    16.,
+                    if item.disabled {
+                        faded
+                    } else {
+                        theme.text_muted
+                    },
+                ))
                 .child(item.label),
         );
     }
@@ -579,6 +825,192 @@ mod tests {
         );
     }
 
+    /// The editor click the plain menu came from: no selection, plain text.
+    fn plain_click() -> Target {
+        Target::Editor(EditorClick {
+            spot: Spot::Text,
+            selection: String::new(),
+            selected: false,
+        })
+    }
+
+    /// The rows of the editor's clipboard section, which every editor menu
+    /// carries, with the labels Obsidian drew disabled marked.
+    fn clipboard_rows(target: &Target) -> Vec<(String, bool)> {
+        items(target)
+            .into_iter()
+            .filter(|i| i.section == Section::Clipboard)
+            .map(|i| (i.label.to_string(), i.disabled))
+            .collect()
+    }
+
+    /// The plain menu of `s01-editor-menu-live`, minus the three submenu
+    /// rows nobody has opened: the two link rows, one separator where
+    /// Format's section was, then the clipboard five.
+    #[test]
+    fn the_editor_menu_is_obsidians_plain_list_without_the_submenus() {
+        assert_eq!(
+            drawn(&plain_click()),
+            [
+                "Add link",
+                "Add external link",
+                "---",
+                "Cut",
+                "Copy",
+                "Paste",
+                "Paste as plain text",
+                "Select all",
+            ]
+        );
+    }
+
+    /// "Cut and Copy are drawn disabled with no selection" -- and enabled
+    /// with one; Paste, Paste as plain text and Select all never are.
+    #[test]
+    fn cut_and_copy_are_disabled_only_while_nothing_is_selected() {
+        assert_eq!(
+            clipboard_rows(&plain_click()),
+            [
+                ("Cut".to_string(), true),
+                ("Copy".to_string(), true),
+                ("Paste".to_string(), false),
+                ("Paste as plain text".to_string(), false),
+                ("Select all".to_string(), false),
+            ]
+        );
+        let live = Target::Editor(EditorClick {
+            spot: Spot::Text,
+            selection: "paragraph with".into(),
+            selected: true,
+        });
+        assert_eq!(
+            clipboard_rows(&live)
+                .into_iter()
+                .filter(|(_, d)| *d)
+                .count(),
+            0,
+            "with a selection no clipboard row is disabled"
+        );
+    }
+
+    /// With a selection the `selection` section opens with Obsidian's
+    /// quoted Search row; Extract current selection... is left out for want
+    /// of a note composer.
+    #[test]
+    fn a_selection_adds_the_quoted_search_row() {
+        let target = Target::Editor(EditorClick {
+            spot: Spot::Text,
+            selection: "paragraph with".into(),
+            selected: true,
+        });
+        assert_eq!(
+            drawn(&target),
+            [
+                "Add link",
+                "Add external link",
+                "---",
+                "Search for \u{201c}paragraph with\u{201d}",
+                "---",
+                "Cut",
+                "Copy",
+                "Paste",
+                "Paste as plain text",
+                "Select all",
+            ]
+        );
+    }
+
+    /// A right click outside a selection: the Search row is built from the
+    /// selection as it was, and Cut and Copy from the one that did not
+    /// survive -- both at once, which is what the probe read back.
+    #[test]
+    fn a_click_outside_the_selection_keeps_the_search_row_and_disables_cut() {
+        let target = Target::Editor(EditorClick {
+            spot: Spot::Text,
+            selection: "paragraph with".into(),
+            selected: false,
+        });
+        assert!(drawn(&target).contains(&"Search for \u{201c}paragraph with\u{201d}".to_string()));
+        assert_eq!(
+            clipboard_rows(&target)[..2],
+            [("Cut".to_string(), true), ("Copy".to_string(), true)]
+        );
+    }
+
+    /// "On a tag the Format row is replaced by Edit tag; the rest is the
+    /// plain menu." Edit tag has no command behind it and Format is a
+    /// submenu, so both are out and a tag's rows are the plain menu's --
+    /// the one place the tag's name still reaches is [`describe`].
+    #[test]
+    fn a_tag_draws_the_plain_menu_until_edit_tag_has_a_command() {
+        let tag = Target::Editor(EditorClick {
+            spot: Spot::Tag("project".into()),
+            selection: String::new(),
+            selected: false,
+        });
+        assert_eq!(drawn(&tag), drawn(&plain_click()));
+        assert_eq!(tag.path(), "", "a tag names no file");
+    }
+
+    /// `s01-editor-menu-live`'s `onWikilink`, minus Open in new window,
+    /// Edit link, Paragraph, Insert and Start presentation: the two Open
+    /// rows above the text rows, then Copy path, the action three and the
+    /// system three. Dropping Start presentation empties the `view`
+    /// section, so the capture's two consecutive separators are one here.
+    #[test]
+    fn a_wikilink_wraps_the_text_rows_in_the_file_menu() {
+        let target = Target::Editor(EditorClick {
+            spot: Spot::Link("Notes/Plan.md".into()),
+            selection: String::new(),
+            selected: false,
+        });
+        assert_eq!(
+            drawn(&target),
+            [
+                "Open in new tab",
+                "Open to the right",
+                "---",
+                "Add link",
+                "Add external link",
+                "---",
+                "Cut",
+                "Copy",
+                "Paste",
+                "Paste as plain text",
+                "Select all",
+                "---",
+                "Copy path",
+                "---",
+                "Rename...",
+                "Move file to...",
+                "Bookmark...",
+                "---",
+                "Open in default app",
+                "Show in system explorer",
+                "Reveal file in navigation",
+            ]
+        );
+        assert_eq!(target.path(), "Notes/Plan.md");
+    }
+
+    /// The caret rule: a point inside the selection keeps it, a point
+    /// outside moves the caret there, and with nothing selected every point
+    /// moves it -- which is the right click that placed the caret on the
+    /// word it landed on.
+    #[test]
+    fn a_right_click_keeps_a_selection_it_lands_in_and_moves_the_caret_otherwise() {
+        let selection = 6..20;
+        assert_eq!(right_click_caret(&selection, 12), None);
+        assert_eq!(right_click_caret(&selection, 6), None, "its head");
+        assert_eq!(right_click_caret(&selection, 20), None, "its tail");
+        assert_eq!(right_click_caret(&selection, 5), Some(5));
+        assert_eq!(right_click_caret(&selection, 35), Some(35));
+        // No selection: the caret goes to the click wherever that is, the
+        // click's own offset included.
+        assert_eq!(right_click_caret(&(0..0), 30), Some(30));
+        assert_eq!(right_click_caret(&(30..30), 30), Some(30));
+    }
+
     /// Obsidian's file row has no creation items, and a row away from the
     /// Files view none either.
     #[test]
@@ -678,6 +1110,12 @@ mod tests {
             Target::Folder("Notes".into()),
             Target::Blank,
             Target::Linked("Plan.md".into()),
+            plain_click(),
+            Target::Editor(EditorClick {
+                spot: Spot::Link("Plan.md".into()),
+                selection: "some words".into(),
+                selected: true,
+            }),
         ];
         for target in targets {
             for item in items(&target) {

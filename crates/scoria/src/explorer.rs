@@ -508,7 +508,17 @@ fn event_for(pick: Pick, target: &Target) -> Option<ExplorerEvent> {
         Pick::NewCanvas => E::NewCanvas { folder: path() },
         Pick::NewBase => E::NewBase { folder: path() },
         Pick::SearchInFolder => E::SearchInFolder(path()),
-        Pick::RevealInNavigation => return None,
+        // "Reveal file in navigation" reveals *in* the explorer, and the
+        // rest are the editor menu's rows, which act on the editor.
+        Pick::RevealInNavigation
+        | Pick::AddLink
+        | Pick::AddExternalLink
+        | Pick::SearchForSelection
+        | Pick::Cut
+        | Pick::Copy
+        | Pick::Paste
+        | Pick::PastePlain
+        | Pick::SelectAll => return None,
     })
 }
 

@@ -584,6 +584,9 @@ impl Cards {
             // A card has no path that writes a property back, so its pills
             // draw no remove control rather than a dead one.
             on_remove_item: None,
+            // The canvas has its own right-click menu over a card; a link
+            // inside one raises no second menu.
+            on_menu: None,
         };
         let renderer = Renderer::new(
             &scaled,

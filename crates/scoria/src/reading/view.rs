@@ -15,11 +15,13 @@ use crate::properties::{Field, Part, Target};
 use crate::properties::{PROPERTIES_FOLD_ID, PROPERTY_ID_BASE};
 use crate::theme::Theme;
 use gpui::{
-    actions, canvas, div, img, list, prelude::*, px, AnyElement, App, ClipboardItem, Context,
-    ElementId, EventEmitter, FocusHandle, Focusable, Font, FontStyle, FontWeight, HighlightStyle,
-    Hsla, InteractiveText, KeyBinding, ListAlignment, ListOffset, ListState, MouseButton,
-    ObjectFit, Pixels, SharedString, StrikethroughStyle, StyledText, Task, TextRun, UnderlineStyle,
-    Window, WindowTextSystem,
+    actions, canvas, div, img, list, prelude::*, px, AnyElement, App, Bounds, ClipboardItem,
+    Context, DispatchPhase, Element, ElementId, EventEmitter, FocusHandle, Focusable, Font,
+    FontStyle, FontWeight, GlobalElementId, HighlightStyle, Hitbox, HitboxBehavior, Hsla,
+    InspectorElementId, InteractiveText, KeyBinding, LayoutId, ListAlignment, ListOffset,
+    ListState, MouseButton, MouseDownEvent, ObjectFit, Pixels, Point, SharedString,
+    StrikethroughStyle, StyledText, Task, TextLayout, TextRun, UnderlineStyle, Window,
+    WindowTextSystem,
 };
 use scoria_formats::config::PropertyTypes;
 use scoria_formats::properties::{PropertiesInDocument, Property, PropertyType};
@@ -219,6 +221,8 @@ pub(crate) struct TableHost {
 
 /// What a rendered link does when clicked.
 pub type LinkHandler = Rc<dyn Fn(LinkTarget, &mut Window, &mut App)>;
+/// What a rendered link does when right-clicked, at the click's position.
+pub type MenuHandler = Rc<dyn Fn(LinkTarget, Point<Pixels>, &mut Window, &mut App)>;
 /// What a foldable callout's title does when clicked, by title id.
 pub type ToggleHandler = Rc<dyn Fn(usize, &mut App)>;
 /// What a task checkbox does when clicked.
@@ -242,12 +246,25 @@ pub(crate) struct ReadingHost {
     /// open a field or a menu. `None` draws no control at all, for a host
     /// with no way to write the note (a canvas card).
     pub on_remove_item: Option<PropertyHandler>,
+    /// What a right click on a rendered link raises. The reading view
+    /// passes the file menu; a host with no menu of its own passes `None`
+    /// and a right click on its text does nothing, which is what Obsidian's
+    /// reading view does everywhere but on a link.
+    pub on_menu: Option<MenuHandler>,
 }
 
 pub enum ReadingEvent {
     OpenLink(LinkTarget),
     /// A Ctrl+click on a link: it opens in a new tab.
     OpenLinkInNewTab(LinkTarget),
+    /// A right click on a rendered link: the file menu, at the click.
+    /// Obsidian's reading view raises this and nothing else — a right click
+    /// on plain text, and on a drag-made selection, raised no menu at all
+    /// ([[Specification#Observed editor context menu and view header actions, Obsidian 1.14.5 (installer build 1.13.7)]]).
+    ContextMenu {
+        target: LinkTarget,
+        position: Point<Pixels>,
+    },
 }
 
 /// A reader clicked a task checkbox. The reading view does not write the
@@ -685,12 +702,21 @@ impl ReadingView {
                 }
             }
         });
+        let on_menu: MenuHandler = Rc::new({
+            let view = view.clone();
+            move |target, position, _window, cx| {
+                view.update(cx, |_, cx| {
+                    cx.emit(ReadingEvent::ContextMenu { target, position })
+                });
+            }
+        });
         let host = ReadingHost {
             properties: self.properties_in_document,
             copied: self.copied,
             on_copy,
             on_task,
             on_remove_item: Some(on_remove_item),
+            on_menu: Some(on_menu),
         };
         let r = Renderer::new(
             &theme,
@@ -2252,9 +2278,9 @@ impl<'a> Renderer<'a> {
             })
             .collect();
         if formulas.is_empty() {
-            return self
-                .interactive(text, &text.text, &text.runs, &text.links)
-                .into_any_element();
+            let (interactive, layout) =
+                self.interactive_with_layout(text, &text.text, &text.runs, &text.links);
+            return self.with_link_menu(interactive.into_any_element(), layout, text.links.clone());
         }
         let t = self.theme;
         let em = px(size);
@@ -2312,17 +2338,38 @@ impl<'a> Renderer<'a> {
             .map(|(r, l)| (remap(r.start)..remap(r.end), l.clone()))
             .collect();
         let (interactive, layout) = self.interactive_with_layout(text, &shaped, &runs, &links);
-        Overlay::new(interactive.into_any_element(), layout, inlines, em, t.text).into_any_element()
+        let overlay = Overlay::new(
+            interactive.into_any_element(),
+            layout.clone(),
+            inlines,
+            em,
+            t.text,
+        )
+        .into_any_element();
+        self.with_link_menu(overlay, layout, links)
     }
 
-    fn interactive(
+    /// The text element with a right click on a link raising the host's
+    /// menu, where the host has one. Only the reading view does: a right
+    /// click in Live Preview belongs to the editor, which places the caret
+    /// and raises the editor's own menu, and a canvas card has no menu at
+    /// all.
+    fn with_link_menu(
         &self,
-        text: &RichText,
-        string: &str,
-        runs: &[(Range<usize>, InlineStyle)],
-        links: &[(Range<usize>, LinkTarget)],
-    ) -> InteractiveText {
-        self.interactive_with_layout(text, string, runs, links).0
+        child: AnyElement,
+        layout: TextLayout,
+        links: Vec<(Range<usize>, LinkTarget)>,
+    ) -> AnyElement {
+        let Some(on_menu) = self.reading_host.and_then(|h| h.on_menu.clone()) else {
+            return child;
+        };
+        LinkMenu {
+            child,
+            layout,
+            links,
+            on_menu,
+        }
+        .into_any_element()
     }
 
     /// The `InteractiveText` of `string` styled by `runs`, and its layout
@@ -2425,6 +2472,106 @@ impl<'a> Renderer<'a> {
             });
         }
         h
+    }
+}
+
+/// Shaped text whose links answer a right click: it wraps the text element,
+/// reads where the click landed from the text's own layout, and raises the
+/// host's menu only when that byte is inside a link's range.
+///
+/// It wraps rather than sits at the view's root because the reading view has
+/// no text menu to raise anywhere else — a right click on plain text, and on
+/// a drag-made selection, raised nothing in Obsidian. It also takes the
+/// mouse down it acts on: the `InteractiveText` underneath treats a mouse
+/// down of any button as the start of a click, and would follow the link on
+/// the right button's mouse up.
+struct LinkMenu {
+    child: AnyElement,
+    layout: TextLayout,
+    links: Vec<(Range<usize>, LinkTarget)>,
+    on_menu: MenuHandler,
+}
+
+impl IntoElement for LinkMenu {
+    type Element = LinkMenu;
+
+    fn into_element(self) -> LinkMenu {
+        self
+    }
+}
+
+impl Element for LinkMenu {
+    type RequestLayoutState = ();
+    type PrepaintState = Hitbox;
+
+    fn id(&self) -> Option<ElementId> {
+        None
+    }
+
+    fn source_location(&self) -> Option<&'static std::panic::Location<'static>> {
+        None
+    }
+
+    fn request_layout(
+        &mut self,
+        _id: Option<&GlobalElementId>,
+        _inspector_id: Option<&InspectorElementId>,
+        window: &mut Window,
+        cx: &mut App,
+    ) -> (LayoutId, ()) {
+        (self.child.request_layout(window, cx), ())
+    }
+
+    fn prepaint(
+        &mut self,
+        _id: Option<&GlobalElementId>,
+        _inspector_id: Option<&InspectorElementId>,
+        bounds: Bounds<Pixels>,
+        _request_layout: &mut (),
+        window: &mut Window,
+        cx: &mut App,
+    ) -> Hitbox {
+        self.child.prepaint(window, cx);
+        // `Normal`: the hitbox answers "is the pointer over this text" and
+        // occludes nothing, so the text's own hitbox still reports hovered
+        // and left clicks keep working.
+        window.insert_hitbox(bounds, HitboxBehavior::Normal)
+    }
+
+    fn paint(
+        &mut self,
+        _id: Option<&GlobalElementId>,
+        _inspector_id: Option<&InspectorElementId>,
+        _bounds: Bounds<Pixels>,
+        _request_layout: &mut (),
+        hitbox: &mut Hitbox,
+        window: &mut Window,
+        cx: &mut App,
+    ) {
+        self.child.paint(window, cx);
+        let hitbox = hitbox.clone();
+        let layout = self.layout.clone();
+        let links = std::mem::take(&mut self.links);
+        let on_menu = self.on_menu.clone();
+        window.on_mouse_event(move |event: &MouseDownEvent, phase, window, cx| {
+            if phase != DispatchPhase::Bubble
+                || event.button != MouseButton::Right
+                || !hitbox.is_hovered(window)
+            {
+                return;
+            }
+            // `index_for_position` is an `Err` for a point past the end of a
+            // row, so a click in the empty space beside the text raises
+            // nothing, like a click on text that is not a link.
+            let Ok(at) = layout.index_for_position(event.position) else {
+                return;
+            };
+            let Some((_, target)) = links.iter().find(|(range, _)| range.contains(&at)) else {
+                return;
+            };
+            cx.stop_propagation();
+            on_menu(target.clone(), event.position, window, cx);
+        });
     }
 }
 

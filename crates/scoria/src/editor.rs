@@ -194,6 +194,19 @@ pub enum EditorEvent {
     /// A link was Ctrl+clicked, in either editing mode: it opens in a new
     /// tab, as Obsidian's Mod+click does.
     OpenLinkInNewTab(LinkTarget),
+    /// A right click in the text: the caret has been placed already (a
+    /// click inside the selection keeps it), and the workspace turns this
+    /// into the editor's context menu. `selection` is the text selected
+    /// when the click arrived and `selected` whether it survived — the two
+    /// Obsidian builds the Search row and Cut/Copy from, separately
+    /// ([`crate::file_menu::EditorClick`]). `link` is whatever the click
+    /// landed in, which decides the rows.
+    ContextMenu {
+        position: Point<Pixels>,
+        selection: String,
+        selected: bool,
+        link: Option<LinkTarget>,
+    },
     /// Something the editor could not do, for the status bar.
     Reported(SharedString),
     /// A property's type was chosen from its menu; the workspace records it
@@ -2621,6 +2634,11 @@ impl Editor {
     }
 
     fn select_all(&mut self, _: &SelectAll, _: &mut Window, cx: &mut Context<Self>) {
+        self.select_all_text(cx);
+    }
+
+    /// Ctrl+A, and the context menu's "Select all" row.
+    pub fn select_all_text(&mut self, cx: &mut Context<Self>) {
         // An open field takes the keys the way backspace and delete give
         // them to it. It carries a caret and no selection, so there is
         // nothing for Ctrl+A to take; what it must not do is select the
@@ -2798,6 +2816,11 @@ impl Editor {
     }
 
     fn copy(&mut self, _: &Copy, _: &mut Window, cx: &mut Context<Self>) {
+        self.copy_selection(cx);
+    }
+
+    /// Ctrl+C, and the context menu's Copy row.
+    pub fn copy_selection(&mut self, cx: &mut Context<Self>) {
         if self.field_kind().is_some() {
             return;
         }
@@ -2808,6 +2831,11 @@ impl Editor {
     }
 
     fn cut(&mut self, _: &Cut, window: &mut Window, cx: &mut Context<Self>) {
+        self.cut_selection(window, cx);
+    }
+
+    /// Ctrl+X, and the context menu's Cut row.
+    pub fn cut_selection(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         if self.field_kind().is_some() {
             return;
         }
@@ -2822,6 +2850,14 @@ impl Editor {
     /// Paste at every cursor; a clipboard with one line per cursor gives
     /// each its own line, the way CodeMirror pastes a multi-cursor copy.
     fn paste(&mut self, _: &Paste, window: &mut Window, cx: &mut Context<Self>) {
+        self.paste_clipboard(window, cx);
+    }
+
+    /// Ctrl+V, and the context menu's Paste row — and its "Paste as plain
+    /// text" row, which is the same paste here: the clipboard is read as
+    /// text and written verbatim, with no HTML or Markdown conversion on
+    /// the way in for a plain paste to skip.
+    pub fn paste_clipboard(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let Some(text) = cx.read_from_clipboard().and_then(|item| item.text()) else {
             return;
         };
@@ -4077,6 +4113,47 @@ impl Editor {
         self.buf.marked = None;
         cx.notify();
         true
+    }
+
+    /// A right click in the text: it places the caret and raises the
+    /// editor's context menu, which is the workspace's to draw.
+    ///
+    /// Observed (`s01-editor-menu-live`, `s01-editor-menu-source`): the
+    /// click places the caret, in both editing modes, unless it lands
+    /// inside the selection — then the selection stays. The rows are built
+    /// from the selection as it stood when the click arrived, so that text
+    /// goes with the event even where the caret has just taken it away.
+    fn right_mouse_down(
+        &mut self,
+        event: &MouseDownEvent,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        window.focus(&self.focus_handle, cx);
+        let Some(at) = self.offset_at_point(window, event.position) else {
+            return;
+        };
+        let selection = self.buf.clipboard_text(&[self.buf.selection()]);
+        let keep = crate::file_menu::right_click_caret(&self.buf.selection(), at).is_none();
+        if !keep {
+            self.buf.collapse_cursors();
+            self.buf.goal = None;
+            self.buf.marked = None;
+            self.buf.head = at;
+            self.buf.anchor = at;
+        }
+        // Not `rendered_only`: the caret has just landed in whatever was
+        // clicked, which is exactly what reveals a link's source in Live
+        // Preview, and the click was on the link either way.
+        let cursor = self.buf.cursor_at(at);
+        let link = self.link_at(cursor.line, cursor.col, false);
+        cx.emit(EditorEvent::ContextMenu {
+            position: event.position,
+            selection,
+            selected: keep,
+            link,
+        });
+        cx.notify();
     }
 
     fn mouse_down(&mut self, event: &MouseDownEvent, window: &mut Window, cx: &mut Context<Self>) {
@@ -5613,11 +5690,22 @@ impl Element for EditorElement {
         let editor = self.editor.clone();
         let hitbox = prepaint.hitbox.clone();
         window.on_mouse_event(move |event: &MouseDownEvent, phase, window, cx| {
-            if phase == DispatchPhase::Bubble
-                && event.button == MouseButton::Left
-                && hitbox.is_hovered(window)
-            {
-                editor.update(cx, |editor, cx| editor.mouse_down(event, window, cx));
+            if phase != DispatchPhase::Bubble || !hitbox.is_hovered(window) {
+                return;
+            }
+            match event.button {
+                MouseButton::Left => {
+                    editor.update(cx, |editor, cx| editor.mouse_down(event, window, cx));
+                }
+                MouseButton::Right => {
+                    // The right click is the editor's: a rendered block's
+                    // `InteractiveText` takes a mouse down of any button
+                    // and would follow its link on the mouse up, which is
+                    // not what a right click does anywhere.
+                    cx.stop_propagation();
+                    editor.update(cx, |editor, cx| editor.right_mouse_down(event, window, cx));
+                }
+                _ => {}
             }
         });
         let editor = self.editor.clone();
