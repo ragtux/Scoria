@@ -1281,7 +1281,25 @@ list already does.
 
 *medium, missing-feature, medium*
 
-**Landed 2026-10-30**: the Daily notes and Templates tabs draw Obsidian 1.14.5's rows and write `daily-notes.json` / `templates.json`, see [[Development#The Daily notes and Templates options tabs, 2026-10-30]]. The other core plugins' tabs still show the placeholder row.
+**Landed 2026-10-30, whole.** The Daily notes and Templates tabs came first (see
+[[Development#The Daily notes and Templates options tabs, 2026-10-30]]); the probe of the same day
+([[Specification#Observed core-plugin options tabs, Obsidian 1.14.5 (installer build 1.13.7)]])
+then settled every other tab, and all seven landed: Backlinks, Canvas, Page preview, Note composer,
+Unique note creator, File recovery and Web viewer, each with its own `#[serde(flatten)] extra`
+config type in `scoria-formats`, loaded by `VaultState` and written through its own `SettingChange`.
+Only twelve core plugins have a tab at all. Sync gets a row of its own saying it is a paid Obsidian
+service Scoria does not speak, rather than the placeholder, which would have been false twice over.
+
+**Every new row is tagged "not in Scoria yet", and that is the honest part**: the values are written
+for the vault, which Obsidian reads, but no Scoria behaviour reads one of these keys yet. The
+ratchet test now runs in both directions -- a toggle may lose its tag only when something really
+reads the key.
+
+The rows with no observed key are drawn and write **nothing**, rather than guessing: the canvas
+folder name and zoom threshold, all three Unique note creator rows, all four File recovery rows, the
+Note composer template path, and the Web viewer homepage, saved-page folder, ad-block rules and
+update frequency. OBSERVE: each of those keys needs a probe that drives a file suggester, types into
+a `type=number` field, edits a textarea or drags a slider.
 
 **Scoria.** `plugin_items` matches only `switcher` and `command-palette`; everything else falls to a
 catch-all returning the single row "Options not shown yet — Scoria does not read this plugin's
