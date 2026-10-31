@@ -752,12 +752,33 @@ marks must stay 0.30*R0 apart, or they read as hatching; and the
 centreline's local curvature radius must exceed 2.5 half-widths, or the
 offset folds over itself.
 
-**Geometry**: offset the spine either side by the tapered half-width and
-close the loop, with both tips a SINGLE shared point so the two sides meet
-there instead of approaching asymptotically - which would leave a pair of
-points closer than the degenerate-segment gate allows, and a needle where
-the drawing has a rounded end. Width profile `x * (2 - x)` over the first
-and last tenth; both measured in Part 1.
+**The width is not constant along the mark.** It swells where the fold is
+sharp and thins where it softens, over the range `relief_modulation` sets -
+at the default the line runs from 0.45 to 1.50 times its nominal width
+within one stroke, and across marks the widest point measures 11 to 19
+canonical units against an outline of 17.4. A monoline of the measured
+waist is what the artwork's one sample is, and at logo scale beside holes
+this large it reads as a scratch; a line that swells puts weight on the
+fold where the surface actually bends, which is the mark's whole job.
+
+The profile is the fold strength recorded along the spine, smoothed by four
+binomial passes - the strength is a second derivative read off a bilinear
+grid, and raw it makes the edge ripple rather than swell - and normalised
+to its own MEAN rather than its maximum, so modulating the line does not
+quietly make every mark thinner. The square root of the ratio, because a
+second derivative's dynamic range is far wider than a line width should
+have.
+
+`relief_weight` is 0.044, 0.76 of the outline, against the measured 0.0336
+which is 0.58 of it. Raised for the same reason: the holes beside it are
+now half as many and a third larger.
+
+**Geometry**: offset the spine either side by the half-width and close the
+loop, with both tips a SINGLE shared point so the two sides meet there
+instead of approaching asymptotically - which would leave a pair of points
+closer than the degenerate-segment gate allows, and a needle where the
+drawing has a rounded end. The end tapers multiply on top of the profile,
+`x * (2 - x)` over the first and last tenth, as measured in Part 1.
 
 ### Parameters
 
@@ -1151,6 +1172,78 @@ at the code that implements it.
   spread. The geometric mean of the bbox sides is `2*sqrt(a*b)` for an
   ellipse, proportional to the equivalent radius and blind to elongation,
   which is what the test meant all along.
+
+- **The holes are laid out, not scattered.** Rejection sampling - throw a
+  dart, keep it if it misses - is what Fidenza does and what this did, and
+  the composition is then whatever the dice left: clumps, bald patches, and
+  the measured spread reached only by re-rolling until it appears. Relaxing
+  a weighted Voronoi diagram gives it by construction, and the three things
+  that fall out are even spacing, a size hierarchy that survives, and holes
+  that take part in the shading.
+
+  Four things had to be got right, each found by measuring:
+
+  - Lloyd does NOT converge in three passes from a random start. At three
+    the seeds were still close enough that the weighted midpoint between a
+    big hole and its neighbour sat 36 units out where the neighbour wanted
+    45, the cell cap bound on nearly every hole and coverage fell to 0.139.
+    Ten passes at an under-relaxed 0.7 settles it.
+  - The cell must CAP the size, not set it. Lloyd equalises cells, so
+    sizing from them directly flattens the measured 3.08x hierarchy into
+    polka dots - the size-spread gate fired on 47 rolls in 200.
+  - Weighting the diagram by the square root of the radius is right for
+    SIZING holes from cells and wrong for PLACING them: it spaces a
+    97-unit hole and a 31-unit one 1.75x apart when they need 3.1x. Since
+    the cells only decide positions, the packing exponent is the one that
+    matters, and that is the radius itself.
+  - A relaxed layout is optimised for even territory, not for clearance, so
+    some holes still do not fit where it puts them. Placing only at the
+    relaxed position took the clean-roll rate from 160 in 200 to 106 and
+    coverage from 0.166 to 0.150. Keeping Fidenza's collision loop as the
+    FALLBACK - relaxed position first, darts if it fails - recovers all of
+    it: 164 in 200 and 0.169, better than either alone.
+
+- **The shading deals the sizes out; it must not scale them.** Scaling each
+  hole's size by how dark its seed is multiplies the drawn hierarchy by a
+  second factor, and the two cross: a 17% shade factor was enough to
+  reorder adjacent stratified bands, leaving the realised sizes spanning
+  2.0x where the draw asked for 3.3x and firing the spread gate on 35 rolls
+  in 200. Dealing them out instead - sort the seeds by brightness, hand the
+  largest size to the darkest - keeps the multiset of sizes exactly as
+  drawn, so the hierarchy survives by construction, and it is a STRONGER
+  effect rather than a weaker one: it has the whole 3.3x range to work
+  with rather than a few percent either side.
+
+  This is what "using the colour to shade" means here. A hole is the
+  darkest ink on the page, so where the holes are big the area reads dark;
+  putting the big ones on the dark side makes the holes part of the shading
+  rather than something scattered over it.
+
+- **What the holes are NOT is Voronoi cells.** The diagram decides where
+  they go and how big; their outlines stay curvy blobs. Part 1's sharpest
+  measured distinction is between the two shape families - vesicle outlines
+  have no segment longer than 53 units and a median 6.6% deviation from
+  chord, facet outlines carry chords up to 145 units straighter than 6% -
+  and it warns that "if either side drifts toward the other the image stops
+  reading as scoria". Polygonal holes would be the clearest possible way to
+  break that.
+
+- **Two gates were short of what the spec already said.** "A scoria with
+  two holes does not read as scoria" was a comment on the packing budget
+  and nothing enforced it: with the count drawn, a Poisson three with one
+  dropped is two holes, which is 67% of the draw and passed the
+  proportional floor. And the size-spread gate exempted targets under four,
+  which was written when the count was fixed at seven and a small target
+  meant a deliberate choice - three is now the commonest small draw and
+  exactly where a flat set of sizes shows most. Both are absolute now.
+
+- **A monoline relief mark is too thin to stand beside holes this size.**
+  The artwork's mark is one sample and it is a constant-width stroke; at
+  0.58 of the outline, beside holes half as many and a third larger, it
+  reads as a scratch. The width now follows the fold strength along the
+  spine, 0.45 to 1.50 of nominal within a stroke, on a nominal raised to
+  0.76 of the outline - so the widest part of a mark measures 11 to 19
+  units against the outline's 17.4, and the thinnest tapers to nothing.
 
 - **Known and not fixed: facet self-intersection at the tame end.** The
   release build's self-intersection test covers the facets, and 16 of 120

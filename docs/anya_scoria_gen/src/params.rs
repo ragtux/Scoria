@@ -212,10 +212,14 @@ pub struct Params {
     /// Interior relief marks: thin tapered lines down the sharpest creases of
     /// the solid, each growing out of the outline ribbon.
     pub relief_lines: u32,
-    /// Width of a relief mark at its waist, as a fraction of R0.
+    /// Nominal width of a relief mark, as a fraction of R0. The realised
+    /// width swells and thins about it along the mark.
     pub relief_weight: f64,
     /// Centreline length of a relief mark, as a fraction of R0.
     pub relief_len: f64,
+    /// How much a relief mark's width swells and thins along its length
+    /// with the sharpness of the fold it traces. 0 is a monoline.
+    pub relief_modulation: f64,
     /// Number of bisections; regions = cuts + 1.
     pub facet_cuts: u32,
     /// How strongly a facet cut follows the solid's iso-brightness lines
@@ -318,6 +322,13 @@ pub struct Params {
     /// How strongly a hole's shape follows the surface it lies on: its long
     /// axis turns to the local contour and it foreshortens by the tilt.
     pub vesicle_contour: f64,
+    /// Caps a hole at this much of its Voronoi territory. 1.0, the default,
+    /// lifts the cap: the territory then decides only where a hole sits,
+    /// not how big it is. Below 1 it thins the packing out.
+    pub vesicle_fill: f64,
+    /// How strongly a hole's size follows the shading, so the holes darken
+    /// the shadow side rather than being scattered over it.
+    pub vesicle_shade: f64,
     /// Minimum gap to the body's INNER boundary, fraction of R0, floored at
     /// `1.2 * outline_weight * R0`.
     pub vesicle_edge_clear: f64,
@@ -367,8 +378,9 @@ impl Default for Params {
             outline_weight: 0.058,
             inner_rim: 0.0,
             relief_lines: 1,
-            relief_weight: 0.034,
+            relief_weight: 0.044,
             relief_len: 0.54,
+            relief_modulation: 0.80,
             facet_cuts: 11,
             facet_relief: 0.80,
             facet_curviness: 0.25,
@@ -395,6 +407,8 @@ impl Default for Params {
             vesicle_aspect_max: 2.40,
             vesicle_align: 0.85,
             vesicle_contour: 0.85,
+            vesicle_fill: 1.00,
+            vesicle_shade: 0.35,
             vesicle_edge_clear: 0.055,
             vesicle_gap: 0.090,
             vesicle_attempts: 220,
@@ -642,6 +656,7 @@ impl Params {
             "relief_lines" => self.relief_lines = u()?,
             "relief_weight" => self.relief_weight = f()?,
             "relief_len" => self.relief_len = f()?,
+            "relief_modulation" => self.relief_modulation = f()?,
             "facet_cuts" => self.facet_cuts = u()?,
             "facet_relief" => self.facet_relief = f()?,
             "facet_curviness" => self.facet_curviness = f()?,
@@ -687,6 +702,8 @@ impl Params {
             "vesicle_aspect_max" => self.vesicle_aspect_max = f()?,
             "vesicle_align" => self.vesicle_align = f()?,
             "vesicle_contour" => self.vesicle_contour = f()?,
+            "vesicle_fill" => self.vesicle_fill = f()?,
+            "vesicle_shade" => self.vesicle_shade = f()?,
             "vesicle_edge_clear" => self.vesicle_edge_clear = f()?,
             "vesicle_gap" => self.vesicle_gap = f()?,
             "vesicle_attempts" => self.vesicle_attempts = u()?,
@@ -734,6 +751,7 @@ impl Params {
         uchk("relief_lines", self.relief_lines, 0, 6)?;
         fchk("relief_weight", self.relief_weight, 0.008, 0.060)?;
         fchk("relief_len", self.relief_len, 0.15, 1.00)?;
+        fchk("relief_modulation", self.relief_modulation, 0.0, 1.0)?;
         uchk("facet_cuts", self.facet_cuts, 4, 20)?;
         fchk("facet_relief", self.facet_relief, 0.0, 1.0)?;
         fchk("facet_curviness", self.facet_curviness, 0.0, 1.50)?;
@@ -790,6 +808,8 @@ impl Params {
         fchk("vesicle_aspect_max", self.vesicle_aspect_max, 1.0, 3.2)?;
         fchk("vesicle_align", self.vesicle_align, 0.0, 1.0)?;
         fchk("vesicle_contour", self.vesicle_contour, 0.0, 1.0)?;
+        fchk("vesicle_fill", self.vesicle_fill, 0.30, 1.00)?;
+        fchk("vesicle_shade", self.vesicle_shade, 0.0, 1.0)?;
         fchk("vesicle_edge_clear", self.vesicle_edge_clear, 0.030, 0.120)?;
         fchk("vesicle_gap", self.vesicle_gap, 0.040, 0.200)?;
         uchk("vesicle_attempts", self.vesicle_attempts, 50, 1000)?;
@@ -864,6 +884,7 @@ impl Params {
             "relief_lines" => self.relief_lines.to_string(),
             "relief_weight" => self.relief_weight.to_string(),
             "relief_len" => self.relief_len.to_string(),
+            "relief_modulation" => self.relief_modulation.to_string(),
             "facet_cuts" => self.facet_cuts.to_string(),
             "facet_relief" => self.facet_relief.to_string(),
             "facet_curviness" => self.facet_curviness.to_string(),
@@ -896,6 +917,8 @@ impl Params {
             "vesicle_aspect_max" => self.vesicle_aspect_max.to_string(),
             "vesicle_align" => self.vesicle_align.to_string(),
             "vesicle_contour" => self.vesicle_contour.to_string(),
+            "vesicle_fill" => self.vesicle_fill.to_string(),
+            "vesicle_shade" => self.vesicle_shade.to_string(),
             "vesicle_edge_clear" => self.vesicle_edge_clear.to_string(),
             "vesicle_gap" => self.vesicle_gap.to_string(),
             "vesicle_attempts" => self.vesicle_attempts.to_string(),
@@ -1131,9 +1154,9 @@ static PARAM_TABLE: &[ParamInfo] = &[
     row(
         "relief_weight",
         Kind::F64,
-        "0.034",
+        "0.044",
         "0.008 ..= 0.060",
-        "Waist width of a relief mark over R0; measured 0.0336, 0.58 of the outline.",
+        "Nominal width of a relief mark over R0, 0.76 of the outline. Measured 0.0336, raised so the mark holds its own beside holes this large.",
     ),
     row(
         "relief_len",
@@ -1141,6 +1164,13 @@ static PARAM_TABLE: &[ParamInfo] = &[
         "0.54",
         "0.15 ..= 1.00",
         "Centreline length of a relief mark over R0; measured 0.535.",
+    ),
+    row(
+        "relief_modulation",
+        Kind::F64,
+        "0.80",
+        "0 ..= 1",
+        "How much a mark swells and thins along its length with the fold's sharpness; 0 is a monoline.",
     ),
     row(
         "facet_cuts",
@@ -1323,6 +1353,20 @@ static PARAM_TABLE: &[ParamInfo] = &[
         "0.85",
         "0 ..= 1",
         "How strongly a hole follows the surface under it: axis to the local contour, foreshortened by the tilt.",
+    ),
+    row(
+        "vesicle_fill",
+        Kind::F64,
+        "1.00",
+        "0.30 ..= 1.00",
+        "Caps a hole at this much of its Voronoi territory; 1.0 lifts the cap and lets it take its drawn size.",
+    ),
+    row(
+        "vesicle_shade",
+        Kind::F64,
+        "0.35",
+        "0 ..= 1",
+        "How strongly a hole's size follows the shading, so the holes darken the shadow side.",
     ),
     row(
         "vesicle_edge_clear",

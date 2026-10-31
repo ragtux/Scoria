@@ -17,7 +17,7 @@ use crate::noise::{Fbm, Perlin};
 use crate::params::min_slope_limit;
 use crate::ring::Ring;
 use crate::rng::{poisson_truncated, Pcg32};
-use crate::solid::DepthMap;
+use crate::solid::{DepthMap, Light};
 use crate::Params;
 
 /// Samples of a vesicle's own `r(theta)`. 72 is one every 5 degrees, which
@@ -119,6 +119,52 @@ const TILT_NZ_FLOOR: f64 = 0.34;
 /// the parameter surface already accepts rather than a new one.
 const TOTAL_ASPECT_CAP: f64 = 3.2;
 
+/// Tries at finding a seed point inside the eroded body.
+///
+/// The body is 68% of its bounding box, so a uniform dart lands inside more
+/// often than not; 200 is for the pinched end of the parameter surface.
+const SEED_ATTEMPTS: u32 = 200;
+
+/// Columns in the relaxation grid.
+///
+/// The grid only has to resolve the boundary between two cells to within a
+/// fraction of a hole, and a hole is a tenth of the body across. 72 columns
+/// over the bbox is about 12 units a cell at the canonical size, well under
+/// that, and the whole relaxation costs five passes over it.
+const RELAX_GRID: usize = 72;
+
+/// Relaxation passes.
+///
+/// Lloyd does not converge in two or three from a random start, whatever
+/// the folklore: measured, at three passes the seeds were still clumped
+/// closely enough that the weighted midpoint between a big hole and its
+/// neighbour sat 36 units out when the neighbour wanted 45, so the cell cap
+/// bound on nearly every hole and coverage fell to 0.139. Ten passes at the
+/// under-relaxed rate below settles it.
+const RELAX_PASSES: usize = 10;
+
+/// How far a seed moves toward its cell's centroid each pass.
+///
+/// Under-relaxed. A full Lloyd step on a grid this coarse makes a seed
+/// overshoot into a neighbour's cell and the pair swap back and forth
+/// instead of settling.
+const RELAX_RATE: f64 = 0.7;
+
+/// Floor on a hole's radius, as a fraction of `vesicle_rmin`.
+///
+/// The cell cap is ADVISORY, and this is why. A weighted diagram gives the
+/// smallest seed the smallest territory, which is right, but it can come
+/// out just under what that hole wanted - and dropping it then leaves a set
+/// of near-equal holes that fails the size-spread gate. Measured, that was
+/// 48 rolls in 200: the cell said 18 units where the hole wanted 24, the
+/// hole went, and the three survivors spanned 1.24x.
+///
+/// So the cap floors here instead, and the packer's own clearance and
+/// separation tests arbitrate - they run on the finished outline, lobes and
+/// bites included, which is a better judge of whether a hole fits than a
+/// radius ever was.
+const MIN_CELL_FRAC: f64 = 0.75;
+
 /// Lowest count the Poisson draw may return.
 ///
 /// "A scoria with two holes does not read as scoria" - SPEC.md's own words
@@ -209,88 +255,52 @@ struct Cand {
     ring: Ring,
     /// Smallest radius the shape can possibly have; used by the cheap
     /// definitely-overlapping rejection before the ring is built.
-    r_low: f64,
     /// The floor `clamp_min` used, as a fraction of the mean radius.
     pinch_floor: f64,
 }
 
-/// Uniform grid broadphase. `Vec<Vec<u16>>` by instruction: a HashMap would
-/// iterate in an order that changes between runs.
-struct Grid {
-    lo: V2,
-    sx: f64,
-    sy: f64,
-    nx: usize,
-    ny: usize,
-    cells: Vec<Vec<u16>>,
-}
-
-impl Grid {
-    /// Cover `lo`..`hi` with cells of about `cell` units.
-    fn new(lo: V2, hi: V2, cell: f64) -> Grid {
-        let cell = cell.max(1e-6);
-        let span_x = (hi.x - lo.x).max(1e-9);
-        let span_y = (hi.y - lo.y).max(1e-9);
-        let nx = ((span_x / cell).ceil() as i64).clamp(1, 128) as usize;
-        let ny = ((span_y / cell).ceil() as i64).clamp(1, 128) as usize;
-        Grid {
-            lo,
-            sx: span_x / nx as f64,
-            sy: span_y / ny as f64,
-            nx,
-            ny,
-            cells: vec![Vec::new(); nx * ny],
-        }
-    }
-
-    /// Cell range of a box, clamped into the grid.
-    fn range(&self, lo: V2, hi: V2) -> (usize, usize, usize, usize) {
-        let fx = |v: f64| {
-            ((v - self.lo.x) / self.sx)
-                .floor()
-                .clamp(0.0, (self.nx - 1) as f64) as usize
-        };
-        let fy = |v: f64| {
-            ((v - self.lo.y) / self.sy)
-                .floor()
-                .clamp(0.0, (self.ny - 1) as f64) as usize
-        };
-        (fx(lo.x), fx(hi.x), fy(lo.y), fy(hi.y))
-    }
-
-    /// Record `idx` in every cell its box touches. Duplicates across cells are
-    /// fine: the narrowphase is idempotent.
-    fn insert(&mut self, idx: u16, lo: V2, hi: V2) {
-        let (x0, x1, y0, y1) = self.range(lo, hi);
-        let stride = self.nx;
-        for iy in y0..=y1 {
-            for ix in x0..=x1 {
-                self.cells[iy * stride + ix].push(idx);
-            }
-        }
-    }
-
-    /// Everything that could be near the box, deduplicated.
-    fn query(&self, lo: V2, hi: V2, out: &mut Vec<u16>) {
-        out.clear();
-        let (x0, x1, y0, y1) = self.range(lo, hi);
-        for iy in y0..=y1 {
-            for ix in x0..=x1 {
-                out.extend_from_slice(&self.cells[iy * self.nx + ix]);
-            }
-        }
-        out.sort_unstable();
-        out.dedup();
-    }
-}
-
-/// Pack up to `p.vesicle_count` holes into the body.
+/// Lay out the holes as a weighted Voronoi packing of the body, then build
+/// them.
+///
+/// Not rejection sampling, which is what this was and what Fidenza does.
+/// Throwing darts and keeping the ones that miss produces clumps and bald
+/// patches - the composition is whatever the dice left - and the only way
+/// it reaches the measured spread is by being re-rolled until it does.
+/// Relaxing a weighted Voronoi diagram produces that spread BY
+/// CONSTRUCTION: every hole ends up in the middle of its own territory,
+/// sized by how much territory it has.
+///
+/// Three things come out of it that the dart-throwing could not give:
+///
+/// - STRUCTURE. The holes are evenly spread without being on a grid, which
+///   is what Part 1 measures - "they SPREAD rather than cluster", the set's
+///   centroid within 7 units of the body's, all four quadrants occupied.
+/// - HIERARCHY, kept. Relaxation on its own equalises cell sizes, which
+///   would flatten the measured 3.08x size range into polka dots. The
+///   diagram is WEIGHTED - a seed of weight `w` claims territory in
+///   proportion to it, and the boundary between two seeds sits at
+///   `d * w_i / (w_i + w_j)` along the line between them - so the
+///   stratified size draw survives the relaxation and sets how much room
+///   each hole gets.
+/// - SHADING. A hole is the darkest ink on the page, so where the holes are
+///   big the area reads dark. Weighting them by the surface's own
+///   brightness therefore makes the holes part of the shading rather than
+///   something scattered over it: the shadow side carries the larger holes,
+///   and the three oranges and the holes describe the same form.
+///
+/// What it deliberately does NOT do is make the holes themselves Voronoi
+/// CELLS. Part 1's sharpest measured distinction is between the two shape
+/// families - vesicle outlines have no segment longer than 53 units and a
+/// median 6.6% deviation from chord, facet outlines carry chords up to 145
+/// units straighter than 6% - and it warns that "if either side drifts
+/// toward the other the image stops reading as scoria". The diagram decides
+/// where the holes are and how big; the holes stay curvy blobs.
 ///
 /// Clearance is measured against the INNER ring - the orange boundary - not
-/// the silhouette: a hole placed against the outer edge bites into the ribbon
-/// and the logo looks chewed. The floor is tied to `outline_weight`, so
-/// thickening the outline pushes the holes in rather than silently breaking
-/// the composition.
+/// the silhouette: a hole placed against the outer edge bites into the
+/// ribbon and the logo looks chewed. The floor is tied to `outline_weight`,
+/// so thickening the outline pushes the holes in rather than silently
+/// breaking the composition.
 #[allow(clippy::too_many_arguments)]
 pub fn pack(
     p: &Params,
@@ -298,6 +308,7 @@ pub fn pack(
     field: &Field,
     perlin: &Perlin,
     depth: &DepthMap,
+    light: &Light,
     rng: &mut Pcg32,
     c: V2,
     r0: f64,
@@ -310,8 +321,8 @@ pub fn pack(
     // number every time is the same tell as giving every hole the same lobe
     // count, which Part 1 calls the most obvious sign of a naive generator.
     let mean = f64::from(p.vesicle_count);
-    let hi = (mean * COUNT_SPREAD).round() as u32 + COUNT_SPREAD_PLUS;
-    let drawn = poisson_truncated(rng, mean, COUNT_MIN.min(p.vesicle_count), hi);
+    let hi_n = (mean * COUNT_SPREAD).round() as u32 + COUNT_SPREAD_PLUS;
+    let drawn = poisson_truncated(rng, mean, COUNT_MIN.min(p.vesicle_count), hi_n);
     let count = drawn as usize;
 
     // Hold the coverage the count just moved. Total hole area goes as
@@ -324,109 +335,169 @@ pub fn pack(
     let rmin = p.vesicle_rmin * r0 * size_comp;
     let rmax = p.vesicle_rmax * r0 * size_comp;
     let span = (rmax - rmin).max(1e-12);
-    // Measured tightest clearance to the inner edge: 11.3/169.2 = 0.067 R0,
-    // and 1.2*0.058 = 0.070 - the ribbon-derived floor is the binding one at
-    // the defaults, which is the right coupling.
     let clearance = (1.2 * p.outline_weight * r0).max(p.vesicle_edge_clear * r0);
 
-    // Radii first, then aspects, in one fixed order: the draw order must not
-    // depend on how the packing goes, or a dropped vesicle would reshuffle
-    // every later size.
-    let mut radii = Vec::with_capacity(count);
+    // ---- weights, drawn before anything geometric
+    //
+    // Stratified, not independent: one draw per 1/count band of the range.
+    // Independent uniforms land within 2x of each other about a third of
+    // the time, which is the polka-dot failure the spread gate then has to
+    // reject; the artwork's holes span 3.08x with a clear hierarchy, and
+    // stratifying reproduces that by construction instead of by re-rolling.
+    let mut weight = Vec::with_capacity(count);
     for k in 0..count {
-        // Stratified, not independent: one draw per 1/count band of the range.
-        // Seven independent uniforms land within 2x of each other about a
-        // third of the time, which is the polka-dot failure the spread gate
-        // then has to reject; the artwork's seven span 3.08x with a clear
-        // two-big / three-mid / two-small hierarchy, and stratifying
-        // reproduces that by construction instead of by re-rolling for it.
         let u = (k as f64 + rng.f64()) / count as f64;
         // u^pow by multiplication - powf is a libm call and a determinism
-        // hazard. pow 2 biases toward small, matching the measured clustering.
+        // hazard.
         let mut up = 1.0;
         for _ in 0..p.vesicle_size_pow {
             up *= u;
         }
-        radii.push(rmin + (rmax - rmin) * up);
-    }
-    let mut aspects = Vec::with_capacity(count);
-    for &r in &radii {
-        let t = ((r - rmin) / span).clamp(0.0, 1.0);
-        aspects.push(1.0 + (p.vesicle_aspect_max - 1.0) * t * rng.range(0.6, 1.0));
+        weight.push(rmin + span * up);
     }
 
-    // Largest first. This alone lifts achieved coverage from about 12% to the
-    // measured 21%, with no relaxation pass.
+    // ---- seeds, anywhere inside the eroded body
+    let ipts = inner.points();
+    let (lo, hi) = bbox(&ipts);
+    let mut centre = Vec::with_capacity(count);
+    for _ in 0..count {
+        let mut placed = None;
+        for _ in 0..SEED_ATTEMPTS {
+            let q = V2::new(rng.range(lo.x, hi.x), rng.range(lo.y, hi.y));
+            if inner.contains(q, clearance + rmin) {
+                placed = Some(q);
+                break;
+            }
+        }
+        // A body too pinched to hold even a minimum hole gets fewer of
+        // them; the coverage gate decides whether that is still a scoria.
+        match placed {
+            Some(q) => centre.push(q),
+            None => break,
+        }
+    }
+    if centre.is_empty() {
+        return (Vec::new(), drawn);
+    }
+    let count = centre.len();
+    weight.truncate(count);
+
+    // ---- relax
+    relax(
+        &mut centre,
+        &mut weight,
+        inner,
+        depth,
+        light,
+        p,
+        lo,
+        hi,
+        clearance,
+        rmin,
+        rmax,
+    );
+
+    // ---- radii from the territory each hole ended up with
+    let mut radii = Vec::with_capacity(count);
+    for i in 0..count {
+        // The weighted midpoint to the nearest neighbour, which is where
+        // that neighbour's territory begins.
+        let mut room = f64::INFINITY;
+        for j in 0..count {
+            if i == j {
+                continue;
+            }
+            // The same weighting the diagram used, or the midpoint this
+            // computes is not the boundary the relaxation settled on.
+            let (wi, wj) = (weight[i].max(1e-12), weight[j].max(1e-12));
+            let d = (centre[j] - centre[i]).len();
+            room = room.min(d * wi / (wi + wj));
+        }
+        // And the body's own edge.
+        let d = centre[i] - inner.c;
+        room = room.min(inner.radius_toward(d) - d.len() - clearance);
+        // THE CELL CAPS THE SIZE, it does not set it. The drawn weight is
+        // the hole's target and the territory is only what stops it
+        // overlapping - which is the right division of labour, because
+        // Lloyd relaxation EQUALISES cells and sizing from them directly
+        // flattens the measured 3.08x hierarchy into polka dots. Measured,
+        // it did: the size-spread gate fired on 47 rolls in 200 and
+        // coverage fell to 0.140.
+        //
+        // The weights drive the relaxation, so a big hole has already
+        // claimed a big cell by the time the cap is applied and it rarely
+        // binds. Back off by the gap the packer would have demanded anyway,
+        // and take `vesicle_fill` of what is left: a hole touching its cell
+        // wall would read as foam, not as gas in rock.
+        let gap = 0.5 * (p.vesicle_gap * r0).max(0.45 * weight[i]);
+        // `vesicle_fill` 1.0 lifts the cap entirely, which is the default:
+        // the relaxation's job is to make room for the drawn sizes, and the
+        // clearance and separation tests below decide whether it managed.
+        let cap = if p.vesicle_fill >= 1.0 {
+            f64::INFINITY
+        } else {
+            (room - gap) * p.vesicle_fill
+        };
+        radii.push(weight[i].min(cap).min(rmax));
+    }
+
+    // ---- build, largest first so the big ones get the benefit of any
+    // doubt the validation gives
     let mut order: Vec<usize> = (0..count).collect();
     order.sort_by(|&a, &b| radii[b].total_cmp(&radii[a]).then(a.cmp(&b)));
 
-    let ipts = inner.points();
-    let (lo, hi) = bbox(&ipts);
-    let mut grid = Grid::new(lo, hi, 2.0 * rmax);
-    // The largest radius any vesicle could reach, for the query box.
-    let reach = rmax * p.vesicle_aspect_max.sqrt() * (1.0 + p.vesicle_amp * AMP_BIG);
-    let gap_max = (p.vesicle_gap * r0).max(0.45 * rmax);
-
+    // THE RELAXED POSITION FIRST, THE DART-THROWER AS FALLBACK.
+    //
+    // The relaxation decides where a hole would ideally sit, and most of
+    // the time it fits there - that is what gives the layout its structure.
+    // But the diagram works on equivalent radii and knows nothing about a
+    // hole's lobes or its bites, and a relaxed layout is optimised for even
+    // territory rather than for clearance, so some holes do not fit where
+    // it put them. Measured, placing ONLY at the relaxed position dropped
+    // enough of them to take the clean-roll rate from 160 in 200 to 106 and
+    // the coverage from 0.166 to 0.150.
+    //
+    // Falling back to Fidenza's collision loop for those recovers all of
+    // it, and costs nothing when the relaxed position works: the result is
+    // never worse placed than the dart-thrower alone, and usually better
+    // ordered.
     let mut placed: Vec<Cand> = Vec::with_capacity(count);
-    let mut near: Vec<u16> = Vec::with_capacity(16);
+    let (lo_b, hi_b) = (lo, hi);
     let mut total = 0u32;
-    let mut consec = 0u32;
-
-    'next: for &k in &order {
-        let r_k = radii[k];
-        let asp = aspects[k];
+    for &k in &order {
+        // The cap floors rather than drops - see `MIN_CELL_FRAC`. What
+        // decides whether the hole actually fits is the clearance and
+        // separation tests, on its finished outline.
+        let r_k = radii[k].max(rmin * MIN_CELL_FRAC);
+        if !r_k.is_finite() || r_k <= 0.0 {
+            continue;
+        }
         let t = ((r_k - rmin) / span).clamp(0.0, 1.0);
-        let amp = p.vesicle_amp * lerp(AMP_SMALL, AMP_BIG, t);
-        let semi_a = r_k * asp.sqrt();
-        let semi_b = r_k / asp.sqrt();
-        let r_low = semi_b * (1.0 - amp);
-        let r_high = semi_a * (1.0 + amp);
+        let asp = 1.0 + (p.vesicle_aspect_max - 1.0) * t * rng.range(0.6, 1.0);
 
-        for _ in 0..p.vesicle_attempts {
-            if total >= p.attempts_total || consec >= p.consec_fail_stop {
-                break 'next;
+        let mut done = false;
+        for attempt in 0..=p.vesicle_attempts {
+            if total >= p.attempts_total {
+                break;
             }
-            total += 1;
-            let centre = V2::new(rng.range(lo.x, hi.x), rng.range(lo.y, hi.y));
-
-            // Necessary condition, O(1) against the star-shaped inner ring:
-            // the nearest boundary point of the candidate is at least r_low
-            // away from its centre, so the centre must clear by that much.
-            if !inner.contains(centre, clearance + r_low) {
-                consec += 1;
+            let at = if attempt == 0 {
+                centre[k]
+            } else {
+                total += 1;
+                V2::new(rng.range(lo_b.x, hi_b.x), rng.range(lo_b.y, hi_b.y))
+            };
+            if attempt > 0 && !inner.contains(at, clearance) {
                 continue;
             }
-
-            let q = V2::new(r_high + reach + gap_max, r_high + reach + gap_max);
-            grid.query(centre - q, centre + q, &mut near);
-
-            // Cheap definite rejection: if even the minimum radii overlap, no
-            // shape this centre could produce would fit.
-            let mut doomed = false;
-            for &j in &near {
-                let other = &placed[j as usize];
-                let gap = (p.vesicle_gap * r0).max(0.45 * r_k.min(other.r_eq));
-                if (other.centre - centre).len() < other.r_low + r_low + gap {
-                    doomed = true;
-                    break;
-                }
-            }
-            if doomed {
-                consec += 1;
-                continue;
-            }
-
-            // The shape depends on the centre - the long axis follows the
-            // field there - so it has to be built before it can be tested.
-            let cand = build_cand(p, field, perlin, depth, rng, c, r0, centre, r_k, asp, t);
-
+            // The shape depends on the centre - the axis follows the field
+            // and the surface there - so it has to be built before it can
+            // be tested.
+            let cand = build_cand(p, field, perlin, depth, rng, c, r0, at, r_k, asp, t);
             if !boundary_clear(&cand.ring, inner, clearance) {
-                consec += 1;
                 continue;
             }
             let mut clash = false;
-            for &j in &near {
-                let other = &placed[j as usize];
+            for other in &placed {
                 let gap = (p.vesicle_gap * r0).max(0.45 * cand.r_eq.min(other.r_eq));
                 if !separated(&cand, other, gap) {
                     clash = true;
@@ -434,25 +505,172 @@ pub fn pack(
                 }
             }
             if clash {
-                consec += 1;
                 continue;
             }
-
-            let bl = V2::new(centre.x - r_high, centre.y - r_high);
-            let br = V2::new(centre.x + r_high, centre.y + r_high);
-            grid.insert(placed.len() as u16, bl, br);
             placed.push(cand);
-            consec = 0;
-            continue 'next;
+            done = true;
+            break;
         }
-        // Out of attempts for this radius: DROP it. A shrunk-to-fit hole reads
-        // as dirt; a missing one reads as composition.
+        // Out of attempts: DROP it. A shrunk-to-fit hole reads as dirt; a
+        // missing one reads as composition.
+        let _ = done;
     }
 
     (
         placed.into_iter().map(|c| finish(c, p, r0)).collect(),
         drawn,
     )
+}
+
+/// Which seed should get which size: an ordering of seed indices, smallest
+/// size first.
+///
+/// Blends two orderings by rank. The seed's own index is the order the
+/// sizes were drawn in, which is arbitrary; brightness, descending, puts
+/// the largest hole on the darkest patch. `shade` 0 keeps the draw's own
+/// pairing and 1 follows the light completely.
+///
+/// Ranks rather than values, because brightness and index are not in the
+/// same units and a blend of ranks is the only one that means anything.
+fn deal_order(centre: &[V2], depth: &DepthMap, light: &Light, shade: f64) -> Vec<usize> {
+    let n = centre.len();
+    let mut by_bright: Vec<usize> = (0..n).collect();
+    // Brightest first, so a high rank is a dark seed and gets a large size.
+    by_bright.sort_by(|&a, &b| {
+        depth
+            .brightness(centre[b], light)
+            .total_cmp(&depth.brightness(centre[a], light))
+            .then(a.cmp(&b))
+    });
+    let mut bright_rank = vec![0.0f64; n];
+    for (r, &i) in by_bright.iter().enumerate() {
+        bright_rank[i] = r as f64;
+    }
+    let s = shade.clamp(0.0, 1.0);
+    let mut out: Vec<usize> = (0..n).collect();
+    out.sort_by(|&a, &b| {
+        let ka = (1.0 - s) * a as f64 + s * bright_rank[a];
+        let kb = (1.0 - s) * b as f64 + s * bright_rank[b];
+        ka.total_cmp(&kb).then(a.cmp(&b))
+    });
+    out
+}
+
+/// Lloyd relaxation on a multiplicatively weighted Voronoi diagram over the
+/// body, with the weights re-read from the shading each pass.
+///
+/// Approximated on a grid rather than by building the diagram: at a handful
+/// of seeds the exact construction is more code than it is worth, and a
+/// grid assignment is the same answer to within a cell. Each pass assigns
+/// every inside cell to the seed minimising `|q - c_i| / w_i` - which is
+/// the weighted diagram - and moves each seed to the centroid of what it
+/// claimed.
+///
+/// The weights pick up the surface's brightness as they go, normalised
+/// across this logo's own seeds so the effect is the same strength on a
+/// bright rock as on a dark one. Darker gets bigger: a hole is the darkest
+/// ink on the page, so weighting it by shadow makes the holes part of the
+/// shading rather than something scattered over it.
+#[allow(clippy::too_many_arguments)]
+fn relax(
+    centre: &mut [V2],
+    weight: &mut [f64],
+    inner: &Ring,
+    depth: &DepthMap,
+    light: &Light,
+    p: &Params,
+    lo: V2,
+    hi: V2,
+    clearance: f64,
+    rmin: f64,
+    rmax: f64,
+) {
+    let n = centre.len();
+    if n == 0 {
+        return;
+    }
+    let base: Vec<f64> = weight.to_vec();
+    let nx = RELAX_GRID;
+    let ny = ((RELAX_GRID as f64 * (hi.y - lo.y) / (hi.x - lo.x).max(1e-9)).round() as usize)
+        .clamp(8, RELAX_GRID);
+    let (dx, dy) = ((hi.x - lo.x) / nx as f64, (hi.y - lo.y) / ny as f64);
+
+    for pass in 0..RELAX_PASSES {
+        // THE SHADING DEALS THE SIZES OUT, it does not scale them.
+        //
+        // Scaling each weight by how dark its seed is - the obvious thing -
+        // multiplies the drawn hierarchy by a second factor, and the two
+        // cross: measured, a 17% shade factor was enough to reorder
+        // adjacent stratified bands, which left the realised sizes spanning
+        // 2.0x where the draw had asked for 3.3x and fired the size-spread
+        // gate on 35 rolls in 200.
+        //
+        // Dealing them out instead keeps the multiset of sizes EXACTLY as
+        // drawn - so the measured hierarchy survives by construction, and
+        // the spread gate cannot fail for this reason - while letting the
+        // shading decide which hole gets which. The darkest seed takes the
+        // largest size. That is a stronger effect than scaling, not a
+        // weaker one: it has the whole 3.3x range to play with rather than
+        // a few percent either side.
+        //
+        // `base` is sorted ascending by construction, being a stratified
+        // draw over bands in order.
+        let order = deal_order(centre, depth, light, p.vesicle_shade);
+        for (rank, &i) in order.iter().enumerate() {
+            weight[i] = base[rank];
+        }
+        let _ = pass;
+        // The claim is the weight itself, so a cell's RADIUS scales with
+        // the hole's. That is what the packing needs: two holes do not
+        // collide when the boundary between their territories is at least
+        // a radius from each, and the boundary of a multiplicatively
+        // weighted cell sits at `d * w_i / (w_i + w_j)` along the line
+        // between them - exactly in proportion to the radii.
+        //
+        // The square root was tried, to stop the smallest seed getting a
+        // cell eleven times smaller in area than the largest, and it is the
+        // right exponent for sizing holes FROM their cells. It is the wrong
+        // one for placing them: it spaces a 97-unit hole and a 31-unit one
+        // only 1.75x apart when they need 3.1x, and the packer then drops
+        // what will not fit. Since the cells no longer set the sizes, only
+        // the positions, the packing exponent is the one that matters.
+        let claim: Vec<f64> = weight.iter().map(|w| w.max(1e-12)).collect();
+        let mut sum = vec![V2::ZERO; n];
+        let mut hits = vec![0.0f64; n];
+        for iy in 0..ny {
+            for ix in 0..nx {
+                let q = V2::new(lo.x + (ix as f64 + 0.5) * dx, lo.y + (iy as f64 + 0.5) * dy);
+                if !inner.contains(q, clearance) {
+                    continue;
+                }
+                let mut best = 0usize;
+                let mut best_d = f64::INFINITY;
+                for i in 0..n {
+                    let d = (q - centre[i]).len() / claim[i];
+                    if d < best_d {
+                        best_d = d;
+                        best = i;
+                    }
+                }
+                sum[best] = sum[best] + q;
+                hits[best] += 1.0;
+            }
+        }
+        for i in 0..n {
+            if hits[i] < 1.0 {
+                continue;
+            }
+            let want = sum[i] * (1.0 / hits[i]);
+            // Part of the way, not all of it: full Lloyd steps on a coarse
+            // grid oscillate between cells.
+            let moved = centre[i] + (want - centre[i]) * RELAX_RATE;
+            // Never outside the body. A seed pushed out by a neighbour
+            // stays where it was rather than leaving.
+            if inner.contains(moved, clearance + rmin.min(rmax)) {
+                centre[i] = moved;
+            }
+        }
+    }
 }
 
 /// Build one candidate's star-shaped outline about `centre`.
@@ -623,7 +841,6 @@ fn build_cand(
         aspect,
         axis,
         ring,
-        r_low: semi_b * (1.0 - amp) * (1.0 - bite),
         pinch_floor,
     }
 }
@@ -818,6 +1035,7 @@ mod tests {
             &field,
             &perlin,
             &flat_depth(),
+            &Light::new(2.30, 0.22),
             &mut vrng,
             V2::new(0.0, 0.0),
             r0,
@@ -917,6 +1135,7 @@ mod tests {
                 &field,
                 &perlin,
                 &flat_depth(),
+                &Light::new(2.30, 0.22),
                 &mut vrng,
                 V2::new(0.0, 0.0),
                 r0,

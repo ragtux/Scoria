@@ -34,6 +34,11 @@ const NORMAL_POLE_MIN: f64 = 0.70;
 /// Measured 0.745 to 0.781 over the same scenes. A map built back to front
 /// would come out near its negation and cannot approach this.
 const NORMAL_MEAN_MIN: f64 = 0.45;
+/// Fewest holes that still read as scoria, whatever the draw asked for.
+/// SPEC.md's own words, which until the count became a draw were only ever
+/// a comment on the packing budget.
+const MIN_HOLES: usize = 3;
+
 /// Lowest Lambert separation between neighbouring tones that still reads as
 /// a step rather than as a rounding accident.
 const TONE_LAMBERT_GAP: f64 = 0.004;
@@ -498,8 +503,15 @@ pub fn vesicle_coverage(ves: &[Vesicle], body_area: f64, target: u32) -> Check {
     // the mean punishes a roll that drew high for drawing high - and since
     // the radii are compensated by `sqrt(mean / drawn)`, a high draw is
     // exactly the roll with the most holes to place and the least room each.
-    // ceil(0.6 * target) without a float round trip.
-    let floor = (6 * target as usize).div_ceil(10);
+    // ceil(0.6 * target) without a float round trip, and never fewer than
+    // three outright. SPEC.md says "a scoria with two holes does not read
+    // as scoria" and until now nothing enforced it: at the bottom of the
+    // Poisson range a draw of three with one dropped is 2, which is 67% of
+    // the draw and passed. The absolute floor is the rule the proportional
+    // one was standing in for.
+    let floor = (6 * target as usize)
+        .div_ceil(10)
+        .max(MIN_HOLES.min(target as usize));
     if ves.len() < floor {
         return Err("vesicle coverage: too many holes could not be placed");
     }
@@ -516,7 +528,13 @@ pub fn vesicle_coverage(ves: &[Vesicle], body_area: f64, target: u32) -> Check {
 
 /// Size spread, so the holes do not read as polka dots.
 pub fn vesicle_spread(ves: &[Vesicle], target: u32) -> Check {
-    if target < 4 || ves.len() < 2 {
+    // Three, not four. The exemption was written when the count was fixed
+    // at seven and a target under four meant a caller had deliberately
+    // asked for a few holes; now three is the bottom of the Poisson range
+    // and the commonest small draw, and it is exactly where a flat set of
+    // sizes is most visible - three near-equal holes read as a pattern,
+    // where seven read as texture.
+    if target < MIN_HOLES as u32 || ves.len() < 2 {
         return Ok(());
     }
     let mut lo = f64::INFINITY;

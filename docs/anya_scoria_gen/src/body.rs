@@ -634,8 +634,17 @@ fn attempt_once(p: &Params, seed: u64) -> Result<(Scene, Timings), &'static str>
 
     // ---- vesicles, cleared against the INNER ring
     let t0 = Instant::now();
-    let (vesicles, vesicles_drawn) =
-        vesicle::pack(p, &inner, &field, &perlin, &depth, &mut rng_ves, c, r0);
+    let (vesicles, vesicles_drawn) = vesicle::pack(
+        p,
+        &inner,
+        &field,
+        &perlin,
+        &depth,
+        &light,
+        &mut rng_ves,
+        c,
+        r0,
+    );
     t.vesicle_us = t0.elapsed().as_micros();
 
     // ---- the relief marks, down the steepest creases
@@ -989,12 +998,12 @@ mod relief_marks {
                     len > 0.15 * scene.r0 && len <= cap + 4.5 * scene.w0,
                     "seed {seed}: length {len:.1} against the cap {cap:.1}"
                 );
-                // 0.58 of the outline is the CENTRE of the band, not the
+                // 0.76 of the outline is the CENTRE of the band, not the
                 // whole of it: a sharper fold is drawn heavier.
                 let ratio = m.width / scene.w0;
                 assert!(
-                    (ratio - 0.586).abs() < 0.586 * 0.23,
-                    "seed {seed}: the mark is {ratio:.3} of the outline, band is 0.45..0.72"
+                    (ratio - 0.759).abs() < 0.759 * 0.24,
+                    "seed {seed}: the mark is {ratio:.3} of the outline, band is 0.58..0.94"
                 );
                 lens.push(len / scene.r0);
                 widths.push(ratio);
@@ -1031,8 +1040,8 @@ mod relief_marks {
         );
         let wm = widths.iter().sum::<f64>() / widths.len() as f64;
         assert!(
-            (wm - 0.586).abs() < 0.08,
-            "the mean waist is {wm:.3} of the outline, measured 0.58"
+            (wm - 0.759).abs() < 0.10,
+            "the mean nominal width is {wm:.3} of the outline, want 0.76"
         );
     }
 }

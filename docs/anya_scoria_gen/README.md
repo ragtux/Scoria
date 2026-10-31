@@ -85,9 +85,14 @@ p.apply_tameness();   // only touches knobs you did not set yourself
   the same tone however far apart they are, and two across a fold get
   different ones however close.
 - **One flow field does three jobs.** It warps the silhouette's noise lookup,
-  orients each gas hole's long axis, and sets the facet cuts' heading. That
-  shared origin is why a seed reads as one rock rather than three unrelated
-  effects.
+  orients each gas hole's long axis where the surface has no opinion, and
+  sets the facet cuts' heading. That shared origin is why a seed reads as
+  one rock rather than three unrelated effects.
+- **The holes are a packing, not a scatter.** A weighted Voronoi diagram is
+  relaxed over the body, so they spread evenly without sitting on a grid;
+  the weights are the drawn sizes, so the measured size hierarchy survives
+  the relaxation; and the largest size goes to the darkest seed, so the
+  holes shade the form rather than being sprinkled over it.
 - **Facets are cut, not placed.** Recursive bisection always splits the largest
   remaining region; children copy the parent's `f64` vertices and share the cut
   array bit for bit, so adjacent facets have literally the same edge and no
@@ -241,6 +246,33 @@ algorithm inferred from it, so where they disagree Part 1 wins.
   no-self-intersection test allows. Neither a cone about the starting heading
   nor a per-step rate limit helps, because a heading can oscillate inside a
   bound forever. The direction is read once, at the seed.
+- **The holes are laid out, not scattered.** Rejection sampling leaves the
+  composition to the dice - clumps and bald patches, with the measured
+  spread reached only by re-rolling for it. A relaxed weighted Voronoi
+  diagram gives it by construction: every hole sits in the middle of its
+  own territory, sized by the territory it claimed. Fidenza's collision
+  loop stays as the FALLBACK, because a relaxed layout is optimised for
+  even territory rather than for clearance and some holes do not fit where
+  it puts them - placing only at the relaxed position cost the clean-roll
+  rate 160/200 to 106 and coverage 0.166 to 0.150, while relaxed-first and
+  darts-after beats both at 164/200 and 0.169.
+- **The shading deals the hole sizes out rather than scaling them.** A hole
+  is the darkest ink on the page, so where the holes are big the area reads
+  dark; the darkest seed therefore takes the largest size. Dealing rather
+  than scaling keeps the multiset of sizes exactly as drawn, so the
+  measured 3.08x hierarchy survives by construction - scaling multiplied
+  the hierarchy by a second factor and the two crossed, leaving the
+  realised sizes spanning 2.0x where the draw asked for 3.3x.
+- **The holes are not Voronoi CELLS, though.** The diagram decides where
+  they go and how big; the outlines stay curvy blobs. Part 1's sharpest
+  measured distinction is between the two shape families, and polygonal
+  holes would be the clearest possible way to break it.
+- **The relief mark's width follows the fold.** A monoline is what the
+  artwork's one sample is, and beside holes this large it reads as a
+  scratch. The line now swells to 1.5x its nominal width where the fold is
+  sharp and thins to 0.45x where it softens, on a nominal raised from 0.58
+  to 0.76 of the outline - so a mark's widest point measures 11 to 19
+  canonical units against the outline's 17.4.
 - **Fewer, larger holes, and the count is drawn rather than set.**
   `vesicle_count` is the MEAN of a Poisson draw now, truncated to
   `[3, 2*mean+4]`, and it is 5 against the artwork's measured 7 with the
@@ -325,9 +357,9 @@ the same sweep on the 2D generator this replaced:
 
 | preset | failed | re-rolls | failed (2D) | re-rolls (2D) |
 |---|---|---|---|---|
-| `anya` (the default) | 0 / 120 | 41 | 0 / 120 | 70 |
-| `tame` | 0 / 120 | 43 | 0 / 120 | 113 |
-| `feral` | 0 / 120 | 252 | 9 / 120 | 626 |
+| `anya` (the default) | 0 / 120 | 45 | 0 / 120 | 70 |
+| `tame` | 0 / 120 | 51 | 0 / 120 | 113 |
+| `feral` | 0 / 120 | 199 | 9 / 120 | 626 |
 
 `feral` is the corner of the parameter space - `vesicle_amp` 0.42,
 `vesicle_aspect_max` 2.40 and `slope_limit` 1.80 all at once - and it used
@@ -337,7 +369,7 @@ geometric infeasibility: what has to fit is a hole's reach,
 holes in a body that could not hold them. Drawing the count and compensating
 the radii per roll by `sqrt(mean / drawn)` removed that: there is no longer a
 setting of the dial that asks the packer for more than the body can take. It
-is still the expensive end - 252 re-rolls against 41 - and callers who want
+is still the expensive end - 199 re-rolls against 45 - and callers who want
 speed should use the default.
 
 The test for this is a RATE over a sweep, not one seed: a single-seed check

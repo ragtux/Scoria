@@ -343,9 +343,15 @@ pub fn build(
         }
         let mut spine = anchor_to_ink(seed, along, root, step, w0);
         let anchored = spine.len();
-        spine.extend(trace(
+        // The anchored run is inside the ink and has no fold of its own to
+        // measure; it carries the seed's, which is the fold it is the stub
+        // of.
+        let mut fold = vec![strength; anchored];
+        let (traced, traced_s) = trace(
             seed, along, depth, light, root, vesicles, h, step, max_len, strength, half_hint,
-        ));
+        );
+        spine.extend(traced);
+        fold.extend(traced_s);
         if anchored == 0 || polyline_len(&spine) < min_len || spine.len() < 4 {
             continue;
         }
@@ -364,7 +370,7 @@ pub fn build(
         if hits_a_vesicle(&spine, vesicles, half * VESICLE_CLEAR) {
             continue;
         }
-        let pts = ribbon(&spine, width);
+        let pts = ribbon(&spine, width, &fold, p.relief_modulation);
         if pts.len() < 6 || self_intersects(&pts, true) {
             continue;
         }
@@ -481,8 +487,9 @@ fn trace(
     max_len: f64,
     s0: f64,
     clear: f64,
-) -> Vec<V2> {
+) -> (Vec<V2>, Vec<f64>) {
     let mut pts = vec![seed];
+    let mut strength = vec![s0];
     let mut p = seed;
     let mut dir = along;
     let mut len = 0.0;
@@ -527,10 +534,11 @@ fn trace(
         }
         dir = want;
         pts.push(next);
+        strength.push(f.strength);
         len += step;
         p = next;
     }
-    pts
+    (pts, strength)
 }
 
 /// Is the spine straight enough to be offset by `half` without folding?
@@ -606,6 +614,59 @@ fn min_spine_gap(a: &[V2], b: &[V2]) -> f64 {
     best
 }
 
+/// Smoothing passes over the fold profile before it becomes a width.
+///
+/// The fold strength is a second derivative read off a bilinear grid, so
+/// sample to sample it is noisy; left raw it makes the mark's edge ripple
+/// rather than swell. Four binomial passes over a spine sampled every three
+/// units is a window of about twenty units - wide enough to carry only the
+/// shape of the fold, narrow enough to keep a local swelling local.
+const PROFILE_SMOOTH_PASSES: usize = 4;
+
+/// Narrowest and widest the line may get within one mark, as multiples of
+/// its nominal width at full modulation.
+///
+/// A wide range on purpose. At 0.45 to 1.50 the line visibly thickens into
+/// the sharp part of a fold and thins almost away where the surface
+/// flattens, which is what makes it read as drawn rather than plotted.
+const PROFILE_LO: f64 = 0.45;
+/// The upper end of that range.
+const PROFILE_HI: f64 = 1.50;
+
+/// Per-sample width multipliers from the fold strength along the spine.
+///
+/// Normalised to the profile's own MEAN rather than its maximum: the mean
+/// keeps the mark's average width at the nominal one the waist calibration
+/// set, so modulating the line does not quietly make every mark thinner.
+fn width_profile(fold: &[f64], n: usize, modulation: f64) -> Vec<f64> {
+    let m = modulation.clamp(0.0, 1.0);
+    if m <= 0.0 || fold.len() < n || n < 3 {
+        return vec![1.0; n];
+    }
+    let mut v: Vec<f64> = fold[..n].to_vec();
+    for _ in 0..PROFILE_SMOOTH_PASSES {
+        let src = v.clone();
+        for i in 0..n {
+            let a = src[i.saturating_sub(1)];
+            let b = src[i];
+            let c = src[(i + 1).min(n - 1)];
+            v[i] = 0.25 * a + 0.5 * b + 0.25 * c;
+        }
+    }
+    let mean = v.iter().sum::<f64>() / n as f64;
+    if !mean.is_finite() || mean <= 0.0 {
+        return vec![1.0; n];
+    }
+    v.iter()
+        .map(|x| {
+            // Square root, because strength is a second derivative and its
+            // dynamic range is far wider than a line width should have.
+            let r = (x / mean).max(0.0).sqrt();
+            (1.0 + m * (r - 1.0)).clamp(1.0 - m * (1.0 - PROFILE_LO), 1.0 + m * (PROFILE_HI - 1.0))
+        })
+        .collect()
+}
+
 /// The tapered width at arclength fraction `t`.
 ///
 /// `x * (2 - x)` over the first and last [`TAPER_FRAC`] of the length: the
@@ -622,13 +683,25 @@ fn taper(t: f64) -> f64 {
     x * (2.0 - x)
 }
 
-/// Offset the spine either side by the tapered half-width and close the loop.
+/// Offset the spine either side by the half-width and close the loop.
 ///
-/// Both tips are a SINGLE shared point, so the two sides meet there instead of
-/// approaching each other asymptotically - which would leave a pair of points
-/// closer than the degenerate-segment gate allows, and a needle where the
-/// drawing has a rounded end.
-fn ribbon(spine: &[V2], width: f64) -> Vec<V2> {
+/// The width is NOT constant along the mark. It swells where the fold the
+/// mark is tracing is sharp and thins where it softens, over a range
+/// `relief_modulation` sets - at the default the line runs from about 0.45
+/// to 1.5 times its nominal width within a single stroke. A monoline of the
+/// measured waist is what the artwork's one sample is, and at logo scale it
+/// reads as a scratch beside holes this large; a line that swells is what
+/// gives the fold weight where the surface actually bends, which is the
+/// whole job of the mark.
+///
+/// The end tapers multiply on top, so both tips still come to a point by
+/// `x * (2 - x)` over a tenth of the length, as measured.
+///
+/// Both tips are a SINGLE shared point, so the two sides meet there instead
+/// of approaching each other asymptotically - which would leave a pair of
+/// points closer than the degenerate-segment gate allows, and a needle where
+/// the drawing has a rounded end.
+fn ribbon(spine: &[V2], width: f64, fold: &[f64], modulation: f64) -> Vec<V2> {
     let n = spine.len();
     if n < 3 {
         return Vec::new();
@@ -644,13 +717,18 @@ fn ribbon(spine: &[V2], width: f64) -> Vec<V2> {
         return Vec::new();
     }
 
+    // The fold profile, smoothed and normalised to its own mean so the
+    // modulation is about SHAPE along the mark and does not fight the
+    // waist, which is already set by the fold's strength at the rim.
+    let prof = width_profile(fold, n, modulation);
+
     let mut left = Vec::with_capacity(n);
     let mut right = Vec::with_capacity(n);
     for i in 1..n - 1 {
         // Averaged tangent, so the offset does not kink at a sample.
         let t = (spine[i + 1] - spine[i - 1]).norm();
         let nrm = t.perp();
-        let h = 0.5 * width * taper(cum[i] / acc);
+        let h = 0.5 * width * prof[i] * taper(cum[i] / acc);
         left.push(spine[i] + nrm * h);
         right.push(spine[i] - nrm * h);
     }
@@ -691,7 +769,9 @@ mod tests {
     #[test]
     fn a_straight_spine_gives_an_even_ribbon() {
         let spine = straight(41, 4.0);
-        let pts = ribbon(&spine, 10.0);
+        // Modulation off, so this measures the offset geometry and not
+        // the width profile - the profile has its own test below.
+        let pts = ribbon(&spine, 10.0, &vec![1.0; spine.len()], 0.0);
         assert_eq!(pts.len(), 2 + 2 * 39);
         assert!(!self_intersects(&pts, true));
         // The waist: the two sides are 10 apart at the middle.
@@ -722,5 +802,43 @@ mod tests {
             })
             .collect();
         assert!(!curvature_ok(&hook, 5.0));
+    }
+
+    /// The line has to actually swell and thin, and to keep its average
+    /// width while doing it - a profile that quietly made every mark
+    /// thinner would read as the modulation "working" while costing the
+    /// mark the weight it was given.
+    #[test]
+    fn the_width_profile_swells_without_shifting_the_mean() {
+        let n = 60;
+        // A fold that is sharp in the middle and soft at both ends.
+        let fold: Vec<f64> = (0..n)
+            .map(|i| {
+                let t = i as f64 / (n - 1) as f64;
+                0.2 + 3.0 * (1.0 - (2.0 * t - 1.0).abs())
+            })
+            .collect();
+
+        let flat = width_profile(&fold, n, 0.0);
+        assert!(
+            flat.iter().all(|x| (x - 1.0).abs() < 1e-12),
+            "0 is monoline"
+        );
+
+        let p = width_profile(&fold, n, 0.8);
+        let mean = p.iter().sum::<f64>() / n as f64;
+        assert!(
+            (mean - 1.0).abs() < 0.12,
+            "the profile shifted the mean width to {mean:.3}"
+        );
+        let lo = p.iter().cloned().fold(f64::INFINITY, f64::min);
+        let hi = p.iter().cloned().fold(0.0, f64::max);
+        assert!(hi > 1.25, "the line never swells: peak {hi:.2}");
+        assert!(lo < 0.75, "the line never thins: trough {lo:.2}");
+        // And it swells where the fold is sharp, not somewhere else.
+        assert!(
+            p[n / 2] > p[2] && p[n / 2] > p[n - 3],
+            "the swelling is not where the fold is"
+        );
     }
 }
