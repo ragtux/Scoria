@@ -209,6 +209,9 @@ pub struct Scene {
     pub facets: Vec<Facet>,
     /// The vesicles, in placement order.
     pub vesicles: Vec<Vesicle>,
+    /// How many the Poisson draw asked for, which is what the coverage gate
+    /// measures the placing against - the parameter is only the MEAN.
+    pub vesicles_drawn: u32,
     /// The interior relief marks, strongest crease first.
     pub relief: Vec<Relief>,
     /// The solid's front surface: the normals that lit the facets and the
@@ -631,7 +634,8 @@ fn attempt_once(p: &Params, seed: u64) -> Result<(Scene, Timings), &'static str>
 
     // ---- vesicles, cleared against the INNER ring
     let t0 = Instant::now();
-    let vesicles = vesicle::pack(p, &inner, &field, &perlin, &mut rng_ves, c, r0);
+    let (vesicles, vesicles_drawn) =
+        vesicle::pack(p, &inner, &field, &perlin, &depth, &mut rng_ves, c, r0);
     t.vesicle_us = t0.elapsed().as_micros();
 
     // ---- the relief marks, down the steepest creases
@@ -679,6 +683,7 @@ fn attempt_once(p: &Params, seed: u64) -> Result<(Scene, Timings), &'static str>
         root_cubics,
         facets,
         vesicles,
+        vesicles_drawn,
         relief,
         depth,
         light,
@@ -843,17 +848,18 @@ mod tests {
         //
         // | preset | here | before | re-rolls here | before |
         // |---|---|---|---|---|
-        // | anya  | 120/120 | 120/120 |  37 |  70 |
-        // | tame  | 120/120 | 120/120 |  29 | 113 |
-        // | feral | 116/120 | 111/120 | 654 | 626 |
+        // | anya  | 120/120 | 120/120 |  41 |  70 |
+        // | tame  | 120/120 | 120/120 |  43 | 113 |
+        // | feral | 120/120 | 111/120 | 252 | 626 |
         //
-        // `feral` is the honest outlier and always has been: it asks for the
-        // lumpiest body and for nine big, lumpy holes in it at once, and it
-        // sits on the vesicle coverage floor. It is a little better here
-        // than it was, not because it was worked on but because the body it
-        // has to fill is the one the projection makes.
+        // `feral` was the honest outlier for a long time - it asked for the
+        // lumpiest body and nine big lumpy holes in it at once, and it sat
+        // on the vesicle coverage floor. Fewer, larger holes drawn from a
+        // Poisson with a per-roll size compensation fixed it: there is no
+        // longer a setting of the dial that asks the packer for more than
+        // the body can take.
         for name in Params::PRESETS {
-            let want = if *name == "feral" { 36 } else { 40 };
+            let want = 40;
             let mut ok = 0;
             let mut last = String::new();
             for seed in 0..40u64 {
@@ -889,15 +895,24 @@ mod tests {
         // The point of five streams: the outline must be byte-identical when
         // only a vesicle parameter moves. Some seeds legitimately fail a gate
         // at one of the two counts, so take the first seed that passes both.
+        //
+        // 7 rather than 9 for the second count. `vesicle_count` is the MEAN
+        // of a Poisson draw now, and the draw reaches twice the mean plus
+        // four - at a mean of 9 that is 22 holes, which the packer cannot
+        // place in a body this size, so no seed passed both and the test
+        // failed for a reason that had nothing to do with what it checks.
+        // The property is the same at any feasible pair, and the draw still
+        // changes between them, which is the thing that must not reach the
+        // silhouette.
         let mut checked = false;
-        for seed in 0..24u64 {
+        for seed in 0..40u64 {
             let a = Params {
                 seed,
                 ..Params::default()
             };
             let b = Params {
                 seed,
-                vesicle_count: 9,
+                vesicle_count: 7,
                 ..Params::default()
             };
             if let (Ok((sa, _)), Ok((sb, _))) = (attempt_once(&a, seed), attempt_once(&b, seed)) {
@@ -909,7 +924,7 @@ mod tests {
                 break;
             }
         }
-        assert!(checked, "no seed in 0..24 produced two clean logos");
+        assert!(checked, "no seed in 0..40 produced two clean logos");
     }
 }
 
@@ -1267,6 +1282,108 @@ mod tonecal {
             got[0].1 < got[1].1 && got[1].1 < got[2].1,
             "the three tones must lie along the light axis in order: {:?}",
             [got[0].1, got[1].1, got[2].1]
+        );
+    }
+}
+
+#[cfg(test)]
+mod contouring {
+    use super::*;
+
+    /// A hole lies ON the rock, so the steeper the surface under it, the
+    /// more it is foreshortened and the more its long axis turns to follow
+    /// the local contour. That is the whole of what makes the holes read as
+    /// sitting on a three-dimensional thing rather than being painted over
+    /// a picture of one, and it is a MONOTONE claim, which is what this
+    /// checks: both effects have to grow as the surface tilts away.
+    ///
+    /// Measured over 120 seeds, bucketed by the normal's `z` under each
+    /// hole:
+    ///
+    /// | `n.z` >= | holes | ellipse aspect | \|axis . contour\| |
+    /// |---|---|---|---|
+    /// | 0.95 | 146 | 1.68 | 0.648 |
+    /// | 0.80 | 247 | 1.72 | 0.699 |
+    /// | 0.60 | 106 | 2.01 | 0.770 |
+    /// | 0.00 |  21 | 2.52 | 0.869 |
+    ///
+    /// The face-on bucket is the control: there the surface has no contour
+    /// to offer and the flow field still sets the axis, which is why its
+    /// alignment sits near the 0.64 a free axis would give rather than at
+    /// zero.
+    #[test]
+    fn a_hole_follows_the_surface_it_lies_on() {
+        let p = Params::default();
+        // (sum aspect, sum alignment, n) for face-on and for tilted.
+        let mut flat = (0.0, 0.0, 0.0f64);
+        let mut steep = (0.0, 0.0, 0.0f64);
+        for seed in 0..120u64 {
+            let Ok((sc, _)) = attempt_once(&p, seed) else {
+                continue;
+            };
+            for v in &sc.vesicles {
+                let n = sc.depth.sample(v.centre).1;
+                let tilt = n.xy();
+                if tilt.len2() <= 1e-12 {
+                    continue;
+                }
+                let align = v.axis.dot(tilt.perp().norm()).abs();
+                let bucket = if n.z >= 0.90 {
+                    &mut flat
+                } else if n.z < 0.70 {
+                    &mut steep
+                } else {
+                    continue;
+                };
+                bucket.0 += v.aspect;
+                bucket.1 += align;
+                bucket.2 += 1.0;
+            }
+        }
+        assert!(
+            flat.2 > 40.0 && steep.2 > 40.0,
+            "too few holes in a bucket to conclude anything: {} flat, {} steep",
+            flat.2,
+            steep.2
+        );
+        let (fa, fl) = (flat.0 / flat.2, flat.1 / flat.2);
+        let (sa, sl) = (steep.0 / steep.2, steep.1 / steep.2);
+        assert!(
+            sa > fa + 0.15,
+            "a hole on a steep patch is not more elongated: {sa:.2} against {fa:.2}"
+        );
+        assert!(
+            sl > fl + 0.06,
+            "a hole on a steep patch does not follow the contour: {sl:.3} against {fl:.3}"
+        );
+    }
+
+    /// The count is a draw, not a constant - and it has to actually vary,
+    /// or the Poisson machinery is an expensive way to write `5`.
+    #[test]
+    fn the_hole_count_varies() {
+        let p = Params::default();
+        let mut counts = Vec::new();
+        for seed in 0..120u64 {
+            if let Ok((sc, _)) = attempt_once(&p, seed) {
+                counts.push(sc.vesicles_drawn);
+            }
+        }
+        assert!(counts.len() > 60, "too few clean rolls: {}", counts.len());
+        let lo = counts.iter().copied().min().expect("non-empty");
+        let hi = counts.iter().copied().max().expect("non-empty");
+        assert!(
+            lo >= 3,
+            "the draw went below the floor that keeps it reading as scoria: {lo}"
+        );
+        assert!(hi >= lo + 3, "the count barely varies: {lo}..{hi}");
+        let mean = counts.iter().map(|c| f64::from(*c)).sum::<f64>() / counts.len() as f64;
+        let want = f64::from(p.vesicle_count);
+        // Truncation at three pulls the mean up a little; it must not drift
+        // far, or `vesicle_count` stops meaning what the table says.
+        assert!(
+            mean > want - 0.3 && mean < want + 0.9,
+            "the drawn mean is {mean:.2} against the parameter's {want}"
         );
     }
 }

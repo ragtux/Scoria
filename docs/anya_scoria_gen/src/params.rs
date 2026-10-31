@@ -315,6 +315,9 @@ pub struct Params {
     pub vesicle_aspect_max: f64,
     /// How strongly a vesicle's long axis follows the field at its centre.
     pub vesicle_align: f64,
+    /// How strongly a hole's shape follows the surface it lies on: its long
+    /// axis turns to the local contour and it foreshortens by the tilt.
+    pub vesicle_contour: f64,
     /// Minimum gap to the body's INNER boundary, fraction of R0, floored at
     /// `1.2 * outline_weight * R0`.
     pub vesicle_edge_clear: f64,
@@ -382,15 +385,16 @@ impl Default for Params {
             tone_contrast: 1.00,
             ink: Rgb::new(0x23, 0x1f, 0x20),
             background: None,
-            vesicle_count: 7,
-            vesicle_rmin: 0.070,
-            vesicle_rmax: 0.240,
+            vesicle_count: 5,
+            vesicle_rmin: 0.090,
+            vesicle_rmax: 0.300,
             vesicle_size_pow: 1,
             vesicle_amp: 0.30,
             vesicle_bite: 0.60,
             vesicle_octaves: 3,
             vesicle_aspect_max: 2.40,
             vesicle_align: 0.85,
+            vesicle_contour: 0.85,
             vesicle_edge_clear: 0.055,
             vesicle_gap: 0.090,
             vesicle_attempts: 220,
@@ -525,10 +529,12 @@ impl Params {
             // Coupling `vesicle_aspect_max` instead moves nothing (20/18/18
             // at 1.8/2.0/2.4), so the count is the real constraint.
             //
-            // It also fixes an off-by-one: lerp(11, 5) rounds to 8 at the
-            // default t = 0.55, where SPEC.md says the dial reproduces the
-            // artwork's measured 7. lerp(9, 5) gives exactly 7.
-            self.vesicle_count = lerp(9.0, 5.0, t).round() as u32;
+            // Fewer than the artwork's seven, and bigger - a deliberate
+            // departure from the measurement, asked for and recorded in
+            // Part 3. lerp(7, 4) passes through 5 at the default t = 0.55,
+            // which is `Params::default().vesicle_count`, so the dial still
+            // agrees with the parameter table where it is supposed to.
+            self.vesicle_count = lerp(7.0, 4.0, t).round() as u32;
         }
         if !self.is_explicit("vesicle_bite") {
             self.vesicle_bite = lerp(0.62, 0.34, t);
@@ -555,11 +561,12 @@ impl Params {
         // [0.070, 0.320] the packer drops the big holes and 43% of seeds
         // exhaust their whole re-roll budget; scaling by count alone leaves
         // 30%; scaling by both leaves 7%.
-        let count_scale = (7.0 / self.vesicle_count.max(1) as f64).sqrt();
+        let base = Params::default();
+        let count_scale =
+            (f64::from(base.vesicle_count) / f64::from(self.vesicle_count.max(1))).sqrt();
         // And against the body the projection actually produces at this
         // amplitude, which grows with it - see `body_growth`.
         let growth_scale = body_growth(self.lump_amp).sqrt();
-        let base = Params::default();
         // Only ever shrinks. The term exists to stop a lumpier hole from
         // outgrowing the room the packer can find for it; there is no matching
         // reason to INFLATE a smooth one, and letting it (at the tame end,
@@ -679,6 +686,7 @@ impl Params {
             "vesicle_octaves" => self.vesicle_octaves = u()?,
             "vesicle_aspect_max" => self.vesicle_aspect_max = f()?,
             "vesicle_align" => self.vesicle_align = f()?,
+            "vesicle_contour" => self.vesicle_contour = f()?,
             "vesicle_edge_clear" => self.vesicle_edge_clear = f()?,
             "vesicle_gap" => self.vesicle_gap = f()?,
             "vesicle_attempts" => self.vesicle_attempts = u()?,
@@ -781,6 +789,7 @@ impl Params {
         uchk("vesicle_octaves", self.vesicle_octaves, 2, 5)?;
         fchk("vesicle_aspect_max", self.vesicle_aspect_max, 1.0, 3.2)?;
         fchk("vesicle_align", self.vesicle_align, 0.0, 1.0)?;
+        fchk("vesicle_contour", self.vesicle_contour, 0.0, 1.0)?;
         fchk("vesicle_edge_clear", self.vesicle_edge_clear, 0.030, 0.120)?;
         fchk("vesicle_gap", self.vesicle_gap, 0.040, 0.200)?;
         uchk("vesicle_attempts", self.vesicle_attempts, 50, 1000)?;
@@ -886,6 +895,7 @@ impl Params {
             "vesicle_octaves" => self.vesicle_octaves.to_string(),
             "vesicle_aspect_max" => self.vesicle_aspect_max.to_string(),
             "vesicle_align" => self.vesicle_align.to_string(),
+            "vesicle_contour" => self.vesicle_contour.to_string(),
             "vesicle_edge_clear" => self.vesicle_edge_clear.to_string(),
             "vesicle_gap" => self.vesicle_gap.to_string(),
             "vesicle_attempts" => self.vesicle_attempts.to_string(),
@@ -1247,21 +1257,21 @@ static PARAM_TABLE: &[ParamInfo] = &[
     row(
         "vesicle_count",
         Kind::U32,
-        "7",
+        "5",
         "0 ..= 20",
         "Target gas holes; the packer may place fewer.",
     ),
     row(
         "vesicle_rmin",
         Kind::F64,
-        "0.070",
+        "0.090",
         "0.030 ..= 0.120",
         "Smallest vesicle radius over R0.",
     ),
     row(
         "vesicle_rmax",
         Kind::F64,
-        "0.240",
+        "0.300",
         "0.100 ..= 0.400",
         "Largest vesicle radius over R0.",
     ),
@@ -1306,6 +1316,13 @@ static PARAM_TABLE: &[ParamInfo] = &[
         "0.85",
         "0 ..= 1",
         "How strongly a vesicle's long axis follows the field.",
+    ),
+    row(
+        "vesicle_contour",
+        Kind::F64,
+        "0.85",
+        "0 ..= 1",
+        "How strongly a hole follows the surface under it: axis to the local contour, foreshortened by the tilt.",
     ),
     row(
         "vesicle_edge_clear",

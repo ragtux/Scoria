@@ -222,9 +222,13 @@ fn the_holes_vary_in_size() {
     for seed in 0..SEEDS {
         let doc = doc(seed);
         let n = doc.matches("id=\"vesicle-").count();
+        // Three, not four. How many holes a rock has is a Poisson draw now,
+        // floored at three because "a scoria with two holes does not read
+        // as scoria" - so three is a legitimate outcome rather than a
+        // failure, and with the holes as large as they now are it reads.
         assert!(
-            n >= 4,
-            "seed {seed}: only {n} holes reached the file; a scoria with three holes is a pebble"
+            n >= 3,
+            "seed {seed}: only {n} holes reached the file; a scoria with two holes is a pebble"
         );
         let mut spans: Vec<f64> = (0..n)
             .filter_map(|i| {
@@ -232,7 +236,7 @@ fn the_holes_vary_in_size() {
                 let rest = &doc[at..];
                 let d = rest.find(" d=\"")? + 4;
                 let end = rest[d..].find('"')? + d;
-                Some(bbox_diagonal(&rest[d..end]))
+                Some(bbox_gmean(&rest[d..end]))
             })
             .collect();
         spans.sort_by(f64::total_cmp);
@@ -243,7 +247,7 @@ fn the_holes_vary_in_size() {
         );
         assert!(
             big >= 1.5 * small,
-            "seed {seed}: the holes barely vary in size (diagonals {spans:?})"
+            "seed {seed}: the holes barely vary in size (mean extents {spans:?})"
         );
     }
 }
@@ -271,7 +275,7 @@ fn outline_d(doc: &str) -> Option<&str> {
 /// A crude parse - every number in the string, taken in x, y order - which is
 /// exactly right here, because a cubic's control points and its endpoints all
 /// lie inside the hull the box is measuring.
-fn bbox_diagonal(d: &str) -> f64 {
+fn bbox_gmean(d: &str) -> f64 {
     let mut nums = Vec::new();
     let mut cur = String::new();
     for ch in d.chars() {
@@ -300,7 +304,15 @@ fn bbox_diagonal(d: &str) -> f64 {
     }
     let (w, h) = (hi_x - lo_x, hi_y - lo_y);
     if w.is_finite() && h.is_finite() {
-        (w * w + h * h).sqrt()
+        // The GEOMETRIC MEAN of the bbox sides, not its diagonal. For an
+        // ellipse of semi-axes a and b the bbox is 2a by 2b, so this is
+        // 2*sqrt(a*b) - proportional to the equivalent radius and blind to
+        // elongation. The diagonal is not, and holes are deliberately
+        // elongated by the tilt of the surface under them now, so a small
+        // hole lying on a steep patch measures as large a diagonal as a big
+        // one lying flat. The test wants to know whether the holes vary in
+        // SIZE.
+        (w * h).sqrt()
     } else {
         0.0
     }

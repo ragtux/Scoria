@@ -134,6 +134,62 @@ pub mod stream {
     pub const MISC: u64 = 0x85EB_CA77_C2B2_AE63;
 }
 
+/// A Poisson draw, truncated to `[lo, hi]`.
+///
+/// How many gas holes a rock has is a COUNT of independent events in a
+/// volume, which is the textbook case for a Poisson distribution, and a
+/// generator that emits the same count every time is the same tell as one
+/// that gives every hole the same lobe count. `lambda` is the mean before
+/// truncation.
+///
+/// Built from the unnormalised weights `w_k = lambda^k / k!`, summed and
+/// sampled proportionally, rather than by Knuth's method. Knuth needs
+/// `exp(-lambda)` and `exp` is a libm call - the one thing the crate will
+/// not do, because it differs in the last ulp between platforms and a
+/// different count is not a last-ulp difference, it is a different logo.
+/// The weights come from the recurrence `w_k = w_{k-1} * lambda / k` with
+/// `w_lo = 1`, so nothing transcendental appears at all and the
+/// normalisation cancels.
+///
+/// Truncation is not an approximation here, it is the point: a scoria with
+/// one hole does not read as scoria, and the sum has to stay bounded for
+/// the packer's budget to mean anything.
+#[must_use]
+pub fn poisson_truncated(rng: &mut Pcg32, lambda: f64, lo: u32, hi: u32) -> u32 {
+    if hi <= lo || !lambda.is_finite() || lambda <= 0.0 {
+        return lo;
+    }
+    let n = (hi - lo) as usize + 1;
+    let mut w = Vec::with_capacity(n);
+    // The recurrence starts at k = lo rather than 0, which only rescales
+    // every weight by the same constant and so leaves the distribution
+    // over [lo, hi] exactly right.
+    let mut cur = 1.0f64;
+    w.push(cur);
+    for k in (lo + 1)..=hi {
+        cur *= lambda / f64::from(k);
+        // The ratio falls below 1 past the mean, so this cannot overflow
+        // for any lambda the parameter surface allows; guard anyway.
+        if !cur.is_finite() {
+            cur = 0.0;
+        }
+        w.push(cur);
+    }
+    let total: f64 = w.iter().sum();
+    if !total.is_finite() || total <= 0.0 {
+        return lo;
+    }
+    let mut x = rng.f64() * total;
+    for (i, wi) in w.iter().enumerate() {
+        x -= wi;
+        if x < 0.0 {
+            // The cast is exact: i < n <= hi - lo + 1.
+            return lo + i as u32;
+        }
+    }
+    hi
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

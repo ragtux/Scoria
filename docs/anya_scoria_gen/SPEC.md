@@ -521,6 +521,35 @@ The residual inaccuracy is that a radial offset is not a true constant-distance 
 
 ### Vesicle packing
 
+**How many, and how big**
+
+The count is a DRAW, not a constant. A gas hole is one event in a volume and the count of such events is Poisson; emitting the same number every time is the same tell as giving every hole the same lobe count. `vesicle_count` is therefore the MEAN, truncated to `[3, 2*mean + 4]` - three because a scoria with two holes does not read as scoria, and a ceiling because the sum has to stay bounded for the packer's budget to mean anything.
+
+Built from the unnormalised weights `w_k = lambda^k / k!`, summed and sampled proportionally, by the recurrence `w_k = w_{k-1} * lambda / k`. NOT by Knuth's method, which needs `exp(-lambda)`: `exp` is a libm call, it differs in the last ulp between platforms, and a different count is not a last-ulp difference, it is a different logo. The normalisation cancels, so nothing transcendental appears.
+
+Coverage is a gated AREA and the count now moves it, so the radii are scaled per roll by `sqrt(mean / drawn)`, clamped to [0.78, 1.32]: a roll that drew three holes makes them bigger, a roll that drew eight makes them smaller, and the rock comes out as vesiculated either way. The coverage gate then measures the placing against the DRAWN count, not against the mean - measuring against the mean punishes a roll for drawing high, which is exactly the roll with the most to place and the least room each.
+
+**Fewer and larger than the artwork.** `vesicle_count` 5 against the measured 7, `vesicle_rmin` 0.090 against 0.070 and `vesicle_rmax` 0.300 against 0.240. This is a deliberate departure from Part 1, asked for rather than measured, and it is recorded in Part 3. Measured over 200 seeds it moves the realised coverage from 0.147 to 0.166, the largest equivalent diameter from 90 to 116 units, and the clean-roll rate from 77% to 80%.
+
+**How a hole lies on the rock**
+
+A hole is a roughly circular patch ON the surface, so what reaches the image is that patch foreshortened: compressed along the direction the surface tilts by the cosine of the tilt, which is the normal's `z`; equivalently STRETCHED along the surface's contour by `1/n.z`. That is what makes a hole look like it is on the rock rather than painted over the picture of it, and near the rim - where the compression is severe and its axis is the rim's own tangent - it is the strongest form cue the holes can give.
+
+Implemented as the axis and the aspect rather than as a second affine map, so the hole stays a polar ring about its centre and every collision test is unchanged: the long axis turns toward the contour, and the aspect is multiplied by `1 + vesicle_contour * (1/n.z - 1)`.
+
+Blended in by how tilted the surface actually is, weight `vesicle_contour * (1 - n.z)`. On a patch facing the viewer there is no foreshortening and no contour to follow, so the flow field keeps the axis and the holes still belong to one flow; by the rim the surface has taken over. `n.z` is floored at 0.34 so a hole never collapses to a hairline, and the TOTAL aspect - intrinsic times foreshortened - is capped at 3.2, because a hole already 2.4x long for being one of the big ones, on a patch that stretches it 2.9x, would come out 7x long and read as a crack.
+
+Measured over 120 seeds, bucketed by the normal under each hole:
+
+| `n.z` >= | holes | ellipse aspect | \|axis . contour\| |
+|---|---|---|---|
+| 0.95 | 146 | 1.68 | 0.648 |
+| 0.80 | 247 | 1.72 | 0.699 |
+| 0.60 | 106 | 2.01 | 0.770 |
+| 0.00 |  21 | 2.52 | 0.869 |
+
+Both rise monotonically, which is the claim. The face-on bucket is the control: there the surface has no contour to offer and the flow field still sets the axis, which is why its alignment sits near what a free axis would give rather than at zero.
+
 **algorithm**
 
 Fidenza's collision loop, largest-first. (1) Draw `vesicle_count` target radii up front, r_k = r_min + (r_max - r_min) * u_k^p with p = 2 (integer power - no powf, and the square biases toward small, which matches the measured distribution: r_eff 13.1, 16.7, 25.5, 28.1, 31.4, 38.3, 40.4 on R0=169, i.e. clustered low with two big ones). (2) Sort descending with `sort_by(|a,b| b.total_cmp(a).then(ia.cmp(&ib)))` - largest-first placement is what lifts achieved coverage from ~12% to the measured ~21% without any relaxation pass. (3) For each radius in turn, up to `attempts_per = 220` tries: sample a centre uniformly in the body's bounding box, reject immediately if it fails the inside-test, then build the candidate's own polar blob (its shape depends on its centre, because the long axis follows the field there - so you must build before you can test), then run the clearance and overlap tests. On success, insert into the grid and emit. On exhaustion, drop that vesicle and continue to the next smaller one. (4) Stop early on `consec_fail_stop = 150` consecutive global failures or when `attempts_total = 2000` is spent. Dropping rather than shrinking is deliberate: a shrunk-to-fit vesicle reads as dirt, a missing one reads as composition.
@@ -775,14 +804,15 @@ and last tenth; both measured in Part 1.
 | `tone_contrast` | `f64` | `1.00` | 0.40 ..= 2.00 | Scales both deltas off the mid tone: shadow = (H - 1.6*c deg, S, L - 0.098*c), mid = (H + 0*, S, L), highlight = (H + 6.6*c deg, S, L). Note the measured structure - the highlight is NOT lighter than the mid, it is hue-rotated +6.6deg toward yellow at identical L, and the shadow is darker at nearly the same hue. Preserving that asymmetry is what keeps recoloured palettes looking like the same artist's hand. At c=1.0 the three come out as #ee3300 / #ff5721 / #ff6f21. |
 | `ink` | `Rgb` | `#231f20` | any | The near-black used for the outline ribbon and the vesicles. Measured; the artwork actually carries two near-identical inks (#231f20 and #221f1f, an Illustrator rich-black artefact) - use one. True #000 is noticeably harsher at small sizes. |
 | `background` | `Option<Rgb>` | `None` | None or any | None emits no background rect, which is what a logo wants. Some(c) emits a full-viewBox rect as the first element. |
-| `vesicle_count` | `u32` | `7` | 0 ..= 20 | Target number of gas holes. Measured exactly 7. This is the target, not a guarantee - the packer drops any it cannot place; falling below 60% of target rejects the whole logo. |
-| `vesicle_rmin` | `f64` | `0.070` | 0.030 ..= 0.120 | Smallest vesicle equivalent radius as a fraction of R0. Measured 13.1/169.2 = 0.077. Below 0.05 small vesicles read as dust specks, not holes. |
-| `vesicle_rmax` | `f64` | `0.260` | 0.100 ..= 0.400 | Largest vesicle equivalent radius as a fraction of R0. Measured 40.4/169.2 = 0.239. The r_max/r_min ratio of 3.7 plus size-coupled anisotropy reproduces the ~7x span the eye reads in max caliper (measured 42.4 to 136.0). |
+| `vesicle_count` | `u32` | `5` | 0 ..= 20 | MEAN of a Poisson draw, truncated to `[3, 2*mean+4]`, not a fixed count. 5 rather than the measured 7: fewer and larger was asked for, see Part 3. Still not a guarantee - the packer drops any it cannot place, and falling below 60% of the DRAW rejects the logo. |
+| `vesicle_rmin` | `f64` | `0.090` | 0.030 ..= 0.120 | Smallest vesicle equivalent radius as a fraction of R0, before the per-roll `sqrt(mean/drawn)` compensation. Measured 0.077; raised with the count cut. |
+| `vesicle_rmax` | `f64` | `0.300` | 0.100 ..= 0.400 | Largest vesicle equivalent radius as a fraction of R0, before the per-roll compensation. Measured 0.239; raised with the count cut. Past 0.320 the packer starts dropping the big ones and the size-spread gate fires on a fifth of rolls. |
 | `vesicle_size_pow` | `u32` | `2` | 1 ..= 3 | r = r_min + (r_max - r_min) * u^pow. INTEGER so it is plain multiplication - powf is a libm call and a determinism hazard. 2 biases toward small, matching the measured clustering (five of seven below the midpoint). |
 | `vesicle_amp` | `f64` | `0.30` | 0.10 ..= 0.50 | Radial fbm amplitude for a vesicle's own outline, fraction of its radius. Higher than the body's 0.22 because the measured vesicles are markedly lumpier than the silhouette (circularity 0.405 to 0.872). This is what stops them looking like drilled holes. |
 | `vesicle_octaves` | `u32` | `3` | 2 ..= 5 | fbm depth per vesicle. 3 is enough at their size; a 4th octave's detail is below 1 unit on the smallest vesicle. |
 | `vesicle_aspect_max` | `f64` | `2.40` | 1.0 ..= 3.2 | Elongation of the largest vesicle; aspect is interpolated by size so small vesicles stay round. Measured: max-caliper / 2*r_eff is 2.13 on the most elongated, 1.68 on the next. This parameter, not the radius law, is what creates the dramatic size impression. |
-| `vesicle_align` | `f64` | `0.85` | 0.0 ..= 1.0 | How strongly a vesicle's long axis follows the flow field at its centre versus a random angle. High values are what make the holes look like gas that stretched in a single flow. At 0 the vesicles stop belonging to the rock. |
+| `vesicle_align` | `f64` | `0.85` | 0.0 ..= 1.0 | How strongly a vesicle's long axis follows the flow field at its centre versus a random angle, BEFORE the surface has its say. High values are what make the holes look like gas that stretched in a single flow. |
+| `vesicle_contour` | `f64` | `0.85` | 0.0 ..= 1.0 | How strongly a hole follows the surface under it: its long axis turns to the local contour and it foreshortens by the tilt, both weighted by `1 - n.z`. 0 recovers the flat behaviour exactly. |
 | `vesicle_edge_clear` | `f64` | `0.055` | 0.030 ..= 0.120 | Minimum gap from a vesicle to the body's INNER (post-ribbon) boundary, fraction of R0, floored at 1.2*outline_weight*R0 so it always scales with the ribbon. Measured tightest: 11.3/169.2 = 0.067, and 1.2*0.058 = 0.070 - the floor is the binding constraint at defaults, which is the right coupling. |
 | `vesicle_gap` | `f64` | `0.090` | 0.040 ..= 0.200 | Minimum vesicle-to-vesicle gap, fraction of R0, additionally floored at 0.45*min(ri,rj). Measured tightest pair: 17.4/169.2 = 0.103. Too small and two vesicles read as one broken hole; too large and the packing loosens and the rock looks under-vesiculated. |
 | `vesicle_attempts` | `u32` | `220` | 50 ..= 1000 | Placement tries per vesicle before giving up on it. 220 gives the hardest (largest, placed first into a constrained body) roughly a 90% success rate at defaults. |
@@ -1070,6 +1100,57 @@ at the code that implements it.
   an illustrator would do - only the line crossing the hole would read as a
   crack through it. Rejecting the whole candidate instead cost 127 marks
   over 28 scenes.
+
+- **Fewer and larger holes, and the count is a draw.** A departure from
+  Part 1 rather than a correction to it: the measured artwork has seven
+  holes over a 3.08x size range, and this now draws a mean of five over a
+  3.3x range at larger absolute sizes. It was asked for, and the reasons it
+  is defensible rather than merely different are that Part 1 measures ONE
+  drawing, that the count of events in a volume is Poisson and a constant
+  count is the same tell as a constant lobe count, and that the change
+  measured better on every axis the crate already gates: realised coverage
+  0.147 to 0.166 (measured artwork 0.207), largest equivalent diameter 90 to
+  116 units, clean-roll rate 77% to 80%.
+
+  It also, unexpectedly, fixed `--preset feral`, which had been the honest
+  outlier since before the 3D stage - 9 failures in 120 on the 2D generator,
+  4 after the move to 3D, and 0 now, with the re-roll count falling from 654
+  to 252. Feral's problem was always that the dial asked the packer for nine
+  big lumpy holes in a body that could not take them. With the count drawn
+  and the radii compensated per roll by `sqrt(mean / drawn)`, there is no
+  longer a setting of the dial that asks for more than the body can hold.
+
+  The ceiling is sharp. At `vesicle_rmax` 0.320 the coverage reaches 0.191,
+  closer to the measured 0.207, but the packer starts dropping the big holes
+  and the size-spread gate fires on 39 rolls in 200 against 10 at 0.300. The
+  binding constraint is placement, not the gates.
+
+- **A hole has to lie ON the surface, and that is one multiplication.** The
+  holes were ellipses oriented by the flow field, which is a statement about
+  the drawing rather than about the rock, and they read as painted over the
+  shape rather than sitting in it. A hole is a roughly circular patch on a
+  tilted surface, so its projection is stretched along the surface's contour
+  by `1/n.z` - and that is expressible as the axis and the aspect, which
+  leaves the hole a polar ring about its centre and every collision test
+  untouched. Measured, the ellipse aspect goes 1.68 / 1.72 / 2.01 / 2.52 and
+  the alignment of the axis with the contour 0.648 / 0.699 / 0.770 / 0.869
+  as the surface tilts from face-on to the rim.
+
+  Two bounds were needed and neither is cosmetic. `n.z` has to be floored,
+  at 0.34, or a hole at the rim collapses to a hairline. And the TOTAL
+  aspect has to be capped, at 3.2, because the intrinsic and the
+  foreshortened elongations MULTIPLY: a hole already 2.4x long for being one
+  of the big ones, on a patch that stretches it 2.9x, comes out 7x long and
+  reads as a crack rather than a hole.
+
+- **A bbox diagonal stopped being a size.** The integration test for "the
+  holes vary in size" measured each hole's bounding-box diagonal, which was
+  fine while elongation was roughly uniform. It is not any more - a small
+  hole on a steep patch now measures the same diagonal as a big one lying
+  flat - and the test failed on a seed whose holes were genuinely well
+  spread. The geometric mean of the bbox sides is `2*sqrt(a*b)` for an
+  ellipse, proportional to the equivalent radius and blind to elongation,
+  which is what the test meant all along.
 
 - **Known and not fixed: facet self-intersection at the tame end.** The
   release build's self-intersection test covers the facets, and 16 of 120

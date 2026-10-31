@@ -241,6 +241,22 @@ algorithm inferred from it, so where they disagree Part 1 wins.
   no-self-intersection test allows. Neither a cone about the starting heading
   nor a per-step rate limit helps, because a heading can oscillate inside a
   bound forever. The direction is read once, at the seed.
+- **Fewer, larger holes, and the count is drawn rather than set.**
+  `vesicle_count` is the MEAN of a Poisson draw now, truncated to
+  `[3, 2*mean+4]`, and it is 5 against the artwork's measured 7 with the
+  radii raised to match. A departure from Part 1 rather than a correction
+  to it - but the count of events in a volume is Poisson, a constant count
+  is the same tell as a constant lobe count, and it measured better on
+  every axis the crate gates: coverage 0.147 to 0.166, largest hole 90 to
+  116 units, clean rolls 77% to 80%. It also fixed `--preset feral`, which
+  had been failing seeds since before the 3D stage.
+- **A hole lies ON the surface.** Its long axis turns to the local contour
+  and it foreshortens by the tilt, both weighted by how tilted the surface
+  under it actually is - so a hole near the rim stretches along the rim and
+  one on a face-on patch keeps the flow field's character. Measured over
+  120 seeds, the ellipse aspect runs 1.68 / 1.72 / 2.01 / 2.52 and the
+  axis-to-contour alignment 0.648 / 0.699 / 0.770 / 0.869 as the surface
+  tilts from face-on to the rim.
 - **The relief mark is traced, not taken from a cut.** Lifting it from a
   facet cut and truncating it at `relief_len` is convenient and gives every
   logo the same mark: measured, 14 of 16 got a stroke of exactly 164.2 units
@@ -309,20 +325,20 @@ the same sweep on the 2D generator this replaced:
 
 | preset | failed | re-rolls | failed (2D) | re-rolls (2D) |
 |---|---|---|---|---|
-| `anya` (the default) | 0 / 120 | 37 | 0 / 120 | 70 |
-| `tame` | 0 / 120 | 29 | 0 / 120 | 113 |
-| `feral` | 4 / 120 | 654 | 9 / 120 | 626 |
+| `anya` (the default) | 0 / 120 | 41 | 0 / 120 | 70 |
+| `tame` | 0 / 120 | 43 | 0 / 120 | 113 |
+| `feral` | 0 / 120 | 252 | 9 / 120 | 626 |
 
-`feral` is the corner of the parameter space - nine holes, `vesicle_amp`
-0.42, `vesicle_aspect_max` 2.40 and `slope_limit` 1.80 all at once - and its
-failures are the vesicle coverage gate reporting a genuine geometric
-infeasibility: what has to fit is a hole's reach,
-`r * sqrt(aspect) * (1 + amp)`, and at the wild end the largest drawn hole is
-simply longer than the body can hold. It is a little better here than it was,
-not because it was worked on but because the body it has to fill is the one
-the projection makes. Closing the rest means deciding what `feral` should
-mean, not tuning a constant. Callers who want every seed to land should use
-the default, or raise `retry_budget`.
+`feral` is the corner of the parameter space - `vesicle_amp` 0.42,
+`vesicle_aspect_max` 2.40 and `slope_limit` 1.80 all at once - and it used
+to fail seeds outright, on the vesicle coverage gate reporting a genuine
+geometric infeasibility: what has to fit is a hole's reach,
+`r * sqrt(aspect) * (1 + amp)`, and the dial was asking for nine big lumpy
+holes in a body that could not hold them. Drawing the count and compensating
+the radii per roll by `sqrt(mean / drawn)` removed that: there is no longer a
+setting of the dial that asks the packer for more than the body can take. It
+is still the expensive end - 252 re-rolls against 41 - and callers who want
+speed should use the default.
 
 The test for this is a RATE over a sweep, not one seed: a single-seed check
 passes unchanged with 95% of seeds failing, which is what it did while

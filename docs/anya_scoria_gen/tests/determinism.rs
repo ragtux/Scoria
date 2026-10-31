@@ -109,19 +109,19 @@ fn changing_the_vesicle_count_leaves_the_silhouette_alone() {
             seed,
             ..Params::default()
         };
-        // Straddling the default 7 rather than sitting below it. Both
-        // counts have to clear the vesicle COVERAGE gate on their own or the
-        // two runs land on different re-roll attempts and the pair is
-        // skipped, and at 5 and 6 the packing is under-vesiculated often
-        // enough that only 8 of 50 seeds stayed comparable. The property
-        // under test is symmetric in the two counts, so which pair is used
-        // does not weaken it.
+        // Straddling the default mean of 5. Both counts have to clear the
+        // vesicle gates on their own or the two runs land on different
+        // re-roll attempts and the pair is skipped - and `vesicle_count` is
+        // the MEAN of a Poisson draw now, whose tail reaches twice it plus
+        // four, so a mean far above the default puts the packer somewhere
+        // it cannot finish. The property under test is symmetric in the two
+        // counts, so which feasible pair is used does not weaken it.
         let more = Params {
-            vesicle_count: 8,
+            vesicle_count: 6,
             ..base.clone()
         };
         let fewer = Params {
-            vesicle_count: 6,
+            vesicle_count: 4,
             ..base.clone()
         };
         let (Ok((a, ta)), Ok((b, tb))) =

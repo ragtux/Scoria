@@ -16,7 +16,8 @@ use crate::math::{closed_len, cos, polygon_area, sin_cos, PI, TAU, V2};
 use crate::noise::{Fbm, Perlin};
 use crate::params::min_slope_limit;
 use crate::ring::Ring;
-use crate::rng::Pcg32;
+use crate::rng::{poisson_truncated, Pcg32};
+use crate::solid::DepthMap;
 use crate::Params;
 
 /// Samples of a vesicle's own `r(theta)`. 72 is one every 5 degrees, which
@@ -93,6 +94,55 @@ const SEG_FRAC: f64 = 0.08;
 /// from chord 6.6%, longest chord 53 units - so a spiky hole is wrong even
 /// when its lobe count is right.
 const VESICLE_SMOOTH_PASSES: usize = 2;
+/// Floor on how far a hole may be foreshortened, as a cosine.
+///
+/// A hole is a roughly circular patch ON the surface, so its projection is
+/// compressed along the direction the surface tilts, by the cosine of that
+/// tilt - which is `n.z`. That is what makes a hole look like it lies on the
+/// rock rather than painted on the picture, and near the rim it is a strong
+/// cue, because the compression there is severe and its axis is the rim's
+/// own tangent.
+///
+/// Severe, but not unbounded: at the rim `n.z` goes to zero and the hole
+/// would collapse to a hairline. 0.34 caps the induced elongation just under
+/// 3x, which is about the artwork's most elongated hole (max caliper over
+/// equivalent diameter 2.13) with room for the shape's own eccentricity.
+const TILT_NZ_FLOOR: f64 = 0.34;
+
+/// Ceiling on a hole's TOTAL elongation, intrinsic times foreshortened.
+///
+/// The two multiply: a hole that is already 2.4x long because it is one of
+/// the big ones, lying on a patch tilted enough to stretch it 2.9x, would
+/// come out 7x long and read as a crack. The measured maximum in the
+/// artwork is a max-caliper-over-equivalent-diameter of 2.13; 3.2 is the
+/// top of `vesicle_aspect_max`'s own range, so the cap is the same bound
+/// the parameter surface already accepts rather than a new one.
+const TOTAL_ASPECT_CAP: f64 = 3.2;
+
+/// Lowest count the Poisson draw may return.
+///
+/// "A scoria with two holes does not read as scoria" - SPEC.md's own words
+/// about the packing budget, applied to the draw. At the default mean an
+/// untruncated Poisson returns 0 or 1 on 4% of seeds.
+const COUNT_MIN: u32 = 3;
+
+/// How far above the mean the draw may reach, as a multiple of it.
+const COUNT_SPREAD: f64 = 2.0;
+/// The constant part of that cap, so a small mean still has somewhere to go.
+const COUNT_SPREAD_PLUS: u32 = 4;
+
+/// Bounds on the per-roll size compensation.
+///
+/// The count varies now, and coverage is a gated AREA. Total hole area goes
+/// as `count * E[r^2]`, so holding it means scaling the radii by
+/// `sqrt(mean / drawn)`: a roll that drew three holes makes them bigger, a
+/// roll that drew eight makes them smaller, and the rock stays as
+/// vesiculated either way. Clamped, because the tails would otherwise ask
+/// the packer for holes it cannot place or specks it should not draw.
+const SIZE_COMP_LO: f64 = 0.78;
+/// The upper end of the same clamp.
+const SIZE_COMP_HI: f64 = 1.32;
+
 /// Lower bound on a vesicle's own radius, as a fraction of its mean, applied
 /// before the limiter. The health gate asserts 0.35; 0.36 leaves it room.
 const PINCH_FLOOR: f64 = 0.36;
@@ -241,21 +291,38 @@ impl Grid {
 /// and the logo looks chewed. The floor is tied to `outline_weight`, so
 /// thickening the outline pushes the holes in rather than silently breaking
 /// the composition.
+#[allow(clippy::too_many_arguments)]
 pub fn pack(
     p: &Params,
     inner: &Ring,
     field: &Field,
     perlin: &Perlin,
+    depth: &DepthMap,
     rng: &mut Pcg32,
     c: V2,
     r0: f64,
-) -> Vec<Vesicle> {
-    let count = p.vesicle_count as usize;
-    if count == 0 {
-        return Vec::new();
+) -> (Vec<Vesicle>, u32) {
+    if p.vesicle_count == 0 {
+        return (Vec::new(), 0);
     }
-    let rmin = p.vesicle_rmin * r0;
-    let rmax = p.vesicle_rmax * r0;
+    // HOW MANY IS A DRAW, not a constant. A gas hole is one event in a
+    // volume and the count of such events is Poisson; emitting the same
+    // number every time is the same tell as giving every hole the same lobe
+    // count, which Part 1 calls the most obvious sign of a naive generator.
+    let mean = f64::from(p.vesicle_count);
+    let hi = (mean * COUNT_SPREAD).round() as u32 + COUNT_SPREAD_PLUS;
+    let drawn = poisson_truncated(rng, mean, COUNT_MIN.min(p.vesicle_count), hi);
+    let count = drawn as usize;
+
+    // Hold the coverage the count just moved. Total hole area goes as
+    // `count * E[r^2]`, so the radii scale by `sqrt(mean / drawn)` and a
+    // three-hole rock comes out as vesiculated as an eight-hole one - with
+    // bigger holes, which is the whole point of letting the count vary.
+    let size_comp = (mean / f64::from(drawn))
+        .sqrt()
+        .clamp(SIZE_COMP_LO, SIZE_COMP_HI);
+    let rmin = p.vesicle_rmin * r0 * size_comp;
+    let rmax = p.vesicle_rmax * r0 * size_comp;
     let span = (rmax - rmin).max(1e-12);
     // Measured tightest clearance to the inner edge: 11.3/169.2 = 0.067 R0,
     // and 1.2*0.058 = 0.070 - the ribbon-derived floor is the binding one at
@@ -351,7 +418,7 @@ pub fn pack(
 
             // The shape depends on the centre - the long axis follows the
             // field there - so it has to be built before it can be tested.
-            let cand = build_cand(p, field, perlin, rng, c, r0, centre, r_k, asp, t);
+            let cand = build_cand(p, field, perlin, depth, rng, c, r0, centre, r_k, asp, t);
 
             if !boundary_clear(&cand.ring, inner, clearance) {
                 consec += 1;
@@ -382,7 +449,10 @@ pub fn pack(
         // as dirt; a missing one reads as composition.
     }
 
-    placed.into_iter().map(|c| finish(c, p, r0)).collect()
+    (
+        placed.into_iter().map(|c| finish(c, p, r0)).collect(),
+        drawn,
+    )
 }
 
 /// Build one candidate's star-shaped outline about `centre`.
@@ -391,6 +461,7 @@ fn build_cand(
     p: &Params,
     field: &Field,
     perlin: &Perlin,
+    depth: &DepthMap,
     rng: &mut Pcg32,
     c: V2,
     r0: f64,
@@ -424,11 +495,54 @@ fn build_cand(
     }
 
     let blended = fdir * p.vesicle_align + rdir * (1.0 - p.vesicle_align);
-    let axis = if blended.len2() < 1e-18 {
+    let flow_axis = if blended.len2() < 1e-18 {
         fdir
     } else {
         blended.norm()
     };
+
+    // THE SURFACE DECIDES, where the surface has an opinion.
+    //
+    // A hole is a roughly circular patch lying ON the rock, so what reaches
+    // the image is that patch foreshortened: compressed along the direction
+    // the surface tilts, by the cosine of the tilt, which is the normal's
+    // `z`. Equivalently it is STRETCHED along the surface's contour - the
+    // perpendicular of the tilt - by `1/n.z`. That is what makes a hole look
+    // like it is on the rock rather than painted over the picture of it, and
+    // near the rim, where the compression is severe and its axis is the
+    // rim's own tangent, it is the strongest form cue the holes can give.
+    //
+    // Blended in by how much the surface is actually tilted. On a patch
+    // facing the viewer there is no foreshortening and no contour to follow,
+    // so the flow field keeps the axis and the holes still belong to one
+    // flow; by the rim the surface has taken over completely. `1 - n.z` is
+    // that weight, and it needs no parameter of its own beyond
+    // `vesicle_contour` to turn the whole effect down.
+    let n = depth.sample(centre).1;
+    let nz = n.z.clamp(TILT_NZ_FLOOR, 1.0);
+    let tilt = n.xy();
+    let (axis, tilt_aspect) = if tilt.len2() > 1e-12 {
+        let contour = tilt.perp().norm();
+        // A long axis is a LINE, not an arrow: take the contour into the
+        // flow's half-plane before blending, or two nearly opposite unit
+        // vectors cancel.
+        let contour = if contour.dot(flow_axis) < 0.0 {
+            -contour
+        } else {
+            contour
+        };
+        let w = p.vesicle_contour * (1.0 - nz);
+        let mixed = flow_axis * (1.0 - w) + contour * w;
+        let a = if mixed.len2() < 1e-18 {
+            flow_axis
+        } else {
+            mixed.norm()
+        };
+        (a, 1.0 + p.vesicle_contour * (1.0 / nz - 1.0))
+    } else {
+        (flow_axis, 1.0)
+    };
+    let aspect = (aspect * tilt_aspect).min(TOTAL_ASPECT_CAP);
     let perp = axis.perp();
 
     // Ramped in across BITE_SPLIT..1, so the small holes stay convex.
@@ -592,6 +706,44 @@ fn bbox(pts: &[V2]) -> (V2, V2) {
 }
 
 #[cfg(test)]
+/// A depth map of a near-flat solid, so the surface has no opinion
+/// about a hole's axis and these tests measure what they used to:
+/// `vesicle_contour` scales by `1 - n.z`, which is nearly zero here.
+///
+/// Flat rather than spherical on purpose. The foreshortening is tested
+/// where it belongs, in `the_surface_turns_a_hole_to_its_contour`; a
+/// test of the lobe count should not also be a test of the tilt.
+fn flat_depth() -> DepthMap {
+    use crate::noise::SphereFbm;
+    use crate::solid::Solid;
+    let mut rng = Pcg32::new(1, crate::rng::stream::MISC);
+    let perlin = Perlin::new(&mut rng);
+    let fbm = SphereFbm::new(&mut rng, 3, 2.03, 0.45);
+    // A sphere 40x the body: over the 300-unit region the tests use,
+    // its normals are within half a degree of facing the viewer.
+    let r = 12000.0;
+    let solid = Solid {
+        a: r,
+        b: r,
+        c: r,
+        amp: 0.0,
+        lobes: 2.6,
+        floor: 0.25,
+        warp: 0.0,
+        fbm,
+    };
+    let n_theta = 90;
+    let (mut rho, mut us) = (Vec::new(), Vec::new());
+    for i in 0..n_theta {
+        let th = TAU * i as f64 / n_theta as f64;
+        let (a, u) = solid.silhouette(&perlin, th, crate::math::V3::new(0.0, 0.0, 0.0));
+        rho.push(a);
+        us.push(u);
+    }
+    DepthMap::build(&solid, &perlin, V2::ZERO, n_theta, &rho, &us, 1.0)
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
     use crate::field::FieldCfg;
@@ -660,21 +812,19 @@ mod tests {
         let perlin = Perlin::new(&mut rng);
         let field = test_field(&mut rng);
         let mut vrng = Pcg32::new(99, stream::VESICLE);
-        let ves = pack(
+        let (ves, drawn) = pack(
             &p,
             &inner,
             &field,
             &perlin,
+            &flat_depth(),
             &mut vrng,
             V2::new(0.0, 0.0),
             r0,
         );
 
         assert!(!ves.is_empty(), "a plain disc must take some holes");
-        assert!(
-            ves.len() <= p.vesicle_count as usize,
-            "never more than asked"
-        );
+        assert!(ves.len() <= drawn as usize, "never more than was drawn");
 
         // The two invariants the packer promises, asserted exactly as it
         // enforces them: probe clearance against the inner ring, and the
@@ -711,8 +861,32 @@ mod tests {
         let field = test_field(&mut rng);
         let mut vrng = Pcg32::new(5, stream::VESICLE);
         let c = V2::new(0.0, 0.0);
-        let small = build_cand(&p, &field, &perlin, &mut vrng, c, r0, c, 25.0, 1.1, 0.05);
-        let big = build_cand(&p, &field, &perlin, &mut vrng, c, r0, c, 75.0, 2.3, 0.95);
+        let small = build_cand(
+            &p,
+            &field,
+            &perlin,
+            &flat_depth(),
+            &mut vrng,
+            c,
+            r0,
+            c,
+            25.0,
+            1.1,
+            0.05,
+        );
+        let big = build_cand(
+            &p,
+            &field,
+            &perlin,
+            &flat_depth(),
+            &mut vrng,
+            c,
+            r0,
+            c,
+            75.0,
+            2.3,
+            0.95,
+        );
         let rel_spread = |ring: &Ring| {
             let mean = ring.mean_radius();
             let lo = ring.r.iter().cloned().fold(f64::INFINITY, f64::min);
@@ -742,13 +916,15 @@ mod tests {
                 &inner,
                 &field,
                 &perlin,
+                &flat_depth(),
                 &mut vrng,
                 V2::new(0.0, 0.0),
                 r0,
             )
         };
-        let a = run();
-        let b = run();
+        let (a, da) = run();
+        let (b, db) = run();
+        assert_eq!(da, db, "the Poisson draw must repeat too");
         assert_eq!(a.len(), b.len());
         for (x, y) in a.iter().zip(b.iter()) {
             assert_eq!(x.centre.x, y.centre.x);
@@ -782,6 +958,7 @@ mod bite_tests {
             &p,
             &field,
             &perlin,
+            &flat_depth(),
             &mut rng,
             V2::ZERO,
             300.0,
@@ -842,6 +1019,7 @@ mod bite_tests {
             &p,
             &field,
             &perlin,
+            &flat_depth(),
             &mut rng,
             V2::ZERO,
             300.0,

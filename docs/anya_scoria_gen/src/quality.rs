@@ -493,6 +493,11 @@ pub fn vesicle_coverage(ves: &[Vesicle], body_area: f64, target: u32) -> Check {
     if target == 0 {
         return Ok(());
     }
+    // `target` is what the POISSON DRAW asked for on this roll, not
+    // `vesicle_count`, which is only its mean. Measuring the placing against
+    // the mean punishes a roll that drew high for drawing high - and since
+    // the radii are compensated by `sqrt(mean / drawn)`, a high draw is
+    // exactly the roll with the most holes to place and the least room each.
     // ceil(0.6 * target) without a float round trip.
     let floor = (6 * target as usize).div_ceil(10);
     if ves.len() < floor {
@@ -770,8 +775,8 @@ pub fn check_silhouette(outer: &Ring, pts: &[V2], r0: f64, p: &Params) -> Check 
 pub fn check_all(scene: &Scene, p: &Params) -> Check {
     check_silhouette(&scene.outer, &scene.outer_pts, scene.r0, p)?;
     ribbon(&scene.outer, &scene.inner, &scene.rp, scene.r0, scene.w0)?;
-    vesicle_spread(&scene.vesicles, p.vesicle_count)?;
-    vesicle_coverage(&scene.vesicles, scene.body_area, p.vesicle_count)?;
+    vesicle_spread(&scene.vesicles, scene.vesicles_drawn)?;
+    vesicle_coverage(&scene.vesicles, scene.body_area, scene.vesicles_drawn)?;
     vesicle_health(&scene.vesicles)?;
     cut_health(&scene.cuts, p.facet_min_chord_sep)?;
     facet_areas(&scene.facets, scene.body_area, p.facet_min_area)?;
