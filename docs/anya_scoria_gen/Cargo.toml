@@ -1,0 +1,28 @@
+# Standalone: this crate lives inside the scoria repository but outside its
+# cargo workspace, so `cargo test --workspace` at the root never builds it and
+# it never pulls gpui. The empty [workspace] table is what detaches it.
+[workspace]
+
+[package]
+name = "anya-scoria-gen"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+license = "MIT"
+publish = false
+description = "Procedural scoria logos: flow-field blobs, packed vesicles, faceted flat shading, out as SVG"
+
+[[bin]]
+name = "scoriagen"
+path = "src/main.rs"
+
+# No dependencies, on purpose. The PRNG, the Perlin noise, sin/cos, the bezier
+# maths and the SVG writer are all in this crate: a cold `cargo build` is under
+# two seconds, and the output is bit-identical on every target because nothing
+# reaches libm. See the determinism note in README.md.
+[dependencies]
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+panic = "abort"

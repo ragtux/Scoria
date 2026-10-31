@@ -32,6 +32,7 @@ crates/scoria-bases     the Bases expression language: statements parsed into Ob
 crates/scoria-pdf       PDF rendering on hayro: pages to RGBA, outline, title, page text, the #page= subpath (no gpui)
 crates/scoria-math      TeX math typeset on RaTeX (KaTeX-compatible): a drawing list in em units plus the KaTeX fonts (no gpui)
 crates/scoria-bench     spike benchmarks: synthetic vault generator, index timer (bin)
+docs/anya_scoria_gen    procedural scoria-logo generator (bin, zero deps, OUTSIDE the cargo workspace)
 docs/scoria             Obsidian vault: spec and design notes (dogfooded by Scoria)
 docs/scoria-demo        Obsidian vault: the geology field guide the README recordings are made on
 tools/demo-vault        the typst source of the PDF that vault embeds
@@ -62,6 +63,10 @@ cargo run --release -p scoria-bench -- generate <dir>   # synthetic 20k-note vau
 cargo run --release -p scoria-bench -- index <vault>    # time scan/read/index/resolve, check the 2 s gate
 cargo fmt --all && cargo clippy --workspace --all-targets
 
+cd docs/anya_scoria_gen && cargo test     # the logo generator: standalone, not in the workspace
+cd docs/anya_scoria_gen && cargo run --release -- --seed 7 --out rock.svg   # one scoria
+cd docs/anya_scoria_gen && cargo run --release -- --count 500 --out ./batch # a sheet
+
 cd site && npm install && npm run build   # scoria.cc -> site/dist/scoria (exits 1 on a dead link)
 cd site && npm run serve                  # the same, served on http://localhost:4321/
 ```
@@ -90,3 +95,10 @@ cd site && npm run serve                  # the same, served on http://localhost
   `WindowOptions`, or the Linux task bar loses the icon.
 - `site/` vendors the builder from the `ragtux.com` repository byte for byte, bar the two
   differences `site/README.md` records. Port fixes across whole rather than merging.
+- `docs/anya_scoria_gen` generates scoria marks from Anya's `docs/img/anya_v0_base.svg`. It has
+  its own empty `[workspace]` table so the root `cargo test --workspace` never builds it, and it
+  has no dependencies on purpose: the PRNG, the Perlin noise, `sin`/`cos` and the SVG writer are
+  all in-crate, because libm differs in the last ulp between platforms and the output is promised
+  byte-identical. `docs/anya_scoria_gen/SPEC.md` is the authority - Part 1 is the drawing
+  measured, Part 2 the algorithm, Part 3 what building it proved wrong. Change a visual constant
+  only against a measurement, and record it there.
