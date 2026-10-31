@@ -614,7 +614,7 @@ fn attempt_once(p: &Params, seed: u64) -> Result<(Scene, Timings), &'static str>
     // same trick with less geometry.
     let mut root_cubics = catmull_rom_closed(&root, p.cr_tension);
     clamp_handles(&mut root_cubics);
-    let (facets, cuts, cut_curves) = facet::build(
+    let (facets, cuts) = facet::build(
         &root,
         p,
         &field,
@@ -651,17 +651,7 @@ fn attempt_once(p: &Params, seed: u64) -> Result<(Scene, Timings), &'static str>
             .map(|(r, wi)| r - 0.5 * wi)
             .collect(),
     };
-    let relief = relief::build(
-        &cut_curves,
-        &root_ring,
-        &depth,
-        &light,
-        &facets,
-        &vesicles,
-        p,
-        r0,
-        w0,
-    );
+    let relief = relief::build(&root_ring, &depth, &light, &facets, &vesicles, p, r0, w0);
     t.relief_us = t0.elapsed().as_micros();
 
     // `clamped` and `segments` cover the RIBBON contours only - see the note
@@ -943,6 +933,8 @@ mod relief_marks {
         let p = Params::default();
         let mut seen = 0;
         let mut with_mark = 0;
+        let mut lens: Vec<f64> = Vec::new();
+        let mut widths: Vec<f64> = Vec::new();
         for seed in 0..60u64 {
             let Ok((scene, _)) = attempt_once(&p, seed) else {
                 continue;
@@ -972,19 +964,25 @@ mod relief_marks {
                     heading.dot(inward) >= 0.573,
                     "seed {seed}: the mark runs along the rim, not into the body"
                 );
-                // 0.535 of the mean radius, measured.
+                // Length is capped by `relief_len`, not set by it - the
+                // mark stops where its crease fades.
                 let len = polyline_len(&m.spine);
-                let want = p.relief_len * scene.r0;
+                let cap = p.relief_len * scene.r0;
+                // The cap bounds the TRACE; the anchor back out to the ink
+                // adds up to `MAX_ANCHOR_FRAC` ribbon widths on top.
                 assert!(
-                    len > 0.5 * want && len <= want + 1.0,
-                    "seed {seed}: length {len:.1} against the asked-for {want:.1}"
+                    len > 0.15 * scene.r0 && len <= cap + 4.5 * scene.w0,
+                    "seed {seed}: length {len:.1} against the cap {cap:.1}"
                 );
-                // 0.58 of the outline, measured.
+                // 0.58 of the outline is the CENTRE of the band, not the
+                // whole of it: a sharper fold is drawn heavier.
                 let ratio = m.width / scene.w0;
                 assert!(
-                    (ratio - 0.586).abs() < 0.02,
-                    "seed {seed}: the mark is {ratio:.3} of the outline, measured 0.58"
+                    (ratio - 0.586).abs() < 0.586 * 0.23,
+                    "seed {seed}: the mark is {ratio:.3} of the outline, band is 0.45..0.72"
                 );
+                lens.push(len / scene.r0);
+                widths.push(ratio);
             }
         }
         assert!(seen > 40, "too few scenes to conclude anything: {seen}");
@@ -995,6 +993,31 @@ mod relief_marks {
         assert!(
             with_mark * 4 >= seen * 3,
             "only {with_mark} of {seen} scenes got a relief mark"
+        );
+
+        // AND THEY MUST DIFFER. The first design took the mark from a facet
+        // cut and truncated it at a constant, which gave 14 of 16 logos a
+        // stroke of exactly 164.2 units and 9.41 width - the same object,
+        // rotated. Tracing the rock's own crease is the fix, and a spread
+        // is the only evidence that it is working.
+        let spread = |v: &[f64]| {
+            let m = v.iter().sum::<f64>() / v.len() as f64;
+            (v.iter().map(|x| (x - m) * (x - m)).sum::<f64>() / v.len() as f64).sqrt() / m
+        };
+        assert!(
+            spread(&lens) > 0.12,
+            "the marks are all the same length: relative spread {:.3}",
+            spread(&lens)
+        );
+        assert!(
+            spread(&widths) > 0.04,
+            "the marks are all the same width: relative spread {:.3}",
+            spread(&widths)
+        );
+        let wm = widths.iter().sum::<f64>() / widths.len() as f64;
+        assert!(
+            (wm - 0.586).abs() < 0.08,
+            "the mean waist is {wm:.3} of the outline, measured 0.58"
         );
     }
 }

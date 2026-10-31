@@ -31,7 +31,6 @@ use crate::math::{
     sin_cos, total_turning, PI, V2,
 };
 use crate::noise::{Fbm, Perlin};
-use crate::relief::Cut;
 use crate::rng::Pcg32;
 use crate::solid::{DepthMap, Light};
 use crate::Params;
@@ -336,7 +335,7 @@ pub fn build(
     c: V2,
     r0: f64,
     body_area: f64,
-) -> (Vec<Facet>, CutReport, Vec<Cut>) {
+) -> (Vec<Facet>, CutReport) {
     let mut regions = vec![Region {
         pts: root.to_vec(),
         breaks: Vec::new(),
@@ -346,9 +345,6 @@ pub fn build(
     // the logo comes out with three facets.
     let mut blocked = vec![false];
     let mut report = CutReport::default();
-    // Kept for the relief pass: a cut that runs down a steep brightness ramp
-    // is a fold in the surface, and that is where the thin interior mark goes.
-    let mut cuts: Vec<Cut> = Vec::new();
 
     for _ in 0..p.facet_cuts {
         // ALWAYS THE LARGEST. Random selection is the classic BSP failure: one
@@ -379,11 +375,10 @@ pub fn build(
             body_area,
             &mut report,
         ) {
-            Some((c1, c2, cut)) => {
+            Some((c1, c2)) => {
                 regions[bi] = c1;
                 regions.push(c2);
                 blocked.push(false);
-                cuts.push(Cut { pts: cut });
             }
             None => {
                 blocked[bi] = true;
@@ -395,7 +390,6 @@ pub fn build(
     (
         tone(regions, p, perlin, depth, light, tone_rng, c, r0),
         report,
-        cuts,
     )
 }
 
@@ -412,7 +406,7 @@ fn try_cut(
     r0: f64,
     body_area: f64,
     report: &mut CutReport,
-) -> Option<(Region, Region, Vec<V2>)> {
+) -> Option<(Region, Region)> {
     let pts = &region.pts;
     let n = pts.len();
     if n < 12 {
@@ -612,7 +606,7 @@ fn try_cut(
         report.made += 1;
         report.min_sep_frac = report.min_sep_frac.min(sep);
         report.max_turning = report.max_turning.max(turning);
-        return Some((c1, c2, cut));
+        return Some((c1, c2));
     }
     None
 }

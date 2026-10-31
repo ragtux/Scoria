@@ -656,17 +656,79 @@ Facets do NOT need to avoid the vesicles - vesicles are opaque and painted after
 
 ### The relief marks
 
-One thin tapered stroke per logo by default, down the rock's steepest fold, growing out of the outline. Part 1 measures the artwork's; this is how to place one.
+One thin tapered stroke per logo by default, traced down a real crease of
+the rock and growing out of the outline. Part 1 measures the artwork's; this
+is how to find one.
 
-**Candidates are facet cuts that reach the rim.** A cut is already a validated, non-self-intersecting curve inside the body, it is already a tone boundary, and it already leans along the solid's iso-brightness line - so it is the curve a fold would be drawn on. A cut END qualifies when it lands inside the ribbon's ink band: the facet root sits on the ribbon's MIDLINE, so a cut that ends on the root ends halfway through the ink and the mark emerges from it seamlessly, exactly as measured, while a cut ending on an earlier cut is strictly inside that and a mark there would float with a tapered point hanging in the orange. Testing the ink band rather than tracking provenance through the subdivision tests the property that actually matters.
+**A crease is a second derivative.** A fold is a line the brightness barely
+changes along, with the brightness falling away sharply to either side. So
+take the Hessian of the brightness by finite difference and diagonalise it:
+the larger principal curvature in magnitude says how sharp the crease is,
+and the eigenvector of the SMALLER one says which way it runs, because the
+crest of a ridge is the direction brightness changes least along. A 2x2
+symmetric eigenproblem is closed form - one `sqrt`, no trigonometry.
 
-**It must head inward.** Measured, Anya's leaves the rim 29 degrees off radial; the rule is within 55. Without it the pass picks marks that run TANGENTIALLY just inside the outline, because that is where the brightness changes fastest, and a line hugging the rim reads as a nick in the ink.
+Not the gradient. `|grad B|` is largest near the rim, where the surface
+rolls away from the viewer, and it is large there whether or not anything is
+happening; a smooth roll-off is not a crease however steep it is.
 
-**Score by the FOLD, not by the slope.** The brightness gradient is largest near the rim whether or not anything is happening there, so scoring by `|grad B|` picks whichever candidate spends longest near the rim - measured on the first twelve seeds, every mark chosen that way ran tangentially. A fold is a place where the gradient CHANGES fast, and a smooth roll-off is not one however steep it is. Sampling the brightness at the spine and one step either side of it, across the spine, measures that for three lookups a sample.
+**Finding candidates.** Probe 180 positions round the rim, each
+[`RIM_PROBE_INSET`] = 1.6 ribbon widths inside the ribbon's midline - far
+enough in that the Hessian stencil, which reaches `h*sqrt(2)` to its
+corners, stays over surface the depth map has. Keep a probe when the crest
+there heads INTO the body, within 55 degrees of inward: a rim roll-off has a
+crest too, and it is the strongest anywhere on the shape, but it runs ALONG
+the rim. That one test separates the rock's creases from its own edge, and
+it does it before any strength is compared. Then keep only local maxima over
+a +-6 probe window, so one broad crest yields one mark.
 
-**Then the rules that keep it a fold rather than a scratch**: it must straddle a TONE STEP somewhere along its length (probed at 30%, 55% and 80%); it must clear every vesicle by two half-widths; two marks must stay 0.30*R0 apart, or they read as hatching; and the centreline's local curvature radius must exceed 2.5 half-widths, or the offset folds over itself.
+**Tracing.** Walk the crest inward at 0.01*R0 a step. Three things have to be
+carried. The direction comes from an eigen-decomposition and has no SIGN, so
+it is oriented against the previous step every time or the trace reverses
+the moment the eigenvector flips. The turn is RATE LIMITED to 0.11 rad a
+step, because where the two principal curvatures are equal the eigenvectors
+are undefined and swing arbitrarily. And the walk stops when the crease has
+faded to a quarter of its strength at the rim, which is what makes the
+length come from the rock rather than from a constant.
 
-**Geometry**: offset the spine either side by the tapered half-width and close the loop, with both tips a SINGLE shared point so the two sides meet there instead of approaching asymptotically - which would leave a pair of points closer than the degenerate-segment gate allows, and a needle where the drawing has a rounded end. Width profile `x * (2 - x)` over the first and last tenth, waist `relief_weight * R0`, length `relief_len * R0`; both measured in Part 1.
+It also stops at the silhouette, at a vesicle - a crease running up to a gas
+hole is real, and ending the stroke short of it is what an illustrator would
+do, where drawing through it would read as a crack - at `relief_len * R0`,
+and at 80 degrees of accumulated absolute turning, which is what stops a
+crest with swirl in it from curling into a fishhook.
+
+**Anchoring.** The probe is 1.6 ribbon widths inside the ink and the mark
+has to START in the ink, so the two are separated: probe where the Hessian
+is well conditioned, then walk back out along the crest's own direction to
+the ribbon's midline. The first stretch of the mark is therefore straight,
+which is how such a line is drawn anyway, and the taper covers most of it.
+A candidate that cannot reach the ink within 4 ribbon widths is dropped -
+its crest does not meet the rim.
+
+**Choosing and sizing.** Rank by `strength * sqrt(length / R0)`, times 1.35
+if the mark straddles a tone step. Length counts because a long crease is a
+more significant feature than a sharp short one and the measured mark is
+long; the tone step counts because a mark the shading already agrees about
+reads better, but it is a PREFERENCE and not a rule - see Part 3.
+
+The waist is `relief_weight * R0 * sqrt(strength * R0^2 / 245)`, clamped to
++-22%: a sharper crease is drawn heavier, the way it would be. 245 is the
+median selected fold strength over 50 seeds and it is a GLOBAL constant, not
+the logo's own median, so a seed whose creases are genuinely sharper gets a
+genuinely heavier line.
+
+**Then the rules that keep it a fold rather than a scratch**: it must be at
+least 0.30*R0 long; it must clear every vesicle by two half-widths; two
+marks must stay 0.30*R0 apart, or they read as hatching; and the
+centreline's local curvature radius must exceed 2.5 half-widths, or the
+offset folds over itself.
+
+**Geometry**: offset the spine either side by the tapered half-width and
+close the loop, with both tips a SINGLE shared point so the two sides meet
+there instead of approaching asymptotically - which would leave a pair of
+points closer than the degenerate-segment gate allows, and a needle where
+the drawing has a rounded end. Width profile `x * (2 - x)` over the first
+and last tenth; both measured in Part 1.
 
 ### Parameters
 
@@ -704,8 +766,8 @@ One thin tapered stroke per logo by default, down the rock's steepest fold, grow
 | `tone_lambert` | `f64` | `0.85` | 0.0 ..= 1.0 | How much of a facet's tone comes from Lambert shading of the solid's real surface normal, against the flat positional ramp. 0 recovers the pre-3D behaviour exactly. |
 | `facet_relief` | `f64` | `0.80` | 0.0 ..= 1.0 | How far a cut's direction leans off the flow field toward the solid's iso-brightness line at its seed. Also switches on the median-brightness seed search. |
 | `relief_lines` | `u32` | `1` | 0 ..= 6 | Interior relief marks to draw. Measured 1. |
-| `relief_weight` | `f64` | `0.034` | 0.008 ..= 0.060 | A mark's waist width over R0. Measured 0.0337, which is 0.58 of the outline ribbon. |
-| `relief_len` | `f64` | `0.54` | 0.15 ..= 1.00 | A mark's centreline length over R0. Measured 0.535. |
+| `relief_weight` | `f64` | `0.034` | 0.008 ..= 0.060 | CENTRE of the band a mark's waist is drawn from, over R0, scaled +-22% by how sharp its fold is. Measured 0.0337, which is 0.58 of the outline ribbon. |
+| `relief_len` | `f64` | `0.54` | 0.15 ..= 1.00 | CAP on a mark's traced length over R0, not a target - the mark stops where its crease fades. Measured 0.535, which is also about where the realised mean lands. |
 | `tone_noise` | `f64` | `0.35` | 0.0 ..= 1.0 | Blend of the light function between the shading term (0, orderly) and pure fbm (1, scattered, reads as mineral variation). 0.35 is measured, not tuned: the artwork's tones overlap by a full quartile and 0.35 is what reproduces both the measured means and the measured interquartile widths. Less of it reads as more three-dimensional by eye and is wrong - see Part 3. |
 | `palette_hue` | `f64` | `13.0` | 0 ..= 360 | Base hue in degrees for the three-tone ramp. 13 is the measured shadow hue of #ee3300. Moving this alone transports the whole family coherently (e.g. 205 gives an ice-blue obsidian variant). |
 | `palette_sat` | `f64` | `1.00` | 0.50 ..= 1.00 | HSL saturation for all three tones. The artwork is 100% on all three - the flatness of the saturation is part of why it reads as a mark rather than a render. Below 0.8 it starts to look like a photo trace. |
@@ -971,6 +1033,43 @@ at the code that implements it.
   626). `feral` is the honest outlier in both - it asks for the lumpiest body
   and nine big lumpy holes in it at once, and it lives on the vesicle
   coverage floor.
+
+- **A relief mark taken from a facet cut is the same mark every time.** The
+  first version took the mark from a cut, which is convenient - a cut is
+  already a validated curve inside the body and already a tone boundary -
+  and truncated it at `relief_len`. A cut is a near-straight chord by
+  design, and a constant length is a constant length, so 14 of 16 logos got
+  a stroke of exactly 164.2 units and 9.41 width deviating 2 to 7% from its
+  chord: the same object, rotated. A fold in a lumpy rock is not a chord.
+  Tracing the crest of the surface's own fold instead, from where it meets
+  the rim until it fades, gives 98 to 229 units and 7.3 to 11.1 width at 3
+  to 23% deviation, with every logo getting one - and the realised mean
+  length, 133 to 170 units depending on the floor, brackets the artwork's
+  equivalent 160. Length, curvature and waist then all come from the rock.
+
+  Four things had to be got right for that to work, each found by looking at
+  the output. The crest has no sign, so it reverses whenever the eigenvector
+  flips unless the walk carries its own heading. The eigenvectors are
+  undefined where the two principal curvatures are equal, so the turn needs
+  a rate limit or the mark kinks. A crest with swirl in it curls into a
+  fishhook, so the TOTAL turning needs a cap - 80 degrees, against the 53
+  Anya's mark turns. And a trace left to stop only when the fold fades
+  produces 60-unit ticks against the rim on a third of seeds, which read as
+  blemishes in the ink; a floor of 0.30*R0 and a ranking that weights length
+  by its square root put the typical mark back at the measured length.
+
+- **The tone step had to stop being a rule.** While the mark was a facet cut
+  it was a tone boundary by construction, so requiring one cost nothing. A
+  crest traced through the surface need not follow a cut, and demanding a
+  step then threw away 166 good candidates over 28 scenes and left a third
+  of logos with no mark at all. It is now a 1.35x ranking bonus. The mark's
+  justification is the fold; the tone step breaks ties.
+
+- **A vesicle should truncate a mark, not veto it.** A crease that runs up
+  to a gas hole is a real crease, and ending the stroke short of it is what
+  an illustrator would do - only the line crossing the hole would read as a
+  crack through it. Rejecting the whole candidate instead cost 127 marks
+  over 28 scenes.
 
 - **Known and not fixed: facet self-intersection at the tame end.** The
   release build's self-intersection test covers the facets, and 16 of 120

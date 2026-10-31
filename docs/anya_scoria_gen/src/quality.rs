@@ -37,12 +37,21 @@ const NORMAL_MEAN_MIN: f64 = 0.45;
 /// Lowest Lambert separation between neighbouring tones that still reads as
 /// a step rather than as a rounding accident.
 const TONE_LAMBERT_GAP: f64 = 0.004;
-/// How far a relief mark's realised mean width may stray from
-/// `relief_weight`, as a fraction of it. The taper takes about 8% off the
+/// How far a relief mark's realised mean width may stray from the waist it
+/// was BUILT for, as a fraction of it.
+///
+/// Against the mark's own `width`, not against `relief_weight` - the waist
+/// varies with how sharp the fold is, by design, and a gate on the
+/// parameter would be a gate on that variation. What is being caught here
+/// is an offset that folded over itself, which leaves the outline's length
+/// untouched and collapses its area. The taper takes about 8% off the
 /// waist, so the band is centred below 1.
 const RELIEF_WIDTH_LO: f64 = 0.80;
 /// The upper end of the same band.
 const RELIEF_WIDTH_HI: f64 = 1.05;
+/// How far the waist itself may stray from `relief_weight * R0`. The
+/// generator's own spread is 0.22 either way; this is that plus rounding.
+const RELIEF_WAIST_SPREAD: f64 = 0.25;
 
 /// Slack on the limiter's own bound, to absorb the rounding of the two sweeps.
 const LIMITER_SLACK: f64 = 1.0001;
@@ -725,9 +734,14 @@ pub fn relief_marks(marks: &[Relief], r0: f64, weight: f64) -> Check {
             return Err("relief: a mark has no length");
         }
         let mean_w = polygon_area(&m.pts).abs() / len;
-        let want = weight * r0;
-        if mean_w < RELIEF_WIDTH_LO * want || mean_w > RELIEF_WIDTH_HI * want {
+        if mean_w < RELIEF_WIDTH_LO * m.width || mean_w > RELIEF_WIDTH_HI * m.width {
             return Err("relief: a mark came out the wrong width for its spine");
+        }
+        let want = weight * r0;
+        if m.width < (1.0 - RELIEF_WAIST_SPREAD) * want
+            || m.width > (1.0 + RELIEF_WAIST_SPREAD) * want
+        {
+            return Err("relief: a mark's waist left the band around relief_weight");
         }
     }
     Ok(())

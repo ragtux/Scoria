@@ -548,6 +548,61 @@ impl DepthMap {
         V2::new(dx, dy) * (0.5 / h)
     }
 
+    /// How hard the lit surface FOLDS under `q`, and which way the fold runs.
+    ///
+    /// A fold is a crease: a line along which the surface's brightness
+    /// barely changes, with the brightness falling away sharply to either
+    /// side of it. That is a statement about second derivatives, so this
+    /// takes the Hessian of the brightness by finite difference and
+    /// diagonalises it. The larger principal curvature in magnitude says how
+    /// sharp the crease is; the eigenvector of the SMALLER one says which
+    /// way it runs, because the crest of a ridge is the direction the
+    /// brightness changes least along.
+    ///
+    /// Why the second derivative and not the gradient: the brightness
+    /// gradient is largest near the rim, where the surface rolls away from
+    /// the viewer, and it is large there whether or not anything is
+    /// happening. Scoring a fold by `|grad B|` therefore finds the rim,
+    /// every time. A smooth roll-off is not a crease however steep it is.
+    ///
+    /// Returns `None` where the surface is too flat to have a direction.
+    #[must_use]
+    pub fn fold(&self, q: V2, light: &Light, h: f64) -> Option<Fold> {
+        let b = |dx: f64, dy: f64| self.brightness(q + V2::new(dx * h, dy * h), light);
+        let b0 = b(0.0, 0.0);
+        let inv = 1.0 / (h * h);
+        let hxx = (b(1.0, 0.0) - 2.0 * b0 + b(-1.0, 0.0)) * inv;
+        let hyy = (b(0.0, 1.0) - 2.0 * b0 + b(0.0, -1.0)) * inv;
+        let hxy = (b(1.0, 1.0) - b(1.0, -1.0) - b(-1.0, 1.0) + b(-1.0, -1.0)) * (0.25 * inv);
+
+        // Symmetric 2x2 eigenvalues, closed form: no trigonometry, one sqrt.
+        let half_tr = 0.5 * (hxx + hyy);
+        let d = 0.5 * (hxx - hyy);
+        let disc = (d * d + hxy * hxy).sqrt();
+        let (lo, hi) = (half_tr - disc, half_tr + disc);
+        // The eigenvector of whichever is SMALLER in magnitude - the crest.
+        let small = if lo.abs() <= hi.abs() { lo } else { hi };
+        let strength = if lo.abs() <= hi.abs() { hi } else { lo }.abs();
+        if !strength.is_finite() || strength <= 0.0 {
+            return None;
+        }
+        // `(hxy, lambda - hxx)` is an eigenvector unless both vanish, in
+        // which case the Hessian is isotropic and `(lambda - hyy, hxy)` is
+        // the one that survives.
+        let v = V2::new(hxy, small - hxx);
+        let along = if v.len2() > 1e-24 {
+            v.norm()
+        } else {
+            let w = V2::new(small - hyy, hxy);
+            if w.len2() > 1e-24 {
+                w.norm()
+            } else {
+                return None;
+            }
+        };
+        Some(Fold { strength, along })
+    }
+
     /// The unit direction along which the brightness does not change.
     ///
     /// This is the direction a facet cut follows, and it is the whole of the
@@ -569,6 +624,18 @@ impl DepthMap {
         }
         Some(g.perp() * (1.0 / l))
     }
+}
+
+/// A crease in the lit surface: how sharp, and which way it runs.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Fold {
+    /// The larger principal curvature of the brightness, in magnitude. Units
+    /// of 1/length^2, so a caller comparing folds across logos should scale
+    /// it by `R0^2`.
+    pub strength: f64,
+    /// Unit direction along the crest, up to sign - the crest has no
+    /// inherent heading, so a caller walking one has to carry its own.
+    pub along: V2,
 }
 
 /// Mesh normals from the stored points.

@@ -24,9 +24,9 @@ ellipsoid displaced along its radii by noise sampled on the sphere - and
 everything you see is derived from it in orthographic projection: the
 silhouette is its apparent contour, the three flat tones are a quantisation
 of its actual surface shading, the facet cuts lean along its iso-brightness
-lines, and the thin relief mark runs down its steepest fold. The flatness is
-a rendering choice applied to real geometry, which is what lets the tones
-describe the shape rather than merely sit on it.
+lines, and the thin relief mark is traced down a real crease of it. The
+flatness is a rendering choice applied to real geometry, which is what lets
+the tones describe the shape rather than merely sit on it.
 
 **[`SPEC.md`](SPEC.md) is the authority.** Part 1 is the measurements, Part 2
 the algorithm with its constants, quality gates and named pitfalls, Part 3
@@ -241,6 +241,15 @@ algorithm inferred from it, so where they disagree Part 1 wins.
   no-self-intersection test allows. Neither a cone about the starting heading
   nor a per-step rate limit helps, because a heading can oscillate inside a
   bound forever. The direction is read once, at the seed.
+- **The relief mark is traced, not taken from a cut.** Lifting it from a
+  facet cut and truncating it at `relief_len` is convenient and gives every
+  logo the same mark: measured, 14 of 16 got a stroke of exactly 164.2 units
+  and 9.41 width deviating 2-7% from its chord, the same object rotated. A
+  fold in a lumpy rock is not a chord. The mark now follows the crest of the
+  surface's own fold - the eigenvector of the smaller principal curvature of
+  the brightness - from the rim until the crease fades, which gives 98-229
+  units and 7.3-11.1 width at 3-23% deviation, with the mean length landing
+  on the artwork's. Length, curvature and waist all come from the rock.
 - **The projection fills notches.** The maximum over tilt can only add
   radius, and it adds most where the displacement dipped, so Rmin/Rmean comes
   out at 0.625 against the artwork's 0.52 - the generated bites are shallower

@@ -27,15 +27,26 @@
 //!
 //! # Where a mark goes
 //!
-//! Not anywhere: down a CREASE, and only one that reaches the rim. The
-//! candidates are the facet cuts, which already run along the solid's
-//! iso-brightness lines (see [`crate::solid::DepthMap::iso_dir`]) and are
-//! already validated as non-self-intersecting curves inside the body. A cut
-//! earns a mark by the mean steepness of the brightness across it: a steep
-//! brightness ramp is a place where the surface tilts hard over a short
-//! distance, which is a fold, and drawing the fold is drawing the depth.
-//! Because the cut is also a tone boundary, the line and the tone step land
-//! on the same curve and reinforce each other instead of competing.
+//! Down a CREASE of the solid, traced as one. The first version took the
+//! mark from a facet cut, which is convenient - a cut is already a validated
+//! curve inside the body and already a tone boundary - and it is why every
+//! mark came out looking like the same mark: a cut is a near-straight chord
+//! by design, and truncating it at a fixed length gave 14 of 16 logos a
+//! stroke of 164.2 units and 9.41 width deviating 2-7% from its chord. The
+//! same object, rotated.
+//!
+//! A fold in a lumpy rock is not a chord. So the mark is now traced along
+//! the crest of the surface's own fold - see [`DepthMap::fold`] - from where
+//! that fold meets the rim, inward, for as far as the fold actually runs.
+//! Length, curvature and waist all then come from the rock rather than from
+//! a constant: the mark stops where the crease fades, bends with it, and is
+//! drawn heavier where the crease is sharper.
+//!
+//! What stays measured is the mark's LANGUAGE rather than its dimensions -
+//! the taper profile, the constant waist between the tapers, the rim end
+//! buried in the ink, the inward heading - because those are what make it
+//! read as a branch of the outline. What varies is everything Part 1 could
+//! only measure one sample of.
 
 use crate::bezier::{catmull_rom_closed, clamp_handles, self_intersects, Cubic};
 use crate::facet::Facet;
@@ -48,24 +59,125 @@ use crate::vesicle::Vesicle;
 /// Fraction of the length each end tapers over. Measured; see the module docs.
 const TAPER_FRAC: f64 = 0.10;
 
-/// Spacing of the centreline samples, as a fraction of R0.
+/// Euler step along the crest, as a fraction of R0.
 ///
-/// The cut this is cut from was traced at 0.01*R0 per Euler step, so resampling
-/// at 0.015 neither invents detail nor throws any away, and it keeps the
-/// offset's per-sample turn small enough for the curvature guard to pass on
-/// anything that is not genuinely hooked.
-const SAMPLE_FRAC: f64 = 0.015;
+/// The same 0.01*R0 Hobbs uses and the facet cuts use. Three canonical
+/// units: short enough that the trace resolves a curving crest, long enough
+/// that a 160-unit mark is 50 steps rather than 500.
+const STEP_FRAC: f64 = 0.01;
+
+/// How far the crest may turn in one step, radians.
+///
+/// A crest direction comes from diagonalising a Hessian, and near a point
+/// where the two principal curvatures are equal the eigenvectors are
+/// undefined and swing arbitrarily. Without a rate limit the trace takes
+/// that swing literally and the mark kinks. 0.11 rad over a 3-unit step is
+/// a floor of 27 units on the mark's curvature radius - well inside what
+/// the offset can take, and still enough to follow a real crease round a
+/// lump.
+const MAX_STEP_TURN: f64 = 0.11;
+
+/// Total absolute turning a mark may accumulate, radians (80 degrees).
+///
+/// The crest direction comes from an eigen-decomposition of a field with
+/// swirl in it, so a trace left to itself will happily curl round into a
+/// fishhook - and a fold in a rock does not hook. Measured on Anya's: it
+/// runs (298.2, 125.1) to (313.4, 75.0) to (292.9, 47.2), which is a turn
+/// of 53 degrees over its length. 80 allows that and a little more, and
+/// TRUNCATES rather than rejects, so a crease that starts well and curls
+/// later is drawn up to the point where it stops being a fold.
+const MAX_TOTAL_TURN: f64 = 1.396_263_401_595_463_7;
+
+/// Fraction of its starting strength at which a fold is over.
+///
+/// This is what makes the length come from the rock: the trace stops when
+/// the crease it is drawing has faded to a quarter of what it was at the
+/// rim, so a mark is as long as its fold and no longer.
+const FADE_FRAC: f64 = 0.25;
+
+/// Shortest mark worth drawing, as a fraction of R0.
+///
+/// Anya's is 0.535 of the mean radius. Letting a trace stop at 0.18 gave
+/// five logos in sixteen a 60-unit tick sitting against the rim, which
+/// reads as a blemish in the ink rather than as relief - the mark has to be
+/// long enough to be legible as a line before it can be read as a fold.
+/// 0.30 is a little over half the measured length, and it is a FLOOR, not a
+/// target: the ranking below prefers longer still.
+const MIN_LEN_FRAC: f64 = 0.30;
+
+/// How many candidates are built before the best are chosen. The rim yields
+/// a handful of crests and only `relief_lines` are drawn; this bounds the
+/// work when a craggy seed yields many.
+const MAX_BUILT: usize = 8;
+
+/// Cap on the walk back out to the ink, in ribbon widths.
+///
+/// The probe sits [`RIM_PROBE_INSET`] in and the crest may run up to 55
+/// degrees off radial, so the walk needs at most `1.6 / cos(55 deg)` = 2.8
+/// widths; 4.0 is that with slack. A cap is needed rather than just a step
+/// budget because the walk can head outward into a NOTCH, where stepping
+/// away from the centre leaves the radius falling for a while and the loop
+/// runs on - measured, one candidate reached 240 units against a 162-unit
+/// mark. A candidate that cannot reach the ink inside the cap is dropped,
+/// which is the right answer: its crest does not meet the rim.
+const MAX_ANCHOR_FRAC: f64 = 4.0;
+
+/// Rim positions probed for a fold, per logo.
+///
+/// One every two degrees. The crests that reach the rim are a handful of
+/// features tens of units wide, so this resolves them several times over
+/// and the local-maximum pass below collapses each to one candidate.
+const RIM_PROBES: usize = 180;
+
+/// How far inside the ribbon's midline a rim probe sits, in ribbon widths.
+///
+/// Far enough in that the probe's Hessian stencil - which reaches `h` in
+/// each axis and `h*sqrt(2)` to its corners, 17 units at the default - stays
+/// inside the silhouette, where the depth map has a surface. Sampling past
+/// it is not an error (the map clamps to the rim) but it biases every
+/// second difference toward the rim's own roll-off, which is the one
+/// feature the inward test exists to reject.
+///
+/// The mark does not START here, though: it is anchored back out to the ink
+/// afterwards, see `anchor_to_ink`.
+const RIM_PROBE_INSET: f64 = 1.6;
+
+/// Half-width of the window, in probes, a candidate must be the strongest
+/// fold within. Stops one broad crest from yielding five marks.
+const PEAK_WINDOW: usize = 6;
+
+/// How far a mark's waist may stray from `relief_weight`, either way.
+///
+/// The artwork gives one sample, so its 0.58 of the outline is the CENTRE of
+/// the band rather than the whole of it; a sharper fold gets a heavier line,
+/// the way it would be drawn. Part 1 makes the same point about the gas
+/// holes: giving every one the same lobe count is the most obvious tell of
+/// a naive generator.
+const WIDTH_SPREAD: f64 = 0.22;
+
+/// cos(55 degrees): how far off inward-radial a crest may run and still be
+/// taken for a fold rather than for the rim.
+///
+/// This is the test that separates the rock's creases from its own edge. A
+/// rim roll-off has a crest as surely as a fold does - it is the strongest
+/// one anywhere on the shape, because that is where the surface turns away
+/// fastest - but its crest runs ALONG the rim, and a line drawn there reads
+/// as a nick in the ink. Anya's leaves the rim 29 degrees off radial:
+/// measured, from (292.9, 47.2) on the top rim to (298.2, 125.1) inside the
+/// body, against a radius through the body centroid at (233.3, 172.1). 55
+/// is twice that, which admits a diagonal fold without admitting a tangent.
+const INWARD_COS: f64 = 0.573_576_436_351_046;
 
 /// How many half-widths of curvature radius the centreline must have.
 ///
-/// Offsetting a polyline by `h` folds the inner side over itself wherever the
-/// local curvature radius drops below `h`. 2.5 leaves margin for the
+/// Offsetting a polyline by `h` folds the inner side over itself wherever
+/// the local curvature radius drops below `h`. 2.5 leaves margin for the
 /// Catmull-Rom fit, which can bulge a handle slightly past the polyline.
 const MIN_CURVE_RATIO: f64 = 2.5;
 
 /// Minimum clearance from a mark to a vesicle, in half-widths.
 ///
-/// A relief line that runs into a gas hole reads as a crack through it rather
+/// A relief line running into a gas hole reads as a crack through it rather
 /// than as a fold of the surface, and the artwork has nothing like it: its
 /// mark's nearest vesicle is 35 units away, six waists.
 const VESICLE_CLEAR: f64 = 2.0;
@@ -76,49 +188,47 @@ const VESICLE_CLEAR: f64 = 2.0;
 /// language from a flat three-tone mark.
 const MARK_SEP_FRAC: f64 = 0.30;
 
-/// cos(55 degrees): how far off inward-radial a mark may leave the rim.
-///
-/// Without this the pass picks marks that run TANGENTIALLY, just inside the
-/// outline, because that is where the brightness changes fastest - and a
-/// line hugging the rim reads as a nick in the ink rather than as a fold of
-/// the surface. Anya's leaves the rim 29 degrees off radial: measured, from
-/// (292.9, 47.2) on the top rim to (298.2, 125.1) inside the body, against a
-/// radius through the body centroid at (233.3, 172.1). 55 degrees is twice
-/// that, which admits a diagonal fold without admitting a tangent.
-const INWARD_COS: f64 = 0.573_576_436_351_046;
-
 /// Positions along a mark where the tones either side of it are compared,
 /// as fractions of its length.
 ///
-/// A mark has to land on a TONE STEP, or it reads as a scratch lying on the
-/// surface rather than as the fold the surface makes. The artwork's does:
-/// its mark runs down the edge of the top-centre peak, with a different
-/// orange either side of it for its whole length. Requiring the step is also
-/// what ties this pass to the other two - the cut was chosen to sit on the
-/// solid's median brightness contour, and the tones were quantised from the
-/// same surface, so a mark that finds a step is a mark on a real fold.
+/// A mark that lands on a TONE STEP reads better - Anya's does, running down
+/// the edge of the top-centre peak with a different orange either side of
+/// it for its whole length - and it is also the sign that the three passes
+/// agree, since the cuts lean along the same surface's iso-brightness lines
+/// and the tones are quantised from the same normals.
+///
+/// It is a PREFERENCE and not a rule, though, and that is a change: while
+/// the mark was a facet cut it was a tone boundary by construction, so
+/// requiring one cost nothing. A crest traced through the surface need not
+/// follow a cut, and demanding a step then threw away 166 good candidates
+/// over 28 scenes and left only a third of logos with a mark at all. The
+/// mark's justification is the FOLD; the tone step just breaks ties.
 const TONE_PROBES: [f64; 3] = [0.3, 0.55, 0.8];
+
 /// How far either side of the spine those probes sit, in half-widths. Clear
 /// of the mark's own ink, so a probe reads the facet rather than the line.
 const TONE_PROBE_REACH: f64 = 2.2;
 
-/// Samples at each end of a candidate that the crease score ignores.
-///
-/// The first few sit inside the ink band, where the depth map's own rim row
-/// is the end of the parameterisation rather than a feature of the rock.
-const SCORE_SKIP: usize = 3;
+/// How much a candidate's score is multiplied by when it straddles a tone
+/// step. Enough to outrank a slightly sharper crease that does not.
+const TONE_STEP_BONUS: f64 = 1.35;
 
-/// How far into the ink band a candidate's rim end must reach to count as
-/// growing out of the outline, as a fraction of the ribbon width.
+/// The fold strength, in units of `1/R0^2`, that maps to the measured waist.
 ///
-/// The facet root sits on the ribbon's MIDLINE, so a cut that ends on the
-/// root ends halfway through the ink and the mark emerges from it seamlessly,
-/// exactly as measured. A cut that ends on an earlier cut instead - an
-/// interior junction, about half of them - is strictly inside that, and a
-/// mark starting there would float with a tapered point hanging in the
-/// orange. Testing the ink band rather than tracking provenance through the
-/// subdivision tests the property that actually matters.
-const RIM_BAND_FRAC: f64 = 0.25;
+/// A GLOBAL reference, not this logo's own median, and the difference is the
+/// whole point. Normalising per logo makes the mark's width depend on where
+/// it sits in its own logo's distribution - and since the strongest crease
+/// is always the one drawn, that is nearly constant, which is how the first
+/// attempt ended up with every mark the same width again. Against a fixed
+/// scale, a seed whose creases are genuinely sharper gets a genuinely
+/// heavier line.
+///
+/// Measured: over 50 seeds the selected fold's `strength * R0^2` runs 161 at
+/// the 10th percentile, 245 at the median and 356 at the 90th. Referencing
+/// the median puts the typical mark at the measured waist and the tails at
+/// 0.81 and 1.21 of it - just inside [`WIDTH_SPREAD`], so the clamp catches
+/// outliers without flattening the range.
+const WIDTH_REF_STRENGTH: f64 = 245.0;
 
 /// One finished relief mark.
 #[derive(Clone, Debug)]
@@ -131,29 +241,21 @@ pub struct Relief {
     pub cubics: Vec<Cubic>,
     /// Waist width in canonical units.
     pub width: f64,
-    /// Mean brightness gradient along the spine, times R0 - the crease
-    /// strength this mark was chosen for.
+    /// The fold strength this mark was chosen for: the larger principal
+    /// curvature of the brightness at its rim end, in units of `1/length^2`.
     pub score: f64,
     /// Handles the Bezier clamp caught.
     pub clamped: usize,
 }
 
-/// A facet cut, kept so the relief pass can look for creases along it.
-#[derive(Clone, Debug)]
-pub struct Cut {
-    /// The cut polyline, both ends exactly on the region boundary they
-    /// crossed.
-    pub pts: Vec<V2>,
-}
-
-/// Choose and build up to `p.relief_lines` marks.
+/// Find the rock's strongest creases and draw up to `p.relief_lines` of
+/// them.
 ///
 /// `root` is the facet root ring - the ribbon's midline - which is what the
-/// rim test measures against.
-#[must_use]
+/// rim probes and the inside test measure against.
 #[allow(clippy::too_many_arguments)]
+#[must_use]
 pub fn build(
-    cuts: &[Cut],
     root: &Ring,
     depth: &DepthMap,
     light: &Light,
@@ -166,70 +268,100 @@ pub fn build(
     if p.relief_lines == 0 || p.relief_weight <= 0.0 {
         return Vec::new();
     }
-    let width = p.relief_weight * r0;
-    let half = 0.5 * width;
-    let spacing = (SAMPLE_FRAC * r0).max(1e-6);
-    let want_len = p.relief_len * r0;
-    let grad_h = GRAD_H_FRAC * r0;
+    let h = GRAD_H_FRAC * r0;
+    let step = STEP_FRAC * r0;
+    let max_len = p.relief_len * r0;
+    let min_len = MIN_LEN_FRAC * r0;
 
-    // Every rim end of every cut is a candidate, scored by how hard the
-    // surface tilts across it.
-    let mut cands: Vec<(f64, Vec<V2>)> = Vec::new();
-    for cut in cuts {
-        if cut.pts.len() < 3 {
+    // ---- where the folds meet the rim
+    //
+    // One probe every two degrees, just inside the ink. A probe qualifies
+    // when the crest there heads INTO the body: a rim roll-off has a crest
+    // too, running along the rim, and it is the strongest "fold" anywhere on
+    // the shape - so the inward test is what separates the rock's creases
+    // from its own edge, and it does it before any strength is compared.
+    let mut probes: Vec<Option<(f64, V2, V2)>> = Vec::with_capacity(RIM_PROBES);
+    for i in 0..RIM_PROBES {
+        let theta = crate::math::TAU * i as f64 / RIM_PROBES as f64;
+        let (st, ct) = crate::math::sin_cos(theta);
+        let dir = V2::new(ct, st);
+        let rim = root.radius_toward(dir);
+        let q = root.c + dir * (rim - RIM_PROBE_INSET * w0);
+        let Some(f) = depth.fold(q, light, h) else {
+            probes.push(None);
+            continue;
+        };
+        // The crest has no heading of its own; take the one that goes in.
+        let inward = -dir;
+        let along = if f.along.dot(inward) < 0.0 {
+            -f.along
+        } else {
+            f.along
+        };
+        if along.dot(inward) < INWARD_COS {
+            probes.push(None);
             continue;
         }
-        for from_start in [true, false] {
-            let mut spine: Vec<V2> = if from_start {
-                cut.pts.clone()
-            } else {
-                cut.pts.iter().rev().copied().collect()
-            };
-            // Does this end emerge from the ink?
-            let end = spine[0];
-            let d = end - root.c;
-            if d.len() < root.radius_toward(d) - RIM_BAND_FRAC * w0 {
-                continue;
-            }
-            spine = truncate(&spine, want_len, spacing);
-            if spine.len() < 4 || polyline_len(&spine) < 0.5 * want_len {
-                continue;
-            }
-            // And does it head INTO the body rather than along the rim?
-            let inward = (root.c - end).norm();
-            if (spine[1] - spine[0]).norm().dot(inward) < INWARD_COS {
-                continue;
-            }
-            let score = crease_score(&spine, depth, light, grad_h, r0);
-            cands.push((score, spine));
-        }
+        probes.push(Some((f.strength, q, along)));
     }
 
-    // Strongest crease first, with a length tie-break so two equal scores
-    // order the same way on every platform.
-    cands.sort_by(|a, b| {
-        b.0.total_cmp(&a.0)
-            .then(polyline_len(&b.1).total_cmp(&polyline_len(&a.1)))
-    });
+    // Local maxima only, so one broad crest yields one mark.
+    let mut cands: Vec<(f64, V2, V2)> = Vec::new();
+    for i in 0..RIM_PROBES {
+        let Some((s_i, q, along)) = probes[i] else {
+            continue;
+        };
+        let peak = (1..=PEAK_WINDOW).all(|d| {
+            let a = probes[(i + d) % RIM_PROBES].map_or(0.0, |x| x.0);
+            let b = probes[(i + RIM_PROBES - d) % RIM_PROBES].map_or(0.0, |x| x.0);
+            // Strictly greater one way, so a plateau yields its first probe
+            // and not all of them.
+            s_i > a && s_i >= b
+        });
+        if peak {
+            cands.push((s_i, q, along));
+        }
+    }
+    if cands.is_empty() {
+        return Vec::new();
+    }
+    cands.sort_by(|a, b| b.0.total_cmp(&a.0));
 
-    let mut out: Vec<Relief> = Vec::new();
-    for (score, spine) in cands {
-        if out.len() >= p.relief_lines as usize {
+    // The trace needs a clearance before the width is known, and the width
+    // needs the trace. The nominal half-width is within 22% of the real one
+    // either way, which is well inside the two half-widths of margin the
+    // vesicle rule asks for.
+    let half_hint = 0.5 * p.relief_weight * r0;
+
+    // Two passes, so a tone step can promote a candidate without a hard
+    // rule throwing the others away: everything that survives the geometry
+    // is built once, scored with the bonus, and the best kept.
+    let mut built: Vec<(f64, Relief)> = Vec::new();
+    for (strength, seed, along) in cands {
+        if built.len() >= MAX_BUILT {
             break;
         }
+        let mut spine = anchor_to_ink(seed, along, root, step, w0);
+        let anchored = spine.len();
+        spine.extend(trace(
+            seed, along, depth, light, root, vesicles, h, step, max_len, strength, half_hint,
+        ));
+        if anchored == 0 || polyline_len(&spine) < min_len || spine.len() < 4 {
+            continue;
+        }
+        // A sharper crease is drawn heavier. Square root, because strength
+        // is a second derivative and noisy; clamped, because the measured
+        // 0.58 of the outline is the centre of the band and not a licence.
+        let scale = (strength * r0 * r0 / WIDTH_REF_STRENGTH)
+            .sqrt()
+            .clamp(1.0 - WIDTH_SPREAD, 1.0 + WIDTH_SPREAD);
+        let width = p.relief_weight * r0 * scale;
+        let half = 0.5 * width;
+
         if !curvature_ok(&spine, half) {
             continue;
         }
         if hits_a_vesicle(&spine, vesicles, half * VESICLE_CLEAR) {
-            continue;
-        }
-        if !straddles_a_tone_step(&spine, facets, half * TONE_PROBE_REACH) {
-            continue;
-        }
-        if out
-            .iter()
-            .any(|m| min_spine_gap(&spine, &m.spine) < MARK_SEP_FRAC * r0)
-        {
             continue;
         }
         let pts = ribbon(&spine, width);
@@ -238,84 +370,167 @@ pub fn build(
         }
         let mut cubics = catmull_rom_closed(&pts, p.cr_tension);
         let clamped = clamp_handles(&mut cubics);
-        out.push(Relief {
-            spine,
-            pts,
-            cubics,
-            width,
-            score,
-            clamped,
-        });
+        // Sharpness, weighted by length and by whether the shading already
+        // agrees there.
+        //
+        // Length counts as its SQUARE ROOT against sharpness linearly. A
+        // long crease is a more significant feature of a rock than a sharp
+        // short one, and the measured mark is long - 0.535 of the mean
+        // radius; ranking on sharpness alone picks the sharpest fold
+        // wherever it is, which is often a small one. The root tips the
+        // choice toward the feature a person would have drawn without
+        // letting length override sharpness entirely, and it is a root
+        // rather than a `powf` because the house rule keeps libm out of
+        // the crate.
+        let rank = strength
+            * (polyline_len(&spine) / r0).max(1e-9).sqrt()
+            * if straddles_a_tone_step(&spine, facets, half * TONE_PROBE_REACH) {
+                TONE_STEP_BONUS
+            } else {
+                1.0
+            };
+        built.push((
+            rank,
+            Relief {
+                spine,
+                pts,
+                cubics,
+                width,
+                score: strength,
+                clamped,
+            },
+        ));
     }
-    out
-}
 
-/// Resample the head of `spine` to uniform spacing, stopped at `want` of
-/// arclength.
-fn truncate(spine: &[V2], want: f64, spacing: f64) -> Vec<V2> {
-    let mut out = vec![spine[0]];
-    let mut carry = 0.0;
-    let mut total = 0.0;
-    for w in spine.windows(2) {
-        let (a, b) = (w[0], w[1]);
-        let seg = (b - a).len();
-        if seg <= 1e-12 {
+    built.sort_by(|a, b| {
+        b.0.total_cmp(&a.0)
+            .then(polyline_len(&b.1.spine).total_cmp(&polyline_len(&a.1.spine)))
+    });
+    let mut out: Vec<Relief> = Vec::new();
+    for (_, m) in built {
+        if out.len() >= p.relief_lines as usize {
+            break;
+        }
+        // Spacing is decided here rather than during the build, so a weaker
+        // mark cannot reserve the space a stronger one wanted.
+        if out
+            .iter()
+            .any(|k| min_spine_gap(&m.spine, &k.spine) < MARK_SEP_FRAC * r0)
+        {
             continue;
         }
-        let mut t = spacing - carry;
-        while t <= seg {
-            if total + t > want {
-                return out;
-            }
-            out.push(a + (b - a) * (t / seg));
-            t += spacing;
-        }
-        carry = seg - (t - spacing);
-        total += seg;
-        if total >= want {
-            return out;
-        }
+        out.push(m);
     }
     out
 }
 
-/// How hard the surface FOLDS along the spine: the mean curvature of the
-/// brightness measured across it, in units of 1/R0^2.
+/// The run from the outline ink out to `seed`, so the mark starts buried in
+/// the ribbon rather than floating a probe's inset inside it.
 ///
-/// The second derivative, not the first, and the difference matters more than
-/// it sounds. The brightness gradient is largest near the rim, where the
-/// surface rolls away from the viewer, and it is large there whether or not
-/// anything interesting is happening - so scoring by the gradient picks the
-/// candidate that spends longest near the rim, every time. Measured on the
-/// first twelve seeds: every mark chosen that way ran tangentially, a couple
-/// of ink widths inside the outline, which reads as a nick in the ink.
+/// The fold has to be measured where its Hessian is well conditioned, which
+/// is a little inside the rim; the mark has to START in the ink, which is
+/// where the measurement is worst. So the two are separated: probe inside,
+/// then walk back out along the crest's own direction to the ribbon's
+/// midline. The first stretch of the mark is therefore straight, which is
+/// how such a line is drawn anyway - it leaves the outline and then picks up
+/// the form - and the taper covers most of it.
 ///
-/// A fold is a place where the gradient CHANGES fast, and a smooth rim
-/// roll-off is not one however steep it is. Sampling the brightness at the
-/// spine and one step either side of it, across the spine, measures exactly
-/// that for three lookups a sample.
-fn crease_score(spine: &[V2], depth: &DepthMap, light: &Light, h: f64, r0: f64) -> f64 {
-    let n = spine.len();
-    if n < 2 * SCORE_SKIP + 3 {
-        return 0.0;
+/// Returns the points from the ink inward, `seed` excluded, or empty if the
+/// walk cannot reach the ink.
+fn anchor_to_ink(seed: V2, along: V2, root: &Ring, step: f64, w0: f64) -> Vec<V2> {
+    let mut back = Vec::new();
+    let mut q = seed;
+    let budget = ((MAX_ANCHOR_FRAC * w0 / step).ceil() as usize).max(2);
+    // To the MIDLINE, which is where `root` is. A step can overshoot it by
+    // three units, so the tip lands within a fifth of a ribbon width of the
+    // middle of the ink - buried, with the band's outer half still to
+    // spare, and never proud of the silhouette.
+    for _ in 0..budget {
+        let next = q - along * step;
+        let d = next - root.c;
+        back.push(next);
+        if d.len() >= root.radius_toward(d) {
+            back.reverse();
+            return back;
+        }
+        q = next;
     }
-    let mut acc = 0.0;
-    let mut count = 0.0;
-    for i in SCORE_SKIP..n - SCORE_SKIP {
-        let t = (spine[(i + 1).min(n - 1)] - spine[i.saturating_sub(1)]).norm();
-        let nrm = t.perp() * h;
-        let b0 = depth.brightness(spine[i] - nrm, light);
-        let b1 = depth.brightness(spine[i], light);
-        let b2 = depth.brightness(spine[i] + nrm, light);
-        acc += (b2 - 2.0 * b1 + b0).abs();
-        count += 1.0;
+    Vec::new()
+}
+
+/// Walk the crest inward from `seed` until the fold fades, the body ends, or
+/// `max_len` is spent.
+///
+/// Three things have to be carried along the walk. The crest direction comes
+/// out of an eigen-decomposition and so has no SIGN - it has to be oriented
+/// against the previous step every time, or the trace reverses the moment
+/// the eigenvector flips. The turn is RATE LIMITED, because where the two
+/// principal curvatures are equal the eigenvectors are undefined and swing
+/// arbitrarily. And the fold's strength at the start sets the bar for
+/// stopping, which is what makes a mark as long as its own crease.
+#[allow(clippy::too_many_arguments)]
+fn trace(
+    seed: V2,
+    along: V2,
+    depth: &DepthMap,
+    light: &Light,
+    root: &Ring,
+    vesicles: &[Vesicle],
+    h: f64,
+    step: f64,
+    max_len: f64,
+    s0: f64,
+    clear: f64,
+) -> Vec<V2> {
+    let mut pts = vec![seed];
+    let mut p = seed;
+    let mut dir = along;
+    let mut len = 0.0;
+    let mut turned = 0.0;
+    let floor = FADE_FRAC * s0;
+    while len < max_len {
+        let next = p + dir * step;
+        // Inside the body, with room for the mark's own half-width.
+        let d = next - root.c;
+        if d.len() > root.radius_toward(d) {
+            break;
+        }
+        // A hole STOPS the mark rather than disqualifying it. A crease
+        // that runs up to a vesicle is a real crease; it is only the line
+        // crossing the hole that would read as a crack through it, and
+        // ending the stroke short is what an illustrator would do anyway.
+        if hits_a_vesicle(&[next], vesicles, clear * VESICLE_CLEAR) {
+            break;
+        }
+        let Some(f) = depth.fold(next, light, h) else {
+            break;
+        };
+        if f.strength < floor {
+            break;
+        }
+        let mut want = if f.along.dot(dir) < 0.0 {
+            -f.along
+        } else {
+            f.along
+        };
+        // Rate limit, as an exact rotation onto the cone boundary: a unit
+        // `want` is `dir*c + dir.perp()*s` with `c^2 + s^2 = 1`, so clamping
+        // is a matter of rebuilding it with the limit values and `s`'s sign.
+        let c = dir.dot(want);
+        if c < MAX_STEP_TURN.cos() {
+            let sgn = if dir.cross(want) < 0.0 { -1.0 } else { 1.0 };
+            want = (dir * MAX_STEP_TURN.cos() + dir.perp() * (MAX_STEP_TURN.sin() * sgn)).norm();
+        }
+        turned += crate::math::angle_between(dir, want);
+        if turned > MAX_TOTAL_TURN {
+            break;
+        }
+        dir = want;
+        pts.push(next);
+        len += step;
+        p = next;
     }
-    if count == 0.0 {
-        return 0.0;
-    }
-    // Divided by h^2 and scaled to R0^2, so the number means the same thing
-    // whatever R0 is.
-    acc / count / (h * h) * r0 * r0
+    pts
 }
 
 /// Is the spine straight enough to be offset by `half` without folding?
@@ -507,18 +722,5 @@ mod tests {
             })
             .collect();
         assert!(!curvature_ok(&hook, 5.0));
-    }
-
-    /// `truncate` stops at the asked-for arclength and resamples evenly.
-    #[test]
-    fn truncate_stops_at_the_length_asked_for() {
-        let spine = straight(200, 3.0);
-        let out = truncate(&spine, 100.0, 4.0);
-        let len = polyline_len(&out);
-        assert!(len <= 100.0 + 1e-9, "overran: {len}");
-        assert!(len > 90.0, "stopped short: {len}");
-        for w in out.windows(2) {
-            assert!(((w[1] - w[0]).len() - 4.0).abs() < 1e-9);
-        }
     }
 }
