@@ -182,6 +182,161 @@ impl Neg for V2 {
     }
 }
 
+/// A point or direction in the 3D body space the solid is built in.
+///
+/// `z` points AT THE VIEWER. `x` and `y` are the SVG image plane, so `y` is
+/// down; that makes `(x, y, z)` left-handed, which is why [`V3::cross`] is
+/// only ever used through [`V3::surface_normal`] — it fixes the sign once, in
+/// one place, instead of leaving every caller to get the handedness right.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct V3 {
+    /// Rightward, as in the image.
+    pub x: f64,
+    /// DOWNWARD, as in the image.
+    pub y: f64,
+    /// Toward the viewer.
+    pub z: f64,
+}
+
+impl V3 {
+    /// A vector from its components.
+    #[inline]
+    #[must_use]
+    pub const fn new(x: f64, y: f64, z: f64) -> V3 {
+        V3 { x, y, z }
+    }
+
+    /// The unit direction at image-plane angle `theta` tilted `u` out of the
+    /// plane toward the viewer.
+    ///
+    /// This is the ONE parameterisation the solid is sampled through, and the
+    /// reason it is a named constructor: every direction whose projection onto
+    /// the image plane points along `theta` is `dir(theta, u)` for some `u`,
+    /// and its projected radius is just `R * cos u`. That is what turns the
+    /// silhouette into a one-dimensional maximisation per angle, and with it
+    /// the whole star-shapedness argument the crate rests on.
+    #[inline]
+    #[must_use]
+    pub fn dir(theta: f64, u: f64) -> V3 {
+        let (st, ct) = sin_cos(theta);
+        V3::dir_at(st, ct, u)
+    }
+
+    /// [`V3::dir`] with the angle's sine and cosine already in hand.
+    ///
+    /// Both hot loops over the solid sweep `u` at a FIXED `theta`, so
+    /// recomputing the angle's sine and cosine per sample doubles the
+    /// trigonometry in the two places that dominate the whole render.
+    #[inline]
+    #[must_use]
+    pub fn dir_at(theta_sin: f64, theta_cos: f64, u: f64) -> V3 {
+        let (su, cu) = sin_cos(u);
+        V3::new(theta_cos * cu, theta_sin * cu, su)
+    }
+
+    /// Squared length — no `sqrt`, for comparisons.
+    #[inline]
+    #[must_use]
+    pub fn len2(self) -> f64 {
+        self.x * self.x + self.y * self.y + self.z * self.z
+    }
+
+    /// Euclidean length. `sqrt`, never `hypot`: `hypot` is libm.
+    #[inline]
+    #[must_use]
+    pub fn len(self) -> f64 {
+        self.len2().sqrt()
+    }
+
+    /// Unit vector; the zero vector maps to itself.
+    #[inline]
+    #[must_use]
+    pub fn norm(self) -> V3 {
+        let l = self.len();
+        if l > 0.0 {
+            self * (1.0 / l)
+        } else {
+            self
+        }
+    }
+
+    /// Dot product.
+    #[inline]
+    #[must_use]
+    pub fn dot(self, o: V3) -> f64 {
+        self.x * o.x + self.y * o.y + self.z * o.z
+    }
+
+    /// Cross product, right-handed in the component algebra.
+    #[inline]
+    #[must_use]
+    pub fn cross(self, o: V3) -> V3 {
+        V3::new(
+            self.y * o.z - self.z * o.y,
+            self.z * o.x - self.x * o.z,
+            self.x * o.y - self.y * o.x,
+        )
+    }
+
+    /// The image-plane part, dropping depth.
+    #[inline]
+    #[must_use]
+    pub fn xy(self) -> V2 {
+        V2::new(self.x, self.y)
+    }
+
+    /// The outward unit normal of a surface spanned by two tangents.
+    ///
+    /// `outward` is any vector known to point out of the solid — the radial
+    /// direction does, for a star-shaped body — and the result is flipped to
+    /// agree with it. Fixing the sign against a reference rather than against
+    /// the parameterisation's handedness is what stops a `(theta, u)` ordering
+    /// slip from inverting the lighting, which is a bug that looks like an
+    /// artistic choice.
+    #[inline]
+    #[must_use]
+    pub fn surface_normal(t1: V3, t2: V3, outward: V3) -> V3 {
+        let n = t1.cross(t2).norm();
+        if n.dot(outward) < 0.0 {
+            -n
+        } else {
+            n
+        }
+    }
+}
+
+impl Add for V3 {
+    type Output = V3;
+    #[inline]
+    fn add(self, o: V3) -> V3 {
+        V3::new(self.x + o.x, self.y + o.y, self.z + o.z)
+    }
+}
+
+impl Sub for V3 {
+    type Output = V3;
+    #[inline]
+    fn sub(self, o: V3) -> V3 {
+        V3::new(self.x - o.x, self.y - o.y, self.z - o.z)
+    }
+}
+
+impl Mul<f64> for V3 {
+    type Output = V3;
+    #[inline]
+    fn mul(self, k: f64) -> V3 {
+        V3::new(self.x * k, self.y * k, self.z * k)
+    }
+}
+
+impl Neg for V3 {
+    type Output = V3;
+    #[inline]
+    fn neg(self) -> V3 {
+        V3::new(-self.x, -self.y, -self.z)
+    }
+}
+
 // ---------------------------------------------------------------- trigonometry
 
 #[inline]

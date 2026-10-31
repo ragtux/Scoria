@@ -7,7 +7,7 @@
 //! machinery. Perlin 2D needs no trig, no `sqrt` and no float table beyond
 //! eight hard-coded gradients, so it is trivially bit-exact.
 
-use crate::math::V2;
+use crate::math::{V2, V3};
 use crate::rng::Pcg32;
 
 /// `1/sqrt(2)`, a compile-time constant so the diagonal gradients never go
@@ -30,6 +30,35 @@ const GRAD8: [(f64, f64); 8] = [
 /// Raw 2D Perlin peaks at `±1/sqrt(2)`; this scales it to roughly `±1`.
 const PERLIN_SCALE: f64 = std::f64::consts::SQRT_2;
 
+/// Perlin's own twelve 3D gradients: the midpoints of a cube's edges.
+///
+/// All twelve have length `sqrt(2)` exactly, in integer components, so the
+/// dot product is three multiplies and no `sqrt` anywhere — and because the
+/// set is closed under the cube's symmetry group there is no directional
+/// bias to show up as a grain on the solid. The classic reference adds four
+/// repeats to pad the table to sixteen so the index can be a mask; indexing
+/// twelve through [`Pcg32::below`]-shuffled bytes needs no padding and no
+/// `% 12` in the hot path, because the permutation is folded at build time.
+const GRAD12: [(f64, f64, f64); 12] = [
+    (1.0, 1.0, 0.0),
+    (-1.0, 1.0, 0.0),
+    (1.0, -1.0, 0.0),
+    (-1.0, -1.0, 0.0),
+    (1.0, 0.0, 1.0),
+    (-1.0, 0.0, 1.0),
+    (1.0, 0.0, -1.0),
+    (-1.0, 0.0, -1.0),
+    (0.0, 1.0, 1.0),
+    (0.0, -1.0, 1.0),
+    (0.0, 1.0, -1.0),
+    (0.0, -1.0, -1.0),
+];
+
+/// Raw 3D Perlin on the twelve `sqrt(2)`-length gradients peaks near
+/// `±0.866`; this scales it to roughly `±1` so `Fbm` normalisation and
+/// [`crate::body::unit_fbm`] mean the same thing in 2D and in 3D.
+const PERLIN3_SCALE: f64 = 1.154_700_538_379_251_5;
+
 /// Quintic fade, `6t^5 - 15t^4 + 10t^3`.
 ///
 /// The cubic `3t^2 - 2t^3` is C1 but not C2, and the second-derivative seam
@@ -49,6 +78,12 @@ fn lerp(a: f64, b: f64, t: f64) -> f64 {
 fn grad(h: u8, x: f64, y: f64) -> f64 {
     let g = GRAD8[(h & 7) as usize];
     g.0 * x + g.1 * y
+}
+
+#[inline]
+fn grad3(h: u8, x: f64, y: f64, z: f64) -> f64 {
+    let g = GRAD12[(h % 12) as usize];
+    g.0 * x + g.1 * y + g.2 * z
 }
 
 /// A seeded Perlin lattice: a 256-entry permutation, duplicated to 512 so the
@@ -112,6 +147,131 @@ impl Perlin {
         let x1 = lerp(grad(aa, xf, yf), grad(ba, xf - 1.0, yf), u);
         let x2 = lerp(grad(ab, xf, yf - 1.0), grad(bb, xf - 1.0, yf - 1.0), u);
         (lerp(x1, x2, v) * PERLIN_SCALE).clamp(-1.0, 1.0)
+    }
+
+    /// Sample the same lattice in three dimensions.
+    ///
+    /// The 512-entry table serves 3D unchanged: `perm[x] + y` reaches 510 at
+    /// worst, which is why the duplication to 512 exists in the first place.
+    /// Sharing one table with [`Perlin::at`] is deliberate — it is one
+    /// permutation per seed rather than two, and 2D and 3D samples of the
+    /// same lattice are not visibly correlated because nothing in the crate
+    /// ever samples both over the same coordinates.
+    #[must_use]
+    pub fn at3(&self, x: f64, y: f64, z: f64) -> f64 {
+        let xi = x.floor();
+        let yi = y.floor();
+        let zi = z.floor();
+        let xf = x - xi;
+        let yf = y - yi;
+        let zf = z - zi;
+        let xg = (xi as i64 & 255) as usize;
+        let yg = (yi as i64 & 255) as usize;
+        let zg = (zi as i64 & 255) as usize;
+        let u = fade(xf);
+        let v = fade(yf);
+        let w = fade(zf);
+
+        let a = self.perm[xg] as usize + yg;
+        let b = self.perm[xg + 1] as usize + yg;
+        let aa = self.perm[a] as usize + zg;
+        let ab = self.perm[a + 1] as usize + zg;
+        let ba = self.perm[b] as usize + zg;
+        let bb = self.perm[b + 1] as usize + zg;
+
+        // The eight cube corners, folded x then y then z.
+        let x1 = lerp(
+            grad3(self.perm[aa], xf, yf, zf),
+            grad3(self.perm[ba], xf - 1.0, yf, zf),
+            u,
+        );
+        let x2 = lerp(
+            grad3(self.perm[ab], xf, yf - 1.0, zf),
+            grad3(self.perm[bb], xf - 1.0, yf - 1.0, zf),
+            u,
+        );
+        let y1 = lerp(x1, x2, v);
+        let x3 = lerp(
+            grad3(self.perm[aa + 1], xf, yf, zf - 1.0),
+            grad3(self.perm[ba + 1], xf - 1.0, yf, zf - 1.0),
+            u,
+        );
+        let x4 = lerp(
+            grad3(self.perm[ab + 1], xf, yf - 1.0, zf - 1.0),
+            grad3(self.perm[bb + 1], xf - 1.0, yf - 1.0, zf - 1.0),
+            u,
+        );
+        let y2 = lerp(x3, x4, v);
+        (lerp(y1, y2, w) * PERLIN3_SCALE).clamp(-1.0, 1.0)
+    }
+}
+
+/// fBm sampled on a SPHERE in 3D noise space.
+///
+/// The 2D silhouette gets its seamlessness by walking a circle in the noise
+/// plane; this is the same trick one dimension up, and in 3D it stops being a
+/// trick at all. A displacement field defined as a 3D function restricted to
+/// the unit sphere is single-valued at every direction by construction, so
+/// there is no seam anywhere on the solid — not at `theta = 0`, not at either
+/// pole, which is where a `(theta, u)`-domain noise would pinch.
+///
+/// `lobes` is in LOBES PER TURN around the equator, so it carries the same
+/// meaning as `lump_freq` did in the plane: the sample walks a sphere of
+/// radius `lobes / PI` in noise space, whose equator has circumference
+/// `2 * PI * lobes / PI` and therefore meets about `lobes` Perlin periods on
+/// the way round.
+#[derive(Clone, Debug)]
+pub struct SphereFbm {
+    offsets: Vec<V3>,
+    lacunarity: f64,
+    gain: f64,
+}
+
+impl SphereFbm {
+    /// Draw one noise-space offset per octave.
+    #[must_use]
+    pub fn new(rng: &mut Pcg32, octaves: u32, lacunarity: f64, gain: f64) -> SphereFbm {
+        let mut offsets = Vec::with_capacity(octaves.max(1) as usize);
+        for _ in 0..octaves.max(1) {
+            offsets.push(V3::new(
+                rng.range(-4096.0, 4096.0),
+                rng.range(-4096.0, 4096.0),
+                rng.range(-4096.0, 4096.0),
+            ));
+        }
+        SphereFbm {
+            offsets,
+            lacunarity,
+            gain,
+        }
+    }
+
+    /// Amplitude-normalised sum over octaves in unit direction `d`.
+    ///
+    /// `warp` displaces the noise LOOKUP, never the geometry: the result stays
+    /// a scalar function of direction, which is the invariant the solid's
+    /// star-shapedness — and through it the silhouette's — depends on.
+    #[must_use]
+    pub fn at(&self, p: &Perlin, d: V3, lobes: f64, warp: V3) -> f64 {
+        let mut f = lobes / crate::math::PI;
+        let mut a = 1.0;
+        let mut acc = 0.0;
+        let mut sum = 0.0;
+        for off in &self.offsets {
+            acc += a * p.at3(
+                d.x * f + warp.x + off.x,
+                d.y * f + warp.y + off.y,
+                d.z * f + warp.z + off.z,
+            );
+            sum += a;
+            a *= self.gain;
+            f *= self.lacunarity;
+        }
+        if sum > 0.0 {
+            acc / sum
+        } else {
+            0.0
+        }
     }
 }
 
@@ -187,7 +347,7 @@ impl Fbm {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::{sin_cos, TAU};
+    use crate::math::{sin_cos, TAU, V3};
     use crate::rng::stream;
 
     fn perlin(seed: u64) -> Perlin {
@@ -355,5 +515,75 @@ mod tests {
             acc
         };
         assert!(rough(&crusty) > rough(&smooth) * 1.5);
+    }
+
+    /// 3D Perlin has the same contract as the 2D lattice: zero at every
+    /// lattice point, inside `[-1, 1]` everywhere, and a pure function of
+    /// its inputs.
+    #[test]
+    fn perlin3_is_zero_on_the_lattice_and_bounded_off_it() {
+        let p = perlin(5);
+        for x in -4..4 {
+            for y in -4..4 {
+                for z in -4..4 {
+                    let v = p.at3(f64::from(x), f64::from(y), f64::from(z));
+                    assert!(v.abs() < 1e-12, "lattice point ({x},{y},{z}) gave {v}");
+                }
+            }
+        }
+        let mut hi: f64 = 0.0;
+        for i in 0..20000 {
+            let t = f64::from(i) * 0.011;
+            let v = p.at3(t, t * 1.37, t * 0.61);
+            assert!(v.is_finite() && v.abs() <= 1.0, "out of range: {v}");
+            hi = hi.max(v.abs());
+        }
+        // Scaled to use the range, not left peaking at 0.87.
+        assert!(hi > 0.8, "the scale constant is too small: peak {hi}");
+    }
+
+    /// The sphere-sampled fBm is seamless BY CONSTRUCTION, in every
+    /// direction - that is the whole reason the solid is displaced in 3D
+    /// rather than over a `(theta, u)` domain, which would pinch at the
+    /// poles. Walking a full turn of longitude and a full turn of
+    /// colatitude both have to come back to the same value.
+    #[test]
+    fn the_sphere_fbm_has_no_seam_anywhere() {
+        let mut rng = Pcg32::new(9, stream::BLOB);
+        let p = Perlin::new(&mut rng);
+        let f = SphereFbm::new(&mut rng, 4, 2.03, 0.45);
+        let z = V3::new(0.0, 0.0, 0.0);
+        let at = |th: f64, u: f64| f.at(&p, V3::dir(th, u), 2.6, z);
+
+        for &u in &[-1.2, -0.4, 0.0, 0.7, 1.3] {
+            let (a, b) = (at(0.0, u), at(TAU, u));
+            assert!((a - b).abs() < 1e-9, "longitude seam at u {u}: {a} vs {b}");
+        }
+        // Over the pole: dir(th, PI/2 - e) and dir(th + PI, PI/2 + e) are
+        // the same direction, so the field must agree there too.
+        for i in 0..8 {
+            let th = TAU * f64::from(i) / 8.0;
+            let e = 0.03;
+            let a = f.at(&p, V3::dir(th, crate::math::PI / 2.0 - e), 2.6, z);
+            let b = f.at(
+                &p,
+                V3::dir(th + crate::math::PI, crate::math::PI / 2.0 + e),
+                2.6,
+                z,
+            );
+            assert!((a - b).abs() < 1e-9, "pole seam at theta {th}: {a} vs {b}");
+        }
+    }
+
+    /// Same inputs, same bits - the whole crate's promise, at the one place
+    /// 3D noise enters it.
+    #[test]
+    fn perlin3_is_a_pure_function() {
+        let a = perlin(3);
+        let b = perlin(3);
+        for i in 0..500 {
+            let t = f64::from(i) * 0.37;
+            assert_eq!(a.at3(t, -t * 0.5, t * 2.1), b.at3(t, -t * 0.5, t * 2.1));
+        }
     }
 }

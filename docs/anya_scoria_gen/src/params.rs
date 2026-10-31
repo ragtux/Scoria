@@ -15,6 +15,59 @@ fn lerp(a: f64, b: f64, t: f64) -> f64 {
     a + (b - a) * t
 }
 
+/// How much silhouette AREA the projection adds at a given `lump_amp`,
+/// relative to the area at the default.
+///
+/// The maximum over the out-of-plane tilt can only add radius, and what it
+/// adds most of is where the displacement dipped - a notch is filled in by
+/// whatever tilt still has radius to offer, while a bump is already the
+/// maximum and gains nothing. So the silhouette gets ROUNDER as the
+/// displacement gets stronger, and with the mean radius normalised, rounder
+/// means more area.
+///
+/// Measured over 200 seeds at each of the three presets, as
+/// `area / (PI * R0^2)` after the limiter and the smoothing: 1.041 at
+/// `lump_amp` 0.120, 1.105 at 0.201, 1.206 at 0.300. Linear in `lump_amp` to
+/// within the noise, at 0.92 of area per unit of amplitude.
+///
+/// Vesicle sizes are fractions of R0, so they do not know about this, and
+/// coverage - a gated AREA ratio - falls as the body grows. Scaling the
+/// radii by the square root of the growth holds it.
+pub fn body_growth(lump_amp: f64) -> f64 {
+    let at = |a: f64| 1.041 + 0.92 * (a - 0.120);
+    at(lump_amp) / at(Params::default().lump_amp)
+}
+
+/// The in-plane aspect the base ELLIPSOID needs for the projected silhouette
+/// to come out at `aspect`.
+///
+/// The projection squares the shape up, and the mechanism is worth stating
+/// because it is not obvious. Along a given image angle the silhouette is the
+/// maximum of `R * cos u` over the out-of-plane tilt `u`, and how wide a
+/// window of `u` competes for that maximum depends on how sharply the
+/// ellipsoid's own radius falls off along that great circle. Along the LONG
+/// in-plane axis the fall-off to the depth axis is steep, so the window is
+/// narrow and the maximum sees little of the displacement; along the SHORT
+/// axis it is shallow, the window is wide, and the maximum is more likely to
+/// catch a big lump. So the short axis gains more radius than the long one,
+/// and the aspect drops.
+///
+/// Measured over 300 seeds at nine base aspects from 1.0 to 3.2, taking the
+/// median realised bbox aspect of the finished outline:
+///
+/// | base | 1.00 | 1.25 | 1.50 | 1.70 | 2.00 | 2.40 | 2.80 | 3.20 |
+/// |---|---|---|---|---|---|---|---|---|
+/// | realised | 1.01 | 1.20 | 1.38 | 1.51 | 1.70 | 1.99 | 2.26 | 2.51 |
+///
+/// Inverting that at the default gives a base of 1.69 for a realised 1.50,
+/// i.e. a gain of 1.38 on `aspect - 1`. The same constant lands within 3% of
+/// the request everywhere else in the parameter's range, which is an eighth
+/// of the bbox gate's own tolerance, so one constant is enough and a fitted
+/// curve would be false precision.
+pub fn base_aspect(aspect: f64) -> f64 {
+    1.0 + (aspect - 1.0) * 1.38
+}
+
 /// The lower bound `slope_limit` must respect at a given aspect.
 ///
 /// The base ellipse itself has `max|r'/r| = (aspect^2 - 1) / (2*aspect)`
@@ -115,6 +168,8 @@ pub struct Params {
     /// Width/height of the base ellipse. Semi-axes `R0*sqrt(a)` and
     /// `R0/sqrt(a)`, so the geometric mean radius is R0 at any aspect.
     pub aspect: f64,
+    /// How deep the solid is, as a fraction of its vertical semi-axis.
+    pub depth: f64,
     /// Canonical mean radius. Everything else is a fraction of it.
     pub r0: f64,
     /// viewBox padding around the silhouette's true bbox, as a fraction of R0.
@@ -154,8 +209,18 @@ pub struct Params {
     pub outline_weight: f64,
     /// Optional second concentric ribbon inside the first, fraction of R0.
     pub inner_rim: f64,
+    /// Interior relief marks: thin tapered lines down the sharpest creases of
+    /// the solid, each growing out of the outline ribbon.
+    pub relief_lines: u32,
+    /// Width of a relief mark at its waist, as a fraction of R0.
+    pub relief_weight: f64,
+    /// Centreline length of a relief mark, as a fraction of R0.
+    pub relief_len: f64,
     /// Number of bisections; regions = cuts + 1.
     pub facet_cuts: u32,
+    /// How strongly a facet cut follows the solid's iso-brightness lines
+    /// rather than the flow field.
+    pub facet_relief: f64,
     /// 0 = a frozen straight chord, 1 = a live flow-field trace.
     ///
     /// 0.25, against SPEC.md's table, which says 1.00. The table's own
@@ -177,7 +242,20 @@ pub struct Params {
     /// Target area share of shadow / mid / highlight, applied as quantiles.
     pub tone_fractions: [f64; 3],
     /// Direction of the tone gradient, radians, SVG coordinates (y down).
+    /// Direction the light comes from, in the image plane, radians.
+    ///
+    /// 2.30 rad, down and to the left. Measured as the axis through the three
+    /// tones' own visible-pixel centroids: (276.9, 135.3) dark to
+    /// (179.0, 244.9) light is the unit vector (-0.666, +0.746), which
+    /// SPEC.md Part 1 gives and which is 2.30 rad. The artwork is lit from
+    /// BELOW, which is what makes it read as glowing lava rather than as a
+    /// lit pebble - not an error to fix.
     pub light_dir: f64,
+    /// The light's component toward the viewer.
+    pub light_elev: f64,
+    /// How much of a facet's tone comes from Lambert shading of the solid's
+    /// real surface normal, against the flat positional ramp.
+    pub tone_lambert: f64,
     /// Blend of the light function between a directional ramp and pure fbm.
     pub tone_noise: f64,
     /// Base hue in degrees: the SHADOW hue of the three-tone ramp.
@@ -266,6 +344,7 @@ impl Default for Params {
             seed: 0,
             tameness: 0.55,
             aspect: 1.50,
+            depth: 0.72,
             r0: 300.0,
             margin: 0.04,
             lump_amp: 0.22,
@@ -284,12 +363,18 @@ impl Default for Params {
             cr_tension: 0.50,
             outline_weight: 0.058,
             inner_rim: 0.0,
+            relief_lines: 1,
+            relief_weight: 0.034,
+            relief_len: 0.54,
             facet_cuts: 11,
+            facet_relief: 0.80,
             facet_curviness: 0.25,
             facet_min_area: 0.015,
             facet_min_chord_sep: 0.08,
             tone_fractions: [0.30, 0.60, 0.10],
-            light_dir: 1.90,
+            light_dir: 2.30,
+            light_elev: 0.22,
+            tone_lambert: 0.85,
             tone_noise: 0.35,
             palette_hue: 13.0,
             palette_sat: 1.00,
@@ -424,7 +509,7 @@ impl Params {
             // The tame end of the dial is 0.80, which is BELOW the interlock at
             // the default aspect (0.817). Taking the max keeps `--preset tame`
             // from producing a parameter set that cannot validate.
-            self.slope_limit = lerp(1.80, 0.80, t).max(min_slope_limit(self.aspect));
+            self.slope_limit = lerp(1.80, 0.80, t).max(min_slope_limit(base_aspect(self.aspect)));
         }
         if !self.is_explicit("warp_amt") {
             self.warp_amt = lerp(0.45, 0.10, t);
@@ -471,6 +556,9 @@ impl Params {
         // exhaust their whole re-roll budget; scaling by count alone leaves
         // 30%; scaling by both leaves 7%.
         let count_scale = (7.0 / self.vesicle_count.max(1) as f64).sqrt();
+        // And against the body the projection actually produces at this
+        // amplitude, which grows with it - see `body_growth`.
+        let growth_scale = body_growth(self.lump_amp).sqrt();
         let base = Params::default();
         // Only ever shrinks. The term exists to stop a lumpier hole from
         // outgrowing the room the packer can find for it; there is no matching
@@ -481,7 +569,7 @@ impl Params {
         let reach_scale = ((1.0 + base.vesicle_amp * vesicle::AMP_BIG)
             / (1.0 + self.vesicle_amp * vesicle::AMP_BIG))
             .min(1.0);
-        let size_scale = count_scale * reach_scale;
+        let size_scale = count_scale * reach_scale * growth_scale;
         if !self.is_explicit("vesicle_rmax") {
             self.vesicle_rmax =
                 (base.vesicle_rmax * size_scale).clamp(VESICLE_RMAX_MIN, VESICLE_RMAX_MAX);
@@ -519,6 +607,7 @@ impl Params {
             }
             "tameness" => self.tameness = f()?,
             "aspect" => self.aspect = f()?,
+            "depth" => self.depth = f()?,
             "r0" => self.r0 = f()?,
             "margin" => self.margin = f()?,
             "lump_amp" => self.lump_amp = f()?,
@@ -543,7 +632,11 @@ impl Params {
             "cr_tension" => self.cr_tension = f()?,
             "outline_weight" => self.outline_weight = f()?,
             "inner_rim" => self.inner_rim = f()?,
+            "relief_lines" => self.relief_lines = u()?,
+            "relief_weight" => self.relief_weight = f()?,
+            "relief_len" => self.relief_len = f()?,
             "facet_cuts" => self.facet_cuts = u()?,
+            "facet_relief" => self.facet_relief = f()?,
             "facet_curviness" => self.facet_curviness = f()?,
             "facet_min_area" => self.facet_min_area = f()?,
             "facet_min_chord_sep" => self.facet_min_chord_sep = f()?,
@@ -562,6 +655,8 @@ impl Params {
                 self.tone_fractions = out;
             }
             "light_dir" => self.light_dir = f()?,
+            "light_elev" => self.light_elev = f()?,
+            "tone_lambert" => self.tone_lambert = f()?,
             "tone_noise" => self.tone_noise = f()?,
             "palette_hue" => self.palette_hue = f()?,
             "palette_sat" => self.palette_sat = f()?,
@@ -602,6 +697,7 @@ impl Params {
     pub fn validate(&self) -> Result<(), String> {
         fchk("tameness", self.tameness, 0.0, 1.0)?;
         fchk("aspect", self.aspect, 1.0, 2.2)?;
+        fchk("depth", self.depth, 0.35, 1.40)?;
         fchk("r0", self.r0, 1.0, 1.0e6)?;
         fchk("margin", self.margin, 0.0, 0.15)?;
         fchk("lump_amp", self.lump_amp, 0.05, 0.35)?;
@@ -627,7 +723,11 @@ impl Params {
         fchk("cr_tension", self.cr_tension, 0.35, 0.60)?;
         fchk("outline_weight", self.outline_weight, 0.020, 0.100)?;
         fchk("inner_rim", self.inner_rim, 0.0, 0.030)?;
+        uchk("relief_lines", self.relief_lines, 0, 6)?;
+        fchk("relief_weight", self.relief_weight, 0.008, 0.060)?;
+        fchk("relief_len", self.relief_len, 0.15, 1.00)?;
         uchk("facet_cuts", self.facet_cuts, 4, 20)?;
+        fchk("facet_relief", self.facet_relief, 0.0, 1.0)?;
         fchk("facet_curviness", self.facet_curviness, 0.0, 1.50)?;
         fchk("facet_min_area", self.facet_min_area, 0.005, 0.050)?;
         fchk("facet_min_chord_sep", self.facet_min_chord_sep, 0.03, 0.20)?;
@@ -655,6 +755,8 @@ impl Params {
             crate::math::TAU,
         )?;
         fchk("tone_noise", self.tone_noise, 0.0, 1.0)?;
+        fchk("light_elev", self.light_elev, 0.0, 1.50)?;
+        fchk("tone_lambert", self.tone_lambert, 0.0, 1.0)?;
         fchk("palette_hue", self.palette_hue, -360.0, 720.0)?;
         fchk("palette_sat", self.palette_sat, 0.50, 1.00)?;
         fchk("palette_light", self.palette_light, 0.30, 0.75)?;
@@ -690,13 +792,23 @@ impl Params {
         // THE INTERLOCK. Everything above is a range on one parameter; this is
         // the one place two parameters can each be legal and still be
         // infeasible together.
-        let floor = min_slope_limit(self.aspect);
+        // Against the BASE ellipsoid's aspect, not the requested one: the
+        // limiter meets the geometry the solid was built from, and
+        // `base_aspect` makes that steeper than what the caller asked for.
+        let floor = min_slope_limit(base_aspect(self.aspect));
         if self.slope_limit < floor {
             return Err(format!(
                 "slope_limit {:.3} is below the floor {:.3} that aspect {:.3} needs \
-                 (kappa >= (aspect^2-1)/(2*aspect) + 0.40): the log-Lipschitz limiter \
-                 would eat the base ellipse and circularise the blob",
-                self.slope_limit, floor, self.aspect
+                 (kappa >= (b^2-1)/(2*b) + 0.40 at the base ellipsoid's own aspect \
+                 b = {:.3}, which `base_aspect` pre-stretches from {:.3} so the \
+                 PROJECTED outline comes out at the aspect asked for): the \
+                 log-Lipschitz limiter would eat the base ellipse and circularise \
+                 the blob",
+                self.slope_limit,
+                floor,
+                self.aspect,
+                base_aspect(self.aspect),
+                self.aspect
             ));
         }
         Ok(())
@@ -718,6 +830,7 @@ impl Params {
             "seed" => self.seed.to_string(),
             "tameness" => self.tameness.to_string(),
             "aspect" => self.aspect.to_string(),
+            "depth" => self.depth.to_string(),
             "r0" => self.r0.to_string(),
             "margin" => self.margin.to_string(),
             "lump_amp" => self.lump_amp.to_string(),
@@ -739,7 +852,11 @@ impl Params {
             "cr_tension" => self.cr_tension.to_string(),
             "outline_weight" => self.outline_weight.to_string(),
             "inner_rim" => self.inner_rim.to_string(),
+            "relief_lines" => self.relief_lines.to_string(),
+            "relief_weight" => self.relief_weight.to_string(),
+            "relief_len" => self.relief_len.to_string(),
             "facet_cuts" => self.facet_cuts.to_string(),
+            "facet_relief" => self.facet_relief.to_string(),
             "facet_curviness" => self.facet_curviness.to_string(),
             "facet_min_area" => self.facet_min_area.to_string(),
             "facet_min_chord_sep" => self.facet_min_chord_sep.to_string(),
@@ -748,6 +865,8 @@ impl Params {
                 self.tone_fractions[0], self.tone_fractions[1], self.tone_fractions[2]
             ),
             "light_dir" => self.light_dir.to_string(),
+            "light_elev" => self.light_elev.to_string(),
+            "tone_lambert" => self.tone_lambert.to_string(),
             "tone_noise" => self.tone_noise.to_string(),
             "palette_hue" => self.palette_hue.to_string(),
             "palette_sat" => self.palette_sat.to_string(),
@@ -851,6 +970,13 @@ static PARAM_TABLE: &[ParamInfo] = &[
         "0.55",
         "0 ..= 1",
         "0 feral, 1 corporate; drives seven other knobs.",
+    ),
+    row(
+        "depth",
+        Kind::F64,
+        "0.72",
+        "0.35 ..= 1.40",
+        "Depth of the solid as a fraction of its vertical semi-axis; 1.0 reads as a ball, 0.4 as a slab.",
     ),
     row(
         "aspect",
@@ -986,11 +1112,39 @@ static PARAM_TABLE: &[ParamInfo] = &[
         "Optional second thin ribbon; the artist's is 0.0147.",
     ),
     row(
+        "relief_lines",
+        Kind::U32,
+        "1",
+        "0 ..= 6",
+        "Thin tapered crease marks growing inward out of the outline; the artwork has 1.",
+    ),
+    row(
+        "relief_weight",
+        Kind::F64,
+        "0.034",
+        "0.008 ..= 0.060",
+        "Waist width of a relief mark over R0; measured 0.0336, 0.58 of the outline.",
+    ),
+    row(
+        "relief_len",
+        Kind::F64,
+        "0.54",
+        "0.15 ..= 1.00",
+        "Centreline length of a relief mark over R0; measured 0.535.",
+    ),
+    row(
         "facet_cuts",
         Kind::U32,
         "11",
         "4 ..= 20",
         "Bisections; regions = cuts + 1.",
+    ),
+    row(
+        "facet_relief",
+        Kind::F64,
+        "0.80",
+        "0 ..= 1.0",
+        "How far a cut follows the solid's iso-brightness line rather than the flow field.",
     ),
     row(
         "facet_curviness",
@@ -1023,9 +1177,23 @@ static PARAM_TABLE: &[ParamInfo] = &[
     row(
         "light_dir",
         Kind::F64,
-        "1.90",
+        "2.30",
         "0 ..= 2*PI",
-        "Tone gradient direction; 1.90 rad lights from BELOW.",
+        "In-plane direction the light comes from; 2.30 rad lights from BELOW LEFT, as measured.",
+    ),
+    row(
+        "light_elev",
+        Kind::F64,
+        "0.22",
+        "0 ..= 1.50",
+        "The light's component toward the viewer; small keeps it grazing and the tones spread.",
+    ),
+    row(
+        "tone_lambert",
+        Kind::F64,
+        "0.85",
+        "0 ..= 1.0",
+        "How much of a tone is Lambert shading of the real surface normal, against the flat ramp.",
     ),
     row(
         "tone_noise",
@@ -1218,11 +1386,23 @@ mod tests {
             aspect: 2.0,
             ..Params::default()
         };
-        p.slope_limit = 0.90; // needs (4-1)/4 + 0.40 = 1.15
+        // The floor is set by the BASE ellipsoid, which `base_aspect`
+        // stretches past the requested aspect, so it is higher than the
+        // naive (4-1)/4 + 0.40 = 1.15 that aspect 2.0 would suggest.
+        let floor = min_slope_limit(base_aspect(2.0));
+        assert!(
+            floor > min_slope_limit(2.0),
+            "the base is the stretched one"
+        );
+        p.slope_limit = 0.90;
         let e = p.validate().expect_err("must be rejected");
         assert!(e.contains("slope_limit"), "{e}");
         assert!(e.contains("circularise"), "the error must say WHY: {e}");
-        p.slope_limit = min_slope_limit(2.0);
+        assert!(
+            e.contains("base_aspect"),
+            "the error must point at the pre-stretch: {e}"
+        );
+        p.slope_limit = floor;
         p.validate().expect("exactly at the floor is feasible");
     }
 

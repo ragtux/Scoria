@@ -13,13 +13,36 @@
 use crate::bezier::{self, Cubic};
 use crate::body::Scene;
 use crate::facet::{CutReport, Facet, MIN_JUNCTION_COS};
-use crate::math::{polygon_area, TAU, V2};
+use crate::math::{polygon_area, polyline_len, TAU, V2};
+use crate::relief::Relief;
 use crate::ring::Ring;
+use crate::solid::DepthMap;
 use crate::vesicle::{boundary_clear, max_radius_window, Vesicle};
 use crate::Params;
 
 /// A gate's verdict: the rule name on failure.
 pub type Check = Result<(), &'static str>;
+
+/// How squarely the node facing the viewer must face the viewer.
+///
+/// At the pole of the front surface the normal is the view direction almost
+/// exactly; measured over 44 scenes across two presets, the worst pole-row
+/// normal has `n.z` 0.883, so 0.70 is margin rather than a tuned threshold.
+const NORMAL_POLE_MIN: f64 = 0.70;
+/// How much of the map, on average, must face the viewer.
+///
+/// Measured 0.745 to 0.781 over the same scenes. A map built back to front
+/// would come out near its negation and cannot approach this.
+const NORMAL_MEAN_MIN: f64 = 0.45;
+/// Lowest Lambert separation between neighbouring tones that still reads as
+/// a step rather than as a rounding accident.
+const TONE_LAMBERT_GAP: f64 = 0.004;
+/// How far a relief mark's realised mean width may stray from
+/// `relief_weight`, as a fraction of it. The taper takes about 8% off the
+/// waist, so the band is centred below 1.
+const RELIEF_WIDTH_LO: f64 = 0.80;
+/// The upper end of the same band.
+const RELIEF_WIDTH_HI: f64 = 1.05;
 
 /// Slack on the limiter's own bound, to absorb the rounding of the two sweeps.
 const LIMITER_SLACK: f64 = 1.0001;
@@ -43,6 +66,18 @@ const AMPLITUDE_LO_FRAC: f64 = 0.70;
 /// start reading as a splat; the limiter is still satisfied, so nothing else
 /// catches it.
 const AMPLITUDE_HI_FRAC: f64 = 1.50;
+/// How much of `lump_amp` survives into the finished outline's deviation
+/// from its base ellipse.
+///
+/// Three things take a bite out of it between the displacement field and the
+/// emitted ring, and none of them is a defect: the projection's maximum over
+/// tilt fills in the dips, the log-Lipschitz limiter erodes the steepest
+/// flanks, and forty binomial passes band-limit what is left. Measured over
+/// 200 seeds at each of the three presets, whose `lump_amp` spans 0.120 to
+/// 0.300, the realised deviation is 0.73, 0.65 and 0.58 of what was asked -
+/// mild saturation, so one constant at the default's 0.65 holds every preset
+/// well inside the band either side of it.
+const PROJECTION_DEV_GAIN: f64 = 0.65;
 /// How far the finished bounding box may stray from the `aspect` asked for,
 /// per unit of `lump_amp`.
 ///
@@ -141,7 +176,7 @@ pub fn star_shaped(ring: &Ring, r0: f64, kappa: f64) -> Check {
 /// is a gate on the ROLL, not on the parameters: `lump_amp` sets the expected
 /// amplitude and the fbm scatters around it by a factor of three either way,
 /// so the only way to keep every seed on-brand is to reject the tails.
-pub fn silhouette_amplitude(ring: &Ring, lump_amp: f64) -> Check {
+pub fn silhouette_amplitude(ring: &Ring, lump_amp: f64, aspect: f64) -> Check {
     let n = ring.n();
     if n == 0 {
         return Err("silhouette amplitude: empty ring");
@@ -150,22 +185,52 @@ pub fn silhouette_amplitude(ring: &Ring, lump_amp: f64) -> Check {
     if !mean.is_finite() || mean <= 0.0 {
         return Err("silhouette amplitude: mean radius collapsed");
     }
+    // AGAINST THE BASE ELLIPSE, not against the mean radius.
+    //
+    // `lump_amp` is documented, and measured, as a fraction of the BASE
+    // ELLIPSE radius, and an ellipse's radius already varies a great deal on
+    // its own - at the default's pre-stretched base of 1.69 its relative
+    // radial std is 0.19 before a single lump is added. Measuring about the
+    // mean therefore measures the aspect and the lumps together, which makes
+    // this gate a second, worse `bbox_aspect` and leaves `lump_amp` almost
+    // no authority over the number it is checked against: measured across
+    // the three presets, which ask for 0.120, 0.201 and 0.300, the std about
+    // the mean came out 0.199, 0.217 and 0.240 - a 2.5x request compressed
+    // into a 1.2x response, so `tame` read as a splat and `feral` as an egg.
+    //
+    // Dividing by the base ellipse first removes the aspect from the
+    // measurement entirely. The same three presets then give 0.087, 0.131
+    // and 0.174, which tracks the request at a steady 0.58 to 0.73 of it.
+    let base = crate::params::base_aspect(aspect);
+    let (semi_a, semi_b) = (base.sqrt(), 1.0 / base.sqrt());
+    let dev: Vec<f64> = (0..n)
+        .map(|i| {
+            let (st, ct) = crate::math::sin_cos(ring.theta(i));
+            let rho = semi_a * semi_b
+                / ((semi_b * ct) * (semi_b * ct) + (semi_a * st) * (semi_a * st)).sqrt();
+            ring.r[i] / rho
+        })
+        .collect();
+    let dm = dev.iter().sum::<f64>() / n as f64;
+    if !dm.is_finite() || dm <= 0.0 {
+        return Err("silhouette amplitude: the ellipse ratio collapsed");
+    }
     // Written as a multiply rather than `powi`: the house rule is integer
     // powers spelled out, so nothing can quietly become a libm `pow`.
-    let var = ring
-        .r
+    let var = dev
         .iter()
-        .map(|r| {
-            let d = r / mean - 1.0;
+        .map(|x| {
+            let d = x / dm - 1.0;
             d * d
         })
         .sum::<f64>()
         / n as f64;
     let std = var.sqrt();
-    if std < AMPLITUDE_LO_FRAC * lump_amp {
+    let want = PROJECTION_DEV_GAIN * lump_amp;
+    if std < AMPLITUDE_LO_FRAC * want {
         return Err("silhouette amplitude: the blob came out as an egg");
     }
-    if std > AMPLITUDE_HI_FRAC * lump_amp {
+    if std > AMPLITUDE_HI_FRAC * want {
         return Err("silhouette amplitude: the blob came out as a splat");
     }
     Ok(())
@@ -515,7 +580,7 @@ pub fn no_self_intersection(scene: &Scene) -> Check {
 /// tracing and splicing rather than from a polar radius, so nothing proves
 /// them simple in advance.
 fn theorem_exempt(kind: &str) -> bool {
-    matches!(kind, "facet" | "body-fill")
+    matches!(kind, "facet" | "body-fill" | "relief")
 }
 
 /// Every contour the writer will emit, in paint order.
@@ -528,6 +593,9 @@ fn contours(scene: &Scene) -> Vec<(&'static str, &[Cubic])> {
     for v in &scene.vesicles {
         out.push(("vesicle", &v.cubics));
     }
+    for m in &scene.relief {
+        out.push(("relief", &m.cubics));
+    }
     out.push(("outline-outer", &scene.outer_cubics));
     out.push(("outline-inner", &scene.inner_cubics));
     if let Some(rim) = &scene.rim {
@@ -535,6 +603,134 @@ fn contours(scene: &Scene) -> Vec<(&'static str, &[Cubic])> {
         out.push(("rim-inner", &rim.inner_cubics));
     }
     out
+}
+
+/// The depth map is the FRONT surface, the right way round.
+///
+/// If the march ever walked round the back of the solid, every tone and
+/// every crease would be computed from a surface the viewer cannot see, and
+/// the output would still be a perfectly plausible rock - just one lit and
+/// creased by its own far side. Nothing downstream can notice that, so it
+/// gets a gate.
+///
+/// What is NOT checked is that every normal faces the viewer, which was the
+/// first attempt and was wrong. The outer rows legitimately face away: that
+/// is what a FOLD is, a near bump whose surface curls past the apparent
+/// contour and occludes what is behind it, and the map is built to keep the
+/// nearest surface precisely so it can represent one. Measured, the worst
+/// node at `t = 0.83` of the silhouette radius reaches `n.z` -0.12 at the
+/// default and -0.64 at `--preset feral`, and both are real geometry; gating
+/// on it re-rolled 91 of 120 rolls.
+///
+/// The invariants that do hold, and that a flipped map cannot satisfy: the
+/// pole faces the viewer squarely, and the map faces the viewer on average.
+/// Not, note, that the centre is nearer than the rim - a bump whose
+/// silhouette point sits well above the equator is nearer the viewer than
+/// the pole of a solid this flat, and 20 rolls in 240 are.
+pub fn depth_map(depth: &DepthMap) -> Check {
+    let (pts, nrm) = depth.nodes();
+    let rows = DepthMap::n_rad() + 1;
+    if pts.is_empty() || pts.len() != nrm.len() || pts.len() % rows != 0 {
+        return Err("depth map: empty or mismatched node grid");
+    }
+    let mut mean_z = 0.0;
+    for (p, n) in pts.iter().zip(nrm.iter()) {
+        if !p.x.is_finite() || !p.y.is_finite() || !p.z.is_finite() {
+            return Err("depth map: a surface node is not finite");
+        }
+        if (n.len() - 1.0).abs() > 1e-6 {
+            return Err("depth map: a normal is not a unit vector");
+        }
+        mean_z += n.z;
+    }
+    mean_z /= pts.len() as f64;
+    if mean_z < NORMAL_MEAN_MIN {
+        return Err("depth map: the surface faces away from the viewer on average");
+    }
+    for row_n in nrm.chunks_exact(rows) {
+        if row_n[0].z < NORMAL_POLE_MIN {
+            return Err("depth map: the node facing the viewer does not face the viewer");
+        }
+    }
+    Ok(())
+}
+
+/// The flat tones are a quantisation of the real shading, the right way up.
+///
+/// The gate for the whole harmonisation: the shadow tone must sit on a
+/// darker part of the lit solid than the highlight does, measured as the
+/// area-weighted mean Lambert brightness of the facets carrying each. A
+/// mirrored light, or a sign slip anywhere between the surface normal and
+/// the palette index, shows up here and nowhere else - every such mistake
+/// still produces a perfectly plausible picture, just one lit from the wrong
+/// side.
+///
+/// The ENDS only, not all three in order. `tone_noise` deliberately scatters
+/// the assignment - 0.35 of it, measured off the artwork, whose own tones
+/// overlap by a full quartile - so the mid tone's mean genuinely can cross
+/// one of its neighbours on a seed where the quantile boundary lands
+/// awkwardly among twelve facets. Pinning all three made the gate a test of
+/// the scatter rather than of the direction, and it re-rolled seeds whose
+/// shading was correct; measured, it exhausted the retry budget on seed 14.
+/// The ends cannot cross without the light itself being wrong.
+pub fn tone_follows_the_light(facets: &[Facet]) -> Check {
+    let mut sum = [0.0f64; 3];
+    let mut area = [0.0f64; 3];
+    for f in facets {
+        if f.tone > 2 {
+            return Err("tone order: a facet carries a tone outside 0..2");
+        }
+        sum[f.tone] += f.lambert * f.area;
+        area[f.tone] += f.area;
+    }
+    let mut mean = [0.0f64; 3];
+    for t in 0..3 {
+        if area[t] <= 0.0 {
+            // `tones_present` is the gate for an empty tone; this one has
+            // nothing to say about it.
+            return Ok(());
+        }
+        mean[t] = sum[t] / area[t];
+    }
+    if mean[2] < mean[0] + TONE_LAMBERT_GAP {
+        return Err("tone order: the flat tones do not follow the solid's own shading");
+    }
+    Ok(())
+}
+
+/// Every relief mark is a stroke on the rock, of the width it was asked for.
+///
+/// The marks are the one piece of geometry built by offsetting a curve rather
+/// than by a polar subtraction, so they are the one piece the star-shape
+/// theorem says nothing about. Hence a width check: an offset that folded
+/// over itself comes out with the right outline length and the wrong area,
+/// which no other gate would see.
+pub fn relief_marks(marks: &[Relief], r0: f64, weight: f64) -> Check {
+    for m in marks {
+        if m.pts.len() < 6 || m.cubics.len() < 4 {
+            return Err("relief: a mark has too little geometry to draw");
+        }
+        for q in &m.pts {
+            if !q.x.is_finite() || !q.y.is_finite() {
+                return Err("relief: a mark has a non-finite point");
+            }
+        }
+        if bezier::self_intersects(&m.pts, true) {
+            return Err("relief: a mark's offset folded over itself");
+        }
+        // Mean width from area over centreline length: a fold shows up as a
+        // collapse here while leaving the outline's length untouched.
+        let len = polyline_len(&m.spine);
+        if len <= 0.0 {
+            return Err("relief: a mark has no length");
+        }
+        let mean_w = polygon_area(&m.pts).abs() / len;
+        let want = weight * r0;
+        if mean_w < RELIEF_WIDTH_LO * want || mean_w > RELIEF_WIDTH_HI * want {
+            return Err("relief: a mark came out the wrong width for its spine");
+        }
+    }
+    Ok(())
 }
 
 /// The gates that need only the outer ring.
@@ -552,7 +748,7 @@ fn contours(scene: &Scene) -> Vec<(&'static str, &[Cubic])> {
 /// gate that quietly stops running.
 pub fn check_silhouette(outer: &Ring, pts: &[V2], r0: f64, p: &Params) -> Check {
     star_shaped(outer, r0, p.slope_limit)?;
-    silhouette_amplitude(outer, p.lump_amp)?;
+    silhouette_amplitude(outer, p.lump_amp, p.aspect)?;
     bbox_aspect(pts, p.aspect, p.lump_amp)
 }
 
@@ -566,7 +762,10 @@ pub fn check_all(scene: &Scene, p: &Params) -> Check {
     cut_health(&scene.cuts, p.facet_min_chord_sep)?;
     facet_areas(&scene.facets, scene.body_area, p.facet_min_area)?;
     tones_present(&scene.facets, scene.body_area)?;
+    tone_follows_the_light(&scene.facets)?;
     facet_junctions(&scene.facets)?;
+    depth_map(&scene.depth)?;
+    relief_marks(&scene.relief, scene.r0, p.relief_weight)?;
 
     contour_sanity(&scene.outer_cubics)?;
     contour_sanity(&scene.inner_cubics)?;
@@ -670,6 +869,78 @@ mod tests {
         assert!(
             vesicle_coverage(&[], 1000.0, 0).is_ok(),
             "zero holes was asked for"
+        );
+    }
+
+    /// The tone-order gate has to catch a mirrored light, which is the one
+    /// mistake that still produces a plausible picture.
+    #[test]
+    fn the_tone_gate_catches_a_mirrored_light() {
+        let facet = |tone: usize, lambert: f64| Facet {
+            pts: Vec::new(),
+            breaks: Vec::new(),
+            cubics: Vec::new(),
+            piece_starts: Vec::new(),
+            centroid: V2::new(0.0, 0.0),
+            area: 1.0,
+            tone,
+            lambert,
+            clamped: 0,
+        };
+        // Right way up: shadow on the dark part, highlight on the bright.
+        let good = [facet(0, -0.3), facet(1, 0.1), facet(2, 0.6)];
+        assert!(tone_follows_the_light(&good).is_ok());
+        // Mirrored.
+        let bad = [facet(0, 0.6), facet(1, 0.1), facet(2, -0.3)];
+        assert!(tone_follows_the_light(&bad).is_err());
+        // The MID may cross a neighbour - `tone_noise` scatters it on
+        // purpose - as long as the ends do not.
+        let noisy = [facet(0, -0.3), facet(1, 0.7), facet(2, 0.6)];
+        assert!(
+            tone_follows_the_light(&noisy).is_ok(),
+            "the gate must not forbid the scatter it was built around"
+        );
+    }
+
+    /// And a relief mark that folded over itself has to be caught by area,
+    /// because its outline length is unchanged by the fold.
+    #[test]
+    fn the_relief_gate_catches_a_collapsed_mark() {
+        let spine: Vec<V2> = (0..40).map(|i| V2::new(f64::from(i) * 4.0, 0.0)).collect();
+        let good = crate::relief::Relief {
+            pts: {
+                // A plain 10-wide band over the same spine.
+                let mut v: Vec<V2> = spine.iter().map(|q| V2::new(q.x, q.y + 5.0)).collect();
+                v.extend(spine.iter().rev().map(|q| V2::new(q.x, q.y - 5.0)));
+                v
+            },
+            cubics: vec![
+                Cubic {
+                    p0: V2::new(0.0, 0.0),
+                    c1: V2::new(1.0, 0.0),
+                    c2: V2::new(2.0, 0.0),
+                    p3: V2::new(3.0, 0.0),
+                };
+                8
+            ],
+            spine: spine.clone(),
+            width: 10.0,
+            score: 1.0,
+            clamped: 0,
+        };
+        assert!(relief_marks(std::slice::from_ref(&good), 300.0, 10.0 / 300.0).is_ok());
+
+        let collapsed = crate::relief::Relief {
+            pts: {
+                let mut v: Vec<V2> = spine.iter().map(|q| V2::new(q.x, q.y + 1.0)).collect();
+                v.extend(spine.iter().rev().map(|q| V2::new(q.x, q.y - 1.0)));
+                v
+            },
+            ..good
+        };
+        assert!(
+            relief_marks(&[collapsed], 300.0, 10.0 / 300.0).is_err(),
+            "a mark a fifth of its asked-for width must be rejected"
         );
     }
 }

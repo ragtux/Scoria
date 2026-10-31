@@ -31,7 +31,9 @@ use crate::math::{
     sin_cos, total_turning, PI, V2,
 };
 use crate::noise::{Fbm, Perlin};
+use crate::relief::Cut;
 use crate::rng::Pcg32;
+use crate::solid::{DepthMap, Light};
 use crate::Params;
 
 /// Euler step for a cut trace, as a fraction of R0. 0.01*300 = 3 canonical
@@ -82,6 +84,35 @@ const CUT_GRID_CELL_FRAC: f64 = 0.08;
 const TONE_OCTAVES: u32 = 3;
 /// Spatial frequency of the tone map, per R0.
 const TONE_NOISE_FREQ: f64 = 0.9;
+/// Seed points tried per cut when the surface is steering it.
+///
+/// `facet_relief` orients a cut along the solid's iso-brightness line, but an
+/// orientation alone does not say WHERE to put the line, and a contour drawn
+/// through the wrong level separates nothing. Scoring a spread of candidate
+/// seeds by how close their brightness is to the region's own mean picks the
+/// level that halves the region's brightness, so the chord through it is the
+/// region's median contour and the two children land either side of a real
+/// step in the shading instead of either side of an arbitrary line.
+const SEED_CANDIDATES: u32 = 12;
+/// Jitter of those candidates about the area centroid, as a fraction of the
+/// region's equivalent radius.
+///
+/// Wider than [`JITTER_FRAC`], which only has to break ties: this one has to
+/// reach far enough across the region to find the brightness level it wants.
+/// The area and sliver gates still decide what is acceptable, so reaching
+/// further costs nothing but a rejected cut.
+const SEED_SPREAD: f64 = 0.45;
+/// Samples of the brightness a facet's tone is averaged over: its centroid
+/// plus one part-way toward each of this many boundary points.
+///
+/// A single sample at the centroid judges a facet spanning a brightness ramp
+/// by one point of it, and the largest facet is 7 times the smallest, so the
+/// largest is exactly where that is least defensible.
+const TONE_SAMPLES: usize = 8;
+/// How far from the centroid toward a boundary point those samples sit. Short
+/// of the boundary, so a sample cannot land on the far side of a shared edge
+/// and pick up the neighbour's brightness instead.
+const TONE_SAMPLE_REACH: f64 = 0.55;
 /// Share of the facet area each tone must end up carrying. The gate asks for
 /// 6% of BODY area, and the facets tile a slightly larger region, so 7% here
 /// clears it with margin.
@@ -247,6 +278,9 @@ pub struct Facet {
     pub area: f64,
     /// 0 shadow, 1 mid, 2 highlight.
     pub tone: usize,
+    /// Mean Lambert brightness of the solid's real surface over this facet.
+    /// The tone is a quantisation of this; the gate checks the two agree.
+    pub lambert: f64,
     /// How many handles the Bezier clamp caught on this facet.
     pub clamped: usize,
 }
@@ -295,12 +329,14 @@ pub fn build(
     p: &Params,
     field: &Field,
     perlin: &Perlin,
+    depth: &DepthMap,
+    light: &Light,
     rng: &mut Pcg32,
     tone_rng: &mut Pcg32,
     c: V2,
     r0: f64,
     body_area: f64,
-) -> (Vec<Facet>, CutReport) {
+) -> (Vec<Facet>, CutReport, Vec<Cut>) {
     let mut regions = vec![Region {
         pts: root.to_vec(),
         breaks: Vec::new(),
@@ -310,6 +346,9 @@ pub fn build(
     // the logo comes out with three facets.
     let mut blocked = vec![false];
     let mut report = CutReport::default();
+    // Kept for the relief pass: a cut that runs down a steep brightness ramp
+    // is a fold in the surface, and that is where the thin interior mark goes.
+    let mut cuts: Vec<Cut> = Vec::new();
 
     for _ in 0..p.facet_cuts {
         // ALWAYS THE LARGEST. Random selection is the classic BSP failure: one
@@ -328,11 +367,23 @@ pub fn build(
             }
         }
         let Some(bi) = best else { break };
-        match try_cut(&regions[bi], p, field, rng, c, r0, body_area, &mut report) {
-            Some((c1, c2)) => {
+        match try_cut(
+            &regions[bi],
+            p,
+            field,
+            depth,
+            light,
+            rng,
+            c,
+            r0,
+            body_area,
+            &mut report,
+        ) {
+            Some((c1, c2, cut)) => {
                 regions[bi] = c1;
                 regions.push(c2);
                 blocked.push(false);
+                cuts.push(Cut { pts: cut });
             }
             None => {
                 blocked[bi] = true;
@@ -341,7 +392,11 @@ pub fn build(
         }
     }
 
-    (tone(regions, p, perlin, tone_rng, c, r0), report)
+    (
+        tone(regions, p, perlin, depth, light, tone_rng, c, r0),
+        report,
+        cuts,
+    )
 }
 
 /// Try to bisect one region, re-jittering the seed point up to six times.
@@ -350,12 +405,14 @@ fn try_cut(
     region: &Region,
     p: &Params,
     field: &Field,
+    depth: &DepthMap,
+    light: &Light,
     rng: &mut Pcg32,
     c: V2,
     r0: f64,
     body_area: f64,
     report: &mut CutReport,
-) -> Option<(Region, Region)> {
+) -> Option<(Region, Region, Vec<V2>)> {
     let pts = &region.pts;
     let n = pts.len();
     if n < 12 {
@@ -369,14 +426,53 @@ fn try_cut(
     let grid = SegGrid::new(pts, (CUT_GRID_CELL_FRAC * r0).max(4.0 * h));
     let prefix = prefix_lengths(pts);
 
+    // The level the cut wants to sit on: the region's own mean brightness,
+    // so the chord through it halves the region's shading.
+    let want_b = if p.facet_relief > 0.0 {
+        Some(mean_brightness(pts, centroid, depth, light))
+    } else {
+        None
+    };
+
     for _ in 0..JITTER_ATTEMPTS {
         // The AREA centroid, not the vertex mean: the vertex mean drifts
         // toward whichever part of the boundary is sampled densest.
-        let g = centroid
-            + V2::new(
-                rng.range(-JITTER_FRAC, JITTER_FRAC) * r_region,
-                rng.range(-JITTER_FRAC, JITTER_FRAC) * r_region,
-            );
+        let g = match want_b {
+            // Steered: try a spread of seeds and keep the one sitting
+            // closest to the level the cut should separate.
+            Some(b0) => {
+                let mut best: Option<(f64, V2)> = None;
+                for _ in 0..SEED_CANDIDATES {
+                    let q = centroid
+                        + V2::new(
+                            rng.range(-SEED_SPREAD, SEED_SPREAD) * r_region,
+                            rng.range(-SEED_SPREAD, SEED_SPREAD) * r_region,
+                        );
+                    if !point_in_polygon(pts, q) {
+                        continue;
+                    }
+                    let err = (depth.brightness(q, light) - b0).abs();
+                    // Strictly better, so the FIRST candidate wins a tie and
+                    // the choice does not depend on iteration order.
+                    if best.is_none_or(|(e, _)| err < e) {
+                        best = Some((err, q));
+                    }
+                }
+                match best {
+                    Some((_, q)) => q,
+                    None => {
+                        continue;
+                    }
+                }
+            }
+            None => {
+                centroid
+                    + V2::new(
+                        rng.range(-JITTER_FRAC, JITTER_FRAC) * r_region,
+                        rng.range(-JITTER_FRAC, JITTER_FRAC) * r_region,
+                    )
+            }
+        };
         // A child region is not star-shaped, so the fast polar test does not
         // apply here - this is the crossing-number test.
         if !point_in_polygon(pts, g) {
@@ -390,24 +486,70 @@ fn try_cut(
         let lobe = if rng.below(2) == 0 { -1.0 } else { 1.0 };
         let family =
             lobe * (CUT_FAMILY_HALF_ANGLE + rng.range(-CUT_FAMILY_JITTER, CUT_FAMILY_JITTER));
-        let straight = field.dir((g - c) * (1.0 / r0));
+        // WHERE THE SURFACE GETS ITS SAY. The cut's base direction is the
+        // flow field at the seed leaned toward the solid's iso-brightness
+        // line there, by `facet_relief`. An iso-line is a contour of the real
+        // lit surface, so a cut along one means the flat tone either side of
+        // it is the quantisation of that surface, and the boundary lands
+        // where the shading would have stepped anyway. A cut across the
+        // gradient instead reads as damage to the rock rather than as its
+        // form - which is most of the difference between faceting that looks
+        // designed and faceting that looks shattered.
+        //
+        // Sampled ONCE, at the seed, and not followed step by step. Following
+        // it was the first design and it does not work: a level set of a
+        // smooth function either leaves the region or closes into a loop, and
+        // between the loops around every brightness extremum and the rapid
+        // rotation near every saddle, a long trace wanders. Measured, with
+        // the direction re-read every 3-unit step: the median cut's total
+        // absolute turning went from 17 degrees to 235, against the 220 the
+        // no-self-intersection test allows, and 916 cuts in 200 seeds failed
+        // it however hard the heading was cone-clamped and rate-limited -
+        // because a bounded heading can still oscillate inside its bound
+        // forever, and absolute turning is what the test measures.
+        //
+        // Taking the direction once is also the better match to the drawing,
+        // whose facet edges are long near-straight chords: measured, 27 to 80
+        // percent of each facet's perimeter runs at least 30 units while
+        // deviating under 6 percent from its chord.
+        let flow = field.dir((g - c) * (1.0 / r0));
+        let straight = match depth.iso_dir(g, light, crate::solid::GRAD_H_FRAC * r0) {
+            Some(iso) if p.facet_relief > 0.0 => {
+                // Orient the iso-line with the flow before blending: the
+                // perpendicular of a gradient carries a sign the field does
+                // not, and blending the two with opposite signs would cancel
+                // them instead of leaning one toward the other.
+                let iso = if iso.dot(flow) < 0.0 { -iso } else { iso };
+                let mixed = flow + (iso - flow) * p.facet_relief;
+                if mixed.len2() > 1e-18 {
+                    mixed.norm()
+                } else {
+                    flow
+                }
+            }
+            _ => flow,
+        };
         let arm = |sign: f64| {
-            trace_arm(
-                g,
+            trace_arm(TraceCfg {
+                start: g,
                 straight,
                 sign,
-                pts,
-                &grid,
+                region: pts,
+                grid: &grid,
                 field,
                 c,
                 r0,
                 h,
-                p.facet_curviness,
+                curviness: p.facet_curviness,
                 family,
-            )
+            })
         };
-        let Some(fwd) = arm(1.0) else { continue };
-        let Some(bwd) = arm(-1.0) else { continue };
+        let Some(fwd) = arm(1.0) else {
+            continue;
+        };
+        let Some(bwd) = arm(-1.0) else {
+            continue;
+        };
 
         let mut cut: Vec<V2> = Vec::with_capacity(bwd.pts.len() + fwd.pts.len() + 1);
         cut.extend(bwd.pts.iter().rev().copied());
@@ -470,32 +612,60 @@ fn try_cut(
         report.made += 1;
         report.min_sep_frac = report.min_sep_frac.min(sep);
         report.max_turning = report.max_turning.max(turning);
-        return Some((c1, c2));
+        return Some((c1, c2, cut));
     }
     None
 }
 
-/// Hobbs's fixed-step Euler walk, from `start` until it leaves the region.
+/// Everything one [`trace_arm`] call needs. A struct rather than fourteen
+/// positional arguments, which is both unreadable and easy to transpose.
+struct TraceCfg<'a> {
+    /// Seed point, the region's jittered centroid.
+    start: V2,
+    /// The field direction frozen at the seed.
+    straight: V2,
+    /// +1 for the forward arm, -1 for the backward one.
+    sign: f64,
+    /// The region boundary the arm must stop on.
+    region: &'a [V2],
+    /// Broadphase over that boundary's segments.
+    grid: &'a SegGrid,
+    /// The flow field.
+    field: &'a Field,
+    /// Body centre.
+    c: V2,
+    /// Canonical mean radius.
+    r0: f64,
+    /// Euler step length.
+    h: f64,
+    /// Flow blend: 0 a straight chord, 1 a live flow curve.
+    curviness: f64,
+    /// Rotation into one of the two measured cut families.
+    family: f64,
+}
+
+/// Hobbs's fixed-step Euler walk, from the seed until it leaves the region.
 ///
 /// `sign` is +1 for the forward arm and -1 for the backward one. The direction
-/// is a blend of the field frozen at the seed and the live field: at
-/// `curviness` 0 the cut is a straight chord, at 1 a full flow curve, above 1
-/// it over-rotates. VECTORS are blended, never angles - interpolating angles
-/// spins a full turn wherever the field crosses +-PI.
-#[allow(clippy::too_many_arguments)]
-fn trace_arm(
-    start: V2,
-    straight: V2,
-    sign: f64,
-    region: &[V2],
-    grid: &SegGrid,
-    field: &Field,
-    c: V2,
-    r0: f64,
-    h: f64,
-    curviness: f64,
-    family: f64,
-) -> Option<Arm> {
+/// is a blend of `straight` - which `try_cut` has already leaned toward the
+/// solid's crease - against the live field: at `curviness` 0 the cut is a
+/// straight chord, at 1 a full flow curve, above 1 it over-rotates. VECTORS
+/// are blended, never angles - interpolating angles spins a full turn
+/// wherever the field crosses +-PI.
+fn trace_arm(cfg: TraceCfg<'_>) -> Option<Arm> {
+    let TraceCfg {
+        start,
+        straight,
+        sign,
+        region,
+        grid,
+        field,
+        c,
+        r0,
+        h,
+        curviness,
+        family,
+    } = cfg;
     let n = region.len();
     let mut pts: Vec<V2> = Vec::with_capacity(64);
     let mut p = start;
@@ -727,15 +897,47 @@ fn enforce_tone_floor(tones: &mut [usize], areas: &[f64], order: &[usize], total
     }
 }
 
+/// Mean Lambert brightness of the solid's real surface over one region.
+///
+/// Sampled at the centroid and part-way toward [`TONE_SAMPLES`] boundary
+/// points, so a facet spanning a brightness ramp is judged by its area rather
+/// than by one point of it.
+fn mean_brightness(pts: &[V2], centroid: V2, depth: &DepthMap, light: &Light) -> f64 {
+    let mut acc = depth.brightness(centroid, light);
+    let mut n = 1.0;
+    let step = (pts.len() / TONE_SAMPLES).max(1);
+    for q in pts.iter().step_by(step).take(TONE_SAMPLES) {
+        acc += depth.brightness(centroid + (*q - centroid) * TONE_SAMPLE_REACH, light);
+        n += 1.0;
+    }
+    acc / n
+}
+
 /// Assign the three tones by AREA QUANTILE over the light function.
+///
+/// The light function is Lambert shading of the SOLID'S OWN SURFACE NORMAL,
+/// blended by `tone_lambert` against the flat positional ramp the 2D
+/// construction used, and then by `tone_noise` against mineral variation.
+/// That is the half of the depth read the cut directions do not carry: tone
+/// becomes a function of ORIENTATION, so two facets lying on the same plane
+/// of the rock get the same tone however far apart they are, and two facets
+/// across a fold get different ones however close. A positional ramp cannot
+/// do either - it can only make one side of the image darker than the other,
+/// which is why it needed so much noise to stop reading as a gradient.
+///
+/// `tone_lambert` 0 recovers the old behaviour exactly, which is what makes
+/// the change measurable rather than a matter of taste.
 ///
 /// Quantiles, not a value threshold: a threshold on the light value can yield
 /// zero highlight facets on some seeds, which is a whole class of bad output
 /// removed by one line.
+#[allow(clippy::too_many_arguments)]
 fn tone(
     regions: Vec<Region>,
     p: &Params,
     perlin: &Perlin,
+    depth: &DepthMap,
+    light: &Light,
     tone_rng: &mut Pcg32,
     c: V2,
     r0: f64,
@@ -749,24 +951,28 @@ fn tone(
 
     let mut centroids = Vec::with_capacity(regions.len());
     let mut areas = Vec::with_capacity(regions.len());
-    let mut light = Vec::with_capacity(regions.len());
+    let mut lambert = Vec::with_capacity(regions.len());
+    let mut score = Vec::with_capacity(regions.len());
     for reg in &regions {
         let cen = polygon_centroid(&reg.pts);
         let rel = (cen - c) * (1.0 / r0);
         let ramp = u_light.dot(rel);
-        // Unit-RMS, so `tone_noise` really does blend the ramp against
+        let lam = mean_brightness(&reg.pts, cen, depth, light);
+        let shade = (1.0 - p.tone_lambert) * ramp + p.tone_lambert * lam;
+        // Unit-RMS, so `tone_noise` really does blend the shading against
         // something of comparable size rather than against a whisper.
         let n =
             crate::body::unit_fbm(fbm.at(perlin, rel.x * TONE_NOISE_FREQ, rel.y * TONE_NOISE_FREQ));
         centroids.push(cen);
         areas.push(reg.area());
-        light.push((1.0 - p.tone_noise) * ramp + p.tone_noise * n);
+        lambert.push(lam);
+        score.push((1.0 - p.tone_noise) * shade + p.tone_noise * n);
     }
 
     let mut order: Vec<usize> = (0..regions.len()).collect();
     // total_cmp with an index tie-break: partial_cmp().unwrap() panics on NaN
     // and leaves ties unordered, and two regions genuinely can tie.
-    order.sort_by(|&a, &b| light[a].total_cmp(&light[b]).then(a.cmp(&b)));
+    order.sort_by(|&a, &b| score[a].total_cmp(&score[b]).then(a.cmp(&b)));
 
     let total: f64 = areas.iter().sum();
     let q0 = p.tone_fractions[0] * total;
@@ -801,6 +1007,7 @@ fn tone(
             centroid: centroids[i],
             area: areas[i],
             tone: tones[i],
+            lambert: lambert[i],
             clamped,
         });
     }

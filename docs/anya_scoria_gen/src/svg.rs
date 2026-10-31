@@ -211,7 +211,24 @@ pub fn render(scene: &Scene, p: &Params) -> String {
     }
     out.push_str("</g>\n");
 
-    // 3. THE RIBBON, last. Two subpaths, the inner one wound the other way AND
+    // 3. THE RELIEF MARKS. Same ink as the ribbon and drawn just before it,
+    //    so where a mark's rim end runs into the ink band the two merge with
+    //    no join to render - which is how the artwork's own mark reads, its
+    //    nearest point measuring 0.05 units from the outline.
+    if !scene.relief.is_empty() {
+        out.push_str("<g id=\"relief\">\n");
+        for (i, m) in scene.relief.iter().enumerate() {
+            out.push_str(&format!(
+                "<path id=\"relief-{:02}\" fill=\"{}\" d=\"{}\"/>\n",
+                i,
+                p.ink.hex(),
+                subpath(&m.cubics, d)
+            ));
+        }
+        out.push_str("</g>\n");
+    }
+
+    // 4. THE RIBBON, last. Two subpaths, the inner one wound the other way AND
     //    marked even-odd: the path then renders identically under either fill
     //    rule, which protects it from tools that drop the attribute.
     out.push_str(&format!(

@@ -40,8 +40,10 @@ pub mod noise;
 pub mod palette;
 pub mod params;
 pub mod quality;
+pub mod relief;
 pub mod ring;
 pub mod rng;
+pub mod solid;
 pub mod svg;
 pub mod vesicle;
 

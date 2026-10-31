@@ -80,6 +80,29 @@ Measured at 1280 points spaced 1 unit apart along the outer contour as the neare
 
 **Placement.** All 7 sit well inside the body - none breaks the rim, none touches another. Minimum clearance to the OUTER silhouette: 72.5, 47.2, 37.8, 35.8, 32.3, 19.8, 17.9 (min 17.9 = 0.039 of width). Minimum clearance to the INNER edge of the ribbon (the orange boundary): 62.6, 37.2, 27.9, 26.0, 22.3, 9.9, 7.6 (min 7.6 = 0.017 of width, 0.76x the ribbon thickness). Minimum gap between any two vesicles 17.38 (path21-path24), then 22.59, 34.74, 37.40, 43.82, 45.25; median of all 21 pairwise gaps 71.23, max 178.69. Centroids: (98.8,205.9) (360.6,172.8) (287.5,235.2) (166.4,132.2) (244.6,77.1) (262.1,167.0) (158.5,269.2). They SPREAD rather than cluster: the vesicle set's centroid is (227.9, 178.6), within 7 units of the body centroid, and they occupy all four quadrants. Packing rule: reject a candidate unless clearance to the body boundary is >= 0.8x its own equivalent radius AND >= 7.5 units, and its gap to every placed vesicle is >= 17 units.
 
+### The interior relief mark
+
+The only interior line work in the drawing: path23, one thin dark stroke that cuts into the body from the rim. Re-measured, because Part 1 originally recorded it as "a ~34-unit curved hairline" and that is wrong in every dimension that matters.
+
+| quantity | measured | as a fraction |
+|---|---|---|
+| centreline length | 90.7 units | 0.535 of the mean radius 169.5 |
+| end-to-end span | 78.1 units | - |
+| filled area | 488.8 units^2 | - |
+| waist width | 5.72 units | 0.0337 of R, **0.58 of the outline ribbon's 9.89** |
+| width at 5% and 95% of the length | 4.23 and 4.29 units | 0.74 and 0.75 of the waist |
+| width at both ends | 0.0 | a point |
+| nearest distance to the outline ink | 0.05 units | it TOUCHES |
+| distance from the far end to that ink | 64.6 units | free inside the body |
+
+So it is a stroke of constant width with both ends rounded off to a point, one end merging into the outline ribbon and the other dying in open orange. Its waist is a little over half the outline's width, which is what lets it read as a thinner branch of the same line rather than as a separate mark.
+
+**The taper is an ellipse, not a ramp.** Over a run of 10% of the length at each end, a linear taper would give 0.50 of the waist at the 5% point and a smoothstep 0.68; `x * (2 - x)` gives 0.75. Measured: 0.74 at the near end and 0.75 at the far one. Two independent measurements agreeing to one percent is a shape, so the profile is `x * (2 - x)` over `TAPER_FRAC = 0.10` and both are measurements rather than taste.
+
+**Where it sits.** From (292.9, 47.2) on the top rim, just right of the top-centre peak, down to (298.2, 125.1) inside the body - i.e. it runs down the edge of the peak, separating it from the mass behind. It leaves the rim 29 degrees off radial: the outward radius there is (0.431, -0.902) from the body centroid at (233.3, 172.1), and the mark heads inward along (0.068, 0.998), which is 0.871 of the inward radial. It is not tangential, and it is not perpendicular either.
+
+**Why it reads as depth.** The eye takes a line that leaves the outline and folds back over the body for an edge where the surface turns away and comes back - a fold. There is a different orange either side of it for its whole length, so the line and the tone step reinforce each other. Its nearest vesicle is 35 units away, six waists: it is not interacting with the holes.
+
 ### Facets
 
 Fourteen flat-filled polygonal cells (5 x #ee3300, 5 x #ff5721, 4 x #ff6f21) completely tiling the interior of the outline ribbon. Visible areas: 9634, 9420, 8505, 7094, 6622, 4370, 3661, 3237, 2230, 1885, 1660, 1537, 1461, 1337 units^2 (largest/smallest 7.2x, mean 4475). Their total 62652, plus vesicles 18601, crack 469 and ribbon 12114, comes to 93836 = 98.9% of the 94884-unit silhouette, the missing 1.1% being antialiasing at seams - so the tiling is gap-free. Each cell has 5-15 corners (median 8.5) where direction turns more than 25 degrees.
@@ -116,7 +139,7 @@ Fourteen flat-filled polygonal cells (5 x #ee3300, 5 x #ff5721, 4 x #ff6f21) com
 20. path20 #ff5721 facet (right flank, largest drawn facet)
 21. path21 #231f20 VESICLE (centre, eqd 33.3)
 22. path22 #231f20 VESICLE (right, eqd 76.6, kidney)
-23. path23 #221f1f interior crack mark (a ~34-unit curved hairline ribbon near x=300, y=47..125, 469 units^2 visible - the only interior line work in the drawing)
+23. path23 #221f1f INTERIOR RELIEF MARK (a 90.7-unit tapered stroke of waist 5.72 running from the top rim at (292.9, 47.2) down to (298.2, 125.1), 488.8 units^2 - the only interior line work in the drawing; see "The interior relief mark" above)
 24. path24 #231f20 VESICLE (bottom centre, eqd 62.8, aspect 2.37, most elongated)
 
 ### What a generator must get right
@@ -133,6 +156,7 @@ Fourteen flat-filled polygonal cells (5 x #ee3300, 5 x #ff5721, 4 x #ff6f21) com
 - Three flat fills only: no gradients, no strokes, no opacity, no filters. All 24 elements are solid-fill <path>s. The oranges are a tight ramp (hue 12.9 / 14.6 / 21.1 deg, V 93 / 100 / 100) warming toward yellow as they lighten; do not widen it into brown-to-amber.
 - The shape fills the frame edge to edge: bbox 0.00-456.80 x 0.20-304.60 inside a 457.14 x 304.92 viewBox, under 0.35 units of slack on any side. Fit the viewBox to the generated silhouette after the fact.
 - What changed from v3 to v0: v3 was a nearly square rock (canvas aspect 1.213, body 57.2% of canvas) rendered with 76 linear gradients from #7a1e02 to #f7a24a, a hairline black outline of only ~0.0055 of its width (2.1% of body area), and 15 rimmed vesicle holes spanning a 9.6x diameter range with white specular highlights. v0 is landscape (aspect 1.499, body 68.1% of canvas), flat-shaded in three oranges, with a 4x heavier outline (0.0218 of width, 12.8% of body area), and replaces outlined holes with 7 unrimmed solid blobs over a narrow 3.1x size range. v0 is also the LUMPIER outline despite the simpler shading - RMS of harmonics >= 4 is 0.063 against v3's 0.047, and h2 nearly doubles (0.261 vs 0.144). Target v0: flatter colour, heavier line, fewer and bigger holes, wider and lumpier body.
+- The interior relief mark is a measured object, not a flourish: 0.535 of the mean radius long, 0.58 of the outline's width at the waist, tapered to a point at both ends by `x * (2 - x)` over a tenth of its length, with one end touching the outline ink and the other 64.6 units inside the body, leaving the rim 29 degrees off radial. A generator that draws it thinner, or tangentially, or floating free of the outline, is drawing a scratch rather than a fold.
 - What I could not measure: the facet-to-facet adjacency graph and the exact order of the crack-splitting recursion are not recoverable from flattened geometry. I measured that 7 shared edges exist and that 53% of cut endpoints die at interior junctions, but the generative tree that produced them is inferred, not observed. Likewise the vesicle orientation finding rests on only 4 elongated samples.
 
 ---
@@ -305,9 +329,51 @@ fn pangle(dx: f64, dy: f64) -> f64 {  // -> [0, 4), monotone with atan2
 // powf is not needed either: the vesicle size law uses an integer exponent (u*u), so it is
 // plain multiplication.
 
+### The solid
+
+**The drawing is a view of a 3D rock, and everything else is derived from it.** The silhouette is the rock's apparent contour, the three flat tones are a quantisation of its real surface shading, the facet cuts lean along its iso-brightness lines, and the relief mark runs down its steepest fold. The flatness of the output is a RENDERING choice applied to real geometry, which is what lets the tones agree with the shape instead of merely being placed on it.
+
+**The solid.** A radial displacement of an ellipsoid, in exactly the form the 2D silhouette used to take:
+
+```text
+  R(d) = rho_ellipsoid(d) * (1 + amp * F(d))        d a unit 3-vector
+  S(d) = C + R(d) * d
+```
+
+with `F` an fBm sampled on the unit SPHERE in 3D noise space. The circle trick that made the 2D silhouette seamless becomes free in 3D and stops being a trick: a 3D function restricted to the sphere is single-valued at every direction, so there is no seam anywhere on the solid - not at theta = 0, not at either pole, which is where a noise defined over a `(theta, u)` domain would pinch. In-plane semi-axes `R0*sqrt(b)` and `R0/sqrt(b)` with `b` the pre-stretched aspect below; the depth axis is `depth` times the second, default 0.72.
+
+**Why projecting it keeps the crate's one theorem.** The 2D construction rested on a theorem: a curve `r(theta)*(cos theta, sin theta)` with `r > 0` single-valued is star-shaped and therefore cannot self-intersect, which is what makes the ribbon a scalar subtraction and the inside-test O(1). Projecting a 3D body would normally throw that away. It does not, and the argument is three lines:
+
+1. Every direction whose image-plane projection points along `theta` is `dir(theta, u) = (cos theta cos u, sin theta cos u, sin u)` for exactly one `u` in `[-PI/2, PI/2]`, and that point's projected radius is `R * cos u`.
+2. The solid is star-shaped about `C`, so the segment from `C` to any surface point lies inside it, and projection maps that segment to the segment from the projected centre to the projected point. So the projected REGION is star-shaped about the projected centre.
+3. Its radius at image angle `theta` is therefore exactly `max over u of R(dir(theta, u)) * cos u` - single-valued and positive.
+
+So the silhouette is still `r(theta)`, still star-shaped, still non-self-intersecting by construction, and the ribbon is still a subtraction. What is new is that a near-side bump genuinely pokes out past the base ellipse, which a 2D radial profile cannot do.
+
+**Finding the maximum.** `R * cos u` is NOT unimodal in `u`, and that is the feature rather than the problem: a second maximum IS a near-side bump poking out. So the search scans rather than climbs - 19 coarse samples over `|u| <= 1.2`, then 8 golden-section refinements inside the winning bracket. 19 puts the stride at 0.126 rad, which resolves the third octave of the displacement; the fourth carries `gain^3` of the amplitude, about two units of radius, and the band-limiting smoothing attenuates what is missed well below that. Every `u` the search can return gives a point ON the surface, so the result is always a valid lower bound on the true contour and the search's only job is to make the bound tight.
+
+**Two corrections the projection needs, and they are the same correction.**
+
+- PRE-STRETCH THE BASE ASPECT. The maximum over `u` squares the shape up. How wide a window of `u` competes for the maximum depends on how sharply the ellipsoid's radius falls off along that great circle: along the LONG in-plane axis the fall-off to the depth axis is steep, the window is narrow, and the maximum sees little of the displacement; along the SHORT axis it is shallow, the window is wide, and the maximum is more likely to catch a lump. The short axis gains more, so the aspect drops. Measured over 300 seeds at nine base aspects, median realised bbox aspect: 1.00 -> 1.01, 1.25 -> 1.20, 1.50 -> 1.38, 1.70 -> 1.51, 2.00 -> 1.70, 2.40 -> 1.99, 2.80 -> 2.26, 3.20 -> 2.51. Inverting at the default gives a base of 1.69 for a realised 1.50, i.e. `base = 1 + (aspect - 1) * 1.38`, and that one constant lands within 3% of the request across the whole range - an eighth of the bbox gate's tolerance. The interlock `kappa >= (b^2-1)/(2b) + 0.40` must then be taken at the PRE-STRETCHED `b`, which is steeper, and the error message has to say so.
+- NORMALISE THE MEAN RADIUS. The maximum can only add radius, so the projection comes out 6.7% larger than the ellipsoid it was built from. R0 is the unit every other length is a fraction of - the ribbon, every vesicle radius, every clearance - so a body 6.7% too big silently shrinks all of them against it; measured, the vesicle coverage gate then failed on 58 seeds in 200. Scaling the finished ring by `R0 / mean(r)` fixes it with no side effects: a uniform scale leaves `|d(ln r)/d theta|`, the relative radial std and the bbox aspect all untouched, so no gate moves, and R0 then means R0 exactly for every seed rather than in expectation.
+
+With the pre-stretch in place the amplitude loss disappears on its own - see Part 3, "the amplitude loss was the aspect loss".
+
+### The depth map
+
+Shading and crease-finding need the front surface as a height field over the image, which means inverting `R(dir(theta, u)) * cos u = rho` for `u`. Doing that per query by bisection costs ten noise evaluations a time and there are thousands of queries.
+
+**March the parameterisation instead.** For each grid angle, walk `u` from the silhouette's own argmax to the pole. That sweeps the front surface from rim to centre in order, and `z = R sin u` grows all the way, so recording the surface point at each fixed fraction `t` of the silhouette radius - LAST write wins - keeps the nearest surface wherever a bump folds over a farther one. One noise evaluation per sample, no inversion at all, and the rim row lands exactly on the silhouette because it is built from the same `u` the maximisation found.
+
+The grid is 180 angles x 24 radial rows, sized against the brightness gradient's 12-unit central difference rather than against the number of lookups: at that resolution the nodes near the rim sit about 11 units apart, so the difference always spans a cell and never measures the bilinear interpolation's own seams. Two binomial passes smooth the normals, for the same reason the silhouette has forty: the marched mesh resolves detail finer than a facet, which the three-tone quantisation cannot represent and which only shows up as instability in which tone a facet lands in.
+
+**Normals come from the mesh, except at the rim, where they are exact.** The stored points are a quadrilateral mesh in `(theta, t)`, so two neighbour differences give two tangents and their cross product gives the normal, with no further noise evaluations - and unlike differencing the depth in IMAGE space it stays well conditioned where it matters, because at the rim the surface is tangent to the view and `dz/dx` is infinite. The last row is the exception: it has only a one-sided radial neighbour, and near the rim the surface is folding, so the chord to the row inside is nowhere near tangent. At the apparent contour the normal is perpendicular to the view by definition, so write it in closed form - `view x contour_tangent`, which with the view down `+z` is the in-plane perpendicular of the contour, oriented outward.
+
 ### The blob
 
 **method**
+
+The silhouette is now the SOLID'S APPARENT CONTOUR, `max over u of R(dir(theta,u)) * cos u` - see "The solid" above. Steps 5 to 7 below are unchanged and still do the work that matters; step 1 describes the base ellipse the solid is built on and step 4's `lump_amp` now scales the 3D displacement, which reaches the outline unattenuated once the base aspect is pre-stretched.
 
 POLAR RADIUS WITH DOMAIN-WARPED PERIODIC fBm over an elliptical base. Not a noise-advected circle, and not a traced flow curve closed back on itself - both of those can self-intersect and neither can be guaranteed closed without a seam. The polar form buys a theorem (see self_intersection_guard) and makes the ribbon offset exact (see outline_ribbon), which is worth more than the extra wiggle freedom.
 
@@ -509,7 +575,46 @@ PER CUT (repeat facet_cuts times):
         child2 = [X_b] + B[ib+1 ..] + B[.. = ia] + [X_a] + cut interior
      Replace the parent with child1 and push child2. Both children are closed polylines built from original boundary points plus the cut - they compose, so the recursion works on children exactly as on the root, which is the property that makes this a 20-line split and not a clipping library.
 
+WHERE THE SURFACE STEERS THE CUT. Two places, and neither is "follow the contour".
+
+  1. DIRECTION. The cut's base direction is the flow field at the seed leaned
+     toward the solid's ISO-BRIGHTNESS line there, by `facet_relief` (0.80).
+     An iso-line is a contour of the real lit surface, so a cut along one
+     means the flat tone either side of it is the quantisation of that
+     surface and the boundary lands where the shading would have stepped
+     anyway. Sampled ONCE, at the seed, and then held - following it step by
+     step does not work, see Part 3.
+  2. POSITION. An orientation does not say WHERE to put the line, and a
+     contour drawn through the wrong level separates nothing. So 12 candidate
+     seeds are scored by how close their brightness is to the region's own
+     mean, and the closest wins: the chord through it is the region's median
+     contour, and the two children land either side of a real step in the
+     shading instead of either side of an arbitrary line.
+
 TONE ASSIGNMENT:
+  L_r = (1 - tone_noise) * S_r + tone_noise * fbm3(centroid_r / R0 * 0.9)
+  S_r = (1 - tone_lambert) * ( u_light . (centroid_r - C) / R0 )
+      + tone_lambert * mean over the facet of ( n . L )
+
+  where `n` is the solid's own surface normal under the sample point and `L`
+  is the 3D light `(cos light_dir, sin light_dir, light_elev)` normalised.
+  The Lambert term is the half of the depth read the cut directions do not
+  carry: tone becomes a function of ORIENTATION, so two facets lying on the
+  same plane of the rock get the same tone however far apart they are, and
+  two across a fold get different ones however close. A positional ramp can
+  only make one side of the image darker than the other, which is why it
+  needed so much noise to stop reading as a gradient. `tone_lambert` 0
+  recovers the old behaviour exactly, which is what makes the change
+  measurable rather than a matter of taste.
+
+  The brightness is averaged over 9 samples per facet - the centroid plus one
+  part-way toward each of 8 boundary points - because the largest facet is
+  7 times the smallest and judging it by one point is least defensible
+  exactly there.
+
+  `light_dir` is 2.30 rad, not SPEC.md's original 1.90: see Part 3.
+
+OLD TONE ASSIGNMENT, for reference:
   L_r = (1 - tone_noise) * ( u_light . (centroid_r - C) / R0 ) + tone_noise * fbm3(centroid_r / R0 * 0.9)
   with u_light = (cos light_dir, sin light_dir), light_dir default 1.90 rad. [measured: the artwork's lightest tone sits at the bottom edge (y 208-298 of 305) and the darkest at top and right - light from below, which is unusual and is exactly why the thing reads as glowing lava rather than as a lit pebble. Keep it.]
   Sort regions by L_r ascending with an index tie-break and `total_cmp`. Walk the sorted list accumulating area and assign tone 0 until 0.30 of body area is covered, tone 1 until 0.90, tone 2 for the rest. [measured tone area split: #ee3300 27026 / #ff5721 54640 / #ff6f21 8982 of 90648 = 0.298 / 0.603 / 0.099]
@@ -549,13 +654,28 @@ The five consequences the implementer must honour to keep it true:
 
 Facets do NOT need to avoid the vesicles - vesicles are opaque and painted after.
 
+### The relief marks
+
+One thin tapered stroke per logo by default, down the rock's steepest fold, growing out of the outline. Part 1 measures the artwork's; this is how to place one.
+
+**Candidates are facet cuts that reach the rim.** A cut is already a validated, non-self-intersecting curve inside the body, it is already a tone boundary, and it already leans along the solid's iso-brightness line - so it is the curve a fold would be drawn on. A cut END qualifies when it lands inside the ribbon's ink band: the facet root sits on the ribbon's MIDLINE, so a cut that ends on the root ends halfway through the ink and the mark emerges from it seamlessly, exactly as measured, while a cut ending on an earlier cut is strictly inside that and a mark there would float with a tapered point hanging in the orange. Testing the ink band rather than tracking provenance through the subdivision tests the property that actually matters.
+
+**It must head inward.** Measured, Anya's leaves the rim 29 degrees off radial; the rule is within 55. Without it the pass picks marks that run TANGENTIALLY just inside the outline, because that is where the brightness changes fastest, and a line hugging the rim reads as a nick in the ink.
+
+**Score by the FOLD, not by the slope.** The brightness gradient is largest near the rim whether or not anything is happening there, so scoring by `|grad B|` picks whichever candidate spends longest near the rim - measured on the first twelve seeds, every mark chosen that way ran tangentially. A fold is a place where the gradient CHANGES fast, and a smooth roll-off is not one however steep it is. Sampling the brightness at the spine and one step either side of it, across the spine, measures that for three lookups a sample.
+
+**Then the rules that keep it a fold rather than a scratch**: it must straddle a TONE STEP somewhere along its length (probed at 30%, 55% and 80%); it must clear every vesicle by two half-widths; two marks must stay 0.30*R0 apart, or they read as hatching; and the centreline's local curvature radius must exceed 2.5 half-widths, or the offset folds over itself.
+
+**Geometry**: offset the spine either side by the tapered half-width and close the loop, with both tips a SINGLE shared point so the two sides meet there instead of approaching asymptotically - which would leave a pair of points closer than the degenerate-segment gate allows, and a needle where the drawing has a rounded end. Width profile `x * (2 - x)` over the first and last tenth, waist `relief_weight * R0`, length `relief_len * R0`; both measured in Part 1.
+
 ### Parameters
 
 | name | type | default | range | effect |
 |---|---|---|---|---|
 | `seed` | `u64` | `0` | any u64 | The whole image. Passed through SplitMix64 and split into 5 independent PCG32 streams (blob, vesicle, facet, tone, noise-perm) so that changing one subsystem's parameters does not reshuffle the others. Sequential seeds give unrelated images. |
 | `tameness` | `f64` | `0.55` | 0.0 ..= 1.0 | The one knob a non-expert touches. 0 = feral, 1 = corporate. Drives seven others by linear interpolation, applied BEFORE any explicit override: lump_amp = lerp(0.30, 0.12, t); lump_octaves = round(lerp(5, 3, t)); slope_limit = lerp(1.80, 0.80, t); warp_amt = lerp(0.45, 0.10, t); vesicle_count = round(lerp(11, 5, t)); vesicle_amp = lerp(0.42, 0.18, t); facet_curviness = lerp(1.00, 0.25, t). The default 0.55 reproduces the artwork's measured values. |
-| `aspect` | `f64` | `1.50` | 1.0 ..= 2.2 | Width/height of the base ellipse; semi-axes a = R0*sqrt(aspect), b = R0/sqrt(aspect) so mean radius is R0 regardless. 1.0 reads as a pebble, 2.2 as a shard. Measured 1.50, which equals the artwork's canvas aspect (457/305). |
+| `aspect` | `f64` | `1.50` | 1.0 ..= 2.2 | Width/height of the finished silhouette's bounding box. The base ellipsoid is pre-stretched to `1 + (aspect-1)*1.38` because the projection squares the shape up; see "The solid". 1.0 reads as a pebble, 2.2 as a shard. Measured 1.50, which equals the artwork's canvas aspect (457/305). |
+| `depth` | `f64` | `0.72` | 0.35 ..= 1.40 | The solid's depth axis as a fraction of its vertical in-plane semi-axis. 1.0 reads as a ball and flattens the shading toward the mid tone; 0.4 reads as a slab and makes the silhouette spikier. Not measurable from a flat drawing - chosen by eye at the value where the tone bands spread across the face without the outline losing its lumps. |
 | `r0` | `f64` | `300.0` | fixed (canonical) | The canonical mean radius. Fix it at 300 inside a 1000-unit canvas and express every other length as a fraction of it; then all the defaults below are readable numbers and the viewBox is round. Rescale only at output time if a caller wants different units. |
 | `margin` | `f64` | `0.04` | 0.0 ..= 0.15 | Padding around the blob's true bbox, as a fraction of R0, used to compute the viewBox. The artwork bleeds to the edge (margin 0); 0.04 is better for a logo that will sit next to text. |
 | `lump_amp` | `f64` | `0.22` | 0.05 ..= 0.35 | Radial fbm amplitude as a fraction of the base ellipse radius. The primary silhouette-chaos knob. 0.05 is an egg, 0.22 is the artwork (measured relative radial std 0.25, Rmin/Rmean 0.52, Rmax/Rmean 1.40), 0.35 starts fighting the slope limiter and the blob circularises. |
@@ -579,8 +699,14 @@ Facets do NOT need to avoid the vesicles - vesicles are opaque and painted after
 | `facet_min_area` | `f64` | `0.015` | 0.005 ..= 0.050 | Reject any cut whose smaller child is below this fraction of body area. The anti-sliver gate. Measured smallest facet in the artwork is 0.019, so 0.015 leaves a little room. |
 | `facet_min_chord_sep` | `f64` | `0.08` | 0.03 ..= 0.20 | Minimum separation of the two cut crossings, as a fraction of the region's perimeter measured the short way round. Stops a cut from clipping a thin wedge off a corner - a different sliver mode from the area gate, because a long thin wedge can pass the area test. |
 | `tone_fractions` | `[f64; 3]` | `[0.30, 0.60, 0.10]` | each 0.06 ..= 0.80, must sum to 1 | Target area share of shadow / mid / highlight, applied as quantiles over the light-sorted regions so all three tones always appear. Measured exactly: 0.298 / 0.603 / 0.099. The dominance of the mid tone is what keeps the piece from looking busy. |
-| `light_dir` | `f64` | `1.90` | 0 ..= 2*PI | Direction of the tone gradient, radians, in SVG coordinates (y down). 1.90 rad points down-and-slightly-left, i.e. the highlight sits at the bottom. Measured: the artwork's three lightest facets all sit in y 180-298 of 305 while the darkest cluster at top and right. Lighting from below is what makes it read as glowing lava rather than as a lit stone - it is a deliberate artistic choice, not an error to fix. |
-| `tone_noise` | `f64` | `0.35` | 0.0 ..= 1.0 | Blend of the light function between a pure directional ramp (0, very orderly, reads as a lit solid) and pure fbm (1, scattered, reads as mineral variation). 0.35 keeps a readable light direction while breaking up the banding. |
+| `light_dir` | `f64` | `2.30` | 0 ..= 2*PI | In-plane direction the light comes FROM, radians, in SVG coordinates (y down). 2.30 rad points down and to the left. Measured as the axis through the three tones' own visible-pixel centroids, (276.9,135.3) dark to (179.0,244.9) light, which is the unit vector (-0.666,+0.746) Part 1 gives. Lighting from below is what makes it read as glowing lava rather than as a lit stone - a deliberate artistic choice, not an error to fix. Was 1.90, inferred rather than measured; see Part 3. |
+| `light_elev` | `f64` | `0.22` | 0.0 ..= 1.50 | The light's component toward the viewer, before normalising. Small keeps the light grazing, which is what spreads the three tones across the face; at 0.80 the light is near head-on and the body floods with the mid tone. Calibrated against Part 1's measured tone positions. |
+| `tone_lambert` | `f64` | `0.85` | 0.0 ..= 1.0 | How much of a facet's tone comes from Lambert shading of the solid's real surface normal, against the flat positional ramp. 0 recovers the pre-3D behaviour exactly. |
+| `facet_relief` | `f64` | `0.80` | 0.0 ..= 1.0 | How far a cut's direction leans off the flow field toward the solid's iso-brightness line at its seed. Also switches on the median-brightness seed search. |
+| `relief_lines` | `u32` | `1` | 0 ..= 6 | Interior relief marks to draw. Measured 1. |
+| `relief_weight` | `f64` | `0.034` | 0.008 ..= 0.060 | A mark's waist width over R0. Measured 0.0337, which is 0.58 of the outline ribbon. |
+| `relief_len` | `f64` | `0.54` | 0.15 ..= 1.00 | A mark's centreline length over R0. Measured 0.535. |
+| `tone_noise` | `f64` | `0.35` | 0.0 ..= 1.0 | Blend of the light function between the shading term (0, orderly) and pure fbm (1, scattered, reads as mineral variation). 0.35 is measured, not tuned: the artwork's tones overlap by a full quartile and 0.35 is what reproduces both the measured means and the measured interquartile widths. Less of it reads as more three-dimensional by eye and is wrong - see Part 3. |
 | `palette_hue` | `f64` | `13.0` | 0 ..= 360 | Base hue in degrees for the three-tone ramp. 13 is the measured shadow hue of #ee3300. Moving this alone transports the whole family coherently (e.g. 205 gives an ice-blue obsidian variant). |
 | `palette_sat` | `f64` | `1.00` | 0.50 ..= 1.00 | HSL saturation for all three tones. The artwork is 100% on all three - the flatness of the saturation is part of why it reads as a mark rather than a render. Below 0.8 it starts to look like a photo trace. |
 | `palette_light` | `f64` | `0.565` | 0.30 ..= 0.75 | HSL lightness of the MID tone, which the other two are defined against. Measured 0.565 (both #ff5721 and #ff6f21). |
@@ -607,6 +733,7 @@ Facets do NOT need to avoid the vesicles - vesicles are opaque and painted after
 
 Every one of these runs before an SVG is emitted. A failure re-rolls the logo.
 
+- SILHOUETTE AMPLITUDE, measured AGAINST THE BASE ELLIPSE. `std(r(theta) / rho_base(theta))` must land in `[0.70, 1.50] * 0.65 * lump_amp`. Measuring about the MEAN RADIUS instead, which is the obvious thing and what this gate first did, measures the aspect and the lumps together and leaves `lump_amp` almost no authority - see Part 3. The 0.65 is how much of `lump_amp` survives the projection, the limiter and the smoothing.
 - SILHOUETTE STAR-SHAPEDNESS. Assert r_i > 0.25*R0 for all i, and after the limiter assert |ln(r_i) - ln(r_{i-1})| <= kappa*dtheta*1.0001 for all i with wraparound. These two together are a PROOF that the outer contour does not self-intersect, so no intersection test is needed on it. Cheap enough to leave on in release.
 - RIBBON POSITIVITY AND EVENNESS. r_in_i = r_i - w_i must satisfy r_in_i >= 0.15*R0 for all i (else the body pinches shut in a notch and the ribbon fills it with a black blob). Perceived width w_i / sqrt(1 + (rp_i/r_i)^2) must land in [0.75, 1.30] * w0 for every i after the k-cap; if not, the cap fired and kappa is too high for this outline_weight - reject and re-roll.
 - RIBBON NECK CHECK. No two ring samples that are more than 0.10*perimeter apart ALONG the curve may be closer than 2.4*w0 in space. This catches the one case the star-shape theorem does not: a deep notch whose two walls are both compliant individually but which the ribbon still closes across, producing a solid black wedge. Test with the segment uniform grid, O(N).
@@ -622,6 +749,9 @@ Every one of these runs before an SVG is emitted. A failure re-rolls the logo.
 - SIZE SPREAD. The ratio of largest to smallest PLACED vesicle equivalent radius must be >= 2.0. If the packer happened to drop both big ones you get seven identical dots, which reads as polka dot, not as rock. Re-roll.
 - NO DEGENERATE OR NON-FINITE OUTPUT. Every emitted coordinate is finite; no |signed area| below 1e-6; format -0.0 as 0.000 (a `-0.000` in the output breaks byte-identity between platforms that differ in sign-of-zero propagation, and looks like a bug to anyone reading the file).
 - EXPLICIT SELF-INTERSECTION TEST on every emitted contour (outer, inner, each facet, each vesicle) via the segment uniform grid, excluding shared endpoints. This is O(n) and should always pass given the construction - it is there to catch an implementation error, not a design one. Treat a failure as a bug, not as a re-roll trigger.
+- DEPTH MAP ORIENTATION. The map is the FRONT surface, the right way round: every node finite, every normal a unit vector, the pole-row normals facing the viewer (`n.z >= 0.70`, measured worst 0.883) and the mean `n.z` over the whole grid at least 0.45 (measured 0.745 to 0.781). NOT that every normal faces the viewer - the outer rows legitimately face away, which is what a fold IS. See Part 3.
+- TONE ORDER. The shadow tone's area-weighted mean Lambert brightness must be below the highlight's. This is the gate for the whole harmonisation: a mirrored light, or a sign slip anywhere between the surface normal and the palette index, shows up here and nowhere else, because every such mistake still produces a perfectly plausible picture lit from the wrong side. The ENDS only - `tone_noise` deliberately scatters the assignment, so the mid tone's mean genuinely can cross a neighbour on a seed where the quantile boundary lands awkwardly among twelve facets.
+- RELIEF MARK GEOMETRY. Every mark is finite, does not self-intersect, and has a mean width (area over centreline length) within [0.80, 1.05] of `relief_weight * R0`. The marks are the one piece of geometry built by OFFSETTING a curve rather than by a polar subtraction, so they are the one piece the star-shape theorem says nothing about - and an offset that folded over itself comes out with the right outline length and the wrong area, which no other gate would see.
 - RETRY DISCIPLINE. Any failure re-rolls the whole logo from a fresh split of the seed, up to retry_budget. On exhaustion return Err with the name of the rule that kept failing - that error message is how a caller discovers that their parameter combination is infeasible (typically outline_weight too high against slope_limit, or vesicle_count too high against vesicle_rmax).
 
 ### Pitfalls
@@ -712,6 +842,148 @@ at the code that implements it.
   amplitude, not the realised one, and the realised bbox aspect is fitted to
   the lumps rather than to the base ellipse. Both needed their own gate for
   the family to stay on-brand across seeds.
+
+### From building the 3D stage
+
+- **The amplitude loss was the aspect loss.** The projection appears to lose
+  amplitude: on an unstretched base the realised radial std comes out at
+  0.193 against the 0.22 asked for, and a gain of 1.40 was carried for a
+  while to buy it back. It is the same effect as the aspect squaring up, seen
+  from the other side - the wider the window of tilt competing for the
+  maximum, the more displacement it catches and the more radius it adds.
+  Pre-stretching the base to fix the aspect narrows that window, and the
+  amplitude comes back on its own: 0.220 against 0.22, with no gain. Two
+  calibrations, one mechanism. Calibrating them in the wrong order produces a
+  correction that double-counts.
+
+- **The amplitude gate was measuring the aspect.** `lump_amp` is documented
+  and measured as a fraction of the BASE ELLIPSE radius, but the gate
+  measured the std of `r(theta)` about its MEAN - and an ellipse's radius
+  varies a great deal on its own, 0.19 at the pre-stretched default before a
+  single lump is added. So the gate was a second, worse `bbox_aspect`, and
+  `lump_amp` had almost no authority over the number it was checked against:
+  the three presets ask for 0.120, 0.201 and 0.300 and measured 0.199, 0.217
+  and 0.240, a 2.5x request compressed into a 1.2x response. `tame` read as a
+  splat and `feral` as an egg. Dividing by the base ellipse first gives
+  0.087, 0.131 and 0.174, which tracks the request at a steady 0.58 to 0.73
+  of it. This was latent before the move to 3D; pre-stretching the base
+  raised the ellipse's own contribution enough to expose it.
+
+- **An iso-brightness line cannot be followed step by step.** The first
+  design re-read the solid's iso-brightness direction at every 3-unit Euler
+  step, which is the obvious way to make a facet boundary follow the shading.
+  A level set of a smooth function on a bounded region either leaves the
+  region or CLOSES INTO A LOOP, and around every brightness extremum it
+  closes; near every saddle it rotates arbitrarily fast. Measured: the median
+  cut's total absolute turning went from 17 degrees to 235, against the 220
+  the no-self-intersection test allows, and 916 cuts in 200 seeds failed it.
+  Neither guard helps. A cone about the starting heading bounds where the
+  heading can GET to but not how much it accumulates on the way - a heading
+  can oscillate inside a bound forever, and absolute turning is what the test
+  measures - and a per-step rate limit only slows the oscillation down. What
+  works is to read the direction ONCE, at the seed, and hold it; the cut then
+  leans into the crease instead of tracing it, which is also the better match
+  to a drawing whose facet edges are long near-straight chords.
+
+- **An orientation is not a position.** Leaning the cut along the iso-line at
+  the region's centroid separates nothing in particular, because a contour
+  drawn through the wrong level is just a line. Scoring a spread of candidate
+  seeds by how close their brightness is to the region's own mean, and taking
+  the closest, puts the chord on the region's median contour - so the two
+  children straddle a real step in the shading. That is the change that made
+  the tone bands follow the terminator instead of radiating from the middle.
+
+- **The projection fills notches, and the body grows with `lump_amp`.** The
+  maximum over tilt can only ADD radius, and what it adds most of is where
+  the displacement dipped: a notch is filled in by whatever tilt still has
+  radius to offer, while a bump is already the maximum and gains nothing. So
+  Rmin/Rmean comes out at 0.625 against the artwork's measured 0.52 - the
+  generated silhouette's bites are shallower than the drawing's - and, with
+  the mean radius normalised, the body gets rounder and therefore BIGGER in
+  area as the amplitude rises: measured `area / (PI*R0^2)` of 1.041, 1.105
+  and 1.206 at `lump_amp` 0.120, 0.201 and 0.300, where the 2D construction
+  gave 0.995, 1.043 and 0.896. Vesicle sizes are fractions of R0 and do not
+  know about this, so coverage - a gated area ratio - falls as the body
+  grows; the tameness dial scales the radii by the square root of the growth
+  to hold it. The shallower bites are NOT fixed and remain the clearest gap
+  against Part 1. A deep bite needs a feature that survives the maximisation,
+  which means a groove running pole to pole rather than a dimple, since a
+  dimple is simply stepped over by a neighbouring tilt.
+
+- **The rim normal has to be written down, not differenced.** The depth map's
+  last row has only a one-sided radial neighbour, and near the rim the
+  surface is folding over, so the chord to the row inside is nowhere near
+  tangent and the cross product comes out tilted - often facing slightly away
+  from the viewer, on the one row that carries the rim's shading and every
+  relief mark's rim end. At the apparent contour the normal is perpendicular
+  to the view by definition, so it is a closed form: the in-plane
+  perpendicular of the contour, oriented outward. Measured, differencing it
+  put 91 of 120 rolls outside the depth map's own sanity gate.
+
+- **"Every normal faces the viewer" is false, and gating on it is worse.**
+  The outer rows legitimately face away: that is what a FOLD is, a near bump
+  whose surface curls past the apparent contour and occludes what is behind
+  it, and the map is built to keep the nearest surface precisely so it can
+  represent one. Measured, the worst node at `t = 0.83` of the silhouette
+  radius reaches `n.z` -0.12 at the default and -0.64 at `--preset feral`,
+  and both are real geometry. The invariants that do hold are that the pole
+  faces the viewer squarely and that the map faces the viewer on average.
+  Nor is the centre always nearer than the rim - a bump whose silhouette
+  point sits well above the equator is nearer the viewer than the pole of a
+  solid this flat, and 20 rolls in 240 are.
+
+- **`light_dir` is 2.30, not 1.90.** Part 1 measures the tone axis directly:
+  the three tones' visible-pixel centroids run from (276.9, 135.3) to
+  (179.0, 244.9), which is the unit vector (-0.666, +0.746), which is 2.30
+  rad. The 1.90 in Part 2's table was inferred from where the lightest facets
+  sit rather than measured, and it costs accuracy: at 1.90 the shadow tone's
+  mean position lands at 0.399 against the measured 0.302, and at 2.30 it
+  lands at 0.368 with the other two improving alongside.
+
+- **`tone_noise` should not be lowered, however much better it looks.**
+  Less noise reads as more three-dimensional by eye - the tone regions get
+  larger and cleaner and the terminator sharpens. It is still wrong: the
+  artwork's tones overlap by a full quartile, and matching that overlap is
+  what makes a generated rock belong to the same family. Measured against
+  Part 1's tone positions, 0.20 puts the three means 0.013, 0.058 and 0.078
+  off while 0.35 puts them 0.066, 0.040 and 0.015 off, and 0.35 also
+  reproduces the interquartile WIDTHS - 0.30 against the measured 0.31 for
+  the shadow, where 0.20 gives 0.22. The measurement overruled the eye.
+
+- **The depth map is sized by the gradient step, not by the lookups.** The
+  obvious sizing - enough nodes for the number of queries - is the wrong
+  question once the cut tracer stopped reading the map per Euler step. What
+  the resolution has to satisfy is that the brightness gradient's central
+  difference spans a CELL: a bilinear sample of a grid is only C0, so a
+  difference narrower than a cell measures the interpolation's seams rather
+  than the surface, and its direction jumps at every cell boundary. At a
+  6-unit difference on 8-unit cells that chatter accumulated enough absolute
+  turning to fail 917 cuts in 200 seeds while every individual step still
+  looked plausible.
+
+- **A one-seed test is not a test of a generator that re-rolls.**
+  `every_preset_generates` checked seed 4 of each preset, which passes
+  unchanged with 95% of seeds failing - and that is what it did while
+  `--preset feral` was exhausting its whole retry budget on one seed in
+  thirty. Measured over 120 seeds, against the same sweep on the 2D
+  generator: anya 120/120 (was 120/120, 37 re-rolls against 70), tame 120/120
+  (was 120/120, 29 against 113), feral 116/120 (was 111/120, 654 against
+  626). `feral` is the honest outlier in both - it asks for the lumpiest body
+  and nine big lumpy holes in it at once, and it lives on the vesicle
+  coverage floor.
+
+- **Known and not fixed: facet self-intersection at the tame end.** The
+  release build's self-intersection test covers the facets, and 16 of 120
+  `--preset tame` rolls trip it and re-roll. This predates the 3D stage - the
+  same sweep on the 2D generator trips 25 of 120 - and the cause is in the
+  Catmull-Rom fit of a region boundary, not in anything here.
+
+- **Cost.** A logo is about 9 ms against the 2D generator's 4, and the
+  silhouette plus the depth map is 5.9 ms of it. That is simply the count of
+  noise evaluations: roughly 20,900 radius evaluations for the silhouette
+  (720 angles x 29 samples of tilt) and 8,800 for the depth map, each a
+  4-octave 3D fBm at about 160 ns, with 3D Perlin itself measured at 26.4 ns
+  a call. A 500-logo batch is about 5 seconds rather than 2.
 
 - **Still open.** The cross-platform half of the determinism claim is
   untested: the suite proves output is a pure function of its inputs within

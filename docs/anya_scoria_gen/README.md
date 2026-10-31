@@ -1,7 +1,8 @@
 # anya-scoria-gen
 
-Procedurally generated scoria logos: flow-field blobs, packed gas holes, flat
-three-tone faceting, out as SVG. Zero dependencies, deterministic to the byte.
+Procedurally generated scoria logos: a bumpy 3D rock, drawn flat in four
+inks - packed gas holes, three-tone faceting, a heavy outline and one thin
+relief mark - out as SVG. Zero dependencies, deterministic to the byte.
 
 ![the mark this aims at](../img/anya_v0_base.svg)
 
@@ -18,10 +19,20 @@ It exists so the mark can move: a seed per release, per page, per sticker
 sheet, all unmistakably the same hand. One `u64` in, one logo out, the same
 bytes on every machine.
 
+**There is a real rock underneath.** Each seed builds a 3D solid - an
+ellipsoid displaced along its radii by noise sampled on the sphere - and
+everything you see is derived from it in orthographic projection: the
+silhouette is its apparent contour, the three flat tones are a quantisation
+of its actual surface shading, the facet cuts lean along its iso-brightness
+lines, and the thin relief mark runs down its steepest fold. The flatness is
+a rendering choice applied to real geometry, which is what lets the tones
+describe the shape rather than merely sit on it.
+
 **[`SPEC.md`](SPEC.md) is the authority.** Part 1 is the measurements, Part 2
-the algorithm with its constants, quality gates and named pitfalls. Where this
-README and the spec disagree, the spec wins; where the spec and the artwork
-disagree, measure the artwork again.
+the algorithm with its constants, quality gates and named pitfalls, Part 3
+what building it proved wrong. Where this README and the spec disagree, the
+spec wins; where the spec and the artwork disagree, measure the artwork
+again.
 
 ## Quickstart
 
@@ -55,17 +66,28 @@ p.set("tameness", "0.8").unwrap();
 p.apply_tameness();   // only touches knobs you did not set yourself
 ```
 
-## Design, in four lines
+## Design, in five lines
 
-- **The silhouette is polar.** It is `r(theta)`, never an advected point cloud.
-  A single-valued `r > 0` is star-shaped about its centre and therefore cannot
-  self-intersect - that theorem is the whole foundation, and it is what turns
-  the outline ribbon from a polygon-offset problem into the subtraction
-  `r - w(theta)`.
+- **The silhouette is a 3D object's outline, and still polar.** It is
+  `max over u of R(dir(theta, u)) * cos u`, the apparent contour of the
+  solid. That is still a single-valued `r(theta) > 0`, so it is still
+  star-shaped about its centre and therefore still cannot self-intersect -
+  the theorem the whole crate rests on survives the move to 3D, because the
+  projection of a star-shaped body is star-shaped. It is what turns the
+  outline ribbon from a polygon-offset problem into the subtraction
+  `r - w(theta)`, and now a near-side bump genuinely pokes out past the base
+  ellipse, which a 2D radial profile cannot do.
+- **The shading is the solid's own.** A depth map of the front surface -
+  built by marching the parameterisation from rim to pole, not by inverting
+  anything - gives a real normal under any image point. A facet's tone is
+  the Lambert brightness of that normal, quantised by area quantile into the
+  measured 30/60/10 split. So two facets on the same plane of the rock get
+  the same tone however far apart they are, and two across a fold get
+  different ones however close.
 - **One flow field does three jobs.** It warps the silhouette's noise lookup,
-  orients each gas hole's long axis, and is traced directly to produce the
-  facet cuts. That shared origin is why a seed reads as one rock rather than
-  three unrelated effects.
+  orients each gas hole's long axis, and sets the facet cuts' heading. That
+  shared origin is why a seed reads as one rock rather than three unrelated
+  effects.
 - **Facets are cut, not placed.** Recursive bisection always splits the largest
   remaining region; children copy the parent's `f64` vertices and share the cut
   array bit for bit, so adjacent facets have literally the same edge and no
@@ -77,9 +99,12 @@ p.apply_tameness();   // only touches knobs you did not set yourself
   decimal in the output. Nothing iterates a `HashMap`, whose order changes
   between runs. Sorting is `total_cmp` with an index tie-break. f64 throughout.
 
-Quality gates run before anything is written: star-shapedness, ribbon evenness
-and neck width, facet area and sliver angles, all three tones present, vesicle
-clearance, coverage and size spread, no self-intersection, nothing non-finite.
+Quality gates run before anything is written: star-shapedness, silhouette
+amplitude and bounding box, ribbon evenness and neck width, facet area and
+sliver angles, all three tones present AND in the order the solid's own
+shading puts them, the depth map facing the right way, relief marks of the
+right width, vesicle clearance, coverage and size spread, no
+self-intersection, nothing non-finite.
 A failure re-rolls the whole logo from a fresh split of the seed; on exhaustion
 the generator returns `Err` naming the gate that kept failing, rather than
 emitting known-bad art.
@@ -87,8 +112,10 @@ emitting known-bad art.
 ## Where this departs from SPEC.md
 
 The spec is the contract and most of the defaults below are its table
-verbatim. Twelve places needed a judgement call, each measured rather than
-guessed; the code carries the reasoning at the point of use.
+verbatim. Each departure below was measured rather than guessed, and the code
+carries the reasoning at the point of use. SPEC.md Part 3 has the full list,
+including everything the 3D stage proved wrong; these are the ones a reader
+of the parameter table most needs to know about.
 
 Four of them are places where SPEC.md contradicts its own Part 1
 measurements. Part 1 is what was measured off the drawing and Part 2 is the
@@ -182,6 +209,43 @@ algorithm inferred from it, so where they disagree Part 1 wins.
   the amplitude band is a ratio of `lump_amp`, so `--preset feral` still gets
   what it asks for. With them the realised aspect runs 1.25 to 1.84, median
   1.50.
+- **The silhouette amplitude gate measures against the BASE ELLIPSE, not
+  the mean radius.** `lump_amp` is documented and measured as a fraction of
+  the base ellipse radius, and an ellipse's radius varies a great deal on its
+  own - 0.19 at the pre-stretched default, before a single lump. Measuring
+  about the mean therefore measures the aspect and the lumps together, which
+  makes the gate a second, worse `bbox_aspect` and leaves `lump_amp` almost
+  no authority: the three presets ask for 0.120, 0.201 and 0.300 and measured
+  0.199, 0.217 and 0.240, a 2.5x request compressed into a 1.2x response, so
+  `tame` read as a splat and `feral` as an egg. Dividing by the base ellipse
+  first gives 0.087, 0.131 and 0.174.
+- **`light_dir` is 2.30, not the spec table's 1.90.** Part 1 measures the
+  tone axis directly - the three tones' visible-pixel centroids run from
+  (276.9, 135.3) to (179.0, 244.9), the unit vector (-0.666, +0.746), which
+  is 2.30 rad. The 1.90 was inferred from where the lightest facets sit, and
+  it costs accuracy: it puts the shadow tone's mean position at 0.399 against
+  the measured 0.302, where 2.30 puts it at 0.368.
+- **`tone_noise` stays at 0.35 even though less looks better.** Less noise
+  reads as more three-dimensional by eye - larger, cleaner tone regions, a
+  sharper terminator. The artwork's tones overlap by a full quartile, and
+  matching that overlap is what makes a generated rock belong to the same
+  family. Against Part 1's measured tone positions, 0.20 puts the three means
+  0.013, 0.058 and 0.078 off while 0.35 puts them 0.066, 0.040 and 0.015 off,
+  and 0.35 reproduces the interquartile widths too. The measurement overruled
+  the eye.
+- **An iso-brightness line is leaned on, never followed.** Re-reading the
+  solid's iso-brightness direction at every Euler step is the obvious way to
+  make a facet boundary follow the shading, and it does not work: a level set
+  either leaves the region or closes into a loop, and the median cut's total
+  absolute turning went from 17 degrees to 235 against the 220 the
+  no-self-intersection test allows. Neither a cone about the starting heading
+  nor a per-step rate limit helps, because a heading can oscillate inside a
+  bound forever. The direction is read once, at the seed.
+- **The projection fills notches.** The maximum over tilt can only add
+  radius, and it adds most where the displacement dipped, so Rmin/Rmean comes
+  out at 0.625 against the artwork's 0.52 - the generated bites are shallower
+  than the drawing's. This is the clearest remaining gap against Part 1 and
+  it is not fixed.
 - **The tameness dial sizes the holes against their REACH.** A hole's
   half-extent is `r * sqrt(aspect) * (1 + amp * AMP_BIG)`, and that is what
   has to fit; the dial moves both the count and the amplitude, so it scales
@@ -201,57 +265,59 @@ algorithm inferred from it, so where they disagree Part 1 wins.
 
 ## Output and cost
 
-About 88 KB per logo at the default resolutions (median over 500).
+About 90 KB per logo at the default resolutions (mean over 500).
 
-**500 logos in 2.11 seconds single-threaded, 4.22 ms each** - measured three
-times on one core, spread under 1.5%, 0 failures. That is above the 1-3 ms
-SPEC.md estimates, and the gap is worth naming precisely rather than rounding
-away:
+**500 logos in 5.04 seconds single-threaded, 10.1 ms each** - measured three
+times on one core, spread under 1.3%, 0 failures, 158 re-rolls over the 500.
 
 | where it goes | per logo |
 |---|---|
-| re-rolls | 0.50 extra attempts average; a rejected roll bails after the silhouette |
-| SVG writer | ~1.8 ms, the single largest item |
-| generation (ring, facets, packing) | ~1.3 ms |
+| silhouette and depth map | ~5.9 ms, the single largest item |
+| SVG writer | ~1.7 ms |
+| facets, packing, relief | ~1.2 ms |
 | quality gates | ~0.4 ms |
+| re-rolls | 0.32 extra attempts average; a rejected roll bails after the silhouette |
 
-Most of the remainder is the spec's own estimate being short rather than the
-code being slow. The spec costed the outline and predicted "near 25 KB"; the
-facet tiling is the other two thirds of the 88 KB and was never estimated,
-and the writer and the gates both scale with it.
+The 3D stage is most of it, and it is the count of noise evaluations rather
+than anything slow: roughly 20,900 radius evaluations for the silhouette
+(720 angles x 29 samples of tilt) and 8,800 for the depth map, each a
+4-octave 3D fBm at about 160 ns. 3D Perlin itself measures 26.4 ns a call.
+The 2D generator this replaced ran at 4.2 ms; the extra 5.9 is the rock.
 
-The re-roll rate used to be the other half of it, at 4.3 extra attempts per
-logo, and stratified radii removed almost all of that: the packer no longer
-has to be re-rolled into a size hierarchy it now gets by construction. What
-is left is paid where it is cheapest - the silhouette gates run the moment
-the ring exists, before the ribbon, the tiling or the packing are built.
-
-The obvious remaining lever is the writer: 1.8 ms to format 88 KB is float
-formatting, and a hand-rolled fixed-point formatter would take most of it.
-It was left alone because byte-identical output is a hard promise and a new
-formatter is the riskiest possible place to touch it.
+Both remaining levers were left alone deliberately. The silhouette's coarse
+scan could run at two octaves instead of four and the refinement at all
+four, for about 10%; that is complexity against a budget nothing is pressing
+on. The writer's 1.7 ms is float formatting, and a hand-rolled fixed-point
+formatter would take most of it - but byte-identical output is a hard
+promise and a new formatter is the riskiest possible place to touch it.
 
 ## Preset health
 
 `generate` re-rolls internally and only returns `Err` when every roll in
 `retry_budget` (20) failed the same gate, which means the parameter set is
-infeasible rather than unlucky. Measured over 200 sequential seeds:
+infeasible rather than unlucky. Measured over 120 sequential seeds, beside
+the same sweep on the 2D generator this replaced:
 
-| preset | seeds that failed |
-|---|---|
-| `anya` (the default) | 0 / 200 |
-| `tame` | 0 / 200 |
-| `feral` | 14 / 200 |
+| preset | failed | re-rolls | failed (2D) | re-rolls (2D) |
+|---|---|---|---|---|
+| `anya` (the default) | 0 / 120 | 37 | 0 / 120 | 70 |
+| `tame` | 0 / 120 | 29 | 0 / 120 | 113 |
+| `feral` | 4 / 120 | 654 | 9 / 120 | 626 |
 
 `feral` is the corner of the parameter space - nine holes, `vesicle_amp`
 0.42, `vesicle_aspect_max` 2.40 and `slope_limit` 1.80 all at once - and its
-failures are the vesicle size-spread gate reporting a genuine geometric
+failures are the vesicle coverage gate reporting a genuine geometric
 infeasibility: what has to fit is a hole's reach,
 `r * sqrt(aspect) * (1 + amp)`, and at the wild end the largest drawn hole is
-simply longer than the body can hold. Stratified radii took that rate from
-20% to 7% and cleared `tame` entirely; closing the rest means deciding what
-`feral` should mean, not tuning a constant. Callers who want every seed to
-land should use the default, or raise `retry_budget`.
+simply longer than the body can hold. It is a little better here than it was,
+not because it was worked on but because the body it has to fill is the one
+the projection makes. Closing the rest means deciding what `feral` should
+mean, not tuning a constant. Callers who want every seed to land should use
+the default, or raise `retry_budget`.
+
+The test for this is a RATE over a sweep, not one seed: a single-seed check
+passes unchanged with 95% of seeds failing, which is what it did while
+`feral` was quietly exhausting its budget on one seed in thirty.
 
 ## Parameters
 
@@ -314,16 +380,18 @@ Every one is settable by name: `--set key=value`, repeatable, applied after
 ## Layout
 
 ```
-src/math.rs     V2, hand-rolled sin/cos, the diamond pseudo-angle, polygon maths
+src/math.rs     V2 and V3, hand-rolled sin/cos, the diamond pseudo-angle, polygon maths
 src/rng.rs      SplitMix64 + PCG32, five named streams
-src/noise.rs    Perlin and fBm
+src/noise.rs    Perlin in 2D and 3D, fBm, the sphere-sampled fBm
+src/solid.rs    the 3D rock: the displaced ellipsoid, its projected contour, the depth map
 src/field.rs    the one flow field
 src/ring.rs     the star-shaped r(theta) ring and its limiter
 src/bezier.rs   Catmull-Rom to cubics, handle clamp, self-intersection
 src/params.rs   the parameter surface, tameness, presets, validation
 src/palette.rs  HSL, hex, the three-tone ramp
 src/body.rs     silhouette, ribbon, and the pipeline
-src/facet.rs    recursive flow-field bisection and tone quantiles
+src/facet.rs    recursive bisection, iso-brightness steering, tone quantiles
+src/relief.rs   the thin interior crease marks
 src/vesicle.rs  collision packing
 src/quality.rs  the gates
 src/svg.rs      the document writer

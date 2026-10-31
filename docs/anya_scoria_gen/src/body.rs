@@ -1,35 +1,39 @@
 //! The silhouette, the ribbon, and the pipeline that assembles a whole logo.
 //!
-//! The blob is a POLAR radius with a domain-warped periodic fBm over an
-//! elliptical base - not a noise-advected circle and not a traced flow curve
-//! closed back on itself. Both of those can self-intersect, and neither can be
-//! guaranteed closed without a seam. The polar form buys a theorem: a
-//! single-valued `r(theta) > 0` is star-shaped about its centre, so every ray
-//! from the centre meets the curve exactly once and the curve cannot cross
-//! itself. The ribbon then falls out as a scalar subtraction `r - w(theta)`
-//! rather than a general polygon offset, which is the error-prone part of
-//! every other approach.
+//! The silhouette is the APPARENT CONTOUR of a 3D rock - see [`crate::solid`]
+//! for the solid itself and for the three-line proof that projecting it keeps
+//! the property everything here leans on. That property: the outline is a
+//! single-valued `r(theta) > 0`, hence star-shaped about its centre, hence
+//! unable to cross itself, and the ribbon then falls out as a scalar
+//! subtraction `r - w(theta)` rather than a general polygon offset - which is
+//! the error-prone part of every other approach.
 //!
 //! Construction, in canonical space (R0 = 300):
 //!
-//! 1. base ellipse, semi-axes `R0*sqrt(aspect)` and `R0/sqrt(aspect)`;
-//! 2. 720 samples of theta;
+//! 1. base ellipsoid, semi-axes `R0*sqrt(aspect)`, `R0/sqrt(aspect)` and
+//!    `depth` times the second, displaced along its radii by fBm sampled on
+//!    the sphere;
+//! 2. 720 samples of theta, each the maximum of `R(theta, u) * cos u` over the
+//!    out-of-plane tilt `u` - the projected radius of the solid;
 //! 3. domain warp - the flow field moves the NOISE LOOKUP, never the geometry,
 //!    which is what keeps `r` single-valued;
-//! 4. `r = rho * (1 + lump_amp * F)`;
-//! 5. the log-Lipschitz limiter;
-//! 6. uniform arclength resample, then Catmull-Rom to cubics.
+//! 4. the log-Lipschitz limiter, then the band-limiting smoothing passes;
+//! 5. uniform arclength resample, then Catmull-Rom to cubics;
+//! 6. the depth map, whose normals light the facets and find the creases the
+//!    relief marks are drawn along.
 
 use std::time::Instant;
 
 use crate::bezier::{catmull_rom_closed, clamp_handles, max_turn, Cubic};
 use crate::facet::{self, CutReport, Facet};
 use crate::field::{Field, FieldCfg};
-use crate::math::{closed_len, resample_closed, sin_cos, PI, TAU, V2};
-use crate::noise::Perlin;
+use crate::math::{closed_len, resample_closed, sin_cos, TAU, V2, V3};
+use crate::noise::{Perlin, SphereFbm};
 use crate::palette::Ramp;
+use crate::relief::{self, Relief};
 use crate::ring::Ring;
 use crate::rng::{splitmix64, stream, Pcg32};
+use crate::solid::{DepthMap, Light, Solid};
 use crate::vesicle::{self, Vesicle};
 use crate::{quality, svg, GenError, Params};
 
@@ -92,8 +96,19 @@ const MAX_DOUBLINGS: u32 = 1;
 const WIDTH_CLAMP_FRAC: f64 = 1.25;
 /// Minimum points on the inner contour, which is shorter than the outer.
 const MIN_INNER_POINTS: usize = 128;
-/// Noise-space offset range for an octave, so octaves are decorrelated.
-const OCTAVE_OFFSET: f64 = 4096.0;
+/// Angular resolution of the depth map.
+///
+/// A quarter of `ring_samples`. At 180 angles the nodes near the rim sit
+/// about 11 units apart, just inside the brightness gradient's own 12-unit
+/// step, so the central difference always spans a cell and never measures the
+/// bilinear interpolation's seams rather than the surface.
+///
+/// The map is read a few thousand times per logo - the facet tones, the cut
+/// seeding, the crease scores - and NOT per Euler step, since the cut tracer
+/// takes its direction from the surface once at its seed. So the grid is
+/// sized by what the gradient step can resolve, not by the number of
+/// lookups, and building it finer only buys noise evaluations.
+const DEPTH_THETA: usize = 180;
 /// Gain that turns the amplitude-normalised fbm into a unit-RMS one.
 ///
 /// Measured over 40 seeds x 720 samples at every octave/gain combination in
@@ -133,6 +148,8 @@ pub struct Timings {
     pub facet_us: u128,
     /// Collision packing.
     pub vesicle_us: u128,
+    /// Crease scoring and the tapered marks.
+    pub relief_us: u128,
     /// Every quality gate.
     pub quality_us: u128,
     /// Document writing.
@@ -192,6 +209,14 @@ pub struct Scene {
     pub facets: Vec<Facet>,
     /// The vesicles, in placement order.
     pub vesicles: Vec<Vesicle>,
+    /// The interior relief marks, strongest crease first.
+    pub relief: Vec<Relief>,
+    /// The solid's front surface: the normals that lit the facets and the
+    /// brightness the creases were found in. The gates read it to check that
+    /// the flat tones and the real shading still agree.
+    pub depth: DepthMap,
+    /// The light those normals were shaded against.
+    pub light: Light,
     /// What the subdivision did.
     pub cuts: CutReport,
     /// The three tones.
@@ -200,65 +225,6 @@ pub struct Scene {
     pub clamped: usize,
     /// Cubics emitted across the whole logo.
     pub segments: usize,
-}
-
-/// Periodic fBm over a circle in noise space.
-///
-/// Sampling the noise along a CIRCLE rather than a line in theta is the whole
-/// trick for a seamless closed silhouette: periodicity is then exact and free,
-/// for every octave, at any frequency. Cross-fading the ends of a linear
-/// sample leaves a crease at theta = 0 that no amount of blending removes.
-///
-/// This is deliberately not [`crate::noise::Fbm`]: the warp must be added ONCE
-/// and unscaled, so it shears the low octaves most. `Fbm` scales its whole
-/// input per octave, which would multiply the warp by `lacunarity^o` and
-/// decorrelate the fine octaves between adjacent theta - exactly the crinkle
-/// the measured spectrum says the artwork does not have.
-struct PeriodicFbm {
-    offsets: Vec<V2>,
-    lacunarity: f64,
-    gain: f64,
-}
-
-impl PeriodicFbm {
-    /// Draw one noise-space offset per octave.
-    fn new(rng: &mut Pcg32, octaves: u32, lacunarity: f64, gain: f64) -> PeriodicFbm {
-        let mut offsets = Vec::with_capacity(octaves as usize);
-        for _ in 0..octaves.max(1) {
-            offsets.push(V2::new(
-                rng.range(-OCTAVE_OFFSET, OCTAVE_OFFSET),
-                rng.range(-OCTAVE_OFFSET, OCTAVE_OFFSET),
-            ));
-        }
-        PeriodicFbm {
-            offsets,
-            lacunarity,
-            gain,
-        }
-    }
-
-    /// Unit-RMS sum over octaves at angle `(ct, st)`.
-    ///
-    /// `freq` is in LOBES PER TURN. The sample walks a circle of radius
-    /// `freq / PI` in noise space, because a circle of radius f has
-    /// circumference 2*PI*f and a Perlin lattice crossing is half a period,
-    /// so it meets about PI*f periods on the way round. Passing `lump_freq`
-    /// as the radius directly - which is how the formula reads - gives eight
-    /// lobes where the parameter says 2.6, and leaves the artwork's measured
-    /// dominant harmonic at k=3 completely empty.
-    fn at(&self, perlin: &Perlin, ct: f64, st: f64, lobes: f64, warp: V2) -> f64 {
-        let mut f = lobes / PI;
-        let mut a = 1.0;
-        let mut acc = 0.0;
-        let mut sum = 0.0;
-        for off in &self.offsets {
-            acc += a * perlin.at(ct * f + warp.x + off.x, st * f + warp.y + off.y);
-            sum += a;
-            a *= self.gain;
-            f *= self.lacunarity;
-        }
-        unit_fbm(acc / sum)
-    }
 }
 
 /// Five-tap binomial smoothing over a wrapped array.
@@ -458,27 +424,86 @@ fn attempt_once(p: &Params, seed: u64) -> Result<(Scene, Timings), &'static str>
     );
     t.field_us = t0.elapsed().as_micros();
 
-    // ---- the silhouette
+    // ---- the solid, and the silhouette as its apparent contour
     let t0 = Instant::now();
-    let fbm = PeriodicFbm::new(&mut rng_blob, p.lump_octaves, p.lacunarity, p.gain);
-    // Semi-axes chosen so the geometric mean radius is exactly R0 at any
-    // aspect, which keeps every other length's fraction of R0 meaningful.
-    let semi_a = r0 * p.aspect.sqrt();
-    let semi_b = r0 / p.aspect.sqrt();
-    let mut outer = Ring::build(c, n, |_theta, u| {
-        let rho = semi_a * semi_b
-            / ((semi_b * u.x) * (semi_b * u.x) + (semi_a * u.y) * (semi_a * u.y)).sqrt();
-        // The warp moves the LOOKUP, not the point: r stays a scalar function
-        // of theta, and the star-shape theorem survives.
-        let d = field.dir(u * (rho / r0));
-        let f = fbm.at(&perlin, u.x, u.y, p.lump_freq, d * p.warp_amt);
-        rho * (1.0 + p.lump_amp * f)
-    });
+    let fbm = SphereFbm::new(&mut rng_blob, p.lump_octaves, p.lacunarity, p.gain);
+    // In-plane semi-axes chosen so the geometric mean radius is exactly R0 at
+    // any aspect, which keeps every other length's fraction of R0 meaningful.
+    // The projected outline of an ellipsoid is the ellipse of its two IN-PLANE
+    // axes whatever its depth - but the DISPLACED solid's is not, because the
+    // maximisation favours the short axis, so the base is pre-stretched. See
+    // `params::base_aspect` for the measurement and the mechanism.
+    let base_aspect = crate::params::base_aspect(p.aspect);
+    let semi_a = r0 * base_aspect.sqrt();
+    let semi_b = r0 / base_aspect.sqrt();
+    let solid = Solid {
+        a: semi_a,
+        b: semi_b,
+        c: p.depth * semi_b,
+        amp: p.lump_amp,
+        lobes: p.lump_freq,
+        floor: R_FLOOR_FRAC,
+        warp: p.warp_amt,
+        fbm,
+    };
+
+    // One pass over theta collecting both the projected radius and the tilt
+    // that achieved it. The tilt is not a diagnostic: the depth map starts its
+    // march from it, which is what makes the map's rim row land exactly on the
+    // silhouette instead of on a second, slightly different evaluation of it.
+    let mut r_raw = Vec::with_capacity(n);
+    let mut u_star = Vec::with_capacity(n);
+    for i in 0..n {
+        let theta = TAU * i as f64 / n as f64;
+        let (st, ct) = sin_cos(theta);
+        let u2 = V2::new(ct, st);
+        // The unwarped in-plane boundary estimate, for the field lookup - the
+        // same quantity the 2D construction used, so a seed's lumps lean the
+        // way they always did.
+        let rho2 = semi_a * semi_b
+            / ((semi_b * u2.x) * (semi_b * u2.x) + (semi_a * u2.y) * (semi_a * u2.y)).sqrt();
+        // The warp moves the LOOKUP, not the geometry: R stays a scalar
+        // function of direction, so the solid is star-shaped, so its
+        // projection is too, and the theorem survives into 3D.
+        let d2 = field.dir(u2 * (rho2 / r0));
+        let (rho, u) = solid.silhouette(&perlin, theta, V3::new(d2.x, d2.y, 0.0));
+        r_raw.push(rho);
+        u_star.push(u);
+    }
+    let mut outer = Ring { c, r: r_raw };
     outer.clamp_min(R_FLOOR_FRAC * r0);
     outer.limit_log_lipschitz(p.slope_limit);
     for _ in 0..RING_SMOOTH_PASSES {
         smooth_ring(&mut outer.r);
     }
+
+    // NORMALISE THE MEAN RADIUS. Taking a maximum over the tilt can only add
+    // radius, never remove it, so the projection comes out 6.7% larger than
+    // the ellipsoid it was built from (measured, 300 seeds at the defaults).
+    // R0 is the unit every other length in the crate is a fraction of - the
+    // ribbon's width, every vesicle radius, every clearance - so a body 6.7%
+    // too big silently shrinks all of them against it: measured, the vesicle
+    // coverage gate failed on 58 seeds in 200 for exactly that reason, the
+    // packing having been asked to fill 14% more area with the same holes.
+    //
+    // A uniform scale is free of side effects here. It leaves
+    // |d(ln r)/d(theta)| untouched, so the limiter's guarantee survives it;
+    // it leaves the relative radial std and the bbox aspect untouched, so
+    // neither silhouette gate moves; and it makes R0 mean R0 exactly, for
+    // every seed, rather than in expectation.
+    let mean_r = outer.r.iter().sum::<f64>() / n as f64;
+    let solid_scale = if mean_r > 0.0 { r0 / mean_r } else { 1.0 };
+    for r in &mut outer.r {
+        *r *= solid_scale;
+    }
+
+    // The depth map, on the finished silhouette. Built from the ring AFTER
+    // the limiter and the smoothing passes so the map's rim row and the
+    // emitted outline are the same curve - a map built on the raw maximum
+    // would have its rim a few units outside the drawn silhouette, and every
+    // normal near the edge would be the normal of a surface that is not
+    // there.
+    let light = Light::new(p.light_dir, p.light_elev);
 
     // BAIL BEFORE PAYING FOR THE REST. Between them the three silhouette
     // gates reject a little over half of all rolls, and there is nothing a
@@ -488,6 +513,16 @@ fn attempt_once(p: &Params, seed: u64) -> Result<(Scene, Timings), &'static str>
     // these on the finished scene; see `quality::check_silhouette`.
     let outer_probe = outer.points();
     quality::check_silhouette(&outer, &outer_probe, r0, p)?;
+
+    let depth = DepthMap::build(
+        &solid,
+        &perlin,
+        c,
+        DEPTH_THETA,
+        &outer.r,
+        &u_star,
+        solid_scale,
+    );
 
     // ---- the ribbon, by radial offset with the slope correction
     let rp = smooth_wrapped(&outer.radial_derivative());
@@ -579,11 +614,13 @@ fn attempt_once(p: &Params, seed: u64) -> Result<(Scene, Timings), &'static str>
     // same trick with less geometry.
     let mut root_cubics = catmull_rom_closed(&root, p.cr_tension);
     clamp_handles(&mut root_cubics);
-    let (facets, cuts) = facet::build(
+    let (facets, cuts, cut_curves) = facet::build(
         &root,
         p,
         &field,
         &perlin,
+        &depth,
+        &light,
         &mut rng_facet,
         &mut rng_tone,
         c,
@@ -596,6 +633,36 @@ fn attempt_once(p: &Params, seed: u64) -> Result<(Scene, Timings), &'static str>
     let t0 = Instant::now();
     let vesicles = vesicle::pack(p, &inner, &field, &perlin, &mut rng_ves, c, r0);
     t.vesicle_us = t0.elapsed().as_micros();
+
+    // ---- the relief marks, down the steepest creases
+    //
+    // Last, because a mark has to dodge the vesicles: a thin line running
+    // into a gas hole reads as a crack through it rather than as a fold of
+    // the surface. The root ring is the ribbon's midline, which is what the
+    // rim test measures against - a mark starts inside the ink and emerges
+    // from it, exactly as the artwork's does.
+    let t0 = Instant::now();
+    let root_ring = Ring {
+        c,
+        r: outer
+            .r
+            .iter()
+            .zip(w.iter())
+            .map(|(r, wi)| r - 0.5 * wi)
+            .collect(),
+    };
+    let relief = relief::build(
+        &cut_curves,
+        &root_ring,
+        &depth,
+        &light,
+        &facets,
+        &vesicles,
+        p,
+        r0,
+        w0,
+    );
+    t.relief_us = t0.elapsed().as_micros();
 
     // `clamped` and `segments` cover the RIBBON contours only - see the note
     // on the clamp gate in `quality`.
@@ -622,6 +689,9 @@ fn attempt_once(p: &Params, seed: u64) -> Result<(Scene, Timings), &'static str>
         root_cubics,
         facets,
         vesicles,
+        relief,
+        depth,
+        light,
         cuts,
         ramp: Ramp::build(
             p.palette_hue,
@@ -675,26 +745,6 @@ mod tests {
                 "erosion must never raise a radius"
             );
         }
-    }
-
-    #[test]
-    fn periodic_fbm_is_seamless() {
-        let mut rng = Pcg32::new(1, stream::BLOB);
-        let perlin = Perlin::new(&mut rng);
-        let fbm = PeriodicFbm::new(&mut rng, 4, 2.03, 0.45);
-        let at = |theta: f64| {
-            let (s, c) = sin_cos(theta);
-            fbm.at(&perlin, c, s, 2.6, V2::new(0.0, 0.0))
-        };
-        // theta and theta + TAU are the same point on the circle, exactly.
-        let a = at(0.0);
-        let b = at(TAU);
-        assert!((a - b).abs() < 1e-9, "{a} vs {b}");
-        // ... and the neighbourhood of the seam is as smooth as anywhere else.
-        let step = 1e-3;
-        let seam = (at(step) - at(-step)).abs();
-        let elsewhere = (at(1.0 + step) - at(1.0 - step)).abs();
-        assert!(seam < 10.0 * elsewhere + 1e-6, "a crease at theta = 0");
     }
 
     #[test]
@@ -792,10 +842,44 @@ mod tests {
 
     #[test]
     fn every_preset_generates() {
+        // A RATE over a sweep, not one seed. One seed per preset is not a
+        // test of a generator that re-rolls: it passes unchanged with 95% of
+        // seeds failing, which is exactly what it did while `--preset feral`
+        // was quietly exhausting its whole retry budget on one seed in
+        // thirty.
+        //
+        // Measured over 120 seeds with the full retry budget, against the
+        // same sweep run on the 2D generator this replaced:
+        //
+        // | preset | here | before | re-rolls here | before |
+        // |---|---|---|---|---|
+        // | anya  | 120/120 | 120/120 |  37 |  70 |
+        // | tame  | 120/120 | 120/120 |  29 | 113 |
+        // | feral | 116/120 | 111/120 | 654 | 626 |
+        //
+        // `feral` is the honest outlier and always has been: it asks for the
+        // lumpiest body and for nine big, lumpy holes in it at once, and it
+        // sits on the vesicle coverage floor. It is a little better here
+        // than it was, not because it was worked on but because the body it
+        // has to fill is the one the projection makes.
         for name in Params::PRESETS {
-            let mut p = Params::preset(name).expect("listed preset");
-            p.seed = 4;
-            generate_checked(&p).unwrap_or_else(|e| panic!("preset {name}: {e}"));
+            let want = if *name == "feral" { 36 } else { 40 };
+            let mut ok = 0;
+            let mut last = String::new();
+            for seed in 0..40u64 {
+                let p = Params {
+                    seed,
+                    ..Params::preset(name).expect("listed preset")
+                };
+                match generate_checked(&p) {
+                    Ok(_) => ok += 1,
+                    Err(e) => last = e.to_string(),
+                }
+            }
+            assert!(
+                ok >= want,
+                "preset {name}: only {ok} of 40 seeds generated (want {want}); last error: {last}"
+            );
         }
     }
 
@@ -836,5 +920,330 @@ mod tests {
             }
         }
         assert!(checked, "no seed in 0..24 produced two clean logos");
+    }
+}
+
+#[cfg(test)]
+mod relief_marks {
+    use super::*;
+    use crate::math::polyline_len;
+
+    /// The marks reproduce what Part 1 measures of Anya's: a stroke 0.535 of
+    /// the mean radius long and 0.58 of the outline's width at the waist,
+    /// growing OUT OF the outline ink and heading into the body rather than
+    /// along the rim.
+    ///
+    /// Checked on the finished scene rather than on the emitted text,
+    /// because the property that matters - that the rim end is buried in the
+    /// ribbon, so the mark reads as a branch of the outline rather than as a
+    /// scratch beside it - is about where the mark sits relative to geometry
+    /// the document does not label.
+    #[test]
+    fn the_marks_grow_out_of_the_outline_and_cut_inward() {
+        let p = Params::default();
+        let mut seen = 0;
+        let mut with_mark = 0;
+        for seed in 0..60u64 {
+            let Ok((scene, _)) = attempt_once(&p, seed) else {
+                continue;
+            };
+            seen += 1;
+            if !scene.relief.is_empty() {
+                with_mark += 1;
+            }
+            for m in &scene.relief {
+                let end = m.spine[0];
+                let d = end - scene.c;
+                let rim = scene.outer.radius_toward(d);
+                // Inside the ink band [r - w, r], with the facet root's
+                // midline as the target.
+                assert!(
+                    d.len() >= rim - 1.25 * scene.w0 && d.len() <= rim + 0.1 * scene.w0,
+                    "seed {seed}: the mark starts {:.1} from the centre, ink band is {:.1}..{:.1}",
+                    d.len(),
+                    rim - scene.w0,
+                    rim
+                );
+                // Heading into the body, not along the rim. Anya's leaves
+                // 29 degrees off radial; the rule is 55.
+                let inward = (scene.c - end).norm();
+                let heading = (m.spine[1] - m.spine[0]).norm();
+                assert!(
+                    heading.dot(inward) >= 0.573,
+                    "seed {seed}: the mark runs along the rim, not into the body"
+                );
+                // 0.535 of the mean radius, measured.
+                let len = polyline_len(&m.spine);
+                let want = p.relief_len * scene.r0;
+                assert!(
+                    len > 0.5 * want && len <= want + 1.0,
+                    "seed {seed}: length {len:.1} against the asked-for {want:.1}"
+                );
+                // 0.58 of the outline, measured.
+                let ratio = m.width / scene.w0;
+                assert!(
+                    (ratio - 0.586).abs() < 0.02,
+                    "seed {seed}: the mark is {ratio:.3} of the outline, measured 0.58"
+                );
+            }
+        }
+        assert!(seen > 40, "too few scenes to conclude anything: {seen}");
+        // The feature has to actually fire. A mark needs a cut that reaches
+        // the ink heading inward, past a tone step and clear of the holes,
+        // so it is not guaranteed on every seed - but it must be the norm,
+        // or the default is quietly drawing nothing.
+        assert!(
+            with_mark * 4 >= seen * 3,
+            "only {with_mark} of {seen} scenes got a relief mark"
+        );
+    }
+}
+
+#[cfg(test)]
+mod amplitude {
+    use super::*;
+    use crate::math::PI;
+    use crate::noise::SphereFbm;
+
+    /// The realised radial statistics of one seed's finished silhouette:
+    /// relative radial std, Rmin/Rmean, Rmax/Rmean. Mirrors
+    /// `attempt_once`'s ring stage exactly, so what it measures is what the
+    /// outline gate sees.
+    fn realised(seed: u64, base_aspect: f64, p: &Params) -> (f64, f64, f64, f64) {
+        let r0 = p.r0;
+        let n = p.ring_samples as usize;
+        let mut rng_blob = Pcg32::new(seed ^ stream::BLOB, stream::BLOB);
+        let mut rng_misc = Pcg32::new(seed ^ stream::MISC, stream::MISC);
+        let perlin = Perlin::new(&mut rng_misc);
+        let field = Field::new(
+            &mut rng_misc,
+            FieldCfg {
+                freq: p.field_freq,
+                angle_range: p.field_angle_range,
+                bias: p.field_bias,
+                quantize: p.field_quantize,
+                octaves: FIELD_OCTAVES,
+                lacunarity: p.lacunarity,
+                gain: p.gain,
+            },
+        );
+        let fbm = SphereFbm::new(&mut rng_blob, p.lump_octaves, p.lacunarity, p.gain);
+        let semi_a = r0 * base_aspect.sqrt();
+        let semi_b = r0 / base_aspect.sqrt();
+        let solid = Solid {
+            a: semi_a,
+            b: semi_b,
+            c: p.depth * semi_b,
+            amp: p.lump_amp,
+            lobes: p.lump_freq,
+            floor: R_FLOOR_FRAC,
+            warp: p.warp_amt,
+            fbm,
+        };
+        let mut r = Vec::with_capacity(n);
+        for i in 0..n {
+            let theta = TAU * i as f64 / n as f64;
+            let (st, ct) = sin_cos(theta);
+            let u2 = V2::new(ct, st);
+            let rho2 = semi_a * semi_b
+                / ((semi_b * u2.x) * (semi_b * u2.x) + (semi_a * u2.y) * (semi_a * u2.y)).sqrt();
+            let d2 = field.dir(u2 * (rho2 / r0));
+            r.push(solid.silhouette(&perlin, theta, V3::new(d2.x, d2.y, 0.0)).0);
+        }
+        let mut ring = Ring {
+            c: V2::new(0.0, 0.0),
+            r,
+        };
+        ring.clamp_min(R_FLOOR_FRAC * r0);
+        ring.limit_log_lipschitz(p.slope_limit);
+        for _ in 0..RING_SMOOTH_PASSES {
+            smooth_ring(&mut ring.r);
+        }
+        let mean = ring.r.iter().sum::<f64>() / n as f64;
+        let std = (ring
+            .r
+            .iter()
+            .map(|x| (x / mean - 1.0) * (x / mean - 1.0))
+            .sum::<f64>()
+            / n as f64)
+            .sqrt();
+        // Against the BASE ELLIPSE rather than against the mean radius.
+        let rho = |i: usize| {
+            let theta = TAU * i as f64 / n as f64;
+            let (st, ct) = sin_cos(theta);
+            semi_a * semi_b / ((semi_b * ct) * (semi_b * ct) + (semi_a * st) * (semi_a * st)).sqrt()
+        };
+        let ratios: Vec<f64> = (0..n).map(|i| ring.r[i] / rho(i)).collect();
+        let rm = ratios.iter().sum::<f64>() / n as f64;
+        let rel = (ratios
+            .iter()
+            .map(|x| (x / rm - 1.0) * (x / rm - 1.0))
+            .sum::<f64>()
+            / n as f64)
+            .sqrt();
+        // The ellipse's own contribution, for the quadrature alternative.
+        let em = (0..n).map(rho).sum::<f64>() / n as f64;
+        let estd = ((0..n)
+            .map(|i| (rho(i) / em - 1.0) * (rho(i) / em - 1.0))
+            .sum::<f64>()
+            / n as f64)
+            .sqrt();
+        let quad = (std * std - estd * estd).max(0.0).sqrt();
+        let area = ring.area().abs() / (PI * r0 * r0);
+        (std, rel, quad, area)
+    }
+
+    fn mean_std(base_aspect: f64, seeds: std::ops::Range<u64>) -> f64 {
+        let p = Params::default();
+        let n = (seeds.end - seeds.start) as f64;
+        seeds.map(|s| realised(s, base_aspect, &p).0).sum::<f64>() / n
+    }
+
+    #[test]
+    fn lump_amp_is_the_realised_outline_amplitude() {
+        let p = Params::default();
+        let want = p.lump_amp;
+        let base = crate::params::base_aspect(p.aspect);
+        for seeds in [0..400u64, 400..800] {
+            let got = mean_std(base, seeds.clone());
+            assert!(
+                (got - want).abs() < 0.012,
+                "seeds {seeds:?}: realised {got:.4} against lump_amp {want}"
+            );
+        }
+    }
+
+    /// Why that needs no correction, when for a while it did: the amplitude
+    /// calibration and the aspect calibration turned out to be the same one.
+    ///
+    /// Taking a maximum over the out-of-plane tilt both inflates the radius
+    /// and squares the shape up, and it does the first BECAUSE of the second.
+    /// The wider the window of tilt competing for the maximum, the more
+    /// displacement it catches and the more radius it adds - and that window
+    /// is widest along the SHORT in-plane axis, which is exactly why the
+    /// aspect drops. Pre-stretching the base ellipsoid to fix the aspect
+    /// narrows the window, so it removes the amplitude loss as a side effect.
+    ///
+    /// Measured: on the unstretched base the realised amplitude is 0.193
+    /// against the 0.22 asked for, and a gain of 1.40 was carried for a
+    /// while to buy it back; on the stretched base it is 0.220 and no gain
+    /// is needed. Kept as a test because a coupling like this is the kind of
+    /// thing that gets re-discovered the hard way - if a future change to
+    /// the solid breaks it, the test above fails and this one says where to
+    /// look.
+    #[test]
+    fn the_amplitude_loss_was_the_aspect_loss() {
+        let p = Params::default();
+        let unstretched = mean_std(p.aspect, 0..400);
+        let stretched = mean_std(crate::params::base_aspect(p.aspect), 0..400);
+        assert!(
+            unstretched < 0.93 * p.lump_amp,
+            "the unstretched base no longer loses amplitude: {unstretched:.4}"
+        );
+        assert!(
+            stretched > unstretched + 0.015,
+            "pre-stretching no longer recovers it: {stretched:.4} against {unstretched:.4}"
+        );
+    }
+}
+
+#[cfg(test)]
+mod tonecal {
+    use super::*;
+
+    /// The artwork's own tone axis: the unit vector from the dark tone's
+    /// visible-pixel centroid (276.9, 135.3) to the light tone's
+    /// (179.0, 244.9), which SPEC.md Part 1 gives as (-0.666, +0.746).
+    const U: V2 = V2 {
+        x: -0.666,
+        y: 0.746,
+    };
+
+    /// Area-weighted mean and quartiles of each tone's position along `U`,
+    /// with the body's extent along `U` normalised to 0..1 - the quantity
+    /// Part 1 measures as 0.302 / 0.486 / 0.695 with interquartile ranges
+    /// 0.14-0.45, 0.31-0.68 and 0.51-0.92.
+    fn tone_positions(p: &Params, seeds: u64) -> [(f64, f64, f64); 3] {
+        // (position, area) per tone, pooled over seeds.
+        let mut pool: [Vec<(f64, f64)>; 3] = [Vec::new(), Vec::new(), Vec::new()];
+        for seed in 0..seeds {
+            let q = Params { seed, ..p.clone() };
+            let Ok((scene, _)) = attempt_once(&q, seed) else {
+                continue;
+            };
+            let proj: Vec<f64> = scene.outer_pts.iter().map(|q| U.dot(*q)).collect();
+            let lo = proj.iter().cloned().fold(f64::INFINITY, f64::min);
+            let hi = proj.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+            let span = (hi - lo).max(1e-9);
+            for f in &scene.facets {
+                pool[f.tone].push(((U.dot(f.centroid) - lo) / span, f.area));
+            }
+        }
+        let mut out = [(0.0, 0.0, 0.0); 3];
+        for (t, v) in pool.iter_mut().enumerate() {
+            v.sort_by(|a, b| a.0.total_cmp(&b.0));
+            let total: f64 = v.iter().map(|x| x.1).sum();
+            if total <= 0.0 {
+                continue;
+            }
+            let mean = v.iter().map(|x| x.0 * x.1).sum::<f64>() / total;
+            let at = |frac: f64| -> f64 {
+                let want = frac * total;
+                let mut acc = 0.0;
+                for &(pos, a) in v.iter() {
+                    acc += a;
+                    if acc >= want {
+                        return pos;
+                    }
+                }
+                v.last().map_or(0.0, |x| x.0)
+            };
+            out[t] = (at(0.25), mean, at(0.75));
+        }
+        out
+    }
+
+    /// The defaults put the three tones where the artwork puts them.
+    ///
+    /// This is the calibration `light_dir` and `light_elev` were set from,
+    /// kept as an assertion. SPEC.md Part 1 measures the artwork's tones by
+    /// projecting every orange pixel onto `U` and normalising the body's
+    /// extent to 0..1, which gives mean positions 0.302 / 0.486 / 0.695 with
+    /// interquartile ranges 0.14-0.45, 0.31-0.68 and 0.51-0.92. The same
+    /// measurement on 120 generated logos is what the tolerance below is
+    /// against.
+    ///
+    /// Two findings came out of running it, and both are in the defaults:
+    ///
+    /// - `light_dir` is 2.30, not SPEC.md's 1.90. 2.30 is the measurement -
+    ///   the axis through the three tones' own centroids - while 1.90 was
+    ///   inferred from where the lightest facets sit. At 1.90 the dark tone
+    ///   lands at 0.399 against the measured 0.302; at 2.30 it lands at
+    ///   0.368, and the other two improve with it.
+    ///
+    /// - `tone_noise` stays at 0.35 even though less of it reads as more
+    ///   three-dimensional by eye. The artwork's tones overlap by a full
+    ///   quartile, and matching that overlap is what makes a generated rock
+    ///   belong to the same family. At 0.20 the three means land 0.013,
+    ///   0.058 and 0.078 off; at 0.35 they land 0.066, 0.040 and 0.015 off,
+    ///   and the interquartile WIDTHS match too - 0.30 against the measured
+    ///   0.31 for the shadow, where 0.20 gives 0.22.
+    #[test]
+    fn the_tones_land_where_the_artwork_puts_them() {
+        let want = [0.302, 0.486, 0.695];
+        let got = tone_positions(&Params::default(), 120);
+        for (t, w) in want.iter().enumerate() {
+            let (q1, mean, q3) = got[t];
+            assert!(
+                (mean - w).abs() < 0.09,
+                "tone {t}: mean {mean:.3} against the artwork's {w:.3}"
+            );
+            assert!(q1 < mean && mean < q3, "tone {t}: quartiles out of order");
+        }
+        assert!(
+            got[0].1 < got[1].1 && got[1].1 < got[2].1,
+            "the three tones must lie along the light axis in order: {:?}",
+            [got[0].1, got[1].1, got[2].1]
+        );
     }
 }
