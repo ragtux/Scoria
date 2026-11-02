@@ -324,7 +324,110 @@ uses behave as Obsidian's do.
 | Bases: the rest of the view | done: the cards, list and kanban layouts, the toolbar's six panels, editing through the table, the five `bases:*` commands beyond `new-file`, and an embedded `![[x.base]]`, see [[#Bases: the rest of the view, 2026-10-25]]; the toolbar and panels rebuilt to the 2026-11-01 record, see [[#The Bases toolbar and its panels, 2026-11-01]]; the embed as the live view and the leaf's chrome, see [[#The embedded base and the base leaf's chrome, 2026-11-01]]; the header, summaries, cells and keyboard, see [[#The column header, summaries, cells and the table keyboard, 2026-11-01]]; the kanban's drags and menus, see [[#The kanban board, 2026-11-02]] |
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
-| The themes subset, URI and CLI | not started |
+| The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry's first half landed 2026-11-02, see [[#The theme registry, 2026-11-02]] and [[Theming#Progress]]; the CLI is not started |
+
+### The theme registry, 2026-11-02
+
+Step 1 of [[Theming]], first half: the vocabulary, with the call sites still
+to follow.
+
+**The probe.** `tools/obsidian-probe/theme-registry.mjs` answers "which
+custom property is this surface painted from" for 330-odd elements of the
+shell, the Files pane, the reading view, Live Preview, source mode, the
+right-dock panes, the file menu, the palette, the switcher, Settings and
+the notice, tooltip, empty tab and autocompletion popups, by walking the
+CSSOM for the rules that match each element and ranking them by
+importance, specificity and order, so the winning declaration comes back
+with its `var()` intact; hover states were read under a real pointer, and
+the Settings rows through the popout window's document, which the opener
+can reach. It also dumps every custom property declared under `:root`,
+`body` and the two theme classes with its raw declaration per selector and
+the value computed on `body`, in both themes. The run took four passes:
+`require('obsidian')` does not resolve from the console (the view is
+`app.workspace.activeLeaf.view`); CodeMirror keeps only the viewport's
+lines in the DOM, so the editor is read with the caret parked on a
+succession of lines; the search box's own suggestion popup covered the
+results until it was removed; and three hover targets were off-screen
+until `scrollIntoView`. The condensed record is
+[[Specification#Observed theme tokens, Obsidian 1.14.5 (installer build 1.13.7)]].
+
+**A second Obsidian beside the desktop's.** `run-block.sh` takes
+`USER_DATA_DIR`: Obsidian launched with `--user-data-dir` on that folder
+keeps its own `obsidian.json`, IndexedDB, update and single-instance
+lock, so the probe no longer needs the person's Obsidian closed and never
+swaps `~/.config/obsidian/obsidian.json`. The newest `obsidian-*.asar`
+of the real config is copied in once; `CDP_PORT` picks a port the desktop
+copy is not on.
+
+**The registry.** `crates/scoria/src/theme/` is a module now.
+`registry.rs` declares 313 tokens through a macro, each under Obsidian's
+property name with a kind (`Color`, `ColorOpt` for the `inherit` ones,
+`Number`, `NumberOpt`, `Length`, `Shadow`) that picks the field's type and
+the reader; a value of the wrong shape keeps the default theme's.
+`value.rs` is the CSS value grammar those declarations use — `var()` with
+fallback, `hsl()`/`rgba()` in both syntaxes with `calc()` channels,
+`color-mix(in oklch, …)` (a mix with `transparent` is the colour at that
+alpha; two opaque colours interpolate in OKLCH), `calc()`, lengths,
+keywords, shadow lists — parsed once and resolved against a table with
+memoisation and a cycle guard. `defaults.rs` is written by
+`theme-defaults.py` from the probe record: the 317 declarations the tokens
+reach, as three layers (`:root` and `body`, then `.theme-dark` or
+`.theme-light`), chains intact. `Theme::from_appearance` builds the tokens
+once per base theme (`OnceLock`), lays `accentColor` over them as
+`--accent-h/s/l` the way Obsidian's inline style does, and derives the old
+short fields from the tokens, so the 750 call sites are untouched and the
+app paints what it painted — verified by a capture of the docs vault in
+each theme from the binary before and after: zero differing pixels.
+
+**Tests.** `theme::tests` resolves every token from the defaults and
+compares it with the value Obsidian computed for it, in both themes,
+whatever syntax the computed value came back in (`#b3b3b3`, `rgba()`,
+`hsl(calc(258 - 3), …)`, `color-mix()`, `calc(400 + 200)`); the short
+fields are asserted against the probed shell colours; the accent setting
+is shown to recolour links, tags and the tag wash; a malformed override
+keeps the default and a palette override propagates. `value::tests`
+cover the grammar.
+
+**What the measurement found.** The light theme's `--interactive-accent`
+is `--color-accent-1` (`hsl(257, 88.9%, 71%)`), where Scoria had painted
+the dark theme's `hsl(258, 88%, 66%)` in both; and `==highlight==` is
+`--color-yellow` at `--highlight-opacity` 30 percent, not `#ffd700` at 40.
+Both are now the registry's. Neither shows on the Welcome note the
+capture was made on.
+
+**The first surfaces repointed, the same day.** The shell went over
+first: the explorer's rows (`--nav-item-color`, `-active`, `-hover`, the
+chevron `--nav-collapse-icon-color`, the extension tag `--nav-tag-color`),
+every `clickable-icon` (`icon_button`, the explorer's and the panes'
+header buttons, the dock tabs, the new-tab button: `--icon-color` at
+`--icon-opacity`, `--icon-color-hover` opaque under the pointer,
+`--icon-color-focused` while active), the tab strip
+(`--tab-container-background`, `--tab-outline-color`, `--tab-divider-color`,
+`--tab-background-active`, the three `--tab-text-color-focused*` titles,
+`--tab-inner-background-hover`), the ribbon, the docks, the view header,
+the vault profile and the status bar. Then the editor's palette, the
+context menu (`--menu-*`, `--text-error` for a warning row, which also
+retired the two literal reds the Bases toolbar carried), the command
+palette (`--prompt-background`, `--prompt-border-color`, the hotkey chip
+as `--code-normal` on `--hotkey-background`), and the reading view's
+inline runs, task boxes, list markers, rule, code blocks, tables,
+properties block and pills. Each pass was captured against the binary
+from before the registry; every differing region was a colour the table
+said was wrong, which is the finding the design note predicted: icons
+sit at 0.85 opacity until hovered; an inactive tab's title and an
+unsupported file's row are muted, not faint; the new-tab plus is the
+icon colour, not the text's; the vault name is weight 500; a
+`nav-action-button` that is active is the normal text colour on the hover
+wash, not the accent; `<del>` keeps its colour; a list marker and an
+unchecked box are the faint colour; the table header has no background
+of its own; the properties title is the normal colour at weight 500 and
+a pill is a bordered transparent box; the palette sits on the primary
+background and highlights its matches in bold alone; the prompt's key
+hints are muted. `code_bg` is the first short field retired.
+
+**Next.** The rest of the call sites: Live Preview's widgets, the search
+pane, the Settings window, the Bases and canvas chrome, the graph, and
+the pane rows, each with the same capture. Then the loader.
 
 ### Four small entries and a URI, 2026-11-02
 

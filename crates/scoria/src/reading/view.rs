@@ -1744,11 +1744,12 @@ impl<'a> Renderer<'a> {
                     .child(self.rich_at(text, base * size))
                     .into_any_element()
             }
+            // `hr`: `--hr-color`.
             RBlock::ThematicBreak => div()
                 .my(px(base * 1.5))
                 .h(px(1.))
                 .w_full()
-                .bg(t.border)
+                .bg(t.tokens.hr_color)
                 .into_any_element(),
             RBlock::Code {
                 id,
@@ -1767,7 +1768,7 @@ impl<'a> Renderer<'a> {
                     .mb(gap)
                     .relative()
                     .group("code-block")
-                    .bg(t.code_bg)
+                    .bg(t.tokens.code_background)
                     .rounded_md()
                     .py_2()
                     .font_family(t.mono_font.clone())
@@ -2038,14 +2039,22 @@ impl<'a> Renderer<'a> {
                         .and_then(|h| h.cell.as_ref())
                         .filter(|(at, _)| Some(at) == span.as_ref())
                         .map(|(_, f)| f);
+                    // `th` and `td`: `--table-border-width` lines in
+                    // `--table-border-color`, the header in
+                    // `--table-header-color` at `--table-header-weight`
+                    // (600) on `--table-header-background`, which is
+                    // transparent (probe of 2026-11-02, `preview.th`).
                     let drawn = div()
                         .w(px(width))
                         .flex_shrink_0()
                         .px_2()
                         .py_1()
                         .border_r_1()
-                        .border_color(t.border)
-                        .when(head, |d| d.font_weight(FontWeight::SEMIBOLD))
+                        .border_color(t.tokens.table_border_color)
+                        .when(head, |d| {
+                            d.font_weight(FontWeight::SEMIBOLD)
+                                .text_color(t.tokens.table_header_color)
+                        })
                         .map(|d| match align {
                             Alignment::Center => d.text_center(),
                             Alignment::Right => d.text_right(),
@@ -2082,16 +2091,16 @@ impl<'a> Renderer<'a> {
                             .flex()
                             .flex_col()
                             .border_1()
-                            .border_color(t.border)
+                            .border_color(t.tokens.table_border_color)
                             .rounded_sm()
                             .text_size(px(font_size))
                             .child(
                                 div()
                                     .flex()
                                     .flex_row()
-                                    .bg(t.bg_secondary)
+                                    .bg(t.tokens.table_header_background)
                                     .border_b_1()
-                                    .border_color(t.border)
+                                    .border_color(t.tokens.table_header_border_color)
                                     .children(
                                         header.iter().enumerate().map(|(i, c)| cell(c, 0, i, true)),
                                     ),
@@ -2101,7 +2110,7 @@ impl<'a> Renderer<'a> {
                                     .flex()
                                     .flex_row()
                                     .when(ri + 1 < rows.len(), |d| {
-                                        d.border_b_1().border_color(t.border)
+                                        d.border_b_1().border_color(t.tokens.table_border_color)
                                     })
                                     .children(
                                         row.iter()
@@ -2148,23 +2157,33 @@ impl<'a> Renderer<'a> {
 
     fn item(&self, item: &RItem, tight: bool) -> AnyElement {
         let t = self.theme;
+        let k = &t.tokens;
         let base = t.base_font_size;
         let marker: AnyElement = match (item.task, item.number) {
             (Some(c), _) => {
                 let checked = c != ' ';
+                // Obsidian's checkbox: a `--checkbox-border-color` line (the
+                // faint text colour) until checked, then `--checkbox-color`
+                // (the interactive accent) with the mark in
+                // `--checkbox-marker-color` (probe of 2026-11-02,
+                // `preview.task.checkbox`).
                 let check = div()
                     .w(px(16.))
                     .h(px(16.))
                     .mt(px(base * 0.3))
                     .rounded_sm()
                     .border_1()
-                    .border_color(if checked { t.accent } else { t.text_muted })
-                    .when(checked, |d| d.bg(t.accent))
+                    .border_color(if checked {
+                        k.checkbox_color
+                    } else {
+                        k.checkbox_border_color
+                    })
+                    .when(checked, |d| d.bg(k.checkbox_color))
                     .flex()
                     .items_center()
                     .justify_center()
                     .text_size(px(11.))
-                    .text_color(t.bg)
+                    .text_color(k.checkbox_marker_color)
                     .when(checked, |d| d.child("✓"));
                 // Clicking the box rewrites its line, the way it does in
                 // Live Preview. An item that came out of an embed has no
@@ -2181,11 +2200,15 @@ impl<'a> Renderer<'a> {
                     _ => check.into_any_element(),
                 }
             }
+            // `li::marker`: `--list-marker-color`, the faint text colour.
             (None, Some(n)) => div()
-                .text_color(t.text_muted)
+                .text_color(k.list_marker_color)
                 .child(SharedString::from(format!("{n}.")))
                 .into_any_element(),
-            (None, None) => div().text_color(t.text_muted).child("•").into_any_element(),
+            (None, None) => div()
+                .text_color(k.list_marker_color)
+                .child("•")
+                .into_any_element(),
         };
         let done = item.task.is_some_and(|c| c != ' ');
         div()
@@ -2207,9 +2230,12 @@ impl<'a> Renderer<'a> {
                     .min_w_0()
                     .flex()
                     .flex_col()
-                    // Obsidian's default theme dims a done task and
-                    // strikes it through (`--checklist-done-decoration`).
-                    .when(done, |d| d.text_color(t.text_muted).line_through())
+                    // Obsidian's default theme dims a done task
+                    // (`--checklist-done-color`) and strikes it through
+                    // (`--checklist-done-decoration`).
+                    .when(done, |d| {
+                        d.text_color(k.checklist_done_color).line_through()
+                    })
                     .children(self.blocks(&item.children, tight)),
             )
             .into_any_element()
@@ -2428,12 +2454,15 @@ impl<'a> Renderer<'a> {
         );
         let on_toggle = self.on_toggle.clone();
         let add = host.map(|h| h.on_action.clone());
+        // `.metadata-container`: `--text-muted` inside a
+        // `--metadata-border-color` line; its "Properties" title is
+        // `--text-normal` at `--font-medium` (probe of 2026-11-02).
         div()
             .mb(px(base * 1.2))
             .flex()
             .flex_col()
             .border_b_1()
-            .border_color(t.border)
+            .border_color(t.tokens.metadata_border_color)
             .pb(px(base * 0.6))
             .text_size(px(base * 0.875))
             .child(
@@ -2445,7 +2474,8 @@ impl<'a> Renderer<'a> {
                     .gap_1()
                     .py_1()
                     .cursor_pointer()
-                    .text_color(t.text_muted)
+                    .text_color(t.tokens.text_normal)
+                    .font_weight(FontWeight::MEDIUM)
                     .child(SharedString::from(if folded {
                         "\u{25b8}"
                     } else {
@@ -2901,14 +2931,17 @@ impl<'a> Renderer<'a> {
                     .gap_1()
                     .px_1p5()
                     .rounded_sm()
-                    .bg(t.code_bg)
-                    // The border is the pill's own colour until the pill is
-                    // the selected one, so taking focus moves nothing.
+                    // `.multi-select-pill`: `--pill-color` on
+                    // `--pill-background` (transparent) inside a
+                    // `--pill-border-color` line, which brightens to the
+                    // focus ring on the selected pill.
+                    .bg(t.tokens.pill_background)
+                    .text_color(t.tokens.pill_color)
                     .border_1()
                     .border_color(if selected == Some(ix) {
-                        t.border_focus
+                        t.tokens.background_modifier_border_focus
                     } else {
-                        t.code_bg
+                        t.tokens.pill_border_color
                     })
                     .child(self.rich(item))
                     .when_some(on_action.clone(), |d, on_action| {
@@ -3193,8 +3226,14 @@ impl<'a> Renderer<'a> {
         (interactive, layout)
     }
 
+    /// The inline runs, by the tokens Obsidian's reading view paints them
+    /// from (probe of 2026-11-02, `preview.*`): `<del>` is struck through
+    /// in its own colour, `==mark==` sits on `--highlight-background`,
+    /// inline code on `--code-background` in `--code-normal`, a tag is
+    /// `--tag-color`, a link or footnote `--link-color`.
     fn highlight(&self, s: InlineStyle) -> HighlightStyle {
         let t = self.theme;
+        let k = &t.tokens;
         let mut h = HighlightStyle::default();
         if s.bold {
             h.font_weight = Some(FontWeight::BOLD);
@@ -3205,19 +3244,19 @@ impl<'a> Renderer<'a> {
         if s.strike {
             h.strikethrough = Some(StrikethroughStyle {
                 thickness: px(1.),
-                color: Some(t.text_muted),
+                color: None,
             });
-            h.color = Some(t.text_muted);
         }
         if s.highlight {
             h.background_color = Some(match s.highlight_color {
                 Some(c) => t.highlight_color(c),
-                None => t.highlight_bg,
+                None => k.highlight_background,
             });
         }
         // `<kbd>` wears inline code's look, the box Obsidian themes it with.
         if s.code || s.kbd {
-            h.background_color = Some(t.code_bg);
+            h.background_color = Some(k.code_background);
+            h.color = Some(k.code_normal);
         }
         // `<u>`: underlined in the text colour; a link's own underline below
         // takes over when both apply.
@@ -3236,19 +3275,19 @@ impl<'a> Renderer<'a> {
             h.color = Some(math::error_color());
         }
         if s.html {
-            h.color = Some(t.text_muted);
+            h.color = Some(k.text_muted);
         }
         if s.tag {
-            h.color = Some(t.tag);
+            h.color = Some(k.tag_color);
         }
         if s.footnote {
-            h.color = Some(t.link);
+            h.color = Some(k.link_color);
         }
         if s.link {
-            h.color = Some(t.link);
+            h.color = Some(k.link_color);
             h.underline = Some(UnderlineStyle {
                 thickness: px(1.),
-                color: Some(t.link),
+                color: Some(k.link_color),
                 wavy: false,
             });
         }

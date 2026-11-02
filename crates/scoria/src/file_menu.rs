@@ -217,16 +217,6 @@ pub struct Item {
     pub submenu: Vec<Item>,
 }
 
-/// The `is-warning` colour Obsidian draws *Delete* and *Clear sort* in:
-/// its own `--text-error` was not read off a run, so this is the red the
-/// rest of the shell uses for a warning.
-pub const WARNING: gpui::Hsla = gpui::Hsla {
-    h: 0.985,
-    s: 0.80,
-    l: 0.60,
-    a: 1.0,
-};
-
 /// What was right-clicked. Paths are vault-relative, folders without a
 /// trailing slash (`""` is the vault root).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -792,19 +782,23 @@ pub fn render<V: 'static>(
     // menu stands near the window's right edge and there is no room.
     let flip_submenu = menu.position.x + px(180. + 140.) > viewport_width;
     let mut list = menu_box(
+        // Obsidian's `.menu`: `--menu-background` inside a
+        // `--menu-border-color` line, rows in `--text-normal` at the small
+        // UI size, icons `--text-muted`, a warning row `--text-error`, the
+        // hover wash `--background-modifier-hover` (probe of 2026-11-02).
         div()
             .id("file-menu")
             .flex()
             .flex_col()
             .min_w(px(180.))
             .py_1()
-            .bg(theme.bg_secondary)
+            .bg(theme.tokens.menu_background)
             .border_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.menu_border_color)
             .rounded_md()
             .shadow_lg()
             .text_size(px(13.))
-            .text_color(theme.text),
+            .text_color(theme.tokens.text_normal),
         focus,
         cx,
         {
@@ -821,7 +815,7 @@ pub fn render<V: 'static>(
                     .my_1()
                     .h(px(1.))
                     .w_full()
-                    .bg(theme.border),
+                    .bg(theme.tokens.background_modifier_border),
             );
         }
         previous = Some(item.section);
@@ -832,8 +826,12 @@ pub fn render<V: 'static>(
         let on_hover = on_submenu.clone();
         // Obsidian's `is-disabled` row: greyed, no hover, and a click on it
         // closes nothing and does nothing.
-        let faded = theme.text_faint;
-        let color = if item.warning { WARNING } else { theme.text };
+        let faded = theme.tokens.text_faint;
+        let color = if item.warning {
+            theme.tokens.text_error
+        } else {
+            theme.tokens.text_normal
+        };
         let mut row = div()
             .id(("file-menu-item", ix))
             .relative()
@@ -846,7 +844,7 @@ pub fn render<V: 'static>(
             .when(item.disabled, |d| d.text_color(faded))
             .when(!item.disabled, |d| {
                 d.cursor_pointer()
-                    .hover(|s| s.bg(theme.bg_alt))
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .on_hover(cx.listener(move |this, hovered: &bool, _, cx| {
                         if *hovered {
                             on_hover(this, has_submenu, cx);
@@ -865,15 +863,19 @@ pub fn render<V: 'static>(
                 if item.disabled {
                     faded
                 } else {
-                    theme.text_muted
+                    theme.tokens.text_muted
                 },
             ))
             .child(div().flex_1().child(item.label.clone()))
             .when(item.checked, |d| {
-                d.child(crate::assets::icon("check", 14., theme.text_muted))
+                d.child(crate::assets::icon("check", 14., theme.tokens.text_muted))
             })
             .when(has_submenu, |d| {
-                d.child(crate::assets::icon("chevron-right", 14., theme.text_muted))
+                d.child(crate::assets::icon(
+                    "chevron-right",
+                    14.,
+                    theme.tokens.text_muted,
+                ))
             });
         // The submenu stands beside its row, open while the pointer rested
         // on that row last; its rows pick like the menu's own.
@@ -888,9 +890,9 @@ pub fn render<V: 'static>(
                 .flex_col()
                 .min_w(px(126.))
                 .py_1()
-                .bg(theme.bg_secondary)
+                .bg(theme.tokens.menu_background)
                 .border_1()
-                .border_color(theme.border)
+                .border_color(theme.tokens.menu_border_color)
                 .rounded_md()
                 .shadow_lg()
                 .occlude();
@@ -906,17 +908,21 @@ pub fn render<V: 'static>(
                         .gap_2()
                         .px_3()
                         .py_1()
-                        .text_color(theme.text)
+                        .text_color(theme.tokens.text_normal)
                         .cursor_pointer()
-                        .hover(|s| s.bg(theme.bg_alt))
+                        .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                         .on_click(cx.listener(move |this, _, window, cx| {
                             on_close(this, cx);
                             on_pick(this, pick, window, cx);
                         }))
-                        .child(crate::assets::icon(subitem.icon, 16., theme.text_muted))
+                        .child(crate::assets::icon(
+                            subitem.icon,
+                            16.,
+                            theme.tokens.text_muted,
+                        ))
                         .child(div().flex_1().child(subitem.label.clone()))
                         .when(subitem.checked, |d| {
-                            d.child(crate::assets::icon("check", 14., theme.text_muted))
+                            d.child(crate::assets::icon("check", 14., theme.tokens.text_muted))
                         }),
                 );
             }

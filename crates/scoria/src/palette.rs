@@ -220,8 +220,9 @@ impl CommandPalette {
                     .map(|r| {
                         (
                             r.clone(),
+                            // `.suggestion-highlight`: bold, in the row's own
+                            // colour (probe of 2026-11-02).
                             HighlightStyle {
-                                color: Some(theme.accent),
                                 font_weight: Some(FontWeight::BOLD),
                                 ..HighlightStyle::default()
                             },
@@ -244,8 +245,10 @@ impl CommandPalette {
                         .gap_3()
                         .rounded_sm()
                         .cursor_pointer()
-                        .when(selected, |d| d.bg(theme.bg_active))
-                        .hover(|s| s.bg(theme.bg_alt))
+                        // The selected row and a hovered one both take
+                        // `--background-modifier-hover`.
+                        .when(selected, |d| d.bg(theme.tokens.background_modifier_hover))
+                        .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                         .on_click(cx.listener(move |this, _, _, cx| {
                             this.selected = ix;
                             this.run_selected(cx);
@@ -262,14 +265,14 @@ impl CommandPalette {
                                         div()
                                             .flex_shrink_0()
                                             .text_size(px(10.))
-                                            .text_color(theme.text_muted)
+                                            .text_color(theme.tokens.text_muted)
                                             .child("PINNED"),
                                     )
                                 })
                                 .child(
                                     div()
                                         .text_size(px(14.))
-                                        .text_color(theme.text)
+                                        .text_color(theme.tokens.text_normal)
                                         .whitespace_nowrap()
                                         .overflow_hidden()
                                         .text_ellipsis()
@@ -287,17 +290,18 @@ impl CommandPalette {
     }
 }
 
-/// A key combination drawn the way the palette and the Hotkeys tab show it.
+/// A key combination drawn the way the palette and the Hotkeys tab show
+/// it: Obsidian's `.suggestion-hotkey` and `.setting-hotkey`, `--code-normal`
+/// on `--hotkey-background` with no border of their own (probe of
+/// 2026-11-02).
 pub fn hotkey_chip(label: String, theme: &Theme) -> gpui::Div {
     div()
         .px(px(6.))
         .py(px(1.))
         .rounded_sm()
-        .bg(theme.bg_alt)
-        .border_1()
-        .border_color(theme.border)
+        .bg(theme.tokens.hotkey_background)
         .text_size(px(11.))
-        .text_color(theme.text_muted)
+        .text_color(theme.tokens.code_normal)
         .whitespace_nowrap()
         .child(SharedString::from(label))
 }
@@ -313,22 +317,26 @@ impl Render for CommandPalette {
                 .flex_row()
                 .items_center()
                 .gap_1()
+                // `.prompt-instruction-command`: bold, in the instructions'
+                // own `--text-muted`.
                 .child(
                     div()
-                        .text_color(theme.text)
+                        .text_color(theme.tokens.text_muted)
                         .font_weight(FontWeight::BOLD)
                         .child(keys),
                 )
-                .child(div().text_color(theme.text_muted).child(text))
+                .child(div().text_color(theme.tokens.text_muted).child(text))
         };
+        // Obsidian's `.prompt`: `--prompt-background` (the primary
+        // background) inside a `--prompt-border-color` line.
         div()
             .id("command-palette")
             .w(px(620.))
             .flex()
             .flex_col()
-            .bg(theme.bg_secondary)
+            .bg(theme.tokens.prompt_background)
             .border_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.prompt_border_color)
             .rounded_lg()
             .shadow_lg()
             .p_2()
@@ -347,7 +355,7 @@ impl Render for CommandPalette {
                     div()
                         .p_3()
                         .text_size(px(12.))
-                        .text_color(theme.text_muted)
+                        .text_color(theme.tokens.text_muted)
                         .child("No commands found."),
                 )
             })
@@ -361,7 +369,7 @@ impl Render for CommandPalette {
                     .pb_1()
                     .mt_1()
                     .border_t_1()
-                    .border_color(theme.border)
+                    .border_color(theme.tokens.background_modifier_border)
                     .text_size(px(11.))
                     .child(instruction("↑↓", "to navigate", &theme))
                     .child(instruction("↵", "to use", &theme))

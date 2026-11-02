@@ -2326,9 +2326,14 @@ fn empty_tab_actions(registry: &CommandRegistry) -> Vec<EmptyAction> {
         .collect()
 }
 
+/// Obsidian's `clickable-icon`: `--icon-color` at `--icon-opacity`, and
+/// under the pointer the hover wash behind `--icon-color-hover` at full
+/// opacity (probe of 2026-11-02).
 fn icon_button(id: &'static str, name: &str, theme: &Theme) -> gpui::Stateful<gpui::Div> {
+    let t = &theme.tokens;
     div()
         .id(id)
+        .group(id)
         .flex_shrink_0()
         .w(px(28.))
         .h(px(24.))
@@ -2337,8 +2342,15 @@ fn icon_button(id: &'static str, name: &str, theme: &Theme) -> gpui::Stateful<gp
         .justify_center()
         .rounded(px(4.))
         .cursor_pointer()
-        .hover(|s| s.bg(theme.bg_alt))
-        .child(icon(name, ICON_SIZE, theme.text_muted))
+        .hover(|s| s.bg(t.background_modifier_hover))
+        .child(
+            icon(name, ICON_SIZE, t.icon_color)
+                .opacity(t.icon_opacity)
+                .group_hover(id, |s| {
+                    s.opacity(t.icon_opacity_hover)
+                        .text_color(t.icon_color_hover)
+                }),
+        )
 }
 
 /// Makes `area` a handle on the window itself when the frame is Scoria's:
@@ -8159,10 +8171,12 @@ impl Workspace {
             .as_deref()
             .filter(|p| FileKind::from_path(p) == FileKind::Base)
             .map(str::to_string);
+        // `.view-header-title` is `--text-normal`; a group that is not the
+        // active one keeps its title muted, as its tab is.
         let title_color = if view.active {
-            theme.text
+            theme.tokens.text_normal
         } else {
-            theme.text_muted
+            theme.tokens.text_muted
         };
         // Obsidian's view header: 40 px, 12 px side padding, the history
         // arrows at 40 percent while they have nowhere to go, the title in
@@ -8205,9 +8219,14 @@ impl Workspace {
                     .gap_1()
                     .whitespace_nowrap()
                     .overflow_hidden()
+                    // `.view-header-title-parent`: `--text-muted`.
                     .when(!crumbs.is_empty(), |d| {
-                        d.child(div().text_color(theme.text_muted).child(crumbs.clone()))
-                            .child(div().text_color(theme.text_muted).child("/"))
+                        d.child(
+                            div()
+                                .text_color(theme.tokens.text_muted)
+                                .child(crumbs.clone()),
+                        )
+                        .child(div().text_color(theme.tokens.text_muted).child("/"))
                     })
                     .child(self.render_title(view, title.clone(), title_color, theme, cx)),
             )
@@ -8220,7 +8239,9 @@ impl Workspace {
                     .gap(px(2.))
                     .child(
                         icon_button("graph", "git-fork", theme)
-                            .when(view.mode == ViewMode::Graph, |d| d.bg(theme.bg_active))
+                            .when(view.mode == ViewMode::Graph, |d| {
+                                d.bg(theme.tokens.background_modifier_hover)
+                            })
                             .on_click(cx.listener(move |this, _, window, cx| {
                                 this.activate_group(id, cx);
                                 this.open_graph_action(&OpenGraph, window, cx)
@@ -10010,7 +10031,7 @@ impl Workspace {
                     .w(px(RIBBON_WIDTH))
                     .h(px(HEADER_HEIGHT))
                     .border_b_1()
-                    .border_color(theme.border),
+                    .border_color(theme.tokens.tab_outline_color),
                 true,
             )
             .into_any_element()
@@ -10022,7 +10043,7 @@ impl Workspace {
                 .items_center()
                 .justify_center()
                 .border_b_1()
-                .border_color(theme.border)
+                .border_color(theme.tokens.tab_outline_color)
                 .child(self.sidebar_toggle(true, theme, cx))
                 .into_any_element()
         };
@@ -10113,7 +10134,9 @@ impl Workspace {
             .flex_shrink_0()
             .w(px(RIBBON_WIDTH))
             .h_full()
-            .bg(theme.bg_secondary)
+            // `.workspace-ribbon`: `--ribbon-background`, its divider the
+            // `--divider-color` hairline.
+            .bg(theme.tokens.ribbon_background)
             .map(|d| self.corners.left().apply(d))
             .child(toggle)
             .child(
@@ -10124,7 +10147,7 @@ impl Workspace {
                     .flex_1()
                     .w_full()
                     .border_r_1()
-                    .border_color(theme.border)
+                    .border_color(theme.tokens.divider_color)
                     .pt(px(8.))
                     .pb(px(12.))
                     .gap(px(6.))
@@ -10156,8 +10179,11 @@ impl Workspace {
             .h(px(HEADER_HEIGHT))
             .px(px(8.))
             .gap(px(2.))
+            // `.workspace-sidedock-vault-profile`: the secondary background
+            // over a `--divider-color` hairline; the switcher row washes on
+            // hover and its name is `--vault-profile-color` at weight 500.
             .border_t_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.divider_color)
             .child(
                 div()
                     .id("vault-switcher")
@@ -10170,8 +10196,10 @@ impl Workspace {
                     .pr(px(6.))
                     .rounded(px(4.))
                     .cursor_pointer()
-                    .hover(|s| s.bg(theme.bg_alt))
-                    .when(self.vault_menu_open, |d| d.bg(theme.bg_alt))
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                    .when(self.vault_menu_open, |d| {
+                        d.bg(theme.tokens.background_modifier_hover)
+                    })
                     .on_hover(cx.listener(|this, over: &bool, _, _| {
                         this.vault_switcher_hovered = *over;
                     }))
@@ -10188,7 +10216,10 @@ impl Workspace {
                             .flex()
                             .items_center()
                             .justify_center()
-                            .child(icon("chevrons-up-down", ICON_SIZE, theme.text_muted)),
+                            .child(
+                                icon("chevrons-up-down", ICON_SIZE, theme.tokens.icon_color)
+                                    .opacity(theme.tokens.icon_opacity),
+                            ),
                     )
                     .child(
                         div()
@@ -10197,8 +10228,8 @@ impl Workspace {
                             .text_ellipsis()
                             .whitespace_nowrap()
                             .text_size(px(FONT_UI_SMALL))
-                            .font_weight(gpui::FontWeight::SEMIBOLD)
-                            .text_color(theme.text)
+                            .font_weight(gpui::FontWeight::MEDIUM)
+                            .text_color(theme.tokens.vault_profile_color)
                             .child(self.vault_name.clone()),
                     ),
             )
@@ -10409,7 +10440,7 @@ impl Workspace {
             } else {
                 px(8.)
             })
-            .bg(theme.bg_secondary)
+            .bg(theme.tokens.tab_container_background)
             .relative()
             .overflow_hidden()
             // A dragged tab over the strip moves the drop bar to the
@@ -10432,7 +10463,7 @@ impl Workspace {
                     .right_0()
                     .bottom_0()
                     .h(px(1.))
-                    .bg(theme.border),
+                    .bg(theme.tokens.tab_outline_color),
             )
             // Without the ribbon a collapsed left sidebar would have no
             // way back from the window; macOS keeps the toggle here, after
@@ -10493,7 +10524,7 @@ impl Workspace {
                                 .top(px(8.))
                                 .w(px(1.))
                                 .h(px(15.))
-                                .bg(theme.tab_divider),
+                                .bg(theme.tokens.tab_divider_color),
                         ))
                     })
                     // The active tab's feet: the concave curves that carry
@@ -10505,15 +10536,25 @@ impl Workspace {
                     })
                     .cursor_pointer()
                     .text_size(px(FONT_UI_SMALL))
-                    .bg(if active { theme.bg } else { theme.bg_secondary })
-                    .text_color(if active && group_active {
-                        theme.text
-                    } else if active {
-                        theme.text_muted
+                    // `--tab-background-active` for the active tab, the strip's
+                    // own colour behind the rest; the title is
+                    // `--tab-text-color-focused-active-current` on the active
+                    // tab of the active group, `-focused-active` on the active
+                    // tab of another group and `-focused` on an inactive tab,
+                    // which Obsidian keeps as muted as the others rather than
+                    // faint (probe of 2026-11-02, `root.tab-header.inactive`).
+                    .bg(if active {
+                        theme.tokens.tab_background_active
                     } else {
-                        theme.text_faint
+                        theme.tokens.tab_container_background
                     })
-                    .when(!active, |d| d.hover(|s| s.text_color(theme.text_muted)))
+                    .text_color(if active && group_active {
+                        theme.tokens.tab_text_color_focused_active_current
+                    } else if active {
+                        theme.tokens.tab_text_color_focused_active
+                    } else {
+                        theme.tokens.tab_text_color_focused
+                    })
                     .on_click(cx.listener(move |this, _, _, cx| {
                         this.activate_group(group, cx);
                         this.activate_tab(ix, cx)
@@ -10557,7 +10598,11 @@ impl Workspace {
                             .pl(px(6.))
                             .pr(px(3.))
                             .rounded(px(4.))
-                            .when(!active, |d| d.group_hover("tab", |s| s.bg(theme.bg_alt)))
+                            .when(!active, |d| {
+                                d.group_hover("tab", |s| {
+                                    s.bg(theme.tokens.tab_inner_background_hover)
+                                })
+                            })
                             .child(
                                 div()
                                     .flex_1()
@@ -10589,8 +10634,10 @@ impl Workspace {
                                         this.close_tab(ix, cx);
                                     }))
                                     .child(
-                                        icon("x", 14., theme.text_muted)
-                                            .group_hover("tab-close", |s| s.text_color(theme.text)),
+                                        icon("x", 14., theme.tokens.tab_text_color_focused_active)
+                                            .group_hover("tab-close", |s| {
+                                                s.text_color(theme.tokens.text_normal)
+                                            }),
                                     ),
                             ),
                     )
@@ -10609,12 +10656,21 @@ impl Workspace {
                     .justify_center()
                     .rounded(px(4.))
                     .cursor_pointer()
-                    .hover(|s| s.bg(theme.bg_alt))
+                    .group("new-tab")
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .on_click(cx.listener(move |this, _, _, cx| {
                         this.activate_group(group, cx);
                         this.new_tab(cx)
                     }))
-                    .child(icon("plus", ICON_SIZE, theme.text)),
+                    // A `clickable-icon`: `--icon-color`, not the text colour.
+                    .child(
+                        icon("plus", ICON_SIZE, theme.tokens.icon_color)
+                            .opacity(theme.tokens.icon_opacity)
+                            .group_hover("new-tab", |s| {
+                                s.opacity(theme.tokens.icon_opacity_hover)
+                                    .text_color(theme.tokens.icon_color_hover)
+                            }),
+                    ),
             )
             .child(window_handle(
                 div().id(("tab-strip-space", group)).flex_1().h_full(),
@@ -12151,19 +12207,42 @@ impl Workspace {
             .justify_center()
             .cursor_pointer()
             .rounded(px(4.))
-            .when(active, |d| d.bg(theme.bg_active))
-            .hover(|s| s.bg(theme.bg_alt))
+            .group(label)
+            // The active dock tab: the hover wash under `--icon-color-focused`
+            // at `--icon-opacity-active`; the others `--icon-color` at
+            // `--icon-opacity`, brightening to `--icon-color-hover` under
+            // the pointer (probe of 2026-11-02, `split.left.tab-header.*`).
+            .when(active, |d| d.bg(theme.tokens.background_modifier_hover))
+            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
             .on_click(cx.listener(move |this, _, window, cx| on_click(this, window, cx)))
-            .child(icon(
-                icon_name,
-                ICON_SIZE,
-                if active { theme.text } else { theme.text_muted },
-            ))
+            .child(
+                icon(
+                    icon_name,
+                    ICON_SIZE,
+                    if active {
+                        theme.tokens.icon_color_focused
+                    } else {
+                        theme.tokens.icon_color
+                    },
+                )
+                .opacity(if active {
+                    theme.tokens.icon_opacity_active
+                } else {
+                    theme.tokens.icon_opacity
+                })
+                .when(!active, |s| {
+                    s.group_hover(label, |s| {
+                        s.opacity(theme.tokens.icon_opacity_hover)
+                            .text_color(theme.tokens.icon_color_hover)
+                    })
+                }),
+            )
     }
 
     /// A pane's own header button: Obsidian's `nav-action-button`, 28 by
-    /// 24 with a 4 px radius, the icon muted until the pointer is over it;
-    /// `active` is the wash and accent of an `is-active` one.
+    /// 24 with a 4 px radius, `--icon-color` at `--icon-opacity` until the
+    /// pointer is over it; an `is-active` one sits on the hover wash in
+    /// `--icon-color-focused` (probe of 2026-11-02, `clickable-icon.active`).
     fn nav_button(
         id: &'static str,
         icon_name: &'static str,
@@ -12171,8 +12250,10 @@ impl Workspace {
         active: bool,
         theme: &Theme,
     ) -> gpui::Stateful<gpui::Div> {
+        let t = &theme.tokens;
         div()
             .id(id)
+            .group(id)
             .flex_shrink_0()
             .w(px(28.))
             .h(px(24.))
@@ -12181,18 +12262,29 @@ impl Workspace {
             .justify_center()
             .rounded(px(4.))
             .cursor_pointer()
-            .when(active, |d| d.bg(theme.bg_alt))
-            .hover(|s| s.bg(theme.bg_alt))
+            .when(active, |d| d.bg(t.background_modifier_hover))
+            .hover(|s| s.bg(t.background_modifier_hover))
             .tooltip(tooltip(label))
-            .child(icon(
-                icon_name,
-                ICON_SIZE,
-                if active {
-                    theme.accent
+            .child(
+                icon(
+                    icon_name,
+                    ICON_SIZE,
+                    if active {
+                        t.icon_color_focused
+                    } else {
+                        t.icon_color
+                    },
+                )
+                .opacity(if active {
+                    t.icon_opacity_active
                 } else {
-                    theme.text_muted
-                },
-            ))
+                    t.icon_opacity
+                })
+                .group_hover(id, |s| {
+                    s.opacity(t.icon_opacity_hover)
+                        .text_color(t.icon_color_hover)
+                }),
+            )
     }
 
     /// The Backlinks pane: Obsidian's four header actions (collapse,
@@ -14124,7 +14216,10 @@ impl Workspace {
             .flex_shrink_0()
             .w(px(self.right_width as f32))
             .h_full()
-            .bg(theme.bg_secondary)
+            // `.workspace-split.mod-sidedock`: `--tab-container-background`;
+            // its tab header row `--sidebar-tab-container-background` over
+            // the `--tab-outline-color` line every header carries.
+            .bg(theme.tokens.tab_container_background)
             .map(|d| self.corners.right().apply(d))
             .child(
                 div()
@@ -14139,8 +14234,9 @@ impl Workspace {
                         px(8.)
                     })
                     .gap(px(3.))
+                    .bg(theme.tokens.sidebar_tab_container_background)
                     .border_b_1()
-                    .border_color(theme.border)
+                    .border_color(theme.tokens.tab_outline_color)
                     .children(tab_button(
                         self,
                         "Backlinks",
@@ -15274,7 +15370,7 @@ impl Render for Workspace {
             .flex_shrink_0()
             .w(px(self.left_width as f32))
             .h_full()
-            .bg(theme.bg_secondary)
+            .bg(theme.tokens.tab_container_background)
             .when(!show_ribbon, |d| corners.left().apply(d))
             .child(
                 div()
@@ -15286,9 +15382,10 @@ impl Render for Workspace {
                     // is the window's top-left corner.
                     .pl(px(8. + self.frame_left_space()))
                     .pr(px(8.))
+                    .bg(theme.tokens.sidebar_tab_container_background)
                     .gap(px(3.))
                     .border_b_1()
-                    .border_color(theme.border)
+                    .border_color(theme.tokens.tab_outline_color)
                     .children(self.left_pane_enabled("file-explorer").then(|| {
                         self.dock_tab(
                             "Files",
@@ -15363,12 +15460,12 @@ impl Render for Workspace {
             .py(px(4.))
             .rounded_tl(px(8.))
             .when(corners.br, |d| d.rounded_br(WINDOW_RADIUS))
-            .bg(theme.bg_secondary)
+            .bg(theme.tokens.status_bar_background)
             .border_t_1()
             .border_l_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.status_bar_border_color)
             .text_size(px(FONT_UI_SMALLER))
-            .text_color(theme.text_muted)
+            .text_color(theme.tokens.status_bar_text_color)
             .child(
                 div()
                     .px(px(4.))

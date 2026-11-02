@@ -38,14 +38,6 @@ use scoria_bases::layout::{self, ImageFit, Layout, Markers, RowHeight, LAYOUTS};
 use scoria_formats::base::{Base, View, DEFAULT_VIEW_NAME, DEFAULT_VIEW_TYPE};
 use serde_json::json;
 
-/// `--text-error`: the colour of a menu's `is-warning` row.
-pub(super) const WARNING: gpui::Rgba = gpui::Rgba {
-    r: 0xe9 as f32 / 255.,
-    g: 0x31 as f32 / 255.,
-    b: 0x47 as f32 / 255.,
-    a: 1.,
-};
-
 impl BasesView {
     /// The rows the panel lists: every view, narrowed by the search field.
     fn views_rows(&self, base: &Base, cx: &Context<Self>) -> Vec<(usize, View)> {
@@ -521,9 +513,13 @@ impl BasesView {
                    warning: bool,
                    checked: bool,
                    cx: &mut Context<Self>| {
-            let color = if warning { WARNING.into() } else { theme.text };
+            let color = if warning {
+                theme.tokens.text_error
+            } else {
+                theme.text
+            };
             let icon_color = if warning {
-                WARNING.into()
+                theme.tokens.text_error
             } else {
                 theme.text_muted
             };

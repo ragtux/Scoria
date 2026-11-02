@@ -115,6 +115,18 @@ Zed's bar is passed at the end of 3. VS Code's is passed at roughly the same mom
 
 Do 1 first, and alone. A loader shipped against 31 tokens would produce themes that visibly do not work, and would teach everyone that Scoria theming is broken — a harder impression to repair than a missing feature is to add.
 
+## Progress
+
+**2026-11-02: the registry exists, the probe answered the mapping, and nothing moved on screen.** Step 1's first half is in. `crates/scoria/src/theme/` is now a module: `registry.rs` declares 313 tokens under Obsidian's own property names (every colour the probe saw a shell, editor, reading, pane, menu, prompt or settings surface read, plus the canvas, graph and code tokens the app already painted by name), each with a kind that decides its type; `value.rs` parses and resolves the CSS value grammar those declarations are written in (`var()` with fallback, `hsl()` with `calc()` channels, `rgba()`, `color-mix(in oklch, …)`, `calc()`, lengths, keywords, shadow lists); `defaults.rs` is **generated** by `tools/obsidian-probe/theme-defaults.py` from the probe's record of the declarations under `:root`, `body`, `.theme-dark` and `.theme-light`, chains intact, so overriding `--color-base-70` moves `--text-muted` and all 20 tokens downstream of it exactly as it does in Obsidian. `theme::tests` holds every token to the value Obsidian computed, in both themes.
+
+The mapping question was answered by `theme-registry.mjs` rather than by judgement: for each surface element it reports the cascade-winning declaration of each painted property with its `var()` intact, found by walking the CSSOM, and the condensed table is in [[Specification#Observed theme tokens, Obsidian 1.14.5 (installer build 1.13.7)]]. Two things the measurement in "Where it stands" could not see fell out: the light theme's accent is `--color-accent-1`, a shade lighter than the dark theme's, where Scoria had painted one value in both; and the highlight wash is `--color-yellow` at 30 percent, not a flat gold.
+
+The screenshot-equal test from "Mapping the call sites" was run on the docs vault in both themes with the binary from before the change beside the one after: zero differing pixels. The short fields (`text_muted`, `bg_alt`, …) still exist and are now derived from the registry, so the roughly 750 call sites are untouched; **what remains of step 1 is repointing them surface by surface** to the token the table names (`nav_item_color` where it says `--nav-item-color`), with the same screenshot check per surface. `appearance.json`'s `accentColor` now lands on `--accent-h/s/l`, which is how Obsidian applies it, so the brand orange recolours the whole accent chain.
+
+The probe ran under a data directory of its own (`USER_DATA_DIR` in `run-block.sh`), beside the desktop's Obsidian rather than instead of it — Obsidian's single-instance lock is per `--user-data-dir`. Every probe from here on can run that way.
+
+**The same day, the shell, the editor's palette, the context menu, the command palette and the reading view's blocks were repointed** (the list is in [[Development#The theme registry, 2026-11-02]]). Each pass was captured against the pre-registry binary, and every region that moved was a colour the table showed to be wrong — a dozen small parity fixes, icon opacity and tab-title weight among them, found in bulk exactly as "Mapping the call sites" said they would be. Still on the short fields: Live Preview's widgets, the search pane, Settings, the Bases and canvas chrome, the graph and the pane rows.
+
 ## See also
 
 - [[Development#Parity (phase 4)]] for the line this note plans, and [[Development#Environment]] for the GPUI pin the ceiling follows from.

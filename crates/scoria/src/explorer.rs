@@ -938,8 +938,10 @@ impl FileExplorer {
     }
 
     /// A header button: Obsidian's `nav-action-button`, 28 by 24 with a
-    /// 4 px radius, the icon muted until the pointer is over it; `active`
-    /// is the wash and accent of an `is-active` one.
+    /// 4 px radius. Its icon is `--icon-color` at `--icon-opacity` until
+    /// the pointer is over it (`--icon-color-hover`, opaque); an
+    /// `is-active` one sits on the hover wash in `--icon-color-focused`
+    /// (probe of 2026-11-02, `clickable-icon.active`).
     fn header_button(
         id: &'static str,
         icon_name: &'static str,
@@ -947,8 +949,10 @@ impl FileExplorer {
         active: bool,
         theme: &Theme,
     ) -> gpui::Stateful<gpui::Div> {
+        let t = &theme.tokens;
         div()
             .id(id)
+            .group(id)
             .flex_shrink_0()
             .w(px(28.))
             .h(px(24.))
@@ -957,18 +961,29 @@ impl FileExplorer {
             .justify_center()
             .rounded(px(4.))
             .cursor_pointer()
-            .when(active, |d| d.bg(theme.bg_alt))
-            .hover(|s| s.bg(theme.bg_alt))
+            .when(active, |d| d.bg(t.background_modifier_hover))
+            .hover(|s| s.bg(t.background_modifier_hover))
             .tooltip(tooltip(label))
-            .child(icon(
-                icon_name,
-                ICON_SIZE,
-                if active {
-                    theme.accent
+            .child(
+                icon(
+                    icon_name,
+                    ICON_SIZE,
+                    if active {
+                        t.icon_color_focused
+                    } else {
+                        t.icon_color
+                    },
+                )
+                .opacity(if active {
+                    t.icon_opacity_active
                 } else {
-                    theme.text_muted
-                },
-            ))
+                    t.icon_opacity
+                })
+                .group_hover(id, |s| {
+                    s.opacity(t.icon_opacity_hover)
+                        .text_color(t.icon_color_hover)
+                }),
+            )
     }
 
     fn render_header(&mut self, cx: &mut Context<Self>) -> gpui::Div {
@@ -1064,7 +1079,7 @@ impl FileExplorer {
                 .flex_col()
                 .min_w(px(220.))
                 .py_1()
-                .bg(theme.bg_secondary)
+                .bg(theme.tokens.menu_background)
                 .border_1()
                 .border_color(theme.border)
                 .rounded_md()
@@ -1080,7 +1095,12 @@ impl FileExplorer {
         );
         for (ix, order) in SortOrder::ALL.into_iter().enumerate() {
             if ix > 0 && ix % 2 == 0 {
-                list = list.child(div().my_1().h(px(1.)).bg(theme.border));
+                list = list.child(
+                    div()
+                        .my_1()
+                        .h(px(1.))
+                        .bg(theme.tokens.background_modifier_border),
+                );
             }
             let checked = order == current;
             list = list.child(
@@ -1101,7 +1121,7 @@ impl FileExplorer {
                             .flex_shrink_0()
                             .flex()
                             .items_center()
-                            .children(checked.then(|| icon("check", 14., theme.text_muted))),
+                            .children(checked.then(|| icon("check", 14., theme.tokens.text_muted))),
                     )
                     .child(order.label()),
             );
@@ -1140,11 +1160,16 @@ impl FileExplorer {
                 });
                 let name: SharedString = row.name.clone().into();
                 let tag: Option<SharedString> = row.tag.clone().map(Into::into);
-                // A file no view can open stays faint; a canvas or an image
-                // reads like a note, its tag saying what it is.
-                let faint = !row.is_folder && row.kind == FileKind::Other;
+                // A file no view can open reads like any other row
+                // (`is-unsupported` sets no colour of its own: the probe
+                // of 2026-11-02 found `--nav-item-color` on it); only its
+                // tag says what it is.
+                let _ = FileKind::Other;
                 // Obsidian's row: 13 px text in a 25 px row with an 8 px
-                // radius, muted until it is active or under the pointer.
+                // radius, `--nav-item-color` until it is active
+                // (`--nav-item-color-active` on `--nav-item-background-active`)
+                // or under the pointer (`-hover`).
+                let t = &theme.tokens;
                 Some(
                     div()
                         .id(("row", ix))
@@ -1159,7 +1184,7 @@ impl FileExplorer {
                         // text does not move when the ring arrives.
                         .border_2()
                         .border_color(if focused {
-                            theme.border_focus
+                            t.background_modifier_border_focus
                         } else {
                             gpui::transparent_black()
                         })
@@ -1168,15 +1193,16 @@ impl FileExplorer {
                         .rounded(px(8.))
                         .cursor_pointer()
                         .text_size(px(13.))
-                        .text_color(if faint {
-                            theme.text_faint
-                        } else if active {
-                            theme.text
+                        .text_color(if active {
+                            t.nav_item_color_active
                         } else {
-                            theme.text_muted
+                            t.nav_item_color
                         })
-                        .when(active, |d| d.bg(theme.bg_active))
-                        .hover(|s| s.bg(theme.bg_alt).text_color(theme.text))
+                        .when(active, |d| d.bg(t.nav_item_background_active))
+                        .hover(|s| {
+                            s.bg(t.nav_item_background_hover)
+                                .text_color(t.nav_item_color_hover)
+                        })
                         .on_click(
                             cx.listener(move |this, event: &gpui::ClickEvent, window, cx| {
                                 let modifiers = event.modifiers();
@@ -1199,12 +1225,12 @@ impl FileExplorer {
                                 .flex_shrink_0()
                                 .flex()
                                 .items_center()
-                                .opacity(0.85)
-                                .children(
-                                    marker.map(|name| {
-                                        crate::assets::icon(name, 14., theme.text_muted)
-                                    }),
-                                ),
+                                // The chevron: `--nav-collapse-icon-color`
+                                // (the faint text colour) at `--icon-opacity`.
+                                .opacity(t.icon_opacity)
+                                .children(marker.map(|name| {
+                                    crate::assets::icon(name, 14., t.nav_collapse_icon_color)
+                                })),
                         )
                         .child(
                             div()
@@ -1223,7 +1249,7 @@ impl FileExplorer {
                                 .ml_2()
                                 .text_size(px(TAG_SIZE))
                                 .font_weight(FontWeight::SEMIBOLD)
-                                .text_color(theme.text_faint)
+                                .text_color(t.nav_tag_color)
                                 .child(tag)
                         })),
                 )

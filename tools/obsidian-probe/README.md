@@ -29,6 +29,14 @@ is already running. Never point it at a real vault: not the gate vault
 (`~/bstore2/raga/plmcrzy/PLMCRZY`) while a byte-level gate run is open, and
 not `docs/scoria`. Scripts get `VAULT` and `RESULTS` in the environment.
 
+With `USER_DATA_DIR=<dir>` the runner launches Obsidian with `--user-data-dir` on
+that folder instead: Obsidian holds its single-instance lock per data directory,
+so the probe's copy runs beside the one on the desktop, keeps its own
+`obsidian.json`, IndexedDB and update there, and never touches
+`~/.config/obsidian`. The newest `obsidian-*.asar` of `~/.config/obsidian` is
+copied in once so the run is on the version the person runs. `CDP_PORT` picks the
+port (default 9222); use another one when a desktop Obsidian may hold 9222.
+
 Scripts, each one checklist block of `docs/scoria/Interaction probes.md`:
 
 | Script | Block | Phases |
@@ -70,6 +78,7 @@ Scripts, each one checklist block of `docs/scoria/Interaction probes.md`:
 | `pdf.mjs` | the PDF view: where pdf.js's `PDFViewer` hangs off the leaf, the leaf's `workspace.json` record against the `pdfjs.history` localStorage entry that really carries page, zoom, rotation and sidebar, the toolbar, sidebar, find bar and Display options menu with their styles in both themes, the zoom ladder, keys, the page-number rule, `#page=`/`#height=` on links and embeds, every embed of `Embeds.md` in reading view and Live Preview, the canvas file card, menus, the three copy strings, the panes, `broken.pdf`, and restart fidelity; the `b` steps are the clean pass after the first pass polluted the history with a rotation (`SHOTS` names the folder) | fixtures, run, after-restart |
 | `vault-switcher.mjs` | the left sidebar's vault profile and the switcher it opens: the footer's parts, the menu's rows against a registry holding two vaults that share a folder name and one whose folder is gone, the check on the open vault, the order the rows come in, and what the row under the separator opens; writes `vault-switcher-menu.png` to `SHOTS` | fixtures, run |
 | `vault-manager.mjs` | the vault-manager window "Manage vaults..." raises (`starter.html`, a CDP target of its own with no `app` in it): the list's rows and their order against the registry on disk, the ellipsis menu, the panel on the right, and what `app:open-vault` and `app:switch-vault` each do; writes `vault-manager.png` and `vault-manager-row-menu.png` to `SHOTS` | fixtures, run |
+| `theme-registry.mjs` | the theme registry: every custom property declared under `:root`/`body`/`.theme-dark`/`.theme-light` with its raw declaration chain and computed value, and for every surface element the cascade-winning declaration of each painted property (`var()` intact, found by walking the CSSOM) in both themes, hover states under a real pointer, the Settings rows through the popout window's document; `theme-defaults.py` writes `crates/scoria/src/theme/defaults.rs` from the run | fixtures, run |
 | `autopair.mjs` | auto-pairing (predates the runner: start Obsidian yourself with `--remote-debugging-port=9222` on a scratch vault and run it directly) | — |
 
 `results/` keeps the raw JSON of the runs the specification cites, named by

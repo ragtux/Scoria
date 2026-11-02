@@ -297,26 +297,31 @@ struct Palette {
 }
 
 impl Palette {
+    /// The editor's colours by the tokens Obsidian's editor reads (probe
+    /// of 2026-11-02, `cm.*`): `--text-normal` and `--text-muted`, the
+    /// interactive accent, `--link-color`, `--tag-color`,
+    /// `--code-background`, `--highlight-background`, `--text-selection`
+    /// (the accent at 33 percent on the dark theme, 20 on the light) and
+    /// `--background-modifier-border`.
     fn from_theme(t: &Theme) -> Palette {
-        let mut selection = t.accent;
-        selection.a = if t.dark { 0.35 } else { 0.25 };
+        let k = &t.tokens;
         Palette {
-            text: t.text,
-            muted: t.text_muted,
-            accent: t.accent,
-            link: t.link,
-            tag: t.tag,
-            code_bg: t.code_bg,
-            highlight_bg: t.highlight_bg,
-            selection,
-            border: t.border,
+            text: k.text_normal,
+            muted: k.text_muted,
+            accent: k.interactive_accent,
+            link: k.link_color,
+            tag: k.tag_color,
+            code_bg: k.code_background,
+            highlight_bg: k.highlight_background,
+            selection: k.text_selection,
+            border: k.background_modifier_border,
             find_match: {
-                let mut c = t.highlight_bg;
+                let mut c = k.highlight_background;
                 c.a = 0.3;
                 c
             },
             find_current: {
-                let mut c = t.highlight_bg;
+                let mut c = k.highlight_background;
                 c.a = 0.75;
                 c
             },

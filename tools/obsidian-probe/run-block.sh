@@ -7,17 +7,44 @@
 # Never points Obsidian at a real vault: it creates its own folder under $TMPDIR
 # unless a vault-dir is given, swaps ~/.config/obsidian/obsidian.json in for the
 # duration, and restores it byte-identical on exit.
+#
+# With USER_DATA_DIR set, Obsidian is launched with `--user-data-dir` on that
+# folder instead: it keeps its own obsidian.json, IndexedDB and update there,
+# holds its own single-instance lock, and the person's Obsidian can stay open
+# on their vault throughout (seen 2026-11-02). The newest obsidian-*.asar of
+# ~/.config/obsidian is copied in once so the run is on the version the person
+# runs rather than the installer's. CDP_PORT picks the port (default 9222).
 set -euo pipefail
 SCRIPT=$(readlink -f "$1"); RESULTS=$(readlink -f -m "$2")
 VAULT=${3:-$(mktemp -d "${TMPDIR:-/tmp}/scoria-probe-vault.XXXXXX")}
-CFG=~/.config/obsidian/obsidian.json
+CDP_PORT=${CDP_PORT:-9222}
+export CDP_BASE="http://127.0.0.1:$CDP_PORT"
+UDD=${USER_DATA_DIR:-}
+UDD_FLAG=()
+if [ -n "$UDD" ]; then
+  mkdir -p "$UDD"
+  [ -f "$UDD/obsidian.json" ] || printf '{"vaults":{}}' > "$UDD/obsidian.json"
+  if ! ls "$UDD"/obsidian-*.asar >/dev/null 2>&1; then
+    NEWEST=$(ls -v ~/.config/obsidian/obsidian-*.asar 2>/dev/null | tail -n 1 || true)
+    [ -n "$NEWEST" ] && command cp -f "$NEWEST" "$UDD/"
+  fi
+  CFG=$UDD/obsidian.json
+  UDD_FLAG=("--user-data-dir=$UDD")
+else
+  CFG=~/.config/obsidian/obsidian.json
+fi
 BACKUP=$(mktemp); command cp -f "$CFG" "$BACKUP"
 LOG=$(mktemp)
 # Anchored at ^/nix/store so it can never match this shell. The group admits the
 # --remote-debugging-port flag between the electron binary and the asar: without
 # it nothing launched with CDP matches, the kill is a no-op, and the next launch
-# is swallowed by the single-instance lock of the survivor.
-PGREP='^/nix/store/[^ ]*electron( --[^ ]*)* /nix/store/[^ ]*obsidian'
+# is swallowed by the single-instance lock of the survivor. With a data dir of
+# our own, only an instance on that dir counts, running or to be killed.
+if [ -n "$UDD" ]; then
+  PGREP="^/nix/store/[^ ]*electron( --[^ ]*)* --user-data-dir=$UDD( --[^ ]*)* /nix/store/[^ ]*obsidian"
+else
+  PGREP='^/nix/store/[^ ]*electron( --[^ ]*)* /nix/store/[^ ]*obsidian'
+fi
 
 # Only an Obsidian this run launched is killed on the way out: refusing to
 # start because one was already running must not close that one.
@@ -32,7 +59,7 @@ trap restore EXIT
 # A previous instance can linger for seconds after its window closes, and a new
 # launch during that window is handed to the dying instance (which then opens
 # ITS vault, not ours). Wait for both the process and the CDP endpoint to go.
-settled() { ! pgrep -f "$PGREP" >/dev/null && ! curl -s --max-time 1 http://127.0.0.1:9222/json >/dev/null 2>&1; }
+settled() { ! pgrep -f "$PGREP" >/dev/null && ! curl -s --max-time 1 "$CDP_BASE/json" >/dev/null 2>&1; }
 for i in $(seq 1 40); do settled && break; sleep 0.5; done
 if ! settled; then echo "[run-block] Obsidian is already running; stop it first" >&2; exit 2; fi
 sleep 2
@@ -54,7 +81,7 @@ PY
 # Launch, wait for a booted vault window, and refuse to proceed unless it is OUR vault.
 launch_once() {
   LAUNCHED=1
-  nohup obsidian --remote-debugging-port=9222 >>"$LOG" 2>&1 &
+  nohup obsidian "${UDD_FLAG[@]}" --remote-debugging-port="$CDP_PORT" >>"$LOG" 2>&1 &
   node -e "
     import('$(dirname "$SCRIPT")/cdp.mjs').then(async (m) => {
       await m.waitForObsidian(90000);
@@ -72,7 +99,7 @@ launch() {
   for i in $(seq 1 40); do settled && break; sleep 0.5; done; sleep 2
   launch_once
 }
-gone() { ! curl -s --max-time 1 http://127.0.0.1:9222/json >/dev/null 2>&1; }
+gone() { ! curl -s --max-time 1 "$CDP_BASE/json" >/dev/null 2>&1; }
 
 echo "[run-block] phase fixtures" >&2;   node "$SCRIPT" fixtures
 echo "[run-block] launch" >&2;           launch

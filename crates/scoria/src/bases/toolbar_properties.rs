@@ -36,14 +36,6 @@ use scoria_formats::base::{Base, View};
 use scoria_formats::properties::PropertyType;
 use serde_json::json;
 
-/// `--color-green`, the *Valid formula* line.
-const VALID: gpui::Rgba = gpui::Rgba {
-    r: 0x44 as f32 / 255.,
-    g: 0xcf as f32 / 255.,
-    b: 0x6e as f32 / 255.,
-    a: 1.,
-};
-
 /// The types the **Property type** select offers, in its order.
 const TYPE_OPTIONS: &[PropertyType] = &[
     PropertyType::Checkbox,
@@ -540,14 +532,11 @@ impl BasesView {
             .border_color(theme.border)
             .font_family(theme.mono_font.clone())
             .child(self.text_box(Field::Formula, &typed, "x + y", theme, cx));
+        // `--text-success` and `--text-error`: the theme's green and red.
         let (status_icon, status_color, status) = if valid {
-            ("circle-check", VALID.into(), "Valid formula")
+            ("circle-check", theme.tokens.text_success, "Valid formula")
         } else {
-            (
-                "circle-x",
-                super::toolbar_views::WARNING.into(),
-                "Invalid formula",
-            )
+            ("circle-x", theme.tokens.text_error, "Invalid formula")
         };
         let status_row = div()
             .flex()

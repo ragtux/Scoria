@@ -70,8 +70,6 @@ use serde_json::{json, Value as Json};
 /// canvas's own right-click list does.
 pub const SEPARATOR: &str = "---";
 
-use crate::file_menu::WARNING;
-
 // ---------------------------------------------------------------------------
 // The column header's context menu
 // ---------------------------------------------------------------------------
@@ -602,7 +600,11 @@ impl BasesView {
             }
             let id = row.id;
             let submenu = row.submenu;
-            let color = if row.warning { WARNING } else { theme.text };
+            let color = if row.warning {
+                theme.tokens.text_error
+            } else {
+                theme.text
+            };
             list = list.child(
                 div()
                     .id(("bases-header-item", ix))

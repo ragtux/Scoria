@@ -7127,3 +7127,327 @@ ad block list URL per line. Shared by all vaults.", textarea), "Ad block update 
 between updating filter lists. 0 indicates disabled. Shared by all vaults.", slider 4, 0..24 step
 1), "Web viewer data" (a "Clear web viewer data" button). The first toggle click wrote both toggle
 keys at once.
+
+
+## Observed theme tokens, Obsidian 1.14.5 (installer build 1.13.7)
+
+Read from a running Obsidian on Linux over CDP on 2026-11-02 with
+`tools/obsidian-probe/theme-registry.mjs` (raw run in
+`tools/obsidian-probe/results/2026-11-02-theme-registry.json`), in a 1024 by 800 window on a
+fresh vault, in both base themes. The run was the first made under a data directory of its own
+(`USER_DATA_DIR` in `run-block.sh`): Obsidian holds its single-instance lock per
+`--user-data-dir`, so the probe's copy ran beside the desktop's without touching
+`~/.config/obsidian`, and fetched its own 1.14.5 bundle into that directory on first launch.
+
+The question the run answers is the one [[Theming]] poses: not what colour a surface is, but
+**which custom property it is painted from**, so that the property's name can be the registry's
+token. For every surface element the script reads the computed value of each painted property
+and, by walking the CSSOM for the rules that match the element and ranking them by importance,
+specificity and order, the cascade-winning declaration with its `var()` intact. An element that
+sets no `color` of its own is reported with the ancestor it inherits from. A few states were read
+under a real pointer (hover) and a key (the menu's selected row).
+
+**The custom-property table.** 983 custom properties are declared under `:root`, `body`,
+`.theme-dark` and `.theme-light`; a further 164 are referenced but declared only on a component
+(`--callout-color`, `--metadata-property-box-shadow`). The declarations are chains:
+`--nav-item-color` is `var(--text-muted)`, which is `var(--color-base-70)`, which is `#b3b3b3` on
+the dark theme and `#5c5c5c` on the light; only the `--color-base-*` palette, the eight
+`--color-<name>` hues, the accent shades, `--mono-0/100`, the shadows, the form-field background,
+the cover and a dozen more differ by theme. The accent is three channels (`--accent-h` 258,
+`--accent-s` 88%, `--accent-l` 66%) that `--color-accent` assembles with `hsl()`, and
+`--color-accent-1` and `-2` are shades computed with `calc()` inside the `hsl()`: on the dark theme
+`-1` is hue minus 3, saturation times 1.02, lightness times 1.15, on the light theme hue minus 1,
+times 1.01, times 1.075, and `-2` is the next step out. The dark theme's `--text-accent` is
+`--color-accent-1` and its `--interactive-accent` is `--color-accent`; the light theme has them the
+other way round, so the light theme's buttons, toggles and checkboxes are a shade lighter than its
+links. Every translucent wash is a `color-mix(in oklch, C p%, transparent)`:
+`--background-modifier-hover` is `--mono-100` (white on dark, black on light) at 6.7 percent,
+`--tag-background` the interactive accent at 10, `--text-selection` at 33 (dark) and 20 (light),
+`--highlight-background` `--color-yellow` at `--highlight-opacity` 30, `--scrollbar-thumb-bg`
+`--mono-100` at 10. `--h1-color` through `--h6-color`, `--bold-color`, `--italic-color`,
+`--blockquote-color`, `--table-text-color`, `--embed-background` and the `*-weight` tokens of the
+nav item, the tab and the tag are `inherit`. The registry in `crates/scoria/src/theme/registry.rs`
+carries 313 of these names and `defaults.rs` the 317 declarations they reach, written by
+`theme-defaults.py` from this run; `theme::tests` holds the resolver to the computed value the
+probe recorded for every one of them, in both themes.
+
+**Which surface reads which.** One row per element the probe described, dark theme (the light
+theme reads the same names). A property set to `transparent`, `none` or `0` is left out, as is an
+element that only inherits `--text-normal`. `hover/` rows were read under the pointer.
+
+| Surface | Element | Reads |
+| --- | --- | --- |
+| Shell | `body` | colour `--text-normal`; background `--background-primary`; size `--font-ui-medium` |
+| Shell | `titlebar` | background transparent; border-bottom `var(--titlebar-border-width) solid var(--titlebar-border-color)`; colour inherited `--text-normal` |
+| Shell | `titlebar.text` | opacity `0.85`; size `--font-ui-small`; colour inherited `--titlebar-text-color-focused` |
+| Shell | `titlebar.button` | colour inherited `--titlebar-text-color-focused` |
+| Shell | `titlebar.button-container` | background `--titlebar-background-focused`; colour inherited `--titlebar-text-color-focused` |
+| Shell | `ribbon` | colour `--text-muted`; background `--ribbon-background` |
+| Shell | `ribbon.action` | colour `--icon-color`; background transparent |
+| Shell | `ribbon.action.svg` | opacity `--icon-opacity`; colour inherited `--icon-color` |
+| Shell | `ribbon.actions` | colour inherited `--text-muted` |
+| Shell | `sidebar.toggle` | colour inherited `--text-muted` |
+| Shell | `sidebar.toggle.svg` | opacity `--icon-opacity`; colour inherited `--icon-color` |
+| Shell | `split.left` | background `--tab-container-background`; colour inherited `--text-normal` |
+| Shell | `split.right` | background `--tab-container-background`; colour inherited `--text-normal` |
+| Shell | `split.root` | background `--background-primary`; colour inherited `--text-normal` |
+| Shell | `split.left.resize-handle` | background transparent; border `--hr-color`; colour inherited `--text-normal` |
+| Shell | `split.left.tab-header-container` | background `--sidebar-tab-container-background`; border-bottom `var(--tab-outline-width) solid var(--tab-outline-color)`; colour inherited `--text-normal` |
+| Shell | `split.left.tab-header.active` | colour `--tab-text-color-focused-active`; background `--background-modifier-hover` |
+| Shell | `split.left.tab-header.inactive` | colour `--tab-text-color-focused`; background transparent |
+| Shell | `split.left.tab-header.active.icon` | colour `--icon-color-focused`; opacity `--icon-opacity-active` |
+| Shell | `split.left.tab-header.inactive.icon` | colour `--icon-color`; opacity `--icon-opacity` |
+| Shell | `split.left.tab-header.active.svg` | colour inherited `--icon-color-focused` |
+| Shell | `split.left.tab-header.inactive.svg` | colour inherited `--icon-color` |
+| Shell | `root.tab-header-container` | background `--tab-container-background`; border-bottom `var(--tab-outline-width) solid var(--tab-outline-color)`; colour inherited `--text-normal` |
+| Shell | `root.tab-header.active` | colour `--tab-text-color-focused-active`; background `--tab-background-active`; shadow `0 0 0 var(--tab-outline-width) var(--tab-outline-color)` |
+| Shell | `root.tab-header.active.inner` | background `--tab-inner-background-active`; border `--tab-inner-border-color-active`; border `var(--tab-inner-border-width) solid var(--tab-inner-border-color)`; colour inherited `--tab-text-color-focused-active` |
+| Shell | `root.tab-header.active.title` | colour `--tab-text-color-focused-active-current`; size `--tab-font-size`; weight `--tab-font-weight` |
+| Shell | `root.tab-header.active.close` | colour `--tab-text-color-focused-active` |
+| Shell | `root.tab-header.active.status` | colour inherited `--tab-text-color-focused-active` |
+| Shell | `root.tab-header.inactive` | colour `--tab-text-color-focused` |
+| Shell | `root.tab-header.inactive.inner` | border `var(--tab-inner-border-width) solid var(--tab-inner-border-color)`; colour inherited `--tab-text-color-focused` |
+| Shell | `root.tab-header.inactive.title` | size `--tab-font-size`; weight `--tab-font-weight`; colour inherited `--tab-text-color-focused` |
+| Shell | `root.tab-header.inactive.close` | colour inherited `--tab-text-color-focused` |
+| Shell | `root.tab-header.new-tab` | colour `--icon-color`; background transparent |
+| Shell | `root.tab-header.tab-list` | colour `--icon-color`; background transparent |
+| Shell | `root.leaf` | background `--background-primary`; colour inherited `--text-normal` |
+| Shell | `view-header` | background `--file-header-background`; border-bottom `--file-header-border`; colour inherited `--text-normal` |
+| Shell | `view-header.title-container` | size `--file-header-font-size`; weight `--file-header-font-weight`; colour inherited `--text-normal` |
+| Shell | `view-header.title` | colour `--text-muted` |
+| Shell | `view-header.title-parent` | colour `--text-muted` |
+| Shell | `view-header.nav-button` | colour `--icon-color`; background transparent; size `--font-ui-small`; weight `--input-font-weight` |
+| Shell | `view-header.nav-button.svg` | opacity `--icon-opacity`; colour inherited `--icon-color` |
+| Shell | `view-header.action` | colour `--icon-color`; background transparent; size `--font-ui-small`; weight `--input-font-weight` |
+| Shell | `view-header.action.svg` | opacity `--icon-opacity`; colour inherited `--icon-color` |
+| Shell | `view-content` | background `--background-primary`; colour inherited `--text-normal` |
+| Shell | `status-bar` | colour `--status-bar-text-color`; background `--status-bar-background`; border `--status-bar-border-color`; size `--status-bar-font-size` |
+| Shell | `status-bar.item` | colour inherited `--status-bar-text-color` |
+| Shell | `status-bar.item.plugin` | colour inherited `--status-bar-text-color` |
+| Shell | `vault-profile` | background `--background-secondary`; border-top `var(--divider-width) solid var(--divider-color)`; colour inherited `--text-normal` |
+| Shell | `vault-profile.switcher` | colour `--vault-profile-color` |
+| Shell | `vault-profile.name` | size `--vault-profile-font-size`; weight `--vault-profile-font-weight`; colour inherited `--vault-profile-color` |
+| Shell | `vault-profile.action` | colour `--icon-color`; background transparent |
+| Shell | `vault-profile.action.svg` | opacity `--icon-opacity`; colour inherited `--icon-color` |
+| Shell | `clickable-icon` | colour `--icon-color`; background transparent |
+| Shell | `clickable-icon.svg` | opacity `--icon-opacity`; colour inherited `--icon-color` |
+| Files pane | `nav.button` | colour `--icon-color`; background transparent |
+| Files pane | `nav.button.svg` | opacity `--icon-opacity`; colour inherited `--icon-color` |
+| Files pane | `nav.folder.title` | colour `--nav-item-color`; size `--nav-item-size`; weight `--nav-item-weight` |
+| Files pane | `nav.folder.title-content` | colour inherited `--nav-item-color` |
+| Files pane | `nav.folder.collapse-indicator` | colour `--icon-color`; opacity `--icon-opacity` |
+| Files pane | `nav.folder.collapse-indicator.svg` | colour `--nav-collapse-icon-color` |
+| Files pane | `nav.file.nonmd` | colour `--nav-item-color`; size `--nav-item-size`; weight `--nav-item-weight` |
+| Files pane | `nav.file.nonmd.content` | colour inherited `--nav-item-color` |
+| Files pane | `nav.file.title` | colour `--nav-item-color`; size `--nav-item-size`; weight `--nav-item-weight` |
+| Files pane | `nav.file.title-content` | colour inherited `--nav-item-color` |
+| Files pane | `nav.file.title.active` | colour `--nav-item-color-active`; background `--nav-item-background-active`; size `--nav-item-size`; weight `--nav-item-weight-active` |
+| Files pane | `nav.file.title.active-content` | colour inherited `--nav-item-color-active` |
+| Files pane | `nav.file.tag` | colour `--nav-tag-color`; background `--nav-tag-background`; size `9px`; weight `--nav-tag-weight` |
+| Files pane | `tree-item.self` | colour `--nav-item-color`; size `--nav-item-size`; weight `--nav-item-weight` |
+| Files pane | `tree-item.inner` | colour inherited `--nav-item-color` |
+| Reading view | `preview` | colour `--text-normal`; size `--font-preferred-size` |
+| Reading view | `preview.inline-title` | colour `--inline-title-color`; size `--inline-title-size`; weight `--inline-title-weight` |
+| Reading view | `preview.h1` | colour `--h1-color`; size `--h1-size`; weight `--font-weight` |
+| Reading view | `preview.h2` | colour `--h2-color`; size `--h2-size`; weight `--font-weight` |
+| Reading view | `preview.h3` | colour `--h3-color`; size `--h3-size`; weight `--font-weight` |
+| Reading view | `preview.h4` | colour `--h4-color`; size `--h4-size`; weight `--font-weight` |
+| Reading view | `preview.h5` | colour `--h5-color`; size `--h5-size`; weight `--font-weight` |
+| Reading view | `preview.h6` | colour `--h6-color`; size `--h6-size`; weight `--font-weight` |
+| Reading view | `preview.h2.collapse-indicator` | colour inherited `--h1-color` |
+| Reading view | `preview.strong` | colour `--bold-color`; weight `calc(var(--font-weight) + var(--bold-modifier))` |
+| Reading view | `preview.em` | colour `--italic-color` |
+| Reading view | `preview.mark` | colour `--text-normal`; background `--highlight-background` |
+| Reading view | `preview.code` | colour `--code-normal`; background `--code-background`; size `--code-size`; border `var(--code-border-width) solid var(--code-border-color)` |
+| Reading view | `preview.internal-link` | colour `--link-color`; weight `--link-weight` |
+| Reading view | `preview.internal-link.unresolved` | colour `--link-unresolved-color`; opacity `--link-unresolved-opacity`; weight `--link-weight`; underline `--link-unresolved-decoration-color` |
+| Reading view | `preview.external-link` | colour `--link-external-color`; weight `--link-weight` |
+| Reading view | `preview.tag` | colour `--tag-color`; background `--tag-background`; size `--tag-size`; weight `--tag-weight`; border `var(--tag-border-width) solid var(--tag-border-color)` |
+| Reading view | `preview.footnote-link` | colour `--link-color`; weight `--link-weight` |
+| Reading view | `preview.blockquote` | colour `--blockquote-color`; background `--blockquote-background-color` |
+| Reading view | `preview.callout` | background `color-mix(in oklch, var(--callout-color) 10%, transparent)`; border `color-mix(in oklch, var(--callout-color) calc(var(--callout-border-opacity) * 100%), transparent)`; colour inherited `--text-normal` |
+| Reading view | `preview.callout.title` | colour `--callout-color`; size `--callout-title-size` |
+| Reading view | `preview.callout.title-inner` | colour `--callout-title-color`; weight `--font-weight` |
+| Reading view | `preview.callout.icon` | colour inherited `--callout-color` |
+| Reading view | `preview.callout.icon.svg` | colour `--callout-color` |
+| Reading view | `preview.callout.content` | background `--callout-content-background`; colour inherited `--text-normal` |
+| Reading view | `preview.callout.warning` | background `color-mix(in oklch, var(--callout-color) 10%, transparent)`; border `color-mix(in oklch, var(--callout-color) calc(var(--callout-border-opacity) * 100%), transparent)`; colour inherited `--text-normal` |
+| Reading view | `preview.callout.warning.fold` | colour inherited `--callout-color` |
+| Reading view | `preview.callout.warning.fold.svg` | colour inherited `--callout-color` |
+| Reading view | `preview.li.bullet` | colour transparent |
+| Reading view | `preview.task.checkbox` | border `1px solid var(--checkbox-border-color)`; colour inherited `--text-normal` |
+| Reading view | `preview.task.checked` | colour `--checklist-done-color` |
+| Reading view | `preview.task.checked.checkbox` | background `--checkbox-color`; border `--checkbox-color`; border `1px solid var(--checkbox-border-color)`; colour inherited `--checklist-done-color` |
+| Reading view | `preview.th` | colour `--table-header-color`; border `--table-header-border-color`; size `--table-header-size`; weight `--table-header-weight`; border `var(--table-border-width) solid var(--table-border-color)` |
+| Reading view | `preview.td` | colour `--table-text-color`; size `--table-text-size`; border `var(--table-border-width) solid var(--table-border-color)` |
+| Reading view | `preview.tr` | background `--table-row-alt-background`; colour inherited `--text-normal` |
+| Reading view | `preview.hr` | border `--hr-color`; colour inherited `--text-normal` |
+| Reading view | `preview.pre` | background `--code-background`; border `var(--code-border-width) solid var(--code-border-color)`; colour inherited `--text-normal` |
+| Reading view | `preview.pre.code` | colour `--code-normal`; background transparent; size `--code-size`; border `var(--code-border-width) solid var(--code-border-color)` |
+| Reading view | `preview.pre.copy` | colour `--text-muted`; background transparent; size `--font-ui-smaller`; weight `--input-font-weight` |
+| Reading view | `preview.token.keyword` | colour `--code-keyword` |
+| Reading view | `preview.token.comment` | colour `--code-comment` |
+| Reading view | `preview.token.number` | colour `--code-value` |
+| Reading view | `preview.token.operator` | colour `--code-operator` |
+| Reading view | `preview.token.punctuation` | colour `--code-punctuation` |
+| Reading view | `preview.embed` | background `--embed-background`; border-bottom `--embed-border-bottom`; border-top `--embed-border-top`; colour inherited `--text-normal` |
+| Reading view | `preview.embed.title` | size `--font-preferred-size`; weight `calc(var(--font-weight) + var(--bold-modifier))`; colour inherited `--text-normal` |
+| Reading view | `preview.embed.link` | colour `--icon-color`; opacity `--icon-opacity` |
+| Reading view | `preview.embed.h1` | colour `--h1-color`; size `--h1-size`; weight `--font-weight` |
+| Reading view | `preview.metadata` | colour `--text-muted`; background `--metadata-background`; border `--metadata-border-color` |
+| Reading view | `preview.metadata.properties-heading` | colour inherited `--text-muted` |
+| Reading view | `preview.metadata.properties-title` | colour `--text-normal`; size `max(var(--font-ui-small), 1em)`; weight `--font-medium` |
+| Reading view | `preview.metadata.collapse-indicator` | colour inherited `--text-muted` |
+| Reading view | `preview.metadata.property` | background `--metadata-property-background`; shadow `--metadata-property-box-shadow`; colour inherited `--text-muted` |
+| Reading view | `preview.metadata.property.key` | background `--metadata-label-background`; border-bottom `var(--metadata-divider-width) solid var(--metadata-divider-color)`; colour inherited `--text-muted` |
+| Reading view | `preview.metadata.property.icon` | colour `--icon-color` |
+| Reading view | `preview.metadata.property.icon.svg` | colour inherited `--icon-color` |
+| Reading view | `preview.metadata.property.key-input` | colour `--metadata-label-text-color`; background transparent; size `--metadata-label-font-size`; weight `--metadata-label-font-weight`; border `var(--input-border-width) solid var(--background-modifier-border)` |
+| Reading view | `preview.metadata.property.value` | background `--metadata-input-background`; border-bottom `var(--metadata-divider-width) solid var(--metadata-divider-color)`; colour inherited `--text-muted` |
+| Reading view | `preview.metadata.input-text` | colour `--text-normal`; background transparent; size `--metadata-input-font-size`; border `var(--input-border-width) solid var(--background-modifier-border)` |
+| Reading view | `preview.metadata.input-number` | colour `--text-normal`; background transparent; size `--metadata-input-font-size`; border `var(--input-border-width) solid var(--background-modifier-border)` |
+| Reading view | `preview.metadata.checkbox` | background `--checkbox-color`; border `--checkbox-color`; size `--metadata-input-font-size`; border `1px solid var(--checkbox-border-color)`; colour inherited `--text-muted` |
+| Reading view | `preview.metadata.pill` | colour `--pill-color`; background `--pill-background`; weight `--pill-weight`; border `var(--pill-border-width) solid var(--pill-border-color)` |
+| Reading view | `preview.metadata.pill-content` | colour inherited `--pill-color` |
+| Reading view | `preview.metadata.pill-remove` | colour `--pill-color-remove` |
+| Reading view | `preview.metadata.pill-input` | colour `--text-normal`; background `inherit` |
+| Reading view | `preview.metadata.add-button` | colour `--text-muted`; size `--metadata-label-font-size`; weight `--input-font-weight` |
+| Live Preview | `cm.line` | colour `--h1-color`; size `--h1-size`; weight `--font-weight` |
+| Live Preview | `cm.line.active` | colour `--h1-color`; size `--h1-size`; weight `--font-weight` |
+| Live Preview | `cm.h1` | colour `--h1-color`; size `--h1-size`; weight `--font-weight` |
+| Live Preview | `cm.h1.text` | colour inherited `--h1-color` |
+| Live Preview | `cm.h2` | colour `--h2-color`; size `--h2-size`; weight `--font-weight` |
+| Live Preview | `cm.h2.text` | colour inherited `--h2-color` |
+| Live Preview | `cm.h3.text` | colour inherited `--h3-color` |
+| Live Preview | `cm.h6.text` | colour inherited `--h6-color` |
+| Live Preview | `cm.formatting-header` | colour `--text-faint` |
+| Live Preview | `cm.strong` | colour `--bold-color`; weight `calc(var(--font-weight) + var(--bold-modifier))` |
+| Live Preview | `cm.em` | colour `--italic-color`; weight `--italic-weight` |
+| Live Preview | `cm.highlight` | colour `--text-normal`; background `--highlight-background` |
+| Live Preview | `cm.inline-code` | colour `--code-normal`; background `--code-background`; border `--code-border-color`; size `--code-size` |
+| Live Preview | `cm.formatting` | colour `--tag-color`; background `--tag-background`; size `--tag-size`; weight `--tag-weight`; border `var(--tag-border-width) solid var(--tag-border-color)` |
+| Live Preview | `cm.formatting-link` | colour `--text-faint`; size `--font-smallest` |
+| Live Preview | `cm.formatting-link-start` | colour `--text-faint`; size `--font-smallest` |
+| Live Preview | `cm.hmd-internal-link` | colour `--link-color`; weight `--link-weight` |
+| Live Preview | `cm.link` | colour `--link-external-color` |
+| Live Preview | `cm.url` | colour `--text-faint`; weight `--link-weight` |
+| Live Preview | `cm.hashtag` | colour `--tag-color`; background `--tag-background`; size `--tag-size`; weight `--tag-weight`; border `var(--tag-border-width) solid var(--tag-border-color)` |
+| Live Preview | `cm.hashtag-begin` | colour `--tag-color`; background `--tag-background`; size `--tag-size`; weight `--tag-weight`; border `var(--tag-border-width) solid var(--tag-border-color)` |
+| Live Preview | `cm.footref` | colour `--text-faint`; size `--font-smallest` |
+| Live Preview | `cm.quote` | background `--blockquote-background-color`; colour inherited `--text-normal` |
+| Live Preview | `cm.quote.text` | colour `--text-faint` |
+| Live Preview | `cm.callout.widget.title` | colour `--callout-color`; size `--callout-title-size` |
+| Live Preview | `cm.embed.edit` | colour `--embed-action-color` |
+| Live Preview | `cm.metadata` | colour `--text-muted`; background `--metadata-background`; border `--metadata-border-color` |
+| Live Preview | `cm.metadata.property.key-input` | colour `--metadata-label-text-color`; background transparent; size `--metadata-label-font-size`; weight `--metadata-label-font-weight`; border `var(--input-border-width) solid var(--background-modifier-border)` |
+| Live Preview | `cm.metadata.pill` | colour `--pill-color`; background `--pill-background`; weight `--pill-weight`; border `var(--pill-border-width) solid var(--pill-border-color)` |
+| Live Preview | `cm.list-bullet` | colour transparent |
+| Live Preview | `cm.formatting-list` | colour `--list-marker-color` |
+| Live Preview | `cm.task.checkbox` | border `1px solid var(--checkbox-border-color)`; colour inherited `--text-normal` |
+| Live Preview | `cm.task.checked` | colour `--checklist-done-color` |
+| Live Preview | `cm.task.checked.text` | colour inherited `--checklist-done-color` |
+| Live Preview | `cm.table-widget.th` | colour `--table-header-color`; border `--table-header-border-color`; size `--table-header-size`; weight `--table-header-weight`; border `var(--table-border-width) solid var(--table-border-color)` |
+| Live Preview | `cm.table-widget.td` | colour `--table-text-color`; size `--table-text-size`; border `var(--table-border-width) solid var(--table-border-color)` |
+| Live Preview | `cm.codeblock` | colour `--code-normal`; background `--code-background`; border `--code-border-color`; size `--code-size` |
+| Live Preview | `cm.codeblock.begin` | colour `--code-normal`; background `--code-background`; border `--code-border-color`; size `--code-size` |
+| Live Preview | `cm.codeblock.text` | colour `--code-keyword` |
+| Live Preview | `cm.codeblock.flair` | colour `--text-muted`; size `--font-ui-smaller` |
+| Live Preview | `cm.codeblock.keyword` | colour `--code-keyword` |
+| Live Preview | `cm.codeblock.comment` | colour `--code-comment` |
+| Live Preview | `cm.codeblock.number` | colour `--code-value` |
+| Live Preview | `cm.callout` | background `--blockquote-background-color`; colour inherited `--text-normal` |
+| Source mode | `src.h1` | colour `--h1-color`; size `--h1-size`; weight `--font-weight` |
+| Source mode | `src.formatting-header` | colour `--text-faint` |
+| Source mode | `src.formatting-strong` | colour `--bold-color`; weight `calc(var(--font-weight) + var(--bold-modifier))` |
+| Source mode | `src.formatting-link` | colour `--text-faint` |
+| Source mode | `src.hmd-internal-link` | colour `--link-color`; weight `--link-weight` |
+| Source mode | `src.formatting-list` | colour `--list-marker-color` |
+| Source mode | `src.formatting-task` | colour `--text-muted` |
+| Source mode | `src.codeblock` | colour `--code-normal`; background `--code-background`; border `--code-border-color`; size `--code-size` |
+| Source mode | `src.codeblock.text` | colour inherited `--code-normal` |
+| Source mode | `src.formatting-code-block` | colour inherited `--code-normal` |
+| Source mode | `src.frontmatter.text` | colour `--text-muted`; size `--font-smaller` |
+| Source mode | `src.formatting-quote` | colour `--text-faint` |
+| Source mode | `src.table-row` | colour `--table-header-color`; size `--code-size` |
+| Source mode | `src.line` | colour `--h1-color`; size `--h1-size`; weight `--font-weight` |
+| Panes | `pane.search.input` | colour `--text-normal`; size `--font-ui-small`; border `var(--input-border-width) solid var(--background-modifier-border)` |
+| Panes | `pane.search.clear` | colour `--search-clear-button-color`; background transparent |
+| Panes | `pane.search.results-info` | colour `--text-muted`; border-bottom `var(--border-width) solid var(--background-modifier-border)` |
+| Panes | `pane.search.result-count` | colour `--icon-color`; background transparent; size `--font-ui-smaller` |
+| Panes | `pane.search.file-title` | colour `--nav-item-color-active`; size `--nav-item-size`; weight `--nav-item-weight` |
+| Panes | `pane.search.file-title-inner` | colour inherited `--nav-item-color-active` |
+| Panes | `pane.search.file-flair` | colour `--text-faint`; size `--font-ui-smaller` |
+| Panes | `pane.search.collapse-icon` | colour `--icon-color`; opacity `--icon-opacity` |
+| Panes | `pane.search.file-matches` | colour `--text-muted`; background `--search-result-background`; shadow `0 0 0 var(--border-width) var(--background-modifier-border)`; size `--font-ui-smaller` |
+| Panes | `pane.search.file-match` | border-bottom `var(--border-width) solid var(--background-modifier-border)`; colour inherited `--text-muted` |
+| Panes | `pane.search.matched-text` | colour `--text-normal`; background `--highlight-background` |
+| Panes | `pane.search.hover-button` | colour `--text-faint` |
+| Panes | `pane.tags.tag` | colour `--nav-item-color`; size `--nav-item-size`; weight `--nav-item-weight` |
+| Panes | `pane.tags.tag-text` | colour inherited `--nav-item-color` |
+| Panes | `pane.tags.tag-inner` | colour inherited `--nav-item-color` |
+| Panes | `pane.tags.tag-count` | colour `--text-faint`; size `--font-ui-smaller` |
+| Panes | `pane.tags.collapse-icon` | colour `--icon-color`; opacity `--icon-opacity` |
+| Panes | `pane.outline.item` | colour `--nav-item-color`; size `--nav-item-size`; weight `--nav-item-weight` |
+| Panes | `pane.outline.inner` | colour inherited `--nav-item-color` |
+| Panes | `pane.outline.item.active` | colour `--nav-item-color-active`; background `--nav-item-background-active`; size `--nav-item-size`; weight `--nav-item-weight-active` |
+| Panes | `pane.outline.collapse-icon` | colour `--icon-color`; opacity `--icon-opacity` |
+| Panes | `pane.backlinks.header` | colour `--nav-heading-color`; size `--nav-item-size`; weight `--nav-item-weight` |
+| Panes | `pane.backlinks.header-inner` | weight `--nav-heading-weight`; colour inherited `--nav-heading-color` |
+| Panes | `pane.backlinks.count` | colour `--text-faint`; size `--font-ui-smaller` |
+| Panes | `pane.backlinks.file-title` | colour `--nav-item-color-active`; size `--nav-item-size`; weight `--nav-item-weight` |
+| Panes | `pane.backlinks.matched-text` | colour `--text-normal`; background `--highlight-background` |
+| Panes | `pane.search.match.hover/match` | colour `--text-normal`; background `--text-selection`; border-bottom `var(--border-width) solid var(--background-modifier-border)` |
+| Panes | `pane.search.match.hover/button` | colour `--text-faint` |
+| Panes | `pane.search.title.hover/title` | colour `--nav-item-color-hover`; background `--nav-item-background-hover`; size `--nav-item-size`; weight `--nav-item-weight-hover` |
+| Palette | `modal-bg` | background `--background-modifier-cover`; colour inherited `--text-normal` |
+| Palette | `prompt` | background `--prompt-background`; shadow `--shadow-l`; border `var(--prompt-border-width) solid var(--prompt-border-color)`; colour inherited `--text-normal` |
+| Palette | `prompt.input` | colour `--text-normal`; background transparent; border `--background-modifier-border-focus`; size `--font-ui-medium`; border `var(--input-border-width) solid var(--background-modifier-border)`; border-bottom `var(--border-width) solid var(--background-secondary)` |
+| Palette | `prompt.item` | size `--font-ui-medium`; colour inherited `--text-normal` |
+| Palette | `prompt.item.selected` | background `--background-modifier-hover`; size `--font-ui-medium`; colour inherited `--text-normal` |
+| Palette | `prompt.item.hotkey` | colour `--code-normal`; background `--hotkey-background`; size `--hotkey-font-size` |
+| Palette | `prompt.instructions` | colour `--text-muted`; size `--font-ui-smaller` |
+| Palette | `prompt.instruction` | colour inherited `--text-muted` |
+| Palette | `prompt.instruction-command` | weight `--bold-weight`; colour inherited `--text-muted` |
+| Palette | `prompt.item.hover/item` | background `--background-modifier-hover`; size `--font-ui-medium`; colour inherited `--text-normal` |
+| Settings | `settings.modal` | background `--settings-background`; border `var(--modal-border-width) solid var(--modal-border-color)`; colour inherited `--text-normal` |
+| Settings | `settings.sidebar` | background `--modal-sidebar-background`; colour inherited `--text-normal` |
+| Settings | `settings.group-title` | colour `--text-faint`; size `--font-ui-smaller`; weight `--font-semibold` |
+| Settings | `settings.nav-item` | size `--font-ui-small`; colour inherited `--text-normal` |
+| Settings | `settings.nav-item.active` | background `--background-modifier-hover`; size `--font-ui-small`; colour inherited `--text-normal` |
+| Settings | `settings.content` | background `--background-primary`; colour inherited `--text-normal` |
+| Settings | `settings.heading` | colour `--setting-group-heading-color`; background transparent; size `--setting-group-heading-size`; weight `--setting-group-heading-weight`; border `var(--setting-items-border-width) solid var(--setting-items-border-color)` |
+| Settings | `settings.heading.name` | colour `--setting-group-heading-color`; size `--setting-group-heading-size`; weight `--setting-group-heading-weight` |
+| Settings | `settings.item` | background transparent; border `var(--setting-items-border-width) solid var(--setting-items-border-color)`; colour inherited `--text-normal` |
+| Settings | `settings.item.name` | colour `--setting-item-name-color`; size `--setting-item-name-size`; weight `--setting-item-name-weight` |
+| Settings | `settings.item.description` | colour `--text-muted`; size `--font-ui-smaller` |
+| Settings | `settings.toggle` | background `--background-modifier-border-hover`; shadow `rgba(0, 0, 0, 0.07) 0px 4px 10px inset`; outline `0 solid var(--background-modifier-border-focus)`; colour inherited `--text-normal` |
+| Settings | `settings.toggle.enabled` | background `--interactive-accent`; shadow `rgba(0, 0, 0, 0.07) 0px 4px 10px inset`; outline `0 solid var(--background-modifier-border-focus)`; colour inherited `--text-normal` |
+| Settings | `settings.select` | colour `--text-normal`; background `--dropdown-background`; shadow `--input-shadow`; size `--font-ui-small`; weight `--input-font-weight` |
+| Settings | `settings.slider` | background `--slider-track-background`; colour inherited `--text-normal` |
+| Settings | `settings.search-input` | colour `--text-normal`; border `--background-modifier-border-focus`; shadow `0 0 0 var(--input-border-width-focus) var(--background-modifier-border-focus)`; size `--font-ui-small`; border `var(--input-border-width) solid var(--background-modifier-border)` |
+| Settings | `settings.extra-button` | colour `--icon-color`; background transparent |
+| Settings | `settings.hotkey` | background `--hotkey-background`; size `--hotkey-font-size`; colour inherited `--text-normal` |
+| Settings | `settings.command-name` | colour `--setting-item-name-color`; size `--setting-item-name-size`; weight `--setting-item-name-weight` |
+| Settings | `settings.hotkey.empty` | background `--hotkey-background`; size `--hotkey-font-size`; colour inherited `--text-normal` |
+| Settings | `settings.color-input` | background transparent; colour inherited `--text-normal` |
+| Settings | `settings.theme-select` | colour `--text-normal`; background `--dropdown-background`; shadow `--input-shadow`; size `--font-ui-small`; weight `--input-font-weight` |
+| Settings | `settings.accent` | background transparent; colour inherited `--text-normal` |
+| Notice, tooltip, empty tab, popups | `notice` | colour `--notice-color`; background `--notice-background`; size `--notice-font-size`; weight `--notice-font-weight`; border `--notice-border` |
+| Notice, tooltip, empty tab, popups | `tooltip` | colour `--tooltip-color`; background `--tooltip-background`; shadow `--tooltip-shadow`; size `--tooltip-font-size`; weight `--tooltip-font-weight` |
+| Notice, tooltip, empty tab, popups | `tooltip.arrow` | colour inherited `--tooltip-color` |
+| Notice, tooltip, empty tab, popups | `empty-state.title` | size `--h2-size`; weight `--h2-weight`; colour inherited `--text-normal` |
+| Notice, tooltip, empty tab, popups | `empty-state.action` | colour `--text-normal`; background transparent; size `--font-ui-small`; border `0.5px solid var(--background-modifier-border)` |
+| Notice, tooltip, empty tab, popups | `root.tab-header.active.empty` | colour `--tab-text-color-focused-active`; background `--tab-background-active`; shadow `0 0 0 var(--tab-outline-width) var(--tab-outline-color)` |
+| Notice, tooltip, empty tab, popups | `view-header.empty` | background `--file-header-background-focused`; border-bottom `--file-header-border`; colour inherited `--text-normal` |
+| Notice, tooltip, empty tab, popups | `view-content.empty` | background `--background-primary`; colour inherited `--text-normal` |
+| Notice, tooltip, empty tab, popups | `suggestion-container` | background `--suggestion-background`; shadow `--shadow-s`; border `var(--border-width) solid var(--background-modifier-border)`; colour inherited `--text-normal` |
+| Notice, tooltip, empty tab, popups | `suggestion-container.item` | background `--background-modifier-hover`; size `--font-ui-medium`; colour inherited `--text-normal` |
+| Notice, tooltip, empty tab, popups | `suggestion-container.item.selected` | background `--background-modifier-hover`; size `--font-ui-medium`; colour inherited `--text-normal` |
+| Notice, tooltip, empty tab, popups | `suggestion-container.note` | colour `--text-muted`; size `0.8em` |
+| Notice, tooltip, empty tab, popups | `popover` | background `--background-primary`; shadow `--shadow-s`; border `var(--border-width) solid var(--background-modifier-border)`; colour inherited `--text-normal` |
+| Notice, tooltip, empty tab, popups | `popover.embed` | background `--embed-background`; colour inherited `--text-normal` |
+
+Two findings from the table that the app had wrong: the light theme's accent (`--interactive-accent`)
+is `--color-accent-1`, `hsl(257, 88.9%, 71%)`, where Scoria painted the dark theme's `hsl(258, 88%,
+66%)` in both; and `==highlight==` is `--color-yellow` at 30 percent (`#e0de71` dark, `#e0ac00`
+light), not a flat gold. Both now come from the registry.
