@@ -47,6 +47,19 @@ pub const WINDOW_SIZE: (f32, f32) = (880., 860.);
 /// The list's column, Obsidian's `.recent-vaults` width.
 const LIST_WIDTH: f32 = 280.;
 
+/// The card under the mark, and the parts of a row in it: the card's
+/// width, its side padding, the gap before the button and the button's
+/// width. They are definite on purpose - the blurb's column is the card
+/// less the rest, not what the flex solve leaves it - because gpui lays a
+/// text out at the width it was last measured at, and a width that only
+/// the solve knows has been measured at one line and painted at two, and
+/// the other way about.
+const CARD_WIDTH: f32 = 440.;
+const CARD_PADDING: f32 = 24.;
+const ROW_GAP: f32 = 16.;
+const BUTTON_WIDTH: f32 = 96.;
+const BLURB_WIDTH: f32 = CARD_WIDTH - 2. * CARD_PADDING - ROW_GAP - BUTTON_WIDTH;
+
 /// One row of the right-hand card.
 struct Choice {
     name: &'static str,
@@ -174,7 +187,8 @@ impl VaultManager {
         cx.open_window(
             WindowOptions {
                 window_bounds: Some(WindowBounds::Windowed(bounds)),
-                window_min_size: Some(size(px(640.), px(480.))),
+                // Wide enough for the list and the card side by side.
+                window_min_size: Some(size(px(880.), px(480.))),
                 // The same frame the main window has: Scoria's own, with a
                 // title row of its own for the window buttons, unless the
                 // frame style is `native`.
@@ -524,7 +538,7 @@ impl VaultManager {
             .flex()
             .flex_row()
             .items_center()
-            .gap(px(16.))
+            .gap(px(ROW_GAP))
             .py(px(18.))
             .when(!last, |d| {
                 d.border_b_1()
@@ -532,8 +546,8 @@ impl VaultManager {
             })
             .child(
                 div()
-                    .flex_1()
-                    .min_w_0()
+                    .w(px(BLURB_WIDTH))
+                    .flex_shrink_0()
                     .flex()
                     .flex_col()
                     .gap(px(4.))
@@ -559,7 +573,7 @@ impl VaultManager {
                     .flex()
                     .items_center()
                     .justify_center()
-                    .min_w(px(96.))
+                    .w(px(BUTTON_WIDTH))
                     .rounded(px(6.))
                     .bg(bg)
                     .border_1()
@@ -624,9 +638,8 @@ impl Render for VaultManager {
         // last row.
         let mut card = div()
             .flex_shrink_0()
-            .w_full()
-            .max_w(px(460.))
-            .px(px(24.))
+            .w(px(CARD_WIDTH))
+            .px(px(CARD_PADDING))
             .rounded(px(12.))
             .bg(theme.tokens.background_secondary)
             .flex()
