@@ -13,11 +13,13 @@
 
 use crate::assets::{icon, logo};
 use crate::theme::{Theme, FONT_UI_MEDIUM};
-use crate::workspace::Workspace;
+use crate::workspace::{
+    client_frame, frame_window_options, window_title_row, WindowCorners, Workspace,
+};
 use gpui::{
     actions, div, prelude::*, px, size, AnyWindowHandle, App, Bounds, Context, FocusHandle,
-    Focusable, FontWeight, KeyBinding, SharedString, TitlebarOptions, WeakEntity, Window,
-    WindowBackgroundAppearance, WindowBounds, WindowDecorations, WindowHandle, WindowOptions,
+    Focusable, FontWeight, KeyBinding, SharedString, WeakEntity, Window, WindowBounds,
+    WindowHandle, WindowOptions,
 };
 
 actions!(help, [Close]);
@@ -112,17 +114,10 @@ impl HelpWindow {
         cx.open_window(
             WindowOptions {
                 window_bounds: Some(WindowBounds::Windowed(bounds)),
-                titlebar: Some(TitlebarOptions {
-                    title: Some("Help".into()),
-                    ..Default::default()
-                }),
-                app_id: Some("scoria".into()),
-                // The desktop's own frame: a dialog has no tab strip to
-                // put the window buttons in.
-                window_decorations: Some(WindowDecorations::Server),
-                window_background: WindowBackgroundAppearance::Opaque,
                 window_min_size: Some(size(px(480.), px(480.))),
-                ..Default::default()
+                // The same frame the main window has, with a title row of
+                // its own for the window buttons.
+                ..frame_window_options("Help")
             },
             move |window, cx| {
                 let view = cx.new(|cx| HelpWindow {
@@ -253,8 +248,10 @@ impl Focusable for HelpWindow {
 }
 
 impl Render for HelpWindow {
-    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = cx.global::<Theme>().clone();
+        let corners = WindowCorners::of(window);
+        let title_row = window_title_row(&theme, window, |w, _| w.remove_window());
         let version: SharedString = concat!("Version ", env!("CARGO_PKG_VERSION")).into();
         let mut card = div()
             .w_full()
@@ -268,16 +265,13 @@ impl Render for HelpWindow {
         for (ix, row) in ROWS.iter().enumerate() {
             card = card.child(self.render_row(row, ix + 1 == count, &theme, cx));
         }
-        div()
-            .id("help-window")
-            .key_context("Help")
-            .track_focus(&self.focus_handle)
-            .on_action(cx.listener(Self::close))
-            .size_full()
+        let body = div()
+            .id("help-body")
+            .flex_1()
+            .min_h_0()
+            .w_full()
             .overflow_y_scroll()
-            .bg(theme.tokens.background_primary)
-            .font_family(theme.ui_font.clone())
-            .text_color(theme.tokens.text_normal)
+            .map(|d| corners.bottom().apply(d))
             .child(
                 div()
                     .flex()
@@ -304,6 +298,21 @@ impl Render for HelpWindow {
                     )
                     .child(div().h(px(48.)))
                     .child(card),
-            )
+            );
+        let root = div()
+            .id("help-window")
+            .key_context("Help")
+            .track_focus(&self.focus_handle)
+            .on_action(cx.listener(Self::close))
+            .size_full()
+            .flex()
+            .flex_col()
+            .bg(theme.tokens.background_primary)
+            .map(|d| corners.apply(d))
+            .font_family(theme.ui_font.clone())
+            .text_color(theme.tokens.text_normal)
+            .children(title_row)
+            .child(body);
+        client_frame(root.into_any_element(), &theme, window)
     }
 }

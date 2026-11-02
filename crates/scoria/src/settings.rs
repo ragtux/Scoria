@@ -31,14 +31,16 @@ use crate::assets::{logo, DISPLAY_FONT_FAMILY};
 use crate::palette::hotkey_chip;
 use crate::text_input::{InputEvent, TextInput};
 use crate::theme::Theme;
-use crate::workspace::{Commands, VaultState, Workspace};
+use crate::workspace::{
+    client_frame, frame_window_options, window_title_row, Commands, VaultState, WindowCorners,
+    Workspace,
+};
 use gpui::{
     actions, canvas, deferred, div, hsla, linear_color_stop, linear_gradient, prelude::*, px, size,
     uniform_list, App, Bounds, Context, Entity, EventEmitter, FocusHandle, Focusable, FontWeight,
     Hsla, KeyBinding, KeyDownEvent, Keystroke, MouseButton, MouseDownEvent, MouseMoveEvent,
-    MouseUpEvent, Pixels, Point, Rgba, SharedString, Subscription, TitlebarOptions,
-    UniformListScrollHandle, WeakEntity, Window, WindowBackgroundAppearance, WindowBounds,
-    WindowDecorations, WindowHandle, WindowOptions,
+    MouseUpEvent, Pixels, Point, Rgba, SharedString, Subscription, UniformListScrollHandle,
+    WeakEntity, Window, WindowBounds, WindowHandle, WindowOptions,
 };
 use scoria_commands::{hotkey_label, keystroke, Command};
 use scoria_formats::config::{
@@ -1876,6 +1878,10 @@ pub struct SettingsView {
     menu: Option<&'static str>,
     /// The accent picker's own state while `menu` is the accent key.
     picker: Option<AccentPicker>,
+    /// Which window corners the panel's columns round, read off the window
+    /// each render: the nav takes the bottom-left, the content the
+    /// bottom-right, under the frame's title row.
+    corners: WindowCorners,
     /// The text field being typed into, by the key it writes. The rows are
     /// rebuilt from the vault on every render, so the open field is the
     /// view's, not the row's.
@@ -1944,6 +1950,7 @@ impl SettingsView {
             capturing: None,
             menu: None,
             picker: None,
+            corners: WindowCorners::default(),
             editing: None,
             local_pick: None,
             field,
@@ -3305,6 +3312,7 @@ impl SettingsView {
             // `.vertical-tab-header`: `--modal-sidebar-background`, the
             // modal's own ground rather than the sidebar colour.
             .bg(theme.tokens.modal_sidebar_background)
+            .map(|d| self.corners.left().bottom().apply(d))
             .border_r_1()
             .border_color(theme.tokens.background_modifier_border)
             .py_2()
@@ -4760,6 +4768,7 @@ impl Render for SettingsView {
             self.focus_tab(window, cx);
         }
         let theme = cx.global::<Theme>().clone();
+        self.corners = WindowCorners::of(window);
         // A write that landed from the hex field or "Restore default"
         // moves the open accent picker; a drag's own write does not, since
         // the picker already shows it.
@@ -4810,6 +4819,7 @@ impl Render for SettingsView {
             // it past the window's edge.
             .size_full()
             .bg(theme.tokens.modal_background)
+            .map(|d| self.corners.bottom().apply(d))
             .overflow_hidden()
             .child(self.render_nav(&theme, cx))
             .child(
@@ -4819,6 +4829,7 @@ impl Render for SettingsView {
                     .flex_1()
                     .min_w_0()
                     .h_full()
+                    .map(|d| self.corners.right().bottom().apply(d))
                     .px_6()
                     .pb_4()
                     .child(
@@ -4998,18 +5009,11 @@ impl SettingsWindow {
         let handle = cx.open_window(
             WindowOptions {
                 window_bounds: Some(WindowBounds::Windowed(bounds)),
-                titlebar: Some(TitlebarOptions {
-                    title: Some("Settings".into()),
-                    ..Default::default()
-                }),
-                app_id: Some("scoria".into()),
-                // The desktop's own frame, as the vault manager and Help
-                // windows have: a dialog has no tab strip to put window
-                // buttons in.
-                window_decorations: Some(WindowDecorations::Server),
-                window_background: WindowBackgroundAppearance::Opaque,
                 window_min_size: Some(size(px(640.), px(480.))),
-                ..Default::default()
+                // The same frame the main window has, with a title row of
+                // its own for the window buttons; its close goes through
+                // the panel, so an open field is written first.
+                ..frame_window_options("Settings")
             },
             move |window, cx| {
                 view.update(cx, |view, cx| view.open(tab, window, cx));
@@ -5057,19 +5061,29 @@ impl Focusable for SettingsWindow {
 }
 
 impl Render for SettingsWindow {
-    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = cx.global::<Theme>().clone();
-        div()
+        let corners = WindowCorners::of(window);
+        let panel = self.view.clone();
+        let title_row = window_title_row(&theme, window, move |_, cx| {
+            panel.update(cx, |view, cx| view.close_from_frame(cx));
+        });
+        let root = div()
             .id("settings-window")
             .key_context("Settings")
             .track_focus(&self.focus_handle)
             .on_action(cx.listener(Self::close))
             .size_full()
+            .flex()
+            .flex_col()
             .bg(theme.tokens.modal_background)
+            .map(|d| corners.apply(d))
             .font_family(theme.ui_font.clone())
             .text_size(px(crate::theme::FONT_UI_MEDIUM))
             .text_color(theme.tokens.text_normal)
-            .child(self.view.clone())
+            .children(title_row)
+            .child(div().flex_1().min_h_0().w_full().child(self.view.clone()));
+        client_frame(root.into_any_element(), &theme, window)
     }
 }
 

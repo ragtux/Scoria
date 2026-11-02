@@ -2178,7 +2178,7 @@ const MAC_FRAME_LEFT_SPACE: f32 = 80.;
 /// sits in a corner; every element that reaches one rounds itself with
 /// [`WindowCorners::apply`], the way Zed's title bar and status bar do.
 #[derive(Clone, Copy, Default, PartialEq, Eq, Debug)]
-struct WindowCorners {
+pub(crate) struct WindowCorners {
     tl: bool,
     tr: bool,
     bl: bool,
@@ -2186,7 +2186,7 @@ struct WindowCorners {
 }
 
 impl WindowCorners {
-    fn of(window: &Window) -> WindowCorners {
+    pub(crate) fn of(window: &Window) -> WindowCorners {
         match window.window_decorations() {
             Decorations::Client { tiling } => WindowCorners {
                 tl: !(tiling.top || tiling.left),
@@ -2199,7 +2199,7 @@ impl WindowCorners {
     }
 
     /// The left edge's corners only, for the ribbon or the left sidebar.
-    fn left(self) -> WindowCorners {
+    pub(crate) fn left(self) -> WindowCorners {
         WindowCorners {
             tr: false,
             br: false,
@@ -2208,7 +2208,7 @@ impl WindowCorners {
     }
 
     /// The right edge's corners only, for the right sidebar.
-    fn right(self) -> WindowCorners {
+    pub(crate) fn right(self) -> WindowCorners {
         WindowCorners {
             tl: false,
             bl: false,
@@ -2216,7 +2216,25 @@ impl WindowCorners {
         }
     }
 
-    fn apply<T: Styled>(self, mut el: T) -> T {
+    /// The top edge's corners only, for a title row.
+    pub(crate) fn top(self) -> WindowCorners {
+        WindowCorners {
+            bl: false,
+            br: false,
+            ..self
+        }
+    }
+
+    /// The bottom edge's corners only, for whatever sits under a title row.
+    pub(crate) fn bottom(self) -> WindowCorners {
+        WindowCorners {
+            tl: false,
+            tr: false,
+            ..self
+        }
+    }
+
+    pub(crate) fn apply<T: Styled>(self, mut el: T) -> T {
         if self.tl {
             el = el.rounded_tl(WINDOW_RADIUS);
         }
@@ -2393,7 +2411,10 @@ fn icon_button(id: &'static str, name: &str, theme: &Theme) -> gpui::Stateful<gp
 /// pointer, so a flag is enough.
 static MAC_DRAG_PENDING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
-fn window_handle(area: gpui::Stateful<gpui::Div>, frameless: bool) -> gpui::Stateful<gpui::Div> {
+pub(crate) fn window_handle(
+    area: gpui::Stateful<gpui::Div>,
+    frameless: bool,
+) -> gpui::Stateful<gpui::Div> {
     if !frameless {
         return area;
     }
@@ -2472,7 +2493,7 @@ fn resize_edge(
 /// was opened with a transparent one, so there the answer is what was
 /// asked for. On macOS the title row then holds the desktop's own traffic
 /// lights rather than window buttons of Scoria's; see `mac_frame`.
-fn frameless(window: &Window) -> bool {
+pub(crate) fn frameless(window: &Window) -> bool {
     if cfg!(target_os = "windows") || cfg!(target_os = "macos") {
         crate::hidden_frame()
     } else {
@@ -2486,7 +2507,7 @@ fn frameless(window: &Window) -> bool {
 /// A tiled or maximised edge loses its margin, border and shadow, so a
 /// snapped window meets the screen edge without a gap. With the desktop's
 /// own frame the content is passed through untouched.
-fn client_frame(
+pub(crate) fn client_frame(
     content: gpui::AnyElement,
     theme: &Theme,
     window: &mut Window,
@@ -2580,6 +2601,151 @@ fn client_frame(
                 .on_mouse_move(|_, _, cx| cx.stop_propagation())
                 .child(content),
         )
+}
+
+/// The frame-related window options every window of Scoria's opens with,
+/// the main one included in spirit: the desktop's frame when the frame
+/// style is `native`, Scoria's own otherwise, with the transparent margin
+/// the shadow needs on Linux and the hidden caption on Windows and macOS.
+/// A caller sets its bounds and minimum size over these.
+pub(crate) fn frame_window_options(title: &'static str) -> gpui::WindowOptions {
+    let hidden = crate::hidden_frame();
+    let decorations = if hidden {
+        gpui::WindowDecorations::Client
+    } else {
+        gpui::WindowDecorations::Server
+    };
+    gpui::WindowOptions {
+        titlebar: Some(gpui::TitlebarOptions {
+            title: Some(title.into()),
+            // What hides the caption on Windows and macOS, where
+            // `window_decorations` is not read at all; see `main.rs`.
+            appears_transparent: (cfg!(target_os = "windows") || cfg!(target_os = "macos"))
+                && hidden,
+            traffic_light_position: (cfg!(target_os = "macos") && hidden)
+                .then(|| point(px(19.), px(12.))),
+        }),
+        // KWin ties the activation token to the application by this id.
+        app_id: Some("scoria".into()),
+        window_decorations: Some(decorations),
+        // The shadow's margin has to be see-through, and only Linux draws
+        // one: Windows keeps the system's shadow outside the window.
+        window_background: match decorations {
+            gpui::WindowDecorations::Client if !cfg!(target_os = "windows") => {
+                gpui::WindowBackgroundAppearance::Transparent
+            }
+            _ => gpui::WindowBackgroundAppearance::Opaque,
+        },
+        ..Default::default()
+    }
+}
+
+/// The three window buttons at the top right of a frameless window:
+/// minimise, maximise or restore, and close, each `RIBBON_WIDTH` wide
+/// and `HEADER_HEIGHT` tall, the close one red on hover and rounded with
+/// the window's corner. `close` is what the close button does, since a
+/// window with an open text field has a write to make on the way out.
+/// On Windows the buttons name their areas instead and the system acts.
+pub(crate) fn window_controls(
+    theme: &Theme,
+    window: &Window,
+    corners: WindowCorners,
+    close: impl Fn(&mut Window, &mut App) + 'static,
+) -> gpui::Div {
+    /// What a window button does when clicked.
+    type Act = Box<dyn Fn(&mut Window, &mut App)>;
+    let maximized = window.is_maximized();
+    let system = cfg!(target_os = "windows");
+    let button =
+        |id: &'static str, name: &'static str, close: bool, area: WindowControlArea, act: Act| {
+            let hover_bg: Hsla = if close {
+                rgb(0xe93147).into()
+            } else {
+                theme.tokens.background_modifier_hover
+            };
+            let color = theme.tokens.text_muted;
+            div()
+                .id(id)
+                .group(id)
+                .w(px(RIBBON_WIDTH))
+                .h(px(HEADER_HEIGHT))
+                .flex()
+                .items_center()
+                .justify_center()
+                .cursor_pointer()
+                .when(close && corners.tr, |d| d.rounded_tr(WINDOW_RADIUS))
+                .hover(move |s| s.bg(hover_bg))
+                .when(system, |d| d.occlude().window_control_area(area))
+                .when(!system, |d| {
+                    d.on_click(move |_, window, cx| act(window, cx))
+                })
+                .child(
+                    div()
+                        .when(close, |d| {
+                            d.group_hover(id, |s| s.text_color(gpui::white()))
+                        })
+                        .text_color(color)
+                        .child(icon(name, 14., color)),
+                )
+        };
+    div()
+        .absolute()
+        .top_0()
+        .right_0()
+        .flex()
+        .flex_row()
+        .child(button(
+            "win-minimize",
+            "minus",
+            false,
+            WindowControlArea::Min,
+            Box::new(|w, _| w.minimize_window()),
+        ))
+        .child(button(
+            "win-maximize",
+            if maximized { "copy" } else { "square" },
+            false,
+            WindowControlArea::Max,
+            Box::new(|w, _| w.zoom_window()),
+        ))
+        .child(button(
+            "win-close",
+            "x",
+            true,
+            WindowControlArea::Close,
+            Box::new(close),
+        ))
+}
+
+/// A title row for a window that is not the main one - the vault manager,
+/// Settings, Help - when the frame is Scoria's: `HEADER_HEIGHT` of
+/// `--titlebar-background` that drags the window, with the window buttons
+/// at its right, or on macOS the desktop's traffic lights at its left.
+/// With the desktop's frame there is no row: the desktop's title bar is
+/// above the window instead.
+pub(crate) fn window_title_row(
+    theme: &Theme,
+    window: &Window,
+    close: impl Fn(&mut Window, &mut App) + 'static,
+) -> Option<gpui::Stateful<gpui::Div>> {
+    if !frameless(window) {
+        return None;
+    }
+    let corners = WindowCorners::of(window);
+    let mac = cfg!(target_os = "macos");
+    let row = div()
+        .id("window-title-row")
+        .relative()
+        .flex_shrink_0()
+        .w_full()
+        .h(px(HEADER_HEIGHT))
+        .bg(theme.tokens.titlebar_background)
+        .map(|d| corners.top().apply(d))
+        .when(mac, |d| d.pl(px(MAC_FRAME_LEFT_SPACE)));
+    let row = window_handle(row, true);
+    Some(row.when(!mac, |d| {
+        d.child(window_controls(theme, window, corners, close))
+    }))
 }
 
 /// How many closed tabs `workspace:undo-close-pane` can bring back.
@@ -10016,69 +10182,7 @@ impl Workspace {
     /// handler can never offer. `occlude` is what keeps the press from
     /// reaching the caption area underneath and dragging the window instead.
     fn render_window_controls(&self, theme: &Theme, window: &Window) -> gpui::Div {
-        let maximized = window.is_maximized();
-        let system = cfg!(target_os = "windows");
-        let corners = self.corners;
-        let button = |id: &'static str,
-                      name: &'static str,
-                      close: bool,
-                      area: WindowControlArea,
-                      act: fn(&mut Window)| {
-            let hover_bg: Hsla = if close {
-                rgb(0xe93147).into()
-            } else {
-                theme.tokens.background_modifier_hover
-            };
-            let color = theme.tokens.text_muted;
-            div()
-                .id(id)
-                .group(id)
-                .w(px(RIBBON_WIDTH))
-                .h(px(HEADER_HEIGHT))
-                .flex()
-                .items_center()
-                .justify_center()
-                .cursor_pointer()
-                .when(close && corners.tr, |d| d.rounded_tr(WINDOW_RADIUS))
-                .hover(move |s| s.bg(hover_bg))
-                .when(system, |d| d.occlude().window_control_area(area))
-                .when(!system, |d| d.on_click(move |_, window, _| act(window)))
-                .child(
-                    div()
-                        .when(close, |d| {
-                            d.group_hover(id, |s| s.text_color(gpui::white()))
-                        })
-                        .text_color(color)
-                        .child(icon(name, 14., color)),
-                )
-        };
-        div()
-            .absolute()
-            .top_0()
-            .right_0()
-            .flex()
-            .flex_row()
-            .child(button(
-                "win-minimize",
-                "minus",
-                false,
-                WindowControlArea::Min,
-                |w| w.minimize_window(),
-            ))
-            .child(button(
-                "win-maximize",
-                if maximized { "copy" } else { "square" },
-                false,
-                WindowControlArea::Max,
-                |w| w.zoom_window(),
-            ))
-            .child(button(
-                "win-close",
-                "x",
-                true,
-                WindowControlArea::Close,
-                |w| w.remove_window(),
-            ))
+        window_controls(theme, window, self.corners, |w, _| w.remove_window())
     }
 
     /// The ribbon down the left edge: the quick switcher, the graph, a new

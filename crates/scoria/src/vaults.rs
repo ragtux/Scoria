@@ -21,12 +21,13 @@
 
 use crate::assets::{icon, logo, DISPLAY_FONT_FAMILY};
 use crate::theme::{Theme, FONT_UI_MEDIUM, FONT_UI_SMALL, FONT_UI_SMALLER};
-use crate::workspace::Workspace;
+use crate::workspace::{
+    client_frame, frame_window_options, window_title_row, WindowCorners, Workspace,
+};
 use gpui::{
     actions, anchored, deferred, div, point, prelude::*, px, size, AnyWindowHandle, App, Bounds,
-    Context, FocusHandle, Focusable, FontWeight, KeyBinding, SharedString, TitlebarOptions,
-    WeakEntity, Window, WindowBackgroundAppearance, WindowBounds, WindowDecorations, WindowHandle,
-    WindowOptions,
+    Context, FocusHandle, Focusable, FontWeight, KeyBinding, SharedString, WeakEntity, Window,
+    WindowBounds, WindowHandle, WindowOptions,
 };
 use scoria_vault::VaultRegistry;
 use std::path::PathBuf;
@@ -170,17 +171,11 @@ impl VaultManager {
         cx.open_window(
             WindowOptions {
                 window_bounds: Some(WindowBounds::Windowed(bounds)),
-                titlebar: Some(TitlebarOptions {
-                    title: Some("Vaults".into()),
-                    ..Default::default()
-                }),
-                app_id: Some("scoria".into()),
-                // The desktop's own frame, as the Help window has: a
-                // dialog has no tab strip to put window buttons in.
-                window_decorations: Some(WindowDecorations::Server),
-                window_background: WindowBackgroundAppearance::Opaque,
                 window_min_size: Some(size(px(640.), px(480.))),
-                ..Default::default()
+                // The same frame the main window has: Scoria's own, with a
+                // title row of its own for the window buttons, unless the
+                // frame style is `native`.
+                ..frame_window_options("Vaults")
             },
             move |window, cx| {
                 let view = cx.new(|cx| VaultManager {
@@ -589,8 +584,10 @@ impl Focusable for VaultManager {
 }
 
 impl Render for VaultManager {
-    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = cx.global::<Theme>().clone();
+        let corners = WindowCorners::of(window);
+        let title_row = window_title_row(&theme, window, |w, _| w.remove_window());
         let version: SharedString = concat!("Version ", env!("CARGO_PKG_VERSION")).into();
         let rows = self.rows.clone();
         let mut list = div()
@@ -626,17 +623,12 @@ impl Render for VaultManager {
         for (ix, option) in OPTIONS.iter().enumerate() {
             card = card.child(self.render_option(option, ix + 1 == count, &theme, cx));
         }
-        div()
-            .id("vault-manager")
-            .key_context("Vaults")
-            .track_focus(&self.focus_handle)
-            .on_action(cx.listener(Self::close))
-            .size_full()
+        let body = div()
+            .flex_1()
+            .min_h_0()
+            .w_full()
             .flex()
             .flex_row()
-            .bg(theme.tokens.background_primary)
-            .font_family(theme.ui_font.clone())
-            .text_color(theme.tokens.text_normal)
             .child(
                 div()
                     .flex_shrink_0()
@@ -645,6 +637,7 @@ impl Render for VaultManager {
                     .flex()
                     .flex_col()
                     .bg(theme.tokens.background_secondary)
+                    .map(|d| corners.left().bottom().apply(d))
                     .child(div().flex_1().min_h_0().child(list))
                     .children(self.error.clone().map(|message| {
                         div()
@@ -663,6 +656,7 @@ impl Render for VaultManager {
                     .flex_1()
                     .min_w_0()
                     .h_full()
+                    .map(|d| corners.right().bottom().apply(d))
                     .overflow_y_scroll()
                     .flex()
                     .flex_col()
@@ -698,7 +692,22 @@ impl Render for VaultManager {
                     .child(div().h(px(32.)))
                     .child(card)
                     .child(div().flex_1()),
-            )
+            );
+        let root = div()
+            .id("vault-manager")
+            .key_context("Vaults")
+            .track_focus(&self.focus_handle)
+            .on_action(cx.listener(Self::close))
+            .size_full()
+            .flex()
+            .flex_col()
+            .bg(theme.tokens.background_primary)
+            .map(|d| corners.apply(d))
+            .font_family(theme.ui_font.clone())
+            .text_color(theme.tokens.text_normal)
+            .children(title_row)
+            .child(body);
+        client_frame(root.into_any_element(), &theme, window)
     }
 }
 
