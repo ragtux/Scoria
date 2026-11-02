@@ -50,9 +50,16 @@ README badge read from this table):
 | Text and links on paper | `#a6462c` | 5.7:1 on `#fbfaf8`, 5.9:1 on white |
 
 No orange of the family clears AA on paper - `#ee3300`, the darkest, is 3.9:1 - which is why the
-light theme's accent is the brown family's lit facet, the nearest hue that does. Obsidian's own
-accent inside the app is untouched: that is a vault setting (`accentColor`), and the default stays
-Obsidian's.
+light theme's accent is the brown family's lit facet, the nearest hue that does.
+
+Inside the app the accent is a vault setting (`accentColor` in `appearance.json`) and a vault that
+sets one gets it. A vault that sets none got Obsidian's purple until 2026-11-02; it now gets
+Scoria's own brick, `hsl(14, 62%, 46%)` = `#be4f2d`, a tone between `#a6462c` and `#d55227` that
+the theme registry declares after Obsidian's purple (`theme::ACCENT`), so a community theme's own
+accent still wins over it. Obsidian's derivations then make the dark theme's links `#d3573b` and
+the light theme's buttons `#cd512f`. It is brick rather than red so it stays apart from the error
+and failure colour, `--color-red` (`#fb464c` dark, `#e93147` light), which is pink-leaning where
+the brick is orange-leaning.
 
 ## The marks
 

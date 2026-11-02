@@ -186,6 +186,33 @@ fn defaults_cascade() -> &'static Cascade {
     })
 }
 
+/// Scoria's own accent, `(h, s%, l%)`: a brick between the two inks of the
+/// mark's palette that sit either side of it, `#a6462c` and `#d55227`
+/// (`docs/scoria/Scoria.md`, "Brand colors"). It replaces Obsidian's purple
+/// (`258, 88%, 66%`) as the accent a vault gets when `appearance.json` sets
+/// none, and it is the one place the app's default theme departs from
+/// Obsidian's sheet on purpose. Its hue keeps it apart from the error red
+/// (`--color-red`, hue 358): brick is orange-leaning, the error pink-leaning.
+/// Through Obsidian's own derivations it comes to `#be4f2d`, 4.9:1 under
+/// white button text on the dark theme, 4.2:1 as a link on `#1c1c1c`, and
+/// 4.9:1 as a link on white.
+pub const ACCENT: (f32, f32, f32) = (14., 62., 46.);
+
+/// The default sheet with Scoria's accent declared after Obsidian's, on
+/// `body` like the original: a theme's own `--accent-*` still wins over it,
+/// as does the inline `accentColor`, exactly as they win over the purple.
+fn scoria_cascade() -> &'static Cascade {
+    static CASCADE: OnceLock<Cascade> = OnceLock::new();
+    CASCADE.get_or_init(|| {
+        let mut c = defaults_cascade().clone();
+        let (h, s, l) = ACCENT;
+        c.declare("body", "--accent-h", &format!("{h}"));
+        c.declare("body", "--accent-s", &format!("{s}%"));
+        c.declare("body", "--accent-l", &format!("{l}%"));
+        c
+    })
+}
+
 /// The default tokens of one base theme, resolved once. Every token must
 /// resolve from the defaults alone; `defaults.rs` is generated against the
 /// registry, so a failure here is a registry entry the record never had.
@@ -194,7 +221,7 @@ fn base_tokens(dark: bool) -> &'static Tokens {
     static LIGHT: OnceLock<Tokens> = OnceLock::new();
     let cell = if dark { &DARK } else { &LIGHT };
     cell.get_or_init(|| {
-        Tokens::from_resolved(&defaults_cascade().table(dark).resolve_all(), None)
+        Tokens::from_resolved(&scoria_cascade().table(dark).resolve_all(), None)
             .unwrap_or_else(|e| panic!("theme defaults do not resolve: {e}"))
     })
 }
@@ -209,7 +236,7 @@ pub fn tokens_from(dark: bool, sheets: &[String], accent: Option<(f32, f32, f32)
     if sheets.is_empty() && accent.is_none() {
         return fallback.clone();
     }
-    let mut cascade = defaults_cascade().clone();
+    let mut cascade = scoria_cascade().clone();
     for sheet in sheets {
         cascade.add_css(sheet);
     }
@@ -502,9 +529,10 @@ mod tests {
     /// registry resolves them. These are the values `theme.rs` carried as
     /// literals before the registry existed, except where Obsidian differs:
     /// the light theme's accent is `--color-accent-1`, a shade lighter
-    /// than the dark theme's (`hsl(257, 88.9%, 71%)`, not `hsl(258, 88%,
-    /// 66%)`), and the highlight wash is `--color-yellow` at 30 percent
-    /// rather than a flat gold.
+    /// than the dark theme's, and the highlight wash is `--color-yellow`
+    /// at 30 percent rather than a flat gold - and except for the accent
+    /// itself, which since 2026-11-02 is Scoria's brick ([`ACCENT`]) run
+    /// through Obsidian's derivations rather than Obsidian's purple.
     #[test]
     fn the_shell_tokens_are_the_probed_colours() {
         let d = Theme::dark().tokens;
@@ -519,10 +547,13 @@ mod tests {
         assert_eq!(hex(d.text_faint), "#666666");
         let hover = d.background_modifier_hover;
         assert!((hover.a - 0.067).abs() < 1e-3 && hover.l > 0.99);
+        // `--interactive-accent` is `--color-accent` on the dark theme and
+        // the links are `--color-accent-1`: hue 3 back, lightness x1.15.
         let accent = d.interactive_accent;
-        assert!((accent.h * 360. - 258.).abs() < 0.01 && (accent.l - 0.66).abs() < 1e-3);
+        assert!((accent.h * 360. - 14.).abs() < 0.01 && (accent.l - 0.46).abs() < 1e-3);
+        assert_eq!(hex(accent), "#be4f2d");
         assert!(
-            (d.link_color.h * 360. - 255.).abs() < 0.01 && (d.link_color.l - 0.759).abs() < 1e-3
+            (d.link_color.h * 360. - 11.).abs() < 0.01 && (d.link_color.l - 0.529).abs() < 1e-3
         );
         assert_eq!(d.tag_color, d.link_color);
         assert_eq!(hex(d.highlight_background), "#e0de714d");
@@ -539,14 +570,14 @@ mod tests {
         assert_eq!(hex(l.text_faint), "#ababab");
         let hover = l.background_modifier_hover;
         assert!((hover.a - 0.067).abs() < 1e-3 && hover.l < 0.01);
+        // The light theme's buttons are `--color-accent-1` (hue 1 back,
+        // lightness x1.075) and its links `--color-accent` itself.
         let accent = l.interactive_accent;
         assert!(
-            (accent.h * 360. - 257.).abs() < 0.01 && (accent.l - 0.7095).abs() < 1e-3,
+            (accent.h * 360. - 13.).abs() < 0.01 && (accent.l - 0.4945).abs() < 1e-3,
             "{accent:?}"
         );
-        assert!(
-            (l.link_color.h * 360. - 258.).abs() < 0.01 && (l.link_color.l - 0.66).abs() < 1e-3
-        );
+        assert!((l.link_color.h * 360. - 14.).abs() < 0.01 && (l.link_color.l - 0.46).abs() < 1e-3);
         assert_eq!(hex(l.highlight_background), "#e0ac004d");
     }
 
