@@ -616,7 +616,11 @@ impl Render for VaultManager {
         for (ix, row) in rows.iter().enumerate() {
             list = list.child(self.render_row(ix, row, &theme, cx));
         }
+        // Nothing in the splash column shrinks: when the window is short
+        // the column scrolls, rather than the card closing up on its
+        // last row.
         let mut card = div()
+            .flex_shrink_0()
             .w_full()
             .max_w(px(460.))
             .px(px(24.))
@@ -691,6 +695,7 @@ impl Render for VaultManager {
                                 // the display face at its one weight, large, and
                                 // the line box no taller than the type.
                                 div()
+                                    .flex_shrink_0()
                                     .mt(px(16.))
                                     .font_family(DISPLAY_FONT_FAMILY)
                                     .text_size(px(104.))
@@ -701,12 +706,13 @@ impl Render for VaultManager {
                             )
                             .child(
                                 div()
+                                    .flex_shrink_0()
                                     .mt(px(4.))
                                     .text_size(px(FONT_UI_SMALL))
                                     .text_color(theme.tokens.text_muted)
                                     .child(version),
                             )
-                            .child(div().h(px(32.)))
+                            .child(div().flex_shrink_0().h(px(32.)))
                             .child(card)
                             .child(div().flex_1()),
                     ),
