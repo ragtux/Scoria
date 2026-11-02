@@ -1771,6 +1771,8 @@ Filled, Unique. A `.bases-table-footer` row holds the table's summaries and a
 `.bases-table-group-summary-row` sits under each group heading, with a `Summary` placeholder in
 `#666` and a `chevrons-up-down` expand button.
 
+**Landed 2026-11-01**: the type icon, the sort chevron, the 6 px accent resizer, drag-to-reorder with the drop line (writing `order`), and the whole menu per kind of column — Group by this property, Edit property... / Edit formula... opening the properties panel's page under the header, the Property type submenu writing `types.json`, Clear sort in the warning colour — with Escape closing it. Summaries are built: the footer and the row under each group heading, the Summarize page with every observed option computed (`scoria_bases::summary`), Hide summary. **Still out**: *Add summary*, drawn inert, since what it creates was never observed. See [[Development#The column header, summaries, cells and the table keyboard, 2026-11-01]].
+
 **Scoria.** Name only, no icon, no sort mark, no reorder. The menu is Hide column, Summarize...
 (inert), Sort A → Z, Sort Z → A, Clear sort, Edit property... (inert), with no icons. No Group by
 this property, no Property type, no summaries at all (`summaries` only round-trips).
@@ -1790,6 +1792,8 @@ and Enter on one opens Edit formula. With nothing editing the table holds an inv
 Tab, Shift+Tab and the arrows move it, Enter opens the cell, typing starts editing, Delete opens
 the editor without clearing. The docs add shift-click cell selection with Copy, Paste, Undo and
 Redo, which the probe did not drive.
+
+**Landed 2026-11-01**: the name cell is a link with the file menu on a right click; a frontmatter cell opens its editor in the 2 px accent ring with the value selected, a text or list cell with the property's values suggested under it (Up, Down, Enter, click; Escape closes the list, then the cell), a list cell drawn as pills, a date cell with *Open daily note* on hover, a checkbox written on click; `file.*` and formula cells take no click. The keyboard: an invisible cursor moved by Tab, Shift+Tab and the arrows, Enter and Delete opening the cell (a formula's Edit formula page), typing opening it with the character. **Still out**: shift-click cell selection with Copy, Paste, Undo and Redo, which the probe never drove; a list cell edits as its comma-joined text rather than as pills with an input.
 
 **Scoria.** One shared `TextInput` for text, number, date and list alike (a list is edited as its
 joined text); checkbox clicks write; Enter commits, Escape cancels. No row or cell menu, no
@@ -1820,6 +1824,8 @@ menus.
 file menu on right-click, and drags out as an `obsidian://` URL. A list item is a `.list-bullet`,
 the link, and `.bases-list-separator`; only the link opens, and right-click on the link is the
 file menu.
+
+**Landed 2026-11-01**: a card's and a list link's right click raise the file menu; only the link of a list line opens the note. **Still out**: the empty grey box a cover-less card draws, and a card's drag-out as an `obsidian://` URL.
 
 **Scoria.** Cards and list lines open on a click anywhere and have no menu; a card with no cover
 draws an empty grey box where Obsidian draws no cover at all.

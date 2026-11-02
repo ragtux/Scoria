@@ -37,7 +37,7 @@ use crate::bases::cells::lines_for;
 use crate::bases::cells::{
     cell_text, checkbox, group_header, lines_for_table, renders_as_link, row_of, Line, CELL_PAD,
 };
-use crate::bases::edit::{editable_key, ColumnDrag, HeaderMove};
+use crate::bases::edit::{editable_key, ColumnDrag, HeaderMove, CELL_KEY};
 use crate::bases::view::BasesView;
 use crate::bases::writes::{sort_direction, DESC};
 use crate::theme::{Theme, FONT_UI_SMALL};
@@ -113,6 +113,10 @@ pub struct TableState {
     pub resize: Option<ColumnResize>,
     /// A header being dragged to another slot: the slot the drop line marks.
     pub drop_at: Option<usize>,
+    /// The table's own cursor -- a line and a column -- which Tab, the
+    /// arrows, Enter, Delete and typing act on. Observed to be invisible
+    /// ("the table holds an invisible cursor"), so nothing draws it.
+    pub focused: Option<(usize, usize)>,
     pub list: ListState,
 }
 
@@ -125,6 +129,7 @@ impl Default for TableState {
             stretch_last: true,
             resize: None,
             drop_at: None,
+            focused: None,
             list: ListState::new(0, ListAlignment::Top, px(400.)),
         }
     }
@@ -139,6 +144,7 @@ impl TableState {
             "row_height": self.row_height,
             "stretch_last": self.stretch_last,
             "resize": self.resize.map(|r| json!({ "column": r.column, "width": r.width })),
+            "focused": self.focused.map(|(line, column)| json!({ "line": line, "column": column })),
         })
     }
 }
@@ -331,6 +337,7 @@ impl BasesView {
             })
             .into_any_element()];
         body.extend(self.render_header_menu(theme, cx));
+        body.extend(self.render_cell_suggestions(theme, cx));
         body
     }
 
@@ -509,6 +516,7 @@ impl BasesView {
         theme: &Theme,
         cx: &mut Context<Self>,
     ) -> AnyElement {
+        use scoria_bases::rule::PropertyKind;
         let last = row.cells.len().saturating_sub(1);
         let columns: Vec<Column> = self.table().map(|t| t.columns.clone()).unwrap_or_default();
         // The column of this row a field is open over, if any.
@@ -537,9 +545,15 @@ impl BasesView {
                     .unwrap_or(MIN_COLUMN_WIDTH);
                 let column = columns.get(c);
                 let link = column.is_some_and(|col| renders_as_link(col, cell));
-                let editable = column.and_then(editable_key).is_some();
+                let is_name = column.is_some_and(|col| {
+                    matches!(&col.source, scoria_bases::ColumnSource::File(f) if f.eq_ignore_ascii_case("name"))
+                });
+                let key = column.and_then(editable_key).map(str::to_string);
+                let kind = key.as_deref().map(|k| self.note_kind(k));
                 let mut box_ = div()
                     .id(SharedString::from(format!("bases-cell-{ix}-{c}")))
+                    .group("bases-cell")
+                    .relative()
                     .flex()
                     .flex_row()
                     .items_center()
@@ -554,50 +568,125 @@ impl BasesView {
                     box_.flex_shrink_0().w(px(width))
                 };
                 // A field is open over this very cell: it draws instead of the
-                // value, and a press anywhere else commits it, the way the
-                // property editor's own field closes.
+                // value inside Obsidian's 2 px accent ring, and a press
+                // anywhere else commits it.
                 if open == Some(c) {
                     if let Some(field) = field.clone() {
                         return box_
                             .px(px(0.))
+                            .border_2()
+                            .border_color(theme.accent)
+                            .bg(theme.bg)
                             .on_mouse_down_out(
                                 cx.listener(|this, _, _, cx| this.commit_cell_edit(cx)),
                             )
+                            .child(self.measure(CELL_KEY))
                             .child(field);
                     }
                 }
                 let path = row.file.path.clone();
-                box_ = match (editable, cell.kind) {
-                    // A boolean has no text to type, so the click flips it.
-                    (true, CellKind::Checkbox) => box_.cursor_pointer().on_click(
+                let menu_path = row.file.path.clone();
+                box_ = match (kind, cell.kind, is_name) {
+                    // The name is an internal link: a click opens the note,
+                    // a right click raises the file menu (observed, `s09`
+                    // `nameLinkClick`, `s24` `linkMenu`).
+                    (_, _, true) => box_
+                        .cursor_pointer()
+                        .on_click(cx.listener(move |this, _, _, cx| this.open(path.clone(), cx)))
+                        .on_mouse_down(
+                            MouseButton::Right,
+                            cx.listener(move |this, event: &MouseDownEvent, _, cx| {
+                                this.file_menu(menu_path.clone(), event.position, cx)
+                            }),
+                        ),
+                    // A boolean has no text to type, so the click flips it
+                    // (observed: the checkbox writes on click).
+                    (Some(_), CellKind::Checkbox, _) => box_.cursor_pointer().on_click(
                         cx.listener(move |this, _, _, cx| this.toggle_checkbox_cell(ix, c, cx)),
                     ),
-                    (true, _) => {
-                        box_.cursor_text()
-                            .on_click(cx.listener(move |this, _, window, cx| {
-                                this.start_cell_edit(ix, c, window, cx)
-                            }))
-                    }
-                    (false, _) => box_
-                        .cursor_pointer()
-                        .on_click(cx.listener(move |this, _, _, cx| this.open(path.clone(), cx))),
+                    // Every other frontmatter cell clicks straight into its
+                    // editor.
+                    (Some(_), _, _) => box_.cursor_text().on_click(cx.listener(
+                        move |this, _, window, cx| this.start_cell_edit(ix, c, window, cx),
+                    )),
+                    // A `file.*` or formula cell is read-only and takes no
+                    // click (observed: a left click on one did nothing).
+                    (None, _, _) => box_,
                 };
-                match cell.kind {
-                    // A boolean is a disabled checkbox, so there is no text
+                match (kind, cell.kind) {
+                    // A boolean is Obsidian's checkbox, so there is no text
                     // even when the value is `true`.
-                    CellKind::Checkbox => {
+                    (_, CellKind::Checkbox) => {
                         box_.child(checkbox(matches!(cell.value, Value::Bool(true)), theme))
+                    }
+                    // A list draws its items as pills (`multi-select-pill`),
+                    // which is what the editor keeps for a list property.
+                    (Some(PropertyKind::List) | Some(PropertyKind::Tags), _) => {
+                        box_.gap(px(4.)).children(list_items(cell).into_iter().map(|item| {
+                            div()
+                                .flex_shrink_0()
+                                .px(px(6.))
+                                .h(px(20.))
+                                .flex()
+                                .items_center()
+                                .rounded(px(4.))
+                                .bg(theme.bg_alt)
+                                .text_size(px(FONT_UI_SMALL))
+                                .text_color(theme.text)
+                                .child(SharedString::from(item))
+                        }))
+                    }
+                    // A date cell carries *Open daily note* (`lucide-link`,
+                    // 22 by 22 at the cell's right, shown on hover), which
+                    // opens the daily note of that day.
+                    (Some(PropertyKind::Date) | Some(PropertyKind::DateTime), _) => {
+                        let date = match &cell.value {
+                            Value::Date(d) => Some(d.at.date()),
+                            _ => None,
+                        };
+                        box_.text_color(theme.text)
+                            .child(
+                                div()
+                                    .flex_1()
+                                    .min_w_0()
+                                    .whitespace_nowrap()
+                                    .overflow_hidden()
+                                    .text_ellipsis()
+                                    .child(SharedString::from(cell_text(cell))),
+                            )
+                            .when_some(date, |d, date| {
+                                d.child(
+                                    div()
+                                        .id(("bases-cell-daily", ix * 4096 + c))
+                                        .flex_shrink_0()
+                                        .size(px(22.))
+                                        .flex()
+                                        .items_center()
+                                        .justify_center()
+                                        .rounded(px(4.))
+                                        .cursor_pointer()
+                                        .opacity(0.)
+                                        .group_hover("bases-cell", |s| s.opacity(1.))
+                                        .hover(|s| s.bg(theme.bg_active))
+                                        .tooltip(crate::canvas::menu::tooltip("Open daily note"))
+                                        .on_click(cx.listener(move |_, _, _, cx| {
+                                            cx.stop_propagation();
+                                            cx.emit(super::view::BasesEvent::OpenDaily { date });
+                                        }))
+                                        .child(crate::assets::icon("link", 16., theme.text_muted)),
+                                )
+                            })
                     }
                     // **Unprobed**: no number column's alignment was measured;
                     // right is the convention a number column reads in.
-                    CellKind::Number => box_.justify_end().text_color(theme.text).child(
+                    (_, CellKind::Number) => box_.justify_end().text_color(theme.text).child(
                         div()
                             .min_w_0()
                             .whitespace_nowrap()
                             .overflow_hidden()
                             .child(SharedString::from(cell_text(cell))),
                     ),
-                    CellKind::Text => box_
+                    (_, CellKind::Text) => box_
                         .text_color(if link { theme.link } else { theme.text })
                         .child(
                             div()
@@ -610,6 +699,17 @@ impl BasesView {
                 }
             }))
             .into_any_element()
+    }
+}
+
+/// The items a list cell draws as pills: the list's own values, each as
+/// its text.
+fn list_items(cell: &scoria_bases::Cell) -> Vec<String> {
+    match &cell.value {
+        Value::List(items) => items.iter().map(|v| v.to_string()).collect(),
+        Value::Tags(tags) => tags.clone(),
+        Value::Null => Vec::new(),
+        other => vec![other.to_string()],
     }
 }
 

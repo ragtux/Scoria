@@ -64,12 +64,28 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-actions!(bases, [ClosePanel, SelectUp, SelectDown, Activate]);
+actions!(
+    bases,
+    [
+        ClosePanel,
+        SelectUp,
+        SelectDown,
+        Activate,
+        CursorLeft,
+        CursorRight,
+        CursorNext,
+        CursorPrev,
+        DeleteCell
+    ]
+);
 
 /// Escape in the view: closes the open panel, combobox or menu, one layer per
 /// press, the way Obsidian's own does. Up, Down and Enter walk and pick in a
 /// list that has no search field of its own (a `<select>`'s), where focus
 /// stays on the view; a list with a field takes them through the field.
+///
+/// With nothing open, the same keys and Tab, Shift+Tab, Left, Right, Delete
+/// and Backspace drive the table's own cursor (`edit`).
 pub fn bind_keys(cx: &mut App) {
     let ctx = Some("Bases");
     cx.bind_keys([
@@ -77,6 +93,12 @@ pub fn bind_keys(cx: &mut App) {
         KeyBinding::new("up", SelectUp, ctx),
         KeyBinding::new("down", SelectDown, ctx),
         KeyBinding::new("enter", Activate, ctx),
+        KeyBinding::new("left", CursorLeft, ctx),
+        KeyBinding::new("right", CursorRight, ctx),
+        KeyBinding::new("tab", CursorNext, ctx),
+        KeyBinding::new("shift-tab", CursorPrev, ctx),
+        KeyBinding::new("delete", DeleteCell, ctx),
+        KeyBinding::new("backspace", DeleteCell, ctx),
     ]);
 }
 
@@ -703,6 +725,8 @@ impl BasesView {
     ) {
         if self.toolbar.combo.is_some() && self.toolbar.editing != Some(Field::ComboSearch) {
             self.move_selection(-1, cx);
+        } else if self.cursor_takes_keys() {
+            self.move_cursor(-1, 0, cx);
         } else {
             cx.propagate();
         }
@@ -716,6 +740,8 @@ impl BasesView {
     ) {
         if self.toolbar.combo.is_some() && self.toolbar.editing != Some(Field::ComboSearch) {
             self.move_selection(1, cx);
+        } else if self.cursor_takes_keys() {
+            self.move_cursor(1, 0, cx);
         } else {
             cx.propagate();
         }
@@ -730,9 +756,101 @@ impl BasesView {
     ) {
         if self.toolbar.combo.is_some() && self.toolbar.editing != Some(Field::ComboSearch) {
             self.combo_pick_selected(window, cx);
+        } else if self.cursor_takes_keys() {
+            self.open_focused_cell(window, cx);
         } else {
             cx.propagate();
         }
+    }
+
+    pub(super) fn cursor_left_action(
+        &mut self,
+        _: &CursorLeft,
+        _: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if self.cursor_takes_keys() {
+            self.move_cursor(0, -1, cx);
+        } else {
+            cx.propagate();
+        }
+    }
+
+    pub(super) fn cursor_right_action(
+        &mut self,
+        _: &CursorRight,
+        _: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if self.cursor_takes_keys() {
+            self.move_cursor(0, 1, cx);
+        } else {
+            cx.propagate();
+        }
+    }
+
+    /// Tab: the next cell, committing an open field first, wrapping to the
+    /// next row's first cell.
+    pub(super) fn cursor_next_action(
+        &mut self,
+        _: &CursorNext,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if self.editing.cell.is_some() {
+            self.commit_cell_edit(cx);
+            self.focus_view(window, cx);
+            self.step_cursor(1, cx);
+        } else if self.cursor_takes_keys() {
+            self.step_cursor(1, cx);
+        } else {
+            cx.propagate();
+        }
+    }
+
+    pub(super) fn cursor_prev_action(
+        &mut self,
+        _: &CursorPrev,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if self.editing.cell.is_some() {
+            self.commit_cell_edit(cx);
+            self.focus_view(window, cx);
+            self.step_cursor(-1, cx);
+        } else if self.cursor_takes_keys() {
+            self.step_cursor(-1, cx);
+        } else {
+            cx.propagate();
+        }
+    }
+
+    /// Delete or Backspace on the cursor: the editor opens without clearing
+    /// (observed, `s25` `deleteOnFocused`: the field opened and the file
+    /// did not change).
+    pub(super) fn delete_cell_action(
+        &mut self,
+        _: &DeleteCell,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if self.cursor_takes_keys() {
+            self.open_focused_cell(window, cx);
+        } else {
+            cx.propagate();
+        }
+    }
+
+    /// Whether a key goes to the table's cursor: a cell is focused and no
+    /// panel, list, menu or field is open over it.
+    pub(super) fn cursor_takes_keys(&self) -> bool {
+        self.table_state.focused.is_some()
+            && self.editing.cell.is_none()
+            && self.editing.menu.is_none()
+            && self.toolbar.panel == Panel::None
+            && self.toolbar.combo.is_none()
+            && self.toolbar.editing.is_none()
+            && matches!(self.layout(), scoria_bases::Layout::Table(_))
     }
 
     /// A press that landed outside the open panel. One inside the bar's
@@ -1039,6 +1157,7 @@ impl BasesView {
             }
             Some(_) if self.toolbar.header_menu => self.toolbar.header_menu = false,
             Some(_) => self.close_panel(window, cx),
+            None if self.table_state.focused.is_some() => self.table_state.focused = None,
             None => {}
         }
         cx.notify();

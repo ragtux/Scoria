@@ -328,6 +328,7 @@ impl BasesView {
         cx: &mut Context<Self>,
     ) -> AnyElement {
         let path = card.path.clone();
+        let menu_path = card.path.clone();
         let metrics = self.cards.metrics;
         let mut box_ = div()
             .id(("bases-card", ix))
@@ -342,7 +343,15 @@ impl BasesView {
             .bg(theme.bg_secondary)
             .cursor_pointer()
             .hover(|s| s.bg(theme.bg_alt))
-            .on_click(cx.listener(move |this, _, _, cx| this.open(path.clone(), cx)));
+            .on_click(cx.listener(move |this, _, _, cx| this.open(path.clone(), cx)))
+            // Observed (`s11` `cardRightClick`): a card's right click is the
+            // file menu over its note.
+            .on_mouse_down(
+                gpui::MouseButton::Right,
+                cx.listener(move |this, event: &gpui::MouseDownEvent, _, cx| {
+                    this.file_menu(menu_path.clone(), event.position, cx)
+                }),
+            );
         if self.cards.has_image {
             // The box is drawn whether or not the property answered, so a
             // row with no image does not shuffle the grid out of line.

@@ -48,7 +48,7 @@
 //!   *Clear sort* clears this column's entries or the whole list. The
 //!   readings are below, each on its own function.
 
-use crate::bases::cells::{cell_text, row_of};
+use crate::bases::cells::{cell_text, row_of, Line};
 use crate::bases::table::HEADER_ROW_KEY;
 use crate::bases::table::{ColumnResize, MIN_COLUMN_WIDTH};
 use crate::bases::view::BasesView;
@@ -338,7 +338,26 @@ pub struct EditState {
     pub field: Option<Entity<TextInput>>,
     /// Keeps the field's Submit and Cancel coming; dropped with the state.
     pub subscription: Option<Subscription>,
+    /// Whether the open field shows its value suggestions. Observed: a text
+    /// or list cell opens with a `suggestion-container mod-property-value`
+    /// under it, Escape closes the list alone, and a second Escape leaves
+    /// the cell.
+    pub suggestions: bool,
+    /// The keyboard-selected suggestion, when one is.
+    pub suggest: Option<usize>,
+    /// Whether the frame after the cell opened was already asked for: the
+    /// suggestion list hangs under the cell's box, which is measured only
+    /// once the cell has painted.
+    pub frame_asked: bool,
 }
+
+/// The anchor key the open cell records its box under, so the suggestion
+/// list can hang under it.
+pub const CELL_KEY: u64 = 0x4345_4c4c;
+
+/// How many suggestions the list shows at most. **Unprobed**: Obsidian's
+/// own cap, if any; the fixture never had more than six.
+pub const MAX_SUGGESTIONS: usize = 20;
 
 impl EditState {
     pub fn state_json(&self) -> Json {
@@ -349,6 +368,8 @@ impl EditState {
                 "path": cell.path,
                 "key": cell.key,
             })),
+            "suggestions": self.suggestions,
+            "suggest": self.suggest,
             "menu": self.menu.as_ref().map(|menu| json!({
                 "column": menu.column,
                 "id": menu.id,
@@ -792,20 +813,49 @@ impl BasesView {
 
     /// The field, built on the first edit and kept for the rest of the
     /// session.
-    fn cell_field(&mut self, cx: &mut Context<Self>) -> Entity<TextInput> {
+    fn cell_field(&mut self, window: &mut Window, cx: &mut Context<Self>) -> Entity<TextInput> {
         if let Some(field) = self.editing.field.clone() {
             return field;
         }
         let field = cx.new(|cx| TextInput::new("", cx));
         // Enter and Escape reach the field as its own Submit and Cancel, so
         // nothing here has to race an action: the field is focused and the
-        // bindings are its key context's.
-        self.editing.subscription = Some(cx.subscribe(
+        // bindings are its key context's. Both hand focus back to the view,
+        // whose cursor the next key drives.
+        self.editing.subscription = Some(cx.subscribe_in(
             &field,
-            |this, _, event: &InputEvent, cx| match event {
-                InputEvent::Submit => this.commit_cell_edit(cx),
-                InputEvent::Cancel => this.cancel_cell_edit(cx),
-                _ => {}
+            window,
+            |this, _, event: &InputEvent, window, cx| match event {
+                // Enter commits the selected suggestion when one is, else
+                // what was typed, and leaves the cell with the cursor on it.
+                InputEvent::Submit => {
+                    if let Some(pick) = this.selected_suggestion() {
+                        this.take_suggestion(&pick, cx);
+                    }
+                    this.commit_cell_edit(cx);
+                    this.focus_view(window, cx);
+                }
+                // Observed: the first Escape closes the suggestion list,
+                // the second leaves the cell without writing, and the cursor
+                // goes with it.
+                InputEvent::Cancel => {
+                    if this.editing.suggestions {
+                        this.editing.suggestions = false;
+                        this.editing.suggest = None;
+                        cx.notify();
+                    } else {
+                        this.cancel_cell_edit(cx);
+                        this.table_state.focused = None;
+                        this.focus_view(window, cx);
+                    }
+                }
+                InputEvent::Changed => {
+                    this.editing.suggestions = true;
+                    this.editing.suggest = None;
+                    cx.notify();
+                }
+                InputEvent::Down => this.move_suggestion(1, cx),
+                InputEvent::Up => this.move_suggestion(-1, cx),
             },
         ));
         self.editing.field = Some(field.clone());
@@ -841,9 +891,26 @@ impl BasesView {
                     .and_then(|props| props.get(&key).map(|p| p.value.display()))
             })
             .unwrap_or(fallback);
-        let field = self.cell_field(cx);
-        field.update(cx, |input, cx| input.set_text(shown, cx));
+        let field = self.cell_field(window, cx);
+        // Observed (`s24` `escapeEdit`): typing `9.9` into a cell holding
+        // `2.7` left `9.9`, so the value opens selected and typing replaces
+        // it.
+        field.update(cx, |input, cx| {
+            input.set_text(shown, cx);
+            input.select_all(cx);
+        });
         window.focus(&field.focus_handle(cx), cx);
+        // A text or list cell opens with its suggestions showing; a number
+        // or a date has none to show.
+        use scoria_bases::rule::PropertyKind;
+        let kind = self.note_kind(&key);
+        self.editing.suggestions = matches!(
+            kind,
+            PropertyKind::Text | PropertyKind::List | PropertyKind::Tags | PropertyKind::Unknown
+        );
+        self.editing.suggest = None;
+        self.editing.frame_asked = false;
+        self.table_state.focused = Some((line, column));
         self.editing.cell = Some(CellEdit {
             line,
             column,
@@ -851,6 +918,294 @@ impl BasesView {
             key,
         });
         cx.notify();
+    }
+
+    // ----- the table's cursor -------------------------------------------------
+
+    /// The lines that are rows, in order: what the cursor moves over.
+    fn row_lines(&self) -> Vec<usize> {
+        self.table_state
+            .lines
+            .iter()
+            .enumerate()
+            .filter(|(_, line)| matches!(line, Line::Row { .. }))
+            .map(|(ix, _)| ix)
+            .collect()
+    }
+
+    /// Moves the cursor `dl` rows and `dc` columns, clamped to the table.
+    pub(super) fn move_cursor(&mut self, dl: i32, dc: i32, cx: &mut Context<Self>) {
+        let rows = self.row_lines();
+        let columns = self.table().map_or(0, |t| t.columns.len());
+        let Some((line, column)) = self.table_state.focused else {
+            return;
+        };
+        if rows.is_empty() || columns == 0 {
+            return;
+        }
+        let at = rows.iter().position(|l| *l == line).unwrap_or(0) as i32;
+        let next_row = (at + dl).clamp(0, rows.len() as i32 - 1) as usize;
+        let next_col = (column as i32 + dc).clamp(0, columns as i32 - 1) as usize;
+        self.table_state.focused = Some((rows[next_row], next_col));
+        cx.notify();
+    }
+
+    /// Tab and Shift+Tab: the next or previous cell, wrapping across rows.
+    pub(super) fn step_cursor(&mut self, delta: i32, cx: &mut Context<Self>) {
+        let rows = self.row_lines();
+        let columns = self.table().map_or(0, |t| t.columns.len());
+        let Some((line, column)) = self.table_state.focused else {
+            return;
+        };
+        if rows.is_empty() || columns == 0 {
+            return;
+        }
+        let at = rows.iter().position(|l| *l == line).unwrap_or(0);
+        let flat = (at * columns + column) as i64 + delta as i64;
+        let flat = flat.clamp(0, (rows.len() * columns) as i64 - 1) as usize;
+        self.table_state.focused = Some((rows[flat / columns], flat % columns));
+        cx.notify();
+    }
+
+    /// Enter, Delete and Backspace on the cursor: the cell's editor, a
+    /// checkbox flipped, or for a formula the **Edit formula** page
+    /// (observed: Enter on a formula cell opened it). The name and the
+    /// other `file.*` cells have nothing to open.
+    pub(super) fn open_focused_cell(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some((line, column)) = self.table_state.focused else {
+            return;
+        };
+        let Some(col) = self.table().and_then(|t| t.columns.get(column)).cloned() else {
+            return;
+        };
+        match &col.source {
+            ColumnSource::Formula(name) => {
+                let name = name.clone();
+                self.open_page_under_header(column, super::toolbar::Page::Formula(name), cx);
+            }
+            ColumnSource::Property(_) => {
+                let checkbox = self
+                    .table()
+                    .and_then(|t| row_of(t, *self.table_state.lines.get(line)?))
+                    .and_then(|row| row.cells.get(column))
+                    .is_some_and(|cell| cell.kind == scoria_bases::CellKind::Checkbox);
+                if checkbox {
+                    self.toggle_checkbox_cell(line, column, cx);
+                } else {
+                    self.start_cell_edit(line, column, window, cx);
+                }
+            }
+            ColumnSource::File(_) => {}
+        }
+    }
+
+    /// A printable key on the cursor: the editor opens holding that
+    /// character (observed, `s25` `typeOnFocused`: typing on a focused list
+    /// cell opened its input and the file changed on Enter).
+    pub(super) fn type_into_focused(
+        &mut self,
+        text: &str,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Some((line, column)) = self.table_state.focused else {
+            return;
+        };
+        let editable = self
+            .table()
+            .and_then(|t| t.columns.get(column))
+            .and_then(editable_key)
+            .is_some();
+        let checkbox = self
+            .table()
+            .and_then(|t| row_of(t, *self.table_state.lines.get(line)?))
+            .and_then(|row| row.cells.get(column))
+            .is_some_and(|cell| cell.kind == scoria_bases::CellKind::Checkbox);
+        if !editable || checkbox {
+            return;
+        }
+        self.start_cell_edit(line, column, window, cx);
+        if let Some(field) = self.editing.field.clone() {
+            field.update(cx, |input, cx| input.set_text(text.to_string(), cx));
+        }
+        self.editing.suggestions = true;
+        self.editing.suggest = None;
+        cx.notify();
+    }
+
+    // ----- the suggestion list -----------------------------------------------
+
+    /// The part of the field a suggestion completes: the whole text for a
+    /// text property, the item after the last comma for a list.
+    fn suggestion_prefix(&self, cx: &Context<Self>) -> String {
+        let text = self
+            .editing
+            .field
+            .as_ref()
+            .map(|f| f.read(cx).text().to_string())
+            .unwrap_or_default();
+        let key = self
+            .editing
+            .cell
+            .as_ref()
+            .map(|c| c.key.clone())
+            .unwrap_or_default();
+        use scoria_bases::rule::PropertyKind;
+        if matches!(
+            self.note_kind(&key),
+            PropertyKind::List | PropertyKind::Tags
+        ) {
+            text.rsplit(',').next().unwrap_or("").trim().to_string()
+        } else {
+            text.trim().to_string()
+        }
+    }
+
+    /// The values the open cell's property holds elsewhere, narrowed by
+    /// what is typed and without the typed value itself.
+    pub(super) fn cell_suggestions(&self, cx: &Context<Self>) -> Vec<String> {
+        let Some(cell) = self.editing.cell.as_ref() else {
+            return Vec::new();
+        };
+        if !self.editing.suggestions {
+            return Vec::new();
+        }
+        let prefix = self.suggestion_prefix(cx).to_lowercase();
+        self.values_of(&cell.key)
+            .iter()
+            .filter(|v| {
+                let lower = v.to_lowercase();
+                prefix.is_empty() || (lower.contains(&prefix) && lower != prefix)
+            })
+            .take(MAX_SUGGESTIONS)
+            .cloned()
+            .collect()
+    }
+
+    /// The keyboard-selected suggestion, as the list last drew it.
+    fn selected_suggestion(&self) -> Option<String> {
+        let ix = self.editing.suggest?;
+        self.editing_shown.get(ix).cloned()
+    }
+
+    fn move_suggestion(&mut self, delta: i32, cx: &mut Context<Self>) {
+        let count = self.cell_suggestions(cx).len();
+        if count == 0 {
+            return;
+        }
+        self.editing.suggestions = true;
+        let next = match self.editing.suggest {
+            None if delta > 0 => 0,
+            None => count - 1,
+            Some(ix) => (ix as i64 + delta as i64).rem_euclid(count as i64) as usize,
+        };
+        self.editing.suggest = Some(next);
+        cx.notify();
+    }
+
+    /// Puts a picked suggestion into the field: in place of the whole text
+    /// for a text property, in place of the item being typed for a list.
+    pub(super) fn take_suggestion(&mut self, pick: &str, cx: &mut Context<Self>) {
+        let Some(field) = self.editing.field.clone() else {
+            return;
+        };
+        let key = self
+            .editing
+            .cell
+            .as_ref()
+            .map(|c| c.key.clone())
+            .unwrap_or_default();
+        use scoria_bases::rule::PropertyKind;
+        let is_list = matches!(
+            self.note_kind(&key),
+            PropertyKind::List | PropertyKind::Tags
+        );
+        let text = field.read(cx).text().to_string();
+        let next = if is_list {
+            let mut items: Vec<String> = text.split(',').map(|s| s.trim().to_string()).collect();
+            if let Some(last) = items.last_mut() {
+                *last = pick.to_string();
+            } else {
+                items.push(pick.to_string());
+            }
+            items.retain(|s| !s.is_empty());
+            items.join(", ")
+        } else {
+            pick.to_string()
+        };
+        field.update(cx, |input, cx| input.set_text(next, cx));
+        self.editing.suggestions = false;
+        self.editing.suggest = None;
+    }
+
+    /// A click on a suggestion: taken and committed.
+    pub(super) fn pick_suggestion(&mut self, pick: String, cx: &mut Context<Self>) {
+        self.take_suggestion(&pick, cx);
+        self.commit_cell_edit(cx);
+    }
+
+    /// The suggestion list under the open cell: Obsidian's
+    /// `suggestion-container mod-property-value`, 3 px under the cell
+    /// (observed at y 241 under a cell ending at 238), one 29 px row per
+    /// value with the keyboard's pick washed.
+    pub(super) fn render_cell_suggestions(
+        &mut self,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> Option<AnyElement> {
+        let shown = self.cell_suggestions(cx);
+        self.editing_shown = shown.clone();
+        if shown.is_empty() {
+            return None;
+        }
+        let cell = self.anchor(CELL_KEY)?;
+        let at = Point::new(cell.origin.x, cell.origin.y + cell.size.height + px(3.));
+        let selected = self.editing.suggest;
+        let list = div()
+            .id("bases-cell-suggestions")
+            .flex()
+            .flex_col()
+            .min_w(px(66.))
+            .max_h(px(300.))
+            .p(px(6.))
+            .bg(theme.bg_secondary)
+            .border_1()
+            .border_color(theme.tab_divider)
+            .rounded(px(8.))
+            .shadow_lg()
+            .text_size(px(FONT_UI_SMALL))
+            .text_color(theme.text)
+            .occlude()
+            .on_mouse_down(gpui::MouseButton::Left, |_, _, cx| cx.stop_propagation())
+            .children(shown.into_iter().enumerate().map(|(ix, value)| {
+                let pick = value.clone();
+                div()
+                    .id(("bases-cell-suggestion", ix))
+                    .h(px(29.))
+                    .px(px(8.))
+                    .flex()
+                    .items_center()
+                    .whitespace_nowrap()
+                    .rounded(px(4.))
+                    .cursor_pointer()
+                    .when(selected == Some(ix), |d| d.bg(theme.bg_alt))
+                    .hover(|s| s.bg(theme.bg_alt))
+                    .on_click(cx.listener(move |this, _, _, cx| {
+                        cx.stop_propagation();
+                        this.pick_suggestion(pick.clone(), cx);
+                    }))
+                    .child(SharedString::from(value))
+            }));
+        Some(
+            deferred(
+                anchored()
+                    .position(at)
+                    .snap_to_window_with_margin(px(8.))
+                    .child(list),
+            )
+            .with_priority(2)
+            .into_any_element(),
+        )
     }
 
     /// The note, the key and the cell's own text for one cell, when that cell
@@ -873,12 +1228,16 @@ impl BasesView {
             Some(field) => field.read(cx).text().to_string(),
             None => return,
         };
+        self.editing.suggestions = false;
+        self.editing.suggest = None;
         self.write_cell(&edit.path, &edit.key, &typed, cx);
         cx.notify();
     }
 
     /// Escape: the note is not written and the field closes.
     pub(super) fn cancel_cell_edit(&mut self, cx: &mut Context<Self>) {
+        self.editing.suggestions = false;
+        self.editing.suggest = None;
         if self.editing.cell.take().is_some() {
             cx.notify();
         }

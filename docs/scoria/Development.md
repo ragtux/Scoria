@@ -321,10 +321,68 @@ uses behave as Obsidian's do.
 | Bases: the format | done: parsed, modelled and written back in Obsidian's own bytes, `scoria-formats::base` |
 | Bases: the expression language | done: the parser and the evaluator, held to 277 parse trees and 1044 evaluated statements, see [[#Bases evaluator, 2026-10-25]] |
 | Bases: the table view | done, read-only: a `.base` opens on its table, see [[#Bases table view, 2026-10-25]]; the ribbon's button creates one |
-| Bases: the rest of the view | done: the cards, list and kanban layouts, the toolbar's six panels, editing through the table, the five `bases:*` commands beyond `new-file`, and an embedded `![[x.base]]`, see [[#Bases: the rest of the view, 2026-10-25]]; the toolbar and panels rebuilt to the 2026-11-01 record, see [[#The Bases toolbar and its panels, 2026-11-01]]; the embed as the live view and the leaf's chrome, see [[#The embedded base and the base leaf's chrome, 2026-11-01]] |
+| Bases: the rest of the view | done: the cards, list and kanban layouts, the toolbar's six panels, editing through the table, the five `bases:*` commands beyond `new-file`, and an embedded `![[x.base]]`, see [[#Bases: the rest of the view, 2026-10-25]]; the toolbar and panels rebuilt to the 2026-11-01 record, see [[#The Bases toolbar and its panels, 2026-11-01]]; the embed as the live view and the leaf's chrome, see [[#The embedded base and the base leaf's chrome, 2026-11-01]]; the header, summaries, cells and keyboard, see [[#The column header, summaries, cells and the table keyboard, 2026-11-01]] |
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | not started |
+
+### The column header, summaries, cells and the table keyboard, 2026-11-01
+
+The two large entries of [[UI parity backlog#Bases]] and the small one on
+card and list menus, built as one campaign against the record.
+
+**The header.** Each header is its type icon and name — the properties
+panel's own icon for the same id — with a `chevron-down` or `chevron-up`
+while the column sorts, a 6 px resizer that turns accent under the pointer,
+and a header drags to another slot: `HeaderMove` on the header, the drop
+line drawn at the nearest column edge over the table's own height, and
+`writes::move_column` rewriting `order` on the drop. The context menu is
+`edit::header_menu_rows` per `HeaderKind`, with icons, the checked sort,
+the warning-coloured *Clear sort*, and a *Property type* list beside its
+row on hover that asks the workspace to write `types.json`. *Group by this
+property* writes `groupBy` ascending; *Edit property...* and *Edit
+formula...* open the properties panel's own pages, hung under the header
+through the toolbar's new `pinned_at`; Escape closes the menu first.
+
+**Summaries.** `scoria_bases::summary` is the engine side: the class of a
+column's values, the options it offers in Obsidian's case-insensitive
+alphabetical order with the base's own `summaries` statements among them,
+and what each computes — two decimals, date-times, a humanized date range,
+a custom statement evaluated with `values` bound. The engine's `round` now
+takes the digits argument the fixture's own `customMean` uses. In the app,
+`bases::summary` draws the footer under an ungrouped view's rows and
+`Line::Summary` under each group heading when the view has any summary, and
+the Summarize page as `Panel::Summary` — opened from the header's row or a
+summary cell, picking writes `summaries.<id>`, *Hide summary* removes it,
+*Add summary* is drawn inert because what it creates was never observed.
+
+**Cells.** The name cell is a link whose right click raises the file menu
+(`file_menu::Target::Row`, also on a card and a list line's link, through
+`BasesEvent::FileMenu`); a frontmatter cell opens its field inside the
+accent ring with the value selected; a text or list cell shows the
+property's distinct values under it (`infer_properties` gathers them with
+the kinds), narrowed by the typed text or the list item being typed, walked
+with Up and Down, taken by Enter or a click; a list cell draws pills and
+edits as its comma-joined text; a date cell carries *Open daily note*,
+which `Workspace::open_daily_on` answers for that day; `file.*` and formula
+cells take no click.
+
+**The keyboard.** `TableState::focused` is the invisible cursor: Tab,
+Shift+Tab, Left, Right, Up and Down move it (the toolbar's own actions
+first, the cursor when nothing is open), Enter and Delete open the cell — a
+formula's Edit formula page, a checkbox flipped — a printable key opens it
+holding that character through the root's `on_key_down`, Enter in the field
+commits and keeps the cursor, and the second Escape leaves the cell with
+the cursor gone.
+
+Driven headless on a scratch base over the rocks and volcanoes with list,
+text, number and date columns: the menu and submenu, the drag writing the
+new order, Group by, the Edit page under the header, the Summarize page
+with its values, a footer and group rows, Hide summary by keyboard, typing
+`fel` + Down + Enter writing `felsic`, the row and card menus, the daily
+note of `1943-02-20` opened from a cell, and the cursor's every move. Open
+after this: *Add summary*, shift-click selection, the list cell's own
+pills-with-input editor, and the kanban entry.
 
 ### The embedded base and the base leaf's chrome, 2026-11-01
 

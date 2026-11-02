@@ -75,6 +75,15 @@ pub enum BasesEvent {
     /// The toolbar's *New* button: `bases:add-item`, which the workspace
     /// runs.
     AddItem,
+    /// A right click on a row's name, a card or a list line's link: the
+    /// file menu over that row's file, which the workspace draws.
+    FileMenu {
+        path: String,
+        position: gpui::Point<gpui::Pixels>,
+    },
+    /// A date cell's *Open daily note* icon: the daily note of that day,
+    /// which the workspace opens or creates.
+    OpenDaily { date: chrono::NaiveDate },
 }
 
 pub struct BasesView {
@@ -105,12 +114,19 @@ pub struct BasesView {
     /// values infer, from the whole vault rather than the filtered rows: a
     /// view that empties still has to know `density` is a number.
     pub(super) property_kinds: Vec<(String, scoria_bases::rule::PropertyKind)>,
+    /// Every distinct value each frontmatter property holds across the
+    /// vault, as the property editor displays one, sorted without regard
+    /// to case: what a cell's suggestion list offers.
+    pub(super) property_values: Vec<(String, Vec<String>)>,
     pub(super) table_state: super::table::TableState,
     pub(super) cards: super::cards::CardsState,
     pub(super) list: super::list::ListLayoutState,
     pub(super) kanban: super::kanban::KanbanState,
     pub(super) toolbar: super::toolbar::ToolbarState,
     pub(super) editing: super::edit::EditState,
+    /// The suggestions the open cell's list last drew, in order, so Enter
+    /// can take the keyboard's pick without the app context the list needs.
+    pub(super) editing_shown: Vec<String>,
 }
 
 impl BasesView {
@@ -128,12 +144,14 @@ impl BasesView {
             dirty: false,
             embedded: false,
             property_kinds: Vec::new(),
+            property_values: Vec::new(),
             table_state: super::table::TableState::default(),
             cards: super::cards::CardsState::default(),
             list: super::list::ListLayoutState::default(),
             kanban: super::kanban::KanbanState::default(),
             toolbar: super::toolbar::ToolbarState::default(),
             editing: super::edit::EditState::default(),
+            editing_shown: Vec::new(),
         }
     }
 
@@ -297,7 +315,9 @@ impl BasesView {
                 now: chrono::Local::now().naive_local(),
             },
         };
-        self.property_kinds = infer_property_kinds(&env.files);
+        let (kinds, values) = infer_properties(&env.files);
+        self.property_kinds = kinds;
+        self.property_values = values;
         let mut table = scoria_bases::table::build(base, self.view_ix, &env);
         if let Some(needle) = self.toolbar.search.as_deref() {
             apply_search(&mut table, needle);
@@ -361,6 +381,25 @@ impl BasesView {
     /// Opens the file a row names, which is the workspace's to do.
     pub(super) fn open(&mut self, path: String, cx: &mut Context<Self>) {
         cx.emit(BasesEvent::Open(path));
+    }
+
+    /// Raises the file menu over a row's file at `position`.
+    pub(super) fn file_menu(
+        &mut self,
+        path: String,
+        position: gpui::Point<gpui::Pixels>,
+        cx: &mut Context<Self>,
+    ) {
+        cx.emit(BasesEvent::FileMenu { path, position });
+    }
+
+    /// The distinct values a frontmatter property holds across the vault.
+    pub(super) fn values_of(&self, key: &str) -> &[String] {
+        self.property_values
+            .iter()
+            .find(|(k, _)| k.eq_ignore_ascii_case(key))
+            .map(|(_, v)| v.as_slice())
+            .unwrap_or(&[])
     }
 
     /// Says something as a Notice.
@@ -592,37 +631,70 @@ impl Focusable for BasesView {
     }
 }
 
+/// Every frontmatter property with the kind its values infer.
+type PropertyKinds = Vec<(String, scoria_bases::rule::PropertyKind)>;
+/// Every frontmatter property with the distinct values it holds.
+type PropertyValues = Vec<(String, Vec<String>)>;
+
 /// Every property name the notes carry, in first-seen order, with the kind
 /// its first non-null value infers — what Obsidian does for a property no
-/// one assigned a type to in `types.json`.
-fn infer_property_kinds(
-    files: &[Arc<scoria_bases::FileData>],
-) -> Vec<(String, scoria_bases::rule::PropertyKind)> {
+/// one assigned a type to in `types.json` — and, per property, the distinct
+/// values it holds, sorted without regard to case (observed: a `kinds`
+/// cell's suggestions read `ash`, `basalt`, `felsic`, `frothy`, `glass`,
+/// `intermediate`). A list property's items are values of their own.
+fn infer_properties(files: &[Arc<scoria_bases::FileData>]) -> (PropertyKinds, PropertyValues) {
     use scoria_bases::rule::PropertyKind;
     use scoria_bases::Value;
-    let mut out: Vec<(String, PropertyKind)> = Vec::new();
+    let mut kinds: Vec<(String, PropertyKind)> = Vec::new();
+    let mut values: Vec<(String, Vec<String>)> = Vec::new();
     for file in files {
         for (name, value) in &file.properties {
             let kind = match value {
-                Value::Bool(_) => PropertyKind::Checkbox,
-                Value::Number(_) => PropertyKind::Number,
-                Value::List(_) | Value::Tags(_) => PropertyKind::List,
-                Value::Date(d) if d.has_time => PropertyKind::DateTime,
-                Value::Date(_) => PropertyKind::Date,
-                Value::Str(_) | Value::Link(_) => PropertyKind::Text,
-                _ => continue,
+                Value::Bool(_) => Some(PropertyKind::Checkbox),
+                Value::Number(_) => Some(PropertyKind::Number),
+                Value::List(_) | Value::Tags(_) => Some(PropertyKind::List),
+                Value::Date(d) if d.has_time => Some(PropertyKind::DateTime),
+                Value::Date(_) => Some(PropertyKind::Date),
+                Value::Str(_) | Value::Link(_) => Some(PropertyKind::Text),
+                _ => None,
             };
-            match out.iter().position(|(n, _)| n == name) {
-                Some(ix) => {
-                    if out[ix].1 == PropertyKind::Unknown {
-                        out[ix].1 = kind;
+            if let Some(kind) = kind {
+                match kinds.iter().position(|(n, _)| n == name) {
+                    Some(ix) => {
+                        if kinds[ix].1 == PropertyKind::Unknown {
+                            kinds[ix].1 = kind;
+                        }
                     }
+                    None => kinds.push((name.clone(), kind)),
                 }
-                None => out.push((name.clone(), kind)),
+            }
+            let texts: Vec<String> = match value {
+                Value::Null | Value::Bool(_) => Vec::new(),
+                Value::List(items) => items.iter().map(|v| v.to_string()).collect(),
+                Value::Tags(tags) => tags.clone(),
+                other => vec![other.to_string()],
+            };
+            if texts.is_empty() {
+                continue;
+            }
+            let slot = match values.iter().position(|(n, _)| n == name) {
+                Some(ix) => ix,
+                None => {
+                    values.push((name.clone(), Vec::new()));
+                    values.len() - 1
+                }
+            };
+            for text in texts {
+                if !text.is_empty() && !values[slot].1.contains(&text) {
+                    values[slot].1.push(text);
+                }
             }
         }
     }
-    out
+    for (_, list) in &mut values {
+        list.sort_by_key(|v| v.to_lowercase());
+    }
+    (kinds, values)
 }
 
 /// The toolbar's search row: keeps the rows whose displayed cells hold the
@@ -672,6 +744,17 @@ impl Render for BasesView {
             Vec::new()
         };
         let embedded = self.embedded;
+        // The suggestion list hangs under the open cell's box, which is
+        // known only after the cell has painted once: ask for that frame.
+        if self.editing.cell.is_some()
+            && self.editing.suggestions
+            && !self.editing.frame_asked
+            && self.anchor(super::edit::CELL_KEY).is_none()
+        {
+            self.editing.frame_asked = true;
+            let entity = cx.entity();
+            window.on_next_frame(move |_, cx| entity.update(cx, |_, cx| cx.notify()));
+        }
         div()
             .track_focus(&self.focus)
             .key_context("Bases")
@@ -679,6 +762,30 @@ impl Render for BasesView {
             .on_action(cx.listener(Self::select_up_action))
             .on_action(cx.listener(Self::select_down_action))
             .on_action(cx.listener(Self::activate_action))
+            .on_action(cx.listener(Self::cursor_left_action))
+            .on_action(cx.listener(Self::cursor_right_action))
+            .on_action(cx.listener(Self::cursor_next_action))
+            .on_action(cx.listener(Self::cursor_prev_action))
+            .on_action(cx.listener(Self::delete_cell_action))
+            // Typing on the cursor opens the cell with the character: the
+            // keys that are not a binding reach here with their `key_char`.
+            .on_key_down(cx.listener(|this, event: &gpui::KeyDownEvent, window, cx| {
+                let keystroke = &event.keystroke;
+                if keystroke.modifiers.control
+                    || keystroke.modifiers.alt
+                    || keystroke.modifiers.platform
+                {
+                    return;
+                }
+                let Some(text) = keystroke.key_char.as_deref() else {
+                    return;
+                };
+                if text.chars().any(|c| c.is_control()) || !this.cursor_takes_keys() {
+                    return;
+                }
+                this.type_into_focused(text, window, cx);
+                cx.stop_propagation();
+            }))
             .flex()
             .flex_col()
             // A leaf's view fills the leaf on its own ground; an embed is

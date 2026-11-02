@@ -6337,6 +6337,41 @@ note instead, those two having no bytes in it to write. A last column that
 `columnSize` names is drawn at that width rather than stretching, which the
 fixture's one sized column (its first) could not settle.
 
+**Superseded on 2026-11-01 by the Bases UI record**
+(`tools/obsidian-probe/results/2026-11-01-bases-ui.json`; the entries are in
+the Bases section of [[UI parity backlog]]): cells **are** editable in place
+— the disabled checkbox above was a cards-view reading — and each kind has
+its editor: a contenteditable with a `suggestion-container
+mod-property-value` listing the property's values for text, a number input,
+a date input with a hover-only *Open daily note* (`lucide-link`, 22 by 22)
+for dates, a checkbox that writes on click, multi-select pills for lists
+and tags, a link shown raw as `[[Basalt]]`. The cell wears a 2 px accent
+ring while editing, typing replaces the value (`9.9` over `2.7`), Enter
+commits and leaves, Escape closes the suggestions first and the cell second
+without writing, the name cell is an `internal-link` whose right click is
+the file menu (`s24` `linkMenu`), and formula cells are read-only with Enter
+opening *Edit formula*. The table holds an invisible cursor: Tab, Shift+Tab
+and the arrows move it, Enter opens the cell, typing starts editing, Delete
+opens the editor without clearing. The column header is the type icon and
+the name with a `chevron-down` while sorted Z → A, a 6 px resizer that turns
+accent on hover, and drags to reorder with a `table-drag-target mod-col`
+line; its menu is *Hide column* · *Summarize...* · *Group by this property*
+| *Sort A → Z* (checked while in force) · *Sort Z → A* · *Clear sort*
+(warning, while sorted) | | *Edit property...* | *Property type* ▸ Checkbox,
+Date, Date & time, List, Number, Text — the `file name` header without Group
+by and Property type, a formula header with *Edit formula...* instead.
+Summaries exist: `summaries: {<id>: <Name>}` on the view, a
+`bases-table-footer` under an ungrouped view's rows and a
+`bases-table-group-summary-row` under each group heading, the *Summary*
+placeholder in `#666` with a `chevrons-up-down` expand button 30 px in, and
+a Summarize page listing the applicable options alphabetically with their
+values (Average, Max, Median, Min, Range, Stddev, Sum for numbers;
+Earliest, Latest, Range for dates; Checked, Unchecked for checkboxes;
+Empty, Filled, Unique for all) plus the base's own `summaries` statements
+over `values`, *Add summary* and *Hide summary*. Scoria builds all of it
+except *Add summary* and the shift-click cell selection; `round(digits)`,
+which the fixture's `customMean` statement uses, is accepted by the engine.
+
 **The two unprobed commands.** `bases:change-view` is read as a suggester over
 the view names and `bases:add-item` as a new note in the base's
 `newItemFolder` from its `newItemTemplate`, opened in a new tab, writing

@@ -47,7 +47,8 @@ use crate::bases::cells::{
 use crate::bases::view::BasesView;
 use crate::theme::{Theme, FONT_UI_SMALL};
 use gpui::{
-    div, list, prelude::*, px, AnyElement, Context, ListAlignment, ListState, SharedString, Window,
+    div, list, prelude::*, px, AnyElement, Context, ListAlignment, ListState, MouseButton,
+    MouseDownEvent, SharedString, Window,
 };
 use scoria_bases::{Column, ListLayout, Markers, Row};
 use serde_json::{json, Value as Json};
@@ -249,13 +250,29 @@ impl BasesView {
         cx: &mut Context<Self>,
     ) -> AnyElement {
         let path = row.file.path.clone();
+        let menu_path = row.file.path.clone();
         let separator = self.list.separator.clone();
         let link = renders_title_as_link(columns, row);
         let body = body_of(row);
+        // Observed (`s11` `listClick`, `s21` `listLinkRightClick`): only the
+        // link opens the note, and its right click is the file menu; the
+        // rest of the line takes neither.
         let title = div()
+            .id(("bases-line-title", id))
             .flex_shrink_0()
             .whitespace_nowrap()
+            .cursor_pointer()
             .text_color(if link { theme.link } else { theme.text })
+            .on_click(cx.listener(move |this, _, _, cx| {
+                cx.stop_propagation();
+                this.open(path.clone(), cx)
+            }))
+            .on_mouse_down(
+                MouseButton::Right,
+                cx.listener(move |this, event: &MouseDownEvent, _, cx| {
+                    this.file_menu(menu_path.clone(), event.position, cx)
+                }),
+            )
             .child(SharedString::from(title_of(row)));
         let values = if self.list.indent {
             div()
@@ -302,9 +319,7 @@ impl BasesView {
             .py(px(LINE_PAD))
             .overflow_hidden()
             .text_size(px(FONT_UI_SMALL))
-            .cursor_pointer()
-            .hover(|s| s.bg(theme.bg_alt))
-            .on_click(cx.listener(move |this, _, _, cx| this.open(path.clone(), cx)));
+            .hover(|s| s.bg(theme.bg_alt));
         if let Some(mark) = marker(self.list.markers, number) {
             line = line.child(
                 div()

@@ -158,6 +158,10 @@ pub enum Target {
     /// of the open-in rows, Rename beside Move and Bookmark, and "Delete
     /// file" alone in the danger pair. The path is the leaf's file.
     View(String),
+    /// A right click on a Bases row's name, a card or a list line's link
+    /// (`s24` `linkMenu`, 2026-11-01): the file menu with the two open-in
+    /// rows, Rename beside Move and Bookmark, and "Delete file".
+    Row(String),
 }
 
 /// A right click in the editor: what it landed on, and the selection as it
@@ -202,7 +206,11 @@ impl Target {
     /// link to a file.
     pub fn path(&self) -> &str {
         match self {
-            Target::File(p) | Target::Folder(p) | Target::Linked(p) | Target::View(p) => p,
+            Target::File(p)
+            | Target::Folder(p)
+            | Target::Linked(p)
+            | Target::View(p)
+            | Target::Row(p) => p,
             Target::Blank => "",
             Target::Editor(click) => match &click.spot {
                 Spot::Link(path) => path,
@@ -360,6 +368,40 @@ pub fn items(target: &Target) -> Vec<Item> {
         // vault folder / from system root) and one row here, like the file
         // row's. Obsidian draws `lucide-edit-3` on Rename, which is
         // `pen-line`.
+        // The Bases row's menu is the view header's with the open-in rows
+        // in place of the splits; the same three rows are left out.
+        Target::Row(_) => vec![
+            item("Open in new tab", "file-plus", S::Open, P::OpenInNewTab),
+            item(
+                "Open to the right",
+                "separator-vertical",
+                S::Open,
+                P::OpenToRight,
+            ),
+            item("Rename...", "pen-line", S::Action, P::Rename),
+            item("Move file to...", "folder-tree", S::Action, P::Move),
+            item("Bookmark...", "bookmark", S::Action, P::Bookmark),
+            item("Copy path", "clipboard", S::Unsectioned, P::CopyPath),
+            item(
+                "Open in default app",
+                "arrow-up-right",
+                S::System,
+                P::OpenInDefaultApp,
+            ),
+            item(
+                "Show in system explorer",
+                "arrow-up-right",
+                S::System,
+                P::ShowInSystemExplorer,
+            ),
+            item(
+                "Reveal file in navigation",
+                "folder-open",
+                S::System,
+                P::RevealInNavigation,
+            ),
+            item("Delete file", "trash-2", S::Danger, P::Delete),
+        ],
         Target::View(_) => vec![
             item("Split right", "separator-vertical", S::Open, P::SplitRight),
             item("Split down", "separator-horizontal", S::Open, P::SplitDown),
@@ -551,6 +593,7 @@ pub fn describe(menu: &Menu) -> Value {
             Spot::Link(_) => "editor-link",
         },
         Target::View(_) => "view",
+        Target::Row(_) => "row",
     };
     let items = items(&menu.target);
     let disabled: Vec<String> = items
@@ -907,6 +950,32 @@ mod tests {
         assert_eq!(
             Target::View("Shelf/Rocks.base".into()).path(),
             "Shelf/Rocks.base"
+        );
+    }
+
+    /// A Bases row's name cell, card or list link (`s24` `linkMenu`), minus
+    /// "Open in new window", the `view` rows and their separator.
+    #[test]
+    fn a_bases_rows_menu_is_the_links_list_without_the_rows_it_cannot_run() {
+        assert_eq!(
+            drawn(&Target::Row("Rocks/Basalt.md".into())),
+            [
+                "Open in new tab",
+                "Open to the right",
+                "---",
+                "Rename...",
+                "Move file to...",
+                "Bookmark...",
+                "---",
+                "Copy path",
+                "---",
+                "Open in default app",
+                "Show in system explorer",
+                "Reveal file in navigation",
+                "---",
+                "---",
+                "Delete file",
+            ]
         );
     }
 

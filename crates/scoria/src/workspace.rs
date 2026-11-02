@@ -2743,6 +2743,15 @@ fn bases_subscription(bases: &Entity<BasesView>, cx: &mut Context<Workspace>) ->
         BasesEvent::ExportCsv { name, csv } => this.export_base_csv(name.clone(), csv.clone(), cx),
         BasesEvent::SetPropertyType { key, ty } => this.assign_property_type(key.clone(), *ty, cx),
         BasesEvent::AddItem => this.add_base_item_from(&bases, cx),
+        BasesEvent::FileMenu { path, position } => {
+            this.file_menu = Some(file_menu::Menu {
+                position: *position,
+                anchor: Anchor::TopLeft,
+                target: file_menu::Target::Row(path.clone()),
+            });
+            cx.notify();
+        }
+        BasesEvent::OpenDaily { date } => this.open_daily_on(*date, cx),
     })
 }
 
@@ -3550,6 +3559,52 @@ impl Workspace {
                 self.open_file(path.clone(), None, cx);
                 let mode = self.editing_mode();
                 self.set_mode(mode, window, cx);
+                self.report(format!("Created {path}"), cx);
+            }
+            Err(err) => self.report(err, cx),
+        }
+    }
+
+    /// A date cell's *Open daily note* (`lucide-link`, observed on every
+    /// date cell of a base, `s08` `addControl` and `s24` `dateHover`): the
+    /// daily note named after that day, opened, or created from the
+    /// template first. **Unprobed**: whether Obsidian creates a missing
+    /// one; it does here, as the ribbon's button does for today.
+    fn open_daily_on(&mut self, date: chrono::NaiveDate, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let (format, folder, template) = {
+            let daily = state.daily_notes();
+            (
+                non_empty(daily.format.as_deref())
+                    .unwrap_or(config::DAILY_NOTE_DEFAULT_FORMAT)
+                    .to_string(),
+                daily.folder.clone().unwrap_or_default(),
+                daily.template.clone().unwrap_or_default(),
+            )
+        };
+        let at = templates::Stamp {
+            year: chrono::Datelike::year(&date) as i64,
+            month: chrono::Datelike::month(&date),
+            day: chrono::Datelike::day(&date),
+            hour: 0,
+            minute: 0,
+            second: 0,
+        };
+        let (path, exists) = match state.vault().daily_note(&format, &folder, &at) {
+            Ok(found) => found,
+            Err(err) => return self.report(err.to_string(), cx),
+        };
+        if exists {
+            self.open_file(path, None, cx);
+            return;
+        }
+        let text = self.daily_template_text(&state, &template, &path, cx);
+        match state.create_note(&path, &text) {
+            Ok(changes) => {
+                self.after_changes(changes, cx);
+                self.open_file(path.clone(), None, cx);
                 self.report(format!("Created {path}"), cx);
             }
             Err(err) => self.report(err, cx),
