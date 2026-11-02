@@ -2735,19 +2735,39 @@ pub(crate) fn window_title_row(
     }
     let corners = WindowCorners::of(window);
     let mac = cfg!(target_os = "macos");
-    let row = div()
-        .id("window-title-row")
-        .relative()
-        .flex_shrink_0()
-        .w_full()
-        .h(px(HEADER_HEIGHT))
-        .bg(bg)
-        .map(|d| corners.top().apply(d))
-        .when(mac, |d| d.pl(px(MAC_FRAME_LEFT_SPACE)));
-    let row = window_handle(row, true);
-    Some(row.when(!mac, |d| {
-        d.child(window_controls(theme, window, corners, close))
-    }))
+    // The handle is a sibling of the buttons, not their parent: a press
+    // on a button inside the handle would start the window moving and
+    // the click would never land, since the compositor takes the pointer.
+    let handle = window_handle(
+        div()
+            .id("window-title-drag")
+            .flex_1()
+            .h_full()
+            .when(mac, |d| d.pl(px(MAC_FRAME_LEFT_SPACE))),
+        true,
+    );
+    Some(
+        div()
+            .id("window-title-row")
+            .flex_shrink_0()
+            .w_full()
+            .h(px(HEADER_HEIGHT))
+            .flex()
+            .flex_row()
+            .bg(bg)
+            .map(|d| corners.top().apply(d))
+            .child(handle)
+            .when(!mac, |d| {
+                d.child(
+                    div()
+                        .relative()
+                        .flex_shrink_0()
+                        .w(px(3. * RIBBON_WIDTH))
+                        .h_full()
+                        .child(window_controls(theme, window, corners, close)),
+                )
+            }),
+    )
 }
 
 /// How many closed tabs `workspace:undo-close-pane` can bring back.
