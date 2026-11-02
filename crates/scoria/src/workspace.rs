@@ -2718,12 +2718,14 @@ pub(crate) fn window_controls(
 }
 
 /// A title row for a window that is not the main one - the vault manager,
-/// Settings, Help - when the frame is Scoria's: `HEADER_HEIGHT` of
-/// `--titlebar-background` that drags the window, with the window buttons
-/// at its right, or on macOS the desktop's traffic lights at its left.
-/// With the desktop's frame there is no row: the desktop's title bar is
-/// above the window instead.
+/// Settings, Help - when the frame is Scoria's: `HEADER_HEIGHT` of `bg`
+/// that drags the window, with the window buttons at its right, or on
+/// macOS the desktop's traffic lights at its left. `bg` is
+/// `--titlebar-background` where the row is meant to read as a bar, and
+/// the window's own ground where it is not. With the desktop's frame
+/// there is no row: the desktop's title bar is above the window instead.
 pub(crate) fn window_title_row(
+    bg: Hsla,
     theme: &Theme,
     window: &Window,
     close: impl Fn(&mut Window, &mut App) + 'static,
@@ -2739,7 +2741,7 @@ pub(crate) fn window_title_row(
         .flex_shrink_0()
         .w_full()
         .h(px(HEADER_HEIGHT))
-        .bg(theme.tokens.titlebar_background)
+        .bg(bg)
         .map(|d| corners.top().apply(d))
         .when(mac, |d| d.pl(px(MAC_FRAME_LEFT_SPACE)));
     let row = window_handle(row, true);

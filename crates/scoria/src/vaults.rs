@@ -587,7 +587,12 @@ impl Render for VaultManager {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = cx.global::<Theme>().clone();
         let corners = WindowCorners::of(window);
-        let title_row = window_title_row(&theme, window, |w, _| w.remove_window());
+        // The row is the splash's own ground rather than a bar: the
+        // buttons sit in the dark, over nothing.
+        let title_row =
+            window_title_row(theme.tokens.background_primary, &theme, window, |w, _| {
+                w.remove_window()
+            });
         let version: SharedString = concat!("Version ", env!("CARGO_PKG_VERSION")).into();
         let rows = self.rows.clone();
         let mut list = div()

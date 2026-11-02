@@ -5065,9 +5065,14 @@ impl Render for SettingsWindow {
         let theme = cx.global::<Theme>().clone();
         let corners = WindowCorners::of(window);
         let panel = self.view.clone();
-        let title_row = window_title_row(&theme, window, move |_, cx| {
-            panel.update(cx, |view, cx| view.close_from_frame(cx));
-        });
+        let title_row = window_title_row(
+            theme.tokens.titlebar_background,
+            &theme,
+            window,
+            move |_, cx| {
+                panel.update(cx, |view, cx| view.close_from_frame(cx));
+            },
+        );
         let root = div()
             .id("settings-window")
             .key_context("Settings")
