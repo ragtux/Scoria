@@ -806,11 +806,11 @@ fn an_empty_base_has_one_default_table_view() {
     assert!(table.rows.is_empty() && table.columns.is_empty() && table.unknown_kind.is_none());
 }
 
-/// A view with no `order` falls back to the properties its rows carry, as the
-/// qualified `note.<name>` ids Obsidian writes when it qualifies one itself.
-/// **Unprobed:** no fixture reached the renderer without an `order`.
+/// A view with no `order` shows `file.name` alone, whatever the rows carry.
+/// **Observed** on the new empty base of 2026-11-01 (`s01` `newFileBody`):
+/// one header, `file name`, over every file in the vault.
 #[test]
-fn a_view_with_no_order_takes_the_rows_own_properties() {
+fn a_view_with_no_order_shows_the_file_name_alone() {
     let rows = vec![
         note(
             "A",
@@ -828,33 +828,21 @@ fn a_view_with_no_order_takes_the_rows_own_properties() {
     ];
     let table = table::build(&base(""), 0, &env(rows));
     let ids: Vec<&str> = table.columns.iter().map(|c| c.id.as_str()).collect();
-    assert_eq!(ids, ["note.type", "note.status", "note.density"]);
-    assert_eq!(displays(&table), ["type", "status", "density"]);
-    assert_eq!(texts(&table), [["rock", "todo", ""], ["", "done", "1"]]);
+    assert_eq!(ids, ["file.name"]);
+    assert_eq!(displays(&table), ["file name"]);
+    assert_eq!(texts(&table), [["A"], ["B"]]);
 
-    // `columns()` answers the same implied set when handed the rows.
+    // `columns()` answers the same column with or without rows in hand.
     let empty = base("");
     let view = scoria_formats::base::View::default();
-    assert_eq!(
-        table::columns(
-            &empty,
-            &view,
-            &table
-                .rows
-                .iter()
-                .map(|r| r.file.clone())
-                .collect::<Vec<_>>()
-        ),
-        table.columns
-    );
-    assert!(table::columns(&empty, &view, &[]).is_empty());
+    assert_eq!(table::columns(&empty, &view, &[]), table.columns);
 }
 
 /// `order: []` is not the absent key: the properties panel's *Hide all*
 /// wrote it (s16 `hideAllFile`, 2026-11-01) and the view then shows no
-/// columns at all, while a view with no `order` still shows the implied ones.
+/// columns at all, while a view with no `order` still shows `file.name`.
 #[test]
-fn an_empty_order_is_no_columns_and_an_absent_one_is_the_implied_ones() {
+fn an_empty_order_is_no_columns_and_an_absent_one_is_the_file_name() {
     let rows = vec![note("A", &[("status", Value::str("todo"))], &[])];
     let hidden = table::build(
         &base("views:\n  - type: table\n    name: V\n    order: []\n"),
@@ -876,7 +864,7 @@ fn an_empty_order_is_no_columns_and_an_absent_one_is_the_implied_ones() {
             .iter()
             .map(|c| c.id.as_str())
             .collect::<Vec<_>>(),
-        ["note.status"]
+        ["file.name"]
     );
 }
 

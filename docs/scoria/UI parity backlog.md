@@ -1828,6 +1828,8 @@ draws an empty grey box where Obsidian draws no cover at all.
 
 *high, parity-gap, medium*
 
+**Landed 2026-11-01**: an embed is the live view itself — the toolbar with its counts and badges, every panel, the layout the view names (cards, list and kanban included), cell editing and New — in a box with no title, border or padding, as tall as its content and scrolled by the note; `#View` picks the view and a name no view has leaves the first showing; Live Preview draws **Edit this block** top-right, which puts the caret on the embed's line; an edit from an embed writes the `.base` through the same save as a leaf's. See [[Development#The embedded base and the base leaf's chrome, 2026-11-01]].
+
 **Obsidian.** `![[x.base]]` is `.internal-embed.bases-embed.interactive-child` with the full
 toolbar and live counts, no title, no border, no padding; `#View` picks the view. Every panel,
 cell editor and New works in place and writes the file. Live Preview adds **Edit this block**
@@ -1839,6 +1841,8 @@ rows then `n more rows`, the subpath ignored; a cards, list or kanban view is dr
 ### The base leaf's chrome is a note's, and the new base is wrong on both ends
 
 *medium, parity-gap, small*
+
+**Landed 2026-11-01**: the leaf's icon is `lucide-table` (observed on the tab header, `s15` `tabMenu.tab`); the base leaf's header draws **More options** alone — Bookmark is zero-rect there as on a note — with the observed rows less the three Scoria cannot run (Open in new window, Open version history, Open linked view); every ribbon button carries its observed tooltip; a new base is one `file name` column over every file of the vault. The doubled separator before Rename on the explorer's `.base` row is Obsidian's own (`s01` `baseFileMenu` has the pair), so it stays.
 
 **Obsidian.** The tab icon is `table` and the title the stem; the view header is the title with
 no icon, back and forward, **Bookmark** and **More options** (`more-vertical`): Split right ·
@@ -1856,10 +1860,11 @@ before Rename.
 
 ### Status of the commands
 
-`bases:new-file`, `bases:insert` and `bases:copy-table` match. `bases:add-view` names the view
-`View N` (above). `bases:add-item` opens a plain new tab without the frontmatter prefill and is
-not reachable from the toolbar. `bases:change-view` is a chooser, unverified against Obsidian's.
-None has a default hotkey in either app.
+`bases:new-file`, `bases:insert` and `bases:copy-table` match. `bases:add-view` named the view
+`View N` until 2026-11-01, and names it `View` now. `bases:add-item` opened a plain new tab
+without the frontmatter prefill until 2026-11-01; the toolbar's *New* — in a leaf and in an
+embed — now creates the note with the prefill and opens it. `bases:change-view` is a chooser,
+unverified against Obsidian's. None has a default hotkey in either app.
 
 ## What the campaign fixed
 

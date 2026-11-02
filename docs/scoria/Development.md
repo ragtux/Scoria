@@ -321,10 +321,58 @@ uses behave as Obsidian's do.
 | Bases: the format | done: parsed, modelled and written back in Obsidian's own bytes, `scoria-formats::base` |
 | Bases: the expression language | done: the parser and the evaluator, held to 277 parse trees and 1044 evaluated statements, see [[#Bases evaluator, 2026-10-25]] |
 | Bases: the table view | done, read-only: a `.base` opens on its table, see [[#Bases table view, 2026-10-25]]; the ribbon's button creates one |
-| Bases: the rest of the view | done: the cards, list and kanban layouts, the toolbar's six panels, editing through the table, the five `bases:*` commands beyond `new-file`, and an embedded `![[x.base]]`, see [[#Bases: the rest of the view, 2026-10-25]] |
+| Bases: the rest of the view | done: the cards, list and kanban layouts, the toolbar's six panels, editing through the table, the five `bases:*` commands beyond `new-file`, and an embedded `![[x.base]]`, see [[#Bases: the rest of the view, 2026-10-25]]; the toolbar and panels rebuilt to the 2026-11-01 record, see [[#The Bases toolbar and its panels, 2026-11-01]]; the embed as the live view and the leaf's chrome, see [[#The embedded base and the base leaf's chrome, 2026-11-01]] |
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | not started |
+
+### The embedded base and the base leaf's chrome, 2026-11-01
+
+Two more entries of [[UI parity backlog#Bases]], built to the same record.
+
+**The embed is the view.** Obsidian's `![[x.base]]` is the whole Bases view
+working in place — toolbar, panels, the layout the view names, cell editors,
+*New* — in a box with no title, border or padding, as tall as its content
+and scrolled by the note. So an embed is now a live `BasesView`, the same
+entity a leaf shows, in an *embedded* mode: `bases::embed` keeps a registry
+of those views (`EmbedViews`), one per host and embed; the reading model
+carries only the path, the view the `#subpath` names and the embed's ordinal
+among the ones naming the same base and view, so the same base written
+twice is two views. A host — a reading view or an editor — syncs the
+registry whenever its model changes, which makes a view for each new
+embed, keeps the ones still drawn with their open panels, and drops the
+rest; the workspace subscribes to every view the registry makes (through a
+deferred `on_create`, since the view is made inside the host's own update),
+saves the ones that edit their file through the same `flush_base_view` as
+the leaf's, re-resolves them on every vault change and reloads them when
+their `.base` is rewritten on disk. In embedded mode the table and list lay
+their lines out in full rather than through a virtualised `list`, the cards
+grid drops its scroll box, and the kanban board is as tall as its tallest
+column (unobserved: the run embedded a table and a cards view). Live
+Preview draws Obsidian's **Edit this block** over the embed, occluding the
+*New* button it overlaps, and a click puts the caret on the embed's line.
+The canvas, which has no registry, draws a titled box that opens the base.
+
+**The leaf's chrome.** The tab icon is `lucide-table`; the base leaf's
+header draws back, forward, the title and **More options** alone, which
+opens the observed menu right-aligned under the button, less the three rows
+Scoria cannot run — `file_menu::Target::View`, with "Split right", "Split
+down" and "Delete file" routed to the group's splits and the delete prompt.
+Every ribbon button carries its observed tooltip. A new base is one `file
+name` column over every file of the vault: `implied_columns` is `file.name`
+alone now, and `rows::env_for` hands the engine every scanned file rather
+than the notes, an attachment's row carrying its names, size and stamps and
+no cache fields. The explorer's doubled separator before Rename on a
+`.base` row turned out to be Obsidian's own.
+
+Driven headless on a copy of the demo vault with a note embedding the
+cards, list and board views, a view name no view has, a missing base and
+the same base twice: every panel opened inside the embed, a row click
+opened its note, *New* created `Rocks/Untitled.md` with the filter's
+prefill, removing a sort through the embed wrote `Rocks.base` after the
+autosave and the leaf then opened on the new bytes. One lesson for the next
+drive: `open` with `Name#Heading` puts the embed at a repeatable position,
+where a pixel scroll does not.
 
 ### The Bases toolbar and its panels, 2026-11-01
 

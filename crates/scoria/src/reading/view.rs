@@ -678,6 +678,12 @@ pub struct ReadingView {
     /// from `selection` whenever it changes, because the painted blocks ask
     /// for it on every frame.
     selected: Rc<HashMap<usize, Range<usize>>>,
+    /// The live views behind the note's embedded bases, shared with the
+    /// workspace that made them; `None` until it hands them over.
+    embed_views: Option<crate::bases::embed::EmbedViews>,
+    /// This view's own entity id, which is what names it as a host of
+    /// those views.
+    id: gpui::EntityId,
 }
 
 impl EventEmitter<ReadingEvent> for ReadingView {}
@@ -711,7 +717,15 @@ impl ReadingView {
             selection: None,
             dragging: false,
             selected: Rc::new(HashMap::new()),
+            embed_views: None,
+            id: cx.entity_id(),
         }
+    }
+
+    /// The registry an embedded base's view comes from. The workspace hands
+    /// it over once; the view syncs it on every note it shows.
+    pub fn set_embed_views(&mut self, views: crate::bases::embed::EmbedViews) {
+        self.embed_views = Some(views);
     }
 
     pub fn set_readable_line_length(&mut self, on: bool) {
@@ -746,6 +760,12 @@ impl ReadingView {
             self.list.scroll_to(top);
         }
         self.model = Arc::new(model);
+        // The embedded bases of this model get live views: new ones made,
+        // the ones still drawn kept with their panels, the rest dropped.
+        if let Some(views) = self.embed_views.clone() {
+            let embeds = crate::bases::embed::embeds_in(&self.model.blocks);
+            views.sync(self.id, &embeds, cx);
+        }
         if !same {
             // ... and the folds they opened: the watcher re-enters this on
             // every autosave, so clearing them unconditionally collapsed an
@@ -1060,7 +1080,7 @@ impl ReadingView {
     /// The scroll position is the list's own: the top-level block at the top
     /// of the view and how far into it the view starts, which is what
     /// [`ReadingView::scroll_to_block`] takes back.
-    pub fn describe(&self) -> Value {
+    pub fn describe(&self, cx: &gpui::App) -> Value {
         let top = self.list.logical_scroll_top();
         json!({
             "path": self.path,
@@ -1082,9 +1102,13 @@ impl ReadingView {
                     "text": selected_text(&runs, start, end),
                 }))
             }),
-            // An embedded base draws no chrome of its own, so this is the
-            // only way one is visible from outside the app.
-            "bases": crate::bases::embed::describe_all(&self.model.blocks),
+            // An embedded base is a live view of its own; its state is the
+            // one the leaf's view reports, under the embed that names it.
+            "bases": crate::bases::embed::describe_all(&self.model.blocks, &|base| {
+                let views = self.embed_views.as_ref()?;
+                let view = views.get(self.id, base)?;
+                Some(view.read(cx).state_json())
+            }),
             // And an embedded PDF likewise: its pages are images and its
             // box has no title, so the dump is what names it.
             "pdfs": crate::pdf::embed::describe_all(&self.model.blocks),
@@ -1245,6 +1269,10 @@ impl ReadingView {
         )
         .with_reading_host(&host)
         .with_selection(&select);
+        let r = match self.embed_views.as_ref() {
+            Some(views) => r.with_embed_views(self.id, views),
+            None => r,
+        };
         let mut inner = r.block(block, false);
         // A heading carries Obsidian's `heading-collapse-indicator`: a
         // chevron in the margin to its left, shown on hover or while
@@ -1460,6 +1488,9 @@ pub(crate) struct Renderer<'a> {
     text_system: Arc<WindowTextSystem>,
     /// Inner width of a top-level block, in pixels.
     available: f32,
+    /// The host's live views for its embedded bases, by the host's id. A
+    /// renderer without one draws an embedded base as a titled box.
+    embeds: Option<(gpui::EntityId, &'a crate::bases::embed::EmbedViews)>,
 }
 
 impl<'a> Renderer<'a> {
@@ -1485,6 +1516,7 @@ impl<'a> Renderer<'a> {
             select: None,
             on_link,
             on_toggle,
+            embeds: None,
             text_system,
             available: available.max(100.),
         }
@@ -1502,6 +1534,17 @@ impl<'a> Renderer<'a> {
     /// them unset, so its widgets keep the one click path they have.
     pub(crate) fn with_reading_host(mut self, host: &'a ReadingHost) -> Renderer<'a> {
         self.reading_host = Some(host);
+        self
+    }
+
+    /// The live views behind the host's embedded bases, so `![[x.base]]`
+    /// is drawn as the view itself rather than as a box.
+    pub(crate) fn with_embed_views(
+        mut self,
+        host: gpui::EntityId,
+        views: &'a crate::bases::embed::EmbedViews,
+    ) -> Renderer<'a> {
+        self.embeds = Some((host, views));
         self
     }
 
@@ -2141,18 +2184,29 @@ impl<'a> Renderer<'a> {
                     .children(self.blocks(blocks, false))
                     .into_any_element()
             }
-            // `![[x.base]]`: the base's own drawing is `bases::embed`, which
-            // takes the view resolved by the same engine the open view uses.
-            // Every click inside it is an internal link by vault path — the
-            // title opens the `.base`, a row opens the file that row came
-            // from — which is how every other embed opens its target.
+            // `![[x.base]]`: the live view the host's registry holds for
+            // this embed, drawn whole -- toolbar, panels, rows -- in a box
+            // with no border, title or padding, as tall as its content and
+            // clipped at the note's edge when its table is wider (observed,
+            // see `bases::embed`). A host with no registry draws the box
+            // with the base's name, which opens the base.
             EmbedKind::Base(base) => {
-                let on_link = self.on_link.clone();
-                let open: crate::bases::embed::OpenPath =
-                    Rc::new(move |path: &str, window: &mut Window, cx: &mut App| {
-                        on_link(LinkTarget::Internal(path.to_string()), window, cx)
-                    });
-                crate::bases::embed::render(base, t, open)
+                let live = self.embeds.and_then(|(host, views)| views.get(host, base));
+                match live {
+                    Some(view) => div()
+                        .w_full()
+                        .overflow_hidden()
+                        .child(view)
+                        .into_any_element(),
+                    None => {
+                        let on_link = self.on_link.clone();
+                        let open: crate::bases::embed::OpenPath =
+                            Rc::new(move |path: &str, window: &mut Window, cx: &mut App| {
+                                on_link(LinkTarget::Internal(path.to_string()), window, cx)
+                            });
+                        crate::bases::embed::render_fallback(base, t, open)
+                    }
+                }
             }
             // `![[x.pdf]]`: the pages are drawn by `pdf::embed`, which asks
             // the document cache for them when it is painted; the model

@@ -603,6 +603,9 @@ pub struct Editor {
     spaces: Option<(Pixels, SpaceWidths)>,
     /// Resolves embeds for the widgets; `None` before a vault is open.
     embed_source: Option<Arc<dyn EmbedSource + Send + Sync>>,
+    /// The live views behind the note's embedded bases, shared with the
+    /// workspace that made them; `None` until it hands them over.
+    embed_views: Option<crate::bases::embed::EmbedViews>,
     build_options: BuildOptions,
     /// The vault's `types.json`, for the type each property row shows.
     property_types: PropertyTypes,
@@ -731,6 +734,7 @@ impl Editor {
             widget_heights: HashMap::new(),
             spaces: None,
             embed_source: None,
+            embed_views: None,
             build_options: BuildOptions::default(),
             property_types: PropertyTypes::default(),
             properties_in_document: PropertiesInDocument::default(),
@@ -787,6 +791,7 @@ impl Editor {
         self.widgets = Arc::new(Vec::new());
         self.flairs = Arc::new(Vec::new());
         self.widget_heights.clear();
+        self.sync_embed_views(cx);
         self.scroll_line = 0;
         self.scroll_px = px(0.);
         self.frame_samples = Sample::default();
@@ -916,6 +921,39 @@ impl Editor {
         self.embed_source = source;
         self.build_options = opts;
         self.request_parse(cx);
+    }
+
+    /// The registry an embedded base's view comes from. The workspace hands
+    /// it over once; the editor syncs it on every parse.
+    pub fn set_embed_views(&mut self, views: crate::bases::embed::EmbedViews) {
+        self.embed_views = Some(views);
+    }
+
+    /// Gives the embedded bases of the current widgets their live views:
+    /// new ones made, the ones still there kept with their open panels,
+    /// the rest dropped. Run after every parse and when the buffer is
+    /// let go of.
+    fn sync_embed_views(&mut self, cx: &mut Context<Self>) {
+        let Some(views) = self.embed_views.clone() else {
+            return;
+        };
+        let embeds =
+            crate::bases::embed::embeds_in_each(self.widgets.iter().map(|(_, w)| &w.block));
+        views.sync(cx.entity_id(), &embeds, cx);
+    }
+
+    /// Live Preview's **Edit this block** over an embedded base: the caret
+    /// goes to the widget's first line, which is what a click on any other
+    /// widget does (observed: the button put the caret at the embed's line
+    /// and opened no surface, `s22-fix-embed` `livePreview.controls`).
+    fn edit_block(&mut self, line: usize, cx: &mut Context<Self>) {
+        let line = line.min(self.line_count() - 1);
+        self.buf.collapse_cursors();
+        self.buf.head = self.buf.line_starts()[line];
+        self.buf.anchor = self.buf.head;
+        self.buf.goal = None;
+        self.buf.marked = None;
+        cx.notify();
     }
 
     /// New render options (`strictLineBreaks` changed in Settings); the
@@ -2165,6 +2203,7 @@ impl Editor {
                     editor.pending_reveal = true;
                 }
                 editor.widgets = Arc::new(widgets);
+                editor.sync_embed_views(cx);
                 editor.flairs = Arc::new(result.7);
                 // Unlike the decorations, a stale set of foldables is worse
                 // than none: resolving the folds against another text's
@@ -5146,6 +5185,7 @@ impl Element for EditorElement {
                     }
                 }),
             };
+            let embed_views = editor.embed_views.clone();
             let renderer = Renderer::new(
                 &theme,
                 window.text_system().clone(),
@@ -5157,6 +5197,10 @@ impl Element for EditorElement {
                 on_link,
                 on_toggle,
             );
+            let renderer = match embed_views.as_ref() {
+                Some(views) => renderer.with_embed_views(entity.entity_id(), views),
+                None => renderer,
+            };
             let mut lines: Vec<(VisibleLine, Shaped)> = Vec::new();
             let mut widgets: Vec<WidgetPaint> = Vec::new();
             let mut flair_elements: Vec<AnyElement> = Vec::new();
@@ -5231,10 +5275,53 @@ impl Element for EditorElement {
                     // table keeps them because its cells take their own:
                     // neither ever unfolds to its source.
                     let embed = matches!(widget.block, RBlock::Paragraph(_) | RBlock::Table { .. });
-                    let mut element = div()
-                        .w(content_width)
-                        .child(renderer.block(&widget.block, false))
-                        .into_any_element();
+                    let mut element = if crate::bases::embed::is_base_embed(&widget.block) {
+                        // Obsidian's `embed-action edit-block-button` over
+                        // an embedded base: `lucide-code-2` (the current
+                        // `code-xml`), 28 by 24, 8 px down and 4 px in from
+                        // the embed's top-right, tooltip "Edit this block".
+                        let first = wlines.start;
+                        let entity = entity.clone();
+                        div()
+                            .w(content_width)
+                            .relative()
+                            .child(renderer.block(&widget.block, false))
+                            .child(
+                                div()
+                                    .id(("edit-block", first))
+                                    .absolute()
+                                    .top(px(8.))
+                                    .right(px(4.))
+                                    .w(px(28.))
+                                    .h(px(24.))
+                                    .flex()
+                                    .items_center()
+                                    .justify_center()
+                                    .rounded(px(4.))
+                                    .cursor_pointer()
+                                    // On the note's own ground: the embed's
+                                    // toolbar runs to the same right edge, so
+                                    // the button sits over its *New* button
+                                    // (observed: 948..976 over New's 919..980).
+                                    // The ground is this build's reading.
+                                    .bg(theme.bg)
+                                    .hover(|s| s.bg(theme.bg_alt))
+                                    // Over the toolbar's New: a press on the
+                                    // button must not reach the button under it.
+                                    .occlude()
+                                    .tooltip(crate::canvas::menu::tooltip("Edit this block"))
+                                    .child(crate::assets::icon("code-xml", 16., theme.text_muted))
+                                    .on_click(move |_, _, cx| {
+                                        entity.update(cx, |e, cx| e.edit_block(first, cx));
+                                    }),
+                            )
+                            .into_any_element()
+                    } else {
+                        div()
+                            .w(content_width)
+                            .child(renderer.block(&widget.block, false))
+                            .into_any_element()
+                    };
                     let measured = element.layout_as_root(
                         size(
                             AvailableSpace::Definite(content_width),

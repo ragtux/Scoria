@@ -179,6 +179,16 @@ impl BasesView {
         if self.list.lines.is_empty() {
             return vec![self.render_empty(theme)];
         }
+        if self.is_embedded() {
+            // As tall as its lines, scrolled by the note: see the table.
+            let count = self.list.lines.len();
+            return vec![div()
+                .flex()
+                .flex_col()
+                .w_full()
+                .children((0..count).map(|ix| self.list_line_element(ix, cx)))
+                .into_any_element()];
+        }
         vec![div()
             .flex_1()
             .min_h(px(0.))
@@ -194,6 +204,11 @@ impl BasesView {
         _: &mut Window,
         cx: &mut Context<Self>,
     ) -> AnyElement {
+        self.list_line_element(ix, cx)
+    }
+
+    /// One line of the body, by index: a group header or a row's values.
+    fn list_line_element(&mut self, ix: usize, cx: &mut Context<Self>) -> AnyElement {
         let theme = cx.global::<Theme>().clone();
         let Some(line) = self.list.lines.get(ix).copied() else {
             return div().into_any_element();

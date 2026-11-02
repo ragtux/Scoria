@@ -31,7 +31,7 @@
 use crate::workspace::VaultState;
 use indexmap::IndexMap;
 use scoria_bases::funcs::time::parse_date;
-use scoria_bases::{DateValue, Env, FileData, LinkValue, Table, Value};
+use scoria_bases::{DateValue, Env, FileData, LinkValue, Value};
 use scoria_cache::{all_tags, CachedMetadata, LinkCache, MetadataCache};
 use scoria_formats::base::Base;
 use scoria_formats::config::PropertyTypes;
@@ -41,65 +41,45 @@ use scoria_vault::VaultFile;
 use std::collections::HashSet;
 use std::sync::Arc;
 
-/// A `.base` resolved against the vault: the parsed file, the table the
-/// showing view resolves to, and the message a parse failure answered.
-///
-/// Both the view and an embedded `![[x.base]]` go through
-/// [`resolve`], so the two cannot disagree about what a file means.
+/// A `.base` parsed for a view: the file, or the message a parse failure
+/// answered. The table is resolved from the parsed base by the view
+/// itself, against the vault it was handed.
 pub struct Resolved {
     /// `None` only when the file failed to parse, in which case nothing is
     /// drawn but the banner — and nothing is ever written back.
     pub base: Option<Base>,
-    pub table: Option<Table>,
     pub error: Option<String>,
 }
 
-/// Parses `text` and resolves its `view_ix`th view against the vault.
-///
-/// With no vault — a test, or a view that has not been handed one yet — the
-/// file still parses and the table comes out empty: the engine reads its rows
-/// from [`Env::files`], and an empty one is a vault with no notes.
-pub fn resolve(
-    state: Option<&VaultState>,
-    path: Option<&str>,
-    text: &str,
-    view_ix: usize,
-) -> Resolved {
+/// Parses `text`.
+pub fn resolve(text: &str) -> Resolved {
     match Base::from_yaml(text) {
         Err(e) => Resolved {
             base: None,
-            table: None,
             error: Some(e.to_string()),
         },
-        Ok(base) => {
-            let env = match (state, path) {
-                (Some(state), Some(path)) => env_for(state, path),
-                _ => Env {
-                    files: Vec::new(),
-                    base_file: None,
-                    now: chrono::Local::now().naive_local(),
-                },
-            };
-            let table = scoria_bases::table::build(&base, view_ix, &env);
-            Resolved {
-                base: Some(base),
-                table: Some(table),
-                error: None,
-            }
-        }
+        Ok(base) => Resolved {
+            base: Some(base),
+            error: None,
+        },
     }
 }
 
-/// Every note of the vault as a row candidate, with the base file's own
+/// Every file of the vault as a row candidate, with the base file's own
 /// [`FileData`] for `this`.
 pub fn env_for(state: &VaultState, base_path: &str) -> Env {
     let vault = state.vault();
     let cache = state.cache();
     let types = state.property_types();
-    // Rows are notes. A `.base` draws a table of markdown files, and the
-    // vault's attachments are not candidates for one.
+    // Rows are every file of the vault, not only its notes. **Observed** on
+    // the new empty base of 2026-11-01 (`s01` `newFileBody`): its
+    // unfiltered default view counted "15 results" and listed the vault's
+    // two PNGs and its three `.base` files among the notes, the new base
+    // itself included. A note is the only kind with a cache record, so an
+    // attachment's row carries its names, size and stamps and nothing else.
     let files: Vec<Arc<FileData>> = vault
-        .markdown_files()
+        .files()
+        .iter()
         .map(|file| Arc::new(build(file, &cache, &types)))
         .collect();
     // The base file is not a note, so it is never among the rows; `this`
@@ -653,18 +633,26 @@ mod tests {
     }
 
     #[test]
-    fn env_holds_the_notes_and_the_base_file_is_this() {
+    fn env_holds_every_file_and_the_base_file_is_this() {
         let (_dir, state) = vault();
         let env = env_for(&state, "Main.base");
         let paths: Vec<&str> = env.files.iter().map(|f| f.path.as_str()).collect();
+        // Observed (2026-11-01, s01 `newFileBody`): an unfiltered view
+        // counts the attachments and the `.base` files too, itself included.
         assert_eq!(
             paths,
-            vec!["Pumice.md", "Rocks/Deep/Basalt.md", "Scoria.md"]
+            vec![
+                "Main.base",
+                "Pumice.md",
+                "Rocks/Deep/Basalt.md",
+                "Scoria.md",
+                "pic.png"
+            ]
         );
-        assert!(
-            !paths.contains(&"pic.png") && !paths.contains(&"Main.base"),
-            "rows are notes: no attachments and not the base itself"
-        );
+        let pic = env.files.iter().find(|f| f.path == "pic.png").unwrap();
+        assert_eq!(pic.name, "pic.png");
+        assert_eq!(pic.ext, "png");
+        assert!(pic.properties.is_empty() && pic.tags.is_empty());
         let base = env.base_file.clone().expect("this");
         assert_eq!(base.name, "Main.base");
         assert_eq!(base.folder, "/");

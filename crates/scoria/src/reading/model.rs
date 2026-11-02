@@ -20,44 +20,66 @@ use std::path::PathBuf;
 /// Embedded notes nest at most this deep; Obsidian stops at a similar depth.
 pub const MAX_EMBED_DEPTH: usize = 4;
 
-/// The bases resolved while building one model, so none is resolved twice.
+/// The embedded bases named while building one model.
 ///
-/// Resolving a `.base` runs a view over the **whole vault** — every note of it
-/// becomes a row candidate — where every other embed reads one file, so a note
-/// that embeds the same base twice, or embeds it again inside an embedded
-/// note, must not pay for it twice. Keyed case-insensitively, the way every
-/// other vault path comparison is. A miss is remembered too: a base that
-/// answered nothing is not asked again either.
-///
-/// This is a cost guard, not a recursion guard: a base's rows are notes, and a
-/// note inside a base is a row rather than an embed, so resolving one never
-/// builds another model and nothing can recurse through it.
+/// A base is drawn by a live view of its own (`bases::embed`), so the model
+/// keeps nothing of its rows; what it settles here is whether the file is
+/// there — asked once per path however many times a note names it, keyed
+/// case-insensitively like every other vault path — and the **ordinal** of
+/// each embed among the ones naming the same base and view, so the same
+/// `![[x.base]]` written twice is two views rather than one drawn twice.
 #[derive(Default)]
 struct BaseCache {
-    seen: RefCell<Vec<(String, Option<Box<crate::bases::EmbeddedBase>>)>>,
+    exists: RefCell<Vec<(String, bool)>>,
+    counts: RefCell<Vec<(EmbedKey, usize)>>,
 }
+
+/// A base and view as the ordinals are counted: lowercased, like every
+/// other vault path comparison.
+type EmbedKey = (String, Option<String>);
 
 impl BaseCache {
     fn resolve(
         &self,
         path: &str,
+        view: Option<&str>,
         vault: &dyn EmbedSource,
-    ) -> Option<Box<crate::bases::EmbeddedBase>> {
-        // The borrow ends before the resolve: nothing is held across it.
-        if let Some(hit) = self
-            .seen
+    ) -> Option<crate::bases::EmbeddedBase> {
+        // The borrow ends before the ask: nothing is held across it.
+        let known = self
+            .exists
             .borrow()
             .iter()
             .find(|(p, _)| p.eq_ignore_ascii_case(path))
-            .map(|(_, base)| base.clone())
-        {
-            return hit;
+            .map(|(_, exists)| *exists);
+        let exists = match known {
+            Some(exists) => exists,
+            None => {
+                let exists = vault.has_base(path);
+                self.exists.borrow_mut().push((path.to_string(), exists));
+                exists
+            }
+        };
+        if !exists {
+            return None;
         }
-        let resolved = vault.base(path).map(Box::new);
-        self.seen
-            .borrow_mut()
-            .push((path.to_string(), resolved.clone()));
-        resolved
+        let key = (path.to_lowercase(), view.map(str::to_lowercase));
+        let mut counts = self.counts.borrow_mut();
+        let nth = match counts.iter_mut().find(|(k, _)| *k == key) {
+            Some((_, n)) => {
+                *n += 1;
+                *n
+            }
+            None => {
+                counts.push((key, 0));
+                0
+            }
+        };
+        Some(crate::bases::EmbeddedBase {
+            path: path.to_string(),
+            view: view.map(str::to_string),
+            nth,
+        })
     }
 }
 
@@ -69,15 +91,12 @@ pub trait EmbedSource {
     fn read(&self, path: &str) -> Option<String>;
     /// Absolute path of a vault file, for images.
     fn absolute(&self, path: &str) -> PathBuf;
-    /// An embedded `![[x.base]]`, resolved on its first view.
-    ///
-    /// A base is a view over the whole vault rather than over one file, so
-    /// this needs the index and the cache and not just the bytes — which is
-    /// why it is its own method rather than a `read` the builder parses. The
-    /// default answers nothing, which is what a source with no vault behind
-    /// it (a test's stub) has to answer.
-    fn base(&self, _path: &str) -> Option<crate::bases::EmbeddedBase> {
-        None
+    /// Whether the `.base` at `path` can be read. An embedded base is drawn
+    /// by a live view that reads the file itself (`bases::embed`), so this
+    /// is all the model asks; the default answers no, which is what a source
+    /// with no vault behind it (a test's stub) has to answer.
+    fn has_base(&self, _path: &str) -> bool {
+        false
     }
 }
 
@@ -166,10 +185,9 @@ pub enum EmbedKind {
         title: String,
         blocks: Vec<RBlock>,
     },
-    /// A `.base`, resolved on its first view. Boxed because the resolved
-    /// table is far larger than any other embed's payload and every `RBlock`
-    /// would otherwise carry the room for one.
-    Base(Box<crate::bases::EmbeddedBase>),
+    /// A `.base`: the path, the view its subpath names and its ordinal in
+    /// the note. The rows are the live view's (`bases::embed`).
+    Base(crate::bases::EmbeddedBase),
     /// A `.pdf`: the path and the subpath, nothing read. The pages come
     /// from the document cache when the embed is drawn (`pdf::embed`).
     Pdf(crate::pdf::embed::PdfEmbed),
@@ -1045,17 +1063,25 @@ impl<'v> Builder<'v> {
                         self.note_embed(&path, parsed.subpath.as_ref(), &wikilink_display(&parsed))
                     }
                 }
-                // A base nests no further: its rows are notes, and a note
+                // A base nests no further: its rows are files, and a note
                 // inside one is a row rather than an embed, so the depth
                 // guard above has nothing to count here — and a note that
                 // embeds a base listing that same note still terminates,
-                // because a row is cells rather than another model. The cache
-                // is the cost guard instead: a view over the whole vault is
-                // the one embed worth never resolving twice.
-                FileKind::Base => match self.bases.resolve(&path, self.vault) {
-                    Some(base) => EmbedKind::Base(base),
-                    None => EmbedKind::Missing,
-                },
+                // because a row is cells rather than another model. The
+                // subpath is the view to show, `![[x.base#Cards]]`, which the
+                // link parser reads as a heading.
+                FileKind::Base => {
+                    let view = match parsed.subpath.as_ref() {
+                        Some(scoria_markdown::Subpath::Headings(names)) => {
+                            names.first().map(|n| n.to_string())
+                        }
+                        _ => None,
+                    };
+                    match self.bases.resolve(&path, view.as_deref(), self.vault) {
+                        Some(base) => EmbedKind::Base(base),
+                        None => EmbedKind::Missing,
+                    }
+                }
                 // A PDF is resolved and nothing more: the file is parsed by
                 // the document cache when the embed is drawn, off the UI
                 // thread. The subpath (`#page=3&height=400`) is the link's
@@ -1697,24 +1723,12 @@ mod tests {
         fn absolute(&self, path: &str) -> PathBuf {
             PathBuf::from("/vault").join(path)
         }
-        /// A base of the stub's own: one named view and no rows, because
-        /// what the rows hold is `scoria-bases`'s business and not the
-        /// model's. `Broken.base` is a file that exists and still answers
-        /// nothing, which is the other way an embed comes out `Missing`.
-        fn base(&self, path: &str) -> Option<crate::bases::EmbeddedBase> {
+        /// Whether the stub has the base. `Broken.base` is a file the
+        /// link resolver knows and the read still refuses, which is the
+        /// other way an embed comes out `Missing`.
+        fn has_base(&self, path: &str) -> bool {
             self.base_calls.set(self.base_calls.get() + 1);
-            if path == "Broken.base" {
-                return None;
-            }
-            self.files
-                .contains_key(path)
-                .then(|| crate::bases::EmbeddedBase {
-                    path: path.to_string(),
-                    view_name: Some("View".to_string()),
-                    layout: scoria_bases::Layout::default(),
-                    table: None,
-                    error: None,
-                })
+            path != "Broken.base" && self.files.contains_key(path)
         }
     }
 
@@ -1903,11 +1917,14 @@ mod tests {
             "![[Main.base]]\n\n![[Nester]]\n\n![[Main.base]]",
             &stub,
         );
-        for ix in [0, 2] {
+        // The same base three times is three embeds, counted in document
+        // order -- the one inside the embedded note is the second.
+        for (ix, nth) in [(0, 0), (2, 2)] {
             match &first_embed(&m.blocks[ix]).kind {
                 EmbedKind::Base(base) => {
                     assert_eq!(base.path, "Main.base");
-                    assert_eq!(base.view_name.as_deref(), Some("View"));
+                    assert_eq!(base.view, None);
+                    assert_eq!(base.nth, nth);
                 }
                 other => panic!("{other:?}"),
             }
@@ -1917,9 +1934,39 @@ mod tests {
         let EmbedKind::Note { blocks, .. } = &first_embed(&m.blocks[1]).kind else {
             panic!("the middle embed is a note")
         };
-        assert!(matches!(first_embed(&blocks[0]).kind, EmbedKind::Base(_)));
-        // And the view over the whole vault was resolved exactly once.
+        match &first_embed(&blocks[0]).kind {
+            EmbedKind::Base(base) => assert_eq!(base.nth, 1),
+            other => panic!("{other:?}"),
+        }
+        // And whether the file is there was asked exactly once.
         assert_eq!(stub.base_calls.get(), 1);
+    }
+
+    /// `![[x.base#Cards]]` names the view to show; the ordinal counts per
+    /// view, so a plain embed and a named one of the same base are each
+    /// the first of their kind.
+    #[test]
+    fn a_base_embeds_subpath_names_its_view() {
+        let stub = stub();
+        let m = build(
+            "Self.md",
+            "![[Main.base#Cards]]\n\n![[Main.base]]\n\n![[Main.base#cards|alias]]",
+            &stub,
+        );
+        let views: Vec<(Option<String>, usize)> = (0..3)
+            .map(|ix| match &first_embed(&m.blocks[ix]).kind {
+                EmbedKind::Base(base) => (base.view.clone(), base.nth),
+                other => panic!("{other:?}"),
+            })
+            .collect();
+        assert_eq!(
+            views,
+            [
+                (Some("Cards".to_string()), 0),
+                (None, 0),
+                (Some("cards".to_string()), 1),
+            ]
+        );
     }
 
     #[test]

@@ -279,15 +279,20 @@ impl BasesView {
         if self.cards.cards == 0 {
             return vec![self.render_empty(theme)];
         }
+        // An embed is as tall as its grid and scrolls with the note; a
+        // leaf's grid scrolls inside the leaf.
+        let embedded = self.is_embedded();
         let mut body = div()
             .id("bases-cards")
             .flex()
             .flex_col()
-            .flex_1()
-            .min_h(px(0.))
             .w_full()
-            .overflow_y_scroll()
-            .track_scroll(&self.cards.scroll);
+            .when(!embedded, |d| {
+                d.flex_1()
+                    .min_h(px(0.))
+                    .overflow_y_scroll()
+                    .track_scroll(&self.cards.scroll)
+            });
         for (s, section) in self.cards.sections.iter().enumerate() {
             if let Some(header) = section.header.as_ref() {
                 body = body.child(group_header(s, header.key.as_deref(), header.rows, theme));

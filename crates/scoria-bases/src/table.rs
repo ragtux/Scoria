@@ -29,7 +29,6 @@ use std::cmp::Ordering;
 use std::sync::Arc;
 
 use chrono::NaiveDateTime;
-use indexmap::IndexMap;
 use scoria_formats::base::{
     Base, Filter, GroupBy, Sort, View, DEFAULT_VIEW_NAME, DEFAULT_VIEW_TYPE,
 };
@@ -323,10 +322,8 @@ pub fn passes(filters: Option<&Filter>, ctx: &dyn Context) -> bool {
 ///
 /// An `order` is exactly the columns, one per id — and `order: []` is
 /// therefore **no columns**, which is what the properties panel's *Hide all*
-/// writes. A view with no `order` key shows the columns `rows` imply (see
-/// [`implied_columns`]), which is why the rows come in: they are not
-/// reachable from a [`View`] alone. [`build`] passes the rows it just
-/// filtered.
+/// writes. A view with no `order` key shows `file.name` alone (see
+/// [`implied_columns`]).
 pub fn columns(base: &Base, view: &View, rows: &[Arc<FileData>]) -> Vec<Column> {
     match &view.order {
         Some(order) => order.iter().map(|id| column(base, id)).collect(),
@@ -538,28 +535,24 @@ fn default_view() -> View {
     }
 }
 
-/// The columns a view with no `order` key shows: every frontmatter property
-/// the filtered rows carry, each as the qualified `note.<name>` id Obsidian
-/// writes when it qualifies one itself, in the order the rows first mention
-/// them.
+/// The columns a view with no `order` key shows: `file.name` alone.
 ///
-/// **Unprobed.** No fixture reached the renderer without an `order`, so
-/// nothing says whether Obsidian shows every property, only the ones in its
-/// own property registry, or `file.name` alongside them. What is observed is
-/// the other half: `order` is exactly the columns, so *Hide column* dropping
-/// `file.name` from `order` dropped it from the header row and from the copied
-/// TSV, and *Hide all* wrote `order: []` — which means nothing is forced into
-/// a view that has an `order`, and an empty one shows nothing at all.
-pub fn implied_columns(base: &Base, rows: &[Arc<FileData>]) -> Vec<Column> {
-    let mut seen: IndexMap<String, ()> = IndexMap::new();
-    for file in rows {
-        for name in file.properties.keys() {
-            seen.entry(name.clone()).or_insert(());
-        }
-    }
-    seen.keys()
-        .map(|name| column(base, &format!("note.{name}")))
-        .collect()
+/// **Observed** on a new, empty base
+/// (`tools/obsidian-probe/results/2026-11-01-bases-ui.json`, `s01` —
+/// `newFileBody`): its default view, which has no `order`, drew exactly one
+/// header, `file name`, over every file in the vault. A view written into the
+/// file without an `order` is taken to be the same case, since the default
+/// view is one; that reading is **unprobed**. The other half is observed too:
+/// `order` is exactly the columns, so *Hide column* dropping `file.name` from
+/// `order` dropped it from the header row and from the copied TSV, and *Hide
+/// all* wrote `order: []` — nothing is forced into a view that has an `order`,
+/// and an empty one shows nothing at all.
+///
+/// The rows still come in, for the one thing they settle: nothing. The
+/// earlier build showed every property the rows carried, and callers that
+/// pass the rows keep compiling.
+pub fn implied_columns(base: &Base, _rows: &[Arc<FileData>]) -> Vec<Column> {
+    vec![column(base, "file.name")]
 }
 
 /// The property the view's layout draws as a row's image, when its layout

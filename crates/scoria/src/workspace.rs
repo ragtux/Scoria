@@ -71,9 +71,11 @@ use scoria_text::table::TableCommand;
 use scoria_text::{BlockInsert, LinePrefix, LinkSyntax};
 use scoria_vault::{FileChange, TrashOption, Vault, VaultError, VaultRegistry};
 use serde_json::{json, Map, Value};
+use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::ops::Range;
 use std::path::{Component, Path, PathBuf};
+use std::rc::Rc;
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 use std::time::{Duration, Instant};
 
@@ -1105,11 +1107,10 @@ impl reading::EmbedSource for VaultState {
         self.vault().absolute(path)
     }
 
-    /// An embedded `![[x.base]]`: the file resolved against this vault, on
-    /// its first view. The whole index and cache are behind it, which is why
-    /// the reading model asks for this rather than for the bytes.
-    fn base(&self, path: &str) -> Option<crate::bases::EmbeddedBase> {
-        crate::bases::resolve_embed(self, path)
+    /// An embedded `![[x.base]]` is drawn by a live view that reads the
+    /// file itself; the model only needs to know the file is there.
+    fn has_base(&self, path: &str) -> bool {
+        std::fs::metadata(self.vault().absolute(path)).is_ok()
     }
 }
 
@@ -2679,6 +2680,15 @@ pub struct Workspace {
     /// The file menu a Backlinks or Outgoing links row opened, while it is
     /// up: where, and on which file.
     file_menu: Option<file_menu::Menu>,
+    /// The box of each group's **More options** button as last painted, by
+    /// group id, so the menu it opens can hang right-aligned under it.
+    header_boxes: Rc<RefCell<HashMap<u64, Bounds<Pixels>>>>,
+    /// The live views behind every `![[x.base]]` on screen, shared with the
+    /// reading views and editors that draw them (`bases::embed`).
+    embed_views: crate::bases::embed::EmbedViews,
+    /// The subscription to each of those views' events, by the view's id;
+    /// a view the registry dropped loses its entry on the next make.
+    embed_subscriptions: HashMap<gpui::EntityId, Subscription>,
     /// The Backlinks pane's search filter (`searchQuery`).
     backlink_filter: Entity<TextInput>,
     /// Every tag in the vault as a tree, sorted the way the Tags pane is.
@@ -2718,6 +2728,24 @@ impl Focusable for Workspace {
 /// click in a group makes it the active one before the view handles the
 /// click, so by the time one of these arrives the views that sent it are
 /// the live ones.
+///
+/// A base's events, whether the view is a leaf's or an embed's. A row of a
+/// base names a file; activating it opens that file, the same route a link
+/// in the reading view takes.
+fn bases_subscription(bases: &Entity<BasesView>, cx: &mut Context<Workspace>) -> Subscription {
+    cx.subscribe(bases, |this, bases, event: &BasesEvent, cx| match event {
+        BasesEvent::Open(path) => this.open_file(path.clone(), None, cx),
+        BasesEvent::Edited => this.schedule_save(cx),
+        BasesEvent::Report(message) => this.report(message.clone(), cx),
+        BasesEvent::SetProperty { path, key, value } => {
+            this.set_note_property(path.clone(), key.clone(), value.clone(), cx)
+        }
+        BasesEvent::ExportCsv { name, csv } => this.export_base_csv(name.clone(), csv.clone(), cx),
+        BasesEvent::SetPropertyType { key, ty } => this.assign_property_type(key.clone(), *ty, cx),
+        BasesEvent::AddItem => this.add_base_item_from(&bases, cx),
+    })
+}
+
 fn view_subscriptions(
     editor: &Entity<Editor>,
     reading: &Entity<ReadingView>,
@@ -2730,23 +2758,7 @@ fn view_subscriptions(
         cx.subscribe(pdf, |this, _, event: &PdfEvent, cx| match event {
             PdfEvent::Report(message) => this.report(message.clone(), cx),
         }),
-        // A row of a base names a file; activating it opens that file, the
-        // same route a link in the reading view takes.
-        cx.subscribe(bases, |this, _, event: &BasesEvent, cx| match event {
-            BasesEvent::Open(path) => this.open_file(path.clone(), None, cx),
-            BasesEvent::Edited => this.schedule_save(cx),
-            BasesEvent::Report(message) => this.report(message.clone(), cx),
-            BasesEvent::SetProperty { path, key, value } => {
-                this.set_note_property(path.clone(), key.clone(), value.clone(), cx)
-            }
-            BasesEvent::ExportCsv { name, csv } => {
-                this.export_base_csv(name.clone(), csv.clone(), cx)
-            }
-            BasesEvent::SetPropertyType { key, ty } => {
-                this.assign_property_type(key.clone(), *ty, cx)
-            }
-            BasesEvent::AddItem => this.add_base_item(cx),
-        }),
+        bases_subscription(bases, cx),
         cx.subscribe(
             canvas,
             |this, canvas, event: &CanvasEvent, cx| match event {
@@ -2824,6 +2836,24 @@ impl Workspace {
         let bases = cx.new(BasesView::new);
         let pdf = cx.new(PdfView::new);
         let graph = cx.new(GraphView::new);
+        // The registry of embedded bases' views. A view is made while a
+        // host is being updated, so the workspace's own subscription to it
+        // waits for the next turn of the app.
+        let embed_views = crate::bases::embed::EmbedViews::default();
+        {
+            let workspace = cx.weak_entity();
+            embed_views.on_create(move |view, cx| {
+                let workspace = workspace.clone();
+                let view = view.clone();
+                cx.defer(move |cx| {
+                    workspace
+                        .update(cx, |ws, cx| ws.watch_embedded_base(&view, cx))
+                        .ok();
+                });
+            });
+        }
+        reading.update(cx, |r, _| r.set_embed_views(embed_views.clone()));
+        editor.update(cx, |e, _| e.set_embed_views(embed_views.clone()));
         let subscriptions = vec![
             // The filter is applied as the pane is drawn; a keystroke only
             // has to ask for a draw.
@@ -3169,6 +3199,9 @@ impl Workspace {
             outgoing_state: OutgoingState::default(),
             sort_menu_at: point(px(0.), px(0.)),
             file_menu: None,
+            header_boxes: Rc::new(RefCell::new(HashMap::new())),
+            embed_views: embed_views.clone(),
+            embed_subscriptions: HashMap::new(),
             backlink_filter,
             tag_tree: Vec::new(),
             tag_state: TagPaneState::default(),
@@ -3262,6 +3295,8 @@ impl Workspace {
         self.last_open_files.clear();
         self._watcher = None;
         self.state = None;
+        self.embed_views.set_state(None);
+        self.embed_subscriptions.clear();
     }
 
     /// Records a property type in the vault's `types.json` and redraws the
@@ -3417,6 +3452,7 @@ impl Workspace {
         }
         let state = Arc::new(state);
         self.state = Some(state.clone());
+        self.embed_views.set_state(Some(state.clone()));
         if self.record_vault {
             let root = state.root.clone();
             self.remember_vault(&root, cx);
@@ -3961,6 +3997,32 @@ impl Workspace {
             group
                 .bases
                 .update(cx, |b, cx| b.invalidate(state.clone(), cx));
+        }
+        for view in self.embed_views.all() {
+            view.update(cx, |b, cx| b.invalidate(state.clone(), cx));
+        }
+        // A `.base` rewritten on disk reloads every embed of it, as a leaf
+        // showing it reloads through `show_file`; an embed's own save
+        // comes back as the bytes it wrote and changes nothing.
+        for change in &changes.files {
+            let path = change.path();
+            if FileKind::from_path(path) != FileKind::Base {
+                continue;
+            }
+            let views = self.embed_views.of_path(path);
+            if views.is_empty() {
+                continue;
+            }
+            let Ok(text) = std::fs::read_to_string(state.vault().absolute(path)) else {
+                continue;
+            };
+            for view in views {
+                view.update(cx, |b, cx| {
+                    if !b.is_dirty() && !b.matches_file(&text) {
+                        b.reload(&text, cx);
+                    }
+                });
+            }
         }
         // A changed `.pdf` is forgotten by the cache every drawing shares --
         // the embeds and the canvas cards read it afresh on their next
@@ -6732,14 +6794,22 @@ impl Workspace {
         if self.main_view(cx) != MainView::Bases {
             return;
         }
+        let bases = self.bases.clone();
+        self.add_base_item_from(&bases, cx);
+    }
+
+    /// The same for a named view, which an embed's *New* button is
+    /// (observed: *New* inside an embed created `Untitled 1.md` and opened
+    /// it, `s22-fix-embed` `newInEmbed`).
+    fn add_base_item_from(&mut self, bases: &Entity<BasesView>, cx: &mut Context<Self>) {
         let Some(state) = self.state.clone() else {
             return;
         };
-        let Some(item) = self.bases.read(cx).new_item() else {
+        let Some(item) = bases.read(cx).new_item() else {
             return;
         };
         let folder = item.folder.unwrap_or_else(|| {
-            self.bases
+            bases
                 .read(cx)
                 .path()
                 .and_then(|p| p.rsplit_once('/'))
@@ -6880,8 +6950,40 @@ impl Workspace {
     /// failed to parse answers no contents at all, so a broken file is never
     /// written over.
     fn flush_bases_save(&mut self, state: &Arc<VaultState>, cx: &mut Context<Self>) {
+        // The leaf's view first, then every embedded one: an embed edits
+        // its file the way a leaf does, and saves the same way.
+        let mut views = vec![self.bases.clone()];
+        views.extend(self.embed_views.all());
+        for view in views {
+            self.flush_base_view(&view, state, cx);
+        }
+    }
+
+    /// Subscribes to the events of a view the embed registry just made,
+    /// and forgets the subscriptions of views it has since dropped.
+    fn watch_embedded_base(&mut self, view: &Entity<BasesView>, cx: &mut Context<Self>) {
+        let live: HashSet<gpui::EntityId> = self
+            .embed_views
+            .all()
+            .iter()
+            .map(|v| v.entity_id())
+            .collect();
+        self.embed_subscriptions.retain(|id, _| live.contains(id));
+        let subscription = bases_subscription(view, cx);
+        self.embed_subscriptions
+            .insert(view.entity_id(), subscription);
+    }
+
+    /// Writes one base view's file now if the view changed it: see
+    /// [`Workspace::flush_bases_save`].
+    fn flush_base_view(
+        &mut self,
+        view: &Entity<BasesView>,
+        state: &Arc<VaultState>,
+        cx: &mut Context<Self>,
+    ) {
         let (dirty, path) = {
-            let bases = self.bases.read(cx);
+            let bases = view.read(cx);
             (bases.is_dirty(), bases.path().map(str::to_string))
         };
         let Some(path) = path.filter(|_| dirty) else {
@@ -6895,7 +6997,7 @@ impl Workspace {
             }
         };
         match std::fs::read_to_string(&absolute) {
-            Ok(on_disk) if self.bases.read(cx).matches_file(&on_disk) => {}
+            Ok(on_disk) if view.read(cx).matches_file(&on_disk) => {}
             Ok(_) => {
                 self.report(
                     format!("{path} changed on disk; not overwritten, your edits are still here"),
@@ -6911,12 +7013,12 @@ impl Workspace {
                 return;
             }
         }
-        let Some(contents) = self.bases.read(cx).file_contents() else {
+        let Some(contents) = view.read(cx).file_contents() else {
             return;
         };
         match scoria_vault::write_no_follow(&absolute, contents.as_bytes()) {
             Ok(()) => {
-                self.bases.update(cx, |b, _| b.mark_saved(contents));
+                view.update(cx, |b, _| b.mark_saved(contents));
                 self.report(format!("{path} saved"), cx);
             }
             Err(err) => self.report(format!("Could not save {path}: {err}"), cx),
@@ -7949,6 +8051,12 @@ impl Workspace {
         };
         let can_back = view.history_ix > 1;
         let can_forward = view.history_ix < view.history_len;
+        // A base leaf draws Obsidian's own actions for one, not a note's.
+        let base_leaf = view
+            .current
+            .as_deref()
+            .filter(|p| FileKind::from_path(p) == FileKind::Base)
+            .map(str::to_string);
         let title_color = if view.active {
             theme.text
         } else {
@@ -8001,7 +8109,9 @@ impl Workspace {
                     })
                     .child(self.render_title(view, title.clone(), title_color, theme, cx)),
             )
-            .child(
+            .child(if let Some(path) = base_leaf.clone() {
+                self.render_base_header_actions(id, path, theme, cx)
+            } else {
                 div()
                     .flex()
                     .flex_row()
@@ -8021,8 +8131,68 @@ impl Workspace {
                                 this.toggle_mode(&ToggleMode, window, cx)
                             },
                         )))
-                    }),
-            )
+                    })
+            })
+    }
+
+    /// A base leaf's view actions, observed
+    /// (`tools/obsidian-probe/results/2026-11-01-bases-ui.json`, `s01`
+    /// `newFileToolbar.viewHeader` and `s02` `moreOptions`): one visible
+    /// button, **More options** (`lucide-more-vertical`, which Lucide now
+    /// ships as `ellipsis-vertical`; tooltip "More options"),
+    /// 28 px wide at the header's right edge -- the Bookmark action is in
+    /// the DOM at zero size, as it is on a note. A base has no reading or
+    /// editing mode and no graph of its own, so neither of the note's two
+    /// buttons is drawn. The menu opens right-aligned under the button
+    /// (button 984..1012 x 47..71, menu 810..1012 from y 73).
+    fn render_base_header_actions(
+        &self,
+        id: u64,
+        path: String,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> gpui::Div {
+        let boxes = self.header_boxes.clone();
+        let record = canvas(
+            move |bounds, _, _| {
+                boxes.borrow_mut().insert(id, bounds);
+            },
+            |_, _, _, _| {},
+        )
+        .absolute()
+        .top_0()
+        .left_0()
+        .size_full();
+        div().flex().flex_row().gap(px(2.)).child(
+            div()
+                .relative()
+                .child(
+                    icon_button("more-options", "ellipsis-vertical", theme)
+                        .tooltip(tooltip("More options"))
+                        .on_click(cx.listener(move |this, _, _, cx| {
+                            this.activate_group(id, cx);
+                            this.open_view_menu(id, path.clone(), cx);
+                        })),
+                )
+                .child(record),
+        )
+    }
+
+    /// Opens the view header's **More options** menu for group `id` over
+    /// `path`, hung under the button's box as last painted; with no box
+    /// yet it opens at the window's top-right, which `snap_to_window`
+    /// keeps on screen.
+    fn open_view_menu(&mut self, id: u64, path: String, cx: &mut Context<Self>) {
+        let position = match self.header_boxes.borrow().get(&id) {
+            Some(b) => point(b.right(), b.bottom() + px(2.)),
+            None => point(px(0.), px(0.)),
+        };
+        self.file_menu = Some(file_menu::Menu {
+            position,
+            anchor: Anchor::TopRight,
+            target: file_menu::Target::View(path),
+        });
+        cx.notify();
     }
 
     /// The view header's title, Obsidian's `.view-header-title`: a field
@@ -8871,6 +9041,8 @@ impl Workspace {
         let canvas = cx.new(CanvasView::new);
         let bases = cx.new(BasesView::new);
         let pdf = cx.new(PdfView::new);
+        reading.update(cx, |r, _| r.set_embed_views(self.embed_views.clone()));
+        editor.update(cx, |e, _| e.set_embed_views(self.embed_views.clone()));
         self._subscriptions.extend(view_subscriptions(
             &editor, &reading, &canvas, &bases, &pdf, cx,
         ));
@@ -9751,44 +9923,85 @@ impl Workspace {
                 .child(self.sidebar_toggle(true, theme, cx))
                 .into_any_element()
         };
-        let button = |id: &'static str, name: &'static str, command: &'static str| {
-            icon_button(id, name, theme).on_click(
-                cx.listener(move |this, _, window, cx| this.run_command(command, window, cx)),
-            )
+        let button = |id: &'static str,
+                      name: &'static str,
+                      command: &'static str,
+                      label: &'static str| {
+            icon_button(id, name, theme)
+                .tooltip(tooltip(label))
+                .on_click(
+                    cx.listener(move |this, _, window, cx| this.run_command(command, window, cx)),
+                )
         };
         // The icons are the ones Obsidian's ribbon names: `lucide-file-search`
         // for the switcher, `git-fork` for the graph, `layout-dashboard` for
         // a new canvas, `calendar`, `files` for a template, `terminal` for
         // the palette and `layout-list` for a new base -- in that order,
-        // which is the order the DOM was read in.
-        let items: [(&'static str, &'static str, &'static str, &'static str); 7] = [
+        // which is the order the DOM was read in. The labels are each
+        // button's `aria-label`, its tooltip, read off the same ribbon
+        // (`tools/obsidian-probe/results/2026-11-01-bases-ui.json`, `s01`
+        // `ribbon`).
+        let items: [(
+            &'static str,
+            &'static str,
+            &'static str,
+            &'static str,
+            &'static str,
+        ); 7] = [
             (
                 "ribbon-switcher",
                 "file-search",
                 "switcher:open",
                 "switcher",
+                "Open quick switcher",
             ),
-            ("ribbon-graph", "git-fork", "graph:open", "graph"),
+            (
+                "ribbon-graph",
+                "git-fork",
+                "graph:open",
+                "graph",
+                "Open graph view",
+            ),
             (
                 "ribbon-canvas",
                 "layout-dashboard",
                 "canvas:new-file",
                 "canvas",
+                "Create new canvas",
             ),
-            ("ribbon-daily", "calendar", "daily-notes", "daily-notes"),
-            ("ribbon-template", "files", "insert-template", "templates"),
+            (
+                "ribbon-daily",
+                "calendar",
+                "daily-notes",
+                "daily-notes",
+                "Open today's daily note",
+            ),
+            (
+                "ribbon-template",
+                "files",
+                "insert-template",
+                "templates",
+                "Insert template",
+            ),
             (
                 "ribbon-palette",
                 "terminal",
                 "command-palette:open",
                 "command-palette",
+                "Open command palette",
             ),
-            ("ribbon-base", "layout-list", "bases:new-file", "bases"),
+            (
+                "ribbon-base",
+                "layout-list",
+                "bases:new-file",
+                "bases",
+                "Create new base",
+            ),
         ];
         let buttons: Vec<_> = items
             .into_iter()
-            .filter(|(_, _, _, plugin)| enabled(plugin) && !hidden(plugin))
-            .map(|(id, name, command, _)| button(id, name, command))
+            .filter(|(_, _, _, plugin, _)| enabled(plugin) && !hidden(plugin))
+            .map(|(id, name, command, _, label)| button(id, name, command, label))
             .collect();
         div()
             .flex()
@@ -11188,7 +11401,7 @@ impl Workspace {
             "file_menu": self.file_menu.as_ref().map(file_menu::describe),
             "modal": self.describe_modal(rows, cx),
             "editor": self.editor.read(cx).describe(text, cx),
-            "reading": self.reading.read(cx).describe(),
+            "reading": self.reading.read(cx).describe(cx),
             "graph": graph,
             "canvas": self.canvas.read(cx).describe(cx),
             "bases": self.bases.read(cx).state_json(),
@@ -11878,6 +12091,7 @@ impl Workspace {
     ) {
         self.file_menu = Some(file_menu::Menu {
             position,
+            anchor: Anchor::TopLeft,
             target: file_menu::Target::Linked(path),
         });
         cx.notify();
@@ -11924,6 +12138,7 @@ impl Workspace {
         };
         self.file_menu = Some(file_menu::Menu {
             position,
+            anchor: Anchor::TopLeft,
             target: file_menu::Target::Editor(file_menu::EditorClick {
                 spot,
                 selection,
@@ -11967,6 +12182,18 @@ impl Workspace {
         match pick {
             Pick::OpenInNewTab => self.open_in_new_tab(path, None, cx),
             Pick::OpenToRight => self.open_to_right(path, window, cx),
+            // The view header's splits act on the group the header belongs
+            // to, which the button made active before the menu opened.
+            Pick::SplitRight => self.split(SplitDirection::Vertical, window, cx),
+            Pick::SplitDown => self.split(SplitDirection::Horizontal, window, cx),
+            // "Delete file" on the view header's menu: the same prompt the
+            // Files view's Delete raises. The explorer's own menu is not
+            // drawn here, so this is the one path that reaches it.
+            Pick::Delete => {
+                if !path.is_empty() {
+                    self.start_delete(&path, window, cx)
+                }
+            }
             Pick::Rename => self.start_rename(&path, window, cx),
             Pick::Move => self.start_move(&path, window, cx),
             Pick::Bookmark => self.start_bookmark_path(&path, window, cx),
@@ -12003,7 +12230,6 @@ impl Workspace {
             Pick::SelectAll => self.editor.update(cx, |e, cx| e.select_all_text(cx)),
             // The Files view's own rows, which no menu drawn here lists.
             Pick::Duplicate
-            | Pick::Delete
             | Pick::NewNote
             | Pick::NewFolder
             | Pick::NewCanvas
@@ -14266,19 +14492,18 @@ fn leaf_json(tab: &Tab) -> Value {
 }
 
 /// The Lucide icon Obsidian records on a file's leaf: the dashboard for a
-/// canvas, the list layout for a base, the text file for a PDF (observed:
+/// canvas, the table for a base (observed on its tab header,
+/// `tools/obsidian-probe/results/2026-11-01-bases-ui.json`, `s15`
+/// `tabMenu.tab`: `lucide-table`, whatever layout the base is on), the
+/// text file for a PDF (observed:
 /// `tools/obsidian-probe/results/2026-10-26-pdf.json`), the plain file
 /// otherwise.
 ///
-/// OBSERVE: what it writes for images and the rest, and the base's
-/// own leaf icon -- the Bases probe of 2026-10-25 never read a leaf, so
-/// `lucide-layout-list` here is the ribbon button's observed icon (see
-/// [[Specification#Observed Bases write behavior, Obsidian 1.14.5
-/// (installer build 1.13.7)]]) carried over the way the canvas's is.
+/// OBSERVE: what it writes for images and the rest.
 fn leaf_icon(path: &str) -> &'static str {
     match FileKind::from_path(path) {
         FileKind::Canvas => "lucide-layout-dashboard",
-        FileKind::Base => "lucide-layout-list",
+        FileKind::Base => "lucide-table",
         FileKind::Pdf => "lucide-file-text",
         _ => "lucide-file",
     }
@@ -15307,7 +15532,7 @@ mod tests {
         };
         let written = leaf_json(&tab);
         assert_eq!(written["state"]["type"], json!("bases"));
-        assert_eq!(written["state"]["icon"], json!("lucide-layout-list"));
+        assert_eq!(written["state"]["icon"], json!("lucide-table"));
         assert_eq!(written["state"]["title"], json!("Books"));
         assert_eq!(
             written["state"]["state"],

@@ -202,8 +202,20 @@ impl BasesView {
             return Vec::new();
         };
         let header = self.render_header(table, theme, cx);
+        let embedded = self.is_embedded();
         let body = if self.table_state.lines.is_empty() {
             self.render_empty(theme)
+        } else if embedded {
+            // An embed is as tall as its rows and scrolls with the note
+            // (observed: `overflowY: visible`, `maxHeight: none`), so the
+            // lines are laid out in full rather than virtualised.
+            let count = self.table_state.lines.len();
+            div()
+                .flex()
+                .flex_col()
+                .w_full()
+                .children((0..count).map(|ix| self.line_element(ix, cx)))
+                .into_any_element()
         } else {
             div()
                 .flex_1()
@@ -221,8 +233,7 @@ impl BasesView {
         let mut body = vec![div()
             .flex()
             .flex_col()
-            .flex_1()
-            .min_h(px(0.))
+            .when(!embedded, |d| d.flex_1().min_h(px(0.)))
             .w_full()
             .on_drag_move(
                 cx.listener(|this, event: &DragMoveEvent<ColumnDrag>, _, cx| {
@@ -322,6 +333,11 @@ impl BasesView {
 
     /// One line of the scroll body.
     fn render_line(&mut self, ix: usize, _: &mut Window, cx: &mut Context<Self>) -> AnyElement {
+        self.line_element(ix, cx)
+    }
+
+    /// One line of the body, by index: a group header or a row.
+    fn line_element(&mut self, ix: usize, cx: &mut Context<Self>) -> AnyElement {
         let theme = cx.global::<Theme>().clone();
         let Some(line) = self.table_state.lines.get(ix).copied() else {
             return div().into_any_element();

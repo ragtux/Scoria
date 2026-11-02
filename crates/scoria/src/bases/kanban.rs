@@ -253,10 +253,23 @@ impl BasesView {
                     .into_any_element()
             })
             .collect();
+        // An embedded board is as tall as its tallest column, so every
+        // card is on the note's own scroll; a leaf's board fills the leaf
+        // and its columns scroll. **Unprobed**: the run embedded a table
+        // and a cards view, not a board, so the height is this build's
+        // reading of the other two.
+        let embedded = self.is_embedded();
+        let tallest = self
+            .kanban
+            .columns
+            .iter()
+            .map(|c| c.rows as f32 * (self.kanban.card_height + CARD_GAP))
+            .fold(0., f32::max);
+        let board_height = COLUMN_HEADER_HEIGHT + tallest + 3. * COLUMN_PAD;
         vec![div()
             .id("bases-kanban")
-            .flex_1()
-            .min_h(px(0.))
+            .when(!embedded, |d| d.flex_1().min_h(px(0.)))
+            .when(embedded, |d| d.h(px(board_height)))
             .w_full()
             .overflow_x_scroll()
             .track_scroll(&self.kanban.scroll)

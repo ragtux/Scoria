@@ -97,6 +97,10 @@ pub struct BasesView {
     state: Option<Arc<VaultState>>,
     /// Set when the view changed the base and the bytes on disk are older.
     dirty: bool,
+    /// Drawn inside a note (`![[x.base]]`) rather than filling a leaf: as
+    /// tall as its content, no ground of its own, nothing scrolled but the
+    /// note. See `bases::embed` for the observation.
+    embedded: bool,
     /// Every frontmatter property the vault's notes carry, with the kind its
     /// values infer, from the whole vault rather than the filtered rows: a
     /// view that empties still has to know `density` is a number.
@@ -122,6 +126,7 @@ impl BasesView {
             error: None,
             state: None,
             dirty: false,
+            embedded: false,
             property_kinds: Vec::new(),
             table_state: super::table::TableState::default(),
             cards: super::cards::CardsState::default(),
@@ -206,6 +211,33 @@ impl BasesView {
         self.path.as_deref()
     }
 
+    /// Makes this the view behind an embed: see [`BasesView::embedded`].
+    pub fn set_embedded(&mut self) {
+        self.embedded = true;
+    }
+
+    pub(super) fn is_embedded(&self) -> bool {
+        self.embedded
+    }
+
+    /// Shows the base's view named `name` — what `![[x.base#Name]]` asks
+    /// for — compared the way Obsidian compares its view names, exactly
+    /// first and then without case. A name no view has leaves the first
+    /// view showing (**unprobed**: the run embedded only names that exist).
+    pub fn show_view_named(&mut self, name: &str, cx: &mut Context<Self>) {
+        let Some(base) = self.base.as_ref() else {
+            return;
+        };
+        let ix = base.views.iter().position(|v| v.name == name).or_else(|| {
+            base.views
+                .iter()
+                .position(|v| v.name.eq_ignore_ascii_case(name))
+        });
+        if let Some(ix) = ix {
+            self.show_view(ix, cx);
+        }
+    }
+
     /// Whether the bytes on disk are the ones the view read.
     pub fn matches_file(&self, text: &str) -> bool {
         self.source == text
@@ -235,7 +267,7 @@ impl BasesView {
     /// Obsidian does: the query is the error object, and nothing is drawn but
     /// the banner.
     fn resolve(&mut self, cx: &mut Context<Self>) {
-        let resolved = rows::resolve(self.state.as_deref(), self.path.as_deref(), &self.source, 0);
+        let resolved = rows::resolve(&self.source);
         self.base = resolved.base;
         self.error = resolved.error;
         // A base with no views has one default view, so index 0 is always
@@ -464,6 +496,7 @@ impl BasesView {
             "limited": self.table.as_ref().is_some_and(|t| t.limited),
             "groups": groups,
             "dirty": self.dirty,
+            "embedded": self.embedded,
             "toolbar": self.toolbar.state_json(),
             "editing": self.editing.state_json(),
         })
@@ -638,6 +671,7 @@ impl Render for BasesView {
         } else {
             Vec::new()
         };
+        let embedded = self.embedded;
         div()
             .track_focus(&self.focus)
             .key_context("Bases")
@@ -647,8 +681,11 @@ impl Render for BasesView {
             .on_action(cx.listener(Self::activate_action))
             .flex()
             .flex_col()
-            .size_full()
-            .bg(theme.bg)
+            // A leaf's view fills the leaf on its own ground; an embed is
+            // as tall as its content on the note's ground, clipped at the
+            // note's edge where its table is wider.
+            .when(!embedded, |d| d.size_full().bg(theme.bg))
+            .when(embedded, |d| d.w_full().overflow_hidden())
             .text_color(theme.text)
             .children(body)
     }
@@ -662,25 +699,34 @@ mod tests {
     fn a_base_that_does_not_parse_has_a_message_and_no_table() {
         // The parse itself is `scoria-formats`'s; what matters here is that
         // the shell keeps the message and draws no rows for it.
-        let resolved = rows::resolve(None, None, "views:\n  - type: table\n", 0);
+        let resolved = rows::resolve("views:\n  - type: table\n");
         assert!(resolved.error.is_some(), "a view with no name is refused");
         assert!(resolved.base.is_none());
     }
 
+    fn no_vault() -> scoria_bases::Env {
+        scoria_bases::Env {
+            files: Vec::new(),
+            base_file: None,
+            now: chrono::Local::now().naive_local(),
+        }
+    }
+
     #[test]
     fn an_empty_file_is_one_default_table_of_the_whole_vault() {
-        let resolved = rows::resolve(None, None, "", 0);
+        let resolved = rows::resolve("");
         assert!(resolved.error.is_none());
         let base = resolved.base.expect("an empty file parses");
         assert!(base.views.is_empty(), "the default view is not in the file");
-        let table = resolved.table.expect("and still resolves to a table");
+        let table = scoria_bases::table::build(&base, 0, &no_vault());
         assert_eq!(table.unknown_kind, None);
     }
 
     #[test]
     fn an_unknown_type_resolves_to_no_rows_and_names_itself() {
-        let resolved = rows::resolve(None, None, "views:\n  - type: nonsense\n    name: V\n", 0);
-        let table = resolved.table.expect("the file parses");
+        let resolved = rows::resolve("views:\n  - type: nonsense\n    name: V\n");
+        let base = resolved.base.expect("the file parses");
+        let table = scoria_bases::table::build(&base, 0, &no_vault());
         assert_eq!(table.unknown_kind.as_deref(), Some("nonsense"));
         assert!(table.rows.is_empty());
     }

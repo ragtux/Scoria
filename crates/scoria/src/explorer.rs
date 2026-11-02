@@ -508,9 +508,12 @@ fn event_for(pick: Pick, target: &Target) -> Option<ExplorerEvent> {
         Pick::NewCanvas => E::NewCanvas { folder: path() },
         Pick::NewBase => E::NewBase { folder: path() },
         Pick::SearchInFolder => E::SearchInFolder(path()),
-        // "Reveal file in navigation" reveals *in* the explorer, and the
-        // rest are the editor menu's rows, which act on the editor.
+        // "Reveal file in navigation" reveals *in* the explorer, the splits
+        // are the view header's, and the rest are the editor menu's rows,
+        // which act on the editor.
         Pick::RevealInNavigation
+        | Pick::SplitRight
+        | Pick::SplitDown
         | Pick::AddLink
         | Pick::AddExternalLink
         | Pick::SearchForSelection
@@ -868,7 +871,11 @@ impl FileExplorer {
                 true => Target::Folder(row.path),
                 false => Target::File(row.path),
             };
-            self.menu = Some(Menu { position, target });
+            self.menu = Some(Menu {
+                position,
+                anchor: gpui::Anchor::TopLeft,
+                target,
+            });
             cx.notify();
         }
     }
@@ -878,6 +885,7 @@ impl FileExplorer {
     fn open_blank_menu(&mut self, position: Point<Pixels>, cx: &mut Context<Self>) {
         self.menu = Some(Menu {
             position,
+            anchor: gpui::Anchor::TopLeft,
             target: Target::Blank,
         });
         cx.notify();

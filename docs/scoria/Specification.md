@@ -5706,7 +5706,7 @@ list; *Hide column* removes the property from `order`; the limit input writes
 
 | Command | Palette name | Effect |
 | --- | --- | --- |
-| `bases:new-file` | Bases: Create new base | creates `Untitled.base` as a **zero-byte file** and opens it; the parsed query of an empty file is one default view, so closing it writes `views:` / `  - type: table` / `    name: View` |
+| `bases:new-file` | Bases: Create new base | creates `Untitled.base` as a **zero-byte file** and opens it; the parsed query of an empty file is one default view, so closing it writes `views:` / `  - type: table` / `    name: View`. Observed 2026-11-01 (`s01` `newFileBody`): that default view draws **one column, `file name`**, over **every file of the vault** — the PNGs and the `.base` files among the notes, the new base itself included, "15 results" on a 15-file vault — so a view with no `order` shows `file.name` alone and a base's row candidates are every file, not only the notes. The leaf's tab icon is `lucide-table` (`s15` `tabMenu.tab`) and its header draws back, forward, the title and **More options** alone (`s01` `newFileToolbar.viewHeader`: the Bookmark action is in the DOM at zero size); the ribbon's button is labelled "Create new base" (`s01` `ribbon`). |
 | `bases:add-view` | Bases: Add view | appends a view named `View 2` and opens its Configure view page |
 | `bases:insert` | Bases: Insert new base | creates another zero-byte base (`Untitled 1.base`) and inserts `![[Untitled 1.base]]` on a line of its own at the cursor |
 | `bases:copy-table` | Bases: Copy table to clipboard | the visible columns as TSV — one header row of display names, tab separators, no trailing newline (`status\tPrice per unit\ntodo\t0.02\ntodo\t0.06`) — and a "Copied to your clipboard" notice. It needs the view focused: run from the palette with focus elsewhere it reports success and shows "Unable to copy to your clipboard" |
@@ -6290,10 +6290,12 @@ column. The same goes for the toolbar — a 30 px bar, 8 px padding, 22 px
 buttons, five control icons in an order of Scoria's choosing, and a panel
 anchored at the pointer because no button box was ever measured.
 
-**What the toolbar does not write, and why.** Three observed controls are drawn
-inert or left out because what each writes is not derivable: **"Hide all"** is
-unresolvable as written — `order` is exactly the shown columns, but an *absent*
-`order` shows the implied ones, so a list that means "none" has no spelling;
+**What the toolbar does not write, and why** (as of 2026-10-25; the 2026-11-01
+record settled most of it, see the Bases section of [[UI parity backlog]]).
+Three observed controls are drawn inert or left out because what each writes
+is not derivable: **"Hide all"** is unresolvable as written — `order` is
+exactly the shown columns, but an *absent* `order` shows the implied ones, so
+a list that means "none" has no spelling;
 **"Add formula"** never had its dialog opened; and **"Export CSV..."** never
 had its file, location or dialect read. *Summarize...* and anything touching
 `summaries` are out for the same reason, the Configure view page's name field
@@ -6342,14 +6344,29 @@ nothing into the `.base`. `View 2` is observed for a base's second view; `View
 3`, `View 4`, ... by position is the reading of that one datum, and a name
 already taken is stepped past byte for byte.
 
-**An embedded base.** Everything but the rows is a reading, the embed being in
-the write-behavior section's own unprobed list: the shell's note-embed box with
-the view name as its title, **no toolbar**, always the file's **first** view
-(a leaf remembers an index and an embed has nowhere to), a cap of 50 rows with
-a line counting the rest, a row click opening that row's file, and a cards,
-list or kanban base drawing the same table rows under its own name. What *is*
-observed is the rows themselves, and both error shapes reach an embed
-unchanged.
+**An embedded base** (observed 2026-11-01, `s12-embed` and `s22-fix-embed` of
+`tools/obsidian-probe/results/2026-11-01-bases-ui.json`, in the reading view
+and in Live Preview alike). `![[x.base]]` is
+`.internal-embed.bases-embed.interactive-child`: the **whole view** — the
+toolbar with its live count and badges, every panel, the layout the view
+names, the cell editors and *New* — working in place and writing the `.base`,
+in a box with no title, no border, no padding and a transparent ground
+(`border: 0px`, `radius: 0px`, `padding: 0px`, `bg: rgba(0, 0, 0, 0)`). The box
+is as tall as its content and never scrolls on its own (`maxHeight: none`,
+`overflowY: visible`; a table of 8 rows measured 553 px, the same base's cards
+1978 px), and a table wider than the note is clipped at the note's edge
+(`overflow: hidden`, a 1055 px table in a 604 px embed). `![[x.base#Cards]]`
+shows the view of that name and a plain embed the file's first; a name no view
+has is **unprobed** and leaves the first showing. Live Preview adds **Edit this
+block** (`lucide-code-2`, 28 by 24, 8 px down and 4 px in from the embed's
+top-right corner, over the toolbar's *New*), which puts the caret on the
+embed's line; a right click inside the embed there raises the editor's own
+menu, and in the reading view nothing. *New* inside an embed created
+`Untitled 1.md` and opened it. Scoria draws an embed as a live view in an
+embedded mode: the table, list and cards are laid out in full rather than
+virtualised, and a kanban board is as tall as its tallest column, which the
+run did not embed and is this build's reading. Both error shapes reach an
+embed unchanged.
 
 **One wording, used in one more place than it was observed.** A view that
 resolves to no rows draws "0 results", which is what `BadFilter.base` reports;

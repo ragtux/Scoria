@@ -5,7 +5,8 @@
 //! itself: [`table`], [`cards`], [`list`] and [`kanban`], the four layouts
 //! Obsidian registers. [`toolbar`] is the chrome above them, [`edit`] is a
 //! cell typed into, [`commands`] is what the `bases:*` commands do to the
-//! showing view, and [`embed`] is an `![[x.base]]` inside a note.
+//! showing view, and [`embed`] is the registry of the live views behind
+//! every `![[x.base]]` inside a note.
 //!
 //! [`writes`] is what a control writes into a view — `sort`, `groupBy`,
 //! `order` and `limit` — in one place, because the toolbar's panels and the
@@ -41,5 +42,5 @@ pub mod toolbar_views;
 pub mod view;
 pub mod writes;
 
-pub use embed::{resolve as resolve_embed, EmbeddedBase};
+pub use embed::EmbeddedBase;
 pub use view::{BasesEvent, BasesView};

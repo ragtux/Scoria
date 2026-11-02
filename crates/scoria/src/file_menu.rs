@@ -32,8 +32,8 @@
 
 use crate::theme::Theme;
 use gpui::{
-    anchored, deferred, div, prelude::*, px, AnyElement, Context, Pixels, Point, SharedString,
-    Window,
+    anchored, deferred, div, prelude::*, px, Anchor, AnyElement, Context, Pixels, Point,
+    SharedString, Window,
 };
 use serde_json::{json, Value};
 use std::ops::Range;
@@ -75,6 +75,11 @@ pub enum Section {
 pub enum Pick {
     OpenInNewTab,
     OpenToRight,
+    /// The view header's "Split right" and "Split down":
+    /// `workspace:split-vertical` and `split-horizontal` on the leaf's
+    /// own group.
+    SplitRight,
+    SplitDown,
     /// "Make a copy".
     Duplicate,
     Move,
@@ -147,6 +152,12 @@ pub enum Target {
     /// A right click in the editor's text, in either editing mode: the
     /// probe raised the same rows in Live Preview and in Source mode.
     Editor(EditorClick),
+    /// The view header's **More options** over a base leaf
+    /// (`tools/obsidian-probe/results/2026-11-01-bases-ui.json`, `s02`
+    /// `moreOptions`): the file menu with the leaf's two splits in place
+    /// of the open-in rows, Rename beside Move and Bookmark, and "Delete
+    /// file" alone in the danger pair. The path is the leaf's file.
+    View(String),
 }
 
 /// A right click in the editor: what it landed on, and the selection as it
@@ -191,7 +202,7 @@ impl Target {
     /// link to a file.
     pub fn path(&self) -> &str {
         match self {
-            Target::File(p) | Target::Folder(p) | Target::Linked(p) => p,
+            Target::File(p) | Target::Folder(p) | Target::Linked(p) | Target::View(p) => p,
             Target::Blank => "",
             Target::Editor(click) => match &click.spot {
                 Spot::Link(path) => path,
@@ -342,6 +353,40 @@ pub fn items(target: &Target) -> Vec<Item> {
             ),
         ],
         Target::Editor(click) => editor_items(click),
+        // Observed on a base leaf; "Open in new window", "Open version
+        // history" and the "Open linked view" submenu are left out, as the
+        // file row's are, and dropping the two `view` rows drops their
+        // separator. "Copy path" is a submenu there (as Obsidian URL / from
+        // vault folder / from system root) and one row here, like the file
+        // row's. Obsidian draws `lucide-edit-3` on Rename, which is
+        // `pen-line`.
+        Target::View(_) => vec![
+            item("Split right", "separator-vertical", S::Open, P::SplitRight),
+            item("Split down", "separator-horizontal", S::Open, P::SplitDown),
+            item("Rename...", "pen-line", S::Action, P::Rename),
+            item("Move file to...", "folder-tree", S::Action, P::Move),
+            item("Bookmark...", "bookmark", S::Action, P::Bookmark),
+            item("Copy path", "clipboard", S::Unsectioned, P::CopyPath),
+            item(
+                "Open in default app",
+                "arrow-up-right",
+                S::System,
+                P::OpenInDefaultApp,
+            ),
+            item(
+                "Show in system explorer",
+                "arrow-up-right",
+                S::System,
+                P::ShowInSystemExplorer,
+            ),
+            item(
+                "Reveal file in navigation",
+                "folder-open",
+                S::System,
+                P::RevealInNavigation,
+            ),
+            item("Delete file", "trash-2", S::Danger, P::Delete),
+        ],
     }
 }
 
@@ -482,6 +527,11 @@ pub fn drawn(target: &Target) -> Vec<String> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Menu {
     pub position: Point<Pixels>,
+    /// Which corner of the list sits at `position`: the top-left for a
+    /// right click, the top-right for a menu hung under a button at the
+    /// window's right edge, the way the view header's **More options**
+    /// opens right-aligned under its button.
+    pub anchor: Anchor,
     pub target: Target,
 }
 
@@ -500,6 +550,7 @@ pub fn describe(menu: &Menu) -> Value {
             Spot::Tag(_) => "editor-tag",
             Spot::Link(_) => "editor-link",
         },
+        Target::View(_) => "view",
     };
     let items = items(&menu.target);
     let disabled: Vec<String> = items
@@ -606,6 +657,7 @@ pub fn render<V: 'static>(
     deferred(
         anchored()
             .position(menu.position)
+            .anchor(menu.anchor)
             .snap_to_window_with_margin(px(8.))
             .child(list),
     )
@@ -822,6 +874,39 @@ mod tests {
                 "Show in system explorer",
                 "Reveal file in navigation",
             ]
+        );
+    }
+
+    /// The view header's More options over a base leaf (`s02` `moreOptions`,
+    /// 2026-11-01), minus "Open in new window", the two `view` rows and
+    /// their separator: the splits, Rename with Move and Bookmark, Copy
+    /// path, the three system rows, and "Delete file" after the danger
+    /// pair.
+    #[test]
+    fn a_base_leafs_more_options_is_the_probes_list_without_the_rows_it_cannot_run() {
+        assert_eq!(
+            drawn(&Target::View("Shelf/Rocks.base".into())),
+            [
+                "Split right",
+                "Split down",
+                "---",
+                "Rename...",
+                "Move file to...",
+                "Bookmark...",
+                "---",
+                "Copy path",
+                "---",
+                "Open in default app",
+                "Show in system explorer",
+                "Reveal file in navigation",
+                "---",
+                "---",
+                "Delete file",
+            ]
+        );
+        assert_eq!(
+            Target::View("Shelf/Rocks.base".into()).path(),
+            "Shelf/Rocks.base"
         );
     }
 
@@ -1090,6 +1175,7 @@ mod tests {
     fn describe_reports_the_target_and_the_drawn_rows() {
         let menu = Menu {
             position: Point::new(px(10.), px(20.)),
+            anchor: Anchor::TopLeft,
             target: Target::Linked("Notes/Plan.md".into()),
         };
         let value = describe(&menu);
