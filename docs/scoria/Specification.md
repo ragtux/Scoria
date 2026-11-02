@@ -6372,6 +6372,24 @@ over `values`, *Add summary* and *Hide summary*. Scoria builds all of it
 except *Add summary* and the shift-click cell selection; `round(digits)`,
 which the fixture's `customMean` statement uses, is accepted by the engine.
 
+The same record settled the **kanban** (`s10`, `s20`, `s26`): a 280 px
+column on `#232323` with an 8 px radius, a 46 px header holding the
+`bases-group-heading` (property and value), a `bases-kanban-column-count`
+and a `bases-kanban-column-create` *Create new note* (`lucide-plus`), the
+cards, and a 41 px `bases-kanban-column-footer` reading *New*; the header
+wears the grab cursor and drags, and a column dropped elsewhere reordered
+the board with the file unchanged. A card (`#1c1c1c`, radius 8, hover
+shadow `#3f3f3f`) opens its note on any click, drags with
+`is-being-dragged` while a `bases-kanban-card-drop-placeholder` of its own
+size stands in the target column, and the drop wrote `status: done` into
+the note. A right click on a header or a card is *Add item* (`plus`) |
+*Hide column* (`eye-off`) · *Edit groups...* (`stretch-horizontal`): *Add
+item* created `Untitled.md` with `status: done` beside the filters' keys,
+*Hide column* wrote `groupOrder: [todo, doing]` and the group panel read
+*Manual*, *Edit groups...* opened the Group panel. Scoria builds all of
+it; where a dropped card lands inside its new column is unobserved and the
+view's sort decides on the next resolve.
+
 **The two unprobed commands.** `bases:change-view` is read as a suggester over
 the view names and `bases:add-item` as a new note in the base's
 `newItemFolder` from its `newItemTemplate`, opened in a new tab, writing

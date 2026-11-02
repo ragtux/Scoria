@@ -128,6 +128,14 @@ impl BasesView {
         })
     }
 
+    /// The same, consuming the group a kanban column's *New* or *Add item*
+    /// asked for, so the next *New* from the toolbar starts clean.
+    pub fn take_new_item(&mut self) -> Option<NewItem> {
+        let item = self.new_item();
+        self.kanban.pending_group = None;
+        item
+    }
+
     /// The toolbar's *New*: the workspace creates the note.
     pub(super) fn add_item(&mut self, cx: &mut Context<Self>) {
         cx.emit(BasesEvent::AddItem);
@@ -198,6 +206,21 @@ impl BasesView {
                 continue;
             }
             lines.push((name.to_string(), String::new()));
+        }
+        // A kanban column's *New*: the grouped property takes the column's
+        // value (observed, `s26` `addItem`: `status: done` from the *done*
+        // column, after the filters' keys and before nothing else).
+        if let (Some(group), Some(group_by)) =
+            (self.kanban.pending_group.as_ref(), view.group_by.as_ref())
+        {
+            let qualified = scoria_bases::layout::qualify(&group_by.property);
+            if let Some(key) = qualified.strip_prefix("note.") {
+                let value = group.clone().map(|v| yaml_scalar(&v)).unwrap_or_default();
+                match lines.iter_mut().find(|(k, _)| k == key) {
+                    Some(line) => line.1 = value,
+                    None => lines.push((key.to_string(), value)),
+                }
+            }
         }
         if lines.is_empty() && tags.is_empty() {
             return String::new();

@@ -1812,6 +1812,8 @@ target column; the drop writes the grouped property to the note (`status: done`)
 reorders in memory until the order is Manual; Hide column writes `groupOrder` and sets Manual.
 Cards hover with a `#3f3f3f` shadow, any click opens the note, right-click is the file menu.
 
+**Landed 2026-11-01**: a card drags with a card-sized placeholder in the target column and the drop writes the grouped property to its note; a column header wears the grab cursor and drags, reordering the board in memory and writing `groupOrder` once the order is Manual; the header carries the count and *Create new note* on hover, the footer *New*, both prefilling the column's value; a right click on a header or a card is *Add item* | *Hide column* · *Edit groups...*, with Hide column writing `groupOrder` without the column and Edit groups opening the Group panel. **Still out**: where a dropped card lands inside its column (the sort re-resolves it), and the `obsidian://` drag-out. See [[Development#The kanban board, 2026-11-02]].
+
 **Scoria.** 300 px columns, `active 3` headers that take nothing, cards that highlight on hover
 and open on click. No drag (`kanban.rs:35-40` leaves it out on purpose), no column plus, no
 menus.

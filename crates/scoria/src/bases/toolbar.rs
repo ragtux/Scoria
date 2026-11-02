@@ -668,6 +668,24 @@ impl BasesView {
     }
 
     /// Closes the open panel and puts focus back on the view.
+    /// Opens a panel from somewhere other than its button -- the kanban's
+    /// *Edit groups...* opens the Group panel -- under the button's box.
+    pub(super) fn show_panel(&mut self, panel: Panel, cx: &mut Context<Self>) {
+        self.forget_panel_anchors();
+        self.toolbar.panel = panel;
+        self.toolbar.page = Page::List;
+        self.toolbar.pinned_at = None;
+        self.toolbar.combo = None;
+        self.toolbar.selected = None;
+        self.toolbar.header_menu = false;
+        self.toolbar.pending_sort = false;
+        self.toolbar.pending_rule = None;
+        self.toolbar.editing = None;
+        self.toolbar.total = None;
+        self.toolbar.rows.clear();
+        cx.notify();
+    }
+
     pub(super) fn close_panel(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         self.forget_panel_anchors();
         self.toolbar.panel = Panel::None;
@@ -698,6 +716,8 @@ impl BasesView {
         if self.editing.menu.is_some() {
             // The column header's own menu, one layer like the rest.
             self.editing.menu = None;
+        } else if self.kanban.menu.is_some() {
+            self.close_kanban_menu(cx);
         } else if self.toolbar.header_menu {
             self.toolbar.header_menu = false;
         } else if self.toolbar.combo.is_some() {

@@ -25,26 +25,39 @@
 //! only the ones on screen. The gap is drawn inside the item, because a
 //! uniform list measures one item and lays the rest out on that measurement.
 //!
-//! **Unprobed.** No kanban view was ever rendered in either probe run, so
-//! everything below the keys is a reading rather than an observation, and each
-//! is marked where it is made: the column header's own text and where its row
-//! count sits, what a null group key reads as, which cell is a card's title,
-//! that a click on a card opens its file, the card's own box, and the two
-//! scroll directions above.
+//! **Observed on 2026-11-01** (`tools/obsidian-probe/results/2026-11-01-bases-ui.json`,
+//! `s10-kanban`, `s20-fix-kanban`, `s26-kanban-rest`): a column is 280 px
+//! with a 46 px header -- the group's property and value as a
+//! `bases-group-heading`, a count, and a `plus` **Create new note** -- a
+//! body of cards and a 41 px footer reading *New*; the header wears the
+//! grab cursor and drags, and a column dropped elsewhere reorders the board
+//! **in memory** (the file did not change) until the order is Manual. A card
+//! is 8 px rounded on `#1c1c1c`, drags with `is-being-dragged` while a
+//! `bases-kanban-card-drop-placeholder` of its own size stands in the target
+//! column, and the drop **writes the grouped property to the note**
+//! (`status: done`). Any click on a card opens its note. A right click on a
+//! column header or a card raises *Add item* (`plus`) | *Hide column*
+//! (`eye-off`) · *Edit groups...* (`stretch-horizontal`): *Add item*
+//! creates a note with the column's value prefilled (`status: done` beside
+//! the filters' keys), *Hide column* writes `groupOrder` without the
+//! column, which makes the order Manual, and *Edit groups...* opens the
+//! Group panel. **Unprobed**, and read here: where a dragged card lands
+//! inside its new column (the sort decides on the next resolve anyway),
+//! that a right click on the card's title link raises the file menu the
+//! way a list line's link does, and that a column drop under a Manual order
+//! writes the new `groupOrder`.
 //!
-//! **Dragging a card between columns is deliberately not implemented.** The
-//! spec's unprobed list says nothing is known about whether a kanban drag
-//! exists, let alone what it writes — presumably the dragged note's `groupBy`
-//! property, but which property id, which value spelling, and whether
-//! `groupOrder` moves with it are all unobserved. A wrong guess would write a
-//! user's note, so the board is read-only until a probe says otherwise.
+//! The rest below the keys is still a reading: which cell is a card's title,
+//! the card's own box, and the two scroll directions above.
 
+use crate::assets::icon;
 use crate::bases::cells::{cell_text, checkbox, image_ref, renders_as_link, ImageRef, CELL_PAD};
 use crate::bases::view::BasesView;
-use crate::theme::{Theme, FONT_UI_SMALL, FONT_UI_SMALLER};
+use crate::theme::{Theme, FONT_UI_SMALL, FONT_UI_SMALLER, ICON_SIZE};
 use gpui::{
-    div, img, prelude::*, px, uniform_list, AnyElement, Context, ObjectFit, ScrollHandle,
-    SharedString, UniformListScrollHandle, Window,
+    anchored, deferred, div, img, prelude::*, px, uniform_list, AnyElement, Context, DragMoveEvent,
+    MouseButton, MouseDownEvent, ObjectFit, Pixels, Point, ScrollHandle, SharedString,
+    UniformListScrollHandle, Window,
 };
 use scoria_bases::{CellKind, Column, ImageFit, KanbanLayout, Layout, Row, Table, Value};
 use serde_json::{json, Value as Json};
@@ -90,6 +103,53 @@ pub const CARD_LINE_HEIGHT: f32 = 18.;
 /// The hairline around a card, which counts towards its height.
 pub const CARD_BORDER: f32 = 1.;
 
+/// The column's footer, which reads *New*: observed 41 px.
+pub const COLUMN_FOOTER_HEIGHT: f32 = 41.;
+
+/// What a card drag carries: which card, and the note it stands for.
+#[derive(Clone)]
+pub struct CardMove {
+    pub column: usize,
+    pub ix: usize,
+    pub path: String,
+    pub title: String,
+}
+
+impl gpui::Render for CardMove {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        let theme = cx.global::<Theme>().clone();
+        div()
+            .px(px(CELL_PAD))
+            .py(px(4.))
+            .rounded_md()
+            .border_1()
+            .border_color(theme.border)
+            .bg(theme.bg)
+            .text_size(px(FONT_UI_SMALL))
+            .text_color(theme.text)
+            .child(SharedString::from(self.title.clone()))
+    }
+}
+
+/// What a column drag carries: which column is being moved.
+#[derive(Clone)]
+pub struct ColumnMove {
+    pub column: usize,
+}
+
+impl gpui::Render for ColumnMove {
+    fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+        gpui::Empty
+    }
+}
+
+/// The open column menu: which column, and where.
+#[derive(Debug, Clone, PartialEq)]
+pub struct KanbanMenu {
+    pub column: usize,
+    pub position: Point<Pixels>,
+}
+
 /// One column of the board: one group of the resolved table.
 #[derive(Debug, Clone, Default)]
 pub struct BoardColumn {
@@ -122,6 +182,23 @@ pub struct KanbanState {
     pub image_fit: ImageFit,
     /// How tall every card of this board is; see [`card_height`].
     pub card_height: f32,
+    /// The columns' drawn order, as indexes into `columns`: the engine's
+    /// order, until a column drag reorders the board in memory.
+    pub order: Vec<usize>,
+    /// The column menu, while open.
+    pub menu: Option<KanbanMenu>,
+    /// A card being dragged, by column and index, drawn faint.
+    pub dragging_card: Option<(usize, usize)>,
+    /// Where a dragged card would land: the column and the slot the
+    /// placeholder stands in.
+    pub card_drop: Option<(usize, usize)>,
+    /// A column being dragged, drawn faint.
+    pub dragging_column: Option<usize>,
+    /// The slot in `order` a dragged column would land in.
+    pub column_drop: Option<usize>,
+    /// The group a *New* asked from a column prefills, taken by the next
+    /// `take_new_item`.
+    pub pending_group: Option<Option<String>>,
 }
 
 impl Default for KanbanState {
@@ -138,6 +215,13 @@ impl Default for KanbanState {
             image_height: image_height(card_width, &layout),
             image_fit: ImageFit::default(),
             card_height: card_height(0, None),
+            order: Vec::new(),
+            menu: None,
+            dragging_card: None,
+            card_drop: None,
+            dragging_column: None,
+            column_drop: None,
+            pending_group: None,
         }
     }
 }
@@ -158,6 +242,12 @@ impl KanbanState {
             "card_width": self.card_width,
             "card_height": self.card_height,
             "image_height": self.image_height,
+            "order": self.order,
+            "menu": self.menu.as_ref().map(|m| json!({ "column": m.column })),
+            "dragging_card": self.dragging_card,
+            "card_drop": self.card_drop,
+            "dragging_column": self.dragging_column,
+            "column_drop": self.column_drop,
         })
     }
 }
@@ -184,6 +274,24 @@ impl BasesView {
         let column_width = column_width(&layout);
         let card_width = card_width(column_width);
         let image_height = image_height(card_width, &layout);
+        // A reorder made in memory survives a resolve: the old order's keys
+        // are mapped onto the new columns, new keys going last.
+        let old_keys: Vec<Option<String>> = self
+            .kanban
+            .order
+            .iter()
+            .filter_map(|&ix| self.kanban.columns.get(ix).map(|c| c.key.clone()))
+            .collect();
+        let mut order: Vec<usize> = old_keys
+            .iter()
+            .filter_map(|key| columns.iter().position(|c| &c.key == key))
+            .collect();
+        for ix in 0..columns.len() {
+            if !order.contains(&ix) {
+                order.push(ix);
+            }
+        }
+        let pending_group = self.kanban.pending_group.take();
         self.kanban = KanbanState {
             scroll: ScrollHandle::default(),
             columns,
@@ -193,7 +301,251 @@ impl BasesView {
             image_height,
             image_fit: layout.image_fit,
             card_height: card_height(cells, image_height),
+            order,
+            menu: None,
+            dragging_card: None,
+            card_drop: None,
+            dragging_column: None,
+            column_drop: None,
+            pending_group,
         };
+    }
+
+    // ----- what the board writes ----------------------------------------------
+
+    /// The frontmatter key the view groups by, when it is a note property a
+    /// card drop can write; a `file.*` group has no key in the note.
+    fn group_key(&self) -> Option<String> {
+        let property = self.view()?.group_by.as_ref()?.property.clone();
+        let qualified = scoria_bases::layout::qualify(&property);
+        qualified.strip_prefix("note.").map(str::to_string)
+    }
+
+    /// The keys of the columns as drawn, in the drawn order: what *Hide
+    /// column* and a Manual reorder write as `groupOrder`.
+    fn drawn_keys(&self) -> Vec<Option<String>> {
+        self.kanban
+            .order
+            .iter()
+            .filter_map(|&ix| self.kanban.columns.get(ix).map(|c| c.key.clone()))
+            .collect()
+    }
+
+    /// A card dropped on column `to`: the grouped property of its note is
+    /// set to that column's value (observed: `status: done` after a drop on
+    /// *done*); the no-value column clears it. A drop on its own column
+    /// writes nothing.
+    pub(super) fn drop_card(&mut self, drag: &CardMove, to: usize, cx: &mut Context<Self>) {
+        self.kanban.card_drop = None;
+        self.kanban.dragging_card = None;
+        if drag.column == to {
+            cx.notify();
+            return;
+        }
+        let (Some(key), Some(column)) = (self.group_key(), self.kanban.columns.get(to)) else {
+            cx.notify();
+            return;
+        };
+        let value = column.key.clone().unwrap_or_default();
+        self.set_property(&drag.path, &key, &value, cx);
+        cx.notify();
+    }
+
+    /// A column dropped at slot `to` of the drawn order: the board reorders
+    /// in memory, and under a Manual order the file's `groupOrder` follows.
+    pub(super) fn drop_board_column(&mut self, from: usize, to: usize, cx: &mut Context<Self>) {
+        self.kanban.column_drop = None;
+        self.kanban.dragging_column = None;
+        let Some(at) = self.kanban.order.iter().position(|&c| c == from) else {
+            cx.notify();
+            return;
+        };
+        let to = to.min(self.kanban.order.len());
+        if at == to || at + 1 == to {
+            cx.notify();
+            return;
+        }
+        let moved = self.kanban.order.remove(at);
+        let slot = if to > at { to - 1 } else { to };
+        self.kanban
+            .order
+            .insert(slot.min(self.kanban.order.len()), moved);
+        if self
+            .view()
+            .is_some_and(scoria_bases::layout::is_manual_group)
+        {
+            let keys = self.drawn_keys();
+            self.edit_view(
+                move |view| scoria_bases::layout::set_group_order(view, Some(keys)),
+                cx,
+            );
+        }
+        cx.notify();
+    }
+
+    /// *Hide column*: `groupOrder` written as every drawn column but this
+    /// one, which also makes the group panel read Manual (observed, `s26`
+    /// `hideColumn`: `groupOrder: [todo, doing]` after hiding *done*).
+    fn hide_column(&mut self, column: usize, cx: &mut Context<Self>) {
+        let Some(hidden) = self.kanban.columns.get(column).map(|c| c.key.clone()) else {
+            return;
+        };
+        let keys: Vec<Option<String>> = self
+            .drawn_keys()
+            .into_iter()
+            .filter(|k| *k != hidden)
+            .collect();
+        self.edit_view(
+            move |view| scoria_bases::layout::set_group_order(view, Some(keys)),
+            cx,
+        );
+    }
+
+    /// *Add item*, the header's plus and the footer's *New*: a note with
+    /// the column's value prefilled beside the filters' keys (observed:
+    /// `status: done` for the *done* column).
+    fn add_item_in(&mut self, column: usize, cx: &mut Context<Self>) {
+        if let Some(col) = self.kanban.columns.get(column) {
+            self.kanban.pending_group = Some(col.key.clone());
+        }
+        self.add_item(cx);
+    }
+
+    // ----- the column menu ----------------------------------------------------
+
+    fn open_kanban_menu(&mut self, column: usize, position: Point<Pixels>, cx: &mut Context<Self>) {
+        self.kanban.menu = Some(KanbanMenu { column, position });
+        cx.notify();
+    }
+
+    pub(super) fn close_kanban_menu(&mut self, cx: &mut Context<Self>) {
+        if self.kanban.menu.take().is_some() {
+            cx.notify();
+        }
+    }
+
+    fn kanban_menu_pick(&mut self, id: &'static str, cx: &mut Context<Self>) {
+        let Some(menu) = self.kanban.menu.take() else {
+            return;
+        };
+        match id {
+            "add-item" => self.add_item_in(menu.column, cx),
+            "hide-column" => self.hide_column(menu.column, cx),
+            "edit-groups" => self.show_panel(super::toolbar::Panel::Group, cx),
+            _ => {}
+        }
+        cx.notify();
+    }
+
+    /// The column menu, observed (`s10` `columnRightClick`, `cardRightClick`):
+    /// *Add item* | *Hide column* · *Edit groups...*, 134 px wide.
+    fn render_kanban_menu(&self, theme: &Theme, cx: &mut Context<Self>) -> Option<AnyElement> {
+        let menu = self.kanban.menu.as_ref()?;
+        let rows: [(&'static str, &'static str, &'static str); 3] = [
+            ("add-item", "Add item", "plus"),
+            ("hide-column", "Hide column", "eye-off"),
+            ("edit-groups", "Edit groups...", "stretch-horizontal"),
+        ];
+        let mut list = div()
+            .id("bases-kanban-menu")
+            .flex()
+            .flex_col()
+            .min_w(px(134.))
+            .py(px(6.))
+            .bg(theme.bg_secondary)
+            .border_1()
+            .border_color(theme.tab_divider)
+            .rounded(px(8.))
+            .shadow_lg()
+            .text_size(px(FONT_UI_SMALL))
+            .text_color(theme.text)
+            .occlude()
+            .on_mouse_down_out(cx.listener(|this, _, _, cx| this.close_kanban_menu(cx)));
+        for (ix, (id, label, icon_name)) in rows.into_iter().enumerate() {
+            if ix == 1 {
+                list = list.child(div().my(px(6.)).h(px(1.)).bg(theme.border));
+            }
+            list = list.child(
+                div()
+                    .id(("bases-kanban-menu-item", ix))
+                    .flex()
+                    .flex_row()
+                    .items_center()
+                    .gap(px(8.))
+                    .h(px(25.))
+                    .mx(px(6.))
+                    .px(px(8.))
+                    .rounded(px(4.))
+                    .cursor_pointer()
+                    .hover(|s| s.bg(theme.bg_alt))
+                    .on_click(cx.listener(move |this, _, _, cx| this.kanban_menu_pick(id, cx)))
+                    .child(icon(icon_name, 16., theme.text_muted))
+                    .child(SharedString::from(label)),
+            );
+        }
+        Some(
+            deferred(
+                anchored()
+                    .position(menu.position)
+                    .snap_to_window_with_margin(px(8.))
+                    .child(list),
+            )
+            .with_priority(1)
+            .into_any_element(),
+        )
+    }
+
+    /// Where a dragged column would land, from the pointer's x against the
+    /// drawn columns' edges.
+    fn column_drag_over(&mut self, pointer_x: Pixels, board_left: Pixels, cx: &mut Context<Self>) {
+        let x = f32::from(pointer_x) - f32::from(board_left) - COLUMN_PAD
+            + f32::from(self.kanban.scroll.offset().x).abs();
+        let step = self.kanban.column_width + CARD_GAP;
+        let slot = ((x + step / 2.) / step).floor().max(0.) as usize;
+        let slot = slot.min(self.kanban.order.len());
+        if self.kanban.column_drop != Some(slot) {
+            self.kanban.column_drop = Some(slot);
+            cx.notify();
+        }
+    }
+
+    /// Where a dragged card would land, from the pointer against the board:
+    /// the column under it by x, the slot by y against that column's cards.
+    /// Computed on the board because a drag-move listener fires only for the
+    /// element the drag started on, so a column cannot watch for another's
+    /// card. **Unprobed**: where the card lands inside its new column; the
+    /// view's sort decides on the next resolve anyway.
+    fn card_drag_over(
+        &mut self,
+        drag: &CardMove,
+        position: Point<Pixels>,
+        board: gpui::Bounds<Pixels>,
+        cx: &mut Context<Self>,
+    ) {
+        if self.kanban.dragging_card != Some((drag.column, drag.ix)) {
+            self.kanban.dragging_card = Some((drag.column, drag.ix));
+            cx.notify();
+        }
+        let x = f32::from(position.x) - f32::from(board.origin.x) - COLUMN_PAD
+            + f32::from(self.kanban.scroll.offset().x).abs();
+        let column_step = self.kanban.column_width + CARD_GAP;
+        let drawn = (x / column_step).floor().max(0.) as usize;
+        let Some(&g) = self.kanban.order.get(drawn) else {
+            if self.kanban.card_drop.take().is_some() {
+                cx.notify();
+            }
+            return;
+        };
+        let step = self.kanban.card_height + CARD_GAP;
+        let y =
+            f32::from(position.y) - f32::from(board.origin.y) - COLUMN_PAD - COLUMN_HEADER_HEIGHT;
+        let rows = self.kanban.columns.get(g).map_or(0, |c| c.rows);
+        let slot = ((y + step / 2.) / step).floor().max(0.) as usize;
+        let slot = slot.min(rows);
+        if self.kanban.card_drop != Some((g, slot)) {
+            self.kanban.card_drop = Some((g, slot));
+            cx.notify();
+        }
     }
 
     /// Draws the board: the columns side by side, scrolling sideways.
@@ -213,21 +565,31 @@ impl BasesView {
         }
         let grouped = self.kanban.grouped;
         let width = self.kanban.column_width;
+        let group_property = self.view().and_then(|v| v.group_by.as_ref()).map(|g| {
+            let q = scoria_bases::layout::qualify(&g.property);
+            q.strip_prefix("note.").unwrap_or(&q).to_string()
+        });
+        let dragging_column = self.kanban.dragging_column;
+        let card_drop = self.kanban.card_drop;
         let columns: Vec<AnyElement> = self
             .kanban
-            .columns
+            .order
             .iter()
-            .enumerate()
+            .filter_map(|&g| self.kanban.columns.get(g).map(|c| (g, c)))
             .map(|(g, column)| {
+                // A placeholder the size of a card stands where the dragged
+                // card would land, so the list holds one more item there.
+                let extra = usize::from(matches!(card_drop, Some((c, _)) if c == g));
                 let cards = uniform_list(
                     ("bases-kanban-cards", g),
-                    column.rows,
+                    column.rows + extra,
                     cx.processor(move |this, range: Range<usize>, window, cx| {
                         this.render_kanban_cards(g, range, window, cx)
                     }),
                 )
                 .track_scroll(&column.cards)
                 .size_full();
+                let title = column_title(column.key.as_deref(), grouped).map(str::to_string);
                 div()
                     .id(("bases-kanban-column", g))
                     .flex()
@@ -235,20 +597,49 @@ impl BasesView {
                     .flex_shrink_0()
                     .w(px(width))
                     .h_full()
-                    .rounded_md()
+                    .rounded(px(8.))
                     .bg(theme.bg_secondary)
-                    .child(column_header(
-                        column_title(column.key.as_deref(), grouped),
+                    .when(dragging_column == Some(g), |d| d.opacity(0.4))
+                    .child(self.render_column_header(
+                        g,
+                        title,
+                        group_property.clone(),
                         column.rows,
                         theme,
+                        cx,
                     ))
                     .child(
                         div()
+                            .id(("bases-kanban-body", g))
                             .flex_1()
                             .min_h(px(0.))
                             .w_full()
                             .px(px(COLUMN_PAD))
+                            .on_drop(cx.listener(move |this, drag: &CardMove, _, cx| {
+                                this.drop_card(drag, g, cx)
+                            }))
                             .child(cards),
+                    )
+                    .child(
+                        // The footer's *New* (observed 41 px): a note in this
+                        // column's group.
+                        div()
+                            .id(("bases-kanban-footer", g))
+                            .flex_shrink_0()
+                            .h(px(COLUMN_FOOTER_HEIGHT))
+                            .w_full()
+                            .px(px(CELL_PAD + 4.))
+                            .flex()
+                            .flex_row()
+                            .items_center()
+                            .gap(px(6.))
+                            .cursor_pointer()
+                            .text_size(px(FONT_UI_SMALL))
+                            .text_color(theme.text_muted)
+                            .hover(|s| s.text_color(theme.text))
+                            .on_click(cx.listener(move |this, _, _, cx| this.add_item_in(g, cx)))
+                            .child(icon("plus", ICON_SIZE, theme.text_muted))
+                            .child(SharedString::from("New")),
                     )
                     .into_any_element()
             })
@@ -265,9 +656,16 @@ impl BasesView {
             .iter()
             .map(|c| c.rows as f32 * (self.kanban.card_height + CARD_GAP))
             .fold(0., f32::max);
-        let board_height = COLUMN_HEADER_HEIGHT + tallest + 3. * COLUMN_PAD;
-        vec![div()
+        let board_height = COLUMN_HEADER_HEIGHT + COLUMN_FOOTER_HEIGHT + tallest + 3. * COLUMN_PAD;
+        let drop_line = self.kanban.column_drop.map(|slot| {
+            COLUMN_PAD + slot as f32 * (width + CARD_GAP)
+                - CARD_GAP / 2.
+                - 1.
+                - f32::from(self.kanban.scroll.offset().x).abs()
+        });
+        let mut out = vec![div()
             .id("bases-kanban")
+            .relative()
             .when(!embedded, |d| d.flex_1().min_h(px(0.)))
             .when(embedded, |d| d.h(px(board_height)))
             .w_full()
@@ -278,8 +676,132 @@ impl BasesView {
             .items_stretch()
             .gap(px(CARD_GAP))
             .p(px(COLUMN_PAD))
+            .on_drag_move(
+                cx.listener(|this, event: &DragMoveEvent<ColumnMove>, _, cx| {
+                    let column = event.drag(cx).column;
+                    if this.kanban.dragging_column != Some(column) {
+                        this.kanban.dragging_column = Some(column);
+                    }
+                    this.column_drag_over(event.event.position.x, event.bounds.left(), cx);
+                }),
+            )
+            .on_drag_move(cx.listener(|this, event: &DragMoveEvent<CardMove>, _, cx| {
+                let drag = event.drag(cx).clone();
+                this.card_drag_over(&drag, event.event.position, event.bounds, cx);
+            }))
+            .on_drop(cx.listener(|this, drag: &ColumnMove, _, cx| {
+                if let Some(to) = this.kanban.column_drop {
+                    this.drop_board_column(drag.column, to, cx);
+                }
+            }))
+            .on_mouse_up_out(
+                MouseButton::Left,
+                cx.listener(|this, _, _, cx| {
+                    this.kanban.card_drop = None;
+                    this.kanban.column_drop = None;
+                    this.kanban.dragging_card = None;
+                    this.kanban.dragging_column = None;
+                    cx.notify();
+                }),
+            )
             .children(columns)
-            .into_any_element()]
+            .when_some(drop_line, |d, x| {
+                d.child(
+                    div()
+                        .absolute()
+                        .top(px(COLUMN_PAD))
+                        .bottom(px(COLUMN_PAD))
+                        .left(px(x))
+                        .w(px(2.))
+                        .bg(theme.accent),
+                )
+            })
+            .into_any_element()];
+        out.extend(self.render_kanban_menu(theme, cx));
+        out
+    }
+
+    /// A column's header (observed 46 px): the group's property and value,
+    /// the count, and *Create new note* (`plus`) on hover; it wears the grab
+    /// cursor, drags the column, and its right click is the column menu.
+    #[allow(clippy::too_many_arguments)]
+    fn render_column_header(
+        &self,
+        g: usize,
+        title: Option<String>,
+        property: Option<String>,
+        rows: usize,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
+        div()
+            .id(("bases-kanban-header", g))
+            .group("bases-kanban-header")
+            .flex()
+            .flex_row()
+            .items_center()
+            .flex_shrink_0()
+            .w_full()
+            .h(px(COLUMN_HEADER_HEIGHT))
+            .px(px(CELL_PAD))
+            .gap(px(6.))
+            .cursor_grab()
+            .on_drag(ColumnMove { column: g }, |drag, _, _, cx| {
+                cx.new(|_| drag.clone())
+            })
+            .on_mouse_down(
+                MouseButton::Right,
+                cx.listener(move |this, event: &MouseDownEvent, _, cx| {
+                    this.open_kanban_menu(g, event.position, cx)
+                }),
+            )
+            .children(property.filter(|_| title.is_some()).map(|property| {
+                div()
+                    .flex_shrink_0()
+                    .text_size(px(FONT_UI_SMALLER))
+                    .text_color(theme.text_muted)
+                    .child(SharedString::from(property))
+            }))
+            .children(title.map(|title| {
+                div()
+                    .min_w_0()
+                    .whitespace_nowrap()
+                    .overflow_hidden()
+                    .text_ellipsis()
+                    .text_size(px(FONT_UI_SMALL))
+                    .text_color(theme.text)
+                    .child(SharedString::from(title))
+            }))
+            .child(
+                div()
+                    .flex_shrink_0()
+                    .text_size(px(FONT_UI_SMALLER))
+                    .text_color(theme.text_faint)
+                    .child(SharedString::from(rows.to_string())),
+            )
+            .child(div().flex_1())
+            .child(
+                div()
+                    .id(("bases-kanban-create", g))
+                    .flex_shrink_0()
+                    .size(px(24.))
+                    .flex()
+                    .items_center()
+                    .justify_center()
+                    .rounded(px(4.))
+                    .cursor_pointer()
+                    .opacity(0.)
+                    .group_hover("bases-kanban-header", |s| s.opacity(0.85))
+                    .hover(|s| s.bg(theme.bg_alt))
+                    .tooltip(crate::canvas::menu::tooltip("Create new note"))
+                    .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
+                    .on_click(cx.listener(move |this, _, _, cx| {
+                        cx.stop_propagation();
+                        this.add_item_in(g, cx)
+                    }))
+                    .child(icon("plus", ICON_SIZE, theme.text_muted)),
+            )
+            .into_any_element()
     }
 
     /// The cards of column `g` the list asked for.
@@ -295,16 +817,43 @@ impl BasesView {
             return Vec::new();
         };
         let columns = table.columns.clone();
-        let rows = rows_of(table, g);
-        let end = range.end.min(rows.len());
-        let rows: Vec<Row> = rows
-            .get(range.start.min(end)..end)
-            .unwrap_or_default()
-            .to_vec();
-        rows.iter()
-            .enumerate()
-            .map(|(at, row)| self.render_kanban_card(range.start + at, row, &columns, &theme, cx))
+        let all = rows_of(table, g).to_vec();
+        let slot = match self.kanban.card_drop {
+            Some((c, slot)) if c == g => Some(slot),
+            _ => None,
+        };
+        range
+            .filter_map(|item| {
+                // The placeholder takes slot `slot`; the cards after it shift
+                // down by one.
+                let ix = match slot {
+                    Some(s) if item == s => return Some(self.render_drop_placeholder(&theme)),
+                    Some(s) if item > s => item - 1,
+                    _ => item,
+                };
+                all.get(ix)
+                    .map(|row| self.render_kanban_card(g, ix, row, &columns, &theme, cx))
+            })
             .collect()
+    }
+
+    /// Obsidian's `bases-kanban-card-drop-placeholder`: a card-sized box
+    /// where the dragged card would land.
+    fn render_drop_placeholder(&self, theme: &Theme) -> AnyElement {
+        div()
+            .w_full()
+            .h(px(self.kanban.card_height + CARD_GAP))
+            .child(
+                div()
+                    .w_full()
+                    .h(px(self.kanban.card_height))
+                    .rounded_md()
+                    .border_1()
+                    .border_dashed()
+                    .border_color(theme.accent)
+                    .bg(theme.bg_alt),
+            )
+            .into_any_element()
     }
 
     /// One card: the row's image over its cells, opening the row's file.
@@ -320,6 +869,7 @@ impl BasesView {
     /// column virtualise.
     fn render_kanban_card(
         &self,
+        g: usize,
         ix: usize,
         row: &Row,
         columns: &[Column],
@@ -327,6 +877,9 @@ impl BasesView {
         cx: &mut Context<Self>,
     ) -> AnyElement {
         let path = row.file.path.clone();
+        let drag_path = row.file.path.clone();
+        let menu_path = row.file.path.clone();
+        let faint = self.kanban.dragging_card == Some((g, ix));
         let title = row
             .cells
             .first()
@@ -340,20 +893,41 @@ impl BasesView {
             (Some(column), Some(cell)) => renders_as_link(column, cell),
             _ => false,
         };
+        let drag_title = title.clone();
         let mut card = div()
-            .id(("bases-kanban-card", ix))
+            .id(("bases-kanban-card", g * 65536 + ix))
             .flex()
             .flex_col()
             .w_full()
             .h(px(self.kanban.card_height))
             .overflow_hidden()
-            .rounded_md()
+            .rounded(px(8.))
             .border_1()
             .border_color(theme.border)
             .bg(theme.bg)
             .cursor_pointer()
-            .hover(|s| s.bg(theme.bg_alt))
-            .on_click(cx.listener(move |this, _, _, cx| this.open(path.clone(), cx)));
+            .when(faint, |d| d.opacity(0.4))
+            .hover(|s| s.bg(theme.bg_alt).shadow_md())
+            .on_click(cx.listener(move |this, _, _, cx| this.open(path.clone(), cx)))
+            // A press-and-move drags the card (`is-being-dragged`); the
+            // source stays, faint, until the drop.
+            .on_drag(
+                CardMove {
+                    column: g,
+                    ix,
+                    path: drag_path,
+                    title: drag_title,
+                },
+                |drag, _, _, cx| cx.new(|_| drag.clone()),
+            )
+            // A right click on the card is the column menu (observed, `s10`
+            // `cardRightClick`); on its title, the file menu.
+            .on_mouse_down(
+                MouseButton::Right,
+                cx.listener(move |this, event: &MouseDownEvent, _, cx| {
+                    this.open_kanban_menu(g, event.position, cx)
+                }),
+            );
         if let Some(height) = self.kanban.image_height {
             card = card.child(self.render_kanban_image(row, height, theme));
         }
@@ -367,6 +941,7 @@ impl BasesView {
                 .p(px(CELL_PAD))
                 .child(
                     div()
+                        .id(("bases-kanban-title", g * 65536 + ix))
                         .flex_shrink_0()
                         .h(px(CARD_TITLE_HEIGHT))
                         .w_full()
@@ -379,6 +954,13 @@ impl BasesView {
                         } else {
                             theme.text
                         })
+                        .on_mouse_down(
+                            MouseButton::Right,
+                            cx.listener(move |this, event: &MouseDownEvent, _, cx| {
+                                cx.stop_propagation();
+                                this.file_menu(menu_path.clone(), event.position, cx)
+                            }),
+                        )
                         .child(
                             div()
                                 .min_w_0()
@@ -474,42 +1056,6 @@ impl BasesView {
             }))
             .into_any_element()
     }
-}
-
-/// A column's header: what the group is called, and how many cards it holds.
-///
-/// **Unprobed**: neither the text nor the count's place was ever read off a
-/// running board. The shape is the table layout's own group header — the key
-/// in 13 px with the count as a faint flair beside it — so a board and a
-/// grouped table name a group the same way.
-fn column_header(title: Option<&str>, rows: usize, theme: &Theme) -> AnyElement {
-    div()
-        .flex()
-        .flex_row()
-        .items_center()
-        .flex_shrink_0()
-        .w_full()
-        .h(px(COLUMN_HEADER_HEIGHT))
-        .px(px(CELL_PAD))
-        .gap(px(8.))
-        .children(title.map(|title| {
-            div()
-                .min_w_0()
-                .whitespace_nowrap()
-                .overflow_hidden()
-                .text_ellipsis()
-                .text_size(px(FONT_UI_SMALL))
-                .text_color(theme.text)
-                .child(SharedString::from(title.to_string()))
-        }))
-        .child(
-            div()
-                .flex_shrink_0()
-                .text_size(px(FONT_UI_SMALLER))
-                .text_color(theme.text_faint)
-                .child(SharedString::from(rows.to_string())),
-        )
-        .into_any_element()
 }
 
 /// The board's columns: one per group, in the engine's own group order.

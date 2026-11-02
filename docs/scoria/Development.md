@@ -321,10 +321,44 @@ uses behave as Obsidian's do.
 | Bases: the format | done: parsed, modelled and written back in Obsidian's own bytes, `scoria-formats::base` |
 | Bases: the expression language | done: the parser and the evaluator, held to 277 parse trees and 1044 evaluated statements, see [[#Bases evaluator, 2026-10-25]] |
 | Bases: the table view | done, read-only: a `.base` opens on its table, see [[#Bases table view, 2026-10-25]]; the ribbon's button creates one |
-| Bases: the rest of the view | done: the cards, list and kanban layouts, the toolbar's six panels, editing through the table, the five `bases:*` commands beyond `new-file`, and an embedded `![[x.base]]`, see [[#Bases: the rest of the view, 2026-10-25]]; the toolbar and panels rebuilt to the 2026-11-01 record, see [[#The Bases toolbar and its panels, 2026-11-01]]; the embed as the live view and the leaf's chrome, see [[#The embedded base and the base leaf's chrome, 2026-11-01]]; the header, summaries, cells and keyboard, see [[#The column header, summaries, cells and the table keyboard, 2026-11-01]] |
+| Bases: the rest of the view | done: the cards, list and kanban layouts, the toolbar's six panels, editing through the table, the five `bases:*` commands beyond `new-file`, and an embedded `![[x.base]]`, see [[#Bases: the rest of the view, 2026-10-25]]; the toolbar and panels rebuilt to the 2026-11-01 record, see [[#The Bases toolbar and its panels, 2026-11-01]]; the embed as the live view and the leaf's chrome, see [[#The embedded base and the base leaf's chrome, 2026-11-01]]; the header, summaries, cells and keyboard, see [[#The column header, summaries, cells and the table keyboard, 2026-11-01]]; the kanban's drags and menus, see [[#The kanban board, 2026-11-02]] |
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | not started |
+
+### The kanban board, 2026-11-02
+
+The last entry of [[UI parity backlog#Bases]], built to `s10-kanban`,
+`s20-fix-kanban` and `s26-kanban-rest` of the 2026-11-01 record.
+
+A column is the observed 46 px header — the group's property and value,
+the count, *Create new note* on hover — over its cards and a 41 px *New*
+footer. A card drags (`CardMove`, with a title preview at the pointer and
+the source drawn faint); the board, not the column, computes the drop
+target from the pointer, because a drag-move listener in gpui fires only
+for the element the drag started on, so a column cannot watch for another
+column's card. A card-sized placeholder stands at the slot in the target
+column — the uniform list holds one more item there — and the drop asks the
+workspace to set the grouped property of the note to the column's value,
+through the same `SetProperty` path a cell uses; the no-value column clears
+it. A column header drags (`ColumnMove`) with an accent line at the slot;
+the drop reorders `KanbanState::order` in memory, which a resolve keeps by
+mapping the old keys onto the new columns, and writes `groupOrder` only
+when the view's order is already Manual. *Hide column* writes `groupOrder`
+as every drawn column but that one, which is what makes the order Manual
+in the first place, exactly as the record shows after hiding *done*. *Add
+item*, the header's plus and the footer's *New* put the column's value
+into the new note's frontmatter beside the filters' keys
+(`KanbanState::pending_group`, consumed by `take_new_item`). *Edit
+groups...* opens the Group panel through the new `show_panel`. Escape
+closes the column menu like every other layer.
+
+Driven headless on the demo's Volcanoes board: the menu, a card dragged
+from *active* to *dormant* with the placeholder showing and `status:
+dormant` written to Kīlauea, a column dragged in memory with the file
+untouched, *Hide column* writing `groupOrder: [extinct, dormant]`, the next
+column drag writing the new order, *New* creating a note with `status:
+dormant`, and *Edit groups...* opening the Group panel.
 
 ### The column header, summaries, cells and the table keyboard, 2026-11-01
 

@@ -6860,7 +6860,7 @@ impl Workspace {
         let Some(state) = self.state.clone() else {
             return;
         };
-        let Some(item) = bases.read(cx).new_item() else {
+        let Some(item) = bases.update(cx, |b, _| b.take_new_item()) else {
             return;
         };
         let folder = item.folder.unwrap_or_else(|| {
