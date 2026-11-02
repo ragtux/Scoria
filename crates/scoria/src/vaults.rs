@@ -38,8 +38,11 @@ pub fn bind_keys(cx: &mut App) {
     cx.bind_keys([KeyBinding::new("escape", Close, Some("Vaults"))]);
 }
 
-/// The window's size: Obsidian's own 800 by 650.
-pub const WINDOW_SIZE: (f32, f32) = (800., 650.);
+/// The window's size. Obsidian's own is 800 by 650; Scoria's is taller,
+/// since its splash sets the mark at 264 px and the name at 104 under a
+/// 40 px title row, and the card under those wants the room before the
+/// column has to scroll.
+pub const WINDOW_SIZE: (f32, f32) = (880., 860.);
 
 /// The list's column, Obsidian's `.recent-vaults` width.
 const LIST_WIDTH: f32 = 280.;
@@ -679,42 +682,52 @@ impl Render for VaultManager {
                             .w_full()
                             .map(|d| corners.right().bottom().apply(d))
                             .overflow_y_scroll()
-                            .flex()
-                            .flex_col()
-                            .items_center()
-                            .px(px(30.))
-                            .py(px(24.))
-                            // Two spacers rather than `justify_center`: they share
-                            // whatever height is spare and shrink to nothing when
-                            // there is none, so a short window scrolls to the top of
-                            // the mark instead of clipping it behind the centring.
-                            .child(div().flex_1())
-                            .child(logo(264.))
-                            .child(
-                                // The product name the way Anya's wordmark sets it:
-                                // the display face at its one weight, large, and
-                                // the line box no taller than the type.
-                                div()
-                                    .flex_shrink_0()
-                                    .mt(px(16.))
-                                    .font_family(DISPLAY_FONT_FAMILY)
-                                    .text_size(px(104.))
-                                    .line_height(px(104.))
-                                    .font_weight(FontWeight::BLACK)
-                                    .text_color(theme.tokens.text_normal)
-                                    .child("Scoria"),
-                            )
+                            // The column is a block inside the scroll box, not
+                            // the scroll box itself: a text that wraps inside
+                            // a flex item of a scrolling column was measured
+                            // at one line and painted at two, and the row
+                            // under it lost a line of height.
                             .child(
                                 div()
-                                    .flex_shrink_0()
-                                    .mt(px(4.))
-                                    .text_size(px(FONT_UI_SMALL))
-                                    .text_color(theme.tokens.text_muted)
-                                    .child(version),
-                            )
-                            .child(div().flex_shrink_0().h(px(32.)))
-                            .child(card)
-                            .child(div().flex_1()),
+                                    .w_full()
+                                    .min_h_full()
+                                    .flex()
+                                    .flex_col()
+                                    .items_center()
+                                    .px(px(30.))
+                                    .py(px(24.))
+                                    // Two spacers rather than `justify_center`: they share
+                                    // whatever height is spare and shrink to nothing when
+                                    // there is none, so a short window scrolls to the top of
+                                    // the mark instead of clipping it behind the centring.
+                                    .child(div().flex_1())
+                                    .child(logo(264.))
+                                    .child(
+                                        // The product name the way Anya's wordmark sets it:
+                                        // the display face at its one weight, large, and
+                                        // the line box no taller than the type.
+                                        div()
+                                            .flex_shrink_0()
+                                            .mt(px(16.))
+                                            .font_family(DISPLAY_FONT_FAMILY)
+                                            .text_size(px(104.))
+                                            .line_height(px(104.))
+                                            .font_weight(FontWeight::BLACK)
+                                            .text_color(theme.tokens.text_normal)
+                                            .child("Scoria"),
+                                    )
+                                    .child(
+                                        div()
+                                            .flex_shrink_0()
+                                            .mt(px(4.))
+                                            .text_size(px(FONT_UI_SMALL))
+                                            .text_color(theme.tokens.text_muted)
+                                            .child(version),
+                                    )
+                                    .child(div().flex_shrink_0().h(px(32.)))
+                                    .child(card)
+                                    .child(div().flex_1()),
+                            ),
                     ),
             );
         let root = div()
