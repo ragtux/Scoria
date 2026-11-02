@@ -49,9 +49,20 @@ pub fn call(ev: &mut Evaluator<'_>, subject: &Value, name: &str, args: &[Expr]) 
             super::arity(name, args, 0, 0)?;
             Ok(Value::Number(n.floor()))
         }
+        // `round(digits)`: the one-argument form is in Obsidian's own
+        // fixture (`summaries: customMean: values.mean().round(2)`,
+        // `tools/obsidian-probe/results/2026-11-01-bases-ui.json`), which
+        // showed `3.71` for a mean of 3.714; the digits round the way the
+        // bare call does, at that decimal. **Unprobed**: its refusals.
         "round" => {
-            super::arity(name, args, 0, 0)?;
-            Ok(Value::Number(round_half_up(n)))
+            super::arity(name, args, 0, 1)?;
+            if args.is_empty() {
+                return Ok(Value::Number(round_half_up(n)));
+            }
+            let vals = ev.eval_args(args)?;
+            let digits = want_number(name, "digits", &vals[0])?;
+            let scale = 10f64.powi(digits.max(0.0) as i32);
+            Ok(Value::Number(round_half_up(n * scale) / scale))
         }
         // Observed false for `12.345`. Whether `0` or `NaN` is "empty" is
         // unprobed; a Number is never empty is the reading that matches the

@@ -48,10 +48,18 @@ pub fn same_property(a: &str, b: &str) -> bool {
 // ---------------------------------------------------------------------------
 
 /// Whether the view already sorts by `property`.
+#[cfg(test)]
 pub fn is_sorted(view: &View, property: &str) -> bool {
+    sort_direction(view, property).is_some()
+}
+
+/// The direction the view sorts `property` in, when it does: an absent
+/// direction is ascending.
+pub fn sort_direction(view: &View, property: &str) -> Option<String> {
     view.sort
         .iter()
-        .any(|s| same_property(&s.property, property))
+        .find(|s| same_property(&s.property, property))
+        .map(|s| s.direction.clone().unwrap_or_else(|| ASC.to_string()))
 }
 
 /// Puts `{property, direction}` at the **head** of the view's `sort`.
@@ -154,6 +162,24 @@ pub fn hide_column(view: &mut View, id: &str, implied: &[String]) {
     );
 }
 
+/// A header dragged onto another: the column at `from` lands at `to`, both
+/// indexes into the shown columns, and `order` is written in the new order.
+/// A view with no `order` materializes `shown` first.
+///
+/// **Observed** that a header drags and a `table-drag-target mod-col` line
+/// marks the drop; the write itself was not read and is this build's
+/// reading of the only thing a reorder could write.
+pub fn move_column(view: &mut View, from: usize, to: usize, shown: &[String]) {
+    let mut order = view.order.clone().unwrap_or_else(|| shown.to_vec());
+    if from >= order.len() || to > order.len() || from == to {
+        return;
+    }
+    let id = order.remove(from);
+    let at = if to > from { to - 1 } else { to };
+    order.insert(at.min(order.len()), id);
+    view.order = Some(order);
+}
+
 /// Appends a property to `order`, which is what "Add *name* property" and
 /// checking a box in the properties panel do. `shown` is the ids the view
 /// currently resolves to: a view with no `order` names them first, or the
@@ -198,6 +224,50 @@ pub fn parse_limit(text: &str) -> Option<u64> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_column_moves_to_the_slot_before_the_one_dropped_on() {
+        let shown: Vec<String> = ["file.name", "status", "rating", "due"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+        let mut view = View::default();
+        // No `order`: the shown columns are materialized first.
+        move_column(&mut view, 0, 3, &shown);
+        assert_eq!(
+            view.order.as_deref().unwrap(),
+            ["status", "rating", "file.name", "due"]
+        );
+        move_column(&mut view, 3, 0, &shown);
+        assert_eq!(
+            view.order.as_deref().unwrap(),
+            ["due", "status", "rating", "file.name"]
+        );
+        // Dropping on itself or past the end writes nothing new.
+        let before = view.order.clone();
+        move_column(&mut view, 1, 1, &shown);
+        move_column(&mut view, 9, 0, &shown);
+        assert_eq!(view.order, before);
+        // Dropping at the very end lands last.
+        move_column(&mut view, 0, 4, &shown);
+        assert_eq!(
+            view.order.as_deref().unwrap(),
+            ["status", "rating", "file.name", "due"]
+        );
+    }
+
+    #[test]
+    fn a_sorts_direction_reads_asc_when_absent() {
+        let mut view = View::default();
+        assert_eq!(sort_direction(&view, "status"), None);
+        prepend_sort(&mut view, "status", DESC);
+        assert_eq!(
+            sort_direction(&view, "note.status").as_deref(),
+            Some("DESC")
+        );
+        view.sort[0].direction = None;
+        assert_eq!(sort_direction(&view, "status").as_deref(), Some("ASC"));
+    }
     use scoria_formats::base::Base;
 
     fn view_of(yaml: &str) -> View {

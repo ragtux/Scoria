@@ -32,11 +32,14 @@
 //! what they write is observed there. A cell typed into writes the note, not
 //! the base, and that is in the same module.
 
+#[cfg(test)]
+use crate::bases::cells::lines_for;
 use crate::bases::cells::{
-    cell_text, checkbox, group_header, lines_for, renders_as_link, row_of, Line, CELL_PAD,
+    cell_text, checkbox, group_header, lines_for_table, renders_as_link, row_of, Line, CELL_PAD,
 };
-use crate::bases::edit::{editable_key, ColumnDrag};
+use crate::bases::edit::{editable_key, ColumnDrag, HeaderMove};
 use crate::bases::view::BasesView;
+use crate::bases::writes::{sort_direction, DESC};
 use crate::theme::{Theme, FONT_UI_SMALL};
 use gpui::{
     div, list, prelude::*, px, AnyElement, Context, DragMoveEvent, ListAlignment, ListState,
@@ -75,6 +78,10 @@ pub const MAX_COLUMN_WIDTH: f32 = 400.;
 /// measured. 6 px is the narrowest target the rest of the shell uses.
 pub const GRIP_WIDTH: f32 = 6.;
 
+/// The anchor key the header row records its box under, so a page opened
+/// from a header can hang under that header.
+pub const HEADER_ROW_KEY: u64 = 0x4845_4144_4552;
+
 /// A header drag in flight: the column whose right edge is moving and the
 /// width it is at. Only the drawing uses it; `columnSize` is written once, at
 /// the end of the drag, by
@@ -104,6 +111,8 @@ pub struct TableState {
     pub stretch_last: bool,
     /// A header drag in flight, which the widths already follow.
     pub resize: Option<ColumnResize>,
+    /// A header being dragged to another slot: the slot the drop line marks.
+    pub drop_at: Option<usize>,
     pub list: ListState,
 }
 
@@ -115,6 +124,7 @@ impl Default for TableState {
             row_height: ROW_HEIGHT,
             stretch_last: true,
             resize: None,
+            drop_at: None,
             list: ListState::new(0, ListAlignment::Top, px(400.)),
         }
     }
@@ -146,9 +156,10 @@ impl BasesView {
             scoria_bases::Layout::Table(table) => table.clone(),
             _ => TableLayout::default(),
         };
+        let summaries = self.view().is_some_and(super::summary::has_summaries);
         let (lines, widths, stretch_last) = match self.table() {
             Some(table) => (
-                lines_for(table, grouped),
+                lines_for_table(table, grouped, summaries),
                 column_widths(&table.columns, &layout),
                 stretches_last(&table.columns, &layout),
             ),
@@ -156,6 +167,22 @@ impl BasesView {
         };
         self.table_state.lines = lines;
         self.table_state.widths = widths;
+        // A sorted, unsized column makes room for its chevron (the 20 px
+        // `bases-table-header-sort` box), so the label is not cut for it.
+        if let (Some(table), Some(view)) = (self.table(), self.view()) {
+            let sorted: Vec<bool> = table
+                .columns
+                .iter()
+                .map(|col| {
+                    layout.width_of(&col.id).is_none() && sort_direction(view, &col.id).is_some()
+                })
+                .collect();
+            for (w, sorted) in self.table_state.widths.iter_mut().zip(sorted) {
+                if sorted {
+                    *w += 22.;
+                }
+            }
+        }
         self.table_state.stretch_last = stretch_last;
         self.table_state.row_height = ROW_HEIGHT * layout.row_height.mult();
         // A rebuild under a header drag — the watcher re-resolving the table
@@ -203,6 +230,29 @@ impl BasesView {
         };
         let header = self.render_header(table, theme, cx);
         let embedded = self.is_embedded();
+        let drop_line = self
+            .table_state
+            .drop_at
+            .map(|slot| self.table_state.widths.iter().take(slot).sum::<f32>() - 1.);
+        let table_height = HEADER_HEIGHT
+            + self
+                .table_state
+                .lines
+                .iter()
+                .map(|line| match line {
+                    Line::Row { .. } => self.table_state.row_height,
+                    Line::Group(_) => crate::bases::cells::GROUP_HEIGHT,
+                    Line::Summary(_) => super::summary::SUMMARY_HEIGHT,
+                })
+                .sum::<f32>();
+        // Observed: an ungrouped view with summaries draws the footer under
+        // its rows; a grouped one draws a row under each heading instead
+        // (`s18` `tableEnd`: `footer: null` while grouped).
+        let grouped = self.view().is_some_and(|v| v.group_by.is_some());
+        let footer = (!grouped
+            && self.view().is_some_and(super::summary::has_summaries)
+            && !self.table_state.lines.is_empty())
+        .then(|| self.render_summary_row(None, theme, cx));
         let body = if self.table_state.lines.is_empty() {
             self.render_empty(theme)
         } else if embedded {
@@ -247,10 +297,38 @@ impl BasesView {
             )
             .on_mouse_up_out(
                 MouseButton::Left,
-                cx.listener(|this, _, _, cx| this.finish_column_resize(cx)),
+                cx.listener(|this, _, _, cx| {
+                    this.table_state.drop_at = None;
+                    this.finish_column_resize(cx)
+                }),
             )
+            .on_drag_move(
+                cx.listener(|this, event: &DragMoveEvent<HeaderMove>, _, cx| {
+                    this.header_drag_over(event.event.position.x, event.bounds.left(), cx);
+                }),
+            )
+            .on_drop(cx.listener(|this, drag: &HeaderMove, _, cx| {
+                if let Some(to) = this.table_state.drop_at {
+                    this.drop_column(drag.column, to, cx);
+                }
+            }))
+            .relative()
             .child(header)
             .child(body)
+            .when_some(footer, |d, row| d.child(row))
+            .when_some(drop_line, |d, x| {
+                // Obsidian's `table-drag-target mod-col`: a line at the slot's
+                // left edge, the table's own height, in the accent colour.
+                d.child(
+                    div()
+                        .absolute()
+                        .top_0()
+                        .h(px(table_height))
+                        .left(px(x))
+                        .w(px(2.))
+                        .bg(theme.accent),
+                )
+            })
             .into_any_element()];
         body.extend(self.render_header_menu(theme, cx));
         body
@@ -264,14 +342,25 @@ impl BasesView {
     fn render_header(&self, table: &Table, theme: &Theme, cx: &mut Context<Self>) -> AnyElement {
         let last = table.columns.len().saturating_sub(1);
         let stretch_last = self.table_state.stretch_last;
+        let view = self.view().cloned();
+        let props = match (self.base(), view.as_ref()) {
+            (Some(base), Some(view)) => self.properties_of(base, view),
+            (Some(base), None) => {
+                let view = self.showing_view(base);
+                self.properties_of(base, &view)
+            }
+            _ => Vec::new(),
+        };
         div()
             .flex()
             .flex_row()
             .flex_shrink_0()
+            .relative()
             .w_full()
             .h(px(HEADER_HEIGHT))
             .border_b_1()
             .border_color(theme.border)
+            .child(self.measure(HEADER_ROW_KEY))
             .children(table.columns.iter().enumerate().map(|(ix, col)| {
                 let width = self
                     .table_state
@@ -279,59 +368,101 @@ impl BasesView {
                     .get(ix)
                     .copied()
                     .unwrap_or(MIN_COLUMN_WIDTH);
+                // The type icon before the name is the properties panel's own
+                // for the same id: `info` for `file.*`, `square-function`
+                // for a formula, the kind's icon for a note property
+                // (observed, `s08` `headerDom`).
+                let icon_name = props
+                    .iter()
+                    .find(|p| crate::bases::writes::same_property(&p.id, &col.id))
+                    .map(|p| p.panel_icon())
+                    .unwrap_or("text");
+                // `chevron-down` while the column sorts Z -> A (observed on a
+                // `file.name DESC` sort); `chevron-up` for A -> Z is the
+                // reading of the other half.
+                let sort = view.as_ref().and_then(|v| sort_direction(v, &col.id));
+                let chevron = sort.as_deref().map(|d| {
+                    if d == DESC {
+                        "chevron-down"
+                    } else {
+                        "chevron-up"
+                    }
+                });
                 let mut cell = div()
                     .id(("bases-header", ix))
                     .relative()
                     .flex()
                     .flex_row()
                     .items_center()
+                    .gap(px(6.))
                     .h_full()
                     .px(px(CELL_PAD))
                     .overflow_hidden()
                     .text_size(px(FONT_UI_SMALL))
                     .text_color(theme.text_muted)
+                    .hover(|s| s.bg(theme.bg_alt))
                     .when(ix > 0, |d| d.border_l_1().border_color(theme.border))
                     .on_mouse_down(
                         MouseButton::Right,
                         cx.listener(move |this, event: &MouseDownEvent, _, cx| {
                             this.open_header_menu(ix, event.position, cx)
                         }),
-                    );
+                    )
+                    // The header itself drags to another slot; a plain click
+                    // does nothing (observed: `leftClick` raised no surface).
+                    .on_drag(HeaderMove { column: ix }, |drag, _, _, cx| {
+                        cx.new(|_| drag.clone())
+                    });
                 cell = if ix == last && stretch_last {
                     cell.flex_1().min_w(px(width))
                 } else {
                     cell.flex_shrink_0().w(px(width))
                 };
-                cell.child(
-                    div()
-                        .min_w_0()
-                        .whitespace_nowrap()
-                        .overflow_hidden()
-                        .text_ellipsis()
-                        .child(SharedString::from(col.display.clone())),
-                )
-                .child(
-                    div()
-                        .id(("bases-header-grip", ix))
-                        .absolute()
-                        .top(px(0.))
-                        .right(px(0.))
-                        .w(px(GRIP_WIDTH))
-                        .h_full()
-                        .cursor_col_resize()
-                        .on_drag(ColumnDrag { column: ix }, |drag, _, _, cx| {
-                            cx.stop_propagation();
-                            cx.new(|_| drag.clone())
-                        })
-                        // The press that starts the drag is not a press on
-                        // the header, which would open its menu.
-                        .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation()),
-                )
+                cell.child(crate::assets::icon(icon_name, 16., theme.text_muted))
+                    .child(
+                        div()
+                            .flex_1()
+                            .min_w_0()
+                            .whitespace_nowrap()
+                            .overflow_hidden()
+                            .text_ellipsis()
+                            .child(SharedString::from(col.display.clone())),
+                    )
+                    .children(chevron.map(|name| {
+                        div()
+                            .flex_shrink_0()
+                            .w(px(20.))
+                            .h_full()
+                            .mr(px(2.))
+                            .flex()
+                            .items_center()
+                            .justify_center()
+                            .child(crate::assets::icon(name, 14., theme.text_muted))
+                    }))
+                    .child(
+                        div()
+                            .id(("bases-header-grip", ix))
+                            .absolute()
+                            .top(px(0.))
+                            .right(px(0.))
+                            .w(px(GRIP_WIDTH))
+                            .h_full()
+                            .cursor_col_resize()
+                            // Observed: the 6 px resizer turns the accent
+                            // colour under the pointer.
+                            .hover(|s| s.bg(theme.accent))
+                            .on_drag(ColumnDrag { column: ix }, |drag, _, _, cx| {
+                                cx.stop_propagation();
+                                cx.new(|_| drag.clone())
+                            })
+                            // The press that starts the drag is not a press on
+                            // the header, which would open its menu.
+                            .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation()),
+                    )
             }))
             .into_any_element()
     }
 
-    /// One line of the scroll body.
     fn render_line(&mut self, ix: usize, _: &mut Window, cx: &mut Context<Self>) -> AnyElement {
         self.line_element(ix, cx)
     }
@@ -359,6 +490,7 @@ impl BasesView {
                 };
                 self.render_row(ix, &row, &theme, cx)
             }
+            Line::Summary(g) => self.render_summary_row(Some(g), &theme, cx),
         }
     }
 

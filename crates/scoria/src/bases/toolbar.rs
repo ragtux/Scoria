@@ -107,6 +107,9 @@ pub enum Panel {
     Group,
     Filter,
     Properties,
+    /// The Summarize page, opened from a column header or a summary cell
+    /// rather than from a button of the bar.
+    Summary,
 }
 
 impl Panel {
@@ -120,6 +123,7 @@ impl Panel {
             Panel::Group => "group",
             Panel::Filter => "filter",
             Panel::Properties => "properties",
+            Panel::Summary => "summary",
         }
     }
 }
@@ -251,6 +255,13 @@ pub struct ToolbarState {
     pub search: Option<String>,
     /// A grip being dragged: the list it belongs to and the row's index.
     pub drag: Option<(&'static str, usize)>,
+    /// Where a page opened from somewhere other than its button hangs --
+    /// the column header's *Edit property...* and *Summarize...* open the
+    /// properties panel's page under the header -- which outranks the
+    /// button's box until the panel closes.
+    pub pinned_at: Option<Point<Pixels>>,
+    /// Which column and rows the Summarize page is about while it is open.
+    pub summary: Option<super::summary::SummaryTarget>,
     /// Where the open panel was asked for, when no button box is known.
     at: Point<Pixels>,
     /// The shared text field, made the first time a panel wants one.
@@ -273,7 +284,7 @@ pub struct ToolbarState {
     /// How many rows the showing view resolves to with its `limit` dropped.
     total: Option<usize>,
     /// What the open panel drew, for the control socket.
-    rows: Vec<Json>,
+    pub(super) rows: Vec<Json>,
     subscriptions: Vec<Subscription>,
 }
 
@@ -282,6 +293,8 @@ impl Default for ToolbarState {
         ToolbarState {
             panel: Panel::None,
             page: Page::List,
+            pinned_at: None,
+            summary: None,
             combo: None,
             selected: None,
             header_menu: false,
@@ -637,6 +650,8 @@ impl BasesView {
         self.forget_panel_anchors();
         self.toolbar.panel = Panel::None;
         self.toolbar.page = Page::List;
+        self.toolbar.pinned_at = None;
+        self.toolbar.summary = None;
         self.toolbar.combo = None;
         self.toolbar.selected = None;
         self.toolbar.header_menu = false;
@@ -658,7 +673,10 @@ impl BasesView {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        if self.toolbar.header_menu {
+        if self.editing.menu.is_some() {
+            // The column header's own menu, one layer like the rest.
+            self.editing.menu = None;
+        } else if self.toolbar.header_menu {
             self.toolbar.header_menu = false;
         } else if self.toolbar.combo.is_some() {
             self.close_combo(window, cx);
@@ -879,7 +897,12 @@ impl BasesView {
         self.toolbar.field_value = text.clone();
         self.toolbar.selected = None;
         if let Some(input) = self.toolbar.field.clone() {
-            let placeholder = placeholder_of(&which);
+            // Observed: the properties panel's and the Summarize page's
+            // search reads "Find or create...", the views panel's "Search...".
+            let placeholder = match (&which, self.toolbar.panel) {
+                (Field::Search, Panel::Properties | Panel::Summary) => "Find or create...",
+                _ => placeholder_of(&which),
+            };
             input.update(cx, |input, cx| {
                 input.set_placeholder(placeholder);
                 input.set_height(px(INPUT_HEIGHT));
@@ -1048,6 +1071,7 @@ impl BasesView {
         match (self.toolbar.panel, &self.toolbar.page) {
             (Panel::Views, Page::List) => self.views_list_len(cx),
             (Panel::Properties, Page::List) => self.properties_list_len(cx),
+            (Panel::Summary, Page::List) => self.summary_list_len(cx),
             _ => 0,
         }
     }
@@ -1057,6 +1081,7 @@ impl BasesView {
         match (self.toolbar.panel, &self.toolbar.page) {
             (Panel::Views, Page::List) => self.views_activate_selected(window, cx),
             (Panel::Properties, Page::List) => self.properties_activate_selected(window, cx),
+            (Panel::Summary, Page::List) => self.summary_activate_selected(window, cx),
             _ => {}
         }
     }
@@ -1080,10 +1105,11 @@ impl BasesView {
             Panel::Sort | Panel::Group => 240.,
             _ => PANEL_WIDTH,
         };
-        let at = self
-            .anchor(key("bases-toolbar-button", panel as usize))
-            .map(|b| Point::new(b.origin.x, b.origin.y + b.size.height + px(2.)))
-            .unwrap_or(self.toolbar.at);
+        let at = self.toolbar.pinned_at.unwrap_or_else(|| {
+            self.anchor(key("bases-toolbar-button", panel as usize))
+                .map(|b| Point::new(b.origin.x, b.origin.y + b.size.height + px(2.)))
+                .unwrap_or(self.toolbar.at)
+        });
         let tallest = (window.viewport_size().height - at.y - px(8.)).max(px(120.));
         let body = match panel {
             Panel::None => return None,
@@ -1093,6 +1119,7 @@ impl BasesView {
             Panel::Group => self.render_group_panel(base, view, theme, cx),
             Panel::Filter => self.render_filter_panel(base, view, theme, cx),
             Panel::Properties => self.render_properties_panel(base, view, theme, cx),
+            Panel::Summary => self.render_summary_panel(base, view, theme, cx),
         };
         let boxed = div()
             .id(("bases-toolbar-panel", panel as usize))

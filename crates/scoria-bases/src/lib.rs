@@ -27,6 +27,7 @@ pub mod expr;
 pub mod funcs;
 pub mod layout;
 pub mod rule;
+pub mod summary;
 pub mod table;
 pub mod value;
 

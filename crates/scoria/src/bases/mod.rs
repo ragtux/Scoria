@@ -8,6 +8,9 @@
 //! showing view, and [`embed`] is the registry of the live views behind
 //! every `![[x.base]]` inside a note.
 //!
+//! [`summary`] is the column summaries: the footer and group rows of the
+//! table, and the Summarize page that sets them.
+//!
 //! [`writes`] is what a control writes into a view — `sort`, `groupBy`,
 //! `order` and `limit` — in one place, because the toolbar's panels and the
 //! column header's own menu both write them and must write the same bytes.
@@ -32,6 +35,7 @@ pub mod embed;
 pub mod kanban;
 pub mod list;
 pub mod rows;
+pub mod summary;
 pub mod table;
 pub mod toolbar;
 pub mod toolbar_filter;

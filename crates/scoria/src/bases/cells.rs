@@ -158,6 +158,9 @@ pub enum Line {
     /// A row: its group, and its index inside that group — or `None` and an
     /// index into [`Table::rows`] when the view does not group.
     Row { group: Option<usize>, ix: usize },
+    /// The summary row under group `g`'s heading, which only the table
+    /// layout draws and only when the view has `summaries`.
+    Summary(usize),
 }
 
 /// The scroll body of a resolved table: group headers interleaved with rows
@@ -168,10 +171,20 @@ pub enum Line {
 /// shape; a grouped view whose groups came back empty falls back to the flat
 /// rows so nothing disappears.
 pub fn lines_for(table: &Table, grouped: bool) -> Vec<Line> {
+    lines_for_table(table, grouped, false)
+}
+
+/// The same, with a summary line under each group heading when the view
+/// has `summaries` -- observed: `bases-group-heading`, then the
+/// `bases-table-group-summary-row`, then the group's rows.
+pub fn lines_for_table(table: &Table, grouped: bool, summaries: bool) -> Vec<Line> {
     if grouped && !table.groups.is_empty() {
-        let mut out = Vec::with_capacity(table.rows.len() + table.groups.len());
+        let mut out = Vec::with_capacity(table.rows.len() + 2 * table.groups.len());
         for (g, group) in table.groups.iter().enumerate() {
             out.push(Line::Group(g));
+            if summaries {
+                out.push(Line::Summary(g));
+            }
             out.extend((0..group.rows.len()).map(|ix| Line::Row { group: Some(g), ix }));
         }
         out
@@ -185,7 +198,7 @@ pub fn lines_for(table: &Table, grouped: bool) -> Vec<Line> {
 /// The row a line points at, through its group when it has one.
 pub fn row_of(table: &Table, line: Line) -> Option<&Row> {
     match line {
-        Line::Group(_) => None,
+        Line::Group(_) | Line::Summary(_) => None,
         Line::Row { group: Some(g), ix } => table.groups.get(g)?.rows.get(ix),
         Line::Row { group: None, ix } => table.rows.get(ix),
     }

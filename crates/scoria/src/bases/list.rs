@@ -123,7 +123,7 @@ impl ListLayoutState {
                 .lines
                 .iter()
                 .filter_map(|line| match line {
-                    Line::Group(_) => None,
+                    Line::Group(_) | Line::Summary(_) => None,
                     Line::Row { ix, .. } => Some(marker(self.markers, ix + 1)),
                 })
                 .take(STATE_LINES)
@@ -217,6 +217,8 @@ impl BasesView {
             return div().into_any_element();
         };
         match line {
+            // A summary line is the table's; the list never lays one out.
+            Line::Summary(_) => div().into_any_element(),
             Line::Group(g) => {
                 let Some(group) = table.groups.get(g) else {
                     return div().into_any_element();
@@ -536,7 +538,7 @@ mod tests {
         let numbers: Vec<Option<String>> = lines_for(&table, true)
             .into_iter()
             .filter_map(|line| match line {
-                Line::Group(_) => None,
+                Line::Group(_) | Line::Summary(_) => None,
                 Line::Row { ix, .. } => Some(marker(Markers::Number, ix + 1)),
             })
             .collect();

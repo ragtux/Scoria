@@ -49,9 +49,12 @@
 //!   readings are below, each on its own function.
 
 use crate::bases::cells::{cell_text, row_of};
+use crate::bases::table::HEADER_ROW_KEY;
 use crate::bases::table::{ColumnResize, MIN_COLUMN_WIDTH};
 use crate::bases::view::BasesView;
-use crate::bases::writes::{clear_sort, hide_column, is_sorted, prepend_sort, ASC, DESC};
+use crate::bases::writes::{
+    clear_sort, hide_column, prepend_sort, set_group_property, sort_direction, ASC, DESC,
+};
 use crate::text_input::{InputEvent, TextInput};
 use crate::theme::{Theme, FONT_UI_SMALL};
 use gpui::{
@@ -60,84 +63,151 @@ use gpui::{
 };
 use scoria_bases::{Column, ColumnSource};
 use scoria_formats::config::PropertyTypes;
-use scoria_formats::properties::{apply, new_block, plan, type_of, Change, Value};
+use scoria_formats::properties::{apply, new_block, plan, type_of, Change, PropertyType, Value};
 use serde_json::{json, Value as Json};
 
 /// A menu row whose label is this draws a separator line instead, as the
 /// canvas's own right-click list does.
 pub const SEPARATOR: &str = "---";
 
+/// The `is-warning` colour of *Clear sort* and *Delete*: Obsidian's own
+/// `--text-error` was not read off the run, so this is the red the rest of
+/// the shell uses for a warning.
+const WARNING: gpui::Hsla = gpui::Hsla {
+    h: 0.985,
+    s: 0.80,
+    l: 0.60,
+    a: 1.0,
+};
+
 // ---------------------------------------------------------------------------
 // The column header's context menu
 // ---------------------------------------------------------------------------
 
 /// One row of the column header's context menu: the id a pick dispatches on,
-/// the label Obsidian draws, and whether picking it does anything here.
+/// the label and icon Obsidian draws, and the marks it wears.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MenuRow {
     pub id: &'static str,
     pub label: &'static str,
-    /// False for the two rows that are drawn because they are observed and
-    /// inert because what they open is not: *Summarize...* and
-    /// *Edit property...*.
-    pub enabled: bool,
+    /// The row's Lucide icon; empty for a separator.
+    pub icon: &'static str,
+    /// `mod-checked`: a check at the row's right.
+    pub checked: bool,
+    /// `is-warning`: the label in the warning colour.
+    pub warning: bool,
+    /// `has-submenu`: a chevron at the right, and a second list on hover.
+    pub submenu: bool,
+}
+
+impl MenuRow {
+    const fn plain(id: &'static str, label: &'static str, icon: &'static str) -> MenuRow {
+        MenuRow {
+            id,
+            label,
+            icon,
+            checked: false,
+            warning: false,
+            submenu: false,
+        }
+    }
+
+    const fn separator() -> MenuRow {
+        MenuRow::plain("separator", SEPARATOR, "")
+    }
+}
+
+/// What kind of column a header menu belongs to, which decides its rows.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum HeaderKind {
+    /// `file.name`: no *Group by this property* and no *Property type*.
+    FileName,
+    /// Any other `file.*` property.
+    File,
+    /// A frontmatter property: the whole menu.
+    Property,
+    /// A `formula.*` column: *Edit formula...* in place of *Edit property...*,
+    /// no *Property type*.
+    Formula,
 }
 
 /// The menu a right-click on a column header opens, in Obsidian's own order
-/// and with its own labels — **observed in full**: *Hide column*,
-/// *Summarize...*, separator, *Sort A → Z*, *Sort Z → A*, (*Clear sort*, only
-/// once a sort exists), separator, *Edit property...*.
+/// and with its own labels and icons — **observed in full**
+/// (`tools/obsidian-probe/results/2026-11-01-bases-ui.json`, `s08`
+/// `rightClick` and `nameHeaderMenu`, `s24` `formulaHeaderMenu` and
+/// `headerMenu:*`): *Hide column* (`eye-off`), *Summarize...*
+/// (`calculator`), *Group by this property* (`group`) | *Sort A → Z*
+/// (`arrow-down-wide-narrow`, `mod-checked` while the column sorts that way),
+/// *Sort Z → A* (`arrow-up-narrow-wide`), *Clear sort* (`eraser`,
+/// `is-warning`, only while sorted) | | *Edit property...* (`edit-3`, which is
+/// `pen-line`) | *Property type* ▸ (`info`). The `file name` header has no
+/// *Group by* and no *Property type*; a formula header has *Edit formula...*
+/// and no *Property type*. The two separators before *Edit property...* are
+/// Obsidian's own empty section.
 ///
-/// **Unprobed**: what "once one exists" counts. A menu belongs to one column,
-/// so this reads it as *this column* being sorted, which is also the only
-/// reading under which the row has something to clear.
-pub fn header_menu_rows(sorted: bool) -> Vec<MenuRow> {
+/// `sort` is the direction the column sorts in, when it does.
+pub fn header_menu_rows(kind: HeaderKind, sort: Option<&str>) -> Vec<MenuRow> {
     let mut rows = vec![
-        MenuRow {
-            id: "hide-column",
-            label: "Hide column",
-            enabled: true,
-        },
-        MenuRow {
-            id: "summarize",
-            label: "Summarize...",
-            enabled: false,
-        },
-        MenuRow {
-            id: "separator-1",
-            label: SEPARATOR,
-            enabled: false,
-        },
-        MenuRow {
-            id: "sort-asc",
-            label: "Sort A → Z",
-            enabled: true,
-        },
-        MenuRow {
-            id: "sort-desc",
-            label: "Sort Z → A",
-            enabled: true,
-        },
+        MenuRow::plain("hide-column", "Hide column", "eye-off"),
+        MenuRow::plain("summarize", "Summarize...", "calculator"),
     ];
-    if sorted {
+    if kind != HeaderKind::FileName {
+        rows.push(MenuRow::plain(
+            "group-by",
+            "Group by this property",
+            "group",
+        ));
+    }
+    rows.push(MenuRow::separator());
+    rows.push(MenuRow {
+        checked: sort == Some(ASC),
+        ..MenuRow::plain("sort-asc", "Sort A → Z", "arrow-down-wide-narrow")
+    });
+    rows.push(MenuRow {
+        checked: sort == Some(DESC),
+        ..MenuRow::plain("sort-desc", "Sort Z → A", "arrow-up-narrow-wide")
+    });
+    if sort.is_some() {
         rows.push(MenuRow {
-            id: "clear-sort",
-            label: "Clear sort",
-            enabled: true,
+            warning: true,
+            ..MenuRow::plain("clear-sort", "Clear sort", "eraser")
         });
     }
-    rows.push(MenuRow {
-        id: "separator-2",
-        label: SEPARATOR,
-        enabled: false,
-    });
-    rows.push(MenuRow {
-        id: "edit-property",
-        label: "Edit property...",
-        enabled: false,
-    });
+    rows.push(MenuRow::separator());
+    rows.push(MenuRow::separator());
+    if kind == HeaderKind::Formula {
+        rows.push(MenuRow::plain(
+            "edit-formula",
+            "Edit formula...",
+            "pen-line",
+        ));
+    } else {
+        rows.push(MenuRow::plain(
+            "edit-property",
+            "Edit property...",
+            "pen-line",
+        ));
+    }
+    if kind == HeaderKind::Property {
+        rows.push(MenuRow::separator());
+        rows.push(MenuRow {
+            submenu: true,
+            ..MenuRow::plain("property-type", "Property type", "info")
+        });
+    }
     rows
 }
+
+/// The *Property type* submenu's rows, observed (`s08` `submenus`): the six
+/// types in this order, the column's current one checked.
+pub const TYPE_ROWS: [(&str, &str, PropertyType); 6] = [
+    ("Checkbox", "square-check", PropertyType::Checkbox),
+    ("Date", "calendar", PropertyType::Date),
+    ("Date & time", "clock", PropertyType::DateTime),
+    ("List", "list", PropertyType::MultiText),
+    ("Number", "binary", PropertyType::Number),
+    ("Text", "text", PropertyType::Text),
+];
 
 /// The open header menu: which column it belongs to, that column's id as
 /// `order` carries it, where it was opened and the rows it drew.
@@ -149,6 +219,11 @@ pub struct HeaderMenu {
     pub id: String,
     pub position: Point<Pixels>,
     pub rows: Vec<MenuRow>,
+    /// The frontmatter key *Property type* writes for, and the type it has
+    /// now; `None` on a header with no such row.
+    pub type_key: Option<(String, PropertyType)>,
+    /// Whether the *Property type* list is showing beside its row.
+    pub submenu: bool,
 }
 
 // ---------------------------------------------------------------------------
@@ -282,8 +357,13 @@ impl EditState {
                 "rows": menu.rows.iter().map(|row| json!({
                     "id": row.id,
                     "label": row.label,
-                    "enabled": row.enabled,
+                    "icon": row.icon,
+                    "checked": row.checked,
+                    "warning": row.warning,
+                    "submenu": row.submenu,
                 })).collect::<Vec<_>>(),
+                "submenu": menu.submenu,
+                "type": menu.type_key.as_ref().map(|(k, t)| json!({"key": k, "type": t.as_str()})),
             })),
         })
     }
@@ -298,6 +378,21 @@ impl EditState {
 #[derive(Clone)]
 pub struct ColumnDrag {
     pub column: usize,
+}
+
+/// What a drag of the header itself carries: which column is being moved.
+/// Observed: a header is draggable, the body wears `is-grabbing`, and a
+/// `table-drag-target mod-col` line (0 wide, the table's full height) marks
+/// where it would land.
+#[derive(Clone)]
+pub struct HeaderMove {
+    pub column: usize,
+}
+
+impl gpui::Render for HeaderMove {
+    fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+        gpui::Empty
+    }
 }
 
 impl gpui::Render for ColumnDrag {
@@ -322,27 +417,84 @@ impl BasesView {
     ) {
         // Opening a menu is the last moment an open field can be written.
         self.commit_cell_edit(cx);
-        let Some(id) = self
-            .table()
-            .and_then(|t| t.columns.get(column))
-            .map(|c| c.id.clone())
-        else {
+        let Some(col) = self.table().and_then(|t| t.columns.get(column)).cloned() else {
             return;
         };
-        let sorted = self.view().is_some_and(|v| is_sorted(v, &id));
+        let id = col.id.clone();
+        let kind = match &col.source {
+            ColumnSource::File(f) if f.eq_ignore_ascii_case("name") => HeaderKind::FileName,
+            ColumnSource::File(_) => HeaderKind::File,
+            ColumnSource::Formula(_) => HeaderKind::Formula,
+            ColumnSource::Property(_) => HeaderKind::Property,
+        };
+        let sort = self.view().and_then(|v| sort_direction(v, &id));
+        let type_key = match &col.source {
+            ColumnSource::Property(name) => {
+                let key = name.strip_prefix("note.").unwrap_or(name).to_string();
+                let ty = self.property_type_of(&key);
+                Some((key, ty))
+            }
+            _ => None,
+        };
         self.editing.menu = Some(HeaderMenu {
             column,
             id,
             position,
-            rows: header_menu_rows(sorted),
+            rows: header_menu_rows(kind, sort.as_deref()),
+            type_key,
+            submenu: false,
         });
         cx.notify();
+    }
+
+    /// The type a frontmatter key has: `types.json` first, then what its
+    /// values infer, which is what the *Property type* submenu checks.
+    fn property_type_of(&self, key: &str) -> PropertyType {
+        use scoria_bases::rule::PropertyKind;
+        match self.note_kind(key) {
+            PropertyKind::Number => PropertyType::Number,
+            PropertyKind::Checkbox => PropertyType::Checkbox,
+            PropertyKind::Date => PropertyType::Date,
+            PropertyKind::DateTime => PropertyType::DateTime,
+            PropertyKind::List => PropertyType::MultiText,
+            PropertyKind::Tags => PropertyType::Tags,
+            _ => PropertyType::Text,
+        }
     }
 
     pub(super) fn close_header_menu(&mut self, cx: &mut Context<Self>) {
         if self.editing.menu.take().is_some() {
             cx.notify();
         }
+    }
+
+    /// Where a page opened from a column header hangs: under the header
+    /// cell, which is where Obsidian put the *Edit* and *Summarize* pages
+    /// (observed at y 152 under a header ending at 148).
+    pub(super) fn header_page_anchor(&self, column: usize) -> Option<Point<Pixels>> {
+        let row = self.anchor(HEADER_ROW_KEY)?;
+        let before: f32 = self.table_state.widths.iter().take(column).sum();
+        Some(Point::new(
+            row.origin.x + px(before),
+            row.origin.y + row.size.height + px(4.),
+        ))
+    }
+
+    /// Opens the properties panel on `page`, hung under column `column`'s
+    /// header rather than under the toolbar's button.
+    pub(super) fn open_page_under_header(
+        &mut self,
+        column: usize,
+        page: super::toolbar::Page,
+        cx: &mut Context<Self>,
+    ) {
+        self.toolbar.pinned_at = self.header_page_anchor(column);
+        self.toolbar.panel = super::toolbar::Panel::Properties;
+        self.toolbar.page = page;
+        self.toolbar.combo = None;
+        self.toolbar.selected = None;
+        self.toolbar.editing = None;
+        cx.notify();
     }
 
     /// What a menu row writes. Every one of these goes through
@@ -353,6 +505,7 @@ impl BasesView {
             return;
         };
         let id = menu.id;
+        let column = menu.column;
         match row {
             "hide-column" => {
                 // A view with no `order` shows the columns its rows imply,
@@ -366,16 +519,41 @@ impl BasesView {
             "sort-asc" => self.edit_view(move |view| prepend_sort(view, &id, ASC), cx),
             "sort-desc" => self.edit_view(move |view| prepend_sort(view, &id, DESC), cx),
             "clear-sort" => self.edit_view(move |view| clear_sort(view, &id), cx),
-            // *Summarize...* and *Edit property...* are drawn because they are
-            // observed and inert because what they open is not; see the module
-            // note.
+            // Observed (`s18` `applied:Group by this property`): the file
+            // gained `groupBy: {property: due, direction: ASC}` for the
+            // header clicked, the id spelled as `order` spells it.
+            "group-by" => self.edit_view(move |view| set_group_property(view, &id), cx),
+            "edit-property" => {
+                let page = super::toolbar::Page::Property(scoria_bases::layout::qualify(&id));
+                self.open_page_under_header(column, page, cx);
+            }
+            "edit-formula" => {
+                let name = id.strip_prefix("formula.").unwrap_or(&id).to_string();
+                self.open_page_under_header(column, super::toolbar::Page::Formula(name), cx);
+            }
+            "summarize" => self.summarize_from_header(column, cx),
             _ => {}
         }
         cx.notify();
     }
 
-    /// The menu itself, over everything else, in the style of the canvas's
-    /// right-click list. A press outside it closes it.
+    /// The *Property type* submenu's pick: `types.json` is the workspace's
+    /// to write, so the view only asks.
+    fn header_menu_pick_type(&mut self, ty: PropertyType, cx: &mut Context<Self>) {
+        let Some(menu) = self.editing.menu.take() else {
+            return;
+        };
+        if let Some((key, _)) = menu.type_key {
+            cx.emit(super::view::BasesEvent::SetPropertyType { key, ty });
+        }
+        cx.notify();
+    }
+
+    /// The menu itself, over everything else: Obsidian's `.menu`, 25 px rows
+    /// of a 16 px icon and the label, a separator per section change, a
+    /// check on a `mod-checked` row and the warning colour on `is-warning`,
+    /// and the *Property type* list beside its row while the pointer rests
+    /// on it. A press outside closes it.
     pub(super) fn render_header_menu(
         &self,
         theme: &Theme,
@@ -384,41 +562,123 @@ impl BasesView {
         let menu = self.editing.menu.as_ref()?;
         let mut list = div()
             .id("bases-header-menu")
+            .relative()
             .flex()
             .flex_col()
-            .min_w(px(200.))
-            .py_1()
+            .min_w(px(192.))
+            .py(px(6.))
             .bg(theme.bg_secondary)
             .border_1()
-            .border_color(theme.border)
-            .rounded_md()
+            .border_color(theme.tab_divider)
+            .rounded(px(8.))
             .shadow_lg()
             .text_size(px(FONT_UI_SMALL))
             .text_color(theme.text)
             .occlude()
             .on_mouse_down_out(cx.listener(|this, _, _, cx| this.close_header_menu(cx)));
+        let mut type_row_top = px(0.);
+        let mut y = px(6.);
         for (ix, row) in menu.rows.iter().enumerate() {
             if row.label == SEPARATOR {
-                list = list.child(div().my_1().h(px(1.)).bg(theme.border));
+                list = list.child(div().my(px(6.)).h(px(1.)).bg(theme.border));
+                y += px(13.);
                 continue;
             }
-            let (id, enabled) = (row.id, row.enabled);
+            if row.submenu {
+                type_row_top = y;
+            }
+            let id = row.id;
+            let submenu = row.submenu;
+            let color = if row.warning { WARNING } else { theme.text };
             list = list.child(
                 div()
                     .id(("bases-header-item", ix))
-                    .px_3()
-                    .py_1()
+                    .flex()
+                    .flex_row()
+                    .items_center()
+                    .gap(px(8.))
+                    .h(px(25.))
+                    .mx(px(6.))
+                    .px(px(8.))
+                    .rounded(px(4.))
                     .cursor_pointer()
+                    .text_color(color)
                     .hover(|s| s.bg(theme.bg_alt))
-                    .on_click(cx.listener(move |this, _, _, cx| {
-                        if enabled {
-                            this.header_menu_pick(id, cx);
-                        } else {
-                            this.close_header_menu(cx);
+                    .on_hover(cx.listener(move |this, hovered: &bool, _, cx| {
+                        if let Some(menu) = this.editing.menu.as_mut() {
+                            if *hovered && menu.submenu != submenu {
+                                menu.submenu = submenu;
+                                cx.notify();
+                            }
                         }
                     }))
-                    .child(SharedString::from(row.label)),
+                    .on_click(cx.listener(move |this, _, _, cx| {
+                        if submenu {
+                            if let Some(menu) = this.editing.menu.as_mut() {
+                                menu.submenu = true;
+                                cx.notify();
+                            }
+                        } else {
+                            this.header_menu_pick(id, cx);
+                        }
+                    }))
+                    .child(crate::assets::icon(row.icon, 16., theme.text_muted))
+                    .child(div().flex_1().child(SharedString::from(row.label)))
+                    .when(row.checked, |d| {
+                        d.child(crate::assets::icon("check", 14., theme.text_muted))
+                    })
+                    .when(submenu, |d| {
+                        d.child(crate::assets::icon("chevron-right", 14., theme.text_muted))
+                    }),
             );
+            y += px(25.);
+        }
+        if menu.submenu {
+            if let Some((_, current)) = menu.type_key.as_ref() {
+                let current = *current;
+                let mut sub = div()
+                    .id("bases-header-type-menu")
+                    .absolute()
+                    .left(px(188.))
+                    .top(type_row_top)
+                    .flex()
+                    .flex_col()
+                    .min_w(px(126.))
+                    .py(px(6.))
+                    .bg(theme.bg_secondary)
+                    .border_1()
+                    .border_color(theme.tab_divider)
+                    .rounded(px(8.))
+                    .shadow_lg()
+                    .occlude();
+                for (ix, (label, icon_name, ty)) in TYPE_ROWS.iter().enumerate() {
+                    let ty = *ty;
+                    sub =
+                        sub.child(
+                            div()
+                                .id(("bases-header-type", ix))
+                                .flex()
+                                .flex_row()
+                                .items_center()
+                                .gap(px(8.))
+                                .h(px(25.))
+                                .mx(px(6.))
+                                .px(px(8.))
+                                .rounded(px(4.))
+                                .cursor_pointer()
+                                .hover(|s| s.bg(theme.bg_alt))
+                                .on_click(cx.listener(move |this, _, _, cx| {
+                                    this.header_menu_pick_type(ty, cx)
+                                }))
+                                .child(crate::assets::icon(icon_name, 16., theme.text_muted))
+                                .child(div().flex_1().child(SharedString::from(*label)))
+                                .when(ty == current, |d| {
+                                    d.child(crate::assets::icon("check", 14., theme.text_muted))
+                                }),
+                        );
+                }
+                list = list.child(sub);
+            }
         }
         Some(
             deferred(
@@ -433,6 +693,48 @@ impl BasesView {
     }
 
     // ----- the header drag ---------------------------------------------------
+
+    /// A header dragged onto another column: `order` is rewritten.
+    pub(super) fn drop_column(&mut self, from: usize, to: usize, cx: &mut Context<Self>) {
+        self.table_state.drop_at = None;
+        let shown: Vec<String> = self
+            .table()
+            .map(|t| t.columns.iter().map(|c| c.id.clone()).collect())
+            .unwrap_or_default();
+        if from == to || from + 1 == to {
+            cx.notify();
+            return;
+        }
+        self.edit_view(
+            move |view| super::writes::move_column(view, from, to, &shown),
+            cx,
+        );
+    }
+
+    /// Where a dragged header would land, from the pointer's x against the
+    /// column edges: the slot whose left edge is nearest.
+    pub(super) fn header_drag_over(
+        &mut self,
+        pointer_x: Pixels,
+        table_left: Pixels,
+        cx: &mut Context<Self>,
+    ) {
+        let x = f32::from(pointer_x) - f32::from(table_left);
+        let mut edge = 0.;
+        let mut slot = 0;
+        for (ix, w) in self.table_state.widths.iter().enumerate() {
+            if x < edge + w / 2. {
+                slot = ix;
+                break;
+            }
+            edge += w;
+            slot = ix + 1;
+        }
+        if self.table_state.drop_at != Some(slot) {
+            self.table_state.drop_at = Some(slot);
+            cx.notify();
+        }
+    }
 
     /// A header grip moved: the column's right edge follows the pointer.
     ///
@@ -661,34 +963,83 @@ mod tests {
     // ----- the menu ----------------------------------------------------------
 
     #[test]
-    fn the_header_menu_is_the_observed_one_and_grows_clear_sort() {
-        let plain: Vec<&str> = header_menu_rows(false).iter().map(|r| r.label).collect();
+    fn the_header_menu_is_the_observed_one_for_each_kind_of_column() {
+        let labels = |kind, sort| -> Vec<&'static str> {
+            header_menu_rows(kind, sort)
+                .iter()
+                .map(|r| r.label)
+                .collect()
+        };
+        // `s08` `rightClick`: a frontmatter property, sorted A -> Z.
         assert_eq!(
-            plain,
+            labels(HeaderKind::Property, Some(ASC)),
+            vec![
+                "Hide column",
+                "Summarize...",
+                "Group by this property",
+                SEPARATOR,
+                "Sort A → Z",
+                "Sort Z → A",
+                "Clear sort",
+                SEPARATOR,
+                SEPARATOR,
+                "Edit property...",
+                SEPARATOR,
+                "Property type",
+            ]
+        );
+        // `s08` `nameHeaderMenu`: `file name` has no Group by and no type.
+        assert_eq!(
+            labels(HeaderKind::FileName, Some(ASC)),
             vec![
                 "Hide column",
                 "Summarize...",
                 SEPARATOR,
                 "Sort A → Z",
                 "Sort Z → A",
+                "Clear sort",
+                SEPARATOR,
                 SEPARATOR,
                 "Edit property...",
             ]
         );
-        let sorted: Vec<&str> = header_menu_rows(true).iter().map(|r| r.label).collect();
-        assert_eq!(sorted[5], "Clear sort");
-        assert_eq!(sorted.len(), plain.len() + 1);
+        // `s24` `formulaHeaderMenu`: unsorted, Edit formula, no type.
+        assert_eq!(
+            labels(HeaderKind::Formula, None),
+            vec![
+                "Hide column",
+                "Summarize...",
+                "Group by this property",
+                SEPARATOR,
+                "Sort A → Z",
+                "Sort Z → A",
+                SEPARATOR,
+                SEPARATOR,
+                "Edit formula...",
+            ]
+        );
     }
 
     #[test]
-    fn summarize_and_edit_property_are_drawn_but_inert() {
-        let rows = header_menu_rows(true);
-        let inert: Vec<&str> = rows
+    fn the_sort_rows_check_the_direction_and_clear_sort_warns() {
+        let rows = header_menu_rows(HeaderKind::Property, Some(DESC));
+        let by = |id: &str| rows.iter().find(|r| r.id == id).unwrap();
+        assert!(!by("sort-asc").checked);
+        assert!(by("sort-desc").checked);
+        assert!(by("clear-sort").warning);
+        assert!(by("property-type").submenu);
+        assert_eq!(by("hide-column").icon, "eye-off");
+        assert_eq!(by("group-by").icon, "group");
+        assert_eq!(by("edit-property").icon, "pen-line");
+        let unsorted = header_menu_rows(HeaderKind::File, None);
+        assert!(unsorted.iter().all(|r| !r.checked && !r.warning));
+        assert!(unsorted
             .iter()
-            .filter(|r| !r.enabled && r.label != SEPARATOR)
-            .map(|r| r.label)
-            .collect();
-        assert_eq!(inert, vec!["Summarize...", "Edit property..."]);
+            .all(|r| r.id != "clear-sort" && r.id != "property-type"));
+        assert_eq!(
+            TYPE_ROWS.iter().map(|(l, _, _)| *l).collect::<Vec<_>>(),
+            ["Checkbox", "Date", "Date & time", "List", "Number", "Text"]
+        );
     }
 
     // ----- what the menu writes ---------------------------------------------
@@ -735,9 +1086,9 @@ mod tests {
         let mut view = view_of(
             "views:\n  - type: table\n    name: V\n    sort:\n      - property: status\n        direction: DESC\n      - property: file.name\n        direction: ASC\n",
         );
-        assert!(is_sorted(&view, "note.status"));
+        assert!(crate::bases::writes::is_sorted(&view, "note.status"));
         clear_sort(&mut view, "note.status");
-        assert!(!is_sorted(&view, "status"));
+        assert!(!crate::bases::writes::is_sorted(&view, "status"));
         assert_eq!(
             sorts(&view),
             vec![("file.name".to_string(), Some("ASC".to_string()))]
