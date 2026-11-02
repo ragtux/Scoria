@@ -959,7 +959,9 @@ mod relief_marks {
         let mut with_mark = 0;
         let mut lens: Vec<f64> = Vec::new();
         let mut widths: Vec<f64> = Vec::new();
-        for seed in 0..60u64 {
+        // Doubled when the proportional clearance and the balance gate took
+        // the single-attempt clean rate from about 75% to about 45%.
+        for seed in 0..120u64 {
             let Ok((scene, _)) = attempt_once(&p, seed) else {
                 continue;
             };
@@ -1326,7 +1328,9 @@ mod contouring {
         // (sum aspect, sum alignment, n) for face-on and for tilted.
         let mut flat = (0.0, 0.0, 0.0f64);
         let mut steep = (0.0, 0.0, 0.0f64);
-        for seed in 0..120u64 {
+        // Doubled when the proportional clearance and the balance gate took
+        // the single-attempt clean rate from about 75% to about 45%.
+        for seed in 0..240u64 {
             let Ok((sc, _)) = attempt_once(&p, seed) else {
                 continue;
             };
@@ -1373,7 +1377,9 @@ mod contouring {
     fn the_hole_count_varies() {
         let p = Params::default();
         let mut counts = Vec::new();
-        for seed in 0..120u64 {
+        // Doubled when the proportional clearance and the balance gate took
+        // the single-attempt clean rate from about 75% to about 45%.
+        for seed in 0..240u64 {
             if let Ok((sc, _)) = attempt_once(&p, seed) {
                 counts.push(sc.vesicles_drawn);
             }
@@ -1388,10 +1394,19 @@ mod contouring {
         assert!(hi >= lo + 3, "the count barely varies: {lo}..{hi}");
         let mean = counts.iter().map(|c| f64::from(*c)).sum::<f64>() / counts.len() as f64;
         let want = f64::from(p.vesicle_count);
-        // Truncation at three pulls the mean up a little; it must not drift
-        // far, or `vesicle_count` stops meaning what the table says.
+        // Truncation at three pulls the mean up a little, and the gates
+        // pull it further: a low draw scales its radii up by `sqrt(mean /
+        // drawn)` and, held a `vesicle_edge_ratio` of their own radius off
+        // the ribbon, those big holes are the ones the packer drops, so
+        // low draws fail the coverage gate more often than high ones.
+        // Measured among clean single attempts over 400 seeds: 5.71 before
+        // the proportional clearance, 5.93 after (6.21 with the balance gate
+        // flat at 0.20, which is why that gate scales with the count). The
+        // ceiling is the measured value plus a little; it is a record of
+        // how far the gates move the parameter, not a licence to let them
+        // move it further.
         assert!(
-            mean > want - 0.3 && mean < want + 0.9,
+            mean > want - 0.3 && mean < want + 1.2,
             "the drawn mean is {mean:.2} against the parameter's {want}"
         );
     }

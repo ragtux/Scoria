@@ -500,7 +500,7 @@ The construction, in full:
 
 7. Z-order: facets, then vesicles, then the outline last. The ribbon on top hides the facet tiling's outermost seams.
 
-Optional second rim: the artwork actually carries a second, thinner concentric ribbon (path 13, width 2.49 units = 0.0147 * R0) just inside the main one. Expose it as `inner_rim` (default 0.0, set 0.015 to match the artist) built by the identical construction at r_in and r_in - inner_rim*R0*k_i.
+Optional second rim: the artwork's FILE carries a second, thinner concentric ribbon (path14, width 2.49 units = 0.0147 * R0) just inside the main one, but Part 1 measured it at zero visible pixels and removing it from the file changes nothing in the render - it lies entirely under the main ribbon. Expose it as `inner_rim` (default 0.0) built by the identical construction at r_in and r_in - inner_rim*R0*k_i, and leave it OFF to match what the drawing shows; the `anya` preset carried 0.0147 for a while and put a hairline on the mark the artist never drew.
 
 **rationale**
 
@@ -805,7 +805,7 @@ drawing has a rounded end. The end tapers multiply on top of the profile,
 | `bezier_points` | `u32` | `256` | 96 ..= 512 | Points after arclength resampling, i.e. the number of cubic segments in the emitted outer contour. 256 keeps max deviation from the sampled ring under 1e-4*R0 at the default kappa, and keeps the `d` attribute near 10 KB. 96 gives a deliberately coarser, more 'drawn' outline. |
 | `cr_tension` | `f64` | `0.50` | 0.35 ..= 0.60 | tau in B1 = P_i + tau*(P_{i+1}-P_{i-1})/3. 0.50 is true Catmull-Rom (the 1/6 coefficient) and reproduces a circle to within 2e-7*R. Lower tightens toward the polyline (crisper); above 0.55 handles bulge at high-curvature samples. |
 | `outline_weight` | `f64` | `0.058` | 0.020 ..= 0.100 | Perceived ribbon width as a fraction of R0. Measured 0.0585 on the artwork (9.90 units over R0=169.2). This is the single most brand-defining number in the file - it is what makes the thing read as a sticker rather than as an illustration. Below 0.03 it stops reading at favicon size. |
-| `inner_rim` | `f64` | `0.0` | 0.0 ..= 0.030 | Optional second concentric ribbon inside the first, as a fraction of R0. The artwork has one at 0.0147 (path 13, 2.49 units). Off by default; set 0.015 to match the artist exactly. |
+| `inner_rim` | `f64` | `0.0` | 0.0 ..= 0.030 | Optional second concentric ribbon inside the first, as a fraction of R0. The artwork's file has one at 0.0147 (path14, 2.49 units) that renders no pixels. Off by default, which is what the drawing shows. |
 | `facet_cuts` | `u32` | `11` | 4 ..= 20 | Number of bisections; regions = cuts + 1. The artwork has 14 facet paths with several adjacent same-tone, so a perceived ~9-12. Above 16 the regions get small enough that the 3-tone quantisation turns into dither. |
 | `facet_curviness` | `f64` | `1.00` | 0.0 ..= 1.50 | Blend between a frozen straight chord (0, giving the low-poly look and exactly the artwork's `l` segments) and a live flow-field trace (1). Above 1.0 the cut over-rotates relative to the field and reads agitated. This knob alone swings the piece from geological to geometric. |
 | `facet_min_area` | `f64` | `0.015` | 0.005 ..= 0.050 | Reject any cut whose smaller child is below this fraction of body area. The anti-sliver gate. Measured smallest facet in the artwork is 0.019, so 0.015 leaves a little room. |
@@ -835,6 +835,7 @@ drawing has a rounded end. The end tapers multiply on top of the profile,
 | `vesicle_align` | `f64` | `0.85` | 0.0 ..= 1.0 | How strongly a vesicle's long axis follows the flow field at its centre versus a random angle, BEFORE the surface has its say. High values are what make the holes look like gas that stretched in a single flow. |
 | `vesicle_contour` | `f64` | `0.85` | 0.0 ..= 1.0 | How strongly a hole follows the surface under it: its long axis turns to the local contour and it foreshortens by the tilt, both weighted by `1 - n.z`. 0 recovers the flat behaviour exactly. |
 | `vesicle_edge_clear` | `f64` | `0.055` | 0.030 ..= 0.120 | Minimum gap from a vesicle to the body's INNER (post-ribbon) boundary, fraction of R0, floored at 1.2*outline_weight*R0 so it always scales with the ribbon. Measured tightest: 11.3/169.2 = 0.067, and 1.2*0.058 = 0.070 - the floor is the binding constraint at defaults, which is the right coupling. |
+| `vesicle_edge_ratio` | `f64` | `0.80` | 0.0 ..= 1.50 | Clearance to the inner boundary as a multiple of the hole's own equivalent radius; the larger of this and `vesicle_edge_clear` binds. Part 1's packing rule ("clearance >= 0.8x its own equivalent radius"), measured on all seven holes: clearance over radius 1.55, 0.97, 0.89, 0.93, 0.87, 0.59, 0.58 largest to smallest. |
 | `vesicle_gap` | `f64` | `0.090` | 0.040 ..= 0.200 | Minimum vesicle-to-vesicle gap, fraction of R0, additionally floored at 0.45*min(ri,rj). Measured tightest pair: 17.4/169.2 = 0.103. Too small and two vesicles read as one broken hole; too large and the packing loosens and the rock looks under-vesiculated. |
 | `vesicle_attempts` | `u32` | `220` | 50 ..= 1000 | Placement tries per vesicle before giving up on it. 220 gives the hardest (largest, placed first into a constrained body) roughly a 90% success rate at defaults. |
 | `attempts_total` | `u32` | `2000` | 500 ..= 20000 | Global placement budget; caps worst-case packing at about 0.4 ms. |
@@ -1262,3 +1263,72 @@ at the code that implements it.
   untested: the suite proves output is a pure function of its inputs within
   one process, but proving byte-identity across glibc, musl, MSVC and Apple
   needs a CI job that diffs them.
+
+### From looking at the drawing again
+
+Measured against the artwork and the generator's own output after the 3D
+cues were reverted, 2026-11-01.
+
+- **The clearance around a hole is PROPORTIONAL to the hole, and Part 2
+  never built it.** Part 1 wrote the rule - "reject a candidate unless
+  clearance to the body boundary is >= 0.8x its own equivalent radius" - and
+  Part 2 implemented `max(1.2 * w0, 0.055 * R0)`, an absolute floor. On the
+  drawing, clearance to the inner edge over equivalent radius runs 1.55,
+  0.97, 0.89, 0.93, 0.87, 0.59, 0.58 largest to smallest: the big holes sit
+  about a radius inside and only the small ones come near the rim. On eight
+  consecutive generated seeds the same ratio ran 0.30 to 4.6 with no
+  relation to size - the largest hole of seed 7 at 0.30, against the ribbon.
+  `vesicle_edge_ratio` 0.80 now binds alongside the floor, in the packer,
+  in the relaxation's containment (so a big seed is steered inward rather
+  than settled on the rim) and in the gate. After: the largest hole of each
+  of twelve seeds sits at 0.63 to 1.72 radii. This is the single change
+  that made the sheet read like the drawing.
+
+- **The centre-line separation test let holes touch.** `separated` is exact
+  for two discs and conservative only ALONG the line joining the centres;
+  two elongated holes side by side pass it and meet along their flanks.
+  Measured on the emitted outlines over 200 default rolls: 23 had a pair
+  closer than the gap they were placed with, three under 0.05 R0 against a
+  demanded 0.090. `probe_gap` - every third ring sample of each, 576
+  distances a pair - now runs in the packer and the gate. After: none under
+  0.05, five under 0.09 (the probes are sparser than the measurement).
+
+- **The holes spread in the drawing, and the only thing that delivers it is
+  a gate.** The drawing's hole-set centroid is 0.04 R0 from the body's;
+  ungated the generator's runs median 0.124, p90 0.237, max 0.40 over 200
+  rolls. A rigid pull of the seeds toward the body centroid inside the
+  relaxation was built, measured, and removed: the distribution was identical
+  to three decimals with and without it, because the relaxed seeds are
+  already balanced and the offset is made afterwards by dropped holes and
+  dart-thrown fallbacks. `vesicle_balance` at 0.20 R0 costs 199 re-rolls
+  per 200 logos against 93 ungated (258 at 0.16) and leaves p90 at 0.17.
+  Applied flat, though, it selected against SMALL draws - a three-hole
+  centroid is noisier than a seven-hole one - and over 400 single attempts
+  that pushed the mean drawn count among clean rolls from 5.71 to 6.21 on a
+  `vesicle_count` of 5: the gate was rewriting the parameter. The allowance
+  now scales as `sqrt(7 / n)`, anchored at the drawing's seven; rejections
+  fall from 58 to 28 in 400, the mean to 5.93, and re-rolls to 134 per 200.
+
+- **The proportional clearance moves `vesicle_count`'s realised mean, and
+  the contract records it.** A low draw scales its radii up by
+  `sqrt(mean / drawn)`, and held 0.8 of their radius off the ribbon those
+  big holes are the ones the packer drops, so low draws fail the coverage
+  gate more often than high ones: coverage rejections 1 -> 13 in 400 single
+  attempts, placement failures 0 -> 6. Among clean rolls the mean drawn
+  count is 5.93 against the parameter's 5, from 5.71 before. The test's
+  ceiling moved from +0.9 to +1.2 with that measurement written on it.
+
+- **The second rim is not in the drawing.** Part 2's `inner_rim` was set to
+  0.0147 in the `anya` preset "to match the artist", from path14 in the
+  file. Part 1 had already measured that path at zero visible pixels;
+  re-checked by removing it and diffing a 1600px render: 0 pixels differ
+  (removing a small vesicle, path13, differs 1796; the ribbon, 35329). The
+  generator has been drawing a hairline the drawing has never shown. Off.
+
+- **What the 3D cues got wrong, for the record.** The lit back wall inside
+  each hole, the rim bands and the recalibrated crag spectrum all measured
+  closer to a Blender rock and read worse against the drawing, because the
+  drawing's language is v0's, not v3's: flat tones, a heavy ribbon, and
+  holes that are solid unrimmed blobs. A rimmed hole is v3. They are kept
+  in `git stash` ("3D cues + reference recalibration") with the reference
+  instrument that measured them still in `reference/`.

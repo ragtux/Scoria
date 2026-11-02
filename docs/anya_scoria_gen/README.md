@@ -403,7 +403,7 @@ Every one is settable by name: `--set key=value`, repeatable, applied after
 | `bezier_points` | u32 | `256` | 96 ..= 512 | Emitted cubics on the outer contour; 96 reads hand-drawn. |
 | `cr_tension` | f64 | `0.50` | 0.35 ..= 0.60 | Catmull-Rom tau; lower is crisper, higher bulges. |
 | `outline_weight` | f64 | `0.058` | 0.020 ..= 0.100 | Ribbon width over R0; the brand-defining number. |
-| `inner_rim` | f64 | `0.0` | 0 ..= 0.030 | Optional second thin ribbon; the artist's is 0.0147. |
+| `inner_rim` | f64 | `0.0` | 0 ..= 0.030 | Optional second thin ribbon. The artist's file has one at 0.0147 but it is fully hidden under the main ribbon; off matches the drawing. |
 | `facet_cuts` | u32 | `11` | 4 ..= 20 | Bisections; regions = cuts + 1. |
 | `facet_curviness` | f64 | `0.25` | 0 ..= 1.50 | 0 a straight chord, 1 a live flow trace. |
 | `facet_min_area` | f64 | `0.015` | 0.005 ..= 0.050 | Anti-sliver: smallest allowed child, over body area. |
@@ -427,6 +427,7 @@ Every one is settable by name: `--set key=value`, repeatable, applied after
 | `vesicle_aspect_max` | f64 | `2.40` | 1.0 ..= 3.2 | Elongation of the largest vesicle. |
 | `vesicle_align` | f64 | `0.85` | 0 ..= 1 | How strongly a vesicle's long axis follows the field. |
 | `vesicle_edge_clear` | f64 | `0.055` | 0.030 ..= 0.120 | Gap to the INNER boundary; floored at 1.2*outline_weight. |
+| `vesicle_edge_ratio` | f64 | `0.80` | 0.000 ..= 1.500 | Gap to the inner boundary as a multiple of the hole's own radius. |
 | `vesicle_gap` | f64 | `0.090` | 0.040 ..= 0.200 | Vesicle-to-vesicle gap; floored at 0.45*min radius. |
 | `vesicle_attempts` | u32 | `220` | 50 ..= 1000 | Placement tries per vesicle before dropping it. |
 | `attempts_total` | u32 | `2000` | 500 ..= 20000 | Global placement budget. |

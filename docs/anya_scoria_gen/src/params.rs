@@ -208,6 +208,9 @@ pub struct Params {
     /// number in the file.
     pub outline_weight: f64,
     /// Optional second concentric ribbon inside the first, fraction of R0.
+    /// The artwork's file carries one (2.49 units, 0.0147 R0) but it lies
+    /// entirely under the main ribbon: removing it changes zero rendered
+    /// pixels. Off is what the drawing looks like.
     pub inner_rim: f64,
     /// Interior relief marks: thin tapered lines down the sharpest creases of
     /// the solid, each growing out of the outline ribbon.
@@ -332,6 +335,12 @@ pub struct Params {
     /// Minimum gap to the body's INNER boundary, fraction of R0, floored at
     /// `1.2 * outline_weight * R0`.
     pub vesicle_edge_clear: f64,
+    /// Gap to the inner boundary as a multiple of the hole's OWN equivalent
+    /// radius; the larger of this and `vesicle_edge_clear` binds. This is
+    /// what puts the big holes deep inside and lets only the small ones near
+    /// the rim - the drawing's clearance over radius runs 1.55, 0.97, 0.89,
+    /// 0.93, 0.87, 0.59, 0.58 largest to smallest. 0 makes the gap absolute.
+    pub vesicle_edge_ratio: f64,
     /// Minimum vesicle-to-vesicle gap, fraction of R0, additionally floored at
     /// `0.45 * min(ri, rj)`.
     pub vesicle_gap: f64,
@@ -410,6 +419,7 @@ impl Default for Params {
             vesicle_fill: 1.00,
             vesicle_shade: 0.35,
             vesicle_edge_clear: 0.055,
+            vesicle_edge_ratio: 0.80,
             vesicle_gap: 0.090,
             vesicle_attempts: 220,
             attempts_total: 2000,
@@ -432,7 +442,12 @@ impl Params {
     pub fn anya() -> Params {
         Params {
             margin: 0.0,
-            inner_rim: 0.0147,
+            // Not the file's 0.0147: that second rim is dead geometry in the
+            // artwork, fully occluded by the main ribbon (Part 1, path14, 0
+            // visible pixels - re-checked by removing it and diffing the
+            // render). Drawing it put a hairline on the mark the drawing has
+            // never shown.
+            inner_rim: 0.0,
             tone_fractions: [0.298, 0.603, 0.099],
             ..Params::default()
         }
@@ -705,6 +720,7 @@ impl Params {
             "vesicle_fill" => self.vesicle_fill = f()?,
             "vesicle_shade" => self.vesicle_shade = f()?,
             "vesicle_edge_clear" => self.vesicle_edge_clear = f()?,
+            "vesicle_edge_ratio" => self.vesicle_edge_ratio = f()?,
             "vesicle_gap" => self.vesicle_gap = f()?,
             "vesicle_attempts" => self.vesicle_attempts = u()?,
             "attempts_total" => self.attempts_total = u()?,
@@ -811,6 +827,7 @@ impl Params {
         fchk("vesicle_fill", self.vesicle_fill, 0.30, 1.00)?;
         fchk("vesicle_shade", self.vesicle_shade, 0.0, 1.0)?;
         fchk("vesicle_edge_clear", self.vesicle_edge_clear, 0.030, 0.120)?;
+        fchk("vesicle_edge_ratio", self.vesicle_edge_ratio, 0.0, 1.50)?;
         fchk("vesicle_gap", self.vesicle_gap, 0.040, 0.200)?;
         uchk("vesicle_attempts", self.vesicle_attempts, 50, 1000)?;
         uchk("attempts_total", self.attempts_total, 500, 20000)?;
@@ -920,6 +937,7 @@ impl Params {
             "vesicle_fill" => self.vesicle_fill.to_string(),
             "vesicle_shade" => self.vesicle_shade.to_string(),
             "vesicle_edge_clear" => self.vesicle_edge_clear.to_string(),
+            "vesicle_edge_ratio" => self.vesicle_edge_ratio.to_string(),
             "vesicle_gap" => self.vesicle_gap.to_string(),
             "vesicle_attempts" => self.vesicle_attempts.to_string(),
             "attempts_total" => self.attempts_total.to_string(),
@@ -1376,6 +1394,13 @@ static PARAM_TABLE: &[ParamInfo] = &[
         "Gap to the INNER boundary; floored at 1.2*outline_weight.",
     ),
     row(
+        "vesicle_edge_ratio",
+        Kind::F64,
+        "0.80",
+        "0.000 ..= 1.500",
+        "Gap to the inner boundary as a multiple of the hole's own radius.",
+    ),
+    row(
         "vesicle_gap",
         Kind::F64,
         "0.090",
@@ -1605,7 +1630,9 @@ mod tests {
     fn anya_is_the_artwork() {
         let p = Params::anya();
         assert_eq!(p.margin, 0.0, "the drawing bleeds to the canvas edge");
-        assert!(p.inner_rim > 0.0, "the drawing carries the second rim");
+        // The file carries a second rim; the DRAWING does not show it -
+        // removing it changes no rendered pixel - so the preset leaves it off.
+        assert_eq!(p.inner_rim, 0.0, "the drawing shows no second rim");
         p.validate().expect("feasible");
     }
 }

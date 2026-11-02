@@ -413,9 +413,11 @@ pub fn pack(
             let d = (centre[j] - centre[i]).len();
             room = room.min(d * wi / (wi + wj));
         }
-        // And the body's own edge.
+        // And the body's own edge, at the clearance THIS hole will be held
+        // to - the floor or its own radius times `vesicle_edge_ratio`.
         let d = centre[i] - inner.c;
-        room = room.min(inner.radius_toward(d) - d.len() - clearance);
+        let clr_i = clearance.max(p.vesicle_edge_ratio * weight[i]);
+        room = room.min(inner.radius_toward(d) - d.len() - clr_i);
         // THE CELL CAPS THE SIZE, it does not set it. The drawn weight is
         // the hole's target and the territory is only what stops it
         // overlapping - which is the right division of labour, because
@@ -486,14 +488,25 @@ pub fn pack(
                 total += 1;
                 V2::new(rng.range(lo_b.x, hi_b.x), rng.range(lo_b.y, hi_b.y))
             };
-            if attempt > 0 && !inner.contains(at, clearance) {
+            // The clearance scales with the hole. SPEC.md Part 1 measured
+            // the drawing's rule as "clearance >= 0.8x its own equivalent
+            // radius", and Part 2 then built an absolute floor: the big
+            // holes could land against the ribbon and the small ones deep
+            // inside, where the drawing does the opposite in every one of
+            // its seven. The fast reject uses the target radius; the real
+            // test below uses the radius the candidate actually came out at.
+            if attempt > 0 && !inner.contains(at, clearance.max(p.vesicle_edge_ratio * r_k)) {
                 continue;
             }
             // The shape depends on the centre - the axis follows the field
             // and the surface there - so it has to be built before it can
             // be tested.
             let cand = build_cand(p, field, perlin, depth, rng, c, r0, at, r_k, asp, t);
-            if !boundary_clear(&cand.ring, inner, clearance) {
+            if !boundary_clear(
+                &cand.ring,
+                inner,
+                clearance.max(p.vesicle_edge_ratio * cand.r_eq),
+            ) {
                 continue;
             }
             let mut clash = false;
@@ -666,7 +679,22 @@ fn relax(
             let moved = centre[i] + (want - centre[i]) * RELAX_RATE;
             // Never outside the body. A seed pushed out by a neighbour
             // stays where it was rather than leaving.
-            if inner.contains(moved, clearance + rmin.min(rmax)) {
+            //
+            // Held to the clearance its own size will be held to, so the
+            // relaxation steers a big hole inward instead of settling it
+            // against the rim and leaving the dart-thrower to find it a
+            // place from scratch. A seed that starts too close for its size
+            // may still move, but only toward the interior: `edge` is its
+            // distance to the inner ring, and a step that grows it passes.
+            let clr_i = clearance.max(p.vesicle_edge_ratio * weight[i]);
+            let edge = |q: V2| {
+                let d = q - inner.c;
+                inner.radius_toward(d) - d.len()
+            };
+            if inner.contains(moved, clr_i)
+                || (inner.contains(moved, clearance + rmin.min(rmax))
+                    && edge(moved) > edge(centre[i]))
+            {
                 centre[i] = moved;
             }
         }
@@ -896,6 +924,33 @@ fn separated(a: &Cand, b: &Cand, gap: f64) -> bool {
     }
     let dir = delta * (1.0 / d);
     d >= max_radius_window(&a.ring, dir) + max_radius_window(&b.ring, -dir) + gap
+        && probe_gap(&a.ring, &b.ring) >= gap
+}
+
+/// Smallest distance between two rings' probe points.
+///
+/// The centre-line test in [`separated`] is exact for two discs and
+/// conservative for two blobs only ALONG the line joining their centres. Two
+/// elongated holes lying side by side can pass it with room to spare and
+/// still meet along their flanks. Measured on the emitted outlines over 200
+/// default rolls: 23 had a pair closer than the gap they were placed with,
+/// three of them under 0.05 R0 against a demanded 0.090. Every third ring
+/// sample, as `boundary_clear` probes - 24 points each, 576 distances a
+/// pair, which at eight holes is nothing.
+pub fn probe_gap(a: &Ring, b: &Ring) -> f64 {
+    let mut best = f64::INFINITY;
+    let (na, nb) = (a.n(), b.n());
+    let mut i = 0;
+    while i < na {
+        let pa = a.point(i);
+        let mut j = 0;
+        while j < nb {
+            best = best.min((b.point(j) - pa).len());
+            j += 3;
+        }
+        i += 3;
+    }
+    best
 }
 
 /// Largest radius of `ring` within +-18 degrees of `dir`.
@@ -1052,6 +1107,18 @@ mod tests {
             assert!(
                 boundary_clear(&v.ring, &inner, clearance),
                 "a hole bit into the ribbon"
+            );
+            // And the proportional rule: a hole keeps `vesicle_edge_ratio`
+            // of its own radius from the ribbon.
+            assert!(
+                boundary_clear(
+                    &v.ring,
+                    &inner,
+                    clearance.max(p.vesicle_edge_ratio * v.r_eq)
+                ),
+                "a hole of radius {} sits closer to the ribbon than {} of it",
+                v.r_eq,
+                p.vesicle_edge_ratio
             );
             for q in &v.pts {
                 assert!(q.len() < r0, "a hole left the body entirely");

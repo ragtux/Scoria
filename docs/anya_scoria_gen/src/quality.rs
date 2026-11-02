@@ -13,11 +13,11 @@
 use crate::bezier::{self, Cubic};
 use crate::body::Scene;
 use crate::facet::{CutReport, Facet, MIN_JUNCTION_COS};
-use crate::math::{polygon_area, polyline_len, TAU, V2};
+use crate::math::{polygon_area, polygon_centroid, polyline_len, TAU, V2};
 use crate::relief::Relief;
 use crate::ring::Ring;
 use crate::solid::DepthMap;
-use crate::vesicle::{boundary_clear, max_radius_window, Vesicle};
+use crate::vesicle::{boundary_clear, max_radius_window, probe_gap, Vesicle};
 use crate::Params;
 
 /// A gate's verdict: the rule name on failure.
@@ -34,6 +34,41 @@ const NORMAL_POLE_MIN: f64 = 0.70;
 /// Measured 0.745 to 0.781 over the same scenes. A map built back to front
 /// would come out near its negation and cannot approach this.
 const NORMAL_MEAN_MIN: f64 = 0.45;
+/// How far the hole set's centroid may sit from the body's, as a fraction
+/// of R0.
+///
+/// The drawing's seven holes SPREAD: their centroid is 7 units from the
+/// body's on a mean radius of 169, 0.04 R0, and they occupy all four
+/// quadrants. Nothing in the packer asks for that - it enforces minimum
+/// gaps and nothing else - and ungated the realised offset over 200 default
+/// rolls is median 0.124 R0, p75 0.185, p90 0.237, max 0.40: a fifth of
+/// rolls past 0.20, with every hole on one side.
+///
+/// Gated rather than steered, after steering was tried and measured. A
+/// rigid pull of the seed set toward the body centroid inside the
+/// relaxation moved nothing - the distribution came out identical to three
+/// decimals with and without it - because the relaxed seeds are already
+/// balanced; the offset is made AFTER relaxation, by the holes the packer
+/// drops and the dart-thrown fallbacks for the ones that did not fit where
+/// they were put. Fixing that means re-placing a dropped hole on the far
+/// side, which is a different packer.
+///
+/// 0.20, not the 0.16 first tried: re-rolls per 200 logos run 93 ungated,
+/// 199 at 0.20 and 258 at 0.16, and what 0.20 admits (p90 0.17, max 0.21)
+/// is a rock with its holes a little off-centre, not one with its holes on
+/// one side. Each re-roll is a whole new logo at about 15 ms.
+///
+/// This is the allowance at the drawing's SEVEN holes; it scales as
+/// `sqrt(7 / n)`. The centroid of n points placed by the same process has a
+/// spread that falls as `1 / sqrt(n)`, so one fixed number is either too
+/// strict for three holes or too loose for nine. Applied flat at 0.20 the
+/// gate took 58 of 400 single attempts, nearly all of them small draws,
+/// and that selection pushed the mean drawn count among clean rolls from
+/// 5.71 to 6.21 against a `vesicle_count` of 5 - the gate was quietly
+/// rewriting what the parameter means.
+const VESICLE_BALANCE_MAX: f64 = 0.20;
+/// The hole count the allowance above was set at.
+const VESICLE_BALANCE_REF_COUNT: f64 = 7.0;
 /// Fewest holes that still read as scoria, whatever the draw asked for.
 /// SPEC.md's own words, which until the count became a draw were only ever
 /// a comment on the packing budget.
@@ -453,7 +488,9 @@ pub fn vesicle_clearance(
     r0: f64,
 ) -> Check {
     for v in ves {
-        if !boundary_clear(&v.ring, inner, clearance) {
+        // The larger of the absolute floor and the hole's own share - the
+        // same rule the packer placed it by.
+        if !boundary_clear(&v.ring, inner, clearance.max(p.vesicle_edge_ratio * v.r_eq)) {
             return Err("vesicle clearance: a hole is too close to the inner edge");
         }
     }
@@ -466,7 +503,9 @@ pub fn vesicle_clearance(
             }
             let dir = delta * (1.0 / d);
             let gap = (p.vesicle_gap * r0).max(0.45 * a.r_eq.min(b.r_eq));
-            if d < max_radius_window(&a.ring, dir) + max_radius_window(&b.ring, -dir) + gap {
+            if d < max_radius_window(&a.ring, dir) + max_radius_window(&b.ring, -dir) + gap
+                || probe_gap(&a.ring, &b.ring) < gap
+            {
                 return Err("vesicle clearance: two holes are closer than the gap");
             }
         }
@@ -522,6 +561,36 @@ pub fn vesicle_coverage(ves: &[Vesicle], body_area: f64, target: u32) -> Check {
     }
     if frac > COVERAGE_HI {
         return Err("vesicle coverage: over-vesiculated, this reads as a sponge");
+    }
+    Ok(())
+}
+
+/// Offset of a set of points' centroid from `body`, in units of `r0`.
+fn balance_offset(centres: &[V2], body: V2, r0: f64) -> f64 {
+    if centres.is_empty() {
+        return 0.0;
+    }
+    let mut sum = V2::ZERO;
+    for &c in centres {
+        sum = sum + c;
+    }
+    (sum * (1.0 / centres.len() as f64) - body).len() / r0
+}
+
+/// The holes spread over the body rather than piling up on one side.
+///
+/// Unweighted centroid of the hole centres against the area centroid of the
+/// silhouette, which is how the drawing was measured. Weighting by area
+/// would let one big hole on the far side balance three small ones on the
+/// near side, and that is exactly the lopsided layout this rejects.
+pub fn vesicle_balance(ves: &[Vesicle], outer_pts: &[V2], r0: f64) -> Check {
+    if ves.len() < 2 || outer_pts.len() < 3 {
+        return Ok(());
+    }
+    let centres: Vec<V2> = ves.iter().map(|v| v.centre).collect();
+    let allow = VESICLE_BALANCE_MAX * (VESICLE_BALANCE_REF_COUNT / centres.len() as f64).sqrt();
+    if balance_offset(&centres, polygon_centroid(outer_pts), r0) > allow {
+        return Err("vesicle balance: the holes all sit on one side of the body");
     }
     Ok(())
 }
@@ -795,6 +864,7 @@ pub fn check_all(scene: &Scene, p: &Params) -> Check {
     ribbon(&scene.outer, &scene.inner, &scene.rp, scene.r0, scene.w0)?;
     vesicle_spread(&scene.vesicles, scene.vesicles_drawn)?;
     vesicle_coverage(&scene.vesicles, scene.body_area, scene.vesicles_drawn)?;
+    vesicle_balance(&scene.vesicles, &scene.outer_pts, scene.r0)?;
     vesicle_health(&scene.vesicles)?;
     cut_health(&scene.cuts, p.facet_min_chord_sep)?;
     facet_areas(&scene.facets, scene.body_area, p.facet_min_area)?;
@@ -833,6 +903,27 @@ pub fn check_all(scene: &Scene, p: &Params) -> Check {
 mod tests {
     use super::*;
     use crate::math::sin_cos;
+
+    #[test]
+    fn balance_offset_is_the_centroid_distance_over_r0() {
+        let body = V2::new(10.0, -4.0);
+        // Symmetric about the body: no offset.
+        let sym = [
+            V2::new(110.0, -4.0),
+            V2::new(-90.0, -4.0),
+            V2::new(10.0, 56.0),
+            V2::new(10.0, -64.0),
+        ];
+        assert!(balance_offset(&sym, body, 300.0).abs() < 1e-12);
+        // Everything 60 units to one side on R0 300: 0.2.
+        let one_side = [
+            V2::new(70.0, -4.0),
+            V2::new(70.0, 26.0),
+            V2::new(70.0, -34.0),
+        ];
+        assert!((balance_offset(&one_side, body, 300.0) - 0.2).abs() < 1e-12);
+        assert_eq!(balance_offset(&[], body, 300.0), 0.0);
+    }
 
     fn disc(r: f64, n: usize) -> Ring {
         Ring::build(V2::new(0.0, 0.0), n, |_t, _d| r)
