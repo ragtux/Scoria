@@ -337,6 +337,7 @@ pub fn bind_all_keys(cx: &mut App, registry: &CommandRegistry) {
     pdf::view::bind_keys(cx);
     bases::toolbar::bind_keys(cx);
     explorer::bind_keys(cx);
+    file_menu::bind_keys(cx);
     settings::bind_keys(cx);
     help::bind_keys(cx);
     vaults::bind_keys(cx);

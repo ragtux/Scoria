@@ -625,6 +625,11 @@ impl CanvasView {
     }
 
     fn clear_selection(&mut self, _: &ClearSelection, _: &mut Window, cx: &mut Context<Self>) {
+        // An open context menu goes first, one layer per press.
+        if self.context_menu.take().is_some() {
+            cx.notify();
+            return;
+        }
         // Escape ends an editing session and leaves the card selected
         // (observed); a second Escape clears the selection.
         if self.editing.take().is_some() {

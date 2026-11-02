@@ -32,13 +32,83 @@
 
 use crate::theme::Theme;
 use gpui::{
-    anchored, deferred, div, prelude::*, px, Anchor, AnyElement, Context, Pixels, Point,
-    SharedString, Window,
+    actions, anchored, deferred, div, prelude::*, px, Anchor, AnyElement, App, Context,
+    FocusHandle, KeyBinding, Pixels, Point, SharedString, Stateful, Window,
 };
 use serde_json::{json, Value};
 use std::ops::Range;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
+
+actions!(menu, [CloseMenu]);
+
+/// Escape closes an open menu: observed, and what every probe run relies
+/// on to take one menu down before raising the next. The binding lives in
+/// the `Menu` key context, which every menu drawn through [`menu_box`]
+/// wears while it holds the keyboard.
+pub fn bind_keys(cx: &mut App) {
+    cx.bind_keys([KeyBinding::new("escape", CloseMenu, Some("Menu"))]);
+}
+
+/// The keyboard a host hands to its menus: the focus handle the open menu
+/// tracks, and where focus was before, so closing the menu -- by Escape,
+/// a pick or a press outside -- puts it back.
+///
+/// The host calls [`MenuFocus::sync`] from its render with whether a menu
+/// is open: the first render with one open takes focus (remembering the
+/// previous handle), the first render with none restores it. Routing it
+/// through the render means every way a menu closes restores focus the
+/// same way, with no window needed at the close site.
+pub struct MenuFocus {
+    pub handle: FocusHandle,
+    restore: Option<FocusHandle>,
+}
+
+impl MenuFocus {
+    pub fn new(cx: &mut App) -> MenuFocus {
+        MenuFocus {
+            handle: cx.focus_handle(),
+            restore: None,
+        }
+    }
+
+    pub fn sync(&mut self, open: bool, window: &mut Window, cx: &mut App) {
+        match (open, self.restore.is_some()) {
+            (true, false) => {
+                self.restore = Some(window.focused(cx).unwrap_or_else(|| self.handle.clone()));
+                window.focus(&self.handle, cx);
+            }
+            (false, true) => {
+                if let Some(previous) = self.restore.take() {
+                    if self.handle.is_focused(window) {
+                        window.focus(&previous, cx);
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+/// Makes a list box a menu: it tracks `focus` under the `Menu` key context,
+/// so Escape runs `on_close`, and a press outside it runs `on_close` too.
+/// `occlude` keeps a click on a row from reaching what is under it.
+pub fn menu_box<V: 'static>(
+    list: Stateful<gpui::Div>,
+    focus: &FocusHandle,
+    cx: &mut Context<V>,
+    on_close: impl Fn(&mut V, &mut Context<V>) + 'static,
+) -> Stateful<gpui::Div> {
+    let on_close = Rc::new(on_close);
+    list.track_focus(focus)
+        .key_context("Menu")
+        .occlude()
+        .on_action(cx.listener({
+            let on_close = on_close.clone();
+            move |this, _: &CloseMenu, _, cx| on_close(this, cx)
+        }))
+        .on_mouse_down_out(cx.listener(move |this, _, _, cx| on_close(this, cx)))
+}
 
 /// Obsidian's `data-section` on a menu item. Items are grouped by it in the
 /// order below, and a separator is drawn wherever the section changes — which
@@ -625,30 +695,34 @@ pub fn describe(menu: &Menu) -> Value {
 pub fn render<V: 'static>(
     menu: &Menu,
     theme: &Theme,
+    focus: &FocusHandle,
     cx: &mut Context<V>,
     on_close: impl Fn(&mut V, &mut Context<V>) + 'static,
     on_pick: impl Fn(&mut V, Pick, &mut Window, &mut Context<V>) + 'static,
 ) -> AnyElement {
     let on_close = Rc::new(on_close);
     let on_pick = Rc::new(on_pick);
-    let mut list = div()
-        .id("file-menu")
-        .flex()
-        .flex_col()
-        .min_w(px(180.))
-        .py_1()
-        .bg(theme.bg_secondary)
-        .border_1()
-        .border_color(theme.border)
-        .rounded_md()
-        .shadow_lg()
-        .text_size(px(13.))
-        .text_color(theme.text)
-        .occlude()
-        .on_mouse_down_out(cx.listener({
+    let mut list = menu_box(
+        div()
+            .id("file-menu")
+            .flex()
+            .flex_col()
+            .min_w(px(180.))
+            .py_1()
+            .bg(theme.bg_secondary)
+            .border_1()
+            .border_color(theme.border)
+            .rounded_md()
+            .shadow_lg()
+            .text_size(px(13.))
+            .text_color(theme.text),
+        focus,
+        cx,
+        {
             let on_close = on_close.clone();
-            move |this, _, _, cx| on_close(this, cx)
-        }));
+            move |this, cx| on_close(this, cx)
+        },
+    );
     let mut previous: Option<Section> = None;
     for (ix, item) in items(&menu.target).into_iter().enumerate() {
         for n in 0..separators_above(previous, item.section) {

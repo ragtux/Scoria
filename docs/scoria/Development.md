@@ -326,6 +326,24 @@ uses behave as Obsidian's do.
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | not started |
 
+### Escape closes every menu, 2026-11-02
+
+The backlog's oldest small bug: the file menus closed on a press outside
+and on nothing else. The fix is one mechanism rather than one binding per
+host. `file_menu::MenuFocus` is a focus handle a host hands to its menus,
+and `menu_box` makes a list box a menu: it tracks that handle under the
+`Menu` key context, where Escape is bound to `CloseMenu`, so the menu
+holds the keyboard while it is up and Escape reaches it before the
+editor's, the explorer's or the Bases view's own Escape. The host calls
+`MenuFocus::sync` from its render with whether any of its menus is open:
+the first render with one open takes focus, remembering where it was, and
+the first render with none gives it back -- so a pick, a press outside and
+Escape all restore focus the same way, with no window needed at any close
+site. The workspace's file menu and its backlinks, tags and properties
+sort menus, and the explorer's row and sort menus, go through it; the
+canvas's own Escape closes its context menu before clearing the
+selection; the Bases menus already closed through their view's layers.
+
 ### The kanban board, 2026-11-02
 
 The last entry of [[UI parity backlog#Bases]], built to `s10-kanban`,

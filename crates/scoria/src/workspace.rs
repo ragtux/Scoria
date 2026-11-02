@@ -2680,6 +2680,9 @@ pub struct Workspace {
     /// The file menu a Backlinks or Outgoing links row opened, while it is
     /// up: where, and on which file.
     file_menu: Option<file_menu::Menu>,
+    /// The keyboard the open menu -- the file menu or a pane's sort menu --
+    /// holds, and where it goes back to when the menu closes.
+    menu_focus: file_menu::MenuFocus,
     /// The box of each group's **More options** button as last painted, by
     /// group id, so the menu it opens can hang right-aligned under it.
     header_boxes: Rc<RefCell<HashMap<u64, Bounds<Pixels>>>>,
@@ -3208,6 +3211,7 @@ impl Workspace {
             outgoing_state: OutgoingState::default(),
             sort_menu_at: point(px(0.), px(0.)),
             file_menu: None,
+            menu_focus: file_menu::MenuFocus::new(cx),
             header_boxes: Rc::new(RefCell::new(HashMap::new())),
             embed_views: embed_views.clone(),
             embed_subscriptions: HashMap::new(),
@@ -12303,9 +12307,11 @@ impl Workspace {
     ) -> Option<gpui::AnyElement> {
         let menu = self.file_menu.as_ref()?;
         let target = menu.target.clone();
+        let focus = self.menu_focus.handle.clone();
         Some(file_menu::render(
             menu,
             theme,
+            &focus,
             cx,
             |this, cx| this.close_file_menu(cx),
             move |this, pick, window, cx| this.file_menu_pick(pick, &target, window, cx),
@@ -12323,25 +12329,28 @@ impl Workspace {
             return None;
         }
         let current = self.backlink_state.sort;
-        let mut list = div()
-            .id("backlinks-sort-menu")
-            .flex()
-            .flex_col()
-            .min_w(px(220.))
-            .py_1()
-            .bg(theme.bg_secondary)
-            .border_1()
-            .border_color(theme.border)
-            .rounded_md()
-            .shadow_lg()
-            .text_size(px(13.))
-            .text_color(theme.text)
-            // Keeps a click on an item from reaching the row under it.
-            .occlude()
-            .on_mouse_down_out(cx.listener(|this, _, _, cx| {
+        let focus = self.menu_focus.handle.clone();
+        let mut list = file_menu::menu_box(
+            div()
+                .id("backlinks-sort-menu")
+                .flex()
+                .flex_col()
+                .min_w(px(220.))
+                .py_1()
+                .bg(theme.bg_secondary)
+                .border_1()
+                .border_color(theme.border)
+                .rounded_md()
+                .shadow_lg()
+                .text_size(px(13.))
+                .text_color(theme.text),
+            &focus,
+            cx,
+            |this, cx| {
                 this.backlink_state.sort_menu_open = false;
                 cx.notify();
-            }));
+            },
+        );
         for (ix, order) in SortOrder::ALL.into_iter().enumerate() {
             if ix > 0 && ix % 2 == 0 {
                 list = list.child(div().my_1().h(px(1.)).bg(theme.border));
@@ -13153,27 +13162,31 @@ impl Workspace {
         if !open {
             return None;
         }
-        let mut list = div()
-            .id(id)
-            .flex()
-            .flex_col()
-            .min_w(px(196.))
-            .py_1()
-            .bg(theme.bg_secondary)
-            .border_1()
-            .border_color(theme.border)
-            .rounded_md()
-            .shadow_lg()
-            .text_size(px(13.))
-            .text_color(theme.text)
-            .occlude()
-            .on_mouse_down_out(cx.listener(move |this, _, _, cx| {
+        let focus = self.menu_focus.handle.clone();
+        let mut list = file_menu::menu_box(
+            div()
+                .id(id)
+                .flex()
+                .flex_col()
+                .min_w(px(196.))
+                .py_1()
+                .bg(theme.bg_secondary)
+                .border_1()
+                .border_color(theme.border)
+                .rounded_md()
+                .shadow_lg()
+                .text_size(px(13.))
+                .text_color(theme.text),
+            &focus,
+            cx,
+            move |this, cx| {
                 match which {
                     RightTab::Tags => this.tag_state.sort_menu_open = false,
                     _ => this.property_state.sort_menu_open = false,
                 }
                 cx.notify();
-            }));
+            },
+        );
         for (ix, order) in PaneSort::ALL.into_iter().enumerate() {
             if ix == 2 {
                 list = list.child(div().my_1().h(px(1.)).bg(theme.border));
@@ -14809,6 +14822,13 @@ impl Render for Workspace {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         self.corners = WindowCorners::of(window);
         let corners = self.corners;
+        // An open menu holds the keyboard, so Escape reaches it first; a
+        // closed one hands the keyboard back where it was.
+        let menu_open = self.file_menu.is_some()
+            || self.backlink_state.sort_menu_open
+            || self.tag_state.sort_menu_open
+            || self.property_state.sort_menu_open;
+        self.menu_focus.sync(menu_open, window, cx);
         if let Some(kind) = self.pending_canvas_pick.take() {
             self.open_canvas_file_chooser(kind, window, cx);
         }

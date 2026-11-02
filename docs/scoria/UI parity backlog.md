@@ -1058,6 +1058,8 @@ Open in default app, Show in system explorer, Reveal file in navigation.
 `outgoing-links.mjs` both press Escape between captures to take one menu down before raising the
 next, and the captures that follow are of a window with no menu in it.
 
+**Landed 2026-11-02**: every menu drawn through `file_menu::menu_box` -- the workspace's file menu and its three pane sort menus, the explorer's row and sort menus -- takes the keyboard under a `Menu` key context whose Escape closes it, and hands focus back where it was; the canvas's context menu closes on its own Escape before the selection does, and the Bases header and kanban menus already did. See [[Development#Escape closes every menu, 2026-11-02]].
+
 **Scoria.** Neither menu closes on Escape. The explorer's and the workspace's file menus are both
 dismissed by `on_mouse_down_out` alone, with no key binding and no action; a press on the running
 app answers `handled: false` and the menu stays. Verified in the app on 2026-10-30, with the file

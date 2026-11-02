@@ -536,6 +536,8 @@ pub struct FileExplorer {
     menu: Option<Menu>,
     /// The sort menu is open under its header button.
     sort_menu_open: bool,
+    /// The keyboard the open menu holds, and where it goes back to.
+    menu_focus: file_menu::MenuFocus,
     focus_handle: FocusHandle,
     /// The row the keyboard is on (Obsidian's `has-focus`), by path so it
     /// survives a re-sort; it may be hidden under a collapsed folder, and
@@ -560,6 +562,7 @@ impl FileExplorer {
             scroll: UniformListScrollHandle::new(),
             menu: None,
             sort_menu_open: false,
+            menu_focus: file_menu::MenuFocus::new(cx),
             focus_handle: cx.focus_handle(),
             focused: None,
         }
@@ -903,9 +906,11 @@ impl FileExplorer {
         let menu = self.menu.as_ref()?;
         let theme = cx.global::<Theme>().clone();
         let target = menu.target.clone();
+        let focus = self.menu_focus.handle.clone();
         Some(file_menu::render(
             menu,
             &theme,
+            &focus,
             cx,
             |this, cx| this.close_menu(cx),
             move |_, pick, _, cx| {
@@ -1035,25 +1040,28 @@ impl FileExplorer {
             return None;
         }
         let current = self.tree.sort();
-        let mut list = div()
-            .id("explorer-sort-menu")
-            .flex()
-            .flex_col()
-            .min_w(px(220.))
-            .py_1()
-            .bg(theme.bg_secondary)
-            .border_1()
-            .border_color(theme.border)
-            .rounded_md()
-            .shadow_lg()
-            .text_size(px(13.))
-            .text_color(theme.text)
-            // Keeps a click on an item from reaching the row under it.
-            .occlude()
-            .on_mouse_down_out(cx.listener(|this, _, _, cx| {
+        let focus = self.menu_focus.handle.clone();
+        let mut list = file_menu::menu_box(
+            div()
+                .id("explorer-sort-menu")
+                .flex()
+                .flex_col()
+                .min_w(px(220.))
+                .py_1()
+                .bg(theme.bg_secondary)
+                .border_1()
+                .border_color(theme.border)
+                .rounded_md()
+                .shadow_lg()
+                .text_size(px(13.))
+                .text_color(theme.text),
+            &focus,
+            cx,
+            |this, cx| {
                 this.sort_menu_open = false;
                 cx.notify();
-            }));
+            },
+        );
         for (ix, order) in SortOrder::ALL.into_iter().enumerate() {
             if ix > 0 && ix % 2 == 0 {
                 list = list.child(div().my_1().h(px(1.)).bg(theme.border));
@@ -1209,8 +1217,12 @@ impl FileExplorer {
 }
 
 impl Render for FileExplorer {
-    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let count = self.tree.len();
+        // An open menu holds the keyboard, so Escape reaches it first; a
+        // closed one hands the keyboard back where it was.
+        let menu_open = self.menu.is_some() || self.sort_menu_open;
+        self.menu_focus.sync(menu_open, window, cx);
         let menu = self.render_menu(cx);
         let header = self.render_header(cx);
         div()
