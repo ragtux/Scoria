@@ -451,10 +451,51 @@ the welcome note confirmed invisible, and the short fields are gone:
 `Theme` is `dark`, the fonts, the base size, the canvas palette and
 `tokens`.
 
-**Next.** The loader (`.obsidian/themes/<name>/theme.css` and the enabled
-snippets through the same value grammar, `.obsidian/` watched for a
-reload), then a probe of the surfaces the record has not got — Bases,
-canvas, graph, PDF — so their mechanical names can become their own.
+**Step 2, the loader, the same night.** `theme/css.rs` is the property
+scanner the design note asked for and nothing more: a tokenizer that
+walks blocks, strings and parentheses, descends into `@media`,
+`@supports`, `@layer` and `@container`, skips `@font-face` and
+`@keyframes` whole, and keeps a declaration only when its property
+begins `--` and its rule's selector is a compound of `html`, `:root`,
+`body`, `.theme-dark` and `.theme-light` (the most specific readable
+part of a list). Every other selector is skipped without being
+understood. The declarations go into a `Cascade` with the scope
+(inherited from the root, or on the body), the theme class, the
+specificity and the order, and `!important`; `table(dark)` picks one
+winner per property the way CSS does on `<body class="theme-dark">`: a
+body-level declaration beats an inherited one, then importance, then
+specificity, then order. That rule is what lets a theme's
+`.theme-dark { --color-base-00 }` beat the app's and keeps a theme's
+`body { --x }` from beating the app's `.theme-dark { --x }` — which is
+why community themes are written the way they are. Obsidian's own
+declarations enter the cascade first: `defaults.rs` now carries each
+with the selector it was declared under, and the generator keeps every
+declaration per property in sheet order. `Theme::load` reads
+`themes/<cssTheme>/theme.css` and then each `enabledCssSnippets` entry
+under `snippets/`, a missing file skipped; `accentColor` goes in as an
+inline declaration, which outranks any sheet short of `!important`.
+
+**Reload.** The vault watcher already covered `.obsidian/`; the
+workspace now rebuilds the theme global and repaints when a path it is
+handed is `appearance.json`, a `theme.css` under `themes/` or a `.css`
+under `snippets/`, and at once when the Settings window writes an
+appearance change. The window's answer to the desktop's scheme lives on
+the workspace (`set_system_dark`), read each frame, so a vault on
+`theme: "system"` follows a desktop switch too.
+
+**Tests.** The scanner against a sheet in a community theme's shape
+(comments with braces, `@charset`, `url()` with a semicolon, a string
+with a brace, a last declaration without its semicolon, `!important`, a
+rule nested in `@media`, `@font-face` and `@keyframes`, a descendant
+selector); the cascade's five rules; a palette override propagating
+through the app's chain while the theme's private variables resolve;
+and `Theme::load` on a temp vault with a theme, an enabled snippet, a
+snippet not enabled and one missing, in both base themes.
+
+**Next.** A probe of the surfaces the record has not got — Bases,
+canvas, graph, PDF — so their mechanical names can become their own;
+the Appearance tab's theme and snippet pickers; and, separately, syntax
+highlighting (step 3).
 
 ### Four small entries and a URI, 2026-11-02
 

@@ -624,6 +624,31 @@ impl VaultState {
         self.appearance.read().unwrap_or_else(|e| e.into_inner())
     }
 
+    /// Re-reads `appearance.json` from disk into the config in hand and
+    /// answers it: an edit made outside the app counts as much as one of
+    /// its own.
+    pub fn reload_appearance(&self) -> AppearanceConfig {
+        let fresh = self
+            .vault
+            .read()
+            .unwrap_or_else(|e| e.into_inner())
+            .appearance_config()
+            .ok();
+        let mut cur = self.appearance.write().unwrap_or_else(|e| e.into_inner());
+        if let Some(fresh) = fresh {
+            *cur = fresh;
+        }
+        cur.clone()
+    }
+
+    pub fn config_dir(&self) -> String {
+        self.vault
+            .read()
+            .unwrap_or_else(|e| e.into_inner())
+            .config_dir()
+            .to_string()
+    }
+
     pub fn core_plugins(&self) -> RwLockReadGuard<'_, Option<CorePlugins>> {
         self.core_plugins.read().unwrap_or_else(|e| e.into_inner())
     }
@@ -2565,6 +2590,9 @@ const LAST_OPEN_FILES_KEPT: usize = 10;
 
 pub struct Workspace {
     focus_handle: FocusHandle,
+    /// The desktop's colour scheme as the window last reported it, which
+    /// is what `theme: "system"` follows.
+    system_dark: bool,
     /// Set when something changed what the main area shows and the keyboard
     /// has to follow it; [`Workspace::render`] is where it is honoured.
     refocus_main: bool,
@@ -3174,6 +3202,7 @@ impl Workspace {
         });
         let mut ws = Workspace {
             focus_handle: cx.focus_handle(),
+            system_dark: true,
             refocus_main: false,
             state: None,
             vault_name: "No vault".into(),
@@ -3472,6 +3501,10 @@ impl Workspace {
                 self.rebuild_commands(&state, Some(overrides), cx);
             }
             SettingChange::CorePlugins(_) => self.rebuild_commands(&state, None, cx),
+            // The base theme, the accent, the CSS theme and the snippets
+            // all live here: the registry is rebuilt at once rather than
+            // when the write comes back through the watcher.
+            SettingChange::Appearance(_) => self.reload_theme(cx),
             _ => {}
         }
         self.apply_app_config(&state, cx);
@@ -4023,6 +4056,12 @@ impl Workspace {
         let Some(state) = self.state.clone() else {
             return;
         };
+        // A theme, a snippet or `appearance.json` changed on disk: the
+        // registry is rebuilt from the files as they are now, which is
+        // Obsidian's live reload of a theme being edited.
+        if paths.iter().any(|p| Self::is_theme_file(&state, p)) {
+            self.reload_theme(cx);
+        }
         cx.spawn(async move |this, cx| {
             let changes = cx
                 .background_executor()
@@ -4031,6 +4070,44 @@ impl Workspace {
             this.update(cx, |ws, cx| ws.after_changes(changes, cx)).ok();
         })
         .detach();
+    }
+
+    /// Whether `path` is one the theme is built from: `theme.css` under
+    /// `themes/`, a snippet under `snippets/`, or `appearance.json` itself.
+    fn is_theme_file(state: &VaultState, path: &Path) -> bool {
+        let cfg = state.root.join(state.config_dir());
+        let Ok(rel) = path.strip_prefix(&cfg) else {
+            return false;
+        };
+        let mut parts = rel.components();
+        match (parts.next(), parts.next()) {
+            (Some(first), _) if first.as_os_str() == "appearance.json" => true,
+            (Some(first), Some(_)) => {
+                let dir = first.as_os_str();
+                (dir == "themes" && rel.file_name().is_some_and(|f| f == "theme.css"))
+                    || (dir == "snippets" && rel.extension().is_some_and(|e| e == "css"))
+            }
+            _ => false,
+        }
+    }
+
+    /// The window's answer to the desktop's scheme, which only it can
+    /// give: `main` passes it once the window exists.
+    pub fn set_system_dark(&mut self, dark: bool, cx: &mut Context<Self>) {
+        self.system_dark = dark;
+        self.reload_theme(cx);
+    }
+
+    /// Rebuilds the theme global from `appearance.json` as it is on disk
+    /// and the sheets it names, and repaints.
+    pub fn reload_theme(&mut self, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let config = state.reload_appearance();
+        let theme = Theme::load(&state.root, &state.config_dir(), &config, self.system_dark);
+        cx.set_global(theme);
+        cx.notify();
     }
 
     /// Whether `changes` touched `path` only as a modification whose bytes
@@ -15307,6 +15384,15 @@ impl Render for Workspace {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         self.corners = WindowCorners::of(window);
         let corners = self.corners;
+        // The desktop's scheme: a vault on `theme: "system"` follows it.
+        let system_dark = matches!(
+            window.appearance(),
+            gpui::WindowAppearance::Dark | gpui::WindowAppearance::VibrantDark
+        );
+        if system_dark != self.system_dark {
+            self.system_dark = system_dark;
+            self.reload_theme(cx);
+        }
         // An open menu holds the keyboard, so Escape reaches it first; a
         // closed one hands the keyboard back where it was.
         let menu_open = self.file_menu.is_some()

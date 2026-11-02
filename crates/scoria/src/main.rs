@@ -366,10 +366,10 @@ fn main() {
     // exist yet; dark is assumed here and the theme is rebuilt below once
     // the window can answer, which only matters for `theme: "system"`.
     let appearance = vault.as_ref().and_then(|v| v.appearance_config().ok());
-    let theme = appearance
-        .as_ref()
-        .map(|a| Theme::from_appearance(a, true))
-        .unwrap_or_else(Theme::dark);
+    let theme = match (vault.as_ref(), appearance.as_ref()) {
+        (Some(v), Some(a)) => Theme::load(v.root(), v.config_dir(), a, true),
+        _ => Theme::dark(),
+    };
     let mut registry = CommandRegistry::with_known_ids();
     // A core plugin that is off has no commands: not in the palette, and
     // nothing bound to its keys. `core-plugins.json` is read here so the
@@ -476,8 +476,9 @@ fn main() {
                             )
                         })
                         .unwrap_or(true);
-                    cx.set_global(Theme::from_appearance(&a, dark));
-                    window.update(cx, |_, _, cx| cx.notify()).ok();
+                    window
+                        .update(cx, |ws, _, cx| ws.set_system_dark(dark, cx))
+                        .ok();
                 }
             }
             cx.on_action(move |_: &Quit, cx| {

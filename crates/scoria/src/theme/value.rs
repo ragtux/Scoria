@@ -416,6 +416,7 @@ impl Table {
         self.decls.insert(canonical(name), value);
     }
 
+    #[cfg(test)]
     pub fn set_str(&mut self, name: &str, value: &str) {
         self.set(name, parse(value));
     }

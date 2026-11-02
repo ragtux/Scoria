@@ -23,17 +23,20 @@
 //! Every paint site reads `tokens` by the surface's own token, which is
 //! what the probe record names.
 
+pub mod css;
 pub mod defaults;
 pub mod registry;
 pub mod value;
 
+use std::path::Path;
 use std::sync::OnceLock;
 
 use gpui::{rgb, Global, Hsla, SharedString};
 use scoria_formats::config::AppearanceConfig;
 
+use css::Cascade;
 pub use registry::Tokens;
-use value::{parse, Expr, Table};
+use value::{parse, Expr};
 
 /// Obsidian's interface sizes: the small UI text of tabs, rows and headers,
 /// the smaller text of the status bar, the height of every header row, the
@@ -170,25 +173,16 @@ impl CanvasColors {
 
 impl Global for Theme {}
 
-/// The default declarations of one base theme, parsed once.
-fn base_table(dark: bool) -> &'static Table {
-    static DARK: OnceLock<Table> = OnceLock::new();
-    static LIGHT: OnceLock<Table> = OnceLock::new();
-    let cell = if dark { &DARK } else { &LIGHT };
-    cell.get_or_init(|| {
-        let mut t = Table::new();
-        for (name, value) in defaults::COMMON {
-            t.set_str(name, value);
+/// Obsidian's own declarations, parsed once: the cascade every theme's
+/// sheets are read into after them.
+fn defaults_cascade() -> &'static Cascade {
+    static CASCADE: OnceLock<Cascade> = OnceLock::new();
+    CASCADE.get_or_init(|| {
+        let mut c = Cascade::new();
+        for (selector, name, value) in defaults::DEFAULTS {
+            c.declare(selector, name, value);
         }
-        let layer = if dark {
-            defaults::DARK
-        } else {
-            defaults::LIGHT
-        };
-        for (name, value) in layer {
-            t.set_str(name, value);
-        }
-        t
+        c
     })
 }
 
@@ -200,24 +194,54 @@ fn base_tokens(dark: bool) -> &'static Tokens {
     static LIGHT: OnceLock<Tokens> = OnceLock::new();
     let cell = if dark { &DARK } else { &LIGHT };
     cell.get_or_init(|| {
-        Tokens::from_resolved(&base_table(dark).resolve_all(), None)
+        Tokens::from_resolved(&defaults_cascade().table(dark).resolve_all(), None)
             .unwrap_or_else(|e| panic!("theme defaults do not resolve: {e}"))
     })
 }
 
-/// The base theme's tokens with `overrides` declared over them: what a
-/// theme file, a snippet or the accent setting contributes. A declaration
-/// that resolves to the wrong shape for its token keeps the default.
-pub fn tokens_with(dark: bool, overrides: &[(String, Expr)]) -> Tokens {
+/// The base theme's tokens with `sheets` read over Obsidian's own, in
+/// order (the theme's `theme.css`, then each enabled snippet), and the
+/// accent channels set inline the way Obsidian's `accentColor` sets them.
+/// A declaration that resolves to the wrong shape for its token keeps the
+/// default.
+pub fn tokens_from(dark: bool, sheets: &[String], accent: Option<(f32, f32, f32)>) -> Tokens {
     let fallback = base_tokens(dark);
-    if overrides.is_empty() {
+    if sheets.is_empty() && accent.is_none() {
         return fallback.clone();
     }
-    let mut table = base_table(dark).clone();
-    for (name, expr) in overrides {
-        table.set(name, expr.clone());
+    let mut cascade = defaults_cascade().clone();
+    for sheet in sheets {
+        cascade.add_css(sheet);
     }
-    Tokens::from_resolved(&table.resolve_all(), Some(fallback)).unwrap_or_else(|_| fallback.clone())
+    if let Some((h, s, l)) = accent {
+        cascade.declare_inline("--accent-h", &format!("{h}"));
+        cascade.declare_inline("--accent-s", &format!("{s}%"));
+        cascade.declare_inline("--accent-l", &format!("{l}%"));
+    }
+    Tokens::from_resolved(&cascade.table(dark).resolve_all(), Some(fallback))
+        .unwrap_or_else(|_| fallback.clone())
+}
+
+/// The sheets `appearance.json` names, read from the vault: the theme's
+/// `theme.css` under `themes/<cssTheme>/`, then every snippet
+/// `enabledCssSnippets` lists under `snippets/`, in that order. A file that
+/// is not there is skipped, as Obsidian skips it.
+pub fn sheets_of(root: &Path, config_dir: &str, config: &AppearanceConfig) -> Vec<String> {
+    let dir = root.join(config_dir);
+    let mut sheets = Vec::new();
+    if let Some(theme) = config.css_theme.as_deref().filter(|t| !t.is_empty()) {
+        if let Ok(css) = std::fs::read_to_string(dir.join("themes").join(theme).join("theme.css")) {
+            sheets.push(css);
+        }
+    }
+    for snippet in config.enabled_css_snippets.iter().flatten() {
+        if let Ok(css) =
+            std::fs::read_to_string(dir.join("snippets").join(format!("{snippet}.css")))
+        {
+            sheets.push(css);
+        }
+    }
+    sheets
 }
 
 impl Theme {
@@ -245,28 +269,43 @@ impl Theme {
         }
     }
 
-    /// The theme `appearance.json` asks for.
+    /// The theme `appearance.json` asks for, with its sheets read from the
+    /// vault's config folder.
+    pub fn load(
+        root: &Path,
+        config_dir: &str,
+        config: &AppearanceConfig,
+        system_dark: bool,
+    ) -> Theme {
+        let sheets = sheets_of(root, config_dir, config);
+        Theme::from_sources(config, system_dark, &sheets)
+    }
+
+    /// The theme `appearance.json` asks for, with no sheet of its own; the
+    /// app reaches a theme through `load`, the tests through this.
     ///
+    #[cfg(test)]
     /// `system` is Obsidian's default and means the desktop's own scheme,
     /// which only a window can answer; `system_dark` is that answer, and
     /// the caller passes what it knows. A vault with no `theme` key gets
     /// the same treatment, since that is what Obsidian reads it as.
     pub fn from_appearance(config: &AppearanceConfig, system_dark: bool) -> Theme {
+        Theme::from_sources(config, system_dark, &[])
+    }
+
+    /// The theme `appearance.json` asks for, over `sheets`: the CSS of the
+    /// theme it names and of its enabled snippets, in that order.
+    pub fn from_sources(config: &AppearanceConfig, system_dark: bool, sheets: &[String]) -> Theme {
         let dark = match config.theme.as_deref() {
             Some("moonstone") => false,
             Some("obsidian") => true,
             // `system` and anything else Obsidian does not know.
             _ => system_dark,
         };
-        let mut overrides = Vec::new();
-        if let Some(hsl) = config.accent_color.as_deref().and_then(accent_hsl) {
-            // Obsidian writes the three channels onto `body` as inline
-            // custom properties; everything accent-coloured follows.
-            overrides.push(("--accent-h".to_string(), parse(&format!("{}", hsl.0))));
-            overrides.push(("--accent-s".to_string(), parse(&format!("{}%", hsl.1))));
-            overrides.push(("--accent-l".to_string(), parse(&format!("{}%", hsl.2))));
-        }
-        let mut theme = Theme::from_tokens(dark, tokens_with(dark, &overrides));
+        // Obsidian writes the three accent channels onto `body` as inline
+        // custom properties; everything accent-coloured follows.
+        let accent = config.accent_color.as_deref().and_then(accent_hsl);
+        let mut theme = Theme::from_tokens(dark, tokens_from(dark, sheets, accent));
         if let Some(size) = config.base_font_size {
             // Obsidian's own slider offers 10 to 30, but it neither clamps
             // nor rewrites a file that holds something else — 99 was left
@@ -364,7 +403,7 @@ fn first_font(list: Option<&str>) -> Option<SharedString> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use value::{hex, Value};
+    use value::{hex, Table, Value};
 
     /// Every token resolves from the defaults, in both themes.
     #[test]
@@ -372,6 +411,7 @@ mod tests {
         let _ = Theme::dark();
         let _ = Theme::light();
         assert_eq!(registry::NAMES.len(), defaults::OBSERVED_DARK.len());
+        assert!(defaults_cascade().len() > registry::NAMES.len());
     }
 
     /// The resolver is held to what Obsidian computed for every token: the
@@ -381,8 +421,7 @@ mod tests {
     /// `calc(400 + 200)`, `0.875em`) is itself a value the resolver reads,
     /// so the two resolutions are compared value for value.
     fn observed_match(dark: bool, observed: &[(&str, &str)]) {
-        let table = base_table(dark);
-        let resolved = table.resolve_all();
+        let resolved = defaults_cascade().table(dark).resolve_all();
         let empty = Table::new();
         let mut failures = Vec::new();
         for (name, computed) in observed {
@@ -519,13 +558,88 @@ mod tests {
         );
     }
 
+    /// A theme the way a community theme is written — a palette under the
+    /// theme classes, tokens on `body`, its own variables, a snippet after
+    /// it — read from the files `appearance.json` names, in that order.
+    #[test]
+    fn the_loader_reads_the_theme_and_the_enabled_snippets_in_order() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        let cfg = root.join(".obsidian");
+        std::fs::create_dir_all(cfg.join("themes/Ember")).unwrap();
+        std::fs::create_dir_all(cfg.join("snippets")).unwrap();
+        std::fs::write(
+            cfg.join("themes/Ember/theme.css"),
+            r#"/* Ember */
+            .theme-dark { --ember: #e8590c; --color-base-00: #101010; --color-base-70: var(--ember); }
+            .theme-light { --color-base-00: #fff8f0; }
+            body { --tab-text-color-focused-active-current: var(--ember); --h1-color: var(--ember); }
+            .nav-file-title { color: red; --nav-item-color: red; }
+            "#,
+        )
+        .unwrap();
+        std::fs::write(
+            cfg.join("snippets/wider.css"),
+            "body { --tab-text-color-focused-active-current: #00ff00 }",
+        )
+        .unwrap();
+        std::fs::write(cfg.join("snippets/off.css"), "body { --h1-color: #0000ff }").unwrap();
+        let config = AppearanceConfig {
+            css_theme: Some("Ember".into()),
+            enabled_css_snippets: Some(vec!["wider".into(), "missing".into()]),
+            ..Default::default()
+        };
+        let dark = Theme::load(root, ".obsidian", &config, true).tokens;
+        assert_eq!(hex(dark.background_primary), "#101010");
+        // The palette moved the chain: muted text, nav rows and icons.
+        assert_eq!(hex(dark.text_muted), "#e8590c");
+        assert_eq!(hex(dark.nav_item_color), "#e8590c");
+        assert_eq!(hex(dark.icon_color), "#e8590c");
+        // The snippet comes after the theme and wins on `body`.
+        assert_eq!(hex(dark.tab_text_color_focused_active_current), "#00ff00");
+        // An inherited heading colour becomes a colour of its own.
+        assert_eq!(dark.h1_color.map(hex), Some("#e8590c".into()));
+        // A rule on a component is not read, and a snippet not enabled is
+        // not read either.
+        assert_eq!(hex(dark.nav_item_color), "#e8590c");
+        assert_ne!(dark.h1_color.map(hex), Some("#0000ff".into()));
+        // The light theme takes its own palette entry and the same body rules.
+        let light = Theme::load(root, ".obsidian", &config, false).tokens;
+        assert_eq!(hex(light.background_primary), "#fff8f0");
+        assert_eq!(light.text_muted, Theme::light().tokens.text_muted);
+        assert_eq!(hex(light.tab_text_color_focused_active_current), "#00ff00");
+        // No theme named: the defaults.
+        let plain = Theme::load(root, ".obsidian", &AppearanceConfig::default(), true).tokens;
+        assert_eq!(plain, Theme::dark().tokens);
+    }
+
+    /// The accent setting outranks a theme's own accent channels, as an
+    /// inline style outranks a sheet.
+    #[test]
+    fn the_accent_setting_outranks_the_theme_s_channels() {
+        let sheets =
+            vec![".theme-dark { --accent-h: 120; --accent-s: 50%; --accent-l: 50% }".to_string()];
+        let themed = tokens_from(true, &sheets, None);
+        assert!((themed.accent_h - 120.).abs() < 0.01);
+        let config = AppearanceConfig {
+            accent_color: Some("#e8590c".into()),
+            ..Default::default()
+        };
+        let set = Theme::from_sources(&config, true, &sheets).tokens;
+        assert!((set.accent_h - 21.).abs() < 1., "{}", set.accent_h);
+    }
+
     /// A theme's override that is not a colour keeps the default rather
     /// than painting nothing.
     #[test]
     fn a_malformed_override_keeps_the_default() {
-        let tokens = tokens_with(true, &[("--text-muted".into(), parse("1px solid red"))]);
+        let tokens = tokens_from(true, &["body { --text-muted: 1px solid red }".into()], None);
         assert_eq!(tokens.text_muted, Theme::dark().tokens.text_muted);
-        let tokens = tokens_with(true, &[("--color-base-70".into(), parse("#ff0000"))]);
+        let tokens = tokens_from(
+            true,
+            &[".theme-dark { --color-base-70: #ff0000 }".into()],
+            None,
+        );
         assert_eq!(hex(tokens.text_muted), "#ff0000");
         assert_eq!(hex(tokens.nav_item_color), "#ff0000");
         assert_eq!(hex(tokens.icon_color), "#ff0000");
