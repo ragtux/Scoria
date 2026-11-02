@@ -27,7 +27,7 @@
 //! vault is shared, so writing a setting Scoria ignores is still worth
 //! doing — pretending it changes something here is not.
 
-use crate::assets::logo;
+use crate::assets::{logo, DISPLAY_FONT_FAMILY};
 use crate::palette::hotkey_chip;
 use crate::text_input::{InputEvent, TextInput};
 use crate::theme::Theme;
@@ -3159,14 +3159,19 @@ impl SettingsView {
                     .px_3()
                     .pt_1()
                     .pb_2()
-                    .child(logo(22.))
+                    .child(logo(52.))
                     .child(
                         div()
                             .flex()
                             .flex_col()
                             .child(
+                                // The product name as the Vaults window sets
+                                // it: the display face at its one weight.
                                 div()
-                                    .text_size(px(13.))
+                                    .font_family(DISPLAY_FONT_FAMILY)
+                                    .font_weight(FontWeight::BLACK)
+                                    .text_size(px(22.))
+                                    .line_height(px(24.))
                                     .text_color(theme.tokens.text_normal)
                                     .child("Scoria"),
                             )
