@@ -324,7 +324,7 @@ uses behave as Obsidian's do.
 | Bases: the rest of the view | done: the cards, list and kanban layouts, the toolbar's six panels, editing through the table, the five `bases:*` commands beyond `new-file`, and an embedded `![[x.base]]`, see [[#Bases: the rest of the view, 2026-10-25]]; the toolbar and panels rebuilt to the 2026-11-01 record, see [[#The Bases toolbar and its panels, 2026-11-01]]; the embed as the live view and the leaf's chrome, see [[#The embedded base and the base leaf's chrome, 2026-11-01]]; the header, summaries, cells and keyboard, see [[#The column header, summaries, cells and the table keyboard, 2026-11-01]]; the kanban's drags and menus, see [[#The kanban board, 2026-11-02]] |
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
-| The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry's first half landed 2026-11-02, see [[#The theme registry, 2026-11-02]] and [[Theming#Progress]]; the CLI is not started |
+| The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader and the Appearance tab's pickers all landed 2026-11-02, see [[#The theme registry, 2026-11-02]], [[#The Appearance tab's pickers, 2026-11-02]] and [[Theming#Progress]] — what is left of the subset is syntax highlighting; the CLI is not started |
 
 ### The theme registry, 2026-11-02
 
@@ -494,8 +494,97 @@ snippet not enabled and one missing, in both base themes.
 
 **Next.** A probe of the surfaces the record has not got — Bases,
 canvas, graph, PDF — so their mechanical names can become their own;
-the Appearance tab's theme and snippet pickers; and, separately, syntax
-highlighting (step 3).
+and, separately, syntax highlighting (step 3). (The Appearance tab's
+pickers followed the same day: see [[#The Appearance tab's pickers,
+2026-11-02]].)
+
+### The Appearance tab's pickers, 2026-11-02
+
+The third of [[Theming]]'s loose ends: until now a theme was chosen by
+writing `cssTheme` and `enabledCssSnippets` into `appearance.json` by
+hand, because the Themes, CSS snippets and Accent color rows were all
+tagged "not in Scoria yet".
+
+**The probe.** `tools/obsidian-probe/appearance-tab.mjs` reads the tab
+through two handles at once: the vault window's JS, which can query the
+Settings popout through `app.setting.activeTab.containerEl` whatever
+document it lives in, and a bare CDP client attached to the popout's own
+page target, which is the only thing that can inject a click into it or
+capture it. Eighteen steps: every row's name, description, control and
+markup; what picking a theme, toggling a snippet, setting an accent and
+picking a font each write; both sections with nothing installed; and the
+three questions below. The record is
+[[Specification#Observed Appearance tab, Obsidian 1.14.5 (installer build 1.13.7)]].
+
+**Three things the probe settled that guessing would have got wrong.**
+
+- A theme folder is listed **only when its `manifest.json` names the
+  folder**. `folder-name` with a manifest saying `Display Name` was
+  dropped, and so was a folder with no manifest; only the one whose name
+  and folder agreed was offered. `Vault::css_themes` is that rule, and it
+  means `cssTheme` is simultaneously the folder, the manifest name and
+  the dropdown value.
+- **Enabled snippets cascade in the snippets folder's order, not the
+  enabled list's.** Enabling `tabs`, `wider`, `dim` in that order left
+  the `<style>` elements as `dim`, `tabs`, `wider`; and `zz-last`
+  enabled first beat `aa-first` enabled second. Obsidian rebuilds the
+  whole set on every toggle from its sorted file list. `theme::sheets_of`
+  had read them in the file's order since the loader landed that night,
+  which was wrong for any pair that set the same property; it now sorts,
+  and `enabled_snippets_cascade_in_the_folder_s_order` pins it.
+- **The tab is a drill-in.** "CSS snippets" and the three font rows are
+  `.setting-item.mod-navigable.tappable` that push a `.setting-page`
+  with a back chevron and its own title; the snippets are not rows on
+  the tab. The first pass looked for them there and found none. Escape
+  on a page backs out to the tab and leaves Settings open, which
+  `escape_closes` now has as a rung of its own between a popover and the
+  modal.
+
+**What was built.** `Control` gained `Color` and `Navigable`; `Item`
+gained a `Picker` (a dropdown whose options are the vault's rather than
+a static `Typed` table), a `Page` and a `folder` button. The Themes row
+is a `Picker` over `Vault::css_themes()` with the `lucide-folder-open`
+"Open themes folder" button beside it; "Current community themes"
+counts them, with the plural following and the "Check for updates"
+button dropped at zero, as Obsidian does. The accent row is a swatch
+behind a `lucide-rotate-ccw` "Restore default": GPUI raises no colour
+dialog, so the swatch opens the row's text field and a hex is typed,
+and `normalize_accent` stores the lowercase `#rrggbb` Obsidian's native
+picker would have — or the empty string, which is what "Restore
+default" writes and what Obsidian reads as "no accent set". The CSS
+snippets page is `render_snippets_page`: the reload and folder buttons,
+a `Search snippets...` box and one toggle per snippet, in the folder's
+order, backed by a new `Flag::CssSnippet` that appends on the way on and
+removes on the way off.
+
+`Vault::css_themes` and `css_snippets` do the folder reading, and
+`SettingsView` caches them in `CssFolders`, refreshed when the modal
+opens, when the vault's state is set again and when the page's reload
+button is pressed — `items` is called per render, so a folder scan
+cannot live there. The "*N* enabled" the collapsed row shows counts the
+enabled snippets whose file still exists, which is why a name left
+behind by a deleted `.css` stops counting; Scoria had "None enabled" at
+zero, where Obsidian says "0 enabled".
+
+**Base color scheme, the fonts and the font size lost their "on
+restart" tags.** They were right when `Theme` was built once at startup;
+since the loader landed, `reload_theme` rebuilds the whole global —
+fonts and base size included — from `appearance.json` on every write, so
+all five rows are live. Only "Current community themes" keeps a tag.
+
+**Verified in the app**, on a scratch vault with two themes (plus one
+Obsidian would drop) and three snippets: the dropdown offered Default,
+Ember and Zephyr and not `folder-name`; picking Ember recoloured the
+Settings window and the workspace as the click landed; the three
+snippet toggles wrote `["tabs", "wider", "dim"]` and dimmed what `dim`
+dims; the accent wrote `#16a34a` and "Restore default" wrote `""`;
+Escape backed out of the page; and the collapsed row read "3 enabled".
+
+**Not built**, and filed in [[UI parity backlog]]: the "Manage" button
+(Obsidian's community theme browser — the probe could not record it
+offline, and Scoria will not download themes), the three font pages, and
+the "Quick font size adjustment" and "Custom app icon" rows, whose keys
+the probe did not record.
 
 ### Four small entries and a URI, 2026-11-02
 

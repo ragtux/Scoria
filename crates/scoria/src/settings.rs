@@ -314,6 +314,9 @@ enum Flag {
     /// A community plugin id in `community-plugins.json`; enabled means
     /// listed.
     CommunityPlugin(String),
+    /// A CSS snippet by its name (`wider.css` is `wider`); enabled means
+    /// listed in `appearance.json`'s `enabledCssSnippets`.
+    CssSnippet(String),
 }
 
 /// A dropdown's options: what each row reads and what it writes.
@@ -643,6 +646,40 @@ impl TextField {
     fn same(&self, other: &TextField) -> bool {
         self.key == other.key && self.prefix == other.prefix
     }
+}
+
+/// `accentColor` in `appearance.json`. Obsidian's control is a native
+/// colour dialog that writes a lowercase `#rrggbb`, and its "Restore
+/// default" writes the empty string rather than dropping the key (probed
+/// 2026-11-02). GPUI raises no colour dialog, so the swatch opens this
+/// field and a hex is typed into it; what lands in the file is the same.
+const ACCENT_COLOR: TextField = TextField {
+    key: "accentColor",
+    placeholder: "#rrggbb",
+    prefix: "",
+    read: |state| state.appearance().accent_color.clone().unwrap_or_default(),
+    write: |state, value| {
+        let mut next = state.appearance().clone();
+        next.accent_color = Some(normalize_accent(value));
+        SettingChange::Appearance(next)
+    },
+};
+
+/// What the accent field stores for what was typed: a `#rrggbb` in lower
+/// case, `#rgb` expanded to it, and anything else — the empty field
+/// included — the empty string, which is what Obsidian's "Restore default"
+/// writes and what it reads as "no accent set".
+fn normalize_accent(typed: &str) -> String {
+    let text = typed.trim().trim_start_matches('#');
+    let hex = match text.len() {
+        3 => text.chars().flat_map(|c| [c, c]).collect::<String>(),
+        6 => text.to_string(),
+        _ => return String::new(),
+    };
+    if !hex.chars().all(|c| c.is_ascii_hexdigit()) {
+        return String::new();
+    }
+    format!("#{}", hex.to_ascii_lowercase())
 }
 
 /// `baseFontSize` in `appearance.json`; Obsidian's slider offers 10 to 30.
@@ -1175,6 +1212,12 @@ impl Flag {
                 core_plugin_enabled(state.core_plugins().as_ref(), id, *default_on)
             }
             Flag::CommunityPlugin(id) => state.community_plugins().contains(id),
+            Flag::CssSnippet(name) => state
+                .appearance()
+                .enabled_css_snippets
+                .iter()
+                .flatten()
+                .any(|s| s == name),
         }
     }
 
@@ -1207,6 +1250,22 @@ impl Flag {
                     None => plugins.push(id.clone()),
                 }
                 SettingChange::CommunityPlugins(plugins)
+            }
+            // Obsidian appends the name on enable and takes it out on
+            // disable, so the list is in the order the toggles were
+            // switched on. The order the snippets are *applied* in is the
+            // folder's, not this one (see `theme::sheets_of`).
+            Flag::CssSnippet(name) => {
+                let mut next = state.appearance().clone();
+                let mut enabled = next.enabled_css_snippets.take().unwrap_or_default();
+                match enabled.iter().position(|s| s == name) {
+                    Some(ix) => {
+                        enabled.remove(ix);
+                    }
+                    None => enabled.push(name.clone()),
+                }
+                next.enabled_css_snippets = Some(enabled);
+                SettingChange::Appearance(next)
             }
         }
     }
@@ -1270,6 +1329,15 @@ enum Control {
     Text(SharedString),
     Slider(SharedString),
     Button(SharedString),
+    /// The accent row: a swatch of the colour stored, empty for the
+    /// default, behind a "Restore default" button. Obsidian's control is
+    /// `<input type="color">` beside a `lucide-rotate-ccw` clickable icon;
+    /// the swatch opens the row's text field, since there is no native
+    /// colour dialog to raise.
+    Color(SharedString),
+    /// A row that opens a page of its own, drawn as what it reads on the
+    /// right and then a chevron: `.setting-item.mod-navigable.tappable`.
+    Navigable(SharedString),
 }
 
 /// How far a setting gets in Scoria.
@@ -1312,21 +1380,57 @@ enum Escape {
     Capture,
     /// An open dropdown's option list.
     Popover,
+    /// A navigable row's page, which backs out to the tab's own rows.
+    Page,
     /// The modal itself, when nothing inside it is open.
     Modal,
 }
 
 /// Escape takes the innermost thing open: the chord capture, then an open
-/// dropdown, and the modal only when neither is. Obsidian's dropdown is a
-/// native `<select>`, so Escape over an open option list closes the list
-/// and leaves the dialog where it was.
-fn escape_closes(capturing: bool, popover_open: bool) -> Escape {
+/// dropdown, then a page, and the modal only when none of them is.
+/// Obsidian's dropdown is a native `<select>`, so Escape over an open
+/// option list closes the list and leaves the dialog where it was; and
+/// Escape on the CSS snippets page goes back to the Appearance tab with
+/// Settings still up (probed 2026-11-02, `appearance-tab.mjs` step s18).
+fn escape_closes(capturing: bool, popover_open: bool, page_open: bool) -> Escape {
     if capturing {
         Escape::Capture
     } else if popover_open {
         Escape::Popover
+    } else if page_open {
+        Escape::Page
     } else {
         Escape::Modal
+    }
+}
+
+/// A dropdown whose options are the vault's rather than a fixed table:
+/// the Themes row lists what is installed under `themes/`, so the options
+/// are built per render and carry their own written values.
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct Picker {
+    /// Identifies the open menu, and is the key the row writes.
+    key: &'static str,
+    /// Each option's label and the value picking it writes.
+    options: Vec<(SharedString, String)>,
+    selected: usize,
+}
+
+/// A page the Appearance tab opens in place of its rows. Obsidian's rows
+/// for these are `.setting-item.mod-navigable.tappable`, and the page has
+/// a titlebar of its own with a back chevron (probed 2026-11-02).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Page {
+    /// "CSS snippets": the reload and folder buttons, a search box and one
+    /// toggle per `.css` file under `snippets/`.
+    CssSnippets,
+}
+
+impl Page {
+    fn title(self) -> &'static str {
+        match self {
+            Page::CssSnippets => "CSS snippets",
+        }
     }
 }
 
@@ -1341,10 +1445,18 @@ struct Item {
     flag: Option<Flag>,
     /// What a dropdown writes, for the controls that are not toggles.
     typed: Option<Typed>,
+    /// What a dropdown built from the vault writes.
+    picker: Option<Picker>,
     /// What a slider writes.
     number: Option<Number>,
     /// What a text field writes.
     field: Option<TextField>,
+    /// The page a navigable row opens.
+    page: Option<Page>,
+    /// The `.obsidian` subfolder a `lucide-folder-open` button before the
+    /// control opens: Obsidian puts one on the Themes row and one on the
+    /// CSS snippets page.
+    folder: Option<&'static str>,
     honored: Honored,
 }
 
@@ -1374,8 +1486,11 @@ fn heading(name: &str) -> Item {
         control: Control::None,
         flag: None,
         typed: None,
+        picker: None,
         number: None,
         field: None,
+        page: None,
+        folder: None,
         honored: Honored::Live,
     }
 }
@@ -1388,8 +1503,11 @@ fn item(name: &str, desc: &str, control: Control) -> Item {
         control,
         flag: None,
         typed: None,
+        picker: None,
         number: None,
         field: None,
+        page: None,
+        folder: None,
         honored: Honored::Live,
     }
 }
@@ -1441,6 +1559,38 @@ fn field(name: &str, desc: &str, state: &VaultState, field: TextField) -> Item {
     Item {
         field: Some(field),
         ..item(name, desc, Control::Text((field.read)(state).into()))
+    }
+}
+
+/// A dropdown whose options come from the vault, showing the one the file
+/// names (or the first, which is the default, when it names none).
+fn picker(
+    name: &str,
+    desc: &str,
+    key: &'static str,
+    options: Vec<(SharedString, String)>,
+    value: &str,
+) -> Item {
+    let selected = options.iter().position(|(_, v)| v == value).unwrap_or(0);
+    let shown = options
+        .get(selected)
+        .map(|(label, _)| label.clone())
+        .unwrap_or_default();
+    Item {
+        picker: Some(Picker {
+            key,
+            options,
+            selected,
+        }),
+        ..item(name, desc, Control::Dropdown(shown))
+    }
+}
+
+/// A row that opens a page of its own, showing `value` on its way there.
+fn navigable(name: &str, desc: &str, value: impl Into<SharedString>, page: Page) -> Item {
+    Item {
+        page: Some(page),
+        ..item(name, desc, Control::Navigable(value.into()))
     }
 }
 
@@ -1504,12 +1654,56 @@ pub enum SettingsEvent {
     /// key changed. The workspace writes it and applies what it can. Boxed
     /// because a whole `AppConfig` dwarfs the other events.
     Changed(Box<SettingChange>),
+    /// Something the modal did outside the vault failed and the person
+    /// should be told: the one case is a folder button whose file manager
+    /// would not start.
+    Report(String),
+}
+
+/// What the vault holds under `themes/` and `snippets/`.
+///
+/// Read when the modal opens and whenever the vault's state is set again
+/// — which a snippet toggle, a theme pick and the watcher all do — rather
+/// than scanned per frame, since `items` is called on every render.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+struct CssFolders {
+    /// Installed theme names, which are also their folder names.
+    themes: Vec<String>,
+    /// Snippet names without the `.css`, in the order they cascade in.
+    snippets: Vec<String>,
+}
+
+impl CssFolders {
+    fn read(state: &VaultState) -> CssFolders {
+        let vault = state.vault();
+        CssFolders {
+            themes: vault.css_themes(),
+            snippets: vault.css_snippets(),
+        }
+    }
+
+    /// The enabled snippets whose file is still there, which is the count
+    /// the collapsed row shows.
+    fn enabled_count(&self, appearance: &AppearanceConfig) -> usize {
+        appearance
+            .enabled_css_snippets
+            .iter()
+            .flatten()
+            .filter(|name| self.snippets.iter().any(|s| s == *name))
+            .count()
+    }
 }
 
 pub struct SettingsView {
     focus_handle: FocusHandle,
     state: Option<Arc<VaultState>>,
     tab: Tab,
+    /// The page the Appearance tab has open in place of its rows.
+    page: Option<Page>,
+    /// What the vault has under `themes/` and `snippets/`.
+    css: CssFolders,
+    /// The CSS snippets page's "Search snippets..." box.
+    snippet_search: Entity<TextInput>,
     hotkey_search: Entity<TextInput>,
     hotkey_filter: HotkeyFilter,
     /// Every command the Hotkeys tab can list, sorted by name.
@@ -1545,8 +1739,17 @@ impl Focusable for SettingsView {
 impl SettingsView {
     pub fn new(cx: &mut Context<Self>) -> SettingsView {
         let hotkey_search = cx.new(|cx| TextInput::new("Filter...", cx));
+        let snippet_search = cx.new(|cx| TextInput::new("Search snippets...", cx));
         let field = cx.new(|cx| TextInput::new("", cx));
         let subscriptions = vec![
+            cx.subscribe(
+                &snippet_search,
+                |this, _, event: &InputEvent, cx| match event {
+                    InputEvent::Changed => cx.notify(),
+                    InputEvent::Cancel => this.close_page(cx),
+                    _ => {}
+                },
+            ),
             cx.subscribe(
                 &hotkey_search,
                 |this, _, event: &InputEvent, cx| match event {
@@ -1570,6 +1773,9 @@ impl SettingsView {
             focus_handle: cx.focus_handle(),
             state: None,
             tab: Tab::General,
+            page: None,
+            css: CssFolders::default(),
+            snippet_search,
             hotkey_search,
             hotkey_filter: HotkeyFilter::All,
             all_commands: Vec::new(),
@@ -1599,8 +1805,37 @@ impl SettingsView {
     }
 
     pub fn set_state(&mut self, state: Arc<VaultState>, cx: &mut Context<Self>) {
+        self.css = CssFolders::read(&state);
         self.state = Some(state);
         self.load_commands(cx);
+        cx.notify();
+    }
+
+    /// Re-reads `themes/` and `snippets/`, which the CSS snippets page's
+    /// reload button does and which every way into the modal does too: a
+    /// file added or deleted outside the app shows up on the next one.
+    fn reload_css_folders(&mut self, cx: &mut Context<Self>) {
+        if let Some(state) = self.state.clone() {
+            self.css = CssFolders::read(&state);
+        }
+        cx.notify();
+    }
+
+    /// Opens a navigable row's page.
+    fn open_page(&mut self, page: Page, window: &mut Window, cx: &mut Context<Self>) {
+        self.commit_field(cx);
+        self.menu = None;
+        self.reload_css_folders(cx);
+        self.snippet_search
+            .update(cx, |input, cx| input.set_text(String::new(), cx));
+        self.page = Some(page);
+        self.focus_tab(window, cx);
+        cx.notify();
+    }
+
+    /// Back out of a page to the tab's own rows.
+    fn close_page(&mut self, cx: &mut Context<Self>) {
+        self.page = None;
         cx.notify();
     }
 
@@ -1616,10 +1851,17 @@ impl SettingsView {
         self.menu = None;
         self.editing = None;
         self.capturing = None;
+        // A page left open by the last session would come back instead of
+        // the tab it belongs to.
+        self.page = None;
         // A filter typed last time would otherwise be what the next thing
         // typed appends to.
         self.hotkey_search
             .update(cx, |input, cx| input.set_text("", cx));
+        self.snippet_search
+            .update(cx, |input, cx| input.set_text("", cx));
+        // A theme or a snippet added since the modal was last open.
+        self.reload_css_folders(cx);
         self.focus_tab(window, cx);
         cx.notify();
     }
@@ -1685,6 +1927,8 @@ impl SettingsView {
                     Control::Text(v) => ("text", json!(v.as_ref())),
                     Control::Slider(v) => ("slider", json!(v.as_ref())),
                     Control::Button(v) => ("button", json!(v.as_ref())),
+                    Control::Color(v) => ("color", json!(v.as_ref())),
+                    Control::Navigable(v) => ("navigable", json!(v.as_ref())),
                 };
                 json!({
                     "kind": if item.heading { "heading" } else { "setting" },
@@ -1711,12 +1955,18 @@ impl SettingsView {
         // the user, so leaving the tab is one of the moments that writes.
         self.dismiss_open_controls(cx);
         self.tab = tab;
+        // A page belongs to the tab that opened it.
+        self.page = None;
         self.focus_tab(window, cx);
         cx.notify();
     }
 
     fn close_action(&mut self, _: &Close, window: &mut Window, cx: &mut Context<Self>) {
-        match escape_closes(self.capturing.is_some(), self.menu.is_some()) {
+        match escape_closes(
+            self.capturing.is_some(),
+            self.menu.is_some(),
+            self.page.is_some(),
+        ) {
             // Escape while a chord is being captured backs out of the
             // capture, not the modal.
             Escape::Capture => {
@@ -1727,6 +1977,11 @@ impl SettingsView {
             Escape::Popover => {
                 self.menu = None;
                 cx.notify();
+            }
+            Escape::Page => {
+                self.dismiss_open_controls(cx);
+                self.close_page(cx);
+                self.focus_tab(window, cx);
             }
             Escape::Modal => {
                 self.dismiss_open_controls(cx);
@@ -1937,7 +2192,7 @@ impl SettingsView {
         };
         match tab {
             Tab::General => Self::general_items(state),
-            Tab::Appearance => Self::appearance_items(state),
+            Tab::Appearance => Self::appearance_items(state, &self.css),
             Tab::Interface => Self::interface_items(state),
             Tab::Editor => Self::editor_items(state),
             Tab::Files => Self::files_items(state),
@@ -1968,7 +2223,17 @@ impl SettingsView {
         ]
     }
 
-    fn appearance_items(state: &VaultState) -> Vec<Item> {
+    /// The Appearance tab, row for row as Obsidian 1.14.5 builds it
+    /// (probed 2026-11-02, `appearance-tab.mjs` step s01): the scheme, the
+    /// accent, the themes picker with the row that counts them, the
+    /// navigable CSS snippets row, then the Font heading and its four
+    /// rows.
+    ///
+    /// The three fonts are navigable in Obsidian too — each opens a page
+    /// listing the installed families — where Scoria still has a text
+    /// field; that page is the Fonts entry of [[UI parity backlog]], not
+    /// this one.
+    fn appearance_items(state: &VaultState, css: &CssFolders) -> Vec<Item> {
         let a = &state.appearance();
         let font = |family: &Option<String>| -> SharedString {
             match family.as_deref().map(str::trim) {
@@ -1976,73 +2241,100 @@ impl SettingsView {
                 _ => "Default".into(),
             }
         };
-        let snippets = a.enabled_css_snippets.as_ref().map_or(0, |s| s.len());
+        // "N enabled" counts the enabled snippets whose file is still
+        // there: a name left in `enabledCssSnippets` after its `.css` was
+        // deleted does not count, and zero reads "0 enabled".
+        let enabled = css.enabled_count(a);
+        let installed = css.themes.len();
+        let mut options: Vec<(SharedString, String)> = vec![("Default".into(), String::new())];
+        options.extend(
+            css.themes
+                .iter()
+                .map(|t| (SharedString::from(t.clone()), t.clone())),
+        );
         vec![
             choice(
                 "Base color scheme",
                 "Choose Obsidian's default color scheme.",
                 state,
                 BASE_COLOR_SCHEME,
-            )
-            .on_restart(),
-            text(
-                "Accent color",
-                "Choose the accent color used throughout the app.",
-                a.accent_color
-                    .clone()
-                    .filter(|c| !c.is_empty())
-                    .unwrap_or_else(|| "Default".into()),
-            )
-            .not_yet(),
-            dropdown(
-                "Themes",
-                "Manage installed themes and browse community themes.",
-                a.css_theme
-                    .clone()
-                    .filter(|t| !t.is_empty())
-                    .unwrap_or_else(|| "Default".into()),
-            )
-            .not_yet(),
+            ),
+            Item {
+                field: Some(ACCENT_COLOR),
+                ..item(
+                    "Accent color",
+                    "Choose the accent color used throughout the app.",
+                    Control::Color((ACCENT_COLOR.read)(state).into()),
+                )
+            },
+            Item {
+                folder: Some("themes"),
+                ..picker(
+                    "Themes",
+                    "Manage installed themes and browse community themes.",
+                    "cssTheme",
+                    options,
+                    a.css_theme.as_deref().unwrap_or_default(),
+                )
+            },
             item(
+                "Current community themes",
+                &format!(
+                    "You currently have {installed} theme{} installed.",
+                    if installed == 1 { "" } else { "s" }
+                ),
+                // Obsidian drops the button when nothing is installed.
+                if installed == 0 {
+                    Control::None
+                } else {
+                    Control::Button("Check for updates".into())
+                },
+            )
+            .not_yet(),
+            navigable(
                 "CSS snippets",
                 "Manage your collection of CSS files for tweaking the app's appearance.",
-                Control::Text(
-                    match snippets {
-                        0 => "None enabled".to_string(),
-                        1 => "1 enabled".to_string(),
-                        n => format!("{n} enabled"),
-                    }
-                    .into(),
-                ),
-            )
-            .not_yet(),
+                format!("{enabled} enabled"),
+                Page::CssSnippets,
+            ),
             heading("Font"),
             text(
                 "Interface font",
                 "Set base font for all of Obsidian.",
                 font(&a.interface_font_family),
-            )
-            .on_restart(),
+            ),
             text(
                 "Text font",
                 "Set font for editing and reading views.",
                 font(&a.text_font_family),
-            )
-            .on_restart(),
+            ),
             text(
                 "Monospace font",
                 "Set font for places like code blocks and frontmatter.",
                 font(&a.monospace_font_family),
-            )
-            .on_restart(),
+            ),
             slider(
                 "Font size",
                 "Font size in pixels that affects editing and reading views.",
                 state,
                 FONT_SIZE,
-            )
-            .on_restart(),
+            ),
         ]
+    }
+
+    /// The rows of the CSS snippets page: one toggle per `.css` file under
+    /// `snippets/`, in the folder's order, filtered by what is typed in
+    /// the page's search box.
+    fn snippet_items(state: &VaultState, css: &CssFolders, query: &str) -> Vec<Item> {
+        let query = query.trim().to_lowercase();
+        css.snippets
+            .iter()
+            .filter(|name| query.is_empty() || name.to_lowercase().contains(&query))
+            .map(|name| {
+                let flag = Flag::CssSnippet(name.clone());
+                toggle(name, "", flag.is_on(state), flag)
+            })
+            .collect()
     }
 
     fn interface_items(state: &VaultState) -> Vec<Item> {
@@ -2993,6 +3285,197 @@ impl SettingsView {
                     .child(toggle)
                     .into_any_element()
             }
+            // A dropdown whose options are the vault's: the same control
+            // as `Control::Dropdown` with a `Typed`, reading and writing
+            // through the row's `Picker` instead of a static table.
+            Control::Dropdown(value) if item.picker.is_some() => {
+                let pick = item.picker.clone().expect("checked above");
+                let shown = div()
+                    .flex()
+                    .flex_row()
+                    .items_center()
+                    .gap_2()
+                    .px_2()
+                    .py(px(3.))
+                    .rounded_sm()
+                    .bg(theme.tokens.dropdown_background)
+                    .border_1()
+                    .border_color(theme.tokens.background_modifier_border)
+                    .text_size(px(12.))
+                    .text_color(theme.tokens.text_normal)
+                    .child(value.clone())
+                    .child(div().text_color(theme.tokens.text_muted).child("▾"));
+                let open = self.menu == Some(pick.key);
+                let selected = pick.selected;
+                div()
+                    .relative()
+                    .child(
+                        div()
+                            .id(SharedString::from(format!("settings-menu-{}", pick.key)))
+                            .cursor_pointer()
+                            .on_click(cx.listener({
+                                let key = pick.key;
+                                move |this, _, _, cx| {
+                                    cx.stop_propagation();
+                                    if this.click_dismissed_a_popover(cx) {
+                                        return;
+                                    }
+                                    this.commit_field(cx);
+                                    this.menu = Some(key);
+                                    cx.notify();
+                                }
+                            }))
+                            .child(shown),
+                    )
+                    .when(open, |d| {
+                        d.child(deferred(
+                            div()
+                                .absolute()
+                                .top(px(26.))
+                                .right(px(0.))
+                                .min_w(px(200.))
+                                .flex()
+                                .flex_col()
+                                .bg(theme.tokens.background_secondary)
+                                .border_1()
+                                .border_color(theme.tokens.background_modifier_border)
+                                .rounded_md()
+                                .shadow_lg()
+                                .py_1()
+                                .children(pick.options.iter().enumerate().map(
+                                    |(ix, (label, value))| {
+                                        let value = value.clone();
+                                        div()
+                                            .id(SharedString::from(format!(
+                                                "settings-option-{}-{ix}",
+                                                pick.key
+                                            )))
+                                            .px_3()
+                                            .py_1()
+                                            .text_size(px(12.))
+                                            .cursor_pointer()
+                                            .when(ix == selected, |d| {
+                                                d.bg(theme.tokens.background_modifier_hover)
+                                            })
+                                            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                                            .text_color(theme.tokens.text_normal)
+                                            .child(label.clone())
+                                            .on_click(cx.listener(move |this, _, window, cx| {
+                                                cx.stop_propagation();
+                                                this.pick_theme(&value, window, cx)
+                                            }))
+                                    },
+                                )),
+                        ))
+                    })
+                    .into_any_element()
+            }
+            Control::Navigable(value) => {
+                let Some(page) = item.page else {
+                    return div().into_any_element();
+                };
+                div()
+                    .id(SharedString::from(format!("settings-page-{}", item.name)))
+                    .flex()
+                    .flex_row()
+                    .items_center()
+                    .gap_2()
+                    .cursor_pointer()
+                    .text_size(px(12.))
+                    .text_color(theme.tokens.text_muted)
+                    .child(value.clone())
+                    .child(
+                        div()
+                            .text_size(px(14.))
+                            .text_color(theme.tokens.text_faint)
+                            .child("›"),
+                    )
+                    .on_click(cx.listener(move |this, _, window, cx| {
+                        cx.stop_propagation();
+                        if this.click_dismissed_a_popover(cx) {
+                            return;
+                        }
+                        this.open_page(page, window, cx)
+                    }))
+                    .into_any_element()
+            }
+            // The accent row, open for typing: the same field every other
+            // text row uses.
+            Control::Color(_)
+                if item
+                    .field
+                    .zip(self.editing)
+                    .is_some_and(|(a, b)| a.same(&b)) =>
+            {
+                div()
+                    .id("settings-accent-open")
+                    .min_w(px(160.))
+                    .max_w(px(220.))
+                    .on_click(|_, _, cx| cx.stop_propagation())
+                    .child(self.field.clone())
+                    .into_any_element()
+            }
+            Control::Color(value) => {
+                let stored = value.clone();
+                let swatch =
+                    crate::theme::accent_swatch(&stored).unwrap_or(theme.tokens.interactive_accent);
+                let at_default = stored.is_empty();
+                div()
+                    .flex()
+                    .flex_row()
+                    .items_center()
+                    .gap_2()
+                    // "Restore default", a `lucide-rotate-ccw` clickable
+                    // icon that Obsidian disables while nothing is set.
+                    .child(
+                        div()
+                            .id("settings-accent-reset")
+                            .flex()
+                            .items_center()
+                            .justify_center()
+                            .size(px(24.))
+                            .rounded_sm()
+                            .text_color(if at_default {
+                                theme.tokens.text_faint
+                            } else {
+                                theme.tokens.icon_color
+                            })
+                            .when(!at_default, |d| {
+                                d.cursor_pointer()
+                                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                            })
+                            .child(crate::assets::icon(
+                                "rotate-ccw",
+                                16.,
+                                theme.tokens.icon_color,
+                            ))
+                            .on_click(cx.listener(move |this, _, window, cx| {
+                                cx.stop_propagation();
+                                if this.click_dismissed_a_popover(cx) {
+                                    return;
+                                }
+                                this.reset_accent(window, cx)
+                            })),
+                    )
+                    .child(
+                        div()
+                            .id("settings-accent-swatch")
+                            .size(px(22.))
+                            .rounded_full()
+                            .bg(swatch)
+                            .border_1()
+                            .border_color(theme.tokens.background_modifier_border)
+                            .cursor_pointer()
+                            .on_click(cx.listener(move |this, _, window, cx| {
+                                cx.stop_propagation();
+                                if this.click_dismissed_a_popover(cx) {
+                                    return;
+                                }
+                                this.edit_field(ACCENT_COLOR, window, cx)
+                            })),
+                    )
+                    .into_any_element()
+            }
             Control::Dropdown(value) => {
                 let shown = div()
                     .flex()
@@ -3315,6 +3798,45 @@ impl SettingsView {
         self.state.as_ref().map(|s| typed.selected(s)).unwrap_or(0)
     }
 
+    /// Picks the theme a Themes row names, writing `cssTheme`. Obsidian
+    /// writes the empty string for Default rather than dropping the key.
+    fn pick_theme(&mut self, name: &str, window: &Window, cx: &mut Context<Self>) {
+        self.menu = None;
+        let name = name.to_string();
+        self.after_open_field(window, cx, move |this, cx| {
+            let Some(state) = this.state.clone() else {
+                return;
+            };
+            if state.appearance().css_theme.as_deref().unwrap_or_default() == name {
+                cx.notify();
+                return;
+            }
+            let mut next = state.appearance().clone();
+            next.css_theme = Some(name);
+            cx.emit(SettingsEvent::Changed(Box::new(SettingChange::Appearance(
+                next,
+            ))));
+            cx.notify();
+        });
+    }
+
+    /// "Restore default" beside the accent swatch: Obsidian writes the
+    /// empty string, which is how it says "no accent set".
+    fn reset_accent(&mut self, window: &Window, cx: &mut Context<Self>) {
+        self.after_open_field(window, cx, move |this, cx| {
+            let Some(state) = this.state.clone() else {
+                return;
+            };
+            if (ACCENT_COLOR.read)(&state).is_empty() {
+                return;
+            }
+            cx.emit(SettingsEvent::Changed(Box::new((ACCENT_COLOR.write)(
+                &state, "",
+            ))));
+            cx.notify();
+        });
+    }
+
     /// Writes the option a dropdown's row names. The value comes from the
     /// same table the control reads through, so the two cannot drift.
     fn pick(&mut self, typed: Typed, option: usize, window: &Window, cx: &mut Context<Self>) {
@@ -3342,7 +3864,7 @@ impl SettingsView {
         });
     }
 
-    fn render_item(&self, item: &Item, theme: &Theme, cx: &mut Context<Self>) -> gpui::Div {
+    fn render_item(&self, item: &Item, theme: &Theme, cx: &mut Context<Self>) -> gpui::AnyElement {
         if item.heading {
             return div()
                 .pt_5()
@@ -3350,9 +3872,14 @@ impl SettingsView {
                 .text_size(px(15.))
                 .font_weight(FontWeight::BOLD)
                 .text_color(theme.tokens.text_normal)
-                .child(item.name.clone());
+                .child(item.name.clone())
+                .into_any_element();
         }
+        // A navigable row is `tappable`: the whole row opens the page, not
+        // only the chevron at its end.
+        let page = item.page;
         div()
+            .id(SharedString::from(format!("settings-row-{}", item.name)))
             .flex()
             .flex_row()
             .items_center()
@@ -3361,6 +3888,16 @@ impl SettingsView {
             .py(px(10.))
             .border_t_1()
             .border_color(theme.tokens.background_modifier_border)
+            .when_some(page, |d, page| {
+                d.cursor_pointer()
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                    .on_click(cx.listener(move |this, _, window, cx| {
+                        if this.click_dismissed_a_popover(cx) {
+                            return;
+                        }
+                        this.open_page(page, window, cx)
+                    }))
+            })
             .child(
                 div()
                     .flex()
@@ -3404,9 +3941,175 @@ impl SettingsView {
             )
             .child(
                 div()
+                    .flex()
+                    .flex_row()
+                    .items_center()
+                    .gap_2()
                     .flex_shrink_0()
+                    .children(item.folder.map(|name| {
+                        self.folder_button(
+                            "settings-folder-themes",
+                            name,
+                            "Open themes folder",
+                            theme,
+                            cx,
+                        )
+                    }))
                     .child(self.render_control(item, theme, cx)),
             )
+            .into_any_element()
+    }
+
+    /// A `lucide-folder-open` clickable icon that opens one of the
+    /// `.obsidian` subfolders in the desktop's file manager.
+    fn folder_button(
+        &self,
+        id: &'static str,
+        folder: &'static str,
+        label: &'static str,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> gpui::Stateful<gpui::Div> {
+        div()
+            .id(id)
+            .flex()
+            .items_center()
+            .justify_center()
+            .size(px(24.))
+            .rounded_sm()
+            .cursor_pointer()
+            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+            .child(crate::assets::icon(
+                "folder-open",
+                16.,
+                theme.tokens.icon_color,
+            ))
+            .tooltip(crate::canvas::menu::tooltip(label))
+            .on_click(cx.listener(move |this, _, _, cx| {
+                cx.stop_propagation();
+                if this.click_dismissed_a_popover(cx) {
+                    return;
+                }
+                this.open_css_folder(folder, cx)
+            }))
+    }
+
+    /// The CSS snippets page: the titlebar's back chevron is drawn by the
+    /// modal's own header, so this is the two buttons, the search box and
+    /// one toggle row per snippet. Obsidian's reload button re-reads the
+    /// folder and its folder button opens it in the file manager.
+    fn render_snippets_page(&self, theme: &Theme, cx: &mut Context<Self>) -> gpui::Div {
+        let query = self.snippet_search.read(cx).text().to_string();
+        let rows: Vec<Item> = match self.state.as_ref() {
+            Some(state) => Self::snippet_items(state, &self.css, &query),
+            None => Vec::new(),
+        };
+        let button =
+            |id: &'static str,
+             icon: &'static str,
+             label: &'static str,
+             theme: &Theme,
+             cx: &mut Context<Self>,
+             on_click: fn(&mut Self, &mut Window, &mut Context<Self>)| {
+                div()
+                    .id(id)
+                    .flex()
+                    .items_center()
+                    .justify_center()
+                    .size(px(26.))
+                    .rounded_sm()
+                    .cursor_pointer()
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                    .child(crate::assets::icon(icon, 16., theme.tokens.icon_color))
+                    .tooltip(crate::canvas::menu::tooltip(label))
+                    .on_click(cx.listener(move |this, _, window, cx| {
+                        cx.stop_propagation();
+                        if this.click_dismissed_a_popover(cx) {
+                            return;
+                        }
+                        on_click(this, window, cx)
+                    }))
+            };
+        let mut list = div()
+            .id("settings-snippets")
+            .overflow_y_scroll()
+            .size_full();
+        if rows.is_empty() {
+            list = list.child(
+                div()
+                    .py_4()
+                    .text_size(px(12.))
+                    .text_color(theme.tokens.text_muted)
+                    .child(if query.trim().is_empty() {
+                        "No snippets found."
+                    } else {
+                        "No snippets match."
+                    }),
+            );
+        }
+        for item in &rows {
+            list = list.child(self.render_item(item, theme, cx));
+        }
+        div()
+            .flex()
+            .flex_col()
+            .size_full()
+            .min_h_0()
+            .child(
+                div()
+                    .flex()
+                    .flex_row()
+                    .items_center()
+                    .justify_end()
+                    .gap_1()
+                    .pb_2()
+                    .child(button(
+                        "settings-snippets-reload",
+                        "refresh-cw",
+                        "Reload snippets",
+                        theme,
+                        cx,
+                        |this, _, cx| this.reload_css_folders(cx),
+                    ))
+                    .child(self.folder_button(
+                        "settings-snippets-folder",
+                        "snippets",
+                        "Open snippets folder",
+                        theme,
+                        cx,
+                    )),
+            )
+            .child(div().pb_2().child(self.snippet_search.clone()))
+            .child(div().flex_1().min_h_0().child(list))
+    }
+
+    /// Opens `themes/` or `snippets/` in the desktop's file manager,
+    /// creating it first: Obsidian's two folder buttons do that, and a
+    /// vault that has never had a snippet has no folder to open.
+    fn open_css_folder(&mut self, name: &'static str, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let dir = state.root.join(state.config_dir()).join(name);
+        cx.spawn(async move |this, cx| {
+            let result = cx
+                .background_executor()
+                .spawn(async move {
+                    std::fs::create_dir_all(&dir)
+                        .map_err(|e| format!("{}: {e}", dir.display()))
+                        .and_then(|()| crate::file_menu::open_folder(&dir))
+                })
+                .await;
+            if let Err(err) = result {
+                this.update(cx, |_, cx| {
+                    cx.emit(SettingsEvent::Report(format!(
+                        "The {name} folder could not be opened: {err}"
+                    )))
+                })
+                .ok();
+            }
+        })
+        .detach();
     }
 
     fn render_hotkey_rows(
@@ -3610,15 +4313,18 @@ impl Render for SettingsView {
         }
         let theme = cx.global::<Theme>().clone();
         let tab = self.tab;
-        let body: gpui::AnyElement = if tab == Tab::Hotkeys {
-            self.render_hotkeys(&theme, cx).into_any_element()
-        } else {
-            let items = self.items(tab);
-            let mut list = div().id("settings-items").overflow_y_scroll().size_full();
-            for item in &items {
-                list = list.child(self.render_item(item, &theme, cx));
+        let page = self.page;
+        let body: gpui::AnyElement = match page {
+            Some(Page::CssSnippets) => self.render_snippets_page(&theme, cx).into_any_element(),
+            None if tab == Tab::Hotkeys => self.render_hotkeys(&theme, cx).into_any_element(),
+            None => {
+                let items = self.items(tab);
+                let mut list = div().id("settings-items").overflow_y_scroll().size_full();
+                for item in &items {
+                    list = list.child(self.render_item(item, &theme, cx));
+                }
+                list.into_any_element()
             }
-            list.into_any_element()
         };
         div()
             .id("settings")
@@ -3661,11 +4367,52 @@ impl Render for SettingsView {
                             .pt_4()
                             .pb_2()
                             .child(
+                                // `.setting-page-titlebar`: a page replaces
+                                // the tab's name with a back chevron and
+                                // its own.
                                 div()
-                                    .text_size(px(18.))
-                                    .font_weight(FontWeight::BOLD)
-                                    .text_color(theme.tokens.text_normal)
-                                    .child(tab.name()),
+                                    .flex()
+                                    .flex_row()
+                                    .items_center()
+                                    .gap_2()
+                                    .when_some(page, |d, page| {
+                                        d.child(
+                                            div()
+                                                .id("settings-page-back")
+                                                .flex()
+                                                .items_center()
+                                                .justify_center()
+                                                .size(px(24.))
+                                                .rounded_sm()
+                                                .cursor_pointer()
+                                                .hover(|s| {
+                                                    s.bg(theme.tokens.background_modifier_hover)
+                                                })
+                                                .child(crate::assets::icon(
+                                                    "chevron-left",
+                                                    18.,
+                                                    theme.tokens.icon_color,
+                                                ))
+                                                .on_click(cx.listener(move |this, _, _, cx| {
+                                                    cx.stop_propagation();
+                                                    if this.click_dismissed_a_popover(cx) {
+                                                        return;
+                                                    }
+                                                    let _ = page;
+                                                    this.close_page(cx)
+                                                })),
+                                        )
+                                    })
+                                    .child(
+                                        div()
+                                            .text_size(px(18.))
+                                            .font_weight(FontWeight::BOLD)
+                                            .text_color(theme.tokens.text_normal)
+                                            .child(match page {
+                                                Some(page) => page.title(),
+                                                None => tab.name(),
+                                            }),
+                                    ),
                             )
                             .child(
                                 div()
@@ -4588,6 +5335,7 @@ mod tests {
                     | Control::Text(v)
                     | Control::Slider(v)
                     | Control::Button(v) => v.to_string(),
+                    Control::Color(v) | Control::Navigable(v) => v.to_string(),
                     Control::Toggle(on) => on.to_string(),
                     Control::None => String::new(),
                 };
@@ -4773,13 +5521,17 @@ mod tests {
     }
 
     /// Escape takes the innermost thing open, so a dropdown closes without
-    /// taking the modal with it.
+    /// taking the modal with it and a page backs out to its tab.
     #[test]
     fn escape_closes_the_innermost_thing_open() {
-        assert_eq!(escape_closes(false, false), Escape::Modal);
-        assert_eq!(escape_closes(false, true), Escape::Popover);
-        assert_eq!(escape_closes(true, false), Escape::Capture);
-        assert_eq!(escape_closes(true, true), Escape::Capture);
+        assert_eq!(escape_closes(false, false, false), Escape::Modal);
+        assert_eq!(escape_closes(false, true, false), Escape::Popover);
+        assert_eq!(escape_closes(true, false, false), Escape::Capture);
+        assert_eq!(escape_closes(true, true, false), Escape::Capture);
+        // A page is outside a dropdown it holds and inside the modal.
+        assert_eq!(escape_closes(false, false, true), Escape::Page);
+        assert_eq!(escape_closes(false, true, true), Escape::Popover);
+        assert_eq!(escape_closes(true, false, true), Escape::Capture);
     }
 
     #[test]
@@ -4904,6 +5656,256 @@ mod tests {
         (dir, state)
     }
 
+    /// A vault with two themes installed and three snippets, plus the two
+    /// theme folders Obsidian drops: one whose manifest names something
+    /// other than its folder, one with no manifest at all.
+    fn vault_with_css() -> (tempfile::TempDir, VaultState) {
+        let (dir, _) = vault();
+        let cfg = dir.path().join(".obsidian");
+        let theme = |name: &str, manifest: Option<&str>| {
+            let folder = cfg.join("themes").join(name);
+            std::fs::create_dir_all(&folder).unwrap();
+            std::fs::write(folder.join("theme.css"), "body { --h1-color: #f00 }").unwrap();
+            if let Some(manifest) = manifest {
+                std::fs::write(
+                    folder.join("manifest.json"),
+                    format!(r#"{{"name":"{manifest}","version":"1.0.0","minAppVersion":"1.0.0","author":"t"}}"#),
+                )
+                .unwrap();
+            }
+        };
+        theme("Ember", Some("Ember"));
+        theme("Zephyr", Some("Zephyr"));
+        theme("folder-name", Some("Display Name"));
+        theme("Bare", None);
+        std::fs::create_dir_all(cfg.join("snippets")).unwrap();
+        for name in ["wider", "dim", "tabs"] {
+            std::fs::write(
+                cfg.join("snippets").join(format!("{name}.css")),
+                "body { --file-line-width: 1100px }",
+            )
+            .unwrap();
+        }
+        std::fs::write(cfg.join("snippets").join("notes.txt"), "not css").unwrap();
+        let state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        (dir, state)
+    }
+
+    /// The Appearance tab, row for row as Obsidian 1.14.5 builds it
+    /// ([[Specification#The Appearance tab, Obsidian 1.14.5]]).
+    #[test]
+    fn the_appearance_tab_builds_obsidians_rows() {
+        let (_dir, state) = vault_with_css();
+        let css = CssFolders::read(&state);
+        let rows: Vec<(String, &'static str)> = SettingsView::appearance_items(&state, &css)
+            .iter()
+            .map(|i| {
+                let kind = match &i.control {
+                    _ if i.heading => "heading",
+                    Control::Dropdown(_) => "dropdown",
+                    Control::Color(_) => "color",
+                    Control::Navigable(_) => "navigable",
+                    Control::Button(_) => "button",
+                    Control::Text(_) => "text",
+                    Control::Slider(_) => "slider",
+                    Control::Toggle(_) => "toggle",
+                    Control::None => "none",
+                };
+                (i.name.to_string(), kind)
+            })
+            .collect();
+        assert_eq!(
+            rows,
+            vec![
+                ("Base color scheme".into(), "dropdown"),
+                ("Accent color".into(), "color"),
+                ("Themes".into(), "dropdown"),
+                ("Current community themes".into(), "button"),
+                ("CSS snippets".into(), "navigable"),
+                ("Font".into(), "heading"),
+                ("Interface font".into(), "text"),
+                ("Text font".into(), "text"),
+                ("Monospace font".into(), "text"),
+                ("Font size".into(), "slider"),
+            ]
+        );
+        let items = SettingsView::appearance_items(&state, &css);
+        let row = |name: &str| {
+            items
+                .iter()
+                .find(|i| i.name.as_ref() == name)
+                .unwrap_or_else(|| panic!("no {name} row"))
+                .clone()
+        };
+        // The count is of themes installed, and the plural follows it.
+        assert_eq!(
+            row("Current community themes").desc.as_ref(),
+            "You currently have 2 themes installed."
+        );
+        // Nothing enabled reads "0 enabled", not "None".
+        assert_eq!(
+            row("CSS snippets").control,
+            Control::Navigable("0 enabled".into())
+        );
+        // Every row of this tab is read live now that the loader rebuilds
+        // the theme from `appearance.json` on every write.
+        for item in &items {
+            assert_eq!(
+                item.honored,
+                if item.name.as_ref() == "Current community themes" {
+                    Honored::No
+                } else {
+                    Honored::Live
+                },
+                "{}",
+                item.name
+            );
+        }
+    }
+
+    /// The Themes dropdown lists what the vault has installed, which is a
+    /// folder holding a `manifest.json` that names the folder — and picking
+    /// one writes `cssTheme`, with the empty string for Default.
+    #[test]
+    fn the_themes_picker_lists_installed_themes_only() {
+        let (dir, mut state) = vault_with_css();
+        let css = CssFolders::read(&state);
+        assert_eq!(css.themes, vec!["Ember".to_string(), "Zephyr".to_string()]);
+        let items = SettingsView::appearance_items(&state, &css);
+        let themes = items.iter().find(|i| i.name.as_ref() == "Themes").unwrap();
+        let picker = themes.picker.clone().expect("the row carries a picker");
+        assert_eq!(picker.key, "cssTheme");
+        assert_eq!(
+            picker.options,
+            vec![
+                (SharedString::from("Default"), String::new()),
+                ("Ember".into(), "Ember".into()),
+                ("Zephyr".into(), "Zephyr".into()),
+            ]
+        );
+        assert_eq!(picker.selected, 0);
+        // Picking one writes the name; Default writes the empty string
+        // rather than dropping the key, as Obsidian does.
+        let mut appearance = state.appearance().clone();
+        appearance.css_theme = Some("Zephyr".into());
+        state
+            .apply_setting(&SettingChange::Appearance(appearance))
+            .unwrap();
+        state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        let items = SettingsView::appearance_items(&state, &css);
+        let themes = items.iter().find(|i| i.name.as_ref() == "Themes").unwrap();
+        assert_eq!(themes.control, Control::Dropdown("Zephyr".into()));
+        assert_eq!(themes.picker.clone().unwrap().selected, 2);
+        // And the theme's CSS is what the loader then reads.
+        let sheets = crate::theme::sheets_of(&state.root, &state.config_dir(), &state.appearance());
+        assert_eq!(sheets.len(), 1);
+    }
+
+    /// A snippet toggle appends its name on the way on and takes it out on
+    /// the way off, which is the order `enabledCssSnippets` is written in.
+    #[test]
+    fn a_snippet_toggle_writes_the_enabled_list_in_click_order() {
+        let (dir, mut state) = vault_with_css();
+        let css = CssFolders::read(&state);
+        assert_eq!(
+            css.snippets,
+            vec!["dim".to_string(), "tabs".into(), "wider".into()],
+            "sorted, and the .txt is not one"
+        );
+        let on = |state: &VaultState, name: &str| {
+            state
+                .apply_setting(&Flag::CssSnippet(name.to_string()).toggled(state))
+                .unwrap();
+        };
+        for name in ["tabs", "wider", "dim"] {
+            on(&state, name);
+            state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        }
+        assert_eq!(
+            state.appearance().enabled_css_snippets,
+            Some(vec!["tabs".into(), "wider".into(), "dim".into()])
+        );
+        assert_eq!(
+            CssFolders::read(&state).enabled_count(&state.appearance()),
+            3
+        );
+        // Off again takes the name out and leaves the rest in place.
+        on(&state, "wider");
+        state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        assert_eq!(
+            state.appearance().enabled_css_snippets,
+            Some(vec!["tabs".into(), "dim".into()])
+        );
+        // The rows read it back, in the folder's order whatever the list's.
+        let rows = SettingsView::snippet_items(&state, &CssFolders::read(&state), "");
+        assert_eq!(
+            rows.iter()
+                .map(|i| (i.name.to_string(), i.control.clone()))
+                .collect::<Vec<_>>(),
+            vec![
+                ("dim".into(), Control::Toggle(true)),
+                ("tabs".into(), Control::Toggle(true)),
+                ("wider".into(), Control::Toggle(false)),
+            ]
+        );
+        // The page's search box filters them.
+        let found = SettingsView::snippet_items(&state, &CssFolders::read(&state), "TAB");
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].name.as_ref(), "tabs");
+        // A name whose file is gone stays in the file and stops counting.
+        std::fs::remove_file(dir.path().join(".obsidian/snippets/dim.css")).unwrap();
+        let css = CssFolders::read(&state);
+        assert_eq!(
+            state.appearance().enabled_css_snippets,
+            Some(vec!["tabs".into(), "dim".into()])
+        );
+        assert_eq!(css.enabled_count(&state.appearance()), 1);
+        assert_eq!(
+            SettingsView::appearance_items(&state, &css)
+                .iter()
+                .find(|i| i.name.as_ref() == "CSS snippets")
+                .unwrap()
+                .control,
+            Control::Navigable("1 enabled".into())
+        );
+    }
+
+    /// The accent row stores a `#rrggbb` in lower case for whatever shape
+    /// was typed, and "Restore default" writes the empty string rather
+    /// than dropping the key.
+    #[test]
+    fn the_accent_row_stores_a_hex_and_restores_to_empty() {
+        assert_eq!(normalize_accent("#E11D48"), "#e11d48");
+        assert_eq!(normalize_accent("e11d48"), "#e11d48");
+        assert_eq!(normalize_accent(" #f0a "), "#ff00aa");
+        for bad in ["", "   ", "#12345", "rebeccapurple", "#gggggg"] {
+            assert_eq!(normalize_accent(bad), "", "{bad}");
+        }
+        let (dir, mut state) = vault_with_css();
+        state
+            .apply_setting(&(ACCENT_COLOR.write)(&state, "#E11D48"))
+            .unwrap();
+        state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        assert_eq!(state.appearance().accent_color.as_deref(), Some("#e11d48"));
+        assert_eq!((ACCENT_COLOR.read)(&state), "#e11d48");
+        // The swatch is that colour, and the accent reaches the theme.
+        assert!(crate::theme::accent_swatch("#e11d48").is_some());
+        let themed =
+            crate::theme::Theme::load(&state.root, &state.config_dir(), &state.appearance(), true);
+        assert!(
+            (themed.tokens.accent_h - 347.).abs() < 1.,
+            "{}",
+            themed.tokens.accent_h
+        );
+        // Restore default: the key stays, holding the empty string.
+        state
+            .apply_setting(&(ACCENT_COLOR.write)(&state, ""))
+            .unwrap();
+        state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        assert_eq!(state.appearance().accent_color.as_deref(), Some(""));
+        assert!(crate::theme::accent_swatch("").is_none());
+    }
+
     /// The frame style is the one dropdown whose value is the machine's,
     /// not the vault's: its options are 1.14.5's three, a pick is a
     /// `SettingChange::Frame` bound for `scoria.json`, and the row is tagged
@@ -4941,7 +5943,7 @@ mod tests {
     fn toggles(state: &VaultState) -> Vec<(String, Honored)> {
         let tabs = [
             SettingsView::general_items(state),
-            SettingsView::appearance_items(state),
+            SettingsView::appearance_items(state, &CssFolders::read(state)),
             SettingsView::interface_items(state),
             SettingsView::editor_items(state),
             SettingsView::files_items(state),

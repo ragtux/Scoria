@@ -2283,6 +2283,76 @@ the Hotkeys tab — which is also why fifteen ids still report a name equal to t
 held for `open-link-in-new-leaf`, `-split` and `-window` until tabs existed; `-leaf` is runnable now
 that they do, while `-split` and `-window` still wait on splits and windows.
 
+## The Appearance tab, against the probe of 2026-11-02
+
+Filed from `tools/obsidian-probe/appearance-tab.mjs`
+([[Specification#Observed Appearance tab, Obsidian 1.14.5 (installer build 1.13.7)]]). The
+Themes picker, the "Current community themes" row, the accent swatch and the CSS snippets page
+were built the same day — [[Development#The Appearance tab's pickers, 2026-11-02]] — and what
+follows is the rest of the tab.
+
+### The three font rows are text fields; Obsidian's are pages of installed families
+
+*medium, parity-gap, medium*
+
+**Obsidian.** Interface font, Text font and Monospace font are
+`.setting-item.mod-navigable.tappable`, and each opens a `.setting-page` with the titlebar, a
+`.setting-page-desc` ("No custom font is applied right now. Add one below."), an empty
+`.setting-group.mod-list` holding the families applied so far, then a second group with an
+`Enter font name...` search box and one `.setting-item.mod-action.tappable` per installed family,
+each row drawn in the family it names. Picking one writes `interfaceFontFamily` and moves it into
+the first group, so the setting is a *list* of families built by picking, not a string typed once.
+
+**Scoria.** A text field per row holding whatever `appearance.json` says, with "Default" when it
+is empty. The value is honoured (the loader reads all three), but nothing enumerates the
+machine's families and a family is typed by hand.
+
+**Fix.** The page machinery is already there — `Page`, `render_snippets_page` and the back
+chevron landed with the CSS snippets page. What is missing is the font list: gpui's font database
+can enumerate families, and `theme::first_font` already reads the CSS-style list the config holds.
+
+### "Manage" is not built, and will not be
+
+*low, missing-feature, —*
+
+**Obsidian.** A `Manage` button at the right of the Themes row, which opens its community theme
+browser.
+
+**Scoria.** No button. The probe could not record what it opens: offline, both the modal count
+and the page stayed unchanged, so even the surface is unrecorded.
+
+**Fix.** None intended. Scoria does not download themes from the community catalogue, and a
+button that cannot do what its label says is worse than its absence. The folder button beside it
+is the working half: it opens `themes/` so a theme can be dropped in by hand. Revisit only if
+Scoria ever grows a catalogue of its own.
+
+### "Quick font size adjustment" and "Custom app icon" are missing
+
+*low, missing-feature, small*
+
+**Obsidian.** Two rows the tab has and Scoria does not: "Quick font size adjustment" ("Adjust the
+font size using Ctrl + Scroll, or using the trackpad pinch-zoom gesture.") as a toggle under the
+Font heading, and, under an **Advanced** heading, "Custom app icon" ("Set a custom icon for the
+app") with a hidden-at-default "Restore default", a `Choose` button and a `mod-cta` `Relaunch`.
+
+**Scoria.** Neither row, and no Advanced heading on this tab.
+
+**Fix.** Blocked on the config keys: the probe recorded the rows but not what either writes, and
+the ground rule is that a key is added only with the observed string. One more probe step that
+clicks each and diffs `.obsidian/appearance.json` settles it. The behaviour behind the first —
+Ctrl+Scroll and pinch to change the font size — is its own piece of work.
+
+### "Check for updates" is inert
+
+*low, parity-gap, —*
+
+**Obsidian.** The "Current community themes" row's button checks the catalogue for updates to the
+installed themes.
+
+**Scoria.** The row is drawn to the record, with the count and the plural right and the button
+dropped at zero themes as Obsidian drops it, but the button does nothing and the row carries the
+"not in Scoria yet" tag. Same reasoning as "Manage".
+
 ## Blocked by the harness, not by the code
 
 Five things could not be settled from outside the process. They are not findings and not fixes —

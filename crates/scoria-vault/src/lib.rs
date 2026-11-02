@@ -12,7 +12,7 @@ use scoria_formats::config::{
     AppConfig, AppearanceConfig, BacklinkConfig, CanvasConfig, CommandPaletteConfig,
     CommunityPlugins, CorePlugins, DailyNotesConfig, FileRecoveryConfig, GraphConfig, Hotkeys,
     NoteComposerConfig, PagePreviewConfig, PluginManifest, PropertyTypes, SwitcherConfig,
-    TemplatesConfig, WebviewerConfig, ZkPrefixerConfig, DEFAULT_CONFIG_DIR,
+    TemplatesConfig, ThemeManifest, WebviewerConfig, ZkPrefixerConfig, DEFAULT_CONFIG_DIR,
 };
 use scoria_formats::FileKind;
 use serde::de::DeserializeOwned;
@@ -613,6 +613,58 @@ impl Vault {
             .collect();
         found.sort_by(|a, b| a.0.cmp(&b.0));
         found.into_iter().map(|(_, m)| m).collect()
+    }
+
+    /// The CSS themes installed under `themes/`, by the one name that is
+    /// the folder, the manifest's `name` and what `cssTheme` holds.
+    ///
+    /// Obsidian lists a folder only when it holds a readable
+    /// `manifest.json` whose `name` equals the folder's own name: a folder
+    /// whose manifest names something else and a folder with no manifest
+    /// are both dropped, so neither can be picked and neither loads
+    /// (probed 2026-11-02, `appearance-tab.mjs` step s17). Sorted, which
+    /// is the order the Themes dropdown lists them in.
+    pub fn css_themes(&self) -> Vec<String> {
+        let dir = self.root.join(&self.config_dir).join("themes");
+        let Ok(entries) = std::fs::read_dir(&dir) else {
+            return Vec::new();
+        };
+        let mut found: Vec<String> = entries
+            .flatten()
+            .filter_map(|e| {
+                let folder = e.file_name().to_string_lossy().into_owned();
+                let text = std::fs::read_to_string(e.path().join("manifest.json")).ok()?;
+                let manifest: ThemeManifest = serde_json::from_str(&text).ok()?;
+                (manifest.name == folder).then_some(folder)
+            })
+            .collect();
+        found.sort();
+        found
+    }
+
+    /// The CSS snippets under `snippets/`, by the stem `enabledCssSnippets`
+    /// holds (`wider.css` is `wider`). Sorted, which is both the order the
+    /// CSS snippets page lists them in and the order they cascade in.
+    pub fn css_snippets(&self) -> Vec<String> {
+        let dir = self.root.join(&self.config_dir).join("snippets");
+        let Ok(entries) = std::fs::read_dir(&dir) else {
+            return Vec::new();
+        };
+        let mut found: Vec<String> = entries
+            .flatten()
+            .filter_map(|e| {
+                let path = e.path();
+                if !path
+                    .extension()
+                    .is_some_and(|x| x.eq_ignore_ascii_case("css"))
+                {
+                    return None;
+                }
+                Some(path.file_stem()?.to_string_lossy().into_owned())
+            })
+            .collect();
+        found.sort();
+        found
     }
 
     /// The raw workspace layout; typed modelling comes with the workspace milestone.

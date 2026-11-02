@@ -7451,3 +7451,103 @@ Two findings from the table that the app had wrong: the light theme's accent (`-
 is `--color-accent-1`, `hsl(257, 88.9%, 71%)`, where Scoria painted the dark theme's `hsl(258, 88%,
 66%)` in both; and `==highlight==` is `--color-yellow` at 30 percent (`#e0de71` dark, `#e0ac00`
 light), not a flat gold. Both now come from the registry.
+
+## Observed Appearance tab, Obsidian 1.14.5 (installer build 1.13.7)
+
+Recorded by `tools/obsidian-probe/appearance-tab.mjs` on 2026-11-02 against a scratch vault
+holding two installed themes and three snippets; the raw run is
+`tools/obsidian-probe/results/2026-11-02-appearance-tab.json` with its screenshots beside it.
+Settings is a popout window in 1.14, so the rows were read through
+`app.setting.activeTab.containerEl` from the vault window and clicked through the popout's own
+page target.
+
+### The tab's rows
+
+In order, with the control each one carries:
+
+| Row | Description | Control |
+| --- | --- | --- |
+| Base color scheme | Choose Obsidian's default color scheme. | `select.dropdown`: Dark `obsidian`, Light `moonstone`, Adapt to system `system` |
+| Accent color | Choose the accent color used throughout the app. | a `lucide-rotate-ccw` `.clickable-icon.extra-setting-button` labelled "Restore default", then `<input type="color">` (`#8a5cf5` at the default). The icon carries `aria-disabled="true"` while nothing is set |
+| Themes | Manage installed themes and browse community themes. | a `lucide-folder-open` icon labelled "Open themes folder", a `select.dropdown` of Default (value `""`) and each installed theme, then a `Manage` button |
+| Current community themes | You currently have *N* theme(s) installed. | a `Check for updates` button, which is absent when *N* is 0 |
+| CSS snippets | Manage your collection of CSS files for tweaking the app's appearance. | `.setting-item.mod-navigable.tappable`: `.setting-item-value` reading "*N* enabled", then a `lucide-chevron-right` |
+| **Font** (heading) | | |
+| Interface font | Set base font for all of Obsidian. | navigable, to a page of installed families |
+| Text font | Set font for editing and reading views. | navigable |
+| Monospace font | Set font for places like code blocks and frontmatter. | navigable |
+| Font size | Font size in pixels that affects editing and reading views. | Restore default, a `.slider-value`, an `input.slider` |
+| Quick font size adjustment | Adjust the font size using Ctrl + Scroll, or using the trackpad pinch-zoom gesture. | toggle |
+| **Advanced** (heading) | | |
+| Custom app icon | Set a custom icon for the app | Restore default (hidden at the default), `Choose`, and a `mod-cta` `Relaunch` |
+
+"theme installed" is singular at exactly one. A `.mod-navigable` row is `tappable`: the whole row
+opens the page, not only the chevron.
+
+### Which folders count as installed
+
+`app.customCss.themes` listed **only** the folder whose `manifest.json` has a `name` equal to the
+folder's own name. A folder named `folder-name` whose manifest said `Display Name`, and a folder
+with no manifest at all, were both dropped — neither appeared in the dropdown and neither could be
+picked. So the one string is the folder, the manifest's name and what `cssTheme` holds, and
+`themes/<cssTheme>/theme.css` always resolves (step s17).
+
+`app.customCss.snippets` is the `.css` stems under `snippets/`, sorted (`wider.css` is `wider`).
+
+### What each control writes
+
+`appearance.json` is pretty-printed with two-space indentation.
+
+| Action | Bytes |
+| --- | --- |
+| Pick a theme | `"cssTheme": "Ember"` |
+| Pick Default | `"cssTheme": ""` — the key stays, holding the empty string |
+| Set the accent | `"accentColor": "#e11d48"`, lowercase, and `--accent-h/s/l` go onto `body`'s inline style as `347`, `77%`, `50%` |
+| Restore default accent | `"accentColor": ""` |
+| Toggle a snippet on | appended to `enabledCssSnippets` |
+| Toggle a snippet off | removed from it, the rest in place |
+| Pick a font family | `"interfaceFontFamily": "Arial"` |
+
+So `enabledCssSnippets` is in the order the toggles were switched on.
+
+### But the snippets cascade in the folder's order
+
+Enabling `tabs`, then `wider`, then `dim` left the `<style>` elements in the document as `dim`,
+`tabs`, `wider` — not the enabled order. Two snippets setting the same property settle it: with
+`zz-last` enabled **first** and `aa-first` second, `zz-last` still won. Obsidian rebuilds the whole
+set whenever one is toggled, walking its sorted list of snippet files and appending the enabled
+ones, so **the alphabetically later snippet always wins a conflict, however the two were switched
+on** (step s14). The theme's own `<style>` comes before all of them.
+
+A name whose `.css` has been deleted stays in `enabledCssSnippets` and simply stops applying; the
+collapsed row's "*N* enabled" counts the enabled snippets whose file is still there, and reads
+"0 enabled" rather than "None" (steps s09, s16).
+
+### The CSS snippets page
+
+`.setting-page` with a `.setting-page-titlebar` holding a `lucide-chevron-left`
+`.setting-page-back-button` and the `.setting-page-title` "CSS snippets", then
+`.setting-page-content`. The content is a right-aligned pair of `.clickable-icon`s —
+`lucide-refresh-cw` "Reload snippets" and `lucide-folder-open` "Open snippets folder" — then a
+card holding a `Search snippets...` search box and one `.setting-item.mod-toggle` per snippet,
+named by its stem, in the folder's sorted order.
+
+The page does not watch the folder: a `.css` dropped in while it was open did not appear until
+something else made it re-read, which is what the reload button is for.
+
+**Escape on the page goes back to the Appearance tab and leaves Settings open** (step s18).
+
+### The font pages
+
+The same `.setting-page` shape: a `.setting-page-desc` ("No custom font is applied right now. Add
+one below."), an empty `.setting-group.mod-list` for the applied families, then a second group with
+an `Enter font name...` search box and one `.setting-item.mod-action.tappable` per installed family,
+each drawn in that family. Picking one writes `interfaceFontFamily` and moves it into the first
+group.
+
+### Not observed
+
+"Manage" raised no modal and pushed no page in the probe's offline run (steps s11 and s13 both saw
+the container count stay at 0), so what it opens is unrecorded; it is Obsidian's community theme
+browser, which needs the network. "Check for updates", "Custom app icon" and the keys
+"Quick font size adjustment" writes were not probed either.

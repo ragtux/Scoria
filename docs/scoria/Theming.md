@@ -129,7 +129,17 @@ The probe ran under a data directory of its own (`USER_DATA_DIR` in `run-block.s
 
 **Step 2, the loader, landed the same night** (`crates/scoria/src/theme/css.rs`; the record is in [[Development#The theme registry, 2026-11-02]]). It is the property scanner described under "The loader" above, with one thing that section did not say and that building it settled: the five selectors are not equal. `.theme-dark` outranks `body` on the body element, so Obsidian's own `.theme-dark { --interactive-accent }` beats a theme's `body { --interactive-accent }`, exactly as it does in Obsidian; the cascade ranks a declaration by scope (inherited from `:root`, or on the body), then `!important`, specificity and order, and Obsidian's defaults are the first sheet in it. A theme's `theme.css` and its enabled snippets are read in that order, the accent setting lands on top as an inline declaration, and `.obsidian/` changes rebuild the registry live.
 
-What remains of the themes subset: the Appearance tab's pickers (today a theme is chosen by writing `cssTheme` and `enabledCssSnippets` into `appearance.json`), and step 3.
+**The Appearance tab's pickers landed on 2026-11-02 too**, which is what makes steps 1 and 2 reachable without a text editor. They were built to a probe of their own, `appearance-tab.mjs` ([[Specification#Observed Appearance tab, Obsidian 1.14.5 (installer build 1.13.7)]]), and the probe answered three things the plan had not asked:
+
+- **A theme folder counts as installed only when its `manifest.json` names the folder.** A folder whose manifest says something else, and a folder with no manifest, are both dropped by Obsidian — they do not appear in the dropdown and cannot be picked. So `cssTheme` is the folder name, the manifest's name and the dropdown's value all at once, and `themes/<cssTheme>/theme.css` always resolves.
+- **Enabled snippets cascade in the snippets folder's order, not in `enabledCssSnippets`' order.** The list in the file is the order the toggles were switched on, but Obsidian rebuilds every `<style>` whenever one is toggled, walking its sorted list of files, so the alphabetically later snippet wins a conflict however the two were enabled. The loader shipped on the night of the 2nd had this wrong and read them in the file's order; `theme::sheets_of` now sorts, and a test pins it.
+- **The tab is a drill-in in 1.14.5.** "CSS snippets" and the three font rows are `.setting-item.mod-navigable.tappable` that push a `.setting-page` with a back chevron and a title of its own; the snippets are not rows on the tab at all. Escape on such a page backs out to the tab and leaves Settings open.
+
+Built: the Themes dropdown over `Vault::css_themes()` with the "Open themes folder" button beside it; the "Current community themes" row that counts them; the accent swatch with its "Restore default", which writes a lowercase `#rrggbb` and the empty string the way Obsidian does; and the CSS snippets page with its reload and folder buttons, its search box and a toggle per snippet. Every one of them writes `appearance.json`, which the loader already watches, so a pick recolours the app as it is made — verified on a scratch vault with two themes and three snippets.
+
+Not built, and now in [[UI parity backlog]]: the "Manage" button (Obsidian's community theme browser, which Scoria will not have), the three font pages (Scoria still shows a text field), and the "Quick font size adjustment" and "Custom app icon" rows, whose config keys the probe did not record.
+
+What remains of the themes subset: step 3.
 
 ## See also
 

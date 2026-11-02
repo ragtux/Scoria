@@ -110,6 +110,7 @@ icons!(
     "quote",
     "rectangle-vertical",
     "redo-2",
+    "refresh-cw",
     "rotate-ccw",
     "scissors",
     "search",

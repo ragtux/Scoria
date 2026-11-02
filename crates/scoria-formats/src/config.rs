@@ -739,6 +739,33 @@ pub struct PluginManifest {
     pub extra: Map<String, Value>,
 }
 
+/// `themes/<name>/manifest.json` of an installed CSS theme.
+///
+/// Obsidian lists a theme folder only when this file's `name` is the
+/// folder's own name, so the one string identifies the theme, names the
+/// folder and is what `cssTheme` holds (probed 2026-11-02).
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct ThemeManifest {
+    #[serde(default)]
+    pub name: String,
+    #[serde(default)]
+    pub version: String,
+    #[serde(default, rename = "minAppVersion")]
+    pub min_app_version: String,
+    #[serde(default)]
+    pub author: String,
+    #[serde(default, rename = "authorUrl", skip_serializing_if = "Option::is_none")]
+    pub author_url: Option<String>,
+    #[serde(
+        default,
+        rename = "fundingUrl",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub funding_url: Option<Value>,
+    #[serde(flatten)]
+    pub extra: Map<String, Value>,
+}
+
 /// A core plugin as the Core plugins tab lists it (names and descriptions
 /// observed in Obsidian 1.14.4) and whether a fresh vault has it on.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

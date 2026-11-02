@@ -1051,6 +1051,32 @@ pub fn show_in_system_explorer(absolute: &Path) -> Result<(), String> {
     Err(err)
 }
 
+/// Opens `dir` itself in the desktop's file manager, which is what the
+/// Appearance tab's "Open themes folder" and "Open snippets folder" do.
+///
+/// Unlike [`show_in_system_explorer`] nothing is selected, so the plain
+/// platform opener is the whole command: `xdg-open` on Linux, `open` on
+/// macOS and `explorer` on Windows. Blocking in the same way, so callers
+/// run it off the UI thread.
+pub fn open_folder(dir: &Path) -> Result<(), String> {
+    use std::process::{Command, Stdio};
+    let program = if cfg!(target_os = "macos") {
+        "open"
+    } else if cfg!(target_os = "windows") {
+        "explorer"
+    } else {
+        "xdg-open"
+    };
+    Command::new(program)
+        .arg(dir)
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .map(drop)
+        .map_err(|e| format!("{program}: {e}"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

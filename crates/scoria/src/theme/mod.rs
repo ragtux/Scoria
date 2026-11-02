@@ -223,9 +223,16 @@ pub fn tokens_from(dark: bool, sheets: &[String], accent: Option<(f32, f32, f32)
 }
 
 /// The sheets `appearance.json` names, read from the vault: the theme's
-/// `theme.css` under `themes/<cssTheme>/`, then every snippet
-/// `enabledCssSnippets` lists under `snippets/`, in that order. A file that
-/// is not there is skipped, as Obsidian skips it.
+/// `theme.css` under `themes/<cssTheme>/`, then the enabled snippets under
+/// `snippets/`. A file that is not there is skipped, as Obsidian skips it.
+///
+/// The snippets come in the **snippets folder's** order, sorted by name,
+/// not in `enabledCssSnippets`' order. Obsidian rebuilds the whole set of
+/// `<style>` elements whenever one is toggled, walking its sorted list of
+/// snippet files and appending the enabled ones, so the alphabetically
+/// later snippet always wins a conflict however the two were enabled —
+/// `zz-last` enabled first still beats `aa-first` enabled second (probed
+/// 2026-11-02, `appearance-tab.mjs` step s14).
 pub fn sheets_of(root: &Path, config_dir: &str, config: &AppearanceConfig) -> Vec<String> {
     let dir = root.join(config_dir);
     let mut sheets = Vec::new();
@@ -234,11 +241,30 @@ pub fn sheets_of(root: &Path, config_dir: &str, config: &AppearanceConfig) -> Ve
             sheets.push(css);
         }
     }
-    for snippet in config.enabled_css_snippets.iter().flatten() {
-        if let Ok(css) =
-            std::fs::read_to_string(dir.join("snippets").join(format!("{snippet}.css")))
-        {
-            sheets.push(css);
+    let enabled = config.enabled_css_snippets.as_deref().unwrap_or(&[]);
+    if !enabled.is_empty() {
+        let mut names: Vec<String> = std::fs::read_dir(dir.join("snippets"))
+            .into_iter()
+            .flatten()
+            .flatten()
+            .filter_map(|e| {
+                let path = e.path();
+                path.extension()
+                    .is_some_and(|x| x.eq_ignore_ascii_case("css"))
+                    .then(|| path.file_stem().map(|s| s.to_string_lossy().into_owned()))
+                    .flatten()
+            })
+            .collect();
+        names.sort();
+        for name in names {
+            if !enabled.contains(&name) {
+                continue;
+            }
+            if let Ok(css) =
+                std::fs::read_to_string(dir.join("snippets").join(format!("{name}.css")))
+            {
+                sheets.push(css);
+            }
         }
     }
     sheets
@@ -383,6 +409,14 @@ fn accent_hsl(hex: &str) -> Option<(f32, f32, f32)> {
     };
     let round = |v: f32| (v * 100.).round() / 100.;
     Some((round(c.h * 360.), round(c.s * 100.), round(c.l * 100.)))
+}
+
+/// `accentColor` as the colour to paint its swatch with, for the
+/// Appearance tab's row. `None` for the empty or malformed value that
+/// means "no accent set", whose swatch is the theme's own accent.
+pub fn accent_swatch(hex: &str) -> Option<Hsla> {
+    let (h, s, l) = accent_hsl(hex)?;
+    Some(gpui::hsla(h / 360., s / 100., l / 100., 1.))
 }
 
 /// The first family of a CSS-style `"Font A", Font B` list.
@@ -611,6 +645,50 @@ mod tests {
         // No theme named: the defaults.
         let plain = Theme::load(root, ".obsidian", &AppearanceConfig::default(), true).tokens;
         assert_eq!(plain, Theme::dark().tokens);
+    }
+
+    /// Two snippets setting the same property settle in the snippets
+    /// folder's order, not in the order `enabledCssSnippets` lists them:
+    /// Obsidian walks its sorted list of files and appends the enabled
+    /// ones, so the later name wins however they were switched on.
+    #[test]
+    fn enabled_snippets_cascade_in_the_folder_s_order() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        let cfg = root.join(".obsidian");
+        std::fs::create_dir_all(cfg.join("snippets")).unwrap();
+        std::fs::write(
+            cfg.join("snippets/aa-first.css"),
+            "body { --h1-color: #ff0000 }",
+        )
+        .unwrap();
+        std::fs::write(
+            cfg.join("snippets/zz-last.css"),
+            "body { --h1-color: #00ff00 }",
+        )
+        .unwrap();
+        // Enabled last-first, as clicking zz-last then aa-first writes it.
+        let config = AppearanceConfig {
+            enabled_css_snippets: Some(vec!["zz-last".into(), "aa-first".into()]),
+            ..Default::default()
+        };
+        let tokens = Theme::load(root, ".obsidian", &config, true).tokens;
+        assert_eq!(tokens.h1_color.map(hex), Some("#00ff00".into()));
+        // And the other way round, which agrees because the order is the
+        // folder's either way.
+        let config = AppearanceConfig {
+            enabled_css_snippets: Some(vec!["aa-first".into(), "zz-last".into()]),
+            ..Default::default()
+        };
+        let tokens = Theme::load(root, ".obsidian", &config, true).tokens;
+        assert_eq!(tokens.h1_color.map(hex), Some("#00ff00".into()));
+        // One of the two enabled is that one, whichever end it sits at.
+        let config = AppearanceConfig {
+            enabled_css_snippets: Some(vec!["aa-first".into()]),
+            ..Default::default()
+        };
+        let tokens = Theme::load(root, ".obsidian", &config, true).tokens;
+        assert_eq!(tokens.h1_color.map(hex), Some("#ff0000".into()));
     }
 
     /// The accent setting outranks a theme's own accent channels, as an

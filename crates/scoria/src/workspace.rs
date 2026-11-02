@@ -3134,6 +3134,7 @@ impl Workspace {
                     SettingsEvent::Changed(change) => {
                         this.change_setting(change.as_ref().clone(), cx)
                     }
+                    SettingsEvent::Report(message) => this.report(message.clone(), cx),
                 },
             ),
             cx.subscribe_in(
