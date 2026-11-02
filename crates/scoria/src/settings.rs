@@ -33,10 +33,12 @@ use crate::text_input::{InputEvent, TextInput};
 use crate::theme::Theme;
 use crate::workspace::{Commands, VaultState, Workspace};
 use gpui::{
-    actions, deferred, div, prelude::*, px, size, uniform_list, App, Bounds, Context, Entity,
-    EventEmitter, FocusHandle, Focusable, FontWeight, KeyBinding, KeyDownEvent, Keystroke,
-    SharedString, Subscription, TitlebarOptions, UniformListScrollHandle, WeakEntity, Window,
-    WindowBackgroundAppearance, WindowBounds, WindowDecorations, WindowHandle, WindowOptions,
+    actions, canvas, deferred, div, hsla, linear_color_stop, linear_gradient, prelude::*, px, size,
+    uniform_list, App, Bounds, Context, Entity, EventEmitter, FocusHandle, Focusable, FontWeight,
+    Hsla, KeyBinding, KeyDownEvent, Keystroke, MouseButton, MouseDownEvent, MouseMoveEvent,
+    MouseUpEvent, Pixels, Point, Rgba, SharedString, Subscription, TitlebarOptions,
+    UniformListScrollHandle, WeakEntity, Window, WindowBackgroundAppearance, WindowBounds,
+    WindowDecorations, WindowHandle, WindowOptions,
 };
 use scoria_commands::{hotkey_label, keystroke, Command};
 use scoria_formats::config::{
@@ -651,8 +653,9 @@ impl TextField {
 /// `accentColor` in `appearance.json`. Obsidian's control is a native
 /// colour dialog that writes a lowercase `#rrggbb`, and its "Restore
 /// default" writes the empty string rather than dropping the key (probed
-/// 2026-11-02). GPUI raises no colour dialog, so the swatch opens this
-/// field and a hex is typed into it; what lands in the file is the same.
+/// 2026-11-02). GPUI raises no colour dialog, so the swatch opens
+/// Scoria's own picker ([`AccentPicker`]), which carries this field for a hex
+/// typed in; what lands in the file is the same.
 const ACCENT_COLOR: TextField = TextField {
     key: "accentColor",
     placeholder: "#rrggbb",
@@ -681,6 +684,160 @@ fn normalize_accent(typed: &str) -> String {
     }
     format!("#{}", hex.to_ascii_lowercase())
 }
+
+/// A colour the way the accent picker holds it: hue in degrees, then
+/// saturation and value in `0..=1`, which is the square's geometry — left
+/// to right is saturation, top to bottom is value falling to black.
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct Hsv {
+    h: f32,
+    s: f32,
+    v: f32,
+}
+
+impl Hsv {
+    fn of_rgb(r: f32, g: f32, b: f32) -> Hsv {
+        let max = r.max(g).max(b);
+        let min = r.min(g).min(b);
+        let d = max - min;
+        let h = if d < 1e-6 {
+            0.
+        } else if max == r {
+            60. * (((g - b) / d).rem_euclid(6.))
+        } else if max == g {
+            60. * ((b - r) / d + 2.)
+        } else {
+            60. * ((r - g) / d + 4.)
+        };
+        let s = if max < 1e-6 { 0. } else { d / max };
+        Hsv { h, s, v: max }
+    }
+
+    /// From a `#rrggbb`, as [`normalize_accent`] writes it; `None` for
+    /// anything else, the empty "no accent set" included.
+    fn of_hex(hex: &str) -> Option<Hsv> {
+        let hex = normalize_accent(hex);
+        if hex.is_empty() {
+            return None;
+        }
+        let byte = |i: usize| u8::from_str_radix(&hex[i..i + 2], 16).ok();
+        let (r, g, b) = (byte(1)?, byte(3)?, byte(5)?);
+        Some(Hsv::of_rgb(
+            r as f32 / 255.,
+            g as f32 / 255.,
+            b as f32 / 255.,
+        ))
+    }
+
+    fn of_hsla(c: Hsla) -> Hsv {
+        let rgb = c.to_rgb();
+        Hsv::of_rgb(rgb.r, rgb.g, rgb.b)
+    }
+
+    fn rgb(self) -> (f32, f32, f32) {
+        let c = self.v * self.s;
+        let hp = (self.h.rem_euclid(360.)) / 60.;
+        let x = c * (1. - ((hp % 2.) - 1.).abs());
+        let (r, g, b) = match hp as u32 {
+            0 => (c, x, 0.),
+            1 => (x, c, 0.),
+            2 => (0., c, x),
+            3 => (0., x, c),
+            4 => (x, 0., c),
+            _ => (c, 0., x),
+        };
+        let m = self.v - c;
+        (r + m, g + m, b + m)
+    }
+
+    /// The `#rrggbb` the file gets.
+    fn hex(self) -> String {
+        let (r, g, b) = self.rgb();
+        let byte = |v: f32| (v * 255.).round().clamp(0., 255.) as u8;
+        format!("#{:02x}{:02x}{:02x}", byte(r), byte(g), byte(b))
+    }
+
+    fn hsla(self) -> Hsla {
+        let (r, g, b) = self.rgb();
+        Rgba { r, g, b, a: 1. }.into()
+    }
+
+    /// The hue at full saturation and value: the square's right edge.
+    fn pure(self) -> Hsla {
+        hsla(self.h / 360., 1., 0.5, 1.)
+    }
+}
+
+/// Which part of the picker a press began on, and so what the drag moves.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum PickerPart {
+    Square,
+    Bar,
+}
+
+/// The accent picker open under the swatch: the colour it shows, which
+/// the drag moves before the file is written, and where its two controls
+/// were painted, so a drag that leaves them still maps to them.
+#[derive(Debug)]
+struct AccentPicker {
+    hsv: Hsv,
+    /// The stored hex the colour was read from, so a write that lands
+    /// from elsewhere (the hex field, "Restore default") is picked up on
+    /// the next render and a drag's own write is not.
+    from: String,
+    drag: Option<PickerPart>,
+    square: Bounds<Pixels>,
+    bar: Bounds<Pixels>,
+}
+
+impl AccentPicker {
+    /// For the stored value, or `fallback` - the theme's own accent - when
+    /// nothing is stored.
+    fn new(stored: &str, fallback: Hsla) -> AccentPicker {
+        AccentPicker {
+            hsv: Hsv::of_hex(stored).unwrap_or_else(|| Hsv::of_hsla(fallback)),
+            from: normalize_accent(stored),
+            drag: None,
+            square: Bounds::default(),
+            bar: Bounds::default(),
+        }
+    }
+}
+
+/// The square's width and height, and the hue bar's height, in pixels.
+const PICKER_SQUARE: (f32, f32) = (200., 140.);
+const PICKER_BAR: f32 = 12.;
+
+/// Saturation and value for a point over (or past) the square.
+fn square_pick(square: Bounds<Pixels>, at: Point<Pixels>) -> (f32, f32) {
+    let s = ((at.x - square.origin.x) / square.size.width).clamp(0., 1.);
+    let down = ((at.y - square.origin.y) / square.size.height).clamp(0., 1.);
+    (s, 1. - down)
+}
+
+/// Hue in degrees for a point over (or past) the bar.
+fn bar_pick(bar: Bounds<Pixels>, at: Point<Pixels>) -> f32 {
+    let along = ((at.x - bar.origin.x) / bar.size.width).clamp(0., 1.);
+    // The bar runs 0 to 360, and its right edge is red again: hold the
+    // pick a hair short so the far edge is not the same hue as the near.
+    (along * 360.).min(359.)
+}
+
+/// The presets under the square: the theme's own accent first, written as
+/// the empty "no accent set", then the marks' inks (`docs/scoria/Scoria.md`,
+/// "Brand colors") and, last, Obsidian's purple for anyone who misses it.
+const PICKER_PRESETS: &[(&str, &str)] = &[
+    ("Scoria's own", ""),
+    ("Body orange", "#ff5721"),
+    ("Shadow orange", "#ee3300"),
+    ("Rust", "#d55227"),
+    ("Sienna", "#a6462c"),
+    ("Brick", "#92391f"),
+    ("Red", "#ca2b27"),
+    ("Deep red", "#a82223"),
+    ("Brown", "#86361e"),
+    ("Obsidian's purple", "#8a5cf6"),
+];
 
 /// `baseFontSize` in `appearance.json`; Obsidian's slider offers 10 to 30.
 const FONT_SIZE: Number = Number {
@@ -1332,7 +1489,7 @@ enum Control {
     /// The accent row: a swatch of the colour stored, empty for the
     /// default, behind a "Restore default" button. Obsidian's control is
     /// `<input type="color">` beside a `lucide-rotate-ccw` clickable icon;
-    /// the swatch opens the row's text field, since there is no native
+    /// the swatch opens Scoria's own picker, since there is no native
     /// colour dialog to raise.
     Color(SharedString),
     /// A row that opens a page of its own, drawn as what it reads on the
@@ -1714,8 +1871,11 @@ pub struct SettingsView {
     /// The command whose ⊕ was clicked: the next chord pressed is its new
     /// binding, Escape backs out.
     capturing: Option<String>,
-    /// The dropdown whose options are showing, by the key it writes.
+    /// The dropdown whose options are showing, by the key it writes. The
+    /// accent picker is a popover like the dropdowns, under the accent key.
     menu: Option<&'static str>,
+    /// The accent picker's own state while `menu` is the accent key.
+    picker: Option<AccentPicker>,
     /// The text field being typed into, by the key it writes. The rows are
     /// rebuilt from the vault on every render, so the open field is the
     /// view's, not the row's.
@@ -1783,6 +1943,7 @@ impl SettingsView {
             hotkey_scroll: UniformListScrollHandle::new(),
             capturing: None,
             menu: None,
+            picker: None,
             editing: None,
             local_pick: None,
             field,
@@ -3404,13 +3565,15 @@ impl SettingsView {
                     }))
                     .into_any_element()
             }
-            // The accent row, open for typing: the same field every other
-            // text row uses.
+            // The accent row, open for typing with no picker up: the same
+            // field every other text row uses. With the picker up the
+            // field is inside it instead.
             Control::Color(_)
-                if item
-                    .field
-                    .zip(self.editing)
-                    .is_some_and(|(a, b)| a.same(&b)) =>
+                if self.menu != Some(ACCENT_COLOR.key)
+                    && item
+                        .field
+                        .zip(self.editing)
+                        .is_some_and(|(a, b)| a.same(&b)) =>
             {
                 div()
                     .id("settings-accent-open")
@@ -3425,11 +3588,15 @@ impl SettingsView {
                 let swatch =
                     crate::theme::accent_swatch(&stored).unwrap_or(theme.tokens.interactive_accent);
                 let at_default = stored.is_empty();
+                let open = self.menu == Some(ACCENT_COLOR.key);
+                let popover = open.then(|| self.render_picker(theme, cx));
                 div()
+                    .relative()
                     .flex()
                     .flex_row()
                     .items_center()
                     .gap_2()
+                    .children(popover)
                     // "Restore default", a `lucide-rotate-ccw` clickable
                     // icon that Obsidian disables while nothing is set.
                     .child(
@@ -3476,7 +3643,7 @@ impl SettingsView {
                                 if this.click_dismissed_a_popover(cx) {
                                     return;
                                 }
-                                this.edit_field(ACCENT_COLOR, window, cx)
+                                this.open_picker(window, cx)
                             })),
                     )
                     .into_any_element()
@@ -3738,6 +3905,282 @@ impl SettingsView {
 
     /// Writes a slider's value, which the control also reads through.
     /// Opens a text field for typing, with what the vault holds in it.
+    /// Opens the accent picker under the swatch, with the hex field inside
+    /// it holding what the vault stores.
+    fn open_picker(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let accent = cx.global::<Theme>().tokens.interactive_accent;
+        let stored = (ACCENT_COLOR.read)(&state);
+        self.picker = Some(AccentPicker::new(&stored, accent));
+        // The field closes any menu; the picker is the menu, so it is
+        // named after the field is up.
+        self.edit_field(ACCENT_COLOR, window, cx);
+        self.menu = Some(ACCENT_COLOR.key);
+        cx.notify();
+    }
+
+    /// Writes the picker's colour: the hex goes to the file and into the
+    /// hex field, so the field's own commit later finds nothing to change.
+    fn write_picked(&mut self, hex: String, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        if let Some(picker) = &mut self.picker {
+            picker.from = normalize_accent(&hex);
+        }
+        self.field
+            .update(cx, |input, cx| input.set_text(hex.clone(), cx));
+        if (ACCENT_COLOR.read)(&state) != hex {
+            cx.emit(SettingsEvent::Changed(Box::new((ACCENT_COLOR.write)(
+                &state, &hex,
+            ))));
+        }
+        cx.notify();
+    }
+
+    /// A press on the square or the bar: the colour moves to the point at
+    /// once and follows the mouse until it is let go.
+    fn picker_press(&mut self, part: PickerPart, at: Point<Pixels>, cx: &mut Context<Self>) {
+        if let Some(picker) = &mut self.picker {
+            picker.drag = Some(part);
+        }
+        self.picker_move(at, cx);
+    }
+
+    fn picker_move(&mut self, at: Point<Pixels>, cx: &mut Context<Self>) {
+        let Some(picker) = &mut self.picker else {
+            return;
+        };
+        match picker.drag {
+            Some(PickerPart::Square) => {
+                let (s, v) = square_pick(picker.square, at);
+                picker.hsv.s = s;
+                picker.hsv.v = v;
+            }
+            Some(PickerPart::Bar) => picker.hsv.h = bar_pick(picker.bar, at),
+            None => return,
+        }
+        cx.notify();
+    }
+
+    /// Letting go is the write: one file per pick rather than one per
+    /// pixel the mouse crossed.
+    fn picker_release(&mut self, cx: &mut Context<Self>) {
+        let Some(picker) = &mut self.picker else {
+            return;
+        };
+        if picker.drag.take().is_none() {
+            return;
+        }
+        let hex = picker.hsv.hex();
+        self.write_picked(hex, cx);
+    }
+
+    /// A preset: the empty one is "Restore default", the rest are hexes.
+    fn pick_preset(&mut self, hex: &'static str, window: &Window, cx: &mut Context<Self>) {
+        if hex.is_empty() {
+            self.reset_accent(window, cx);
+            return;
+        }
+        if let Some(picker) = &mut self.picker {
+            if let Some(hsv) = Hsv::of_hex(hex) {
+                picker.hsv = hsv;
+            }
+        }
+        self.write_picked(hex.to_string(), cx);
+    }
+
+    /// The picker: a saturation and value square under a hue bar, the
+    /// presets, and the hex field beside a swatch of the colour as it
+    /// stands. Deferred and absolute like the dropdowns' option lists, and
+    /// every press in it stops at it, so the root's click does not close
+    /// it and the drag's own mouse-up is the write.
+    fn render_picker(&self, theme: &Theme, cx: &mut Context<Self>) -> gpui::AnyElement {
+        let Some(picker) = &self.picker else {
+            return div().into_any_element();
+        };
+        let hsv = picker.hsv;
+        let (w, h) = PICKER_SQUARE;
+        let view = cx.entity().clone();
+        let square_bounds = view.clone();
+        let bar_bounds = view;
+        let black = hsla(0., 0., 0., 1.);
+        let clear = hsla(0., 0., 0., 0.);
+        let white = hsla(0., 0., 1., 1.);
+        let ring = div()
+            .absolute()
+            .size(px(12.))
+            .rounded_full()
+            .border_2()
+            .border_color(white)
+            .shadow_sm()
+            .left(px(hsv.s * w - 6.))
+            .top(px((1. - hsv.v) * h - 6.));
+        let square = div()
+            .id("settings-accent-square")
+            .relative()
+            .w(px(w))
+            .h(px(h))
+            .rounded_sm()
+            .overflow_hidden()
+            .bg(linear_gradient(
+                90.,
+                linear_color_stop(white, 0.),
+                linear_color_stop(hsv.pure(), 1.),
+            ))
+            .cursor(gpui::CursorStyle::Crosshair)
+            .child(div().absolute().inset_0().bg(linear_gradient(
+                180.,
+                linear_color_stop(clear, 0.),
+                linear_color_stop(black, 1.),
+            )))
+            .child(
+                canvas(
+                    move |bounds, _, cx| {
+                        square_bounds.update(cx, |this, _| {
+                            if let Some(p) = &mut this.picker {
+                                p.square = bounds;
+                            }
+                        })
+                    },
+                    |_, _, _, _| {},
+                )
+                .absolute()
+                .inset_0(),
+            )
+            .child(ring)
+            .on_mouse_down(
+                MouseButton::Left,
+                cx.listener(|this, e: &MouseDownEvent, _, cx| {
+                    cx.stop_propagation();
+                    this.picker_press(PickerPart::Square, e.position, cx)
+                }),
+            );
+        let bar = div()
+            .id("settings-accent-bar")
+            .relative()
+            .w(px(w))
+            .h(px(PICKER_BAR))
+            .rounded_sm()
+            .overflow_hidden()
+            .flex()
+            .flex_row()
+            .cursor(gpui::CursorStyle::Crosshair)
+            // Six two-stop runs make the wheel: gpui's gradient takes two
+            // colours, and red to red through five more is six of them.
+            .children((0..6).map(|i| {
+                div().flex_1().h_full().bg(linear_gradient(
+                    90.,
+                    linear_color_stop(hsla(i as f32 / 6., 1., 0.5, 1.), 0.),
+                    linear_color_stop(hsla((i + 1) as f32 / 6., 1., 0.5, 1.), 1.),
+                ))
+            }))
+            .child(
+                canvas(
+                    move |bounds, _, cx| {
+                        bar_bounds.update(cx, |this, _| {
+                            if let Some(p) = &mut this.picker {
+                                p.bar = bounds;
+                            }
+                        })
+                    },
+                    |_, _, _, _| {},
+                )
+                .absolute()
+                .inset_0(),
+            )
+            .child(
+                div()
+                    .absolute()
+                    .top(px(-1.))
+                    .w(px(4.))
+                    .h(px(PICKER_BAR + 2.))
+                    .rounded_sm()
+                    .border_2()
+                    .border_color(white)
+                    .left(px((hsv.h / 360. * w - 2.).clamp(0., w - 4.))),
+            )
+            .on_mouse_down(
+                MouseButton::Left,
+                cx.listener(|this, e: &MouseDownEvent, _, cx| {
+                    cx.stop_propagation();
+                    this.picker_press(PickerPart::Bar, e.position, cx)
+                }),
+            );
+        let presets = div().flex().flex_row().flex_wrap().gap_1().children(
+            PICKER_PRESETS.iter().enumerate().map(|(ix, (name, hex))| {
+                let colour = Hsv::of_hex(hex)
+                    .map(Hsv::hsla)
+                    .unwrap_or(theme.tokens.interactive_accent);
+                div()
+                    .id(SharedString::from(format!("settings-accent-preset-{ix}")))
+                    .size(px(18.))
+                    .rounded_full()
+                    .bg(colour)
+                    .border_1()
+                    .border_color(theme.tokens.background_modifier_border)
+                    .cursor_pointer()
+                    .hover(|s| s.border_color(theme.tokens.text_normal))
+                    .tooltip(crate::canvas::menu::tooltip(*name))
+                    .on_click(cx.listener(move |this, _, window, cx| {
+                        cx.stop_propagation();
+                        this.pick_preset(hex, window, cx)
+                    }))
+            }),
+        );
+        let live = div()
+            .size(px(22.))
+            .rounded_full()
+            .bg(hsv.hsla())
+            .border_1()
+            .border_color(theme.tokens.background_modifier_border);
+        deferred(
+            div()
+                .id("settings-accent-picker")
+                // Occluding, so the row under it is not hovered through
+                // it: the Themes folder button's tooltip rose through
+                // the square otherwise.
+                .occlude()
+                .absolute()
+                .top(px(28.))
+                .right(px(0.))
+                .w(px(w + 24.))
+                .flex()
+                .flex_col()
+                .gap_2()
+                .p_3()
+                .bg(theme.tokens.background_secondary)
+                .border_1()
+                .border_color(theme.tokens.background_modifier_border)
+                .rounded_md()
+                .shadow_lg()
+                .on_click(|_, _, cx| cx.stop_propagation())
+                .on_mouse_move(cx.listener(|this, e: &MouseMoveEvent, _, cx| {
+                    if e.pressed_button == Some(MouseButton::Left) {
+                        this.picker_move(e.position, cx)
+                    }
+                }))
+                .capture_any_mouse_up(
+                    cx.listener(|this, _: &MouseUpEvent, _, cx| this.picker_release(cx)),
+                )
+                .child(square)
+                .child(bar)
+                .child(presets)
+                .child(
+                    div()
+                        .flex()
+                        .flex_row()
+                        .items_center()
+                        .gap_2()
+                        .child(div().flex_1().min_w_0().child(self.field.clone()))
+                        .child(live),
+                ),
+        )
+        .into_any_element()
+    }
+
     fn edit_field(&mut self, field: TextField, window: &mut Window, cx: &mut Context<Self>) {
         // One input serves every row, so opening the next one is the last
         // moment the one before it can be written.
@@ -4317,6 +4760,21 @@ impl Render for SettingsView {
             self.focus_tab(window, cx);
         }
         let theme = cx.global::<Theme>().clone();
+        // A write that landed from the hex field or "Restore default"
+        // moves the open accent picker; a drag's own write does not, since
+        // the picker already shows it.
+        if self.menu == Some(ACCENT_COLOR.key) {
+            if let (Some(picker), Some(state)) = (&mut self.picker, &self.state) {
+                let stored = (ACCENT_COLOR.read)(state);
+                if picker.drag.is_none() && picker.from != normalize_accent(&stored) {
+                    *picker = AccentPicker::new(&stored, theme.tokens.interactive_accent);
+                    // The hex field follows too, or dismissing the picker
+                    // would commit the value it was showing before.
+                    self.field
+                        .update(cx, |input, cx| input.set_text(stored, cx));
+                }
+            }
+        }
         let tab = self.tab;
         let page = self.page;
         let body: gpui::AnyElement = match page {
@@ -5909,6 +6367,60 @@ mod tests {
         state = VaultState::load(&dir.path().to_path_buf()).unwrap();
         assert_eq!(state.appearance().accent_color.as_deref(), Some(""));
         assert!(crate::theme::accent_swatch("").is_none());
+    }
+
+    /// The picker's colour model: a hex round-trips through it, the
+    /// square and the bar map a point to the channel each one moves, and a
+    /// picker opened on "no accent set" starts from the theme's own.
+    #[test]
+    fn the_accent_picker_maps_points_to_colours() {
+        for hex in [
+            "#be4f2d", "#ff5721", "#000000", "#ffffff", "#8a5cf6", "#00ff80",
+        ] {
+            let hsv = Hsv::of_hex(hex).unwrap();
+            assert_eq!(hsv.hex(), hex);
+        }
+        assert_eq!(Hsv::of_hex(""), None);
+        assert_eq!(Hsv::of_hex("nope"), None);
+        let brick = Hsv::of_hex("#be4f2d").unwrap();
+        assert!((brick.h - 14.).abs() < 1., "{}", brick.h);
+
+        let square = Bounds::new(gpui::point(px(10.), px(20.)), size(px(200.), px(100.)));
+        assert_eq!(square_pick(square, gpui::point(px(10.), px(20.))), (0., 1.));
+        assert_eq!(
+            square_pick(square, gpui::point(px(210.), px(120.))),
+            (1., 0.)
+        );
+        assert_eq!(
+            square_pick(square, gpui::point(px(110.), px(70.))),
+            (0.5, 0.5)
+        );
+        // Past the edges the pick stays on them.
+        assert_eq!(
+            square_pick(square, gpui::point(px(-50.), px(500.))),
+            (0., 0.)
+        );
+        let bar = Bounds::new(gpui::point(px(0.), px(0.)), size(px(360.), px(12.)));
+        assert_eq!(bar_pick(bar, gpui::point(px(90.), px(6.))), 90.);
+        assert_eq!(bar_pick(bar, gpui::point(px(9999.), px(6.))), 359.);
+
+        let fallback = hsla(14. / 360., 0.62, 0.46, 1.);
+        let fresh = AccentPicker::new("", fallback);
+        assert_eq!(fresh.hex_for_test(), "#be4f2d");
+        assert_eq!(fresh.from, "");
+        let set = AccentPicker::new("#E11D48", fallback);
+        assert_eq!(set.hex_for_test(), "#e11d48");
+        assert_eq!(set.from, "#e11d48");
+        // Every preset is a hex the file can hold, or the empty default.
+        for (_, hex) in PICKER_PRESETS {
+            assert!(hex.is_empty() || Hsv::of_hex(hex).is_some(), "{hex}");
+        }
+    }
+
+    impl AccentPicker {
+        fn hex_for_test(&self) -> String {
+            self.hsv.hex()
+        }
     }
 
     /// The frame style is the one dropdown whose value is the machine's,
