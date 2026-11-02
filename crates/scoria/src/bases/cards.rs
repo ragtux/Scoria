@@ -339,10 +339,10 @@ impl BasesView {
             .overflow_hidden()
             .rounded(px(6.))
             .border_1()
-            .border_color(theme.border)
-            .bg(theme.bg_secondary)
+            .border_color(theme.tokens.background_modifier_border)
+            .bg(theme.tokens.background_secondary)
             .cursor_pointer()
-            .hover(|s| s.bg(theme.bg_alt))
+            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
             .on_click(cx.listener(move |this, _, _, cx| this.open(path.clone(), cx)))
             // Observed (`s11` `cardRightClick`): a card's right click is the
             // file menu over its note.
@@ -360,7 +360,7 @@ impl BasesView {
                 .h(px(metrics.image_height))
                 .flex_shrink_0()
                 .overflow_hidden()
-                .bg(theme.bg_alt);
+                .bg(theme.tokens.background_modifier_hover);
             if let Some(file) = card.image.clone() {
                 frame = frame.child(img(file).size_full().object_fit(match self.cards.fit {
                     ImageFit::Cover => ObjectFit::Cover,
@@ -383,7 +383,11 @@ impl BasesView {
                         .overflow_hidden()
                         .text_ellipsis()
                         .text_size(px(FONT_UI_SMALL))
-                        .text_color(if card.link { theme.link } else { theme.text })
+                        .text_color(if card.link {
+                            theme.tokens.link_color
+                        } else {
+                            theme.tokens.text_normal
+                        })
                         .child(SharedString::from(card.title.clone())),
                 )
                 .children(card.body.iter().map(|value| {
@@ -393,7 +397,7 @@ impl BasesView {
                         .overflow_hidden()
                         .text_ellipsis()
                         .text_size(px(FONT_UI_SMALLER))
-                        .text_color(theme.text_muted)
+                        .text_color(theme.tokens.text_muted)
                         .child(SharedString::from(value.clone()))
                 })),
         )

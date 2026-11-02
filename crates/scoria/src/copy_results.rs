@@ -117,7 +117,10 @@ impl CopyResults {
             .justify_between()
             .gap(px(24.))
             .py(px(12.))
-            .when(!first, |d| d.border_t_1().border_color(theme.border))
+            .when(!first, |d| {
+                d.border_t_1()
+                    .border_color(theme.tokens.background_modifier_border)
+            })
             .child(
                 div()
                     .flex_1()
@@ -125,11 +128,16 @@ impl CopyResults {
                     .flex()
                     .flex_col()
                     .gap(px(2.))
-                    .child(div().text_size(px(14.)).text_color(theme.text).child(name))
+                    .child(
+                        div()
+                            .text_size(px(14.))
+                            .text_color(theme.tokens.text_normal)
+                            .child(name),
+                    )
                     .child(
                         div()
                             .text_size(px(FONT_UI_SMALLER))
-                            .text_color(theme.text_muted)
+                            .text_color(theme.tokens.text_muted)
                             .child(desc),
                     ),
             )
@@ -160,14 +168,14 @@ impl CopyResults {
             .pl(px(10.))
             .pr(px(8.))
             .rounded(px(5.))
-            .bg(theme.bg_alt)
+            .bg(theme.tokens.background_modifier_hover)
             .border_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.background_modifier_border)
             .cursor_pointer()
             .text_size(px(FONT_UI_SMALL))
-            .text_color(theme.text)
-            .when(open, |d| d.border_color(theme.accent))
-            .hover(|s| s.bg(theme.bg_active))
+            .text_color(theme.tokens.text_normal)
+            .when(open, |d| d.border_color(theme.tokens.interactive_accent))
+            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
             .on_click(cx.listener(move |this, event: &ClickEvent, _, cx| {
                 this.menu_at = event.position();
                 this.open = if this.open == Some(which) {
@@ -181,7 +189,7 @@ impl CopyResults {
             .child(crate::assets::icon(
                 "chevrons-up-down",
                 12.,
-                theme.text_muted,
+                theme.tokens.text_muted,
             ));
         let popup = open.then(|| {
             let mut list = menu(
@@ -272,11 +280,14 @@ impl Render for CopyResults {
                 .rounded(px(5.))
                 .cursor_pointer()
                 .text_size(px(FONT_UI_SMALL))
-                .when(primary, |d| d.bg(theme.accent).text_color(gpui::white()))
+                .when(primary, |d| {
+                    d.bg(theme.tokens.interactive_accent)
+                        .text_color(gpui::white())
+                })
                 .when(!primary, |d| {
-                    d.bg(theme.bg_alt)
-                        .text_color(theme.text)
-                        .hover(|s| s.bg(theme.bg_active))
+                    d.bg(theme.tokens.background_modifier_hover)
+                        .text_color(theme.tokens.text_normal)
+                        .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                 })
                 .child(label)
         };
@@ -288,9 +299,9 @@ impl Render for CopyResults {
             .w(px(560.))
             .flex()
             .flex_col()
-            .bg(theme.bg_secondary)
+            .bg(theme.tokens.background_secondary)
             .border_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.background_modifier_border)
             .rounded_lg()
             .shadow_lg()
             .p_4()
@@ -310,7 +321,7 @@ impl Render for CopyResults {
                         div()
                             .text_size(px(15.))
                             .font_weight(FontWeight::SEMIBOLD)
-                            .text_color(theme.text)
+                            .text_color(theme.tokens.text_normal)
                             .child("Copy search results"),
                     )
                     .child(
@@ -322,9 +333,9 @@ impl Render for CopyResults {
                             .justify_center()
                             .rounded(px(4.))
                             .cursor_pointer()
-                            .hover(|s| s.bg(theme.bg_alt))
+                            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                             .on_click(cx.listener(|_, _, _, cx| cx.emit(CopyResultsEvent::Close)))
-                            .child(crate::assets::icon("x", 16., theme.text_muted)),
+                            .child(crate::assets::icon("x", 16., theme.tokens.text_muted)),
                     ),
             )
             .child(
@@ -336,12 +347,12 @@ impl Render for CopyResults {
                     .px(px(10.))
                     .py(px(6.))
                     .rounded(px(5.))
-                    .bg(theme.bg_alt)
+                    .bg(theme.tokens.background_modifier_hover)
                     .border_1()
-                    .border_color(theme.border)
+                    .border_color(theme.tokens.background_modifier_border)
                     .text_size(px(FONT_UI_SMALL))
                     .line_height(relative(1.5))
-                    .text_color(theme.text)
+                    .text_color(theme.tokens.text_normal)
                     .child(text),
             )
             .child(

@@ -434,7 +434,7 @@ fn index_at(layout: &gpui::TextLayout, position: gpui::Point<Pixels>) -> usize {
 /// The wash behind selected text: the accent at the alpha the editor's own
 /// selection uses, so the two views look alike.
 pub(crate) fn selection_color(theme: &Theme) -> Hsla {
-    let mut color = theme.accent;
+    let mut color = theme.tokens.interactive_accent;
     color.a = if theme.dark { 0.35 } else { 0.25 };
     color
 }
@@ -1392,7 +1392,7 @@ impl ReadingView {
                                         "chevron-down"
                                     },
                                     16.,
-                                    theme.text_muted,
+                                    theme.tokens.text_muted,
                                 )),
                         )
                         .into_any_element();
@@ -1486,7 +1486,7 @@ impl Render for ReadingView {
             .font_family(theme.text_font.clone())
             .text_size(px(base))
             .line_height(px(base * LINE_HEIGHT))
-            .text_color(theme.text)
+            .text_color(theme.tokens.text_normal)
             .relative()
             .flex()
             .flex_col()
@@ -1804,14 +1804,14 @@ impl<'a> Renderer<'a> {
                                 .invisible()
                                 .group_hover("code-block", |s| s.visible())
                                 .cursor_pointer()
-                                .hover(|s| s.bg(t.bg_secondary))
+                                .hover(|s| s.bg(t.tokens.background_secondary))
                                 // `lucide-copy`, and `lucide-check` for as long
                                 // as the check shows. A 16 px icon in this box
                                 // is the 31.98 x 27.97 px button Obsidian paints.
                                 .child(icon(
                                     if copied { "check" } else { "copy" },
                                     16.,
-                                    t.text_muted,
+                                    t.tokens.text_muted,
                                 ))
                                 .on_click(move |_, _, cx| {
                                     // An empty fence's button writes nothing at
@@ -1872,7 +1872,7 @@ impl<'a> Renderer<'a> {
                                     "chevron-down"
                                 },
                                 14.,
-                                t.text_muted,
+                                t.tokens.text_muted,
                             ))
                             .child(div().flex_1().child(self.rich(summary))),
                     )
@@ -1891,13 +1891,13 @@ impl<'a> Renderer<'a> {
                 .mb(gap)
                 .font_family(t.mono_font.clone())
                 .text_size(px(base * 0.875))
-                .text_color(t.text_muted)
+                .text_color(t.tokens.text_muted)
                 .child(SharedString::from(text.clone()))
                 .into_any_element(),
             RBlock::Quote(children) => div()
                 .mb(gap)
                 .border_l_2()
-                .border_color(t.accent)
+                .border_color(t.tokens.interactive_accent)
                 .pl_4()
                 .flex()
                 .flex_col()
@@ -1988,7 +1988,7 @@ impl<'a> Renderer<'a> {
                                         "chevron-down"
                                     },
                                     16.,
-                                    t.text_muted,
+                                    t.tokens.text_muted,
                                 ))
                             }),
                     )
@@ -2126,7 +2126,7 @@ impl<'a> Renderer<'a> {
                 .mt(px(base * 2.))
                 .pt(px(base))
                 .border_t_1()
-                .border_color(t.border)
+                .border_color(t.tokens.background_modifier_border)
                 .text_size(px(base * 0.875))
                 .flex()
                 .flex_col()
@@ -2139,7 +2139,7 @@ impl<'a> Renderer<'a> {
                             div()
                                 .w(px(28.))
                                 .flex_shrink_0()
-                                .text_color(t.text_muted)
+                                .text_color(t.tokens.text_muted)
                                 .child(SharedString::from(format!("{n}."))),
                         )
                         .child(
@@ -2272,7 +2272,7 @@ impl<'a> Renderer<'a> {
                 .child(div().mx_auto().flex_shrink_0().child(FormulaElement::new(
                     formula,
                     px(base),
-                    t.text,
+                    t.tokens.text_normal,
                 )))
                 .into_any_element(),
             Err(_) => div()
@@ -2311,7 +2311,7 @@ impl<'a> Renderer<'a> {
                 div()
                     .my_2()
                     .border_1()
-                    .border_color(t.border)
+                    .border_color(t.tokens.background_modifier_border)
                     .rounded_md()
                     .px_4()
                     .py_3()
@@ -2323,9 +2323,9 @@ impl<'a> Renderer<'a> {
                             .id(("embed-title", path.len() + title.len()))
                             .mb_2()
                             .text_size(px(base * 0.75))
-                            .text_color(t.text_muted)
+                            .text_color(t.tokens.text_muted)
                             .cursor_pointer()
-                            .hover(|s| s.text_color(t.link))
+                            .hover(|s| s.text_color(t.tokens.link_color))
                             .on_click(move |_, window, cx| {
                                 on_link(LinkTarget::Internal(link.clone()), window, cx)
                             })
@@ -2384,9 +2384,9 @@ impl<'a> Renderer<'a> {
                     .my_1()
                     .p(px(8.))
                     .rounded(px(8.))
-                    .bg(t.bg_alt)
+                    .bg(t.tokens.background_modifier_hover)
                     .text_size(px(14.))
-                    .text_color(t.text_muted)
+                    .text_color(t.tokens.text_muted)
                     .child(SharedString::from(format!(
                         "\u{201c}{}\u{201d} could not be found.",
                         embed.link
@@ -2395,7 +2395,7 @@ impl<'a> Renderer<'a> {
             }
             EmbedKind::Missing => div()
                 .my_1()
-                .text_color(t.text_muted)
+                .text_color(t.tokens.text_muted)
                 .italic()
                 .child(SharedString::from(format!("{}: file not found", embed.alt)))
                 .into_any_element(),
@@ -2405,7 +2405,7 @@ impl<'a> Renderer<'a> {
                 div()
                     .id(("embed-file", embed.link.len()))
                     .my_1()
-                    .text_color(t.link)
+                    .text_color(t.tokens.link_color)
                     .cursor_pointer()
                     .on_click(move |_, window, cx| {
                         on_link(LinkTarget::Internal(link.clone()), window, cx)
@@ -2415,7 +2415,7 @@ impl<'a> Renderer<'a> {
             }
             EmbedKind::TooDeep => div()
                 .my_1()
-                .text_color(t.text_muted)
+                .text_color(t.tokens.text_muted)
                 .italic()
                 .child(SharedString::from(format!(
                     "{}: embed nested too deep",
@@ -2506,7 +2506,7 @@ impl<'a> Renderer<'a> {
                                 div()
                                     .w(px(base))
                                     .flex_shrink_0()
-                                    .text_color(t.text_faint)
+                                    .text_color(t.tokens.text_faint)
                                     .child(SharedString::from("T")),
                             )
                             .child(self.property_field(&field, false)),
@@ -2532,7 +2532,7 @@ impl<'a> Renderer<'a> {
                             .gap_1p5()
                             .py_1()
                             .cursor_pointer()
-                            .text_color(t.text_faint)
+                            .text_color(t.tokens.text_faint)
                             .child(SharedString::from("+"))
                             .child(SharedString::from("Add property"))
                             .on_mouse_down(gpui::MouseButton::Left, move |_, window, cx| {
@@ -2557,13 +2557,13 @@ impl<'a> Renderer<'a> {
             .min_w_0()
             .px_1()
             .rounded_sm()
-            .bg(t.bg_active)
+            .bg(t.tokens.background_modifier_hover)
             .child(SharedString::from(before.to_string()))
             .child(
                 div()
                     .w(px(1.))
                     .h(px(t.base_font_size))
-                    .bg(t.accent)
+                    .bg(t.tokens.interactive_accent)
                     .flex_shrink_0(),
             )
             .child(SharedString::from(after.to_string()))
@@ -2590,12 +2590,12 @@ impl<'a> Renderer<'a> {
                     .flex_row()
                     .items_center()
                     .gap_2()
-                    .text_color(t.text_muted)
+                    .text_color(t.tokens.text_muted)
                     .child({
                         let glyph = div()
                             .w(px(base))
                             .flex_shrink_0()
-                            .text_color(t.text_faint)
+                            .text_color(t.tokens.text_faint)
                             .child(SharedString::from(crate::properties::type_glyph(row.ty)));
                         match host.map(|h| h.on_action.clone()) {
                             Some(on_action) => {
@@ -2668,7 +2668,7 @@ impl<'a> Renderer<'a> {
                         d.child(
                             div()
                                 .flex_shrink_0()
-                                .text_color(t.text_faint)
+                                .text_color(t.tokens.text_faint)
                                 .child(SharedString::from("\u{26a0}")),
                         )
                     })
@@ -2680,7 +2680,7 @@ impl<'a> Renderer<'a> {
                                 .flex_shrink_0()
                                 .px_1()
                                 .cursor_pointer()
-                                .text_color(t.text_faint)
+                                .text_color(t.tokens.text_faint)
                                 .child(SharedString::from("\u{00d7}"))
                                 .on_mouse_down(gpui::MouseButton::Left, move |_, window, cx| {
                                     on_action(
@@ -2713,9 +2713,9 @@ impl<'a> Renderer<'a> {
             .flex()
             .flex_col()
             .border_1()
-            .border_color(t.border)
+            .border_color(t.tokens.background_modifier_border)
             .rounded_md()
-            .bg(t.bg_secondary)
+            .bg(t.tokens.background_secondary)
             .py_1()
             .children(PropertyType::selectable().iter().copied().map(|ty| {
                 let on_action = host.on_action.clone();
@@ -2729,8 +2729,8 @@ impl<'a> Renderer<'a> {
                     .px_2()
                     .py_0p5()
                     .cursor_pointer()
-                    .when(ty == row.ty, |d| d.text_color(t.accent))
-                    .hover(|d| d.bg(t.bg_active))
+                    .when(ty == row.ty, |d| d.text_color(t.tokens.interactive_accent))
+                    .hover(|d| d.bg(t.tokens.background_modifier_hover))
                     .child(SharedString::from(crate::properties::type_glyph(ty)))
                     .child(SharedString::from(ty.label()))
                     .on_mouse_down(gpui::MouseButton::Left, move |_, window, cx| {
@@ -2855,11 +2855,11 @@ impl<'a> Renderer<'a> {
                         .w(px(t.base_font_size))
                         .h(px(t.base_font_size))
                         .border_1()
-                        .border_color(t.border)
+                        .border_color(t.tokens.background_modifier_border)
                         .rounded_sm()
                         .when(*checked, |d| {
-                            d.bg(t.accent)
-                                .text_color(t.bg)
+                            d.bg(t.tokens.interactive_accent)
+                                .text_color(t.tokens.background_primary)
                                 .child(SharedString::from("\u{2713}"))
                         }),
                 )
@@ -2868,7 +2868,7 @@ impl<'a> Renderer<'a> {
             // both are blank, and a blank cell that drew nothing would have
             // no height and so take no click at all.
             crate::properties::Display::Empty | crate::properties::Display::Pills(_) => div()
-                .text_color(t.text_faint)
+                .text_color(t.tokens.text_faint)
                 .child(SharedString::from("Empty"))
                 .into_any_element(),
         }
@@ -2977,7 +2977,7 @@ impl<'a> Renderer<'a> {
                                 .child(crate::assets::icon(
                                     "x",
                                     t.base_font_size * 0.875,
-                                    t.text_faint,
+                                    t.tokens.text_faint,
                                 ))
                                 .on_mouse_down(gpui::MouseButton::Left, move |_, window, cx| {
                                     cx.stop_propagation();
@@ -3100,7 +3100,7 @@ impl<'a> Renderer<'a> {
             layout.clone(),
             inlines,
             em,
-            t.text,
+            t.tokens.text_normal,
         )
         .into_any_element();
         let element = self.selectable(overlay, text, &layout);

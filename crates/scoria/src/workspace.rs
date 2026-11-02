@@ -2082,12 +2082,12 @@ impl Render for TabDragPreview {
                     .px(px(10.))
                     .max_w(px(200.))
                     .rounded(px(6.))
-                    .bg(theme.bg)
+                    .bg(theme.tokens.background_primary)
                     .border_1()
-                    .border_color(theme.border)
+                    .border_color(theme.tokens.background_modifier_border)
                     .shadow_md()
                     .text_size(px(FONT_UI_SMALL))
-                    .text_color(theme.text)
+                    .text_color(theme.tokens.text_normal)
                     .whitespace_nowrap()
                     .overflow_hidden()
                     .text_ellipsis()
@@ -2473,7 +2473,7 @@ fn client_frame(
     };
     let client = matches!(decorations, Decorations::Client { .. });
     window.set_client_inset(if client { FRAME_SHADOW } else { px(0.) });
-    let border = theme.border;
+    let border = theme.tokens.background_modifier_border;
     let shadow: Hsla = rgba(FRAME_SHADOW_COLOR).into();
     let corners = WindowCorners::of(window);
     div()
@@ -2533,7 +2533,7 @@ fn client_frame(
             div()
                 .size_full()
                 .cursor(CursorStyle::Arrow)
-                .bg(theme.bg)
+                .bg(theme.tokens.background_primary)
                 .map(|d| corners.apply(d))
                 .when(client, |d| {
                     d.border_color(border)
@@ -8045,7 +8045,7 @@ impl Workspace {
                         cell = cell
                             .when(row, |d| d.border_l_1())
                             .when(!row, |d| d.border_t_1())
-                            .border_color(theme.border)
+                            .border_color(theme.tokens.background_modifier_border)
                             .child(handle);
                     }
                     container = container.child(cell);
@@ -8107,8 +8107,8 @@ impl Workspace {
         cx: &mut Context<Self>,
     ) -> gpui::Stateful<gpui::Div> {
         let zone = self.tab_drop.filter(|(g, _)| *g == id).map(|(_, z)| z);
-        let wash = theme.accent.opacity(0.15);
-        let edge = theme.accent.opacity(0.6);
+        let wash = theme.tokens.interactive_accent.opacity(0.15);
+        let edge = theme.tokens.interactive_accent.opacity(0.6);
         div()
             .id(("drop-zones", id))
             .absolute()
@@ -8343,9 +8343,9 @@ impl Workspace {
         let paint_entity = cx.entity();
         let read_focus = self.title_focus.clone();
         let paint_focus = self.title_focus.clone();
-        let mut selection_color = theme.accent;
+        let mut selection_color = theme.tokens.interactive_accent;
         selection_color.a = if theme.dark { 0.35 } else { 0.25 };
-        let caret_color = theme.text;
+        let caret_color = theme.tokens.text_normal;
         let body = canvas(
             move |bounds, window, cx| {
                 let style = window.text_style();
@@ -8732,7 +8732,7 @@ impl Workspace {
                 .flex()
                 .items_center()
                 .justify_center()
-                .text_color(theme.text_muted)
+                .text_color(theme.tokens.text_muted)
                 .child("The graph is open in another pane")
                 .into_any_element(),
             MainView::Reading => view.reading.clone().into_any_element(),
@@ -8764,10 +8764,10 @@ impl Workspace {
                     .px_3()
                     .py_1()
                     .text_size(px(12.))
-                    .bg(theme.bg_alt)
-                    .text_color(theme.text_muted)
+                    .bg(theme.tokens.background_modifier_hover)
+                    .text_color(theme.tokens.text_muted)
                     .border_b_1()
-                    .border_color(theme.border)
+                    .border_color(theme.tokens.background_modifier_border)
                     .child(format!(
                         "{name} — this buffer no longer belongs to a file in the vault, \
                          and nothing saves it"
@@ -8797,7 +8797,7 @@ impl Workspace {
             .gap_5()
             .items_center()
             .justify_center()
-            .text_color(theme.text_muted)
+            .text_color(theme.tokens.text_muted)
             .child(message)
             .into_any_element()
     }
@@ -8825,17 +8825,21 @@ impl Workspace {
                         .px(px(14.))
                         .py(px(6.))
                         .rounded(px(14.))
-                        .bg(theme.bg_alt)
+                        .bg(theme.tokens.background_modifier_hover)
                         .border_1()
-                        .border_color(theme.border)
+                        .border_color(theme.tokens.background_modifier_border)
                         .cursor_pointer()
-                        .hover(|s| s.bg(theme.bg_active))
+                        .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                         .text_size(px(FONT_UI_SMALL))
-                        .child(div().text_color(theme.text).child(action.label))
+                        .child(
+                            div()
+                                .text_color(theme.tokens.text_normal)
+                                .child(action.label),
+                        )
                         .children(
                             action
                                 .hotkey
-                                .map(|keys| div().text_color(theme.text_faint).child(keys)),
+                                .map(|keys| div().text_color(theme.tokens.text_faint).child(keys)),
                         )
                         .on_click(cx.listener(move |this, _, window, cx| {
                             this.run_command(command, window, cx)
@@ -8849,7 +8853,7 @@ impl Workspace {
             .gap_5()
             .items_center()
             .justify_center()
-            .text_color(theme.text_muted)
+            .text_color(theme.tokens.text_muted)
             .child(logo(104.))
             .child(
                 div()
@@ -9884,10 +9888,13 @@ impl Workspace {
             .w(px(3.))
             .when(left, |d| d.right(px(0.)).border_r_1())
             .when(!left, |d| d.left(px(0.)).border_l_1())
-            .border_color(theme.border)
+            .border_color(theme.tokens.background_modifier_border)
             .cursor_col_resize()
             .occlude()
-            .hover(|s| s.bg(theme.accent).border_color(theme.accent))
+            .hover(|s| {
+                s.bg(theme.tokens.interactive_accent)
+                    .border_color(theme.tokens.interactive_accent)
+            })
             .on_drag(DockDrag { left }, |_, _, _, cx| cx.new(|_| NoDragPreview))
     }
 
@@ -9942,9 +9949,9 @@ impl Workspace {
             let hover_bg: Hsla = if close {
                 rgb(0xe93147).into()
             } else {
-                theme.bg_alt
+                theme.tokens.background_modifier_hover
             };
-            let color = theme.text_muted;
+            let color = theme.tokens.text_muted;
             div()
                 .id(id)
                 .group(id)
@@ -10279,7 +10286,7 @@ impl Workspace {
                 .rounded(px(4.))
                 .mx_1()
                 .cursor_pointer()
-                .hover(|s| s.bg(theme.bg_alt))
+                .hover(|s| s.bg(theme.tokens.background_modifier_hover))
         };
         let check = |on: bool, theme: &Theme| {
             div()
@@ -10287,7 +10294,7 @@ impl Workspace {
                 .flex_shrink_0()
                 .flex()
                 .items_center()
-                .children(on.then(|| icon("check", 14., theme.text_muted)))
+                .children(on.then(|| icon("check", 14., theme.tokens.text_muted)))
         };
         // A machine that has opened dozens of vaults has a menu taller than
         // the window, and the rows under the hairline are then off the
@@ -10303,13 +10310,13 @@ impl Workspace {
             .max_h(tallest)
             .overflow_y_scroll()
             .py_1()
-            .bg(theme.bg_secondary)
+            .bg(theme.tokens.background_secondary)
             .border_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.background_modifier_border)
             .rounded_md()
             .shadow_lg()
             .text_size(px(FONT_UI_SMALL))
-            .text_color(theme.text)
+            .text_color(theme.tokens.text_normal)
             .occlude()
             // A press on the switcher row is a press outside the menu, and
             // the click that ends it toggles: closing here as well would
@@ -10327,7 +10334,7 @@ impl Workspace {
                 div()
                     .px_3()
                     .py(px(5.))
-                    .text_color(theme.text_faint)
+                    .text_color(theme.tokens.text_faint)
                     .child("No vaults opened yet"),
             );
         }
@@ -10363,8 +10370,14 @@ impl Workspace {
         // 2026-10-29). Scoria's own "Open vault..." and "Open sandbox
         // vault" moved into that window, where Obsidian keeps the same
         // two; they are still commands, and still in the palette.
-        list =
-            list.child(div().my_1().h(px(1.)).bg(theme.border)).child(
+        list = list
+            .child(
+                div()
+                    .my_1()
+                    .h(px(1.))
+                    .bg(theme.tokens.background_modifier_border),
+            )
+            .child(
                 item("vault-menu-manage".into(), theme)
                     .on_click(cx.listener(|this, _, window, cx| {
                         this.run_command("app:open-vault", window, cx)
@@ -10375,7 +10388,7 @@ impl Workspace {
                             .flex_shrink_0()
                             .flex()
                             .items_center()
-                            .child(icon("folder-open", 14., theme.text_muted)),
+                            .child(icon("folder-open", 14., theme.tokens.text_muted)),
                     )
                     .child("Manage vaults..."),
             );
@@ -10696,12 +10709,12 @@ impl Workspace {
                             .justify_center()
                             .rounded(px(4.))
                             .cursor_pointer()
-                            .hover(|s| s.bg(theme.bg_alt))
-                            .when(menu_open, |d| d.bg(theme.bg_alt))
+                            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                            .when(menu_open, |d| d.bg(theme.tokens.background_modifier_hover))
                             .on_click(cx.listener(move |this, _, _, cx| {
                                 this.toggle_tab_list_menu(group, cx)
                             }))
-                            .child(icon("chevron-down", ICON_SIZE, theme.text)),
+                            .child(icon("chevron-down", ICON_SIZE, theme.tokens.text_normal)),
                     )
                     .children(self.render_tab_list_menu(view, theme, cx)),
             )
@@ -10727,7 +10740,7 @@ impl Workspace {
                         .w(px(DROP_BAR_WIDTH))
                         .h(px(25.))
                         .rounded(px(DROP_BAR_WIDTH / 2.))
-                        .bg(theme.accent),
+                        .bg(theme.tokens.interactive_accent),
                 ))
             })
     }
@@ -10770,10 +10783,16 @@ impl Workspace {
                 .h(px(25.))
                 .rounded(px(4.))
                 .cursor_pointer()
-                .hover(|s| s.bg(theme.bg_alt))
-                .child(icon(name, ICON_SIZE, theme.text_muted))
+                .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                .child(icon(name, ICON_SIZE, theme.tokens.text_muted))
         };
-        let separator = |theme: &Theme| div().my(px(6.)).mx(px(-6.)).h(px(1.)).bg(theme.border);
+        let separator = |theme: &Theme| {
+            div()
+                .my(px(6.))
+                .mx(px(-6.))
+                .h(px(1.))
+                .bg(theme.tokens.background_modifier_border)
+        };
         let mut list = div()
             .id(("tab-list-menu", group))
             .flex()
@@ -10781,13 +10800,13 @@ impl Workspace {
             .min_w(px(167.))
             .max_w(px(360.))
             .p(px(6.))
-            .bg(theme.bg_secondary)
+            .bg(theme.tokens.background_secondary)
             .border_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.background_modifier_border)
             .rounded(px(8.))
             .shadow_lg()
             .text_size(px(FONT_UI_SMALL))
-            .text_color(theme.text)
+            .text_color(theme.tokens.text_normal)
             .occlude()
             .on_mouse_down_out(cx.listener(|this, _, _, cx| {
                 this.tab_list_menu = None;
@@ -10845,7 +10864,7 @@ impl Workspace {
                             .whitespace_nowrap()
                             .child(tab.title()),
                     )
-                    .children(checked.then(|| icon("check", ICON_SIZE, theme.text_muted))),
+                    .children(checked.then(|| icon("check", ICON_SIZE, theme.tokens.text_muted))),
             );
         }
         // The wrapper lays the menu out below the button, so the offset
@@ -12615,13 +12634,13 @@ impl Workspace {
                 .flex_col()
                 .min_w(px(220.))
                 .py_1()
-                .bg(theme.bg_secondary)
+                .bg(theme.tokens.background_secondary)
                 .border_1()
-                .border_color(theme.border)
+                .border_color(theme.tokens.background_modifier_border)
                 .rounded_md()
                 .shadow_lg()
                 .text_size(px(13.))
-                .text_color(theme.text),
+                .text_color(theme.tokens.text_normal),
             &focus,
             cx,
             |this, cx| {
@@ -12631,7 +12650,12 @@ impl Workspace {
         );
         for (ix, order) in SortOrder::ALL.into_iter().enumerate() {
             if ix > 0 && ix % 2 == 0 {
-                list = list.child(div().my_1().h(px(1.)).bg(theme.border));
+                list = list.child(
+                    div()
+                        .my_1()
+                        .h(px(1.))
+                        .bg(theme.tokens.background_modifier_border),
+                );
             }
             let checked = order == current;
             list = list.child(
@@ -12644,7 +12668,7 @@ impl Workspace {
                     .px_3()
                     .py_1()
                     .cursor_pointer()
-                    .hover(|s| s.bg(theme.bg_alt))
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .on_click(cx.listener(move |this, _, _, cx| this.set_backlink_sort(order, cx)))
                     .child(
                         div()
@@ -12652,7 +12676,7 @@ impl Workspace {
                             .flex_shrink_0()
                             .flex()
                             .items_center()
-                            .children(checked.then(|| icon("check", 14., theme.text_muted))),
+                            .children(checked.then(|| icon("check", 14., theme.tokens.text_muted))),
                     )
                     .child(order.label()),
             );
@@ -12738,17 +12762,24 @@ impl Workspace {
                     .gap(px(4.))
                     .rounded(px(8.))
                     .cursor_pointer()
-                    .hover(|s| s.bg(theme.bg_alt))
+                    .hover(|s| s.bg(theme.tokens.nav_item_background_hover))
                     .on_click(
                         cx.listener(move |this, _, _, cx| this.toggle_section(which, s_ix, cx)),
                     )
+                    // `.tree-item-self.is-clickable` at the pane's root:
+                    // `--nav-heading-color` at `--nav-heading-weight`,
+                    // `--nav-heading-color-collapsed` while folded.
                     .child(
                         div()
                             .flex_1()
                             .min_w_0()
                             .text_size(px(FONT_UI_SMALL))
                             .font_weight(FontWeight::MEDIUM)
-                            .text_color(if folded { theme.text_faint } else { theme.text })
+                            .text_color(if folded {
+                                theme.tokens.nav_heading_color_collapsed
+                            } else {
+                                theme.tokens.nav_heading_color
+                            })
                             .whitespace_nowrap()
                             .overflow_hidden()
                             .text_ellipsis()
@@ -12758,9 +12789,11 @@ impl Workspace {
                         div()
                             .flex_shrink_0()
                             .text_size(px(FONT_UI_SMALLER))
-                            .text_color(theme.text_faint)
+                            .text_color(theme.tokens.text_faint)
                             .when(!folded, |d| {
-                                d.group_hover("pane-section", |s| s.text_color(theme.text_muted))
+                                d.group_hover("pane-section", |s| {
+                                    s.text_color(theme.tokens.text_muted)
+                                })
                             })
                             .child(count),
                     ),
@@ -12783,7 +12816,7 @@ impl Workspace {
                         .pl(px(8.))
                         .mb(px(12.))
                         .text_size(px(FONT_UI_SMALL))
-                        .text_color(theme.text_faint)
+                        .text_color(theme.tokens.text_faint)
                         .child("No backlinks found."),
                 );
             }
@@ -12827,8 +12860,8 @@ impl Workspace {
                         .flex()
                         .items_center()
                         .justify_center()
-                        .opacity(0.85)
-                        .child(icon(name, 14., theme.text_muted))
+                        .opacity(theme.tokens.icon_opacity)
+                        .child(icon(name, 14., theme.tokens.icon_color))
                         .into_any_element()
                 } else {
                     let key = key.clone();
@@ -12852,7 +12885,7 @@ impl Workspace {
                                 "chevron-down"
                             },
                             12.,
-                            theme.text_muted,
+                            theme.tokens.collapse_icon_color,
                         ))
                         .into_any_element()
                 };
@@ -12877,7 +12910,7 @@ impl Workspace {
                         .gap(px(4.))
                         .rounded(px(8.))
                         .cursor_pointer()
-                        .hover(|s| s.bg(theme.bg_alt))
+                        .hover(|s| s.bg(theme.tokens.nav_item_background_hover))
                         .when(unresolved, |d| d.tooltip(tooltip("Not created yet")))
                         .on_click(cx.listener(move |this, _, _, cx| {
                             // A Links row follows the link the way the note
@@ -12912,14 +12945,18 @@ impl Workspace {
                                     div()
                                         .text_size(px(FONT_UI_SMALL))
                                         .line_height(px(17.))
+                                        // A file's title is
+                                        // `--nav-item-color-active` (probe of
+                                        // 2026-11-02, `pane.backlinks.file-title`);
+                                        // a links row is an ordinary nav item.
                                         .text_color(if flat {
-                                            theme.text_muted
+                                            theme.tokens.nav_item_color
                                         } else {
-                                            theme.text
+                                            theme.tokens.nav_item_color_active
                                         })
                                         .when(flat, |d| {
                                             d.group_hover("pane-group", |s| {
-                                                s.text_color(theme.text)
+                                                s.text_color(theme.tokens.nav_item_color_hover)
                                             })
                                         })
                                         .whitespace_nowrap()
@@ -12931,7 +12968,7 @@ impl Workspace {
                                     div()
                                         .text_size(px(11.))
                                         .line_height(px(14.))
-                                        .text_color(theme.text_faint)
+                                        .text_color(theme.tokens.text_faint)
                                         .whitespace_nowrap()
                                         .overflow_hidden()
                                         .text_ellipsis()
@@ -12943,7 +12980,7 @@ impl Workspace {
                                 .flex_shrink_0()
                                 .pt(px(2.))
                                 .text_size(px(FONT_UI_SMALLER))
-                                .text_color(theme.text_faint)
+                                .text_color(theme.tokens.text_faint)
                                 .child(count)
                         })),
                 );
@@ -12973,7 +13010,8 @@ impl Workspace {
             .flex()
             .flex_col()
             .rounded(px(4.))
-            .bg(theme.bg)
+            // `.search-result-file-matches`: `--search-result-background`.
+            .bg(theme.tokens.search_result_background)
     }
 
     /// One match in a file's card: its context with the matched text
@@ -13003,8 +13041,8 @@ impl Workspace {
                 (
                     r.clone(),
                     HighlightStyle {
-                        background_color: Some(theme.highlight_bg),
-                        color: Some(theme.text),
+                        background_color: Some(theme.tokens.highlight_background),
+                        color: Some(theme.tokens.text_normal),
                         ..HighlightStyle::default()
                     },
                 )
@@ -13040,7 +13078,7 @@ impl Workspace {
                         .px(px(6.))
                         .py(px(4.))
                         .rounded(px(4.))
-                        .bg(theme.border)
+                        .bg(theme.tokens.background_modifier_border)
                         .cursor_pointer()
                         .tooltip(tooltip("Link this file"))
                         .on_click(cx.listener(move |this, _, window, cx| {
@@ -13053,11 +13091,11 @@ impl Workspace {
                             );
                             cx.stop_propagation();
                         }))
-                        .child(icon("link", 14., theme.text_faint))
+                        .child(icon("link", 14., theme.tokens.text_faint))
                         .child(
                             div()
                                 .text_size(px(FONT_UI_SMALLER))
-                                .text_color(theme.text_muted)
+                                .text_color(theme.tokens.text_muted)
                                 .child(name),
                         ),
                 )
@@ -13071,9 +13109,9 @@ impl Workspace {
                 .px(px(8.))
                 .py(px(4.))
                 .rounded(px(5.))
-                .bg(theme.border)
+                .bg(theme.tokens.background_modifier_border)
                 .text_size(px(FONT_UI_SMALLER))
-                .text_color(theme.text)
+                .text_color(theme.tokens.text_normal)
                 .cursor_pointer()
                 .invisible()
                 .group_hover("pane-match", |s| s.visible())
@@ -13083,8 +13121,9 @@ impl Workspace {
                 }))
                 .child("Link")
         });
-        let mut hover = theme.accent;
-        hover.a = 0.33;
+        // A hovered match: `--text-selection` (probe of 2026-11-02,
+        // `pane.search.match.hover`).
+        let hover = theme.tokens.text_selection;
         div()
             .id(("pane-match", ix))
             .group("pane-match")
@@ -13119,7 +13158,7 @@ impl Workspace {
             .child(
                 div()
                     .text_size(px(FONT_UI_SMALLER))
-                    .text_color(theme.text_muted)
+                    .text_color(theme.tokens.text_muted)
                     .line_height(relative(1.3))
                     .child(text),
             )
@@ -13390,7 +13429,7 @@ impl Workspace {
                         .h(px(30.))
                         .flex()
                         .items_center()
-                        .child(icon("search", 14., theme.text_muted)),
+                        .child(icon("search", 14., theme.tokens.text_muted)),
                 )
                 .children(has_text.then(|| {
                     div()
@@ -13409,7 +13448,7 @@ impl Workspace {
                         .on_click(cx.listener(move |this, _, window, cx| {
                             this.clear_pane_filter(which, window, cx)
                         }))
-                        .child(icon("x", 14., theme.text_muted))
+                        .child(icon("x", 14., theme.tokens.text_muted))
                 })),
         )
     }
@@ -13448,13 +13487,13 @@ impl Workspace {
                 .flex_col()
                 .min_w(px(196.))
                 .py_1()
-                .bg(theme.bg_secondary)
+                .bg(theme.tokens.background_secondary)
                 .border_1()
-                .border_color(theme.border)
+                .border_color(theme.tokens.background_modifier_border)
                 .rounded_md()
                 .shadow_lg()
                 .text_size(px(13.))
-                .text_color(theme.text),
+                .text_color(theme.tokens.text_normal),
             &focus,
             cx,
             move |this, cx| {
@@ -13467,7 +13506,12 @@ impl Workspace {
         );
         for (ix, order) in PaneSort::ALL.into_iter().enumerate() {
             if ix == 2 {
-                list = list.child(div().my_1().h(px(1.)).bg(theme.border));
+                list = list.child(
+                    div()
+                        .my_1()
+                        .h(px(1.))
+                        .bg(theme.tokens.background_modifier_border),
+                );
             }
             let checked = order == current;
             list = list.child(
@@ -13480,7 +13524,7 @@ impl Workspace {
                     .gap_2()
                     .px_3()
                     .cursor_pointer()
-                    .hover(|s| s.bg(theme.bg_alt))
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .on_click(
                         cx.listener(move |this, _, _, cx| this.set_pane_sort(which, order, cx)),
                     )
@@ -13490,7 +13534,7 @@ impl Workspace {
                             .flex_shrink_0()
                             .flex()
                             .items_center()
-                            .children(checked.then(|| icon("check", 14., theme.text_muted))),
+                            .children(checked.then(|| icon("check", 14., theme.tokens.text_muted))),
                     )
                     .child(SharedString::from(order.label(noun))),
             );
@@ -13549,8 +13593,10 @@ impl Workspace {
                     }))
                     .child(
                         div()
-                            .text_color(theme.text_faint)
-                            .group_hover("tree-row", |s| s.text_color(theme.text_muted))
+                            .text_color(theme.tokens.collapse_icon_color)
+                            .group_hover("tree-row", |s| {
+                                s.text_color(theme.tokens.icon_color_hover)
+                            })
                             .child(icon(
                                 if collapsed {
                                     "chevron-right"
@@ -13558,7 +13604,7 @@ impl Workspace {
                                     "chevron-down"
                                 },
                                 10.,
-                                theme.text_faint,
+                                theme.tokens.collapse_icon_color,
                             )),
                     ),
             ),
@@ -13573,8 +13619,8 @@ impl Workspace {
                     .flex()
                     .items_center()
                     .justify_center()
-                    .opacity(0.85)
-                    .child(icon(name, 14., theme.text_muted)),
+                    .opacity(theme.tokens.icon_opacity)
+                    .child(icon(name, 14., theme.tokens.icon_color)),
             ),
             (None, None) => None,
         };
@@ -13594,8 +13640,10 @@ impl Workspace {
             .items_start()
             .rounded(px(8.))
             .cursor_pointer()
-            .when(active, |d| d.bg(theme.bg_alt))
-            .hover(|s| s.bg(theme.bg_alt))
+            // A `tree-item-self`: the nav item's colours (probe of
+            // 2026-11-02, `pane.tags.*`, `pane.outline.*`).
+            .when(active, |d| d.bg(theme.tokens.nav_item_background_active))
+            .hover(|s| s.bg(theme.tokens.nav_item_background_hover))
             // Obsidian's `tree-item-children` guides: a hairline 12 px in
             // from each ancestor's text, the row's full pitch tall.
             .children((1..=depth).map(|k| {
@@ -13605,7 +13653,7 @@ impl Workspace {
                     .top(px(0.))
                     .bottom(px(-2.))
                     .w(px(1.))
-                    .bg(theme.border)
+                    .bg(theme.tokens.nav_indentation_guide_color)
             }))
             .children(gutter)
             .child(
@@ -13614,8 +13662,14 @@ impl Workspace {
                     .min_w_0()
                     .text_size(px(FONT_UI_SMALL))
                     .line_height(px(17.))
-                    .text_color(if active { theme.text } else { theme.text_muted })
-                    .group_hover("tree-row", |s| s.text_color(theme.text))
+                    .text_color(if active {
+                        theme.tokens.nav_item_color_active
+                    } else {
+                        theme.tokens.nav_item_color
+                    })
+                    .group_hover("tree-row", |s| {
+                        s.text_color(theme.tokens.nav_item_color_hover)
+                    })
                     .child(label),
             )
             .children(flair.map(|count| {
@@ -13625,8 +13679,8 @@ impl Workspace {
                     .pt(px(3.))
                     .text_size(px(FONT_UI_SMALLER))
                     .line_height(px(12.))
-                    .text_color(theme.text_faint)
-                    .group_hover("tree-row", |s| s.text_color(theme.text_muted))
+                    .text_color(theme.tokens.text_faint)
+                    .group_hover("tree-row", |s| s.text_color(theme.tokens.text_muted))
                     .child(count)
             }))
     }
@@ -14061,7 +14115,7 @@ impl Workspace {
                         .px(px(16.))
                         .py(px(24.))
                         .text_size(px(FONT_UI_SMALL))
-                        .text_color(theme.text_faint)
+                        .text_color(theme.tokens.text_faint)
                         .text_center()
                         .child("No headings found."),
                 )
@@ -14102,7 +14156,7 @@ impl Workspace {
                         (
                             r.clone(),
                             HighlightStyle {
-                                color: Some(theme.accent),
+                                color: Some(theme.tokens.interactive_accent),
                                 ..HighlightStyle::default()
                             },
                         )
@@ -15016,7 +15070,7 @@ fn leaf_icon(path: &str) -> &'static str {
 /// outline hairline stops where the curve begins.
 fn tab_foot(left: bool, theme: &Theme) -> impl IntoElement {
     let r = px(TAB_CURVE);
-    let color = theme.bg;
+    let color = theme.tokens.background_primary;
     canvas(
         |_, _, _| (),
         move |bounds, _, window, _| {
@@ -15308,7 +15362,7 @@ impl Render for Workspace {
         let main_body: gpui::AnyElement = if let Some(loading) = &self.loading {
             div()
                 .p_4()
-                .text_color(theme.text_muted)
+                .text_color(theme.tokens.text_muted)
                 .child(loading.clone())
                 .into_any_element()
         } else {
@@ -15535,11 +15589,11 @@ impl Render for Workspace {
                         .px_3()
                         .py_1()
                         .rounded_md()
-                        .bg(theme.bg_secondary)
+                        .bg(theme.tokens.background_secondary)
                         .border_1()
-                        .border_color(theme.border)
+                        .border_color(theme.tokens.background_modifier_border)
                         .text_size(px(12.))
-                        .text_color(theme.text)
+                        .text_color(theme.tokens.text_normal)
                         .child(notice.text.clone())
                 }))
         });
@@ -15571,14 +15625,14 @@ impl Render for Workspace {
             .flex()
             .flex_col()
             .size_full()
-            .bg(theme.bg)
+            .bg(theme.tokens.background_primary)
             // This box paints the whole content square, over the frame's
             // rounding and under its children's; a corner left square here
-            // is a notch of `theme.bg` outside every rounded child.
+            // is a notch of `theme.tokens.background_primary` outside every rounded child.
             .map(|d| corners.apply(d))
             .font_family(theme.ui_font.clone())
             .text_size(px(crate::theme::FONT_UI_MEDIUM))
-            .text_color(theme.text)
+            .text_color(theme.tokens.text_normal)
             .child(
                 div()
                     .flex()

@@ -4610,7 +4610,7 @@ impl Render for Editor {
             .font_family(theme.text_font.clone())
             .text_size(px(base))
             .line_height(px(base * 1.5))
-            .text_color(theme.text)
+            .text_color(theme.tokens.text_normal)
             .on_action(cx.listener(Self::move_left))
             .on_action(cx.listener(Self::move_right))
             .on_action(cx.listener(Self::move_up))
@@ -4688,18 +4688,19 @@ impl Editor {
                 .rounded_sm()
                 .cursor_pointer()
                 .text_size(px(12.))
-                .text_color(theme.text)
-                .bg(theme.bg_alt)
-                .hover(|s| s.bg(theme.bg_active))
+                .text_color(theme.tokens.text_normal)
+                .bg(theme.tokens.background_modifier_hover)
+                .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                 .child(label)
         };
         // A toggle shows its state with the accent color.
         let toggle = |id: &'static str, label: &'static str, on: bool, theme: &Theme| {
             let mut b = button(id, label, theme).border_1();
             b = if on {
-                b.border_color(theme.accent).text_color(theme.accent)
+                b.border_color(theme.tokens.interactive_accent)
+                    .text_color(theme.tokens.interactive_accent)
             } else {
-                b.border_color(theme.bg_alt)
+                b.border_color(theme.tokens.background_modifier_hover)
             };
             b
         };
@@ -4733,7 +4734,7 @@ impl Editor {
                     div()
                         .min_w(px(70.))
                         .text_size(px(11.))
-                        .text_color(theme.text_muted)
+                        .text_color(theme.tokens.text_muted)
                         .child(status),
                 )
                 .child(
@@ -4782,9 +4783,9 @@ impl Editor {
             .gap_1()
             .p_2()
             .rounded_md()
-            .bg(theme.bg_secondary)
+            .bg(theme.tokens.background_secondary)
             .border_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.background_modifier_border)
             .font_family(theme.ui_font.clone())
             .on_action(cx.listener(Self::find_previous))
             .on_action(cx.listener(Self::find_next))
@@ -5309,13 +5310,17 @@ impl Element for EditorElement {
                                     // the button sits over its *New* button
                                     // (observed: 948..976 over New's 919..980).
                                     // The ground is this build's reading.
-                                    .bg(theme.bg)
-                                    .hover(|s| s.bg(theme.bg_alt))
+                                    .bg(theme.tokens.background_primary)
+                                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                                     // Over the toolbar's New: a press on the
                                     // button must not reach the button under it.
                                     .occlude()
                                     .tooltip(crate::canvas::menu::tooltip("Edit this block"))
-                                    .child(crate::assets::icon("code-xml", 16., theme.text_muted))
+                                    .child(crate::assets::icon(
+                                        "code-xml",
+                                        16.,
+                                        theme.tokens.text_muted,
+                                    ))
                                     .on_click(move |_, _, cx| {
                                         entity.update(cx, |e, cx| e.edit_block(first, cx));
                                     }),
@@ -5412,7 +5417,7 @@ impl Element for EditorElement {
                             .text_size(px(theme.base_font_size * 0.8))
                             .text_color(palette.muted)
                             .cursor(CursorStyle::Arrow)
-                            .hover(|s| s.bg(theme.bg_secondary))
+                            .hover(|s| s.bg(theme.tokens.background_secondary))
                             // The editor's own window listener runs ahead
                             // of this element and would put the caret on
                             // the fence line; Obsidian's flair leaves the

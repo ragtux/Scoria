@@ -525,7 +525,7 @@ impl BasesView {
             .h(px(HEADER_HEIGHT))
             .px(px(2.))
             .border_b_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.background_modifier_border)
             .child(bar);
         let search_row = self.render_search_row(theme, cx);
         let panel = self.render_panel(&base, &view, theme, window, cx);
@@ -545,9 +545,9 @@ impl BasesView {
     /// One `text-icon-button` of the bar.
     fn render_bar_item(&self, item: BarItem, theme: &Theme, cx: &mut Context<Self>) -> AnyElement {
         let color = if item.active || item.open {
-            theme.accent
+            theme.tokens.interactive_accent
         } else {
-            theme.text_muted
+            theme.tokens.text_muted
         };
         let id = item.id;
         let anchor = item.panel.map(|p| key("bases-toolbar-button", p as usize));
@@ -566,8 +566,8 @@ impl BasesView {
             .cursor_pointer()
             .text_size(px(FONT_UI_SMALL))
             .text_color(color)
-            .when(item.open, |d| d.bg(theme.bg_alt))
-            .hover(|s| s.bg(theme.bg_alt))
+            .when(item.open, |d| d.bg(theme.tokens.background_modifier_hover))
+            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
             .children(anchor.map(|k| self.measure(k)))
             .on_click(cx.listener(move |this, event: &ClickEvent, window, cx| {
                 cx.stop_propagation();
@@ -997,7 +997,7 @@ impl BasesView {
                 .px(px(8.))
                 .py(px(4.))
                 .border_b_1()
-                .border_color(theme.border)
+                .border_color(theme.tokens.background_modifier_border)
                 .child(div().flex_1().child(self.text_box(
                     Field::TableSearch,
                     &text,
@@ -1009,7 +1009,7 @@ impl BasesView {
                     div()
                         .flex_shrink_0()
                         .text_size(px(FONT_UI_SMALL))
-                        .text_color(theme.text_muted)
+                        .text_color(theme.tokens.text_muted)
                         .child(SharedString::from(format!("Showing {showing}"))),
                 )
                 .into_any_element(),
@@ -1267,13 +1267,13 @@ impl BasesView {
             .w(px(width))
             .max_h(tallest)
             .overflow_y_scroll()
-            .bg(theme.bg_secondary)
+            .bg(theme.tokens.background_secondary)
             .border_1()
-            .border_color(theme.tab_divider)
+            .border_color(theme.tokens.tab_divider_color)
             .rounded(px(8.))
             .shadow_lg()
             .text_size(px(FONT_UI_SMALL))
-            .text_color(theme.text)
+            .text_color(theme.tokens.text_normal)
             .occlude()
             .on_mouse_down_out(cx.listener(|this, event: &MouseDownEvent, window, cx| {
                 this.press_out(event.position, window, cx)
@@ -1312,12 +1312,12 @@ impl BasesView {
             .mt(px(4.))
             .pb(px(2.))
             .border_b_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.background_modifier_border)
             .child(self.text_box(which, &text, placeholder, theme, cx))
             .child(div().absolute().left(px(8.)).top(px(6.)).child(icon(
                 "search",
                 ICON_SIZE,
-                theme.text_muted,
+                theme.tokens.text_muted,
             )))
             .into_any_element()
     }
@@ -1363,15 +1363,15 @@ impl BasesView {
             .flex()
             .items_center()
             .rounded_md()
-            .bg(theme.bg_alt)
+            .bg(theme.tokens.background_modifier_hover)
             .border_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.background_modifier_border)
             .cursor_text()
             .text_size(px(FONT_UI_SMALL))
             .text_color(if text.is_empty() {
-                theme.text_faint
+                theme.tokens.text_faint
             } else {
-                theme.text
+                theme.tokens.text_normal
             })
             .whitespace_nowrap()
             .overflow_hidden()
@@ -1413,12 +1413,12 @@ impl BasesView {
                     .rounded(px(4.))
                     .cursor_pointer()
                     .font_weight(gpui::FontWeight::MEDIUM)
-                    .hover(|s| s.bg(theme.bg_alt))
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .on_click(cx.listener(|this, _, window, cx| {
                         cx.stop_propagation();
                         this.page_back(window, cx);
                     }))
-                    .child(icon("chevron-left", ICON_SIZE, theme.text))
+                    .child(icon("chevron-left", ICON_SIZE, theme.tokens.text_normal))
                     .child(
                         div()
                             .whitespace_nowrap()
@@ -1439,15 +1439,21 @@ impl BasesView {
                         .justify_center()
                         .rounded(px(4.))
                         .cursor_pointer()
-                        .when(self.toolbar.header_menu, |d| d.bg(theme.bg_alt))
-                        .hover(|s| s.bg(theme.bg_alt))
+                        .when(self.toolbar.header_menu, |d| {
+                            d.bg(theme.tokens.background_modifier_hover)
+                        })
+                        .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                         .child(self.measure(key("bases-page-menu", 0)))
                         .on_click(cx.listener(|this, _, _, cx| {
                             cx.stop_propagation();
                             this.toolbar.header_menu = !this.toolbar.header_menu;
                             cx.notify();
                         }))
-                        .child(icon("ellipsis-vertical", ICON_SIZE, theme.text_muted)),
+                        .child(icon(
+                            "ellipsis-vertical",
+                            ICON_SIZE,
+                            theme.tokens.text_muted,
+                        )),
                 )
             })
             .child(
@@ -1460,12 +1466,12 @@ impl BasesView {
                     .justify_center()
                     .rounded(px(4.))
                     .cursor_pointer()
-                    .hover(|s| s.bg(theme.bg_alt))
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .on_click(cx.listener(|this, _, window, cx| {
                         cx.stop_propagation();
                         this.close_panel(window, cx);
                     }))
-                    .child(icon("x", ICON_SIZE, theme.text_muted)),
+                    .child(icon("x", ICON_SIZE, theme.tokens.text_muted)),
             )
             .into_any_element()
     }
@@ -1511,7 +1517,7 @@ impl BasesView {
                     .py(px(4.))
                     .gap(px(2.))
                     .text_size(px(FONT_UI_SMALL))
-                    .text_color(theme.text)
+                    .text_color(theme.tokens.text_normal)
                     .child(SharedString::from(label))
             }))
             .child(div().w_full().child(control))
@@ -1540,7 +1546,10 @@ impl BasesView {
             .flex_col()
             .w_full()
             .p(px(6.))
-            .when(bordered, |d| d.border_t_1().border_color(theme.border))
+            .when(bordered, |d| {
+                d.border_t_1()
+                    .border_color(theme.tokens.background_modifier_border)
+            })
             .children(rows)
             .into_any_element()
     }
@@ -1566,7 +1575,7 @@ impl BasesView {
             .py(px(8.))
             .gap(px(4.))
             .text_size(px(FONT_UI_SMALL))
-            .text_color(theme.text)
+            .text_color(theme.tokens.text_normal)
             .font_weight(gpui::FontWeight::MEDIUM);
         if let Some((collapsed, section)) = fold {
             row = row
@@ -1583,7 +1592,7 @@ impl BasesView {
                         "chevron-down"
                     },
                     14.,
-                    theme.text_muted,
+                    theme.tokens.text_muted,
                 ));
         }
         row = row.child(SharedString::from(title));
@@ -1594,9 +1603,9 @@ impl BasesView {
                     .px(px(4.))
                     .py(px(2.))
                     .rounded(px(4.))
-                    .bg(theme.bg_alt)
+                    .bg(theme.tokens.background_modifier_hover)
                     .text_size(px(10.))
-                    .text_color(theme.text_muted)
+                    .text_color(theme.tokens.text_muted)
                     .font_weight(gpui::FontWeight::MEDIUM)
                     .child(SharedString::from(n.to_string())),
             );
@@ -1618,14 +1627,14 @@ impl BasesView {
         on_click: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static,
     ) -> AnyElement {
         let color = if enabled {
-            theme.text
+            theme.tokens.text_normal
         } else {
-            theme.text_faint
+            theme.tokens.text_faint
         };
         let icon_color = if enabled {
-            theme.text_muted
+            theme.tokens.text_muted
         } else {
-            theme.text_faint
+            theme.tokens.text_faint
         };
         div()
             .id((prefix, ix))
@@ -1642,7 +1651,8 @@ impl BasesView {
             .rounded(px(4.))
             .text_color(color)
             .when(enabled, |d| {
-                d.cursor_pointer().hover(|s| s.bg(theme.bg_alt))
+                d.cursor_pointer()
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
             })
             .when(enabled, |d| d.on_click(on_click))
             .child(icon(icon_name, ICON_SIZE, icon_color))
@@ -1670,7 +1680,7 @@ impl BasesView {
             .justify_center()
             .rounded(px(4.))
             .cursor_pointer()
-            .hover(|s| s.bg(theme.bg_alt))
+            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
             .on_click(on_click)
             .child(icon(icon_name, ICON_SIZE, color))
             .into_any_element()
@@ -1701,7 +1711,7 @@ impl BasesView {
                     cx.notify();
                 }),
             )
-            .child(icon("grip-vertical", ICON_SIZE, theme.text_faint))
+            .child(icon("grip-vertical", ICON_SIZE, theme.tokens.text_faint))
             .into_any_element()
     }
 
@@ -1764,12 +1774,13 @@ impl BasesView {
             .rounded(px(4.))
             .border_1()
             .border_color(if checked {
-                theme.accent
+                theme.tokens.interactive_accent
             } else {
-                theme.border_focus
+                theme.tokens.background_modifier_border_focus
             })
             .when(checked, |d| {
-                d.bg(theme.accent).child(icon("check", 12., gpui::white()))
+                d.bg(theme.tokens.interactive_accent)
+                    .child(icon("check", 12., gpui::white()))
             })
     }
 
@@ -1811,7 +1822,7 @@ impl BasesView {
                     .flex_shrink_0()
                     .min_w(px(28.))
                     .text_size(px(FONT_UI_SMALL))
-                    .text_color(theme.text)
+                    .text_color(theme.tokens.text_normal)
                     .child(SharedString::from(format!("{snapped:.decimals$}"))),
             )
             .child(
@@ -1856,7 +1867,7 @@ impl BasesView {
                             .top(px(6.))
                             .h(px(4.))
                             .rounded(px(2.))
-                            .bg(theme.border_focus),
+                            .bg(theme.tokens.background_modifier_border_focus),
                     )
                     .child(
                         div()
@@ -1866,7 +1877,7 @@ impl BasesView {
                             .h(px(4.))
                             .w(gpui::relative(fraction))
                             .rounded(px(2.))
-                            .bg(theme.accent),
+                            .bg(theme.tokens.interactive_accent),
                     )
                     .child(
                         div()
@@ -1928,9 +1939,9 @@ impl BasesView {
         let searchable = spec.searchable;
         let k = key("bases-combo", hash_key(spec.name, spec.ix));
         let label_color = if spec.shown.is_some() {
-            theme.text
+            theme.tokens.text_normal
         } else {
-            theme.text_faint
+            theme.tokens.text_faint
         };
         let mut trigger = div()
             .id(("bases-combobox", hash_key(spec.name, spec.ix)))
@@ -1958,17 +1969,17 @@ impl BasesView {
                 }
             }));
         if spec.flat {
-            trigger = trigger.when(open, |d| d.bg(theme.bg_alt));
+            trigger = trigger.when(open, |d| d.bg(theme.tokens.background_modifier_hover));
         } else {
             trigger = trigger
                 .w_full()
                 .rounded(px(5.))
-                .bg(theme.bg_active)
+                .bg(theme.tokens.background_modifier_hover)
                 .border_1()
-                .border_color(theme.border);
+                .border_color(theme.tokens.background_modifier_border);
         }
         if let Some(name) = spec.icon {
-            trigger = trigger.child(icon(name, ICON_SIZE, theme.text_muted));
+            trigger = trigger.child(icon(name, ICON_SIZE, theme.tokens.text_muted));
         }
         trigger = trigger.child(
             div()
@@ -1993,10 +2004,10 @@ impl BasesView {
                         cx.stop_propagation();
                         this.combo_clear(name, ix, window, cx);
                     }))
-                    .child(icon("x", 14., theme.text_muted)),
+                    .child(icon("x", 14., theme.tokens.text_muted)),
             );
         }
-        trigger = trigger.child(icon("chevrons-up-down", 14., theme.text_muted));
+        trigger = trigger.child(icon("chevrons-up-down", 14., theme.tokens.text_muted));
         let mut wrap = div()
             .relative()
             .min_w(px(0.))
@@ -2046,13 +2057,13 @@ impl BasesView {
             .flex_col()
             .w(px(COMBO_WIDTH))
             .max_h(px(300.))
-            .bg(theme.bg_secondary)
+            .bg(theme.tokens.background_secondary)
             .border_1()
-            .border_color(theme.tab_divider)
+            .border_color(theme.tokens.tab_divider_color)
             .rounded(px(8.))
             .shadow_lg()
             .text_size(px(FONT_UI_SMALL))
-            .text_color(theme.text)
+            .text_color(theme.tokens.text_normal)
             .occlude()
             .child(self.measure(list_key));
         if spec.searchable {
@@ -2083,13 +2094,19 @@ impl BasesView {
                     .gap(px(8.))
                     .rounded(px(4.))
                     .cursor_pointer()
-                    .when(is_selected, |d| d.bg(theme.bg_alt))
-                    .hover(|s| s.bg(theme.bg_alt))
+                    .when(is_selected, |d| {
+                        d.bg(theme.tokens.background_modifier_hover)
+                    })
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .on_click(cx.listener(move |this, _, window, cx| {
                         cx.stop_propagation();
                         this.combo_pick(name, ix, opt, window, cx);
                     }))
-                    .children(option.icon.map(|n| icon(n, ICON_SIZE, theme.text_muted)))
+                    .children(
+                        option
+                            .icon
+                            .map(|n| icon(n, ICON_SIZE, theme.tokens.text_muted)),
+                    )
                     .child(
                         div()
                             .flex_1()
@@ -2103,10 +2120,12 @@ impl BasesView {
                         div()
                             .flex_shrink_0()
                             .text_size(px(FONT_UI_SMALLER))
-                            .text_color(theme.text_faint)
+                            .text_color(theme.tokens.text_faint)
                             .child(aux)
                     }))
-                    .when(is_pick, |d| d.child(icon("check", 14., theme.text_muted)))
+                    .when(is_pick, |d| {
+                        d.child(icon("check", 14., theme.tokens.text_muted))
+                    })
                     .into_any_element()
             })
             .collect();

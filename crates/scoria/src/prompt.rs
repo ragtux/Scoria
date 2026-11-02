@@ -207,7 +207,6 @@ impl Prompt {
                         (
                             r.clone(),
                             HighlightStyle {
-                                color: Some(theme.accent),
                                 font_weight: Some(FontWeight::BOLD),
                                 ..HighlightStyle::default()
                             },
@@ -225,8 +224,8 @@ impl Prompt {
                         .rounded_sm()
                         .cursor_pointer()
                         .text_size(px(13.))
-                        .when(selected, |d| d.bg(theme.bg_active))
-                        .hover(|s| s.bg(theme.bg_alt))
+                        .when(selected, |d| d.bg(theme.tokens.background_modifier_hover))
+                        .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                         .on_click(cx.listener(move |this, _, _, cx| {
                             this.selected = ix;
                             this.submit(cx);
@@ -264,11 +263,18 @@ impl Render for Prompt {
                 .rounded_md()
                 .cursor_pointer()
                 .text_size(px(13.))
-                .when(primary, |d| d.bg(theme.accent).text_color(gpui::white()))
+                // `button.mod-cta`: `--text-on-accent` on `--interactive-accent`;
+                // a plain button `--text-normal` on `--interactive-normal`,
+                // `--interactive-hover` under the pointer.
+                .when(primary, |d| {
+                    d.bg(theme.tokens.interactive_accent)
+                        .text_color(theme.tokens.text_on_accent)
+                        .hover(|s| s.bg(theme.tokens.interactive_accent_hover))
+                })
                 .when(!primary, |d| {
-                    d.bg(theme.bg_alt)
-                        .text_color(theme.text)
-                        .hover(|s| s.bg(theme.bg_active))
+                    d.bg(theme.tokens.interactive_normal)
+                        .text_color(theme.tokens.text_normal)
+                        .hover(|s| s.bg(theme.tokens.interactive_hover))
                 })
                 .child(label)
         };
@@ -288,9 +294,9 @@ impl Render for Prompt {
             .flex()
             .flex_col()
             .gap_2()
-            .bg(theme.bg_secondary)
+            .bg(theme.tokens.prompt_background)
             .border_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.prompt_border_color)
             .rounded_lg()
             .shadow_lg()
             .p_4()
@@ -299,13 +305,13 @@ impl Render for Prompt {
                 div()
                     .text_size(px(15.))
                     .font_weight(FontWeight::SEMIBOLD)
-                    .text_color(theme.text)
+                    .text_color(theme.tokens.text_normal)
                     .child(self.spec.title.clone()),
             )
             .children(self.spec.detail.clone().map(|d| {
                 div()
                     .text_size(px(13.))
-                    .text_color(theme.text_muted)
+                    .text_color(theme.tokens.text_muted)
                     .child(d)
             }))
             .when(self.spec.input.is_some(), |d| d.child(self.input.clone()))
@@ -319,7 +325,7 @@ impl Render for Prompt {
             .children(self.error.clone().map(|e| {
                 div()
                     .text_size(px(12.))
-                    .text_color(gpui::hsla(0., 0.7, 0.6, 1.))
+                    .text_color(theme.tokens.text_error)
                     .child(e)
             }))
             .child(

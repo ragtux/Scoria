@@ -123,10 +123,10 @@ impl gpui::Render for CardMove {
             .py(px(4.))
             .rounded_md()
             .border_1()
-            .border_color(theme.border)
-            .bg(theme.bg)
+            .border_color(theme.tokens.background_modifier_border)
+            .bg(theme.tokens.background_primary)
             .text_size(px(FONT_UI_SMALL))
-            .text_color(theme.text)
+            .text_color(theme.tokens.text_normal)
             .child(SharedString::from(self.title.clone()))
     }
 }
@@ -452,18 +452,23 @@ impl BasesView {
             .flex_col()
             .min_w(px(134.))
             .py(px(6.))
-            .bg(theme.bg_secondary)
+            .bg(theme.tokens.background_secondary)
             .border_1()
-            .border_color(theme.tab_divider)
+            .border_color(theme.tokens.tab_divider_color)
             .rounded(px(8.))
             .shadow_lg()
             .text_size(px(FONT_UI_SMALL))
-            .text_color(theme.text)
+            .text_color(theme.tokens.text_normal)
             .occlude()
             .on_mouse_down_out(cx.listener(|this, _, _, cx| this.close_kanban_menu(cx)));
         for (ix, (id, label, icon_name)) in rows.into_iter().enumerate() {
             if ix == 1 {
-                list = list.child(div().my(px(6.)).h(px(1.)).bg(theme.border));
+                list = list.child(
+                    div()
+                        .my(px(6.))
+                        .h(px(1.))
+                        .bg(theme.tokens.background_modifier_border),
+                );
             }
             list = list.child(
                 div()
@@ -477,9 +482,9 @@ impl BasesView {
                     .px(px(8.))
                     .rounded(px(4.))
                     .cursor_pointer()
-                    .hover(|s| s.bg(theme.bg_alt))
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .on_click(cx.listener(move |this, _, _, cx| this.kanban_menu_pick(id, cx)))
-                    .child(icon(icon_name, 16., theme.text_muted))
+                    .child(icon(icon_name, 16., theme.tokens.text_muted))
                     .child(SharedString::from(label)),
             );
         }
@@ -598,7 +603,7 @@ impl BasesView {
                     .w(px(width))
                     .h_full()
                     .rounded(px(8.))
-                    .bg(theme.bg_secondary)
+                    .bg(theme.tokens.background_secondary)
                     .when(dragging_column == Some(g), |d| d.opacity(0.4))
                     .child(self.render_column_header(
                         g,
@@ -635,10 +640,10 @@ impl BasesView {
                             .gap(px(6.))
                             .cursor_pointer()
                             .text_size(px(FONT_UI_SMALL))
-                            .text_color(theme.text_muted)
-                            .hover(|s| s.text_color(theme.text))
+                            .text_color(theme.tokens.text_muted)
+                            .hover(|s| s.text_color(theme.tokens.text_normal))
                             .on_click(cx.listener(move |this, _, _, cx| this.add_item_in(g, cx)))
-                            .child(icon("plus", ICON_SIZE, theme.text_muted))
+                            .child(icon("plus", ICON_SIZE, theme.tokens.text_muted))
                             .child(SharedString::from("New")),
                     )
                     .into_any_element()
@@ -713,7 +718,7 @@ impl BasesView {
                         .bottom(px(COLUMN_PAD))
                         .left(px(x))
                         .w(px(2.))
-                        .bg(theme.accent),
+                        .bg(theme.tokens.interactive_accent),
                 )
             })
             .into_any_element()];
@@ -759,7 +764,7 @@ impl BasesView {
                 div()
                     .flex_shrink_0()
                     .text_size(px(FONT_UI_SMALLER))
-                    .text_color(theme.text_muted)
+                    .text_color(theme.tokens.text_muted)
                     .child(SharedString::from(property))
             }))
             .children(title.map(|title| {
@@ -769,14 +774,14 @@ impl BasesView {
                     .overflow_hidden()
                     .text_ellipsis()
                     .text_size(px(FONT_UI_SMALL))
-                    .text_color(theme.text)
+                    .text_color(theme.tokens.text_normal)
                     .child(SharedString::from(title))
             }))
             .child(
                 div()
                     .flex_shrink_0()
                     .text_size(px(FONT_UI_SMALLER))
-                    .text_color(theme.text_faint)
+                    .text_color(theme.tokens.text_faint)
                     .child(SharedString::from(rows.to_string())),
             )
             .child(div().flex_1())
@@ -792,14 +797,14 @@ impl BasesView {
                     .cursor_pointer()
                     .opacity(0.)
                     .group_hover("bases-kanban-header", |s| s.opacity(0.85))
-                    .hover(|s| s.bg(theme.bg_alt))
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .tooltip(crate::canvas::menu::tooltip("Create new note"))
                     .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
                     .on_click(cx.listener(move |this, _, _, cx| {
                         cx.stop_propagation();
                         this.add_item_in(g, cx)
                     }))
-                    .child(icon("plus", ICON_SIZE, theme.text_muted)),
+                    .child(icon("plus", ICON_SIZE, theme.tokens.text_muted)),
             )
             .into_any_element()
     }
@@ -850,8 +855,8 @@ impl BasesView {
                     .rounded_md()
                     .border_1()
                     .border_dashed()
-                    .border_color(theme.accent)
-                    .bg(theme.bg_alt),
+                    .border_color(theme.tokens.interactive_accent)
+                    .bg(theme.tokens.background_modifier_hover),
             )
             .into_any_element()
     }
@@ -903,11 +908,11 @@ impl BasesView {
             .overflow_hidden()
             .rounded(px(8.))
             .border_1()
-            .border_color(theme.border)
-            .bg(theme.bg)
+            .border_color(theme.tokens.background_modifier_border)
+            .bg(theme.tokens.background_primary)
             .cursor_pointer()
             .when(faint, |d| d.opacity(0.4))
-            .hover(|s| s.bg(theme.bg_alt).shadow_md())
+            .hover(|s| s.bg(theme.tokens.background_modifier_hover).shadow_md())
             .on_click(cx.listener(move |this, _, _, cx| this.open(path.clone(), cx)))
             // A press-and-move drags the card (`is-being-dragged`); the
             // source stays, faint, until the drop.
@@ -950,9 +955,9 @@ impl BasesView {
                         .overflow_hidden()
                         .text_size(px(FONT_UI_SMALL))
                         .text_color(if title_is_link {
-                            theme.link
+                            theme.tokens.link_color
                         } else {
-                            theme.text
+                            theme.tokens.text_normal
                         })
                         .on_mouse_down(
                             MouseButton::Right,
@@ -997,9 +1002,9 @@ impl BasesView {
                                         .get(c)
                                         .is_some_and(|column| renders_as_link(column, cell));
                                     line.text_color(if link {
-                                        theme.link
+                                        theme.tokens.link_color
                                     } else {
-                                        theme.text_muted
+                                        theme.tokens.text_muted
                                     })
                                     .child(
                                         div()
@@ -1044,7 +1049,7 @@ impl BasesView {
             .w_full()
             .h(px(height))
             .overflow_hidden()
-            .bg(theme.bg_secondary)
+            .bg(theme.tokens.background_secondary)
             .children(file.map(|path| {
                 img(path)
                     .size_full()

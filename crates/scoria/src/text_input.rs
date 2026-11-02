@@ -737,15 +737,18 @@ impl Render for TextInput {
             .flex()
             .items_center()
             .rounded_md()
-            .bg(theme.bg_alt)
+            // An input: `--background-modifier-form-field` inside
+            // `--background-modifier-border`, `-focus` while focused (probe
+            // of 2026-11-02, `settings.search-input`).
+            .bg(theme.tokens.background_modifier_form_field)
             .border_1()
             .border_color(if self.focus_handle.is_focused(_window) {
-                theme.accent
+                theme.tokens.background_modifier_border_focus
             } else {
-                theme.border
+                theme.tokens.background_modifier_border
             })
             .text_size(px(13.))
-            .text_color(theme.text)
+            .text_color(theme.tokens.text_normal)
             .child(
                 canvas(
                     move |bounds, window, cx| {
@@ -765,9 +768,9 @@ impl Render for TextInput {
                         };
                         let theme = cx.global::<Theme>();
                         let (shown, color) = if text.is_empty() {
-                            (placeholder.to_string(), theme.text_faint)
+                            (placeholder.to_string(), theme.tokens.text_faint)
                         } else {
-                            (text.clone(), theme.text)
+                            (text.clone(), theme.tokens.text_normal)
                         };
                         let mut run = style.to_run(shown.len());
                         run.color = color;
@@ -817,8 +820,7 @@ impl Render for TextInput {
                         window.with_content_mask(Some(gpui::ContentMask { bounds }), |window| {
                             if let Some(selection) = &prepaint.selection_x {
                                 let theme = cx.global::<Theme>();
-                                let mut color = theme.accent;
-                                color.a = if theme.dark { 0.35 } else { 0.25 };
+                                let color = theme.tokens.text_selection;
                                 window.paint_quad(fill(
                                     Bounds::from_corners(
                                         point(origin.x + selection.start, y),
@@ -837,7 +839,7 @@ impl Render for TextInput {
                             );
                             if prepaint.focused {
                                 let x = bounds.origin.x + prepaint.cursor_x - prepaint.scroll_x;
-                                let color = cx.global::<Theme>().text;
+                                let color = cx.global::<Theme>().tokens.text_normal;
                                 window.paint_quad(fill(
                                     Bounds::new(
                                         point(x, y + px(2.)),

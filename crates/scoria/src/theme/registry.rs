@@ -337,6 +337,7 @@ tokens! {
     Number nav_tag_weight = "--nav-tag-weight";
     Color collapse_icon_color = "--collapse-icon-color";
     Color collapse_icon_color_collapsed = "--collapse-icon-color-collapsed";
+    Color nav_heading_color_collapsed = "--nav-heading-color-collapsed";
     // ---- Tabs --------------------------------------------------------------
     Color tab_background_active = "--tab-background-active";
     Color tab_background_hover = "--tab-background-hover";
@@ -432,6 +433,7 @@ tokens! {
     // ---- Search ------------------------------------------------------------
     Color search_result_background = "--search-result-background";
     Color search_clear_button_color = "--search-clear-button-color";
+    Color search_icon_color = "--search-icon-color";
     // ---- Scrollbars and guides --------------------------------------------
     Color scrollbar_thumb_bg = "--scrollbar-thumb-bg";
     Color scrollbar_active_thumb_bg = "--scrollbar-active-thumb-bg";

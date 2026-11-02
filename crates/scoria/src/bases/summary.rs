@@ -305,9 +305,11 @@ impl BasesView {
                     .gap(px(8.))
                     .rounded(px(4.))
                     .cursor_pointer()
-                    .text_color(theme.text)
-                    .when(selected == Some(row) || active, |d| d.bg(theme.bg_alt))
-                    .hover(|s| s.bg(theme.bg_alt))
+                    .text_color(theme.tokens.text_normal)
+                    .when(selected == Some(row) || active, |d| {
+                        d.bg(theme.tokens.background_modifier_hover)
+                    })
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .on_click(cx.listener(move |this, _, window, cx| {
                         cx.stop_propagation();
                         this.pick_summary(name.clone(), window, cx);
@@ -315,7 +317,7 @@ impl BasesView {
                     .child(icon(
                         icon_of(&option.name, class, option.custom),
                         ICON_SIZE,
-                        theme.text_muted,
+                        theme.tokens.text_muted,
                     ))
                     .child(
                         div()
@@ -330,10 +332,10 @@ impl BasesView {
                         div()
                             .flex_shrink_0()
                             .text_size(px(FONT_UI_SMALLER))
-                            .text_color(theme.text_faint)
+                            .text_color(theme.tokens.text_faint)
                             .child(SharedString::from(value.clone())),
                     )
-                    .child(icon("chevron-right", ICON_SIZE, theme.text_faint))
+                    .child(icon("chevron-right", ICON_SIZE, theme.tokens.text_faint))
                     .into_any_element()
             })
             .collect();
@@ -363,7 +365,7 @@ impl BasesView {
             );
             actions.push(if on {
                 div()
-                    .bg(theme.bg_alt)
+                    .bg(theme.tokens.background_modifier_hover)
                     .rounded(px(4.))
                     .child(hide)
                     .into_any_element()
@@ -414,7 +416,7 @@ impl BasesView {
             .w_full()
             .h(px(SUMMARY_HEIGHT))
             .border_b_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.background_modifier_border)
             .child(self.measure(row_key))
             .children(columns.into_iter().map(|(id, c)| {
                 let width = self
@@ -443,8 +445,11 @@ impl BasesView {
                     .overflow_hidden()
                     .text_size(px(FONT_UI_SMALL))
                     .cursor_pointer()
-                    .hover(|s| s.bg(theme.bg_alt))
-                    .when(c > 0, |d| d.border_l_1().border_color(theme.border))
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                    .when(c > 0, |d| {
+                        d.border_l_1()
+                            .border_color(theme.tokens.background_modifier_border)
+                    })
                     .on_click(cx.listener(move |this, _, _, cx| {
                         let at = this.summary_row_anchor(c, group);
                         this.open_summary_page(c, group, at, cx);
@@ -466,7 +471,7 @@ impl BasesView {
                         .justify_center()
                         .opacity(0.)
                         .group_hover("bases-summary-cell", |s| s.opacity(1.))
-                        .child(icon("chevrons-up-down", 14., theme.text_faint)),
+                        .child(icon("chevrons-up-down", 14., theme.tokens.text_faint)),
                 );
                 match (set, text) {
                     (Some(name), Some(value)) => cell
@@ -475,19 +480,19 @@ impl BasesView {
                                 .flex_shrink_0()
                                 .whitespace_nowrap()
                                 .text_size(px(FONT_UI_SMALLER))
-                                .text_color(theme.text_faint)
+                                .text_color(theme.tokens.text_faint)
                                 .child(SharedString::from(name)),
                         )
                         .child(
                             div()
                                 .flex_shrink_0()
                                 .whitespace_nowrap()
-                                .text_color(theme.text)
+                                .text_color(theme.tokens.text_normal)
                                 .child(SharedString::from(value)),
                         ),
                     _ => cell.child(
                         div()
-                            .text_color(theme.text_faint)
+                            .text_color(theme.tokens.text_faint)
                             .child(SharedString::from("Summary")),
                     ),
                 }

@@ -260,14 +260,14 @@ impl BasesView {
                 let page_id = r.prop.id.clone();
                 let is_formula = r.prop.id.starts_with("formula.");
                 let color = if r.shown {
-                    theme.text
+                    theme.tokens.text_normal
                 } else {
-                    theme.text_faint
+                    theme.tokens.text_faint
                 };
                 let icon_color = if r.shown {
-                    theme.text_muted
+                    theme.tokens.text_muted
                 } else {
-                    theme.text_faint
+                    theme.tokens.text_faint
                 };
                 div()
                     .id(("bases-property-row", row))
@@ -284,8 +284,10 @@ impl BasesView {
                     .rounded(px(4.))
                     .cursor_pointer()
                     .text_color(color)
-                    .when(selected == Some(row), |d| d.bg(theme.bg_alt))
-                    .hover(|s| s.bg(theme.bg_alt))
+                    .when(selected == Some(row), |d| {
+                        d.bg(theme.tokens.background_modifier_hover)
+                    })
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .on_click(cx.listener(move |this, _, _, cx| {
                         cx.stop_propagation();
                         this.toggle_column(&id, cx);
@@ -310,7 +312,7 @@ impl BasesView {
                             .items_center()
                             .justify_center()
                             .rounded(px(4.))
-                            .hover(|s| s.bg(theme.bg_active))
+                            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                             .on_click(cx.listener(move |this, _, _, cx| {
                                 cx.stop_propagation();
                                 this.toolbar.page = if is_formula {
@@ -333,7 +335,7 @@ impl BasesView {
         let wash = |el: AnyElement, on: bool| {
             if on {
                 div()
-                    .bg(theme.bg_alt)
+                    .bg(theme.tokens.background_modifier_hover)
                     .rounded(px(4.))
                     .child(el)
                     .into_any_element()
@@ -519,7 +521,7 @@ impl BasesView {
             .py(px(4.))
             .gap(px(4.))
             .child(SharedString::from("Formula"))
-            .child(icon("circle-help", 14., theme.text_faint));
+            .child(icon("circle-help", 14., theme.tokens.text_faint));
         let editor = div()
             .flex()
             .flex_col()
@@ -527,9 +529,9 @@ impl BasesView {
             .min_h(px(100.))
             .p(px(6.))
             .rounded(px(5.))
-            .bg(theme.bg_alt)
+            .bg(theme.tokens.background_modifier_hover)
             .border_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.background_modifier_border)
             .font_family(theme.mono_font.clone())
             .child(self.text_box(Field::Formula, &typed, "x + y", theme, cx));
         // `--text-success` and `--text-error`: the theme's green and red.

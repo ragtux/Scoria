@@ -126,7 +126,7 @@ impl BasesView {
                     "bases-sort-trash",
                     ix,
                     "trash-2",
-                    theme.text_muted,
+                    theme.tokens.text_muted,
                     theme,
                     cx.listener(move |this, _, _, cx| {
                         cx.stop_propagation();
@@ -173,7 +173,7 @@ impl BasesView {
                         "bases-sort-trash",
                         ix,
                         "trash-2",
-                        theme.text_muted,
+                        theme.tokens.text_muted,
                         theme,
                         cx.listener(|this, _, window, cx| {
                             cx.stop_propagation();
@@ -215,7 +215,7 @@ impl BasesView {
                     .w_full()
                     .p(px(2.))
                     .border_b_1()
-                    .border_color(theme.border)
+                    .border_color(theme.tokens.background_modifier_border)
                     .child(self.section_header("Sort by", None, None, theme, cx))
                     .children(rows),
             )
@@ -297,9 +297,9 @@ impl BasesView {
                 0,
                 "trash-2",
                 if grouped {
-                    theme.text_muted
+                    theme.tokens.text_muted
                 } else {
-                    theme.text_faint
+                    theme.tokens.text_faint
                 },
                 theme,
                 cx.listener(|this, _, _, cx| {
@@ -366,7 +366,7 @@ impl BasesView {
                 .gap(px(8.))
                 .rounded(px(4.))
                 .cursor_pointer()
-                .hover(|s| s.bg(theme.bg_alt))
+                .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                 .on_click(cx.listener(move |this, _, _, cx| {
                     cx.stop_propagation();
                     this.toggle_group_visible(key_for.clone(), cx);
@@ -382,9 +382,9 @@ impl BasesView {
                         .overflow_hidden()
                         .text_ellipsis()
                         .text_color(if *visible {
-                            theme.text
+                            theme.tokens.text_normal
                         } else {
-                            theme.text_faint
+                            theme.tokens.text_faint
                         })
                         .child(SharedString::from(label)),
                 );
@@ -432,7 +432,7 @@ impl BasesView {
             .flex_col()
             .w_full()
             .border_t_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.background_modifier_border)
             .child(self.group(rows, false, theme))
             .child(self.group(actions, true, theme))
             .into_any_element()

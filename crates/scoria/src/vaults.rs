@@ -344,8 +344,8 @@ impl VaultManager {
             .py(px(8.))
             .rounded(px(6.))
             .cursor_pointer()
-            .hover(|s| s.bg(theme.bg_alt))
-            .when(open, |d| d.bg(theme.bg_alt))
+            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+            .when(open, |d| d.bg(theme.tokens.background_modifier_hover))
             .tooltip(crate::canvas::menu::tooltip(row.path.display().to_string()))
             .on_click(
                 cx.listener(move |this, _, window, cx| this.open_vault(path.clone(), window, cx)),
@@ -360,13 +360,13 @@ impl VaultManager {
                     .child(
                         div()
                             .text_size(px(FONT_UI_MEDIUM))
-                            .text_color(theme.text)
+                            .text_color(theme.tokens.text_normal)
                             .child(row.name.clone()),
                     )
                     .child(
                         div()
                             .text_size(px(FONT_UI_SMALLER))
-                            .text_color(theme.text_muted)
+                            .text_color(theme.tokens.text_muted)
                             .child(row.parent.clone()),
                     ),
             )
@@ -380,7 +380,7 @@ impl VaultManager {
                     .justify_center()
                     .rounded(px(4.))
                     .cursor_pointer()
-                    .hover(|s| s.bg(theme.bg_active))
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .tooltip(crate::canvas::menu::tooltip("More options"))
                     .on_hover(cx.listener(move |this, over: &bool, _, _| {
                         this.over_dots = if *over { Some(ix) } else { None };
@@ -397,7 +397,7 @@ impl VaultManager {
                         cx.stop_propagation();
                         cx.notify();
                     }))
-                    .child(icon("ellipsis-vertical", 16., theme.text_muted)),
+                    .child(icon("ellipsis-vertical", 16., theme.tokens.text_muted)),
             )
             // The menu's anchor is this box, pinned at the row's top
             // right corner, where Obsidian drops it from the ellipsis: an
@@ -430,13 +430,13 @@ impl VaultManager {
             .flex_col()
             .min_w(px(240.))
             .py_1()
-            .bg(theme.bg_secondary)
+            .bg(theme.tokens.background_secondary)
             .border_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.background_modifier_border)
             .rounded_md()
             .shadow_lg()
             .text_size(px(FONT_UI_SMALL))
-            .text_color(theme.text)
+            .text_color(theme.tokens.text_normal)
             .occlude()
             .on_mouse_down_out(cx.listener(move |this, _, _, cx| {
                 // The ellipsis closes the menu itself, on the click that
@@ -449,7 +449,12 @@ impl VaultManager {
             }));
         for (n, (item, separator)) in ROW_ITEMS.iter().copied().enumerate() {
             if separator {
-                list = list.child(div().my_1().h(px(1.)).bg(theme.border));
+                list = list.child(
+                    div()
+                        .my_1()
+                        .h(px(1.))
+                        .bg(theme.tokens.background_modifier_border),
+                );
             }
             // Obsidian draws "Remove from list" in `--text-error`, which
             // its default theme takes from `--color-red`: the first of the
@@ -457,7 +462,7 @@ impl VaultManager {
             let color = if item.warning() {
                 theme.canvas.presets[0]
             } else {
-                theme.text
+                theme.tokens.text_normal
             };
             list = list.child(
                 div()
@@ -472,7 +477,7 @@ impl VaultManager {
                     .rounded(px(4.))
                     .cursor_pointer()
                     .text_color(color)
-                    .hover(|s| s.bg(theme.bg_alt))
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .on_mouse_down(gpui::MouseButton::Left, |_, _, cx| cx.stop_propagation())
                     .on_click(cx.listener(move |this, _, _, cx| {
                         cx.stop_propagation();
@@ -505,9 +510,17 @@ impl VaultManager {
     ) -> gpui::Div {
         let go = option.go;
         let (bg, fg, border) = if option.primary {
-            (theme.accent, gpui::white(), theme.accent)
+            (
+                theme.tokens.interactive_accent,
+                gpui::white(),
+                theme.tokens.interactive_accent,
+            )
         } else {
-            (theme.bg_alt, theme.text, theme.border)
+            (
+                theme.tokens.background_modifier_hover,
+                theme.tokens.text_normal,
+                theme.tokens.background_modifier_border,
+            )
         };
         div()
             .flex()
@@ -515,7 +528,10 @@ impl VaultManager {
             .items_center()
             .gap(px(16.))
             .py(px(18.))
-            .when(!last, |d| d.border_b_1().border_color(theme.border))
+            .when(!last, |d| {
+                d.border_b_1()
+                    .border_color(theme.tokens.background_modifier_border)
+            })
             .child(
                 div()
                     .flex_1()
@@ -526,13 +542,13 @@ impl VaultManager {
                     .child(
                         div()
                             .text_size(px(FONT_UI_MEDIUM))
-                            .text_color(theme.text)
+                            .text_color(theme.tokens.text_normal)
                             .child(option.name),
                     )
                     .child(
                         div()
                             .text_size(px(FONT_UI_SMALL))
-                            .text_color(theme.text_muted)
+                            .text_color(theme.tokens.text_muted)
                             .child(option.blurb),
                     ),
             )
@@ -557,7 +573,7 @@ impl VaultManager {
                         if option.primary {
                             s.opacity(0.9)
                         } else {
-                            s.bg(theme.bg_active)
+                            s.bg(theme.tokens.background_modifier_hover)
                         }
                     })
                     .on_click(cx.listener(move |this, _, window, cx| this.go(go, window, cx)))
@@ -591,7 +607,7 @@ impl Render for VaultManager {
                     .px(px(12.))
                     .py(px(8.))
                     .text_size(px(FONT_UI_SMALL))
-                    .text_color(theme.text_faint)
+                    .text_color(theme.tokens.text_faint)
                     .child("No vaults opened yet"),
             );
         }
@@ -603,7 +619,7 @@ impl Render for VaultManager {
             .max_w(px(460.))
             .px(px(24.))
             .rounded(px(12.))
-            .bg(theme.bg_secondary)
+            .bg(theme.tokens.background_secondary)
             .flex()
             .flex_col();
         let count = OPTIONS.len();
@@ -618,9 +634,9 @@ impl Render for VaultManager {
             .size_full()
             .flex()
             .flex_row()
-            .bg(theme.bg)
+            .bg(theme.tokens.background_primary)
             .font_family(theme.ui_font.clone())
-            .text_color(theme.text)
+            .text_color(theme.tokens.text_normal)
             .child(
                 div()
                     .flex_shrink_0()
@@ -628,16 +644,16 @@ impl Render for VaultManager {
                     .h_full()
                     .flex()
                     .flex_col()
-                    .bg(theme.bg_secondary)
+                    .bg(theme.tokens.background_secondary)
                     .child(div().flex_1().min_h_0().child(list))
                     .children(self.error.clone().map(|message| {
                         div()
                             .px(px(12.))
                             .py(px(8.))
                             .border_t_1()
-                            .border_color(theme.border)
+                            .border_color(theme.tokens.background_modifier_border)
                             .text_size(px(FONT_UI_SMALLER))
-                            .text_color(theme.text_muted)
+                            .text_color(theme.tokens.text_muted)
                             .child(message)
                     })),
             )
@@ -660,14 +676,14 @@ impl Render for VaultManager {
                             .mt(px(16.))
                             .text_size(px(26.))
                             .font_weight(FontWeight::SEMIBOLD)
-                            .text_color(theme.text)
+                            .text_color(theme.tokens.text_normal)
                             .child("Scoria"),
                     )
                     .child(
                         div()
                             .mt(px(4.))
                             .text_size(px(FONT_UI_SMALL))
-                            .text_color(theme.text_muted)
+                            .text_color(theme.tokens.text_muted)
                             .child(version),
                     )
                     .child(div().h(px(32.)))

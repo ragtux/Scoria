@@ -130,15 +130,15 @@ impl BasesView {
                     .cursor_pointer()
                     .font_weight(gpui::FontWeight::MEDIUM)
                     .when(ix == showing || selected == Some(row), |d| {
-                        d.bg(theme.bg_alt)
+                        d.bg(theme.tokens.background_modifier_hover)
                     })
-                    .hover(|s| s.bg(theme.bg_alt))
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .on_click(cx.listener(move |this, _, window, cx| {
                         cx.stop_propagation();
                         this.show_view(ix, cx);
                         this.close_panel(window, cx);
                     }))
-                    .child(icon(icon_name, ICON_SIZE, theme.text))
+                    .child(icon(icon_name, ICON_SIZE, theme.tokens.text_normal))
                     .child(
                         div()
                             .flex_1()
@@ -157,13 +157,13 @@ impl BasesView {
                             .items_center()
                             .justify_center()
                             .rounded(px(4.))
-                            .hover(|s| s.bg(theme.bg_active))
+                            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                             .on_click(cx.listener(move |this, _, _, cx| {
                                 cx.stop_propagation();
                                 this.show_view(ix, cx);
                                 this.configure_view(ix, cx);
                             }))
-                            .child(icon("chevron-right", ICON_SIZE, theme.text_muted)),
+                            .child(icon("chevron-right", ICON_SIZE, theme.tokens.text_muted)),
                     )
                     .into_any_element()
             })
@@ -183,7 +183,7 @@ impl BasesView {
         );
         let add = if add_selected {
             div()
-                .bg(theme.bg_alt)
+                .bg(theme.tokens.background_modifier_hover)
                 .rounded(px(4.))
                 .child(add)
                 .into_any_element()
@@ -516,12 +516,12 @@ impl BasesView {
             let color = if warning {
                 theme.tokens.text_error
             } else {
-                theme.text
+                theme.tokens.text_normal
             };
             let icon_color = if warning {
                 theme.tokens.text_error
             } else {
-                theme.text_muted
+                theme.tokens.text_muted
             };
             div()
                 .id(("bases-page-menu-item", key(id, 0) as usize % 100_000))
@@ -535,7 +535,7 @@ impl BasesView {
                 .rounded(px(4.))
                 .cursor_pointer()
                 .text_color(color)
-                .hover(|s| s.bg(theme.bg_alt))
+                .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                 .on_click(cx.listener(move |this, _, window, cx| {
                     cx.stop_propagation();
                     this.page_menu_pick(id, window, cx);
@@ -547,7 +547,9 @@ impl BasesView {
                         .whitespace_nowrap()
                         .child(SharedString::from(label)),
                 )
-                .when(checked, |d| d.child(icon("check", 14., theme.text_muted)))
+                .when(checked, |d| {
+                    d.child(icon("check", 14., theme.tokens.text_muted))
+                })
         };
         let menu = div()
             .id("bases-page-menu-list")
@@ -556,9 +558,9 @@ impl BasesView {
             .flex_col()
             .min_w(px(153.))
             .p(px(6.))
-            .bg(theme.bg_secondary)
+            .bg(theme.tokens.background_secondary)
             .border_1()
-            .border_color(theme.tab_divider)
+            .border_color(theme.tokens.tab_divider_color)
             .rounded(px(8.))
             .shadow_lg()
             .text_size(px(FONT_UI_SMALL))
@@ -580,7 +582,13 @@ impl BasesView {
                 false,
                 cx,
             ))
-            .child(div().my(px(6.)).mx(px(-6.)).h(px(1.)).bg(theme.border))
+            .child(
+                div()
+                    .my(px(6.))
+                    .mx(px(-6.))
+                    .h(px(1.))
+                    .bg(theme.tokens.background_modifier_border),
+            )
             .child(row("delete", "trash-2", "Delete view", true, false, cx));
         Some(
             deferred(

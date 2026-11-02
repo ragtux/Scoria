@@ -219,13 +219,13 @@ impl BookmarksPane {
             .flex_col()
             .min_w(px(160.))
             .py_1()
-            .bg(theme.bg_secondary)
+            .bg(theme.tokens.background_secondary)
             .border_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.background_modifier_border)
             .rounded_md()
             .shadow_lg()
             .text_size(px(13.))
-            .text_color(theme.text)
+            .text_color(theme.tokens.text_normal)
             .on_mouse_down_out(cx.listener(|this, _, _, cx| {
                 this.menu = None;
                 cx.notify();
@@ -236,7 +236,7 @@ impl BookmarksPane {
                     .px_3()
                     .py_1()
                     .cursor_pointer()
-                    .hover(|s| s.bg(theme.bg_alt))
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .on_click(cx.listener(move |this, _, _, cx| {
                         this.menu = None;
                         cx.emit(BookmarkEvent::Remove(at.clone()));
@@ -272,8 +272,11 @@ impl Render for BookmarksPane {
                     .rounded_sm()
                     .cursor_pointer()
                     .text_size(px(14.))
-                    .text_color(theme.text_muted)
-                    .hover(|s| s.bg(theme.bg_alt).text_color(theme.text))
+                    .text_color(theme.tokens.text_muted)
+                    .hover(|s| {
+                        s.bg(theme.tokens.background_modifier_hover)
+                            .text_color(theme.tokens.text_normal)
+                    })
                     .on_click(cx.listener(move |this, _, _, cx| event(this, cx)))
                     .child(glyph)
             };
@@ -310,7 +313,7 @@ impl Render for BookmarksPane {
                     div()
                         .p_3()
                         .text_size(px(12.))
-                        .text_color(theme.text_muted)
+                        .text_color(theme.tokens.text_muted)
                         .child("No bookmarks yet"),
                 )
             })
@@ -347,8 +350,8 @@ impl Render for BookmarksPane {
                     .rounded_sm()
                     .cursor_pointer()
                     .text_size(px(13.))
-                    .when(active, |d| d.bg(theme.bg_active))
-                    .hover(|s| s.bg(theme.bg_alt))
+                    .when(active, |d| d.bg(theme.tokens.background_modifier_hover))
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .on_click(cx.listener(move |this, _, _, cx| this.activate(&click_row, cx)))
                     .on_mouse_down(
                         gpui::MouseButton::Right,
@@ -364,7 +367,7 @@ impl Render for BookmarksPane {
                         div()
                             .w(px(14.))
                             .flex_shrink_0()
-                            .text_color(theme.text_muted)
+                            .text_color(theme.tokens.text_muted)
                             .text_size(px(11.))
                             .child(marker),
                     )
@@ -375,7 +378,7 @@ impl Render for BookmarksPane {
                             .whitespace_nowrap()
                             .overflow_hidden()
                             .text_ellipsis()
-                            .text_color(theme.text)
+                            .text_color(theme.tokens.text_normal)
                             .child(title),
                     )
             }));

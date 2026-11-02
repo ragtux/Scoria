@@ -168,9 +168,17 @@ impl HelpWindow {
     ) -> gpui::Div {
         let go = row.go;
         let (bg, fg, border) = if row.primary {
-            (theme.accent, gpui::white(), theme.accent)
+            (
+                theme.tokens.interactive_accent,
+                gpui::white(),
+                theme.tokens.interactive_accent,
+            )
         } else {
-            (theme.bg_alt, theme.text, theme.border)
+            (
+                theme.tokens.background_modifier_hover,
+                theme.tokens.text_normal,
+                theme.tokens.background_modifier_border,
+            )
         };
         div()
             .flex()
@@ -178,14 +186,17 @@ impl HelpWindow {
             .items_center()
             .gap(px(24.))
             .py(px(22.))
-            .when(!last, |d| d.border_b_1().border_color(theme.border))
+            .when(!last, |d| {
+                d.border_b_1()
+                    .border_color(theme.tokens.background_modifier_border)
+            })
             .child(
                 div()
                     .flex_shrink_0()
                     .w(px(64.))
                     .flex()
                     .justify_center()
-                    .child(icon(row.icon, 56., theme.text_faint)),
+                    .child(icon(row.icon, 56., theme.tokens.text_faint)),
             )
             .child(
                 div()
@@ -197,13 +208,13 @@ impl HelpWindow {
                     .child(
                         div()
                             .text_size(px(17.))
-                            .text_color(theme.text)
+                            .text_color(theme.tokens.text_normal)
                             .child(row.title),
                     )
                     .child(
                         div()
                             .text_size(px(FONT_UI_MEDIUM))
-                            .text_color(theme.text_muted)
+                            .text_color(theme.tokens.text_muted)
                             .child(row.blurb),
                     ),
             )
@@ -226,7 +237,7 @@ impl HelpWindow {
                         if row.primary {
                             s.opacity(0.9)
                         } else {
-                            s.bg(theme.bg_active)
+                            s.bg(theme.tokens.background_modifier_hover)
                         }
                     })
                     .on_click(cx.listener(move |this, _, window, cx| this.go(go, window, cx)))
@@ -250,7 +261,7 @@ impl Render for HelpWindow {
             .max_w(px(720.))
             .px(px(24.))
             .rounded(px(12.))
-            .bg(theme.bg_secondary)
+            .bg(theme.tokens.background_secondary)
             .flex()
             .flex_col();
         let count = ROWS.len();
@@ -264,9 +275,9 @@ impl Render for HelpWindow {
             .on_action(cx.listener(Self::close))
             .size_full()
             .overflow_y_scroll()
-            .bg(theme.bg)
+            .bg(theme.tokens.background_primary)
             .font_family(theme.ui_font.clone())
-            .text_color(theme.text)
+            .text_color(theme.tokens.text_normal)
             .child(
                 div()
                     .flex()
@@ -281,14 +292,14 @@ impl Render for HelpWindow {
                             .mt(px(20.))
                             .text_size(px(30.))
                             .font_weight(FontWeight::SEMIBOLD)
-                            .text_color(theme.text)
+                            .text_color(theme.tokens.text_normal)
                             .child("Scoria"),
                     )
                     .child(
                         div()
                             .mt(px(6.))
                             .text_size(px(16.))
-                            .text_color(theme.text_muted)
+                            .text_color(theme.tokens.text_muted)
                             .child(version),
                     )
                     .child(div().h(px(48.)))

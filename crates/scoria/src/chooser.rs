@@ -201,7 +201,6 @@ impl Chooser {
                         (
                             r.clone(),
                             HighlightStyle {
-                                color: Some(theme.accent),
                                 font_weight: Some(FontWeight::BOLD),
                                 ..HighlightStyle::default()
                             },
@@ -221,8 +220,8 @@ impl Chooser {
                         .items_center()
                         .rounded_sm()
                         .cursor_pointer()
-                        .when(selected, |d| d.bg(theme.bg_active))
-                        .hover(|s| s.bg(theme.bg_alt))
+                        .when(selected, |d| d.bg(theme.tokens.background_modifier_hover))
+                        .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                         .on_click(cx.listener(move |this, _, _, cx| {
                             this.selected = ix;
                             this.choose(cx);
@@ -230,7 +229,7 @@ impl Chooser {
                         .child(
                             div()
                                 .text_size(px(14.))
-                                .text_color(theme.text)
+                                .text_color(theme.tokens.text_normal)
                                 .whitespace_nowrap()
                                 .overflow_hidden()
                                 .text_ellipsis()
@@ -252,9 +251,9 @@ impl Render for Chooser {
             .w(px(620.))
             .flex()
             .flex_col()
-            .bg(theme.bg_secondary)
+            .bg(theme.tokens.prompt_background)
             .border_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.prompt_border_color)
             .rounded_lg()
             .shadow_lg()
             .p_2()
@@ -273,7 +272,7 @@ impl Render for Chooser {
                     div()
                         .p_3()
                         .text_size(px(12.))
-                        .text_color(theme.text_muted)
+                        .text_color(theme.tokens.text_muted)
                         .child(self.empty.clone()),
                 )
             })

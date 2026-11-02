@@ -568,7 +568,7 @@ impl BasesView {
             .gap(px(16.))
             .p(px(24.))
             .text_size(px(theme.base_font_size))
-            .text_color(theme.text);
+            .text_color(theme.tokens.text_normal);
         if banner {
             block = block.child(SharedString::from(PARSE_ERROR_BANNER));
         }
@@ -579,7 +579,7 @@ impl BasesView {
                     .flex_col()
                     .font_family(theme.mono_font.clone())
                     .text_size(px(FONT_UI_SMALL))
-                    .text_color(theme.text_muted)
+                    .text_color(theme.tokens.text_muted)
                     .children(message.lines().map(|line| {
                         // An empty line still needs a line box, or the caret
                         // under the snippet climbs onto the text above it.
@@ -613,7 +613,7 @@ impl BasesView {
             .py(px(24.))
             .px(px(16.))
             .text_size(px(FONT_UI_SMALL))
-            .text_color(theme.text_faint)
+            .text_color(theme.tokens.text_faint)
             .child(SharedString::from("0 results"))
             .into_any_element()
     }
@@ -791,9 +791,11 @@ impl Render for BasesView {
             // A leaf's view fills the leaf on its own ground; an embed is
             // as tall as its content on the note's ground, clipped at the
             // note's edge where its table is wider.
-            .when(!embedded, |d| d.size_full().bg(theme.bg))
+            .when(!embedded, |d| {
+                d.size_full().bg(theme.tokens.background_primary)
+            })
             .when(embedded, |d| d.w_full().overflow_hidden())
-            .text_color(theme.text)
+            .text_color(theme.tokens.text_normal)
             .children(body)
     }
 }

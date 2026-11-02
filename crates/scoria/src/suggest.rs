@@ -109,7 +109,6 @@ pub fn render(
                 (
                     r.clone(),
                     HighlightStyle {
-                        color: Some(theme.accent),
                         font_weight: Some(FontWeight::BOLD),
                         ..HighlightStyle::default()
                     },
@@ -131,8 +130,8 @@ pub fn render(
             .gap_2()
             .rounded_sm()
             .cursor_pointer()
-            .when(selected, |d| d.bg(theme.bg_active))
-            .hover(|s| s.bg(theme.bg_alt))
+            .when(selected, |d| d.bg(theme.tokens.background_modifier_hover))
+            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
             .on_mouse_down(
                 gpui::MouseButton::Left,
                 cx.listener(move |this, _, window, cx| {
@@ -142,7 +141,11 @@ pub fn render(
             .child(
                 div()
                     .text_size(px(13.))
-                    .text_color(if muted { theme.text_muted } else { theme.text })
+                    .text_color(if muted {
+                        theme.tokens.text_muted
+                    } else {
+                        theme.tokens.text_normal
+                    })
                     .whitespace_nowrap()
                     .overflow_hidden()
                     .text_ellipsis()
@@ -152,7 +155,7 @@ pub fn render(
                 div()
                     .flex_shrink_0()
                     .text_size(px(11.))
-                    .text_color(theme.text_muted)
+                    .text_color(theme.tokens.text_muted)
                     .child(SharedString::from(d))
             }))
     });
@@ -164,9 +167,9 @@ pub fn render(
         .flex()
         .flex_col()
         .p_1()
-        .bg(theme.bg_secondary)
+        .bg(theme.tokens.suggestion_background)
         .border_1()
-        .border_color(theme.border)
+        .border_color(theme.tokens.background_modifier_border)
         .rounded_md()
         .shadow_lg()
         .children(rows)

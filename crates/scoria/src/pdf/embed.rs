@@ -474,7 +474,7 @@ impl Element for Frame {
             .w_full()
             .h(px(height))
             .border_1()
-            .border_color(self.theme.border)
+            .border_color(self.theme.tokens.background_modifier_border)
             .rounded(px(4.))
             .overflow_hidden()
             .child(Pages {
@@ -578,7 +578,8 @@ impl Pages {
             .justify_center()
             .rounded(px(4. * s))
             .when(enabled, |d| {
-                d.cursor_pointer().hover(|s| s.bg(theme.bg_alt))
+                d.cursor_pointer()
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
             })
             .when_some(on_click.filter(|_| enabled), |d, on_click| {
                 d.on_click(move |_, window, cx| {
@@ -591,9 +592,9 @@ impl Pages {
                 name,
                 ICON_SIZE * s,
                 if enabled {
-                    theme.text_muted
+                    theme.tokens.text_muted
                 } else {
-                    theme.text_faint
+                    theme.tokens.text_faint
                 },
             ))
             .into_any_element()
@@ -642,12 +643,12 @@ impl Pages {
             .items_center()
             .gap(px(TOOLBAR_GAP * s))
             .px(px(TOOLBAR_PADDING * s))
-            .bg(theme.bg)
+            .bg(theme.tokens.background_primary)
             .border_b_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.background_modifier_border)
             .font_family(theme.ui_font.clone())
             .text_size(px(FONT_UI_SMALL * s))
-            .text_color(theme.text_muted)
+            .text_color(theme.tokens.text_muted)
             .child(self.button(
                 "pdf-embed-sidebar",
                 "layout-list",
@@ -675,7 +676,7 @@ impl Pages {
                     .w(px(1.))
                     .h(px(ICON_SIZE * s))
                     .flex_shrink_0()
-                    .bg(theme.border),
+                    .bg(theme.tokens.background_modifier_border),
             )
             .child(self.button(
                 "pdf-embed-zoom-in",
@@ -702,9 +703,9 @@ impl Pages {
                     .px(px(8. * s))
                     .rounded(px(4. * s))
                     .border_1()
-                    .border_color(theme.border)
-                    .bg(theme.bg_secondary)
-                    .text_color(theme.text)
+                    .border_color(theme.tokens.background_modifier_border)
+                    .bg(theme.tokens.background_secondary)
+                    .text_color(theme.tokens.text_normal)
                     .child(SharedString::from(bar.current.to_string())),
             )
             .child(
@@ -794,7 +795,7 @@ impl Pages {
             .w_full()
             // OBSERVE: the viewer's ground; the box itself is transparent in
             // Obsidian and pdf.js's viewer is a mid grey.
-            .bg(self.theme.bg_secondary)
+            .bg(self.theme.tokens.background_secondary)
             .child(column)
             .into_any_element();
         (

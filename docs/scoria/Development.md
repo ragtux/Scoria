@@ -425,9 +425,36 @@ a pill is a bordered transparent box; the palette sits on the primary
 background and highlights its matches in bold alone; the prompt's key
 hints are muted. `code_bg` is the first short field retired.
 
-**Next.** The rest of the call sites: Live Preview's widgets, the search
-pane, the Settings window, the Bases and canvas chrome, the graph, and
-the pane rows, each with the same capture. Then the loader.
+**The rest, the same evening.** The right dock's rows went over to the
+nav tokens (`--nav-heading-color` and `-collapsed` for a section's
+header, `--nav-item-color-active` for a file's title, which Obsidian
+keeps at the normal colour, `--nav-indentation-guide-color` for the
+tree guides, `--collapse-icon-color` for the chevrons, `--text-selection`
+for a hovered match, `--search-result-background` for the card); the
+search pane the same plus `--search-icon-color`,
+`--search-clear-button-color` and the toggle's
+`--background-modifier-border-hover` track under a `--toggle-thumb-color`
+knob; the Settings window its own record (`--modal-background`,
+`--modal-sidebar-background` — the sidebar sits on the modal's ground,
+not the secondary colour — nav items in `--text-normal` whether active
+or not, `--dropdown-background`, `--background-modifier-form-field`
+inputs, `--slider-track-background` and `-fill-`, buttons as
+`--text-normal` on `--interactive-normal`); the switcher, the chooser and
+the prompt on `--prompt-background`; the autocompletion popup on
+`--suggestion-background`; every text field on
+`--background-modifier-form-field` with the focus ring in
+`--background-modifier-border-focus` rather than the accent. Everything
+the record does not name — the Bases, canvas, graph and PDF chrome, the
+bookmarks, help and vault manager — was renamed mechanically to the
+token each short field already was, which a capture of the graph and
+the welcome note confirmed invisible, and the short fields are gone:
+`Theme` is `dark`, the fonts, the base size, the canvas palette and
+`tokens`.
+
+**Next.** The loader (`.obsidian/themes/<name>/theme.css` and the enabled
+snippets through the same value grammar, `.obsidian/` watched for a
+reload), then a probe of the surfaces the record has not got — Bases,
+canvas, graph, PDF — so their mechanical names can become their own.
 
 ### Four small entries and a URI, 2026-11-02
 

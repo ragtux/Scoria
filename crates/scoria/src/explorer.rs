@@ -1081,11 +1081,11 @@ impl FileExplorer {
                 .py_1()
                 .bg(theme.tokens.menu_background)
                 .border_1()
-                .border_color(theme.border)
+                .border_color(theme.tokens.background_modifier_border)
                 .rounded_md()
                 .shadow_lg()
                 .text_size(px(13.))
-                .text_color(theme.text),
+                .text_color(theme.tokens.text_normal),
             &focus,
             cx,
             |this, cx| {
@@ -1113,7 +1113,7 @@ impl FileExplorer {
                     .px_3()
                     .py_1()
                     .cursor_pointer()
-                    .hover(|s| s.bg(theme.bg_alt))
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .on_click(cx.listener(move |this, _, _, cx| this.set_sort(order, cx)))
                     .child(
                         div()

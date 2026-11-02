@@ -578,20 +578,25 @@ impl BasesView {
             .flex_col()
             .min_w(px(192.))
             .py(px(6.))
-            .bg(theme.bg_secondary)
+            .bg(theme.tokens.background_secondary)
             .border_1()
-            .border_color(theme.tab_divider)
+            .border_color(theme.tokens.tab_divider_color)
             .rounded(px(8.))
             .shadow_lg()
             .text_size(px(FONT_UI_SMALL))
-            .text_color(theme.text)
+            .text_color(theme.tokens.text_normal)
             .occlude()
             .on_mouse_down_out(cx.listener(|this, _, _, cx| this.close_header_menu(cx)));
         let mut type_row_top = px(0.);
         let mut y = px(6.);
         for (ix, row) in menu.rows.iter().enumerate() {
             if row.label == SEPARATOR {
-                list = list.child(div().my(px(6.)).h(px(1.)).bg(theme.border));
+                list = list.child(
+                    div()
+                        .my(px(6.))
+                        .h(px(1.))
+                        .bg(theme.tokens.background_modifier_border),
+                );
                 y += px(13.);
                 continue;
             }
@@ -603,7 +608,7 @@ impl BasesView {
             let color = if row.warning {
                 theme.tokens.text_error
             } else {
-                theme.text
+                theme.tokens.text_normal
             };
             list = list.child(
                 div()
@@ -618,7 +623,7 @@ impl BasesView {
                     .rounded(px(4.))
                     .cursor_pointer()
                     .text_color(color)
-                    .hover(|s| s.bg(theme.bg_alt))
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .on_hover(cx.listener(move |this, hovered: &bool, _, cx| {
                         if let Some(menu) = this.editing.menu.as_mut() {
                             if *hovered && menu.submenu != submenu {
@@ -637,13 +642,17 @@ impl BasesView {
                             this.header_menu_pick(id, cx);
                         }
                     }))
-                    .child(crate::assets::icon(row.icon, 16., theme.text_muted))
+                    .child(crate::assets::icon(row.icon, 16., theme.tokens.text_muted))
                     .child(div().flex_1().child(SharedString::from(row.label)))
                     .when(row.checked, |d| {
-                        d.child(crate::assets::icon("check", 14., theme.text_muted))
+                        d.child(crate::assets::icon("check", 14., theme.tokens.text_muted))
                     })
                     .when(submenu, |d| {
-                        d.child(crate::assets::icon("chevron-right", 14., theme.text_muted))
+                        d.child(crate::assets::icon(
+                            "chevron-right",
+                            14.,
+                            theme.tokens.text_muted,
+                        ))
                     }),
             );
             y += px(25.);
@@ -660,37 +669,38 @@ impl BasesView {
                     .flex_col()
                     .min_w(px(126.))
                     .py(px(6.))
-                    .bg(theme.bg_secondary)
+                    .bg(theme.tokens.background_secondary)
                     .border_1()
-                    .border_color(theme.tab_divider)
+                    .border_color(theme.tokens.tab_divider_color)
                     .rounded(px(8.))
                     .shadow_lg()
                     .occlude();
                 for (ix, (label, icon_name, ty)) in TYPE_ROWS.iter().enumerate() {
                     let ty = *ty;
-                    sub =
-                        sub.child(
-                            div()
-                                .id(("bases-header-type", ix))
-                                .flex()
-                                .flex_row()
-                                .items_center()
-                                .gap(px(8.))
-                                .h(px(25.))
-                                .mx(px(6.))
-                                .px(px(8.))
-                                .rounded(px(4.))
-                                .cursor_pointer()
-                                .hover(|s| s.bg(theme.bg_alt))
-                                .on_click(cx.listener(move |this, _, _, cx| {
+                    sub = sub.child(
+                        div()
+                            .id(("bases-header-type", ix))
+                            .flex()
+                            .flex_row()
+                            .items_center()
+                            .gap(px(8.))
+                            .h(px(25.))
+                            .mx(px(6.))
+                            .px(px(8.))
+                            .rounded(px(4.))
+                            .cursor_pointer()
+                            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                            .on_click(
+                                cx.listener(move |this, _, _, cx| {
                                     this.header_menu_pick_type(ty, cx)
-                                }))
-                                .child(crate::assets::icon(icon_name, 16., theme.text_muted))
-                                .child(div().flex_1().child(SharedString::from(*label)))
-                                .when(ty == current, |d| {
-                                    d.child(crate::assets::icon("check", 14., theme.text_muted))
                                 }),
-                        );
+                            )
+                            .child(crate::assets::icon(icon_name, 16., theme.tokens.text_muted))
+                            .child(div().flex_1().child(SharedString::from(*label)))
+                            .when(ty == current, |d| {
+                                d.child(crate::assets::icon("check", 14., theme.tokens.text_muted))
+                            }),
+                    );
                 }
                 list = list.child(sub);
             }
@@ -1162,13 +1172,13 @@ impl BasesView {
             .min_w(px(66.))
             .max_h(px(300.))
             .p(px(6.))
-            .bg(theme.bg_secondary)
+            .bg(theme.tokens.background_secondary)
             .border_1()
-            .border_color(theme.tab_divider)
+            .border_color(theme.tokens.tab_divider_color)
             .rounded(px(8.))
             .shadow_lg()
             .text_size(px(FONT_UI_SMALL))
-            .text_color(theme.text)
+            .text_color(theme.tokens.text_normal)
             .occlude()
             .on_mouse_down(gpui::MouseButton::Left, |_, _, cx| cx.stop_propagation())
             .children(shown.into_iter().enumerate().map(|(ix, value)| {
@@ -1182,8 +1192,10 @@ impl BasesView {
                     .whitespace_nowrap()
                     .rounded(px(4.))
                     .cursor_pointer()
-                    .when(selected == Some(ix), |d| d.bg(theme.bg_alt))
-                    .hover(|s| s.bg(theme.bg_alt))
+                    .when(selected == Some(ix), |d| {
+                        d.bg(theme.tokens.background_modifier_hover)
+                    })
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .on_click(cx.listener(move |this, _, _, cx| {
                         cx.stop_propagation();
                         this.pick_suggestion(pick.clone(), cx);

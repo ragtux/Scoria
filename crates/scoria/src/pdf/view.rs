@@ -1174,10 +1174,10 @@ impl PdfView {
             .items_center()
             .justify_center()
             .rounded(px(4.))
-            .when(active, |d| d.bg(theme.bg_active))
+            .when(active, |d| d.bg(theme.tokens.background_modifier_hover))
             .when(enabled, |d| {
                 d.cursor_pointer()
-                    .hover(|s| s.bg(theme.bg_alt))
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
                         cx.stop_propagation();
                         on_click(this, window, cx)
@@ -1188,9 +1188,9 @@ impl PdfView {
                 name,
                 ICON_SIZE,
                 if enabled {
-                    theme.text_muted
+                    theme.tokens.text_muted
                 } else {
-                    theme.text_faint
+                    theme.tokens.text_faint
                 },
             ))
             .into_any_element()
@@ -1202,7 +1202,7 @@ impl PdfView {
             .w(px(1.))
             .h(px(DIVIDER_HEIGHT))
             .flex_shrink_0()
-            .bg(theme.border)
+            .bg(theme.tokens.background_modifier_border)
             .into_any_element()
     }
 
@@ -1241,9 +1241,9 @@ impl PdfView {
             .items_center()
             .gap(px(CONTROL_GAP))
             .px(px(TOOLBAR_PAD_X))
-            .bg(theme.bg)
+            .bg(theme.tokens.background_primary)
             .text_size(px(FONT_UI_SMALL))
-            .text_color(theme.text)
+            .text_color(theme.tokens.text_normal)
             .child(
                 canvas(
                     move |bounds, _, cx| entity.update(cx, |view, _| view.toolbar_measured(bounds)),
@@ -1356,7 +1356,7 @@ impl PdfView {
         div()
             .h(px(1.))
             .my(px(4.))
-            .bg(theme.border)
+            .bg(theme.tokens.background_modifier_border)
             .into_any_element()
     }
 
@@ -1549,14 +1549,14 @@ impl PdfView {
             .items_center()
             .gap(px(4.))
             .p(px(6.))
-            .bg(theme.bg)
+            .bg(theme.tokens.background_primary)
             .text_size(px(FONT_UI_SMALL))
-            .text_color(theme.text)
+            .text_color(theme.tokens.text_normal)
             .children(status.map(|text| {
                 div()
                     .mx(px(8.))
                     .whitespace_nowrap()
-                    .text_color(theme.text_muted)
+                    .text_color(theme.tokens.text_muted)
                     .child(text)
             }))
             .child(
@@ -1587,8 +1587,10 @@ impl PdfView {
                             .justify_center()
                             .rounded(px(4.))
                             .cursor_pointer()
-                            .when(case_sensitive, |d| d.bg(theme.bg_active))
-                            .hover(|s| s.bg(theme.bg_alt))
+                            .when(case_sensitive, |d| {
+                                d.bg(theme.tokens.background_modifier_hover)
+                            })
+                            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                             .tooltip(tooltip("Match case"))
                             .on_click(cx.listener(|this, _: &ClickEvent, _, cx| {
                                 cx.stop_propagation();
@@ -1600,7 +1602,7 @@ impl PdfView {
                                 let text = this.find_input.read(cx).text().to_string();
                                 this.search(text, true, cx);
                             }))
-                            .child(icon("case-sensitive", ICON_SIZE, theme.text_muted)),
+                            .child(icon("case-sensitive", ICON_SIZE, theme.tokens.text_muted)),
                     ),
             )
             .child(self.control(
@@ -1665,9 +1667,9 @@ impl PdfView {
             .flex_shrink_0()
             .overflow_y_scroll()
             .track_scroll(&self.sidebar_scroll)
-            .bg(theme.bg)
+            .bg(theme.tokens.background_primary)
             .text_size(px(FONT_UI_SMALL))
-            .text_color(theme.text)
+            .text_color(theme.tokens.text_normal)
             .on_mouse_down(
                 MouseButton::Left,
                 cx.listener(|this, _, window, cx| {
@@ -1739,13 +1741,9 @@ impl PdfView {
             }
             self.sidebar_followed = Some(self.page);
         }
-        let selected: Hsla = if theme.dark {
-            gpui::rgba(0xffffff11).into()
-        } else {
-            gpui::rgba(0x00000011).into()
-        };
+        let selected: Hsla = theme.tokens.background_modifier_hover;
         let ring: Hsla = if theme.dark {
-            theme.border
+            theme.tokens.background_modifier_border
         } else {
             gpui::rgba(0x00000026).into()
         };
@@ -1790,7 +1788,7 @@ impl PdfView {
                     .rounded(px(4.))
                     .cursor_pointer()
                     .when(current, |d| d.bg(selected))
-                    .hover(|s| s.bg(theme.bg_alt))
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
                         cx.stop_propagation();
                         this.go_to_page(ix, true, cx);
@@ -1815,7 +1813,7 @@ impl PdfView {
         if items.is_empty() {
             return div()
                 .p(px(OUTLINE_PAD))
-                .text_color(theme.text_faint)
+                .text_color(theme.tokens.text_faint)
                 .child("No outline available")
                 .into_any_element();
         }
@@ -1840,9 +1838,9 @@ impl PdfView {
                 .py(px(4.))
                 .rounded(px(4.))
                 .text_color(if on_page {
-                    theme.text
+                    theme.tokens.text_normal
                 } else {
-                    theme.text_muted
+                    theme.tokens.text_muted
                 })
                 .child(
                     div()
@@ -1868,7 +1866,7 @@ impl PdfView {
                                         "chevron-right"
                                     },
                                     12.,
-                                    theme.text_faint,
+                                    theme.tokens.text_faint,
                                 ))
                         }),
                 )
@@ -1885,13 +1883,13 @@ impl PdfView {
                     div()
                         .flex_shrink_0()
                         .text_size(px(FONT_UI_SMALLER))
-                        .text_color(theme.text_faint)
+                        .text_color(theme.tokens.text_faint)
                         .child(SharedString::from((p + 1).to_string()))
                 }));
             if let Some(page) = page {
                 row = row
                     .cursor_pointer()
-                    .hover(|s| s.bg(theme.bg_alt))
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
                         cx.stop_propagation();
                         this.go_to_page(page, true, cx);
@@ -1921,7 +1919,7 @@ impl PdfView {
             .min_w_0()
             .h_full()
             .overflow_hidden()
-            .bg(theme.bg)
+            .bg(theme.tokens.background_primary)
             .on_scroll_wheel(cx.listener(|this, event, window, cx| this.wheel(event, window, cx)))
             .on_mouse_down(
                 MouseButton::Left,
@@ -1954,7 +1952,7 @@ impl PdfView {
         let cache = documents(cx);
         let shadow = if theme.dark {
             vec![BoxShadow {
-                color: theme.border,
+                color: theme.tokens.background_modifier_border,
                 offset: point(px(0.), px(0.)),
                 blur_radius: px(0.),
                 spread_radius: px(1.),
@@ -2068,8 +2066,8 @@ impl Render for PdfView {
             .flex_col()
             .size_full()
             .overflow_hidden()
-            .bg(theme.bg)
-            .text_color(theme.text)
+            .bg(theme.tokens.background_primary)
+            .text_color(theme.tokens.text_normal)
             .child(self.render_toolbar(window, cx))
             .children(find_bar)
             .child(body)

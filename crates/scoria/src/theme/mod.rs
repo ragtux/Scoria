@@ -20,9 +20,8 @@
 //! over whatever is underneath rather than a flat colour, so the same token
 //! reads right over both backgrounds.
 //!
-//! The short field names (`text_muted`, `bg_alt`, …) predate the registry
-//! and are derived from it; new paint sites should read `tokens` by the
-//! surface's own token, which is what the probe record names.
+//! Every paint site reads `tokens` by the surface's own token, which is
+//! what the probe record names.
 
 pub mod defaults;
 pub mod registry;
@@ -79,34 +78,6 @@ pub fn heading_style(level: u8) -> (f32, f32, f32) {
 #[derive(Debug, Clone)]
 pub struct Theme {
     pub dark: bool,
-    /// `--background-primary`.
-    pub bg: Hsla,
-    /// `--background-secondary`.
-    pub bg_secondary: Hsla,
-    /// Hovered rows and buttons: a translucent wash (`--background-modifier-hover`).
-    pub bg_alt: Hsla,
-    /// The active row, dock tab and explorer file: the same wash.
-    pub bg_active: Hsla,
-    /// `--background-modifier-border`.
-    pub border: Hsla,
-    /// `--tab-divider-color`: the hairline between two inactive root tabs,
-    /// read as a computed property on 2026-10-22 (#3f3f3f dark, #dadada
-    /// light), a step brighter than the strip's own `--background-modifier-border`.
-    pub tab_divider: Hsla,
-    /// `--background-modifier-border-focus`: the 2 px ring on the explorer
-    /// row the keyboard is on.
-    pub border_focus: Hsla,
-    /// `--text-normal`, `--text-muted`, `--text-faint`.
-    pub text: Hsla,
-    pub text_muted: Hsla,
-    pub text_faint: Hsla,
-    /// `--interactive-accent`.
-    pub accent: Hsla,
-    /// `--link-color` and `--tag-color`: both `--text-accent`.
-    pub link: Hsla,
-    pub tag: Hsla,
-    /// `--highlight-background`: `--color-yellow` at `--highlight-opacity`.
-    pub highlight_bg: Hsla,
     pub ui_font: SharedString,
     pub text_font: SharedString,
     pub mono_font: SharedString,
@@ -261,25 +232,10 @@ impl Theme {
         Theme::from_tokens(false, base_tokens(false).clone())
     }
 
-    /// A theme over a token set: the short fields are the tokens the probe
-    /// saw the corresponding surfaces read.
+    /// A theme over a token set.
     pub fn from_tokens(dark: bool, tokens: Tokens) -> Theme {
         Theme {
             dark,
-            bg: tokens.background_primary,
-            bg_secondary: tokens.background_secondary,
-            bg_alt: tokens.background_modifier_hover,
-            bg_active: tokens.background_modifier_hover,
-            border: tokens.background_modifier_border,
-            tab_divider: tokens.tab_divider_color,
-            border_focus: tokens.background_modifier_border_focus,
-            text: tokens.text_normal,
-            text_muted: tokens.text_muted,
-            text_faint: tokens.text_faint,
-            accent: tokens.interactive_accent,
-            link: tokens.link_color,
-            tag: tokens.tag_color,
-            highlight_bg: tokens.highlight_background,
             ui_font: crate::assets::FONT_FAMILY.into(),
             text_font: crate::assets::FONT_FAMILY.into(),
             mono_font: DEFAULT_MONO_FONT.into(),
@@ -469,47 +425,56 @@ mod tests {
         observed_match(false, defaults::OBSERVED_LIGHT);
     }
 
-    /// The short fields the app has painted from since 2026-10-20, as the
-    /// registry derives them. These are the values `theme.rs` carried as
+    /// The shell colours the app has painted since 2026-10-20, as the
+    /// registry resolves them. These are the values `theme.rs` carried as
     /// literals before the registry existed, except where Obsidian differs:
     /// the light theme's accent is `--color-accent-1`, a shade lighter
     /// than the dark theme's (`hsl(257, 88.9%, 71%)`, not `hsl(258, 88%,
     /// 66%)`), and the highlight wash is `--color-yellow` at 30 percent
     /// rather than a flat gold.
     #[test]
-    fn the_short_fields_are_the_probed_shell_colours() {
-        let d = Theme::dark();
-        assert_eq!(hex(d.bg), "#1c1c1c");
-        assert_eq!(hex(d.bg_secondary), "#282828");
-        assert_eq!(hex(d.border), "#333333");
-        assert_eq!(hex(d.tab_divider), "#3f3f3f");
-        assert_eq!(hex(d.border_focus), "#555555");
-        assert_eq!(hex(d.text), "#dadada");
+    fn the_shell_tokens_are_the_probed_colours() {
+        let d = Theme::dark().tokens;
+        assert_eq!(hex(d.background_primary), "#1c1c1c");
+        assert_eq!(hex(d.background_secondary), "#282828");
+        assert_eq!(hex(d.code_background), "#232323");
+        assert_eq!(hex(d.background_modifier_border), "#333333");
+        assert_eq!(hex(d.tab_divider_color), "#3f3f3f");
+        assert_eq!(hex(d.background_modifier_border_focus), "#555555");
+        assert_eq!(hex(d.text_normal), "#dadada");
         assert_eq!(hex(d.text_muted), "#b3b3b3");
         assert_eq!(hex(d.text_faint), "#666666");
-        assert!((d.bg_alt.a - 0.067).abs() < 1e-3 && d.bg_alt.l > 0.99);
-        assert!((d.accent.h * 360. - 258.).abs() < 0.01 && (d.accent.l - 0.66).abs() < 1e-3);
-        assert!((d.link.h * 360. - 255.).abs() < 0.01 && (d.link.l - 0.759).abs() < 1e-3);
-        assert_eq!(d.tag, d.link);
-        assert_eq!(hex(d.highlight_bg), "#e0de714d");
+        let hover = d.background_modifier_hover;
+        assert!((hover.a - 0.067).abs() < 1e-3 && hover.l > 0.99);
+        let accent = d.interactive_accent;
+        assert!((accent.h * 360. - 258.).abs() < 0.01 && (accent.l - 0.66).abs() < 1e-3);
+        assert!(
+            (d.link_color.h * 360. - 255.).abs() < 0.01 && (d.link_color.l - 0.759).abs() < 1e-3
+        );
+        assert_eq!(d.tag_color, d.link_color);
+        assert_eq!(hex(d.highlight_background), "#e0de714d");
 
-        let l = Theme::light();
-        assert_eq!(hex(l.bg), "#ffffff");
-        assert_eq!(hex(l.bg_secondary), "#f6f6f6");
-        assert_eq!(hex(l.border), "#e4e4e4");
-        assert_eq!(hex(l.tab_divider), "#dadada");
-        assert_eq!(hex(l.border_focus), "#bdbdbd");
-        assert_eq!(hex(l.text), "#222222");
+        let l = Theme::light().tokens;
+        assert_eq!(hex(l.background_primary), "#ffffff");
+        assert_eq!(hex(l.background_secondary), "#f6f6f6");
+        assert_eq!(hex(l.code_background), "#fafafa");
+        assert_eq!(hex(l.background_modifier_border), "#e4e4e4");
+        assert_eq!(hex(l.tab_divider_color), "#dadada");
+        assert_eq!(hex(l.background_modifier_border_focus), "#bdbdbd");
+        assert_eq!(hex(l.text_normal), "#222222");
         assert_eq!(hex(l.text_muted), "#5c5c5c");
         assert_eq!(hex(l.text_faint), "#ababab");
-        assert!((l.bg_alt.a - 0.067).abs() < 1e-3 && l.bg_alt.l < 0.01);
+        let hover = l.background_modifier_hover;
+        assert!((hover.a - 0.067).abs() < 1e-3 && hover.l < 0.01);
+        let accent = l.interactive_accent;
         assert!(
-            (l.accent.h * 360. - 257.).abs() < 0.01 && (l.accent.l - 0.7095).abs() < 1e-3,
-            "{:?}",
-            l.accent
+            (accent.h * 360. - 257.).abs() < 0.01 && (accent.l - 0.7095).abs() < 1e-3,
+            "{accent:?}"
         );
-        assert!((l.link.h * 360. - 258.).abs() < 0.01 && (l.link.l - 0.66).abs() < 1e-3);
-        assert_eq!(hex(l.highlight_bg), "#e0ac004d");
+        assert!(
+            (l.link_color.h * 360. - 258.).abs() < 0.01 && (l.link_color.l - 0.66).abs() < 1e-3
+        );
+        assert_eq!(hex(l.highlight_background), "#e0ac004d");
     }
 
     /// `accentColor` moves every accent-derived token the way Obsidian's
@@ -521,20 +486,24 @@ mod tests {
             accent_color: Some("#e8590c".into()),
             ..Default::default()
         };
-        let t = Theme::from_appearance(&config, true);
+        let t = Theme::from_appearance(&config, true).tokens;
+        assert!((t.accent_h - 21.).abs() < 1., "{}", t.accent_h);
         assert!(
-            (t.tokens.accent_h - 21.).abs() < 1.,
-            "{}",
-            t.tokens.accent_h
+            (t.interactive_accent.h * 360. - 21.).abs() < 1.,
+            "{:?}",
+            t.interactive_accent
         );
-        assert!((t.accent.h * 360. - 21.).abs() < 1., "{:?}", t.accent);
         // `--color-accent-1` on the dark theme: hue 3 less, saturation times
         // 1.02, lightness times 1.15.
-        assert!((t.link.h * 360. - 18.).abs() < 1., "{:?}", t.link);
-        assert!((t.link.l / t.tokens.color_accent.l - 1.15).abs() < 0.01);
         assert!(
-            (t.tokens.tag_background.h - t.accent.h).abs() < 0.01
-                && (t.tokens.tag_background.a - 0.1).abs() < 1e-3
+            (t.link_color.h * 360. - 18.).abs() < 1.,
+            "{:?}",
+            t.link_color
+        );
+        assert!((t.link_color.l / t.color_accent.l - 1.15).abs() < 0.01);
+        assert!(
+            (t.tag_background.h - t.interactive_accent.h).abs() < 0.01
+                && (t.tag_background.a - 0.1).abs() < 1e-3
         );
         // An empty value is the default.
         let plain = Theme::from_appearance(
@@ -544,7 +513,10 @@ mod tests {
             },
             true,
         );
-        assert_eq!(plain.accent, Theme::dark().accent);
+        assert_eq!(
+            plain.tokens.interactive_accent,
+            Theme::dark().tokens.interactive_accent
+        );
     }
 
     /// A theme's override that is not a colour keeps the default rather

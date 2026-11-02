@@ -262,7 +262,11 @@ impl BasesView {
             .flex_shrink_0()
             .whitespace_nowrap()
             .cursor_pointer()
-            .text_color(if link { theme.link } else { theme.text })
+            .text_color(if link {
+                theme.tokens.link_color
+            } else {
+                theme.tokens.text_normal
+            })
             .on_click(cx.listener(move |this, _, _, cx| {
                 cx.stop_propagation();
                 this.open(path.clone(), cx)
@@ -287,7 +291,7 @@ impl BasesView {
                         .whitespace_nowrap()
                         .overflow_hidden()
                         .text_ellipsis()
-                        .text_color(theme.text_muted)
+                        .text_color(theme.tokens.text_muted)
                         .child(SharedString::from(value.clone()))
                 }))
         } else {
@@ -304,7 +308,7 @@ impl BasesView {
                             .whitespace_nowrap()
                             .overflow_hidden()
                             .text_ellipsis()
-                            .text_color(theme.text_muted)
+                            .text_color(theme.tokens.text_muted)
                             .child(SharedString::from(rest)),
                     )
                 })
@@ -319,13 +323,13 @@ impl BasesView {
             .py(px(LINE_PAD))
             .overflow_hidden()
             .text_size(px(FONT_UI_SMALL))
-            .hover(|s| s.bg(theme.bg_alt));
+            .hover(|s| s.bg(theme.tokens.background_modifier_hover));
         if let Some(mark) = marker(self.list.markers, number) {
             line = line.child(
                 div()
                     .flex_shrink_0()
                     .w(px(MARKER_WIDTH))
-                    .text_color(theme.text_muted)
+                    .text_color(theme.tokens.text_muted)
                     .child(SharedString::from(mark)),
             );
         }

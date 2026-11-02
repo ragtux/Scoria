@@ -62,12 +62,12 @@ impl Render for Tooltip {
             .px_2()
             .py_1()
             .rounded_md()
-            .bg(theme.bg_secondary)
+            .bg(theme.tokens.background_secondary)
             .border_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.background_modifier_border)
             .shadow_md()
             .text_size(px(12.))
-            .text_color(theme.text)
+            .text_color(theme.tokens.text_normal)
             .child(self.text.clone())
     }
 }
@@ -110,7 +110,7 @@ pub fn icon_row(
                 .justify_center()
                 .rounded_sm()
                 .cursor_pointer()
-                .hover(|s| s.bg(theme.bg_alt))
+                .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                 .tooltip(tooltip(item.label))
                 .on_click(cx.listener(move |this, _, window, cx| this.menu_pick(id, window, cx)))
                 .child(icon(
@@ -137,19 +137,24 @@ pub fn context_menu(
         .flex_col()
         .min_w(px(200.))
         .py_1()
-        .bg(theme.bg_secondary)
+        .bg(theme.tokens.background_secondary)
         .border_1()
-        .border_color(theme.border)
+        .border_color(theme.tokens.background_modifier_border)
         .rounded_md()
         .shadow_lg()
         .text_size(px(13.))
-        .text_color(theme.text)
+        .text_color(theme.tokens.text_normal)
         .occlude()
         .on_mouse_down_out(cx.listener(|this, _, _, cx| this.close_context_menu(cx)));
     for (ix, item) in items.iter().enumerate() {
         let id = item.id;
         if item.label == SEPARATOR {
-            list = list.child(div().my_1().h(px(1.)).bg(theme.border));
+            list = list.child(
+                div()
+                    .my_1()
+                    .h(px(1.))
+                    .bg(theme.tokens.background_modifier_border),
+            );
             continue;
         }
         list = list.child(
@@ -158,7 +163,7 @@ pub fn context_menu(
                 .px_3()
                 .py_1()
                 .cursor_pointer()
-                .hover(|s| s.bg(theme.bg_alt))
+                .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                 .on_click(cx.listener(move |this, _, window, cx| {
                     this.close_context_menu(cx);
                     this.menu_pick(id, window, cx);

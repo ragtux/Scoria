@@ -22,7 +22,7 @@ use crate::text_input::{InputEvent, TextInput};
 use crate::theme::{Theme, FONT_UI_SMALL, FONT_UI_SMALLER, ICON_SIZE};
 use crate::workspace::VaultState;
 use gpui::{
-    anchored, deferred, div, list, prelude::*, px, relative, rgb, Anchor, App, ClickEvent, Context,
+    anchored, deferred, div, list, prelude::*, px, relative, Anchor, App, ClickEvent, Context,
     Entity, EventEmitter, FocusHandle, Focusable, HighlightStyle, ListAlignment, ListState, Pixels,
     Point, SharedString, StyledText, Subscription, Window,
 };
@@ -109,7 +109,6 @@ pub struct CopyEntry {
 const CONTAINER_PAD: f32 = 12.;
 const FILE_ROW_HEIGHT: f32 = 25.;
 /// The accent at a third: Obsidian's match-row hover wash.
-const HOVER_ALPHA: f32 = 0.33;
 /// The accent at a tenth: the wash behind an active header button.
 const ACTIVE_ALPHA: f32 = 0.1;
 
@@ -706,7 +705,7 @@ impl SearchPane {
             .items_center()
             .rounded(px(8.))
             .cursor_pointer()
-            .hover(|s| s.bg(theme.bg_alt))
+            .hover(|s| s.bg(theme.tokens.nav_item_background_hover))
             .on_click(cx.listener(move |this, _, _, cx| {
                 this.focused = Some(row_ix);
                 this.toggle(path.clone(), cx)
@@ -723,7 +722,7 @@ impl SearchPane {
                     .flex()
                     .items_center()
                     .justify_center()
-                    .opacity(0.85)
+                    .opacity(theme.tokens.icon_opacity)
                     .child(icon(
                         if collapsed {
                             "chevron-right"
@@ -731,15 +730,17 @@ impl SearchPane {
                             "chevron-down"
                         },
                         10.,
-                        theme.text_faint,
+                        theme.tokens.collapse_icon_color,
                     )),
             )
+            // `.search-result-file-title`: `--nav-item-color-active`, its
+            // flair `--text-faint` (probe of 2026-11-02).
             .child(
                 div()
                     .flex_1()
                     .min_w_0()
                     .text_size(px(FONT_UI_SMALL))
-                    .text_color(theme.text)
+                    .text_color(theme.tokens.nav_item_color_active)
                     .whitespace_nowrap()
                     .overflow_hidden()
                     .text_ellipsis()
@@ -750,7 +751,7 @@ impl SearchPane {
                     .flex_shrink_0()
                     .pl(px(8.))
                     .text_size(px(FONT_UI_SMALLER))
-                    .text_color(theme.text_faint)
+                    .text_color(theme.tokens.text_faint)
                     .child(count),
             )
             .children(focused.then(|| focus_ring(8., theme)))
@@ -797,8 +798,8 @@ impl SearchPane {
                 None => (false, false),
             }
         };
-        let mut wash = theme.accent;
-        wash.a = HOVER_ALPHA;
+        // A hovered match: `--text-selection`.
+        let wash = theme.tokens.text_selection;
         let chevron_path = path.clone();
         let chevron = move |up: bool, cx: &mut Context<Self>| {
             let path = chevron_path.clone();
@@ -821,7 +822,7 @@ impl SearchPane {
                 .cursor_pointer()
                 .invisible()
                 .group_hover("search-match", |s| s.visible())
-                .hover(|s| s.bg(theme.bg_alt))
+                .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                 .tooltip(tooltip("Show more context"))
                 .on_click(cx.listener(move |this, _, _, cx| {
                     this.grow_context(path.clone(), offset, up, cx);
@@ -830,7 +831,7 @@ impl SearchPane {
                 .child(icon(
                     if up { "chevron-up" } else { "chevron-down" },
                     ICON_SIZE,
-                    theme.text_faint,
+                    theme.tokens.text_faint,
                 ))
         };
         let light = !theme.dark;
@@ -839,17 +840,24 @@ impl SearchPane {
             .group("search-match")
             .relative()
             .w_full()
-            .bg(theme.bg)
+            // `.search-result-file-matches`: `--search-result-background`,
+            // the rows parted by `--background-modifier-border`.
+            .bg(theme.tokens.search_result_background)
             .when(first, |d| d.mt(px(4.)).rounded_t(px(4.)))
             .when(last, |d| d.mb(px(8.)).rounded_b(px(4.)))
             // The light theme rings the card with a hairline; the dark one
             // has only the hairlines between rows.
             .when(light, |d| {
-                d.border_l_1().border_r_1().border_color(theme.border)
+                d.border_l_1()
+                    .border_r_1()
+                    .border_color(theme.tokens.background_modifier_border)
             })
             .when(light && first, |d| d.border_t_1())
             .when(light && last, |d| d.border_b_1())
-            .when(!first, |d| d.border_t_1().border_color(theme.border))
+            .when(!first, |d| {
+                d.border_t_1()
+                    .border_color(theme.tokens.background_modifier_border)
+            })
             .pl(px(12.))
             .pr(px(20.))
             .py(px(8.))
@@ -863,8 +871,8 @@ impl SearchPane {
                 div()
                     .text_size(px(FONT_UI_SMALLER))
                     .line_height(relative(1.3))
-                    .text_color(theme.text_muted)
-                    .group_hover("search-match", |s| s.text_color(theme.text))
+                    .text_color(theme.tokens.text_muted)
+                    .group_hover("search-match", |s| s.text_color(theme.tokens.text_normal))
                     .child(text),
             )
             .children(has_above.then(|| chevron(true, cx)))
@@ -883,7 +891,7 @@ impl SearchPane {
         self.input
             .update(cx, |input, _| input.set_pad_right(px(pad)));
         let matching = self.matching_case;
-        let mut active_wash = theme.accent;
+        let mut active_wash = theme.tokens.interactive_accent;
         active_wash.a = ACTIVE_ALPHA;
         let match_case = div()
             .id("search-match-case")
@@ -895,16 +903,16 @@ impl SearchPane {
             .rounded(px(4.))
             .cursor_pointer()
             .when(matching, |d| d.bg(active_wash))
-            .hover(|s| s.bg(theme.bg_alt))
+            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
             .tooltip(tooltip("Match case"))
             .on_click(cx.listener(move |this, _, _, cx| this.set_matching_case(!matching, cx)))
             .child(icon(
                 "case-sensitive",
                 ICON_SIZE,
                 if matching {
-                    theme.accent
+                    theme.tokens.interactive_accent
                 } else {
-                    theme.text_muted
+                    theme.tokens.icon_color
                 },
             ));
         let clear = has_text.then(|| {
@@ -922,14 +930,16 @@ impl SearchPane {
                     window.focus(&this.input.focus_handle(cx), cx);
                 }))
                 .child(
+                    // `.search-input-clear-button`: a disc in
+                    // `--search-clear-button-color`.
                     div()
                         .size(px(14.))
                         .rounded_full()
-                        .bg(theme.text_muted)
+                        .bg(theme.tokens.search_clear_button_color)
                         .flex()
                         .items_center()
                         .justify_center()
-                        .child(icon("x", 9., theme.bg_secondary)),
+                        .child(icon("x", 9., theme.tokens.background_secondary)),
                 )
         });
         let settings_open = self.settings_open;
@@ -944,7 +954,7 @@ impl SearchPane {
             .rounded(px(4.))
             .cursor_pointer()
             .when(settings_open, |d| d.bg(active_wash))
-            .hover(|s| s.bg(theme.bg_alt))
+            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
             .tooltip(tooltip("Search settings"))
             .on_click(cx.listener(|this, _, _, cx| {
                 this.settings_open = !this.settings_open;
@@ -954,9 +964,9 @@ impl SearchPane {
                 "sliders-horizontal",
                 ICON_SIZE,
                 if settings_open {
-                    theme.accent
+                    theme.tokens.interactive_accent
                 } else {
-                    theme.text_muted
+                    theme.tokens.icon_color
                 },
             ));
         div()
@@ -984,7 +994,7 @@ impl SearchPane {
                             .h(px(30.))
                             .flex()
                             .items_center()
-                            .child(icon("search", ICON_SIZE, theme.text_muted)),
+                            .child(icon("search", ICON_SIZE, theme.tokens.search_icon_color)),
                     )
                     .child(
                         div()
@@ -1039,7 +1049,7 @@ impl SearchPane {
                 .flex_col()
                 .text_size(px(FONT_UI_SMALLER))
                 .line_height(relative(1.3))
-                .text_color(theme.text_muted)
+                .text_color(theme.tokens.text_muted)
                 .children(lines),
         )
     }
@@ -1075,7 +1085,7 @@ impl SearchPane {
                             div()
                                 .min_w_0()
                                 .text_size(px(FONT_UI_SMALL))
-                                .text_color(theme.text)
+                                .text_color(theme.tokens.setting_item_name_color)
                                 .whitespace_nowrap()
                                 .overflow_hidden()
                                 .text_ellipsis()
@@ -1110,9 +1120,9 @@ impl SearchPane {
             .rounded(px(4.))
             .cursor_pointer()
             .text_size(px(FONT_UI_SMALLER))
-            .text_color(theme.text_muted)
-            .when(count_open, |d| d.bg(theme.bg_alt))
-            .hover(|s| s.bg(theme.bg_alt))
+            .text_color(theme.tokens.text_muted)
+            .when(count_open, |d| d.bg(theme.tokens.background_modifier_hover))
+            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
             .when(count.is_empty(), |d| d.invisible())
             .on_click(cx.listener(|this, event: &ClickEvent, _, cx| {
                 this.menu_at = event.position();
@@ -1126,11 +1136,11 @@ impl SearchPane {
                 div()
                     .size(px(14.))
                     .rounded_full()
-                    .bg(theme.text_muted)
+                    .bg(theme.tokens.text_muted)
                     .flex()
                     .items_center()
                     .justify_center()
-                    .child(icon("ellipsis", 10., theme.bg_secondary)),
+                    .child(icon("ellipsis", 10., theme.tokens.background_secondary)),
             );
         let sort_open = self.sort_menu_open;
         let sort_control = div()
@@ -1145,9 +1155,9 @@ impl SearchPane {
             .rounded(px(5.))
             .cursor_pointer()
             .text_size(px(FONT_UI_SMALLER))
-            .text_color(theme.text_muted)
-            .when(sort_open, |d| d.bg(theme.bg_alt))
-            .hover(|s| s.bg(theme.bg_alt))
+            .text_color(theme.tokens.text_muted)
+            .when(sort_open, |d| d.bg(theme.tokens.background_modifier_hover))
+            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
             .tooltip(tooltip("Change sort order"))
             .on_click(cx.listener(|this, event: &ClickEvent, _, cx| {
                 this.menu_at = event.position();
@@ -1156,7 +1166,7 @@ impl SearchPane {
                 cx.notify();
             }))
             .child(div().whitespace_nowrap().child(self.sort.label()))
-            .child(icon("chevrons-up-down", 12., theme.text_muted));
+            .child(icon("chevrons-up-down", 12., theme.tokens.text_muted));
         div()
             .flex_shrink_0()
             .px(px(12.))
@@ -1247,7 +1257,12 @@ impl SearchPane {
             }));
         for (ix, order) in SortOrder::ALL.into_iter().enumerate() {
             if ix > 0 && ix % 2 == 0 {
-                list = list.child(div().my_1().h(px(1.)).bg(theme.border));
+                list = list.child(
+                    div()
+                        .my_1()
+                        .h(px(1.))
+                        .bg(theme.tokens.background_modifier_border),
+                );
             }
             list = list.child(
                 menu_item(
@@ -1315,11 +1330,13 @@ fn focus_ring(radius: f32, theme: &Theme) -> gpui::Div {
         .inset_0()
         .rounded(px(radius))
         .border_2()
-        .border_color(theme.border_focus)
+        .border_color(theme.tokens.background_modifier_border_focus)
 }
 
 /// A settings toggle the size of Obsidian's `checkbox-container` in a
-/// pane: 34 by 19, the knob 15, the track the accent when on.
+/// pane: 34 by 19, the knob 15 in `--toggle-thumb-color`, the track
+/// `--background-modifier-border-hover`, `--interactive-accent` when on
+/// (probe of 2026-11-02, `settings.toggle`).
 pub(crate) fn toggle(
     id: (&'static str, usize),
     on: bool,
@@ -1332,7 +1349,11 @@ pub(crate) fn toggle(
         .w(px(34.))
         .h(px(19.))
         .rounded_full()
-        .bg(if on { theme.accent } else { theme.tab_divider })
+        .bg(if on {
+            theme.tokens.interactive_accent
+        } else {
+            theme.tokens.background_modifier_border_hover
+        })
         .cursor_pointer()
         .child(
             div()
@@ -1341,7 +1362,7 @@ pub(crate) fn toggle(
                 .left(px(if on { 17. } else { 2. }))
                 .size(px(15.))
                 .rounded_full()
-                .bg(rgb(0xffffff)),
+                .bg(theme.tokens.toggle_thumb_color),
         )
 }
 
@@ -1354,13 +1375,13 @@ pub(crate) fn menu(id: &'static str, theme: &Theme) -> gpui::Stateful<gpui::Div>
         .flex_col()
         .min_w(px(172.))
         .p(px(6.))
-        .bg(theme.bg_secondary)
+        .bg(theme.tokens.menu_background)
         .border_1()
-        .border_color(theme.tab_divider)
+        .border_color(theme.tokens.menu_border_color)
         .rounded(px(8.))
         .shadow_lg()
         .text_size(px(FONT_UI_SMALL))
-        .text_color(theme.text)
+        .text_color(theme.tokens.text_normal)
         // Keeps a click on an item from reaching what is under it.
         .occlude()
 }
@@ -1376,9 +1397,9 @@ pub(crate) fn menu_item(
     theme: &Theme,
 ) -> gpui::Stateful<gpui::Div> {
     let glyph: Option<gpui::Svg> = if checked {
-        Some(icon("check", 14., theme.text_muted))
+        Some(icon("check", 14., theme.tokens.text_muted))
     } else {
-        icon_name.map(|n| icon(n, ICON_SIZE, theme.text_muted))
+        icon_name.map(|n| icon(n, ICON_SIZE, theme.tokens.text_muted))
     };
     div()
         .id((prefix, ix))
@@ -1390,7 +1411,7 @@ pub(crate) fn menu_item(
         .py(px(4.))
         .rounded(px(4.))
         .cursor_pointer()
-        .hover(|s| s.bg(theme.bg_alt))
+        .hover(|s| s.bg(theme.tokens.background_modifier_hover))
         .child(
             div()
                 .w(px(16.))
@@ -1545,10 +1566,10 @@ fn highlights(
             (
                 r.clone(),
                 HighlightStyle {
-                    background_color: Some(theme.highlight_bg),
+                    background_color: Some(theme.tokens.highlight_background),
                     color: match kind {
                         Highlight::Name => None,
-                        Highlight::Match => Some(theme.text),
+                        Highlight::Match => Some(theme.tokens.text_normal),
                     },
                     ..HighlightStyle::default()
                 },

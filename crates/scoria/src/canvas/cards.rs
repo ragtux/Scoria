@@ -337,15 +337,20 @@ impl Cards {
                     kind_icon(*kind),
                     name,
                     kind_label(*kind),
-                    theme.text,
+                    theme.tokens.text_normal,
                     scale,
                     theme,
                 ),
-                Content::Missing { name, reason } => {
-                    Cards::placeholder("file-search", name, reason, theme.text_muted, scale, theme)
-                }
+                Content::Missing { name, reason } => Cards::placeholder(
+                    "file-search",
+                    name,
+                    reason,
+                    theme.tokens.text_muted,
+                    scale,
+                    theme,
+                ),
                 Content::Link { host, url } => {
-                    Cards::placeholder("link", host, url, theme.text, scale, theme)
+                    Cards::placeholder("link", host, url, theme.tokens.text_normal, scale, theme)
                 }
                 Content::Background { path, style } => img(path.clone())
                     .size_full()
@@ -614,7 +619,7 @@ impl Cards {
                 .font_family(theme.text_font.clone())
                 .text_size(px(base))
                 .line_height(px(base * LINE_HEIGHT))
-                .text_color(theme.text)
+                .text_color(theme.tokens.text_normal)
                 .flex()
                 .flex_col()
                 .children(blocks),
@@ -631,7 +636,11 @@ impl Cards {
             .flex()
             .items_center()
             .justify_center()
-            .child(icon(name, PLACEHOLDER_ICON * scale, theme.text))
+            .child(icon(
+                name,
+                PLACEHOLDER_ICON * scale,
+                theme.tokens.text_normal,
+            ))
             .into_any_element()
     }
 
@@ -653,7 +662,11 @@ impl Cards {
             .gap(px(base * 0.5))
             .px(px(CARD_PADDING * scale))
             .font_family(theme.ui_font.clone())
-            .child(icon(icon_name, PLACEHOLDER_ICON * scale, theme.text_muted))
+            .child(icon(
+                icon_name,
+                PLACEHOLDER_ICON * scale,
+                theme.tokens.text_muted,
+            ))
             .child(
                 div()
                     .max_w_full()
@@ -670,7 +683,7 @@ impl Cards {
                     .truncate()
                     .text_size(px(base * 0.85))
                     .line_height(px(base * 0.85 * 1.3))
-                    .text_color(theme.text_muted)
+                    .text_color(theme.tokens.text_muted)
                     .child(SharedString::from(detail.to_string())),
             )
             .into_any_element()
@@ -694,7 +707,7 @@ impl Cards {
                     .text_size(px(font))
                     .line_height(px(font * 1.2))
                     .font_weight(FontWeight::SEMIBOLD)
-                    .text_color(theme.text)
+                    .text_color(theme.tokens.text_normal)
                     .child(SharedString::from(text.to_string())),
             )
             .into_any_element()

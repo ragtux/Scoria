@@ -1159,7 +1159,11 @@ impl GraphView {
             .w(px(30.))
             .h(px(16.))
             .rounded_full()
-            .bg(if on { theme.accent } else { theme.bg_active })
+            .bg(if on {
+                theme.tokens.interactive_accent
+            } else {
+                theme.tokens.background_modifier_hover
+            })
             .child(
                 div()
                     .absolute()
@@ -1168,7 +1172,7 @@ impl GraphView {
                     .w(px(12.))
                     .h(px(12.))
                     .rounded_full()
-                    .bg(theme.bg),
+                    .bg(theme.tokens.background_primary),
             )
     }
 
@@ -1191,7 +1195,7 @@ impl GraphView {
             .py(px(3.))
             .cursor_pointer()
             .on_click(cx.listener(move |this, _, _, cx| this.toggle_flag(key, cx)))
-            .child(div().text_color(theme.text).child(label))
+            .child(div().text_color(theme.tokens.text_normal).child(label))
             .child(Self::pill(on, theme))
     }
 
@@ -1199,7 +1203,11 @@ impl GraphView {
         let value = slider.get(&self.config, &self.local_options);
         let t = slider.fraction(value);
         let entity = cx.entity();
-        let (track_color, fill_color, knob_color) = (theme.bg_active, theme.accent, theme.text);
+        let (track_color, fill_color, knob_color) = (
+            theme.tokens.background_modifier_hover,
+            theme.tokens.interactive_accent,
+            theme.tokens.text_normal,
+        );
         let track = canvas(
             move |bounds, window, _| window.insert_hitbox(bounds, HitboxBehavior::Normal),
             move |bounds, hitbox, window, _| {
@@ -1275,7 +1283,11 @@ impl GraphView {
             .gap_2()
             .px_2()
             .py(px(3.))
-            .child(div().text_color(theme.text).child(slider.label()))
+            .child(
+                div()
+                    .text_color(theme.tokens.text_normal)
+                    .child(slider.label()),
+            )
             .child(
                 div()
                     .flex()
@@ -1287,7 +1299,7 @@ impl GraphView {
                         div()
                             .w(px(30.))
                             .text_right()
-                            .text_color(theme.text_muted)
+                            .text_color(theme.tokens.text_muted)
                             .child(SharedString::from(shown)),
                     ),
             )
@@ -1308,8 +1320,11 @@ impl GraphView {
             .rounded_sm()
             .cursor_pointer()
             .text_size(px(13.))
-            .text_color(theme.text_muted)
-            .hover(|s| s.bg(theme.bg_alt).text_color(theme.text))
+            .text_color(theme.tokens.text_muted)
+            .hover(|s| {
+                s.bg(theme.tokens.background_modifier_hover)
+                    .text_color(theme.tokens.text_normal)
+            })
             .child(glyph)
     }
 
@@ -1325,7 +1340,7 @@ impl GraphView {
             .flex()
             .flex_col()
             .border_t_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.background_modifier_border)
             .child(
                 div()
                     .id(SharedString::from(format!(
@@ -1339,15 +1354,19 @@ impl GraphView {
                     .px_2()
                     .py(px(5.))
                     .cursor_pointer()
-                    .hover(|s| s.bg(theme.bg_alt))
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .on_click(cx.listener(move |this, _, _, cx| this.toggle_section(section, cx)))
                     .child(
                         div()
                             .w(px(12.))
-                            .text_color(theme.text_muted)
+                            .text_color(theme.tokens.text_muted)
                             .child(if collapsed { "▸" } else { "▾" }),
                     )
-                    .child(div().text_color(theme.text).child(section.label())),
+                    .child(
+                        div()
+                            .text_color(theme.tokens.text_normal)
+                            .child(section.label()),
+                    ),
             )
             .when(!collapsed, |d| {
                 d.child(div().flex().flex_col().pb_1().children(body))
@@ -1360,9 +1379,9 @@ impl GraphView {
                 .absolute()
                 .top_2()
                 .left_2()
-                .bg(theme.bg_secondary)
+                .bg(theme.tokens.background_secondary)
                 .border_1()
-                .border_color(theme.border)
+                .border_color(theme.tokens.background_modifier_border)
                 .occlude()
                 .on_click(cx.listener(|this, _, _, cx| this.set_closed(false, cx)))
                 .into_any_element();
@@ -1443,11 +1462,11 @@ impl GraphView {
                         .overflow_hidden()
                         .text_ellipsis()
                         .text_color(if group.query.is_empty() {
-                            theme.text_faint
+                            theme.tokens.text_faint
                         } else {
-                            theme.text
+                            theme.tokens.text_normal
                         })
-                        .hover(|s| s.bg(theme.bg_alt))
+                        .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                         .on_click(cx.listener(move |this, _, window, cx| {
                             this.start_edit_group(ix, window, cx)
                         }))
@@ -1497,11 +1516,11 @@ impl GraphView {
                         .py(px(2.))
                         .rounded_sm()
                         .cursor_pointer()
-                        .bg(theme.bg_alt)
+                        .bg(theme.tokens.background_modifier_hover)
                         .border_1()
-                        .border_color(theme.border)
-                        .text_color(theme.text)
-                        .hover(|s| s.bg(theme.bg_active))
+                        .border_color(theme.tokens.background_modifier_border)
+                        .text_color(theme.tokens.text_normal)
+                        .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                         .on_click(cx.listener(|this, _, window, cx| this.add_group(window, cx)))
                         .child("New group"),
                 )
@@ -1542,9 +1561,9 @@ impl GraphView {
             .overflow_y_scroll()
             .flex()
             .flex_col()
-            .bg(theme.bg_secondary)
+            .bg(theme.tokens.background_secondary)
             .border_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.background_modifier_border)
             .rounded_md()
             .text_size(px(12.))
             .child(
@@ -1591,8 +1610,11 @@ impl GraphView {
             .justify_center()
             .rounded_sm()
             .cursor_pointer()
-            .text_color(theme.text_muted)
-            .hover(|s| s.bg(theme.bg_alt).text_color(theme.text))
+            .text_color(theme.tokens.text_muted)
+            .hover(|s| {
+                s.bg(theme.tokens.background_modifier_hover)
+                    .text_color(theme.tokens.text_normal)
+            })
             .child(glyph)
     }
 }
@@ -2025,13 +2047,17 @@ impl Render for GraphView {
                 .text_size(px(11.))
                 .cursor_pointer()
                 .bg(if on {
-                    theme.bg_active
+                    theme.tokens.background_modifier_hover
                 } else {
-                    theme.bg_secondary
+                    theme.tokens.background_secondary
                 })
-                .text_color(if on { theme.text } else { theme.text_muted })
+                .text_color(if on {
+                    theme.tokens.text_normal
+                } else {
+                    theme.tokens.text_muted
+                })
                 .border_1()
-                .border_color(theme.border)
+                .border_color(theme.tokens.background_modifier_border)
                 .child(label)
         };
 
@@ -2043,7 +2069,7 @@ impl Render for GraphView {
             .on_action(cx.listener(Self::reset_view))
             .relative()
             .size_full()
-            .bg(theme.bg)
+            .bg(theme.tokens.background_primary)
             .child(
                 canvas(
                     move |bounds, window, cx| {
@@ -2161,7 +2187,7 @@ impl Render for GraphView {
                                     }
                                 }
                             }
-                            let mut edge_color = theme.text_faint;
+                            let mut edge_color = theme.tokens.text_faint;
                             edge_color.a = if hovered.is_some() { 0.25 } else { 0.6 };
                             if any_plain {
                                 if let Ok(path) = plain.build() {
@@ -2175,11 +2201,11 @@ impl Render for GraphView {
                             }
                             if any_bright {
                                 if let Ok(path) = bright.build() {
-                                    window.paint_path(path, theme.accent);
+                                    window.paint_path(path, theme.tokens.interactive_accent);
                                 }
                                 if arrows {
                                     if let Ok(path) = bright_heads.build() {
-                                        window.paint_path(path, theme.accent);
+                                        window.paint_path(path, theme.tokens.interactive_accent);
                                     }
                                 }
                             }
@@ -2199,13 +2225,13 @@ impl Render for GraphView {
                                 }
                                 let dim = hovered.is_some() && !highlight.contains(&i);
                                 let mut color = match node.kind {
-                                    NodeKind::Note => node.color.unwrap_or(theme.text_muted),
-                                    NodeKind::Attachment => theme.text_faint,
-                                    NodeKind::Unresolved => theme.text_faint,
-                                    NodeKind::Tag => theme.tag,
+                                    NodeKind::Note => node.color.unwrap_or(theme.tokens.text_muted),
+                                    NodeKind::Attachment => theme.tokens.text_faint,
+                                    NodeKind::Unresolved => theme.tokens.text_faint,
+                                    NodeKind::Tag => theme.tokens.tag_color,
                                 };
                                 if Some(i) == current_ix || Some(i) == hovered {
-                                    color = theme.accent;
+                                    color = theme.tokens.interactive_accent;
                                 }
                                 if dim {
                                     color.a *= 0.3;
@@ -2227,7 +2253,11 @@ impl Render for GraphView {
                                 if show_label {
                                     labels += 1;
                                     let mut run = style.to_run(node.label.len());
-                                    run.color = if dim { theme.text_faint } else { theme.text };
+                                    run.color = if dim {
+                                        theme.tokens.text_faint
+                                    } else {
+                                        theme.tokens.text_normal
+                                    };
                                     let line = window.text_system().shape_line(
                                         node.label.clone(),
                                         font_size,
@@ -2302,14 +2332,16 @@ impl Render for GraphView {
                     .flex_row()
                     .items_center()
                     .gap_2()
-                    .children(
-                        hovered_label
-                            .map(|l| div().text_size(px(11.)).text_color(theme.text).child(l)),
-                    )
+                    .children(hovered_label.map(|l| {
+                        div()
+                            .text_size(px(11.))
+                            .text_color(theme.tokens.text_normal)
+                            .child(l)
+                    }))
                     .child(
                         div()
                             .text_size(px(11.))
-                            .text_color(theme.text_muted)
+                            .text_color(theme.tokens.text_muted)
                             .child(status),
                     )
                     .child(

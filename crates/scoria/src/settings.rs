@@ -33,7 +33,7 @@ use crate::text_input::{InputEvent, TextInput};
 use crate::theme::Theme;
 use crate::workspace::{Commands, VaultState, Workspace};
 use gpui::{
-    actions, deferred, div, prelude::*, px, rgb, size, uniform_list, App, Bounds, Context, Entity,
+    actions, deferred, div, prelude::*, px, size, uniform_list, App, Bounds, Context, Entity,
     EventEmitter, FocusHandle, Focusable, FontWeight, KeyBinding, KeyDownEvent, Keystroke,
     SharedString, Subscription, TitlebarOptions, UniformListScrollHandle, WeakEntity, Window,
     WindowBackgroundAppearance, WindowBounds, WindowDecorations, WindowHandle, WindowOptions,
@@ -2835,7 +2835,7 @@ impl SettingsView {
                 .pt_3()
                 .pb_1()
                 .text_size(px(11.))
-                .text_color(theme.text_faint)
+                .text_color(theme.tokens.text_faint)
                 .child(label.to_uppercase())
         };
         let mut nav = div()
@@ -2849,9 +2849,11 @@ impl SettingsView {
             .w(px(220.))
             .h_full()
             .flex_shrink_0()
-            .bg(theme.bg_secondary)
+            // `.vertical-tab-header`: `--modal-sidebar-background`, the
+            // modal's own ground rather than the sidebar colour.
+            .bg(theme.tokens.modal_sidebar_background)
             .border_r_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.background_modifier_border)
             .py_2()
             // Obsidian's sidebar opens straight on "Options"; the mark and
             // the version above it are ours, and say which program wrote
@@ -2873,13 +2875,13 @@ impl SettingsView {
                             .child(
                                 div()
                                     .text_size(px(13.))
-                                    .text_color(theme.text)
+                                    .text_color(theme.tokens.text_normal)
                                     .child("Scoria"),
                             )
                             .child(
                                 div()
                                     .text_size(px(10.))
-                                    .text_color(theme.text_faint)
+                                    .text_color(theme.tokens.text_faint)
                                     .child(concat!("v", env!("CARGO_PKG_VERSION"))),
                             ),
                     ),
@@ -2924,9 +2926,12 @@ impl SettingsView {
             .rounded_sm()
             .cursor_pointer()
             .text_size(px(13.))
-            .text_color(if active { theme.text } else { theme.text_muted })
-            .when(active, |d| d.bg(theme.bg_active))
-            .hover(|s| s.bg(theme.bg_alt))
+            // `.vertical-tab-nav-item`: the text colour whether active or
+            // not; the active one sits on the hover wash (probe of
+            // 2026-11-02, `settings.nav-item`).
+            .text_color(theme.tokens.text_normal)
+            .when(active, |d| d.bg(theme.tokens.background_modifier_hover))
+            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
             .on_click(cx.listener(move |this, _, window, cx| {
                 if this.click_dismissed_a_popover(cx) {
                     return;
@@ -2951,9 +2956,19 @@ impl SettingsView {
                     .w(px(36.))
                     .h(px(20.))
                     .rounded_full()
-                    .bg(if on { theme.accent } else { theme.bg_active })
+                    // `.checkbox-container`: `--background-modifier-border-hover`,
+                    // `--interactive-accent` while on (probe of 2026-11-02).
+                    .bg(if on {
+                        theme.tokens.interactive_accent
+                    } else {
+                        theme.tokens.background_modifier_border_hover
+                    })
                     .border_1()
-                    .border_color(if on { theme.accent } else { theme.border })
+                    .border_color(if on {
+                        theme.tokens.interactive_accent
+                    } else {
+                        theme.tokens.background_modifier_border_hover
+                    })
                     .child(
                         div()
                             .absolute()
@@ -2961,7 +2976,7 @@ impl SettingsView {
                             .left(px(if on { 17. } else { 2. }))
                             .size(px(14.))
                             .rounded_full()
-                            .bg(rgb(0xffffff)),
+                            .bg(theme.tokens.toggle_thumb_color),
                     );
                 let Some(flag) = item.flag.clone() else {
                     return toggle.into_any_element();
@@ -2987,13 +3002,15 @@ impl SettingsView {
                     .px_2()
                     .py(px(3.))
                     .rounded_sm()
-                    .bg(theme.bg_alt)
+                    // `select.dropdown`: `--text-normal` on
+                    // `--dropdown-background`.
+                    .bg(theme.tokens.dropdown_background)
                     .border_1()
-                    .border_color(theme.border)
+                    .border_color(theme.tokens.background_modifier_border)
                     .text_size(px(12.))
-                    .text_color(theme.text)
+                    .text_color(theme.tokens.text_normal)
                     .child(value.clone())
-                    .child(div().text_color(theme.text_muted).child("▾"));
+                    .child(div().text_color(theme.tokens.text_muted).child("▾"));
                 let Some(typed) = item.typed else {
                     return shown.into_any_element();
                 };
@@ -3034,9 +3051,9 @@ impl SettingsView {
                                 .min_w(px(200.))
                                 .flex()
                                 .flex_col()
-                                .bg(theme.bg_secondary)
+                                .bg(theme.tokens.background_secondary)
                                 .border_1()
-                                .border_color(theme.border)
+                                .border_color(theme.tokens.background_modifier_border)
                                 .rounded_md()
                                 .shadow_lg()
                                 .py_1()
@@ -3050,9 +3067,11 @@ impl SettingsView {
                                         .py_1()
                                         .text_size(px(12.))
                                         .cursor_pointer()
-                                        .when(ix == selected, |d| d.bg(theme.bg_active))
-                                        .hover(|s| s.bg(theme.bg_alt))
-                                        .text_color(theme.text)
+                                        .when(ix == selected, |d| {
+                                            d.bg(theme.tokens.background_modifier_hover)
+                                        })
+                                        .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                                        .text_color(theme.tokens.text_normal)
                                         .child(SharedString::from(typed.option_label(ix)))
                                         .on_click(cx.listener(move |this, _, window, cx| {
                                             cx.stop_propagation();
@@ -3088,15 +3107,17 @@ impl SettingsView {
                     .px_2()
                     .py(px(3.))
                     .rounded_sm()
-                    .bg(theme.bg_alt)
+                    // A text input: `--background-modifier-form-field` inside
+                    // `--background-modifier-border`.
+                    .bg(theme.tokens.background_modifier_form_field)
                     .border_1()
-                    .border_color(theme.border)
+                    .border_color(theme.tokens.background_modifier_border)
                     .text_size(px(12.))
                     .cursor_text()
                     .text_color(if value.is_empty() {
-                        theme.text_faint
+                        theme.tokens.text_faint
                     } else {
-                        theme.text
+                        theme.tokens.text_normal
                     })
                     .whitespace_nowrap()
                     .overflow_hidden()
@@ -3124,14 +3145,14 @@ impl SettingsView {
                 .px_2()
                 .py(px(3.))
                 .rounded_sm()
-                .bg(theme.bg_alt)
+                .bg(theme.tokens.background_modifier_form_field)
                 .border_1()
-                .border_color(theme.border)
+                .border_color(theme.tokens.background_modifier_border)
                 .text_size(px(12.))
                 .text_color(if value.is_empty() {
-                    theme.text_faint
+                    theme.tokens.text_faint
                 } else {
-                    theme.text
+                    theme.tokens.text_normal
                 })
                 .whitespace_nowrap()
                 .overflow_hidden()
@@ -3154,12 +3175,12 @@ impl SettingsView {
                                 .w(px(120.))
                                 .h(px(4.))
                                 .rounded_full()
-                                .bg(theme.bg_active),
+                                .bg(theme.tokens.slider_track_background),
                         )
                         .child(
                             div()
                                 .text_size(px(12.))
-                                .text_color(theme.text_muted)
+                                .text_color(theme.tokens.text_muted)
                                 .child(value.clone()),
                         )
                         .into_any_element();
@@ -3185,9 +3206,9 @@ impl SettingsView {
                                 .h(px(4.))
                                 .cursor_pointer()
                                 .bg(if step <= now {
-                                    theme.accent
+                                    theme.tokens.slider_fill_background
                                 } else {
-                                    theme.bg_active
+                                    theme.tokens.slider_track_background
                                 })
                                 .on_click(cx.listener(move |this, _, window, cx| {
                                     if this.click_dismissed_a_popover(cx) {
@@ -3200,20 +3221,21 @@ impl SettingsView {
                     .child(
                         div()
                             .text_size(px(12.))
-                            .text_color(theme.text_muted)
+                            .text_color(theme.tokens.text_muted)
                             .child(value.clone()),
                     )
                     .into_any_element()
             }
+            // A button: `--text-normal` on `--interactive-normal`.
             Control::Button(label) => div()
                 .px_3()
                 .py(px(3.))
                 .rounded_sm()
-                .bg(theme.bg_alt)
+                .bg(theme.tokens.interactive_normal)
                 .border_1()
-                .border_color(theme.border)
+                .border_color(theme.tokens.background_modifier_border)
                 .text_size(px(12.))
-                .text_color(theme.text_muted)
+                .text_color(theme.tokens.text_normal)
                 .child(label.clone())
                 .into_any_element(),
         }
@@ -3327,7 +3349,7 @@ impl SettingsView {
                 .pb_1()
                 .text_size(px(15.))
                 .font_weight(FontWeight::BOLD)
-                .text_color(theme.text)
+                .text_color(theme.tokens.text_normal)
                 .child(item.name.clone());
         }
         div()
@@ -3338,7 +3360,7 @@ impl SettingsView {
             .gap_6()
             .py(px(10.))
             .border_t_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.background_modifier_border)
             .child(
                 div()
                     .flex()
@@ -3355,7 +3377,7 @@ impl SettingsView {
                             .child(
                                 div()
                                     .text_size(px(14.))
-                                    .text_color(theme.text)
+                                    .text_color(theme.tokens.text_normal)
                                     .child(item.name.clone()),
                             )
                             .children(item.honored.tag().map(|tag| {
@@ -3365,9 +3387,9 @@ impl SettingsView {
                                     .py(px(1.))
                                     .rounded_sm()
                                     .border_1()
-                                    .border_color(theme.border)
+                                    .border_color(theme.tokens.background_modifier_border)
                                     .text_size(px(10.))
-                                    .text_color(theme.text_faint)
+                                    .text_color(theme.tokens.text_faint)
                                     .child(tag)
                             })),
                     )
@@ -3375,7 +3397,7 @@ impl SettingsView {
                         d.child(
                             div()
                                 .text_size(px(12.))
-                                .text_color(theme.text_muted)
+                                .text_color(theme.tokens.text_muted)
                                 .child(item.desc.clone()),
                         )
                     }),
@@ -3417,7 +3439,9 @@ impl SettingsView {
                         if duplicate {
                             chip = chip.border_color(danger).text_color(danger);
                         } else if c.custom {
-                            chip = chip.border_color(theme.accent).text_color(theme.text);
+                            chip = chip
+                                .border_color(theme.tokens.interactive_accent)
+                                .text_color(theme.tokens.text_normal);
                         }
                         let id = id.clone();
                         let hotkey = h.clone();
@@ -3425,8 +3449,8 @@ impl SettingsView {
                             div()
                                 .id(SharedString::from(format!("hotkey-remove-{}-{hix}", c.id)))
                                 .cursor_pointer()
-                                .text_color(theme.text_faint)
-                                .hover(|s| s.text_color(theme.text))
+                                .text_color(theme.tokens.text_faint)
+                                .hover(|s| s.text_color(theme.tokens.text_normal))
                                 .on_click(cx.listener(move |this, _, _, cx| {
                                     this.remove_hotkey(&id, hotkey.clone(), cx)
                                 }))
@@ -3446,8 +3470,11 @@ impl SettingsView {
                         .rounded_sm()
                         .cursor_pointer()
                         .text_size(px(14.))
-                        .text_color(theme.text_muted)
-                        .hover(|s| s.bg(theme.bg_alt).text_color(theme.text))
+                        .text_color(theme.tokens.text_muted)
+                        .hover(|s| {
+                            s.bg(theme.tokens.background_modifier_hover)
+                                .text_color(theme.tokens.text_normal)
+                        })
                         .child(glyph)
                 };
                 let add = {
@@ -3472,11 +3499,11 @@ impl SettingsView {
                         .justify_between()
                         .gap_4()
                         .border_t_1()
-                        .border_color(theme.border)
+                        .border_color(theme.tokens.background_modifier_border)
                         .child(
                             div()
                                 .text_size(px(13.))
-                                .text_color(theme.text)
+                                .text_color(theme.tokens.text_normal)
                                 .whitespace_nowrap()
                                 .overflow_hidden()
                                 .text_ellipsis()
@@ -3493,7 +3520,7 @@ impl SettingsView {
                                     d.child(
                                         div()
                                             .text_size(px(11.))
-                                            .text_color(theme.text_faint)
+                                            .text_color(theme.tokens.text_faint)
                                             .child("Blank"),
                                     )
                                 })
@@ -3501,8 +3528,8 @@ impl SettingsView {
                                 .when(capturing, |d| {
                                     d.child(
                                         hotkey_chip("Press hotkey...".into(), &theme)
-                                            .border_color(theme.accent)
-                                            .text_color(theme.text),
+                                            .border_color(theme.tokens.interactive_accent)
+                                            .text_color(theme.tokens.text_normal),
                                     )
                                 })
                                 .children(restore)
@@ -3528,9 +3555,13 @@ impl SettingsView {
                     .rounded_sm()
                     .cursor_pointer()
                     .text_size(px(11.))
-                    .text_color(if active { theme.text } else { theme.text_muted })
-                    .when(active, |d| d.bg(theme.bg_active))
-                    .hover(|s| s.bg(theme.bg_alt))
+                    .text_color(if active {
+                        theme.tokens.text_normal
+                    } else {
+                        theme.tokens.text_muted
+                    })
+                    .when(active, |d| d.bg(theme.tokens.background_modifier_hover))
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .on_click(cx.listener(move |this, _, _, cx| {
                         this.hotkey_filter = f;
                         this.refresh_hotkeys(cx);
@@ -3553,7 +3584,7 @@ impl SettingsView {
                     .child(
                         div()
                             .text_size(px(11.))
-                            .text_color(theme.text_muted)
+                            .text_color(theme.tokens.text_muted)
                             .child(SharedString::from(format!("{count} commands"))),
                     ),
             )
@@ -3609,7 +3640,7 @@ impl Render for SettingsView {
             // the difference out of the content column rather than pushing
             // it past the window's edge.
             .size_full()
-            .bg(theme.bg)
+            .bg(theme.tokens.modal_background)
             .overflow_hidden()
             .child(self.render_nav(&theme, cx))
             .child(
@@ -3633,7 +3664,7 @@ impl Render for SettingsView {
                                 div()
                                     .text_size(px(18.))
                                     .font_weight(FontWeight::BOLD)
-                                    .text_color(theme.text)
+                                    .text_color(theme.tokens.text_normal)
                                     .child(tab.name()),
                             )
                             .child(
@@ -3643,8 +3674,8 @@ impl Render for SettingsView {
                                     .rounded_sm()
                                     .cursor_pointer()
                                     .text_size(px(18.))
-                                    .text_color(theme.text_muted)
-                                    .hover(|s| s.bg(theme.bg_alt))
+                                    .text_color(theme.tokens.text_muted)
+                                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                                     .on_click(cx.listener(|this, _, _, cx| {
                                         if this.click_dismissed_a_popover(cx) {
                                             return;
@@ -3661,9 +3692,9 @@ impl Render for SettingsView {
                             .px_3()
                             .py(px(6.))
                             .rounded_sm()
-                            .bg(theme.bg_alt)
+                            .bg(theme.tokens.background_modifier_hover)
                             .text_size(px(11.))
-                            .text_color(theme.text_muted)
+                            .text_color(theme.tokens.text_muted)
                             .child("Every control that writes does so to the vault's .obsidian folder as you use it. A tagged setting is still written for Obsidian, but Scoria does not read it yet, or reads it only when it starts."),
                     )
                     .child(div().flex_1().min_h_0().child(body)),
@@ -3824,10 +3855,10 @@ impl Render for SettingsWindow {
             .track_focus(&self.focus_handle)
             .on_action(cx.listener(Self::close))
             .size_full()
-            .bg(theme.bg)
+            .bg(theme.tokens.modal_background)
             .font_family(theme.ui_font.clone())
             .text_size(px(crate::theme::FONT_UI_MEDIUM))
-            .text_color(theme.text)
+            .text_color(theme.tokens.text_normal)
             .child(self.view.clone())
     }
 }

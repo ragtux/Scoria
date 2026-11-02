@@ -63,15 +63,15 @@ pub fn checkbox(checked: bool, theme: &Theme) -> gpui::Div {
         .w(px(theme.base_font_size))
         .h(px(theme.base_font_size))
         .border_1()
-        .border_color(theme.border)
+        .border_color(theme.tokens.background_modifier_border)
         .rounded_sm()
         .when(checked, |d| {
-            d.bg(theme.accent)
-                .text_color(theme.bg)
+            d.bg(theme.tokens.interactive_accent)
+                .text_color(theme.tokens.background_primary)
                 .child(crate::assets::icon(
                     "check",
                     theme.base_font_size - 4.,
-                    theme.bg,
+                    theme.tokens.background_primary,
                 ))
         })
 }
@@ -270,9 +270,9 @@ pub fn group_header(ix: usize, key: Option<&str>, rows: usize, theme: &Theme) ->
         .h(px(GROUP_HEIGHT))
         .px(px(CELL_PAD))
         .gap(px(8.))
-        .bg(theme.bg_secondary)
+        .bg(theme.tokens.background_secondary)
         .border_b_1()
-        .border_color(theme.border)
+        .border_color(theme.tokens.background_modifier_border)
         .child(
             div()
                 .min_w_0()
@@ -280,14 +280,14 @@ pub fn group_header(ix: usize, key: Option<&str>, rows: usize, theme: &Theme) ->
                 .overflow_hidden()
                 .text_ellipsis()
                 .text_size(px(FONT_UI_SMALL))
-                .text_color(theme.text)
+                .text_color(theme.tokens.text_normal)
                 .child(SharedString::from(key.unwrap_or("Empty").to_string())),
         )
         .child(
             div()
                 .flex_shrink_0()
                 .text_size(px(FONT_UI_SMALLER))
-                .text_color(theme.text_faint)
+                .text_color(theme.tokens.text_faint)
                 .child(SharedString::from(rows.to_string())),
         )
         .into_any_element()

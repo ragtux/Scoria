@@ -141,7 +141,7 @@ impl BasesView {
                 .w_full()
                 .p(px(2.))
                 .border_b_1()
-                .border_color(theme.border)
+                .border_color(theme.tokens.background_modifier_border)
                 .child(self.section_header(
                     section.heading(),
                     Some(count),
@@ -217,7 +217,7 @@ impl BasesView {
                 "bases-group-remove",
                 ix,
                 "trash-2",
-                theme.text_muted,
+                theme.tokens.text_muted,
                 theme,
                 cx.listener(move |this, _, _, cx| {
                     cx.stop_propagation();
@@ -317,7 +317,7 @@ impl BasesView {
             .items_center()
             .justify_end()
             .text_size(px(FONT_UI_SMALL))
-            .text_color(theme.text)
+            .text_color(theme.tokens.text_normal)
             .child(SharedString::from(word.to_string()))
             .into_any_element()
     }
@@ -343,10 +343,10 @@ impl BasesView {
             .rounded(px(5.))
             .cursor_pointer()
             .text_size(px(FONT_UI_SMALL))
-            .text_color(theme.text_muted)
-            .hover(|s| s.bg(theme.bg_alt))
+            .text_color(theme.tokens.text_muted)
+            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
             .on_click(on_click)
-            .child(icon(icon_name, ICON_SIZE, theme.text_muted))
+            .child(icon(icon_name, ICON_SIZE, theme.tokens.text_muted))
             .child(SharedString::from(label))
             .into_any_element()
     }
@@ -421,9 +421,9 @@ impl BasesView {
                             "code-xml"
                         },
                         if can_toggle {
-                            theme.text_muted
+                            theme.tokens.text_muted
                         } else {
-                            theme.text_faint
+                            theme.tokens.text_faint
                         },
                         theme,
                         cx.listener(move |this, _, window, cx| {
@@ -451,7 +451,7 @@ impl BasesView {
                         "bases-rule-remove",
                         ix,
                         "trash-2",
-                        theme.text_muted,
+                        theme.tokens.text_muted,
                         theme,
                         cx.listener(move |this, _, _, cx| {
                             cx.stop_propagation();
@@ -502,9 +502,9 @@ impl BasesView {
             .min_w(px(0.))
             .h(px(INPUT_HEIGHT))
             .rounded(px(6.))
-            .bg(theme.bg_alt)
+            .bg(theme.tokens.background_modifier_hover)
             .border_1()
-            .border_color(theme.tab_divider)
+            .border_color(theme.tokens.tab_divider_color)
             .overflow_hidden()
             .child(self.combobox(
                 ComboSpec {
@@ -522,7 +522,7 @@ impl BasesView {
                 div()
                     .h_full()
                     .border_l_1()
-                    .border_color(theme.border)
+                    .border_color(theme.tokens.background_modifier_border)
                     .child(self.combobox(
                         ComboSpec {
                             shown: Some(SharedString::from(rule.operator.label())),
@@ -581,7 +581,7 @@ impl BasesView {
                     .px(px(8.))
                     .gap(px(4.))
                     .border_l_1()
-                    .border_color(theme.border);
+                    .border_color(theme.tokens.background_modifier_border);
                 for (i, item) in items.iter().enumerate() {
                     let remove_path = path.to_vec();
                     let remaining: Vec<String> = items
@@ -599,7 +599,7 @@ impl BasesView {
                             .px(px(6.))
                             .h(px(17.))
                             .rounded(px(4.))
-                            .bg(theme.bg_active)
+                            .bg(theme.tokens.background_modifier_hover)
                             .text_size(px(FONT_UI_SMALL))
                             .child(SharedString::from(item.clone()))
                             .child(
@@ -616,7 +616,7 @@ impl BasesView {
                                             cx,
                                         );
                                     }))
-                                    .child(icon("x", 12., theme.text_muted)),
+                                    .child(icon("x", 12., theme.tokens.text_muted)),
                             ),
                     );
                 }
@@ -648,7 +648,7 @@ impl BasesView {
                         .min_w(px(0.))
                         .h_full()
                         .border_l_1()
-                        .border_color(theme.border)
+                        .border_color(theme.tokens.background_modifier_border)
                         .child(self.flat_text(value_field, &typed, "Empty", theme, cx)),
                 );
             }
@@ -685,9 +685,9 @@ impl BasesView {
             .cursor_text()
             .text_size(px(FONT_UI_SMALL))
             .text_color(if text.is_empty() {
-                theme.text_faint
+                theme.tokens.text_faint
             } else {
-                theme.text
+                theme.tokens.text_normal
             })
             .whitespace_nowrap()
             .overflow_hidden()
@@ -732,9 +732,9 @@ impl BasesView {
                     .min_w(px(0.))
                     .h(px(INPUT_HEIGHT))
                     .rounded(px(6.))
-                    .bg(theme.bg_alt)
+                    .bg(theme.tokens.background_modifier_hover)
                     .border_1()
-                    .border_color(theme.tab_divider)
+                    .border_color(theme.tokens.tab_divider_color)
                     .child(self.combobox(
                         ComboSpec {
                             placeholder: "Property",
@@ -750,7 +750,7 @@ impl BasesView {
                 "bases-rule-remove",
                 ix,
                 "trash-2",
-                theme.text_muted,
+                theme.tokens.text_muted,
                 theme,
                 cx.listener(|this, _, window, cx| {
                     cx.stop_propagation();

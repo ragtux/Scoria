@@ -1558,7 +1558,7 @@ impl CanvasView {
                     None => {
                         let mut wash = theme.canvas.card_border;
                         wash.a = theme.canvas.wash_alpha;
-                        (wash, theme.text_muted)
+                        (wash, theme.tokens.text_muted)
                     }
                 };
                 let pad = (
@@ -1734,7 +1734,7 @@ impl CanvasView {
     fn paint_pill(&self, text: &str, at: CPoint, theme: &Theme, window: &mut Window, cx: &mut App) {
         let ls = self.label_scale();
         let font = px((EDGE_LABEL_SIZE * ls) as f32);
-        let line = shape_label(text, font, theme.text, None, window);
+        let line = shape_label(text, font, theme.tokens.text_normal, None, window);
         let line_height = px((EDGE_LABEL_LINE * ls) as f32);
         let pad = px((EDGE_LABEL_PADDING * ls) as f32);
         let w = line.width + pad * 2.0;
@@ -1842,7 +1842,8 @@ impl CanvasView {
                     frame.size.height + ring * 2.0,
                 ),
             );
-            let color = Self::color_of(node.color.as_deref(), theme).unwrap_or(theme.accent);
+            let color = Self::color_of(node.color.as_deref(), theme)
+                .unwrap_or(theme.tokens.interactive_accent);
             let mut quad = fill(outline, gpui::transparent_black());
             quad.corner_radii = Corners::all(px((CARD_RADIUS * scale) as f32) + ring);
             quad.border_widths = Edges::all(ring);
@@ -1878,7 +1879,7 @@ impl CanvasView {
         }
         if let Some(Drag::Marquee { start, end, .. }) = &self.drag {
             let r = self.screen_rect(&Rect::between(*start, *end));
-            let mut wash = theme.accent;
+            let mut wash = theme.tokens.interactive_accent;
             wash.a = theme.canvas.wash_alpha;
             let mut quad = fill(
                 Bounds::new(
@@ -1891,7 +1892,7 @@ impl CanvasView {
                 wash,
             );
             quad.border_widths = Edges::all(px(1.0));
-            quad.border_color = theme.accent;
+            quad.border_color = theme.tokens.interactive_accent;
             window.paint_quad(quad);
         }
     }
@@ -1918,7 +1919,7 @@ impl CanvasView {
             let fg = if *enabled {
                 theme.canvas.control_fg
             } else {
-                theme.text_faint
+                theme.tokens.text_faint
             };
             group = group.child(
                 div()
@@ -2032,7 +2033,7 @@ impl CanvasView {
                     if enabled {
                         theme.canvas.control_fg
                     } else {
-                        theme.text_faint
+                        theme.tokens.text_faint
                     },
                 ))
         };
@@ -2183,8 +2184,8 @@ impl CanvasView {
                     .cursor_pointer()
                     .bg(fill_color)
                     .border_1()
-                    .border_color(theme.border)
-                    .hover(|s| s.border_color(theme.text))
+                    .border_color(theme.tokens.background_modifier_border)
+                    .hover(|s| s.border_color(theme.tokens.text_normal))
                     .on_click(cx.listener(move |this, _, _, cx| {
                         this.palette_open = false;
                         this.set_color(color, cx)
@@ -2518,7 +2519,7 @@ impl Render for CanvasView {
             .relative()
             .size_full()
             .overflow_hidden()
-            .bg(theme.bg)
+            .bg(theme.tokens.background_primary)
             .child(
                 canvas(
                     move |bounds, window, cx| {
@@ -2620,7 +2621,7 @@ impl Render for CanvasView {
                     .flex()
                     .items_center()
                     .justify_center()
-                    .text_color(theme.text_muted)
+                    .text_color(theme.tokens.text_muted)
                     .child(format!("This canvas could not be read: {message}"))
             }))
             .children(floating)

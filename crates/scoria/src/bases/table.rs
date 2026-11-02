@@ -332,7 +332,7 @@ impl BasesView {
                         .h(px(table_height))
                         .left(px(x))
                         .w(px(2.))
-                        .bg(theme.accent),
+                        .bg(theme.tokens.interactive_accent),
                 )
             })
             .into_any_element()];
@@ -366,7 +366,7 @@ impl BasesView {
             .w_full()
             .h(px(HEADER_HEIGHT))
             .border_b_1()
-            .border_color(theme.border)
+            .border_color(theme.tokens.background_modifier_border)
             .child(self.measure(HEADER_ROW_KEY))
             .children(table.columns.iter().enumerate().map(|(ix, col)| {
                 let width = self
@@ -406,9 +406,12 @@ impl BasesView {
                     .px(px(CELL_PAD))
                     .overflow_hidden()
                     .text_size(px(FONT_UI_SMALL))
-                    .text_color(theme.text_muted)
-                    .hover(|s| s.bg(theme.bg_alt))
-                    .when(ix > 0, |d| d.border_l_1().border_color(theme.border))
+                    .text_color(theme.tokens.text_muted)
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                    .when(ix > 0, |d| {
+                        d.border_l_1()
+                            .border_color(theme.tokens.background_modifier_border)
+                    })
                     .on_mouse_down(
                         MouseButton::Right,
                         cx.listener(move |this, event: &MouseDownEvent, _, cx| {
@@ -425,7 +428,7 @@ impl BasesView {
                 } else {
                     cell.flex_shrink_0().w(px(width))
                 };
-                cell.child(crate::assets::icon(icon_name, 16., theme.text_muted))
+                cell.child(crate::assets::icon(icon_name, 16., theme.tokens.text_muted))
                     .child(
                         div()
                             .flex_1()
@@ -444,7 +447,7 @@ impl BasesView {
                             .flex()
                             .items_center()
                             .justify_center()
-                            .child(crate::assets::icon(name, 14., theme.text_muted))
+                            .child(crate::assets::icon(name, 14., theme.tokens.text_muted))
                     }))
                     .child(
                         div()
@@ -457,7 +460,7 @@ impl BasesView {
                             .cursor_col_resize()
                             // Observed: the 6 px resizer turns the accent
                             // colour under the pointer.
-                            .hover(|s| s.bg(theme.accent))
+                            .hover(|s| s.bg(theme.tokens.interactive_accent))
                             .on_drag(ColumnDrag { column: ix }, |drag, _, _, cx| {
                                 cx.stop_propagation();
                                 cx.new(|_| drag.clone())
@@ -534,8 +537,8 @@ impl BasesView {
             .w_full()
             .h(px(self.table_state.row_height))
             .border_b_1()
-            .border_color(theme.border)
-            .hover(|s| s.bg(theme.bg_alt))
+            .border_color(theme.tokens.background_modifier_border)
+            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
             .children(row.cells.iter().enumerate().map(|(c, cell)| {
                 let width = self
                     .table_state
@@ -561,7 +564,7 @@ impl BasesView {
                     .px(px(CELL_PAD))
                     .overflow_hidden()
                     .text_size(px(FONT_UI_SMALL))
-                    .when(c > 0, |d| d.border_l_1().border_color(theme.border));
+                    .when(c > 0, |d| d.border_l_1().border_color(theme.tokens.background_modifier_border));
                 box_ = if c == last && self.table_state.stretch_last {
                     box_.flex_1().min_w(px(width))
                 } else {
@@ -575,8 +578,8 @@ impl BasesView {
                         return box_
                             .px(px(0.))
                             .border_2()
-                            .border_color(theme.accent)
-                            .bg(theme.bg)
+                            .border_color(theme.tokens.interactive_accent)
+                            .bg(theme.tokens.background_primary)
                             .on_mouse_down_out(
                                 cx.listener(|this, _, _, cx| this.commit_cell_edit(cx)),
                             )
@@ -630,9 +633,9 @@ impl BasesView {
                                 .flex()
                                 .items_center()
                                 .rounded(px(4.))
-                                .bg(theme.bg_alt)
+                                .bg(theme.tokens.background_modifier_hover)
                                 .text_size(px(FONT_UI_SMALL))
-                                .text_color(theme.text)
+                                .text_color(theme.tokens.text_normal)
                                 .child(SharedString::from(item))
                         }))
                     }
@@ -644,7 +647,7 @@ impl BasesView {
                             Value::Date(d) => Some(d.at.date()),
                             _ => None,
                         };
-                        box_.text_color(theme.text)
+                        box_.text_color(theme.tokens.text_normal)
                             .child(
                                 div()
                                     .flex_1()
@@ -667,19 +670,19 @@ impl BasesView {
                                         .cursor_pointer()
                                         .opacity(0.)
                                         .group_hover("bases-cell", |s| s.opacity(1.))
-                                        .hover(|s| s.bg(theme.bg_active))
+                                        .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                                         .tooltip(crate::canvas::menu::tooltip("Open daily note"))
                                         .on_click(cx.listener(move |_, _, _, cx| {
                                             cx.stop_propagation();
                                             cx.emit(super::view::BasesEvent::OpenDaily { date });
                                         }))
-                                        .child(crate::assets::icon("link", 16., theme.text_muted)),
+                                        .child(crate::assets::icon("link", 16., theme.tokens.text_muted)),
                                 )
                             })
                     }
                     // **Unprobed**: no number column's alignment was measured;
                     // right is the convention a number column reads in.
-                    (_, CellKind::Number) => box_.justify_end().text_color(theme.text).child(
+                    (_, CellKind::Number) => box_.justify_end().text_color(theme.tokens.text_normal).child(
                         div()
                             .min_w_0()
                             .whitespace_nowrap()
@@ -687,7 +690,7 @@ impl BasesView {
                             .child(SharedString::from(cell_text(cell))),
                     ),
                     (_, CellKind::Text) => box_
-                        .text_color(if link { theme.link } else { theme.text })
+                        .text_color(if link { theme.tokens.link_color } else { theme.tokens.text_normal })
                         .child(
                             div()
                                 .min_w_0()
