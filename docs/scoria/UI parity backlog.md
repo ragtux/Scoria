@@ -2353,6 +2353,28 @@ installed themes.
 dropped at zero themes as Obsidian drops it, but the button does nothing and the row carries the
 "not in Scoria yet" tag. Same reasoning as "Manage".
 
+### Syntax highlighting covers eleven languages where Obsidian covers 171
+
+*medium, missing-feature, large*
+
+**Landed 2026-11-02** as the engine and a first tranche; what follows is the gap that remains.
+See [[Development#Syntax highlighting, 2026-11-02]].
+
+**Obsidian.** Of 201 language names the probe tried, 171 produced tokens — effectively Prism's
+whole component set, including every common language and a long tail of rare ones.
+
+**Scoria.** Eleven: clike, css, diff, go, ini, json, nix, python, rust, toml, yaml. A fence whose
+language is not among them renders plain, which is exactly what Obsidian does for a name Prism
+has no grammar for, so the gap shows as missing colour rather than as wrong colour.
+
+**Fix.** One grammar at a time, each a data table ported from Prism's upstream source into
+`crates/scoria-highlight/src/languages/`, each verified against a sample in
+`tests/corpus/obsidian-1.14.5.json`. The ones to do next, by what a notes app sees: **javascript**
+and **typescript** (Prism's largest grammars, and the template-string recursion is the fiddly
+part), **markup** (html, xml, svg), **bash**, **sql**, **java**, **c** and **cpp** — the last four
+are `clike` with substitutions, which is already ported. Adding a sample to the corpus needs
+`tools/obsidian-probe/code-highlight.mjs` re-run against the Obsidian of the day.
+
 ## Blocked by the harness, not by the code
 
 Five things could not be settled from outside the process. They are not findings and not fixes —

@@ -7551,3 +7551,76 @@ group.
 the container count stay at 0), so what it opens is unrecorded; it is Obsidian's community theme
 browser, which needs the network. "Check for updates", "Custom app icon" and the keys
 "Quick font size adjustment" writes were not probed either.
+
+## Observed code highlighting, Obsidian 1.14.5 (installer build 1.13.7)
+
+Recorded by `tools/obsidian-probe/code-highlight.mjs` on 2026-11-02; the raw run is
+`tools/obsidian-probe/results/2026-11-02-code-highlight.json` with screenshots beside it. The
+language-resolution rules are in "Observed code block copy behaviour" above and are unchanged;
+this is what the highlighter does once the language resolves.
+
+### Two engines over one palette
+
+The reading view highlights with **Prism.js** — a rendered block is `span.token.<name>` — and the
+editor is **CodeMirror**, whose spans are `.cm-keyword`, `.cm-string`, `.cm-number`,
+`.cm-variable-2`, `.cm-def`, `.cm-atom`, `.cm-meta`, `.cm-builtin`, `.cm-property`,
+`.cm-operator`, `.cm-comment`, `.cm-string-2`, each with `.cm-hmd-codeblock`. Both resolve to the
+same eleven `--code-*` custom properties, so a theme sets one palette and gets both.
+
+The two do **not** agree with each other. A JSON key is `--code-property` in the reading view
+(`token property`) and `--code-function` in the editor (`cm-property cm-string`); a Python
+decorator is `token decorator annotation punctuation` in one and `cm-meta`, which is
+`--code-comment`, in the other; `cm-def` and `cm-atom` carry no colour at all where Prism's
+`function` and `boolean` do.
+
+### Which classes are styled
+
+Obsidian's `.token` rules are **not reachable through `document.styleSheets`** — a dump found 184
+CodeMirror rules and none of Prism's, with 39 token spans on screen — so each class was put to the
+renderer instead: a span of it placed inside a real rendered block, and its computed colour read
+back and matched to the variable holding it (step s10). Thirty-three classes are styled; every
+other class inherits `--code-normal`, which the block's `code` element carries.
+
+| `--code-*` | classes |
+| --- | --- |
+| `--code-comment` | `comment`, `prolog`, `doctype`, `cdata` |
+| `--code-punctuation` | `punctuation` |
+| `--code-property` | `property`, `variable`, `parameter`, `entity`, `url` |
+| `--code-tag` | `tag`, `constant`, `deleted`, `symbol` |
+| `--code-value` | `boolean`, `number` |
+| `--code-string` | `selector`, `attr-name`, `string`, `char`, `inserted` |
+| `--code-operator` | `operator` |
+| `--code-function` | `atrule`, `attr-value`, `function`, `class-name`, `builtin`, `property-access` |
+| `--code-keyword` | `keyword` |
+| `--code-important` | `regex`, and `important`, which is also weight 700 |
+| *(weight and slant only)* | `bold` is weight 700, `italic` is italic; neither sets a colour |
+
+`--code-operator` and `--code-tag` hold the same value in both base themes, so colour alone cannot
+separate them; the cascade record of step s06 does, with `.token.operator` winning on
+`var(--code-operator)`. `symbol` was never produced by a sample and is grouped with `tag` on its
+colour alone.
+
+A span carries its type then its aliases, and every rule is one class of equal specificity, so
+document order settles a conflict. The only conflict observed is `important`, which beats the
+colour of what it is an alias of: `boolean important` is the important orange, not the value
+purple. In every other recorded combination at most one name is styled — `key property` is a
+property, `key atrule` a function, `prefix deleted` a tag, `prefix unchanged` nothing.
+
+Values in the dark theme: `--code-normal` `#dadada`, `--code-comment` `#666666`, `--code-keyword`
+`#fa99cd`, `--code-string` `#44cf6e`, `--code-function` `#e0de71`, `--code-value` `#a882ff`,
+`--code-operator` and `--code-tag` `#fb464c`, `--code-punctuation` `#b3b3b3`, `--code-property`
+`#53dfdd`, `--code-important` `#e9973f`.
+
+### How many languages
+
+Of 201 language names tried, **171 produced tokens**: effectively Prism's whole component set.
+The 30 that did not are not evidence of a missing grammar — the sample line was
+`x = 1 // "s" /* c */ # c -- c`, which has nothing for `diff`, `http` or `latex` to find — so the
+highlighted list is sound and the other is not a negative. `Prism` itself is not reachable as an
+object in 1.14.5 (neither a global nor through `require`), which is why the list was settled by
+rendering.
+
+### Not observed
+
+Which Prism version Obsidian bundles; whether a theme can add a language; the `.cm-` rules'
+full list, of which only the ones a sample produced were followed back to their variable.

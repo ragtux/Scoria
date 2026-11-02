@@ -287,6 +287,9 @@ struct Palette {
     link: Hsla,
     tag: Hsla,
     code_bg: Hsla,
+    /// The eleven `--code-*` a highlighted run is painted from, in the
+    /// order of [`scoria_highlight::Paint`].
+    code: [Hsla; 11],
     highlight_bg: Hsla,
     selection: Hsla,
     border: Hsla,
@@ -312,6 +315,19 @@ impl Palette {
             link: k.link_color,
             tag: k.tag_color,
             code_bg: k.code_background,
+            code: [
+                k.code_normal,
+                k.code_comment,
+                k.code_keyword,
+                k.code_string,
+                k.code_function,
+                k.code_value,
+                k.code_operator,
+                k.code_punctuation,
+                k.code_property,
+                k.code_tag,
+                k.code_important,
+            ],
             highlight_bg: k.highlight_background,
             selection: k.text_selection,
             border: k.background_modifier_border,
@@ -591,6 +607,9 @@ pub struct Editor {
     find: FindState,
     _subscriptions: Vec<Subscription>,
     highlights: Arc<Vec<Vec<HighlightSpan>>>,
+    /// Syntax highlighting inside fenced blocks, per line, from the same
+    /// parse as `highlights`.
+    code_runs: Arc<Vec<Vec<CodeRun>>>,
     /// Live Preview's block widgets with the lines each covers, from the
     /// same parse as the highlights.
     widgets: Arc<Vec<(Range<usize>, Widget)>>,
@@ -734,6 +753,7 @@ impl Editor {
             dragging: false,
             thumb_drag: None,
             highlights: Arc::new(vec![Vec::new()]),
+            code_runs: Arc::new(vec![Vec::new()]),
             widgets: Arc::new(Vec::new()),
             flairs: Arc::new(Vec::new()),
             widget_heights: HashMap::new(),
@@ -1754,6 +1774,7 @@ impl Editor {
     fn shape(&self, window: &mut Window, line: usize) -> Option<Shaped> {
         let style = self.layout.text_style.as_ref()?;
         let spans = self.highlights.get(line).map(Vec::as_slice).unwrap_or(&[]);
+        let code = self.code_runs.get(line).map(Vec::as_slice).unwrap_or(&[]);
         Some(shape_display(
             window,
             style,
@@ -1762,6 +1783,7 @@ impl Editor {
             self.layout.wrap_width,
             self.display_for(line),
             spans,
+            code,
             &self.palette,
         ))
     }
@@ -2160,6 +2182,7 @@ impl Editor {
                     let started = Instant::now();
                     let doc = scoria_markdown::parse(&text);
                     let lines = highlight_lines(&doc);
+                    let code = code_highlights(&doc);
                     let foldables = fold::foldables(&doc, &text, fold_options);
                     let widgets = match &widget_source {
                         Some(source) => {
@@ -2186,6 +2209,7 @@ impl Editor {
                         widgets,
                         flairs,
                         foldables,
+                        code,
                     )
                 })
                 .await;
@@ -2193,6 +2217,7 @@ impl Editor {
                 let parse_ms = result.1.as_secs_f64() * 1000.0;
                 // A slightly stale decoration set is better than none while typing.
                 editor.highlights = Arc::new(result.0);
+                editor.code_runs = Arc::new(result.9);
                 let widgets = result.6;
                 editor
                     .widget_heights
@@ -4398,6 +4423,121 @@ fn code_flairs(text: &str, doc: &Document<'_>) -> Vec<Flair> {
     out
 }
 
+/// A run of highlighted code on one line, in that line's own offsets —
+/// the same frame `HighlightSpan` uses, so the painter reads both the same
+/// way.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct CodeRun {
+    pub start: usize,
+    pub end: usize,
+    pub style: scoria_highlight::Style,
+}
+
+/// Syntax highlighting for every fenced block, bucketed per line.
+///
+/// `scoria-highlight` is a port of Prism, which is what Obsidian highlights
+/// a *rendered* block with. Obsidian's editor uses CodeMirror's own
+/// tokenizer instead, and the two disagree in places — a JSON key is
+/// `--code-property` in one and `--code-function` in the other — but both
+/// resolve to the same eleven `--code-*` of the theme. One tokenizer is the
+/// point of the crate, so Scoria's two views agree with each other and both
+/// match Obsidian's rendered block.
+///
+/// The body the parser hands back has its fence and indentation stripped,
+/// so an offset in it is not an offset in the document. The mapping is done
+/// a line at a time: a body line is a suffix of the document line it came
+/// from, and the difference in length is the prefix the parser removed.
+fn code_highlights(doc: &scoria_markdown::Document<'_>) -> Vec<Vec<CodeRun>> {
+    let lines = scoria_markdown::LineIndex::new(doc.source);
+    let mut out: Vec<Vec<CodeRun>> = vec![Vec::new(); lines.line_count()];
+    collect_code_runs(doc.source, &doc.blocks, &lines, &mut out);
+    for line in &mut out {
+        line.sort_by_key(|r| (r.start, std::cmp::Reverse(r.end)));
+    }
+    out
+}
+
+fn collect_code_runs(
+    source: &str,
+    blocks: &[Block<'_>],
+    lines: &scoria_markdown::LineIndex,
+    out: &mut Vec<Vec<CodeRun>>,
+) {
+    for block in blocks {
+        match &block.kind {
+            BlockKind::CodeBlock {
+                fence: Some(_),
+                info,
+                content,
+            } => {
+                let runs = scoria_highlight::highlight(content, info.as_deref());
+                if runs.is_empty() {
+                    continue;
+                }
+                let first = lines.pos(block.span.start).line as usize;
+                let last = lines
+                    .pos(block.span.end.saturating_sub(1).max(block.span.start))
+                    .line as usize;
+                // Each body line, with where it starts in `content`, the
+                // document line it came from, and the prefix stripped off it.
+                let mut at = 0usize;
+                let mut mapped: Vec<(usize, usize, usize, usize)> = Vec::new();
+                for (ix, body_line) in content.split_inclusive('\n').enumerate() {
+                    let doc_line = first + 1 + ix;
+                    let start = at;
+                    at += body_line.len();
+                    if doc_line > last || doc_line >= lines.line_count() {
+                        break;
+                    }
+                    let ls = lines.line_start(doc_line);
+                    let le = if doc_line + 1 < lines.line_count() {
+                        lines.line_start(doc_line + 1)
+                    } else {
+                        source.len()
+                    };
+                    let doc_text = source[ls..le].trim_end_matches(['\n', '\r']);
+                    let body_text = body_line.trim_end_matches(['\n', '\r']);
+                    // A body line the parser rebuilt rather than sliced --
+                    // a tab expanded, say -- cannot be placed, so it is
+                    // left plain rather than placed wrongly.
+                    let Some(indent) = doc_text
+                        .len()
+                        .checked_sub(body_text.len())
+                        .filter(|_| doc_text.ends_with(body_text))
+                    else {
+                        continue;
+                    };
+                    mapped.push((start, start + body_text.len(), doc_line, indent));
+                }
+                for run in runs {
+                    for (line_start, line_end, doc_line, indent) in &mapped {
+                        let from = run.start.max(*line_start);
+                        let to = run.end.min(*line_end);
+                        if to <= from {
+                            continue;
+                        }
+                        out[*doc_line].push(CodeRun {
+                            start: indent + (from - line_start),
+                            end: indent + (to - line_start),
+                            style: run.style,
+                        });
+                    }
+                }
+            }
+            BlockKind::CodeBlock { .. } => {}
+            BlockKind::BlockQuote { children } | BlockKind::Callout { children, .. } => {
+                collect_code_runs(source, children, lines, out)
+            }
+            BlockKind::List { items, .. } => {
+                for item in items {
+                    collect_code_runs(source, &item.children, lines, out);
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
 fn collect_flairs(blocks: &[Block<'_>], line_of: &dyn Fn(usize) -> usize, out: &mut Vec<Flair>) {
     for block in blocks {
         match &block.kind {
@@ -4886,9 +5026,30 @@ fn run_for(
 /// Builds runs covering the display text: the source's highlighted
 /// segments carried through copied pieces, a substitution styled as the
 /// construct it stands for.
+/// The palette entry a highlighted code run is painted from. The editor's
+/// `Palette` is derived from the theme registry, so these are the same
+/// `--code-*` the reading view uses.
+fn code_colour(paint: scoria_highlight::Paint, p: &Palette) -> Hsla {
+    use scoria_highlight::Paint;
+    p.code[match paint {
+        Paint::Normal => 0,
+        Paint::Comment => 1,
+        Paint::Keyword => 2,
+        Paint::String => 3,
+        Paint::Function => 4,
+        Paint::Value => 5,
+        Paint::Operator => 6,
+        Paint::Punctuation => 7,
+        Paint::Property => 8,
+        Paint::Tag => 9,
+        Paint::Important => 10,
+    }]
+}
+
 fn runs_for_display(
     display: &DisplayLine,
     spans: &[HighlightSpan],
+    code: &[CodeRun],
     base: &TextStyle,
     p: &Palette,
 ) -> Vec<TextRun> {
@@ -4900,14 +5061,40 @@ fn runs_for_display(
             runs.push(run);
         }
     };
-    // The stretches no construct covers take the same treatment, which on a
-    // done task is most of the line.
-    let plain = |len: usize| run_for(&[], base, len, p, done);
     for piece in &display.pieces {
         match piece {
             Piece::Copy { source, len, .. } => {
                 let (s0, s1) = (*source, source + len);
                 let mut at = s0;
+                let mut emit = |kinds: &[HighlightKind], from: usize, to: usize| {
+                    // Inside a fenced block the code runs decide the colour
+                    // and the emphasis; everything else about the run --
+                    // the mono family, the block's background -- stays what
+                    // the markdown span said.
+                    let mut cut = from;
+                    for run in code.iter().filter(|r| r.end > from && r.start < to) {
+                        let (a, b) = (run.start.max(from), run.end.min(to));
+                        if b <= a || a < cut {
+                            continue;
+                        }
+                        if a > cut {
+                            push(run_for(kinds, base, a - cut, p, done));
+                        }
+                        let mut text = run_for(kinds, base, b - a, p, done);
+                        text.color = code_colour(run.style.paint, p);
+                        if run.style.bold {
+                            text.font.weight = FontWeight::BOLD;
+                        }
+                        if run.style.italic {
+                            text.font.style = FontStyle::Italic;
+                        }
+                        push(text);
+                        cut = b;
+                    }
+                    if cut < to {
+                        push(run_for(kinds, base, to - cut, p, done));
+                    }
+                };
                 for (range, kinds) in &flat {
                     let start = range.start.max(s0);
                     let end = range.end.min(s1);
@@ -4915,13 +5102,13 @@ fn runs_for_display(
                         continue;
                     }
                     if start > at {
-                        push(plain(start - at));
+                        emit(&[], at, start);
                     }
-                    push(run_for(kinds, base, end - start, p, done));
+                    emit(kinds, start, end);
                     at = end;
                 }
                 if at < s1 {
-                    push(plain(s1 - at));
+                    emit(&[], at, s1);
                 }
             }
             Piece::Sub {
@@ -4955,9 +5142,10 @@ fn shape_display(
     wrap_width: Option<Pixels>,
     display: DisplayLine,
     spans: &[HighlightSpan],
+    code: &[CodeRun],
     p: &Palette,
 ) -> Shaped {
-    let runs = runs_for_display(&display, spans, style, p);
+    let runs = runs_for_display(&display, spans, code, style, p);
     let size = font_size * display.scale;
     // Headings keep Obsidian's tighter line height, never below the body's.
     let row_height = if display.scale > 1.0 {
@@ -5114,6 +5302,7 @@ impl Element for EditorElement {
             }
             let palette = editor.palette.clone();
             let highlights = editor.highlights.clone();
+            let code_runs = editor.code_runs.clone();
             let flairs = editor.flairs.clone();
             let count = editor.line_count();
             let scroll_line = editor.scroll_line.min(count - 1);
@@ -5363,6 +5552,7 @@ impl Element for EditorElement {
                     continue;
                 }
                 let spans = highlights.get(line).map(Vec::as_slice).unwrap_or(&[]);
+                let code = code_runs.get(line).map(Vec::as_slice).unwrap_or(&[]);
                 let shaped = shape_display(
                     window,
                     &text_style,
@@ -5371,6 +5561,7 @@ impl Element for EditorElement {
                     wrap_width,
                     editor.display_for(line),
                     spans,
+                    code,
                     &palette,
                 );
                 let rows = shaped.rows();
@@ -5624,6 +5815,10 @@ impl Element for EditorElement {
                         wrap_width,
                         editor.display_for(cursor_line_ix),
                         highlights
+                            .get(cursor_line_ix)
+                            .map(Vec::as_slice)
+                            .unwrap_or(&[]),
+                        code_runs
                             .get(cursor_line_ix)
                             .map(Vec::as_slice)
                             .unwrap_or(&[]),
@@ -5894,6 +6089,92 @@ mod tests {
         let doc = scoria_markdown::parse(src);
         let lines = highlight_lines(&doc);
         preview::display_line(src.lines().next().unwrap_or(""), &lines[0], &[])
+    }
+
+    /// Every code run of `src`, as `(line, start, end, paint)`, which is
+    /// the frame the painter reads them in.
+    fn code_runs(src: &str) -> Vec<(usize, usize, usize, scoria_highlight::Paint)> {
+        let doc = scoria_markdown::parse(src);
+        code_highlights(&doc)
+            .into_iter()
+            .enumerate()
+            .flat_map(|(line, runs)| {
+                runs.into_iter()
+                    .map(move |r| (line, r.start, r.end, r.style.paint))
+            })
+            .collect()
+    }
+
+    /// The editor highlights a fenced block's body, and the runs land on
+    /// the document's own lines and columns.
+    #[test]
+    fn a_fenced_block_is_highlighted_at_its_own_offsets() {
+        use scoria_highlight::Paint;
+        let src = "# Note\n\n```json\n{ \"a\": 1 }\n```\n";
+        let runs = code_runs(src);
+        // Line 3 is the body. `{` and `}` punctuation, `"a"` the property,
+        // `:` the operator, `1` the value.
+        assert_eq!(
+            runs,
+            vec![
+                (3, 0, 1, Paint::Punctuation),
+                (3, 2, 5, Paint::Property),
+                (3, 5, 6, Paint::Operator),
+                (3, 7, 8, Paint::Value),
+                (3, 9, 10, Paint::Punctuation),
+            ]
+        );
+        // The fence lines themselves carry none.
+        assert!(!runs.iter().any(|(line, ..)| *line == 2 || *line == 4));
+    }
+
+    /// A fence inside a list has its indentation stripped from the body the
+    /// parser hands back, so an offset in that body is not an offset in the
+    /// line. The mapping has to put the runs back where the text is.
+    #[test]
+    fn an_indented_fence_s_runs_are_moved_back_over_its_indent() {
+        use scoria_highlight::Paint;
+        let src = "- item\n\n  ```json\n  { \"a\": 1 }\n  ```\n";
+        let runs = code_runs(src);
+        assert!(!runs.is_empty(), "the indented fence was not highlighted");
+        // The same tokens as above, each two columns further along.
+        assert_eq!(
+            runs,
+            vec![
+                (3, 2, 3, Paint::Punctuation),
+                (3, 4, 7, Paint::Property),
+                (3, 7, 8, Paint::Operator),
+                (3, 9, 10, Paint::Value),
+                (3, 11, 12, Paint::Punctuation),
+            ]
+        );
+    }
+
+    /// A language with no ported grammar, and a fence with no language at
+    /// all, leave the body plain — which is what Obsidian does for a name
+    /// Prism has no grammar for.
+    #[test]
+    fn an_unported_language_leaves_the_body_plain() {
+        assert!(code_runs("```\nplain\n```\n").is_empty());
+        assert!(code_runs("```scoria-made-up\nplain\n```\n").is_empty());
+        assert!(code_runs("```c#\nplain\n```\n").is_empty());
+        // An indented code block is not a fence and carries no language.
+        assert!(code_runs("    plain = 1\n").is_empty());
+    }
+
+    /// A multi-line token keeps its colour on every line it covers.
+    #[test]
+    fn a_token_that_spans_lines_is_cut_at_each_one() {
+        use scoria_highlight::Paint;
+        let src = "```python\ns = \"\"\"one\ntwo\"\"\"\n```\n";
+        let runs = code_runs(src);
+        let strings: Vec<_> = runs
+            .iter()
+            .filter(|(.., paint)| *paint == Paint::String)
+            .collect();
+        assert_eq!(strings.len(), 2, "{runs:?}");
+        assert_eq!(strings[0].0, 1, "the first line of the string");
+        assert_eq!(strings[1].0, 2, "and the second");
     }
 
     /// Every flair in `src`, as `(line, label, copied)`.

@@ -324,7 +324,7 @@ uses behave as Obsidian's do.
 | Bases: the rest of the view | done: the cards, list and kanban layouts, the toolbar's six panels, editing through the table, the five `bases:*` commands beyond `new-file`, and an embedded `![[x.base]]`, see [[#Bases: the rest of the view, 2026-10-25]]; the toolbar and panels rebuilt to the 2026-11-01 record, see [[#The Bases toolbar and its panels, 2026-11-01]]; the embed as the live view and the leaf's chrome, see [[#The embedded base and the base leaf's chrome, 2026-11-01]]; the header, summaries, cells and keyboard, see [[#The column header, summaries, cells and the table keyboard, 2026-11-01]]; the kanban's drags and menus, see [[#The kanban board, 2026-11-02]] |
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
-| The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader and the Appearance tab's pickers all landed 2026-11-02, see [[#The theme registry, 2026-11-02]], [[#The Appearance tab's pickers, 2026-11-02]] and [[Theming#Progress]] — what is left of the subset is syntax highlighting; the CLI is not started |
+| The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, see [[#The theme registry, 2026-11-02]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done but for breadth, a grammar at a time; the CLI is not started |
 
 ### The theme registry, 2026-11-02
 
@@ -585,6 +585,91 @@ Escape backed out of the page; and the collapsed row read "3 enabled".
 offline, and Scoria will not download themes), the three font pages, and
 the "Quick font size adjustment" and "Custom app icon" rows, whose keys
 the probe did not record.
+
+### Syntax highlighting, 2026-11-02
+
+Step 3 of [[Theming]], and the last of the themes subset.
+
+**The probe came first and changed the plan.** `code-highlight.mjs` found
+that Obsidian runs **two** highlighters over one palette — Prism in the
+reading view, CodeMirror in the editor — and that they disagree with each
+other: a JSON key is `--code-property` rendered and `--code-function` in
+the editor, a Python decorator is punctuation in one and `--code-comment`
+in the other. Both resolve to the same eleven `--code-*`, which the
+registry has had since step 1, so no token was added for this.
+
+It also found that Obsidian's `.token` rules are unreachable through
+`document.styleSheets` — a dump returned 184 CodeMirror rules and none of
+Prism's, with 39 token spans on screen. The question was put to the
+renderer instead: a span of each candidate class placed inside a real
+rendered block, its computed colour read back and matched to the variable
+holding it. **Thirty-three classes are styled; everything else inherits
+`--code-normal`.** `--code-operator` and `--code-tag` hold the same value
+in both themes, so only the cascade record separates them. The table is in
+[[Specification#Observed code highlighting, Obsidian 1.14.5 (installer build 1.13.7)]].
+
+**Prism was ported, not wrapped.** [[Theming]] had expected `syntect` to
+be the quick way to breadth; measuring it killed that: its bundled set is
+75 syntaxes against the 171 names Obsidian highlights, with no TypeScript,
+TOML, Kotlin, Swift, Nix, Dockerfile or GraphQL — and breadth was the
+whole argument for it. Prism's grammars are MIT and upstream, which is the
+same footing as the Lucide icons this repo already cuts from source, and
+Prism's token names are what a theme addresses, so porting the engine buys
+*exactness* that no mapping from another engine's scopes can.
+
+`crates/scoria-highlight` is that port.
+
+- `engine.rs` is `matchGrammar` from `prism-core.js`. Prism's output
+  depends on its grammar's key order, on a greedy pattern's right to reach
+  across tokens already made, and on the rematch that follows when one
+  does, so the algorithm had to come over whole. Two things differ and
+  neither changes the output: a `Vec` with the same splice points instead
+  of the linked list, and every node a **byte range** rather than a string,
+  since Prism only ever stores slices of what it was given. Prism's list
+  has a head sentinel and a `Vec` has not, which cost one bug — the first
+  run tokenized nothing at all because `startNode.next` had become
+  `start + 1` past the end.
+- `grammar.rs` is the data: an ordered map of name to patterns, with
+  Prism's four flags. `lookbehind` is not a regex lookbehind — the first
+  capture group is context that is not part of the token — and `greedy` is
+  what lets a string win over what is inside it.
+- `compiled.rs` compiles a grammar once and memoises it by address. The
+  grammars are `static`s of pure data because **a `static` holding any
+  interior mutability cannot be const-promoted at all**, so the cache
+  cannot live in the pattern; keying by address also settles the recursion,
+  since Prism's grammars refer to themselves (a Nix interpolation holds
+  Nix, a Python format field holds Python) and compiling eagerly would not
+  terminate.
+- `palette.rs` is the thirty-three-class table, and `languages/` the
+  grammars.
+
+**The corpus is the ratchet.** `tests/corpus/obsidian-1.14.5.json` holds,
+per language, a sample and the exact `innerHTML` Obsidian rendered it to. A
+grammar is correct when Scoria's HTML is identical, which compares every
+token's name, its aliases, its nesting and its boundaries in one
+assertion. Eight languages match byte for byte — css (with `css-extras`,
+which Obsidian loads and which is where `unit`, `hexcode` and the selector's
+`pseudo-class` come from), diff, go, json, python, rust, toml and yaml —
+and clike, ini and nix are ported without a sample. Two mismatches were
+real finds: `>` has to be escaped because `innerHTML` serialises it that
+way, and CSS without `css-extras` is visibly poorer than Obsidian's.
+`every_pattern_compiles` guards the translation from JavaScript's regex
+syntax, where `/…/i` becomes `(?i)…`, `\/` is not an escape and a `[`
+inside a class must be.
+
+**Both views paint from it.** The reading view's block is a `StyledText`
+with one highlight per run; the editor computes per-line runs in the same
+background parse as the markdown spans and lays them over the run list, so
+the mono family and the block's background stay what the markdown said
+while the colour and the emphasis come from the token. The body the parser
+hands back has its fence and indentation stripped, so an offset in it is
+not an offset in the document: the mapping is done a line at a time, since
+a body line is a suffix of the document line it came from and the
+difference in length is the prefix removed. A line the parser rebuilt
+rather than sliced is left plain rather than placed wrongly.
+
+Scoria's two views therefore agree with each other, where Obsidian's do
+not, and both match Obsidian's rendered block.
 
 ### Four small entries and a URI, 2026-11-02
 

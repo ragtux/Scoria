@@ -26,6 +26,7 @@ use gpui::{
 use scoria_formats::config::PropertyTypes;
 use scoria_formats::properties::{PropertiesInDocument, Property, PropertyType};
 use scoria_formats::FileKind;
+use scoria_highlight::{highlight, Paint};
 use scoria_markdown::Alignment;
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
@@ -705,6 +706,56 @@ impl EventEmitter<PropertyItemRemoved> for ReadingView {}
 impl Focusable for ReadingView {
     fn focus_handle(&self, _cx: &App) -> FocusHandle {
         self.focus_handle.clone()
+    }
+}
+
+/// A fenced block's body as one styled run per token.
+///
+/// `scoria-highlight` is a port of Prism, which is what Obsidian highlights
+/// a rendered block with, and it answers flat runs in painting order — a
+/// nested token after the one that holds it — so applying them in sequence
+/// leaves the innermost showing, as the cascade does over nested spans. A
+/// language with no grammar ported answers no runs and the block is plain,
+/// which is what Obsidian does for a fence Prism has no grammar for.
+fn code_text(text: &str, language: Option<&str>, theme: &Theme) -> AnyElement {
+    let runs = highlight(text, language);
+    if runs.is_empty() {
+        return SharedString::from(text.to_string()).into_any_element();
+    }
+    let highlights: Vec<(std::ops::Range<usize>, HighlightStyle)> = runs
+        .into_iter()
+        .map(|run| {
+            (
+                run.start..run.end,
+                HighlightStyle {
+                    color: Some(code_colour(run.style.paint, theme)),
+                    font_weight: run.style.bold.then_some(FontWeight::BOLD),
+                    font_style: run.style.italic.then_some(FontStyle::Italic),
+                    ..Default::default()
+                },
+            )
+        })
+        .collect();
+    StyledText::new(SharedString::from(text.to_string()))
+        .with_highlights(highlights)
+        .into_any_element()
+}
+
+/// The registry token a highlighted run is painted from.
+fn code_colour(paint: Paint, theme: &Theme) -> Hsla {
+    let t = &theme.tokens;
+    match paint {
+        Paint::Normal => t.code_normal,
+        Paint::Comment => t.code_comment,
+        Paint::Keyword => t.code_keyword,
+        Paint::String => t.code_string,
+        Paint::Function => t.code_function,
+        Paint::Value => t.code_value,
+        Paint::Operator => t.code_operator,
+        Paint::Punctuation => t.code_punctuation,
+        Paint::Property => t.code_property,
+        Paint::Tag => t.code_tag,
+        Paint::Important => t.code_important,
     }
 }
 
@@ -1753,11 +1804,11 @@ impl<'a> Renderer<'a> {
                 .into_any_element(),
             RBlock::Code {
                 id,
+                language,
                 text,
                 copy,
                 wrap,
                 copyable,
-                ..
             } => {
                 let id = *id;
                 let (wrap, copyable) = (*wrap, *copyable);
@@ -1784,7 +1835,7 @@ impl<'a> Renderer<'a> {
                             .child(
                                 div()
                                     .when(!wrap, |d| d.whitespace_nowrap())
-                                    .child(SharedString::from(text.clone())),
+                                    .child(code_text(text, language.as_deref(), t)),
                             ),
                     )
                     .when(copyable, |d| {

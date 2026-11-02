@@ -31,6 +31,7 @@ crates/scoria-canvas    canvas model: viewport math, edge geometry, hit tests, s
 crates/scoria-bases     the Bases expression language: statements parsed into Obsidian's own tree (no gpui)
 crates/scoria-pdf       PDF rendering on hayro: pages to RGBA, outline, title, page text, the #page= subpath (no gpui)
 crates/scoria-math      TeX math typeset on RaTeX (KaTeX-compatible): a drawing list in em units plus the KaTeX fonts (no gpui)
+crates/scoria-highlight code highlighting: Prism's tokenizer and grammars ported, and the --code-* each token paints from (no gpui)
 crates/scoria-bench     spike benchmarks: synthetic vault generator, index timer (bin)
 docs/anya_scoria_gen    procedural scoria-logo generator (bin, zero deps, OUTSIDE the cargo workspace)
 docs/scoria             Obsidian vault: spec and design notes (dogfooded by Scoria)

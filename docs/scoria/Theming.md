@@ -139,7 +139,33 @@ Built: the Themes dropdown over `Vault::css_themes()` with the "Open themes fold
 
 Not built, and now in [[UI parity backlog]]: the "Manage" button (Obsidian's community theme browser, which Scoria will not have), the three font pages (Scoria still shows a text field), and the "Quick font size adjustment" and "Custom app icon" rows, whose config keys the probe did not record.
 
-What remains of the themes subset: step 3.
+**Step 3, syntax highlighting, landed on 2026-11-02**, and the probe changed the plan's
+recommendation before a line was written. `code-highlight.mjs`
+([[Specification#Observed code highlighting, Obsidian 1.14.5 (installer build 1.13.7)]]) settled
+three things:
+
+- **Obsidian runs two highlighters over one palette.** Prism in the reading view, CodeMirror in
+  the editor, both resolving to the same eleven `--code-*`. The section above said the Prism set
+  is what a theme addresses; what it did not say is that the *editor* has its own token names and
+  that the two disagree — a JSON key is `--code-property` rendered and `--code-function` in the
+  editor. One tokenizer is the right answer for Scoria, and it is Prism's, because Prism's names
+  are what a theme styles.
+- **Thirty-three classes are styled and everything else inherits `--code-normal`.** The rules are
+  not reachable through `document.styleSheets`, so each class was put to the renderer directly.
+  The registry already had all eleven properties from step 1, so no new tokens were needed.
+- **`syntect` is not the shortcut this note assumed.** Its bundled set is 75 syntaxes against
+  Obsidian's 171, and it has no TypeScript, TOML, Kotlin, Swift, Nix, Dockerfile or GraphQL.
+  Breadth was the whole argument for it, and the breadth is not there.
+
+So Prism was **ported** rather than wrapped: `crates/scoria-highlight` is `matchGrammar` from
+`prism-core.js` with the grammars written out from the same upstream source — the move the
+project already makes for Lucide's icons. That buys exactness, and the exactness is testable:
+`tests/corpus/obsidian-1.14.5.json` holds Obsidian's own `innerHTML` for a sample per language,
+and a ported grammar is correct when Scoria's HTML is **identical**, which compares every token's
+name, aliases, nesting and boundaries at once. Eight languages match byte for byte today.
+
+What remains is breadth, one grammar at a time — a language with no port renders plain, which is
+what Obsidian does for a name Prism has not got. See [[Development#Syntax highlighting, 2026-11-02]].
 
 ## See also
 

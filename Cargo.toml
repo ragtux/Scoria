@@ -18,6 +18,7 @@ members = [
     "crates/scoria-templates",
     "crates/scoria-pdf",
     "crates/scoria-math",
+    "crates/scoria-highlight",
     "crates/scoria-bench",
 ]
 
@@ -44,6 +45,7 @@ scoria-suggest = { path = "crates/scoria-suggest" }
 scoria-templates = { path = "crates/scoria-templates" }
 scoria-pdf = { path = "crates/scoria-pdf" }
 scoria-math = { path = "crates/scoria-math" }
+scoria-highlight = { path = "crates/scoria-highlight" }
 
 anyhow = "1"
 thiserror = "2"
@@ -61,6 +63,10 @@ walkdir = "2"
 tempfile = "3"
 rayon = "1"
 regex = "1"
+# Prism's patterns use lookahead and lookbehind, which `regex` has not got.
+# `fancy-regex` is pure Rust: it hands what it can to `regex` and backtracks
+# for the rest. Only `scoria-highlight` needs it.
+fancy-regex = "0.16"
 notify = "8"
 # Pure Rust PDF rasterizer for the PDF view and `![[x.pdf]]` embeds. The default
 # features embed the 14 standard fonts and the CMaps, so a PDF without its own
