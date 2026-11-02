@@ -123,11 +123,16 @@ written. Android and iOS deliberately match nothing — there is no build for ei
 
 ## The marks
 
-`assets/logo.svg` is the full mark, `docs/img/scoria_v3_fixed.svg` in this
-repository with Inkscape's editor state stripped. `assets/favicon.svg` is
-generated from the same file: its outline and six largest vesicles, flat
-`#E8590C` on the dark rounded square, because the full mark's gradients and
-all fourteen holes are mud at 16 px.
+`assets/logo.svg` is the full mark, a byte-for-byte copy of
+`docs/img/marks/clast-orange.svg` in this repository. `assets/favicon.svg` is
+written by `tools/app-icons/cut.py` beside the app icons, and is the same tile
+their small sizes are: Anya's flat cut of the same clast
+(`docs/img/marks/clast-flat-orange.svg` - one orange, the outline and the
+vesicles, no facets) nested whole on a rounded square of paper, because the
+full drawing's facets are mud at 16 px. The plate is paper rather than the
+near-black the old mark sat on: the outline is `#221f1f` and disappears into a
+dark tile. The accent tokens in `assets/scoria.css` are the marks' own inks;
+the palette is fixed in `docs/scoria/Scoria.md`.
 
 ## Deploying
 

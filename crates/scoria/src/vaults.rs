@@ -19,7 +19,7 @@
 //! no answer to, so the sandbox vault takes that place. Obsidian's fourth
 //! row is a language dropdown; Scoria is English only and has none.
 
-use crate::assets::{icon, logo};
+use crate::assets::{icon, logo, DISPLAY_FONT_FAMILY};
 use crate::theme::{Theme, FONT_UI_MEDIUM, FONT_UI_SMALL, FONT_UI_SMALLER};
 use crate::workspace::Workspace;
 use gpui::{
@@ -667,15 +667,24 @@ impl Render for VaultManager {
                     .flex()
                     .flex_col()
                     .items_center()
-                    .justify_center()
                     .px(px(30.))
                     .py(px(24.))
-                    .child(logo(90.))
+                    // Two spacers rather than `justify_center`: they share
+                    // whatever height is spare and shrink to nothing when
+                    // there is none, so a short window scrolls to the top of
+                    // the mark instead of clipping it behind the centring.
+                    .child(div().flex_1())
+                    .child(logo(264.))
                     .child(
+                        // The product name the way Anya's wordmark sets it:
+                        // the display face at its one weight, large, and
+                        // the line box no taller than the type.
                         div()
                             .mt(px(16.))
-                            .text_size(px(26.))
-                            .font_weight(FontWeight::SEMIBOLD)
+                            .font_family(DISPLAY_FONT_FAMILY)
+                            .text_size(px(104.))
+                            .line_height(px(104.))
+                            .font_weight(FontWeight::BLACK)
                             .text_color(theme.tokens.text_normal)
                             .child("Scoria"),
                     )
@@ -687,7 +696,8 @@ impl Render for VaultManager {
                             .child(version),
                     )
                     .child(div().h(px(32.)))
-                    .child(card),
+                    .child(card)
+                    .child(div().flex_1()),
             )
     }
 }

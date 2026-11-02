@@ -18,13 +18,14 @@
      actions are ink on paper, inverted, rather than orange buttons, so the one
      orange thing on a page is the thing worth looking at.
 
-   The accent hues themselves are the ones fixed in the repository's vault
-   (docs/scoria/Scoria.md, 2026-10-17) and are not changed here: #E8590C for
-   the logo and large marks, #C2410C for text and links on light backgrounds,
-   #F2691F on the dark theme. Against the backgrounds below they measure 5.0:1
-   on the paper and 6.3:1 on the near-black — the dark theme gains over the
-   5.4:1 the vault records against the old #1e1e22, the light one gives up .2
-   of the 5.2:1 it has on pure white. Both clear AA for body text. */
+   The accent hues themselves are the marks' own inks, the palette fixed in
+   the repository's vault (docs/scoria/Scoria.md, 2026-11-02) and not changed
+   here: #ff5721, the clast's body, for the brand and large marks; #ff6f21,
+   its lit facet, for text and links on the dark theme; #a6462c, the brown
+   clast's lit facet, for text and links on paper, because no orange of the
+   family clears AA there (#ee3300, the darkest, is 3.9:1). Against the
+   backgrounds below they measure 7.1:1 on the near-black and 5.7:1 on the
+   paper. Both clear AA for body text. */
 
 /* ---------- the faces ----------
    Subset to Latin plus the punctuation, arrows and marks the content uses, from
@@ -53,8 +54,8 @@
   --text:#e7e5e2; --dim:#8b8984; --head:#faf9f7;
   --shadow:0 18px 50px rgba(0,0,0,.55);
 
-  --brand:#E8590C;
-  --accent:#F2691F; --accent-fg:#0b0b0c; --accent-soft:rgba(242,105,31,.13);
+  --brand:#ff5721;
+  --accent:#ff6f21; --accent-fg:#0b0b0c; --accent-soft:rgba(255,111,33,.13);
   /* --pop, orange in the shared sheet, is red here: it marks warnings, and
      beside an orange accent an orange warning stops reading as one. */
   --pop:#f2545b; --c-source:#d98324; --c-depth:#3fb27f;
@@ -63,7 +64,7 @@
   --bg:#fbfaf8; --panel:#fff; --raise:#f2f0ec; --border:#e5e2db; --widget:#f2f0ec;
   --text:#1a1a1c; --dim:#6b6861; --head:#0c0c0d;
   --shadow:0 18px 50px rgba(30,25,18,.10);
-  --accent:#C2410C; --accent-fg:#fff; --accent-soft:rgba(194,65,12,.09);
+  --accent:#a6462c; --accent-fg:#fff; --accent-soft:rgba(166,70,44,.09);
   --pop:#c0392b; --c-source:#9a5a00; --c-depth:#157a52;
 }
 @media (prefers-color-scheme: light) {
@@ -71,7 +72,7 @@
     --bg:#fbfaf8; --panel:#fff; --raise:#f2f0ec; --border:#e5e2db; --widget:#f2f0ec;
     --text:#1a1a1c; --dim:#6b6861; --head:#0c0c0d;
     --shadow:0 18px 50px rgba(30,25,18,.10);
-    --accent:#C2410C; --accent-fg:#fff; --accent-soft:rgba(194,65,12,.09);
+    --accent:#a6462c; --accent-fg:#fff; --accent-soft:rgba(166,70,44,.09);
     --pop:#c0392b; --c-source:#9a5a00; --c-depth:#157a52;
   }
 }

@@ -65,9 +65,13 @@ clean:
 
 # ---- Packaging -----------------------------------------------------------
 
-# Re-cut the app icons from the logo master (docs/img/scoria_v3_fixed.svg)
+# Re-cut the app icons and the site's favicon from the logo master (docs/img/marks/clast-orange.svg)
 icons:
     nix-shell -p imagemagick --run tools/app-icons/cut.py
+
+# Re-cut every mark in docs/img/marks from Anya's sheet (docs/img/marks/Scoria_draft3.pdf)
+marks:
+    nix-shell -p inkscape --run tools/marks/cut.py
 
 # Wrap a release build in Scoria.app, the only place macOS looks for an icon (run on a Mac)
 macos-app:

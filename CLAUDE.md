@@ -38,7 +38,7 @@ docs/anya_scoria_gen    procedural scoria-logo generator (bin, zero deps, OUTSID
 docs/scoria             Obsidian vault: spec and design notes (dogfooded by Scoria)
 docs/scoria-demo        Obsidian vault: the geology field guide the README recordings are made on
 tools/demo-vault        the typst source of the PDF that vault embeds
-docs/img                brand art; scoria_v3_fixed.svg is the logo every other copy is cut from
+docs/img                brand art; docs/img/marks holds Anya's marks, and marks/clast-orange.svg is the logo every other copy is cut from
 docs/img/app            README screenshots and recordings, made by tools/readme-recording over the control socket
 site                    scoria.cc: the informational site and the manual (static, node)
 ```
@@ -86,17 +86,26 @@ cd site && npm run serve                  # the same, served on http://localhost
   observed behavior (list it in `docs/scoria/Specification.md`).
 - `docs/scoria/` is an Obsidian vault: write notes with wikilinks and frontmatter, and keep
   `.obsidian/` committed except `workspace.json`.
-- The logo lives in three places — `docs/img/scoria_v3_fixed.svg` (the master), the app's
-  `crates/scoria/assets/logo.svg` and the site's `site/sites/scoria/assets/`. Change the master
-  and re-cut the copies; never edit one of the copies on its own.
-- The app icons are a fourth cut of that master, and `just icons` (`tools/app-icons/cut.py`) is
-  the only thing that writes them: `crates/scoria/resources/windows/scoria.ico`, which
-  `crates/scoria/build.rs` embeds as resource 1 of `scoria.exe`;
-  `crates/scoria/resources/macos/scoria.icns`, which `tools/macos-app/bundle.sh` puts in
-  `Scoria.app`; and `crates/scoria/resources/linux/icons`, the hicolor theme
-  `tools/linux-desktop/install.sh` installs beside `scoria.desktop`. Re-cut them when the
-  master changes. The entry's `StartupWMClass` must stay equal to the `app_id` in
-  `WindowOptions`, or the Linux task bar loses the icon.
+- The marks are Anya's, and `docs/img/marks/` is the only place they are drawn: every file
+  there is cut from her sheet `docs/img/marks/Scoria_draft3.pdf` by `just marks`
+  (`tools/marks/cut.py`), never edited by hand. The logo is `docs/img/marks/clast-orange.svg`,
+  the master; the app's `crates/scoria/assets/logo.svg` and the site's
+  `site/sites/scoria/assets/logo.svg` are byte-identical copies of it. Change the sheet, re-cut
+  the marks, re-copy; never edit a copy on its own. The marks are flat: filled paths only, no
+  gradients and no strokes (the two `-shaded` studies excepted), and the outline (`#221f1f`)
+  and the vesicles (`#231f20`) are near-black rather than black — which is why anything that
+  puts a mark on a tile (the app icons, the favicon, the social card) uses paper, not the
+  chrome's dark. The brand palette is the marks' own inks, listed in `docs/scoria/Scoria.md`.
+- The app icons and the site's favicon are cuts of that master and of Anya's flat cut of it
+  (`marks/clast-flat-orange.svg`, drawn at 32 px and below), and `just icons`
+  (`tools/app-icons/cut.py`) is the only thing that writes them:
+  `crates/scoria/resources/windows/scoria.ico`, which `crates/scoria/build.rs` embeds as
+  resource 1 of `scoria.exe`; `crates/scoria/resources/macos/scoria.icns`, which
+  `tools/macos-app/bundle.sh` puts in `Scoria.app`; `crates/scoria/resources/linux/icons`, the
+  hicolor theme `tools/linux-desktop/install.sh` installs beside `scoria.desktop`; and
+  `site/sites/scoria/assets/favicon.svg`. Re-cut them when the master changes. The entry's
+  `StartupWMClass` must stay equal to the `app_id` in `WindowOptions`, or the Linux task bar
+  loses the icon.
 - `site/` vendors the builder from the `ragtux.com` repository byte for byte, bar the two
   differences `site/README.md` records. Port fixes across whole rather than merging.
 - `docs/anya_scoria_gen` generates scoria marks from Anya's `docs/img/anya_v0_base.svg`. It has

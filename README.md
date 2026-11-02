@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/img/scoria_v3_fixed.svg" alt="" width="132" height="109">
+  <img src="docs/img/marks/clast-orange.svg" alt="" width="132" height="94">
 </p>
 
 <h1 align="center">Scoria</h1>
@@ -7,7 +7,7 @@
 <p align="center"><strong>Your vault, opened natively.</strong></p>
 
 <p align="center">
-  <img alt="100% Rust" src="https://img.shields.io/badge/100%25-Rust-E8590C?style=flat-square&logo=rust&logoColor=white">
+  <img alt="100% Rust" src="https://img.shields.io/badge/100%25-Rust-FF5721?style=flat-square&logo=rust&logoColor=white">
   <img alt="Linux, Windows, macOS" src="https://img.shields.io/badge/Linux%20%7C%20Windows%20%7C%20macOS-2b2b2b?style=flat-square">
   <img alt="MIT licensed" src="https://img.shields.io/badge/license-MIT-2b2b2b?style=flat-square">
   <img alt="Early alpha, v0.3.2" src="https://img.shields.io/badge/status-early%20alpha%20·%20v0.3.2-f2545b?style=flat-square">

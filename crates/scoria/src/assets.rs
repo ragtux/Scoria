@@ -12,7 +12,11 @@
 //! `assets/fonts/LICENSE-Inter.txt`), the family at the head of Obsidian's
 //! own interface and text font stacks, in the static faces the pinned gpui
 //! can pick weights from (a variable font renders every weight as regular).
-//! The logo is ours, drawn for the project; see `docs/img/` for the master.
+//! Beside it rides one face of Rubik (SIL OFL, `assets/fonts/LICENSE-Rubik.txt`),
+//! the Black weight as a static instance of the variable file, chosen for the
+//! product name under the mark: as heavy as the Gibson Anya set the wordmark
+//! in, with rounder corners and a blockier set. It signs that name and nothing else.
+//! The logo is Anya's; see `docs/img/marks/` for the master.
 
 use anyhow::Result;
 use gpui::{img, px, svg, AssetSource, Hsla, Img, SharedString, Styled, Svg};
@@ -157,14 +161,14 @@ icons!(
 /// The logo, the one bundled asset that is not a monochrome icon. It is
 /// loaded through [`img`] rather than [`svg`] because gpui draws an `svg()`
 /// as a single-colour mask and rasterizes an `img()` through resvg, which is
-/// what keeps the mark's gradients.
+/// what keeps the mark's five colours apart.
 const LOGO: (&str, &[u8]) = ("logo.svg", include_bytes!("../assets/logo.svg"));
 
 /// The mark's width over its height. Setting both axes from it keeps the
 /// aspect ratio off the layout's hands. The `viewBox` it comes from is
-/// 50.041168 x 41.242233, which is finer than an `f32` holds, so the ratio
+/// 603.3067 x 430.8733, which is finer than an `f32` holds, so the ratio
 /// is written out rather than divided here.
-const LOGO_ASPECT: f32 = 1.213_347_7;
+const LOGO_ASPECT: f32 = 1.400_195_2;
 
 /// Every path [`Assets`] answers to.
 fn bundled() -> impl Iterator<Item = &'static (&'static str, &'static [u8])> {
@@ -186,10 +190,12 @@ impl AssetSource for Assets {
     }
 }
 
-/// Inter's static faces, registered with the text system at startup so the
-/// family resolves on a machine that does not have it installed.
+/// Inter's static faces and Rubik's Black, registered with the text system
+/// at startup so the families resolve on a machine that does not have them
+/// installed.
 pub fn fonts() -> Vec<Cow<'static, [u8]>> {
     vec![
+        Cow::Borrowed(include_bytes!("../assets/fonts/Rubik-Black.ttf")),
         Cow::Borrowed(include_bytes!("../assets/fonts/Inter-Regular.ttf")),
         Cow::Borrowed(include_bytes!("../assets/fonts/Inter-Italic.ttf")),
         Cow::Borrowed(include_bytes!("../assets/fonts/Inter-Medium.ttf")),
@@ -199,8 +205,12 @@ pub fn fonts() -> Vec<Cow<'static, [u8]>> {
     ]
 }
 
-/// The family [`fonts`] registers.
+/// The interface family [`fonts`] registers.
 pub const FONT_FAMILY: &str = "Inter";
+
+/// The display family [`fonts`] registers, in its Black weight only: the
+/// product name under the mark is set in it, the way Anya's wordmark is.
+pub const DISPLAY_FONT_FAMILY: &str = "Rubik";
 
 /// A Lucide icon by name, `size` pixels square, painted in `color`.
 /// Obsidian's icons are 16 px with a 2 px stroke on a 24-unit grid, which is
@@ -321,15 +331,17 @@ mod tests {
         let bytes = Assets.load(LOGO.0).unwrap().expect("logo.svg");
         let text = std::str::from_utf8(&bytes).unwrap();
         assert!(text.contains("<svg"), "the logo is not an svg");
-        // It is drawn with gradients, which is the whole reason it goes
-        // through img() instead of svg().
-        assert!(text.contains("linearGradient"), "the logo lost its shading");
-        // No stop fades out: a mark that ramps to transparent takes the
-        // colour of whatever is behind it, which is how the drawing arrived.
-        assert!(
-            !text.contains("stop-opacity:0;"),
-            "the logo has a transparent gradient stop again"
-        );
+        // Five fills and no others, which is the whole reason it goes through
+        // img() instead of svg(): the two near-blacks are the outline and the
+        // vesicles, and neither is #000, so a mark drawn as a single-colour
+        // mask would lose the drawing.
+        for colour in ["#ee3300", "#ff5721", "#ff6f21", "#231f20", "#221f1f"] {
+            assert!(text.contains(colour), "the logo lost {colour}");
+        }
+        // Flat on purpose: nothing is stroked and nothing is shaded, so the
+        // mark is the same drawing at 16 px as at 1024.
+        assert!(!text.contains("linearGradient"), "the logo grew a gradient");
+        assert!(!text.contains("stroke="), "the logo grew a stroke");
         assert!(Assets.list("").unwrap().iter().any(|p| p == LOGO.0));
     }
 
