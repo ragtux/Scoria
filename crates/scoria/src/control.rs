@@ -8,6 +8,14 @@
 //! keystrokes and mouse events into gpui's own dispatcher, which is as close
 //! to a real user as the app can get from the inside.
 //!
+//! Two sockets can be bound. `--control` is the full protocol, on a path
+//! the caller chose; a run that opens a vault also binds the handover
+//! socket named after it ([`scoria_cli::instance`]), and that one answers
+//! only [`scoria_control::INSTANCE_METHODS`] — opening a note, a URI and
+//! raising the window — because its path is predictable and a Scoria
+//! someone started from their desktop should not be driveable by anything
+//! that can guess it.
+//!
 //! Every request is answered exactly once and nothing waits forever: KWin
 //! stops delivering frame callbacks when the monitors sleep, so the waits
 //! carry a deadline and report `timed_out` rather than leaving a client
@@ -42,14 +50,24 @@ const MAX_WAIT_MS: usize = 600_000;
 /// a caller's number is also a number of forced repaints.
 const MAX_FRAMES: usize = 240;
 
-/// The bound socket path, so both the `quit` method and the `Quit` action can
-/// take the file away again.
-static SOCKET: Mutex<Option<PathBuf>> = Mutex::new(None);
+/// The bound socket paths, so both the `quit` method and the `Quit` action
+/// can take the files away again. Two at most: `--control`'s and the
+/// vault's handover socket.
+static SOCKETS: Mutex<Vec<PathBuf>> = Mutex::new(Vec::new());
 
-/// Starts the control socket. One thread accepts connections and gives each
+/// Which methods a socket answers.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Scope {
+    /// Every method: `--control`, on a path the caller chose.
+    Full,
+    /// The handover calls only, for the socket named after the vault.
+    Instance,
+}
+
+/// Starts a control socket. One thread accepts connections and gives each
 /// one a reader thread; the readers hand requests to the main thread and block
 /// on the answer, so the app itself is only ever touched where gpui expects.
-pub fn start(path: PathBuf, window: WindowHandle<Workspace>, cx: &mut App) {
+pub fn start(path: PathBuf, scope: Scope, window: WindowHandle<Workspace>, cx: &mut App) {
     // A socket file outlives the run that bound it, and `bind` refuses an
     // existing path, so a stale one has to go. One that still answers is
     // not stale: taking its name away would leave another Scoria's clients
@@ -84,10 +102,15 @@ pub fn start(path: PathBuf, window: WindowHandle<Workspace>, cx: &mut App) {
             return;
         }
     }
-    if let Ok(mut socket) = SOCKET.lock() {
-        *socket = Some(path.clone());
+    if let Ok(mut sockets) = SOCKETS.lock() {
+        sockets.push(path.clone());
     }
-    eprintln!("control: listening on {}", path.display());
+    match scope {
+        Scope::Full => eprintln!("control: listening on {}", path.display()),
+        // One line per run, on the way up, so a person who wonders why a
+        // second `scoria` did not open a window can see the rendezvous.
+        Scope::Instance => eprintln!("instance: listening on {}", path.display()),
+    }
 
     let (requests, incoming) = async_channel::unbounded::<Pending>();
     std::thread::spawn(move || {
@@ -107,10 +130,22 @@ pub fn start(path: PathBuf, window: WindowHandle<Workspace>, cx: &mut App) {
                 win: window,
                 cx: &mut *cx,
             };
-            let line = match handle(&mut ctl, &pending.request, &pending.reply) {
-                Ok(Some(result)) => Some(Response::ok(id, result).line()),
-                Ok(None) => None,
-                Err(error) => Some(Response::err(id, error).line()),
+            // The handover socket serves a launcher, not a driver, and says
+            // so by name rather than answering `unknown method`.
+            let out_of_scope = scope == Scope::Instance
+                && !scoria_control::is_instance_method(&pending.request.method);
+            let line = if out_of_scope {
+                let error = format!(
+                    "the handover socket does not answer `{}`; run the app with --control for that",
+                    pending.request.method
+                );
+                Some(Response::err(id, error).line())
+            } else {
+                match handle(&mut ctl, &pending.request, &pending.reply) {
+                    Ok(Some(result)) => Some(Response::ok(id, result).line()),
+                    Ok(None) => None,
+                    Err(error) => Some(Response::err(id, error).line()),
+                }
             };
             if let Some(line) = line {
                 let _ = pending.reply.send(line);
@@ -120,12 +155,18 @@ pub fn start(path: PathBuf, window: WindowHandle<Workspace>, cx: &mut App) {
     .detach();
 }
 
-/// Removes the socket file, so the next run can bind the same path.
+/// Removes the socket files, so the next run can bind the same paths.
 pub fn cleanup() {
-    let Some(path) = SOCKET.lock().ok().and_then(|mut socket| socket.take()) else {
+    let Some(paths) = SOCKETS
+        .lock()
+        .ok()
+        .map(|mut sockets| std::mem::take(&mut *sockets))
+    else {
         return;
     };
-    let _ = std::fs::remove_file(path);
+    for path in paths {
+        let _ = std::fs::remove_file(path);
+    }
 }
 
 /// One request waiting for the main thread, with the channel the connection

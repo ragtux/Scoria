@@ -10,6 +10,7 @@ members = [
     "crates/scoria-llm-mcp",
     "crates/scoria-commands",
     "crates/scoria-control",
+    "crates/scoria-cli",
     "crates/scoria-search",
     "crates/scoria-text",
     "crates/scoria-canvas",
@@ -37,6 +38,7 @@ scoria-cache = { path = "crates/scoria-cache" }
 scoria-formats = { path = "crates/scoria-formats" }
 scoria-commands = { path = "crates/scoria-commands" }
 scoria-control = { path = "crates/scoria-control" }
+scoria-cli = { path = "crates/scoria-cli" }
 scoria-search = { path = "crates/scoria-search" }
 scoria-text = { path = "crates/scoria-text" }
 scoria-canvas = { path = "crates/scoria-canvas" }

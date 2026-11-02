@@ -22,6 +22,7 @@ scoria-markdown.workspace = true
 scoria-highlight.workspace = true
 scoria-cache.workspace = true
 scoria-commands.workspace = true
+scoria-cli.workspace = true
 scoria-control.workspace = true
 scoria-formats.workspace = true
 scoria-search.workspace = true

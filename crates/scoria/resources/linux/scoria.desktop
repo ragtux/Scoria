@@ -4,15 +4,21 @@ Version=1.0
 Name=Scoria
 GenericName=Knowledge base
 Comment=Open a folder of Markdown notes, compatible with Obsidian vaults
-# A vault is a folder, so the entry takes one: tools/linux-desktop/install.sh rewrites this
+# One argument, and it may be a URL: %u covers all three shapes the command line takes — a vault
+# folder, a file inside one, and a scoria:// URI. tools/linux-desktop/install.sh rewrites this
 # line to the absolute path when the binary is not on PATH, which is the case for the archive.
-# With no argument Scoria opens empty and the sidebar's footer has "Open vault...".
-Exec=scoria %f
+# With no argument Scoria opens the vault manager, which is where "Open folder as vault" is.
+Exec=scoria %u
 Icon=scoria
 Terminal=false
 Categories=Office;
 Keywords=notes;markdown;vault;obsidian;wiki;zettelkasten;knowledge;
-MimeType=inode/directory;
+# inode/directory puts Scoria in a file manager's "Open With" for a folder, which is the shape a
+# vault has; text/markdown does the same for a note, which opens the vault that holds it and then
+# the note. x-scheme-handler/scoria is Scoria's own URI scheme — the obsidian:// grammar under a
+# name Obsidian does not own, since on a machine that has Obsidian that scheme is already taken.
+# `install.sh --obsidian-scheme` adds obsidian:// too, for a machine without it.
+MimeType=inode/directory;text/markdown;x-scheme-handler/scoria;
 StartupNotify=true
 # gpui sets this as the Wayland app_id and the X11 WM_CLASS (see WindowOptions in main.rs);
 # it is what ties the running window to this entry, and so to the icon, in the task bar.

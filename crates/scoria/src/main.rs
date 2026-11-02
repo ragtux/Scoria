@@ -2,11 +2,19 @@
 //!
 //! `scoria <vault> [--note <path>]` opens a vault in the three-pane shell:
 //! Files on the left, the reading view (or the source editor, Ctrl+E) in the
-//! middle, and Backlinks, Outline and Tags on the right. `--synthetic N`
-//! and `--stress` keep the editor spike from the first gate runnable; the
-//! other flags open the app in a given state for screenshots and smoke
-//! tests, and `--control <socket>` lets a test or the MCP server drive the
-//! running app instead (see `docs/scoria/Development.md`).
+//! middle, and Backlinks, Outline and Tags on the right. A file argument
+//! (`scoria Rocks/Basalt.md`) opens the vault that holds it and then the
+//! note, and a `scoria://` or `obsidian://` argument is acted on once the
+//! vault has loaded. `--synthetic N` and `--stress` keep the editor spike
+//! from the first gate runnable; the other flags open the app in a given
+//! state for screenshots and smoke tests, and `--control <socket>` lets a
+//! test or the MCP server drive the running app instead (see
+//! `docs/scoria/Development.md`).
+//!
+//! The command line itself lives in `scoria-cli`, which has no gpui in it:
+//! the flag table and its help text, the file argument, and the handover
+//! that makes a second `scoria` on an open vault raise that window instead
+//! of starting a second one.
 
 mod assets;
 mod backlinks;
@@ -47,9 +55,9 @@ use gpui::{
     actions, point, prelude::*, px, size, App, Bounds, Focusable, KeyBinding, TitlebarOptions,
     WindowAppearance, WindowBackgroundAppearance, WindowBounds, WindowDecorations, WindowOptions,
 };
+use scoria_cli::{instance, Args, Forward, Target};
 use scoria_commands::CommandRegistry;
 use std::fmt::Write as _;
-use std::path::PathBuf;
 use std::sync::Arc;
 use theme::Theme;
 use workspace::{Commands, ViewMode, Workspace};
@@ -133,135 +141,76 @@ fn synthetic_note(lines: usize) -> String {
     out
 }
 
-struct Args {
-    vault: Option<PathBuf>,
-    note: Option<String>,
-    synthetic: Option<usize>,
-    /// Number of self-driven edit and navigation steps to run before quitting.
-    stress: Option<usize>,
-    /// Pre-filled Search query, for screenshots.
-    search: Option<String>,
-    /// Open the quick switcher with this query, for screenshots.
-    switcher: Option<String>,
-    /// Right-dock tab to show: backlinks, outgoing, tags, properties, outline.
-    pane: Option<String>,
-    /// Open the graph view: `global` or `local`.
-    graph: Option<String>,
-    /// Open the command palette with this query, for screenshots.
-    palette: Option<String>,
-    /// Open Settings on this tab (`hotkeys`, `appearance`, ...).
-    settings: Option<String>,
-    /// Open the note in source mode.
-    source: bool,
-    /// Open the note in reading view, whatever `defaultViewMode` says.
-    reading: bool,
-    /// Open the find panel with this query.
-    find: Option<String>,
-    /// Open the find panel with this query and select every match (Find all).
-    find_all: Option<String>,
-    /// Rename the opened note to this name at startup (links rewritten).
-    rename: Option<String>,
-    /// Open a file prompt for the opened note: rename, move, delete, folder.
-    prompt: Option<String>,
-    /// Type this text at the cursor in the source editor, which is how the
-    /// autocompletion popup is opened for a screenshot (`--type "[[al"`).
-    type_text: Option<String>,
-    /// Press these keys, comma separated, after `--type`: `enter`, `tab`,
-    /// `shift-tab`, `shift-enter`, `escape`, `up`, `down`.
-    accept: Option<String>,
-    /// An `obsidian://` URI to act on once the vault has loaded: a bare
-    /// argument of that scheme, or `--uri`.
-    uri: Option<String>,
-    /// Open this cell of the note's first table for editing, before
-    /// `--type`, the way clicking one does.
-    cell: Option<usize>,
-    /// Run these command ids at startup, comma separated, after everything
-    /// else: `--command editor:table-row-after`.
-    command: Option<String>,
-    /// Open the template chooser and pick the template this matches.
-    template: Option<String>,
-    /// Open the Settings dropdown that writes this key, for screenshots.
-    menu: Option<String>,
-    /// Bind the control socket at this path, so something outside the app
-    /// can read its state and drive it.
-    control: Option<PathBuf>,
-    /// Window size in logical pixels, `--size 1400x900`.
-    size: Option<(f32, f32)>,
-    /// `hidden` (the default, Obsidian's on Linux) or `native`.
-    frame: Option<String>,
+/// What the command line asked this process to do.
+enum Startup {
+    /// Open a window with these arguments.
+    Run(Box<Args>),
+    /// Nothing more to do: the help or the version was printed, or a Scoria
+    /// that is already running took the arguments over.
+    Done,
+    /// Give up with this exit status, the message already printed.
+    Failed(i32),
 }
 
-/// `1400x900` as a width and a height; anything else leaves the default.
-fn parse_size(value: &str) -> Option<(f32, f32)> {
-    let (width, height) = value.split_once(['x', 'X'])?;
-    Some((width.trim().parse().ok()?, height.trim().parse().ok()?))
-}
-
-fn parse_args() -> Args {
-    let mut args = Args {
-        vault: None,
-        note: None,
-        synthetic: None,
-        stress: None,
-        search: None,
-        switcher: None,
-        pane: None,
-        graph: None,
-        palette: None,
-        settings: None,
-        source: false,
-        reading: false,
-        find: None,
-        find_all: None,
-        rename: None,
-        prompt: None,
-        type_text: None,
-        accept: None,
-        uri: None,
-        cell: None,
-        command: None,
-        template: None,
-        menu: None,
-        control: None,
-        size: None,
-        frame: None,
+/// Everything the arguments decide before a window exists: the help text,
+/// the version, what a path argument names, and whether this run belongs to
+/// the Scoria that already has the vault open.
+///
+/// The exit statuses are the usual ones — 2 for a command line that could
+/// not be used, 1 for a handover that was refused — so a script can tell a
+/// typo from a vault that answered.
+fn startup() -> Startup {
+    let mut args = match scoria_cli::parse(std::env::args().skip(1)) {
+        Ok(args) => args,
+        Err(error) => {
+            eprintln!("scoria: {error}");
+            eprintln!("try `scoria --help`");
+            return Startup::Failed(2);
+        }
     };
-    let mut it = std::env::args().skip(1);
-    while let Some(a) = it.next() {
-        match a.as_str() {
-            "--synthetic" => {
-                args.synthetic = it.next().and_then(|n| n.parse().ok()).or(Some(50_000))
+    if args.help {
+        print!("{}", scoria_cli::usage());
+        return Startup::Done;
+    }
+    if args.version {
+        println!("{}", scoria_cli::version());
+        return Startup::Done;
+    }
+    // A folder is the vault; a file is a note (or a canvas, a base, a PDF)
+    // in the vault above it, which is what a file manager hands over and
+    // what shell completion produces.
+    if let Some(given) = args.vault.clone() {
+        match scoria_cli::resolve(&given) {
+            Ok(Target::Vault(root)) => args.vault = Some(root),
+            Ok(Target::File { vault, path }) => {
+                args.vault = Some(vault);
+                if args.note.is_none() && args.open_path.is_none() {
+                    args.open_path = Some(path);
+                }
             }
-            "--stress" => args.stress = it.next().and_then(|n| n.parse().ok()).or(Some(600)),
-            "--note" => args.note = it.next(),
-            "--search" => args.search = it.next(),
-            "--switcher" => args.switcher = it.next(),
-            "--pane" => args.pane = it.next(),
-            "--graph" => args.graph = it.next().or(Some("global".into())),
-            "--palette" => args.palette = it.next().or(Some(String::new())),
-            "--settings" => args.settings = it.next().or(Some("general".into())),
-            "--source" => args.source = true,
-            "--reading" => args.reading = true,
-            "--find" => args.find = it.next().or(Some(String::new())),
-            "--find-all" => args.find_all = it.next().or(Some(String::new())),
-            "--rename" => args.rename = it.next(),
-            "--prompt" => args.prompt = it.next().or(Some("rename".into())),
-            "--type" => args.type_text = it.next(),
-            "--accept" | "--press" => args.accept = it.next().or(Some("enter".into())),
-            "--cell" => args.cell = it.next().and_then(|n| n.parse().ok()),
-            "--command" => args.command = it.next(),
-            "--template" => args.template = it.next(),
-            "--menu" => args.menu = it.next(),
-            "--control" => args.control = it.next().map(PathBuf::from),
-            "--size" => args.size = it.next().as_deref().and_then(parse_size),
-            "--frame" => args.frame = it.next(),
-            "--uri" => args.uri = it.next(),
-            _ if a.starts_with("obsidian://") => args.uri = Some(a),
-            _ if args.vault.is_none() => args.vault = Some(PathBuf::from(a)),
-            _ => args.note = Some(a),
+            Err(error) => {
+                eprintln!("scoria: {error}");
+                return Startup::Failed(2);
+            }
         }
     }
-    args
+    // `obsidian://open?vault=Rocks` is for the window showing Rocks, and
+    // the app refuses a URI meant for another vault, so the vault the URI
+    // names is what routes it.
+    let named = args
+        .uri
+        .as_deref()
+        .and_then(|uri| uri::parse(uri).ok())
+        .and_then(|uri| uri.vault().map(str::to_string));
+    match instance::forward(&args, named.as_deref()) {
+        Ok(Forward::Handled) => return Startup::Done,
+        Ok(Forward::NoInstance) => {}
+        Err(error) => {
+            eprintln!("scoria: {error}");
+            return Startup::Failed(1);
+        }
+    }
+    Startup::Run(Box::new(args))
 }
 
 /// Whether the window is opened without the desktop's own title bar, which
@@ -280,13 +229,14 @@ pub fn hidden_frame() -> bool {
 /// and the variable are a way to try the other style for one run without
 /// changing what the next run gets.
 fn frame_style() -> String {
-    let mut it = std::env::args().skip(1);
-    while let Some(a) = it.next() {
-        if a == "--frame" {
-            if let Some(v) = it.next() {
-                return v;
-            }
-        }
+    // Parsed again rather than threaded through: `hidden_frame` is asked
+    // from inside a paint, where there is no `Args` to hand it, and the
+    // answer is kept in a `OnceLock` either way.
+    if let Some(frame) = scoria_cli::parse(std::env::args().skip(1))
+        .ok()
+        .and_then(|args| args.frame)
+    {
+        return frame;
     }
     if let Ok(v) = std::env::var("SCORIA_FRAME") {
         return v;
@@ -354,7 +304,18 @@ pub fn bind_all_keys(cx: &mut App, registry: &CommandRegistry) {
 }
 
 fn main() {
-    let args = parse_args();
+    let args = match startup() {
+        Startup::Run(args) => args,
+        Startup::Done => return,
+        Startup::Failed(code) => std::process::exit(code),
+    };
+    // A run that opens a vault binds the socket named after it, so the next
+    // `scoria` on the same vault finds this window. Taken before gpui
+    // starts, since binding happens inside the app.
+    let handover = args
+        .single_instance()
+        .then(|| args.vault.as_deref().and_then(instance::prepare))
+        .flatten();
     // The theme comes from appearance.json and the key bindings from
     // hotkeys.json; read both before the window opens so the first frame
     // already has the right colors and keys.
@@ -499,10 +460,14 @@ fn main() {
             // Bound before the startup flags are applied, so `--control`
             // composes with `--note`, `--source` and the rest of them.
             if let Some(path) = args.control.clone() {
-                control::start(path, window, cx);
+                control::start(path, control::Scope::Full, window, cx);
+            }
+            if let Some(path) = handover.clone() {
+                control::start(path, control::Scope::Instance, window, cx);
             }
 
             let note = args.note.clone();
+            let open_path = args.open_path.clone();
             let search = args.search.clone();
             let switcher = args.switcher.clone();
             let pane = args.pane.clone();
@@ -570,9 +535,25 @@ fn main() {
                             // With a layout restored and no note asked for, the
                             // window stays as `workspace.json` left it, which is
                             // the empty state when nothing was open.
-                            let opened = match &note {
-                                Some(n) => ws.open_by_name(n, cx),
-                                None => false,
+                            let opened = match (&open_path, &note) {
+                                // A file argument names the file itself, so
+                                // it is opened by path rather than resolved
+                                // as a link: a `.canvas`, `.base` or `.pdf`
+                                // is no link target, and two notes of the
+                                // same name in different folders are
+                                // distinct files.
+                                (Some(path), _) => match ws.vault_file_path(path) {
+                                    Some(key) => {
+                                        ws.open_file(key, None, cx);
+                                        true
+                                    }
+                                    None => {
+                                        eprintln!("scoria: no such file in the vault: {path}");
+                                        false
+                                    }
+                                },
+                                (None, Some(n)) => ws.open_by_name(n, cx),
+                                (None, None) => false,
                             };
                             if !opened && !ws.layout_restored() {
                                 ws.open_first(cx);

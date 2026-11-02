@@ -29,7 +29,8 @@ mod protocol;
 /// on Windows), and so is the client.
 pub use client::Client;
 pub use methods::{
-    method, params_schema, protocol_json, MethodSpec, ParamSpec, ParamType, METHODS,
+    is_instance_method, method, params_schema, protocol_json, MethodSpec, ParamSpec, ParamType,
+    INSTANCE_METHODS, METHODS,
 };
 pub use protocol::{Request, Response};
 

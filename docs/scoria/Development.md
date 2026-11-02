@@ -324,7 +324,115 @@ uses behave as Obsidian's do.
 | Bases: the rest of the view | done: the cards, list and kanban layouts, the toolbar's six panels, editing through the table, the five `bases:*` commands beyond `new-file`, and an embedded `![[x.base]]`, see [[#Bases: the rest of the view, 2026-10-25]]; the toolbar and panels rebuilt to the 2026-11-01 record, see [[#The Bases toolbar and its panels, 2026-11-01]]; the embed as the live view and the leaf's chrome, see [[#The embedded base and the base leaf's chrome, 2026-11-01]]; the header, summaries, cells and keyboard, see [[#The column header, summaries, cells and the table keyboard, 2026-11-01]]; the kanban's drags and menus, see [[#The kanban board, 2026-11-02]] |
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
-| The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, see [[#The theme registry, 2026-11-02]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done but for breadth, a grammar at a time; the CLI is not started |
+| The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, see [[#The theme registry, 2026-11-02]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done but for breadth, a grammar at a time; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]] |
+
+### The command line, 2026-11-02
+
+The last line of [[#Parity (phase 4)]]. There was nothing to clone here:
+`obsidian --help` parses no flags at all — it opens a window, and (on this
+machine) downloaded an update while doing it — and Obsidian's installed
+desktop entry is four interesting lines, `Exec=obsidian %u` with
+`MimeType=x-scheme-handler/obsidian` and no file types. So the surface is
+Scoria's own, and the one behaviour borrowed is the only one a person would
+notice: **one window per vault, raised by the second launch**, which
+Electron's single-instance lock gives Obsidian for free and a one-window
+app has to arrange for itself.
+
+**The crate.** `crates/scoria-cli` has no gpui in it, so the command line
+builds and tests in `cargo test --workspace` without a display. `args.rs`
+holds `FLAGS`, one entry per flag with its metavar, its default when given
+bare, its section and its help line: `parse` looks a flag up there to
+decide whether to take the next argument, and `usage` prints the same
+table, so a flag cannot work and be undocumented. `the_table_and_the_parser_agree`
+parses every entry and asserts it changed something, which is what catches
+a flag added to the table and forgotten in the `apply` match.
+
+**The parser is strict, where the old one swallowed everything.** `_ =>
+args.note = Some(a)` meant `--surce` was a note name and a run with a typo
+opened the wrong thing silently. Now an unknown flag, a missing value, a
+third positional and a bad number are each an error naming themselves, and
+the status is 2. `--flag=value` is accepted, since a desktop entry and a
+shell script both write that. Two older sharp edges went with it: an
+optional-value flag no longer eats the flag after it (`--graph --source`
+was one flag), while a required value is still taken whatever it looks like
+(`--type ---` types three hyphens).
+
+**A file argument.** `scoria Rocks/Basalt.md` opens the vault that holds
+the note and then the note: `target.rs` walks up for the nearest folder
+with a `.obsidian`, failing that a folder on the machine's own vault list,
+failing that the file's own folder — any folder is a vault, and that is
+what a person opening a loose note means. The file is then opened **by
+path** rather than as a link (`Args::open_path`, the control socket's
+`open_path`), because a `.canvas`, `.base` or `.pdf` is no link target and
+two notes of one name in different folders are different files.
+
+**The handover.** A run that opens a vault binds a second socket named
+after it — FNV-1a over the canonicalized path, in `$XDG_RUNTIME_DIR/scoria`
+(`$TMPDIR` on macOS, the user's temp folder on Windows; a machine with
+neither gets no handover rather than a socket in shared `/tmp`). A later
+`scoria` on the same vault connects, sends `wait_loaded` and then its note,
+file or URI, asks for `window {activate: true}` and exits 0; nothing
+listening means the file is stale or absent, and this run opens the window
+instead. A URI with no vault of its own goes to the window used most
+recently, by `ts` in `scoria.json`; a URI whose `vault` names one goes to
+that vault's window, which is what makes `obsidian://open?vault=Rocks`
+land in the right place rather than being refused by the wrong window.
+`--new-window`, `SCORIA_SINGLE_INSTANCE=0`, a spike (`--synthetic`,
+`--stress`) and `--control` all opt out: a driven run was spawned by
+something that wants *that* process, so handing its arguments to an earlier
+Scoria would leave the caller waiting on a window that never comes.
+
+**The handover socket answers eight methods, not thirty.** Its path is
+predictable, so `scoria_control::INSTANCE_METHODS` is what it serves —
+`ping`, `protocol`, `wait_loaded`, `open`, `open_path`, `set_mode`, `uri`,
+`window` — and anything else comes back as "the handover socket does not
+answer `keys`; run the app with --control for that". `--control` is
+unchanged: the whole protocol, on a path the caller chose.
+`control::start` takes a `Scope` and `SOCKETS` is a list now, so a quit
+takes both files away. Writing that list turned up a drift the protocol
+table was supposed to make impossible: `uri` was handled by the socket and
+missing from `METHODS`, so `protocol` never listed it. It is in the table
+now, with its params.
+
+**The desktop entry.** `Exec=scoria %u` (one argument, and it may be a
+URL), and `MimeType=inode/directory;text/markdown;x-scheme-handler/scoria;`
+— a folder, a note, and Scoria's own scheme, which is the `obsidian://`
+grammar under a name Obsidian does not own (`uri::parse` takes either
+prefix). `install.sh --obsidian-scheme` claims `obsidian://` as well, for a
+machine without Obsidian, and warns first if `obsidian` is on PATH.
+Being in `MimeType=` only offers the entry, so the script also runs
+`xdg-mime default` for the schemes — and only when `--prefix` is the
+calling user's own data directory, because that list is always the caller's
+`mimeapps.list` whatever `--prefix` says, and a system-wide install has no
+business rewriting root's choices. (Found the hard way: a smoke test with
+`--prefix` pointing at a temp folder still hijacked `obsidian://` on this
+machine.)
+
+**Tests.** 22 in `scoria-cli`: the flag table against the parser and
+against the help text, the aliases, the equals form, the optional-value
+rule, every error message, the vault-of-a-file ladder, the socket name
+(two spellings of one folder are one instance, the folder is 0700), and
+the handover itself against a fake instance — the exact method sequence
+per argument shape, the mode passed along, `activate: true` at the end, a
+note the vault has not got reported rather than passed off as opened, and
+each opt-out leaving the instance untouched.
+
+Driven headless on two copies of the demo vault: the first run binding its
+socket, then a second run with `--note`, with a file path, with a bare
+`obsidian://` URI routed through the vault list, and with
+`scoria://open?vault=…` — each one changing the running window's title and
+adding no second window; a URI for another vault refused with status 1; a
+missing note reported with status 1; `keys`, `write_file` and `state`
+refused on the handover socket; `--new-window` opening a second window;
+two vaults at once keeping a window and a socket each, with a second run on
+each reaching the right one; and a `SIGKILL`ed Scoria's leftover socket
+file taken over by the next run rather than refused.
+
+**What is left.** A `SIGTERM`ed app leaves its socket file behind — the
+next run unlinks it, as it already did for `--control`, so this is
+self-healing rather than broken. macOS needs the open-URLs Apple Event
+before `scoria://` works from a browser there; a URI on the command line
+works on all three platforms today, and the handover does too.
 
 ### The theme registry, 2026-11-02
 
@@ -495,8 +603,8 @@ snippet not enabled and one missing, in both base themes.
 **Next.** A probe of the surfaces the record has not got — Bases,
 canvas, graph, PDF — so their mechanical names can become their own;
 and, separately, syntax highlighting (step 3). (The Appearance tab's
-pickers followed the same day: see [[#The Appearance tab's pickers,
-2026-11-02]].)
+pickers followed the same day:
+see [[#The Appearance tab's pickers, 2026-11-02]].)
 
 ### The Appearance tab's pickers, 2026-11-02
 
@@ -2388,6 +2496,7 @@ Nothing that crosses the socket may panic.
 | `open` | `name` (`Note#Heading`, `Note#^id`), `mode?` | `{"current"}` |
 | `open_path` | `path`, `mode?` | `{"current"}` |
 | `set_mode` | `mode`: reading, live, source, graph | `{"mode"}` |
+| `uri` | `uri`: an `obsidian://` or `scoria://` URI | `{"status"}` — refused when it names another vault |
 | `command` | `id` | `{"status"}` — the status bar after it ran |
 | `keys` | `keys`: gpui keystrokes, `["ctrl-shift-f","enter"]` | `{"handled","pending"}` |
 | `type` | `text` | `{"target"}`: editor, input or none |
@@ -2404,6 +2513,15 @@ Nothing that crosses the socket may panic.
 | `list_commands` | – | id, name, hotkeys and whether it is runnable |
 | `notice_clear` | – | `{"ok"}` |
 | `quit` | – | `{"ok"}`, written before the app exits |
+
+A run that opens a vault binds a second socket of its own, named after the
+vault, so that the next `scoria` on it can hand its arguments over rather
+than open a window — see [[#The command line, 2026-11-02]]. That socket
+answers eight of the methods above and refuses the rest by name: `ping`,
+`protocol`, `wait_loaded`, `open`, `open_path`, `set_mode`, `uri` and
+`window`, which is what a launcher needs and nothing that presses a key,
+reads the window back or writes a file. Its path is predictable, where
+`--control`'s is the caller's own choice.
 
 **The state dump.** `state` answers one object in which every key is always
 present and absence is `null`, so a driver can index into it without guarding

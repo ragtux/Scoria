@@ -24,6 +24,7 @@ crates/scoria-markdown  OFM primitives
 crates/scoria-cache     CachedMetadata, LinkResolver
 crates/scoria-formats   FileKind, config types, canvas, base
 crates/scoria-commands  command registry, default hotkeys
+crates/scoria-cli       the command line: flags and help, the file argument, the one-window-per-vault handover (no gpui)
 crates/scoria-search    search query grammar and matcher, fuzzy search
 crates/scoria-text      editor text model: buffer, selections, undo, edit plans (no gpui)
 crates/scoria-suggest   autocompletion: triggers, candidates, the link an accepted row writes (no gpui)
@@ -57,6 +58,8 @@ cargo test --workspace            # all library tests (fast)
 SCORIA_ROUNDTRIP_VAULT=<vault> cargo test -p scoria-text --test writer_roundtrip   # Writer gate round trips, over a real vault too
 cargo check -p scoria             # app, pulls gpui (slow first time)
 cargo run --release -p scoria -- <vault> [--note "Name#Heading"]   # open a vault (release: the editor reparses on every edit)
+cargo run --release -p scoria -- --help                            # every flag, written from scoria-cli's own table
+cargo run --release -p scoria -- <vault>/Note.md --new-window      # a file argument; --new-window skips the handover a second run makes
 cargo run --release -p scoria -- <vault> --frame native   # the desktop's title bar instead of the hidden frame (SCORIA_FRAME=native does the same)
 cargo run --release -p scoria -- <vault> --synthetic 50000 --stress   # editor spike: self-driven edits, prints timings
 cargo run --release -p scoria -- <vault> --note X --source --type '[[al' [--accept enter]  # open the autocompletion popup (and press its keys) for a screenshot

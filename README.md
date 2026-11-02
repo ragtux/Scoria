@@ -130,6 +130,14 @@ cargo run --release -p scoria -- "/path/to/vault" --frame native   # the desktop
 cargo test --workspace
 ```
 
+The argument is a vault folder, a file inside one (`scoria Rocks/Basalt.md` opens the vault above
+it and then the note), or an `obsidian://` URI; with none at all Scoria opens the vault manager.
+`scoria --help` prints every flag. One vault means one window: a second `scoria` on a vault that
+is already open hands it the note, file or URI and raises that window instead of starting again,
+which is what makes `scoria ~/notes Basalt` a "go to this note" command from a terminal.
+`tools/linux-desktop/install.sh` puts Scoria in the desktop's menu and gives it the folder,
+Markdown and `scoria://` associations.
+
 `--control` exposes the running app on a Unix socket (on Windows too) speaking
 newline-delimited JSON: open a note, run a command id, send keystrokes or
 clicks, and read back a dump of the window's whole state. `scoria-mcp` wraps
@@ -172,7 +180,7 @@ at [scoria.cc](https://scoria.cc), whose site is built from `site/` in this repo
 | 1. Spike | 50k-line editor, parser conformance corpus, 2 s vault index | Done |
 | 2. Reader | A daily user browses their real vault with no missing content | Done: Files, reading view, Backlinks, Outgoing links, Outline, Tags, Search, quick switcher, graph, command palette, the Settings window, file watching |
 | 3. Writer | The vault round-trips byte-identical after a week of mixed use in both apps | In progress: Source mode, Live Preview, find and replace, file operations with link rewriting, properties, autocompletion, table editing, block references, templates, daily notes, tab groups, bookmarks, the round-trip harness and the Settings toggles are done; every Settings control Obsidian offers as one writes; and the editing commands the 2026-10-25 probes settled (insert blocks, the checklist cycle, highlight colours, Clear formatting, auto-pairing) are in; file recovery is out of phase 3 |
-| 4. Parity | Core plugin parity | Started: the canvas view and the canvas writer are done, and a `.base` is parsed, written back, evaluated — its expression language is held to 277 of Obsidian's parse trees and 1044 of its answers — and opens in all four of its layouts with its toolbar; a `.pdf` opens in a viewer and embeds; `$x$` and `$$x$$` are typeset (KaTeX's syntax, where Obsidian's MathJax takes more); the themes subset, URI and CLI are not started |
+| 4. Parity | Core plugin parity | Started: the canvas view and the canvas writer are done, and a `.base` is parsed, written back, evaluated — its expression language is held to 277 of Obsidian's parse trees and 1044 of its answers — and opens in all four of its layouts with its toolbar; a `.pdf` opens in a viewer and embeds; `$x$` and `$$x$$` are typeset (KaTeX's syntax, where Obsidian's MathJax takes more); a vault's CSS theme and snippets load and the Appearance tab picks them, with fenced code highlighted from Prism's own grammars; `obsidian://` URIs, the command line and the desktop entry are in |
 | 5. Ecosystem | Native plugin SDK | Not started |
 
 Progress notes, gates and the per-item status live in `docs/scoria/Development.md`.

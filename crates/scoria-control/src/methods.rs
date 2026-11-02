@@ -80,6 +80,31 @@ const fn m(name: &'static str, summary: &'static str, params: &'static [ParamSpe
 
 const NONE: &[ParamSpec] = &[];
 
+/// The methods a vault's handover socket answers.
+///
+/// Every run that opens a vault binds a socket named after it, so that the
+/// next `scoria` on the same vault can hand its note, file or URI over and
+/// raise the window (`scoria_cli::instance`). That path is predictable,
+/// which the `--control` one is not, so the app serves only these there:
+/// the calls a launcher needs, and none of the ones that press keys, move
+/// the pointer, read the window back or write a file. A method outside this
+/// list is answered with an error naming `--control`.
+pub const INSTANCE_METHODS: &[&str] = &[
+    "ping",
+    "protocol",
+    "wait_loaded",
+    "open",
+    "open_path",
+    "set_mode",
+    "uri",
+    "window",
+];
+
+/// Whether the handover socket answers `name`; see [`INSTANCE_METHODS`].
+pub fn is_instance_method(name: &str) -> bool {
+    INSTANCE_METHODS.contains(&name)
+}
+
 /// Every method, in the order the specification lists them.
 pub const METHODS: &[MethodSpec] = &[
     m(
@@ -187,6 +212,17 @@ pub const METHODS: &[MethodSpec] = &[
             ParamType::Str,
             true,
             "`reading`, `live`, `source` or `graph`.",
+        )],
+    ),
+    m(
+        "uri",
+        "Act on an `obsidian://` URI — `open`, `new`, `search` or `daily` — and return the status \
+         bar text it left. A URI naming another vault is refused.",
+        &[p(
+            "uri",
+            ParamType::Str,
+            true,
+            "`obsidian://open?file=Note`, percent-encoded, or the same under `scoria://`.",
         )],
     ),
     m(
@@ -590,6 +626,17 @@ mod tests {
         let schema = params_schema(method("keys").expect("exists"));
         assert_eq!(schema["properties"]["keys"]["type"], "array");
         assert_eq!(schema["properties"]["keys"]["items"]["type"], "string");
+    }
+
+    #[test]
+    fn the_handover_methods_are_methods() {
+        for name in INSTANCE_METHODS {
+            assert!(method(name).is_some(), "{name} is not a method");
+        }
+        // The point of the list is what it leaves out.
+        for name in ["keys", "click", "type", "write_file", "state", "quit"] {
+            assert!(!is_instance_method(name), "{name} should need --control");
+        }
     }
 
     #[test]

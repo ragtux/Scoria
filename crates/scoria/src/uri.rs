@@ -16,10 +16,13 @@
 //! - `daily` — `vault`: today's daily note.
 //!
 //! A `vault` naming another vault is refused rather than opened: Scoria
-//! shows one vault per window and does not switch under a URI. The scheme
-//! is **not** registered with the desktop -- Obsidian owns `obsidian://` on
-//! a machine that has it -- so a URI reaches Scoria as a command-line
-//! argument or over the control socket.
+//! shows one vault per window and does not switch under a URI. What the
+//! desktop entry registers is `scoria://`, the same grammar under Scoria's
+//! own name, because Obsidian owns `obsidian://` on a machine that has it
+//! (`tools/linux-desktop/install.sh --obsidian-scheme` claims the other one
+//! on a machine that has not). Either way the URI reaches Scoria as a
+//! command-line argument, which a second run hands to the window already
+//! open, or over the control socket's `uri` method.
 
 /// One parsed URI.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -50,11 +53,26 @@ pub enum Uri {
     },
 }
 
-/// Parses an `obsidian://` URI, or says why it could not.
+impl Uri {
+    /// The `vault` parameter, which names a vault by its folder name or by
+    /// its id in the machine's list. A second `scoria` reads it to decide
+    /// which window to hand the URI to.
+    pub fn vault(&self) -> Option<&str> {
+        match self {
+            Uri::Open { vault, .. }
+            | Uri::New { vault, .. }
+            | Uri::Search { vault, .. }
+            | Uri::Daily { vault } => vault.as_deref(),
+        }
+    }
+}
+
+/// Parses an `obsidian://` (or `scoria://`) URI, or says why it could not.
 pub fn parse(uri: &str) -> Result<Uri, String> {
-    let rest = uri
-        .trim()
+    let trimmed = uri.trim();
+    let rest = trimmed
         .strip_prefix("obsidian://")
+        .or_else(|| trimmed.strip_prefix("scoria://"))
         .ok_or_else(|| format!("not an obsidian:// URI: {uri}"))?;
     let (action, query) = match rest.split_once('?') {
         Some((action, query)) => (action, query),
@@ -207,6 +225,30 @@ mod tests {
             }
         );
         assert!(parse("obsidian://hook-get-address").is_err());
+    }
+
+    #[test]
+    fn scoria_is_the_same_scheme_under_its_own_name() {
+        assert_eq!(
+            parse("scoria://open?vault=rocks&file=Basalt").unwrap(),
+            parse("obsidian://open?vault=rocks&file=Basalt").unwrap()
+        );
+        assert!(parse("https://obsidian.md/open?file=Basalt").is_err());
+    }
+
+    #[test]
+    fn the_vault_parameter_is_readable_for_routing() {
+        assert_eq!(
+            parse("obsidian://open?vault=rocks&file=Basalt")
+                .unwrap()
+                .vault(),
+            Some("rocks")
+        );
+        assert_eq!(
+            parse("obsidian://daily?vault=x").unwrap().vault(),
+            Some("x")
+        );
+        assert_eq!(parse("obsidian://open?file=Basalt").unwrap().vault(), None);
         assert!(parse("https://example.invalid").is_err());
         assert!(names_vault(None, "Any"));
         assert!(names_vault(Some("demo"), "Demo"));
