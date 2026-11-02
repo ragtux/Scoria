@@ -1,177 +1,146 @@
-//! The Bases toolbar: the view switcher and the five panels its controls
-//! open.
+//! The Bases toolbar: the bar above a view and the panels its buttons open.
 //!
-//! Observed (`tools/obsidian-probe/results/2026-10-25-bases.json`; the prose
-//! is in
-//! [[Specification#Observed Bases write behavior, Obsidian 1.14.5 (installer build 1.13.7)]]):
-//! the toolbar does **not** open menus of rows. Each control opens a
-//! `.menu.bases-toolbar-menu` whose body is a panel —
+//! Everything drawn here is **observed** on Obsidian 1.14.5
+//! (`tools/obsidian-probe/results/2026-11-01-bases-ui.json`, steps
+//! `s02-toolbar-per-layout`, `s13-keyboard` and `s14-styles`; the earlier
+//! `2026-10-25-bases.json` step `s05` already held the same bar). The bar is a
+//! 40 px `.bases-header` with a 29 px row of eight `text-icon-button`s in it:
 //!
-//! - **sort** and **group**: `.combobox-button` pairs (property, direction)
-//!   with a `lucide-trash-2` button;
-//! - **filter**: a `<select class="conjunction">` (`and`/`or`/`not`) per
-//!   group, then a property combobox, an operator combobox, a value input and
-//!   a `filer-expression-mode-toggle` (`lucide-code-xml`) per rule, in two
-//!   sections, "All views" and "This view";
-//! - **properties**: a checkbox list of every property with "Add *name*
-//!   property", "Add formula" and "Hide all";
-//! - **results**: a "Limit number of results" number input and the rows
-//!   *Show all (n)*, *Copy to clipboard* and *Export CSV...*.
+//! | Item | Icon | Label |
+//! | --- | --- | --- |
+//! | the view switcher | the layout's own | the view's name, then `chevrons-up-down` |
+//! | results | `text-align-start` | *N results* |
+//! | sort | `arrow-up-down` | *Sort* |
+//! | group | `stretch-horizontal` | *Group* |
+//! | filter | `list-filter` | *Filter* |
+//! | properties | `list` | *Properties* |
+//! | search | `search` | *Search* |
+//! | new | `plus` | *New* |
 //!
-//! The views menu lists one row per view, and the row's own icon opens that
-//! view's settings (the Configure view page), whose Layout combobox offers
-//! exactly `table`, `cards`, `list` and `kanban`.
+//! The first two sit at the left and the rest at the right. A button is
+//! 25 px tall with 4 px of padding, a 5 px radius, a 13 px label in
+//! `--text-muted`, the hover wash under the pointer, and the accent colour
+//! (`is-active`) while its control holds a value — a sort, a filter of the
+//! view's own, a group. **None of them has a tooltip.** The count badges
+//! exist in the DOM but `--bases-toolbar-badge-display` is `none`, so they are
+//! not drawn.
 //!
-//! What the panels write is [`BasesView::edit_view`] and
-//! [`BasesView::edit_base`]'s business: *Sort Z → A* **prepends**
-//! `{property, direction: DESC}` to the view's `sort`, *Hide column* removes
-//! the property from `order`, and the limit input writes `limit` as a bare
-//! number.
+//! Each of the five panel buttons opens a `.menu.bases-toolbar-menu` hung
+//! 2 px under the button's left edge: 228 px wide (the filter panel 520), the
+//! secondary background, a 1 px border, an 8 px radius and the menu shadow,
+//! scrolling inside itself when taller than the window. The sixth button
+//! shows the search row under the bar and the seventh creates a note.
 //!
-//! Every write below goes through one of those two closures and through
-//! `scoria_bases::layout`'s setters, so the bytes are `Base::to_yaml`'s and
-//! nothing here serializes anything. The free functions at the bottom of the
-//! module are where each rule lives, which is why they take a `&mut View` or
-//! a `&mut Option<Filter>` rather than the element: the tests at the end
-//! apply one and assert the written bytes.
+//! **Keyboard and focus** (`s13-keyboard`): Escape closes whichever panel is
+//! open and puts focus back on the view; the views and properties panels
+//! focus their search field on opening, where Down and Up move the selected
+//! row and Enter activates it; the other panels leave focus on the bar.
+//! Clicking an open panel's button closes it. A combobox opens its own
+//! `suggestion-container` under its trigger with a search field of its own,
+//! and a press outside that list closes the list alone.
 //!
-//! **Unprobed, and therefore not drawn or not written.** Three observed
-//! controls are deliberately missing, because what each writes cannot be
-//! derived from the run:
-//!
-//! - the properties panel's **"Hide all"**. `order` is exactly the shown
-//!   columns, so hiding every column wants an empty `order` — but
-//!   `scoria_formats::base::View` never writes an empty `order` (the key is
-//!   omitted), and a view with no `order` shows the *implied* columns, which
-//!   is the opposite of hiding all. So the key "Hide all" writes is unknown.
-//! - the properties panel's **"Add formula"**, whose dialog was never opened,
-//!   so neither the formula name it writes nor its statement is observed.
-//! - the results panel's ***Export CSV...***, whose file, location and
-//!   dialect were never observed.
-//!
-//! Also unprobed and so not written: the *Summarize...* submenu and what a
-//! summary chosen from the UI writes (`summaries` is read and round-tripped,
-//! never written by a control here); the key the list layout's "Indent
-//! properties" toggle writes (`layout::INDENT_PROPERTIES_KEY` is the plain
-//! spelling and nothing writes it, so the toggle is not drawn); renaming a
-//! view through the Configure view page's name field, so that page shows the
-//! name as text; and whether `groupOrder` is ever written by the UI, so
-//! nothing here writes or clears one.
-//!
-//! **Unprobed metrics.** No toolbar rect was measured in the run: the bar's
-//! height, its padding, the gap between controls, and which `lucide-*` icon
-//! each control carries are all this module's own. The height is the 30 px of
-//! the table's header row, which is the one measured row of the view.
+//! The panels themselves live beside this module — [`super::toolbar_views`],
+//! [`super::toolbar_properties`], [`super::toolbar_filter`] and
+//! [`super::toolbar_lists`] (sort, group, results) — and share the widgets
+//! at the bottom of this file. Every write goes through
+//! [`BasesView::edit_view`] or [`BasesView::edit_base`], so the bytes are
+//! `Base::to_yaml`'s.
 
 use crate::assets::icon;
-use crate::bases::cells::table_tsv;
 use crate::bases::view::BasesView;
-use crate::bases::writes::{
-    add_property, parse_limit, prepend_sort, remove_sort, same_property, set_group_direction,
-    set_group_property, set_sort_direction, set_sort_property, toggle_property,
-};
-use crate::canvas::menu::tooltip;
-use crate::search::menu;
 use crate::text_input::{InputEvent, TextInput};
 use crate::theme::{Theme, FONT_UI_SMALL, FONT_UI_SMALLER, ICON_SIZE};
 use gpui::{
-    anchored, deferred, div, prelude::*, px, Anchor, AnyElement, App, ClickEvent, ClipboardItem,
-    Context, Entity, Focusable, Pixels, Point, SharedString, Subscription, Window,
+    actions, anchored, canvas, deferred, div, prelude::*, px, Anchor, AnyElement, App, Bounds,
+    ClickEvent, Context, Entity, Focusable, KeyBinding, MouseButton, MouseDownEvent,
+    MouseMoveEvent, Pixels, Point, SharedString, Subscription, Window,
 };
-use scoria_bases::layout::{
-    self, ImageFit, Layout, Markers, RowHeight, ASPECT_RANGE, CARD_SIZE_RANGE, COLUMN_WIDTH_RANGE,
-    LAYOUTS,
-};
-use scoria_formats::base::{Base, Filter, View, DEFAULT_VIEW_NAME, DEFAULT_VIEW_TYPE};
+use scoria_bases::layout;
+use scoria_bases::rule::PropertyKind;
+use scoria_formats::base::{Base, View, DEFAULT_VIEW_NAME, DEFAULT_VIEW_TYPE};
+use scoria_formats::properties::PropertyType;
 use serde_json::{json, Value as Json};
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::rc::Rc;
 
-/// The bar's own height. **Unprobed** — no toolbar rect was measured; this is
-/// the 30 px of the table header row, the one row of the view that was.
-pub const TOOLBAR_HEIGHT: f32 = 30.;
-/// Padding inside the bar and gap between its controls. **Unprobed**, as
-/// above; 8 and 4 are the shell's own.
-const PAD: f32 = 8.;
-const GAP: f32 = 4.;
+actions!(bases, [ClosePanel, SelectUp, SelectDown, Activate]);
 
-/// The `lucide-*` icon each toolbar control carries.
-///
-/// **Unprobed**: the run read the panels, never the buttons that open them,
-/// so neither the icons nor their order is observed. Each name here is the
-/// nearest drawing `crates/scoria/assets/icons` bundles.
-const CONTROLS: &[(Panel, &str)] = &[
-    (Panel::Filter, "sliders-horizontal"),
-    (Panel::Properties, "square-check"),
-    (Panel::Sort, "arrow-up-narrow-wide"),
-    (Panel::Group, "layers"),
-    (Panel::Results, "list"),
-];
+/// Escape in the view: closes the open panel, combobox or menu, one layer per
+/// press, the way Obsidian's own does. Up, Down and Enter walk and pick in a
+/// list that has no search field of its own (a `<select>`'s), where focus
+/// stays on the view; a list with a field takes them through the field.
+pub fn bind_keys(cx: &mut App) {
+    let ctx = Some("Bases");
+    cx.bind_keys([
+        KeyBinding::new("escape", ClosePanel, ctx),
+        KeyBinding::new("up", SelectUp, ctx),
+        KeyBinding::new("down", SelectDown, ctx),
+        KeyBinding::new("enter", Activate, ctx),
+    ]);
+}
 
-/// The twelve `file.*` properties the properties panel offers, in the order
-/// it lists them.
-///
-/// Eleven are observed, under the labels
-/// `scoria_bases::table::column` gives them: `file backlinks`, `file base
-/// name`, `created time`, `file embeds`, `folder`, `file full name`,
-/// `file links`, `modified time`, `file path`, `file size`, `file tags` —
-/// which is alphabetical by the property's own name. `file.name` is the
-/// twelfth and is a **reading**: the observed sentence does not list it, but
-/// it is the one `file.*` column the run ever rendered and the panel is a
-/// checkbox list of every property, so it is offered in its alphabetical
-/// slot.
-const FILE_PROPERTIES: &[&str] = &[
-    "file.backlinks",
-    "file.basename",
-    "file.ctime",
-    "file.embeds",
-    "file.folder",
-    "file.fullname",
-    "file.links",
-    "file.mtime",
-    "file.name",
-    "file.path",
-    "file.size",
-    "file.tags",
-];
-
-/// `ASC` and `DESC`, which Obsidian labels "A → Z" and "Z → A" — the two
-/// labels its own column header menu uses (*Sort A → Z*, *Sort Z → A*).
-const DIRECTIONS: &[(&str, &str)] = &[("ASC", "A → Z"), ("DESC", "Z → A")];
-
-/// The conjunctions a `<select class="conjunction">` offers.
-const CONJUNCTIONS: &[&str] = &["and", "or", "not"];
+/// `.bases-header`: 40 px, with the 29 px bar centred in it and a 1 px
+/// bottom border.
+pub const HEADER_HEIGHT: f32 = 40.;
+const BAR_HEIGHT: f32 = 29.;
+/// A `text-icon-button`: 25 px tall, 4 px of padding, 2 px of margin.
+const BUTTON_HEIGHT: f32 = 25.;
+/// The panels' width; the filter panel has its own.
+pub(super) const PANEL_WIDTH: f32 = 228.;
+pub(super) const FILTER_PANEL_WIDTH: f32 = 520.;
+/// A combobox's `suggestion-container`.
+pub(super) const COMBO_WIDTH: f32 = 228.;
+/// A row of a panel list: 25 px, padded 4 / 4 / 4 / 6.
+pub(super) const ROW_HEIGHT: f32 = 25.;
+/// An input, a combobox or a select inside a panel: 28 px.
+pub(super) const INPUT_HEIGHT: f32 = 28.;
 
 /// Which panel, if any, is open.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum Panel {
     #[default]
     None,
     Views,
-    Filter,
-    Properties,
+    Results,
     Sort,
     Group,
-    Results,
+    Filter,
+    Properties,
 }
 
 impl Panel {
-    /// The name the control socket reports, which is also the name the
-    /// toolbar's own buttons go by.
+    /// The name the control socket reports.
     pub fn as_str(self) -> &'static str {
         match self {
             Panel::None => "none",
             Panel::Views => "views",
-            Panel::Filter => "filter",
-            Panel::Properties => "properties",
+            Panel::Results => "results",
             Panel::Sort => "sort",
             Panel::Group => "group",
-            Panel::Results => "results",
+            Panel::Filter => "filter",
+            Panel::Properties => "properties",
         }
     }
 }
 
-/// Which of the filter panel's two sections a group or rule belongs to: the
-/// base's own `filters` ("All views") or the showing view's ("This view").
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// The page a panel is on: its list, or one of the pages a row's gear opens
+/// in place of it.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub enum Page {
+    #[default]
+    List,
+    /// The views panel's **Configure view** page for the view at this index.
+    Configure(usize),
+    /// The properties panel's **Edit *name*** page for a property, by id.
+    Property(String),
+    /// The properties panel's **Edit *name*** page for a formula, by name.
+    Formula(String),
+}
+
+/// Which of the filter panel's two sections a node belongs to: the base's
+/// own `filters` ("All views") or the showing view's ("This view").
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Section {
     AllViews,
     ThisView,
@@ -179,199 +148,449 @@ pub enum Section {
 
 impl Section {
     /// Obsidian's own heading for the section.
-    fn heading(self) -> &'static str {
+    pub fn heading(self) -> &'static str {
         match self {
             Section::AllViews => "All views",
             Section::ThisView => "This view",
         }
     }
 
-    fn as_str(self) -> &'static str {
+    pub fn as_str(self) -> &'static str {
         match self {
             Section::AllViews => "all",
             Section::ThisView => "view",
+        }
+    }
+
+    fn ix(self) -> usize {
+        match self {
+            Section::AllViews => 0,
+            Section::ThisView => 1,
         }
     }
 }
 
 /// Which text control the one shared [`TextInput`] is standing in for.
 ///
-/// One field serves the whole toolbar, the way `SettingsView` keeps one for
-/// every row of a settings tab: only one panel is open at a time, and inside
-/// a panel only one field is being typed into.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// One field serves the whole toolbar: only one panel is open at a time and
+/// inside it only one field is typed into.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Field {
+    /// The search field at the head of the views and properties panels.
+    Search,
+    /// The search field of an open combobox's list.
+    ComboSearch,
     /// The results panel's "Limit number of results" number input.
     Limit,
-    /// The list layout's `separator` text field.
+    /// The Configure view page's name input.
+    ViewName,
+    /// The list layout's "Property separator".
     Separator,
-    /// The properties panel's own field, which both narrows the checkbox list
-    /// and names the property "Add *name* property" adds.
-    Property,
-    /// One filter rule's statement, by index into [`BasesView::filter_nodes`].
-    /// A rule past the end of a group is the group's own new-rule field.
-    Rule(usize),
+    /// An Edit page's "Display name".
+    DisplayName,
+    /// A formula page's statement.
+    Formula,
+    /// A filter rule in advanced mode: its statement, verbatim. The path is
+    /// the node's path within its section.
+    Rule(Section, Vec<usize>),
+    /// A filter rule's value input.
+    RuleValue(Section, Vec<usize>),
+    /// The group panel's "Add group" name.
+    GroupAdd,
+    /// The toolbar's own search row, under the bar.
+    TableSearch,
 }
 
 impl Field {
-    fn as_str(self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match self {
+            Field::Search => "search",
+            Field::ComboSearch => "combo",
             Field::Limit => "limit",
+            Field::ViewName => "name",
             Field::Separator => "separator",
-            Field::Property => "property",
-            Field::Rule(_) => "rule",
+            Field::DisplayName => "displayName",
+            Field::Formula => "formula",
+            Field::Rule(..) => "rule",
+            Field::RuleValue(..) => "value",
+            Field::GroupAdd => "groupAdd",
+            Field::TableSearch => "tableSearch",
         }
     }
 }
 
+/// An open combobox: the name its owner gave it and the entry it belongs to
+/// (0 where there is only one of it).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Combo {
+    pub name: &'static str,
+    pub ix: usize,
+}
+
 /// What the toolbar keeps between renders.
-#[derive(Default)]
 pub struct ToolbarState {
     pub panel: Panel,
-    /// Which view's Configure view page is showing inside the views panel.
-    pub configuring: Option<usize>,
-    /// The combobox whose options are showing: its name and the entry it
-    /// belongs to (0 where there is only one of it).
-    pub combo: Option<(&'static str, usize)>,
-    /// Where the panel is anchored, which is where the control was clicked.
-    /// **Unprobed**: no toolbar rect was measured, so there is no button box
-    /// to hang the panel under.
+    pub page: Page,
+    pub combo: Option<Combo>,
+    /// The keyboard-selected row of the open list, when it has one.
+    pub selected: Option<usize>,
+    /// Whether the Configure view page's own `more-vertical` menu is open.
+    pub header_menu: bool,
+    /// A sort row added and not yet given a property: drawn, not written.
+    pub pending_sort: bool,
+    /// A filter row added and not yet given a property, by section and the
+    /// path of the group it will land in.
+    pub pending_rule: Option<(Section, Vec<usize>)>,
+    /// The filter rows showing their statement rather than a property,
+    /// operator and value.
+    pub advanced: Vec<(Section, Vec<usize>)>,
+    /// Which of the filter panel's sections are folded. "All views" starts
+    /// folded, which is how the panel first opened in the run.
+    pub collapsed: [bool; 2],
+    /// The search row under the bar and its text; `None` while hidden.
+    pub search: Option<String>,
+    /// A grip being dragged: the list it belongs to and the row's index.
+    pub drag: Option<(&'static str, usize)>,
+    /// Where the open panel was asked for, when no button box is known.
     at: Point<Pixels>,
-    /// The panel a press outside it just closed, with the position of that
-    /// press. A control's own button sits outside its panel, so pressing it
-    /// closes the panel on the way down and the click that follows would
-    /// open it again; the position says whether the two are one gesture.
-    just_closed: Option<(Panel, Point<Pixels>)>,
     /// The shared text field, made the first time a panel wants one.
     field: Option<Entity<TextInput>>,
     /// What [`ToolbarState::field`] is standing in for, if anything.
     pub editing: Option<Field>,
+    /// A field asked for from somewhere without a window — a command, a
+    /// page change — which the next render opens.
+    pending_field: Option<(Field, String)>,
     /// What the field last held, so the control socket can read it without
     /// the app context a [`TextInput`] needs.
     field_value: String,
-    /// How many rows the showing view resolves to with its `limit` dropped,
-    /// which is the *n* of *Show all (n)*. Counted when the results panel
-    /// opens, because the resolved table holds only the limited rows.
+    /// The boxes of the bar's buttons, every combobox trigger and every open
+    /// list, as painted last frame. A panel hangs under its button's box, a
+    /// list under its trigger's, and a press inside any of them is not a
+    /// press "outside" the panel. The bar's own boxes live for the view;
+    /// a panel's are forgotten when the panel or its list closes, so a box
+    /// that is no longer drawn cannot swallow a press.
+    anchors: Rc<RefCell<HashMap<u64, Bounds<Pixels>>>>,
+    /// How many rows the showing view resolves to with its `limit` dropped.
     total: Option<usize>,
-    /// What the open panel drew, for the control socket. Filled during
-    /// render, so `bases.toolbar` reports the panel's contents rather than
-    /// only its name.
+    /// What the open panel drew, for the control socket.
     rows: Vec<Json>,
     subscriptions: Vec<Subscription>,
 }
 
+impl Default for ToolbarState {
+    fn default() -> ToolbarState {
+        ToolbarState {
+            panel: Panel::None,
+            page: Page::List,
+            combo: None,
+            selected: None,
+            header_menu: false,
+            pending_sort: false,
+            pending_rule: None,
+            advanced: Vec::new(),
+            collapsed: [true, false],
+            search: None,
+            drag: None,
+            at: Point::default(),
+            field: None,
+            editing: None,
+            pending_field: None,
+            field_value: String::new(),
+            anchors: Rc::new(RefCell::new(HashMap::new())),
+            total: None,
+            rows: Vec::new(),
+            subscriptions: Vec::new(),
+        }
+    }
+}
+
 impl ToolbarState {
     pub fn state_json(&self) -> Json {
+        let page = match &self.page {
+            Page::List => json!("list"),
+            Page::Configure(ix) => json!({ "configure": ix }),
+            Page::Property(id) => json!({ "property": id }),
+            Page::Formula(name) => json!({ "formula": name }),
+        };
         json!({
             "panel": self.panel.as_str(),
-            "configuring": self.configuring,
-            "combo": self.combo.map(|(name, ix)| json!({ "name": name, "ix": ix })),
-            "field": self.editing.map(Field::as_str),
+            "page": page,
+            "configuring": match self.page { Page::Configure(ix) => Some(ix), _ => None },
+            "combo": self.combo.map(|c| json!({ "name": c.name, "ix": c.ix })),
+            "selected": self.selected,
+            "header_menu": self.header_menu,
+            "pending_sort": self.pending_sort,
+            "pending_rule": self.pending_rule.as_ref().map(|(s, p)| json!({ "section": s.as_str(), "path": p })),
+            "advanced": self.advanced.len(),
+            "drag": self.drag.map(|(l, i)| json!({ "list": l, "ix": i })),
+            "field": self.editing.as_ref().map(Field::as_str),
             "field_value": self.field_value,
+            "search": self.search,
             "total": self.total,
             "rows": self.rows,
         })
     }
+
+    pub(super) fn record(&mut self, row: Json) {
+        self.rows.push(row);
+    }
+
+    pub(super) fn set_rows(&mut self, rows: Vec<Json>) {
+        self.rows = rows;
+    }
+}
+
+/// A stable number for an anchor or element key.
+pub(super) fn key(name: &str, ix: usize) -> u64 {
+    name.bytes()
+        .fold((ix as u64).wrapping_mul(0x9E37_79B9), |h, b| {
+            h.wrapping_mul(1_099_511_628_211).wrapping_add(b as u64)
+        })
+}
+
+/// The same number cut down to an element id.
+pub(super) fn hash_key(name: &str, ix: usize) -> usize {
+    (key(name, ix) % 1_000_000_007) as usize
 }
 
 // ---------------------------------------------------------------------------
 // The bar
 // ---------------------------------------------------------------------------
 
+/// One button of the bar.
+struct BarItem {
+    id: &'static str,
+    icon: &'static str,
+    label: SharedString,
+    active: bool,
+    open: bool,
+    panel: Option<Panel>,
+    aux: Option<&'static str>,
+}
+
 impl BasesView {
-    /// The toolbar above the layout: the view switcher, the five controls,
-    /// and whichever panel is open.
+    /// The toolbar above the layout: the bar, the search row when it is
+    /// showing, and whichever panel is open.
     pub(super) fn render_toolbar(
         &mut self,
         theme: &Theme,
+        window: &mut Window,
         cx: &mut Context<Self>,
     ) -> Option<AnyElement> {
         let base = self.base()?.clone();
         let view = self.showing_view(&base);
-        let open = self.toolbar.panel;
+        if let Some((which, text)) = self.toolbar.pending_field.take() {
+            self.open_field(which, text, window, cx);
+        }
+        let count = self.table().map_or(0, |t| t.rows.len());
         let icon_name = layout::kind_icon(&view.kind).unwrap_or("file-question");
+        let open = self.toolbar.panel;
+        let items = [
+            BarItem {
+                id: "views",
+                icon: icon_name,
+                label: SharedString::from(view.name.clone()),
+                active: false,
+                open: open == Panel::Views,
+                panel: Some(Panel::Views),
+                aux: Some("chevrons-up-down"),
+            },
+            BarItem {
+                id: "results",
+                icon: "text-align-start",
+                label: SharedString::from(format!(
+                    "{count} result{}",
+                    if count == 1 { "" } else { "s" }
+                )),
+                active: false,
+                open: open == Panel::Results,
+                panel: Some(Panel::Results),
+                aux: None,
+            },
+        ];
+        let right = [
+            BarItem {
+                id: "sort",
+                icon: "arrow-up-down",
+                label: SharedString::from("Sort"),
+                active: !view.sort.is_empty(),
+                open: open == Panel::Sort,
+                panel: Some(Panel::Sort),
+                aux: None,
+            },
+            BarItem {
+                id: "group",
+                icon: "stretch-horizontal",
+                label: SharedString::from("Group"),
+                active: view.group_by.is_some(),
+                open: open == Panel::Group,
+                panel: Some(Panel::Group),
+                aux: None,
+            },
+            BarItem {
+                id: "filter",
+                icon: "list-filter",
+                label: SharedString::from("Filter"),
+                active: view.filters.is_some(),
+                open: open == Panel::Filter,
+                panel: Some(Panel::Filter),
+                aux: None,
+            },
+            BarItem {
+                id: "properties",
+                icon: "list",
+                label: SharedString::from("Properties"),
+                active: false,
+                open: open == Panel::Properties,
+                panel: Some(Panel::Properties),
+                aux: None,
+            },
+            BarItem {
+                id: "search",
+                icon: "search",
+                label: SharedString::from("Search"),
+                active: self.toolbar.search.is_some(),
+                open: false,
+                panel: None,
+                aux: None,
+            },
+            BarItem {
+                id: "new",
+                icon: "plus",
+                label: SharedString::from("New"),
+                active: false,
+                open: false,
+                panel: None,
+                aux: None,
+            },
+        ];
         let bar = div()
+            .flex()
+            .flex_row()
+            .items_center()
+            .w_full()
+            .h(px(BAR_HEIGHT))
+            .children(
+                items
+                    .into_iter()
+                    .map(|item| self.render_bar_item(item, theme, cx)),
+            )
+            .child(div().flex_1())
+            .children(
+                right
+                    .into_iter()
+                    .map(|item| self.render_bar_item(item, theme, cx)),
+            );
+        let header = div()
             .flex()
             .flex_row()
             .items_center()
             .flex_shrink_0()
             .w_full()
-            .h(px(TOOLBAR_HEIGHT))
-            .px(px(PAD))
-            .gap(px(GAP))
+            .h(px(HEADER_HEIGHT))
+            .px(px(2.))
             .border_b_1()
             .border_color(theme.border)
-            .child(
-                div()
-                    .id("bases-toolbar-views")
-                    .flex()
-                    .flex_row()
-                    .items_center()
-                    .gap(px(6.))
-                    .px(px(6.))
-                    .h(px(22.))
-                    .rounded(px(4.))
-                    .cursor_pointer()
-                    .text_size(px(FONT_UI_SMALL))
-                    .text_color(theme.text)
-                    .when(open == Panel::Views, |d| d.bg(theme.bg_alt))
-                    .hover(|s| s.bg(theme.bg_alt))
-                    .on_click(cx.listener(|this, event: &ClickEvent, window, cx| {
-                        this.toggle_panel(Panel::Views, event.position(), window, cx)
-                    }))
-                    .child(icon(icon_name, 14., theme.text_muted))
-                    .child(
-                        div()
-                            .whitespace_nowrap()
-                            .child(SharedString::from(view.name.clone())),
-                    )
-                    .child(icon("chevron-down", 12., theme.text_muted)),
-            )
-            .child(div().flex_1())
-            .children(
-                CONTROLS
-                    .iter()
-                    .map(|(panel, name)| self.render_control(*panel, name, theme, cx)),
-            );
-        let panel = self.render_panel(&base, &view, theme, cx);
+            .child(bar);
+        let search_row = self.render_search_row(theme, cx);
+        let panel = self.render_panel(&base, &view, theme, window, cx);
         Some(
             div()
                 .flex()
                 .flex_col()
                 .flex_shrink_0()
                 .w_full()
-                .child(bar)
+                .child(header)
+                .children(search_row)
                 .children(panel)
                 .into_any_element(),
         )
     }
 
-    /// One toolbar control: an icon that opens its panel.
-    fn render_control(
-        &self,
-        panel: Panel,
-        name: &'static str,
-        theme: &Theme,
-        cx: &mut Context<Self>,
-    ) -> AnyElement {
-        let open = self.toolbar.panel == panel;
+    /// One `text-icon-button` of the bar.
+    fn render_bar_item(&self, item: BarItem, theme: &Theme, cx: &mut Context<Self>) -> AnyElement {
+        let color = if item.active || item.open {
+            theme.accent
+        } else {
+            theme.text_muted
+        };
+        let id = item.id;
+        let anchor = item.panel.map(|p| key("bases-toolbar-button", p as usize));
         div()
-            .id(("bases-toolbar-control", panel as usize))
-            .size(px(22.))
+            .id(("bases-toolbar-item", hash_key(id, 0)))
+            .relative()
             .flex()
+            .flex_row()
             .items_center()
-            .justify_center()
-            .rounded(px(4.))
+            .flex_shrink_0()
+            .h(px(BUTTON_HEIGHT))
+            .m(px(2.))
+            .p(px(4.))
+            .gap(px(4.))
+            .rounded(px(5.))
             .cursor_pointer()
-            .when(open, |d| d.bg(theme.bg_alt))
+            .text_size(px(FONT_UI_SMALL))
+            .text_color(color)
+            .when(item.open, |d| d.bg(theme.bg_alt))
             .hover(|s| s.bg(theme.bg_alt))
-            .tooltip(tooltip(panel.as_str()))
+            .children(anchor.map(|k| self.measure(k)))
             .on_click(cx.listener(move |this, event: &ClickEvent, window, cx| {
-                this.toggle_panel(panel, event.position(), window, cx)
+                cx.stop_propagation();
+                match item.panel {
+                    Some(panel) => this.toggle_panel(panel, event.position(), window, cx),
+                    None if id == "search" => this.toggle_search(window, cx),
+                    None => this.add_item(cx),
+                }
             }))
-            .child(icon(name, ICON_SIZE, theme.text_muted))
+            .child(icon(item.icon, ICON_SIZE, color))
+            .child(div().whitespace_nowrap().child(item.label))
+            .children(item.aux.map(|n| icon(n, 14., color)))
             .into_any_element()
     }
+
+    /// Records the box of the element this is a child of, under `k`, so a
+    /// later frame can hang something under it or tell a press inside it
+    /// from one outside. The parent must be `relative()`.
+    pub(super) fn measure(&self, k: u64) -> AnyElement {
+        let anchors = self.toolbar.anchors.clone();
+        canvas(
+            move |bounds, _, _| {
+                anchors.borrow_mut().insert(k, bounds);
+            },
+            |_, _, _, _| {},
+        )
+        .absolute()
+        .top_0()
+        .left_0()
+        .size_full()
+        .into_any_element()
+    }
+
+    pub(super) fn anchor(&self, k: u64) -> Option<Bounds<Pixels>> {
+        self.toolbar.anchors.borrow().get(&k).copied()
+    }
+
+    /// Forgets every box but the bar's buttons: what a panel drew is gone
+    /// with it.
+    fn forget_panel_anchors(&self) {
+        let keep: Vec<u64> = [
+            Panel::Views,
+            Panel::Results,
+            Panel::Sort,
+            Panel::Group,
+            Panel::Filter,
+            Panel::Properties,
+        ]
+        .iter()
+        .map(|p| key("bases-toolbar-button", *p as usize))
+        .collect();
+        self.toolbar
+            .anchors
+            .borrow_mut()
+            .retain(|k, _| keep.contains(k));
+    }
+
+    // ----- open, close, focus -------------------------------------------------
 
     /// Opens `panel`, or closes it when it was already open.
     fn toggle_panel(
@@ -381,64 +600,185 @@ impl BasesView {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        cx.stop_propagation();
-        // The press that began this click lands outside the open panel —
-        // a control's button is not inside its own panel — so the panel has
-        // already closed itself by the time the click arrives. A second click
-        // on the same control therefore closes rather than reopens.
-        let reopening = self.toolbar.just_closed.take() == Some((panel, at));
-        if self.toolbar.panel == panel || reopening {
-            self.close_panel(cx);
+        if self.toolbar.panel == panel {
+            self.close_panel(window, cx);
             return;
         }
+        self.forget_panel_anchors();
         self.toolbar.panel = panel;
+        self.toolbar.page = Page::List;
         self.toolbar.at = at;
         self.toolbar.combo = None;
-        self.toolbar.configuring = None;
+        self.toolbar.selected = None;
+        self.toolbar.header_menu = false;
+        self.toolbar.pending_sort = false;
+        self.toolbar.pending_rule = None;
         self.toolbar.editing = None;
         self.toolbar.total = None;
         self.toolbar.rows.clear();
-        // Two panels open with a field already live, so the first keystroke
-        // lands in it rather than opening it.
         match panel {
+            // Observed: these two open with their search field focused; the
+            // others leave focus where it was.
+            Panel::Views | Panel::Properties => {
+                self.open_field(Field::Search, String::new(), window, cx)
+            }
             Panel::Results => {
                 let total = self.unlimited_rows();
                 self.toolbar.total = Some(total);
-                let text = self
-                    .view()
-                    .and_then(|v| v.limit)
-                    .map(|n| n.to_string())
-                    .unwrap_or_default();
-                self.open_field(Field::Limit, text, window, cx);
+                self.focus_view(window, cx);
             }
-            Panel::Properties => self.open_field(Field::Property, String::new(), window, cx),
-            _ => {}
+            _ => self.focus_view(window, cx),
         }
         cx.notify();
     }
 
-    /// Closes the panel because something outside it was pressed, keeping
-    /// which panel it was and where the press landed; see
-    /// [`ToolbarState::just_closed`].
-    fn close_panel_out(&mut self, at: Point<Pixels>, cx: &mut Context<Self>) {
-        let was = self.toolbar.panel;
-        self.close_panel(cx);
-        self.toolbar.just_closed = Some((was, at));
-    }
-
-    fn close_panel(&mut self, cx: &mut Context<Self>) {
+    /// Closes the open panel and puts focus back on the view.
+    pub(super) fn close_panel(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.forget_panel_anchors();
         self.toolbar.panel = Panel::None;
+        self.toolbar.page = Page::List;
         self.toolbar.combo = None;
-        self.toolbar.configuring = None;
+        self.toolbar.selected = None;
+        self.toolbar.header_menu = false;
+        self.toolbar.pending_sort = false;
+        self.toolbar.pending_rule = None;
         self.toolbar.editing = None;
+        self.toolbar.drag = None;
         self.toolbar.field_value.clear();
         self.toolbar.rows.clear();
+        self.focus_view(window, cx);
         cx.notify();
+    }
+
+    /// Escape: one layer at a time — the menu, then the list, then the panel,
+    /// then the search row; with nothing open the key goes on to the shell.
+    pub(super) fn close_panel_action(
+        &mut self,
+        _: &ClosePanel,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if self.toolbar.header_menu {
+            self.toolbar.header_menu = false;
+        } else if self.toolbar.combo.is_some() {
+            self.close_combo(window, cx);
+        } else if self.toolbar.panel != Panel::None {
+            self.close_panel(window, cx);
+        } else if self.toolbar.search.is_some() {
+            self.toolbar.search = None;
+            self.toolbar.editing = None;
+            self.resolve_search();
+        } else {
+            cx.propagate();
+            return;
+        }
+        cx.notify();
+    }
+
+    /// Up and Down with a searchless list open: the selection moves; with
+    /// nothing of the kind open the key goes on to the shell.
+    pub(super) fn select_up_action(
+        &mut self,
+        _: &SelectUp,
+        _: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if self.toolbar.combo.is_some() && self.toolbar.editing != Some(Field::ComboSearch) {
+            self.move_selection(-1, cx);
+        } else {
+            cx.propagate();
+        }
+    }
+
+    pub(super) fn select_down_action(
+        &mut self,
+        _: &SelectDown,
+        _: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if self.toolbar.combo.is_some() && self.toolbar.editing != Some(Field::ComboSearch) {
+            self.move_selection(1, cx);
+        } else {
+            cx.propagate();
+        }
+    }
+
+    /// Enter with a searchless list open: picks the selected row.
+    pub(super) fn activate_action(
+        &mut self,
+        _: &Activate,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if self.toolbar.combo.is_some() && self.toolbar.editing != Some(Field::ComboSearch) {
+            self.combo_pick_selected(window, cx);
+        } else {
+            cx.propagate();
+        }
+    }
+
+    /// A press that landed outside the open panel. One inside the bar's
+    /// buttons or a combobox's trigger is left to that control's own click;
+    /// anywhere else closes the outermost open layer.
+    pub(super) fn press_out(
+        &mut self,
+        at: Point<Pixels>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if self
+            .toolbar
+            .anchors
+            .borrow()
+            .values()
+            .any(|b| b.contains(&at))
+        {
+            return;
+        }
+        if self.toolbar.header_menu {
+            self.toolbar.header_menu = false;
+            cx.notify();
+            return;
+        }
+        if self.toolbar.combo.is_some() {
+            self.close_combo(window, cx);
+            return;
+        }
+        self.close_panel(window, cx);
+    }
+
+    pub(super) fn focus_view(&self, window: &mut Window, cx: &mut Context<Self>) {
+        let handle = self.focus_handle(cx);
+        window.focus(&handle, cx);
+    }
+
+    /// Opens the views panel on `ix`'s **Configure view** page, which is what
+    /// `bases:add-view` and the row's gear do.
+    pub(super) fn configure_view(&mut self, ix: usize, cx: &mut Context<Self>) {
+        self.toolbar.panel = Panel::Views;
+        self.toolbar.page = Page::Configure(ix);
+        self.toolbar.combo = None;
+        self.toolbar.selected = None;
+        self.toolbar.header_menu = false;
+        let name = self
+            .base()
+            .and_then(|b| b.views.get(ix))
+            .map(|v| v.name.clone())
+            .unwrap_or_else(|| DEFAULT_VIEW_NAME.to_string());
+        // Observed: the page opens with the name field focused and selected.
+        self.request_field(Field::ViewName, name);
+        cx.notify();
+    }
+
+    /// Asks the next render to open the shared field on `which`, for a
+    /// caller that has no window to focus it with.
+    pub(super) fn request_field(&mut self, which: Field, text: String) {
+        self.toolbar.pending_field = Some((which, text));
     }
 
     /// The view whose keys the toolbar shows. An empty base has none, and
     /// what it shows is the default view `edit_view` would materialize.
-    fn showing_view(&self, base: &Base) -> View {
+    pub(super) fn showing_view(&self, base: &Base) -> View {
         base.views
             .get(self.view_ix())
             .cloned()
@@ -446,9 +786,9 @@ impl BasesView {
     }
 
     /// How many rows the showing view resolves to with no `limit`, which is
-    /// the *n* of *Show all (n)*: the resolved table carries only the limited
+    /// the *n* of *Show all*: the resolved table carries only the limited
     /// rows, so the whole count has to be built for it.
-    fn unlimited_rows(&self) -> usize {
+    pub(super) fn unlimited_rows(&self) -> usize {
         let Some(base) = self.base() else {
             return 0;
         };
@@ -467,48 +807,86 @@ impl BasesView {
         scoria_bases::table::build(&probe, ix, &env).rows.len()
     }
 
+    // ----- the search row -----------------------------------------------------
+
+    /// The *Search* button: shows the row under the bar with its field
+    /// focused, or hides it again.
+    fn toggle_search(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if self.toolbar.search.is_some() {
+            self.toolbar.search = None;
+            if self.toolbar.editing == Some(Field::TableSearch) {
+                self.toolbar.editing = None;
+            }
+            self.resolve_search();
+            self.focus_view(window, cx);
+        } else {
+            self.toolbar.search = Some(String::new());
+            self.open_field(Field::TableSearch, String::new(), window, cx);
+        }
+        cx.notify();
+    }
+
+    /// `.bases-search-row`: the *Find...* field and *Showing N* beside it.
+    fn render_search_row(&mut self, theme: &Theme, cx: &mut Context<Self>) -> Option<AnyElement> {
+        let text = self.toolbar.search.clone()?;
+        let showing = self.table().map_or(0, |t| t.rows.len());
+        Some(
+            div()
+                .flex()
+                .flex_row()
+                .items_center()
+                .flex_shrink_0()
+                .w_full()
+                .gap(px(8.))
+                .px(px(8.))
+                .py(px(4.))
+                .border_b_1()
+                .border_color(theme.border)
+                .child(div().flex_1().child(self.text_box(
+                    Field::TableSearch,
+                    &text,
+                    "Find...",
+                    theme,
+                    cx,
+                )))
+                .child(
+                    div()
+                        .flex_shrink_0()
+                        .text_size(px(FONT_UI_SMALL))
+                        .text_color(theme.text_muted)
+                        .child(SharedString::from(format!("Showing {showing}"))),
+                )
+                .into_any_element(),
+        )
+    }
+
     // ----- the shared text field ---------------------------------------------
 
     /// Puts the shared field on `which`, with `text` in it, and focuses it.
     ///
     /// Nothing is written by installing the text: [`BasesView::commit_field`]
     /// compares before it writes, so the change event `set_text` raises for
-    /// the value already in the file is a no-op. Obsidian writes nothing on an
-    /// open, and neither does this.
-    fn open_field(
+    /// the value already in the file is a no-op.
+    pub(super) fn open_field(
         &mut self,
         which: Field,
         text: String,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        if self.toolbar.field.is_none() {
-            let input = cx.new(|cx| TextInput::new("", cx));
-            self.toolbar.subscriptions =
-                vec![cx.subscribe(&input, |this, input, event: &InputEvent, cx| {
-                    let text = input.read(cx).text().to_string();
-                    match event {
-                        InputEvent::Changed => this.commit_field(&text, cx),
-                        InputEvent::Submit => {
-                            this.commit_field(&text, cx);
-                            if matches!(this.toolbar.editing, Some(Field::Rule(_))) {
-                                this.toolbar.editing = None;
-                            }
-                            cx.notify();
-                        }
-                        InputEvent::Cancel => {
-                            this.toolbar.editing = None;
-                            cx.notify();
-                        }
-                        InputEvent::Up | InputEvent::Down => {}
-                    }
-                })];
-            self.toolbar.field = Some(input);
-        }
-        self.toolbar.editing = Some(which);
+        self.ensure_field(window, cx);
+        self.toolbar.editing = Some(which.clone());
         self.toolbar.field_value = text.clone();
+        self.toolbar.selected = None;
         if let Some(input) = self.toolbar.field.clone() {
+            let placeholder = placeholder_of(&which);
             input.update(cx, |input, cx| {
+                input.set_placeholder(placeholder);
+                input.set_height(px(INPUT_HEIGHT));
+                input.set_pad_left(px(match which {
+                    Field::Search | Field::ComboSearch => 30.,
+                    _ => 8.,
+                }));
                 input.set_text(text, cx);
                 input.select_all(cx);
             });
@@ -517,77 +895,33 @@ impl BasesView {
         }
     }
 
-    /// What the shared field writes, by what it is standing in for.
-    ///
-    /// Every arm compares before it writes: the field raises a change event
-    /// for the text it is opened with too, and a base must not be written
-    /// because a panel was opened.
-    fn commit_field(&mut self, text: &str, cx: &mut Context<Self>) {
-        self.toolbar.field_value = text.to_string();
-        match self.toolbar.editing {
-            // Observed: the limit input writes `limit` as a bare number, and
-            // an empty field is no limit at all.
-            Some(Field::Limit) => {
-                let limit = parse_limit(text);
-                if self.view().and_then(|v| v.limit) == limit {
-                    return;
-                }
-                self.edit_view(move |view| layout::set_limit(view, limit), cx);
-            }
-            Some(Field::Separator) => {
-                let now = self
-                    .base()
-                    .map(|base| self.showing_view(base))
-                    .and_then(|v| match Layout::of(&v) {
-                        Layout::List(list) => Some(list.separator),
-                        _ => None,
-                    });
-                if now.as_deref() == Some(text) {
-                    return;
-                }
-                let separator = text.to_string();
-                self.edit_view(move |view| layout::set_separator(view, &separator), cx);
-            }
-            // The property field only narrows the list; "Add *name* property"
-            // is the row that writes.
-            Some(Field::Property) => cx.notify(),
-            Some(Field::Rule(ix)) => {
-                let Some(node) = self.filter_nodes().get(ix).cloned() else {
-                    return;
-                };
-                match &node.kind {
-                    NodeKind::Rule(now) if now == text => return,
-                    NodeKind::Group(_) if text.is_empty() => return,
-                    _ => {}
-                }
-                let text = text.to_string();
-                let new_rule = matches!(node.kind, NodeKind::Group(_));
-                let path = node.path.clone();
-                let kind = node.kind.clone();
-                self.edit_filter(
-                    node.section,
-                    move |filter| {
-                        let mut tree = group_tree(filter.as_ref());
-                        match kind {
-                            NodeKind::Rule(_) => set_rule(&mut tree, &path, &text),
-                            NodeKind::Group(_) => add_rule(&mut tree, &path, &text),
-                        }
-                        *filter = written(tree);
-                    },
-                    cx,
-                );
-                // A group's new-rule field has become that rule's own field,
-                // which the next render draws on the node the rule now is.
-                if new_rule {
-                    self.toolbar.editing = None;
-                }
-                cx.notify();
-            }
-            None => {}
+    fn ensure_field(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if self.toolbar.field.is_some() {
+            return;
         }
+        let input = cx.new(|cx| TextInput::new("", cx));
+        self.toolbar.subscriptions = vec![cx.subscribe_in(
+            &input,
+            window,
+            |this: &mut BasesView,
+             input: &Entity<TextInput>,
+             event: &InputEvent,
+             window: &mut Window,
+             cx: &mut Context<BasesView>| {
+                let text = input.read(cx).text().to_string();
+                match event {
+                    InputEvent::Changed => this.commit_field(&text, window, cx),
+                    InputEvent::Submit => this.submit_field(&text, window, cx),
+                    InputEvent::Cancel => this.cancel_field(window, cx),
+                    InputEvent::Up => this.move_selection(-1, cx),
+                    InputEvent::Down => this.move_selection(1, cx),
+                }
+            },
+        )];
+        self.toolbar.field = Some(input);
     }
 
-    fn field_text(&self, cx: &Context<Self>) -> String {
+    pub(super) fn field_text(&self, cx: &Context<Self>) -> String {
         self.toolbar
             .field
             .as_ref()
@@ -595,1211 +929,248 @@ impl BasesView {
             .unwrap_or_default()
     }
 
-    // ----- the panels ---------------------------------------------------------
+    /// What the shared field writes, by what it is standing in for.
+    ///
+    /// Every arm compares before it writes: the field raises a change event
+    /// for the text it is opened with too, and a base must not be written
+    /// because a panel was opened.
+    fn commit_field(&mut self, text: &str, window: &mut Window, cx: &mut Context<Self>) {
+        self.toolbar.field_value = text.to_string();
+        let Some(which) = self.toolbar.editing.clone() else {
+            return;
+        };
+        match which {
+            // The search fields only narrow their lists.
+            Field::Search | Field::ComboSearch => {
+                self.toolbar.selected = None;
+                cx.notify();
+            }
+            Field::TableSearch => {
+                self.toolbar.search = Some(text.to_string());
+                self.resolve_search();
+                cx.notify();
+            }
+            Field::Limit => self.commit_limit(text, cx),
+            Field::ViewName => self.commit_view_name(text, cx),
+            Field::Separator => self.commit_separator(text, cx),
+            Field::DisplayName => self.commit_display_name(text, cx),
+            Field::Formula => self.commit_formula(text, cx),
+            Field::Rule(section, path) => self.commit_rule_text(section, &path, text, cx),
+            Field::RuleValue(section, path) => self.commit_rule_value(section, &path, text, cx),
+            Field::GroupAdd => cx.notify(),
+        }
+        let _ = window;
+    }
 
-    /// The open panel, anchored where its control was clicked.
+    /// Enter in the field: activates the selected row of a list, or settles
+    /// the field it is in.
+    fn submit_field(&mut self, text: &str, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(which) = self.toolbar.editing.clone() else {
+            return;
+        };
+        match which {
+            Field::Search => self.activate_selected(window, cx),
+            Field::ComboSearch => self.combo_pick_selected(window, cx),
+            Field::GroupAdd => self.commit_group_add(text, cx),
+            Field::RuleValue(section, path) => {
+                // A list row takes the typed item as a pill on Enter; the
+                // other rows were written as they were typed.
+                self.submit_rule_value(section, &path, text, cx);
+                self.toolbar.editing = None;
+                self.focus_view(window, cx);
+                cx.notify();
+            }
+            Field::Rule(..) => {
+                self.commit_field(text, window, cx);
+                self.toolbar.editing = None;
+                self.focus_view(window, cx);
+                cx.notify();
+            }
+            Field::TableSearch => {}
+            _ => {
+                self.commit_field(text, window, cx);
+                self.toolbar.editing = None;
+                self.focus_view(window, cx);
+                cx.notify();
+            }
+        }
+    }
+
+    /// Escape in the field. Observed: in a panel's search field it closes
+    /// the panel; in the search row it clears and hides the row; in a list's
+    /// search field it closes the list.
+    fn cancel_field(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        match self.toolbar.editing.clone() {
+            Some(Field::TableSearch) => {
+                self.toolbar.search = None;
+                self.toolbar.editing = None;
+                self.resolve_search();
+                self.focus_view(window, cx);
+            }
+            Some(Field::ComboSearch) => self.close_combo(window, cx),
+            Some(Field::Rule(..)) | Some(Field::RuleValue(..)) => {
+                // The value typed so far is already in the file; Escape only
+                // leaves the field.
+                self.toolbar.editing = None;
+                self.focus_view(window, cx);
+            }
+            Some(_) if self.toolbar.header_menu => self.toolbar.header_menu = false,
+            Some(_) => self.close_panel(window, cx),
+            None => {}
+        }
+        cx.notify();
+    }
+
+    /// Down and Up in a list's search field.
+    fn move_selection(&mut self, delta: i32, cx: &mut Context<Self>) {
+        let count = self.list_len(cx);
+        if count == 0 {
+            return;
+        }
+        let next = match self.toolbar.selected {
+            None if delta > 0 => 0,
+            None => count - 1,
+            Some(ix) => {
+                let next = ix as i64 + delta as i64;
+                next.rem_euclid(count as i64) as usize
+            }
+        };
+        self.toolbar.selected = Some(next);
+        cx.notify();
+    }
+
+    /// How many rows the open list has, which is what the arrows cycle
+    /// over.
+    fn list_len(&self, cx: &Context<Self>) -> usize {
+        if self.toolbar.combo.is_some() {
+            return self.combo_list_len(cx);
+        }
+        match (self.toolbar.panel, &self.toolbar.page) {
+            (Panel::Views, Page::List) => self.views_list_len(cx),
+            (Panel::Properties, Page::List) => self.properties_list_len(cx),
+            _ => 0,
+        }
+    }
+
+    /// Enter in a list's search field.
+    fn activate_selected(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        match (self.toolbar.panel, &self.toolbar.page) {
+            (Panel::Views, Page::List) => self.views_activate_selected(window, cx),
+            (Panel::Properties, Page::List) => self.properties_activate_selected(window, cx),
+            _ => {}
+        }
+    }
+
+    // ----- the panel box ------------------------------------------------------
+
+    /// The open panel, hung under its button.
     fn render_panel(
         &mut self,
         base: &Base,
         view: &View,
         theme: &Theme,
+        window: &mut Window,
         cx: &mut Context<Self>,
     ) -> Option<AnyElement> {
         self.toolbar.rows.clear();
-        let body = match self.toolbar.panel {
+        let panel = self.toolbar.panel;
+        let width = match panel {
+            Panel::None => return None,
+            Panel::Filter => FILTER_PANEL_WIDTH,
+            Panel::Sort | Panel::Group => 240.,
+            _ => PANEL_WIDTH,
+        };
+        let at = self
+            .anchor(key("bases-toolbar-button", panel as usize))
+            .map(|b| Point::new(b.origin.x, b.origin.y + b.size.height + px(2.)))
+            .unwrap_or(self.toolbar.at);
+        let tallest = (window.viewport_size().height - at.y - px(8.)).max(px(120.));
+        let body = match panel {
             Panel::None => return None,
             Panel::Views => self.render_views_panel(base, theme, cx),
+            Panel::Results => self.render_results_panel(view, theme, cx),
             Panel::Sort => self.render_sort_panel(base, view, theme, cx),
             Panel::Group => self.render_group_panel(base, view, theme, cx),
-            Panel::Properties => self.render_properties_panel(base, view, theme, cx),
             Panel::Filter => self.render_filter_panel(base, view, theme, cx),
-            Panel::Results => self.render_results_panel(view, theme, cx),
+            Panel::Properties => self.render_properties_panel(base, view, theme, cx),
         };
-        let at = self.toolbar.at;
+        let boxed = div()
+            .id(("bases-toolbar-panel", panel as usize))
+            .flex()
+            .flex_col()
+            .w(px(width))
+            .max_h(tallest)
+            .overflow_y_scroll()
+            .bg(theme.bg_secondary)
+            .border_1()
+            .border_color(theme.tab_divider)
+            .rounded(px(8.))
+            .shadow_lg()
+            .text_size(px(FONT_UI_SMALL))
+            .text_color(theme.text)
+            .occlude()
+            .on_mouse_down_out(cx.listener(|this, event: &MouseDownEvent, window, cx| {
+                this.press_out(event.position, window, cx)
+            }))
+            .child(body);
         Some(
             deferred(
                 anchored()
                     .position(at)
                     .anchor(Anchor::TopLeft)
                     .snap_to_window_with_margin(px(8.))
-                    .child(body),
+                    .child(boxed),
             )
             .with_priority(1)
             .into_any_element(),
         )
     }
 
-    /// The `.menu.bases-toolbar-menu` box every panel sits in.
-    fn panel_box(
-        &self,
-        id: &'static str,
-        theme: &Theme,
-        cx: &mut Context<Self>,
-    ) -> gpui::Stateful<gpui::Div> {
-        menu(id, theme)
-            .min_w(px(260.))
-            .max_w(px(420.))
-            .gap(px(2.))
-            .on_mouse_down_out(cx.listener(|this, event: &gpui::MouseDownEvent, _, cx| {
-                this.close_panel_out(event.position, cx)
-            }))
-    }
-
-    /// Opens the views panel on `ix`'s **Configure view** page, which is
-    /// what `bases:add-view` does after appending a view: "appends a view
-    /// named `View 2` and opens its Configure view page" is the observed
-    /// effect, and this is its second half.
-    pub(super) fn configure_view(&mut self, ix: usize, cx: &mut Context<Self>) {
-        self.toolbar.panel = Panel::Views;
-        self.toolbar.configuring = Some(ix);
-        self.toolbar.combo = None;
-        cx.notify();
-    }
-
-    // ----- views + Configure view --------------------------------------------
-
-    /// The views panel: one row per view, the row's own icon opening that
-    /// view's Configure view page.
-    fn render_views_panel(
-        &mut self,
-        base: &Base,
-        theme: &Theme,
-        cx: &mut Context<Self>,
-    ) -> AnyElement {
-        if let Some(ix) = self.toolbar.configuring {
-            return self.render_configure(base, ix, theme, cx);
-        }
-        let views: Vec<View> = if base.views.is_empty() {
-            vec![default_view()]
-        } else {
-            base.views.clone()
-        };
-        self.toolbar.rows = views
-            .iter()
-            .map(|v| json!({ "name": v.name, "type": v.kind }))
-            .collect();
-        let showing = self.view_ix();
-        let mut body = self.panel_box("bases-toolbar-views-menu", theme, cx);
-        for (ix, view) in views.iter().enumerate() {
-            let icon_name = layout::kind_icon(&view.kind).unwrap_or("file-question");
-            body = body.child(
-                div()
-                    .id(("bases-view-row", ix))
-                    .flex()
-                    .flex_row()
-                    .items_center()
-                    .gap(px(8.))
-                    .px(px(8.))
-                    .py(px(4.))
-                    .rounded(px(4.))
-                    .cursor_pointer()
-                    .when(ix == showing, |d| d.bg(theme.bg_active))
-                    .hover(|s| s.bg(theme.bg_alt))
-                    .on_click(cx.listener(move |this, _, _, cx| {
-                        this.show_view(ix, cx);
-                        this.close_panel(cx);
-                    }))
-                    .child(
-                        // The row's own icon is the Configure view page's
-                        // handle, which is observed.
-                        div()
-                            .id(("bases-view-configure", ix))
-                            .size(px(20.))
-                            .flex()
-                            .items_center()
-                            .justify_center()
-                            .rounded(px(4.))
-                            .hover(|s| s.bg(theme.bg_active))
-                            .on_click(cx.listener(move |this, _, _, cx| {
-                                cx.stop_propagation();
-                                this.show_view(ix, cx);
-                                this.toolbar.configuring = Some(ix);
-                                cx.notify();
-                            }))
-                            .child(icon(icon_name, 14., theme.text_muted)),
-                    )
-                    .child(
-                        div()
-                            .flex_1()
-                            .whitespace_nowrap()
-                            .overflow_hidden()
-                            .text_ellipsis()
-                            .child(SharedString::from(view.name.clone())),
-                    ),
-            );
-        }
-        body.into_any_element()
-    }
-
-    /// The Configure view page: the Layout combobox and that layout's own
-    /// controls.
-    ///
-    /// Observed: the combobox offers exactly Table, Cards, List and Kanban,
-    /// and picking one **rewrites `type` and leaves the previous layout's
-    /// keys in place**. Obsidian 1.14.5 marks *Table* as the selected row
-    /// whatever the view's real layout is; that is a bug the run recorded as
-    /// one, so this marks the real layout instead.
-    ///
-    /// The page's name field is **not** drawn: what renaming a view through
-    /// it writes was never observed, so the name shows as text.
-    fn render_configure(
-        &mut self,
-        base: &Base,
-        ix: usize,
-        theme: &Theme,
-        cx: &mut Context<Self>,
-    ) -> AnyElement {
-        let view = base.views.get(ix).cloned().unwrap_or_else(default_view);
-        let kind = view.kind.clone();
-        let labels: Vec<SharedString> = LAYOUTS
-            .iter()
-            .map(|(_, label, _)| SharedString::from(*label))
-            .collect();
-        let selected = LAYOUTS.iter().position(|(k, ..)| *k == kind);
-        let shown = layout::kind_label(&kind)
-            .map(SharedString::from)
-            .unwrap_or_else(|| SharedString::from(kind.clone()));
-        let mut body = self
-            .panel_box("bases-toolbar-configure", theme, cx)
-            .child(
-                div()
-                    .flex()
-                    .flex_row()
-                    .items_center()
-                    .gap(px(6.))
-                    .px(px(4.))
-                    .pb(px(4.))
-                    .child(
-                        div()
-                            .id("bases-configure-back")
-                            .size(px(20.))
-                            .flex()
-                            .items_center()
-                            .justify_center()
-                            .rounded(px(4.))
-                            .cursor_pointer()
-                            .hover(|s| s.bg(theme.bg_alt))
-                            .on_click(cx.listener(|this, _, _, cx| {
-                                cx.stop_propagation();
-                                this.toolbar.configuring = None;
-                                this.toolbar.combo = None;
-                                this.toolbar.editing = None;
-                                cx.notify();
-                            }))
-                            .child(icon("arrow-left", 14., theme.text_muted)),
-                    )
-                    .child(
-                        div()
-                            .flex_1()
-                            .whitespace_nowrap()
-                            .overflow_hidden()
-                            .text_ellipsis()
-                            .text_color(theme.text)
-                            .child(SharedString::from(view.name.clone())),
-                    ),
-            )
-            .child(self.setting_row(
-                "Layout",
-                self.combobox("layout", 0, Some(shown), &labels, selected, theme, cx),
-                theme,
-            ));
-        self.toolbar.rows = vec![json!({ "control": "Layout", "value": kind })];
-        // Each layout's own keys, from the observed layout-key table. The
-        // label of every control but Row height is **unprobed** — the
-        // Configure view page's own wording was never read — so the rest show
-        // the key they write.
-        match Layout::of(&view) {
-            Layout::Table(table) => {
-                let steps: Vec<SharedString> = RowHeight::all()
-                    .iter()
-                    .map(|h| SharedString::from(h.label()))
-                    .collect();
-                let now = RowHeight::all().iter().position(|h| *h == table.row_height);
-                let shown = SharedString::from(table.row_height.label());
-                self.record_control("rowHeight", table.row_height.key());
-                body = body.child(self.setting_row(
-                    "Row height",
-                    self.combobox("rowHeight", 0, Some(shown), &steps, now, theme, cx),
-                    theme,
-                ));
-            }
-            Layout::Cards(cards) => {
-                self.record_control("cardSize", &cards.card_size.to_string());
-                body = body.child(self.setting_row(
-                    "cardSize",
-                    self.slider("cardSize", cards.card_size, CARD_SIZE_RANGE, theme, cx),
-                    theme,
-                ));
-                body = body.child(self.image_row(base, &view, cards.image.as_deref(), theme, cx));
-                body = body.child(self.image_fit_row(cards.image_fit, theme, cx));
-                self.record_control("imageAspectRatio", &cards.image_aspect_ratio.to_string());
-                body = body.child(self.setting_row(
-                    "imageAspectRatio",
-                    self.slider(
-                        "imageAspectRatio",
-                        cards.image_aspect_ratio,
-                        ASPECT_RANGE,
-                        theme,
-                        cx,
-                    ),
-                    theme,
-                ));
-            }
-            Layout::Kanban(kanban) => {
-                self.record_control("columnWidth", &kanban.column_width.to_string());
-                body = body.child(self.setting_row(
-                    "columnWidth",
-                    self.slider(
-                        "columnWidth",
-                        kanban.column_width,
-                        COLUMN_WIDTH_RANGE,
-                        theme,
-                        cx,
-                    ),
-                    theme,
-                ));
-                body = body.child(self.image_row(base, &view, kanban.image.as_deref(), theme, cx));
-                body = body.child(self.image_fit_row(kanban.image_fit, theme, cx));
-                self.record_control("imageAspectRatio", &kanban.image_aspect_ratio.to_string());
-                body = body.child(self.setting_row(
-                    "imageAspectRatio",
-                    self.slider(
-                        "imageAspectRatio",
-                        kanban.image_aspect_ratio,
-                        ASPECT_RANGE,
-                        theme,
-                        cx,
-                    ),
-                    theme,
-                ));
-            }
-            Layout::List(list) => {
-                let marks: Vec<SharedString> = Markers::all()
-                    .iter()
-                    .map(|m| SharedString::from(m.label()))
-                    .collect();
-                let now = Markers::all().iter().position(|m| *m == list.markers);
-                let shown = SharedString::from(list.markers.label());
-                self.record_control("markers", list.markers.key());
-                body = body.child(self.setting_row(
-                    "markers",
-                    self.combobox("markers", 0, Some(shown), &marks, now, theme, cx),
-                    theme,
-                ));
-                self.record_control("separator", &list.separator);
-                body = body.child(self.setting_row(
-                    "separator",
-                    self.text_field(Field::Separator, &list.separator, theme, cx),
-                    theme,
-                ));
-                // "Indent properties" is not drawn: the key it writes is
-                // unprobed, and nothing should write `indentProperties`.
-            }
-            // An unknown type never reaches the toolbar; the shell draws the
-            // error block instead.
-            Layout::Unknown(_) => {}
-        }
-        body.into_any_element()
-    }
-
-    /// The `image` property picker, which writes a **qualified** id.
-    fn image_row(
-        &self,
-        base: &Base,
-        view: &View,
-        current: Option<&str>,
-        theme: &Theme,
-        cx: &mut Context<Self>,
-    ) -> AnyElement {
-        let properties = self.properties_of(base, view);
-        // The picker's own "no property" row was never read; this is the one
-        // label in the module that is not observed, and it only clears a key.
-        let mut labels = vec![SharedString::from("None")];
-        labels.extend(properties.iter().map(|p| SharedString::from(p.1.clone())));
-        let selected = match current {
-            None => Some(0),
-            Some(id) => properties
-                .iter()
-                .position(|p| same_property(&p.0, id))
-                .map(|ix| ix + 1),
-        };
-        let shown = selected
-            .and_then(|ix| labels.get(ix).cloned())
-            .unwrap_or_else(|| SharedString::from(current.unwrap_or("None").to_string()));
-        self.setting_row(
-            "image",
-            self.combobox("image", 0, Some(shown), &labels, selected, theme, cx),
-            theme,
-        )
-    }
-
-    fn image_fit_row(&self, fit: ImageFit, theme: &Theme, cx: &mut Context<Self>) -> AnyElement {
-        let labels = [SharedString::from("Cover"), SharedString::from("Contain")];
-        let now = match fit {
-            ImageFit::Cover => 0,
-            ImageFit::Contain => 1,
-        };
-        self.setting_row(
-            "imageFit",
-            self.combobox(
-                "imageFit",
-                0,
-                Some(labels[now].clone()),
-                &labels,
-                Some(now),
-                theme,
-                cx,
-            ),
-            theme,
-        )
-    }
-
-    fn record_control(&mut self, key: &str, value: &str) {
-        self.toolbar
-            .rows
-            .push(json!({ "control": key, "value": value }));
-    }
-
-    // ----- results ------------------------------------------------------------
-
-    /// The results panel: the limit input, *Show all (n)* and *Copy to
-    /// clipboard*.
-    ///
-    /// Observed: the input writes `limit` as a bare number and *Show all*
-    /// drops it; *Copy to clipboard* produces the same TSV `bases:copy-table`
-    /// does. ***Export CSV...*** is not drawn — see the module note.
-    fn render_results_panel(
-        &mut self,
-        view: &View,
-        theme: &Theme,
-        cx: &mut Context<Self>,
-    ) -> AnyElement {
-        let total = self.toolbar.total.unwrap_or(0);
-        let limit = view.limit;
-        self.toolbar.rows = vec![
-            json!({ "control": "Limit number of results", "value": limit }),
-            json!({ "row": format!("Show all ({total})") }),
-            json!({ "row": "Copy to clipboard" }),
-        ];
-        let field = self.text_field(
-            Field::Limit,
-            &limit.map(|n| n.to_string()).unwrap_or_default(),
-            theme,
-            cx,
-        );
-        self.panel_box("bases-toolbar-results", theme, cx)
-            .child(self.setting_row("Limit number of results", field, theme))
-            .child(self.panel_row(
-                "bases-results-show-all",
-                0,
-                None,
-                SharedString::from(format!("Show all ({total})")),
-                theme,
-                cx.listener(|this, _, _, cx| {
-                    cx.stop_propagation();
-                    this.edit_view(|view| layout::set_limit(view, None), cx);
-                    let total = this.unlimited_rows();
-                    this.toolbar.total = Some(total);
-                    // The field has to follow the key it writes; the change
-                    // event that raises is a no-op, because `limit` is
-                    // already gone.
-                    if let Some(input) = this.toolbar.field.clone() {
-                        input.update(cx, |input, cx| input.set_text("", cx));
-                    }
-                    cx.notify();
-                }),
-            ))
-            .child(self.panel_row(
-                "bases-results-copy",
-                0,
-                Some("copy"),
-                SharedString::from("Copy to clipboard"),
-                theme,
-                cx.listener(|this, _, _, cx| {
-                    cx.stop_propagation();
-                    this.copy_table(cx);
-                }),
-            ))
-            .into_any_element()
-    }
-
-    /// The visible columns as TSV, on the clipboard, with Obsidian's own
-    /// notice.
-    ///
-    /// Observed for `bases:copy-table`: one header row of display names, tab
-    /// separators, no trailing newline, and a "Copied to your clipboard"
-    /// notice. The results panel's own row produces the same TSV.
-    fn copy_table(&mut self, cx: &mut Context<Self>) {
-        let Some(table) = self.table() else {
-            return;
-        };
-        cx.write_to_clipboard(ClipboardItem::new_string(table_tsv(table)));
-        self.report("Copied to your clipboard", cx);
-        self.close_panel(cx);
-    }
-
-    // ----- sort ---------------------------------------------------------------
-
-    /// The sort panel: a (property, direction) pair per entry with a
-    /// `lucide-trash-2`, over the row that adds one.
-    ///
-    /// Observed: an insertion into `sort` **prepends** — *Sort Z → A* puts
-    /// `{property, direction: DESC}` at the head of the list. The panel's own
-    /// add affordance was never read, so it is drawn at the head and
-    /// prepends too, which is the only insertion the run pins down.
-    fn render_sort_panel(
-        &mut self,
-        base: &Base,
-        view: &View,
-        theme: &Theme,
-        cx: &mut Context<Self>,
-    ) -> AnyElement {
-        let properties = self.properties_of(base, view);
-        let labels: Vec<SharedString> = properties
-            .iter()
-            .map(|p| SharedString::from(p.1.clone()))
-            .collect();
-        let directions: Vec<SharedString> = DIRECTIONS
-            .iter()
-            .map(|(_, label)| SharedString::from(*label))
-            .collect();
-        self.toolbar.rows = view
-            .sort
-            .iter()
-            .map(|s| json!({ "property": s.property, "direction": s.direction }))
-            .collect();
-        let mut body = self
-            .panel_box("bases-toolbar-sort", theme, cx)
-            .child(self.add_row("sortAdd", &labels, theme, cx));
-        for (ix, entry) in view.sort.iter().enumerate() {
-            let selected = properties
-                .iter()
-                .position(|p| same_property(&p.0, &entry.property));
-            let shown = selected
-                .and_then(|i| labels.get(i).cloned())
-                .unwrap_or_else(|| SharedString::from(entry.property.clone()));
-            let down = direction_ix(entry.direction.as_deref());
-            body = body.child(
-                div()
-                    .flex()
-                    .flex_row()
-                    .items_center()
-                    .gap(px(4.))
-                    .px(px(4.))
-                    .child(div().flex_1().min_w(px(0.)).child(self.combobox(
-                        "sortProperty",
-                        ix,
-                        Some(shown),
-                        &labels,
-                        selected,
-                        theme,
-                        cx,
-                    )))
-                    .child(self.combobox(
-                        "sortDirection",
-                        ix,
-                        Some(directions[down].clone()),
-                        &directions,
-                        Some(down),
-                        theme,
-                        cx,
-                    ))
-                    .child(self.trash(
-                        "bases-sort-trash",
-                        ix,
-                        theme,
-                        cx.listener(move |this, _, _, cx| {
-                            cx.stop_propagation();
-                            this.edit_view(move |view| remove_sort(view, ix), cx);
-                        }),
-                    )),
-            );
-        }
-        body.into_any_element()
-    }
-
-    // ----- group --------------------------------------------------------------
-
-    /// The group panel: the same (property, direction) pair for `groupBy`,
-    /// which is one entry rather than a list.
-    ///
-    /// Nothing here writes or clears `groupOrder`: whether the UI ever writes
-    /// one is unprobed, so a `groupOrder` the file carries is left exactly as
-    /// it was found.
-    fn render_group_panel(
-        &mut self,
-        base: &Base,
-        view: &View,
-        theme: &Theme,
-        cx: &mut Context<Self>,
-    ) -> AnyElement {
-        let properties = self.properties_of(base, view);
-        let labels: Vec<SharedString> = properties
-            .iter()
-            .map(|p| SharedString::from(p.1.clone()))
-            .collect();
-        let directions: Vec<SharedString> = DIRECTIONS
-            .iter()
-            .map(|(_, label)| SharedString::from(*label))
-            .collect();
-        self.toolbar.rows = view
-            .group_by
-            .iter()
-            .map(|g| json!({ "property": g.property, "direction": g.direction }))
-            .collect();
-        let mut body = self.panel_box("bases-toolbar-group", theme, cx);
-        match &view.group_by {
-            None => body = body.child(self.add_row("groupAdd", &labels, theme, cx)),
-            Some(group) => {
-                let selected = properties
-                    .iter()
-                    .position(|p| same_property(&p.0, &group.property));
-                let shown = selected
-                    .and_then(|i| labels.get(i).cloned())
-                    .unwrap_or_else(|| SharedString::from(group.property.clone()));
-                let down = direction_ix(group.direction.as_deref());
-                body = body.child(
-                    div()
-                        .flex()
-                        .flex_row()
-                        .items_center()
-                        .gap(px(4.))
-                        .px(px(4.))
-                        .child(div().flex_1().min_w(px(0.)).child(self.combobox(
-                            "groupProperty",
-                            0,
-                            Some(shown),
-                            &labels,
-                            selected,
-                            theme,
-                            cx,
-                        )))
-                        .child(self.combobox(
-                            "groupDirection",
-                            0,
-                            Some(directions[down].clone()),
-                            &directions,
-                            Some(down),
-                            theme,
-                            cx,
-                        ))
-                        .child(self.trash(
-                            "bases-group-trash",
-                            0,
-                            theme,
-                            cx.listener(|this, _, _, cx| {
-                                cx.stop_propagation();
-                                this.edit_view(|view| view.group_by = None, cx);
-                            }),
-                        )),
-                );
-            }
-        }
-        body.into_any_element()
-    }
-
-    // ----- properties ---------------------------------------------------------
-
-    /// The properties panel: a checkbox per property, over the field that
-    /// narrows the list and the "Add *name* property" row.
-    ///
-    /// Observed: `order` is exactly the shown columns, so checking a property
-    /// appends its id and unchecking removes it. A box is checked when the
-    /// resolved table shows that column, which is also what makes unchecking
-    /// work on a view with no `order` at all: the implied columns are written
-    /// out minus the one unchecked. That materialization is a **reading** —
-    /// no fixture reached the renderer without an `order`.
-    ///
-    /// "Hide all" and "Add formula" are not drawn; see the module note.
-    fn render_properties_panel(
-        &mut self,
-        base: &Base,
-        view: &View,
-        theme: &Theme,
-        cx: &mut Context<Self>,
-    ) -> AnyElement {
-        let properties = self.properties_of(base, view);
-        let shown = self.shown_columns();
-        let typed = match self.toolbar.editing {
-            Some(Field::Property) => self.field_text(cx),
-            _ => String::new(),
-        };
-        let needle = typed.trim().to_ascii_lowercase();
-        let matching: Vec<(usize, (String, String))> = properties
-            .iter()
-            .cloned()
-            .enumerate()
-            .filter(|(_, (id, label))| {
-                needle.is_empty()
-                    || label.to_ascii_lowercase().contains(&needle)
-                    || id.to_ascii_lowercase().contains(&needle)
-            })
-            .collect();
-        self.toolbar.rows = matching
-            .iter()
-            .map(|(_, (id, label))| {
-                json!({
-                    "id": id,
-                    "label": label,
-                    "checked": shown.iter().any(|s| same_property(s, id)),
-                })
-            })
-            .collect();
-        let mut body = self.panel_box("bases-toolbar-properties", theme, cx).child(
-            div()
-                .px(px(4.))
-                .pb(px(4.))
-                .child(self.text_field(Field::Property, &typed, theme, cx)),
-        );
-        for (ix, (id, label)) in matching {
-            let checked = shown.iter().any(|s| same_property(s, &id));
-            let write = id.clone();
-            let shown_now = shown.clone();
-            body = body.child(
-                div()
-                    .id(("bases-property-row", ix))
-                    .flex()
-                    .flex_row()
-                    .items_center()
-                    .gap(px(8.))
-                    .px(px(8.))
-                    .py(px(4.))
-                    .rounded(px(4.))
-                    .cursor_pointer()
-                    .hover(|s| s.bg(theme.bg_alt))
-                    .on_click(cx.listener(move |this, _, _, cx| {
-                        cx.stop_propagation();
-                        let id = write.clone();
-                        let shown = shown_now.clone();
-                        this.edit_view(move |view| toggle_property(view, &shown, &id), cx);
-                    }))
-                    .child(check_box(checked, theme))
-                    .child(
-                        div()
-                            .flex_1()
-                            .whitespace_nowrap()
-                            .overflow_hidden()
-                            .text_ellipsis()
-                            .child(SharedString::from(label)),
-                    ),
-            );
-        }
-        // "Add *name* property": the italic *name* is the field's own text,
-        // which is how the row names a property the vault does not carry yet.
-        let name = typed.trim().to_string();
-        if !name.is_empty() && !properties.iter().any(|(_, label)| *label == name) {
-            let id = layout::qualify(&name);
-            body = body.child(self.panel_row(
-                "bases-property-add",
-                0,
-                Some("plus"),
-                SharedString::from(format!("Add {name} property")),
-                theme,
-                cx.listener(move |this, _, _, cx| {
-                    cx.stop_propagation();
-                    let id = id.clone();
-                    this.edit_view(move |view| add_property(view, &layout::qualify(&id)), cx);
-                }),
-            ));
-        }
-        body.into_any_element()
-    }
-
-    /// The ids of the columns the showing view resolves to, which is what the
-    /// checkbox list reflects.
-    fn shown_columns(&self) -> Vec<String> {
-        self.table()
-            .map(|t| t.columns.iter().map(|c| c.id.clone()).collect())
-            .unwrap_or_default()
-    }
-
-    // ----- filter -------------------------------------------------------------
-
-    /// The filter panel: the base's own `filters` under "All views" and the
-    /// view's under "This view", a conjunction select per group and a
-    /// statement field per rule.
-    ///
-    /// The **operator combobox is not drawn**, and with it the structured
-    /// (property, operator, value) triple: the run read the rule's shape but
-    /// never its operator list, so building one would invent the statement
-    /// text a rule writes. The panel is therefore the expression mode the
-    /// `filer-expression-mode-toggle` switches into — the toggle is drawn on
-    /// each rule, lit, and says so — and a rule is its statement verbatim,
-    /// which is the one form `scoria_formats` round-trips byte for byte.
-    ///
-    /// An absent `filters` and a bare top-level statement are both shown as
-    /// an `and` group, so every section has one group at its root; the first
-    /// edit of a bare statement therefore writes it as `and: [..]`. What
-    /// Obsidian writes for a single rule is unobserved.
-    fn render_filter_panel(
-        &mut self,
-        _base: &Base,
-        _view: &View,
-        theme: &Theme,
-        cx: &mut Context<Self>,
-    ) -> AnyElement {
-        let nodes = self.filter_nodes();
-        self.toolbar.rows = nodes
-            .iter()
-            .map(|n| match &n.kind {
-                NodeKind::Group(conj) => json!({
-                    "section": n.section.as_str(),
-                    "depth": n.depth,
-                    "conjunction": conj,
-                }),
-                NodeKind::Rule(text) => json!({
-                    "section": n.section.as_str(),
-                    "depth": n.depth,
-                    "rule": text,
-                }),
-            })
-            .collect();
-        let conjunctions: Vec<SharedString> = CONJUNCTIONS
-            .iter()
-            .map(|c| SharedString::from(*c))
-            .collect();
-        let mut body = self.panel_box("bases-toolbar-filter", theme, cx);
-        let mut section = None;
-        for (ix, node) in nodes.iter().enumerate() {
-            if section != Some(node.section) {
-                section = Some(node.section);
-                body = body.child(
-                    div()
-                        .px(px(8.))
-                        .pt(px(6.))
-                        .pb(px(2.))
-                        .text_size(px(FONT_UI_SMALLER))
-                        .text_color(theme.text_faint)
-                        .child(SharedString::from(node.section.heading())),
-                );
-            }
-            let indent = px(4. + 12. * node.depth as f32);
-            match &node.kind {
-                NodeKind::Group(conj) => {
-                    let now = CONJUNCTIONS.iter().position(|c| c == conj);
-                    let shown = SharedString::from(*conj);
-                    body = body.child(
-                        div()
-                            .flex()
-                            .flex_row()
-                            .items_center()
-                            .gap(px(4.))
-                            .pl(indent)
-                            .pr(px(4.))
-                            .child(self.combobox(
-                                "conjunction",
-                                ix,
-                                Some(shown),
-                                &conjunctions,
-                                now,
-                                theme,
-                                cx,
-                            )),
-                    );
-                    // The group's own new-rule field: typing in it appends a
-                    // rule to this group.
-                    body = body.child(
-                        div()
-                            .flex()
-                            .flex_row()
-                            .items_center()
-                            .gap(px(4.))
-                            .pl(px(4. + 12. * (node.depth + 1) as f32))
-                            .pr(px(4.))
-                            .child(div().flex_1().min_w(px(0.)).child(self.text_field(
-                                Field::Rule(ix),
-                                "",
-                                theme,
-                                cx,
-                            ))),
-                    );
-                }
-                NodeKind::Rule(text) => {
-                    body = body.child(
-                        div()
-                            .flex()
-                            .flex_row()
-                            .items_center()
-                            .gap(px(4.))
-                            .pl(indent)
-                            .pr(px(4.))
-                            .child(div().flex_1().min_w(px(0.)).child(self.text_field(
-                                Field::Rule(ix),
-                                text,
-                                theme,
-                                cx,
-                            )))
-                            .child(
-                                // `filer-expression-mode-toggle`, spelled as
-                                // Obsidian spells it. It is lit and inert:
-                                // expression mode is the only mode this panel
-                                // has, because the operator list is unprobed.
-                                div()
-                                    .id(("bases-rule-mode", ix))
-                                    .size(px(22.))
-                                    .flex()
-                                    .items_center()
-                                    .justify_center()
-                                    .rounded(px(4.))
-                                    .bg(theme.bg_active)
-                                    .tooltip(tooltip(EXPRESSION_MODE_TOGGLE))
-                                    .child(icon("code-xml", 14., theme.accent)),
-                            )
-                            .child(self.trash(
-                                "bases-rule-trash",
-                                ix,
-                                theme,
-                                cx.listener(move |this, _, _, cx| {
-                                    cx.stop_propagation();
-                                    this.remove_rule_at(ix, cx);
-                                }),
-                            )),
-                    );
-                }
-            }
-        }
-        body.into_any_element()
-    }
-
-    /// Every group and rule of both sections, flattened, which is what the
-    /// filter panel's combobox and field keys index into.
-    fn filter_nodes(&self) -> Vec<Node> {
-        let Some(base) = self.base() else {
-            return Vec::new();
-        };
-        let view = self.showing_view(base);
-        let mut out = Vec::new();
-        flatten(
-            Section::AllViews,
-            &group_tree(base.filters.as_ref()),
-            Vec::new(),
-            0,
-            &mut out,
-        );
-        flatten(
-            Section::ThisView,
-            &group_tree(view.filters.as_ref()),
-            Vec::new(),
-            0,
-            &mut out,
-        );
-        out
-    }
-
-    fn remove_rule_at(&mut self, ix: usize, cx: &mut Context<Self>) {
-        let Some(node) = self.filter_nodes().get(ix).cloned() else {
-            return;
-        };
-        self.toolbar.editing = None;
-        let path = node.path.clone();
-        self.edit_filter(
-            node.section,
-            move |filter| {
-                let mut tree = group_tree(filter.as_ref());
-                remove_at(&mut tree, &path);
-                *filter = written(tree);
-            },
-            cx,
-        );
-        cx.notify();
-    }
-
-    /// Routes a filter write to the section it belongs to: the base's own
-    /// `filters` ("All views") or the showing view's ("This view").
-    fn edit_filter<F>(&mut self, section: Section, edit: F, cx: &mut Context<Self>)
-    where
-        F: FnOnce(&mut Option<Filter>),
-    {
-        match section {
-            Section::AllViews => self.edit_base(move |base| edit(&mut base.filters), cx),
-            Section::ThisView => self.edit_view(move |view| edit(&mut view.filters), cx),
-        }
-    }
-
     // ----- the widgets --------------------------------------------------------
 
-    /// A labelled row of the Configure view and results panels.
-    fn setting_row(&self, label: &str, control: AnyElement, theme: &Theme) -> AnyElement {
-        div()
-            .flex()
-            .flex_row()
-            .items_center()
-            .justify_between()
-            .gap(px(8.))
-            .px(px(4.))
-            .py(px(3.))
-            .child(
-                div()
-                    .flex_shrink_0()
-                    .text_size(px(FONT_UI_SMALL))
-                    .text_color(theme.text_muted)
-                    .child(SharedString::from(label.to_string())),
-            )
-            .child(control)
-            .into_any_element()
-    }
-
-    /// A row of a panel: an icon slot, a label, and what a click does.
-    fn panel_row(
+    /// `.search-input-container`: the field with a magnifier at its left,
+    /// under a hairline; `which` says which list it narrows.
+    pub(super) fn search_box(
         &self,
-        prefix: &'static str,
-        ix: usize,
-        icon_name: Option<&'static str>,
-        label: SharedString,
-        theme: &Theme,
-        on_click: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static,
-    ) -> AnyElement {
-        div()
-            .id((prefix, ix))
-            .flex()
-            .flex_row()
-            .items_center()
-            .gap(px(8.))
-            .px(px(8.))
-            .py(px(4.))
-            .rounded(px(4.))
-            .cursor_pointer()
-            .hover(|s| s.bg(theme.bg_alt))
-            .on_click(on_click)
-            .child(
-                div()
-                    .size(px(16.))
-                    .flex_shrink_0()
-                    .flex()
-                    .items_center()
-                    .justify_center()
-                    .children(icon_name.map(|n| icon(n, ICON_SIZE, theme.text_muted))),
-            )
-            .child(div().whitespace_nowrap().child(label))
-            .into_any_element()
-    }
-
-    /// The `lucide-trash-2` button an entry of the sort, group and filter
-    /// panels carries.
-    fn trash(
-        &self,
-        prefix: &'static str,
-        ix: usize,
-        theme: &Theme,
-        on_click: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static,
-    ) -> AnyElement {
-        div()
-            .id((prefix, ix))
-            .size(px(22.))
-            .flex_shrink_0()
-            .flex()
-            .items_center()
-            .justify_center()
-            .rounded(px(4.))
-            .cursor_pointer()
-            .hover(|s| s.bg(theme.bg_alt))
-            .on_click(on_click)
-            .child(icon("trash-2", 14., theme.text_muted))
-            .into_any_element()
-    }
-
-    /// The head of the sort and group panels: a `plus` that opens the
-    /// property list and, on a pick, adds the entry.
-    fn add_row(
-        &self,
-        name: &'static str,
-        labels: &[SharedString],
+        which: Field,
+        placeholder: &'static str,
         theme: &Theme,
         cx: &mut Context<Self>,
     ) -> AnyElement {
-        div()
-            .flex()
-            .flex_row()
-            .items_center()
-            .px(px(4.))
-            .child(self.combobox(name, 0, None, labels, None, theme, cx))
-            .into_any_element()
-    }
-
-    /// A `.combobox-button`: the shown value, and its options while it is
-    /// open. `shown` of `None` draws the `plus` trigger the add rows use.
-    #[allow(clippy::too_many_arguments)]
-    fn combobox(
-        &self,
-        name: &'static str,
-        ix: usize,
-        shown: Option<SharedString>,
-        options: &[SharedString],
-        selected: Option<usize>,
-        theme: &Theme,
-        cx: &mut Context<Self>,
-    ) -> AnyElement {
-        let open = self.toolbar.combo == Some((name, ix));
-        let trigger = match shown {
-            Some(text) => div()
-                .flex()
-                .flex_row()
-                .items_center()
-                .justify_between()
-                .gap(px(4.))
-                .px(px(6.))
-                .h(px(22.))
-                .min_w(px(0.))
-                .rounded(px(4.))
-                .bg(theme.bg_alt)
-                .border_1()
-                .border_color(theme.border)
-                .text_size(px(FONT_UI_SMALLER))
-                .text_color(theme.text)
-                .child(
-                    div()
-                        .min_w(px(0.))
-                        .whitespace_nowrap()
-                        .overflow_hidden()
-                        .text_ellipsis()
-                        .child(text),
-                )
-                .child(icon("chevron-down", 12., theme.text_muted)),
-            None => div()
-                .flex()
-                .items_center()
-                .justify_center()
-                .size(px(22.))
-                .rounded(px(4.))
-                .bg(theme.bg_alt)
-                .border_1()
-                .border_color(theme.border)
-                .child(icon("plus", 14., theme.text_muted)),
+        let text = match &self.toolbar.editing {
+            Some(w) if *w == which => self.field_text(cx),
+            _ => String::new(),
         };
-        let mut wrap = div().relative().min_w(px(0.)).child(
-            div()
-                .id(("bases-combobox", hash_key(name, ix)))
-                .cursor_pointer()
-                .on_click(cx.listener(move |this, _, _, cx| {
-                    cx.stop_propagation();
-                    this.toolbar.combo =
-                        (this.toolbar.combo != Some((name, ix))).then_some((name, ix));
-                    cx.notify();
-                }))
-                .child(trigger),
-        );
-        if open {
-            let options: Vec<SharedString> = options.to_vec();
-            wrap = wrap.child(
-                deferred(
-                    div()
-                        .id(("bases-combobox-list", hash_key(name, ix)))
-                        .absolute()
-                        .top(px(24.))
-                        .left(px(0.))
-                        .min_w(px(180.))
-                        .max_h(px(320.))
-                        .overflow_y_scroll()
-                        .flex()
-                        .flex_col()
-                        .p(px(4.))
-                        .bg(theme.bg_secondary)
-                        .border_1()
-                        .border_color(theme.tab_divider)
-                        .rounded(px(8.))
-                        .shadow_lg()
-                        .occlude()
-                        .text_size(px(FONT_UI_SMALLER))
-                        .text_color(theme.text)
-                        .children(options.into_iter().enumerate().map(|(opt, label)| {
-                            div()
-                                .id(("bases-combobox-option", hash_key(name, ix) * 512 + opt))
-                                .flex()
-                                .flex_row()
-                                .items_center()
-                                .gap(px(6.))
-                                .px(px(6.))
-                                .py(px(3.))
-                                .rounded(px(4.))
-                                .cursor_pointer()
-                                .when(selected == Some(opt), |d| d.bg(theme.bg_active))
-                                .hover(|s| s.bg(theme.bg_alt))
-                                .on_click(cx.listener(move |this, _, _, cx| {
-                                    cx.stop_propagation();
-                                    this.combo_pick(name, ix, opt, cx);
-                                }))
-                                .child(
-                                    div()
-                                        .whitespace_nowrap()
-                                        .overflow_hidden()
-                                        .text_ellipsis()
-                                        .child(label),
-                                )
-                        })),
-                )
-                .with_priority(2),
-            );
-        }
-        wrap.into_any_element()
-    }
-
-    /// A slider over one of the layout keys' observed `(min, max, step)`
-    /// ranges: one cell per step, the way the settings sliders are drawn, so
-    /// a click lands on a value without measuring the track.
-    fn slider(
-        &self,
-        name: &'static str,
-        value: f64,
-        range: (f64, f64, f64),
-        theme: &Theme,
-        cx: &mut Context<Self>,
-    ) -> AnyElement {
-        let (min, max, step) = range;
-        let count = (((max - min) / step).round() as usize) + 1;
-        let now = (((layout::snap(value, range) - min) / step).round().max(0.) as usize).min(count);
-        let width = (120. / count as f32).max(2.);
         div()
-            .flex()
-            .flex_row()
-            .items_center()
-            .gap(px(8.))
-            .child(
-                div()
-                    .flex()
-                    .flex_row()
-                    .items_center()
-                    .h(px(14.))
-                    .children((0..count).map(|i| {
-                        div()
-                            .id(("bases-slider", hash_key(name, 0) * 1024 + i))
-                            .w(px(width))
-                            .h(px(4.))
-                            .cursor_pointer()
-                            .bg(if i <= now {
-                                theme.accent
-                            } else {
-                                theme.bg_active
-                            })
-                            .on_click(cx.listener(move |this, _, _, cx| {
-                                cx.stop_propagation();
-                                this.slider_pick(name, min + i as f64 * step, cx);
-                            }))
-                    })),
-            )
-            .child(
-                div()
-                    .flex_shrink_0()
-                    .text_size(px(FONT_UI_SMALLER))
-                    .text_color(theme.text_muted)
-                    .child(SharedString::from(number_text(value))),
-            )
+            .relative()
+            .mt(px(4.))
+            .pb(px(2.))
+            .border_b_1()
+            .border_color(theme.border)
+            .child(self.text_box(which, &text, placeholder, theme, cx))
+            .child(div().absolute().left(px(8.)).top(px(6.)).child(icon(
+                "search",
+                ICON_SIZE,
+                theme.text_muted,
+            )))
             .into_any_element()
     }
 
-    /// A text field: the shared [`TextInput`] when it is standing in for
+    /// A text input: the shared [`TextInput`] when it is standing in for
     /// `which`, and the value as a box that opens it otherwise.
-    fn text_field(
+    pub(super) fn text_box(
         &self,
         which: Field,
         value: &str,
+        placeholder: &'static str,
         theme: &Theme,
         cx: &mut Context<Self>,
     ) -> AnyElement {
-        if self.toolbar.editing == Some(which) {
+        if self.toolbar.editing.as_ref() == Some(&which) {
             if let Some(input) = self.toolbar.field.clone() {
                 return div()
-                    .id("bases-toolbar-field")
-                    .min_w(px(120.))
+                    .id(("bases-toolbar-field", hash_key(which.as_str(), 0)))
+                    .w_full()
                     // A click inside the open field is not a click away from
                     // the panel, which is what the root would read it as.
                     .on_click(|_, _, cx| cx.stop_propagation())
@@ -1808,23 +1179,29 @@ impl BasesView {
             }
         }
         let text = value.to_string();
-        let key = match which {
-            Field::Rule(ix) => ix + 1,
-            _ => 0,
+        let shown = if text.is_empty() {
+            placeholder.to_string()
+        } else {
+            text.clone()
+        };
+        let pad_left = match which {
+            Field::Search | Field::ComboSearch => 30.,
+            _ => 8.,
         };
         div()
-            .id(("bases-toolbar-field-shut", hash_key(which.as_str(), key)))
-            .min_w(px(120.))
-            .px(px(6.))
-            .h(px(22.))
+            .id(("bases-toolbar-field-shut", hash_key(which.as_str(), 0)))
+            .w_full()
+            .h(px(INPUT_HEIGHT))
+            .pl(px(pad_left))
+            .pr(px(8.))
             .flex()
             .items_center()
-            .rounded(px(4.))
+            .rounded_md()
             .bg(theme.bg_alt)
             .border_1()
             .border_color(theme.border)
             .cursor_text()
-            .text_size(px(FONT_UI_SMALLER))
+            .text_size(px(FONT_UI_SMALL))
             .text_color(if text.is_empty() {
                 theme.text_faint
             } else {
@@ -1833,111 +1210,529 @@ impl BasesView {
             .whitespace_nowrap()
             .overflow_hidden()
             .text_ellipsis()
-            .child(SharedString::from(text.clone()))
+            .child(SharedString::from(shown))
             .on_click(cx.listener(move |this, _, window, cx| {
                 cx.stop_propagation();
-                this.open_field(which, text.clone(), window, cx);
+                this.open_field(which.clone(), text.clone(), window, cx);
             }))
             .into_any_element()
     }
 
-    // ----- what the comboboxes and sliders write -----------------------------
+    /// `.bases-toolbar-menu-container-header`: the back button with the
+    /// page's title, then the page's own `more-vertical` button when it has
+    /// a menu, then the close button.
+    pub(super) fn page_header(
+        &self,
+        title: SharedString,
+        menu: bool,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
+        div()
+            .flex()
+            .flex_row()
+            .items_center()
+            .p(px(4.))
+            .child(
+                div()
+                    .id("bases-page-back")
+                    .flex()
+                    .flex_row()
+                    .items_center()
+                    .flex_1()
+                    .min_w(px(0.))
+                    .h(px(ROW_HEIGHT))
+                    .p(px(4.))
+                    .gap(px(4.))
+                    .rounded(px(4.))
+                    .cursor_pointer()
+                    .font_weight(gpui::FontWeight::MEDIUM)
+                    .hover(|s| s.bg(theme.bg_alt))
+                    .on_click(cx.listener(|this, _, window, cx| {
+                        cx.stop_propagation();
+                        this.page_back(window, cx);
+                    }))
+                    .child(icon("chevron-left", ICON_SIZE, theme.text))
+                    .child(
+                        div()
+                            .whitespace_nowrap()
+                            .overflow_hidden()
+                            .text_ellipsis()
+                            .child(title),
+                    ),
+            )
+            .when(menu, |d| {
+                d.child(
+                    div()
+                        .id("bases-page-menu")
+                        .relative()
+                        .w(px(28.))
+                        .h(px(ROW_HEIGHT))
+                        .flex()
+                        .items_center()
+                        .justify_center()
+                        .rounded(px(4.))
+                        .cursor_pointer()
+                        .when(self.toolbar.header_menu, |d| d.bg(theme.bg_alt))
+                        .hover(|s| s.bg(theme.bg_alt))
+                        .child(self.measure(key("bases-page-menu", 0)))
+                        .on_click(cx.listener(|this, _, _, cx| {
+                            cx.stop_propagation();
+                            this.toolbar.header_menu = !this.toolbar.header_menu;
+                            cx.notify();
+                        }))
+                        .child(icon("ellipsis-vertical", ICON_SIZE, theme.text_muted)),
+                )
+            })
+            .child(
+                div()
+                    .id("bases-page-close")
+                    .w(px(24.))
+                    .h(px(ROW_HEIGHT))
+                    .flex()
+                    .items_center()
+                    .justify_center()
+                    .rounded(px(4.))
+                    .cursor_pointer()
+                    .hover(|s| s.bg(theme.bg_alt))
+                    .on_click(cx.listener(|this, _, window, cx| {
+                        cx.stop_propagation();
+                        this.close_panel(window, cx);
+                    }))
+                    .child(icon("x", ICON_SIZE, theme.text_muted)),
+            )
+            .into_any_element()
+    }
 
-    /// Every combobox's write, by the name the box goes by.
-    fn combo_pick(&mut self, name: &'static str, ix: usize, opt: usize, cx: &mut Context<Self>) {
+    /// The back button of a page: the list again.
+    fn page_back(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.forget_panel_anchors();
+        self.toolbar.page = Page::List;
         self.toolbar.combo = None;
-        match name {
-            // Observed: picking a layout rewrites `type` and leaves the
-            // previous layout's keys in place.
-            "layout" => {
-                if let Some((kind, ..)) = LAYOUTS.get(opt) {
-                    let kind = kind.to_string();
-                    self.edit_view(move |view| layout::set_kind(view, &kind), cx);
-                }
+        self.toolbar.header_menu = false;
+        self.toolbar.selected = None;
+        match self.toolbar.panel {
+            Panel::Views | Panel::Properties => {
+                self.open_field(Field::Search, String::new(), window, cx)
             }
-            "rowHeight" => {
-                if let Some(h) = RowHeight::all().get(opt).copied() {
-                    self.edit_view(move |view| layout::set_row_height(view, h), cx);
-                }
+            _ => {
+                self.toolbar.editing = None;
+                self.focus_view(window, cx);
             }
-            "markers" => {
-                if let Some(m) = Markers::all().get(opt).copied() {
-                    self.edit_view(move |view| layout::set_markers(view, m), cx);
-                }
-            }
-            "imageFit" => {
-                let fit = if opt == 1 {
-                    ImageFit::Contain
-                } else {
-                    ImageFit::Cover
-                };
-                self.edit_view(move |view| layout::set_image_fit(view, fit), cx);
-            }
-            "image" => {
-                let id = opt.checked_sub(1).and_then(|i| self.property_id(i));
-                self.edit_view(move |view| layout::set_image(view, id.as_deref()), cx);
-            }
-            "sortAdd" => {
-                if let Some(id) = self.property_id(opt) {
-                    self.edit_view(
-                        move |view| prepend_sort(view, &layout::qualify(&id), "ASC"),
-                        cx,
-                    );
-                }
-            }
-            "sortProperty" => {
-                if let Some(id) = self.property_id(opt) {
-                    self.edit_view(
-                        move |view| set_sort_property(view, ix, &layout::qualify(&id)),
-                        cx,
-                    );
-                }
-            }
-            "sortDirection" => {
-                let dir = DIRECTIONS.get(opt).map(|(d, _)| d.to_string());
-                if let Some(dir) = dir {
-                    self.edit_view(move |view| set_sort_direction(view, ix, &dir), cx);
-                }
-            }
-            "groupAdd" | "groupProperty" => {
-                if let Some(id) = self.property_id(opt) {
-                    self.edit_view(
-                        move |view| set_group_property(view, &layout::qualify(&id)),
-                        cx,
-                    );
-                }
-            }
-            "groupDirection" => {
-                let dir = DIRECTIONS.get(opt).map(|(d, _)| d.to_string());
-                if let Some(dir) = dir {
-                    self.edit_view(move |view| set_group_direction(view, &dir), cx);
-                }
-            }
-            "conjunction" => {
-                let Some(conj) = CONJUNCTIONS.get(opt).copied() else {
-                    return;
-                };
-                let Some(node) = self.filter_nodes().get(ix).cloned() else {
-                    return;
-                };
-                let path = node.path.clone();
-                self.edit_filter(
-                    node.section,
-                    move |filter| {
-                        let mut tree = group_tree(filter.as_ref());
-                        set_conjunction(&mut tree, &path, conj);
-                        *filter = written(tree);
-                    },
-                    cx,
-                );
-            }
-            _ => {}
         }
         cx.notify();
     }
 
+    /// `.input-row`: a label over its control, the shape every row of a
+    /// page takes. A row with no label is the control alone.
+    pub(super) fn input_row(
+        &self,
+        label: Option<&'static str>,
+        control: AnyElement,
+        theme: &Theme,
+    ) -> AnyElement {
+        div()
+            .flex()
+            .flex_col()
+            .w_full()
+            .children(label.map(|label| {
+                div()
+                    .flex()
+                    .flex_row()
+                    .items_center()
+                    .h(px(ROW_HEIGHT))
+                    .px(px(2.))
+                    .py(px(4.))
+                    .gap(px(2.))
+                    .text_size(px(FONT_UI_SMALL))
+                    .text_color(theme.text)
+                    .child(SharedString::from(label))
+            }))
+            .child(div().w_full().child(control))
+            .into_any_element()
+    }
+
+    /// The form of a page: rows 8 px apart under `4px 8px 8px` of padding.
+    pub(super) fn page_form(&self, rows: Vec<AnyElement>) -> AnyElement {
+        div()
+            .flex()
+            .flex_col()
+            .w_full()
+            .pt(px(4.))
+            .px(px(8.))
+            .pb(px(8.))
+            .gap(px(8.))
+            .children(rows)
+            .into_any_element()
+    }
+
+    /// `.suggestion-group`: a padded run of rows; `bordered` puts the
+    /// hairline above it that the actions group carries.
+    pub(super) fn group(&self, rows: Vec<AnyElement>, bordered: bool, theme: &Theme) -> AnyElement {
+        div()
+            .flex()
+            .flex_col()
+            .w_full()
+            .p(px(6.))
+            .when(bordered, |d| d.border_t_1().border_color(theme.border))
+            .children(rows)
+            .into_any_element()
+    }
+
+    /// `.bases-toolbar-section-header`: a 13 px medium heading padded
+    /// `8px 12px`, with an optional fold triangle before it and a count
+    /// flair after it.
+    pub(super) fn section_header(
+        &self,
+        title: &'static str,
+        flair: Option<usize>,
+        fold: Option<(bool, Section)>,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
+        let mut row = div()
+            .id(("bases-section-header", hash_key(title, 0)))
+            .flex()
+            .flex_row()
+            .items_center()
+            .w_full()
+            .px(px(12.))
+            .py(px(8.))
+            .gap(px(4.))
+            .text_size(px(FONT_UI_SMALL))
+            .text_color(theme.text)
+            .font_weight(gpui::FontWeight::MEDIUM);
+        if let Some((collapsed, section)) = fold {
+            row = row
+                .cursor_pointer()
+                .on_click(cx.listener(move |this, _, _, cx| {
+                    cx.stop_propagation();
+                    this.toolbar.collapsed[section.ix()] = !this.toolbar.collapsed[section.ix()];
+                    cx.notify();
+                }))
+                .child(icon(
+                    if collapsed {
+                        "chevron-right"
+                    } else {
+                        "chevron-down"
+                    },
+                    14.,
+                    theme.text_muted,
+                ));
+        }
+        row = row.child(SharedString::from(title));
+        if let Some(n) = flair {
+            row = row.child(
+                div()
+                    .ml(px(4.))
+                    .px(px(4.))
+                    .py(px(2.))
+                    .rounded(px(4.))
+                    .bg(theme.bg_alt)
+                    .text_size(px(10.))
+                    .text_color(theme.text_muted)
+                    .font_weight(gpui::FontWeight::MEDIUM)
+                    .child(SharedString::from(n.to_string())),
+            );
+        }
+        row.into_any_element()
+    }
+
+    /// `.bases-toolbar-menu-action`: a row of an actions group — an icon and
+    /// a label, 25 px, padded `4px 4px 4px 6px`.
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn action_row(
+        &self,
+        prefix: &'static str,
+        ix: usize,
+        icon_name: &'static str,
+        label: SharedString,
+        enabled: bool,
+        theme: &Theme,
+        on_click: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static,
+    ) -> AnyElement {
+        let color = if enabled {
+            theme.text
+        } else {
+            theme.text_faint
+        };
+        let icon_color = if enabled {
+            theme.text_muted
+        } else {
+            theme.text_faint
+        };
+        div()
+            .id((prefix, ix))
+            .flex()
+            .flex_row()
+            .items_center()
+            .w_full()
+            .h(px(ROW_HEIGHT))
+            .pl(px(6.))
+            .pr(px(4.))
+            .py(px(4.))
+            .mb(px(1.))
+            .gap(px(8.))
+            .rounded(px(4.))
+            .text_color(color)
+            .when(enabled, |d| {
+                d.cursor_pointer().hover(|s| s.bg(theme.bg_alt))
+            })
+            .when(enabled, |d| d.on_click(on_click))
+            .child(icon(icon_name, ICON_SIZE, icon_color))
+            .child(div().whitespace_nowrap().child(label))
+            .into_any_element()
+    }
+
+    /// `.clickable-icon`: a 28 by 24 icon button.
+    pub(super) fn clickable_icon(
+        &self,
+        prefix: &'static str,
+        ix: usize,
+        icon_name: &'static str,
+        color: gpui::Hsla,
+        theme: &Theme,
+        on_click: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static,
+    ) -> AnyElement {
+        div()
+            .id((prefix, ix))
+            .w(px(28.))
+            .h(px(24.))
+            .flex_shrink_0()
+            .flex()
+            .items_center()
+            .justify_center()
+            .rounded(px(4.))
+            .cursor_pointer()
+            .hover(|s| s.bg(theme.bg_alt))
+            .on_click(on_click)
+            .child(icon(icon_name, ICON_SIZE, color))
+            .into_any_element()
+    }
+
+    /// The `grip-vertical` handle of a reorderable row: a press starts a
+    /// drag of row `ix` of `list`, and the rows under the pointer take it.
+    pub(super) fn grip(
+        &self,
+        list: &'static str,
+        ix: usize,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
+        div()
+            .id(("bases-grip", hash_key(list, ix)))
+            .size(px(16.))
+            .flex_shrink_0()
+            .flex()
+            .items_center()
+            .justify_center()
+            .cursor_grab()
+            .on_mouse_down(
+                MouseButton::Left,
+                cx.listener(move |this, _, _, cx| {
+                    cx.stop_propagation();
+                    this.toolbar.drag = Some((list, ix));
+                    cx.notify();
+                }),
+            )
+            .child(icon("grip-vertical", ICON_SIZE, theme.text_faint))
+            .into_any_element()
+    }
+
+    /// Wraps a reorderable row: while a grip of `list` is held, the pointer
+    /// entering this row moves the dragged row here, and letting go ends the
+    /// drag.
+    pub(super) fn drop_target<T: InteractiveElement + IntoElement>(
+        &self,
+        list: &'static str,
+        ix: usize,
+        row: T,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
+        row.on_mouse_move(cx.listener(move |this, event: &MouseMoveEvent, _, cx| {
+            let Some((from_list, from)) = this.toolbar.drag else {
+                return;
+            };
+            if from_list != list || from == ix || event.pressed_button != Some(MouseButton::Left) {
+                return;
+            }
+            this.toolbar.drag = Some((list, ix));
+            this.reorder(list, from, ix, cx);
+        }))
+        .on_mouse_up(
+            MouseButton::Left,
+            cx.listener(|this, _, _, cx| {
+                if this.toolbar.drag.take().is_some() {
+                    cx.notify();
+                }
+            }),
+        )
+        .into_any_element()
+    }
+
+    /// A row of `list` moved from `from` to `to`.
+    fn reorder(&mut self, list: &'static str, from: usize, to: usize, cx: &mut Context<Self>) {
+        match list {
+            "sort" => self.edit_view(
+                move |view| {
+                    if from < view.sort.len() && to < view.sort.len() {
+                        let entry = view.sort.remove(from);
+                        view.sort.insert(to, entry);
+                    }
+                },
+                cx,
+            ),
+            "groups" => self.reorder_group(from, to, cx),
+            _ => {}
+        }
+    }
+
+    /// A 16 px checkbox: the accent when checked, with a white check.
+    pub(super) fn check_box(&self, checked: bool, theme: &Theme) -> gpui::Div {
+        div()
+            .flex()
+            .items_center()
+            .justify_center()
+            .flex_shrink_0()
+            .size(px(16.))
+            .rounded(px(4.))
+            .border_1()
+            .border_color(if checked {
+                theme.accent
+            } else {
+                theme.border_focus
+            })
+            .when(checked, |d| {
+                d.bg(theme.accent).child(icon("check", 12., gpui::white()))
+            })
+    }
+
+    /// `input[type=range]`: a 4 px track with the accent up to the value and
+    /// a 16 px thumb, the value's text before it. A press or a drag along the
+    /// track picks the step under the pointer.
+    pub(super) fn slider(
+        &self,
+        name: &'static str,
+        value: f64,
+        range: (f64, f64, f64),
+        decimals: usize,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
+        let (min, max, _) = range;
+        let snapped = layout::snap(value, range);
+        let fraction = ((snapped - min) / (max - min)).clamp(0., 1.) as f32;
+        let k = key("bases-slider", hash_key(name, 0));
+        let pick = move |this: &mut BasesView, x: Pixels, cx: &mut Context<BasesView>| {
+            let Some(bounds) = this.anchor(k) else {
+                return;
+            };
+            let width = bounds.size.width.as_f32().max(1.);
+            let f = ((x - bounds.origin.x).as_f32() / width).clamp(0., 1.) as f64;
+            let picked = layout::snap(min + f * (max - min), range);
+            this.slider_pick(name, picked, cx);
+        };
+        let pick_move = pick;
+        div()
+            .flex()
+            .flex_row()
+            .items_center()
+            .w_full()
+            .h(px(INPUT_HEIGHT))
+            .gap(px(8.))
+            .child(
+                div()
+                    .flex_shrink_0()
+                    .min_w(px(28.))
+                    .text_size(px(FONT_UI_SMALL))
+                    .text_color(theme.text)
+                    .child(SharedString::from(format!("{snapped:.decimals$}"))),
+            )
+            .child(
+                div()
+                    .id(("bases-slider", hash_key(name, 0)))
+                    .relative()
+                    .flex_1()
+                    .h(px(16.))
+                    .flex()
+                    .items_center()
+                    .cursor_pointer()
+                    .child(self.measure(k))
+                    .on_mouse_down(
+                        MouseButton::Left,
+                        cx.listener(move |this, event: &MouseDownEvent, _, cx| {
+                            cx.stop_propagation();
+                            this.toolbar.drag = Some((name, usize::MAX));
+                            pick(this, event.position.x, cx);
+                        }),
+                    )
+                    .on_mouse_move(cx.listener(move |this, event: &MouseMoveEvent, _, cx| {
+                        if this.toolbar.drag == Some((name, usize::MAX))
+                            && event.pressed_button == Some(MouseButton::Left)
+                        {
+                            pick_move(this, event.position.x, cx);
+                        }
+                    }))
+                    .on_mouse_up(
+                        MouseButton::Left,
+                        cx.listener(move |this, _, _, cx| {
+                            if this.toolbar.drag == Some((name, usize::MAX)) {
+                                this.toolbar.drag = None;
+                                cx.notify();
+                            }
+                        }),
+                    )
+                    .child(
+                        div()
+                            .absolute()
+                            .left_0()
+                            .right_0()
+                            .top(px(6.))
+                            .h(px(4.))
+                            .rounded(px(2.))
+                            .bg(theme.border_focus),
+                    )
+                    .child(
+                        div()
+                            .absolute()
+                            .left_0()
+                            .top(px(6.))
+                            .h(px(4.))
+                            .w(gpui::relative(fraction))
+                            .rounded(px(2.))
+                            .bg(theme.accent),
+                    )
+                    .child(
+                        div()
+                            .absolute()
+                            .top_0()
+                            .left(gpui::relative(fraction))
+                            .ml(px(-8.))
+                            .size(px(16.))
+                            .rounded_full()
+                            .bg(gpui::white())
+                            .shadow_sm(),
+                    ),
+            )
+            .into_any_element()
+    }
+
     /// Every slider's write, by the key it writes.
     fn slider_pick(&mut self, name: &'static str, value: f64, cx: &mut Context<Self>) {
+        let now = self.base().map(|b| self.showing_view(b));
+        let Some(view) = now else {
+            return;
+        };
+        let unchanged = match (name, layout::Layout::of(&view)) {
+            ("cardSize", layout::Layout::Cards(c)) => c.card_size == value,
+            ("imageAspectRatio", layout::Layout::Cards(c)) => c.image_aspect_ratio == value,
+            ("imageAspectRatio", layout::Layout::Kanban(k)) => k.image_aspect_ratio == value,
+            ("columnWidth", layout::Layout::Kanban(k)) => k.column_width == value,
+            _ => false,
+        };
+        if unchanged {
+            return;
+        }
         match name {
             "cardSize" => self.edit_view(move |view| layout::set_card_size(view, value), cx),
             "columnWidth" => self.edit_view(move |view| layout::set_column_width(view, value), cx),
@@ -1948,95 +1743,617 @@ impl BasesView {
         }
     }
 
-    /// The id of the `n`th row of the property pickers, which every one of
-    /// them is built from. Rebuilt rather than cached: a picker is only open
-    /// while its panel is, and the set is a few dozen strings.
-    fn property_id(&self, n: usize) -> Option<String> {
-        let base = self.base()?;
-        let view = self.showing_view(base);
-        self.properties_of(base, &view)
-            .get(n)
-            .map(|(id, _)| id.clone())
+    // ----- comboboxes ---------------------------------------------------------
+
+    /// A `.combobox-button` and, while it is open, its
+    /// `suggestion-container`: a search field over rows of icon, label and
+    /// aux text, the picked one marked with a check.
+    pub(super) fn combobox(
+        &self,
+        spec: ComboSpec,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
+        let combo = Combo {
+            name: spec.name,
+            ix: spec.ix,
+        };
+        let open = self.toolbar.combo == Some(combo);
+        let searchable = spec.searchable;
+        let k = key("bases-combo", hash_key(spec.name, spec.ix));
+        let label_color = if spec.shown.is_some() {
+            theme.text
+        } else {
+            theme.text_faint
+        };
+        let mut trigger = div()
+            .id(("bases-combobox", hash_key(spec.name, spec.ix)))
+            .relative()
+            .flex()
+            .flex_row()
+            .items_center()
+            .h(px(INPUT_HEIGHT))
+            .min_w(px(0.))
+            .pl(px(8.))
+            .pr(px(6.))
+            .gap(px(4.))
+            .cursor_pointer()
+            .text_size(px(FONT_UI_SMALL))
+            .text_color(label_color)
+            .whitespace_nowrap()
+            .overflow_hidden()
+            .child(self.measure(k))
+            .on_click(cx.listener(move |this, _, window, cx| {
+                cx.stop_propagation();
+                if this.toolbar.combo == Some(combo) {
+                    this.close_combo(window, cx);
+                } else {
+                    this.open_combo(combo, searchable, window, cx);
+                }
+            }));
+        if spec.flat {
+            trigger = trigger.when(open, |d| d.bg(theme.bg_alt));
+        } else {
+            trigger = trigger
+                .w_full()
+                .rounded(px(5.))
+                .bg(theme.bg_active)
+                .border_1()
+                .border_color(theme.border);
+        }
+        if let Some(name) = spec.icon {
+            trigger = trigger.child(icon(name, ICON_SIZE, theme.text_muted));
+        }
+        trigger = trigger.child(
+            div()
+                .min_w(px(0.))
+                .when(!spec.flat, |d| d.flex_1())
+                .overflow_hidden()
+                .text_ellipsis()
+                .child(
+                    spec.shown
+                        .clone()
+                        .unwrap_or_else(|| SharedString::from(spec.placeholder)),
+                ),
+        );
+        if spec.clearable && spec.shown.is_some() {
+            let (name, ix) = (spec.name, spec.ix);
+            trigger = trigger.child(
+                div()
+                    .id(("bases-combobox-clear", hash_key(spec.name, spec.ix)))
+                    .flex_shrink_0()
+                    .cursor_pointer()
+                    .on_click(cx.listener(move |this, _, window, cx| {
+                        cx.stop_propagation();
+                        this.combo_clear(name, ix, window, cx);
+                    }))
+                    .child(icon("x", 14., theme.text_muted)),
+            );
+        }
+        trigger = trigger.child(icon("chevrons-up-down", 14., theme.text_muted));
+        let mut wrap = div()
+            .relative()
+            .min_w(px(0.))
+            .when(!spec.flat, |d| d.w_full())
+            .child(trigger);
+        if open {
+            wrap = wrap.child(self.render_combo_list(&spec, k, theme, cx));
+        }
+        wrap.into_any_element()
+    }
+
+    /// The open list of a combobox, hung under its trigger.
+    fn render_combo_list(
+        &self,
+        spec: &ComboSpec,
+        trigger: u64,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
+        let at = self
+            .anchor(trigger)
+            .map(|b| Point::new(b.origin.x, b.origin.y + b.size.height + px(4.)))
+            .unwrap_or_default();
+        let query = match &self.toolbar.editing {
+            Some(Field::ComboSearch) => self.field_text(cx).trim().to_ascii_lowercase(),
+            _ => String::new(),
+        };
+        let shown: Vec<(usize, &ComboOption)> = spec
+            .options
+            .iter()
+            .enumerate()
+            .filter(|(_, o)| {
+                query.is_empty()
+                    || o.label.to_ascii_lowercase().contains(&query)
+                    || o.aux
+                        .as_ref()
+                        .is_some_and(|a| a.to_ascii_lowercase().contains(&query))
+            })
+            .collect();
+        let selected_row = self.toolbar.selected;
+        let list_key = key("bases-combo-list", hash_key(spec.name, spec.ix));
+        let (name, ix) = (spec.name, spec.ix);
+        let mut list = div()
+            .id(("bases-combobox-list", hash_key(spec.name, spec.ix)))
+            .relative()
+            .flex()
+            .flex_col()
+            .w(px(COMBO_WIDTH))
+            .max_h(px(300.))
+            .bg(theme.bg_secondary)
+            .border_1()
+            .border_color(theme.tab_divider)
+            .rounded(px(8.))
+            .shadow_lg()
+            .text_size(px(FONT_UI_SMALL))
+            .text_color(theme.text)
+            .occlude()
+            .child(self.measure(list_key));
+        if spec.searchable {
+            list = list.child(div().px(px(0.)).pt(px(2.)).child(self.search_box(
+                Field::ComboSearch,
+                "Search...",
+                theme,
+                cx,
+            )));
+        }
+        let rows: Vec<AnyElement> = shown
+            .iter()
+            .enumerate()
+            .map(|(row, (opt, option))| {
+                let opt = *opt;
+                let is_pick = spec.selected == Some(opt);
+                let is_selected = selected_row == Some(row);
+                div()
+                    .id((
+                        "bases-combobox-option",
+                        hash_key(spec.name, spec.ix) * 512 + opt,
+                    ))
+                    .flex()
+                    .flex_row()
+                    .items_center()
+                    .h(px(29.))
+                    .px(px(8.))
+                    .gap(px(8.))
+                    .rounded(px(4.))
+                    .cursor_pointer()
+                    .when(is_selected, |d| d.bg(theme.bg_alt))
+                    .hover(|s| s.bg(theme.bg_alt))
+                    .on_click(cx.listener(move |this, _, window, cx| {
+                        cx.stop_propagation();
+                        this.combo_pick(name, ix, opt, window, cx);
+                    }))
+                    .children(option.icon.map(|n| icon(n, ICON_SIZE, theme.text_muted)))
+                    .child(
+                        div()
+                            .flex_1()
+                            .min_w(px(0.))
+                            .whitespace_nowrap()
+                            .overflow_hidden()
+                            .text_ellipsis()
+                            .child(option.label.clone()),
+                    )
+                    .children(option.aux.clone().map(|aux| {
+                        div()
+                            .flex_shrink_0()
+                            .text_size(px(FONT_UI_SMALLER))
+                            .text_color(theme.text_faint)
+                            .child(aux)
+                    }))
+                    .when(is_pick, |d| d.child(icon("check", 14., theme.text_muted)))
+                    .into_any_element()
+            })
+            .collect();
+        list = list.child(
+            div()
+                .id(("bases-combobox-rows", hash_key(spec.name, spec.ix)))
+                .flex()
+                .flex_col()
+                .p(px(6.))
+                .overflow_y_scroll()
+                .children(rows),
+        );
+        deferred(
+            anchored()
+                .position(at)
+                .anchor(Anchor::TopLeft)
+                .snap_to_window_with_margin(px(8.))
+                .child(list),
+        )
+        .with_priority(2)
+        .into_any_element()
+    }
+
+    /// Opens a combobox's list. A searchable one takes focus into its
+    /// field; a searchless one leaves focus on the view, where the arrows
+    /// and Enter are the view's own actions.
+    pub(super) fn open_combo(
+        &mut self,
+        combo: Combo,
+        searchable: bool,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.toolbar.combo = Some(combo);
+        self.toolbar.header_menu = false;
+        self.toolbar.selected = None;
+        if searchable {
+            self.open_field(Field::ComboSearch, String::new(), window, cx);
+        } else {
+            if self.toolbar.editing == Some(Field::ComboSearch) {
+                self.toolbar.editing = None;
+            }
+            self.focus_view(window, cx);
+        }
+        cx.notify();
+    }
+
+    pub(super) fn close_combo(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.forget_panel_anchors();
+        self.toolbar.combo = None;
+        self.toolbar.selected = None;
+        if self.toolbar.editing == Some(Field::ComboSearch) {
+            self.toolbar.editing = None;
+        }
+        // A list that opened for a row still waiting on its property closes
+        // with the row: a pending entry is never written.
+        self.toolbar.pending_sort = false;
+        self.toolbar.pending_rule = None;
+        self.focus_view(window, cx);
+        cx.notify();
+    }
+
+    /// The options of the open combobox, as the owner panel built them.
+    fn combo_options(&self, cx: &Context<Self>) -> Vec<ComboOption> {
+        let Some(combo) = self.toolbar.combo else {
+            return Vec::new();
+        };
+        let Some(base) = self.base().cloned() else {
+            return Vec::new();
+        };
+        let view = self.showing_view(&base);
+        self.options_of(combo, &base, &view, cx)
+    }
+
+    fn combo_shown_indices(&self, cx: &Context<Self>) -> Vec<usize> {
+        let query = match &self.toolbar.editing {
+            Some(Field::ComboSearch) => self.field_text(cx).trim().to_ascii_lowercase(),
+            _ => String::new(),
+        };
+        self.combo_options(cx)
+            .iter()
+            .enumerate()
+            .filter(|(_, o)| {
+                query.is_empty()
+                    || o.label.to_ascii_lowercase().contains(&query)
+                    || o.aux
+                        .as_ref()
+                        .is_some_and(|a| a.to_ascii_lowercase().contains(&query))
+            })
+            .map(|(ix, _)| ix)
+            .collect()
+    }
+
+    fn combo_list_len(&self, cx: &Context<Self>) -> usize {
+        self.combo_shown_indices(cx).len()
+    }
+
+    /// Enter in a list's search field: the selected row, else the first.
+    fn combo_pick_selected(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(combo) = self.toolbar.combo else {
+            return;
+        };
+        let shown = self.combo_shown_indices(cx);
+        let row = self.toolbar.selected.unwrap_or(0);
+        if let Some(opt) = shown.get(row).copied() {
+            self.combo_pick(combo.name, combo.ix, opt, window, cx);
+        }
+    }
+
+    /// A pick in a combobox's list, routed to the panel that owns it.
+    fn combo_pick(
+        &mut self,
+        name: &'static str,
+        ix: usize,
+        opt: usize,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.toolbar.combo = None;
+        self.toolbar.selected = None;
+        if self.toolbar.editing == Some(Field::ComboSearch) {
+            self.toolbar.editing = None;
+        }
+        self.focus_view(window, cx);
+        self.pick(name, ix, opt, window, cx);
+        cx.notify();
+    }
+
+    /// The clear button of a clearable combobox.
+    fn combo_clear(
+        &mut self,
+        name: &'static str,
+        ix: usize,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.clear(name, ix, window, cx);
+        cx.notify();
     }
 
     // ----- the property set ---------------------------------------------------
 
-    /// Every property the pickers and the checkbox list offer: the twelve
-    /// `file.*` ones, then the base's formulas, then the frontmatter
-    /// properties the rows carry, then anything the view's `order` names that
-    /// none of those reached.
+    /// Every property the view knows, with its label, kind and icon.
     ///
-    /// The file set is the one the properties panel was observed to name;
-    /// the formulas and the `order` tail are **readings** — "a checkbox list
-    /// of every property" does not say whether a formula is one, and
-    /// `formula.ppu` renders as a column, so it is offered.
-    fn properties_of(&self, base: &Base, view: &View) -> Vec<(String, String)> {
-        let mut ids: Vec<String> = FILE_PROPERTIES.iter().map(|id| id.to_string()).collect();
-        fn push(ids: &mut Vec<String>, id: String) {
-            if !ids.iter().any(|seen| same_property(seen, &id)) {
-                ids.push(id);
+    /// The `file.*` set is in the order the sort list offers it (observed);
+    /// then the base's formulas in file order; then the note properties in
+    /// `types.json`'s order followed by the rest as the rows carry them;
+    /// then anything the view's `order` names that none of those reached.
+    pub(super) fn properties_of(&self, base: &Base, view: &View) -> Vec<Prop> {
+        let mut out: Vec<Prop> = Vec::new();
+        fn push(out: &mut Vec<Prop>, p: Prop) {
+            if !out
+                .iter()
+                .any(|seen| super::writes::same_property(&seen.id, &p.id))
+            {
+                out.push(p);
             }
+        }
+        for (id, kind) in FILE_PROPERTIES {
+            push(&mut out, self.prop(base, id, *kind));
         }
         for name in base.formulas.keys() {
-            push(&mut ids, format!("formula.{name}"));
+            push(
+                &mut out,
+                self.prop(base, &format!("formula.{name}"), PropertyKind::Formula),
+            );
         }
-        for row in self.table().iter().flat_map(|t| t.rows.iter()) {
-            for name in row.file.properties.keys() {
-                push(&mut ids, format!("note.{name}"));
+        let mut note_names: Vec<String> = Vec::new();
+        if let Some(state) = self.vault() {
+            for name in state.property_types().types.keys() {
+                note_names.push(name.clone());
             }
         }
-        for id in &view.order {
-            push(&mut ids, layout::qualify(id));
+        for (name, _) in &self.property_kinds {
+            if !note_names.iter().any(|n| n == name) {
+                note_names.push(name.clone());
+            }
         }
-        ids.into_iter()
-            .map(|id| {
-                let display = scoria_bases::table::column(base, &id).display;
-                (id, display)
+        for name in note_names {
+            let kind = self.note_kind(&name);
+            push(&mut out, self.prop(base, &format!("note.{name}"), kind));
+        }
+        for id in view.order.iter().flatten() {
+            let qualified = layout::qualify(id);
+            let kind = match qualified.strip_prefix("note.") {
+                Some(name) => self.note_kind(name),
+                None => PropertyKind::Unknown,
+            };
+            push(&mut out, self.prop(base, &qualified, kind));
+        }
+        out
+    }
+
+    fn prop(&self, base: &Base, id: &str, kind: PropertyKind) -> Prop {
+        let display = scoria_bases::table::column(base, id).display;
+        Prop {
+            id: id.to_string(),
+            label: display,
+            kind,
+        }
+    }
+
+    /// A note property's kind: `types.json` first, then what its values
+    /// are, the way Obsidian infers a type for a property nobody assigned.
+    pub(super) fn note_kind(&self, name: &str) -> PropertyKind {
+        if let Some(state) = self.vault() {
+            if let Some(ty) = state
+                .property_types()
+                .types
+                .get(name)
+                .and_then(|t| PropertyType::parse(t))
+            {
+                return kind_of_type(ty);
+            }
+        }
+        match name {
+            "tags" => return PropertyKind::Tags,
+            "aliases" | "cssclasses" => return PropertyKind::List,
+            _ => {}
+        }
+        self.property_kinds
+            .iter()
+            .find(|(n, _)| n == name)
+            .map(|(_, k)| *k)
+            .unwrap_or(PropertyKind::Text)
+    }
+
+    /// The kind of any property id the panels name.
+    pub(super) fn kind_of(&self, base: &Base, view: &View, id: &str) -> PropertyKind {
+        let qualified = layout::qualify(id);
+        if qualified == "file" {
+            return PropertyKind::File;
+        }
+        self.properties_of(base, view)
+            .into_iter()
+            .find(|p| super::writes::same_property(&p.id, &qualified))
+            .map(|p| p.kind)
+            .unwrap_or(PropertyKind::Unknown)
+    }
+
+    /// The id of the `n`th property of the pickers, which every one of them
+    /// is built from.
+    pub(super) fn property_id(&self, n: usize) -> Option<String> {
+        let base = self.base()?;
+        let view = self.showing_view(base);
+        self.properties_of(base, &view).get(n).map(|p| p.id.clone())
+    }
+
+    /// The property rows of a picker: one option per property, labelled and
+    /// iconed, with the id as the aux text where it differs from the label.
+    pub(super) fn property_options(&self, props: &[Prop]) -> Vec<ComboOption> {
+        props
+            .iter()
+            .map(|p| ComboOption {
+                icon: Some(p.icon()),
+                label: SharedString::from(p.label.clone()),
+                aux: (p.label != p.id && !p.id.starts_with("note.") || p.id.starts_with("file."))
+                    .then(|| SharedString::from(p.id.clone())),
             })
             .collect()
     }
 }
 
-/// The class Obsidian puts on a rule's mode button, spelled as Obsidian
-/// spells it — `filer`, not `filter`.
-pub const EXPRESSION_MODE_TOGGLE: &str = "filer-expression-mode-toggle";
-
-/// A small checkbox, as the properties panel's rows carry.
-fn check_box(checked: bool, theme: &Theme) -> gpui::Div {
-    div()
-        .flex()
-        .items_center()
-        .justify_center()
-        .flex_shrink_0()
-        .size(px(14.))
-        .rounded_sm()
-        .border_1()
-        .border_color(if checked { theme.accent } else { theme.border })
-        .when(checked, |d| {
-            d.bg(theme.accent).child(icon("check", 10., theme.bg))
-        })
+/// One property as the panels list it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Prop {
+    pub id: String,
+    pub label: String,
+    pub kind: PropertyKind,
 }
 
-/// A stable element-id number for a `(name, index)` key.
-fn hash_key(name: &str, ix: usize) -> usize {
-    name.bytes().fold(ix.wrapping_mul(31), |h, b| {
-        h.wrapping_mul(131).wrapping_add(b as usize)
-    }) % 100_000
+impl Prop {
+    /// The icon the sort and filter lists put before the property: by its
+    /// kind, with `file.*` properties by what they hold.
+    pub fn icon(&self) -> &'static str {
+        match self.id.as_str() {
+            "file.ctime" | "file.mtime" => "clock",
+            "file.size" => "binary",
+            "file.links" | "file.embeds" => "list",
+            "file.tags" => "tags",
+            id if id.starts_with("file.") => "text",
+            "note.aliases" => "forward",
+            _ => kind_icon(self.kind),
+        }
+    }
+
+    /// The icon the properties panel puts before the property, where every
+    /// `file.*` property carries `info`.
+    pub fn panel_icon(&self) -> &'static str {
+        if self.id.starts_with("file.") {
+            "info"
+        } else {
+            self.icon()
+        }
+    }
 }
 
-/// A number as the sliders label one: integral values bare, the rest with
-/// their decimals, which is the rule the keys are written by.
-fn number_text(v: f64) -> String {
-    if v.fract() == 0. {
-        format!("{}", v as i64)
-    } else {
-        format!("{v}")
+/// The `lucide-*` icon of a property kind.
+pub fn kind_icon(kind: PropertyKind) -> &'static str {
+    match kind {
+        PropertyKind::File => "file",
+        PropertyKind::Text => "text",
+        PropertyKind::Number => "binary",
+        PropertyKind::Checkbox => "square-check",
+        PropertyKind::Date => "calendar",
+        PropertyKind::DateTime => "clock",
+        PropertyKind::List => "list",
+        PropertyKind::Tags => "tags",
+        PropertyKind::Formula => "square-function",
+        PropertyKind::Unknown => "text",
+    }
+}
+
+/// A `types.json` type as a kind.
+pub fn kind_of_type(ty: PropertyType) -> PropertyKind {
+    match ty {
+        PropertyType::Text => PropertyKind::Text,
+        PropertyType::MultiText | PropertyType::Aliases => PropertyKind::List,
+        PropertyType::Number => PropertyKind::Number,
+        PropertyType::Checkbox => PropertyKind::Checkbox,
+        PropertyType::Date => PropertyKind::Date,
+        PropertyType::DateTime => PropertyKind::DateTime,
+        PropertyType::Tags => PropertyKind::Tags,
+    }
+}
+
+/// The twelve `file.*` properties, in the order the sort list offers them,
+/// with the kind each one sorts and filters as.
+pub const FILE_PROPERTIES: &[(&str, PropertyKind)] = &[
+    ("file.name", PropertyKind::Text),
+    ("file.basename", PropertyKind::Text),
+    ("file.fullname", PropertyKind::Text),
+    ("file.path", PropertyKind::Text),
+    ("file.folder", PropertyKind::Text),
+    ("file.ext", PropertyKind::Text),
+    ("file.ctime", PropertyKind::DateTime),
+    ("file.mtime", PropertyKind::DateTime),
+    ("file.size", PropertyKind::Number),
+    ("file.links", PropertyKind::List),
+    ("file.embeds", PropertyKind::List),
+    ("file.tags", PropertyKind::Tags),
+];
+
+/// One option of a combobox's list.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ComboOption {
+    pub icon: Option<&'static str>,
+    pub label: SharedString,
+    pub aux: Option<SharedString>,
+}
+
+impl ComboOption {
+    pub fn plain(label: impl Into<SharedString>) -> ComboOption {
+        ComboOption {
+            icon: None,
+            label: label.into(),
+            aux: None,
+        }
+    }
+}
+
+/// How a combobox is drawn.
+pub struct ComboSpec {
+    pub name: &'static str,
+    pub ix: usize,
+    /// The icon before the shown value.
+    pub icon: Option<&'static str>,
+    /// The shown value; `None` draws the placeholder faint.
+    pub shown: Option<SharedString>,
+    pub placeholder: &'static str,
+    pub options: Vec<ComboOption>,
+    pub selected: Option<usize>,
+    /// Draws the clear button after the value.
+    pub clearable: bool,
+    /// Whether the list opens with a search field.
+    pub searchable: bool,
+    /// Inside a filter row's expression box: no box of its own.
+    pub flat: bool,
+}
+
+impl ComboSpec {
+    pub fn new(name: &'static str, ix: usize) -> ComboSpec {
+        ComboSpec {
+            name,
+            ix,
+            icon: None,
+            shown: None,
+            placeholder: "",
+            options: Vec::new(),
+            selected: None,
+            clearable: false,
+            searchable: true,
+            flat: false,
+        }
+    }
+}
+
+/// The placeholder a field shows while empty.
+fn placeholder_of(which: &Field) -> &'static str {
+    match which {
+        Field::Search => "Search...",
+        Field::ComboSearch => "Search...",
+        Field::Limit => "e.g. 10",
+        Field::ViewName => "View name",
+        Field::TableSearch => "Find...",
+        Field::Formula => "x + y",
+        _ => "",
     }
 }
 
 /// The view an empty base shows, which is what `edit_view` materializes for
 /// a write.
-fn default_view() -> View {
+pub(super) fn default_view() -> View {
     View {
         kind: DEFAULT_VIEW_TYPE.to_string(),
         name: DEFAULT_VIEW_NAME.to_string(),
@@ -2044,479 +2361,33 @@ fn default_view() -> View {
     }
 }
 
-/// Which of [`DIRECTIONS`] a direction is; an absent one is ascending.
-fn direction_ix(direction: Option<&str>) -> usize {
-    match direction {
-        Some(d) if d.eq_ignore_ascii_case("desc") => 1,
-        _ => 0,
-    }
-}
-
-// ---------------------------------------------------------------------------
-// What the panels write
-// ---------------------------------------------------------------------------
-
-// ----- the filter tree -------------------------------------------------------
-
-/// One group or rule of the filter panel, flattened.
-#[derive(Debug, Clone, PartialEq)]
-pub struct Node {
-    pub section: Section,
-    /// The indices to descend from the section's root group.
-    pub path: Vec<usize>,
-    pub depth: usize,
-    pub kind: NodeKind,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum NodeKind {
-    /// A conjunction group: `and`, `or` or `not`.
-    Group(&'static str),
-    /// A rule: its statement, verbatim.
-    Rule(String),
-}
-
-/// The tree the filter panel edits: an absent `filters` and a bare statement
-/// are both read as an `and` group, so every section has one group at its
-/// root and a conjunction select to go with it.
-pub fn group_tree(filter: Option<&Filter>) -> Filter {
-    match filter {
-        None => Filter::And(Vec::new()),
-        Some(Filter::Statement(s)) => Filter::And(vec![Filter::Statement(s.clone())]),
-        Some(other) => other.clone(),
-    }
-}
-
-/// What a group tree is written back as: an empty group is no `filters` key
-/// at all, which is the shape the file had before the panel touched it.
-pub fn written(tree: Filter) -> Option<Filter> {
-    let empty = match &tree {
-        Filter::And(items) | Filter::Or(items) | Filter::Not(items) => items.is_empty(),
-        Filter::Statement(_) => false,
-    };
-    if empty {
-        None
-    } else {
-        Some(tree)
-    }
-}
-
-fn conjunction_of(filter: &Filter) -> &'static str {
-    match filter {
-        Filter::And(_) => "and",
-        Filter::Or(_) => "or",
-        Filter::Not(_) => "not",
-        Filter::Statement(_) => "and",
-    }
-}
-
-fn items_of(filter: &Filter) -> Option<&Vec<Filter>> {
-    match filter {
-        Filter::And(items) | Filter::Or(items) | Filter::Not(items) => Some(items),
-        Filter::Statement(_) => None,
-    }
-}
-
-fn items_mut(filter: &mut Filter) -> Option<&mut Vec<Filter>> {
-    match filter {
-        Filter::And(items) | Filter::Or(items) | Filter::Not(items) => Some(items),
-        Filter::Statement(_) => None,
-    }
-}
-
-fn at_mut<'f>(tree: &'f mut Filter, path: &[usize]) -> Option<&'f mut Filter> {
-    match path.split_first() {
-        None => Some(tree),
-        Some((head, rest)) => at_mut(items_mut(tree)?.get_mut(*head)?, rest),
-    }
-}
-
-/// Flattens a section's tree into the nodes the panel draws.
-pub fn flatten(
-    section: Section,
-    tree: &Filter,
-    path: Vec<usize>,
-    depth: usize,
-    out: &mut Vec<Node>,
-) {
-    match tree {
-        Filter::Statement(s) => out.push(Node {
-            section,
-            path,
-            depth,
-            kind: NodeKind::Rule(s.clone()),
-        }),
-        group => {
-            out.push(Node {
-                section,
-                path: path.clone(),
-                depth,
-                kind: NodeKind::Group(conjunction_of(group)),
-            });
-            for (ix, item) in items_of(group).into_iter().flatten().enumerate() {
-                let mut child = path.clone();
-                child.push(ix);
-                flatten(section, item, child, depth + 1, out);
-            }
-        }
-    }
-}
-
-/// Rewraps the group at `path` under another conjunction, keeping its rules.
-pub fn set_conjunction(tree: &mut Filter, path: &[usize], conjunction: &str) {
-    let Some(node) = at_mut(tree, path) else {
-        return;
-    };
-    let items = match items_mut(node) {
-        Some(items) => std::mem::take(items),
-        None => return,
-    };
-    *node = match conjunction {
-        "or" => Filter::Or(items),
-        "not" => Filter::Not(items),
-        _ => Filter::And(items),
-    };
-}
-
-/// Replaces the rule at `path` with `text`, verbatim.
-pub fn set_rule(tree: &mut Filter, path: &[usize], text: &str) {
-    if let Some(node) = at_mut(tree, path) {
-        *node = Filter::Statement(text.to_string());
-    }
-}
-
-/// Appends a rule to the group at `path`. An empty statement writes nothing:
-/// the new-rule field is live before it has anything in it.
-pub fn add_rule(tree: &mut Filter, path: &[usize], text: &str) {
-    if text.is_empty() {
-        return;
-    }
-    if let Some(items) = at_mut(tree, path).and_then(items_mut) {
-        items.push(Filter::Statement(text.to_string()));
-    }
-}
-
-/// Removes whatever is at `path` from its parent group.
-pub fn remove_at(tree: &mut Filter, path: &[usize]) {
-    let Some((last, parent)) = path.split_last() else {
-        return;
-    };
-    if let Some(items) = at_mut(tree, parent).and_then(items_mut) {
-        if *last < items.len() {
-            items.remove(*last);
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use scoria_bases::Table;
-    use scoria_formats::base::Base;
-
-    fn base_of(yaml: &str) -> Base {
-        Base::from_yaml(yaml).expect("parses")
-    }
-
-    fn yaml_of(base: &Base) -> String {
-        base.to_yaml()
-    }
 
     #[test]
-    fn a_sort_added_from_the_panel_goes_to_the_head_of_the_list() {
-        // Observed: *Sort Z → A* prepends `{property, direction: DESC}`; the
-        // model holds `note.status` and the writer strips it (2026-10-30).
-        let mut base = base_of(
-            "views:\n  - type: table\n    name: V\n    sort:\n      - property: file.name\n        direction: ASC\n",
-        );
-        prepend_sort(&mut base.views[0], "note.status", "DESC");
-        assert_eq!(
-            yaml_of(&base),
-            "views:\n  - type: table\n    name: V\n    sort:\n      - property: status\n        direction: DESC\n      - property: file.name\n        direction: ASC\n"
-        );
-    }
-
-    #[test]
-    fn a_sort_entry_keeps_the_bare_id_the_file_wrote() {
-        // The writer strips `note.` and never adds it, so changing a direction
-        // must not rewrite the property.
-        let mut base =
-            base_of("views:\n  - type: table\n    name: V\n    sort:\n      - property: status\n");
-        set_sort_direction(&mut base.views[0], 0, "DESC");
-        assert_eq!(
-            yaml_of(&base),
-            "views:\n  - type: table\n    name: V\n    sort:\n      - property: status\n        direction: DESC\n"
-        );
-    }
-
-    #[test]
-    fn the_trash_button_drops_one_sort_entry_and_the_key_with_the_last() {
-        let mut base = base_of(
-            "views:\n  - type: table\n    name: V\n    sort:\n      - property: a\n      - property: b\n",
-        );
-        remove_sort(&mut base.views[0], 0);
-        assert!(yaml_of(&base).contains("property: b"));
-        remove_sort(&mut base.views[0], 0);
-        assert_eq!(yaml_of(&base), "views:\n  - type: table\n    name: V\n");
-    }
-
-    #[test]
-    fn a_group_by_added_from_the_panel_is_ascending_and_leaves_group_order_alone() {
-        let mut base =
-            base_of("views:\n  - type: table\n    name: V\n    groupOrder:\n      - todo\n");
-        set_group_property(&mut base.views[0], "note.status");
-        assert_eq!(
-            yaml_of(&base),
-            "views:\n  - type: table\n    name: V\n    groupBy:\n      property: status\n      direction: ASC\n    groupOrder:\n      - todo\n"
-        );
-    }
-
-    #[test]
-    fn a_limit_is_written_as_a_bare_number_and_show_all_drops_it() {
-        let mut base = base_of("views:\n  - type: table\n    name: V\n");
-        layout::set_limit(&mut base.views[0], parse_limit(" 103 "));
-        assert_eq!(
-            yaml_of(&base),
-            "views:\n  - type: table\n    name: V\n    limit: 103\n"
-        );
-        layout::set_limit(&mut base.views[0], parse_limit(""));
-        assert_eq!(yaml_of(&base), "views:\n  - type: table\n    name: V\n");
-        assert_eq!(parse_limit("ten"), None);
-    }
-
-    #[test]
-    fn picking_a_layout_rewrites_type_and_keeps_the_old_layouts_keys() {
-        // Observed: a list view with `markers: number` and `separator: "; "`
-        // became `type: kanban` with both keys still there.
-        let mut base = base_of(
-            "views:\n  - type: list\n    name: V\n    markers: number\n    separator: \"; \"\n",
-        );
-        layout::set_kind(&mut base.views[0], "kanban");
-        assert_eq!(
-            yaml_of(&base),
-            "views:\n  - type: kanban\n    name: V\n    markers: number\n    separator: \"; \"\n"
-        );
-    }
-
-    #[test]
-    fn checking_a_property_appends_its_id_and_unchecking_removes_it() {
-        let mut base =
-            base_of("views:\n  - type: table\n    name: V\n    order:\n      - file.name\n");
-        let shown = vec!["file.name".to_string()];
-        toggle_property(&mut base.views[0], &shown, "note.status");
-        assert_eq!(
-            yaml_of(&base),
-            "views:\n  - type: table\n    name: V\n    order:\n      - file.name\n      - status\n"
-        );
-        toggle_property(
-            &mut base.views[0],
-            &["file.name".to_string(), "note.status".to_string()],
-            "file.name",
-        );
-        assert_eq!(
-            yaml_of(&base),
-            "views:\n  - type: table\n    name: V\n    order:\n      - status\n"
-        );
-    }
-
-    #[test]
-    fn unchecking_a_column_of_a_view_with_no_order_writes_the_rest_out() {
-        // A view with no `order` shows the implied columns, so the panel has
-        // to name what is left for the uncheck to mean anything.
-        let mut base = base_of("views:\n  - type: table\n    name: V\n");
-        let shown = vec!["note.status".to_string(), "note.phase".to_string()];
-        toggle_property(&mut base.views[0], &shown, "note.status");
-        assert_eq!(
-            yaml_of(&base),
-            "views:\n  - type: table\n    name: V\n    order:\n      - phase\n"
-        );
-    }
-
-    #[test]
-    fn a_bare_id_already_in_order_is_the_same_property_as_its_qualified_form() {
-        let mut base =
-            base_of("views:\n  - type: table\n    name: V\n    order:\n      - status\n");
-        // Checking it again must not double it, and unchecking must find it.
-        add_property(&mut base.views[0], "note.status");
-        assert_eq!(base.views[0].order, vec!["status".to_string()]);
-        // Unchecking the last column is refused rather than writing an empty
-        // `order`, which the serializer omits and the implied columns come
-        // back from: the box would turn into "show every property".
-        toggle_property(&mut base.views[0], &["status".to_string()], "note.status");
-        assert_eq!(
-            yaml_of(&base),
-            "views:\n  - type: table\n    name: V\n    order:\n      - status\n"
-        );
-    }
-
-    #[test]
-    fn a_file_property_the_panel_offers_takes_obsidians_own_label() {
-        let base = base_of("views:\n  - type: table\n    name: V\n");
+    fn a_file_property_takes_obsidians_own_label_and_icon() {
+        let base = Base::from_yaml("views:\n  - type: table\n    name: V\n").unwrap();
         let labels: Vec<String> = FILE_PROPERTIES
             .iter()
-            .map(|id| scoria_bases::table::column(&base, id).display)
+            .map(|(id, _)| scoria_bases::table::column(&base, id).display)
             .collect();
         assert!(labels.contains(&"file base name".to_string()));
         assert!(labels.contains(&"created time".to_string()));
-        assert!(labels.contains(&"modified time".to_string()));
-        assert!(labels.contains(&"folder".to_string()));
-        assert!(labels.contains(&"file full name".to_string()));
         assert_eq!(FILE_PROPERTIES.len(), 12);
-    }
-
-    #[test]
-    fn an_absent_filter_reads_as_an_empty_and_group_and_writes_back_as_nothing() {
-        let tree = group_tree(None);
-        assert_eq!(tree, Filter::And(Vec::new()));
-        assert_eq!(written(tree), None);
-    }
-
-    #[test]
-    fn the_conjunction_select_rewraps_a_group_and_keeps_its_rules() {
-        let mut base = base_of(
-            "filters:\n  and:\n    - status != \"done\"\n    - not:\n        - file.ext == \"md\"\n",
-        );
-        let mut tree = group_tree(base.filters.as_ref());
-        set_conjunction(&mut tree, &[], "or");
-        base.filters = written(tree);
-        assert_eq!(
-            yaml_of(&base),
-            "filters:\n  or:\n    - status != \"done\"\n    - not:\n        - file.ext == \"md\"\n"
-        );
-    }
-
-    #[test]
-    fn a_nested_groups_own_select_is_reached_by_its_path() {
-        let mut base = base_of("filters:\n  and:\n    - a\n    - not:\n        - b\n");
-        let mut nodes = Vec::new();
-        flatten(
-            Section::AllViews,
-            &group_tree(base.filters.as_ref()),
-            Vec::new(),
-            0,
-            &mut nodes,
-        );
-        // root group, rule a, nested group, rule b
-        assert_eq!(nodes.len(), 4);
-        assert_eq!(nodes[0].kind, NodeKind::Group("and"));
-        assert_eq!(nodes[1].kind, NodeKind::Rule("a".to_string()));
-        assert_eq!(nodes[2].kind, NodeKind::Group("not"));
-        assert_eq!(nodes[2].path, vec![1]);
-        assert_eq!(nodes[3].depth, 2);
-        let mut tree = group_tree(base.filters.as_ref());
-        set_conjunction(&mut tree, &nodes[2].path, "or");
-        base.filters = written(tree);
-        assert_eq!(
-            yaml_of(&base),
-            "filters:\n  and:\n    - a\n    - or:\n        - b\n"
-        );
-    }
-
-    #[test]
-    fn a_rules_statement_is_written_verbatim() {
-        // A statement's bytes survive; only their quoting changes.
-        let mut base = base_of("filters:\n  and:\n    - a\n");
-        let mut tree = group_tree(base.filters.as_ref());
-        set_rule(&mut tree, &[0], "type + \" \"  + file.name");
-        base.filters = written(tree);
-        assert_eq!(
-            yaml_of(&base),
-            "filters:\n  and:\n    - type + \" \"  + file.name\n"
-        );
-    }
-
-    #[test]
-    fn the_last_rule_of_a_group_takes_the_filters_key_with_it() {
-        let mut base = base_of("filters:\n  and:\n    - a\n");
-        let mut tree = group_tree(base.filters.as_ref());
-        remove_at(&mut tree, &[0]);
-        base.filters = written(tree);
-        assert_eq!(yaml_of(&base), "");
-    }
-
-    #[test]
-    fn a_new_rule_lands_at_the_end_of_its_group_and_an_empty_one_writes_nothing() {
-        let mut base = base_of("filters:\n  and:\n    - a\n");
-        let mut tree = group_tree(base.filters.as_ref());
-        add_rule(&mut tree, &[], "");
-        add_rule(&mut tree, &[], "status == \"todo\"");
-        base.filters = written(tree);
-        assert_eq!(
-            yaml_of(&base),
-            "filters:\n  and:\n    - a\n    - status == \"todo\"\n"
-        );
-    }
-
-    #[test]
-    fn copy_to_clipboard_is_the_tsv_obsidian_put_on_the_clipboard() {
-        // Observed for `bases:copy-table`, which the results panel's own row
-        // produces too: one header row of display names, tab separators, no
-        // trailing newline.
-        use scoria_bases::{Cell, CellKind, Column, ColumnSource, FileData, Row, Value};
-        use std::sync::Arc;
-        fn cell(text: &str) -> Cell {
-            Cell {
-                value: Value::Str(text.to_string()),
-                error: None,
-                kind: CellKind::Text,
-                text: text.to_string(),
-            }
-        }
-        fn row(a: &str, b: &str) -> Row {
-            Row {
-                file: Arc::new(FileData::default()),
-                cells: vec![cell(a), cell(b)],
-                image: None,
-            }
-        }
-        let table = Table {
-            columns: vec![
-                Column {
-                    id: "status".to_string(),
-                    display: "status".to_string(),
-                    source: ColumnSource::Property("status".to_string()),
-                },
-                Column {
-                    id: "formula.ppu".to_string(),
-                    display: "Price per unit".to_string(),
-                    source: ColumnSource::Formula("ppu".to_string()),
-                },
-            ],
-            rows: vec![row("todo", "0.02"), row("todo", "0.06")],
-            groups: Vec::new(),
-            limited: false,
-            unknown_kind: None,
+        let p = Prop {
+            id: "file.ctime".into(),
+            label: "created time".into(),
+            kind: PropertyKind::DateTime,
         };
-        assert_eq!(
-            table_tsv(&table),
-            "status\tPrice per unit\ntodo\t0.02\ntodo\t0.06"
-        );
-        let heads_only = Table {
-            rows: Vec::new(),
-            ..table
-        };
-        assert_eq!(table_tsv(&heads_only), "status\tPrice per unit");
+        assert_eq!(p.icon(), "clock");
+        assert_eq!(p.panel_icon(), "info");
     }
 
     #[test]
-    fn a_this_view_filter_lands_on_the_view_and_an_all_views_one_on_the_base() {
-        // The two sections are two keys, and the panel's own writes are the
-        // same shape against either.
-        let mut base = base_of("views:\n  - type: table\n    name: V\n");
-        let mut tree = group_tree(base.filters.as_ref());
-        add_rule(&mut tree, &[], "file.ext == \"md\"");
-        base.filters = written(tree);
-        let mut tree = group_tree(base.views[0].filters.as_ref());
-        add_rule(&mut tree, &[], "status != \"done\"");
-        base.views[0].filters = written(tree);
-        assert_eq!(
-            yaml_of(&base),
-            "filters:\n  and:\n    - file.ext == \"md\"\nviews:\n  - type: table\n    name: V\n    filters:\n      and:\n        - status != \"done\"\n"
-        );
-    }
-
-    #[test]
-    fn the_expression_toggles_class_is_spelled_the_way_obsidian_spells_it() {
-        assert_eq!(EXPRESSION_MODE_TOGGLE, "filer-expression-mode-toggle");
+    fn the_keys_are_stable_and_distinct() {
+        assert_eq!(key("a", 1), key("a", 1));
+        assert_ne!(key("a", 1), key("a", 2));
+        assert_ne!(key("sort", 0), key("group", 0));
     }
 }

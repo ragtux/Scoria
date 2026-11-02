@@ -6141,6 +6141,109 @@ inferred from `str` rather than read off a rendered cell, because neither a
 List nor a Link column was ever rendered. A cell's own rendering is
 [[#Observed Bases table view, Obsidian 1.14.5 (installer build 1.13.7)]].
 
+## Observed Bases toolbar and panels, Obsidian 1.14.5 (installer build 1.13.7)
+
+Driven over CDP on 2026-11-01 (`tools/obsidian-probe/bases-ui.mjs`, results in
+`tools/obsidian-probe/results/2026-11-01-bases-ui.json` with a screenshot per
+state). This section supersedes the toolbar readings of the section after it.
+
+**The bar.** `.bases-header` is 40 px with a 1 px bottom border; inside it a
+29 px `.bases-toolbar` of eight `.bases-toolbar-item`s, each a 25 px
+`text-icon-button` (4 px padding, 2 px margin, 4 px gap, 13 px label, 5 px
+radius, `--text-muted`, the hover wash, `--text-accent` with `is-active` while
+the control holds a value). Left to right: the view switcher (the layout's icon,
+the view's name, `chevrons-up-down`); `N results` (`text-align-start`); **Sort**
+(`arrow-up-down`); **Group** (`stretch-horizontal`); **Filter** (`list-filter`);
+**Properties** (`list`); **Search** (`search`); **New** (`plus`). The first two
+sit at the left, the rest at the right. No item has a tooltip. The count badges
+exist in the DOM with `--bases-toolbar-badge-display: none`. The bar is the
+same in every layout; only the switcher's icon and label change. Search reveals
+`.bases-search-row` under the bar — a `Find...` input and `Showing N` — and
+Escape clears and hides it. New creates `Untitled.md` with frontmatter
+prefilled from the filters (`tags: [rock]` for `file.hasTag("rock")`,
+`rating: 1` for `rating >= 1`, `status: done` for an equality) and an empty key
+per other shown note property, and opens it in a `bases-new-item-popover`
+editor with the inline title focused.
+
+**Panels.** Each button opens `.menu.bases-toolbar-menu` 2 px under the
+button's left edge: 228 px wide (the filter panel 520, sort and group ~240),
+`--background-secondary`, a 1 px `#3f3f3f` border, an 8 px radius, the menu
+shadow, `max-height` the window. Escape closes the panel and returns focus to
+the button; the views and properties panels focus their search field on
+opening (Down selects, Enter picks or toggles); the others leave focus on the
+button. Clicking an open panel's button closes it. A combobox opens a
+`suggestion-container.combobox` under its trigger with a `Search...` field and
+rows of type icon, label and (for `file.*`) the id as aux text, the picked row
+checked; a `<select>` is the same list without the field.
+
+**Views.** `Search...` input; one `.bases-toolbar-menu-item` per view (layout
+icon, name at weight 500, `chevron-right` gear), the showing one `mod-active`;
+then **Add view** (`plus`). The gear opens the Configure view page in place:
+header `chevron-left` **Configure view**, `more-vertical`, `x`; a **View name**
+input; **Layout** combobox (Table / Cards / List / Kanban with icons; Table is
+marked whatever the layout, a bug); then per layout — table **Row height**
+(Short / Medium / Tall / Extra tall); cards **Card size** (50–800 step 10),
+**Image property** (clearable; `file` and every property), **Image fit** (Cover
+/ Contain), **Image aspect ratio** (0.25–2.5 step 0.05); list **Markers**
+(Bullet / Number / None), **Indent properties** (checkbox, wrote nothing),
+**Property separator** (text); kanban **Column width** (200–500 step 10) and
+the three image rows. The header's menu: **Default view** (`layers-2`,
+`mod-checked`), **Duplicate view** (`files`), separator, **Delete view**
+(`trash-2`, `is-warning`). **Add view writes `- type: table` / `name: View`**,
+whatever the count — the fifth view of the fixture was named `View`.
+
+**Properties.** `Find or create...` input; rows of a 16 px checkbox, type icon
+(`info` on `file.*`), name, gear: the shown columns first, then hidden `file.*`
+(`mod-implicit`), hidden formulas (`mod-formula`, `square-function`), hidden
+note properties, hidden rows in `--text-faint`; then **Add formula**
+(`square-function`) and **Hide all** (`eye-off`). An unknown name puts
+`Add "x" property` (`plus`) first. Hide all writes `order: []`. Add formula
+writes `Untitled: ""` under `formulas` and appends `formula.Untitled` to
+`order`, then opens **Edit property** with the name selected. The gear opens
+**Edit <name>**: **Display name** and **Property type** (Checkbox, Date, Date &
+time, List, Number, Text); on a formula **Display name** and **Formula** (a
+`help-circle` beside the label, a CodeMirror editor with placeholder `x + y`,
+and a status row *Valid formula* / `x-circle` *Invalid formula*). A display
+name is written under `properties.<id>.displayName`.
+
+**Filter.** Two collapsible sections, **All views** (starts folded) and
+**This view**, each with a count flair. A group: a select — **All the
+following are true** (`and`), **Any of the following are true** (`or`),
+**None of the following are true** (`not`) — then rows reading `where` /
+`and` + property combobox + operator combobox + value (contenteditable text
+with a value suggestion list, number input, date input, checkbox, or
+multi-select pills) + **Advanced filter** (`code-xml`, swapping the row to its
+statement and itself to **Simple filter**, `mouse-pointer-click`) + **Remove
+filter** (`trash-2`); a nested group is a row with its own select and
+`trash-2`; a group ends with **Add filter** and **Add filter group** (`plus`).
+Operators — file: links to, in folder, has tag, has property, does not link
+to, is not in folder, does not have tag, does not have property; number: =, ≠,
+<, ≤, >, ≥, is empty, is not empty; text: is, is not, starts with, ends with,
+is empty, contains, contains any of, contains all of, does not start with,
+does not end with, is not empty, does not contain, does not contain any of,
+does not contain all of; checkbox: is, is not. Observed pairs:
+`file.hasTag("rock")` ↔ file · has tag · [rock]; `rating >= 1` ↔ Rating · ≥ ·
+1; `status != "archived"` ↔ status · is not · archived; `done != "nope"` ↔ done
+· is not · checkbox.
+
+**Sort.** Header **Sort by**; per rule a `grip-vertical` handle, the property
+combobox, the direction combobox (**A → Z** / **Z → A**; **0 → 1** / **1 → 0**
+on a number), `trash-2`; **Add sort** (`plus`) appends a row with its
+property list open and writes nothing until a property is picked.
+
+**Group.** Header **Group by**; one row of property, direction (**A → Z** /
+**Z → A** / **Manual**) and `trash-2`. *Manual* is the state with `groupOrder`
+present: the kanban's *Hide column* wrote `groupOrder: [todo, doing]` while
+`direction` stayed `ASC`, the third group disappeared, and the combobox read
+*Manual*. Under it `.bases-group-list`: grip rows with a checkbox per value,
+**Add group** (`plus`), **Hide all** (`eye-off`).
+
+**Results.** **Limit number of results** over `input[type=number]`
+(placeholder `e.g. 10`, min 1); **Show all** (`rotate-ccw`, `mod-hidden` until
+a limit is set); **Copy to clipboard** (`copy`); **Export CSV...**
+(`file-down`). A new empty base shows one column, `file name`, over every file
+in the vault.
+
 ## What building the rest of the Bases view settled, 2026-10-25
 
 The other three layouts, the toolbar, editing through the table, the `bases:*`

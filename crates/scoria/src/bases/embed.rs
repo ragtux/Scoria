@@ -503,6 +503,7 @@ mod tests {
                 rows,
                 groups: Vec::new(),
                 limited: false,
+                all_groups: Vec::new(),
                 unknown_kind: None,
             }),
             error: None,

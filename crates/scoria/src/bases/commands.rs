@@ -7,7 +7,7 @@
 //! | Command | Palette name | Effect |
 //! | --- | --- | --- |
 //! | `bases:new-file` | Bases: Create new base | a **zero-byte** `Untitled.base`, opened |
-//! | `bases:add-view` | Bases: Add view | appends a view named `View 2` and opens its Configure view page |
+//! | `bases:add-view` | Bases: Add view | appends a view named `View` and opens its Configure view page |
 //! | `bases:insert` | Bases: Insert new base | another zero-byte base, and `![[Untitled 1.base]]` on a line of its own at the cursor |
 //! | `bases:copy-table` | Bases: Copy table to clipboard | the visible columns as TSV, and a "Copied to your clipboard" notice |
 //! | `bases:change-view` | Bases: Switch view... | not probed |
@@ -25,9 +25,11 @@
 //! than letting it run and fail.
 
 use crate::bases::cells::table_tsv;
-use crate::bases::view::BasesView;
+use crate::bases::toolbar::Section;
+use crate::bases::view::{BasesEvent, BasesView};
 use gpui::Context;
-use scoria_formats::base::{Base, View, DEFAULT_VIEW_NAME, DEFAULT_VIEW_TYPE};
+use scoria_bases::rule::{parse_rule, Operator, RuleValue};
+use scoria_formats::base::{Base, Filter, View, DEFAULT_VIEW_NAME, DEFAULT_VIEW_TYPE};
 
 /// Where `bases:add-item` would put the note it creates, which is the base's
 /// own `newItemFolder` and `newItemTemplate` — two keys the published schema
@@ -40,14 +42,23 @@ use scoria_formats::base::{Base, View, DEFAULT_VIEW_NAME, DEFAULT_VIEW_TYPE};
 pub struct NewItem {
     pub folder: Option<String>,
     pub template: Option<String>,
+    /// The frontmatter the note starts with, as text — `---` lines included
+    /// — or empty when the view implies none.
+    ///
+    /// Observed (2026-11-01, the toolbar's *New*): the note's frontmatter is
+    /// prefilled from the filters — `tags: [rock]` for `file.hasTag("rock")`,
+    /// `rating: 1` for `rating >= 1`, `status: done` for an equality — and
+    /// carries an empty key for every other note property the view shows.
+    pub frontmatter: String,
 }
 
 impl BasesView {
     /// `bases:add-view`: appends a view to the base and shows it.
     ///
-    /// Observed: the second view of a base is named `View 2`, and Obsidian
-    /// opens its Configure view page — which is the toolbar's views panel,
-    /// so the command shows the new view and then opens that page on it.
+    /// Observed (2026-11-01): every added view is named `View` — the fifth
+    /// of a base included — and Obsidian opens its Configure view page,
+    /// which is the toolbar's views panel, so the command shows the new view
+    /// and then opens that page on it.
     ///
     /// Answers the new view's index, or `None` when there is no base to
     /// append to: a file that did not parse is never written, so there is
@@ -113,18 +124,123 @@ impl BasesView {
         Some(NewItem {
             folder: base.new_item_folder.clone(),
             template: base.new_item_template.clone(),
+            frontmatter: self.new_item_frontmatter(base),
         })
+    }
+
+    /// The toolbar's *New*: the workspace creates the note.
+    pub(super) fn add_item(&mut self, cx: &mut Context<Self>) {
+        cx.emit(BasesEvent::AddItem);
+    }
+
+    /// The frontmatter a new item starts with; see [`NewItem::frontmatter`].
+    fn new_item_frontmatter(&self, base: &Base) -> String {
+        let view = self.view().cloned().unwrap_or_default();
+        let mut lines: Vec<(String, String)> = Vec::new();
+        let mut tags: Vec<String> = Vec::new();
+        let kind_of = |id: &str| self.kind_of(base, &view, id);
+        for section in [Section::AllViews, Section::ThisView] {
+            let filters = match section {
+                Section::AllViews => base.filters.as_ref(),
+                Section::ThisView => view.filters.as_ref(),
+            };
+            let statements: Vec<&str> = match filters {
+                None => Vec::new(),
+                Some(Filter::Statement(s)) => vec![s.as_str()],
+                Some(Filter::And(items)) => items
+                    .iter()
+                    .filter_map(|f| match f {
+                        Filter::Statement(s) => Some(s.as_str()),
+                        _ => None,
+                    })
+                    .collect(),
+                Some(_) => Vec::new(),
+            };
+            for statement in statements {
+                let Some(rule) = parse_rule(statement, &kind_of) else {
+                    continue;
+                };
+                match (rule.operator, &rule.value) {
+                    (Operator::HasTag, RuleValue::List(items)) => {
+                        tags.extend(items.iter().cloned())
+                    }
+                    (Operator::HasTag, RuleValue::Text(t)) if !t.is_empty() => tags.push(t.clone()),
+                    (
+                        Operator::Is
+                        | Operator::Eq
+                        | Operator::Ge
+                        | Operator::Le
+                        | Operator::CheckboxIs,
+                        value,
+                    ) if rule.property != "file" => {
+                        let key = rule.property.trim_start_matches("note.").to_string();
+                        let text = match value {
+                            RuleValue::Text(t) => yaml_scalar(t),
+                            RuleValue::Number(n) => n.clone(),
+                            RuleValue::Bool(b) => b.to_string(),
+                            RuleValue::List(items) => items.join(", "),
+                            RuleValue::None => continue,
+                        };
+                        if !lines.iter().any(|(k, _)| k == &key) {
+                            lines.push((key, text));
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+        for id in view.order.iter().flatten() {
+            let qualified = scoria_bases::layout::qualify(id);
+            let Some(name) = qualified.strip_prefix("note.") else {
+                continue;
+            };
+            if name == "tags" || lines.iter().any(|(k, _)| k == name) {
+                continue;
+            }
+            lines.push((name.to_string(), String::new()));
+        }
+        if lines.is_empty() && tags.is_empty() {
+            return String::new();
+        }
+        let mut out = String::from("---\n");
+        if !tags.is_empty() {
+            out.push_str("tags:\n");
+            for t in tags {
+                out.push_str(&format!("  - {t}\n"));
+            }
+        }
+        for (k, v) in lines {
+            if v.is_empty() {
+                out.push_str(&format!("{k}:\n"));
+            } else {
+                out.push_str(&format!("{k}: {v}\n"));
+            }
+        }
+        out.push_str("---\n");
+        out
+    }
+}
+
+/// A frontmatter scalar as Obsidian would write a plain string: bare when
+/// it reads back as that string, quoted otherwise.
+fn yaml_scalar(text: &str) -> String {
+    match serde_yaml::from_str::<serde_yaml::Value>(text) {
+        Ok(serde_yaml::Value::String(s)) if s == text && !text.contains(':') => text.to_string(),
+        _ => format!("{text:?}"),
     }
 }
 
 /// What `bases:add-view` does to the base: appends a [`DEFAULT_VIEW_TYPE`]
-/// view under [`next_view_name`].
+/// view named [`DEFAULT_VIEW_NAME`].
+///
+/// **Observed** (2026-11-01, `s15-fix-views`): the fifth view of a base was
+/// written as `- type: table` / `name: View`, the same name as the first —
+/// Obsidian neither numbers nor dedupes.
 ///
 /// A base whose file names no views is given its default view first, the way
 /// [`BasesView::edit_view`] materializes one, because that view exists in
 /// Obsidian's parsed query already and the write that follows has to carry
-/// it: appending to nothing would otherwise write a base whose only view is
-/// `View 2`.
+/// it.
 pub(super) fn append_view(base: &mut Base) {
     if base.views.is_empty() {
         base.views.push(View {
@@ -135,28 +251,9 @@ pub(super) fn append_view(base: &mut Base) {
     }
     base.views.push(View {
         kind: DEFAULT_VIEW_TYPE.to_string(),
-        name: next_view_name(&base.views),
+        name: DEFAULT_VIEW_NAME.to_string(),
         ..View::default()
     });
-}
-
-/// The name the appended view takes: `View 2` for the second view of a base,
-/// which is observed, and `View 3`, `View 4`, ... after it, which is the
-/// reading of that one datum — the number is the view's own position.
-///
-/// A name already taken is stepped past rather than repeated, since `name` is
-/// the only thing the views panel has to tell two views apart.
-/// **Unprobed**: whether Obsidian dedupes at all, and whether it compares
-/// names case-insensitively; this compares them byte for byte.
-pub(super) fn next_view_name(views: &[View]) -> String {
-    let mut n = views.len() + 1;
-    loop {
-        let name = format!("{DEFAULT_VIEW_NAME} {n}");
-        if !views.iter().any(|v| v.name == name) {
-            return name;
-        }
-        n += 1;
-    }
 }
 
 #[cfg(test)]
@@ -207,6 +304,7 @@ mod tests {
             columns: vec![column("status", "status"), column("ppu", "Price per unit")],
             rows: rows.clone(),
             groups: vec![Group { key: None, rows }],
+            all_groups: Vec::new(),
             limited: false,
             unknown_kind: None,
         };
@@ -224,6 +322,7 @@ mod tests {
             columns: vec![column("status", "status")],
             rows: Vec::new(),
             groups: Vec::new(),
+            all_groups: Vec::new(),
             limited: false,
             unknown_kind: None,
         };
@@ -231,15 +330,15 @@ mod tests {
     }
 
     #[test]
-    fn add_view_appends_a_view_named_view_2_and_writes_obsidians_bytes() {
+    fn add_view_appends_a_view_named_view_and_writes_obsidians_bytes() {
         let mut base = Base::from_yaml("views:\n  - type: table\n    name: View\n").unwrap();
         append_view(&mut base);
         assert_eq!(base.views.len(), 2);
-        assert_eq!(base.views[1].name, "View 2");
+        assert_eq!(base.views[1].name, "View");
         assert_eq!(base.views[1].kind, "table");
         assert_eq!(
             base.to_yaml(),
-            "views:\n  - type: table\n    name: View\n  - type: table\n    name: View 2\n"
+            "views:\n  - type: table\n    name: View\n  - type: table\n    name: View\n"
         );
     }
 
@@ -251,19 +350,14 @@ mod tests {
         append_view(&mut base);
         assert_eq!(
             base.to_yaml(),
-            "views:\n  - type: table\n    name: View\n  - type: table\n    name: View 2\n"
+            "views:\n  - type: table\n    name: View\n  - type: table\n    name: View\n"
         );
     }
 
     #[test]
-    fn the_next_free_name_steps_past_an_existing_view_2() {
-        let base =
-            Base::from_yaml("views:\n  - type: table\n    name: View 2\n").expect("it parses");
-        assert_eq!(next_view_name(&base.views), "View 3");
-        let base = Base::from_yaml(
-            "views:\n  - type: table\n    name: View\n  - type: table\n    name: View 3\n",
-        )
-        .expect("it parses");
-        assert_eq!(next_view_name(&base.views), "View 4");
+    fn a_frontmatter_scalar_is_bare_when_it_reads_back_as_itself() {
+        assert_eq!(yaml_scalar("done"), "done");
+        assert_eq!(yaml_scalar("true"), "\"true\"");
+        assert_eq!(yaml_scalar("a: b"), "\"a: b\"");
     }
 }

@@ -101,10 +101,20 @@ pub struct Group {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Table {
     pub columns: Vec<Column>,
-    /// Every row in view order, groups flattened. A view with no `groupBy`
-    /// has one group holding these same rows.
+    /// Every row in view order, groups flattened — so only the rows of the
+    /// groups the view **shows**: a group `groupOrder` leaves unnamed is not
+    /// here. A view with no `groupBy` has one group holding these same rows.
     pub rows: Vec<Row>,
+    /// The groups the view shows, in its order: `groupOrder`'s when the key
+    /// is present, else the `groupBy` direction's.
     pub groups: Vec<Group>,
+    /// Every group key the rows produce, in the `groupBy` direction's order
+    /// and ignoring `groupOrder` — the hidden ones included. This is what the
+    /// group panel's Manual list shows, with the hidden groups unchecked
+    /// (observed: a kanban grouped by `status` with `groupOrder: [todo,
+    /// doing]` drew two columns and listed `todo 2`, `doing 2`, `done 3`).
+    /// Empty for a view with no `groupBy`.
+    pub all_groups: Vec<Option<String>>,
     /// Set when `limit` cut rows off the end.
     pub limited: bool,
     /// A view whose `type` is not one this build draws. Obsidian shows
@@ -309,14 +319,19 @@ pub fn passes(filters: Option<&Filter>, ctx: &dyn Context) -> bool {
     }
 }
 
-/// The columns a view shows: its `order`, one column per id.
+/// The columns a view shows.
 ///
-/// A view with no `order` answers **no columns here**, because the properties
-/// the rows carry are not reachable from a [`View`] alone. [`build`] fills
-/// those in from the rows it just filtered; a caller that wants them without
-/// building a table should use [`build`] and read [`Table::columns`].
-pub fn columns(base: &Base, view: &View) -> Vec<Column> {
-    view.order.iter().map(|id| column(base, id)).collect()
+/// An `order` is exactly the columns, one per id — and `order: []` is
+/// therefore **no columns**, which is what the properties panel's *Hide all*
+/// writes. A view with no `order` key shows the columns `rows` imply (see
+/// [`implied_columns`]), which is why the rows come in: they are not
+/// reachable from a [`View`] alone. [`build`] passes the rows it just
+/// filtered.
+pub fn columns(base: &Base, view: &View, rows: &[Arc<FileData>]) -> Vec<Column> {
+    match &view.order {
+        Some(order) => order.iter().map(|id| column(base, id)).collect(),
+        None => implied_columns(base, rows),
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -397,8 +412,16 @@ fn sorted(mut keyed: Vec<Keyed>, sort: &[Sort]) -> Vec<Keyed> {
 /// It takes the whole [`View`] rather than the list so that it never has to
 /// name `serde_yaml`: `scoria-bases` does not depend on it, and the entries'
 /// type arrives through [`scoria_formats`].
-fn group_order_keys(view: &View) -> Vec<Option<String>> {
-    view.group_order
+///
+/// `None` when the view has no `groupOrder`. The model keeps the key as a
+/// list that is empty when absent, so `groupOrder: []` reads as no key —
+/// which is also what the writer does with one.
+fn group_order_keys(view: &View) -> Option<Vec<Option<String>>> {
+    if view.group_order.is_empty() {
+        return None;
+    }
+    let keys = view
+        .group_order
         .iter()
         .map(|value| {
             if value.is_null() {
@@ -413,7 +436,8 @@ fn group_order_keys(view: &View) -> Vec<Option<String>> {
                 value.as_f64().map(crate::value::js_number)
             }
         })
-        .collect()
+        .collect();
+    Some(keys)
 }
 
 /// Splits the rows into groups and puts the groups in the view's order.
@@ -424,12 +448,24 @@ fn group_order_keys(view: &View) -> Vec<Option<String>> {
 /// string". A null key is its own group — Obsidian's "no value" one — and is
 /// the group a `groupOrder` null names.
 ///
+/// A `groupOrder` is a **whitelist**: with the key present, only the groups
+/// it names show, in its order, and a group it does not name is hidden.
+/// Observed on 1.14.5 (`2026-11-01-bases-ui.json`, s26 `hideColumn`): the
+/// kanban column menu's *Hide column* on a board grouped by `status` wrote
+/// `groupOrder: [todo, doing]`, the third group `done` left the board, and
+/// `groupBy.direction` stayed `ASC`. With no `groupOrder` every group shows,
+/// in the direction's order. An entry that names no group is ignored.
+///
+/// The second list answered is every group, hidden or not, in the
+/// direction's order — [`Table::all_groups`], which is what the panel lists.
+///
 /// **Unprobed:** the text a group header draws, for a null key or any other
-/// (no group header was ever rendered in the run), and where a group that
-/// `groupOrder` does not name goes. Those groups are appended after the named
-/// ones, in the `groupBy` direction's own order, which is what a hand-dragged
-/// prefix implies.
-fn grouped(keyed: Vec<Keyed>, group_by: &GroupBy, named: &[Option<String>]) -> Vec<Group> {
+/// (no group header was ever rendered in the run).
+fn grouped(
+    keyed: Vec<Keyed>,
+    group_by: &GroupBy,
+    named: Option<&[Option<String>]>,
+) -> (Vec<Group>, Vec<Option<String>>) {
     let mut keys: Vec<Option<String>> = Vec::new();
     let mut values: Vec<Option<Value>> = Vec::new();
     let mut buckets: Vec<Vec<Row>> = Vec::new();
@@ -459,21 +495,32 @@ fn grouped(keyed: Vec<Keyed>, group_by: &GroupBy, named: &[Option<String>]) -> V
             ord
         }
     });
+    let all: Vec<Option<String>> = order.iter().map(|&ix| keys[ix].clone()).collect();
 
-    if !named.is_empty() {
-        order.sort_by_key(|&ix| match named.iter().position(|n| *n == keys[ix]) {
-            Some(at) => (0usize, at),
-            None => (1, 0),
-        });
-    }
+    let shown: Vec<usize> = match named {
+        None => order,
+        Some(named) => {
+            let mut shown = Vec::new();
+            for name in named {
+                if let Some(ix) = keys.iter().position(|k| k == name) {
+                    // A key named twice shows once, where it was named first.
+                    if !shown.contains(&ix) {
+                        shown.push(ix);
+                    }
+                }
+            }
+            shown
+        }
+    };
 
-    order
+    let groups = shown
         .into_iter()
         .map(|ix| Group {
             key: keys[ix].clone(),
             rows: std::mem::take(&mut buckets[ix]),
         })
-        .collect()
+        .collect();
+    (groups, all)
 }
 
 // ---------------------------------------------------------------------------
@@ -491,17 +538,19 @@ fn default_view() -> View {
     }
 }
 
-/// The columns a view with no `order` shows: every frontmatter property the
-/// filtered rows carry, each as the qualified `note.<name>` id Obsidian writes
-/// when it qualifies one itself, in the order the rows first mention them.
+/// The columns a view with no `order` key shows: every frontmatter property
+/// the filtered rows carry, each as the qualified `note.<name>` id Obsidian
+/// writes when it qualifies one itself, in the order the rows first mention
+/// them.
 ///
 /// **Unprobed.** No fixture reached the renderer without an `order`, so
 /// nothing says whether Obsidian shows every property, only the ones in its
 /// own property registry, or `file.name` alongside them. What is observed is
 /// the other half: `order` is exactly the columns, so *Hide column* dropping
 /// `file.name` from `order` dropped it from the header row and from the copied
-/// TSV, which means nothing is forced into a view that has an `order`.
-fn implied_columns(base: &Base, rows: &[Arc<FileData>]) -> Vec<Column> {
+/// TSV, and *Hide all* wrote `order: []` — which means nothing is forced into
+/// a view that has an `order`, and an empty one shows nothing at all.
+pub fn implied_columns(base: &Base, rows: &[Arc<FileData>]) -> Vec<Column> {
     let mut seen: IndexMap<String, ()> = IndexMap::new();
     for file in rows {
         for name in file.properties.keys() {
@@ -546,8 +595,9 @@ fn image_property(view: &View) -> Option<String> {
 ///    nothing cut. The results panel calls the control "Limit number of
 ///    results" and offers "Show all (4)" beside it, counting rows rather than
 ///    groups, which is why the cut lands here.
-/// 5. **Group**, by `groupBy`, ordered by `groupOrder` and then by the
-///    `groupBy` direction.
+/// 5. **Group**, by `groupBy`. A `groupOrder` names the groups that show
+///    and their order; without one every group shows in the `groupBy`
+///    direction's order. [`Table::all_groups`] lists every group either way.
 pub fn build(base: &Base, view_ix: usize, env: &Env) -> Table {
     let fallback;
     let view = match base.views.get(view_ix) {
@@ -561,6 +611,7 @@ pub fn build(base: &Base, view_ix: usize, env: &Env) -> Table {
                 columns: Vec::new(),
                 rows: Vec::new(),
                 groups: Vec::new(),
+                all_groups: Vec::new(),
                 limited: false,
                 unknown_kind: None,
             }
@@ -578,6 +629,7 @@ pub fn build(base: &Base, view_ix: usize, env: &Env) -> Table {
             columns: Vec::new(),
             rows: Vec::new(),
             groups: Vec::new(),
+            all_groups: Vec::new(),
             limited: false,
             unknown_kind: Some(view.kind.clone()),
         };
@@ -597,11 +649,7 @@ pub fn build(base: &Base, view_ix: usize, env: &Env) -> Table {
         .cloned()
         .collect();
 
-    let columns = if view.order.is_empty() {
-        implied_columns(base, &passing)
-    } else {
-        columns(base, view)
-    };
+    let columns = columns(base, view, &passing);
 
     let group_source = view.group_by.as_ref().map(|g| source_of(&g.property));
     // The cards and kanban layouts' `image` key names a property that is not
@@ -652,15 +700,18 @@ pub fn build(base: &Base, view_ix: usize, env: &Env) -> Table {
         }
     }
 
-    let groups = match &view.group_by {
+    let (groups, all_groups) = match &view.group_by {
         Some(group_by) => {
             let named = group_order_keys(view);
-            grouped(keyed, group_by, &named)
+            grouped(keyed, group_by, named.as_deref())
         }
-        None => vec![Group {
-            key: None,
-            rows: keyed.into_iter().map(|k| k.row).collect(),
-        }],
+        None => (
+            vec![Group {
+                key: None,
+                rows: keyed.into_iter().map(|k| k.row).collect(),
+            }],
+            Vec::new(),
+        ),
     };
     let rows: Vec<Row> = groups.iter().flat_map(|g| g.rows.iter().cloned()).collect();
 
@@ -668,6 +719,7 @@ pub fn build(base: &Base, view_ix: usize, env: &Env) -> Table {
         columns,
         rows,
         groups,
+        all_groups,
         limited,
         unknown_kind: None,
     }

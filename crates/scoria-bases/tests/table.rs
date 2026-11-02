@@ -631,8 +631,12 @@ fn groups_come_out_in_the_group_bys_direction() {
     assert_eq!(keys, [Some("beta"), Some("alpha"), None]);
 }
 
-/// A `groupOrder` entry may be a null, which is the "no value" group. Groups
-/// it does not name follow, in the `groupBy` direction's own order.
+/// A `groupOrder` entry may be a null, which is the "no value" group. A
+/// group it does not name is **hidden**: observed on s26 `hideColumn`
+/// (2026-11-01), where the kanban column menu's *Hide column* wrote
+/// `groupOrder: [todo, doing]` and the `done` column left the board while
+/// `groupBy.direction` stayed `ASC`. The hidden group is still in
+/// `all_groups`, which is what the panel's Manual list shows.
 #[test]
 fn group_order_names_the_groups_including_the_null_one() {
     let rows = vec![
@@ -656,7 +660,86 @@ fn group_order_names_the_groups_including_the_null_one() {
         &env(rows),
     );
     let keys: Vec<Option<&str>> = table.groups.iter().map(|g| g.key.as_deref()).collect();
-    assert_eq!(keys, [Some("beta"), None, Some("alpha"), Some("gamma")]);
+    assert_eq!(keys, [Some("beta"), None, Some("alpha")]);
+    // `gamma` is hidden, so its row is not among the table's rows either.
+    assert_eq!(
+        table
+            .rows
+            .iter()
+            .map(|r| r.file.name.as_str())
+            .collect::<Vec<_>>(),
+        ["C", "B", "A"]
+    );
+    // ... but the panel still lists it, in the direction's order.
+    assert_eq!(
+        table.all_groups,
+        [
+            None,
+            Some("alpha".to_string()),
+            Some("beta".to_string()),
+            Some("gamma".to_string())
+        ]
+    );
+}
+
+/// The observed case itself: `groupOrder: [todo, doing]` over three groups.
+#[test]
+fn a_group_order_hides_the_groups_it_does_not_name() {
+    let rows = vec![
+        note("A", &[("status", Value::str("done"))], &[]),
+        note("B", &[("status", Value::str("todo"))], &[]),
+        note("C", &[("status", Value::str("doing"))], &[]),
+        note("D", &[("status", Value::str("done"))], &[]),
+    ];
+    let with = "views:\n  - type: kanban\n    name: Board\n    groupBy:\n      property: status\n      direction: ASC\n    groupOrder:\n      - todo\n      - doing\n    order:\n      - file.name\n";
+    let table = table::build(&base(with), 0, &env(rows.clone()));
+    let keys: Vec<Option<&str>> = table.groups.iter().map(|g| g.key.as_deref()).collect();
+    assert_eq!(
+        keys,
+        [Some("todo"), Some("doing")],
+        "named ones only, in groupOrder's order"
+    );
+    assert_eq!(table.rows.len(), 2);
+    assert_eq!(
+        table.all_groups,
+        [
+            Some("doing".to_string()),
+            Some("done".to_string()),
+            Some("todo".to_string())
+        ],
+        "every group, in the direction's order, groupOrder ignored"
+    );
+
+    // Without the key, every group shows in the direction's order and
+    // `all_groups` is the same list.
+    let without = with.replace("    groupOrder:\n      - todo\n      - doing\n", "");
+    let table = table::build(&base(&without), 0, &env(rows));
+    let keys: Vec<Option<String>> = table.groups.iter().map(|g| g.key.clone()).collect();
+    assert_eq!(keys, table.all_groups);
+    assert_eq!(table.rows.len(), 4);
+    // A view with no `groupBy` lists no groups for the panel.
+    let flat = table::build(
+        &base("views:\n  - type: table\n    name: V\n    order: [file.name]\n"),
+        0,
+        &env(vec![]),
+    );
+    assert!(flat.all_groups.is_empty());
+}
+
+/// A `groupOrder` entry that names no group is skipped rather than drawn
+/// empty. **Unprobed**: nothing in the run left a stale name behind.
+#[test]
+fn a_group_order_entry_with_no_rows_is_skipped() {
+    let rows = vec![note("A", &[("g", Value::str("x"))], &[])];
+    let table = table::build(
+        &base(
+            "views:\n  - type: table\n    name: V\n    order: [file.name]\n    groupBy:\n      property: g\n    groupOrder: [gone, x, x]\n",
+        ),
+        0,
+        &env(rows),
+    );
+    let keys: Vec<Option<&str>> = table.groups.iter().map(|g| g.key.as_deref()).collect();
+    assert_eq!(keys, [Some("x")]);
 }
 
 /// A group's identity is its key's rendered string, which is how Obsidian
@@ -749,9 +832,52 @@ fn a_view_with_no_order_takes_the_rows_own_properties() {
     assert_eq!(displays(&table), ["type", "status", "density"]);
     assert_eq!(texts(&table), [["rock", "todo", ""], ["", "done", "1"]]);
 
-    // `columns()` cannot see the rows, so it answers only the view's `order`.
+    // `columns()` answers the same implied set when handed the rows.
     let empty = base("");
-    assert!(table::columns(&empty, &scoria_formats::base::View::default()).is_empty());
+    let view = scoria_formats::base::View::default();
+    assert_eq!(
+        table::columns(
+            &empty,
+            &view,
+            &table
+                .rows
+                .iter()
+                .map(|r| r.file.clone())
+                .collect::<Vec<_>>()
+        ),
+        table.columns
+    );
+    assert!(table::columns(&empty, &view, &[]).is_empty());
+}
+
+/// `order: []` is not the absent key: the properties panel's *Hide all*
+/// wrote it (s16 `hideAllFile`, 2026-11-01) and the view then shows no
+/// columns at all, while a view with no `order` still shows the implied ones.
+#[test]
+fn an_empty_order_is_no_columns_and_an_absent_one_is_the_implied_ones() {
+    let rows = vec![note("A", &[("status", Value::str("todo"))], &[])];
+    let hidden = table::build(
+        &base("views:\n  - type: table\n    name: V\n    order: []\n"),
+        0,
+        &env(rows.clone()),
+    );
+    assert!(hidden.columns.is_empty());
+    assert_eq!(hidden.rows.len(), 1, "the rows are still there, cell-less");
+    assert!(hidden.rows[0].cells.is_empty());
+
+    let implied = table::build(
+        &base("views:\n  - type: table\n    name: V\n"),
+        0,
+        &env(rows),
+    );
+    assert_eq!(
+        implied
+            .columns
+            .iter()
+            .map(|c| c.id.as_str())
+            .collect::<Vec<_>>(),
+        ["note.status"]
+    );
 }
 
 // ---------------------------------------------------------------------------

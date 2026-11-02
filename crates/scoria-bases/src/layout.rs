@@ -43,8 +43,10 @@
 //! reads [`INDENT_PROPERTIES_KEY`], the plain spelling, and nothing writes it.
 
 use indexmap::IndexMap;
-use scoria_formats::base::{written_id, View};
+use scoria_formats::base::{written_id, Base, PropertyConfig, View};
 use serde_yaml::{Mapping, Value};
+
+use crate::table::qualified_id;
 
 /// The four layouts Obsidian registers, in the order the Configure view
 /// page's Layout combobox offers them: the name, the label and the
@@ -542,6 +544,192 @@ pub fn set_limit(view: &mut View, limit: Option<u64>) {
     view.limit = limit;
 }
 
+// ---------------------------------------------------------------------------
+// The base's own edits: views, display names, formulas, group order
+// ---------------------------------------------------------------------------
+//
+// What the view switcher, the properties panel and the group panel write
+// above the layout keys. Each is observed where its note says so, and the
+// rest is the plain reading of the file Obsidian writes
+// (`tools/obsidian-probe/results/2026-11-01-bases-ui.json`, 1.14.5).
+
+/// Whether two property ids name the same property: `status` and
+/// `note.status` do, case-insensitively, which is how the vault compares
+/// every other name.
+pub fn same_property(a: &str, b: &str) -> bool {
+    qualified_id(a).eq_ignore_ascii_case(&qualified_id(b))
+}
+
+/// The view's `name`. Obsidian refuses a file whose view has an empty name,
+/// so an empty or blank one is ignored here rather than written. **Unprobed**:
+/// what the rename field does with a blank entry.
+pub fn rename_view(view: &mut View, name: &str) {
+    if !name.trim().is_empty() {
+        view.name = name.to_string();
+    }
+}
+
+/// *Duplicate view*: a clone of the `ix`th view inserted right after it,
+/// under the same name — Obsidian allows duplicate names, it calls every
+/// added view `View`. Answers the clone's index, or `None` for an `ix` the
+/// base has no view at.
+pub fn duplicate_view(base: &mut Base, ix: usize) -> Option<usize> {
+    let copy = base.views.get(ix)?.clone();
+    base.views.insert(ix + 1, copy);
+    Some(ix + 1)
+}
+
+/// *Delete view*. Deleting the last view leaves a base with none, which
+/// [`crate::table::build`] shows as the default table view and Obsidian
+/// writes back as one; **unprobed** whether its own menu refuses the last.
+pub fn delete_view(base: &mut Base, ix: usize) {
+    if ix < base.views.len() {
+        base.views.remove(ix);
+    }
+}
+
+/// Makes the `ix`th view the one the base opens on, which is the first in
+/// `views`: the view is moved to index 0 and the rest keep their order.
+pub fn make_default_view(base: &mut Base, ix: usize) {
+    if ix < base.views.len() && ix != 0 {
+        let view = base.views.remove(ix);
+        base.views.insert(0, view);
+    }
+}
+
+/// `properties.<id>.displayName`, which the property page writes
+/// (s04-properties-panel). The lookup key is the **qualified** id — see
+/// [`crate::table::column`] — but the fixture carried both `status:` and
+/// `note.rating:` spellings, so an existing entry for the same property is
+/// updated under whichever spelling it has, and a new one is inserted under
+/// the qualified id. `None` or an empty name clears it, and a config left
+/// with nothing in it is dropped.
+pub fn set_display_name(base: &mut Base, id: &str, name: Option<&str>) {
+    let name = name.map(str::trim).filter(|n| !n.is_empty());
+    let existing = base
+        .properties
+        .keys()
+        .find(|k| same_property(k, id))
+        .cloned();
+    match (existing, name) {
+        (Some(key), Some(name)) => {
+            base.properties[&key].display_name = Some(name.to_string());
+        }
+        (Some(key), None) => {
+            let cfg = &mut base.properties[&key];
+            cfg.display_name = None;
+            if cfg.is_dropped() {
+                base.properties.shift_remove(&key);
+            }
+        }
+        (None, Some(name)) => {
+            base.properties.insert(
+                qualified_id(id),
+                PropertyConfig {
+                    display_name: Some(name.to_string()),
+                    ..PropertyConfig::default()
+                },
+            );
+        }
+        (None, None) => {}
+    }
+}
+
+/// Shows one more column: appends `id` to the view's `order`.
+///
+/// `shown` is the columns the view resolves to now, which is what a view
+/// with no `order` needs: it shows the columns its rows imply, so naming one
+/// more has to name those too, or the view would collapse to the one column.
+/// The implied ids are materialized first and `id` goes after them.
+/// **Unprobed** on a view with no `order`; observed on one with: *Add
+/// formula* appended `formula.Untitled` to the end of `order`.
+pub fn add_column(view: &mut View, shown: &[String], id: &str) {
+    let order = view.order.get_or_insert_with(|| shown.to_vec());
+    if !order.iter().any(|o| same_property(o, id)) {
+        order.push(id.to_string());
+    }
+}
+
+/// The name *Add formula* gives a new formula: `Untitled`, then `Untitled 1`,
+/// `Untitled 2`, … while the name is taken. Only `Untitled` itself is
+/// observed (s16 `fileAfterAddFormula`); the numbering is **unprobed**.
+pub fn next_formula_name(base: &Base) -> String {
+    let taken = |name: &str| base.formulas.keys().any(|k| k.eq_ignore_ascii_case(name));
+    if !taken("Untitled") {
+        return "Untitled".to_string();
+    }
+    (1..)
+        .map(|n| format!("Untitled {n}"))
+        .find(|name| !taken(name))
+        .expect("the integers do not run out")
+}
+
+/// *Add formula*, observed on s16: writes `formulas: { Untitled: "" }` and
+/// appends `formula.Untitled` to the view's `order`. `shown` is what
+/// [`add_column`] needs for a view with no `order`. Answers the name.
+pub fn add_formula(base: &mut Base, view_ix: usize, shown: &[String]) -> String {
+    let name = next_formula_name(base);
+    base.formulas.insert(name.clone(), String::new());
+    if let Some(view) = base.views.get_mut(view_ix) {
+        add_column(view, shown, &format!("formula.{name}"));
+    }
+    name
+}
+
+/// The formula editor's write: `formulas.<name>`, the statement verbatim. A
+/// name the base has no formula for is added.
+pub fn set_formula(base: &mut Base, name: &str, statement: &str) {
+    base.formulas
+        .insert(name.to_string(), statement.to_string());
+}
+
+/// Removes a formula and every reference to its `formula.<name>` id: from
+/// each view's `order`, `sort`, `groupBy` and `summaries`, and from the
+/// base's `properties`. **Unprobed** — the delete row's write was never
+/// read; this is what leaves no dangling column behind.
+pub fn remove_formula(base: &mut Base, name: &str) {
+    base.formulas.shift_remove(name);
+    let id = format!("formula.{name}");
+    for view in &mut base.views {
+        if let Some(order) = view.order.as_mut() {
+            order.retain(|o| !same_property(o, &id));
+        }
+        view.sort.retain(|s| !same_property(&s.property, &id));
+        if view
+            .group_by
+            .as_ref()
+            .is_some_and(|g| same_property(&g.property, &id))
+        {
+            view.group_by = None;
+        }
+        view.summaries.retain(|k, _| !same_property(k, &id));
+    }
+    base.properties.retain(|k, _| !same_property(k, &id));
+}
+
+/// `groupOrder`: the groups the view shows, in order, a `None` naming the
+/// no-value group as a YAML `null`. `None` removes the key, which the model
+/// holds as an empty list — so `Some(vec![])` removes it too, and no
+/// group-hiding-all state is representable; **unprobed** whether Obsidian
+/// ever writes an empty one.
+pub fn set_group_order(view: &mut View, keys: Option<Vec<Option<String>>>) {
+    view.group_order = keys
+        .unwrap_or_default()
+        .into_iter()
+        .map(|k| match k {
+            Some(s) => Value::String(s),
+            None => Value::Null,
+        })
+        .collect();
+}
+
+/// Whether the group panel's direction reads *Manual*: the state in which
+/// `groupOrder` is present. The file keeps `direction: ASC` beside it
+/// (observed, s26 `hideColumn`), so the direction field alone cannot say.
+pub fn is_manual_group(view: &View) -> bool {
+    !view.group_order.is_empty()
+}
+
 /// A number as Obsidian writes one: integral values bare (`cardSize: 630`,
 /// `imageAspectRatio: 2` for 2.00), the rest with their decimals.
 pub fn number(v: f64) -> Value {
@@ -849,5 +1037,212 @@ mod tests {
         clear_column_size(&mut base.views[0], "price");
         clear_column_size(&mut base.views[0], "status");
         assert_eq!(TableLayout::of(&base.views[0]).column_size.len(), 1);
+    }
+
+    // -----------------------------------------------------------------------
+    // The base's own edits
+    // -----------------------------------------------------------------------
+
+    const TWO_VIEWS: &str =
+        "views:\n  - type: table\n    name: First\n    order:\n      - file.name\n  - type: cards\n    name: Second\n    cardSize: 220\n";
+
+    #[test]
+    fn rename_view_writes_the_name_and_ignores_a_blank_one() {
+        let mut base = Base::from_yaml(TWO_VIEWS).unwrap();
+        rename_view(&mut base.views[1], "Gallery");
+        assert!(base
+            .to_yaml()
+            .contains("  - type: cards\n    name: Gallery\n    cardSize: 220\n"));
+        rename_view(&mut base.views[1], "  ");
+        assert_eq!(base.views[1].name, "Gallery");
+    }
+
+    #[test]
+    fn duplicate_view_inserts_a_same_named_clone_right_after() {
+        let mut base = Base::from_yaml(TWO_VIEWS).unwrap();
+        assert_eq!(duplicate_view(&mut base, 0), Some(1));
+        assert_eq!(duplicate_view(&mut base, 9), None);
+        assert_eq!(
+            base.to_yaml(),
+            "views:\n  - type: table\n    name: First\n    order:\n      - file.name\n  - type: table\n    name: First\n    order:\n      - file.name\n  - type: cards\n    name: Second\n    cardSize: 220\n"
+        );
+    }
+
+    #[test]
+    fn delete_view_removes_one_and_tolerates_a_stale_index() {
+        let mut base = Base::from_yaml(TWO_VIEWS).unwrap();
+        delete_view(&mut base, 0);
+        assert_eq!(
+            base.to_yaml(),
+            "views:\n  - type: cards\n    name: Second\n    cardSize: 220\n"
+        );
+        delete_view(&mut base, 5);
+        assert_eq!(base.views.len(), 1);
+        delete_view(&mut base, 0);
+        assert!(base.views.is_empty());
+    }
+
+    #[test]
+    fn make_default_view_moves_it_first_and_keeps_the_rest_in_order() {
+        let mut base = Base::from_yaml(
+            "views:\n  - type: table\n    name: A\n  - type: table\n    name: B\n  - type: table\n    name: C\n",
+        )
+        .unwrap();
+        make_default_view(&mut base, 2);
+        assert_eq!(
+            base.to_yaml(),
+            "views:\n  - type: table\n    name: C\n  - type: table\n    name: A\n  - type: table\n    name: B\n"
+        );
+        make_default_view(&mut base, 0);
+        make_default_view(&mut base, 7);
+        assert_eq!(base.views[0].name, "C");
+    }
+
+    #[test]
+    fn set_display_name_updates_either_spelling_and_inserts_qualified() {
+        // The fixture's own two spellings (s04): `status:` and `note.rating:`.
+        let mut base = Base::from_yaml(
+            "properties:\n  status:\n    displayName: Status\n  note.rating:\n    displayName: Rating\nviews:\n  - type: table\n    name: V\n",
+        )
+        .unwrap();
+        set_display_name(&mut base, "note.status", Some("State"));
+        set_display_name(&mut base, "rating", Some("Stars"));
+        set_display_name(&mut base, "due", Some("Due date"));
+        set_display_name(&mut base, "formula.ppu", Some("Price per unit"));
+        assert_eq!(
+            base.to_yaml(),
+            "properties:\n  status:\n    displayName: State\n  note.rating:\n    displayName: Stars\n  note.due:\n    displayName: Due date\n  formula.ppu:\n    displayName: Price per unit\nviews:\n  - type: table\n    name: V\n"
+        );
+    }
+
+    #[test]
+    fn clearing_a_display_name_drops_an_empty_config_and_keeps_a_full_one() {
+        let mut base = Base::from_yaml(
+            "properties:\n  status:\n    unknownPropKey: 1\n    displayName: Status\n  note.rating:\n    displayName: Rating\nviews:\n  - type: table\n    name: V\n",
+        )
+        .unwrap();
+        set_display_name(&mut base, "rating", None);
+        set_display_name(&mut base, "status", Some(""));
+        set_display_name(&mut base, "nothing", None);
+        assert_eq!(
+            base.to_yaml(),
+            "properties:\n  status:\n    unknownPropKey: 1\nviews:\n  - type: table\n    name: V\n"
+        );
+        set_display_name(&mut base, "status", None);
+        assert!(
+            base.properties.contains_key("status"),
+            "the unknown key keeps it"
+        );
+        // The last named config gone, the whole key goes.
+        let mut only = Base::from_yaml(
+            "properties:\n  note.rating:\n    displayName: Rating\nviews:\n  - type: table\n    name: V\n",
+        )
+        .unwrap();
+        set_display_name(&mut only, "rating", None);
+        assert_eq!(only.to_yaml(), "views:\n  - type: table\n    name: V\n");
+    }
+
+    #[test]
+    fn add_formula_writes_an_empty_untitled_and_appends_its_column() {
+        // s16 `fileAfterAddFormula`: `Untitled: ""` under `formulas`, and
+        // `formula.Untitled` at the end of the view's `order`.
+        let mut base = Base::from_yaml(
+            "formulas:\n  score: rating * 2\nviews:\n  - type: table\n    name: Table\n    order:\n      - file.name\n      - status\n",
+        )
+        .unwrap();
+        assert_eq!(add_formula(&mut base, 0, &[]), "Untitled");
+        assert_eq!(
+            base.to_yaml(),
+            "formulas:\n  score: rating * 2\n  Untitled: \"\"\nviews:\n  - type: table\n    name: Table\n    order:\n      - file.name\n      - status\n      - formula.Untitled\n"
+        );
+        assert_eq!(add_formula(&mut base, 0, &[]), "Untitled 1");
+        assert_eq!(add_formula(&mut base, 0, &[]), "Untitled 2");
+        assert_eq!(
+            base.formulas.keys().collect::<Vec<_>>(),
+            ["score", "Untitled", "Untitled 1", "Untitled 2"]
+        );
+        assert_eq!(
+            base.views[0].order.as_deref().unwrap().last().unwrap(),
+            "formula.Untitled 2"
+        );
+    }
+
+    #[test]
+    fn add_formula_materializes_the_implied_columns_of_a_view_with_no_order() {
+        let mut base = Base::from_yaml("views:\n  - type: table\n    name: V\n").unwrap();
+        let shown = vec!["note.status".to_string(), "note.density".to_string()];
+        add_formula(&mut base, 0, &shown);
+        assert_eq!(
+            base.to_yaml(),
+            "formulas:\n  Untitled: \"\"\nviews:\n  - type: table\n    name: V\n    order:\n      - status\n      - density\n      - formula.Untitled\n"
+        );
+        // ... and `order: []` is a list to append to, not an absent key.
+        let mut hidden =
+            Base::from_yaml("views:\n  - type: table\n    name: V\n    order: []\n").unwrap();
+        add_formula(&mut hidden, 0, &shown);
+        assert_eq!(
+            hidden.views[0].order.as_deref().unwrap(),
+            ["formula.Untitled"]
+        );
+        // A view index the base has no view at still adds the formula.
+        let mut none = Base::from_yaml("views:\n  - type: table\n    name: V\n").unwrap();
+        add_formula(&mut none, 3, &[]);
+        assert!(none.formulas.contains_key("Untitled"));
+        assert_eq!(none.views[0].order, None);
+    }
+
+    #[test]
+    fn set_formula_writes_the_statement_verbatim() {
+        let mut base =
+            Base::from_yaml("formulas:\n  Untitled: \"\"\nviews:\n  - type: table\n    name: V\n")
+                .unwrap();
+        set_formula(&mut base, "Untitled", "rating * 2 + (d)");
+        set_formula(&mut base, "label", "title + \" (\" + status + \")\"");
+        assert_eq!(
+            base.to_yaml(),
+            "formulas:\n  Untitled: rating * 2 + (d)\n  label: title + \" (\" + status + \")\"\nviews:\n  - type: table\n    name: V\n"
+        );
+    }
+
+    #[test]
+    fn remove_formula_drops_it_and_every_reference_to_its_id() {
+        let mut base = Base::from_yaml(
+            "formulas:\n  score: rating * 2\n  label: title\nproperties:\n  formula.score:\n    displayName: Score\nviews:\n  - type: table\n    name: V\n    groupBy:\n      property: formula.score\n      direction: ASC\n    order:\n      - file.name\n      - formula.score\n      - formula.label\n    sort:\n      - property: formula.score\n        direction: DESC\n      - property: file.name\n    summaries:\n      formula.score: Max\n      rating: Average\n",
+        )
+        .unwrap();
+        remove_formula(&mut base, "score");
+        assert_eq!(
+            base.to_yaml(),
+            "formulas:\n  label: title\nviews:\n  - type: table\n    name: V\n    order:\n      - file.name\n      - formula.label\n    sort:\n      - property: file.name\n    summaries:\n      rating: Average\n"
+        );
+        remove_formula(&mut base, "nothing");
+        assert_eq!(base.formulas.len(), 1);
+    }
+
+    #[test]
+    fn set_group_order_writes_a_null_for_the_no_value_group_and_none_drops_it() {
+        let mut base = Base::from_yaml(
+            "views:\n  - type: kanban\n    name: Board\n    groupBy:\n      property: status\n      direction: ASC\n    order:\n      - file.name\n",
+        )
+        .unwrap();
+        assert!(!is_manual_group(&base.views[0]));
+        set_group_order(
+            &mut base.views[0],
+            Some(vec![
+                Some("todo".to_string()),
+                None,
+                Some("doing".to_string()),
+            ]),
+        );
+        assert!(is_manual_group(&base.views[0]));
+        // s26 `hideColumn`: `groupOrder` between `groupBy` and `order`, and
+        // the direction stays `ASC`.
+        assert_eq!(
+            base.to_yaml(),
+            "views:\n  - type: kanban\n    name: Board\n    groupBy:\n      property: status\n      direction: ASC\n    groupOrder:\n      - todo\n      - null\n      - doing\n    order:\n      - file.name\n"
+        );
+        set_group_order(&mut base.views[0], None);
+        assert!(!is_manual_group(&base.views[0]));
+        assert!(!base.to_yaml().contains("groupOrder"));
     }
 }

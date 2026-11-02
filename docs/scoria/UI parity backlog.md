@@ -78,7 +78,7 @@ Most of the 50 are the same large gaps the first pass had already filed — no t
 Hotkeys tab, the graph controls panel — and they are not duplicated below. What the triage added is
 twenty entries nobody had filed before and fresh evidence on a dozen more; both are folded into the
 sections that follow, so the sections held **61 open entries** in total; the five large builds of 2026-10-20 and the
-four small entries they carried closed nine of them, so **52 remain** — plus one filed after the frame work of the same evening, below; the Files header of 2026-10-21 closed one more and halved two, and the explorer keyboard the same day closed the halved header entry. The UI-rules pass of 2026-10-28 closed two more and filed two of its own (the explorer's context menus and the reading view's property pills), both of them work its own build deliberately left. The Bases pass of 2026-11-01 filed thirteen more under [[#Bases]], the first entries this file holds for that view.
+four small entries they carried closed nine of them, so **52 remain** — plus one filed after the frame work of the same evening, below; the Files header of 2026-10-21 closed one more and halved two, and the explorer keyboard the same day closed the halved header entry. The UI-rules pass of 2026-10-28 closed two more and filed two of its own (the explorer's context menus and the reading view's property pills), both of them work its own build deliberately left. The Bases pass of 2026-11-01 filed thirteen more under [[#Bases]], the first entries this file holds for that view, and the build of the same day landed the first seven.
 
 ## Files view and file operations
 
@@ -1594,6 +1594,8 @@ Order below is roughly the order a user meets them. Icons are Lucide ids.
 
 *high, parity-gap, medium*
 
+**Landed 2026-11-01**: the bar is the eight labelled buttons in Obsidian's order and icons, accent-coloured while their control holds a value, no tooltips; Search shows the `Find...` row with *Showing N* and narrows the rows; New creates the note with the frontmatter the filters imply. See [[Development#The Bases toolbar and its panels, 2026-11-01]].
+
 **Obsidian.** `.bases-toolbar`, 29 px, the same eight items in every layout, each a 25 px
 `text-icon-button` with a 13 px label, radius 5, `--text-muted` idle, hover
 `--background-modifier-hover`, `--text-accent` with `is-active` when the control has a value, no
@@ -1620,6 +1622,8 @@ the add-item path with the prefill (that path is the entry below).
 
 *medium, bug, small*
 
+**Landed 2026-11-01**: Escape closes one layer at a time (menu, list, panel, search row), a second click on the button closes, the tooltips are gone, the views and properties panels focus their search field where Down, Up and Enter work, and a pick from a list closes the list alone.
+
 **Obsidian.** Escape closes every panel and returns focus to its button; the views and properties
 panels focus their search input on open, Down moves `is-selected`, Enter picks or toggles; the
 sort, filter, group and results panels leave focus on the button. Clicking the button again
@@ -1636,6 +1640,8 @@ one tier wider.
 ### The view switcher has no search, no gear menu, and names a new view `View N`
 
 *medium, missing-feature, medium*
+
+**Landed 2026-11-01**: the search field, the gear, the Configure page with its name field and Obsidian's labels, the header menu (Default view, Duplicate view, Delete view) and Add view naming every view `View`. **Still out**: the list layout's *Indent properties* toggle, whose key is unobserved.
 
 **Obsidian.** The panel (228 px, `.bases-toolbar-views-menu`) opens with a `Search...` input that
 filters the rows live; one row per view with its layout icon, the active one `mod-active`, and a
@@ -1663,6 +1669,8 @@ names the view `View N` and opens Configure without the name field.
 
 *high, missing-feature, large*
 
+**Landed 2026-11-01**: the observed order and styling, scrolling inside the window, Add formula, Hide all (`order: []`), `Add "x" property`, and both gear pages — display name and property type, or the formula with its live validity line. **Still out**: the editor's completions.
+
 **Obsidian.** `Find or create...` input; rows of checkbox, type icon (`info` for `file.*`, `text`,
 `binary`, `square-function`, …), name and a `chevron-right` gear; the shown columns first, then
 the hidden `file.*` rows (`mod-implicit`), then hidden formulas (`mod-formula`), then note
@@ -1682,6 +1690,8 @@ no formula editor.
 ### Filters are expression fields; Obsidian's are property, operator and value rows
 
 *high, missing-feature, large*
+
+**Landed 2026-11-01**: rows of property, operator and value with the observed operator lists per kind (`scoria_bases::rule`), typed values, pills, the advanced toggle both ways, Add filter, Add filter group, nested groups with their own trash, and the collapsible sections with count flairs. **Still out**: the value fields' suggestion lists.
 
 **Obsidian.** A 520 px panel of two collapsible sections, **All views** and **This view**, each
 with a count flair. A group is a header select — **All the following are true** (`and`), **Any of
@@ -1711,6 +1721,8 @@ the row UI and the mapping from a statement to a row, observed for every operato
 
 *medium, parity-gap, medium*
 
+**Landed 2026-11-01**: both headers, grips that reorder by drag, Add sort at the bottom appending a row that waits for its property, number directions, the group panel's empty row, *Manual* writing `groupOrder` and the group list with checkboxes and grips. **Still out**: *Hide all* in the group list, drawn faint, since an empty `groupOrder` is not representable.
+
 **Obsidian.** Sort: header **Sort by**; each rule a `grip-vertical` handle, property combobox,
 direction combobox (**A → Z** / **Z → A**, **0 → 1** / **1 → 0** on numbers), `trash-2`; **Add
 sort** (`plus`) at the bottom opens the new row's property list at once. Group: header **Group
@@ -1727,6 +1739,8 @@ with a `+`; a pick closes the panel. No Manual, `groupOrder` is never written. G
 ### Results: Show all is always drawn and rewrites the file, and there is no CSV export
 
 *low, parity-gap, small*
+
+**Landed 2026-11-01**: Show all faint until a limit is set and writing only then; Export CSV... through the desktop's save dialog with `scoria_bases::csv`'s dialect.
 
 **Obsidian.** **Limit number of results**, a number input with placeholder `e.g. 10`; **Show all**
 (`rotate-ccw`) only while a limit is set; **Copy to clipboard** (`copy`); **Export CSV...**

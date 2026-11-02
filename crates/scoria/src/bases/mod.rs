@@ -14,7 +14,9 @@
 //! [`rows`] is the bridge: it turns the vault's own index and cache into the
 //! `FileData` values `scoria-bases` evaluates against, so nothing below this
 //! module knows what a vault is. [`cells`] is what one cell draws, shared by
-//! every layout.
+//! every layout. The toolbar's panels are [`toolbar_views`],
+//! [`toolbar_properties`], [`toolbar_filter`] and [`toolbar_lists`] (sort,
+//! group, results), with [`toolbar_picks`] routing their comboboxes.
 //!
 //! **Writing.** Obsidian writes a base on a toolbar change and canonicalizes
 //! it on close, and never writes one that failed to parse; `scoria_formats::base`
@@ -31,6 +33,11 @@ pub mod list;
 pub mod rows;
 pub mod table;
 pub mod toolbar;
+pub mod toolbar_filter;
+pub mod toolbar_lists;
+pub mod toolbar_picks;
+pub mod toolbar_properties;
+pub mod toolbar_views;
 pub mod view;
 pub mod writes;
 

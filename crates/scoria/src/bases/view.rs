@@ -63,6 +63,18 @@ pub enum BasesEvent {
         key: String,
         value: String,
     },
+    /// The results panel's *Export CSV...*: the workspace asks where the
+    /// file goes and writes these bytes there.
+    ExportCsv { name: String, csv: String },
+    /// A property page's **Property type** select: `types.json` is the
+    /// workspace's to write, and every pane reading it to refresh.
+    SetPropertyType {
+        key: String,
+        ty: scoria_formats::properties::PropertyType,
+    },
+    /// The toolbar's *New* button: `bases:add-item`, which the workspace
+    /// runs.
+    AddItem,
 }
 
 pub struct BasesView {
@@ -85,6 +97,10 @@ pub struct BasesView {
     state: Option<Arc<VaultState>>,
     /// Set when the view changed the base and the bytes on disk are older.
     dirty: bool,
+    /// Every frontmatter property the vault's notes carry, with the kind its
+    /// values infer, from the whole vault rather than the filtered rows: a
+    /// view that empties still has to know `density` is a number.
+    pub(super) property_kinds: Vec<(String, scoria_bases::rule::PropertyKind)>,
     pub(super) table_state: super::table::TableState,
     pub(super) cards: super::cards::CardsState,
     pub(super) list: super::list::ListLayoutState,
@@ -106,6 +122,7 @@ impl BasesView {
             error: None,
             state: None,
             dirty: false,
+            property_kinds: Vec::new(),
             table_state: super::table::TableState::default(),
             cards: super::cards::CardsState::default(),
             list: super::list::ListLayoutState::default(),
@@ -248,12 +265,24 @@ impl BasesView {
                 now: chrono::Local::now().naive_local(),
             },
         };
-        self.table = Some(scoria_bases::table::build(base, self.view_ix, &env));
+        self.property_kinds = infer_property_kinds(&env.files);
+        let mut table = scoria_bases::table::build(base, self.view_ix, &env);
+        if let Some(needle) = self.toolbar.search.as_deref() {
+            apply_search(&mut table, needle);
+        }
+        self.table = Some(table);
         self.layout = match base.views.get(self.view_ix) {
             Some(view) => Layout::of(view),
             // An empty base is one default table of the whole vault.
             None => Layout::default(),
         };
+    }
+
+    /// The toolbar's search row changed: the same query, its rows narrowed
+    /// again.
+    pub(super) fn resolve_search(&mut self) {
+        self.resolve_table();
+        self.rebuild();
     }
 
     /// Rebuilds whichever layout is showing. Only one runs: a kanban's
@@ -530,8 +559,65 @@ impl Focusable for BasesView {
     }
 }
 
+/// Every property name the notes carry, in first-seen order, with the kind
+/// its first non-null value infers — what Obsidian does for a property no
+/// one assigned a type to in `types.json`.
+fn infer_property_kinds(
+    files: &[Arc<scoria_bases::FileData>],
+) -> Vec<(String, scoria_bases::rule::PropertyKind)> {
+    use scoria_bases::rule::PropertyKind;
+    use scoria_bases::Value;
+    let mut out: Vec<(String, PropertyKind)> = Vec::new();
+    for file in files {
+        for (name, value) in &file.properties {
+            let kind = match value {
+                Value::Bool(_) => PropertyKind::Checkbox,
+                Value::Number(_) => PropertyKind::Number,
+                Value::List(_) | Value::Tags(_) => PropertyKind::List,
+                Value::Date(d) if d.has_time => PropertyKind::DateTime,
+                Value::Date(_) => PropertyKind::Date,
+                Value::Str(_) | Value::Link(_) => PropertyKind::Text,
+                _ => continue,
+            };
+            match out.iter().position(|(n, _)| n == name) {
+                Some(ix) => {
+                    if out[ix].1 == PropertyKind::Unknown {
+                        out[ix].1 = kind;
+                    }
+                }
+                None => out.push((name.clone(), kind)),
+            }
+        }
+    }
+    out
+}
+
+/// The toolbar's search row: keeps the rows whose displayed cells hold the
+/// query, case-insensitively, and drops the groups that empties.
+///
+/// Observed only as far as the row's own words go — "search for items using
+/// their displayed properties" and a *Showing N* count beside the field —
+/// so what counts as a match is a reading: any cell's text.
+fn apply_search(table: &mut Table, needle: &str) {
+    let needle = needle.trim().to_lowercase();
+    if needle.is_empty() {
+        return;
+    }
+    let hit = |row: &scoria_bases::Row| {
+        row.cells
+            .iter()
+            .any(|c| c.text.to_lowercase().contains(&needle))
+            || row.file.name.to_lowercase().contains(&needle)
+    };
+    table.rows.retain(|r| hit(r));
+    for group in &mut table.groups {
+        group.rows.retain(|r| hit(r));
+    }
+    table.groups.retain(|g| !g.rows.is_empty());
+}
+
 impl Render for BasesView {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = cx.global::<Theme>().clone();
         let body: Vec<AnyElement> = if let Some(message) = self.error.clone() {
             vec![self.render_error(true, &message, &theme)]
@@ -540,7 +626,7 @@ impl Render for BasesView {
             vec![self.render_error(false, &format!("Unknown view type: {kind}"), &theme)]
         } else if self.table.is_some() {
             let mut body = Vec::new();
-            body.extend(self.render_toolbar(&theme, cx));
+            body.extend(self.render_toolbar(&theme, window, cx));
             body.extend(match self.layout.clone() {
                 Layout::Cards(_) => self.render_cards(&theme, cx),
                 Layout::List(_) => self.render_list(&theme, cx),
@@ -555,6 +641,10 @@ impl Render for BasesView {
         div()
             .track_focus(&self.focus)
             .key_context("Bases")
+            .on_action(cx.listener(Self::close_panel_action))
+            .on_action(cx.listener(Self::select_up_action))
+            .on_action(cx.listener(Self::select_down_action))
+            .on_action(cx.listener(Self::activate_action))
             .flex()
             .flex_col()
             .size_full()

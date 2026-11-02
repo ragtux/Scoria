@@ -138,66 +138,46 @@ pub fn set_group_direction(view: &mut View, direction: &str) {
 
 /// *Hide column*, and the properties panel's unchecking.
 ///
-/// **Observed**: it removes the property from `order`.
-///
-/// A view with no `order` shows the columns the rows imply, and there is
-/// nothing to remove from; `implied` is then materialized without the hidden
-/// id, which is **unprobed** but the only way the row can do anything at all.
-/// Hiding the last column of such a view would write an empty `order`, which
-/// the serializer omits and the implied columns come back from, so the one
-/// remaining column is kept instead of writing a list that means "all of
-/// them".
+/// **Observed**: it removes the property from `order`, and the properties
+/// panel's *Hide all* writes `order: []` — an explicit empty list, which is
+/// the view with no columns at all, where an absent `order` is the view with
+/// every implied column. So a view with no `order` first materializes
+/// `implied` without the hidden id, and hiding the last column leaves the
+/// empty list rather than dropping the key.
 pub fn hide_column(view: &mut View, id: &str, implied: &[String]) {
-    if view.order.is_empty() {
-        if implied.len() < 2 {
-            return;
-        }
-        view.order = implied
-            .iter()
+    let current = view.order.clone().unwrap_or_else(|| implied.to_vec());
+    view.order = Some(
+        current
+            .into_iter()
             .filter(|other| !same_property(other, id))
-            .cloned()
-            .collect();
-        return;
-    }
-    if view.order.len() < 2 {
-        return;
-    }
-    view.order.retain(|other| !same_property(other, id));
+            .collect(),
+    );
 }
 
 /// Appends a property to `order`, which is what "Add *name* property" and
-/// checking a box in the properties panel do.
-pub fn add_property(view: &mut View, id: &str) {
-    if view.order.iter().any(|o| same_property(o, id)) {
-        return;
-    }
-    view.order.push(id.to_string());
+/// checking a box in the properties panel do. `shown` is the ids the view
+/// currently resolves to: a view with no `order` names them first, or the
+/// one id written would be the only column left.
+pub fn add_property(view: &mut View, shown: &[String], id: &str) {
+    scoria_bases::layout::add_column(view, shown, id);
 }
 
 /// Checks or unchecks one property of the properties panel.
 ///
 /// Observed: `order` is exactly the shown columns, so checking appends the id
 /// and unchecking removes it. `shown` is the ids the view currently resolves
-/// to, which is what makes unchecking work on a view with no `order`: the
-/// implied columns are written out minus the one unchecked, through
-/// [`hide_column`], so the panel and the header menu refuse to empty `order`
-/// in exactly the same place.
+/// to, which is what makes either work on a view with no `order`.
 pub fn toggle_property(view: &mut View, shown: &[String], id: &str) {
-    let in_order = view.order.iter().any(|o| same_property(o, id));
-    let implied = view.order.is_empty() && shown.iter().any(|s| same_property(s, id));
+    let in_order = view
+        .order
+        .as_ref()
+        .is_some_and(|order| order.iter().any(|o| same_property(o, id)));
+    let implied = view.order.is_none() && shown.iter().any(|s| same_property(s, id));
     if in_order || implied {
         hide_column(view, id, shown);
-        return;
+    } else {
+        add_property(view, shown, id);
     }
-    // A view with no `order` shows the columns its rows imply, so naming one
-    // more column has to name those as well: appending the id alone would
-    // write an `order` of one, and the view would lose every column it was
-    // already showing. **Unprobed** — no fixture reached the panel without an
-    // `order` — but the alternative is a box that collapses the table.
-    if view.order.is_empty() {
-        view.order = shown.to_vec();
-    }
-    add_property(view, id);
 }
 
 // ---------------------------------------------------------------------------
@@ -253,10 +233,10 @@ mod tests {
         // The writer does not qualify a bare id, so neither does this.
         let mut view = a_table();
         prepend_sort(&mut view, "status", ASC);
-        add_property(&mut view, "status");
+        add_property(&mut view, &[], "status");
         set_group_property(&mut view, "status");
         assert_eq!(view.sort[0].property, "status");
-        assert_eq!(view.order, vec!["status".to_string()]);
+        assert_eq!(view.order, Some(vec!["status".to_string()]));
         assert_eq!(view.group_by.as_ref().unwrap().property, "status");
     }
 
@@ -295,7 +275,7 @@ mod tests {
             "views:\n  - type: table\n    name: V\n    order:\n      - file.name\n      - status\n",
         );
         hide_column(&mut view, "note.status", &[]);
-        assert_eq!(view.order, vec!["file.name".to_string()]);
+        assert_eq!(view.order, Some(vec!["file.name".to_string()]));
     }
 
     #[test]
@@ -303,25 +283,22 @@ mod tests {
         let mut view = a_table();
         let implied = vec!["note.status".to_string(), "note.density".to_string()];
         hide_column(&mut view, "status", &implied);
-        assert_eq!(view.order, vec!["note.density".to_string()]);
+        assert_eq!(view.order, Some(vec!["note.density".to_string()]));
     }
 
     #[test]
-    fn neither_surface_ever_empties_order() {
-        // An empty `order` is the key omitted, which means every implied
-        // column, so the last column would come straight back.
+    fn hiding_the_last_column_writes_an_empty_order() {
+        // Observed for *Hide all*: `order: []`, the view with no columns,
+        // which is not the absent key that means every implied column.
         let mut one = view_of("views:\n  - type: table\n    name: V\n    order:\n      - status\n");
         hide_column(&mut one, "status", &[]);
-        assert_eq!(one.order, vec!["status".to_string()]);
+        assert_eq!(one.order, Some(Vec::new()));
         let mut implied = a_table();
         hide_column(&mut implied, "status", &["status".to_string()]);
-        assert!(implied.order.is_empty());
+        assert_eq!(implied.order, Some(Vec::new()));
         let mut panel = a_table();
         toggle_property(&mut panel, &["status".to_string()], "status");
-        assert!(
-            panel.order.is_empty(),
-            "the panel refuses in the same place"
-        );
+        assert_eq!(panel.order, Some(Vec::new()));
     }
 
     #[test]
@@ -331,19 +308,23 @@ mod tests {
         toggle_property(&mut view, &shown, "note.density");
         assert_eq!(
             view.order,
-            vec!["note.status".to_string(), "note.density".to_string()],
-            "unchecking nothing first materializes the implied order"
+            Some(vec!["note.status".to_string(), "note.density".to_string()]),
+            "checking first materializes the implied order"
         );
         toggle_property(&mut view, &shown, "note.density");
-        assert_eq!(view.order, vec!["note.status".to_string()]);
+        assert_eq!(view.order, Some(vec!["note.status".to_string()]));
     }
 
     #[test]
     fn a_bare_id_already_in_order_is_the_same_property_as_its_qualified_form() {
         let mut view =
             view_of("views:\n  - type: table\n    name: V\n    order:\n      - status\n");
-        add_property(&mut view, "note.status");
-        assert_eq!(view.order.len(), 1, "it is already there");
+        add_property(&mut view, &[], "note.status");
+        assert_eq!(
+            view.order.as_ref().map(Vec::len),
+            Some(1),
+            "it is already there"
+        );
     }
 
     #[test]

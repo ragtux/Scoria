@@ -335,6 +335,7 @@ pub fn bind_all_keys(cx: &mut App, registry: &CommandRegistry) {
     graph::bind_keys(cx);
     canvas::view::bind_keys(cx);
     pdf::view::bind_keys(cx);
+    bases::toolbar::bind_keys(cx);
     explorer::bind_keys(cx);
     settings::bind_keys(cx);
     help::bind_keys(cx);

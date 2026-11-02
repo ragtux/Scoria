@@ -2739,6 +2739,13 @@ fn view_subscriptions(
             BasesEvent::SetProperty { path, key, value } => {
                 this.set_note_property(path.clone(), key.clone(), value.clone(), cx)
             }
+            BasesEvent::ExportCsv { name, csv } => {
+                this.export_base_csv(name.clone(), csv.clone(), cx)
+            }
+            BasesEvent::SetPropertyType { key, ty } => {
+                this.assign_property_type(key.clone(), *ty, cx)
+            }
+            BasesEvent::AddItem => this.add_base_item(cx),
         }),
         cx.subscribe(
             canvas,
@@ -6572,12 +6579,11 @@ impl Workspace {
 
     /// `bases:add-view`: appends a view to the showing base and shows it.
     ///
-    /// Observed: the appended view is named `View 2` and Obsidian opens its
-    /// Configure view page. The name and the write are
-    /// [`BasesView::add_view`]'s; the Configure view page is the toolbar's
-    /// views panel, which this cannot open yet, so the new view is only
-    /// shown. Nothing is announced — Obsidian raises no Notice for it, and
-    /// the autosave the edit schedules says the file was written.
+    /// Observed: the appended view is named `View` and Obsidian opens its
+    /// Configure view page. The name, the write and the page are
+    /// [`BasesView::add_view`]'s. Nothing is announced — Obsidian raises no
+    /// Notice for it, and the autosave the edit schedules says the file was
+    /// written.
     ///
     /// With no base showing it does nothing at all, the way Obsidian's own
     /// check callback keeps the command off the palette.
@@ -6741,10 +6747,13 @@ impl Workspace {
                 .unwrap_or_default()
         });
         let path = state.vault().available_path(&folder, "Untitled", "md");
-        let text = match item.template.as_deref() {
+        let body = match item.template.as_deref() {
             Some(template) => self.daily_template_text(&state, template, &path, cx),
             None => String::new(),
         };
+        // Observed: the note starts with the frontmatter the view implies —
+        // the filters' values and an empty key per shown property.
+        let text = format!("{}{body}", item.frontmatter);
         match state.create_note(&path, &text) {
             Ok(changes) => {
                 self.after_changes(changes, cx);
@@ -6753,6 +6762,39 @@ impl Workspace {
             }
             Err(err) => self.report(err, cx),
         }
+    }
+
+    /// The results panel's *Export CSV...*: the desktop's save dialog, then
+    /// the bytes. The dialect is `scoria_bases::table_csv`'s; Obsidian's own
+    /// file was never read, so the dialog's default name is this app's.
+    fn export_base_csv(&mut self, name: String, csv: String, cx: &mut Context<Self>) {
+        let dir = self
+            .state
+            .as_ref()
+            .map(|s| s.root.clone())
+            .unwrap_or_else(|| PathBuf::from("."));
+        let picked = cx.prompt_for_new_path(&dir, Some(&name));
+        cx.spawn(async move |this, cx| {
+            let path = match picked.await {
+                Ok(Ok(Some(path))) => path,
+                Ok(Ok(None)) => return,
+                Ok(Err(err)) => {
+                    this.update(cx, |this, cx| {
+                        this.report(format!("Could not open the dialog: {err}"), cx)
+                    })
+                    .ok();
+                    return;
+                }
+                Err(_) => return,
+            };
+            let written = std::fs::write(&path, csv.as_bytes());
+            this.update(cx, |this, cx| match written {
+                Ok(()) => this.report(format!("Exported {}", path.display()), cx),
+                Err(err) => this.report(format!("Could not write {}: {err}", path.display()), cx),
+            })
+            .ok();
+        })
+        .detach();
     }
 
     /// A cell of a base was typed into: sets `key` to `value` in the note

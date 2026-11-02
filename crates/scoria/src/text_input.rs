@@ -281,6 +281,9 @@ pub struct TextInput {
     placeholder: SharedString,
     pad_left: Pixels,
     pad_right: Pixels,
+    /// The box's height; 30 px is Obsidian's `--input-height`, and the
+    /// Bases panels' 28 px inputs ask for less.
+    height: Pixels,
     layout: Layout,
     dragging: bool,
 }
@@ -302,9 +305,16 @@ impl TextInput {
             placeholder: placeholder.into(),
             pad_left: px(8.),
             pad_right: px(8.),
+            height: px(30.),
             layout: Layout::default(),
             dragging: false,
         }
+    }
+
+    /// The box's height, for owners whose rows are shorter than the 30 px
+    /// default.
+    pub fn set_height(&mut self, height: Pixels) {
+        self.height = height;
     }
 
     pub fn text(&self) -> &str {
@@ -721,7 +731,7 @@ impl Render for TextInput {
             .on_action(cx.listener(Self::down))
             .on_action(cx.listener(Self::swallow))
             .w_full()
-            .h(px(30.))
+            .h(self.height)
             .pl(self.pad_left)
             .pr(self.pad_right)
             .flex()

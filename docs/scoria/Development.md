@@ -326,6 +326,65 @@ uses behave as Obsidian's do.
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | not started |
 
+### The Bases toolbar and its panels, 2026-11-01
+
+The first build against the Bases record of 2026-11-01
+([[UI parity backlog#Bases]]): the bar and the six surfaces its buttons open,
+rebuilt to the observation rather than to the readings `toolbar.rs` had
+carried since 2026-10-25.
+
+- **The bar** is Obsidian's eight `text-icon-button`s in a 40 px header —
+  the view switcher, *N results*, Sort, Group, Filter, Properties, Search,
+  New — labelled, iconed, accent-coloured while their control holds a value,
+  and with no tooltips. Search drops a `Find...` row under the bar that
+  narrows the rows by their displayed cells; New creates the note
+  `bases:add-item` does, with the frontmatter the filters imply.
+- **Panels hang under their button** and close on Escape, on a second click
+  of the button and on a press outside, one layer at a time; the views and
+  properties panels focus their search field, where Down, Up and Enter walk
+  and pick. Every combobox opens a `suggestion-container` of its own under
+  its trigger, with a search field when Obsidian's has one.
+- **Views**: search, the rows with their gear, Add view (named `View`, the
+  fifth included). The Configure page carries the name field, the Layout
+  combobox, the layout's own rows under Obsidian's labels, and the
+  `more-vertical` menu — Default view, Duplicate view, Delete view.
+- **Properties**: shown columns first, then the hidden `file.*`, formulas
+  and note properties, faint; Add formula (`Untitled: ""` and its column),
+  Hide all (`order: []`), `Add "x" property`; the gear's pages — display
+  name and property type, or display name and the formula with its live
+  *Valid formula* / *Invalid formula* line.
+- **Filter**: rows of property, operator and value from
+  `scoria_bases::rule`, with the observed operator lists per kind, pills for
+  a list, a checkbox for a boolean, the advanced toggle to the statement and
+  back, Add filter and Add filter group, and the collapsible sections with
+  their count flairs.
+- **Sort and group**: *Sort by* with grips that reorder by drag, *Add sort*
+  appending a row that waits for its property; *Group by* with *Manual*,
+  which is `groupOrder`, and the group list under it with its checkboxes
+  and grips.
+- **Results**: *Show all* faint until a limit is set, *Copy to clipboard*,
+  *Export CSV...* through the desktop's save dialog.
+
+Behind it, in the gpui-free crates: `View.order` is `Option<Vec<String>>`
+so `order: []` round-trips; `groupOrder` hides the groups it does not name;
+`scoria_bases::rule` parses a statement into a row and prints the row back;
+`scoria_bases::csv` and the view, formula and display-name helpers in
+`layout.rs`.
+
+**Three things the headless drive taught.** The control socket's `type`
+never reaches a pane's own `TextInput` — send `keys` one character at a
+time. A deferred panel positioned from a measurement must read the
+measurement *before* the frame that clears it, or it lands at the click
+point and covers the bar; the box map now lives across frames and is pruned
+when a panel closes. And a panel that moves by 15 px invalidates every
+coordinate a script learned from the previous screenshot — read the state
+dump after each click rather than trusting the aim.
+
+Not built here, filed to stay: the list layout's *Indent properties* toggle
+(its key is still unobserved), *Hide all* in the group list (an empty
+`groupOrder` is not representable), the formula editor's completions and the
+value fields' suggestion lists.
+
 ### Eight backlog entries, and the probe that unblocked three, 2026-10-30
 
 A pass over what was left of [[UI parity backlog]], run as parallel worktrees

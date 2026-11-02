@@ -296,10 +296,10 @@ fn note_ids_are_written_bare_where_obsidian_writes_them_bare() {
     assert_eq!(base.to_yaml(), fixture("ids.out.base"));
 
     // The model keeps the file's spelling; only the writer strips.
-    assert_eq!(base.views[0].order[1], "note.status");
+    assert_eq!(base.views[0].order.as_ref().unwrap()[1], "note.status");
     assert_eq!(base.views[0].sort[0].property, "note.price");
     let out = Base::from_yaml(&fixture("ids.out.base")).unwrap();
-    assert_eq!(out.views[0].order[1], "status");
+    assert_eq!(out.views[0].order.as_ref().unwrap()[1], "status");
     assert!(out.properties.contains_key("note.price"));
     assert!(out.properties.contains_key("status"));
     assert_eq!(

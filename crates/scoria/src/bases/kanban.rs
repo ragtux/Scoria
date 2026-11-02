@@ -642,6 +642,7 @@ mod tests {
             rows,
             groups,
             limited: false,
+            all_groups: Vec::new(),
             unknown_kind: None,
         }
     }

@@ -648,7 +648,7 @@ mod tests {
     }
 
     fn ids(view: &View) -> Vec<String> {
-        view.order.clone()
+        view.order.clone().unwrap_or_default()
     }
 
     fn sorts(view: &View) -> Vec<(String, Option<String>)> {
@@ -766,16 +766,17 @@ mod tests {
     }
 
     #[test]
-    fn the_last_column_is_never_hidden_into_an_empty_order() {
-        // An empty `order` is the key omitted, which means every implied
-        // column, so hiding the only one would put it straight back.
+    fn hiding_the_last_column_writes_an_empty_order() {
+        // Observed (2026-11-01, the properties panel's *Hide all*): an
+        // explicit `order: []` is the view with no columns, which an absent
+        // key -- every implied column -- is not.
         let mut view =
             view_of("views:\n  - type: table\n    name: V\n    order:\n      - status\n");
         hide_column(&mut view, "status", &[]);
-        assert_eq!(ids(&view), vec!["status"]);
+        assert_eq!(view.order, Some(Vec::new()));
         let mut implied_view = view_of("views:\n  - type: table\n    name: V\n");
         hide_column(&mut implied_view, "status", &["status".to_string()]);
-        assert!(ids(&implied_view).is_empty());
+        assert_eq!(implied_view.order, Some(Vec::new()));
     }
 
     // ----- what a cell edit writes ------------------------------------------

@@ -192,7 +192,12 @@ pub struct View {
     /// Values rather than strings: `groupOrder` may carry a `null`, which means
     /// the files with no value for the grouped property.
     pub group_order: Vec<Value>,
-    pub order: Vec<String>,
+    /// The columns the view shows, in order. `None` is an absent key, which
+    /// means the columns the rows imply; `Some(vec![])` is `order: []`, which
+    /// means **no columns** — the properties panel's *Hide all* writes exactly
+    /// that (observed on 1.14.5, `2026-11-01-bases-ui.json`, s16
+    /// `hideAllFile`), and the two must not collapse into each other.
+    pub order: Option<Vec<String>>,
     pub sort: Vec<Sort>,
     pub limit: Option<u64>,
     /// Property id to summary name, in file order.
@@ -214,11 +219,12 @@ fn as_str(v: &Value) -> Option<String> {
     v.as_str().map(|s| s.to_string())
 }
 
-fn string_list(v: Option<&Value>) -> Vec<String> {
-    match v.and_then(|v| v.as_sequence()) {
-        Some(items) => items.iter().filter_map(as_str).collect(),
-        None => Vec::new(),
-    }
+/// A list of strings, or `None` when the key is absent or is not a sequence
+/// — `order: null` and `order: 3` are read as no key, which is the plain
+/// reading of a serializer that iterates the value. **Unprobed.**
+fn string_list(v: Option<&Value>) -> Option<Vec<String>> {
+    v.and_then(|v| v.as_sequence())
+        .map(|items| items.iter().filter_map(as_str).collect())
 }
 
 fn string_map(v: Option<&Value>) -> IndexMap<String, String> {
@@ -442,7 +448,8 @@ impl View {
         push("filters", self.filters.is_some());
         push("groupBy", self.group_by.is_some());
         push("groupOrder", !self.group_order.is_empty());
-        push("order", !self.order.is_empty());
+        // Present when the key is, empty or not: `order: []` is a state.
+        push("order", self.order.is_some());
         push("sort", !self.sort.is_empty());
         push("limit", self.limit.is_some());
         push("summaries", !self.summaries.is_empty());
@@ -565,8 +572,12 @@ impl View {
                     .map(|g| pair_value(&g.property, g.direction.as_deref()))
                     .unwrap_or(Value::Null),
                 "groupOrder" => Value::Sequence(self.group_order.clone()),
+                // An empty one is emitted as the flow `[]`, which is what
+                // Obsidian wrote for *Hide all*.
                 "order" => Value::Sequence(
                     self.order
+                        .as_deref()
+                        .unwrap_or_default()
                         .iter()
                         .map(|s| Value::String(written_id(s).to_string()))
                         .collect(),
@@ -994,6 +1005,33 @@ newItemFolder: Notes
         assert_eq!(b, Base::default());
         assert!(b.key_order().is_empty());
         assert!(Base::from_yaml("{}\n").unwrap().key_order().is_empty());
+    }
+
+    /// The properties panel's *Hide all* wrote `order: []` on the view
+    /// (1.14.5, s16 `hideAllFile`), flow style on one line, and that is a
+    /// different state from no `order` at all.
+    #[test]
+    fn an_empty_order_round_trips_as_a_flow_list() {
+        let text = "views:\n  - type: table\n    name: V\n    order: []\n    limit: 2\n";
+        let b = Base::from_yaml(text).unwrap();
+        assert_eq!(b.views[0].order, Some(Vec::new()));
+        assert_eq!(b.views[0].key_order(), ["type", "name", "order", "limit"]);
+        assert_eq!(b.to_yaml(), text);
+    }
+
+    #[test]
+    fn an_absent_order_is_none_and_stays_absent() {
+        let text = "views:\n  - type: table\n    name: V\n";
+        let b = Base::from_yaml(text).unwrap();
+        assert_eq!(b.views[0].order, None);
+        assert_eq!(b.views[0].key_order(), ["type", "name"]);
+        assert_eq!(b.to_yaml(), text);
+        // A non-empty one is read into the model as it is.
+        let b = Base::from_yaml(SCRAMBLED).unwrap();
+        assert_eq!(
+            b.views[0].order.as_deref(),
+            Some(&["file.name".to_string(), "status".to_string()][..])
+        );
     }
 
     #[test]
