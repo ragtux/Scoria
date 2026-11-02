@@ -514,6 +514,9 @@ fn event_for(pick: Pick, target: &Target) -> Option<ExplorerEvent> {
         Pick::RevealInNavigation
         | Pick::SplitRight
         | Pick::SplitDown
+        | Pick::RenameProperty
+        | Pick::DeleteProperty
+        | Pick::SetPropertyType(_)
         | Pick::AddLink
         | Pick::AddExternalLink
         | Pick::SearchForSelection
@@ -876,6 +879,7 @@ impl FileExplorer {
             };
             self.menu = Some(Menu {
                 position,
+                submenu: false,
                 anchor: gpui::Anchor::TopLeft,
                 target,
             });
@@ -888,6 +892,7 @@ impl FileExplorer {
     fn open_blank_menu(&mut self, position: Point<Pixels>, cx: &mut Context<Self>) {
         self.menu = Some(Menu {
             position,
+            submenu: false,
             anchor: gpui::Anchor::TopLeft,
             target: Target::Blank,
         });
@@ -907,15 +912,26 @@ impl FileExplorer {
         let theme = cx.global::<Theme>().clone();
         let target = menu.target.clone();
         let focus = self.menu_focus.handle.clone();
+        // The explorer sits at the window's left, so its submenus open to
+        // the right; no window is at hand here and none is needed.
         Some(file_menu::render(
             menu,
             &theme,
             &focus,
+            px(f32::MAX),
             cx,
             |this, cx| this.close_menu(cx),
             move |_, pick, _, cx| {
                 if let Some(event) = event_for(pick, &target) {
                     cx.emit(event);
+                }
+            },
+            |this, open, cx| {
+                if let Some(menu) = this.menu.as_mut() {
+                    if menu.submenu != open {
+                        menu.submenu = open;
+                        cx.notify();
+                    }
                 }
             },
         ))

@@ -280,8 +280,11 @@ fn handle(
         "state" => {
             let text = request.bool_param("text", false);
             let rows = request.opt_usize("rows").unwrap_or(50);
-            ctl.workspace(|ws, window, cx| Ok(ws.describe(text, rows, window, cx)))
-                .map(Some)
+            ctl.workspace(|ws, window, cx| {
+                ws.ensure_reading_built(cx);
+                Ok(ws.describe(text, rows, window, cx))
+            })
+            .map(Some)
         }
         "open" => {
             let name = request.str_param("name")?;
@@ -334,6 +337,14 @@ fn handle(
             ctl.workspace(|ws, window, cx| {
                 ws.set_mode(mode, window, cx);
                 Ok(json!({"mode": mode.as_str()}))
+            })
+            .map(Some)
+        }
+        "uri" => {
+            let uri = request.str_param("uri")?;
+            ctl.workspace(|ws, window, cx| {
+                ws.handle_uri(uri, window, cx)?;
+                Ok(json!({"status": ws.status_text()}))
             })
             .map(Some)
         }

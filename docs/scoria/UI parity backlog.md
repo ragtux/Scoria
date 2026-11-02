@@ -392,6 +392,8 @@ as the sanitizer capture records. Still open: **HTML blocks** (`RBlock::Html`: `
 cannot shift its baseline, Live Preview's own source transform (`<b>` still shows as source while
 editing), and `<ins>/<samp>/<var>/<tt>/<big>`.
 
+**The block half landed 2026-11-02**: a raw `<pre>` is a code block that wraps and carries the copy button only with a `<code>` child; `<details>` folds its `<summary>` over its body, open when the tag says so; a container (`<div>`, `<p>`, `<center>`, `<span>`, `<font>`, `<small>`, `<big>`, `<section>`, `<article>`, `<ins>`, `<samp>`, `<var>`, `<tt>` and the inline tags) draws as a paragraph of its content through the same overlay inline HTML takes, with entities decoded and a leading comment dropped; each of those is a Live Preview widget. A `<table>`, `<iframe>`, `<form>` and the rest stay source. **Still out**: `sup`/`sub` at body size, Live Preview's own source transform of inline tags, and a raw table.
+
 **Scoria.** An HTML block that holds nothing but `<img>` tags now resolves and renders as an image
 widget in both views. Everything else — comments, `<div>`, `<pre>`, `<a>`, inline `<u>`, `<sup>`,
 `<kbd>` — still falls through to `RBlock::Html`, drawn as muted monospace source. The promotion is
@@ -635,6 +637,8 @@ with the fold-persistence fix above, since both want the same per-path store.
 more -- the "reading view built in N ms" suffix is behind `SCORIA_DEBUG_STATUS`. The work
 itself is unchanged: `show_file` still calls `reading::build_with` for every markdown open in
 every mode, so an editing session still pays for a view it is not showing.
+
+**Landed 2026-11-02**: a note opened in an editing mode hands the reading view its text without building it (`ReadingView::set_note_later`), and the model is built on the first read -- the switch to reading view, a fold sync, a control-socket state dump -- so an editing session no longer pays for a view it is not showing. The debug status still times the build where it happens.
 
 **Scoria.** Opening three notes in each of live, source and reading gives the same work and the same
 wording in all three: "Specification.md · reading view built in 2.9 ms",
@@ -1078,6 +1082,8 @@ runs before `capture_key_down`, so a menu that wants Escape before anything else
 **Scoria.** A right click on a tag, property or outline row does nothing, and the rows take no
 keys. Everything else these panes do landed on 2026-10-22
 ([[Development#Tags, All properties and Outline panes, 2026-10-22]]).
+
+**The properties half landed 2026-11-02**: a right click on an All properties row raises Rename, Property type ▸ (the six types, the current one checked, writing `types.json`), a separator, Delete property in the warning colour; Rename prompts for the key and rewrites it in every note that carries it with the entry kept in place, Delete removes it from every note, both skipping a note with unsaved edits and taking the `types.json` entry along. **Still out**: the tag and outline rows, which wait on a probe, and the keyboard.
 
 **Obsidian.** [[Specification#Observed all properties pane behavior, Obsidian 1.14.4 (installer build 1.13.7)]]:
 a property row's menu is Rename (`lucide-edit-3`), Property type (`lucide-menu`, with a submenu),

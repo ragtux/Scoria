@@ -32,7 +32,7 @@
 
 use crate::theme::Theme;
 use gpui::{
-    actions, anchored, deferred, div, prelude::*, px, Anchor, AnyElement, App, Context,
+    actions, anchored, deferred, div, prelude::*, px, relative, Anchor, AnyElement, App, Context,
     FocusHandle, KeyBinding, Pixels, Point, SharedString, Stateful, Window,
 };
 use serde_json::{json, Value};
@@ -137,6 +137,9 @@ pub enum Section {
     Unsectioned,
     System,
     Danger,
+    /// The All properties row's "Delete property": one separator before it,
+    /// not the danger pair.
+    Remove,
 }
 
 /// What a clicked row asks for. The path it acts on is the menu's
@@ -187,6 +190,13 @@ pub enum Pick {
     /// is the same paste — which is what the row promises.
     PastePlain,
     SelectAll,
+    // ----- the All properties row's menu ------------------------------------
+    /// "Rename": the key renamed in every note that carries it.
+    RenameProperty,
+    /// "Delete property": the key removed from every note that carries it.
+    DeleteProperty,
+    /// "Property type" ▸ one of the six: `types.json`.
+    SetPropertyType(scoria_formats::properties::PropertyType),
 }
 
 /// One row of a context menu: what Obsidian draws, and what a click reports.
@@ -199,7 +209,23 @@ pub struct Item {
     /// Drawn greyed and inert, the way Obsidian draws Cut and Copy with
     /// nothing selected (`is-disabled` on the row).
     pub disabled: bool,
+    /// `is-warning`: the label in the warning colour.
+    pub warning: bool,
+    /// `mod-checked`: a check at the row's right.
+    pub checked: bool,
+    /// `has-submenu`: the rows a hover opens beside this one.
+    pub submenu: Vec<Item>,
 }
+
+/// The `is-warning` colour Obsidian draws *Delete* and *Clear sort* in:
+/// its own `--text-error` was not read off a run, so this is the red the
+/// rest of the shell uses for a warning.
+pub const WARNING: gpui::Hsla = gpui::Hsla {
+    h: 0.985,
+    s: 0.80,
+    l: 0.60,
+    a: 1.0,
+};
 
 /// What was right-clicked. Paths are vault-relative, folders without a
 /// trailing slash (`""` is the vault root).
@@ -232,6 +258,14 @@ pub enum Target {
     /// (`s24` `linkMenu`, 2026-11-01): the file menu with the two open-in
     /// rows, Rename beside Move and Bookmark, and "Delete file".
     Row(String),
+    /// A right click on an All properties row
+    /// ([[Specification#Observed all properties pane behavior, Obsidian 1.14.4 (installer build 1.13.7)]]):
+    /// Rename, Property type ▸, a separator, Delete property. `ty` is the
+    /// type the key has now, which the submenu checks.
+    Property {
+        name: String,
+        ty: Option<scoria_formats::properties::PropertyType>,
+    },
 }
 
 /// A right click in the editor: what it landed on, and the selection as it
@@ -281,7 +315,7 @@ impl Target {
             | Target::Linked(p)
             | Target::View(p)
             | Target::Row(p) => p,
-            Target::Blank => "",
+            Target::Blank | Target::Property { .. } => "",
             Target::Editor(click) => match &click.spot {
                 Spot::Link(path) => path,
                 Spot::Text | Spot::Tag(_) => "",
@@ -431,6 +465,42 @@ pub fn items(target: &Target) -> Vec<Item> {
             ),
         ],
         Target::Editor(click) => editor_items(click),
+        // Observed through a CDP right click on a property row: Rename
+        // (`lucide-edit-3`, which is `pen-line`), Property type (`lucide-menu`,
+        // a submenu of the six types), a separator, Delete property
+        // (`is-warning`, `lucide-trash-2`).
+        Target::Property { ty, .. } => {
+            use scoria_formats::properties::PropertyType as T;
+            let types = [
+                ("Checkbox", "square-check", T::Checkbox),
+                ("Date", "calendar", T::Date),
+                ("Date & time", "clock", T::DateTime),
+                ("List", "list", T::MultiText),
+                ("Number", "binary", T::Number),
+                ("Text", "text", T::Text),
+            ];
+            let mut type_row = item(
+                "Property type",
+                "menu",
+                S::Action,
+                P::SetPropertyType(T::Text),
+            );
+            type_row.submenu = types
+                .iter()
+                .map(|(label, icon, t)| Item {
+                    checked: *ty == Some(*t),
+                    ..item(label, icon, S::Action, P::SetPropertyType(*t))
+                })
+                .collect();
+            vec![
+                item("Rename", "pen-line", S::Action, P::RenameProperty),
+                type_row,
+                Item {
+                    warning: true,
+                    ..item("Delete property", "trash-2", S::Remove, P::DeleteProperty)
+                },
+            ]
+        }
         // Observed on a base leaf; "Open in new window", "Open version
         // history" and the "Open linked view" submenu are left out, as the
         // file row's are, and dropping the two `view` rows drops their
@@ -505,6 +575,9 @@ pub fn items(target: &Target) -> Vec<Item> {
 /// One row, enabled.
 fn item(label: &'static str, icon: &'static str, section: Section, pick: Pick) -> Item {
     Item {
+        warning: false,
+        checked: false,
+        submenu: Vec::new(),
         label: SharedString::new_static(label),
         icon,
         section,
@@ -559,6 +632,9 @@ fn editor_items(click: &EditorClick) -> Vec<Item> {
             section: S::Selection,
             pick: P::SearchForSelection,
             disabled: false,
+            warning: false,
+            checked: false,
+            submenu: Vec::new(),
         });
     }
     // `lucide-box-select` is Lucide's deprecated alias of `square-dashed`,
@@ -639,6 +715,9 @@ pub fn drawn(target: &Target) -> Vec<String> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Menu {
     pub position: Point<Pixels>,
+    /// Whether a row's submenu is showing beside it: the pointer rests on
+    /// the row, or did last.
+    pub submenu: bool,
     /// Which corner of the list sits at `position`: the top-left for a
     /// right click, the top-right for a menu hung under a button at the
     /// window's right edge, the way the view header's **More options**
@@ -664,6 +743,7 @@ pub fn describe(menu: &Menu) -> Value {
         },
         Target::View(_) => "view",
         Target::Row(_) => "row",
+        Target::Property { .. } => "property",
     };
     let items = items(&menu.target);
     let disabled: Vec<String> = items
@@ -676,6 +756,7 @@ pub fn describe(menu: &Menu) -> Value {
         "path": menu.target.path(),
         "items": drawn(&menu.target),
         "disabled": disabled,
+        "submenu": menu.submenu,
     });
     // What the editor's menu was built from, which no other target has.
     if let Target::Editor(click) = &menu.target {
@@ -692,16 +773,24 @@ pub fn describe(menu: &Menu) -> Value {
 /// runs `on_close`; a click on a row runs `on_close` and then `on_pick` with
 /// the row's [`Pick`]. The view owns the [`Menu`] and clears it in
 /// `on_close`; this only draws.
+#[allow(clippy::too_many_arguments)]
 pub fn render<V: 'static>(
     menu: &Menu,
     theme: &Theme,
     focus: &FocusHandle,
+    viewport_width: Pixels,
     cx: &mut Context<V>,
     on_close: impl Fn(&mut V, &mut Context<V>) + 'static,
     on_pick: impl Fn(&mut V, Pick, &mut Window, &mut Context<V>) + 'static,
+    on_submenu: impl Fn(&mut V, bool, &mut Context<V>) + 'static,
 ) -> AnyElement {
     let on_close = Rc::new(on_close);
     let on_pick = Rc::new(on_pick);
+    let on_submenu = Rc::new(on_submenu);
+    let submenu_open = menu.submenu;
+    // A submenu opens beside its row on the right, or on the left when the
+    // menu stands near the window's right edge and there is no room.
+    let flip_submenu = menu.position.x + px(180. + 140.) > viewport_width;
     let mut list = menu_box(
         div()
             .id("file-menu")
@@ -737,39 +826,103 @@ pub fn render<V: 'static>(
         }
         previous = Some(item.section);
         let pick = item.pick;
-        let on_close = on_close.clone();
-        let on_pick = on_pick.clone();
+        let on_close_row = on_close.clone();
+        let on_pick_row = on_pick.clone();
+        let has_submenu = !item.submenu.is_empty();
+        let on_hover = on_submenu.clone();
         // Obsidian's `is-disabled` row: greyed, no hover, and a click on it
         // closes nothing and does nothing.
         let faded = theme.text_faint;
-        list = list.child(
-            div()
-                .id(("file-menu-item", ix))
+        let color = if item.warning { WARNING } else { theme.text };
+        let mut row = div()
+            .id(("file-menu-item", ix))
+            .relative()
+            .flex()
+            .items_center()
+            .gap_2()
+            .px_3()
+            .py_1()
+            .text_color(color)
+            .when(item.disabled, |d| d.text_color(faded))
+            .when(!item.disabled, |d| {
+                d.cursor_pointer()
+                    .hover(|s| s.bg(theme.bg_alt))
+                    .on_hover(cx.listener(move |this, hovered: &bool, _, cx| {
+                        if *hovered {
+                            on_hover(this, has_submenu, cx);
+                        }
+                    }))
+                    .when(!has_submenu, |d| {
+                        d.on_click(cx.listener(move |this, _, window, cx| {
+                            on_close_row(this, cx);
+                            on_pick_row(this, pick, window, cx);
+                        }))
+                    })
+            })
+            .child(crate::assets::icon(
+                item.icon,
+                16.,
+                if item.disabled {
+                    faded
+                } else {
+                    theme.text_muted
+                },
+            ))
+            .child(div().flex_1().child(item.label.clone()))
+            .when(item.checked, |d| {
+                d.child(crate::assets::icon("check", 14., theme.text_muted))
+            })
+            .when(has_submenu, |d| {
+                d.child(crate::assets::icon("chevron-right", 14., theme.text_muted))
+            });
+        // The submenu stands beside its row, open while the pointer rested
+        // on that row last; its rows pick like the menu's own.
+        if has_submenu && submenu_open {
+            let mut sub = div()
+                .id(("file-submenu", ix))
+                .absolute()
+                .when(!flip_submenu, |d| d.left(relative(1.)))
+                .when(flip_submenu, |d| d.right(relative(1.)))
+                .top(px(-6.))
                 .flex()
-                .items_center()
-                .gap_2()
-                .px_3()
+                .flex_col()
+                .min_w(px(126.))
                 .py_1()
-                .when(item.disabled, |d| d.text_color(faded))
-                .when(!item.disabled, |d| {
-                    d.cursor_pointer()
+                .bg(theme.bg_secondary)
+                .border_1()
+                .border_color(theme.border)
+                .rounded_md()
+                .shadow_lg()
+                .occlude();
+            for (sx, subitem) in item.submenu.iter().enumerate() {
+                let pick = subitem.pick;
+                let on_close = on_close.clone();
+                let on_pick = on_pick.clone();
+                sub = sub.child(
+                    div()
+                        .id(("file-submenu-item", ix * 64 + sx))
+                        .flex()
+                        .items_center()
+                        .gap_2()
+                        .px_3()
+                        .py_1()
+                        .text_color(theme.text)
+                        .cursor_pointer()
                         .hover(|s| s.bg(theme.bg_alt))
                         .on_click(cx.listener(move |this, _, window, cx| {
                             on_close(this, cx);
                             on_pick(this, pick, window, cx);
                         }))
-                })
-                .child(crate::assets::icon(
-                    item.icon,
-                    16.,
-                    if item.disabled {
-                        faded
-                    } else {
-                        theme.text_muted
-                    },
-                ))
-                .child(item.label),
-        );
+                        .child(crate::assets::icon(subitem.icon, 16., theme.text_muted))
+                        .child(div().flex_1().child(subitem.label.clone()))
+                        .when(subitem.checked, |d| {
+                            d.child(crate::assets::icon("check", 14., theme.text_muted))
+                        }),
+                );
+            }
+            row = row.child(sub);
+        }
+        list = list.child(row);
     }
     deferred(
         anchored()
@@ -1053,6 +1206,40 @@ mod tests {
         );
     }
 
+    /// The All properties row's menu: Rename, Property type with its six
+    /// types (the current one checked), a separator, Delete property.
+    #[test]
+    fn a_property_rows_menu_is_rename_type_and_delete() {
+        use scoria_formats::properties::PropertyType;
+        let target = Target::Property {
+            name: "status".into(),
+            ty: Some(PropertyType::Number),
+        };
+        assert_eq!(
+            drawn(&target),
+            ["Rename", "Property type", "---", "Delete property"]
+        );
+        let items = items(&target);
+        let types: Vec<(&str, bool)> = items[1]
+            .submenu
+            .iter()
+            .map(|i| (i.label.as_ref(), i.checked))
+            .collect();
+        assert_eq!(
+            types,
+            [
+                ("Checkbox", false),
+                ("Date", false),
+                ("Date & time", false),
+                ("List", false),
+                ("Number", true),
+                ("Text", false),
+            ]
+        );
+        assert!(items[2].warning);
+        assert_eq!(target.path(), "");
+    }
+
     /// The editor click the plain menu came from: no selection, plain text.
     fn plain_click() -> Target {
         Target::Editor(EditorClick {
@@ -1318,6 +1505,7 @@ mod tests {
     fn describe_reports_the_target_and_the_drawn_rows() {
         let menu = Menu {
             position: Point::new(px(10.), px(20.)),
+            submenu: false,
             anchor: Anchor::TopLeft,
             target: Target::Linked("Notes/Plan.md".into()),
         };

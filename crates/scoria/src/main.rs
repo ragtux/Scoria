@@ -38,6 +38,7 @@ mod switcher;
 mod text_input;
 mod theme;
 mod title_field;
+mod uri;
 mod vaults;
 mod watch;
 mod workspace;
@@ -168,6 +169,9 @@ struct Args {
     /// Press these keys, comma separated, after `--type`: `enter`, `tab`,
     /// `shift-tab`, `shift-enter`, `escape`, `up`, `down`.
     accept: Option<String>,
+    /// An `obsidian://` URI to act on once the vault has loaded: a bare
+    /// argument of that scheme, or `--uri`.
+    uri: Option<String>,
     /// Open this cell of the note's first table for editing, before
     /// `--type`, the way clicking one does.
     cell: Option<usize>,
@@ -213,6 +217,7 @@ fn parse_args() -> Args {
         prompt: None,
         type_text: None,
         accept: None,
+        uri: None,
         cell: None,
         command: None,
         template: None,
@@ -250,6 +255,8 @@ fn parse_args() -> Args {
             "--control" => args.control = it.next().map(PathBuf::from),
             "--size" => args.size = it.next().as_deref().and_then(parse_size),
             "--frame" => args.frame = it.next(),
+            "--uri" => args.uri = it.next(),
+            _ if a.starts_with("obsidian://") => args.uri = Some(a),
             _ if args.vault.is_none() => args.vault = Some(PathBuf::from(a)),
             _ => args.note = Some(a),
         }
@@ -504,6 +511,7 @@ fn main() {
             let source = args.source;
             let type_text = args.type_text.clone();
             let accept = args.accept.clone();
+            let uri = args.uri.clone();
             let cell = args.cell;
             let command = args.command.clone();
             let template = args.template.clone();
@@ -620,6 +628,11 @@ fn main() {
                             }
                             if let Some(key) = &menu {
                                 ws.open_settings_menu(key, cx);
+                            }
+                            if let Some(u) = &uri {
+                                if let Err(err) = ws.handle_uri(u, window, cx) {
+                                    eprintln!("{err}");
+                                }
                             }
                             ws.mark_started();
                             true

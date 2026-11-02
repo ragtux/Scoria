@@ -988,7 +988,30 @@ fn every_config_file_is_written_back_byte_identical() {
             "daily-notes.json",
         ));
         // Every set has to contribute, or naming a vault proves nothing
-        // about its own `.obsidian`.
+        // about its own `.obsidian` -- unless the vault keeps none of the
+        // modelled files at all (a vault with only `workspace.json`, which
+        // Scoria neither models nor writes), where there is nothing to
+        // prove and the note round trips are the whole gate.
+        let modelled = [
+            "app.json",
+            "appearance.json",
+            "core-plugins.json",
+            "community-plugins.json",
+            "graph.json",
+            "hotkeys.json",
+            "types.json",
+            "switcher.json",
+            "command-palette.json",
+            "templates.json",
+            "daily-notes.json",
+        ];
+        if !modelled.iter().any(|name| dir.join(name).is_file()) {
+            eprintln!(
+                "{} holds no modelled config file; nothing to round-trip",
+                dir.display()
+            );
+            continue;
+        }
         assert!(
             checked > before,
             "no config file round-tripped in {}",

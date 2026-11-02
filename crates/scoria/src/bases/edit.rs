@@ -70,15 +70,7 @@ use serde_json::{json, Value as Json};
 /// canvas's own right-click list does.
 pub const SEPARATOR: &str = "---";
 
-/// The `is-warning` colour of *Clear sort* and *Delete*: Obsidian's own
-/// `--text-error` was not read off the run, so this is the red the rest of
-/// the shell uses for a warning.
-const WARNING: gpui::Hsla = gpui::Hsla {
-    h: 0.985,
-    s: 0.80,
-    l: 0.60,
-    a: 1.0,
-};
+use crate::file_menu::WARNING;
 
 // ---------------------------------------------------------------------------
 // The column header's context menu

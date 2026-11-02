@@ -63,6 +63,7 @@ use scoria_formats::config::{
     PagePreviewConfig, PluginManifest, PropertyTypes, SwitcherConfig, TemplatesConfig,
     WebviewerConfig, CORE_PLUGINS,
 };
+use scoria_formats::properties::Change;
 use scoria_formats::properties::PropertiesInDocument;
 use scoria_formats::{validate_renamed_file, FileKind};
 use scoria_markdown::Subpath;
@@ -760,6 +761,29 @@ impl VaultState {
         Ok(types.clone())
     }
 
+    /// A property renamed everywhere takes its `types.json` entry with it.
+    pub fn rename_property_type(&self, from: &str, to: &str) -> Result<(), String> {
+        let mut types = self.property_types.write().expect("property types lock");
+        let Some(ty) = types.types.shift_remove(from) else {
+            return Ok(());
+        };
+        types.types.insert(to.to_string(), ty);
+        self.vault()
+            .write_config("types.json", &*types)
+            .map_err(|e| e.to_string())
+    }
+
+    /// A property deleted everywhere leaves `types.json` too.
+    pub fn remove_property_type(&self, key: &str) -> Result<(), String> {
+        let mut types = self.property_types.write().expect("property types lock");
+        if types.types.shift_remove(key).is_none() {
+            return Ok(());
+        }
+        self.vault()
+            .write_config("types.json", &*types)
+            .map_err(|e| e.to_string())
+    }
+
     pub fn vault(&self) -> RwLockReadGuard<'_, Vault> {
         self.vault.read().unwrap_or_else(|e| e.into_inner())
     }
@@ -1440,6 +1464,8 @@ enum Modal {
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum PendingOp {
     Rename(String),
+    /// "Rename" on an All properties row: the key to rename everywhere.
+    RenameProperty(String),
     Move(String),
     Delete(String),
     NewFolder {
@@ -2749,6 +2775,7 @@ fn bases_subscription(bases: &Entity<BasesView>, cx: &mut Context<Workspace>) ->
         BasesEvent::FileMenu { path, position } => {
             this.file_menu = Some(file_menu::Menu {
                 position: *position,
+                submenu: false,
                 anchor: Anchor::TopLeft,
                 target: file_menu::Target::Row(path.clone()),
             });
@@ -5593,14 +5620,26 @@ impl Workspace {
             },
             FileKind::Markdown => match std::fs::read_to_string(state.vault().absolute(path)) {
                 Ok(text) => {
-                    let started = Instant::now();
-                    let model =
-                        reading::build_with(path, &text, state.as_ref(), state.build_options());
-                    let build_ms = started.elapsed().as_secs_f64() * 1000.0;
                     self.words = text.split_whitespace().count();
                     self.chars = text.chars().count();
-                    self.reading
-                        .update(cx, |r, cx| r.set_note(Some(path.to_string()), model, cx));
+                    // A leaf renders the view it is showing: in an editing
+                    // mode the reading model waits until something reads it
+                    // -- the switch to reading view, a fold sync, the state
+                    // dump -- rather than being built for every open.
+                    let build_ms = if self.mode.is_editing() && !debug_status() {
+                        let (path, text, state) = (path.to_string(), text.clone(), state.clone());
+                        self.reading
+                            .update(cx, |r, cx| r.set_note_later(path, text, state, cx));
+                        0.0
+                    } else {
+                        let started = Instant::now();
+                        let model =
+                            reading::build_with(path, &text, state.as_ref(), state.build_options());
+                        let build_ms = started.elapsed().as_secs_f64() * 1000.0;
+                        self.reading
+                            .update(cx, |r, cx| r.set_note(Some(path.to_string()), model, cx));
+                        build_ms
+                    };
                     // The editor keeps its buffer when the file on disk is
                     // what it last saved (or still holds unsaved edits), and
                     // keeps its place when the note changed underneath it.
@@ -7374,6 +7413,10 @@ impl Workspace {
         };
         let value = value.trim();
         match op {
+            PendingOp::RenameProperty(from) => {
+                self.rename_property_everywhere(&from, value, cx);
+                self.close_modal(window, cx);
+            }
             PendingOp::Rename(from) => {
                 // The box holds the stem, which is what `renamed_path`
                 // takes -- the same path and the same validator the view
@@ -8248,6 +8291,7 @@ impl Workspace {
         };
         self.file_menu = Some(file_menu::Menu {
             position,
+            submenu: false,
             anchor: Anchor::TopRight,
             target: file_menu::Target::View(path),
         });
@@ -11270,6 +11314,117 @@ impl Workspace {
     /// screenshot. Every key is always there, `null` when there is nothing
     /// to say, so a caller can index into it without guessing. Each view
     /// describes itself; the rest is the shell's own.
+    /// An `obsidian://` URI, from the command line or the control socket:
+    /// see [`crate::uri`]. A URI naming another vault is refused.
+    pub fn handle_uri(
+        &mut self,
+        uri: &str,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> Result<(), String> {
+        use crate::uri::{names_vault, Uri};
+        let parsed = crate::uri::parse(uri)?;
+        let Some(state) = self.state.clone() else {
+            return Err("no vault is open".to_string());
+        };
+        let vault_name = state
+            .root
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_default();
+        let vault = match &parsed {
+            Uri::Open { vault, .. }
+            | Uri::New { vault, .. }
+            | Uri::Search { vault, .. }
+            | Uri::Daily { vault } => vault.clone(),
+        };
+        if !names_vault(vault.as_deref(), &vault_name) {
+            return Err(format!(
+                "the URI names the vault {}; this window shows {vault_name}",
+                vault.unwrap_or_default()
+            ));
+        }
+        match parsed {
+            Uri::Open { file, path, .. } => {
+                if let Some(path) = path {
+                    let exists = state.vault().absolute(&path).exists();
+                    let path = if exists || path.contains('.') {
+                        path
+                    } else {
+                        format!("{path}.md")
+                    };
+                    self.open_file(path, None, cx);
+                } else if let Some(name) = file {
+                    if !self.open_by_name(&name, cx) {
+                        return Err(format!("no note named {name}"));
+                    }
+                }
+                Ok(())
+            }
+            Uri::New {
+                name,
+                path,
+                content,
+                silent,
+                append,
+                prepend,
+                overwrite,
+                ..
+            } => {
+                let path = match (path, name) {
+                    (Some(path), _) => path,
+                    (None, Some(name)) => format!("{}.md", name.trim_end_matches(".md")),
+                    (None, None) => "Untitled.md".to_string(),
+                };
+                let content = content.unwrap_or_default();
+                let absolute = state.vault().absolute(&path);
+                if absolute.exists() {
+                    let on_disk = std::fs::read_to_string(&absolute).map_err(|e| e.to_string())?;
+                    let text = if overwrite {
+                        Some(content)
+                    } else if append {
+                        Some(format!("{on_disk}{content}"))
+                    } else if prepend {
+                        Some(format!("{content}{on_disk}"))
+                    } else {
+                        None
+                    };
+                    if let Some(text) = text {
+                        if self.buffer_differs(&path, &on_disk, cx) {
+                            return Err(format!("{path} has unsaved edits"));
+                        }
+                        scoria_vault::write_no_follow(&absolute, text.as_bytes())
+                            .map_err(|e| e.to_string())?;
+                        self.files_changed(vec![absolute], cx);
+                    }
+                } else {
+                    match state.create_note(&path, &content) {
+                        Ok(changes) => self.after_changes(changes, cx),
+                        Err(err) => return Err(err),
+                    }
+                }
+                if !silent {
+                    self.open_file(path, None, cx);
+                }
+                Ok(())
+            }
+            Uri::Search { query, .. } => {
+                self.show_search(&query.unwrap_or_default(), Some(window), cx);
+                Ok(())
+            }
+            Uri::Daily { .. } => {
+                self.open_daily(None, window, cx);
+                Ok(())
+            }
+        }
+    }
+
+    /// Builds the reading model a note opened in an editing mode is still
+    /// waiting on, so a state dump describes the note rather than nothing.
+    pub fn ensure_reading_built(&mut self, cx: &mut Context<Self>) {
+        self.reading.update(cx, |r, cx| r.ensure_built(cx));
+    }
+
     pub fn describe(&self, text: bool, rows: usize, window: &Window, cx: &App) -> Value {
         let mut vault = Map::new();
         vault.insert(
@@ -11550,6 +11705,9 @@ impl Workspace {
             match &self.pending {
                 None => Value::Null,
                 Some(PendingOp::Rename(path)) => json!({"op": "rename", "path": path}),
+                Some(PendingOp::RenameProperty(key)) => {
+                    json!({"op": "rename-property", "key": key})
+                }
                 Some(PendingOp::Move(path)) => json!({"op": "move", "path": path}),
                 Some(PendingOp::Delete(path)) => json!({"op": "delete", "path": path}),
                 Some(PendingOp::NewFolder { parent }) => {
@@ -12150,6 +12308,7 @@ impl Workspace {
     ) {
         self.file_menu = Some(file_menu::Menu {
             position,
+            submenu: false,
             anchor: Anchor::TopLeft,
             target: file_menu::Target::Linked(path),
         });
@@ -12197,6 +12356,7 @@ impl Workspace {
         };
         self.file_menu = Some(file_menu::Menu {
             position,
+            submenu: false,
             anchor: Anchor::TopLeft,
             target: file_menu::Target::Editor(file_menu::EditorClick {
                 spot,
@@ -12287,6 +12447,22 @@ impl Workspace {
                 .editor
                 .update(cx, |e, cx| e.paste_clipboard(window, cx)),
             Pick::SelectAll => self.editor.update(cx, |e, cx| e.select_all_text(cx)),
+            // The All properties row's menu.
+            Pick::RenameProperty => {
+                if let file_menu::Target::Property { name, .. } = target {
+                    self.start_rename_property(name, window, cx);
+                }
+            }
+            Pick::DeleteProperty => {
+                if let file_menu::Target::Property { name, .. } = target {
+                    self.delete_property_everywhere(name, cx);
+                }
+            }
+            Pick::SetPropertyType(ty) => {
+                if let file_menu::Target::Property { name, .. } = target {
+                    self.assign_property_type(name.clone(), ty, cx);
+                }
+            }
             // The Files view's own rows, which no menu drawn here lists.
             Pick::Duplicate
             | Pick::NewNote
@@ -12303,6 +12479,7 @@ impl Workspace {
     fn render_file_menu(
         &mut self,
         theme: &Theme,
+        window: &Window,
         cx: &mut Context<Self>,
     ) -> Option<gpui::AnyElement> {
         let menu = self.file_menu.as_ref()?;
@@ -12312,9 +12489,18 @@ impl Workspace {
             menu,
             theme,
             &focus,
+            window.viewport_size().width,
             cx,
             |this, cx| this.close_file_menu(cx),
             move |this, pick, window, cx| this.file_menu_pick(pick, &target, window, cx),
+            |this, open, cx| {
+                if let Some(menu) = this.file_menu.as_mut() {
+                    if menu.submenu != open {
+                        menu.submenu = open;
+                        cx.notify();
+                    }
+                }
+            },
         ))
     }
 
@@ -13535,6 +13721,8 @@ impl Workspace {
             .pb(px(32.));
         for (ix, row) in rows.into_iter().enumerate() {
             let name = row.name.clone();
+            let menu_name = row.name.clone();
+            let ty = row.ty;
             list = list.child(
                 Self::tree_row(
                     ("property-row", ix),
@@ -13549,7 +13737,22 @@ impl Workspace {
                 )
                 .on_click(cx.listener(move |this, _, window, cx| {
                     this.show_search(&format!("[\"{name}\"]"), Some(window), cx);
-                })),
+                }))
+                .on_mouse_down(
+                    MouseButton::Right,
+                    cx.listener(move |this, event: &MouseDownEvent, _, cx| {
+                        this.file_menu = Some(file_menu::Menu {
+                            position: event.position,
+                            submenu: false,
+                            anchor: Anchor::TopLeft,
+                            target: file_menu::Target::Property {
+                                name: menu_name.clone(),
+                                ty,
+                            },
+                        });
+                        cx.notify();
+                    }),
+                ),
             );
         }
         div()
@@ -13560,6 +13763,138 @@ impl Workspace {
             .children(filter)
             .child(list)
             .into_any_element()
+    }
+
+    // ----- the All properties row's menu --------------------------------------
+
+    /// "Rename" on a property row: the prompt for the new key, which then
+    /// renames it in every note that carries it. **Unprobed**: the prompt
+    /// Obsidian shows; the file prompt's own shape stands in.
+    fn start_rename_property(&mut self, name: &str, window: &mut Window, cx: &mut Context<Self>) {
+        self.open_prompt(
+            PendingOp::RenameProperty(name.to_string()),
+            PromptSpec {
+                title: "Rename property".into(),
+                detail: Some(name.to_string().into()),
+                input: Some(name.to_string()),
+                placeholder: "Property name".into(),
+                confirm: "Rename".into(),
+                ..PromptSpec::default()
+            },
+            window,
+            cx,
+        );
+    }
+
+    /// Renames `from` to `to` in every note's frontmatter and in
+    /// `types.json`, each note planned over its own bytes with the entry
+    /// kept where it is.
+    fn rename_property_everywhere(&mut self, from: &str, to: &str, cx: &mut Context<Self>) {
+        if to.is_empty() || to.eq_ignore_ascii_case(from) {
+            return;
+        }
+        let (from, to) = (from.to_string(), to.to_string());
+        let changed = self.rewrite_property_everywhere(
+            &from,
+            Change::Rename {
+                from: from.clone(),
+                to: to.clone(),
+            },
+            cx,
+        );
+        if let Some(state) = self.state.clone() {
+            if let Err(err) = state.rename_property_type(&from, &to) {
+                self.report(err, cx);
+            }
+        }
+        self.report(format!("Renamed {from} to {to} in {changed} notes"), cx);
+    }
+
+    /// "Delete property": the key removed from every note that carries it
+    /// and from `types.json`. **Unprobed**: whether Obsidian asks first.
+    fn delete_property_everywhere(&mut self, name: &str, cx: &mut Context<Self>) {
+        let changed = self.rewrite_property_everywhere(
+            name,
+            Change::Remove {
+                key: name.to_string(),
+            },
+            cx,
+        );
+        if let Some(state) = self.state.clone() {
+            if let Err(err) = state.remove_property_type(name) {
+                self.report(err, cx);
+            }
+        }
+        self.report(format!("Deleted {name} from {changed} notes"), cx);
+    }
+
+    /// Applies one frontmatter change to every note whose cached frontmatter
+    /// carries `key`, under the guard a cell edit uses: a note open in a
+    /// buffer with unsaved edits is skipped and said so. Returns how many
+    /// notes were written.
+    fn rewrite_property_everywhere(
+        &mut self,
+        key: &str,
+        change: Change,
+        cx: &mut Context<Self>,
+    ) -> usize {
+        let Some(state) = self.state.clone() else {
+            return 0;
+        };
+        let paths: Vec<String> = {
+            let vault = state.vault();
+            let cache = state.cache();
+            vault
+                .markdown_files()
+                .filter(|f| {
+                    cache
+                        .file(&f.path)
+                        .and_then(|m| m.frontmatter.as_ref())
+                        .and_then(|fm| fm.as_mapping())
+                        .is_some_and(|map| {
+                            map.keys()
+                                .any(|k| k.as_str().is_some_and(|k| k.eq_ignore_ascii_case(key)))
+                        })
+                })
+                .map(|f| f.path.clone())
+                .collect()
+        };
+        let mut written_paths = Vec::new();
+        for path in paths {
+            let absolute = match state.vault().write_path(&path) {
+                Ok(absolute) => absolute,
+                Err(err) => {
+                    self.report(format!("{path} not written: {err}"), cx);
+                    continue;
+                }
+            };
+            let Ok(on_disk) = std::fs::read_to_string(&absolute) else {
+                continue;
+            };
+            if self.buffer_differs(&path, &on_disk, cx) {
+                self.report(format!("{path} has unsaved edits; skipped"), cx);
+                continue;
+            }
+            let Some(props) = scoria_cache::note_properties(&on_disk) else {
+                continue;
+            };
+            let Some(edits) =
+                scoria_formats::properties::plan(&on_disk, &props, std::slice::from_ref(&change))
+            else {
+                continue;
+            };
+            let written = scoria_formats::properties::apply(&on_disk, &edits);
+            if let Err(err) = scoria_vault::write_no_follow(&absolute, written.as_bytes()) {
+                self.report(format!("Could not write {path}: {err}"), cx);
+                continue;
+            }
+            written_paths.push(absolute);
+        }
+        let count = written_paths.len();
+        if !written_paths.is_empty() {
+            self.files_changed(written_paths, cx);
+        }
+        count
     }
 
     /// The Outline pane: search, auto-scroll and collapse-all buttons, the
@@ -15171,7 +15506,7 @@ impl Render for Workspace {
             // and Outgoing links rows, the editor's text, a link in the
             // reading view -- positioned at the click and drawn over
             // everything else, so no dock's clipping can cut it off.
-            .children(self.render_file_menu(&theme, cx))
+            .children(self.render_file_menu(&theme, window, cx))
             .children(notices);
         client_frame(content.into_any_element(), &theme, window)
     }

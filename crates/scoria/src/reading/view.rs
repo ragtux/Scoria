@@ -241,6 +241,10 @@ fn collect_runs<'a>(blocks: &'a [RBlock], block: usize, out: &mut Vec<Run<'a>>) 
                     collect_runs(body, block, out);
                 }
             }
+            RBlock::Details { summary, body, .. } => {
+                push(summary, "\n", out);
+                collect_runs(body, block, out);
+            }
             RBlock::Properties(_)
             | RBlock::ThematicBreak
             | RBlock::Code { .. }
@@ -684,6 +688,14 @@ pub struct ReadingView {
     /// This view's own entity id, which is what names it as a host of
     /// those views.
     id: gpui::EntityId,
+    /// A note handed over while an editing mode is showing: its text and
+    /// vault, built into a model only when something reads it -- the first
+    /// render in reading view, a fold sync, the control socket. An editing
+    /// session does not pay for a view it is not showing.
+    pending: Option<(String, String, Arc<crate::workspace::VaultState>)>,
+    /// The note the current `model` was built from, which is what a reload
+    /// of the same note compares against to keep the reader's place.
+    built_path: Option<String>,
 }
 
 impl EventEmitter<ReadingEvent> for ReadingView {}
@@ -719,7 +731,45 @@ impl ReadingView {
             selected: Rc::new(HashMap::new()),
             embed_views: None,
             id: cx.entity_id(),
+            pending: None,
+            built_path: None,
         }
+    }
+
+    /// Hands the view a note without building it: `path` is the note it
+    /// shows from now on, and the model is built on the first read. A note
+    /// other than the built one drops the built model at once, so nothing
+    /// of another note can be read in the meantime.
+    pub fn set_note_later(
+        &mut self,
+        path: String,
+        text: String,
+        state: Arc<crate::workspace::VaultState>,
+        cx: &mut Context<Self>,
+    ) {
+        if !same_note(self.built_path.as_deref(), Some(&path)) {
+            self.model = Arc::new(Model::default());
+            self.list.reset(0);
+            self.built_path = None;
+        }
+        self.path = Some(path.clone());
+        self.pending = Some((path, text, state));
+        cx.notify();
+    }
+
+    /// Builds the note handed over by [`ReadingView::set_note_later`], if
+    /// one is waiting.
+    pub fn ensure_built(&mut self, cx: &mut Context<Self>) {
+        if let Some((path, text, state)) = self.pending.take() {
+            let model =
+                crate::reading::build_with(&path, &text, state.as_ref(), state.build_options());
+            self.set_note(Some(path), model, cx);
+        }
+    }
+
+    /// Whether a note is waiting to be built.
+    pub fn is_pending(&self) -> bool {
+        self.pending.is_some()
     }
 
     /// The registry an embedded base's view comes from. The workspace hands
@@ -751,8 +801,10 @@ impl ReadingView {
     }
 
     pub fn set_note(&mut self, path: Option<String>, model: Model, cx: &mut Context<Self>) {
-        let same = same_note(self.path.as_deref(), path.as_deref());
+        let same = same_note(self.built_path.as_deref(), path.as_deref());
         let top = self.list.logical_scroll_top();
+        self.pending = None;
+        self.built_path = path.clone();
         self.path = path;
         self.list.reset(model.blocks.len());
         if same {
@@ -951,6 +1003,7 @@ impl ReadingView {
     }
 
     pub fn set_fold_keys(&mut self, keys: Vec<FoldKey>, cx: &mut Context<Self>) {
+        self.ensure_built(cx);
         self.folds = keys;
         self.recompute_hidden();
         cx.notify();
@@ -1102,6 +1155,8 @@ impl ReadingView {
                     "text": selected_text(&runs, start, end),
                 }))
             }),
+            // A note handed over in an editing mode and not built yet.
+            "pending": self.is_pending(),
             // An embedded base is a live view of its own; its state is the
             // one the leaf's view reports, under the embed that names it.
             "bases": crate::bases::embed::describe_all(&self.model.blocks, &|base| {
@@ -1364,6 +1419,7 @@ impl ReadingView {
 
 impl Render for ReadingView {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        self.ensure_built(cx);
         let theme = cx.global::<Theme>().clone();
         let base = theme.base_font_size;
         let view = cx.entity().downgrade();
@@ -1694,8 +1750,16 @@ impl<'a> Renderer<'a> {
                 .w_full()
                 .bg(t.border)
                 .into_any_element(),
-            RBlock::Code { id, text, copy, .. } => {
+            RBlock::Code {
+                id,
+                text,
+                copy,
+                wrap,
+                copyable,
+                ..
+            } => {
                 let id = *id;
+                let (wrap, copyable) = (*wrap, *copyable);
                 let payload = copy.clone();
                 let on_copy = self.reading_host.map(|h| h.on_copy.clone());
                 let copied = self.reading_host.is_some_and(|h| h.copied == Some(id));
@@ -1710,56 +1774,116 @@ impl<'a> Renderer<'a> {
                     .text_size(px(base * 0.875))
                     .line_height(px(base * 0.875 * 1.5))
                     .child(
-                        // Code keeps its columns: long lines scroll sideways.
-                        div().id(("code", id)).overflow_x_scroll().px_3().child(
-                            div()
-                                .whitespace_nowrap()
-                                .child(SharedString::from(text.clone())),
-                        ),
-                    )
-                    .child(
-                        // Obsidian draws no language name on a rendered
-                        // block; the only thing on it is a copy button,
-                        // and only while the block is hovered.
+                        // Code keeps its columns: long lines scroll sideways
+                        // -- except a raw `<pre>`, which wraps (observed).
                         div()
-                            .id(("copy-code", id))
-                            .absolute()
-                            .top_0()
-                            .right_0()
-                            .m(px(6.))
-                            .px_2()
-                            .py(px(6.))
-                            .rounded_sm()
-                            .invisible()
-                            .group_hover("code-block", |s| s.visible())
+                            .id(("code", id))
+                            .when(!wrap, |d| d.overflow_x_scroll())
+                            .px_3()
+                            .child(
+                                div()
+                                    .when(!wrap, |d| d.whitespace_nowrap())
+                                    .child(SharedString::from(text.clone())),
+                            ),
+                    )
+                    .when(copyable, |d| {
+                        d.child(
+                            // Obsidian draws no language name on a rendered
+                            // block; the only thing on it is a copy button,
+                            // and only while the block is hovered.
+                            div()
+                                .id(("copy-code", id))
+                                .absolute()
+                                .top_0()
+                                .right_0()
+                                .m(px(6.))
+                                .px_2()
+                                .py(px(6.))
+                                .rounded_sm()
+                                .invisible()
+                                .group_hover("code-block", |s| s.visible())
+                                .cursor_pointer()
+                                .hover(|s| s.bg(t.bg_secondary))
+                                // `lucide-copy`, and `lucide-check` for as long
+                                // as the check shows. A 16 px icon in this box
+                                // is the 31.98 x 27.97 px button Obsidian paints.
+                                .child(icon(
+                                    if copied { "check" } else { "copy" },
+                                    16.,
+                                    t.text_muted,
+                                ))
+                                .on_click(move |_, _, cx| {
+                                    // An empty fence's button writes nothing at
+                                    // all -- a click on one in Obsidian left the
+                                    // clipboard holding what it already had, so
+                                    // an empty body is not copied as an empty
+                                    // string. Whether its check still flashes is
+                                    // unobserved; flashing one for a copy that
+                                    // did not happen would be a lie, so it does
+                                    // not.
+                                    if payload.is_empty() {
+                                        return;
+                                    }
+                                    cx.write_to_clipboard(ClipboardItem::new_string(
+                                        payload.clone(),
+                                    ));
+                                    if let Some(on_copy) = &on_copy {
+                                        on_copy(id, cx);
+                                    }
+                                }),
+                        )
+                    })
+                    .into_any_element()
+            }
+            // A raw `<details>`: the summary row folds the body, the way a
+            // browser's does; `open` opens it, and a click flips it for the
+            // session through the same toggle a callout uses.
+            RBlock::Details {
+                id,
+                open,
+                summary,
+                body,
+            } => {
+                let id = *id;
+                let flipped = self.toggled.contains(&id);
+                let collapsed = *open == flipped;
+                let on_toggle = self.on_toggle.clone();
+                div()
+                    .mb(gap)
+                    .flex()
+                    .flex_col()
+                    .child(
+                        div()
+                            .id(("details", id))
+                            .flex()
+                            .flex_row()
+                            .items_center()
+                            .gap_2()
                             .cursor_pointer()
-                            .hover(|s| s.bg(t.bg_secondary))
-                            // `lucide-copy`, and `lucide-check` for as long
-                            // as the check shows. A 16 px icon in this box
-                            // is the 31.98 x 27.97 px button Obsidian paints.
+                            .block_mouse_except_scroll()
+                            .on_mouse_down(gpui::MouseButton::Left, move |_, _, cx| {
+                                on_toggle(id, cx)
+                            })
                             .child(icon(
-                                if copied { "check" } else { "copy" },
-                                16.,
+                                if collapsed {
+                                    "chevron-right"
+                                } else {
+                                    "chevron-down"
+                                },
+                                14.,
                                 t.text_muted,
                             ))
-                            .on_click(move |_, _, cx| {
-                                // An empty fence's button writes nothing at
-                                // all -- a click on one in Obsidian left the
-                                // clipboard holding what it already had, so
-                                // an empty body is not copied as an empty
-                                // string. Whether its check still flashes is
-                                // unobserved; flashing one for a copy that
-                                // did not happen would be a lie, so it does
-                                // not.
-                                if payload.is_empty() {
-                                    return;
-                                }
-                                cx.write_to_clipboard(ClipboardItem::new_string(payload.clone()));
-                                if let Some(on_copy) = &on_copy {
-                                    on_copy(id, cx);
-                                }
-                            }),
+                            .child(div().flex_1().child(self.rich(summary))),
                     )
+                    .when(!collapsed, |d| {
+                        d.child(
+                            div()
+                                .pl(px(22.))
+                                .flex()
+                                .flex_col()
+                                .children(self.blocks(body, false)),
+                        )
+                    })
                     .into_any_element()
             }
             RBlock::Html(text) => div()

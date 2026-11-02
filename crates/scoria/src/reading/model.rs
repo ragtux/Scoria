@@ -273,6 +273,21 @@ pub enum RBlock {
         /// What the copy button writes: the body with `\n` endings and
         /// exactly one trailing newline removed, as Obsidian's copies.
         copy: String,
+        /// A raw `<pre>` wraps its lines (observed: `white-space: pre-wrap`,
+        /// no sideways scroll), where a fence keeps its columns.
+        wrap: bool,
+        /// Whether the block carries a copy button: a fence always, a raw
+        /// `<pre>` only with a `<code>` child (observed).
+        copyable: bool,
+    },
+    /// A raw `<details>`: its `<summary>` as the row that folds the rest,
+    /// open when the tag says `open`.
+    Details {
+        /// The summary's own text id, which is also the fold's.
+        id: usize,
+        open: bool,
+        summary: RichText,
+        body: Vec<RBlock>,
     },
     Html(String),
     Quote(Vec<RBlock>),
@@ -471,7 +486,9 @@ pub fn build_widgets(
             // Only the raw HTML the renderer can actually draw earns a
             // widget. Anything else -- a comment, a script, a bare `<div>` --
             // would fold its source lines away to show the same muted text.
-            BlockKind::HtmlBlock { content } => html_images(content).is_some(),
+            BlockKind::HtmlBlock { content } => {
+                html_images(content).is_some() || html_block_renders(content)
+            }
             BlockKind::Paragraph { content } => match content.as_slice() {
                 [one] => matches!(
                     &one.kind,
@@ -651,6 +668,8 @@ impl<'v> Builder<'v> {
                         .map(str::to_string),
                     text: body.trim_end_matches('\n').to_string(),
                     copy: body.strip_suffix('\n').unwrap_or(&body).to_string(),
+                    wrap: false,
+                    copyable: true,
                 }
             }
             // A block of nothing but comments and scripts draws nothing at
@@ -674,7 +693,7 @@ impl<'v> Builder<'v> {
                     }
                     RBlock::Paragraph(segments)
                 }
-                None => RBlock::Html(content.trim_end().to_string()),
+                None => self.html_block(content),
             },
             BlockKind::BlockQuote { children } => RBlock::Quote(self.blocks(children, false)),
             BlockKind::Callout {
@@ -839,6 +858,73 @@ impl<'v> Builder<'v> {
             self.inline(inline, &mut acc);
         }
         acc.finish(self.id())
+    }
+
+    /// Rich text from a run of raw HTML: the tags go through the same
+    /// overlay inline HTML takes, the text between them has its entities
+    /// decoded and its newlines read as spaces.
+    fn rich_html(&mut self, html: &str) -> RichText {
+        let mut acc = RichBuilder::default();
+        let mut rest = html.trim();
+        while !rest.is_empty() {
+            match rest.find('<') {
+                Some(0) => {
+                    let end = rest.find('>').map(|i| i + 1).unwrap_or(rest.len());
+                    acc.html(&rest[..end]);
+                    rest = &rest[end..];
+                }
+                Some(at) => {
+                    acc.push(&html_text(&rest[..at]));
+                    rest = &rest[at..];
+                }
+                None => {
+                    acc.push(&html_text(rest));
+                    rest = "";
+                }
+            }
+        }
+        acc.finish(self.id())
+    }
+
+    /// A raw HTML block that is not a run of images: a `<pre>` as a wrapped
+    /// code block, a `<details>` as a fold, a container (`<div>`, `<p>`,
+    /// `<center>`, ...) as a paragraph of its content, and everything else
+    /// as the muted source it was ([[Specification#Observed raw HTML behavior, Obsidian 1.14.4 (installer build 1.13.7)]]).
+    fn html_block(&mut self, content: &str) -> RBlock {
+        match classify_html_block(content) {
+            HtmlBlockKind::Pre { text, code } => RBlock::Code {
+                id: self.id(),
+                language: None,
+                copy: text.clone(),
+                text,
+                wrap: true,
+                copyable: code,
+            },
+            HtmlBlockKind::Details {
+                open,
+                summary,
+                body,
+            } => {
+                let summary = self.rich_html(&summary);
+                let body = if body.trim().is_empty() {
+                    Vec::new()
+                } else {
+                    let rich = self.rich_html(&body);
+                    vec![RBlock::Paragraph(vec![Segment::Text(rich)])]
+                };
+                RBlock::Details {
+                    id: summary.id,
+                    open,
+                    summary,
+                    body,
+                }
+            }
+            HtmlBlockKind::Container(inner) => {
+                let rich = self.rich_html(&inner);
+                RBlock::Paragraph(vec![Segment::Text(rich)])
+            }
+            HtmlBlockKind::Source => RBlock::Html(content.trim_end().to_string()),
+        }
     }
 
     fn inline(&mut self, inline: &Inline<'_>, acc: &mut RichBuilder) {
@@ -1209,7 +1295,8 @@ impl HtmlTag {
             "sup" => HtmlTag::Sup,
             "sub" => HtmlTag::Sub,
             "a" => HtmlTag::Anchor,
-            "span" | "div" | "font" | "center" | "small" | "p" => HtmlTag::Transparent,
+            "span" | "div" | "font" | "center" | "small" | "big" | "p" | "section" | "article"
+            | "ins" | "samp" | "var" | "tt" => HtmlTag::Transparent,
             _ => return None,
         })
     }
@@ -1447,6 +1534,209 @@ fn size_hint(s: &str) -> Option<(f32, Option<f32>)> {
 /// elements, and the whitespace between them, and nothing else. An
 /// unterminated comment or script swallows the rest of the block, as a
 /// parser reading to the end of input does.
+/// What a raw HTML block draws as.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum HtmlBlockKind {
+    /// `<pre>…</pre>`: the literal text and whether a `<code>` child earns
+    /// the copy button.
+    Pre { text: String, code: bool },
+    /// `<details [open]>`: the summary's HTML, the rest's HTML.
+    Details {
+        open: bool,
+        summary: String,
+        body: String,
+    },
+    /// A container the sanitizer keeps with its content: the inner HTML.
+    Container(String),
+    /// Anything else, drawn as source.
+    Source,
+}
+
+/// Whether a raw HTML block renders as something other than its source,
+/// which is what earns it a Live Preview widget.
+fn html_block_renders(content: &str) -> bool {
+    classify_html_block(content) != HtmlBlockKind::Source
+}
+
+fn classify_html_block(content: &str) -> HtmlBlockKind {
+    // A comment before the first tag says nothing about the block: the
+    // inline overlay drops it on the way through.
+    let mut trimmed = content.trim();
+    while let Some(after) = trimmed.strip_prefix("<!--") {
+        trimmed = match after.find("-->") {
+            Some(end) => after[end + 3..].trim_start(),
+            None => return HtmlBlockKind::Source,
+        };
+    }
+    let Some(end) = trimmed.find('>') else {
+        return HtmlBlockKind::Source;
+    };
+    let Some(HtmlToken::Open { name, attrs }) = html_token(&trimmed[..=end]) else {
+        return HtmlBlockKind::Source;
+    };
+    let name = name.to_ascii_lowercase();
+    let after = &trimmed[end + 1..];
+    let inner = |closing: &str| -> &str {
+        match find_ignore_ascii_case(after, closing) {
+            Some(at) => &after[..at],
+            None => after,
+        }
+    };
+    match name.as_str() {
+        "pre" => {
+            let mut body = inner("</pre").trim_matches('\n').to_string();
+            let mut code = false;
+            if let Some(stripped) = strip_tag(&body, "code") {
+                body = stripped;
+                code = true;
+            }
+            HtmlBlockKind::Pre {
+                text: decode_entities(&strip_tags(&body))
+                    .trim_end_matches('\n')
+                    .to_string(),
+                code,
+            }
+        }
+        "details" => {
+            let open = attrs.split_whitespace().any(|a| {
+                a.eq_ignore_ascii_case("open") || a.to_ascii_lowercase().starts_with("open=")
+            });
+            let inner = inner("</details").trim();
+            let (summary, body) = match find_ignore_ascii_case(inner, "<summary") {
+                Some(at) => {
+                    let after_tag = inner[at..]
+                        .find('>')
+                        .map(|i| at + i + 1)
+                        .unwrap_or(inner.len());
+                    let rest = &inner[after_tag..];
+                    match find_ignore_ascii_case(rest, "</summary") {
+                        Some(close) => {
+                            let tail = rest[close..]
+                                .find('>')
+                                .map(|i| close + i + 1)
+                                .unwrap_or(rest.len());
+                            (rest[..close].to_string(), rest[tail..].to_string())
+                        }
+                        None => (rest.to_string(), String::new()),
+                    }
+                }
+                None => (String::from("Details"), inner.to_string()),
+            };
+            HtmlBlockKind::Details {
+                open,
+                summary,
+                body,
+            }
+        }
+        "div" | "p" | "center" | "span" | "font" | "small" | "big" | "section" | "article"
+        | "ins" | "samp" | "var" | "tt" | "kbd" | "sup" | "sub" | "b" | "strong" | "i" | "em"
+        | "u" | "mark" | "s" | "del" | "strike" | "a" => {
+            HtmlBlockKind::Container(trimmed.to_string())
+        }
+        _ => HtmlBlockKind::Source,
+    }
+}
+
+/// `body` with one outer `<tag …>…</tag>` pair removed, when it starts with
+/// the opener.
+fn strip_tag(body: &str, tag: &str) -> Option<String> {
+    let trimmed = body.trim_start();
+    let lower = trimmed.to_ascii_lowercase();
+    if !lower.starts_with(&format!("<{tag}")) {
+        return None;
+    }
+    let open_end = trimmed.find('>')? + 1;
+    let inner = &trimmed[open_end..];
+    let close = format!("</{tag}");
+    let cut = match find_ignore_ascii_case(inner, &close) {
+        Some(at) => &inner[..at],
+        None => inner,
+    };
+    Some(cut.trim_start_matches('\n').to_string())
+}
+
+/// Every tag removed, its content kept: what a `<pre>` shows for the live
+/// markup inside it, as text.
+fn strip_tags(html: &str) -> String {
+    let mut out = String::with_capacity(html.len());
+    let mut rest = html;
+    while let Some(at) = rest.find('<') {
+        out.push_str(&rest[..at]);
+        match rest[at..].find('>') {
+            Some(end) => rest = &rest[at + end + 1..],
+            None => {
+                out.push_str(&rest[at..]);
+                rest = "";
+            }
+        }
+    }
+    out.push_str(rest);
+    out
+}
+
+/// Text between tags: the entities a hand-written note uses decoded, and
+/// the newlines HTML reads as spaces read as spaces.
+fn html_text(raw: &str) -> String {
+    let decoded = decode_entities(raw);
+    // HTML collapses a run of whitespace, newlines included, to one space,
+    // and keeps the one at a chunk's edge: `The ` before `<i>` stays `The `.
+    let mut out = String::with_capacity(decoded.len());
+    let mut in_space = false;
+    for ch in decoded.chars() {
+        if ch.is_whitespace() && ch != '\u{a0}' {
+            if !in_space {
+                out.push(' ');
+                in_space = true;
+            }
+        } else {
+            out.push(ch);
+            in_space = false;
+        }
+    }
+    out
+}
+
+/// The entities a hand-written note uses, decoded; everything else as it
+/// was, newlines included (a `<pre>` keeps them).
+fn decode_entities(raw: &str) -> String {
+    let mut out = String::with_capacity(raw.len());
+    let mut rest = raw;
+    while let Some(at) = rest.find('&') {
+        out.push_str(&rest[..at]);
+        let tail = &rest[at..];
+        let entity = tail.find(';').map(|i| &tail[..=i]);
+        let decoded = match entity {
+            Some("&amp;") => Some('&'),
+            Some("&lt;") => Some('<'),
+            Some("&gt;") => Some('>'),
+            Some("&quot;") => Some('"'),
+            Some("&apos;") | Some("&#39;") => Some('\''),
+            Some("&nbsp;") => Some('\u{a0}'),
+            Some(e) if e.starts_with("&#") => {
+                let num = &e[2..e.len() - 1];
+                let code = match num.strip_prefix(['x', 'X']) {
+                    Some(hex) => u32::from_str_radix(hex, 16).ok(),
+                    None => num.parse::<u32>().ok(),
+                };
+                code.and_then(char::from_u32)
+            }
+            _ => None,
+        };
+        match (decoded, entity) {
+            (Some(ch), Some(e)) => {
+                out.push(ch);
+                rest = &tail[e.len()..];
+            }
+            _ => {
+                out.push('&');
+                rest = &tail[1..];
+            }
+        }
+    }
+    out.push_str(rest);
+    out
+}
+
 fn html_block_is_invisible(content: &str) -> bool {
     let mut rest = content.trim();
     let mut seen = false;
@@ -2304,7 +2594,7 @@ mod tests {
         for src in [
             "<img src=\"https://e.com/a.png\">\n",
             "<img src=\"pic.png\" width=\"50%\">\n",
-            "<div>mixed</div>\n<img src=\"pic.png\">\n",
+            "<table><tr><td>c</td></tr></table>\n",
         ] {
             assert!(widgets(src, &stub()).is_empty(), "{src:?} became a widget");
             let m = build("Self.md", src, &stub());
@@ -2314,6 +2604,90 @@ mod tests {
                 m.blocks[0]
             );
         }
+    }
+
+    /// A raw `<pre>` is a wrapped code block whose copy button needs a
+    /// `<code>` child; a `<details>` folds its summary over its body; a
+    /// container keeps its content as a paragraph
+    /// ([[Specification#`<pre>`]] and the sanitizer table).
+    #[test]
+    fn pre_details_and_containers_render_rather_than_showing_source() {
+        let m = build(
+            "Self.md",
+            "<pre>**not bold** &amp; two  spaces\n  indented</pre>\n",
+            &stub(),
+        );
+        match &m.blocks[0] {
+            RBlock::Code {
+                text,
+                wrap,
+                copyable,
+                language,
+                ..
+            } => {
+                assert_eq!(text, "**not bold** & two  spaces\n  indented");
+                assert!(*wrap && !*copyable);
+                assert_eq!(*language, None);
+            }
+            other => panic!("{other:?}"),
+        }
+        let m = build("Self.md", "<pre><code>let x = 1;\n</code></pre>\n", &stub());
+        match &m.blocks[0] {
+            RBlock::Code { text, copyable, .. } => {
+                assert_eq!(text, "let x = 1;");
+                assert!(*copyable);
+            }
+            other => panic!("{other:?}"),
+        }
+        let m = build(
+            "Self.md",
+            "<details open>\n<summary>More <b>here</b></summary>\nThe <i>body</i>.\n</details>\n",
+            &stub(),
+        );
+        match &m.blocks[0] {
+            RBlock::Details {
+                open,
+                summary,
+                body,
+                ..
+            } => {
+                assert!(*open);
+                assert_eq!(summary.text, "More here");
+                assert!(summary
+                    .runs
+                    .iter()
+                    .any(|(r, s)| s.bold && &summary.text[r.clone()] == "here"));
+                assert_eq!(body.len(), 1);
+                match &body[0] {
+                    RBlock::Paragraph(segments) => match &segments[0] {
+                        Segment::Text(rich) => assert_eq!(rich.text, "The body."),
+                        other => panic!("{other:?}"),
+                    },
+                    other => panic!("{other:?}"),
+                }
+            }
+            other => panic!("{other:?}"),
+        }
+        let m = build(
+            "Self.md",
+            "<div class=\"x\">mixed <b>bold</b> &amp; plain</div>\n",
+            &stub(),
+        );
+        match &m.blocks[0] {
+            RBlock::Paragraph(segments) => match &segments[0] {
+                Segment::Text(rich) => assert_eq!(rich.text, "mixed bold & plain"),
+                other => panic!("{other:?}"),
+            },
+            other => panic!("{other:?}"),
+        }
+        // Each of those is a widget in Live Preview; a table stays source.
+        assert_eq!(widgets("<pre>x</pre>\n", &stub()).len(), 1);
+        assert_eq!(
+            widgets("<details><summary>s</summary>b</details>\n", &stub()).len(),
+            1
+        );
+        assert_eq!(widgets("<center>c</center>\n", &stub()).len(), 1);
+        assert!(widgets("<table><tr><td>c</td></tr></table>\n", &stub()).is_empty());
     }
 
     /// Obsidian's sanitizer takes a `<script>` out whole and keeps what
@@ -2349,17 +2723,20 @@ mod tests {
             m.blocks[0]
         );
         assert_eq!(m.starts.len(), 1);
-        // Anything else in the block keeps the whole thing as source.
+        // A comment beside a container drops out and the container draws
+        // its content, the way the inline overlay reads a comment.
         for src in [
             "<!-- a comment --><div>x</div>\n",
             "<div>x</div>\n<!-- a comment -->\n",
         ] {
             let m = build("Self.md", src, &stub());
-            assert!(
-                matches!(&m.blocks[0], RBlock::Html(_)),
-                "{src:?} -> {:?}",
-                m.blocks[0]
-            );
+            match &m.blocks[0] {
+                RBlock::Paragraph(segments) => match &segments[0] {
+                    Segment::Text(rich) => assert_eq!(rich.text.trim(), "x", "{src:?}"),
+                    other => panic!("{src:?} -> {other:?}"),
+                },
+                other => panic!("{src:?} -> {other:?}"),
+            }
         }
     }
 

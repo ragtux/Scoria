@@ -326,6 +326,65 @@ uses behave as Obsidian's do.
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | not started |
 
+### Four small entries and a URI, 2026-11-02
+
+The open backlog's concrete entries, taken together.
+
+**The reading model is lazy in the editing modes.** `show_file` used to
+build the reading model for every markdown open; now a note opened in Live
+Preview or Source mode reaches the reading view as text
+(`ReadingView::set_note_later`), and the model is built on the first read:
+the view's render, a fold sync on the way into reading view, or the
+control socket's state dump, which calls `Workspace::ensure_reading_built`
+first so a dump still describes the note. The built note is tracked apart
+from the shown one so a reload of the same note keeps the reader's place
+and another note drops the stale model at once.
+
+**Raw HTML blocks.** The reading model classifies an HTML block by its
+first tag, a leading comment skipped: `<pre>` becomes a code block with
+`wrap` set and `copyable` only for a `<code>` child, as observed;
+`<details>` becomes `RBlock::Details`, its summary and body built through
+`rich_html`, which tokenizes raw HTML into the same overlay inline HTML
+takes, decodes entities and collapses whitespace; a container keeps its
+content as a paragraph; the rest stays source. The reading view wraps a
+`wrap` block and draws the copy button only when `copyable`; a details
+block folds through the callout's toggle. Each renders as a Live Preview
+widget, since the widget predicate asks the same classifier.
+
+**The All properties row's menu.** `file_menu::Target::Property` draws
+Rename, Property type ▸ and Delete property; items gained `warning`,
+`checked` and a `submenu`, which the menu draws beside the row the pointer
+last rested on (`Menu::submenu`, set through the new `on_submenu`
+callback), flipped to the row's left when the menu stands near the
+window's right edge. Rename prompts (`PendingOp::RenameProperty`) and then
+`rewrite_property_everywhere` plans `Change::Rename` over every note whose
+cached frontmatter carries the key, under the cell edit's unsaved-buffer
+guard; Delete plans `Change::Remove` the same way; both take the
+`types.json` entry along through `VaultState::rename_property_type` and
+`remove_property_type`. Property type writes `types.json` as the Bases
+header's submenu does.
+
+**`obsidian://` URIs.** `crates/scoria/src/uri.rs` parses the four
+documented actions -- `open` with `file` or `path`, `new` with `name`,
+`path`, `content` and the `silent`, `append`, `prepend` and `overwrite`
+flags, `search` with `query`, and `daily` -- from Obsidian's public help,
+and `Workspace::handle_uri` acts on them, refusing a `vault` that names
+another vault. A URI reaches the app as a bare `obsidian://` argument, as
+`--uri`, or over the control socket's `uri` method; the scheme is not
+registered with the desktop, which Obsidian owns on a machine that has
+it.
+
+**The Writer harness.** The config round trip over the real vault failed
+for a reason that was not a round-trip failure: that vault's `.obsidian`
+holds only `workspace.json`, which Scoria neither models nor writes, so no
+modelled file existed to check. The test now says so and passes
+vacuously; the fourteen note round trips are the gate there.
+
+Driven headless: the pre, details, container and table cases in both
+views; a note opened live then switched to reading; Rename writing
+`colour` into eight notes and Delete removing it from the same eight; the
+four URI actions over the socket, with the wrong-vault refusal.
+
 ### Escape closes every menu, 2026-11-02
 
 The backlog's oldest small bug: the file menus closed on a press outside
