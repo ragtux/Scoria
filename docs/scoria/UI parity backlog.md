@@ -78,7 +78,7 @@ Most of the 50 are the same large gaps the first pass had already filed — no t
 Hotkeys tab, the graph controls panel — and they are not duplicated below. What the triage added is
 twenty entries nobody had filed before and fresh evidence on a dozen more; both are folded into the
 sections that follow, so the sections held **61 open entries** in total; the five large builds of 2026-10-20 and the
-four small entries they carried closed nine of them, so **52 remain** — plus one filed after the frame work of the same evening, below; the Files header of 2026-10-21 closed one more and halved two, and the explorer keyboard the same day closed the halved header entry. The UI-rules pass of 2026-10-28 closed two more and filed two of its own (the explorer's context menus and the reading view's property pills), both of them work its own build deliberately left.
+four small entries they carried closed nine of them, so **52 remain** — plus one filed after the frame work of the same evening, below; the Files header of 2026-10-21 closed one more and halved two, and the explorer keyboard the same day closed the halved header entry. The UI-rules pass of 2026-10-28 closed two more and filed two of its own (the explorer's context menus and the reading view's property pills), both of them work its own build deliberately left. The Bases pass of 2026-11-01 filed thirteen more under [[#Bases]], the first entries this file holds for that view.
 
 ## Files view and file operations
 
@@ -1568,6 +1568,284 @@ returns the right string. The empty value never reaches it, because `prompt_subm
 dot-prefixed. Guard the stem in the `PendingOp::Rename` arm before the extension is appended — the
 same guard the `/`-accepting entry under Files needs — and add it to the `PendingOp::Move` arm too,
 where an empty value silently renames the file to itself.
+
+## Bases
+
+Filed 2026-11-01 from a pass of its own: every surface of the Bases view compared between
+Obsidian 1.14.5 (installer build 1.13.7) and Scoria at `48d66a9`. The Obsidian half was driven over
+CDP by `tools/obsidian-probe/bases-ui.mjs` on a scratch vault with eight typed notes and a
+four-view base — 26 steps in `tools/obsidian-probe/results/2026-11-01-bases-ui.json`, 343
+screenshots in `2026-11-01-bases-ui-shots/` (untracked, 30 MB; each step's `shot` names its file).
+The Scoria half was driven over the control socket in a headless sway session on a copy of
+`docs/scoria-demo`, 105 captures with the state dump beside each. The public docs and changelogs
+through 1.14.5 were read for the vocabulary, and the 2026-10-25 record was re-read: it already held
+all eight toolbar items with classes, labels, icons and rects, and the full markup of every panel,
+while `toolbar.rs` and [[Specification#What building the rest of the Bases view settled, 2026-10-25]]
+say the toolbar was never measured. Those comments are stale, and so is the `View 2` name in
+`bases/commands.rs`: Obsidian names every added view `View`, the fifth one included.
+
+Two things the records settle that earlier entries left open: **cells are editable in place** in
+Obsidian (the disabled checkbox of 2026-10-25 was a cards-view reading), and a **new empty base
+shows exactly one column, `file name`**, over every file in the vault.
+
+Order below is roughly the order a user meets them. Icons are Lucide ids.
+
+### The toolbar is five icons in Scoria's order; Obsidian's is eight labelled buttons
+
+*high, parity-gap, medium*
+
+**Obsidian.** `.bases-toolbar`, 29 px, the same eight items in every layout, each a 25 px
+`text-icon-button` with a 13 px label, radius 5, `--text-muted` idle, hover
+`--background-modifier-hover`, `--text-accent` with `is-active` when the control has a value, no
+tooltips anywhere on the bar. Left to right: the view switcher (the layout's icon `table` /
+`layout-grid` / `list` / `kanban-square`, the view's name, `chevrons-up-down`); **7 results**
+(`text-align-start`, the live count); **Sort** (`arrow-up-down`, a `.flair.toolbar-badge` with the
+count); **Group** (`stretch-horizontal`); **Filter** (`list-filter`, badge of the view's own
+filters); **Properties** (`list`); **Search** (`search`); **New** (`plus`). Search reveals a
+`.bases-search-row` under the bar with a `Find...` input and `Showing N`; Escape clears and hides
+it. New creates `Untitled.md` with its frontmatter prefilled from the filters and the group
+(`tags: [rock]`, `rating: 1`, `status: done`, empty keys for the view's other properties) and
+opens it in a `bases-new-item-popover` editor with the inline title focused.
+
+**Scoria.** A 30 px bar: the switcher at the left, then a spacer, then five 22 px icon squares at
+the right — `sliders-horizontal`, `square-check`, `arrow-up-narrow-wide`, `layers`, `list` — with
+tooltips of the bare words `filter`, `properties`, `sort`, `group`, `results`. No count, no
+badges, no active colour, no Search, no New. `toolbar.rs:96-100` calls the order and icons its own.
+
+**Fix.** Redraw the bar from `s02-toolbar-per-layout` of the record: labelled buttons in
+Obsidian's order with its icons and badges, the count as a button, a search row, and `New` running
+the add-item path with the prefill (that path is the entry below).
+
+### No panel closes on Escape or on a second click, and tooltips draw over them
+
+*medium, bug, small*
+
+**Obsidian.** Escape closes every panel and returns focus to its button; the views and properties
+panels focus their search input on open, Down moves `is-selected`, Enter picks or toggles; the
+sort, filter, group and results panels leave focus on the button. Clicking the button again
+closes.
+
+**Scoria.** Escape closes nothing in the Bases view — not a panel, not the views menu, not a combo
+list, not the header menu. Clicking the open panel's button leaves it open; only an outside press
+closes it. The button's tooltip is drawn over the open panel while the pointer rests on it. After
+Escape on a combo list the next click in the page is swallowed. Picking from the group panel's
+`+` list or from the Configure page's Layout combo closes the whole panel. Tab in the properties
+field inserts a literal tab. This is the same gap as [[#Escape does not close a context menu]],
+one tier wider.
+
+### The view switcher has no search, no gear menu, and names a new view `View N`
+
+*medium, missing-feature, medium*
+
+**Obsidian.** The panel (228 px, `.bases-toolbar-views-menu`) opens with a `Search...` input that
+filters the rows live; one row per view with its layout icon, the active one `mod-active`, and a
+`chevron-right` gear at the right; then **Add view** (`plus`). The gear opens the Configure view
+page in place: a header with `chevron-left` **Configure view**, a `more-vertical` menu and an `x`
+close; a **View name** text input; the **Layout** combobox (Table / Cards / List / Kanban with
+icons; Table always marked, Obsidian's own bug); then the layout's rows under these labels —
+table **Row height** (Short / Medium / Tall / Extra tall); cards **Card size** (50–800 step 10),
+**Image property** (a clearable combobox of `file` and every property with type icons), **Image
+fit** (Cover / Contain), **Image aspect ratio** (0.25–2.5 step 0.05); list **Markers** (Bullet /
+Number / None), **Indent properties** (checkbox), **Property separator** (text, `, `); kanban
+**Column width** (200–500 step 10), then the three image rows. The header's `more-vertical` menu:
+**Default view** (`layers-2`, `mod-checked`), **Duplicate view** (`files`), separator, **Delete
+view** (`trash-2`, `is-warning`). Add view opens that page with the name `View` prefilled and
+writes `- type: table` / `name: View` on close — `View`, whatever the count. Right-click on a row
+is a plain click.
+
+**Scoria.** Rows with an icon and a name, nothing else; the row's icon opens Configure. No search,
+no Add view row, no Default / Duplicate / Delete, no close button, no name field. The Configure
+rows are labelled with the raw keys — `cardSize`, `image`, `imageFit`, `imageAspectRatio`,
+`columnWidth`, `markers`, `separator` — and Indent properties is not drawn. `bases:add-view`
+names the view `View N` and opens Configure without the name field.
+
+### The properties panel is unordered, unstyled, overflows the window, and has no formula editor
+
+*high, missing-feature, large*
+
+**Obsidian.** `Find or create...` input; rows of checkbox, type icon (`info` for `file.*`, `text`,
+`binary`, `square-function`, …), name and a `chevron-right` gear; the shown columns first, then
+the hidden `file.*` rows (`mod-implicit`), then hidden formulas (`mod-formula`), then note
+properties, hidden rows in `#666`; actions **Add formula** (`square-function`) and **Hide all**
+(`eye-off`, writes `order: []`). An unknown name puts `Add "x" property` (`plus`) first. The gear
+opens **Edit &lt;name&gt;**: **Display name** input and **Property type** select (Checkbox / Date /
+Date &amp; time / List / Number / Text). On a formula it opens **Formula**: Display name, then a
+CodeMirror editor with placeholder `x + y`, bracket auto-pair, a status row (`x-circle` **Invalid
+formula** with the parse position, else valid), and completions in a `suggestion-container` with
+a doc line per function. Add formula writes `Untitled: ""` under `formulas`.
+
+**Scoria.** A text field and a checkbox list: the 12 `file.*` labels alphabetically, then the
+formula, then every note property, no icons, no hidden styling, no gear. The panel is taller than
+the window on the demo vault and does not scroll. No Add formula, no Hide all, no property page,
+no formula editor.
+
+### Filters are expression fields; Obsidian's are property, operator and value rows
+
+*high, missing-feature, large*
+
+**Obsidian.** A 520 px panel of two collapsible sections, **All views** and **This view**, each
+with a count flair. A group is a header select — **All the following are true** (`and`), **Any of
+the following are true** (`or`), **None of the following are true** (`not`) — and rows reading
+`where` / `and` + a property combobox with its type icon + an operator combobox + a value: a
+contenteditable text with a value suggestion list, a number input, a date input, a checkbox, or
+multi-select pills. Each row has **Advanced filter** (`code-xml`, aria-label; swaps the row to a
+CodeMirror expression and itself to **Simple filter**, `mouse-pointer-click`) and **Remove
+filter** (`trash-2`). A group's footer has **Add filter** and **Add filter group** (`plus`); a
+nested group is a row with its own select and a `trash-2`. Operators — file: links to, in folder,
+has tag, has property, does not link to, is not in folder, does not have tag, does not have
+property; number: =, ≠, &lt;, ≤, &gt;, ≥, is empty, is not empty; text: is, is not, starts with, ends
+with, is empty, contains, contains any of, contains all of, does not start with, does not end
+with, is not empty, does not contain, does not contain any of, does not contain all of; checkbox:
+is, is not. Enter in a value opens its suggestions; Escape closes only those.
+
+**Scoria.** The sections, a conjunction pill reading `and` / `or` / `not`, an **empty rule field
+drawn above the existing rules**, and per rule a verbatim statement field, an inert `code-xml`
+button whose tooltip is the misspelled class name `filer-expression-mode-toggle`, and a trash.
+Typing in the empty field appends a statement; editing an existing rule and pressing Escape
+**commits** instead of cancelling. No Add filter, no Add filter group, no operators, no typed
+values, no collapse. The expression language itself is complete (`scoria-bases`), so the work is
+the row UI and the mapping from a statement to a row, observed for every operator above in
+`s05-filters` and `s17-fix-filters`.
+
+### Sort and group: no headers, no grips, no Manual order, and an empty group panel
+
+*medium, parity-gap, medium*
+
+**Obsidian.** Sort: header **Sort by**; each rule a `grip-vertical` handle, property combobox,
+direction combobox (**A → Z** / **Z → A**, **0 → 1** / **1 → 0** on numbers), `trash-2`; **Add
+sort** (`plus`) at the bottom opens the new row's property list at once. Group: header **Group
+by**; one row of property, direction (**A → Z** / **Z → A** / **Manual**), trash; with Manual a
+`.bases-group-list` appears — grip rows with a checkbox per value, **Add group**, **Hide all**
+(`eye-off`) — and hiding writes `groupOrder`. Group headings in the table, cards and list are
+`.bases-group-heading.mod-collapsible`: the property name in 12 px muted, the value bold, a
+`chevron-right`; a click folds the group.
+
+**Scoria.** Sort: a `+` at the top, no header, no grips. Group with no `groupBy` is an empty box
+with a `+`; a pick closes the panel. No Manual, `groupOrder` is never written. Group headers read
+`active 3` and take no click.
+
+### Results: Show all is always drawn and rewrites the file, and there is no CSV export
+
+*low, parity-gap, small*
+
+**Obsidian.** **Limit number of results**, a number input with placeholder `e.g. 10`; **Show all**
+(`rotate-ccw`) only while a limit is set; **Copy to clipboard** (`copy`); **Export CSV...**
+(`file-down`).
+
+**Scoria.** Show all is drawn always, with the count, and clicking it with no limit marks the
+base dirty and saves it. No Export CSV.
+
+### The column header has no icon, no sort mark, no reorder, and half a menu
+
+*high, missing-feature, large*
+
+**Obsidian.** Each header is the type icon + name in 13 px muted, a `chevron-up` / `chevron-down`
+when sorted, a 6 px resizer that turns accent on hover, and the header is draggable to reorder
+columns (a `.table-drag-target.mod-col` line marks the drop). A left click does nothing; there is
+no `+` column control. The context menu: **Hide column** (`eye-off`) · **Summarize...**
+(`calculator`) · **Group by this property** (`group`) | **Sort A → Z**
+(`arrow-down-wide-narrow`, `mod-checked` when active) · **Sort Z → A** (`arrow-up-narrow-wide`) ·
+**Clear sort** (`eraser`, `is-warning`, only when sorted) | **Edit property...** (`edit-3`) |
+**Property type ▸** (`info`: Checkbox, Date, Date &amp; time, List, Number, Text, the current one
+checked). The `file name` header has no Group by and no Property type; a formula header offers
+**Edit formula...** instead and no Property type. **Summaries** are a whole feature: Summarize
+and every summary cell open a page (`Find or create...`, rows showing the computed value, **Add
+summary** (`square-function`), **Hide summary** (`trash-2`)); the options are, for numbers and
+formulas, Average, Max, Median, Min, Range, Stddev, Sum plus Empty, Filled, Unique; for dates
+Earliest, Latest, Range; for checkboxes Checked, Unchecked; for text, lists and files Empty,
+Filled, Unique. A `.bases-table-footer` row holds the table's summaries and a
+`.bases-table-group-summary-row` sits under each group heading, with a `Summary` placeholder in
+`#666` and a `chevrons-up-down` expand button.
+
+**Scoria.** Name only, no icon, no sort mark, no reorder. The menu is Hide column, Summarize...
+(inert), Sort A → Z, Sort Z → A, Clear sort, Edit property... (inert), with no icons. No Group by
+this property, no Property type, no summaries at all (`summaries` only round-trips).
+
+### Cells edit through one text field; Obsidian has an editor per type, a file menu and a keyboard
+
+*high, parity-gap, large*
+
+**Obsidian.** The name cell is an `internal-link` (click opens the note in the leaf; right-click
+raises the file menu, with **Copy path ▸** as Obsidian URL / from vault folder / from system
+root). Every other property cell clicks straight into an editor with a 2 px accent ring: text is a
+contenteditable with a value suggestion list, number an `input[type=number]`, date an
+`input[type=date]` with a hover-only **Open daily note** (`link`) icon, checkbox an input that
+writes on click, list and tags a pill container with suggestions, a link shows `[[Basalt]]` raw.
+Enter commits and leaves; Escape reverts; double-click is a click; formula cells are read-only
+and Enter on one opens Edit formula. With nothing editing the table holds an invisible cursor:
+Tab, Shift+Tab and the arrows move it, Enter opens the cell, typing starts editing, Delete opens
+the editor without clearing. The docs add shift-click cell selection with Copy, Paste, Undo and
+Redo, which the probe did not drive.
+
+**Scoria.** One shared `TextInput` for text, number, date and list alike (a list is edited as its
+joined text); checkbox clicks write; Enter commits, Escape cancels. No row or cell menu, no
+suggestions, no date picker, no pills, no keyboard at all: Tab, the arrows, Enter and Escape are
+inert with nothing editing.
+
+### Kanban cards and columns have no drag and no menus
+
+*medium, missing-feature, large*
+
+**Obsidian.** A column is 280 px, `#232323`, radius 8; its header is draggable (grab cursor) with
+the value, the count and a `plus` **Create new note**; right-click on a header or a card gives
+**Add item** (`plus`) | **Hide column** (`eye-off`) · **Edit groups...** (`stretch-horizontal`,
+opens the Group panel). A card is draggable with `is-being-dragged` and a drop placeholder in the
+target column; the drop writes the grouped property to the note (`status: done`). A column drop
+reorders in memory until the order is Manual; Hide column writes `groupOrder` and sets Manual.
+Cards hover with a `#3f3f3f` shadow, any click opens the note, right-click is the file menu.
+
+**Scoria.** 300 px columns, `active 3` headers that take nothing, cards that highlight on hover
+and open on click. No drag (`kanban.rs:35-40` leaves it out on purpose), no column plus, no
+menus.
+
+### Cards and list rows have no file menu, and a list line opens on any click
+
+*low, parity-gap, small*
+
+**Obsidian.** A card (`#1C1C1C`, radius 8, hover shadow `#3f3f3f`) opens on click, raises the
+file menu on right-click, and drags out as an `obsidian://` URL. A list item is a `.list-bullet`,
+the link, and `.bases-list-separator`; only the link opens, and right-click on the link is the
+file menu.
+
+**Scoria.** Cards and list lines open on a click anywhere and have no menu; a card with no cover
+draws an empty grey box where Obsidian draws no cover at all.
+
+### The embed draws a titled, bordered first view; Obsidian embeds the whole toolbar
+
+*high, parity-gap, medium*
+
+**Obsidian.** `![[x.base]]` is `.internal-embed.bases-embed.interactive-child` with the full
+toolbar and live counts, no title, no border, no padding; `#View` picks the view. Every panel,
+cell editor and New works in place and writes the file. Live Preview adds **Edit this block**
+(`code-2`) top-right, which places the caret on the line; right-click there is the editor menu.
+
+**Scoria.** A bordered, rounded box titled `↗ All rocks`, the first view only, no toolbar, 50
+rows then `n more rows`, the subpath ignored; a cards, list or kanban view is drawn as table rows.
+
+### The base leaf's chrome is a note's, and the new base is wrong on both ends
+
+*medium, parity-gap, small*
+
+**Obsidian.** The tab icon is `table` and the title the stem; the view header is the title with
+no icon, back and forward, **Bookmark** and **More options** (`more-vertical`): Split right ·
+Split down · Open in new window | Rename... · Move file to... · Bookmark... | Copy path ▸ | Open
+version history · Open linked view ▸ (Open backlinks) | Open in default app · Show in system
+explorer · Reveal file in navigation | Delete file. The ribbon's **Create new base**
+(`layout-list`) has that tooltip. A new base is `Untitled.base`, 0 bytes, one view named `View`,
+one column `file name`, over every file in the vault (`15 results`).
+
+**Scoria.** The leaf icon is `layout-list`, and the view header still draws the graph button and
+the Reading/Edit mode switch over a base (`workspace.rs:2253`, `7975`), which the mode ignores.
+The ribbon button has no tooltip. A new base opens with every note property as implied columns
+and no `file name` column. The explorer's file menu on a `.base` row has a doubled separator
+before Rename.
+
+### Status of the commands
+
+`bases:new-file`, `bases:insert` and `bases:copy-table` match. `bases:add-view` names the view
+`View N` (above). `bases:add-item` opens a plain new tab without the frontmatter prefill and is
+not reachable from the toolbar. `bases:change-view` is a chooser, unverified against Obsidian's.
+None has a default hotkey in either app.
 
 ## What the campaign fixed
 
