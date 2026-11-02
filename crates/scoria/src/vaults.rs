@@ -642,7 +642,7 @@ impl Render for VaultManager {
                     .flex()
                     .flex_col()
                     .bg(theme.tokens.background_secondary)
-                    .map(|d| corners.left().bottom().apply(d))
+                    .map(|d| corners.left().apply(d))
                     .child(div().flex_1().min_h_0().child(list))
                     .children(self.error.clone().map(|message| {
                         div()
@@ -657,46 +657,59 @@ impl Render for VaultManager {
             )
             .child(
                 div()
-                    .id("vault-splash")
                     .flex_1()
                     .min_w_0()
                     .h_full()
-                    .map(|d| corners.right().bottom().apply(d))
-                    .overflow_y_scroll()
                     .flex()
                     .flex_col()
-                    .items_center()
-                    .px(px(30.))
-                    .py(px(24.))
-                    // Two spacers rather than `justify_center`: they share
-                    // whatever height is spare and shrink to nothing when
-                    // there is none, so a short window scrolls to the top of
-                    // the mark instead of clipping it behind the centring.
-                    .child(div().flex_1())
-                    .child(logo(264.))
-                    .child(
-                        // The product name the way Anya's wordmark sets it:
-                        // the display face at its one weight, large, and
-                        // the line box no taller than the type.
-                        div()
-                            .mt(px(16.))
-                            .font_family(DISPLAY_FONT_FAMILY)
-                            .text_size(px(104.))
-                            .line_height(px(104.))
-                            .font_weight(FontWeight::BLACK)
-                            .text_color(theme.tokens.text_normal)
-                            .child("Scoria"),
-                    )
+                    .map(|d| corners.right().apply(d))
+                    // The title row sits over the splash alone, so the
+                    // list runs the full height and meets the top-left
+                    // corner itself.
+                    .children(title_row)
                     .child(
                         div()
-                            .mt(px(4.))
-                            .text_size(px(FONT_UI_SMALL))
-                            .text_color(theme.tokens.text_muted)
-                            .child(version),
-                    )
-                    .child(div().h(px(32.)))
-                    .child(card)
-                    .child(div().flex_1()),
+                            .id("vault-splash")
+                            .flex_1()
+                            .min_h_0()
+                            .w_full()
+                            .map(|d| corners.right().bottom().apply(d))
+                            .overflow_y_scroll()
+                            .flex()
+                            .flex_col()
+                            .items_center()
+                            .px(px(30.))
+                            .py(px(24.))
+                            // Two spacers rather than `justify_center`: they share
+                            // whatever height is spare and shrink to nothing when
+                            // there is none, so a short window scrolls to the top of
+                            // the mark instead of clipping it behind the centring.
+                            .child(div().flex_1())
+                            .child(logo(264.))
+                            .child(
+                                // The product name the way Anya's wordmark sets it:
+                                // the display face at its one weight, large, and
+                                // the line box no taller than the type.
+                                div()
+                                    .mt(px(16.))
+                                    .font_family(DISPLAY_FONT_FAMILY)
+                                    .text_size(px(104.))
+                                    .line_height(px(104.))
+                                    .font_weight(FontWeight::BLACK)
+                                    .text_color(theme.tokens.text_normal)
+                                    .child("Scoria"),
+                            )
+                            .child(
+                                div()
+                                    .mt(px(4.))
+                                    .text_size(px(FONT_UI_SMALL))
+                                    .text_color(theme.tokens.text_muted)
+                                    .child(version),
+                            )
+                            .child(div().h(px(32.)))
+                            .child(card)
+                            .child(div().flex_1()),
+                    ),
             );
         let root = div()
             .id("vault-manager")
@@ -710,7 +723,6 @@ impl Render for VaultManager {
             .map(|d| corners.apply(d))
             .font_family(theme.ui_font.clone())
             .text_color(theme.tokens.text_normal)
-            .children(title_row)
             .child(body);
         client_frame(root.into_any_element(), &theme, window)
     }
