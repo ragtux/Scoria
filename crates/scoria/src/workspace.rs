@@ -2719,12 +2719,14 @@ pub(crate) fn window_controls(
 
 /// A title row for a window that is not the main one - the vault manager,
 /// Settings, Help - when the frame is Scoria's: `HEADER_HEIGHT` of `bg`
-/// that drags the window, with the window buttons at its right, or on
-/// macOS the desktop's traffic lights at its left. `bg` is
-/// `--titlebar-background` where the row is meant to read as a bar, and
-/// the window's own ground where it is not. With the desktop's frame
-/// there is no row: the desktop's title bar is above the window instead.
+/// that drags the window, with `title` centred on it the way Obsidian's
+/// `.titlebar-text` is, the window buttons at its right, or on macOS the
+/// desktop's traffic lights at its left. `bg` is `--titlebar-background`
+/// where the row is meant to read as a bar, and the window's own ground
+/// where it is not. With the desktop's frame there is no row: the
+/// desktop's title bar, with the same title, is above the window instead.
 pub(crate) fn window_title_row(
+    title: &'static str,
     bg: Hsla,
     theme: &Theme,
     window: &Window,
@@ -2749,6 +2751,7 @@ pub(crate) fn window_title_row(
     Some(
         div()
             .id("window-title-row")
+            .relative()
             .flex_shrink_0()
             .w_full()
             .h(px(HEADER_HEIGHT))
@@ -2756,6 +2759,20 @@ pub(crate) fn window_title_row(
             .flex_row()
             .bg(bg)
             .map(|d| corners.top().apply(d))
+            // The title is centred on the whole row, not on the handle,
+            // and painted under the handle and the buttons: it has no
+            // hitbox of its own, so a press on it still drags the window.
+            .child(
+                div()
+                    .absolute()
+                    .inset_0()
+                    .flex()
+                    .items_center()
+                    .justify_center()
+                    .text_size(px(FONT_UI_SMALLER))
+                    .text_color(theme.tokens.text_muted)
+                    .child(title),
+            )
             .child(handle)
             .when(!mac, |d| {
                 d.child(

@@ -11,8 +11,8 @@
 //! opening help again while it is up brings it forward rather than making
 //! a second one.
 
-use crate::assets::{icon, logo};
-use crate::theme::{Theme, FONT_UI_MEDIUM};
+use crate::assets::{icon, logo, DISPLAY_FONT_FAMILY};
+use crate::theme::{Theme, FONT_UI_MEDIUM, FONT_UI_SMALL};
 use crate::workspace::{
     client_frame, frame_window_options, window_title_row, WindowCorners, Workspace,
 };
@@ -28,9 +28,26 @@ pub fn bind_keys(cx: &mut App) {
     cx.bind_keys([KeyBinding::new("escape", Close, Some("Help"))]);
 }
 
-/// The window's size: enough for the four rows at the text sizes below
-/// without a scrollbar, and the shape of Obsidian's.
-pub const WINDOW_SIZE: (f32, f32) = (700., 860.);
+/// The window's size: the shape of Obsidian's, as wide as the vault
+/// manager's splash column and tall enough for the mark and the name at
+/// the sizes the vault manager sets them, and the four rows under them,
+/// before the column has to scroll. The frame's margin is inside it.
+pub const WINDOW_SIZE: (f32, f32) = (700., 980.);
+
+/// The card under the mark, and the parts of a row in it: the card's
+/// width, its side padding, the icon's column, the gap between the parts
+/// and the button's width. They are definite on purpose, the way the
+/// vault manager's are - the blurb's column is the card less the rest,
+/// not what the flex solve leaves it - because gpui lays a text out at
+/// the width it was last measured at, and a width that only the solve
+/// knows was measured at two lines and painted at three, with the last
+/// row running out of the card's bottom.
+const CARD_WIDTH: f32 = 600.;
+const CARD_PADDING: f32 = 24.;
+const ICON_WIDTH: f32 = 64.;
+const ROW_GAP: f32 = 16.;
+const BUTTON_WIDTH: f32 = 96.;
+const BLURB_WIDTH: f32 = CARD_WIDTH - 2. * CARD_PADDING - ICON_WIDTH - 2. * ROW_GAP - BUTTON_WIDTH;
 
 /// Where "Visit" goes for the manual: Obsidian opens its help site, Scoria
 /// scoria.cc.
@@ -114,7 +131,8 @@ impl HelpWindow {
         cx.open_window(
             WindowOptions {
                 window_bounds: Some(WindowBounds::Windowed(bounds)),
-                window_min_size: Some(size(px(480.), px(480.))),
+                // Wide enough for the card.
+                window_min_size: Some(size(px(700.), px(480.))),
                 // The same frame the main window has, with a title row of
                 // its own for the window buttons.
                 ..frame_window_options("Help")
@@ -179,8 +197,8 @@ impl HelpWindow {
             .flex()
             .flex_row()
             .items_center()
-            .gap(px(24.))
-            .py(px(22.))
+            .gap(px(ROW_GAP))
+            .py(px(18.))
             .when(!last, |d| {
                 d.border_b_1()
                     .border_color(theme.tokens.background_modifier_border)
@@ -188,27 +206,27 @@ impl HelpWindow {
             .child(
                 div()
                     .flex_shrink_0()
-                    .w(px(64.))
+                    .w(px(ICON_WIDTH))
                     .flex()
                     .justify_center()
-                    .child(icon(row.icon, 56., theme.tokens.text_faint)),
+                    .child(icon(row.icon, 48., theme.tokens.text_faint)),
             )
             .child(
                 div()
-                    .flex_1()
-                    .min_w_0()
+                    .w(px(BLURB_WIDTH))
+                    .flex_shrink_0()
                     .flex()
                     .flex_col()
                     .gap(px(4.))
                     .child(
                         div()
-                            .text_size(px(17.))
+                            .text_size(px(FONT_UI_MEDIUM))
                             .text_color(theme.tokens.text_normal)
                             .child(row.title),
                     )
                     .child(
                         div()
-                            .text_size(px(FONT_UI_MEDIUM))
+                            .text_size(px(FONT_UI_SMALL))
                             .text_color(theme.tokens.text_muted)
                             .child(row.blurb),
                     ),
@@ -218,14 +236,16 @@ impl HelpWindow {
                     .id(row.title)
                     .flex_shrink_0()
                     .px(px(16.))
-                    .h(px(36.))
+                    .h(px(32.))
                     .flex()
                     .items_center()
-                    .rounded(px(8.))
+                    .justify_center()
+                    .w(px(BUTTON_WIDTH))
+                    .rounded(px(6.))
                     .bg(bg)
                     .border_1()
                     .border_color(border)
-                    .text_size(px(16.))
+                    .text_size(px(FONT_UI_SMALL))
                     .text_color(fg)
                     .cursor_pointer()
                     .hover(move |s| {
@@ -251,15 +271,22 @@ impl Render for HelpWindow {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = cx.global::<Theme>().clone();
         let corners = WindowCorners::of(window);
-        let title_row =
-            window_title_row(theme.tokens.titlebar_background, &theme, window, |w, _| {
-                w.remove_window()
-            });
+        // The row is the splash's own ground rather than a bar, as the
+        // vault manager's is: the buttons sit in the dark, over nothing.
+        let title_row = window_title_row(
+            "Help",
+            theme.tokens.background_primary,
+            &theme,
+            window,
+            |w, _| w.remove_window(),
+        );
         let version: SharedString = concat!("Version ", env!("CARGO_PKG_VERSION")).into();
+        // Nothing in the column shrinks: when the window is short the
+        // column scrolls, rather than the card closing up on its last row.
         let mut card = div()
-            .w_full()
-            .max_w(px(720.))
-            .px(px(24.))
+            .flex_shrink_0()
+            .w(px(CARD_WIDTH))
+            .px(px(CARD_PADDING))
             .rounded(px(12.))
             .bg(theme.tokens.background_secondary)
             .flex()
@@ -268,6 +295,8 @@ impl Render for HelpWindow {
         for (ix, row) in ROWS.iter().enumerate() {
             card = card.child(self.render_row(row, ix + 1 == count, &theme, cx));
         }
+        // The same splash as the vault manager's: the mark at 264, the
+        // name at 104 in the display face, the version, and the card.
         let body = div()
             .id("help-body")
             .flex_1()
@@ -275,32 +304,46 @@ impl Render for HelpWindow {
             .w_full()
             .overflow_y_scroll()
             .map(|d| corners.bottom().apply(d))
+            // The column is a block inside the scroll box, not the scroll
+            // box itself: a text that wraps inside a flex item of a
+            // scrolling column is measured at one line and painted at two.
             .child(
                 div()
+                    .w_full()
+                    .min_h_full()
                     .flex()
                     .flex_col()
                     .items_center()
-                    .px(px(40.))
-                    .pt(px(48.))
-                    .pb(px(40.))
-                    .child(logo(104.))
+                    .px(px(30.))
+                    .py(px(24.))
+                    // Two spacers rather than `justify_center`: they share
+                    // whatever height is spare and shrink to nothing when
+                    // there is none, so a short window scrolls to the top
+                    // of the mark instead of clipping it behind the centring.
+                    .child(div().flex_1())
+                    .child(logo(264.))
                     .child(
                         div()
-                            .mt(px(20.))
-                            .text_size(px(30.))
-                            .font_weight(FontWeight::SEMIBOLD)
+                            .flex_shrink_0()
+                            .mt(px(16.))
+                            .font_family(DISPLAY_FONT_FAMILY)
+                            .text_size(px(104.))
+                            .line_height(px(104.))
+                            .font_weight(FontWeight::BLACK)
                             .text_color(theme.tokens.text_normal)
                             .child("Scoria"),
                     )
                     .child(
                         div()
-                            .mt(px(6.))
-                            .text_size(px(16.))
+                            .flex_shrink_0()
+                            .mt(px(4.))
+                            .text_size(px(FONT_UI_SMALL))
                             .text_color(theme.tokens.text_muted)
                             .child(version),
                     )
-                    .child(div().h(px(48.)))
-                    .child(card),
+                    .child(div().flex_shrink_0().h(px(32.)))
+                    .child(card)
+                    .child(div().flex_1()),
             );
         let root = div()
             .id("help-window")

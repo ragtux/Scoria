@@ -3312,7 +3312,7 @@ impl SettingsView {
             // `.vertical-tab-header`: `--modal-sidebar-background`, the
             // modal's own ground rather than the sidebar colour.
             .bg(theme.tokens.modal_sidebar_background)
-            .map(|d| self.corners.left().bottom().apply(d))
+            .map(|d| self.corners.left().apply(d))
             .border_r_1()
             .border_color(theme.tokens.background_modifier_border)
             .py_2()
@@ -4798,6 +4798,21 @@ impl Render for SettingsView {
                 list.into_any_element()
             }
         };
+        // The title row sits over the content column alone, as the vault
+        // manager's does over its splash: the nav runs the full height and
+        // meets the top-left corner itself. The row is the content's own
+        // ground rather than a bar, and its close goes through the panel,
+        // so an open field is written first.
+        let view = cx.entity().downgrade();
+        let title_row = window_title_row(
+            "Settings",
+            theme.tokens.modal_background,
+            &theme,
+            window,
+            move |_, cx| {
+                view.update(cx, |view, cx| view.close_from_frame(cx)).ok();
+            },
+        );
         div()
             .id("settings")
             .key_context("Settings")
@@ -4819,7 +4834,7 @@ impl Render for SettingsView {
             // it past the window's edge.
             .size_full()
             .bg(theme.tokens.modal_background)
-            .map(|d| self.corners.bottom().apply(d))
+            .map(|d| self.corners.apply(d))
             .overflow_hidden()
             .child(self.render_nav(&theme, cx))
             .child(
@@ -4829,16 +4844,22 @@ impl Render for SettingsView {
                     .flex_1()
                     .min_w_0()
                     .h_full()
-                    .map(|d| self.corners.right().bottom().apply(d))
-                    .px_6()
-                    .pb_4()
+                    .map(|d| self.corners.right().apply(d))
+                    .children(title_row)
+                    .child(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .flex_1()
+                            .min_h_0()
+                            .px_6()
+                            .pb_4()
                     .child(
                         div()
                             .flex()
                             .flex_row()
                             .items_center()
-                            .justify_between()
-                            .pt_4()
+                            .pt_2()
                             .pb_2()
                             .child(
                                 // `.setting-page-titlebar`: a page replaces
@@ -4887,24 +4908,6 @@ impl Render for SettingsView {
                                                 None => tab.name(),
                                             }),
                                     ),
-                            )
-                            .child(
-                                div()
-                                    .id("settings-close")
-                                    .px_2()
-                                    .rounded_sm()
-                                    .cursor_pointer()
-                                    .text_size(px(18.))
-                                    .text_color(theme.tokens.text_muted)
-                                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
-                                    .on_click(cx.listener(|this, _, _, cx| {
-                                        if this.click_dismissed_a_popover(cx) {
-                                            return;
-                                        }
-                                        this.dismiss_open_controls(cx);
-                                        cx.emit(SettingsEvent::Close)
-                                    }))
-                                    .child("×"),
                             ),
                     )
                     .child(
@@ -4919,6 +4922,7 @@ impl Render for SettingsView {
                             .child("Every control that writes does so to the vault's .obsidian folder as you use it. A tagged setting is still written for Obsidian, but Scoria does not read it yet, or reads it only when it starts."),
                     )
                     .child(div().flex_1().min_h_0().child(body)),
+                    ),
             )
     }
 }
@@ -5064,15 +5068,7 @@ impl Render for SettingsWindow {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = cx.global::<Theme>().clone();
         let corners = WindowCorners::of(window);
-        let panel = self.view.clone();
-        let title_row = window_title_row(
-            theme.tokens.titlebar_background,
-            &theme,
-            window,
-            move |_, cx| {
-                panel.update(cx, |view, cx| view.close_from_frame(cx));
-            },
-        );
+        // The title row is the panel's, drawn over its content column.
         let root = div()
             .id("settings-window")
             .key_context("Settings")
@@ -5086,7 +5082,6 @@ impl Render for SettingsWindow {
             .font_family(theme.ui_font.clone())
             .text_size(px(crate::theme::FONT_UI_MEDIUM))
             .text_color(theme.tokens.text_normal)
-            .children(title_row)
             .child(div().flex_1().min_h_0().w_full().child(self.view.clone()));
         client_frame(root.into_any_element(), &theme, window)
     }
