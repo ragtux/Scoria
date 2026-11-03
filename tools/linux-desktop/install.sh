@@ -18,6 +18,7 @@
 # that scheme and taking it away would break its own links.
 #
 # Everything lands under the XDG data directory, which is per-user by default and needs no root.
+# On Plasma the user's icon cache is dropped afterwards, or the task bar keeps the old picture.
 set -euo pipefail
 
 user_prefix=${XDG_DATA_HOME:-$HOME/.local/share}
@@ -49,6 +50,25 @@ refresh() {
     update-desktop-database "$prefix/applications" 2>/dev/null || true
   command -v gtk-update-icon-cache >/dev/null 2>&1 &&
     gtk-update-icon-cache -qtf "$icons" 2>/dev/null || true
+  refresh_plasma
+}
+
+# Plasma keeps every icon it has drawn in a cache keyed by the icon's name, and an icon file
+# replaced under the same name is not noticed: the task bar and the menu go on drawing the old
+# picture until the cache is dropped and KIconLoader is told, which is what this does. The cache
+# and the session are the calling user's, so a system-wide install leaves them alone: that
+# user's desktop is somebody else's.
+refresh_plasma() {
+  [ "$prefix" = "$user_prefix" ] || return 0
+  case ${XDG_CURRENT_DESKTOP:-} in *KDE*) ;; *) [ -n "${KDE_FULL_SESSION:-}" ] || return 0 ;; esac
+  rm -f "${XDG_CACHE_HOME:-$HOME/.cache}/icon-cache.kcache"
+  command -v kbuildsycoca6 >/dev/null 2>&1 && kbuildsycoca6 >/dev/null 2>&1 || true
+  command -v dbus-send >/dev/null 2>&1 || return 0
+  # One signal per KIconLoader group: Desktop, Toolbar, MainToolbar, Small, Panel, Dialog.
+  for group in 0 1 2 3 4 5; do
+    dbus-send --session --type=signal /KIconLoader org.kde.KIconLoader.iconChanged \
+      "int32:$group" 2>/dev/null || true
+  done
 }
 
 # `MimeType=` only offers the entry; what makes a link open in it is the per-user default list,

@@ -17,7 +17,9 @@ Everything lands under `$XDG_DATA_HOME` (`~/.local/share` by default), so nothin
 `applications/scoria.desktop`, and the hicolor theme from
 `crates/scoria/resources/linux/icons`, cut from the logo master by `tools/app-icons/cut.py`.
 It then refreshes `update-desktop-database` and `gtk-update-icon-cache` if either is installed,
-and `--uninstall` removes exactly the files it wrote.
+and on Plasma drops the user's `icon-cache.kcache` and signals `KIconLoader`, because that cache
+is keyed by name and an icon replaced under the same name otherwise stays the old picture in
+the task bar. `--uninstall` removes exactly the files it wrote.
 
 `scoria.desktop` ships `Exec=scoria %u`, which is right when the binary is on PATH and wrong for
 an unpacked archive, so the script substitutes the absolute path of the binary it found. The
