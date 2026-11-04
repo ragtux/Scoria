@@ -39,6 +39,7 @@ mod preview;
 mod prompt;
 mod properties;
 mod reading;
+mod remote;
 mod search;
 mod settings;
 mod suggest;
@@ -415,6 +416,9 @@ fn main() {
         .with_assets(assets::Assets)
         .run(move |cx: &mut App| {
             cx.set_global(theme);
+            // Remote images (`![alt](https://...)`) load through gpui's `img()`,
+            // which fetches with the app's HTTP client; the default refuses all.
+            cx.set_http_client(std::sync::Arc::new(remote::RemoteClient::new()));
             if let Err(e) = cx.text_system().add_fonts(assets::fonts()) {
                 eprintln!("could not register the bundled fonts: {e}");
             }

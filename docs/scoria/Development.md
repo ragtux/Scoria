@@ -592,6 +592,60 @@ Driven on Windows over `scoria-mcp`: the probe's two notes in Live Preview
 and the reading view, with the inline widgets, the literal Markdown in
 `<b>**md** inside</b>` and the four raw tables as the screenshots show them.
 
+### Remote images, and images inside lists and quotes, 2026-11-04
+
+Two backlog entries that meet in the same widget.
+
+**Remote images.** `![alt](https://…)` was a link run with an External
+target. The reading model now builds `EmbedKind::Remote(url)` for an `http:`
+or `https:` destination of an inline image, a reference image and a raw
+`<img src>`, the `|WxH` hint read off the alt by the same `alias_parts` a
+vault image goes through, and the URL kept as written -- a raw `<img>`'s src
+is percent-decoded only when it is a vault path. `![[https://…]]` is still a
+missing file and `//host/x.png` still a vault path naming nothing, as
+Obsidian has them. Both views draw the embed through gpui's `img()`, whose
+`Resource::Uri` loader fetches with whatever HTTP client the app sets and
+whose default client refuses everything; `crates/scoria/src/remote.rs` is
+that client, ureq on rustls with ring and the webpki roots (no system TLS
+and no cmake on any platform), one thread per request handing its answer
+back over a oneshot, `GET` only, `http(s)` only, Chromium's image `Accept`,
+no cookies or referrer, a 64 MB body cap. gpui caches a loaded image for the
+session, which is the one-request-per-URL the spec records. A failed load
+draws the alt text through `with_fallback`: the brief said blank, but the
+probe below saw Obsidian show the alt beside Chromium's broken-image glyph,
+so the alt it is.
+
+**Images nested in lists and quotes.** Probed first, as the backlog asked
+(`tools/obsidian-probe/nested-images.mjs`, Obsidian 1.15.0 on this Windows
+machine, launched on its own `--user-data-dir` and port 9232): Obsidian draws
+`- ![[pic.png]]` as one line as tall as the picture, the image at the item's
+text column and the bullet at the line's foot; ordered, task, nested and
+quoted lines the same; a lazy continuation or a loose item's image gets a
+no-bullet line at the item's indent. `build_widgets` now walks lists and
+quotes at any depth (`nested_widgets`) and makes every paragraph that is
+one embed a widget whose span starts at the embed. `widget_lines` still
+widens it to its line, so the editor -- which paints a widget *instead of*
+its lines -- re-draws what the widget's span leaves out: `nested_prefix`
+runs the bytes before the embed through the line's own Live Preview
+display (`- ` is `•`, `1. ` stays, `- [ ] ` is `☐`, `> ` is nothing with
+its quote depth), the prefix is shaped like any line, painted at the
+widget's foot, the quote bars run the widget's height, and the embed is
+laid out after it in the width left. No model type changed for it: the
+prefix is the span's offset into its line.
+
+The lazy continuation shares its paragraph with text, so it is the
+inline-placement case and stays open in the backlog.
+
+Driven on `w11` through this worktree's own `scoria-mcp.exe` on a copy of the
+probe's note, with a local server serving the PNG and logging requests: in
+Live Preview the bullet, `1.`, nested bullet, task box and quote bar sit
+beside their images as in the probe's screenshots, the remote image draws
+in a bullet, `|60x30` sizes it in a quote, the 404 shows `missing alt` on
+its bullet's line, and the reading view matches. The server logged one
+`GET /remote.png` per launch, carrying `User-Agent: Scoria/0.3.2` and the
+image `Accept`, however many times the URL was drawn.
+
+
 ### The command line, 2026-11-02
 
 The last line of [[#Parity (phase 4)]]. There was nothing to clone here:

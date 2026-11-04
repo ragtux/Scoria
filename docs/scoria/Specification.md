@@ -2297,6 +2297,52 @@ again on every render, four times across the run (at 120, 648, 13463 and
 pre-arrival layout: by the time it was read it was already cached and
 `complete`.
 
+### The 2026-11-04 pass: a broken remote image shows its alt
+
+Seen on screen this time (`tools/obsidian-probe/nested-images.mjs`, Obsidian
+1.15.0, results and screenshots under
+`tools/obsidian-probe/results/2026-11-04-nested-images*`): a 404 is
+Chromium's broken `<img>` -- the broken-image glyph followed by the alt text,
+in the body colour, one text line tall (91.41 x 24 for `missing alt`, both in
+Live Preview's `div.image-wrapper` and in the reading view). So a failed load
+is not blank: the alt is what the reader sees. A 200 loads once per session;
+the 404 was requested again when the view changed mode.
+
+## Image embeds nested in lists and quotes, Obsidian 1.15.0
+
+Observed on 2026-11-04 over CDP (`tools/obsidian-probe/nested-images.mjs`,
+results `tools/obsidian-probe/results/2026-11-04-nested-images.json`, the
+screenshots beside it), Obsidian 1.15.0 on Windows at the default theme, with
+a 120 x 60 PNG in the vault and the same PNG served over HTTP. Live Preview,
+the cursor parked on the last line:
+
+| Source | Live Preview |
+| --- | --- |
+| `- ![[pic.png]]` | **one** `cm-line` 62.4 tall (60 + the list line's 1.2 px padding top and bottom); the image at the line's text column (x = the marker's 22.79 px), the bullet at the line's **foot**, on the image's baseline |
+| `1. ![[pic.png\|60]]` | one line 32.4 tall, the `1.` at the foot, the image 60 x 30 after it |
+| `   - ![[pic.png]]` (nested under the `1.`) | one line, the image at the nested item's column (35 px) |
+| `- [ ] ![[pic.png]]` | one line, the checkbox at the foot (16 x 16), the image after it |
+| `> ![[pic.png]]` | one line exactly 60 tall, the image at x + 15.33 (after `> `), the quote's border down the line |
+| `- item` then `  ![[pic.png]]` (lazy continuation, one paragraph) | the image on a `list-line-nobullet` line of its own at the item's indent, 61.2 tall |
+| `- item`, blank, `  ![[pic.png]]` (loose item) | the same: a no-bullet line at the indent |
+| `> [!note]` / `> ![[pic.png]]` | the callout is one `cm-embed-block`, the image inside its body |
+| `- ![remote](http://...)`, `> ![sized\|60x30](http://...)` | the same as the vault image: on the marker's line, at its own size or the hint's |
+| `- ![missing alt](http://.../404)` | one 26.4 line: the bullet, then the broken glyph and the alt |
+
+The image is an inline-flex `span.internal-embed.image-embed` inside the line,
+so the line grows to the picture and its marker sits on the baseline at the
+bottom. The reading view puts the same images inside the `li` (x 401.88, after
+the bullet) and the bullet at the item's **top** instead, 24 px down from the
+`li`'s top; a quote's image is inside its `p` after the border.
+
+Scoria (2026-11-04): an embed that is alone in its paragraph inside a list
+item or a quote, at any depth, is a widget spanning the embed only; the editor
+shapes the bytes before it on the line through the same Live Preview display
+the line would get -- `- ` as `•`, `- [ ] ` as its box, `> ` as nothing plus
+its bar -- paints that at the widget's foot, and draws the embed after it. The
+lazy-continuation case (an embed sharing its paragraph with text) is the
+inline-placement case and is still drawn as the line's text.
+
 ## Observed UI rules, Obsidian 1.14.5 (installer build 1.13.7)
 
 Observed on 2026-10-25 over CDP — `tools/obsidian-probe/ui-rules.mjs`,

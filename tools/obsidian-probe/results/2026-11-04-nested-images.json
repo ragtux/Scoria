@@ -1,0 +1,3616 @@
+{
+ "phase": "run",
+ "startedAt": "2026-11-04T14:51:54.899Z",
+ "steps": {
+  "version": {
+   "ok": true,
+   "ms": 2,
+   "value": {
+    "version": "1.15.0",
+    "apiVersion": null,
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.12.7 Chrome/142.0.7444.265 Electron/39.8.3 Safari/537.36"
+   }
+  },
+  "lp-open": {
+   "ok": true,
+   "ms": 2132,
+   "value": {
+    "file": "Nested.md",
+    "mode": "source",
+    "source": false
+   }
+  },
+  "lp-cursor-end": {
+   "ok": true,
+   "ms": 1521,
+   "value": {
+    "line": 54,
+    "ch": 0
+   }
+  },
+  "lp-dump": {
+   "ok": true,
+   "ms": 6,
+   "value": {
+    "contentRect": {
+     "x": 376,
+     "y": -930.64,
+     "w": 604,
+     "h": 2160.15
+    },
+    "lines": [
+     {
+      "tag": "DIV",
+      "cls": "cm-gap",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": -930.64,
+       "w": 604,
+       "h": 577.04
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-gap\" style=\"height: 577.042px;\"></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "Case D: an ordered item that is only an embed, then a nested bullet.",
+      "rect": {
+       "x": 376,
+       "y": -353.59,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\">Case D: an ordered item that is only an embed, then a nested bullet.</div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": -329.59,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line HyperMD-list-line HyperMD-list-line-1",
+      "text": "1. ",
+      "rect": {
+       "x": 376,
+       "y": -305.59,
+       "w": 604,
+       "h": 32.4
+      },
+      "paddingLeft": "28px",
+      "textIndent": "-28px",
+      "imgs": [
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 376,
+         "y": -297.06,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1",
+        "display": "inline"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 404.48,
+         "y": -297.06,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1",
+        "display": "inline"
+       },
+       {
+        "src": "app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383",
+        "alt": null,
+        "width": "60",
+        "height": null,
+        "rect": {
+         "x": 404.48,
+         "y": -304.4,
+         "w": 60,
+         "h": 30
+        },
+        "complete": true,
+        "naturalWidth": 120,
+        "parentClass": "image-wrapper",
+        "display": "block"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 464.48,
+         "y": -297.06,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1",
+        "display": "inline"
+       }
+      ],
+      "embeds": [
+       {
+        "cls": "internal-embed media-embed image-embed is-loaded no-hover-actions",
+        "tag": "DIV",
+        "rect": {
+         "x": 404.48,
+         "y": -304.4,
+         "w": 60,
+         "h": 30
+        },
+        "display": "inline-flex"
+       },
+       {
+        "cls": "image-wrapper",
+        "tag": "DIV",
+        "rect": {
+         "x": 404.48,
+         "y": -304.4,
+         "w": 60,
+         "h": 30
+        },
+        "display": "flex"
+       }
+      ],
+      "bullets": [
+       {
+        "cls": "cm-formatting cm-formatting-list cm-formatting-list-ol cm-list-1",
+        "text": "1. ",
+        "rect": {
+         "x": 376,
+         "y": -297.06,
+         "w": 28.48,
+         "h": 21.33
+        }
+       }
+      ],
+      "html": "<div class=\"cm-line HyperMD-list-line HyperMD-list-line-1\" dir=\"ltr\" style=\"text-indent: -28px; padding-inline-start: 28px;\"><div class=\"cm-fold-indicator\" contenteditable=\"false\"><div class=\"collapse-indicator collapse-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon right-triangle\"><path d=\"M3 8L12 17L21 8\"></path></svg></div></div><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-formatting cm-formatting-list cm-formatting-list-ol cm-list-1\"><span class=\"list-number\">1. </span></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><div class=\"internal-embed media-embed image-embed is-loaded no-hover-actions\" tabindex=\"-1\" src=\"pic.png\" width=\"60\" contenteditable=\"false\"><div class=\"image-wrapper\"><img src=\"app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383\" width=\"60\"><div class=\"image-resize-corner\"></div></div><div class=\"embed-actions\"><div class=\"embed-action\" aria-label=\"Zoom in\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" heigh…"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line HyperMD-list-line HyperMD-list-line-2",
+      "text": "   - ",
+      "rect": {
+       "x": 376,
+       "y": -273.2,
+       "w": 604,
+       "h": 62.4
+      },
+      "paddingLeft": "35px",
+      "textIndent": "-35px",
+      "imgs": [
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 411.95,
+         "y": -234.67,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-2",
+        "display": "inline"
+       },
+       {
+        "src": "app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383",
+        "alt": "pic.png",
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 411.95,
+         "y": -272,
+         "w": 120,
+         "h": 60
+        },
+        "complete": true,
+        "naturalWidth": 120,
+        "parentClass": "image-wrapper",
+        "display": "block"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 531.95,
+         "y": -234.67,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-2",
+        "display": "inline"
+       }
+      ],
+      "embeds": [
+       {
+        "cls": "internal-embed media-embed image-embed is-loaded",
+        "tag": "DIV",
+        "rect": {
+         "x": 411.95,
+         "y": -272,
+         "w": 120,
+         "h": 60
+        },
+        "display": "inline-flex"
+       },
+       {
+        "cls": "image-wrapper",
+        "tag": "DIV",
+        "rect": {
+         "x": 411.95,
+         "y": -272,
+         "w": 120,
+         "h": 60
+        },
+        "display": "flex"
+       }
+      ],
+      "bullets": [
+       {
+        "cls": "cm-formatting cm-formatting-list cm-formatting-list-ul cm-list-2",
+        "text": "- ",
+        "rect": {
+         "x": 389.16,
+         "y": -234.67,
+         "w": 22.79,
+         "h": 21.33
+        }
+       },
+       {
+        "cls": "list-bullet",
+        "text": "-",
+        "rect": {
+         "x": 401.16,
+         "y": -236,
+         "w": 6.41,
+         "h": 24
+        }
+       }
+      ],
+      "html": "<div class=\"cm-line HyperMD-list-line HyperMD-list-line-2\" dir=\"ltr\" style=\"text-indent: -35px; padding-inline-start: 35px;\"><span class=\"cm-hmd-list-indent cm-hmd-list-indent-1\"><span class=\"cm-indent-spacing\">   </span></span><span class=\"cm-formatting cm-formatting-list cm-formatting-list-ul cm-list-2\"><span class=\"list-bullet\">-</span> </span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><div class=\"internal-embed media-embed image-embed is-loaded\" tabindex=\"-1\" src=\"pic.png\" alt=\"pic.png\" contenteditable=\"false\"><div class=\"image-wrapper\"><img src=\"app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383\" alt=\"pic.png\"><div class=\"image-resize-corner\"></div></div><div class=\"embed-actions\"><div class=\"embed-action\" aria-label=\"Zoom in\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-zoom-in\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line><line x1=\"11\" y1=\"8\" x2=\"11\" y2=\"14\"></line><line x1=\"8\" y1=\"11\" x2=\"14\" y2…"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": -210.8,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "Case E: a blockquote that is only an embed.",
+      "rect": {
+       "x": 376,
+       "y": -186.8,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\">Case E: a blockquote that is only an embed.</div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": -162.8,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line HyperMD-quote HyperMD-quote-1",
+      "text": "> ",
+      "rect": {
+       "x": 376,
+       "y": -138.8,
+       "w": 604,
+       "h": 60
+      },
+      "paddingLeft": "15px",
+      "textIndent": "-15px",
+      "imgs": [
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 391.33,
+         "y": -101.47,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-quote HyperMD-quote-1",
+        "display": "inline"
+       },
+       {
+        "src": "app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383",
+        "alt": "pic.png",
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 391.33,
+         "y": -138.8,
+         "w": 120,
+         "h": 60
+        },
+        "complete": true,
+        "naturalWidth": 120,
+        "parentClass": "image-wrapper",
+        "display": "block"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 511.33,
+         "y": -101.47,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-quote HyperMD-quote-1",
+        "display": "inline"
+       }
+      ],
+      "embeds": [
+       {
+        "cls": "internal-embed media-embed image-embed is-loaded",
+        "tag": "DIV",
+        "rect": {
+         "x": 391.33,
+         "y": -138.8,
+         "w": 120,
+         "h": 60
+        },
+        "display": "inline-flex"
+       },
+       {
+        "cls": "image-wrapper",
+        "tag": "DIV",
+        "rect": {
+         "x": 391.33,
+         "y": -138.8,
+         "w": 120,
+         "h": 60
+        },
+        "display": "flex"
+       }
+      ],
+      "bullets": [
+       {
+        "cls": "cm-formatting cm-formatting-quote cm-formatting-quote-1 cm-quote cm-quote-1",
+        "text": "> ",
+        "rect": {
+         "x": 376,
+         "y": -101.47,
+         "w": 15.33,
+         "h": 21.33
+        }
+       }
+      ],
+      "html": "<div class=\"cm-line HyperMD-quote HyperMD-quote-1\" dir=\"ltr\" style=\"text-indent: -15px; padding-inline-start: 15px;\"><span class=\"cm-formatting cm-formatting-quote cm-formatting-quote-1 cm-quote cm-quote-1\"><span class=\"cm-transparent\">&gt;</span> </span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><div class=\"internal-embed media-embed image-embed is-loaded\" tabindex=\"-1\" src=\"pic.png\" alt=\"pic.png\" contenteditable=\"false\"><div class=\"image-wrapper\"><img src=\"app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383\" alt=\"pic.png\"><div class=\"image-resize-corner\"></div></div><div class=\"embed-actions\"><div class=\"embed-action\" aria-label=\"Zoom in\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-zoom-in\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line><line x1=\"11\" y1=\"8\" x2=\"11\" y2=\"14\"></line><line x1=\"8\" y1=\"11\" x2=\"14\" y2=\"11\"></line></svg></div><div class=\"embed-action edit-block-button\" aria-label=\"Edit this blo…"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": -78.8,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "Case F: a callout whose body is only an embed.",
+      "rect": {
+       "x": 376,
+       "y": -54.8,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\">Case F: a callout whose body is only an embed.</div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": -30.8,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-embed-block cm-callout",
+      "text": "Note\n\n",
+      "rect": {
+       "x": 376,
+       "y": -6.8,
+       "w": 604,
+       "h": 142.13
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [
+       {
+        "src": "app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383",
+        "alt": "pic.png",
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 400,
+         "y": 41.99,
+         "w": 120,
+         "h": 60
+        },
+        "complete": true,
+        "naturalWidth": 120,
+        "parentClass": "internal-embed media-embed image-embed is-loaded",
+        "display": "inline"
+       }
+      ],
+      "embeds": [
+       {
+        "cls": "internal-embed media-embed image-embed is-loaded",
+        "tag": "SPAN",
+        "rect": {
+         "x": 400,
+         "y": 84.66,
+         "w": 120,
+         "h": 21.33
+        },
+        "display": "inline"
+       }
+      ],
+      "bullets": [
+       {
+        "cls": "callout-title",
+        "text": "Note",
+        "rect": {
+         "x": 400,
+         "y": 5.2,
+         "w": 568,
+         "h": 20.79
+        }
+       }
+      ],
+      "html": "<div class=\"cm-embed-block cm-callout\" tabindex=\"-1\" contenteditable=\"false\"><div class=\"markdown-rendered show-indentation-guide\"><div data-callout-metadata=\"\" data-callout-fold=\"\" data-callout=\"note\" class=\"callout\"><div class=\"callout-title\" dir=\"auto\"><div class=\"callout-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-pencil\"><path d=\"M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z\"></path><path d=\"m15 5 4 4\"></path></svg></div><div class=\"callout-title-inner\">Note</div></div><div class=\"callout-content\">\n<p dir=\"auto\"><span alt=\"pic.png\" src=\"pic.png\" class=\"internal-embed media-embed image-embed is-loaded\"><img alt=\"pic.png\" src=\"app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383\"></span></p>\n</div></div></div><div class=\"embed-actions\"><div class=\"embed-action edit-block-button\" aria-label=\"Edit this block\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" heigh…"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 135.32,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "Case G: a task item that is only an embed.",
+      "rect": {
+       "x": 376,
+       "y": 159.32,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\">Case G: a task item that is only an embed.</div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 183.32,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line HyperMD-list-line HyperMD-list-line-1 HyperMD-task-line",
+      "text": " ",
+      "rect": {
+       "x": 376,
+       "y": 207.32,
+       "w": 604,
+       "h": 62.4
+      },
+      "paddingLeft": "31px",
+      "textIndent": "-31px",
+      "imgs": [
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 376,
+         "y": 245.85,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1 HyperMD-task-line",
+        "display": "inline"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 376,
+         "y": 245.85,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1 HyperMD-task-line",
+        "display": "inline"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 402.67,
+         "y": 245.85,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1 HyperMD-task-line",
+        "display": "inline"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 407.05,
+         "y": 245.85,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1 HyperMD-task-line",
+        "display": "inline"
+       },
+       {
+        "src": "app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383",
+        "alt": "pic.png",
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 407.05,
+         "y": 208.52,
+         "w": 120,
+         "h": 60
+        },
+        "complete": true,
+        "naturalWidth": 120,
+        "parentClass": "image-wrapper",
+        "display": "block"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 527.05,
+         "y": 245.85,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1 HyperMD-task-line",
+        "display": "inline"
+       }
+      ],
+      "embeds": [
+       {
+        "cls": "internal-embed media-embed image-embed is-loaded",
+        "tag": "DIV",
+        "rect": {
+         "x": 407.05,
+         "y": 208.52,
+         "w": 120,
+         "h": 60
+        },
+        "display": "inline-flex"
+       },
+       {
+        "cls": "image-wrapper",
+        "tag": "DIV",
+        "rect": {
+         "x": 407.05,
+         "y": 208.52,
+         "w": 120,
+         "h": 60
+        },
+        "display": "flex"
+       }
+      ],
+      "bullets": [
+       {
+        "cls": "task-list-item-checkbox",
+        "text": "",
+        "rect": {
+         "x": 383.33,
+         "y": 249.85,
+         "w": 16,
+         "h": 16
+        }
+       }
+      ],
+      "html": "<div class=\"cm-line HyperMD-list-line HyperMD-list-line-1 HyperMD-task-line\" data-task=\" \" dir=\"ltr\" style=\"text-indent: -31px; padding-inline-start: 31px;\"><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span contenteditable=\"false\"></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><label class=\"task-list-label\" contenteditable=\"false\"><input class=\"task-list-item-checkbox\" type=\"checkbox\" data-task=\" \"></label><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-list-1\"> </span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><div class=\"internal-embed media-embed image-embed is-loaded\" tabindex=\"-1\" src=\"pic.png\" alt=\"pic.png\" contenteditable=\"false\"><div class=\"image-wrapper\"><img src=\"app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383\" alt=\"pic.png\"><div class=\"image-resize-corner\"></div></div><div class=\"embed-actions\"><div class=\"embed-action\" aria-label=\"Zoom in\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-zoom-in\"><circle cx=\"…"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 269.72,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "Case H: remote images in a bullet and a quote.",
+      "rect": {
+       "x": 376,
+       "y": 293.72,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\">Case H: remote images in a bullet and a quote.</div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 317.72,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line HyperMD-list-line HyperMD-list-line-1",
+      "text": "- ",
+      "rect": {
+       "x": 376,
+       "y": 341.72,
+       "w": 604,
+       "h": 62.4
+      },
+      "paddingLeft": "22px",
+      "textIndent": "-22px",
+      "imgs": [
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 398.79,
+         "y": 380.25,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1",
+        "display": "inline"
+       },
+       {
+        "src": "http://127.0.0.1:8741/remote.png",
+        "alt": "remote",
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 398.79,
+         "y": 342.92,
+         "w": 120,
+         "h": 60
+        },
+        "complete": true,
+        "naturalWidth": 120,
+        "parentClass": "image-wrapper",
+        "display": "block"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 518.79,
+         "y": 380.25,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1",
+        "display": "inline"
+       }
+      ],
+      "embeds": [
+       {
+        "cls": "image-embed",
+        "tag": "DIV",
+        "rect": {
+         "x": 398.79,
+         "y": 342.92,
+         "w": 120,
+         "h": 60
+        },
+        "display": "inline-flex"
+       },
+       {
+        "cls": "image-wrapper",
+        "tag": "DIV",
+        "rect": {
+         "x": 398.79,
+         "y": 342.92,
+         "w": 120,
+         "h": 60
+        },
+        "display": "flex"
+       }
+      ],
+      "bullets": [
+       {
+        "cls": "cm-formatting cm-formatting-list cm-formatting-list-ul cm-list-1",
+        "text": "- ",
+        "rect": {
+         "x": 376,
+         "y": 380.25,
+         "w": 22.79,
+         "h": 21.33
+        }
+       },
+       {
+        "cls": "list-bullet",
+        "text": "-",
+        "rect": {
+         "x": 388,
+         "y": 378.92,
+         "w": 6.41,
+         "h": 24
+        }
+       }
+      ],
+      "html": "<div class=\"cm-line HyperMD-list-line HyperMD-list-line-1\" dir=\"ltr\" style=\"text-indent: -22px; padding-inline-start: 22px;\"><span class=\"cm-formatting cm-formatting-list cm-formatting-list-ul cm-list-1\"><span class=\"list-bullet\">-</span> </span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><div class=\"image-embed\" tabindex=\"-1\" contenteditable=\"false\"><div class=\"image-wrapper\"><img src=\"http://127.0.0.1:8741/remote.png\" alt=\"remote\"><div class=\"image-resize-corner\"></div></div><div class=\"embed-actions\"><div class=\"embed-action\" aria-label=\"Zoom in\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-zoom-in\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line><line x1=\"11\" y1=\"8\" x2=\"11\" y2=\"14\"></line><line x1=\"8\" y1=\"11\" x2=\"14\" y2=\"11\"></line></svg></div><div class=\"embed-action edit-block-button\" aria-label=\"Edit this block\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-…"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line HyperMD-quote HyperMD-quote-1",
+      "text": "> ",
+      "rect": {
+       "x": 376,
+       "y": 404.11,
+       "w": 604,
+       "h": 30
+      },
+      "paddingLeft": "15px",
+      "textIndent": "-15px",
+      "imgs": [
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 391.33,
+         "y": 411.45,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-quote HyperMD-quote-1",
+        "display": "inline"
+       },
+       {
+        "src": "http://127.0.0.1:8741/remote.png",
+        "alt": "sized",
+        "width": "60",
+        "height": "30",
+        "rect": {
+         "x": 391.33,
+         "y": 404.11,
+         "w": 60,
+         "h": 30
+        },
+        "complete": true,
+        "naturalWidth": 120,
+        "parentClass": "image-wrapper",
+        "display": "block"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 451.33,
+         "y": 411.45,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-quote HyperMD-quote-1",
+        "display": "inline"
+       }
+      ],
+      "embeds": [
+       {
+        "cls": "image-embed no-hover-actions",
+        "tag": "DIV",
+        "rect": {
+         "x": 391.33,
+         "y": 404.11,
+         "w": 60,
+         "h": 30
+        },
+        "display": "inline-flex"
+       },
+       {
+        "cls": "image-wrapper",
+        "tag": "DIV",
+        "rect": {
+         "x": 391.33,
+         "y": 404.11,
+         "w": 60,
+         "h": 30
+        },
+        "display": "flex"
+       }
+      ],
+      "bullets": [
+       {
+        "cls": "cm-formatting cm-formatting-quote cm-formatting-quote-1 cm-quote cm-quote-1",
+        "text": "> ",
+        "rect": {
+         "x": 376,
+         "y": 411.45,
+         "w": 15.33,
+         "h": 21.33
+        }
+       }
+      ],
+      "html": "<div class=\"cm-line HyperMD-quote HyperMD-quote-1\" dir=\"ltr\" style=\"text-indent: -15px; padding-inline-start: 15px;\"><span class=\"cm-formatting cm-formatting-quote cm-formatting-quote-1 cm-quote cm-quote-1\"><span class=\"cm-transparent\">&gt;</span> </span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><div class=\"image-embed no-hover-actions\" tabindex=\"-1\" contenteditable=\"false\"><div class=\"image-wrapper\"><img src=\"http://127.0.0.1:8741/remote.png\" width=\"60\" height=\"30\" alt=\"sized\"><div class=\"image-resize-corner\"></div></div><div class=\"embed-actions\"><div class=\"embed-action\" aria-label=\"Zoom in\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-zoom-in\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line><line x1=\"11\" y1=\"8\" x2=\"11\" y2=\"14\"></line><line x1=\"8\" y1=\"11\" x2=\"14\" y2=\"11\"></line></svg></div><div class=\"embed-action edit-block-button\" aria-label=\"Edit this block\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"…"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 434.11,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "Case I: a remote 404 in a bullet.",
+      "rect": {
+       "x": 376,
+       "y": 458.11,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\">Case I: a remote 404 in a bullet.</div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 482.11,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line HyperMD-list-line HyperMD-list-line-1",
+      "text": "- ",
+      "rect": {
+       "x": 376,
+       "y": 506.11,
+       "w": 604,
+       "h": 26.4
+      },
+      "paddingLeft": "22px",
+      "textIndent": "-22px",
+      "imgs": [
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 398.79,
+         "y": 508.65,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1",
+        "display": "inline"
+       },
+       {
+        "src": "http://127.0.0.1:8741/missing.png",
+        "alt": "missing alt",
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 398.79,
+         "y": 507.31,
+         "w": 91.41,
+         "h": 24
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "image-wrapper",
+        "display": "block"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 490.2,
+         "y": 508.65,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1",
+        "display": "inline"
+       }
+      ],
+      "embeds": [
+       {
+        "cls": "image-embed",
+        "tag": "DIV",
+        "rect": {
+         "x": 398.79,
+         "y": 507.31,
+         "w": 91.41,
+         "h": 24
+        },
+        "display": "inline-flex"
+       },
+       {
+        "cls": "image-wrapper",
+        "tag": "DIV",
+        "rect": {
+         "x": 398.79,
+         "y": 507.31,
+         "w": 91.41,
+         "h": 24
+        },
+        "display": "flex"
+       }
+      ],
+      "bullets": [
+       {
+        "cls": "cm-formatting cm-formatting-list cm-formatting-list-ul cm-list-1",
+        "text": "- ",
+        "rect": {
+         "x": 376,
+         "y": 508.65,
+         "w": 22.79,
+         "h": 21.33
+        }
+       },
+       {
+        "cls": "list-bullet",
+        "text": "-",
+        "rect": {
+         "x": 388,
+         "y": 507.31,
+         "w": 6.41,
+         "h": 24
+        }
+       }
+      ],
+      "html": "<div class=\"cm-line HyperMD-list-line HyperMD-list-line-1\" dir=\"ltr\" style=\"text-indent: -22px; padding-inline-start: 22px;\"><span class=\"cm-formatting cm-formatting-list cm-formatting-list-ul cm-list-1\"><span class=\"list-bullet\">-</span> </span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><div class=\"image-embed\" tabindex=\"-1\" contenteditable=\"false\"><div class=\"image-wrapper\"><img src=\"http://127.0.0.1:8741/missing.png\" alt=\"missing alt\"><div class=\"image-resize-corner\"></div></div><div class=\"embed-actions\"><div class=\"embed-action\" aria-label=\"Zoom in\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-zoom-in\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line><line x1=\"11\" y1=\"8\" x2=\"11\" y2=\"14\"></line><line x1=\"8\" y1=\"11\" x2=\"14\" y2=\"11\"></line></svg></div><div class=\"embed-action edit-block-button\" aria-label=\"Edit this block\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" s…"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 532.51,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "Case J: top-level controls.",
+      "rect": {
+       "x": 376,
+       "y": 556.51,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\">Case J: top-level controls.</div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 580.51,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 604.51,
+       "w": 604,
+       "h": 60
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 376,
+         "y": 641.84,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line",
+        "display": "inline"
+       },
+       {
+        "src": "app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383",
+        "alt": "pic.png",
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 376,
+         "y": 604.51,
+         "w": 120,
+         "h": 60
+        },
+        "complete": true,
+        "naturalWidth": 120,
+        "parentClass": "image-wrapper",
+        "display": "block"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 496,
+         "y": 641.84,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line",
+        "display": "inline"
+       }
+      ],
+      "embeds": [
+       {
+        "cls": "internal-embed media-embed image-embed is-loaded",
+        "tag": "DIV",
+        "rect": {
+         "x": 376,
+         "y": 604.51,
+         "w": 120,
+         "h": 60
+        },
+        "display": "inline-flex"
+       },
+       {
+        "cls": "image-wrapper",
+        "tag": "DIV",
+        "rect": {
+         "x": 376,
+         "y": 604.51,
+         "w": 120,
+         "h": 60
+        },
+        "display": "flex"
+       }
+      ],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><div class=\"internal-embed media-embed image-embed is-loaded\" tabindex=\"-1\" src=\"pic.png\" alt=\"pic.png\" contenteditable=\"false\"><div class=\"image-wrapper\"><img src=\"app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383\" alt=\"pic.png\"><div class=\"image-resize-corner\"></div></div><div class=\"embed-actions\"><div class=\"embed-action\" aria-label=\"Zoom in\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-zoom-in\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line><line x1=\"11\" y1=\"8\" x2=\"11\" y2=\"14\"></line><line x1=\"8\" y1=\"11\" x2=\"14\" y2=\"11\"></line></svg></div><div class=\"embed-action edit-block-button\" aria-label=\"Edit this block\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-code-2\"><path d=…"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 664.51,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 688.51,
+       "w": 604,
+       "h": 60
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 376,
+         "y": 725.84,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line",
+        "display": "inline"
+       },
+       {
+        "src": "http://127.0.0.1:8741/remote.png",
+        "alt": "remote",
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 376,
+         "y": 688.51,
+         "w": 120,
+         "h": 60
+        },
+        "complete": true,
+        "naturalWidth": 120,
+        "parentClass": "image-wrapper",
+        "display": "block"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 496,
+         "y": 725.84,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line",
+        "display": "inline"
+       }
+      ],
+      "embeds": [
+       {
+        "cls": "image-embed",
+        "tag": "DIV",
+        "rect": {
+         "x": 376,
+         "y": 688.51,
+         "w": 120,
+         "h": 60
+        },
+        "display": "inline-flex"
+       },
+       {
+        "cls": "image-wrapper",
+        "tag": "DIV",
+        "rect": {
+         "x": 376,
+         "y": 688.51,
+         "w": 120,
+         "h": 60
+        },
+        "display": "flex"
+       }
+      ],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><div class=\"image-embed\" tabindex=\"-1\" contenteditable=\"false\"><div class=\"image-wrapper\"><img src=\"http://127.0.0.1:8741/remote.png\" alt=\"remote\"><div class=\"image-resize-corner\"></div></div><div class=\"embed-actions\"><div class=\"embed-action\" aria-label=\"Zoom in\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-zoom-in\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line><line x1=\"11\" y1=\"8\" x2=\"11\" y2=\"14\"></line><line x1=\"8\" y1=\"11\" x2=\"14\" y2=\"11\"></line></svg></div><div class=\"embed-action edit-block-button\" aria-label=\"Edit this block\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-code-2\"><path d=\"m18 16 4-4-4-4\"></path><path d=\"m6 8-4 4 4 4\"></path><path d=\"m14.5 4-5 16\"></path></svg></div></div></div><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"></d…"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 748.51,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 772.51,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 376,
+         "y": 773.84,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line",
+        "display": "inline"
+       },
+       {
+        "src": "http://127.0.0.1:8741/missing.png",
+        "alt": "missing alt",
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 376,
+         "y": 772.51,
+         "w": 91.41,
+         "h": 24
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "image-wrapper",
+        "display": "block"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 467.41,
+         "y": 773.84,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line",
+        "display": "inline"
+       }
+      ],
+      "embeds": [
+       {
+        "cls": "image-embed",
+        "tag": "DIV",
+        "rect": {
+         "x": 376,
+         "y": 772.51,
+         "w": 91.41,
+         "h": 24
+        },
+        "display": "inline-flex"
+       },
+       {
+        "cls": "image-wrapper",
+        "tag": "DIV",
+        "rect": {
+         "x": 376,
+         "y": 772.51,
+         "w": 91.41,
+         "h": 24
+        },
+        "display": "flex"
+       }
+      ],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><div class=\"image-embed\" tabindex=\"-1\" contenteditable=\"false\"><div class=\"image-wrapper\"><img src=\"http://127.0.0.1:8741/missing.png\" alt=\"missing alt\"><div class=\"image-resize-corner\"></div></div><div class=\"embed-actions\"><div class=\"embed-action\" aria-label=\"Zoom in\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-zoom-in\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line><line x1=\"11\" y1=\"8\" x2=\"11\" y2=\"14\"></line><line x1=\"8\" y1=\"11\" x2=\"14\" y2=\"11\"></line></svg></div><div class=\"embed-action edit-block-button\" aria-label=\"Edit this block\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-code-2\"><path d=\"m18 16 4-4-4-4\"></path><path d=\"m6 8-4 4 4 4\"></path><path d=\"m14.5 4-5 16\"></path></svg></div></div></div><img class=\"cm-widgetBuffer\" aria-hidden=\"tru…"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 796.51,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "End.",
+      "rect": {
+       "x": 376,
+       "y": 820.51,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\">End.</div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line cm-active",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 844.51,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line cm-active\" dir=\"ltr\"><br></div>"
+     }
+    ]
+   }
+  },
+  "lp-shot-top": {
+   "ok": true,
+   "ms": 92,
+   "value": "C:\\Users\\ragtu\\AppData\\Local\\Temp\\scoria-images-probe1\\shots\\lp-top.png"
+  },
+  "lp-scroll-mid": {
+   "ok": true,
+   "ms": 1202,
+   "value": 934
+  },
+  "lp-shot-mid": {
+   "ok": true,
+   "ms": 97,
+   "value": "C:\\Users\\ragtu\\AppData\\Local\\Temp\\scoria-images-probe1\\shots\\lp-mid.png"
+  },
+  "lp-scroll-end": {
+   "ok": true,
+   "ms": 1207,
+   "value": 1546
+  },
+  "lp-shot-end": {
+   "ok": true,
+   "ms": 89,
+   "value": "C:\\Users\\ragtu\\AppData\\Local\\Temp\\scoria-images-probe1\\shots\\lp-end.png"
+  },
+  "lp-cursor-on-A": {
+   "ok": true,
+   "ms": 1212,
+   "value": "- ![[pic.png]]"
+  },
+  "lp-dump-cursor-A": {
+   "ok": true,
+   "ms": 5,
+   "value": {
+    "contentRect": {
+     "x": 376,
+     "y": 154.03,
+     "w": 604,
+     "h": 2160.15
+    },
+    "lines": [
+     {
+      "tag": "DIV",
+      "cls": "cm-line HyperMD-header HyperMD-header-1",
+      "text": "Nested images",
+      "rect": {
+       "x": 376,
+       "y": 154.03,
+       "w": 604,
+       "h": 49.06
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 376,
+         "y": 170.03,
+         "w": 0,
+         "h": 25.89
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-header HyperMD-header-1",
+        "display": "inline"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 376,
+         "y": 170.03,
+         "w": 0,
+         "h": 25.89
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-header HyperMD-header-1",
+        "display": "inline"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 376,
+         "y": 170.03,
+         "w": 0,
+         "h": 25.89
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-header HyperMD-header-1",
+        "display": "inline"
+       }
+      ],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line HyperMD-header HyperMD-header-1\" dir=\"ltr\"><div class=\"cm-fold-indicator\" contenteditable=\"false\"><div class=\"collapse-indicator collapse-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon right-triangle\"><path d=\"M3 8L12 17L21 8\"></path></svg></div></div><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span contenteditable=\"false\"></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-header cm-header-1\">Nested images</span></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 203.09,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "Case A: a bullet that is only an embed.",
+      "rect": {
+       "x": 376,
+       "y": 227.09,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\">Case A: a bullet that is only an embed.</div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 251.09,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line cm-active HyperMD-list-line HyperMD-list-line-1",
+      "text": "- ",
+      "rect": {
+       "x": 376,
+       "y": 275.09,
+       "w": 604,
+       "h": 62.4
+      },
+      "paddingLeft": "22px",
+      "textIndent": "-22px",
+      "imgs": [
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 398.79,
+         "y": 313.63,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line cm-active HyperMD-list-line HyperMD-list-line-1",
+        "display": "inline"
+       },
+       {
+        "src": "app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383",
+        "alt": "pic.png",
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 398.79,
+         "y": 276.29,
+         "w": 120,
+         "h": 60
+        },
+        "complete": true,
+        "naturalWidth": 120,
+        "parentClass": "image-wrapper",
+        "display": "block"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 518.79,
+         "y": 313.63,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line cm-active HyperMD-list-line HyperMD-list-line-1",
+        "display": "inline"
+       }
+      ],
+      "embeds": [
+       {
+        "cls": "internal-embed media-embed image-embed is-loaded",
+        "tag": "DIV",
+        "rect": {
+         "x": 398.79,
+         "y": 276.29,
+         "w": 120,
+         "h": 60
+        },
+        "display": "inline-flex"
+       },
+       {
+        "cls": "image-wrapper",
+        "tag": "DIV",
+        "rect": {
+         "x": 398.79,
+         "y": 276.29,
+         "w": 120,
+         "h": 60
+        },
+        "display": "flex"
+       }
+      ],
+      "bullets": [
+       {
+        "cls": "cm-formatting cm-formatting-list cm-formatting-list-ul cm-list-1",
+        "text": "- ",
+        "rect": {
+         "x": 376,
+         "y": 313.63,
+         "w": 22.79,
+         "h": 21.33
+        }
+       },
+       {
+        "cls": "list-bullet",
+        "text": "-",
+        "rect": {
+         "x": 388,
+         "y": 312.29,
+         "w": 6.41,
+         "h": 24
+        }
+       }
+      ],
+      "html": "<div class=\"cm-line cm-active HyperMD-list-line HyperMD-list-line-1\" dir=\"ltr\" style=\"text-indent: -22px; padding-inline-start: 22px;\"><span class=\"cm-formatting cm-formatting-list cm-formatting-list-ul cm-list-1\"><span class=\"list-bullet\">-</span> </span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><div class=\"internal-embed media-embed image-embed is-loaded\" tabindex=\"-1\" src=\"pic.png\" alt=\"pic.png\" contenteditable=\"false\"><div class=\"image-wrapper\"><img src=\"app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383\" alt=\"pic.png\"><div class=\"image-resize-corner\"></div></div><div class=\"embed-actions\"><div class=\"embed-action\" aria-label=\"Zoom in\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-zoom-in\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line><line x1=\"11\" y1=\"8\" x2=\"11\" y2=\"14\"></line><line x1=\"8\" y1=\"11\" x2=\"14\" y2=\"11\"></line></svg></div><div class=\"embed-action edit-block-button\" aria-label=\"Edit this bl…"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line HyperMD-list-line HyperMD-list-line-1",
+      "text": "- after A",
+      "rect": {
+       "x": 376,
+       "y": 337.49,
+       "w": 604,
+       "h": 26.4
+      },
+      "paddingLeft": "22px",
+      "textIndent": "-22px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [
+       {
+        "cls": "cm-formatting cm-formatting-list cm-formatting-list-ul cm-list-1",
+        "text": "- ",
+        "rect": {
+         "x": 376,
+         "y": 340.02,
+         "w": 22.79,
+         "h": 21.33
+        }
+       },
+       {
+        "cls": "list-bullet",
+        "text": "-",
+        "rect": {
+         "x": 388,
+         "y": 338.69,
+         "w": 6.41,
+         "h": 24
+        }
+       }
+      ],
+      "html": "<div class=\"cm-line HyperMD-list-line HyperMD-list-line-1\" dir=\"ltr\" style=\"text-indent: -22px; padding-inline-start: 22px;\"><span class=\"cm-formatting cm-formatting-list cm-formatting-list-ul cm-list-1\"><span class=\"list-bullet\">-</span> </span><span class=\"cm-list-1\">after A</span></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 363.89,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "Case B: an embed on the line after the bullet text (lazy continuation).",
+      "rect": {
+       "x": 376,
+       "y": 387.89,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\">Case B: an embed on the line after the bullet text (lazy continuation).</div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 411.89,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line HyperMD-list-line HyperMD-list-line-1",
+      "text": "- item B",
+      "rect": {
+       "x": 376,
+       "y": 435.89,
+       "w": 604,
+       "h": 26.4
+      },
+      "paddingLeft": "22px",
+      "textIndent": "-22px",
+      "imgs": [
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 376,
+         "y": 438.42,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1",
+        "display": "inline"
+       }
+      ],
+      "embeds": [],
+      "bullets": [
+       {
+        "cls": "cm-formatting cm-formatting-list cm-formatting-list-ul cm-list-1",
+        "text": "- ",
+        "rect": {
+         "x": 376,
+         "y": 438.42,
+         "w": 22.79,
+         "h": 21.33
+        }
+       },
+       {
+        "cls": "list-bullet",
+        "text": "-",
+        "rect": {
+         "x": 388,
+         "y": 437.08,
+         "w": 6.41,
+         "h": 24
+        }
+       }
+      ],
+      "html": "<div class=\"cm-line HyperMD-list-line HyperMD-list-line-1\" dir=\"ltr\" style=\"text-indent: -22px; padding-inline-start: 22px;\"><div class=\"cm-fold-indicator\" contenteditable=\"false\"><div class=\"collapse-indicator collapse-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon right-triangle\"><path d=\"M3 8L12 17L21 8\"></path></svg></div></div><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-formatting cm-formatting-list cm-formatting-list-ul cm-list-1\"><span class=\"list-bullet\">-</span> </span><span class=\"cm-list-1\">item B</span></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line HyperMD-list-line HyperMD-list-line-1 HyperMD-list-line-nobullet",
+      "text": "  ",
+      "rect": {
+       "x": 376,
+       "y": 462.28,
+       "w": 604,
+       "h": 61.2
+      },
+      "paddingLeft": "24px",
+      "textIndent": "-24px",
+      "imgs": [
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 400.77,
+         "y": 499.61,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1 HyperMD-list-line-nobullet",
+        "display": "inline"
+       },
+       {
+        "src": "app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383",
+        "alt": "pic.png",
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 400.77,
+         "y": 462.28,
+         "w": 120,
+         "h": 60
+        },
+        "complete": true,
+        "naturalWidth": 120,
+        "parentClass": "image-wrapper",
+        "display": "block"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 520.77,
+         "y": 499.61,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1 HyperMD-list-line-nobullet",
+        "display": "inline"
+       }
+      ],
+      "embeds": [
+       {
+        "cls": "internal-embed media-embed image-embed is-loaded",
+        "tag": "DIV",
+        "rect": {
+         "x": 400.77,
+         "y": 462.28,
+         "w": 120,
+         "h": 60
+        },
+        "display": "inline-flex"
+       },
+       {
+        "cls": "image-wrapper",
+        "tag": "DIV",
+        "rect": {
+         "x": 400.77,
+         "y": 462.28,
+         "w": 120,
+         "h": 60
+        },
+        "display": "flex"
+       }
+      ],
+      "bullets": [],
+      "html": "<div class=\"cm-line HyperMD-list-line HyperMD-list-line-1 HyperMD-list-line-nobullet\" dir=\"ltr\" style=\"text-indent: -24px; padding-inline-start: 24px;\"><span class=\"cm-hmd-list-indent cm-hmd-list-indent-1\"><span class=\"cm-indent-spacing\">  </span></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><div class=\"internal-embed media-embed image-embed is-loaded\" tabindex=\"-1\" src=\"pic.png\" alt=\"pic.png\" contenteditable=\"false\"><div class=\"image-wrapper\"><img src=\"app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383\" alt=\"pic.png\"><div class=\"image-resize-corner\"></div></div><div class=\"embed-actions\"><div class=\"embed-action\" aria-label=\"Zoom in\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-zoom-in\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line><line x1=\"11\" y1=\"8\" x2=\"11\" y2=\"14\"></line><line x1=\"8\" y1=\"11\" x2=\"14\" y2=\"11\"></line></svg></div><div class=\"embed-action edit-block-button\" aria-label=\"Edit this bloc…"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 523.48,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "Case C: an embed as its own paragraph inside a loose item.",
+      "rect": {
+       "x": 376,
+       "y": 547.48,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\">Case C: an embed as its own paragraph inside a loose item.</div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 571.48,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line HyperMD-list-line HyperMD-list-line-1",
+      "text": "- item C",
+      "rect": {
+       "x": 376,
+       "y": 595.48,
+       "w": 604,
+       "h": 26.4
+      },
+      "paddingLeft": "22px",
+      "textIndent": "-22px",
+      "imgs": [
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 376,
+         "y": 598.01,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1",
+        "display": "inline"
+       }
+      ],
+      "embeds": [],
+      "bullets": [
+       {
+        "cls": "cm-formatting cm-formatting-list cm-formatting-list-ul cm-list-1",
+        "text": "- ",
+        "rect": {
+         "x": 376,
+         "y": 598.01,
+         "w": 22.79,
+         "h": 21.33
+        }
+       },
+       {
+        "cls": "list-bullet",
+        "text": "-",
+        "rect": {
+         "x": 388,
+         "y": 596.68,
+         "w": 6.41,
+         "h": 24
+        }
+       }
+      ],
+      "html": "<div class=\"cm-line HyperMD-list-line HyperMD-list-line-1\" dir=\"ltr\" style=\"text-indent: -22px; padding-inline-start: 22px;\"><div class=\"cm-fold-indicator\" contenteditable=\"false\"><div class=\"collapse-indicator collapse-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon right-triangle\"><path d=\"M3 8L12 17L21 8\"></path></svg></div></div><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-formatting cm-formatting-list cm-formatting-list-ul cm-list-1\"><span class=\"list-bullet\">-</span> </span><span class=\"cm-list-1\">item C</span></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 621.88,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line HyperMD-list-line HyperMD-list-line-1 HyperMD-list-line-nobullet",
+      "text": "  ",
+      "rect": {
+       "x": 376,
+       "y": 645.88,
+       "w": 604,
+       "h": 61.2
+      },
+      "paddingLeft": "24px",
+      "textIndent": "-24px",
+      "imgs": [
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 400.77,
+         "y": 683.21,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1 HyperMD-list-line-nobullet",
+        "display": "inline"
+       },
+       {
+        "src": "app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383",
+        "alt": "pic.png",
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 400.77,
+         "y": 645.88,
+         "w": 120,
+         "h": 60
+        },
+        "complete": true,
+        "naturalWidth": 120,
+        "parentClass": "image-wrapper",
+        "display": "block"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 520.77,
+         "y": 683.21,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1 HyperMD-list-line-nobullet",
+        "display": "inline"
+       }
+      ],
+      "embeds": [
+       {
+        "cls": "internal-embed media-embed image-embed is-loaded",
+        "tag": "DIV",
+        "rect": {
+         "x": 400.77,
+         "y": 645.88,
+         "w": 120,
+         "h": 60
+        },
+        "display": "inline-flex"
+       },
+       {
+        "cls": "image-wrapper",
+        "tag": "DIV",
+        "rect": {
+         "x": 400.77,
+         "y": 645.88,
+         "w": 120,
+         "h": 60
+        },
+        "display": "flex"
+       }
+      ],
+      "bullets": [],
+      "html": "<div class=\"cm-line HyperMD-list-line HyperMD-list-line-1 HyperMD-list-line-nobullet\" dir=\"ltr\" style=\"text-indent: -24px; padding-inline-start: 24px;\"><span class=\"cm-hmd-list-indent cm-hmd-list-indent-1\"><span class=\"cm-indent-spacing\">  </span></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><div class=\"internal-embed media-embed image-embed is-loaded\" tabindex=\"-1\" src=\"pic.png\" alt=\"pic.png\" contenteditable=\"false\"><div class=\"image-wrapper\"><img src=\"app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383\" alt=\"pic.png\"><div class=\"image-resize-corner\"></div></div><div class=\"embed-actions\"><div class=\"embed-action\" aria-label=\"Zoom in\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-zoom-in\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line><line x1=\"11\" y1=\"8\" x2=\"11\" y2=\"14\"></line><line x1=\"8\" y1=\"11\" x2=\"14\" y2=\"11\"></line></svg></div><div class=\"embed-action edit-block-button\" aria-label=\"Edit this bloc…"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 707.07,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "Case D: an ordered item that is only an embed, then a nested bullet.",
+      "rect": {
+       "x": 376,
+       "y": 731.07,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\">Case D: an ordered item that is only an embed, then a nested bullet.</div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 755.07,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line HyperMD-list-line HyperMD-list-line-1",
+      "text": "1. ",
+      "rect": {
+       "x": 376,
+       "y": 779.07,
+       "w": 604,
+       "h": 32.4
+      },
+      "paddingLeft": "28px",
+      "textIndent": "-28px",
+      "imgs": [
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 376,
+         "y": 787.6,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1",
+        "display": "inline"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 404.48,
+         "y": 787.6,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1",
+        "display": "inline"
+       },
+       {
+        "src": "app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383",
+        "alt": null,
+        "width": "60",
+        "height": null,
+        "rect": {
+         "x": 404.48,
+         "y": 780.27,
+         "w": 60,
+         "h": 30
+        },
+        "complete": true,
+        "naturalWidth": 120,
+        "parentClass": "image-wrapper",
+        "display": "block"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 464.48,
+         "y": 787.6,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1",
+        "display": "inline"
+       }
+      ],
+      "embeds": [
+       {
+        "cls": "internal-embed media-embed image-embed is-loaded no-hover-actions",
+        "tag": "DIV",
+        "rect": {
+         "x": 404.48,
+         "y": 780.27,
+         "w": 60,
+         "h": 30
+        },
+        "display": "inline-flex"
+       },
+       {
+        "cls": "image-wrapper",
+        "tag": "DIV",
+        "rect": {
+         "x": 404.48,
+         "y": 780.27,
+         "w": 60,
+         "h": 30
+        },
+        "display": "flex"
+       }
+      ],
+      "bullets": [
+       {
+        "cls": "cm-formatting cm-formatting-list cm-formatting-list-ol cm-list-1",
+        "text": "1. ",
+        "rect": {
+         "x": 376,
+         "y": 787.6,
+         "w": 28.48,
+         "h": 21.33
+        }
+       }
+      ],
+      "html": "<div class=\"cm-line HyperMD-list-line HyperMD-list-line-1\" dir=\"ltr\" style=\"text-indent: -28px; padding-inline-start: 28px;\"><div class=\"cm-fold-indicator\" contenteditable=\"false\"><div class=\"collapse-indicator collapse-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon right-triangle\"><path d=\"M3 8L12 17L21 8\"></path></svg></div></div><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-formatting cm-formatting-list cm-formatting-list-ol cm-list-1\"><span class=\"list-number\">1. </span></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><div class=\"internal-embed media-embed image-embed is-loaded no-hover-actions\" tabindex=\"-1\" src=\"pic.png\" width=\"60\" contenteditable=\"false\"><div class=\"image-wrapper\"><img src=\"app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383\" width=\"60\"><div class=\"image-resize-corner\"></div></div><div class=\"embed-actions\"><div class=\"embed-action\" aria-label=\"Zoom in\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" heigh…"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line HyperMD-list-line HyperMD-list-line-2",
+      "text": "   - ",
+      "rect": {
+       "x": 376,
+       "y": 811.47,
+       "w": 604,
+       "h": 62.4
+      },
+      "paddingLeft": "35px",
+      "textIndent": "-35px",
+      "imgs": [
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 411.95,
+         "y": 850,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-2",
+        "display": "inline"
+       },
+       {
+        "src": "app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383",
+        "alt": "pic.png",
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 411.95,
+         "y": 812.67,
+         "w": 120,
+         "h": 60
+        },
+        "complete": true,
+        "naturalWidth": 120,
+        "parentClass": "image-wrapper",
+        "display": "block"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 531.95,
+         "y": 850,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-2",
+        "display": "inline"
+       }
+      ],
+      "embeds": [
+       {
+        "cls": "internal-embed media-embed image-embed is-loaded",
+        "tag": "DIV",
+        "rect": {
+         "x": 411.95,
+         "y": 812.67,
+         "w": 120,
+         "h": 60
+        },
+        "display": "inline-flex"
+       },
+       {
+        "cls": "image-wrapper",
+        "tag": "DIV",
+        "rect": {
+         "x": 411.95,
+         "y": 812.67,
+         "w": 120,
+         "h": 60
+        },
+        "display": "flex"
+       }
+      ],
+      "bullets": [
+       {
+        "cls": "cm-formatting cm-formatting-list cm-formatting-list-ul cm-list-2",
+        "text": "- ",
+        "rect": {
+         "x": 389.16,
+         "y": 850,
+         "w": 22.79,
+         "h": 21.33
+        }
+       },
+       {
+        "cls": "list-bullet",
+        "text": "-",
+        "rect": {
+         "x": 401.16,
+         "y": 848.67,
+         "w": 6.41,
+         "h": 24
+        }
+       }
+      ],
+      "html": "<div class=\"cm-line HyperMD-list-line HyperMD-list-line-2\" dir=\"ltr\" style=\"text-indent: -35px; padding-inline-start: 35px;\"><span class=\"cm-hmd-list-indent cm-hmd-list-indent-1\"><span class=\"cm-indent-spacing\">   </span></span><span class=\"cm-formatting cm-formatting-list cm-formatting-list-ul cm-list-2\"><span class=\"list-bullet\">-</span> </span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><div class=\"internal-embed media-embed image-embed is-loaded\" tabindex=\"-1\" src=\"pic.png\" alt=\"pic.png\" contenteditable=\"false\"><div class=\"image-wrapper\"><img src=\"app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383\" alt=\"pic.png\"><div class=\"image-resize-corner\"></div></div><div class=\"embed-actions\"><div class=\"embed-action\" aria-label=\"Zoom in\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-zoom-in\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line><line x1=\"11\" y1=\"8\" x2=\"11\" y2=\"14\"></line><line x1=\"8\" y1=\"11\" x2=\"14\" y2…"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 873.86,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "Case E: a blockquote that is only an embed.",
+      "rect": {
+       "x": 376,
+       "y": 897.86,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\">Case E: a blockquote that is only an embed.</div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 921.86,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line HyperMD-quote HyperMD-quote-1",
+      "text": "> ",
+      "rect": {
+       "x": 376,
+       "y": 945.86,
+       "w": 604,
+       "h": 60
+      },
+      "paddingLeft": "15px",
+      "textIndent": "-15px",
+      "imgs": [
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 391.33,
+         "y": 983.2,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-quote HyperMD-quote-1",
+        "display": "inline"
+       },
+       {
+        "src": "app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383",
+        "alt": "pic.png",
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 391.33,
+         "y": 945.86,
+         "w": 120,
+         "h": 60
+        },
+        "complete": true,
+        "naturalWidth": 120,
+        "parentClass": "image-wrapper",
+        "display": "block"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 511.33,
+         "y": 983.2,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-quote HyperMD-quote-1",
+        "display": "inline"
+       }
+      ],
+      "embeds": [
+       {
+        "cls": "internal-embed media-embed image-embed is-loaded",
+        "tag": "DIV",
+        "rect": {
+         "x": 391.33,
+         "y": 945.86,
+         "w": 120,
+         "h": 60
+        },
+        "display": "inline-flex"
+       },
+       {
+        "cls": "image-wrapper",
+        "tag": "DIV",
+        "rect": {
+         "x": 391.33,
+         "y": 945.86,
+         "w": 120,
+         "h": 60
+        },
+        "display": "flex"
+       }
+      ],
+      "bullets": [
+       {
+        "cls": "cm-formatting cm-formatting-quote cm-formatting-quote-1 cm-quote cm-quote-1",
+        "text": "> ",
+        "rect": {
+         "x": 376,
+         "y": 983.2,
+         "w": 15.33,
+         "h": 21.33
+        }
+       }
+      ],
+      "html": "<div class=\"cm-line HyperMD-quote HyperMD-quote-1\" dir=\"ltr\" style=\"text-indent: -15px; padding-inline-start: 15px;\"><span class=\"cm-formatting cm-formatting-quote cm-formatting-quote-1 cm-quote cm-quote-1\"><span class=\"cm-transparent\">&gt;</span> </span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><div class=\"internal-embed media-embed image-embed is-loaded\" tabindex=\"-1\" src=\"pic.png\" alt=\"pic.png\" contenteditable=\"false\"><div class=\"image-wrapper\"><img src=\"app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383\" alt=\"pic.png\"><div class=\"image-resize-corner\"></div></div><div class=\"embed-actions\"><div class=\"embed-action\" aria-label=\"Zoom in\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-zoom-in\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line><line x1=\"11\" y1=\"8\" x2=\"11\" y2=\"14\"></line><line x1=\"8\" y1=\"11\" x2=\"14\" y2=\"11\"></line></svg></div><div class=\"embed-action edit-block-button\" aria-label=\"Edit this blo…"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 1005.86,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "Case F: a callout whose body is only an embed.",
+      "rect": {
+       "x": 376,
+       "y": 1029.86,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\">Case F: a callout whose body is only an embed.</div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 1053.86,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-embed-block cm-callout",
+      "text": "Note\n\n",
+      "rect": {
+       "x": 376,
+       "y": 1077.86,
+       "w": 604,
+       "h": 142.13
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [
+       {
+        "src": "app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383",
+        "alt": "pic.png",
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 400,
+         "y": 1126.66,
+         "w": 120,
+         "h": 60
+        },
+        "complete": true,
+        "naturalWidth": 120,
+        "parentClass": "internal-embed media-embed image-embed is-loaded",
+        "display": "inline"
+       }
+      ],
+      "embeds": [
+       {
+        "cls": "internal-embed media-embed image-embed is-loaded",
+        "tag": "SPAN",
+        "rect": {
+         "x": 400,
+         "y": 1169.32,
+         "w": 120,
+         "h": 21.33
+        },
+        "display": "inline"
+       }
+      ],
+      "bullets": [
+       {
+        "cls": "callout-title",
+        "text": "Note",
+        "rect": {
+         "x": 400,
+         "y": 1089.86,
+         "w": 568,
+         "h": 20.79
+        }
+       }
+      ],
+      "html": "<div class=\"cm-embed-block cm-callout\" tabindex=\"-1\" contenteditable=\"false\"><div class=\"markdown-rendered show-indentation-guide\"><div data-callout-metadata=\"\" data-callout-fold=\"\" data-callout=\"note\" class=\"callout\"><div class=\"callout-title\" dir=\"auto\"><div class=\"callout-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-pencil\"><path d=\"M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z\"></path><path d=\"m15 5 4 4\"></path></svg></div><div class=\"callout-title-inner\">Note</div></div><div class=\"callout-content\">\n<p dir=\"auto\"><span alt=\"pic.png\" src=\"pic.png\" class=\"internal-embed media-embed image-embed is-loaded\"><img alt=\"pic.png\" src=\"app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383\"></span></p>\n</div></div></div><div class=\"embed-actions\"><div class=\"embed-action edit-block-button\" aria-label=\"Edit this block\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" heigh…"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 1219.99,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "Case G: a task item that is only an embed.",
+      "rect": {
+       "x": 376,
+       "y": 1243.99,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\">Case G: a task item that is only an embed.</div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 1267.99,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line HyperMD-list-line HyperMD-list-line-1 HyperMD-task-line",
+      "text": " ",
+      "rect": {
+       "x": 376,
+       "y": 1291.99,
+       "w": 604,
+       "h": 62.4
+      },
+      "paddingLeft": "31px",
+      "textIndent": "-31px",
+      "imgs": [
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 376,
+         "y": 1330.52,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1 HyperMD-task-line",
+        "display": "inline"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 376,
+         "y": 1330.52,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1 HyperMD-task-line",
+        "display": "inline"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 402.67,
+         "y": 1330.52,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1 HyperMD-task-line",
+        "display": "inline"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 407.05,
+         "y": 1330.52,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1 HyperMD-task-line",
+        "display": "inline"
+       },
+       {
+        "src": "app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383",
+        "alt": "pic.png",
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 407.05,
+         "y": 1293.19,
+         "w": 120,
+         "h": 60
+        },
+        "complete": true,
+        "naturalWidth": 120,
+        "parentClass": "image-wrapper",
+        "display": "block"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 527.05,
+         "y": 1330.52,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1 HyperMD-task-line",
+        "display": "inline"
+       }
+      ],
+      "embeds": [
+       {
+        "cls": "internal-embed media-embed image-embed is-loaded",
+        "tag": "DIV",
+        "rect": {
+         "x": 407.05,
+         "y": 1293.19,
+         "w": 120,
+         "h": 60
+        },
+        "display": "inline-flex"
+       },
+       {
+        "cls": "image-wrapper",
+        "tag": "DIV",
+        "rect": {
+         "x": 407.05,
+         "y": 1293.19,
+         "w": 120,
+         "h": 60
+        },
+        "display": "flex"
+       }
+      ],
+      "bullets": [
+       {
+        "cls": "task-list-item-checkbox",
+        "text": "",
+        "rect": {
+         "x": 383.33,
+         "y": 1334.52,
+         "w": 16,
+         "h": 16
+        }
+       }
+      ],
+      "html": "<div class=\"cm-line HyperMD-list-line HyperMD-list-line-1 HyperMD-task-line\" data-task=\" \" dir=\"ltr\" style=\"text-indent: -31px; padding-inline-start: 31px;\"><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span contenteditable=\"false\"></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><label class=\"task-list-label\" contenteditable=\"false\"><input class=\"task-list-item-checkbox\" type=\"checkbox\" data-task=\" \"></label><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-list-1\"> </span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><div class=\"internal-embed media-embed image-embed is-loaded\" tabindex=\"-1\" src=\"pic.png\" alt=\"pic.png\" contenteditable=\"false\"><div class=\"image-wrapper\"><img src=\"app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383\" alt=\"pic.png\"><div class=\"image-resize-corner\"></div></div><div class=\"embed-actions\"><div class=\"embed-action\" aria-label=\"Zoom in\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-zoom-in\"><circle cx=\"…"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 1354.39,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "Case H: remote images in a bullet and a quote.",
+      "rect": {
+       "x": 376,
+       "y": 1378.39,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\">Case H: remote images in a bullet and a quote.</div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 1402.39,
+       "w": 604,
+       "h": 24
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line HyperMD-list-line HyperMD-list-line-1",
+      "text": "- ",
+      "rect": {
+       "x": 376,
+       "y": 1426.39,
+       "w": 604,
+       "h": 62.4
+      },
+      "paddingLeft": "22px",
+      "textIndent": "-22px",
+      "imgs": [
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 398.79,
+         "y": 1464.92,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1",
+        "display": "inline"
+       },
+       {
+        "src": "http://127.0.0.1:8741/remote.png",
+        "alt": "remote",
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 398.79,
+         "y": 1427.58,
+         "w": 120,
+         "h": 60
+        },
+        "complete": true,
+        "naturalWidth": 120,
+        "parentClass": "image-wrapper",
+        "display": "block"
+       },
+       {
+        "src": null,
+        "alt": null,
+        "width": null,
+        "height": null,
+        "rect": {
+         "x": 518.79,
+         "y": 1464.92,
+         "w": 0,
+         "h": 16
+        },
+        "complete": true,
+        "naturalWidth": 0,
+        "parentClass": "cm-line HyperMD-list-line HyperMD-list-line-1",
+        "display": "inline"
+       }
+      ],
+      "embeds": [
+       {
+        "cls": "image-embed",
+        "tag": "DIV",
+        "rect": {
+         "x": 398.79,
+         "y": 1427.58,
+         "w": 120,
+         "h": 60
+        },
+        "display": "inline-flex"
+       },
+       {
+        "cls": "image-wrapper",
+        "tag": "DIV",
+        "rect": {
+         "x": 398.79,
+         "y": 1427.58,
+         "w": 120,
+         "h": 60
+        },
+        "display": "flex"
+       }
+      ],
+      "bullets": [
+       {
+        "cls": "cm-formatting cm-formatting-list cm-formatting-list-ul cm-list-1",
+        "text": "- ",
+        "rect": {
+         "x": 376,
+         "y": 1464.92,
+         "w": 22.79,
+         "h": 21.33
+        }
+       },
+       {
+        "cls": "list-bullet",
+        "text": "-",
+        "rect": {
+         "x": 388,
+         "y": 1463.58,
+         "w": 6.41,
+         "h": 24
+        }
+       }
+      ],
+      "html": "<div class=\"cm-line HyperMD-list-line HyperMD-list-line-1\" dir=\"ltr\" style=\"text-indent: -22px; padding-inline-start: 22px;\"><span class=\"cm-formatting cm-formatting-list cm-formatting-list-ul cm-list-1\"><span class=\"list-bullet\">-</span> </span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><div class=\"image-embed\" tabindex=\"-1\" contenteditable=\"false\"><div class=\"image-wrapper\"><img src=\"http://127.0.0.1:8741/remote.png\" alt=\"remote\"><div class=\"image-resize-corner\"></div></div><div class=\"embed-actions\"><div class=\"embed-action\" aria-label=\"Zoom in\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-zoom-in\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"></line><line x1=\"11\" y1=\"8\" x2=\"11\" y2=\"14\"></line><line x1=\"8\" y1=\"11\" x2=\"14\" y2=\"11\"></line></svg></div><div class=\"embed-action edit-block-button\" aria-label=\"Edit this block\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-…"
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-gap",
+      "text": "",
+      "rect": {
+       "x": 376,
+       "y": 1488.78,
+       "w": 604,
+       "h": 464.4
+      },
+      "paddingLeft": "0px",
+      "textIndent": "0px",
+      "imgs": [],
+      "embeds": [],
+      "bullets": [],
+      "html": "<div class=\"cm-gap\" style=\"height: 464.396px;\"></div>"
+     }
+    ]
+   }
+  },
+  "lp-shot-cursor-A": {
+   "ok": true,
+   "ms": 92,
+   "value": "C:\\Users\\ragtu\\AppData\\Local\\Temp\\scoria-images-probe1\\shots\\lp-cursor-A.png"
+  },
+  "rv-open": {
+   "ok": true,
+   "ms": 1621,
+   "value": {
+    "file": "Nested.md",
+    "mode": "preview",
+    "source": false
+   }
+  },
+  "rv-scroll": {
+   "ok": true,
+   "ms": 2153,
+   "value": 1880
+  },
+  "rv-dump": {
+   "ok": true,
+   "ms": 2,
+   "value": {
+    "imgs": [
+     {
+      "src": "app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383",
+      "alt": "pic.png",
+      "rect": {
+       "x": 401.88,
+       "y": 242.39,
+       "w": 120,
+       "h": 60
+      },
+      "complete": true,
+      "naturalWidth": 120,
+      "li": {
+       "rect": {
+        "x": 401.88,
+        "y": 241.19,
+        "w": 578.13,
+        "h": 67.73
+       },
+       "html": "<li data-line=\"0\" dir=\"auto\"><span class=\"list-bullet\"></span><span alt=\"pic.png\" src=\"pic.png\" class=\"internal-embed media-embed image-embed is-loaded\"><img alt=\"pic.png\" src=\"app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383\"></span></li>"
+      },
+      "liBullet": {
+       "x": 389.08,
+       "y": 242.39,
+       "w": 0,
+       "h": 24
+      },
+      "bq": null,
+      "callout": null,
+      "p": null
+     },
+     {
+      "src": "app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383",
+      "alt": "pic.png",
+      "rect": {
+       "x": 401.88,
+       "y": 416.51,
+       "w": 120,
+       "h": 60
+      },
+      "complete": true,
+      "naturalWidth": 120,
+      "li": {
+       "rect": {
+        "x": 401.88,
+        "y": 391.31,
+        "w": 578.13,
+        "h": 91.73
+       },
+       "html": "<li data-line=\"0\" dir=\"auto\"><span class=\"list-bullet\"></span>item B<br>\n<span alt=\"pic.png\" src=\"pic.png\" class=\"internal-embed media-embed image-embed is-loaded\"><img alt=\"pic.png\" src=\"app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383\"></span></li>"
+      },
+      "liBullet": {
+       "x": 389.08,
+       "y": 392.51,
+       "w": 0,
+       "h": 24
+      },
+      "bq": null,
+      "callout": null,
+      "p": null
+     },
+     {
+      "src": "app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383",
+      "alt": "pic.png",
+      "rect": {
+       "x": 401.88,
+       "y": 580.24,
+       "w": 120,
+       "h": 60
+      },
+      "complete": true,
+      "naturalWidth": 120,
+      "li": {
+       "rect": {
+        "x": 401.88,
+        "y": 539.04,
+        "w": 578.13,
+        "h": 107.73
+       },
+       "html": "<li data-line=\"0\" dir=\"auto\"><span class=\"list-bullet\"></span>\n<p>item C</p>\n<p><span alt=\"pic.png\" src=\"pic.png\" class=\"internal-embed media-embed image-embed is-loaded\"><img alt=\"pic.png\" src=\"app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383\"></span></p>\n</li>"
+      },
+      "liBullet": {
+       "x": 389.08,
+       "y": 540.24,
+       "w": 0,
+       "h": 24
+      },
+      "bq": null,
+      "callout": null,
+      "p": {
+       "x": 401.88,
+       "y": 580.24,
+       "w": 578.13,
+       "h": 65.33
+      }
+     },
+     {
+      "src": "app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383",
+      "alt": "pic.png",
+      "rect": {
+       "x": 401.88,
+       "y": 703.97,
+       "w": 60,
+       "h": 30
+      },
+      "complete": true,
+      "naturalWidth": 120,
+      "li": {
+       "rect": {
+        "x": 401.88,
+        "y": 702.77,
+        "w": 578.13,
+        "h": 105.46
+       },
+       "html": "<li data-line=\"0\" dir=\"auto\"><span class=\"list-collapse-indicator collapse-indicator collapse-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon right-triangle\"><path d=\"M3 8L12 17L21 8\"></path></svg></span><span width=\"60\" alt=\"pic.png\" src=\"pic.png\" class=\"internal-embed media-embed image-embed is-loaded\"><img alt=\"pic.png\" width=\"60\" src=\"app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/"
+      },
+      "liBullet": null,
+      "bq": null,
+      "callout": null,
+      "p": null
+     },
+     {
+      "src": "app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383",
+      "alt": "pic.png",
+      "rect": {
+       "x": 427.75,
+       "y": 740.5,
+       "w": 120,
+       "h": 60
+      },
+      "complete": true,
+      "naturalWidth": 120,
+      "li": {
+       "rect": {
+        "x": 427.75,
+        "y": 739.3,
+        "w": 552.25,
+        "h": 67.73
+       },
+       "html": "<li data-line=\"1\" dir=\"auto\"><span class=\"list-bullet\"></span><span alt=\"pic.png\" src=\"pic.png\" class=\"internal-embed media-embed image-embed is-loaded\"><img alt=\"pic.png\" src=\"app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383\"></span></li>"
+      },
+      "liBullet": {
+       "x": 414.96,
+       "y": 740.5,
+       "w": 0,
+       "h": 24
+      },
+      "bq": null,
+      "callout": null,
+      "p": null
+     },
+     {
+      "src": "app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383",
+      "alt": "pic.png",
+      "rect": {
+       "x": 402,
+       "y": 864.23,
+       "w": 120,
+       "h": 60
+      },
+      "complete": true,
+      "naturalWidth": 120,
+      "li": null,
+      "liBullet": null,
+      "bq": {
+       "x": 376,
+       "y": 864.23,
+       "w": 604,
+       "h": 65.33
+      },
+      "callout": null,
+      "p": {
+       "x": 402,
+       "y": 864.23,
+       "w": 578,
+       "h": 65.33
+      }
+     },
+     {
+      "src": "app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383",
+      "alt": "pic.png",
+      "rect": {
+       "x": 400,
+       "y": 1034.35,
+       "w": 120,
+       "h": 60
+      },
+      "complete": true,
+      "naturalWidth": 120,
+      "li": null,
+      "liBullet": null,
+      "bq": null,
+      "callout": {
+       "x": 376,
+       "y": 985.56,
+       "w": 604,
+       "h": 142.13
+      },
+      "p": {
+       "x": 400,
+       "y": 1034.35,
+       "w": 568,
+       "h": 65.33
+      }
+     },
+     {
+      "src": "app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383",
+      "alt": "pic.png",
+      "rect": {
+       "x": 401.88,
+       "y": 1184.89,
+       "w": 120,
+       "h": 60
+      },
+      "complete": true,
+      "naturalWidth": 120,
+      "li": {
+       "rect": {
+        "x": 401.88,
+        "y": 1183.69,
+        "w": 578.13,
+        "h": 67.73
+       },
+       "html": "<li data-line=\"0\" data-task=\"\" class=\"task-list-item\" dir=\"auto\"><span class=\"list-bullet\"></span><input data-line=\"0\" type=\"checkbox\" class=\"task-list-item-checkbox\"><span alt=\"pic.png\" src=\"pic.png\" class=\"internal-embed media-embed image-embed is-loaded\"><img alt=\"pic.png\" src=\"app://6c2d33243054eefbdd69ca92e5ecd677656b/C:/Users/ragtu/AppData/Local/Temp/scoria-images-probe1/vault/pic.png?1793803721383\"></span></li>"
+      },
+      "liBullet": {
+       "x": 0,
+       "y": 0,
+       "w": 0,
+       "h": 0
+      },
+      "bq": null,
+      "callout": null,
+      "p": null
+     },
+     {
+      "src": "http://127.0.0.1:8741/remote.png",
+      "alt": "remote",
+      "rect": {
+       "x": 401.88,
+       "y": 1308.61,
+       "w": 120,
+       "h": 60
+      },
+      "complete": true,
+      "naturalWidth": 120,
+      "li": {
+       "rect": {
+        "x": 401.88,
+        "y": 1307.42,
+        "w": 578.13,
+        "h": 135.06
+       },
+       "html": "<li data-line=\"0\" dir=\"auto\"><span class=\"list-bullet\"></span><img alt=\"remote\" src=\"http://127.0.0.1:8741/remote.png\" referrerpolicy=\"no-referrer\">\n<blockquote dir=\"auto\">\n<p><img height=\"30\" width=\"60\" alt=\"sized\" src=\"http://127.0.0.1:8741/remote.png\" referrerpolicy=\"no-referrer\"></p>\n</blockquote>\n</li>"
+      },
+      "liBullet": {
+       "x": 389.08,
+       "y": 1308.61,
+       "w": 0,
+       "h": 24
+      },
+      "bq": null,
+      "callout": null,
+      "p": null
+     },
+     {
+      "src": "http://127.0.0.1:8741/remote.png",
+      "alt": "sized",
+      "rect": {
+       "x": 427.88,
+       "y": 1389.95,
+       "w": 60,
+       "h": 30
+      },
+      "complete": true,
+      "naturalWidth": 120,
+      "li": {
+       "rect": {
+        "x": 401.88,
+        "y": 1307.42,
+        "w": 578.13,
+        "h": 135.06
+       },
+       "html": "<li data-line=\"0\" dir=\"auto\"><span class=\"list-bullet\"></span><img alt=\"remote\" src=\"http://127.0.0.1:8741/remote.png\" referrerpolicy=\"no-referrer\">\n<blockquote dir=\"auto\">\n<p><img height=\"30\" width=\"60\" alt=\"sized\" src=\"http://127.0.0.1:8741/remote.png\" referrerpolicy=\"no-referrer\"></p>\n</blockquote>\n</li>"
+      },
+      "liBullet": {
+       "x": 389.08,
+       "y": 1308.61,
+       "w": 0,
+       "h": 24
+      },
+      "bq": {
+       "x": 401.88,
+       "y": 1389.95,
+       "w": 578.13,
+       "h": 35.33
+      },
+      "callout": null,
+      "p": {
+       "x": 427.88,
+       "y": 1389.95,
+       "w": 552.13,
+       "h": 35.33
+      }
+     },
+     {
+      "src": "http://127.0.0.1:8741/missing.png",
+      "alt": "missing alt",
+      "rect": {
+       "x": 401.88,
+       "y": 1499.68,
+       "w": 91.41,
+       "h": 24
+      },
+      "complete": true,
+      "naturalWidth": 0,
+      "li": {
+       "rect": {
+        "x": 401.88,
+        "y": 1498.48,
+        "w": 578.13,
+        "h": 26.4
+       },
+       "html": "<li data-line=\"0\" dir=\"auto\"><span class=\"list-bullet\"></span><img alt=\"missing alt\" src=\"http://127.0.0.1:8741/missing.png\" referrerpolicy=\"no-referrer\"></li>"
+      },
+      "liBullet": {
+       "x": 389.08,
+       "y": 1499.68,
+       "w": 0,
+       "h": 24
+      },
+      "bq": null,
+      "callout": null,
+      "p": null
+     }
+    ]
+   }
+  },
+  "rv-shot": {
+   "ok": true,
+   "ms": 117,
+   "value": "C:\\Users\\ragtu\\AppData\\Local\\Temp\\scoria-images-probe1\\shots\\rv-top.png"
+  }
+ },
+ "httpLog": [
+  {
+   "t": 2215,
+   "url": "/remote.png"
+  },
+  {
+   "t": 2217,
+   "url": "/missing.png"
+  },
+  {
+   "t": 8164,
+   "url": "/missing.png"
+  }
+ ],
+ "elapsedMs": 11619
+}

@@ -19,7 +19,7 @@ use gpui::{
     Context, DispatchPhase, Element, ElementId, EventEmitter, FocusHandle, Focusable, Font,
     FontStyle, FontWeight, GlobalElementId, HighlightStyle, Hitbox, HitboxBehavior, Hsla,
     InspectorElementId, InteractiveText, KeyBinding, LayoutId, ListAlignment, ListOffset,
-    ListState, MouseButton, MouseDownEvent, ObjectFit, Pixels, Point, SharedString,
+    ListState, MouseButton, MouseDownEvent, ObjectFit, Pixels, Point, SharedString, SharedUri,
     StrikethroughStyle, StyledText, Task, TextLayout, TextRun, UnderlineStyle, Window,
     WindowTextSystem,
 };
@@ -2352,6 +2352,28 @@ impl<'a> Renderer<'a> {
                 let mut image = img(path.clone())
                     .max_w_full()
                     .object_fit(ObjectFit::Contain);
+                if let Some(w) = embed.width {
+                    image = image.w(px(w));
+                }
+                if let Some(h) = embed.height {
+                    image = image.h(px(h));
+                }
+                div().my_1().child(image).into_any_element()
+            }
+            // `![alt|60x30](https://...)`: fetched through the app's HTTP
+            // client (`remote.rs`) and drawn at its own size or the hint's,
+            // `|60x30` filling exactly that box the way the `<img>`'s width
+            // and height attributes do. Nothing is reserved while it loads,
+            // and a failed load is the alt text, as tall as a line of text:
+            // Chromium's broken `<img>` showing its alt, less the
+            // broken-image glyph (observed: a 404 measures the alt's own box
+            // at the line height).
+            EmbedKind::Remote(url) => {
+                let alt = SharedString::from(embed.alt.clone());
+                let mut image = img(SharedUri::from(url.clone()))
+                    .max_w_full()
+                    .object_fit(ObjectFit::Fill)
+                    .with_fallback(move || div().child(alt.clone()).into_any_element());
                 if let Some(w) = embed.width {
                     image = image.w(px(w));
                 }

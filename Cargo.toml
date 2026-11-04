@@ -104,6 +104,15 @@ chrono = { version = "0.4", default-features = false, features = ["clock", "std"
 # `libc::ENOATTR`, which libc 0.2.190 removed on Linux. Drop the pin once async-tar moves to xattr 1.x.
 gpui = { git = "https://github.com/zed-industries/zed", rev = "4ce18741ad2ea007cb20a1dd96d2a170d224cc01" }
 gpui_platform = { git = "https://github.com/zed-industries/zed", rev = "4ce18741ad2ea007cb20a1dd96d2a170d224cc01", features = ["font-kit", "wayland", "x11"] }
+# gpui's own HTTP trait, from the same commit: `img()` fetches a URI through whatever client
+# the app sets, and the default one refuses every request. Scoria's client is `crates/scoria/src/
+# remote.rs`, over ureq.
+http_client = { git = "https://github.com/zed-industries/zed", rev = "4ce18741ad2ea007cb20a1dd96d2a170d224cc01" }
+# Fetches remote images (`![alt](https://...)`) for gpui's `img()`: blocking, one thread per
+# request, rustls on ring with the webpki roots, so no system TLS library and no cmake.
+ureq = "3"
+# Already in the tree through gpui; the HTTP client hands its answer back over a oneshot.
+futures = "0.3"
 
 [profile.dev]
 opt-level = 0

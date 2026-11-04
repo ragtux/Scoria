@@ -4351,6 +4351,27 @@ impl Editor {
     }
 }
 
+/// The display of the bytes before a nested embed on its line -- `- `,
+/// `1. `, `- [ ] `, `> `, `  ` -- or `None` for a widget that starts its
+/// line. Built from the line's own highlight spans with no cursor on it,
+/// so the marker reads exactly as it would on a line of text.
+fn nested_prefix(line: &str, len: usize, spans: &[HighlightSpan]) -> Option<DisplayLine> {
+    if len == 0 || len > line.len() || !line.is_char_boundary(len) {
+        return None;
+    }
+    let spans: Vec<HighlightSpan> = spans
+        .iter()
+        .filter(|s| s.range.end <= len)
+        .cloned()
+        .collect();
+    Some(preview::display_line_with(
+        &line[..len],
+        &spans,
+        &[],
+        &|_, _| None,
+    ))
+}
+
 /// Pairs each widget with the lines its span covers in `text`.
 fn widget_lines(text: &str, widgets: Vec<Widget>) -> Vec<(Range<usize>, Widget)> {
     let starts: Vec<usize> = std::iter::once(0)
@@ -5280,6 +5301,9 @@ struct WidgetPaint {
     bounds: Bounds<Pixels>,
     embed: bool,
     element: AnyElement,
+    /// The list or quote marker in front of a nested embed, shaped as the
+    /// line's own text, and where it is painted.
+    prefix: Option<(Point<Pixels>, Shaped)>,
 }
 
 struct Prepaint {
@@ -5548,6 +5572,42 @@ impl Element for EditorElement {
                     // table keeps them because its cells take their own:
                     // neither ever unfolds to its source.
                     let embed = matches!(widget.block, RBlock::Paragraph(_) | RBlock::Table { .. });
+                    // An embed alone in a list item or a quote starts after
+                    // the line's marker, which is painted beside it the way
+                    // the line would show it: `- ` as its bullet, `- [ ] `
+                    // as its box, `> ` as nothing (its bar is a decoration).
+                    let first_spans = highlights
+                        .get(wlines.start)
+                        .map(Vec::as_slice)
+                        .unwrap_or(&[]);
+                    let prefix = nested_prefix(
+                        editor.buf.line_text(wlines.start),
+                        // Saturating: a widget list one parse behind the
+                        // buffer can hold a span from before an edit.
+                        widget
+                            .span
+                            .start
+                            .saturating_sub(editor.buf.line_starts()[wlines.start]),
+                        first_spans,
+                    )
+                    .map(|display| {
+                        shape_display(
+                            window,
+                            &text_style,
+                            font_size,
+                            lh,
+                            None,
+                            display,
+                            first_spans,
+                            &[],
+                            &palette,
+                        )
+                    });
+                    let indent = prefix
+                        .as_ref()
+                        .map(|p| p.line.unwrapped_layout.width)
+                        .unwrap_or_default();
+                    let width = (content_width - indent).max(px(0.));
                     let mut element = if crate::bases::embed::is_base_embed(&widget.block) {
                         // Obsidian's `embed-action edit-block-button` over
                         // an embedded base: `lucide-code-2` (the current
@@ -5556,7 +5616,7 @@ impl Element for EditorElement {
                         let first = wlines.start;
                         let entity = entity.clone();
                         div()
-                            .w(content_width)
+                            .w(width)
                             .relative()
                             .child(renderer.block(&widget.block, false))
                             .child(
@@ -5595,15 +5655,12 @@ impl Element for EditorElement {
                             .into_any_element()
                     } else {
                         div()
-                            .w(content_width)
+                            .w(width)
                             .child(renderer.block(&widget.block, false))
                             .into_any_element()
                     };
                     let measured = element.layout_as_root(
-                        size(
-                            AvailableSpace::Definite(content_width),
-                            AvailableSpace::MinContent,
-                        ),
+                        size(AvailableSpace::Definite(width), AvailableSpace::MinContent),
                         window,
                         cx,
                     );
@@ -5612,7 +5669,21 @@ impl Element for EditorElement {
                         scroll_px = lead;
                         y = bounds.origin.y;
                     }
-                    element.prepaint_at(point(content_x, y), window, cx);
+                    element.prepaint_at(point(content_x + indent, y), window, cx);
+                    // The marker sits at the widget's foot, on the line the
+                    // picture stands on, as Obsidian's bullet does; a quote's
+                    // bars run the widget's whole height.
+                    let prefix = prefix.map(|shaped| {
+                        let depth = shaped.display.decor.quote_depth;
+                        for level in 0..depth {
+                            let x = content_x - px(10.) * (depth - level) as f32;
+                            let mut bar = palette.muted;
+                            bar.a = 0.6;
+                            decor_quads
+                                .push(fill(Bounds::new(point(x, y), size(px(2.), height)), bar));
+                        }
+                        (point(content_x, y + height - lh), shaped)
+                    });
                     widgets.push(WidgetPaint {
                         lines: wlines.clone(),
                         visible: VisibleLine {
@@ -5621,9 +5692,10 @@ impl Element for EditorElement {
                             rows: 1,
                             row_height: height,
                         },
-                        bounds: Bounds::new(point(content_x, y), size(content_width, height)),
+                        bounds: Bounds::new(point(content_x + indent, y), size(width, height)),
                         embed,
                         element,
+                        prefix,
                     });
                     y += height;
                     line = wlines.end;
@@ -6041,6 +6113,12 @@ impl Element for EditorElement {
                 }
             }
             for w in prepaint.widgets.iter_mut() {
+                if let Some((origin, shaped)) = &w.prefix {
+                    let _ =
+                        shaped
+                            .line
+                            .paint(*origin, line_height, TextAlign::Left, None, window, cx);
+                }
                 w.element.paint(window, cx);
             }
             // Over the lines: a flair sits on its fence line's text.
@@ -6167,6 +6245,29 @@ mod tests {
         let doc = scoria_markdown::parse(src);
         let lines = highlight_lines(&doc);
         preview::display_line(src.lines().next().unwrap_or(""), &lines[0], &[])
+    }
+
+    /// The marker a nested image widget paints beside itself is the line's
+    /// own Live Preview display of the bytes before the embed: a bullet, a
+    /// number, a task's box, nothing for a quote but its bar.
+    #[test]
+    fn a_nested_embed_paints_its_lines_marker() {
+        let shown = |src: &str| {
+            let doc = scoria_markdown::parse(src);
+            let lines = highlight_lines(&doc);
+            let line = src.lines().next().unwrap_or("");
+            let at = line.find('!').expect("an embed");
+            nested_prefix(line, at, &lines[0]).map(|d| (d.text, d.decor.quote_depth))
+        };
+        assert_eq!(shown("- ![[pic.png]]\n"), Some(("• ".to_string(), 0)));
+        assert_eq!(shown("1. ![[pic.png]]\n"), Some(("1. ".to_string(), 0)));
+        assert_eq!(shown("- [ ] ![[pic.png]]\n"), Some(("☐ ".to_string(), 0)));
+        assert_eq!(shown("> > ![[pic.png]]\n"), Some((String::new(), 2)));
+        assert_eq!(
+            shown("![[pic.png]]\n"),
+            None,
+            "a top-level embed has no marker"
+        );
     }
 
     /// Every code run of `src`, as `(line, start, end, paint)`, which is

@@ -191,6 +191,12 @@ pub enum EmbedKind {
     /// A `.pdf`: the path and the subpath, nothing read. The pages come
     /// from the document cache when the embed is drawn (`pdf::embed`).
     Pdf(crate::pdf::embed::PdfEmbed),
+    /// `![alt](https://...)`: an `http:` or `https:` image, fetched with
+    /// no prompt and drawn when it arrives; a failed load shows the alt
+    /// text ([[Specification#Observed remote image behavior, Obsidian 1.14.4 (installer build 1.13.7)]]).
+    /// The URL as written. A wikilink naming a URL is not one of these: it
+    /// is a missing file, and nothing is requested.
+    Remote(String),
     /// The target file does not exist.
     Missing,
     /// The target exists but Scoria cannot render it inline yet.
@@ -489,17 +495,13 @@ pub fn build_widgets(
             BlockKind::HtmlBlock { content } => {
                 html_images(content).is_some() || html_block_renders(content)
             }
-            BlockKind::Paragraph { content } => match content.as_slice() {
-                [one] => matches!(
-                    &one.kind,
-                    InlineKind::Wikilink { embed: true, .. }
-                        | InlineKind::Image {
-                            kind: LinkKind::Inline,
-                            ..
-                        }
-                ),
-                _ => false,
-            },
+            BlockKind::Paragraph { content } => is_lone_embed(content),
+            // An image alone in a list item or a quote is drawn on the
+            // marker's own line, which stays painted beside it.
+            BlockKind::List { .. } | BlockKind::BlockQuote { .. } => {
+                nested_widgets(&mut b, block, &mut out);
+                false
+            }
             _ => false,
         };
         if !widget {
@@ -513,6 +515,58 @@ pub fn build_widgets(
         }
     }
     out
+}
+
+/// A paragraph that is one embed and nothing else, which Live Preview
+/// draws as the embed in place of its source.
+fn is_lone_embed(content: &[Inline<'_>]) -> bool {
+    match content {
+        [one] => match &one.kind {
+            InlineKind::Wikilink { embed, .. } => *embed,
+            InlineKind::Image {
+                kind: LinkKind::Inline,
+                ..
+            } => true,
+            InlineKind::Image {
+                kind: LinkKind::Reference,
+                destination,
+                ..
+            } => crate::remote::is_remote(destination),
+            _ => false,
+        },
+        _ => false,
+    }
+}
+
+/// The widgets inside a list or a quote: every paragraph that is one embed,
+/// at any depth of lists and quotes. Obsidian draws such an image on the
+/// line its marker is on -- `- ![[pic.png]]` is one line as tall as the
+/// picture, with the bullet at its foot -- and an image on a line of its
+/// own inside a loose item at the item's indent
+/// ([[Specification#Image embeds nested in lists and quotes, Obsidian 1.15.0]]).
+/// The widget's span starts at the embed, not the line: the bytes before it
+/// on the line are the marker the editor paints beside the widget. A
+/// callout is a widget whole, so nothing inside one is looked at here.
+fn nested_widgets(b: &mut Builder<'_>, block: &Block<'_>, out: &mut Vec<Widget>) {
+    let children: Vec<&Block<'_>> = match &block.kind {
+        BlockKind::List { items, .. } => items.iter().flat_map(|i| i.children.iter()).collect(),
+        BlockKind::BlockQuote { children } => children.iter().collect(),
+        _ => return,
+    };
+    for child in children {
+        match &child.kind {
+            BlockKind::Paragraph { content } if is_lone_embed(content) => {
+                if let Some(built) = b.block(child, false) {
+                    out.push(Widget {
+                        span: child.span.start..child.span.end,
+                        block: built,
+                    });
+                }
+            }
+            BlockKind::List { .. } | BlockKind::BlockQuote { .. } => nested_widgets(b, child, out),
+            _ => {}
+        }
+    }
 }
 
 /// Builds the model of an embedded note or section with the given nesting.
@@ -688,7 +742,11 @@ impl<'v> Builder<'v> {
                 Some(imgs) => {
                     let mut segments = Vec::with_capacity(imgs.len());
                     for img in imgs {
-                        let embed = self.embed(&img.src, img.alt, img.width, img.height);
+                        let embed = if crate::remote::is_remote(&img.src) {
+                            remote_embed(&img.src, img.alt, img.width, img.height)
+                        } else {
+                            self.embed(&img.src, img.alt, img.width, img.height)
+                        };
                         segments.push(Segment::Embed(embed));
                     }
                     RBlock::Paragraph(segments)
@@ -815,6 +873,24 @@ impl<'v> Builder<'v> {
                     self.flush(&mut acc, &mut out);
                     let embed = self.wikilink_embed(body);
                     out.push(Segment::Embed(embed));
+                }
+                // `![alt|200x100](https://...)`: fetched and drawn, the size
+                // read off the alt the way a vault image's is. A reference
+                // image is fetched the same way (observed).
+                InlineKind::Image {
+                    destination,
+                    kind: LinkKind::Inline | LinkKind::Reference,
+                    children,
+                    ..
+                } if crate::remote::is_remote(destination) => {
+                    self.flush(&mut acc, &mut out);
+                    let (alt, width, height) = alias_parts(&plain_text(children));
+                    out.push(Segment::Embed(remote_embed(
+                        destination,
+                        alt.unwrap_or_default(),
+                        width,
+                        height,
+                    )));
                 }
                 InlineKind::Image {
                     destination,
@@ -1564,6 +1640,18 @@ impl RichBuilder {
     }
 }
 
+/// A remote image's embed: the URL as written, nothing resolved.
+fn remote_embed(url: &str, alt: String, width: Option<f32>, height: Option<f32>) -> Embed {
+    let url = url.trim();
+    Embed {
+        kind: EmbedKind::Remote(url.to_string()),
+        link: url.to_string(),
+        alt,
+        width,
+        height,
+    }
+}
+
 /// The `|`-separated parts of an embed's alias, which is the alias of
 /// `![[pic.png|alt|200x100]]` and the alt of `![alt|200x100](pic.png)`
 /// alike: every part that reads as `W` or `WxH` claims the size (the last
@@ -2113,7 +2201,7 @@ fn html_image(attrs: &str) -> Option<HtmlImage> {
     let mut height = None;
     for (name, value) in html_attrs(attrs.trim_end().trim_end_matches('/'))? {
         match name.as_str() {
-            "src" => src = Some(percent_decode(&value).into_owned()),
+            "src" => src = Some(value),
             "alt" => alt = value,
             // A raw dimension is CSS pixels; a `%` or a `calc()` is not
             // something the embed can carry, so the block stays source.
@@ -2123,11 +2211,17 @@ fn html_image(attrs: &str) -> Option<HtmlImage> {
         }
     }
     let src = src?;
-    // A remote image is fetched by Obsidian and shown as a link here, the
-    // way a markdown image with a scheme already is.
-    if src.is_empty() || has_scheme(&src) {
+    // A remote image is fetched, as Obsidian fetches a raw `<img>`'s; any
+    // other scheme leaves the block as source.
+    if src.is_empty() || (has_scheme(&src) && !crate::remote::is_remote(&src)) {
         return None;
     }
+    // A URL is requested as written; a vault path is a file name.
+    let src = if crate::remote::is_remote(&src) {
+        src
+    } else {
+        percent_decode(&src).into_owned()
+    };
     Some(HtmlImage {
         src,
         alt,
@@ -2853,15 +2947,104 @@ mod tests {
         ));
     }
 
+    /// `![alt|WxH](https://...)` is a remote image with the size read off
+    /// the alt as a vault image's is; a reference image and a raw `<img>`
+    /// are fetched the same way, while a URL inside a wikilink is a missing
+    /// file and a protocol-relative or `file:` destination is not remote
+    /// ([[Specification#Observed remote image behavior, Obsidian 1.14.4 (installer build 1.13.7)]]).
+    #[test]
+    fn http_images_are_remote_embeds() {
+        let m = build(
+            "Self.md",
+            "![alt|200x100](https://e.com/x.png)\n\n\
+             ![a|200](http://h/x%20y.png \"title\")\n\n\
+             ![ref alt][rr]\n\n\
+             [rr]: HTTPS://e.com/r.png \"Ref\"\n\n\
+             <img src=\"https://e.com/raw%20x.png\" width=\"40\" alt=\"raw\">\n\n\
+             ![[https://e.com/x.png]]\n\n\
+             ![p](//e.com/x.png)\n",
+            &stub(),
+        );
+        let remote = |ix: usize| {
+            let e = first_embed(&m.blocks[ix]);
+            match &e.kind {
+                EmbedKind::Remote(url) => (url.as_str(), e.alt.as_str(), e.width, e.height),
+                other => panic!("block {ix}: {other:?}"),
+            }
+        };
+        assert_eq!(
+            remote(0),
+            ("https://e.com/x.png", "alt", Some(200.), Some(100.))
+        );
+        // The URL is requested as written: no percent-decoding.
+        assert_eq!(remote(1), ("http://h/x%20y.png", "a", Some(200.), None));
+        assert_eq!(remote(2), ("HTTPS://e.com/r.png", "ref alt", None, None));
+        assert_eq!(
+            remote(3),
+            ("https://e.com/raw%20x.png", "raw", Some(40.), None)
+        );
+        assert!(matches!(first_embed(&m.blocks[4]).kind, EmbedKind::Missing));
+        // `//host` resolves against `app://` in Obsidian and loads nothing:
+        // a vault path that names no file, never a request.
+        assert!(matches!(first_embed(&m.blocks[5]).kind, EmbedKind::Missing));
+        // Each stands alone in its paragraph, so Live Preview draws each.
+        let src = "![alt](https://e.com/x.png)\n\n![r][rr]\n\n[rr]: https://e.com/r.png\n";
+        let w = widgets(src, &stub());
+        assert_eq!(w.len(), 2, "{w:?}");
+        assert!(w
+            .iter()
+            .all(|w| matches!(&first_embed(&w.block).kind, EmbedKind::Remote(_))));
+    }
+
+    /// An image alone in a list item or a quote is a widget of its own,
+    /// spanning the embed and not the marker before it, at any depth; one
+    /// sharing its paragraph with text is not, and nothing inside a
+    /// callout is, the callout being a widget whole
+    /// ([[Specification#Image embeds nested in lists and quotes, Obsidian 1.15.0]]).
+    #[test]
+    fn an_image_alone_in_a_list_item_or_quote_is_a_widget() {
+        let src = "- ![[pic.png]]\n\
+                   - text ![[pic.png]]\n\
+                   - item\n\
+                   \n  ![[pic.png|60]]\n\
+                   \n1. ![x](pic.png)\n   - [ ] ![r](https://e.com/r.png)\n\
+                   \n> ![[pic.png]]\n> > ![[pic.png]]\n\
+                   \n> [!note]\n> ![[pic.png]]\n";
+        let w = widgets(src, &stub());
+        let shown: Vec<(&str, &str)> = w
+            .iter()
+            .map(|w| {
+                let line_start = src[..w.span.start].rfind('\n').map_or(0, |i| i + 1);
+                (&src[line_start..w.span.start], &src[w.span.clone()])
+            })
+            .collect();
+        assert_eq!(
+            shown,
+            vec![
+                ("- ", "![[pic.png]]"),
+                ("  ", "![[pic.png|60]]"),
+                ("1. ", "![x](pic.png)"),
+                ("   - [ ] ", "![r](https://e.com/r.png)"),
+                ("> ", "![[pic.png]]"),
+                ("> > ", "![[pic.png]]"),
+                ("", "> [!note]\n> ![[pic.png]]"),
+            ]
+        );
+        assert!(matches!(first_embed(&w[1].block).width, Some(60.)));
+        assert!(matches!(
+            first_embed(&w[3].block).kind,
+            EmbedKind::Remote(_)
+        ));
+    }
+
     #[test]
     fn other_html_blocks_stay_source() {
-        // A remote image and a mixed block reach the builder as the same
-        // `HtmlBlock` and are not something the renderer can draw, so they
-        // keep their raw text and never fold their lines. (A comment and a
-        // script used to be in this list; they draw nothing at all now --
-        // see the test below.)
+        // A mixed block reaches the builder as the same `HtmlBlock` and is
+        // not something the renderer can draw, so it keeps its raw text and
+        // never folds its lines. (A comment, a script and a remote `<img>`
+        // used to be in this list; the first two draw nothing at all now and
+        // the last is fetched -- see the tests around this one.)
         for src in [
-            "<img src=\"https://e.com/a.png\">\n",
             "<img src=\"pic.png\" width=\"50%\">\n",
         ] {
             assert!(widgets(src, &stub()).is_empty(), "{src:?} became a widget");

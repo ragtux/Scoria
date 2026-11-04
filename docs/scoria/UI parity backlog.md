@@ -357,6 +357,19 @@ own app data, never in the vault.
 
 *medium, parity-gap, large*
 
+**Half landed 2026-11-04, the nested half.** Probed first
+([[Specification#Image embeds nested in lists and quotes, Obsidian 1.15.0]]): Obsidian draws
+`- ![[pic.png]]` as **one** line as tall as the picture, the image at the item's text column and
+the bullet at the line's foot; an ordered item, a task, a nested item and `> ![[pic.png]]` the
+same. `build_widgets` now walks lists and quotes at any depth and makes every paragraph that is one
+embed a widget whose span starts at the embed, not the line; the editor shapes the bytes before it
+through the line's own Live Preview display (`- ` is `•`, `- [ ] ` its box, `> ` nothing plus the
+bar), paints that at the widget's foot and lays the embed out after it in the width left. A
+callout was already a widget whole. **Still open**: an embed sharing its paragraph with text --
+`Look: ![[real.png]] here` and the lazy continuation `- item` / `  ![[pic.png]]`, which Obsidian
+draws on a no-bullet line of its own at the item's indent -- is the inline placement below; and
+a click on a nested widget's box (the `☐` beside an image) does not toggle the task.
+
 **Scoria.** With an 80×80 PNG in the vault, `- ![[real.png]]`, `Look: ![[real.png]] here` and
 `> ![[real.png]]` each measure one 24 px text row and a click on them navigates to the file, while
 the same embed alone on a line measures ~104 px. Sizing works (`|40` gives ~64 px); only placement
@@ -804,6 +817,19 @@ needs nothing new — `properties::remove_item` is already the editor's.
 **Half landed 2026-10-30**: the inline subset is mapped onto styles -- see the Live Preview entry
 above for exactly which tags and what is left. Remote images are untouched: `![remote](https://…)`
 is still an External link rather than a fetched `<img>`, and `EmbedKind::Remote` does not exist.
+
+**The remote-image half landed 2026-11-04**: `EmbedKind::Remote(url)` is built in the model for an
+`http:`/`https:` destination of `![alt](…)`, of a reference image and of a raw `<img src>`, the
+`|WxH` hint read off the alt by the same `alias_parts` a vault image uses, the URL kept as written.
+Both views draw it through gpui's `img()`, which fetches through the app's HTTP client
+(`remote.rs`: ureq on rustls/ring, `GET` only, an image `Accept`, no referrer or cookies, redirects
+followed, a 64 MB cap); gpui caches a loaded image for the session. Nothing is reserved while it
+loads, and a failed load is its alt text -- the 2026-11-04 probe saw Obsidian's broken image show
+the alt beside Chromium's broken glyph, not a blank. `![[https://…]]` stays a missing file and
+`//host/x.png` stays a vault path that names no file, as observed: nothing is requested. **Still open**: a remote image in a heading or a table
+cell is still the link it was, and one mid-sentence breaks its paragraph in the reading view (as a
+vault image does) and stays text in Live Preview -- both the inline-placement case; and a 404 is
+not re-requested on the next render the way Obsidian re-requests one.
 
 **Scoria.** `line one<br>line two`, `<u>underlined</u>` and `<sup>2</sup>` all appear as their tags;
 `![remote](https://…)` becomes a link-styled run with an External target, so clicking it would open
