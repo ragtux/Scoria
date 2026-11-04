@@ -1945,6 +1945,15 @@ Cards hover with a `#3f3f3f` shadow, any click opens the note, right-click is th
 
 **Landed 2026-11-01**: a card drags with a card-sized placeholder in the target column and the drop writes the grouped property to its note; a column header wears the grab cursor and drags, reordering the board in memory and writing `groupOrder` once the order is Manual; the header carries the count and *Create new note* on hover, the footer *New*, both prefilling the column's value; a right click on a header or a card is *Add item* | *Hide column* · *Edit groups...*, with Hide column writing `groupOrder` without the column and Edit groups opening the Group panel. **Still out**: where a dropped card lands inside its column (the sort re-resolves it), and the `obsidian://` drag-out. See [[Development#The kanban board, 2026-11-02]].
 
+**Both settled 2026-11-04 by the probe** (`tools/obsidian-probe/bases-leftovers.mjs`, `s05`,
+Obsidian 1.14.5): Obsidian ignores the drop position too. A card dropped mid-column, at the top
+or below the last card lands in its name-sorted place, the 88 px placeholder already sits at that
+slot during the drag, only the note's grouped property is written, and the `.base` never gains an
+order key; a drop within its own column draws no placeholder and changes nothing. So the
+re-resolving sort *is* the behaviour. The drag carries no `obsidian://` URL: its only type is
+`text/plain`, the note's basename (`Tuff`), after a `setDragImage`. A board with an explicit sort
+or a Manual group order was not tried.
+
 **Scoria.** 300 px columns, `active 3` headers that take nothing, cards that highlight on hover
 and open on click. No drag (`kanban.rs:35-40` leaves it out on purpose), no column plus, no
 menus.
@@ -1959,6 +1968,12 @@ the link, and `.bases-list-separator`; only the link opens, and right-click on t
 file menu.
 
 **Landed 2026-11-01**: a card's and a list link's right click raise the file menu; only the link of a list line opens the note. **Still out**: the empty grey box a cover-less card draws, and a card's drag-out as an `obsidian://` URL.
+
+**The grey box is right, settled 2026-11-04 by the probe** (`bases-leftovers.mjs` `s01`): a card
+whose note has no `cover`, or an empty one, still gets its `.bases-cards-cover` -- the full
+cover height, `background-color` rgb(35, 35, 35), no image, no children -- and every card keeps
+the same height, so the entry's "Obsidian draws no cover at all" was never observed and is
+wrong. The drag-out is not an `obsidian://` URL either: see the kanban entry above.
 
 **Scoria.** Cards and list lines open on a click anywhere and have no menu; a card with no cover
 draws an empty grey box where Obsidian draws no cover at all.
