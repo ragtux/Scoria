@@ -367,8 +367,11 @@ through the line's own Live Preview display (`- ` is `•`, `- [ ] ` its box, `>
 bar), paints that at the widget's foot and lays the embed out after it in the width left. A
 callout was already a widget whole. **Still open**: an embed sharing its paragraph with text --
 `Look: ![[real.png]] here` and the lazy continuation `- item` / `  ![[pic.png]]`, which Obsidian
-draws on a no-bullet line of its own at the item's indent -- is the inline placement below; and
-a click on a nested widget's box (the `☐` beside an image) does not toggle the task.
+draws on a no-bullet line of its own at the item's indent -- is the inline placement below.
+(A click on a nested widget's box, the `☐` beside an image, was listed here too; re-driven on
+Windows on 2026-11-04 it toggles `- [ ]` and `- [x]` both ways and autosaves, so it is struck.
+The same run saw a stray `-` painted after that box once it was checked, see
+[[#A task's checkbox is a font glyph, and a checked one is a colour emoji on Windows]].)
 
 **Scoria.** With an 80×80 PNG in the vault, `- ![[real.png]]`, `Look: ![[real.png]] here` and
 `> ![[real.png]]` each measure one 24 px text row and a click on them navigates to the file, while
@@ -386,6 +389,26 @@ re-draws — a naive promotion loses the bullet, because `widget_lines` widens a
 whole lines and the editor paints the widget *instead of* them. Inline placement then needs a
 non-text piece kind in `preview.rs`'s `DisplayLine` threaded through shaping, hit testing, selection
 and the cursor maths, which is an `editor.rs` project of its own.
+
+### A task's checkbox is a font glyph, and a checked one is a colour emoji on Windows
+
+*low, parity-gap, small* · **Filed:** 2026-11-04
+
+**Scoria.** Live Preview draws a task's box as text: `preview.rs` replaces `[ ]` with `☐` and
+`[x]` with `☑` and styles them as a run. Inter has neither glyph, so the font fallback picks one,
+and on Windows 11 that is Segoe UI Emoji: a checked task is a purple-blue emoji tile, while the
+same task in reading view is the `--checkbox-color` box in the vault's accent (brick on a vault
+that sets none). The unchecked `☐` comes out as an outline that roughly fits. Seen on the
+2026-11-04 backlog check, Windows, 150 % scaling, with a `- [x] ![[real.jpg|80]]` line, which also
+painted a stray `-` after the checked box at the widget's foot. A plain `- [x] done` line was not
+looked at on Windows, and the Linux fallback has not been checked either.
+
+**Obsidian.** The box is an `<input type=checkbox>` styled from `--checkbox-color`,
+`--checkbox-border-color` and `--checkbox-marker-color`, the same in Live Preview and reading view.
+
+**Fix.** Paint the box the way `reading/view.rs` already does (the three tokens, a drawn marker)
+instead of a glyph, which also takes away the dependence on the platform's fallback font. That
+means a non-text piece in `DisplayLine`, so it overlaps the inline-placement work above.
 
 ### HTML other than an `<img>`-only block is still raw muted source
 
@@ -1075,7 +1098,9 @@ interlinks are off.
 **Landed 2026-10-22** ([[Development#Backlinks pane, 2026-10-22]]): both panes are now
 Section > FileGroup > Match with the matched range highlighted, a header row of the four
 actions, per-file collapse and a Link button on every unlinked mention. What is still open is
-keyboard navigation of the rows, which the search pane entry below also wants.
+keyboard navigation of the rows, which the search pane entry below also wants. Still so on
+2026-11-04: with the Backlinks tab clicked, Down answers `handled: false` twice. The dock pane
+keyboard of that day covered Tags, All properties and Outline, not these two panes.
 
 **Scoria.** Development.md's Backlinks tab showed "Linked mentions (41)" followed by 41 rows all
 labelled "Development", each detail a `{line}: {trimmed source line}` string, with no grouping and
@@ -1582,7 +1607,8 @@ same day below.
 Obsidian's hidden frame by default and `--frame native` / `SCORIA_FRAME=native` asks for the
 desktop's; the Interface tab shows the row with that value but cannot change it, since Scoria has
 no per-user settings file to keep it in. The tab-list button and its menu are drawn since
-2026-10-22; the bookmark action and the "More options" menu are not.
+2026-10-22; the bookmark action and the "More options" menu are not, and on 2026-11-04 the view
+header still held only the local-graph and mode buttons.
 
 **Fix.** A per-user config file (XDG config dir on Linux) holding the frame style, read before the
 window opens; then the two remaining controls, each after a probe of what its menu holds.
