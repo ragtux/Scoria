@@ -2312,6 +2312,16 @@ follows is the rest of the tab.
 
 *medium, parity-gap, medium*
 
+**Landed 2026-11-04**: each row opens its page (`Page::Font`, `render_font_page`): the line saying
+what the list does, the applied families in their own faces with Delete and a drag handle and the
+"not detected" warning, then `Enter font name...` over the families gpui reports, each drawn in
+itself, with the typed name offered first. A pick appends, Delete removes, a drag reorders, and the
+field is written as Obsidian writes it — `Segoe UI,Arial,Courier New`, `""` when emptied. The row
+reads nothing, the family, or "*N* fonts"; and the theme now applies the first family of the list
+the machine has, not merely the first. See
+[[Development#The font pages, quick font size and the app icon, 2026-11-04]]. Left: the applied
+rows are not in a card of their own, and the drag shows no insertion line, only the row under it.
+
 **Obsidian.** Interface font, Text font and Monospace font are
 `.setting-item.mod-navigable.tappable`, and each opens a `.setting-page` with the titlebar, a
 `.setting-page-desc` ("No custom font is applied right now. Add one below."), an empty
@@ -2346,6 +2356,19 @@ Scoria ever grows a catalogue of its own.
 ### "Quick font size adjustment" and "Custom app icon" are missing
 
 *low, missing-feature, small*
+
+**Landed 2026-11-04**: the probe settled both keys. "Quick font size adjustment" writes
+`baseFontSizeAction` (`true`, then `false`, the key kept) and is live: Ctrl+wheel over a note steps
+the size a pixel a notch between 10 and 30 and writes nothing, as Obsidian does, until the file's
+own `baseFontSize` changes. "Custom app icon" is Obsidian's `"icon": "icon.png"` in `obsidian.json`
+with the file copied beside it, so Scoria's is the same key in `scoria.json` with the copy in its
+config folder; Restore default deletes both, and Relaunch starts a new Scoria on the vault and
+quits. **Scoria cannot swap its own icon**: gpui takes a window icon only on X11, where the choice
+is applied from the next start; on Windows the icon is the executable's resource and on macOS the
+bundle's, so there the row only keeps the choice and is tagged "not in Scoria yet". See
+[[Development#The font pages, quick font size and the app icon, 2026-11-04]]. Left: the trackpad
+pinch (gpui's `PinchEvent`) does not step the size, and Scoria's dialog cannot filter to PNG, ICO
+and ICNS — another kind is refused after the pick.
 
 **Obsidian.** Two rows the tab has and Scoria does not: "Quick font size adjustment" ("Adjust the
 font size using Ctrl + Scroll, or using the trackpad pinch-zoom gesture.") as a toggle under the

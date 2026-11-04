@@ -55,6 +55,14 @@ struct Document {
     /// Scoria. Absent means `hidden`, the default on Linux and Windows.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     frame: Option<String>,
+    /// "Custom app icon" of Settings → Appearance: the name of the copy of
+    /// the chosen image kept beside this file, `icon.png` (or `.ico`,
+    /// `.icns`). Obsidian copies the picked file into its user-data folder
+    /// under that name and writes `"icon": "icon.png"` into `obsidian.json`;
+    /// "Restore default" deletes the copy and drops the key (probed
+    /// 2026-11-04).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    icon: Option<String>,
     #[serde(flatten)]
     extra: Map<String, Value>,
 }
@@ -171,6 +179,72 @@ impl VaultRegistry {
         self.doc.frame = frame.map(str::to_string);
     }
 
+    /// The custom app icon's file name, relative to the folder this file
+    /// lives in, if one was chosen.
+    pub fn icon(&self) -> Option<&str> {
+        self.doc.icon.as_deref()
+    }
+
+    /// Where the custom app icon is kept, if one was chosen.
+    pub fn icon_path(&self) -> Option<PathBuf> {
+        let name = self.icon()?;
+        Some(self.path.parent()?.join(name))
+    }
+
+    /// Records the custom app icon's file name; `None` drops the key.
+    pub fn set_icon(&mut self, icon: Option<&str>) {
+        self.doc.icon = icon.map(str::to_string);
+    }
+
+    /// "Choose" on the Custom app icon row: copies `source` beside this
+    /// file as `icon.<ext>`, records it, and writes the document. Only the
+    /// three kinds Obsidian's dialog offers are taken — PNG, ICO and ICNS —
+    /// and a copy left by an earlier choice of another kind is deleted.
+    /// Returns the name recorded.
+    pub fn install_icon(&mut self, source: &Path) -> std::io::Result<String> {
+        let ext = source
+            .extension()
+            .map(|e| e.to_string_lossy().to_lowercase())
+            .filter(|e| ICON_EXTENSIONS.contains(&e.as_str()))
+            .ok_or_else(|| {
+                std::io::Error::new(
+                    std::io::ErrorKind::InvalidInput,
+                    format!("{} is not a PNG, ICO or ICNS file", source.display()),
+                )
+            })?;
+        let dir = self
+            .path
+            .parent()
+            .map(Path::to_path_buf)
+            .unwrap_or_default();
+        std::fs::create_dir_all(&dir)?;
+        let name = format!("icon.{ext}");
+        let target = dir.join(&name);
+        std::fs::copy(source, &target)?;
+        if let Some(old) = self.icon_path().filter(|old| *old != target) {
+            match std::fs::remove_file(&old) {
+                Err(e) if e.kind() != std::io::ErrorKind::NotFound => return Err(e),
+                _ => {}
+            }
+        }
+        self.set_icon(Some(&name));
+        self.save()?;
+        Ok(name)
+    }
+
+    /// "Restore default" on the Custom app icon row: deletes the copy and
+    /// drops the key, and writes the document.
+    pub fn clear_icon(&mut self) -> std::io::Result<()> {
+        if let Some(path) = self.icon_path() {
+            match std::fs::remove_file(&path) {
+                Err(e) if e.kind() != std::io::ErrorKind::NotFound => return Err(e),
+                _ => {}
+            }
+        }
+        self.set_icon(None);
+        self.save()
+    }
+
     /// Writes the document back, making the folder it lives in.
     pub fn save(&self) -> std::io::Result<()> {
         if let Some(dir) = self.path.parent() {
@@ -180,6 +254,10 @@ impl VaultRegistry {
         std::fs::write(&self.path, text)
     }
 }
+
+/// What "Custom app icon" accepts: the filter of Obsidian's dialog,
+/// `PNG/ICO/ICNS` (probed 2026-11-04).
+pub const ICON_EXTENSIONS: &[&str] = &["png", "ico", "icns"];
 
 /// The folder `scoria.json` lives under: `$SCORIA_CONFIG_DIR` when set,
 /// otherwise the desktop's per-user configuration folder. Everything
@@ -344,6 +422,58 @@ mod tests {
         let path = dir.path().join("scoria.json");
         std::fs::write(&path, "not json").unwrap();
         assert!(VaultRegistry::load(&path).is_err());
+    }
+
+    #[test]
+    fn the_custom_icon_is_a_file_name_beside_the_list() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join(FILE_NAME);
+        std::fs::write(&path, r#"{"vaults":{},"keep":1}"#).unwrap();
+        let mut reg = VaultRegistry::load(&path).unwrap();
+        assert_eq!(reg.icon(), None);
+        assert_eq!(reg.icon_path(), None);
+        reg.set_icon(Some("icon.png"));
+        reg.save().unwrap();
+        let text = std::fs::read_to_string(&path).unwrap();
+        assert!(text.contains("\"icon\":\"icon.png\""), "{text}");
+        assert!(text.contains("\"keep\":1"), "{text}");
+        let mut again = VaultRegistry::load(&path).unwrap();
+        assert_eq!(again.icon_path(), Some(dir.path().join("icon.png")));
+        again.set_icon(None);
+        again.save().unwrap();
+        let text = std::fs::read_to_string(&path).unwrap();
+        assert!(!text.contains("icon"), "{text}");
+    }
+
+    #[test]
+    fn choosing_an_icon_copies_it_beside_the_list_and_restoring_deletes_it() {
+        let dir = tempfile::tempdir().unwrap();
+        let home = dir.path().join("scoria");
+        let path = home.join(FILE_NAME);
+        let png = dir.path().join("Mine.PNG");
+        std::fs::write(&png, b"png bytes").unwrap();
+        let ico = dir.path().join("other.ico");
+        std::fs::write(&ico, b"ico bytes").unwrap();
+        let mut reg = VaultRegistry::load(&path).unwrap();
+        assert_eq!(reg.install_icon(&png).unwrap(), "icon.png");
+        assert_eq!(std::fs::read(home.join("icon.png")).unwrap(), b"png bytes");
+        let text = std::fs::read_to_string(&path).unwrap();
+        assert!(text.contains("\"icon\":\"icon.png\""), "{text}");
+        // Another kind replaces the copy rather than leaving both.
+        assert_eq!(reg.install_icon(&ico).unwrap(), "icon.ico");
+        assert!(!home.join("icon.png").exists());
+        assert!(home.join("icon.ico").exists());
+        // Anything else is refused and changes nothing.
+        let txt = dir.path().join("icon.txt");
+        std::fs::write(&txt, b"no").unwrap();
+        assert!(reg.install_icon(&txt).is_err());
+        assert_eq!(reg.icon(), Some("icon.ico"));
+        reg.clear_icon().unwrap();
+        assert!(!home.join("icon.ico").exists());
+        let text = std::fs::read_to_string(&path).unwrap();
+        assert!(!text.contains("icon"), "{text}");
+        // Restoring with nothing chosen is harmless.
+        reg.clear_icon().unwrap();
     }
 
     #[test]

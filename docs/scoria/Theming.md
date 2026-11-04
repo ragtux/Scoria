@@ -86,7 +86,7 @@ Small, once the registry exists.
 
 - Read `.obsidian/themes/<name>/theme.css` for the theme `cssTheme` names, then each file in `.obsidian/snippets/` that `enabledCssSnippets` lists, in that order.
 - Scan **custom-property declarations only**, under `:root`, `body`, `.theme-dark` and `.theme-light`. This is a property scanner of a couple of hundred lines, not a CSS engine: every selector that is not one of those four, and every declaration whose property does not begin `--`, is skipped without being understood. Refusing to grow a cascade here is the whole reason it stays small, and that refusal needs defending every time someone asks for one more selector.
-- Parse each value as a colour (hex, `rgb()`, `rgba()`, `hsl()`, `hsla()`), a length, or a font list — `first_font` already covers the last case. A `var()` reference resolves against the table being built; anything else is dropped.
+- Parse each value as a colour (hex, `rgb()`, `rgba()`, `hsl()`, `hsla()`), a length, or a font list — `theme::fonts::font_list` covers the last case. A `var()` reference resolves against the table being built; anything else is dropped.
 - Add `.obsidian/` to `watch.rs`. A changed `theme.css` then rebuilds the table and re-runs the existing `set_global` and `notify`, which is hot reload and live preview at no further cost. (Built: the watcher was already recursive, so this became a filter in the workspace's change handler.)
 
 A native format falls out of this for nothing: the same registry serialised as JSON is a Scoria theme file, Zed-shaped, for anyone who would rather write one than write CSS.

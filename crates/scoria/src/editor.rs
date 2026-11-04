@@ -4799,6 +4799,7 @@ impl Render for Editor {
             .relative()
             .size_full()
             .child(editor)
+            .child(crate::theme::fonts::quick_size_layer())
             .children(panel)
             .children(popup.flatten())
     }

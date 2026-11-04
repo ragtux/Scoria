@@ -25,6 +25,7 @@
 
 pub mod css;
 pub mod defaults;
+pub mod fonts;
 pub mod registry;
 pub mod value;
 
@@ -85,6 +86,9 @@ pub struct Theme {
     pub text_font: SharedString,
     pub mono_font: SharedString,
     pub base_font_size: f32,
+    /// `baseFontSizeAction`, "Quick font size adjustment": Ctrl+wheel over
+    /// a note steps [`Theme::base_font_size`] for the session.
+    pub quick_font_size: bool,
     /// The canvas: card background and the border of a card with no colour
     /// of its own, the dot grid, the six preset colours a card or edge can
     /// carry (`"1"` red through `"6"` purple), the stroke of an edge with no
@@ -328,6 +332,7 @@ impl Theme {
             text_font: crate::assets::FONT_FAMILY.into(),
             mono_font: DEFAULT_MONO_FONT.into(),
             base_font_size: 16.0,
+            quick_font_size: false,
             canvas: CanvasColors::from_tokens(dark, &tokens),
             tokens,
         }
@@ -377,14 +382,17 @@ impl Theme {
             // honoured. The floor only keeps a zero out of the layout.
             theme.base_font_size = size.max(1) as f32;
         }
-        if let Some(f) = first_font(config.text_font_family.as_deref()) {
-            theme.text_font = f;
+        theme.quick_font_size = config.base_font_size_action.unwrap_or(false);
+        // Each field is a list, and the first family of it the machine has
+        // is the one applied; none of them leaves the default.
+        if let Some(f) = fonts::first_installed(config.text_font_family.as_deref()) {
+            theme.text_font = f.into();
         }
-        if let Some(f) = first_font(config.interface_font_family.as_deref()) {
-            theme.ui_font = f;
+        if let Some(f) = fonts::first_installed(config.interface_font_family.as_deref()) {
+            theme.ui_font = f.into();
         }
-        if let Some(f) = first_font(config.monospace_font_family.as_deref()) {
-            theme.mono_font = f;
+        if let Some(f) = fonts::first_installed(config.monospace_font_family.as_deref()) {
+            theme.mono_font = f.into();
         }
         theme
     }
@@ -480,21 +488,6 @@ pub fn box_shadows(layers: &[value::ShadowLayer]) -> Vec<gpui::BoxShadow> {
             spread_radius: gpui::px(l.spread),
         })
         .collect()
-}
-
-/// The first family of a CSS-style `"Font A", Font B` list.
-fn first_font(list: Option<&str>) -> Option<SharedString> {
-    let first = list?
-        .split(',')
-        .next()?
-        .trim()
-        .trim_matches('"')
-        .trim_matches('\'');
-    if first.is_empty() {
-        None
-    } else {
-        Some(first.to_string().into())
-    }
 }
 
 #[cfg(test)]

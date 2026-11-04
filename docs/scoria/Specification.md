@@ -7785,14 +7785,99 @@ The same `.setting-page` shape: a `.setting-page-desc` ("No custom font is appli
 one below."), an empty `.setting-group.mod-list` for the applied families, then a second group with
 an `Enter font name...` search box and one `.setting-item.mod-action.tappable` per installed family,
 each drawn in that family. Picking one writes `interfaceFontFamily` and moves it into the first
-group.
+group. What the list holds and how it is edited is recorded below, in "The font pages, clicked
+through".
 
 ### Not observed
 
 "Manage" raised no modal and pushed no page in the probe's offline run (steps s11 and s13 both saw
 the container count stay at 0), so what it opens is unrecorded; it is Obsidian's community theme
-browser, which needs the network. "Check for updates", "Custom app icon" and the keys
-"Quick font size adjustment" writes were not probed either.
+browser, which needs the network. "Check for updates" was not probed either. "Custom app icon" and
+"Quick font size adjustment" were probed on 2026-11-04; see below.
+
+## Observed font pages, quick font size and app icon, Obsidian 1.14.5
+
+Recorded by `tools/obsidian-probe/font-pages.mjs` on 2026-11-04, on Windows 11 against Obsidian
+1.14.5 (the user agent says installer 1.12.7) with a `--user-data-dir` of its own; the raw run is
+`tools/obsidian-probe/results/2026-11-04-font-pages.json` with its screenshots beside it. The same
+two handles as the Appearance-tab probe: the vault window's `app` finds the popout's rows, and a
+bare CDP client on the popout clicks them.
+
+### The font pages, clicked through
+
+Each of Interface font, Text font and Monospace font edits one key — `interfaceFontFamily`,
+`textFontFamily`, `monospaceFontFamily` — and the three pages are alike.
+
+| Gesture | Bytes |
+| --- | --- |
+| Pick Segoe UI | `"interfaceFontFamily": "Segoe UI"` |
+| Then Arial | `"Segoe UI,Arial"` |
+| Then Courier New | `"Segoe UI,Arial,Courier New"` |
+| Type `Probe Sans`, pick the row it offers | `"Segoe UI,Arial,Courier New,Probe Sans"` |
+| Drag Probe Sans's handle onto the first row | `"Probe Sans,Segoe UI,Arial,Courier New"` |
+| Delete Arial, then Segoe UI, then Courier New | `"Probe Sans,Segoe UI,Courier New"`, `"Probe Sans,Courier New"`, `"Probe Sans"` |
+| Delete the last one | `"interfaceFontFamily": ""` — the key stays, empty |
+
+So the value is the families **joined by a bare `,`, in the list's order, never quoted** — not
+even round a name with a space in it — and a pick **appends**. The CSS Obsidian builds from it
+quotes where it must: the field above became `--font-interface-override: "Segoe UI", Arial,
+"Courier New"` on `body`.
+
+- **The page's description** reads "No custom font is applied right now. Add one below." while the
+  list is empty and "The first font from this list that is available on your system will be
+  applied." once it is not. That is the rule: the first *installed* family wins, the rest are
+  fallbacks.
+- **An applied row** is the family's name drawn in that family, then a `lucide-x` "Delete" and a
+  `lucide-menu` "Drag to rearrange" `.mod-drag-handle`. A family the machine lacks carries
+  "This font is not detected on your system." under its name, in the warning colour.
+- **The installed list** is every family the system reports (198 rows on this machine, from
+  `Agency FB`), sorted, each `.setting-item-name` styled `font-family: <name>`. An applied family is
+  hidden from it (`display: none`), not removed.
+- **The search box** filters the list by substring without case, and fills the first row — hidden
+  until something is typed — with the text typed, drawn in it, with the same warning when it is not
+  an installed family: `cour` offered `cour` and `Courier` (Courier New was applied). Picking that
+  row adds the typed text as it stands. **Enter does nothing.**
+- **The tab's row** reads nothing before its chevron while the list is empty, the family when it
+  holds one (`Consolas`) and "*N* fonts" for more (`2 fonts`).
+- The installed list is filled in after the page opens (about half a second here).
+
+### Quick font size adjustment
+
+The toggle writes **`baseFontSizeAction`** to `appearance.json`: `true` on, `false` off — the key
+is kept, never dropped. Nothing else changed: not `app.json`, not the user-data folder, not local
+storage.
+
+With it on, Ctrl+wheel over a note changes `--font-text-size` on `body` **one pixel per notch**
+(`deltaY` ±120): up from 16 to 17, 18, 19, back down to 13. A `deltaY` of 10 alone did not move
+it. It stops at **30** going up and **10** going down — the slider's own range — and the Font size
+slider's value follows it (it read 10 after the clamp). A wheel without Ctrl only scrolls.
+
+**The size reached is not written anywhere**: not `baseFontSize`, not any other file of the vault,
+not local storage, not after Ctrl was released, not after a clean quit (step s09, nine seconds of
+waiting and then `app:quit`). It lasts the session. With the toggle off, Ctrl+wheel left the size
+alone.
+
+The wheel events were `WheelEvent`s dispatched on the note from the page: `Input.dispatchMouseEvent`
+of type `mouseWheel` never returned on Windows, the browser waiting on an acknowledgement the
+renderer did not send. Obsidian's listener is ordinary script reading `ctrlKey` and `deltaY`, which
+the run shows it does; whether Chromium's own Ctrl+wheel page zoom fires with the toggle off was
+therefore not observable, and the pinch gesture was not tried.
+
+### Custom app icon
+
+At the default the row is "Custom app icon" / "Set a custom icon for the app" (no full stop) with
+"Restore default" hidden, `Choose`, and `Relaunch` hidden. `Choose` raises the native open dialog
+(`showOpenDialogSync`) titled "Custom app icon", `properties: ["openFile", "dontAddToRecent"]`,
+filtered to `PNG/ICO/ICNS` (`png`, `ico`, `icns`). Given a PNG it:
+
+- copies the file into the **user-data folder** as `icon.png` (the chosen file's extension kept);
+- writes **`"icon": "icon.png"`** into that folder's **`obsidian.json`**, beside `vaults` — the
+  app's file, not the vault's: nothing under `.obsidian` changed;
+- replaces the row's description with a 64 × 64 `<img>` of the copy, shows "Restore default", and
+  shows the `mod-cta` `Relaunch`.
+
+"Restore default" deletes `icon.png`, drops the `icon` key, and puts the description back;
+`Relaunch` stays shown once the icon has changed this session, either way. Relaunch was not clicked.
 
 ## Observed code highlighting, Obsidian 1.14.5 (installer build 1.13.7)
 

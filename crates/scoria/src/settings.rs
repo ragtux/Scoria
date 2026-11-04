@@ -30,7 +30,7 @@
 use crate::assets::{logo, DISPLAY_FONT_FAMILY};
 use crate::palette::hotkey_chip;
 use crate::text_input::{InputEvent, TextInput};
-use crate::theme::Theme;
+use crate::theme::{fonts, Theme};
 use crate::workspace::{
     client_frame, frame_window_options, window_title_row, Commands, VaultState, WindowCorners,
     Workspace,
@@ -247,6 +247,7 @@ flags!(
     SHOW_VIEW_HEADER, "showViewHeader", show_view_header, true, false;
     SHOW_RIBBON, "showRibbon", show_ribbon, true, false;
     NATIVE_MENUS, "nativeMenus", native_menus, false, false;
+    QUICK_FONT_SIZE, "baseFontSizeAction", base_font_size_action, false, false;
 );
 
 flags!(
@@ -1497,6 +1498,11 @@ enum Control {
     /// A row that opens a page of its own, drawn as what it reads on the
     /// right and then a chevron: `.setting-item.mod-navigable.tappable`.
     Navigable(SharedString),
+    /// "Custom app icon": a "Restore default" icon, shown only while an
+    /// icon is chosen, a `Choose` button and a `mod-cta` `Relaunch`, shown
+    /// once the icon has changed this session. Holds the chosen file's
+    /// name, empty at the default.
+    AppIcon(SharedString),
 }
 
 /// How far a setting gets in Scoria.
@@ -1583,12 +1589,197 @@ pub enum Page {
     /// "CSS snippets": the reload and folder buttons, a search box and one
     /// toggle per `.css` file under `snippets/`.
     CssSnippets,
+    /// "Interface font", "Text font" or "Monospace font": the families
+    /// applied, then a search box over the installed ones.
+    Font(FontSlot),
 }
 
 impl Page {
     fn title(self) -> &'static str {
         match self {
             Page::CssSnippets => "CSS snippets",
+            Page::Font(slot) => slot.title(),
+        }
+    }
+}
+
+/// Which of `appearance.json`'s three font fields a font page edits.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FontSlot {
+    Interface,
+    Text,
+    Monospace,
+}
+
+impl FontSlot {
+    fn title(self) -> &'static str {
+        match self {
+            FontSlot::Interface => "Interface font",
+            FontSlot::Text => "Text font",
+            FontSlot::Monospace => "Monospace font",
+        }
+    }
+
+    fn desc(self) -> &'static str {
+        match self {
+            FontSlot::Interface => "Set base font for all of Obsidian.",
+            FontSlot::Text => "Set font for editing and reading views.",
+            FontSlot::Monospace => "Set font for places like code blocks and frontmatter.",
+        }
+    }
+
+    fn field(self, a: &AppearanceConfig) -> Option<&str> {
+        match self {
+            FontSlot::Interface => a.interface_font_family.as_deref(),
+            FontSlot::Text => a.text_font_family.as_deref(),
+            FontSlot::Monospace => a.monospace_font_family.as_deref(),
+        }
+    }
+
+    /// The families the field holds, in its order.
+    fn read(self, a: &AppearanceConfig) -> Vec<String> {
+        fonts::font_list(self.field(a).unwrap_or_default())
+    }
+
+    /// `a` with the field holding `list`, as Obsidian writes it: an empty
+    /// list writes `""` rather than dropping the key.
+    fn write(self, a: &AppearanceConfig, list: &[String]) -> AppearanceConfig {
+        let mut next = a.clone();
+        let value = Some(fonts::join_fonts(list));
+        match self {
+            FontSlot::Interface => next.interface_font_family = value,
+            FontSlot::Text => next.text_font_family = value,
+            FontSlot::Monospace => next.monospace_font_family = value,
+        }
+        next
+    }
+}
+
+/// One edit a font page makes to its list.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum FontEdit {
+    /// A row of the installed list, or the typed name, picked: it goes to
+    /// the end of the list.
+    Add(String),
+    /// The Delete button of the applied row at this index.
+    Remove(usize),
+    /// The applied row at `from` dragged onto the row at `to`.
+    Move { from: usize, to: usize },
+}
+
+impl FontEdit {
+    /// `list` with the edit made; `None` when it changes nothing, so
+    /// nothing is written.
+    fn apply(&self, list: &[String]) -> Option<Vec<String>> {
+        let mut next = list.to_vec();
+        match self {
+            FontEdit::Add(name) => {
+                let name = name.trim();
+                if name.is_empty() || list.iter().any(|f| f.eq_ignore_ascii_case(name)) {
+                    return None;
+                }
+                next.push(name.to_string());
+            }
+            FontEdit::Remove(ix) => {
+                if *ix >= next.len() {
+                    return None;
+                }
+                next.remove(*ix);
+            }
+            FontEdit::Move { from, to } => {
+                if from == to || *from >= next.len() || *to >= next.len() {
+                    return None;
+                }
+                let family = next.remove(*from);
+                next.insert(*to, family);
+            }
+        }
+        Some(next)
+    }
+}
+
+/// What a font page's second card lists under its search box: the typed
+/// name first, when it is neither an installed family nor one already
+/// applied (Obsidian offers it whether the machine has it or not, warning
+/// when it does not), then every installed family not yet applied whose
+/// name contains the query, without case, in the installed order.
+fn font_choices(
+    installed: &[String],
+    applied: &[String],
+    query: &str,
+) -> (Option<String>, Vec<String>) {
+    let query = query.trim();
+    let needle = query.to_lowercase();
+    let applied_has = |f: &str| applied.iter().any(|a| a.eq_ignore_ascii_case(f));
+    let rows: Vec<String> = installed
+        .iter()
+        .filter(|f| !applied_has(f))
+        .filter(|f| needle.is_empty() || f.to_lowercase().contains(&needle))
+        .cloned()
+        .collect();
+    let typed = (!query.is_empty()
+        && !applied_has(query)
+        && !installed.iter().any(|f| f.eq_ignore_ascii_case(query)))
+    .then(|| query.to_string());
+    (typed, rows)
+}
+
+/// The payload of an applied font row's drag handle, drawn under the
+/// pointer as the family's name in its own face.
+#[derive(Debug, Clone)]
+struct FontMove {
+    from: usize,
+    family: SharedString,
+}
+
+impl Render for FontMove {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        let theme = cx.global::<Theme>();
+        div()
+            .px_3()
+            .py_1()
+            .rounded_sm()
+            .bg(theme.tokens.background_secondary)
+            .border_1()
+            .border_color(theme.tokens.background_modifier_border)
+            .text_size(px(14.))
+            .text_color(theme.tokens.text_normal)
+            .font_family(self.family.clone())
+            .child(self.family.clone())
+    }
+}
+
+/// The custom app icon as the Appearance tab shows it: the copy recorded
+/// in `scoria.json`, its picture for the row's description, and whether it
+/// changed this session, which is when Obsidian shows "Relaunch".
+#[derive(Default)]
+struct AppIcon {
+    name: Option<String>,
+    preview: Option<Arc<gpui::Image>>,
+    changed: bool,
+}
+
+impl AppIcon {
+    /// What the registry records now, with the picture read off disk.
+    fn read() -> AppIcon {
+        let registry = scoria_vault::registry::VaultRegistry::open().ok().flatten();
+        let name = registry.as_ref().and_then(|r| r.icon().map(str::to_string));
+        let preview = registry
+            .as_ref()
+            .and_then(|r| r.icon_path())
+            .and_then(|path| {
+                let format = match path.extension()?.to_str()? {
+                    "png" => gpui::ImageFormat::Png,
+                    "ico" => gpui::ImageFormat::Ico,
+                    _ => return None,
+                };
+                let bytes = std::fs::read(&path).ok()?;
+                Some(Arc::new(gpui::Image::from_bytes(format, bytes)))
+            });
+        AppIcon {
+            name,
+            preview,
+            changed: false,
         }
     }
 }
@@ -1863,6 +2054,12 @@ pub struct SettingsView {
     css: CssFolders,
     /// The CSS snippets page's "Search snippets..." box.
     snippet_search: Entity<TextInput>,
+    /// A font page's "Enter font name..." box.
+    font_search: Entity<TextInput>,
+    /// The font page's list of installed families.
+    font_scroll: UniformListScrollHandle,
+    /// The custom app icon `scoria.json` records.
+    app_icon: AppIcon,
     hotkey_search: Entity<TextInput>,
     hotkey_filter: HotkeyFilter,
     /// Every command the Hotkeys tab can list, sorted by name.
@@ -1906,10 +2103,21 @@ impl SettingsView {
     pub fn new(cx: &mut Context<Self>) -> SettingsView {
         let hotkey_search = cx.new(|cx| TextInput::new("Filter...", cx));
         let snippet_search = cx.new(|cx| TextInput::new("Search snippets...", cx));
+        let font_search = cx.new(|cx| TextInput::new("Enter font name...", cx));
         let field = cx.new(|cx| TextInput::new("", cx));
         let subscriptions = vec![
             cx.subscribe(
                 &snippet_search,
+                |this, _, event: &InputEvent, cx| match event {
+                    InputEvent::Changed => cx.notify(),
+                    InputEvent::Cancel => this.close_page(cx),
+                    _ => {}
+                },
+            ),
+            // Enter in the box picks nothing: Obsidian's did not either
+            // (step s03); a family is added by clicking its row.
+            cx.subscribe(
+                &font_search,
                 |this, _, event: &InputEvent, cx| match event {
                     InputEvent::Changed => cx.notify(),
                     InputEvent::Cancel => this.close_page(cx),
@@ -1942,6 +2150,9 @@ impl SettingsView {
             page: None,
             css: CssFolders::default(),
             snippet_search,
+            font_search,
+            font_scroll: UniformListScrollHandle::new(),
+            app_icon: AppIcon::read(),
             hotkey_search,
             hotkey_filter: HotkeyFilter::All,
             all_commands: Vec::new(),
@@ -1996,6 +2207,9 @@ impl SettingsView {
         self.reload_css_folders(cx);
         self.snippet_search
             .update(cx, |input, cx| input.set_text(String::new(), cx));
+        self.font_search
+            .update(cx, |input, cx| input.set_text(String::new(), cx));
+        self.font_scroll = UniformListScrollHandle::new();
         self.page = Some(page);
         self.focus_tab(window, cx);
         cx.notify();
@@ -2028,8 +2242,14 @@ impl SettingsView {
             .update(cx, |input, cx| input.set_text("", cx));
         self.snippet_search
             .update(cx, |input, cx| input.set_text("", cx));
-        // A theme or a snippet added since the modal was last open.
+        self.font_search
+            .update(cx, |input, cx| input.set_text("", cx));
+        // A theme or a snippet added since the modal was last open, and the
+        // icon another window may have chosen; "Relaunch" stays once shown.
         self.reload_css_folders(cx);
+        let changed = self.app_icon.changed;
+        self.app_icon = AppIcon::read();
+        self.app_icon.changed = changed;
         self.focus_tab(window, cx);
         cx.notify();
     }
@@ -2040,8 +2260,26 @@ impl SettingsView {
     pub fn describe(&self, rows: usize, cx: &App) -> Value {
         let listed = self.described_rows(rows, cx);
         let total = self.row_count();
+        // A font page: what it lists, so a driver can check a pick landed.
+        let font_page = match (self.page, self.state.as_ref()) {
+            (Some(Page::Font(slot)), Some(state)) => {
+                let applied = slot.read(&state.appearance());
+                let query = self.font_search.read(cx).text().to_string();
+                let (typed, offered) = font_choices(fonts::installed(), &applied, &query);
+                json!({
+                    "applied": applied,
+                    "search": query,
+                    "typed": typed,
+                    "offered": offered.iter().take(rows).collect::<Vec<_>>(),
+                    "offered_total": offered.len(),
+                })
+            }
+            _ => Value::Null,
+        };
         json!({
             "tab": self.tab.id(),
+            "page": self.page.map(Page::title),
+            "font_page": font_page,
             "menu": self.menu,
             "editing": self.editing.map(|field| field.key),
             "hotkey_search": self.hotkey_search.read(cx).text(),
@@ -2097,6 +2335,7 @@ impl SettingsView {
                     Control::Button(v) => ("button", json!(v.as_ref())),
                     Control::Color(v) => ("color", json!(v.as_ref())),
                     Control::Navigable(v) => ("navigable", json!(v.as_ref())),
+                    Control::AppIcon(v) => ("app_icon", json!(v.as_ref())),
                 };
                 json!({
                     "kind": if item.heading { "heading" } else { "setting" },
@@ -2360,7 +2599,9 @@ impl SettingsView {
         };
         match tab {
             Tab::General => Self::general_items(state),
-            Tab::Appearance => Self::appearance_items(state, &self.css),
+            Tab::Appearance => {
+                Self::appearance_items(state, &self.css, self.app_icon.name.as_deref())
+            }
             Tab::Interface => Self::interface_items(state),
             Tab::Editor => Self::editor_items(state),
             Tab::Files => Self::files_items(state),
@@ -2397,17 +2638,41 @@ impl SettingsView {
     /// navigable CSS snippets row, then the Font heading and its four
     /// rows.
     ///
-    /// The three fonts are navigable in Obsidian too — each opens a page
-    /// listing the installed families — where Scoria still has a text
-    /// field; that page is the Fonts entry of [[UI parity backlog]], not
-    /// this one.
-    fn appearance_items(state: &VaultState, css: &CssFolders) -> Vec<Item> {
+    /// The three fonts are navigable: each opens the page of its families
+    /// (`render_font_page`), and the row reads nothing, the one family, or
+    /// "*N* fonts". Then "Quick font size adjustment", and under Advanced
+    /// "Custom app icon", whose file name `icon` is passed in because it is
+    /// the machine's (`scoria.json`), not the vault's (probed 2026-11-04,
+    /// `font-pages.mjs`).
+    fn appearance_items(state: &VaultState, css: &CssFolders, icon: Option<&str>) -> Vec<Item> {
         let a = &state.appearance();
-        let font = |family: &Option<String>| -> SharedString {
-            match family.as_deref().map(str::trim) {
-                Some(f) if !f.is_empty() => f.to_string().into(),
-                _ => "Default".into(),
-            }
+        let font = |slot: FontSlot| {
+            navigable(
+                slot.title(),
+                slot.desc(),
+                fonts::summary(&slot.read(a)),
+                Page::Font(slot),
+            )
+        };
+        // The icon is applied from the next start, and only where the
+        // window system takes one from the app (X11); elsewhere it is the
+        // executable's own and the choice is only kept.
+        let icon_row = Item {
+            desc: if icon.is_some() {
+                "".into()
+            } else {
+                "Set a custom icon for the app".into()
+            },
+            ..item(
+                "Custom app icon",
+                "",
+                Control::AppIcon(icon.unwrap_or_default().to_string().into()),
+            )
+        };
+        let icon_row = if cfg!(target_os = "linux") {
+            icon_row.on_restart()
+        } else {
+            icon_row.not_yet()
         };
         // "N enabled" counts the enabled snippets whose file is still
         // there: a name left in `enabledCssSnippets` after its `.css` was
@@ -2466,27 +2731,23 @@ impl SettingsView {
                 Page::CssSnippets,
             ),
             heading("Font"),
-            text(
-                "Interface font",
-                "Set base font for all of Obsidian.",
-                font(&a.interface_font_family),
-            ),
-            text(
-                "Text font",
-                "Set font for editing and reading views.",
-                font(&a.text_font_family),
-            ),
-            text(
-                "Monospace font",
-                "Set font for places like code blocks and frontmatter.",
-                font(&a.monospace_font_family),
-            ),
+            font(FontSlot::Interface),
+            font(FontSlot::Text),
+            font(FontSlot::Monospace),
             slider(
                 "Font size",
                 "Font size in pixels that affects editing and reading views.",
                 state,
                 FONT_SIZE,
             ),
+            appearance_toggle(
+                "Quick font size adjustment",
+                "Adjust the font size using Ctrl + Scroll, or using the trackpad pinch-zoom gesture.",
+                a,
+                QUICK_FONT_SIZE,
+            ),
+            heading("Advanced"),
+            icon_row,
         ]
     }
 
@@ -3901,6 +4162,175 @@ impl SettingsView {
                 .text_color(theme.tokens.text_normal)
                 .child(label.clone())
                 .into_any_element(),
+            Control::AppIcon(name) => {
+                let chosen = !name.is_empty();
+                let button = |id: &'static str, label: &'static str, cta: bool| {
+                    div()
+                        .id(id)
+                        .px_3()
+                        .py(px(3.))
+                        .rounded_sm()
+                        .cursor_pointer()
+                        .bg(if cta {
+                            theme.tokens.interactive_accent
+                        } else {
+                            theme.tokens.interactive_normal
+                        })
+                        .border_1()
+                        .border_color(if cta {
+                            theme.tokens.interactive_accent
+                        } else {
+                            theme.tokens.background_modifier_border
+                        })
+                        .text_size(px(12.))
+                        .text_color(if cta {
+                            theme.tokens.text_on_accent
+                        } else {
+                            theme.tokens.text_normal
+                        })
+                        .child(label)
+                };
+                div()
+                    .flex()
+                    .flex_row()
+                    .items_center()
+                    .gap_2()
+                    // Hidden, not disabled, at the default (step s08).
+                    .when(chosen, |d| {
+                        d.child(
+                            div()
+                                .id("settings-icon-reset")
+                                .flex()
+                                .items_center()
+                                .justify_center()
+                                .size(px(24.))
+                                .rounded_sm()
+                                .cursor_pointer()
+                                .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                                .tooltip(crate::canvas::menu::tooltip("Restore default"))
+                                .child(crate::assets::icon(
+                                    "rotate-ccw",
+                                    16.,
+                                    theme.tokens.icon_color,
+                                ))
+                                .on_click(cx.listener(|this, _, _, cx| {
+                                    cx.stop_propagation();
+                                    if this.click_dismissed_a_popover(cx) {
+                                        return;
+                                    }
+                                    this.restore_app_icon(cx)
+                                })),
+                        )
+                    })
+                    .child(
+                        button("settings-icon-choose", "Choose", false).on_click(cx.listener(
+                            |this, _, window, cx| {
+                                cx.stop_propagation();
+                                if this.click_dismissed_a_popover(cx) {
+                                    return;
+                                }
+                                this.choose_app_icon(window, cx)
+                            },
+                        )),
+                    )
+                    .when(self.app_icon.changed, |d| {
+                        d.child(button("settings-icon-relaunch", "Relaunch", true).on_click(
+                            cx.listener(|this, _, _, cx| {
+                                cx.stop_propagation();
+                                this.relaunch(cx)
+                            }),
+                        ))
+                    })
+                    .into_any_element()
+            }
+        }
+    }
+
+    /// "Choose" on the Custom app icon row: the desktop's file dialog, then
+    /// the file copied beside `scoria.json` as `icon.<ext>` and recorded
+    /// there, the way Obsidian copies it into its own user-data folder. Its
+    /// dialog filters to PNG, ICO and ICNS; gpui's has no filter, so another
+    /// kind is refused after the pick.
+    fn choose_app_icon(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.menu = None;
+        let picked = cx.prompt_for_paths(gpui::PathPromptOptions {
+            files: true,
+            directories: false,
+            multiple: false,
+            prompt: Some("Custom app icon".into()),
+        });
+        cx.spawn_in(window, async move |this, cx| {
+            let source = match picked.await {
+                Ok(Ok(Some(mut paths))) if !paths.is_empty() => paths.remove(0),
+                Ok(Err(err)) => {
+                    this.update(cx, |_, cx| {
+                        cx.emit(SettingsEvent::Report(format!(
+                            "Could not open the file dialog: {err}"
+                        )))
+                    })
+                    .ok();
+                    return;
+                }
+                _ => return,
+            };
+            let result = scoria_vault::registry::VaultRegistry::open()
+                .and_then(|r| {
+                    r.ok_or_else(|| {
+                        std::io::Error::other("there is no configuration folder to keep it in")
+                    })
+                })
+                .and_then(|mut r| r.install_icon(&source));
+            this.update(cx, |this, cx| match result {
+                Ok(_) => {
+                    this.app_icon = AppIcon::read();
+                    this.app_icon.changed = true;
+                    cx.notify();
+                }
+                Err(err) => cx.emit(SettingsEvent::Report(format!(
+                    "The app icon could not be set: {err}"
+                ))),
+            })
+            .ok();
+        })
+        .detach();
+    }
+
+    /// "Restore default" on the Custom app icon row: the copy deleted and
+    /// the key dropped from `scoria.json`.
+    fn restore_app_icon(&mut self, cx: &mut Context<Self>) {
+        let result = scoria_vault::registry::VaultRegistry::open().and_then(|r| match r {
+            Some(mut r) => r.clear_icon(),
+            None => Ok(()),
+        });
+        match result {
+            Ok(()) => {
+                self.app_icon = AppIcon::read();
+                self.app_icon.changed = true;
+            }
+            Err(err) => cx.emit(SettingsEvent::Report(format!(
+                "The app icon could not be restored: {err}"
+            ))),
+        }
+        cx.notify();
+    }
+
+    /// "Relaunch": a new Scoria on this vault, in a window of its own so it
+    /// does not hand itself back to this one, then this one quits.
+    fn relaunch(&mut self, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let spawned = std::env::current_exe().and_then(|exe| {
+            std::process::Command::new(exe)
+                .arg(&state.root)
+                .arg("--new-window")
+                .spawn()
+        });
+        match spawned {
+            Ok(_) => cx.quit(),
+            Err(err) => cx.emit(SettingsEvent::Report(format!(
+                "Scoria could not be relaunched: {err}"
+            ))),
         }
     }
 
@@ -4393,7 +4823,15 @@ impl SettingsView {
                                 .text_color(theme.tokens.text_muted)
                                 .child(item.desc.clone()),
                         )
-                    }),
+                    })
+                    // A chosen app icon stands in for its row's description,
+                    // 64 px square (an `<img width=64 height=64>` there).
+                    .when_some(
+                        matches!(item.control, Control::AppIcon(_))
+                            .then(|| self.app_icon.preview.clone())
+                            .flatten(),
+                        |d, image| d.child(gpui::img(image).size(px(64.))),
+                    ),
             )
             .child(
                 div()
@@ -4537,6 +4975,213 @@ impl SettingsView {
             )
             .child(div().pb_2().child(self.snippet_search.clone()))
             .child(div().flex_1().min_h_0().child(list))
+    }
+
+    /// Writes one edit of a font page's list to `appearance.json`; an edit
+    /// that changes nothing writes nothing.
+    fn edit_fonts(&mut self, slot: FontSlot, edit: FontEdit, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let current = state.appearance().clone();
+        let Some(next) = edit.apply(&slot.read(&current)) else {
+            return;
+        };
+        cx.emit(SettingsEvent::Changed(Box::new(SettingChange::Appearance(
+            slot.write(&current, &next),
+        ))));
+    }
+
+    /// A font page, as Obsidian 1.14.5 draws one (probed 2026-11-04,
+    /// `font-pages.mjs`): a line saying what the list does, the families
+    /// applied — each in its own face, with a Delete button and a drag
+    /// handle, and a warning under one the machine lacks — then the
+    /// "Enter font name..." box over the installed families, each drawn in
+    /// itself. Picking one appends it to the list and takes it out of the
+    /// lower card. The installed list is a `uniform_list`, so only the rows
+    /// on screen load their face.
+    fn render_font_page(&self, slot: FontSlot, theme: &Theme, cx: &mut Context<Self>) -> gpui::Div {
+        let applied = self
+            .state
+            .as_ref()
+            .map(|s| slot.read(&s.appearance()))
+            .unwrap_or_default();
+        let query = self.font_search.read(cx).text().to_string();
+        let (typed, offered) = font_choices(fonts::installed(), &applied, &query);
+        let border = theme.tokens.background_modifier_border;
+        let hover = theme.tokens.background_modifier_hover;
+        let warning = theme.tokens.text_warning;
+        let normal = theme.tokens.text_normal;
+        let missing = move |family: &str| {
+            (!fonts::is_installed(family)).then(|| {
+                div()
+                    .text_size(px(12.))
+                    .text_color(warning)
+                    .child("This font is not detected on your system.")
+            })
+        };
+        let family_name = move |family: &str| {
+            div()
+                .text_size(px(14.))
+                .text_color(normal)
+                .font_family(SharedString::from(family.to_string()))
+                .child(SharedString::from(family.to_string()))
+        };
+        let icon_button = |id: (&'static str, usize), icon: &'static str, label: &'static str| {
+            div()
+                .id(id)
+                .flex()
+                .items_center()
+                .justify_center()
+                .size(px(26.))
+                .rounded_sm()
+                .hover(move |s| s.bg(hover))
+                .child(crate::assets::icon(icon, 16., theme.tokens.icon_color))
+                .tooltip(crate::canvas::menu::tooltip(label))
+        };
+        let mut applied_list = div().flex().flex_col();
+        for (ix, family) in applied.iter().enumerate() {
+            let drag = FontMove {
+                from: ix,
+                family: family.clone().into(),
+            };
+            applied_list = applied_list.child(
+                div()
+                    .id(("settings-font-applied", ix))
+                    .flex()
+                    .flex_row()
+                    .items_center()
+                    .justify_between()
+                    .gap_4()
+                    .py(px(8.))
+                    .border_t_1()
+                    .border_color(border)
+                    .drag_over::<FontMove>(move |s, _, _, _| s.bg(hover))
+                    .on_drop(cx.listener(move |this, drag: &FontMove, _, cx| {
+                        this.edit_fonts(
+                            slot,
+                            FontEdit::Move {
+                                from: drag.from,
+                                to: ix,
+                            },
+                            cx,
+                        )
+                    }))
+                    .child(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .gap(px(2.))
+                            .min_w_0()
+                            .child(family_name(family))
+                            .children(missing(family)),
+                    )
+                    .child(
+                        div()
+                            .flex()
+                            .flex_row()
+                            .items_center()
+                            .gap_1()
+                            .flex_shrink_0()
+                            .child(
+                                icon_button(("settings-font-delete", ix), "x", "Delete")
+                                    .cursor_pointer()
+                                    .on_click(cx.listener(move |this, _, _, cx| {
+                                        cx.stop_propagation();
+                                        this.edit_fonts(slot, FontEdit::Remove(ix), cx)
+                                    })),
+                            )
+                            .child(
+                                icon_button(
+                                    ("settings-font-drag", ix),
+                                    "menu",
+                                    "Drag to rearrange",
+                                )
+                                .cursor_grab()
+                                .on_drag(drag, |drag, _, _, cx| cx.new(|_| drag.clone())),
+                            ),
+                    ),
+            );
+        }
+        // The typed name, offered first: a family Scoria cannot see may
+        // still be one a theme or another machine has.
+        let typed_row = typed.map(|name| {
+            div()
+                .id("settings-font-typed")
+                .flex()
+                .flex_col()
+                .gap(px(2.))
+                .py(px(8.))
+                .border_t_1()
+                .border_color(border)
+                .cursor_pointer()
+                .hover(move |s| s.bg(hover))
+                .child(family_name(&name))
+                .children(missing(&name))
+                .on_click(cx.listener(move |this, _, _, cx| {
+                    this.edit_fonts(slot, FontEdit::Add(name.clone()), cx)
+                }))
+        });
+        let rows = Arc::new(offered);
+        let count = rows.len();
+        let list = uniform_list(
+            "settings-font-installed",
+            count,
+            cx.processor(move |_, range: Range<usize>, _, cx| {
+                range
+                    .filter_map(|ix| rows.get(ix).cloned())
+                    .map(|family| {
+                        let name: SharedString = family.clone().into();
+                        div()
+                            .id(name.clone())
+                            .flex()
+                            .items_center()
+                            .w_full()
+                            .h(px(36.))
+                            .border_t_1()
+                            .border_color(border)
+                            .cursor_pointer()
+                            .hover(move |s| s.bg(hover))
+                            .child(
+                                div()
+                                    .text_size(px(14.))
+                                    .text_color(normal)
+                                    .font_family(name.clone())
+                                    .whitespace_nowrap()
+                                    .overflow_hidden()
+                                    .text_ellipsis()
+                                    .child(name),
+                            )
+                            .on_click(cx.listener(move |this, _, _, cx| {
+                                this.edit_fonts(slot, FontEdit::Add(family.clone()), cx)
+                            }))
+                    })
+                    .collect()
+            }),
+        )
+        .track_scroll(&self.font_scroll)
+        .flex_1()
+        .min_h_0();
+        div()
+            .flex()
+            .flex_col()
+            .size_full()
+            .min_h_0()
+            .child(
+                div()
+                    .pb_3()
+                    .text_size(px(14.))
+                    .text_color(theme.tokens.text_muted)
+                    .child(if applied.is_empty() {
+                        "No custom font is applied right now. Add one below."
+                    } else {
+                        "The first font from this list that is available on your system will be applied."
+                    }),
+            )
+            .when(!applied.is_empty(), |d| d.child(applied_list.pb_4()))
+            .child(div().pb_2().child(self.font_search.clone()))
+            .children(typed_row)
+            .child(list)
     }
 
     /// Opens `themes/` or `snippets/` in the desktop's file manager,
@@ -4788,6 +5433,7 @@ impl Render for SettingsView {
         let page = self.page;
         let body: gpui::AnyElement = match page {
             Some(Page::CssSnippets) => self.render_snippets_page(&theme, cx).into_any_element(),
+            Some(Page::Font(slot)) => self.render_font_page(slot, &theme, cx).into_any_element(),
             None if tab == Tab::Hotkeys => self.render_hotkeys(&theme, cx).into_any_element(),
             None => {
                 let items = self.items(tab);
@@ -5812,7 +6458,9 @@ mod tests {
                     | Control::Text(v)
                     | Control::Slider(v)
                     | Control::Button(v) => v.to_string(),
-                    Control::Color(v) | Control::Navigable(v) => v.to_string(),
+                    Control::Color(v) | Control::Navigable(v) | Control::AppIcon(v) => {
+                        v.to_string()
+                    }
                     Control::Toggle(on) => on.to_string(),
                     Control::None => String::new(),
                 };
@@ -6174,7 +6822,7 @@ mod tests {
     fn the_appearance_tab_builds_obsidians_rows() {
         let (_dir, state) = vault_with_css();
         let css = CssFolders::read(&state);
-        let rows: Vec<(String, &'static str)> = SettingsView::appearance_items(&state, &css)
+        let rows: Vec<(String, &'static str)> = SettingsView::appearance_items(&state, &css, None)
             .iter()
             .map(|i| {
                 let kind = match &i.control {
@@ -6182,6 +6830,7 @@ mod tests {
                     Control::Dropdown(_) => "dropdown",
                     Control::Color(_) => "color",
                     Control::Navigable(_) => "navigable",
+                    Control::AppIcon(_) => "app_icon",
                     Control::Button(_) => "button",
                     Control::Text(_) => "text",
                     Control::Slider(_) => "slider",
@@ -6200,13 +6849,16 @@ mod tests {
                 ("Current community themes".into(), "button"),
                 ("CSS snippets".into(), "navigable"),
                 ("Font".into(), "heading"),
-                ("Interface font".into(), "text"),
-                ("Text font".into(), "text"),
-                ("Monospace font".into(), "text"),
+                ("Interface font".into(), "navigable"),
+                ("Text font".into(), "navigable"),
+                ("Monospace font".into(), "navigable"),
                 ("Font size".into(), "slider"),
+                ("Quick font size adjustment".into(), "toggle"),
+                ("Advanced".into(), "heading"),
+                ("Custom app icon".into(), "app_icon"),
             ]
         );
-        let items = SettingsView::appearance_items(&state, &css);
+        let items = SettingsView::appearance_items(&state, &css, None);
         let row = |name: &str| {
             items
                 .iter()
@@ -6224,20 +6876,155 @@ mod tests {
             row("CSS snippets").control,
             Control::Navigable("0 enabled".into())
         );
-        // Every row of this tab is read live now that the loader rebuilds
-        // the theme from `appearance.json` on every write.
+        // An empty font list reads nothing before the chevron.
+        assert_eq!(row("Text font").control, Control::Navigable("".into()));
+        assert_eq!(row("Text font").page, Some(Page::Font(FontSlot::Text)));
+        // The icon's description is Obsidian's, with no full stop.
+        assert_eq!(
+            row("Custom app icon").desc.as_ref(),
+            "Set a custom icon for the app"
+        );
+        // Every vault row of this tab is read live now that the loader
+        // rebuilds the theme from `appearance.json` on every write; the
+        // icon is the machine's and only X11 takes it, from the next start.
         for item in &items {
-            assert_eq!(
-                item.honored,
-                if item.name.as_ref() == "Current community themes" {
-                    Honored::No
-                } else {
-                    Honored::Live
-                },
-                "{}",
-                item.name
-            );
+            let want = match item.name.as_ref() {
+                "Current community themes" => Honored::No,
+                "Custom app icon" if cfg!(target_os = "linux") => Honored::OnRestart,
+                "Custom app icon" => Honored::No,
+                _ => Honored::Live,
+            };
+            assert_eq!(item.honored, want, "{}", item.name);
         }
+    }
+
+    /// The font rows read the list as Obsidian's row does: nothing, the one
+    /// family, or a count (step s06 of `font-pages.mjs`).
+    #[test]
+    fn a_font_row_reads_its_list() {
+        let (dir, _) = vault();
+        std::fs::write(
+            dir.path().join(".obsidian/appearance.json"),
+            r#"{"textFontFamily":"Consolas,Cascadia Mono","monospaceFontFamily":"Consolas","interfaceFontFamily":""}"#,
+        )
+        .unwrap();
+        let state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        let css = CssFolders::read(&state);
+        let items = SettingsView::appearance_items(&state, &css, Some("icon.png"));
+        let value = |name: &str| {
+            items
+                .iter()
+                .find(|i| i.name.as_ref() == name)
+                .map(|i| i.control.clone())
+                .unwrap()
+        };
+        assert_eq!(value("Interface font"), Control::Navigable("".into()));
+        assert_eq!(value("Text font"), Control::Navigable("2 fonts".into()));
+        assert_eq!(
+            value("Monospace font"),
+            Control::Navigable("Consolas".into())
+        );
+        // A chosen icon replaces the description with its picture.
+        let icon = items
+            .iter()
+            .find(|i| i.name.as_ref() == "Custom app icon")
+            .unwrap();
+        assert_eq!(icon.control, Control::AppIcon("icon.png".into()));
+        assert!(icon.desc.is_empty());
+    }
+
+    /// What each gesture on a font page does to the list, and the bytes it
+    /// writes: Obsidian's own run, step for step (`font-pages.mjs` s02-s05).
+    #[test]
+    fn the_font_page_edits_write_what_obsidian_writes() {
+        let slot = FontSlot::Interface;
+        let mut a = AppearanceConfig::default();
+        let step = |edit: FontEdit, a: &mut AppearanceConfig| -> String {
+            let next = edit
+                .apply(&slot.read(a))
+                .expect("the edit changes the list");
+            *a = slot.write(a, &next);
+            a.interface_font_family.clone().unwrap()
+        };
+        assert_eq!(step(FontEdit::Add("Segoe UI".into()), &mut a), "Segoe UI");
+        assert_eq!(
+            step(FontEdit::Add("Arial".into()), &mut a),
+            "Segoe UI,Arial"
+        );
+        assert_eq!(
+            step(FontEdit::Add("Courier New".into()), &mut a),
+            "Segoe UI,Arial,Courier New"
+        );
+        // A typed name the machine lacks goes on the end like any other.
+        assert_eq!(
+            step(FontEdit::Add("Probe Sans".into()), &mut a),
+            "Segoe UI,Arial,Courier New,Probe Sans"
+        );
+        // The last row dragged onto the first.
+        assert_eq!(
+            step(FontEdit::Move { from: 3, to: 0 }, &mut a),
+            "Probe Sans,Segoe UI,Arial,Courier New"
+        );
+        // Delete from the middle out; the last one leaves "".
+        assert_eq!(
+            step(FontEdit::Remove(2), &mut a),
+            "Probe Sans,Segoe UI,Courier New"
+        );
+        assert_eq!(step(FontEdit::Remove(1), &mut a), "Probe Sans,Courier New");
+        assert_eq!(step(FontEdit::Remove(1), &mut a), "Probe Sans");
+        assert_eq!(step(FontEdit::Remove(0), &mut a), "");
+        let json = serde_json::to_string(&a).unwrap();
+        assert_eq!(json, r#"{"interfaceFontFamily":""}"#);
+        // Edits that change nothing write nothing.
+        let list = vec!["Arial".to_string()];
+        assert_eq!(FontEdit::Add("arial".into()).apply(&list), None);
+        assert_eq!(FontEdit::Add("  ".into()).apply(&list), None);
+        assert_eq!(FontEdit::Remove(1).apply(&list), None);
+        assert_eq!(FontEdit::Move { from: 0, to: 0 }.apply(&list), None);
+        // The other two fields are written under their own keys.
+        let text = FontSlot::Text.write(&AppearanceConfig::default(), &["Consolas".into()]);
+        assert_eq!(text.text_font_family.as_deref(), Some("Consolas"));
+        let mono = FontSlot::Monospace.write(&AppearanceConfig::default(), &["Consolas".into()]);
+        assert_eq!(mono.monospace_font_family.as_deref(), Some("Consolas"));
+    }
+
+    /// The lower card: the installed families not yet applied that contain
+    /// the query, and the typed name first when it names none of them —
+    /// "cour" offered itself and Courier, with Courier New already applied.
+    #[test]
+    fn the_font_page_offers_the_typed_name_and_the_matches() {
+        let installed: Vec<String> = ["Arial", "Courier", "Courier New", "Segoe UI"]
+            .map(String::from)
+            .to_vec();
+        let applied = vec!["Courier New".to_string()];
+        let (typed, rows) = font_choices(&installed, &applied, "");
+        assert_eq!(typed, None);
+        assert_eq!(rows, ["Arial", "Courier", "Segoe UI"]);
+        let (typed, rows) = font_choices(&installed, &applied, "cour");
+        assert_eq!(typed.as_deref(), Some("cour"));
+        assert_eq!(rows, ["Courier"]);
+        let (typed, rows) = font_choices(&installed, &applied, " Probe Sans ");
+        assert_eq!(typed.as_deref(), Some("Probe Sans"));
+        assert!(rows.is_empty());
+        // A name that is a family already listed is not offered twice.
+        assert_eq!(font_choices(&installed, &applied, "arial").0, None);
+        assert_eq!(font_choices(&installed, &applied, "courier new").0, None);
+    }
+
+    /// "Quick font size adjustment" writes `baseFontSizeAction`, `true`
+    /// then `false`, and keeps the key (step s07).
+    #[test]
+    fn quick_font_size_writes_base_font_size_action() {
+        let on = QUICK_FONT_SIZE.toggled(&AppearanceConfig::default());
+        assert_eq!(
+            serde_json::to_string(&on).unwrap(),
+            r#"{"baseFontSizeAction":true}"#
+        );
+        let off = QUICK_FONT_SIZE.toggled(&on);
+        assert_eq!(
+            serde_json::to_string(&off).unwrap(),
+            r#"{"baseFontSizeAction":false}"#
+        );
     }
 
     /// The Themes dropdown lists what the vault has installed, which is a
@@ -6248,7 +7035,7 @@ mod tests {
         let (dir, mut state) = vault_with_css();
         let css = CssFolders::read(&state);
         assert_eq!(css.themes, vec!["Ember".to_string(), "Zephyr".to_string()]);
-        let items = SettingsView::appearance_items(&state, &css);
+        let items = SettingsView::appearance_items(&state, &css, None);
         let themes = items.iter().find(|i| i.name.as_ref() == "Themes").unwrap();
         let picker = themes.picker.clone().expect("the row carries a picker");
         assert_eq!(picker.key, "cssTheme");
@@ -6269,7 +7056,7 @@ mod tests {
             .apply_setting(&SettingChange::Appearance(appearance))
             .unwrap();
         state = VaultState::load(&dir.path().to_path_buf()).unwrap();
-        let items = SettingsView::appearance_items(&state, &css);
+        let items = SettingsView::appearance_items(&state, &css, None);
         let themes = items.iter().find(|i| i.name.as_ref() == "Themes").unwrap();
         assert_eq!(themes.control, Control::Dropdown("Zephyr".into()));
         assert_eq!(themes.picker.clone().unwrap().selected, 2);
@@ -6338,7 +7125,7 @@ mod tests {
         );
         assert_eq!(css.enabled_count(&state.appearance()), 1);
         assert_eq!(
-            SettingsView::appearance_items(&state, &css)
+            SettingsView::appearance_items(&state, &css, None)
                 .iter()
                 .find(|i| i.name.as_ref() == "CSS snippets")
                 .unwrap()
@@ -6474,7 +7261,7 @@ mod tests {
     fn toggles(state: &VaultState) -> Vec<(String, Honored)> {
         let tabs = [
             SettingsView::general_items(state),
-            SettingsView::appearance_items(state, &CssFolders::read(state)),
+            SettingsView::appearance_items(state, &CssFolders::read(state), None),
             SettingsView::interface_items(state),
             SettingsView::editor_items(state),
             SettingsView::files_items(state),
@@ -6508,6 +7295,7 @@ mod tests {
         assert_eq!(
             live,
             [
+                "Quick font size adjustment",
                 "Show ribbon",
                 "Readable line length",
                 "Strict line breaks",

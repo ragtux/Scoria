@@ -1570,6 +1570,7 @@ impl Render for ReadingView {
                 .absolute()
                 .inset_0(),
             )
+            .child(crate::theme::fonts::quick_size_layer())
     }
 }
 

@@ -324,7 +324,7 @@ uses behave as Obsidian's do.
 | Bases: the rest of the view | done: the cards, list and kanban layouts, the toolbar's six panels, editing through the table, the five `bases:*` commands beyond `new-file`, and an embedded `![[x.base]]`, see [[#Bases: the rest of the view, 2026-10-25]]; the toolbar and panels rebuilt to the 2026-11-01 record, see [[#The Bases toolbar and its panels, 2026-11-01]]; the embed as the live view and the leaf's chrome, see [[#The embedded base and the base leaf's chrome, 2026-11-01]]; the header, summaries, cells and keyboard, see [[#The column header, summaries, cells and the table keyboard, 2026-11-01]]; the kanban's drags and menus, see [[#The kanban board, 2026-11-02]] |
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
-| The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]] |
+| The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
 
 ### Syntax highlighting breadth, 2026-11-04
 
@@ -466,6 +466,82 @@ heading and the editor in focus. The ring was checked on a screenshot.
 Not built, on purpose: Escape, Home, End, F2 and Delete in the panes, which
 Obsidian leaves alone (F2 reaching the note title is the global hotkey, which
 Scoria already has).
+
+### The font pages, quick font size and the app icon, 2026-11-04
+
+The last of the Appearance tab. [[#The Appearance tab's pickers, 2026-11-02]] left three things in
+[[UI parity backlog]]: the font rows were text fields where Obsidian's are pages, and two rows were
+missing because nobody had seen what they write.
+
+**The probe.** `tools/obsidian-probe/font-pages.mjs`, run on the Windows machine with a
+`--user-data-dir` and a CDP port of its own so the person's Obsidian stayed open beside it. It
+clicks through a font page — three picks, a typed name, a drag, every Delete — and diffs
+`appearance.json` after each; toggles Quick font size adjustment and wheels a note with Ctrl held;
+and presses Choose on Custom app icon, with the native dialog answered from inside the renderer
+(`@electron/remote`'s `dialog.showOpenDialogSync` patched to hand back a PNG the probe drew), while
+every file under the vault *and* the user-data folder is diffed. The record is
+[[Specification#Observed font pages, quick font size and app icon, Obsidian 1.14.5]]. Two harness
+lessons for the next Windows run: a popout behind another window stops answering
+`Input.dispatchMouseEvent`, so every click raises its target first (`Page.bringToFront`); and a
+`mouseWheel` event never returns at all, so the wheel is a `WheelEvent` dispatched from the page.
+
+**What it settled.**
+
+- A font field is a **list joined by a bare `,`**, never quoted: `Segoe UI,Arial,Courier New`. A
+  pick appends, the drag handle reorders, Delete removes, and the last Delete writes `""` with the
+  key kept. The page says the first family the system has is applied — so `theme::first_font`,
+  which took the first entry whatever it was, was wrong for any list that opens with a family the
+  machine lacks. `theme::fonts::first_installed` replaces it, against the families gpui reports,
+  read once at startup (`installed_families` in `main.rs`, which drops gpui's own fallback names
+  unless asking for one really lands on it, and the bundled Rubik).
+- "Quick font size adjustment" is **`baseFontSizeAction`**, and the size the wheel reaches is
+  **written nowhere** — not `baseFontSize`, not local storage, not on a clean quit. One pixel a
+  notch, between 10 and 30. That made the behaviour cheap: a session value, not a write path.
+- "Custom app icon" is not the vault's at all: Obsidian copies the file into its user-data folder
+  as `icon.png` and writes `"icon": "icon.png"` into `obsidian.json`. Scoria's counterpart of that
+  file is `scoria.json`, which already holds `frame` for the same reason.
+
+**What was built.** `Page::Font(FontSlot)` and `render_font_page`: the description that changes
+with the list, the applied rows in their own faces with a `lucide-x` Delete and a `lucide-menu`
+drag handle (gpui's `on_drag`/`on_drop`, a `FontMove` payload) and the "This font is not detected on
+your system." warning, then the `Enter font name...` box over a `uniform_list` of the installed
+families — so only the rows on screen load their face — with the typed name offered first.
+`FontEdit` is the list arithmetic, `font_choices` what the lower card offers, both tested against
+the probe's own sequence of bytes. The row reads nothing, the family, or "*N* fonts". `menu.svg` is
+Lucide's, added to the bundle.
+
+Quick font size: the toggle is an `AppearanceFlag`, and `Theme::quick_font_size` carries it.
+`fonts::quick_size_layer` is a `canvas` laid over the source editor and the reading view that
+listens to the wheel in the *capture* phase, so a Ctrl+wheel it takes never reaches the scrolling
+underneath and every other wheel passes; a notch is a step, a touchpad's pixels add up to one per
+50. The size lives in a `QuickFontSize` global, and `reload_theme` keeps it across rebuilds until
+the file's own `baseFontSize` changes — the slider moved, or the file was rewritten — which is
+the last size asked for.
+
+Custom app icon: `VaultRegistry::install_icon` copies a PNG, ICO or ICNS beside `scoria.json` as
+`icon.<ext>`, deleting an earlier copy of another kind, and records it; `clear_icon` deletes and
+drops the key. The row shows the copy at 64 px in place of its description, Restore default only
+while one is chosen, and Relaunch once it has changed this session — which spawns
+`scoria <vault> --new-window` and quits. **What Scoria cannot do is wear the icon.** gpui takes a
+window icon only on X11 (`WindowOptions::icon`, which `custom_window_icon` now fills for every
+window); on Windows the icon is the executable's resource and on macOS the bundle's, so there the
+row keeps the choice and is tagged "not in Scoria yet", and on Linux "on restart".
+
+**Verified in the app** over the control socket, on a scratch vault holding
+`"textFontFamily": "Probe Sans,Georgia"` and an unknown key, with `SCORIA_CONFIG_DIR` pointed at a
+scratch folder: the Text font row read "2 fonts"; its page showed Probe Sans with the warning and
+Georgia in Georgia, over 186 installed families each in its face; picking Arial wrote
+`Probe Sans,Georgia,Arial` and Delete on Probe Sans wrote `Georgia,Arial`, the unknown key kept;
+the note rendered in Georgia; typing "Probe Serif" offered it alone with the warning and picking it
+appended it; six Ctrl+wheel notches took the note from 16 to 22 px with `appearance.json`
+untouched; and with an icon recorded the row showed it, and Restore default deleted the copy and
+the key and brought Relaunch up.
+
+**Not built**: the trackpad pinch (gpui raises it as a `PinchEvent`, not a Ctrl+wheel); a filter on
+the icon dialog, which gpui's `prompt_for_paths` cannot take, so another kind is refused after the
+pick; and the drag's insertion line — the row under the pointer is washed instead. gpui reports
+DirectWrite's family names, which fold a few of the faces Obsidian lists on their own (`Arial
+Black`, `Arial Narrow`) into their family.
 
 ### The command line, 2026-11-02
 

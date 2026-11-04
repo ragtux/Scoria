@@ -281,6 +281,52 @@ fn stored_frame() -> &'static std::sync::Mutex<String> {
     })
 }
 
+/// The families Settings → Appearance's font pages offer, and that a font
+/// list is tested against. gpui's list adds its own fallback stack whether
+/// the platform has those families or not, so each of them is kept only if
+/// asking for it really lands on it; the display face Scoria bundles for
+/// its wordmark (one weight, not a reading face) is left out.
+fn installed_families(cx: &App) -> Vec<String> {
+    const GPUI_FALLBACKS: &[&str] = &[
+        "Helvetica",
+        "Segoe UI",
+        "Ubuntu",
+        "Adwaita Sans",
+        "Cantarell",
+        "Noto Sans",
+        "DejaVu Sans",
+        "Arial",
+    ];
+    let text = cx.text_system().clone();
+    theme::fonts::pickable(text.all_font_names(), |name| {
+        if name == assets::DISPLAY_FONT_FAMILY {
+            return true;
+        }
+        if !GPUI_FALLBACKS.contains(&name) {
+            return false;
+        }
+        let id = text.resolve_font(&gpui::font(name.to_string()));
+        !text
+            .get_font_for_id(id)
+            .is_some_and(|f| f.family.eq_ignore_ascii_case(name))
+    })
+}
+
+/// The "Custom app icon" `scoria.json` records, for a window to carry.
+/// Only X11 takes an icon from the app (gpui reads `WindowOptions::icon`
+/// there alone); everywhere else the icon is the executable's or the
+/// desktop entry's, so the file is not even read.
+pub fn custom_window_icon() -> Option<Arc<image::RgbaImage>> {
+    if !cfg!(target_os = "linux") {
+        return None;
+    }
+    let path = scoria_vault::registry::VaultRegistry::open()
+        .ok()
+        .flatten()?
+        .icon_path()?;
+    Some(Arc::new(image::open(path).ok()?.into_rgba8()))
+}
+
 /// Every key binding in the app, from scratch: the views' own and the
 /// registry's hotkeys. Called at startup and again whenever `hotkeys.json`
 /// changes, since a binding made from the old registry would otherwise stay.
@@ -372,6 +418,7 @@ fn main() {
             if let Err(e) = cx.text_system().add_fonts(assets::fonts()) {
                 eprintln!("could not register the bundled fonts: {e}");
             }
+            theme::fonts::set_installed(installed_families(cx));
             bind_all_keys(cx, &registry);
             cx.set_global(Commands(registry));
 
@@ -417,6 +464,7 @@ fn main() {
                             _ => WindowBackgroundAppearance::Opaque,
                         },
                         window_min_size: Some(size(px(480.), px(320.))),
+                        icon: custom_window_icon(),
                         ..Default::default()
                     },
                     |window, cx| cx.new(|cx| Workspace::new(vault, window, cx)),

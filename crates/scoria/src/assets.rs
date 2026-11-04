@@ -101,6 +101,7 @@ icons!(
     "list",
     "list-start",
     "maximize",
+    "menu",
     "minus",
     "move-horizontal",
     "move-vertical",

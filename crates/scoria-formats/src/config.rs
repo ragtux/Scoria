@@ -216,6 +216,19 @@ pub struct AppearanceConfig {
         skip_serializing_if = "Option::is_none"
     )]
     pub base_font_size: Option<u32>,
+    /// "Quick font size adjustment": Ctrl+wheel over a note changes the
+    /// font size for the session. The toggle writes `true` and then
+    /// `false`, never dropping the key; the size the wheel reaches is not
+    /// written anywhere (probed 2026-11-04).
+    #[serde(
+        default,
+        rename = "baseFontSizeAction",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub base_font_size_action: Option<bool>,
+    /// The font fields hold the families picked on the font pages, joined
+    /// by a bare `,` in the order of the page's list, unquoted:
+    /// `Segoe UI,Arial,Courier New`. Removing the last one writes `""`.
     #[serde(
         default,
         rename = "interfaceFontFamily",

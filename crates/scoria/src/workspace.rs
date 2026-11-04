@@ -2656,6 +2656,7 @@ pub(crate) fn frame_window_options(title: &'static str) -> gpui::WindowOptions {
         }),
         // KWin ties the activation token to the application by this id.
         app_id: Some("scoria".into()),
+        icon: crate::custom_window_icon(),
         window_decorations: Some(decorations),
         // The shadow's margin has to be see-through, and only Linux draws
         // one: Windows keeps the system's shadow outside the window.
@@ -4348,7 +4349,8 @@ impl Workspace {
             return;
         };
         let config = state.reload_appearance();
-        let theme = Theme::load(&state.root, &state.config_dir(), &config, self.system_dark);
+        let mut theme = Theme::load(&state.root, &state.config_dir(), &config, self.system_dark);
+        crate::theme::fonts::keep_quick_size(&mut theme, cx);
         cx.set_global(theme);
         cx.notify();
     }

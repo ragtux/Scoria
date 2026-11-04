@@ -1,0 +1,5547 @@
+{
+ "fixtures": {
+  "icon": "%USERPROFILE%\\AppData\\Local\\Temp\\claude\\ee260a2aa19f2c19\\9de413a8-bf7f-462b-ba29-8abb2f96541e\\scratchpad\\probe5\\probe-icon.png"
+ },
+ "vaultPath": "%USERPROFILE%\\AppData\\Local\\Temp\\claude\\ee260a2aa19f2c19\\9de413a8-bf7f-462b-ba29-8abb2f96541e\\scratchpad\\probe5\\vault",
+ "version": {
+  "version": "1.14.5",
+  "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.12.7 Chrome/142.0.7444.265 Electron/39.8.3 Safari/537.36",
+  "platform": "win32"
+ },
+ "foundPopout": true,
+ "s01-interface-empty": {
+  "opened": true,
+  "waitedMs": 324,
+  "page": {
+   "title": "Interface font",
+   "desc": "No custom font is applied right now. Add one below.",
+   "groups": [
+    {
+     "cls": "setting-group mod-list",
+     "search": null,
+     "items": []
+    },
+    {
+     "cls": "setting-group mod-list",
+     "search": {
+      "placeholder": "Enter font name...",
+      "value": ""
+     },
+     "items": [
+      {
+       "name": "Agency FB",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: \"Agency FB\"; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Algerian",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: Algerian; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Arial",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: Arial; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Arial Black",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: \"Arial Black\"; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Arial Narrow",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: \"Arial Narrow\"; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Arial Rounded MT",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: \"Arial Rounded MT\"; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Bahnschrift",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: Bahnschrift; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Baskerville Old Face",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: \"Baskerville Old Face\"; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Bauhaus 93",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Bell MT",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: \"Bell MT\"; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Berlin Sans FB",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: \"Berlin Sans FB\"; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Bernard MT",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: \"Bernard MT\"; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Blackadder ITC",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: \"Blackadder ITC\"; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Bodoni 72",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Bodoni 72 Oldstyle",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Bodoni 72 Smallcaps",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Bodoni MT",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: \"Bodoni MT\"; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Bodoni MT Poster",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: \"Bodoni MT Poster\"; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Book Antiqua",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: \"Book Antiqua\"; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Bookman Old Style",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: \"Bookman Old Style\"; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Bookshelf Symbol 7",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Bradley Hand ITC",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: \"Bradley Hand ITC\"; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Britannic",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: Britannic; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Broadway",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: Broadway; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Brush Script MT",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: \"Brush Script MT\"; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Calibri",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: Calibri; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Californian FB",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: \"Californian FB\"; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Calisto MT",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: \"Calisto MT\"; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Cambria",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: Cambria; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "name": "Cambria Math",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "font-family: \"Cambria Math\"; color: var(--text-normal);",
+       "buttons": []
+      },
+      {
+       "more": 198
+      }
+     ]
+    }
+   ],
+   "installedCount": 198
+  },
+  "html": "<div class=\"setting-page-titlebar\"><div class=\"clickable-icon setting-page-back-button\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-chevron-left\"><path d=\"m15 18-6-6 6-6\"></path></svg></div><div class=\"setting-page-title\">Interface font</div></div><div class=\"setting-page-content\"><p class=\"setting-page-desc\">No custom font is applied right now. Add one below.</p><div class=\"setting-group mod-list\"><div class=\"setting-group-search\" tabindex=\"-1\"></div><div class=\"setting-items\"></div></div><div class=\"setting-group mod-list\"><div class=\"setting-group-search\" tabindex=\"-1\"><div class=\"search-input-container\"><input enterkeyhint=\"search\" type=\"search\" spellcheck=\"false\" placeholder=\"Enter font name...\"><div class=\"search-input-clear-button\"></div></div></div><div class=\"setting-items\"><div class=\"setting-item mod-action tappable\" tabindex=\"-1\" style=\"display: none;\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"color: var(--text-normal);\"></div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: &quot;Agency FB&quot;; color: var(--text-normal);\">Agency FB</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: Algerian; color: var(--text-normal);\">Algerian</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: Arial; color: var(--text-normal);\">Arial</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: &quot;Arial Black&quot;; color: var(--text-normal);\">Arial Black</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: &quot;Arial Narrow&quot;; color: var(--text-normal);\">Arial Narrow</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: &quot;Arial Rounded MT&quot;; color: var(--text-normal);\">Arial Rounded MT</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: Bahnschrift; color: var(--text-normal);\">Bahnschrift</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: &quot;Baskerville Old Face&quot;; color: var(--text-normal);\">Baskerville Old Face</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"color: var(--text-normal);\">Bauhaus 93</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: &quot;Bell MT&quot;; color: var(--text-normal);\">Bell MT</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: &quot;Berlin Sans FB&quot;; color: var(--text-normal);\">Berlin Sans FB</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: &quot;Bernard MT&quot;; color: var(--text-normal);\">Bernard MT</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: &quot;Blackadder ITC&quot;; color: var(--text-normal);\">Blackadder ITC</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"color: var(--text-normal);\">Bodoni 72</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"color: var(--text-normal);\">Bodoni 72 Oldstyle</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"color: var(--text-normal);\">Bodoni 72 Smallcaps</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: &quot;Bodoni MT&quot;; color: var(--text-normal);\">Bodoni MT</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: &quot;Bodoni MT Poster&quot;; color: var(--text-normal);\">Bodoni MT Poster</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: &quot;Book Antiqua&quot;; color: var(--text-normal);\">Book Antiqua</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: &quot;Bookman Old Style&quot;; color: var(--text-normal);\">Bookman Old Style</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"color: var(--text-normal);\">Bookshelf Symbol 7</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: &quot;Bradley Hand ITC&quot;; color: var(--text-normal);\">Bradley Hand ITC</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: Britannic; co...",
+  "installed": [
+   {
+    "name": "",
+    "shown": false,
+    "style": "color: var(--text-normal);"
+   },
+   {
+    "name": "Agency FB",
+    "shown": true,
+    "style": "font-family: \"Agency FB\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Algerian",
+    "shown": true,
+    "style": "font-family: Algerian; color: var(--text-normal);"
+   },
+   {
+    "name": "Arial",
+    "shown": true,
+    "style": "font-family: Arial; color: var(--text-normal);"
+   },
+   {
+    "name": "Arial Black",
+    "shown": true,
+    "style": "font-family: \"Arial Black\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Arial Narrow",
+    "shown": true,
+    "style": "font-family: \"Arial Narrow\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Arial Rounded MT",
+    "shown": true,
+    "style": "font-family: \"Arial Rounded MT\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Bahnschrift",
+    "shown": true,
+    "style": "font-family: Bahnschrift; color: var(--text-normal);"
+   },
+   {
+    "name": "Baskerville Old Face",
+    "shown": true,
+    "style": "font-family: \"Baskerville Old Face\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Bauhaus 93",
+    "shown": true,
+    "style": "color: var(--text-normal);"
+   },
+   {
+    "name": "Bell MT",
+    "shown": true,
+    "style": "font-family: \"Bell MT\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Berlin Sans FB",
+    "shown": true,
+    "style": "font-family: \"Berlin Sans FB\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Bernard MT",
+    "shown": true,
+    "style": "font-family: \"Bernard MT\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Blackadder ITC",
+    "shown": true,
+    "style": "font-family: \"Blackadder ITC\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Bodoni 72",
+    "shown": true,
+    "style": "color: var(--text-normal);"
+   },
+   {
+    "name": "Bodoni 72 Oldstyle",
+    "shown": true,
+    "style": "color: var(--text-normal);"
+   },
+   {
+    "name": "Bodoni 72 Smallcaps",
+    "shown": true,
+    "style": "color: var(--text-normal);"
+   },
+   {
+    "name": "Bodoni MT",
+    "shown": true,
+    "style": "font-family: \"Bodoni MT\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Bodoni MT Poster",
+    "shown": true,
+    "style": "font-family: \"Bodoni MT Poster\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Book Antiqua",
+    "shown": true,
+    "style": "font-family: \"Book Antiqua\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Bookman Old Style",
+    "shown": true,
+    "style": "font-family: \"Bookman Old Style\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Bookshelf Symbol 7",
+    "shown": true,
+    "style": "color: var(--text-normal);"
+   },
+   {
+    "name": "Bradley Hand ITC",
+    "shown": true,
+    "style": "font-family: \"Bradley Hand ITC\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Britannic",
+    "shown": true,
+    "style": "font-family: Britannic; color: var(--text-normal);"
+   },
+   {
+    "name": "Broadway",
+    "shown": true,
+    "style": "font-family: Broadway; color: var(--text-normal);"
+   },
+   {
+    "name": "Brush Script MT",
+    "shown": true,
+    "style": "font-family: \"Brush Script MT\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Calibri",
+    "shown": true,
+    "style": "font-family: Calibri; color: var(--text-normal);"
+   },
+   {
+    "name": "Californian FB",
+    "shown": true,
+    "style": "font-family: \"Californian FB\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Calisto MT",
+    "shown": true,
+    "style": "font-family: \"Calisto MT\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Cambria",
+    "shown": true,
+    "style": "font-family: Cambria; color: var(--text-normal);"
+   },
+   {
+    "name": "Cambria Math",
+    "shown": true,
+    "style": "font-family: \"Cambria Math\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Candara",
+    "shown": true,
+    "style": "font-family: Candara; color: var(--text-normal);"
+   },
+   {
+    "name": "Cascadia Code",
+    "shown": true,
+    "style": "font-family: \"Cascadia Code\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Cascadia Mono",
+    "shown": true,
+    "style": "font-family: \"Cascadia Mono\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Castellar",
+    "shown": true,
+    "style": "font-family: Castellar; color: var(--text-normal);"
+   },
+   {
+    "name": "Centaur",
+    "shown": true,
+    "style": "font-family: Centaur; color: var(--text-normal);"
+   },
+   {
+    "name": "Century",
+    "shown": true,
+    "style": "font-family: Century; color: var(--text-normal);"
+   },
+   {
+    "name": "Century Gothic",
+    "shown": true,
+    "style": "font-family: \"Century Gothic\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Century Schoolbook",
+    "shown": true,
+    "style": "font-family: \"Century Schoolbook\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Chiller",
+    "shown": true,
+    "style": "font-family: Chiller; color: var(--text-normal);"
+   },
+   {
+    "name": "Colonna MT",
+    "shown": true,
+    "style": "font-family: \"Colonna MT\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Comic Sans MS",
+    "shown": true,
+    "style": "font-family: \"Comic Sans MS\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Consolas",
+    "shown": true,
+    "style": "font-family: Consolas; color: var(--text-normal);"
+   },
+   {
+    "name": "Constantia",
+    "shown": true,
+    "style": "font-family: Constantia; color: var(--text-normal);"
+   },
+   {
+    "name": "Cooper",
+    "shown": true,
+    "style": "font-family: Cooper; color: var(--text-normal);"
+   },
+   {
+    "name": "Copperplate Gothic",
+    "shown": true,
+    "style": "font-family: \"Copperplate Gothic\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Corbel",
+    "shown": true,
+    "style": "font-family: Corbel; color: var(--text-normal);"
+   },
+   {
+    "name": "Courier",
+    "shown": true,
+    "style": "font-family: Courier; color: var(--text-normal);"
+   },
+   {
+    "name": "Courier New",
+    "shown": true,
+    "style": "font-family: \"Courier New\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Curlz MT",
+    "shown": true,
+    "style": "font-family: \"Curlz MT\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Dubai",
+    "shown": true,
+    "style": "font-family: Dubai; color: var(--text-normal);"
+   },
+   {
+    "name": "Ebrima",
+    "shown": true,
+    "style": "font-family: Ebrima; color: var(--text-normal);"
+   },
+   {
+    "name": "Edwardian Script ITC",
+    "shown": true,
+    "style": "font-family: \"Edwardian Script ITC\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Elephant",
+    "shown": true,
+    "style": "font-family: Elephant; color: var(--text-normal);"
+   },
+   {
+    "name": "Engravers MT",
+    "shown": true,
+    "style": "font-family: \"Engravers MT\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Eras ITC",
+    "shown": true,
+    "style": "font-family: \"Eras ITC\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Felix Titling",
+    "shown": true,
+    "style": "font-family: \"Felix Titling\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Footlight MT",
+    "shown": true,
+    "style": "font-family: \"Footlight MT\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Forte",
+    "shown": true,
+    "style": "font-family: Forte; color: var(--text-normal);"
+   },
+   {
+    "name": "Franklin Gothic",
+    "shown": true,
+    "style": "font-family: \"Franklin Gothic\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Franklin Gothic Book",
+    "shown": true,
+    "style": "font-family: \"Franklin Gothic Book\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Franklin Gothic Medium",
+    "shown": true,
+    "style": "font-family: \"Franklin Gothic Medium\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Freestyle Script",
+    "shown": true,
+    "style": "font-family: \"Freestyle Script\"; color: var(--text-normal);"
+   },
+   {
+    "name": "French Script MT",
+    "shown": true,
+    "style": "font-family: \"French Script MT\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Gabriola",
+    "shown": true,
+    "style": "font-family: Gabriola; color: var(--text-normal);"
+   },
+   {
+    "name": "Gadugi",
+    "shown": true,
+    "style": "font-family: Gadugi; color: var(--text-normal);"
+   },
+   {
+    "name": "Garamond",
+    "shown": true,
+    "style": "font-family: Garamond; color: var(--text-normal);"
+   },
+   {
+    "name": "Georgia",
+    "shown": true,
+    "style": "font-family: Georgia; color: var(--text-normal);"
+   },
+   {
+    "name": "Gigi",
+    "shown": true,
+    "style": "font-family: Gigi; color: var(--text-normal);"
+   },
+   {
+    "name": "Gill Sans",
+    "shown": true,
+    "style": "font-family: \"Gill Sans\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Gill Sans MT",
+    "shown": true,
+    "style": "font-family: \"Gill Sans MT\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Gloucester MT",
+    "shown": true,
+    "style": "font-family: \"Gloucester MT\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Goudy Old Style",
+    "shown": true,
+    "style": "font-family: \"Goudy Old Style\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Goudy Stout",
+    "shown": true,
+    "style": "font-family: \"Goudy Stout\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Haettenschweiler",
+    "shown": true,
+    "style": "font-family: Haettenschweiler; color: var(--text-normal);"
+   },
+   {
+    "name": "Harlow Solid",
+    "shown": true,
+    "style": "font-family: \"Harlow Solid\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Harrington",
+    "shown": true,
+    "style": "font-family: Harrington; color: var(--text-normal);"
+   },
+   {
+    "name": "Helvetica",
+    "shown": true,
+    "style": "font-family: Helvetica; color: var(--text-normal);"
+   },
+   {
+    "name": "High Tower Text",
+    "shown": true,
+    "style": "font-family: \"High Tower Text\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Impact",
+    "shown": true,
+    "style": "font-family: Impact; color: var(--text-normal);"
+   },
+   {
+    "name": "Imprint MT Shadow",
+    "shown": true,
+    "style": "font-family: \"Imprint MT Shadow\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Informal Roman",
+    "shown": true,
+    "style": "font-family: \"Informal Roman\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Ink Free",
+    "shown": true,
+    "style": "font-family: \"Ink Free\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Inter",
+    "shown": true,
+    "style": "font-family: Inter; color: var(--text-normal);"
+   },
+   {
+    "name": "Javanese Text",
+    "shown": true,
+    "style": "font-family: \"Javanese Text\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Jokerman",
+    "shown": true,
+    "style": "font-family: Jokerman; color: var(--text-normal);"
+   },
+   {
+    "name": "Juice ITC",
+    "shown": true,
+    "style": "font-family: \"Juice ITC\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Kristen ITC",
+    "shown": true,
+    "style": "font-family: \"Kristen ITC\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Kunstler Script",
+    "shown": true,
+    "style": "font-family: \"Kunstler Script\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Leelawadee",
+    "shown": true,
+    "style": "font-family: Leelawadee; color: var(--text-normal);"
+   },
+   {
+    "name": "Leelawadee UI",
+    "shown": true,
+    "style": "font-family: \"Leelawadee UI\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Lucida Bright",
+    "shown": true,
+    "style": "font-family: \"Lucida Bright\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Lucida Calligraphy",
+    "shown": true,
+    "style": "font-family: \"Lucida Calligraphy\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Lucida Console",
+    "shown": true,
+    "style": "font-family: \"Lucida Console\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Lucida Fax",
+    "shown": true,
+    "style": "font-family: \"Lucida Fax\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Lucida Handwriting",
+    "shown": true,
+    "style": "font-family: \"Lucida Handwriting\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Lucida Sans",
+    "shown": true,
+    "style": "font-family: \"Lucida Sans\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Lucida Sans Typewriter",
+    "shown": true,
+    "style": "font-family: \"Lucida Sans Typewriter\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Lucida Sans Unicode",
+    "shown": true,
+    "style": "font-family: \"Lucida Sans Unicode\"; color: var(--text-normal);"
+   },
+   {
+    "name": "MS Gothic",
+    "shown": true,
+    "style": "font-family: \"MS Gothic\"; color: var(--text-normal);"
+   },
+   {
+    "name": "MS Outlook",
+    "shown": true,
+    "style": "font-family: \"MS Outlook\"; color: var(--text-normal);"
+   },
+   {
+    "name": "MS PGothic",
+    "shown": true,
+    "style": "font-family: \"MS PGothic\"; color: var(--text-normal);"
+   },
+   {
+    "name": "MS Reference Sans Serif",
+    "shown": true,
+    "style": "font-family: \"MS Reference Sans Serif\"; color: var(--text-normal);"
+   },
+   {
+    "name": "MS Reference Specialty",
+    "shown": true,
+    "style": "font-family: \"MS Reference Specialty\"; color: var(--text-normal);"
+   },
+   {
+    "name": "MS UI Gothic",
+    "shown": true,
+    "style": "font-family: \"MS UI Gothic\"; color: var(--text-normal);"
+   },
+   {
+    "name": "MT Extra",
+    "shown": true,
+    "style": "font-family: \"MT Extra\"; color: var(--text-normal);"
+   },
+   {
+    "name": "MV Boli",
+    "shown": true,
+    "style": "font-family: \"MV Boli\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Magneto",
+    "shown": true,
+    "style": "font-family: Magneto; color: var(--text-normal);"
+   },
+   {
+    "name": "Maiandra GD",
+    "shown": true,
+    "style": "font-family: \"Maiandra GD\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Malgun Gothic",
+    "shown": true,
+    "style": "font-family: \"Malgun Gothic\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Marlett",
+    "shown": true,
+    "style": "font-family: Marlett; color: var(--text-normal);"
+   },
+   {
+    "name": "Matura MT Script Capitals",
+    "shown": true,
+    "style": "font-family: \"Matura MT Script Capitals\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Microsoft Himalaya",
+    "shown": true,
+    "style": "font-family: \"Microsoft Himalaya\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Microsoft JhengHei",
+    "shown": true,
+    "style": "font-family: \"Microsoft JhengHei\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Microsoft JhengHei UI",
+    "shown": true,
+    "style": "font-family: \"Microsoft JhengHei UI\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Microsoft New Tai Lue",
+    "shown": true,
+    "style": "font-family: \"Microsoft New Tai Lue\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Microsoft PhagsPa",
+    "shown": true,
+    "style": "font-family: \"Microsoft PhagsPa\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Microsoft Sans Serif",
+    "shown": true,
+    "style": "font-family: \"Microsoft Sans Serif\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Microsoft Tai Le",
+    "shown": true,
+    "style": "font-family: \"Microsoft Tai Le\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Microsoft Uighur",
+    "shown": true,
+    "style": "font-family: \"Microsoft Uighur\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Microsoft YaHei",
+    "shown": true,
+    "style": "font-family: \"Microsoft YaHei\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Microsoft YaHei UI",
+    "shown": true,
+    "style": "font-family: \"Microsoft YaHei UI\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Microsoft Yi Baiti",
+    "shown": true,
+    "style": "font-family: \"Microsoft Yi Baiti\"; color: var(--text-normal);"
+   },
+   {
+    "name": "MingLiU-ExtB",
+    "shown": true,
+    "style": "font-family: MingLiU-ExtB; color: var(--text-normal);"
+   },
+   {
+    "name": "MingLiU_HKSCS-ExtB",
+    "shown": true,
+    "style": "font-family: MingLiU_HKSCS-ExtB; color: var(--text-normal);"
+   },
+   {
+    "name": "MingLiU_MSCS-ExtB",
+    "shown": true,
+    "style": "font-family: MingLiU_MSCS-ExtB; color: var(--text-normal);"
+   },
+   {
+    "name": "Mistral",
+    "shown": true,
+    "style": "font-family: Mistral; color: var(--text-normal);"
+   },
+   {
+    "name": "Modern No. 20",
+    "shown": true,
+    "style": "color: var(--text-normal);"
+   },
+   {
+    "name": "Mongolian Baiti",
+    "shown": true,
+    "style": "font-family: \"Mongolian Baiti\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Monotype Corsiva",
+    "shown": true,
+    "style": "font-family: \"Monotype Corsiva\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Myanmar Text",
+    "shown": true,
+    "style": "font-family: \"Myanmar Text\"; color: var(--text-normal);"
+   },
+   {
+    "name": "NSimSun",
+    "shown": true,
+    "style": "font-family: NSimSun; color: var(--text-normal);"
+   },
+   {
+    "name": "Niagara Engraved",
+    "shown": true,
+    "style": "font-family: \"Niagara Engraved\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Niagara Solid",
+    "shown": true,
+    "style": "font-family: \"Niagara Solid\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Nirmala Text",
+    "shown": true,
+    "style": "font-family: \"Nirmala Text\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Nirmala UI",
+    "shown": true,
+    "style": "font-family: \"Nirmala UI\"; color: var(--text-normal);"
+   },
+   {
+    "name": "OCR A",
+    "shown": true,
+    "style": "font-family: \"OCR A\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Old English Text MT",
+    "shown": true,
+    "style": "font-family: \"Old English Text MT\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Onyx",
+    "shown": true,
+    "style": "font-family: Onyx; color: var(--text-normal);"
+   },
+   {
+    "name": "PMingLiU-ExtB",
+    "shown": true,
+    "style": "font-family: PMingLiU-ExtB; color: var(--text-normal);"
+   },
+   {
+    "name": "Palace Script MT",
+    "shown": true,
+    "style": "font-family: \"Palace Script MT\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Palatino Linotype",
+    "shown": true,
+    "style": "font-family: \"Palatino Linotype\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Papyrus",
+    "shown": true,
+    "style": "font-family: Papyrus; color: var(--text-normal);"
+   },
+   {
+    "name": "Parchment",
+    "shown": true,
+    "style": "font-family: Parchment; color: var(--text-normal);"
+   },
+   {
+    "name": "Perpetua",
+    "shown": true,
+    "style": "font-family: Perpetua; color: var(--text-normal);"
+   },
+   {
+    "name": "Perpetua Titling MT",
+    "shown": true,
+    "style": "font-family: \"Perpetua Titling MT\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Playbill",
+    "shown": true,
+    "style": "font-family: Playbill; color: var(--text-normal);"
+   },
+   {
+    "name": "Poor Richard",
+    "shown": true,
+    "style": "font-family: \"Poor Richard\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Pristina",
+    "shown": true,
+    "style": "font-family: Pristina; color: var(--text-normal);"
+   },
+   {
+    "name": "Rage",
+    "shown": true,
+    "style": "font-family: Rage; color: var(--text-normal);"
+   },
+   {
+    "name": "Ravie",
+    "shown": true,
+    "style": "font-family: Ravie; color: var(--text-normal);"
+   },
+   {
+    "name": "Rockwell",
+    "shown": true,
+    "style": "font-family: Rockwell; color: var(--text-normal);"
+   },
+   {
+    "name": "Sans Serif Collection",
+    "shown": true,
+    "style": "font-family: \"Sans Serif Collection\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Script MT",
+    "shown": true,
+    "style": "font-family: \"Script MT\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Segoe Fluent Icons",
+    "shown": true,
+    "style": "font-family: \"Segoe Fluent Icons\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Segoe MDL2 Assets",
+    "shown": true,
+    "style": "font-family: \"Segoe MDL2 Assets\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Segoe Print",
+    "shown": true,
+    "style": "font-family: \"Segoe Print\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Segoe Script",
+    "shown": true,
+    "style": "font-family: \"Segoe Script\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Segoe UI",
+    "shown": true,
+    "style": "font-family: \"Segoe UI\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Segoe UI Emoji",
+    "shown": true,
+    "style": "font-family: \"Segoe UI Emoji\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Segoe UI Historic",
+    "shown": true,
+    "style": "font-family: \"Segoe UI Historic\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Segoe UI Symbol",
+    "shown": true,
+    "style": "font-family: \"Segoe UI Symbol\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Segoe UI Variable Display",
+    "shown": true,
+    "style": "font-family: \"Segoe UI Variable Display\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Segoe UI Variable Small",
+    "shown": true,
+    "style": "font-family: \"Segoe UI Variable Small\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Segoe UI Variable Text",
+    "shown": true,
+    "style": "font-family: \"Segoe UI Variable Text\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Showcard Gothic",
+    "shown": true,
+    "style": "font-family: \"Showcard Gothic\"; color: var(--text-normal);"
+   },
+   {
+    "name": "SimSun",
+    "shown": true,
+    "style": "font-family: SimSun; color: var(--text-normal);"
+   },
+   {
+    "name": "SimSun-ExtB",
+    "shown": true,
+    "style": "font-family: SimSun-ExtB; color: var(--text-normal);"
+   },
+   {
+    "name": "SimSun-ExtG",
+    "shown": true,
+    "style": "font-family: SimSun-ExtG; color: var(--text-normal);"
+   },
+   {
+    "name": "Sitka Banner",
+    "shown": true,
+    "style": "font-family: \"Sitka Banner\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Sitka Display",
+    "shown": true,
+    "style": "font-family: \"Sitka Display\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Sitka Heading",
+    "shown": true,
+    "style": "font-family: \"Sitka Heading\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Sitka Small",
+    "shown": true,
+    "style": "font-family: \"Sitka Small\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Sitka Subheading",
+    "shown": true,
+    "style": "font-family: \"Sitka Subheading\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Sitka Text",
+    "shown": true,
+    "style": "font-family: \"Sitka Text\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Snap ITC",
+    "shown": true,
+    "style": "font-family: \"Snap ITC\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Source Code Pro",
+    "shown": true,
+    "style": "font-family: \"Source Code Pro\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Stencil",
+    "shown": true,
+    "style": "font-family: Stencil; color: var(--text-normal);"
+   },
+   {
+    "name": "Sylfaen",
+    "shown": true,
+    "style": "font-family: Sylfaen; color: var(--text-normal);"
+   },
+   {
+    "name": "Symbol",
+    "shown": true,
+    "style": "font-family: Symbol; color: var(--text-normal);"
+   },
+   {
+    "name": "Tahoma",
+    "shown": true,
+    "style": "font-family: Tahoma; color: var(--text-normal);"
+   },
+   {
+    "name": "Tempus Sans ITC",
+    "shown": true,
+    "style": "font-family: \"Tempus Sans ITC\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Times",
+    "shown": true,
+    "style": "font-family: Times; color: var(--text-normal);"
+   },
+   {
+    "name": "Times New Roman",
+    "shown": true,
+    "style": "font-family: \"Times New Roman\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Trebuchet MS",
+    "shown": true,
+    "style": "font-family: \"Trebuchet MS\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Tw Cen MT",
+    "shown": true,
+    "style": "font-family: \"Tw Cen MT\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Ubuntu Mono",
+    "shown": true,
+    "style": "font-family: \"Ubuntu Mono\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Verdana",
+    "shown": true,
+    "style": "font-family: Verdana; color: var(--text-normal);"
+   },
+   {
+    "name": "Viner Hand ITC",
+    "shown": true,
+    "style": "font-family: \"Viner Hand ITC\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Vivaldi",
+    "shown": true,
+    "style": "font-family: Vivaldi; color: var(--text-normal);"
+   },
+   {
+    "name": "Vladimir Script",
+    "shown": true,
+    "style": "font-family: \"Vladimir Script\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Webdings",
+    "shown": true,
+    "style": "font-family: Webdings; color: var(--text-normal);"
+   },
+   {
+    "name": "Wide Latin",
+    "shown": true,
+    "style": "font-family: \"Wide Latin\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Wingdings",
+    "shown": true,
+    "style": "font-family: Wingdings; color: var(--text-normal);"
+   },
+   {
+    "name": "Wingdings 2",
+    "shown": true,
+    "style": "color: var(--text-normal);"
+   },
+   {
+    "name": "Wingdings 3",
+    "shown": true,
+    "style": "color: var(--text-normal);"
+   },
+   {
+    "name": "Yu Gothic",
+    "shown": true,
+    "style": "font-family: \"Yu Gothic\"; color: var(--text-normal);"
+   },
+   {
+    "name": "Yu Gothic UI",
+    "shown": true,
+    "style": "font-family: \"Yu Gothic UI\"; color: var(--text-normal);"
+   }
+  ],
+  "shot": "interface-empty.png"
+ },
+ "s02-three-picks": {
+  "want": [
+   "Segoe UI",
+   "Arial",
+   "Courier New"
+  ],
+  "picks": [
+   {
+    "name": "Segoe UI",
+    "appearanceJson": "{\n  \"interfaceFontFamily\": \"Segoe UI\"\n}",
+    "page": {
+     "title": "Interface font",
+     "desc": "The first font from this list that is available on your system will be applied.",
+     "groups": [
+      {
+       "cls": "setting-group mod-list",
+       "search": null,
+       "items": [
+        {
+         "name": "Segoe UI",
+         "cls": "setting-item",
+         "shown": true,
+         "style": "font-family: \"Segoe UI\";",
+         "buttons": [
+          {
+           "aria": "Delete",
+           "cls": "clickable-icon extra-setting-button"
+          },
+          {
+           "aria": "Drag to rearrange",
+           "cls": "clickable-icon extra-setting-button mod-drag-handle"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "cls": "setting-group mod-list",
+       "search": {
+        "placeholder": "Enter font name...",
+        "value": ""
+       },
+       "items": [
+        {
+         "name": "Agency FB",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Agency FB\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Algerian",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Algerian; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Arial; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial Black",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Arial Black\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial Narrow",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Arial Narrow\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial Rounded MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Arial Rounded MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bahnschrift",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Bahnschrift; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Baskerville Old Face",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Baskerville Old Face\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bauhaus 93",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bell MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bell MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Berlin Sans FB",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Berlin Sans FB\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bernard MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bernard MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Blackadder ITC",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Blackadder ITC\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni 72",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni 72 Oldstyle",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni 72 Smallcaps",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bodoni MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni MT Poster",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bodoni MT Poster\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Book Antiqua",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Book Antiqua\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bookman Old Style",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bookman Old Style\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bookshelf Symbol 7",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bradley Hand ITC",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bradley Hand ITC\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Britannic",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Britannic; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Broadway",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Broadway; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Brush Script MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Brush Script MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Calibri",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Calibri; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Californian FB",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Californian FB\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Calisto MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Calisto MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Cambria",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Cambria; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Cambria Math",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Cambria Math\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "more": 198
+        }
+       ]
+      }
+     ],
+     "installedCount": 198
+    }
+   },
+   {
+    "name": "Arial",
+    "appearanceJson": "{\n  \"interfaceFontFamily\": \"Segoe UI,Arial\"\n}",
+    "page": {
+     "title": "Interface font",
+     "desc": "The first font from this list that is available on your system will be applied.",
+     "groups": [
+      {
+       "cls": "setting-group mod-list",
+       "search": null,
+       "items": [
+        {
+         "name": "Segoe UI",
+         "cls": "setting-item",
+         "shown": true,
+         "style": "font-family: \"Segoe UI\";",
+         "buttons": [
+          {
+           "aria": "Delete",
+           "cls": "clickable-icon extra-setting-button"
+          },
+          {
+           "aria": "Drag to rearrange",
+           "cls": "clickable-icon extra-setting-button mod-drag-handle"
+          }
+         ]
+        },
+        {
+         "name": "Arial",
+         "cls": "setting-item",
+         "shown": true,
+         "style": "font-family: Arial;",
+         "buttons": [
+          {
+           "aria": "Delete",
+           "cls": "clickable-icon extra-setting-button"
+          },
+          {
+           "aria": "Drag to rearrange",
+           "cls": "clickable-icon extra-setting-button mod-drag-handle"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "cls": "setting-group mod-list",
+       "search": {
+        "placeholder": "Enter font name...",
+        "value": ""
+       },
+       "items": [
+        {
+         "name": "Agency FB",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Agency FB\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Algerian",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Algerian; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial Black",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Arial Black\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial Narrow",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Arial Narrow\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial Rounded MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Arial Rounded MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bahnschrift",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Bahnschrift; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Baskerville Old Face",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Baskerville Old Face\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bauhaus 93",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bell MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bell MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Berlin Sans FB",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Berlin Sans FB\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bernard MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bernard MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Blackadder ITC",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Blackadder ITC\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni 72",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni 72 Oldstyle",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni 72 Smallcaps",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bodoni MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni MT Poster",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bodoni MT Poster\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Book Antiqua",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Book Antiqua\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bookman Old Style",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bookman Old Style\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bookshelf Symbol 7",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bradley Hand ITC",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bradley Hand ITC\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Britannic",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Britannic; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Broadway",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Broadway; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Brush Script MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Brush Script MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Calibri",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Calibri; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Californian FB",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Californian FB\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Calisto MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Calisto MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Cambria",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Cambria; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Cambria Math",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Cambria Math\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Candara",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Candara; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "more": 198
+        }
+       ]
+      }
+     ],
+     "installedCount": 198
+    }
+   },
+   {
+    "name": "Courier New",
+    "appearanceJson": "{\n  \"interfaceFontFamily\": \"Segoe UI,Arial,Courier New\"\n}",
+    "page": {
+     "title": "Interface font",
+     "desc": "The first font from this list that is available on your system will be applied.",
+     "groups": [
+      {
+       "cls": "setting-group mod-list",
+       "search": null,
+       "items": [
+        {
+         "name": "Segoe UI",
+         "cls": "setting-item",
+         "shown": true,
+         "style": "font-family: \"Segoe UI\";",
+         "buttons": [
+          {
+           "aria": "Delete",
+           "cls": "clickable-icon extra-setting-button"
+          },
+          {
+           "aria": "Drag to rearrange",
+           "cls": "clickable-icon extra-setting-button mod-drag-handle"
+          }
+         ]
+        },
+        {
+         "name": "Arial",
+         "cls": "setting-item",
+         "shown": true,
+         "style": "font-family: Arial;",
+         "buttons": [
+          {
+           "aria": "Delete",
+           "cls": "clickable-icon extra-setting-button"
+          },
+          {
+           "aria": "Drag to rearrange",
+           "cls": "clickable-icon extra-setting-button mod-drag-handle"
+          }
+         ]
+        },
+        {
+         "name": "Courier New",
+         "cls": "setting-item",
+         "shown": true,
+         "style": "font-family: \"Courier New\";",
+         "buttons": [
+          {
+           "aria": "Delete",
+           "cls": "clickable-icon extra-setting-button"
+          },
+          {
+           "aria": "Drag to rearrange",
+           "cls": "clickable-icon extra-setting-button mod-drag-handle"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "cls": "setting-group mod-list",
+       "search": {
+        "placeholder": "Enter font name...",
+        "value": ""
+       },
+       "items": [
+        {
+         "name": "Agency FB",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Agency FB\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Algerian",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Algerian; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial Black",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Arial Black\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial Narrow",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Arial Narrow\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial Rounded MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Arial Rounded MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bahnschrift",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Bahnschrift; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Baskerville Old Face",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Baskerville Old Face\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bauhaus 93",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bell MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bell MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Berlin Sans FB",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Berlin Sans FB\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bernard MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bernard MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Blackadder ITC",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Blackadder ITC\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni 72",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni 72 Oldstyle",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni 72 Smallcaps",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bodoni MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni MT Poster",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bodoni MT Poster\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Book Antiqua",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Book Antiqua\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bookman Old Style",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bookman Old Style\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bookshelf Symbol 7",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bradley Hand ITC",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bradley Hand ITC\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Britannic",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Britannic; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Broadway",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Broadway; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Brush Script MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Brush Script MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Calibri",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Calibri; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Californian FB",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Californian FB\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Calisto MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Calisto MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Cambria",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Cambria; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Cambria Math",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Cambria Math\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Candara",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Candara; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "more": 198
+        }
+       ]
+      }
+     ],
+     "installedCount": 198
+    }
+   }
+  ],
+  "html": "<div class=\"setting-page-titlebar\"><div class=\"clickable-icon setting-page-back-button\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-chevron-left\"><path d=\"m15 18-6-6 6-6\"></path></svg></div><div class=\"setting-page-title\">Interface font</div></div><div class=\"setting-page-content\"><p class=\"setting-page-desc\">The first font from this list that is available on your system will be applied.</p><div class=\"setting-group mod-list\"><div class=\"setting-group-search\" tabindex=\"-1\"></div><div class=\"setting-items\"><div class=\"setting-item\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: &quot;Segoe UI&quot;;\">Segoe UI</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Delete\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></div><div class=\"clickable-icon extra-setting-button mod-drag-handle\" tabindex=\"-1\" aria-label=\"Drag to rearrange\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-menu\"><path d=\"M4 5h16\"></path><path d=\"M4 12h16\"></path><path d=\"M4 19h16\"></path></svg></div></div></div><div class=\"setting-item\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: Arial;\">Arial</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Delete\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></div><div class=\"clickable-icon extra-setting-button mod-drag-handle\" tabindex=\"-1\" aria-label=\"Drag to rearrange\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-menu\"><path d=\"M4 5h16\"></path><path d=\"M4 12h16\"></path><path d=\"M4 19h16\"></path></svg></div></div></div><div class=\"setting-item\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: &quot;Courier New&quot;;\">Courier New</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Delete\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></div><div class=\"clickable-icon extra-setting-button mod-drag-handle\" tabindex=\"-1\" aria-label=\"Drag to rearrange\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-menu\"><path d=\"M4 5h16\"></path><path d=\"M4 12h16\"></path><path d=\"M4 19h16\"></path></svg></div></div></div></div></div><div class=\"setting-group mod-list\"><div class=\"setting-group-search\" tabindex=\"-1\"><div class=\"search-input-container\"><input enterkeyhint=\"search\" type=\"search\" spellcheck=\"false\" placeholder=\"Enter font name...\"><div class=\"search-input-clear-button\"></div></div></div><div class=\"setting-items\"><div class=\"setting-item mod-action tappable\" tabindex=\"-1\" style=\"display: none;\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"color: var(--text-normal);\"></div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: &quot;Agency FB&quot;; color: var(--text-normal);\">Agency FB</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: Algerian; color: var(--text-normal);\">Algerian</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\" style=\"display: none;\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: Arial; color: var(--text-normal);\">Arial</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: &quot;Arial Black&quot;; color: var(--text-normal);\">Arial Black</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: &quot;Arial Narrow&quot;; color: var(--text-normal);\">Arial Narrow</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: &quot;Arial Rounded MT&quot;; color: var(--text-normal);\">Arial Rounded MT</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: Bahnschrift; color: var(--text-normal);\">Bahnschrift</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: &quot;Baskerville Old Face&quot;; color: var(--text-normal);\">Baskerville Old Face</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"color: var(--text-normal);\">Bauhaus 93</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: &quot;Bell MT&quot;; color: var(--text-normal);\">Bell MT</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: &quot;Berlin Sans FB&quot;; color: var(--text-normal);\">Berlin Sans FB</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\" style=\"font-family: &quot;Bernard MT&quot;; color: var(--text-normal);\">Bernard MT</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div><div class=\"setting-item mod-action t...",
+  "config": "Segoe UI,Arial,Courier New",
+  "cssVar": "\"Segoe UI\", Arial, \"Courier New\" | \"Segoe UI\", Arial, \"Courier New\", '??', '??', ui-sans-serif, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", \"Google Sans Flex\", Roboto, \"Inter Variable\", \"Inter\", \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", sans-serif",
+  "bodyStyle": "--zoom-factor: 1; --font-text-size: 16px; --indent-size: 4; --font-interface-override: \"Segoe UI\", Arial, \"Courier New\";",
+  "shot": "interface-three.png"
+ },
+ "s03-typed-name": {
+  "page": {
+   "title": "Interface font",
+   "desc": "The first font from this list that is available on your system will be applied.",
+   "groups": [
+    {
+     "cls": "setting-group mod-list",
+     "search": null,
+     "items": [
+      {
+       "name": "Segoe UI",
+       "cls": "setting-item",
+       "shown": true,
+       "style": "font-family: \"Segoe UI\";",
+       "buttons": [
+        {
+         "aria": "Delete",
+         "cls": "clickable-icon extra-setting-button"
+        },
+        {
+         "aria": "Drag to rearrange",
+         "cls": "clickable-icon extra-setting-button mod-drag-handle"
+        }
+       ]
+      },
+      {
+       "name": "Arial",
+       "cls": "setting-item",
+       "shown": true,
+       "style": "font-family: Arial;",
+       "buttons": [
+        {
+         "aria": "Delete",
+         "cls": "clickable-icon extra-setting-button"
+        },
+        {
+         "aria": "Drag to rearrange",
+         "cls": "clickable-icon extra-setting-button mod-drag-handle"
+        }
+       ]
+      },
+      {
+       "name": "Courier New",
+       "cls": "setting-item",
+       "shown": true,
+       "style": "font-family: \"Courier New\";",
+       "buttons": [
+        {
+         "aria": "Delete",
+         "cls": "clickable-icon extra-setting-button"
+        },
+        {
+         "aria": "Drag to rearrange",
+         "cls": "clickable-icon extra-setting-button mod-drag-handle"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "cls": "setting-group mod-list",
+     "search": {
+      "placeholder": "Enter font name...",
+      "value": "Probe Sans"
+     },
+     "items": [
+      {
+       "name": "Probe Sans",
+       "cls": "setting-item mod-action tappable",
+       "shown": true,
+       "style": "color: var(--text-normal); font-family: \"Probe Sans\";",
+       "buttons": []
+      },
+      {
+       "more": 198
+      }
+     ]
+    }
+   ],
+   "installedCount": 198
+  },
+  "installedShown": [
+   {
+    "name": "Probe Sans",
+    "shown": true,
+    "style": "color: var(--text-normal); font-family: \"Probe Sans\";"
+   }
+  ],
+  "shot": "interface-typed.png",
+  "afterPick": {
+   "appearanceJson": "{\n  \"interfaceFontFamily\": \"Segoe UI,Arial,Courier New,Probe Sans\"\n}",
+   "page": {
+    "title": "Interface font",
+    "desc": "The first font from this list that is available on your system will be applied.",
+    "groups": [
+     {
+      "cls": "setting-group mod-list",
+      "search": null,
+      "items": [
+       {
+        "name": "Segoe UI",
+        "cls": "setting-item",
+        "shown": true,
+        "style": "font-family: \"Segoe UI\";",
+        "buttons": [
+         {
+          "aria": "Delete",
+          "cls": "clickable-icon extra-setting-button"
+         },
+         {
+          "aria": "Drag to rearrange",
+          "cls": "clickable-icon extra-setting-button mod-drag-handle"
+         }
+        ]
+       },
+       {
+        "name": "Arial",
+        "cls": "setting-item",
+        "shown": true,
+        "style": "font-family: Arial;",
+        "buttons": [
+         {
+          "aria": "Delete",
+          "cls": "clickable-icon extra-setting-button"
+         },
+         {
+          "aria": "Drag to rearrange",
+          "cls": "clickable-icon extra-setting-button mod-drag-handle"
+         }
+        ]
+       },
+       {
+        "name": "Courier New",
+        "cls": "setting-item",
+        "shown": true,
+        "style": "font-family: \"Courier New\";",
+        "buttons": [
+         {
+          "aria": "Delete",
+          "cls": "clickable-icon extra-setting-button"
+         },
+         {
+          "aria": "Drag to rearrange",
+          "cls": "clickable-icon extra-setting-button mod-drag-handle"
+         }
+        ]
+       },
+       {
+        "name": "Probe Sans",
+        "cls": "setting-item",
+        "shown": true,
+        "style": "font-family: \"Probe Sans\";",
+        "buttons": [
+         {
+          "aria": "Delete",
+          "cls": "clickable-icon extra-setting-button"
+         },
+         {
+          "aria": "Drag to rearrange",
+          "cls": "clickable-icon extra-setting-button mod-drag-handle"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "cls": "setting-group mod-list",
+      "search": {
+       "placeholder": "Enter font name...",
+       "value": "Probe Sans"
+      },
+      "items": [
+       {
+        "more": 198
+       }
+      ]
+     }
+    ],
+    "installedCount": 198
+   }
+  },
+  "partial": [
+   {
+    "name": "cour",
+    "shown": true,
+    "style": "color: var(--text-normal); font-family: cour;"
+   },
+   {
+    "name": "Courier",
+    "shown": true,
+    "style": "font-family: Courier; color: var(--text-normal);"
+   }
+  ],
+  "afterEnter": {
+   "appearanceJson": "{\n  \"interfaceFontFamily\": \"Segoe UI,Arial,Courier New,Probe Sans\"\n}",
+   "page": {
+    "title": "Interface font",
+    "desc": "The first font from this list that is available on your system will be applied.",
+    "groups": [
+     {
+      "cls": "setting-group mod-list",
+      "search": null,
+      "items": [
+       {
+        "name": "Segoe UI",
+        "cls": "setting-item",
+        "shown": true,
+        "style": "font-family: \"Segoe UI\";",
+        "buttons": [
+         {
+          "aria": "Delete",
+          "cls": "clickable-icon extra-setting-button"
+         },
+         {
+          "aria": "Drag to rearrange",
+          "cls": "clickable-icon extra-setting-button mod-drag-handle"
+         }
+        ]
+       },
+       {
+        "name": "Arial",
+        "cls": "setting-item",
+        "shown": true,
+        "style": "font-family: Arial;",
+        "buttons": [
+         {
+          "aria": "Delete",
+          "cls": "clickable-icon extra-setting-button"
+         },
+         {
+          "aria": "Drag to rearrange",
+          "cls": "clickable-icon extra-setting-button mod-drag-handle"
+         }
+        ]
+       },
+       {
+        "name": "Courier New",
+        "cls": "setting-item",
+        "shown": true,
+        "style": "font-family: \"Courier New\";",
+        "buttons": [
+         {
+          "aria": "Delete",
+          "cls": "clickable-icon extra-setting-button"
+         },
+         {
+          "aria": "Drag to rearrange",
+          "cls": "clickable-icon extra-setting-button mod-drag-handle"
+         }
+        ]
+       },
+       {
+        "name": "Probe Sans",
+        "cls": "setting-item",
+        "shown": true,
+        "style": "font-family: \"Probe Sans\";",
+        "buttons": [
+         {
+          "aria": "Delete",
+          "cls": "clickable-icon extra-setting-button"
+         },
+         {
+          "aria": "Drag to rearrange",
+          "cls": "clickable-icon extra-setting-button mod-drag-handle"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "cls": "setting-group mod-list",
+      "search": {
+       "placeholder": "Enter font name...",
+       "value": "cour"
+      },
+      "items": [
+       {
+        "name": "cour",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "color: var(--text-normal); font-family: cour;",
+        "buttons": []
+       },
+       {
+        "name": "Courier",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: Courier; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "more": 198
+       }
+      ]
+     }
+    ],
+    "installedCount": 198
+   }
+  }
+ },
+ "s04-reorder": {
+  "before": [
+   {
+    "name": "Segoe UI",
+    "rect": {
+     "x": 257,
+     "y": 131.5,
+     "w": 599,
+     "h": 40
+    },
+    "handle": {
+     "x": 816,
+     "y": 139.5,
+     "w": 24,
+     "h": 24
+    }
+   },
+   {
+    "name": "Arial",
+    "rect": {
+     "x": 257,
+     "y": 171.5,
+     "w": 599,
+     "h": 40
+    },
+    "handle": {
+     "x": 816.01,
+     "y": 179.5,
+     "w": 24,
+     "h": 24
+    }
+   },
+   {
+    "name": "Courier New",
+    "rect": {
+     "x": 257,
+     "y": 211.5,
+     "w": 599,
+     "h": 40
+    },
+    "handle": {
+     "x": 816.01,
+     "y": 219.5,
+     "w": 24,
+     "h": 24
+    }
+   },
+   {
+    "name": "Probe Sans",
+    "rect": {
+     "x": 257,
+     "y": 251.5,
+     "w": 599,
+     "h": 52.49
+    },
+    "handle": {
+     "x": 816,
+     "y": 265.74,
+     "w": 24,
+     "h": 24
+    }
+   }
+  ],
+  "json": "{\n  \"interfaceFontFamily\": \"Segoe UI,Arial,Courier New,Probe Sans\"\n}",
+  "after": {
+   "appearanceJson": "{\n  \"interfaceFontFamily\": \"Probe Sans,Segoe UI,Arial,Courier New\"\n}",
+   "rows": [
+    {
+     "name": "Probe Sans",
+     "rect": {
+      "x": 257,
+      "y": 131.5,
+      "w": 599,
+      "h": 52.49
+     },
+     "handle": {
+      "x": 816,
+      "y": 145.74,
+      "w": 24,
+      "h": 24
+     }
+    },
+    {
+     "name": "Segoe UI",
+     "rect": {
+      "x": 257,
+      "y": 183.99,
+      "w": 599,
+      "h": 40
+     },
+     "handle": {
+      "x": 816,
+      "y": 191.99,
+      "w": 24,
+      "h": 24
+     }
+    },
+    {
+     "name": "Arial",
+     "rect": {
+      "x": 257,
+      "y": 223.99,
+      "w": 599,
+      "h": 40
+     },
+     "handle": {
+      "x": 816.01,
+      "y": 231.99,
+      "w": 24,
+      "h": 24
+     }
+    },
+    {
+     "name": "Courier New",
+     "rect": {
+      "x": 257,
+      "y": 263.99,
+      "w": 599,
+      "h": 40
+     },
+     "handle": {
+      "x": 816.01,
+      "y": 271.99,
+      "w": 24,
+      "h": 24
+     }
+    }
+   ]
+  },
+  "shot": "interface-reordered.png"
+ },
+ "s05-delete": {
+  "tries": [
+   {
+    "victim": "Arial",
+    "appearanceJson": "{\n  \"interfaceFontFamily\": \"Probe Sans,Segoe UI,Courier New\"\n}",
+    "config": "Probe Sans,Segoe UI,Courier New",
+    "page": {
+     "title": "Interface font",
+     "desc": "The first font from this list that is available on your system will be applied.",
+     "groups": [
+      {
+       "cls": "setting-group mod-list",
+       "search": null,
+       "items": [
+        {
+         "name": "Probe Sans",
+         "cls": "setting-item",
+         "shown": true,
+         "style": "font-family: \"Probe Sans\";",
+         "buttons": [
+          {
+           "aria": "Delete",
+           "cls": "clickable-icon extra-setting-button"
+          },
+          {
+           "aria": "Drag to rearrange",
+           "cls": "clickable-icon extra-setting-button mod-drag-handle"
+          }
+         ]
+        },
+        {
+         "name": "Segoe UI",
+         "cls": "setting-item",
+         "shown": true,
+         "style": "font-family: \"Segoe UI\";",
+         "buttons": [
+          {
+           "aria": "Delete",
+           "cls": "clickable-icon extra-setting-button"
+          },
+          {
+           "aria": "Drag to rearrange",
+           "cls": "clickable-icon extra-setting-button mod-drag-handle"
+          }
+         ]
+        },
+        {
+         "name": "Courier New",
+         "cls": "setting-item",
+         "shown": true,
+         "style": "font-family: \"Courier New\";",
+         "buttons": [
+          {
+           "aria": "Delete",
+           "cls": "clickable-icon extra-setting-button"
+          },
+          {
+           "aria": "Drag to rearrange",
+           "cls": "clickable-icon extra-setting-button mod-drag-handle"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "cls": "setting-group mod-list",
+       "search": {
+        "placeholder": "Enter font name...",
+        "value": ""
+       },
+       "items": [
+        {
+         "name": "Agency FB",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Agency FB\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Algerian",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Algerian; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Arial; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial Black",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Arial Black\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial Narrow",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Arial Narrow\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial Rounded MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Arial Rounded MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bahnschrift",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Bahnschrift; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Baskerville Old Face",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Baskerville Old Face\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bauhaus 93",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bell MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bell MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Berlin Sans FB",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Berlin Sans FB\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bernard MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bernard MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Blackadder ITC",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Blackadder ITC\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni 72",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni 72 Oldstyle",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni 72 Smallcaps",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bodoni MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni MT Poster",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bodoni MT Poster\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Book Antiqua",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Book Antiqua\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bookman Old Style",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bookman Old Style\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bookshelf Symbol 7",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bradley Hand ITC",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bradley Hand ITC\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Britannic",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Britannic; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Broadway",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Broadway; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Brush Script MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Brush Script MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Calibri",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Calibri; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Californian FB",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Californian FB\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Calisto MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Calisto MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Cambria",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Cambria; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Cambria Math",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Cambria Math\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "more": 198
+        }
+       ]
+      }
+     ],
+     "installedCount": 198
+    }
+   },
+   {
+    "victim": "Segoe UI",
+    "appearanceJson": "{\n  \"interfaceFontFamily\": \"Probe Sans,Courier New\"\n}",
+    "config": "Probe Sans,Courier New",
+    "page": {
+     "title": "Interface font",
+     "desc": "The first font from this list that is available on your system will be applied.",
+     "groups": [
+      {
+       "cls": "setting-group mod-list",
+       "search": null,
+       "items": [
+        {
+         "name": "Probe Sans",
+         "cls": "setting-item",
+         "shown": true,
+         "style": "font-family: \"Probe Sans\";",
+         "buttons": [
+          {
+           "aria": "Delete",
+           "cls": "clickable-icon extra-setting-button"
+          },
+          {
+           "aria": "Drag to rearrange",
+           "cls": "clickable-icon extra-setting-button mod-drag-handle"
+          }
+         ]
+        },
+        {
+         "name": "Courier New",
+         "cls": "setting-item",
+         "shown": true,
+         "style": "font-family: \"Courier New\";",
+         "buttons": [
+          {
+           "aria": "Delete",
+           "cls": "clickable-icon extra-setting-button"
+          },
+          {
+           "aria": "Drag to rearrange",
+           "cls": "clickable-icon extra-setting-button mod-drag-handle"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "cls": "setting-group mod-list",
+       "search": {
+        "placeholder": "Enter font name...",
+        "value": ""
+       },
+       "items": [
+        {
+         "name": "Agency FB",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Agency FB\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Algerian",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Algerian; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Arial; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial Black",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Arial Black\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial Narrow",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Arial Narrow\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial Rounded MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Arial Rounded MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bahnschrift",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Bahnschrift; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Baskerville Old Face",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Baskerville Old Face\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bauhaus 93",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bell MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bell MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Berlin Sans FB",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Berlin Sans FB\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bernard MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bernard MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Blackadder ITC",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Blackadder ITC\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni 72",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni 72 Oldstyle",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni 72 Smallcaps",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bodoni MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni MT Poster",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bodoni MT Poster\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Book Antiqua",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Book Antiqua\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bookman Old Style",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bookman Old Style\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bookshelf Symbol 7",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bradley Hand ITC",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bradley Hand ITC\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Britannic",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Britannic; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Broadway",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Broadway; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Brush Script MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Brush Script MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Calibri",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Calibri; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Californian FB",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Californian FB\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Calisto MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Calisto MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Cambria",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Cambria; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Cambria Math",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Cambria Math\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "more": 198
+        }
+       ]
+      }
+     ],
+     "installedCount": 198
+    }
+   },
+   {
+    "victim": "Courier New",
+    "appearanceJson": "{\n  \"interfaceFontFamily\": \"Probe Sans\"\n}",
+    "config": "Probe Sans",
+    "page": {
+     "title": "Interface font",
+     "desc": "The first font from this list that is available on your system will be applied.",
+     "groups": [
+      {
+       "cls": "setting-group mod-list",
+       "search": null,
+       "items": [
+        {
+         "name": "Probe Sans",
+         "cls": "setting-item",
+         "shown": true,
+         "style": "font-family: \"Probe Sans\";",
+         "buttons": [
+          {
+           "aria": "Delete",
+           "cls": "clickable-icon extra-setting-button"
+          },
+          {
+           "aria": "Drag to rearrange",
+           "cls": "clickable-icon extra-setting-button mod-drag-handle"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "cls": "setting-group mod-list",
+       "search": {
+        "placeholder": "Enter font name...",
+        "value": ""
+       },
+       "items": [
+        {
+         "name": "Agency FB",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Agency FB\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Algerian",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Algerian; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Arial; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial Black",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Arial Black\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial Narrow",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Arial Narrow\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial Rounded MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Arial Rounded MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bahnschrift",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Bahnschrift; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Baskerville Old Face",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Baskerville Old Face\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bauhaus 93",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bell MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bell MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Berlin Sans FB",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Berlin Sans FB\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bernard MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bernard MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Blackadder ITC",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Blackadder ITC\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni 72",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni 72 Oldstyle",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni 72 Smallcaps",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bodoni MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni MT Poster",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bodoni MT Poster\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Book Antiqua",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Book Antiqua\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bookman Old Style",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bookman Old Style\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bookshelf Symbol 7",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bradley Hand ITC",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bradley Hand ITC\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Britannic",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Britannic; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Broadway",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Broadway; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Brush Script MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Brush Script MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Calibri",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Calibri; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Californian FB",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Californian FB\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Calisto MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Calisto MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Cambria",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Cambria; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Cambria Math",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Cambria Math\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "more": 198
+        }
+       ]
+      }
+     ],
+     "installedCount": 198
+    }
+   },
+   {
+    "victim": "Probe Sans",
+    "appearanceJson": "{\n  \"interfaceFontFamily\": \"\"\n}",
+    "config": "",
+    "page": {
+     "title": "Interface font",
+     "desc": "No custom font is applied right now. Add one below.",
+     "groups": [
+      {
+       "cls": "setting-group mod-list",
+       "search": null,
+       "items": []
+      },
+      {
+       "cls": "setting-group mod-list",
+       "search": {
+        "placeholder": "Enter font name...",
+        "value": ""
+       },
+       "items": [
+        {
+         "name": "Agency FB",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Agency FB\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Algerian",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Algerian; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Arial; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial Black",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Arial Black\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial Narrow",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Arial Narrow\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Arial Rounded MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Arial Rounded MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bahnschrift",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Bahnschrift; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Baskerville Old Face",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Baskerville Old Face\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bauhaus 93",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bell MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bell MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Berlin Sans FB",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Berlin Sans FB\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bernard MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bernard MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Blackadder ITC",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Blackadder ITC\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni 72",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni 72 Oldstyle",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni 72 Smallcaps",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bodoni MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bodoni MT Poster",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bodoni MT Poster\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Book Antiqua",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Book Antiqua\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bookman Old Style",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bookman Old Style\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bookshelf Symbol 7",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Bradley Hand ITC",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Bradley Hand ITC\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Britannic",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Britannic; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Broadway",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Broadway; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Brush Script MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Brush Script MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Calibri",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Calibri; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Californian FB",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Californian FB\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Calisto MT",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Calisto MT\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Cambria",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: Cambria; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "name": "Cambria Math",
+         "cls": "setting-item mod-action tappable",
+         "shown": true,
+         "style": "font-family: \"Cambria Math\"; color: var(--text-normal);",
+         "buttons": []
+        },
+        {
+         "more": 198
+        }
+       ]
+      }
+     ],
+     "installedCount": 198
+    }
+   }
+  ],
+  "emptyShot": "interface-emptied.png"
+ },
+ "s06-text-and-mono": {
+  "Text font": {
+   "opened": true,
+   "waitedMs": 2,
+   "page": {
+    "title": "Text font",
+    "desc": "No custom font is applied right now. Add one below.",
+    "groups": [
+     {
+      "cls": "setting-group",
+      "search": {
+       "placeholder": null,
+       "value": "#8a5cf5"
+      },
+      "items": [
+       {
+        "name": "Base color scheme",
+        "cls": "setting-item",
+        "shown": true,
+        "style": null,
+        "buttons": []
+       },
+       {
+        "name": "Accent color",
+        "cls": "setting-item mod-toggle",
+        "shown": true,
+        "style": null,
+        "buttons": [
+         {
+          "aria": "Restore default",
+          "cls": "clickable-icon extra-setting-button"
+         }
+        ]
+       },
+       {
+        "name": "Themes",
+        "cls": "setting-item",
+        "shown": true,
+        "style": null,
+        "buttons": [
+         {
+          "aria": "Open themes folder",
+          "cls": "clickable-icon extra-setting-button"
+         }
+        ]
+       },
+       {
+        "name": "Current community themes",
+        "cls": "setting-item",
+        "shown": true,
+        "style": null,
+        "buttons": []
+       },
+       {
+        "name": "CSS snippets",
+        "cls": "setting-item mod-navigable tappable",
+        "shown": true,
+        "style": null,
+        "buttons": []
+       }
+      ]
+     },
+     {
+      "cls": "setting-group",
+      "search": {
+       "placeholder": null,
+       "value": "16"
+      },
+      "items": [
+       {
+        "name": "Font",
+        "cls": "setting-item setting-item-heading",
+        "shown": true,
+        "style": null,
+        "buttons": []
+       },
+       {
+        "name": "Interface font",
+        "cls": "setting-item mod-navigable tappable",
+        "shown": true,
+        "style": null,
+        "buttons": []
+       },
+       {
+        "name": "Text font",
+        "cls": "setting-item mod-navigable tappable",
+        "shown": true,
+        "style": null,
+        "buttons": []
+       },
+       {
+        "name": "Monospace font",
+        "cls": "setting-item mod-navigable tappable",
+        "shown": true,
+        "style": null,
+        "buttons": []
+       },
+       {
+        "name": "Font size",
+        "cls": "setting-item",
+        "shown": true,
+        "style": null,
+        "buttons": [
+         {
+          "aria": "Restore default",
+          "cls": "clickable-icon extra-setting-button"
+         }
+        ]
+       },
+       {
+        "name": "Quick font size adjustment",
+        "cls": "setting-item mod-toggle",
+        "shown": true,
+        "style": null,
+        "buttons": []
+       }
+      ]
+     },
+     {
+      "cls": "setting-group",
+      "search": null,
+      "items": [
+       {
+        "name": "Advanced",
+        "cls": "setting-item setting-item-heading",
+        "shown": true,
+        "style": null,
+        "buttons": []
+       },
+       {
+        "name": "Custom app icon",
+        "cls": "setting-item",
+        "shown": true,
+        "style": null,
+        "buttons": [
+         {
+          "aria": "Restore default",
+          "cls": "clickable-icon extra-setting-button"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "cls": "setting-group mod-list",
+      "search": null,
+      "items": []
+     },
+     {
+      "cls": "setting-group mod-list",
+      "search": {
+       "placeholder": "Enter font name...",
+       "value": ""
+      },
+      "items": [
+       {
+        "name": "Agency FB",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Agency FB\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Algerian",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: Algerian; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Arial",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: Arial; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Arial Black",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Arial Black\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Arial Narrow",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Arial Narrow\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Arial Rounded MT",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Arial Rounded MT\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Bahnschrift",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: Bahnschrift; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Baskerville Old Face",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Baskerville Old Face\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Bauhaus 93",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Bell MT",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Bell MT\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Berlin Sans FB",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Berlin Sans FB\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Bernard MT",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Bernard MT\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Blackadder ITC",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Blackadder ITC\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Bodoni 72",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Bodoni 72 Oldstyle",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Bodoni 72 Smallcaps",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Bodoni MT",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Bodoni MT\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Bodoni MT Poster",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Bodoni MT Poster\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Book Antiqua",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Book Antiqua\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Bookman Old Style",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Bookman Old Style\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Bookshelf Symbol 7",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Bradley Hand ITC",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Bradley Hand ITC\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Britannic",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: Britannic; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Broadway",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: Broadway; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Brush Script MT",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Brush Script MT\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Calibri",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: Calibri; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Californian FB",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Californian FB\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Calisto MT",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Calisto MT\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Cambria",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: Cambria; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Cambria Math",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Cambria Math\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "more": 198
+       }
+      ]
+     }
+    ],
+    "installedCount": 6
+   },
+   "picks": [
+    {
+     "name": "Consolas",
+     "appearanceJson": "{\n  \"interfaceFontFamily\": \"\",\n  \"textFontFamily\": \"Consolas\"\n}",
+     "page": {
+      "title": "Text font",
+      "desc": "The first font from this list that is available on your system will be applied.",
+      "groups": [
+       {
+        "cls": "setting-group mod-list",
+        "search": null,
+        "items": [
+         {
+          "name": "Consolas",
+          "cls": "setting-item",
+          "shown": true,
+          "style": "font-family: Consolas;",
+          "buttons": [
+           {
+            "aria": "Delete",
+            "cls": "clickable-icon extra-setting-button"
+           },
+           {
+            "aria": "Drag to rearrange",
+            "cls": "clickable-icon extra-setting-button mod-drag-handle"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "cls": "setting-group mod-list",
+        "search": {
+         "placeholder": "Enter font name...",
+         "value": ""
+        },
+        "items": [
+         {
+          "name": "Agency FB",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Agency FB\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Algerian",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: Algerian; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Arial",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: Arial; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Arial Black",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Arial Black\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Arial Narrow",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Arial Narrow\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Arial Rounded MT",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Arial Rounded MT\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bahnschrift",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: Bahnschrift; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Baskerville Old Face",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Baskerville Old Face\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bauhaus 93",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bell MT",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Bell MT\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Berlin Sans FB",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Berlin Sans FB\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bernard MT",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Bernard MT\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Blackadder ITC",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Blackadder ITC\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bodoni 72",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bodoni 72 Oldstyle",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bodoni 72 Smallcaps",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bodoni MT",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Bodoni MT\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bodoni MT Poster",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Bodoni MT Poster\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Book Antiqua",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Book Antiqua\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bookman Old Style",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Bookman Old Style\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bookshelf Symbol 7",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bradley Hand ITC",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Bradley Hand ITC\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Britannic",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: Britannic; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Broadway",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: Broadway; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Brush Script MT",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Brush Script MT\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Calibri",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: Calibri; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Californian FB",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Californian FB\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Calisto MT",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Calisto MT\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Cambria",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: Cambria; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Cambria Math",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Cambria Math\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "more": 198
+         }
+        ]
+       }
+      ],
+      "installedCount": 198
+     }
+    },
+    {
+     "name": "Cascadia Mono",
+     "appearanceJson": "{\n  \"interfaceFontFamily\": \"\",\n  \"textFontFamily\": \"Consolas,Cascadia Mono\"\n}",
+     "page": {
+      "title": "Text font",
+      "desc": "The first font from this list that is available on your system will be applied.",
+      "groups": [
+       {
+        "cls": "setting-group mod-list",
+        "search": null,
+        "items": [
+         {
+          "name": "Consolas",
+          "cls": "setting-item",
+          "shown": true,
+          "style": "font-family: Consolas;",
+          "buttons": [
+           {
+            "aria": "Delete",
+            "cls": "clickable-icon extra-setting-button"
+           },
+           {
+            "aria": "Drag to rearrange",
+            "cls": "clickable-icon extra-setting-button mod-drag-handle"
+           }
+          ]
+         },
+         {
+          "name": "Cascadia Mono",
+          "cls": "setting-item",
+          "shown": true,
+          "style": "font-family: \"Cascadia Mono\";",
+          "buttons": [
+           {
+            "aria": "Delete",
+            "cls": "clickable-icon extra-setting-button"
+           },
+           {
+            "aria": "Drag to rearrange",
+            "cls": "clickable-icon extra-setting-button mod-drag-handle"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "cls": "setting-group mod-list",
+        "search": {
+         "placeholder": "Enter font name...",
+         "value": ""
+        },
+        "items": [
+         {
+          "name": "Agency FB",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Agency FB\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Algerian",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: Algerian; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Arial",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: Arial; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Arial Black",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Arial Black\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Arial Narrow",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Arial Narrow\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Arial Rounded MT",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Arial Rounded MT\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bahnschrift",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: Bahnschrift; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Baskerville Old Face",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Baskerville Old Face\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bauhaus 93",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bell MT",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Bell MT\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Berlin Sans FB",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Berlin Sans FB\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bernard MT",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Bernard MT\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Blackadder ITC",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Blackadder ITC\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bodoni 72",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bodoni 72 Oldstyle",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bodoni 72 Smallcaps",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bodoni MT",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Bodoni MT\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bodoni MT Poster",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Bodoni MT Poster\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Book Antiqua",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Book Antiqua\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bookman Old Style",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Bookman Old Style\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bookshelf Symbol 7",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bradley Hand ITC",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Bradley Hand ITC\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Britannic",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: Britannic; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Broadway",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: Broadway; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Brush Script MT",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Brush Script MT\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Calibri",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: Calibri; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Californian FB",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Californian FB\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Calisto MT",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Calisto MT\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Cambria",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: Cambria; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Cambria Math",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Cambria Math\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "more": 198
+         }
+        ]
+       }
+      ],
+      "installedCount": 198
+     }
+    }
+   ],
+   "shot": "text-font.png"
+  },
+  "Monospace font": {
+   "opened": true,
+   "waitedMs": 1,
+   "page": {
+    "title": "Monospace font",
+    "desc": "No custom font is applied right now. Add one below.",
+    "groups": [
+     {
+      "cls": "setting-group mod-list",
+      "search": null,
+      "items": []
+     },
+     {
+      "cls": "setting-group mod-list",
+      "search": {
+       "placeholder": "Enter font name...",
+       "value": ""
+      },
+      "items": [
+       {
+        "name": "Agency FB",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Agency FB\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Algerian",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: Algerian; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Arial",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: Arial; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Arial Black",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Arial Black\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Arial Narrow",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Arial Narrow\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Arial Rounded MT",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Arial Rounded MT\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Bahnschrift",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: Bahnschrift; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Baskerville Old Face",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Baskerville Old Face\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Bauhaus 93",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Bell MT",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Bell MT\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Berlin Sans FB",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Berlin Sans FB\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Bernard MT",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Bernard MT\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Blackadder ITC",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Blackadder ITC\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Bodoni 72",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Bodoni 72 Oldstyle",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Bodoni 72 Smallcaps",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Bodoni MT",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Bodoni MT\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Bodoni MT Poster",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Bodoni MT Poster\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Book Antiqua",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Book Antiqua\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Bookman Old Style",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Bookman Old Style\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Bookshelf Symbol 7",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Bradley Hand ITC",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Bradley Hand ITC\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Britannic",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: Britannic; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Broadway",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: Broadway; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Brush Script MT",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Brush Script MT\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Calibri",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: Calibri; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Californian FB",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Californian FB\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Calisto MT",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Calisto MT\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Cambria",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: Cambria; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "name": "Cambria Math",
+        "cls": "setting-item mod-action tappable",
+        "shown": true,
+        "style": "font-family: \"Cambria Math\"; color: var(--text-normal);",
+        "buttons": []
+       },
+       {
+        "more": 198
+       }
+      ]
+     }
+    ],
+    "installedCount": 198
+   },
+   "picks": [
+    {
+     "name": "Consolas",
+     "appearanceJson": "{\n  \"interfaceFontFamily\": \"\",\n  \"textFontFamily\": \"Consolas,Cascadia Mono\",\n  \"monospaceFontFamily\": \"Consolas\"\n}",
+     "page": {
+      "title": "Monospace font",
+      "desc": "The first font from this list that is available on your system will be applied.",
+      "groups": [
+       {
+        "cls": "setting-group mod-list",
+        "search": null,
+        "items": [
+         {
+          "name": "Consolas",
+          "cls": "setting-item",
+          "shown": true,
+          "style": "font-family: Consolas;",
+          "buttons": [
+           {
+            "aria": "Delete",
+            "cls": "clickable-icon extra-setting-button"
+           },
+           {
+            "aria": "Drag to rearrange",
+            "cls": "clickable-icon extra-setting-button mod-drag-handle"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "cls": "setting-group mod-list",
+        "search": {
+         "placeholder": "Enter font name...",
+         "value": ""
+        },
+        "items": [
+         {
+          "name": "Agency FB",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Agency FB\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Algerian",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: Algerian; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Arial",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: Arial; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Arial Black",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Arial Black\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Arial Narrow",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Arial Narrow\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Arial Rounded MT",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Arial Rounded MT\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bahnschrift",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: Bahnschrift; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Baskerville Old Face",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Baskerville Old Face\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bauhaus 93",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bell MT",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Bell MT\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Berlin Sans FB",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Berlin Sans FB\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bernard MT",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Bernard MT\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Blackadder ITC",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Blackadder ITC\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bodoni 72",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bodoni 72 Oldstyle",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bodoni 72 Smallcaps",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bodoni MT",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Bodoni MT\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bodoni MT Poster",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Bodoni MT Poster\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Book Antiqua",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Book Antiqua\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bookman Old Style",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Bookman Old Style\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bookshelf Symbol 7",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Bradley Hand ITC",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Bradley Hand ITC\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Britannic",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: Britannic; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Broadway",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: Broadway; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Brush Script MT",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Brush Script MT\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Calibri",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: Calibri; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Californian FB",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Californian FB\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Calisto MT",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Calisto MT\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Cambria",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: Cambria; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "name": "Cambria Math",
+          "cls": "setting-item mod-action tappable",
+          "shown": true,
+          "style": "font-family: \"Cambria Math\"; color: var(--text-normal);",
+          "buttons": []
+         },
+         {
+          "more": 198
+         }
+        ]
+       }
+      ],
+      "installedCount": 198
+     }
+    }
+   ],
+   "shot": "monospace-font.png"
+  },
+  "tabRows": [
+   {
+    "name": "Font",
+    "value": "",
+    "desc": "",
+    "cls": "setting-item setting-item-heading",
+    "html": "<div class=\"setting-item-name\">Font</div><div class=\"setting-item-control\"></div>"
+   },
+   {
+    "name": "Interface font",
+    "value": "",
+    "desc": "Set base font for all of Obsidian.",
+    "cls": "setting-item mod-navigable tappable",
+    "html": "<div class=\"setting-item-info\"><div class=\"setting-item-name\">Interface font</div><div class=\"setting-item-description\">Set base font for all of Obsidian.</div></div><div class=\"setting-item-control\"><div class=\"setting-item-chevron\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-chevron-right\"><path d=\"m9 18 6-6-6-6\"></path></svg></div></div>"
+   },
+   {
+    "name": "Text font",
+    "value": "2 fonts",
+    "desc": "Set font for editing and reading views.",
+    "cls": "setting-item mod-navigable tappable",
+    "html": "<div class=\"setting-item-info\"><div class=\"setting-item-name\">Text font</div><div class=\"setting-item-description\">Set font for editing and reading views.</div></div><div class=\"setting-item-control\"><div class=\"setting-item-value\">2 fonts</div><div class=\"setting-item-chevron\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-chevron-right\"><path d=\"m9 18 6-6-6-6\"></path></svg></div></div>"
+   },
+   {
+    "name": "Monospace font",
+    "value": "Consolas",
+    "desc": "Set font for places like code blocks and frontmatter.",
+    "cls": "setting-item mod-navigable tappable",
+    "html": "<div class=\"setting-item-info\"><div class=\"setting-item-name\">Monospace font</div><div class=\"setting-item-description\">Set font for places like code blocks and frontmatter.</div></div><div class=\"setting-item-control\"><div class=\"setting-item-value\">Consolas</div><div class=\"setting-item-chevron\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-chevron-right\"><path d=\"m9 18 6-6-6-6\"></path></svg></div></div>"
+   },
+   {
+    "name": "Font size",
+    "value": "",
+    "desc": "Font size in pixels that affects editing and reading views.",
+    "cls": "setting-item",
+    "html": "<div class=\"setting-item-info\"><div class=\"setting-item-name\">Font size</div><div class=\"setting-item-description\">Font size in pixels that affects editing and reading views.</div></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Restore default\" aria-disabled=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-rotate-ccw\"><path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\"></path><path d=\"M3 3v5h5\"></path></svg></div><span class=\"slider-value\">16</span><input class=\"slider\" type=\"range\" data-ignore-swipe=\"true\" min=\"10\" max=\"30\" step=\"1\" style=\"--slider-fill-ratio: 0.3;\"></div>"
+   },
+   {
+    "name": "Quick font size adjustment",
+    "value": "",
+    "desc": "Adjust the font size using Ctrl + Scroll, or using the trackpad pinch-zoom gesture.",
+    "cls": "setting-item mod-toggle",
+    "html": "<div class=\"setting-item-info\"><div class=\"setting-item-name\">Quick font size adjustment</div><div class=\"setting-item-description\">Adjust the font size using Ctrl + Scroll, or using the trackpad pinch-zoom gesture.</div></div><div class=\"setting-item-control\"><label class=\"checkbox-container\" tabindex=\"0\"><input type=\"checkbox\" tabindex=\"-1\"></label></div>"
+   }
+  ],
+  "tabShot": "appearance-fonts-set.png",
+  "appearanceJson": "{\n  \"interfaceFontFamily\": \"\",\n  \"textFontFamily\": \"Consolas,Cascadia Mono\",\n  \"monospaceFontFamily\": \"Consolas\"\n}"
+ },
+ "s07-quick-font-size": {
+  "row": {
+   "name": "Quick font size adjustment",
+   "desc": "Adjust the font size using Ctrl + Scroll, or using the trackpad pinch-zoom gesture.",
+   "on": false,
+   "toggle": {
+    "x": 796.01,
+    "y": 443.24,
+    "w": 40,
+    "h": 22
+   }
+  },
+  "offState": {
+   "cssVar": "16px",
+   "zoom": 1,
+   "config": []
+  },
+  "toggleOn": {
+   "appearanceJson": "{\n  \"baseFontSizeAction\": true\n}",
+   "diff": {
+    "vault": {
+     "added": [],
+     "removed": [],
+     "changed": [
+      ".obsidian\\app.json",
+      ".obsidian\\appearance.json"
+     ]
+    },
+    "udd": {
+     "added": [],
+     "removed": [],
+     "changed": [
+      "DIPS-wal"
+     ]
+    }
+   },
+   "text": {
+    "vault/.obsidian\\app.json": "{}",
+    "vault/.obsidian\\appearance.json": "{\n  \"baseFontSizeAction\": true\n}",
+    "udd/DIPS-wal": "(browser state, dropped)"
+   },
+   "localStorage": {}
+  },
+  "onWheel": [
+   {
+    "dy": -120,
+    "appearanceJson": "{\n  \"baseFontSizeAction\": true\n}",
+    "state": {
+     "cssVar": "17px",
+     "zoom": 1,
+     "config": [
+      "baseFontSizeAction"
+     ]
+    }
+   },
+   {
+    "dy": -120,
+    "appearanceJson": "{\n  \"baseFontSizeAction\": true\n}",
+    "state": {
+     "cssVar": "18px",
+     "zoom": 1,
+     "config": [
+      "baseFontSizeAction"
+     ]
+    }
+   },
+   {
+    "dy": -120,
+    "appearanceJson": "{\n  \"baseFontSizeAction\": true\n}",
+    "state": {
+     "cssVar": "19px",
+     "zoom": 1,
+     "config": [
+      "baseFontSizeAction"
+     ]
+    }
+   },
+   {
+    "dy": 120,
+    "appearanceJson": "{\n  \"baseFontSizeAction\": true\n}",
+    "state": {
+     "cssVar": "18px",
+     "zoom": 1,
+     "config": [
+      "baseFontSizeAction"
+     ]
+    }
+   },
+   {
+    "dy": 120,
+    "appearanceJson": "{\n  \"baseFontSizeAction\": true\n}",
+    "state": {
+     "cssVar": "17px",
+     "zoom": 1,
+     "config": [
+      "baseFontSizeAction"
+     ]
+    }
+   },
+   {
+    "dy": 120,
+    "appearanceJson": "{\n  \"baseFontSizeAction\": true\n}",
+    "state": {
+     "cssVar": "16px",
+     "zoom": 1,
+     "config": [
+      "baseFontSizeAction"
+     ]
+    }
+   },
+   {
+    "dy": 120,
+    "appearanceJson": "{\n  \"baseFontSizeAction\": true\n}",
+    "state": {
+     "cssVar": "15px",
+     "zoom": 1,
+     "config": [
+      "baseFontSizeAction"
+     ]
+    }
+   },
+   {
+    "dy": 120,
+    "appearanceJson": "{\n  \"baseFontSizeAction\": true\n}",
+    "state": {
+     "cssVar": "14px",
+     "zoom": 1,
+     "config": [
+      "baseFontSizeAction"
+     ]
+    }
+   },
+   {
+    "dy": 120,
+    "appearanceJson": "{\n  \"baseFontSizeAction\": true\n}",
+    "state": {
+     "cssVar": "13px",
+     "zoom": 1,
+     "config": [
+      "baseFontSizeAction"
+     ]
+    }
+   }
+  ],
+  "smallDelta": {
+   "appearanceJson": "{\n  \"baseFontSizeAction\": true\n}",
+   "state": {
+    "cssVar": "14px",
+    "zoom": 1,
+    "config": [
+     "baseFontSizeAction"
+    ]
+   }
+  },
+  "plainWheel": {
+   "appearanceJson": "{\n  \"baseFontSizeAction\": true\n}",
+   "state": {
+    "cssVar": "14px",
+    "zoom": 1,
+    "config": [
+     "baseFontSizeAction"
+    ]
+   }
+  },
+  "clampUp": {
+   "appearanceJson": "{\n  \"baseFontSizeAction\": true\n}",
+   "state": {
+    "cssVar": "30px",
+    "zoom": 1,
+    "config": [
+     "baseFontSizeAction"
+    ]
+   }
+  },
+  "clampDown": {
+   "appearanceJson": "{\n  \"baseFontSizeAction\": true\n}",
+   "state": {
+    "cssVar": "10px",
+    "zoom": 1,
+    "config": [
+     "baseFontSizeAction"
+    ]
+   }
+  },
+  "sliderRow": {
+   "value": "10",
+   "min": "10",
+   "max": "30",
+   "step": "1",
+   "text": "10"
+  },
+  "toggleOff": {
+   "appearanceJson": "{\n  \"baseFontSizeAction\": false\n}"
+  },
+  "offWheel": {
+   "appearanceJson": "{\n  \"baseFontSizeAction\": false\n}",
+   "state": {
+    "cssVar": "10px",
+    "zoom": 1,
+    "config": [
+     "baseFontSizeAction"
+    ]
+   }
+  }
+ },
+ "s08-custom-icon": {
+  "row": {
+   "name": "Custom app icon",
+   "desc": "Set a custom icon for the app",
+   "html": "<div class=\"setting-item-info\"><div class=\"setting-item-name\">Custom app icon</div><div class=\"setting-item-description\">Set a custom icon for the app</div></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Restore default\" style=\"display: none;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-rotate-ccw\"><path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\"></path><path d=\"M3 3v5h5\"></path></svg></div><button>Choose</button><button class=\"mod-cta\" style=\"display: none;\">Relaunch</button></div>",
+   "controls": [
+    {
+     "tag": "DIV",
+     "text": "",
+     "aria": "Restore default",
+     "cls": "clickable-icon extra-setting-button",
+     "shown": false,
+     "rect": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0
+     }
+    },
+    {
+     "tag": "BUTTON",
+     "text": "Choose",
+     "aria": null,
+     "cls": "",
+     "shown": true,
+     "rect": {
+      "x": 769.05,
+      "y": 579.23,
+      "w": 66.96,
+      "h": 30
+     }
+    },
+    {
+     "tag": "BUTTON",
+     "text": "Relaunch",
+     "aria": null,
+     "cls": "mod-cta",
+     "shown": false,
+     "rect": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0
+     }
+    }
+   ]
+  },
+  "hookPop": [
+   "@electron/remote",
+   "electron.remote"
+  ],
+  "hookVault": [
+   "@electron/remote",
+   "electron.remote"
+  ],
+  "chooser": null,
+  "ipcPop": [
+   {
+    "m": "sendSync",
+    "a": "[\"REMOTE_BROWSER_GET_BUILTIN\",\"4-2\",\"dialog\",null]"
+   },
+   {
+    "m": "sendSync",
+    "a": "[\"REMOTE_BROWSER_GET_BUILTIN\",\"4-2\",\"dialog\",null]"
+   }
+  ],
+  "ipcVault": [
+   {
+    "m": "sendSync",
+    "a": "[\"REMOTE_BROWSER_GET_BUILTIN\",\"4-1\",\"dialog\",null]"
+   },
+   {
+    "m": "sendSync",
+    "a": "[\"REMOTE_BROWSER_GET_BUILTIN\",\"4-1\",\"dialog\",null]"
+   },
+   {
+    "m": "sendSync",
+    "a": "[\"REMOTE_BROWSER_GET_BUILTIN\",\"4-1\",\"dialog\",null]"
+   },
+   {
+    "m": "@electron/remote.showOpenDialogSync",
+    "a": "[{\"title\":\"Custom app icon\",\"properties\":[\"openFile\",\"dontAddToRecent\"],\"filters\":[{\"name\":\"PNG/ICO/ICNS\",\"extensions\":[\"png\",\"ico\",\"icns\"]}]}]"
+   },
+   {
+    "m": "sendSync",
+    "a": "[\"set-icon\",\"icon.png\",{\"type\":\"Buffer\",\"data\":[137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,64,0,0,0,64,8,6,0,0,0,170,105,113,222,0,0,0,236,73,68,65,84,120,1,236,147,65,10,194,64,16,4,163,248,8,63,231,235,252,156,143,16,244,62,48,12,141,23,83,83,129,28,54,59,11,219,213,149,235,177,252,17,192,114,1,14,13,208,128,229,4,218,95,224,245,184,125,72,111,215,115,11,160,59,64,251,46,0,90,163,105,30"
+   },
+   {
+    "m": "sendSync",
+    "a": "[\"get-icon\"]"
+   },
+   {
+    "m": "sendSync",
+    "a": "[\"REMOTE_BROWSER_GET_BUILTIN\",\"4-1\",\"app\",null]"
+   },
+   {
+    "m": "sendSync",
+    "a": "[\"REMOTE_BROWSER_MEMBER_CALL\",\"4-1\",2,\"getPath\",[{\"type\":\"value\",\"value\":\"userData\"}]]"
+   }
+  ],
+  "chooseDiff": {
+   "vault": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "udd": {
+    "added": [
+     "icon.png"
+    ],
+    "removed": [],
+    "changed": [
+     "DIPS-wal",
+     "obsidian.json"
+    ]
+   }
+  },
+  "chooseText": {
+   "udd/DIPS-wal": "(browser state, dropped)",
+   "udd/obsidian.json": "{\"vaults\":{\"41f1f168ca11ae02\":{\"path\":\"C:\\\\Users\\\\ragtu\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\ee260a2aa19f2c19\\\\9de413a8-bf7f-462b-ba29-8abb2f96541e\\\\scratchpad\\\\probe5\\\\vault\",\"ts\":1793804274144,\"open\":true}},\"icon\":\"icon.png\"}"
+  },
+  "rowAfter": {
+   "name": "Custom app icon",
+   "desc": "",
+   "html": "<div class=\"setting-item-info\"><div class=\"setting-item-name\">Custom app icon</div><div class=\"setting-item-description\"><img width=\"64\" height=\"64\" src=\"app://287c63c739f92f60c8a7428ae0aa0151b36a/C:/Users/ragtu/AppData/Local/Temp/claude/ee260a2aa19f2c19/9de413a8-bf7f-462b-ba29-8abb2f96541e/scratchpad/probe5/udd/icon.png?1793804279432\"></div></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Restore default\" style=\"\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-rotate-ccw\"><path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\"></path><path d=\"M3 3v5h5\"></path></svg></div><button class=\"\">Choose</button><button class=\"mod-cta\" style=\"\">Relaunch</button></div>",
+   "controls": [
+    {
+     "tag": "DIV",
+     "text": "",
+     "aria": "Restore default",
+     "cls": "clickable-icon extra-setting-button",
+     "shown": true,
+     "rect": {
+      "x": 653,
+      "y": 534.23,
+      "w": 24,
+      "h": 24
+     }
+    },
+    {
+     "tag": "BUTTON",
+     "text": "Choose",
+     "aria": null,
+     "cls": "",
+     "shown": true,
+     "rect": {
+      "x": 685,
+      "y": 531.23,
+      "w": 66.96,
+      "h": 30
+     }
+    },
+    {
+     "tag": "BUTTON",
+     "text": "Relaunch",
+     "aria": null,
+     "cls": "mod-cta",
+     "shown": true,
+     "rect": {
+      "x": 759.96,
+      "y": 531.23,
+      "w": 76.04,
+      "h": 30
+     }
+    }
+   ]
+  },
+  "shot": "custom-icon-chosen.png",
+  "restoreDiff": {
+   "vault": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "udd": {
+    "added": [
+     "Local State",
+     "Network\\Network Persistent State",
+     "Preferences"
+    ],
+    "removed": [
+     "icon.png"
+    ],
+    "changed": [
+     "obsidian.json"
+    ]
+   }
+  },
+  "restoreText": {
+   "udd/Local State": "(browser state, dropped)",
+   "udd/Network\\Network Persistent State": "(browser state, dropped)",
+   "udd/Preferences": "(browser state, dropped)",
+   "udd/obsidian.json": "{\"vaults\":{\"41f1f168ca11ae02\":{\"path\":\"C:\\\\Users\\\\ragtu\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\ee260a2aa19f2c19\\\\9de413a8-bf7f-462b-ba29-8abb2f96541e\\\\scratchpad\\\\probe5\\\\vault\",\"ts\":1793804274144,\"open\":true}}}"
+  },
+  "ipcPopAfterRestore": [
+   {
+    "m": "sendSync",
+    "a": "[\"REMOTE_BROWSER_GET_BUILTIN\",\"4-2\",\"dialog\",null]"
+   },
+   {
+    "m": "sendSync",
+    "a": "[\"REMOTE_BROWSER_GET_BUILTIN\",\"4-2\",\"dialog\",null]"
+   }
+  ],
+  "rowAfterRestore": {
+   "name": "Custom app icon",
+   "desc": "Set a custom icon for the app",
+   "html": "<div class=\"setting-item-info\"><div class=\"setting-item-name\">Custom app icon</div><div class=\"setting-item-description\">Set a custom icon for the app</div></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Restore default\" style=\"display: none;\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-rotate-ccw\"><path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\"></path><path d=\"M3 3v5h5\"></path></svg></div><button class=\"\">Choose</button><button class=\"mod-cta\" style=\"\">Relaunch</button></div>",
+   "controls": [
+    {
+     "tag": "DIV",
+     "text": "",
+     "aria": "Restore default",
+     "cls": "clickable-icon extra-setting-button",
+     "shown": false,
+     "rect": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0
+     }
+    },
+    {
+     "tag": "BUTTON",
+     "text": "Choose",
+     "aria": null,
+     "cls": "",
+     "shown": true,
+     "rect": {
+      "x": 685.01,
+      "y": 579.23,
+      "w": 66.96,
+      "h": 30
+     }
+    },
+    {
+     "tag": "BUTTON",
+     "text": "Relaunch",
+     "aria": null,
+     "cls": "mod-cta",
+     "shown": true,
+     "rect": {
+      "x": 759.97,
+      "y": 579.23,
+      "w": 76.04,
+      "h": 30
+     }
+    }
+   ]
+  }
+ },
+ "finalAppearanceJson": "{}",
+ "s09-wheel-persist": {
+  "before": {
+   "hits": {
+    "vault.config.baseFontSizeAction": true
+   },
+   "ls": {},
+   "bodyStyle": "--zoom-factor: 1; --font-text-size: 16px; --indent-size: 4;"
+  },
+  "soon": {
+   "appearanceJson": "{\n  \"baseFontSizeAction\": true\n}",
+   "probe": {
+    "hits": {
+     "vault.config.baseFontSizeAction": true
+    },
+    "ls": {
+     "997df57c44b4735f-base-font-size": "18"
+    },
+    "bodyStyle": "--zoom-factor: 1; --font-text-size: 18px; --indent-size: 4;"
+   }
+  },
+  "after": {
+   "hits": {
+    "vault.config.baseFontSizeAction": true
+   },
+   "ls": {
+    "997df57c44b4735f-base-font-size": "18"
+   },
+   "bodyStyle": "--zoom-factor: 1; --font-text-size: 18px; --indent-size: 4;"
+  },
+  "afterCtrlUp": {
+   "appearanceJson": "{\n  \"baseFontSizeAction\": true\n}",
+   "body": "--zoom-factor: 1; --font-text-size: 18px; --indent-size: 4;"
+  },
+  "quit": true,
+  "afterQuit": {
+   "appearanceJson": "{\n  \"baseFontSizeAction\": true\n}",
+   "diff": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   }
+  },
+  "appearanceJson": "{\n  \"baseFontSizeAction\": true\n}",
+  "diff": {
+   "vault": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "udd": {
+    "added": [
+     "997df57c44b4735f.json",
+     "Local State",
+     "Network\\Network Persistent State",
+     "Network\\TransportSecurity",
+     "Preferences"
+    ],
+    "removed": [
+     "DIPS-wal",
+     "lockfile"
+    ],
+    "changed": [
+     "DIPS",
+     "Local Storage\\leveldb\\000003.log",
+     "Session Storage\\000003.log",
+     "WebStorage\\QuotaManager",
+     "WebStorage\\QuotaManager-journal"
+    ]
+   }
+  },
+  "text": {
+   "udd/997df57c44b4735f.json": "{\"x\":768,\"y\":296,\"width\":1024,\"height\":800,\"isMaximized\":false,\"devTools\":false,\"zoom\":0}",
+   "udd/Local State": "(browser state, dropped)",
+   "udd/Network\\Network Persistent State": "(browser state, dropped)",
+   "udd/Network\\TransportSecurity": "(browser state, dropped)",
+   "udd/Preferences": "(browser state, dropped)",
+   "udd/DIPS": "(browser state, dropped)",
+   "udd/WebStorage\\QuotaManager": "SQLite format 3\u0000\u0010\u0000\u0001\u0001\u0000@  \u0000\u0000\u0000\u0001\u0000\u0000\u0000\n\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0007\u0000\u0000\u0000\u0004\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0001\u0000.�\u0014\r\u000f�\u0000\t\u000bw\u0000\u000fg\u000f�\r�\r�\r\u0017\f�\fM\u000b�\u000bw\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000...",
+   "udd/WebStorage\\QuotaManager-journal": ""
+  }
+ },
+ "runs": "s01-s06 one launch; s07 a second (ONLY_STEPS); s08 a third; s09 a fourth with QUICK_ON=1 (the toggle on at launch). Windows 11, Obsidian 1.14.5 (installer 1.12.7 per the UA), each with its own --user-data-dir."
+}
