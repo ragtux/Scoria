@@ -4,7 +4,8 @@
 //! inclusive counts, a flat list of property keys with a type icon and a
 //! note count, and a structural tree of headings with the one holding the
 //! cursor marked. Each pane's sort order, hierarchy toggle, folds and
-//! search filter are applied here, and nothing here touches gpui.
+//! search filter are applied here, and so is what the arrow keys do to
+//! the three trees ([`tree_key`]); nothing here touches gpui.
 
 use scoria_cache::{PropertyEntry, TagEntry};
 use scoria_formats::properties::PropertyType;
@@ -501,9 +502,146 @@ fn find_all(text: &str, query: &str) -> Vec<Range<usize>> {
     out
 }
 
+/// A visible row as the panes' keyboard sees it: how deep it sits and
+/// whether it has a fold to open or close.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct NavRow {
+    pub depth: usize,
+    pub has_children: bool,
+    pub collapsed: bool,
+}
+
+/// The four keys the three panes' tree takes (2026-11-04 probe).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NavKey {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+/// What a key does to the tree: the ring moves to a visible row, or the
+/// focused row folds or opens.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NavMove {
+    Focus(usize),
+    Fold(usize),
+    Unfold(usize),
+}
+
+/// One arrow key on a pane's visible rows with the ring on `focused` (an
+/// index into `rows`, or none): Down and Up step one row and stop at the
+/// ends, starting from the first row (Down) or the last (Up) when no row
+/// has the ring; Left folds an open row with children and otherwise
+/// climbs to the parent; Right opens a folded row and does nothing else
+/// (it does not step into the children). What Obsidian 1.14.5's Tags,
+/// All properties and Outline trees did under real keys.
+pub fn tree_key(rows: &[NavRow], focused: Option<usize>, key: NavKey) -> Option<NavMove> {
+    let last = rows.len().checked_sub(1)?;
+    let focused = focused.filter(|&ix| ix <= last);
+    match (key, focused) {
+        (NavKey::Down, None) => Some(NavMove::Focus(0)),
+        (NavKey::Up, None) => Some(NavMove::Focus(last)),
+        (NavKey::Down, Some(ix)) => (ix < last).then_some(NavMove::Focus(ix + 1)),
+        (NavKey::Up, Some(ix)) => ix.checked_sub(1).map(NavMove::Focus),
+        (NavKey::Left, Some(ix)) => {
+            let row = rows[ix];
+            if row.has_children && !row.collapsed {
+                return Some(NavMove::Fold(ix));
+            }
+            rows[..ix]
+                .iter()
+                .rposition(|r| r.depth < row.depth)
+                .map(NavMove::Focus)
+        }
+        (NavKey::Right, Some(ix)) => {
+            let row = rows[ix];
+            (row.has_children && row.collapsed).then_some(NavMove::Unfold(ix))
+        }
+        (NavKey::Left | NavKey::Right, None) => None,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn nav(depth: usize, has_children: bool, collapsed: bool) -> NavRow {
+        NavRow {
+            depth,
+            has_children,
+            collapsed,
+        }
+    }
+
+    /// The probe's tags pane: `common`, `project` (open, holding `alpha`
+    /// and `beta`), `topic`.
+    fn nav_rows() -> Vec<NavRow> {
+        vec![
+            nav(0, false, false),
+            nav(0, true, false),
+            nav(1, false, false),
+            nav(1, false, false),
+            nav(0, false, false),
+        ]
+    }
+
+    #[test]
+    fn down_and_up_start_at_the_ends_and_stop_there() {
+        let rows = nav_rows();
+        assert_eq!(tree_key(&rows, None, NavKey::Down), Some(NavMove::Focus(0)));
+        assert_eq!(tree_key(&rows, None, NavKey::Up), Some(NavMove::Focus(4)));
+        assert_eq!(
+            tree_key(&rows, Some(0), NavKey::Down),
+            Some(NavMove::Focus(1))
+        );
+        assert_eq!(
+            tree_key(&rows, Some(3), NavKey::Up),
+            Some(NavMove::Focus(2))
+        );
+        assert_eq!(tree_key(&rows, Some(4), NavKey::Down), None);
+        assert_eq!(tree_key(&rows, Some(0), NavKey::Up), None);
+        assert_eq!(tree_key(&[], None, NavKey::Down), None);
+        // A ring left on a row the filter or a fold has since hidden
+        // starts over, as if none had it.
+        assert_eq!(
+            tree_key(&rows, Some(9), NavKey::Down),
+            Some(NavMove::Focus(0))
+        );
+    }
+
+    #[test]
+    fn left_folds_an_open_row_and_otherwise_climbs() {
+        let rows = nav_rows();
+        assert_eq!(
+            tree_key(&rows, Some(1), NavKey::Left),
+            Some(NavMove::Fold(1))
+        );
+        assert_eq!(
+            tree_key(&rows, Some(3), NavKey::Left),
+            Some(NavMove::Focus(1))
+        );
+        // A top-level leaf has nowhere to go.
+        assert_eq!(tree_key(&rows, Some(0), NavKey::Left), None);
+        let folded = [nav(0, false, false), nav(1, true, true)];
+        assert_eq!(
+            tree_key(&folded, Some(1), NavKey::Left),
+            Some(NavMove::Focus(0))
+        );
+        assert_eq!(tree_key(&rows, None, NavKey::Left), None);
+    }
+
+    #[test]
+    fn right_only_opens_a_folded_row() {
+        let rows = nav_rows();
+        assert_eq!(tree_key(&rows, Some(1), NavKey::Right), None);
+        assert_eq!(tree_key(&rows, Some(2), NavKey::Right), None);
+        let folded = [nav(0, true, true)];
+        assert_eq!(
+            tree_key(&folded, Some(0), NavKey::Right),
+            Some(NavMove::Unfold(0))
+        );
+    }
 
     fn entry(name: &str, count: usize, files: &[&str]) -> (String, TagEntry) {
         (

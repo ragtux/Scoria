@@ -63,6 +63,7 @@ still unprobed, which are collected in each section rather than here.
 | ~~9~~ | [[#Graph view (`.obsidian/graph.json` write-back)\|graph.json write-back]] | ~~50 min~~ **done** | run over CDP on 2026-10-25 (`graph-writeback.mjs`): every section expanded, every control driven |
 | ~~10~~ | [[#Remote images — human pass\|Remote images]] | ~~50 min~~ **done** | run over CDP on 2026-10-25 (`raw-html-remote.mjs`), measured rather than eyeballed |
 | ~~11~~ | [[#Bases: the format, the write-back and the expression language\|Bases]] | ~~2 h~~ **done** | run over CDP on 2026-10-25 (`bases.mjs`, `bases-expr.mjs`): phase-4 groundwork — nothing about Bases had ever been observed |
+| ~~12~~ | [[#Dock panes: row menus, keyboard, the outline highlight\|Dock panes]] | ~~20 min~~ **done** | run over CDP on 2026-11-04 (`dock-menus-keys.mjs`) on Windows: real right clicks and keys, the listeners read off each row |
 
 ## How to record a result
 
@@ -543,3 +544,18 @@ Two things to know before re-running it. pdf.js keeps a per-document record in `
    - Record: the exact clipboard bytes of *Copy*, *Copy as quote* and *Copy link to selection*; the broken file's `0 of 0` toolbar with no error; that the page comes back after a restart and the zoom does not.
 
 **Left out, deliberately:** annotations and the annotation editor, which the viewer builds hidden; printing and `workspace:export-pdf`; a password-protected PDF; a PDF with page labels; and the *Save current position in document* button, which did nothing visible here and needs a hand pass.
+
+### Dock panes: row menus, keyboard, the outline highlight
+
+**Done 2026-11-04** over CDP on Obsidian 1.14.5, Windows 11
+(`tools/obsidian-probe/dock-menus-keys.mjs`, raw run in
+`results/2026-11-04-dock-menus-keys.json`); the findings are
+[[Specification#Observed dock pane menus and keyboard, Obsidian 1.14.5]] and
+the highlight paragraph of
+[[Specification#Observed outline pane behavior, Obsidian 1.14.4 (installer build 1.13.7)]].
+The 2026-10-22 `dock-panes.mjs` run had seen no menu on a tag or outline row and
+could not say why; this block settles it and the three panes' keyboard.
+
+1. ~~**Row menus.** A real right click (pointer moved first) on two or three rows of each pane, the All properties row as the control; a capture listener on the document recording each `contextmenu` and whether it was default-prevented; `getEventListeners` up each row's ancestors.~~ The tags and outline rows have no `contextmenu` listener and raise nothing.
+2. ~~**Keyboard.** Each pane made the active leaf four ways (tab header, empty space, a row click, `setActiveLeaf`); Up, Down, Left, Right, Home, End, PageUp, Shift+Down, Space, Enter, Ctrl+Enter, Escape, F2, Delete and Tab, with the ring, the tree's `focusedItem`, the active leaf, the editor's cursor and the search query read after each.~~ One tree keyboard for all three.
+3. ~~**The ring and the highlight.** The computed style of a `has-focus` row and of the outline filter's `span.suggestion-highlight` in both themes, with the stylesheet rules that select them.~~

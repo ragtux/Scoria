@@ -5340,8 +5340,9 @@ matches, Props with one), `tag:#project` for the parent row (4 results, the
 search's `tag:` matching nested tags) and `tag:#project/beta/deep` for the
 depth-2 row; the tags pane kept no selected row and its state did not change.
 A click on the row `a` with focus then in the search input: ArrowDown and
-Enter did nothing to the pane. A right click raised no menu through CDP (as
-on the file-properties rows). The tags pane does not depend on the active
+Enter did nothing to the pane. A right click raises no menu: the row has no
+`contextmenu` handler at all (see
+[[#Observed dock pane menus and keyboard, Obsidian 1.14.5]]). The tags pane does not depend on the active
 note: switching notes left it unchanged.
 
 **Unprobed:** whether the search filter matches the full path or the last
@@ -5425,7 +5426,7 @@ right-click menu is Rename (`lucide-edit-3`), Property type (`lucide-menu`,
 `lucide-trash-2`), as recorded above — this run reached it through a CDP
 right click.
 
-**Unprobed:** keyboard navigation of the list; whether the filter matches
+**Unprobed:** whether the filter matches
 beyond a prefix; the tooltip of a long key; a `types.json` type that
 contradicts a value's shape; the `file` and `folder` widgets' icons; what the
 pane shows in a vault with no properties.
@@ -5502,7 +5503,9 @@ so the heading's line sat at 348 px (344, and 261 for the four-line
 heading) from the top of the 682 px tall scroller — centred. In reading mode
 a click scrolled the heading to the top edge of `.markdown-preview-view`
 (the `h1`/`h4` at 0 and −1 px, `getScroll()` 94.0 and 49.0, the heading's
-line) and focused the preview. A right click raised no menu through CDP.
+line) and focused the preview. A right click raises no menu: the row has no
+`contextmenu` handler (see
+[[#Observed dock pane menus and keyboard, Obsidian 1.14.5]]).
 
 **Folding.** Clicking `Top heading`'s triangle gave its `tree-item`
 `is-collapsed` and removed its descendants from the DOM (35 rows became 30);
@@ -5516,6 +5519,12 @@ the query case-insensitively *and their ancestors* (`Top heading` stayed for
 its matching children), hid the rest with `is-filtered-out`, and wrapped each
 match in `span.suggestion-highlight` (`Second`, `second`); `zzz` emptied the
 list with no text; Escape hid the box, cleared the query and showed all rows.
+The highlight is bold and nothing else (read 2026-11-04 on 1.14.5): the only
+rule that reaches it is `.suggestion-highlight { font-weight: bold }`, so it
+computes to weight 700 on the row's own 400 with the row's colour, no
+background and no decoration — `rgb(92, 92, 92)` (`--text-muted`) in the light
+theme, `rgb(218, 218, 218)` (`--text-normal`) in the dark one with the row
+under the pointer. No token is involved. The tags pane's filter wraps nothing.
 
 **Switching notes and edits.** Opening `NoHeadings.md` replaced the list
 with `div.pane-empty` "No headings found." (13 px, `--text-faint`,
@@ -5526,11 +5535,59 @@ with nothing marked (cursor at line 0, inside the frontmatter); returning to
 heading` changed the row to `Top heading X` 2.1 s later, at the moment the
 file reached disk — the outline follows the metadata cache, not the buffer.
 
-**Unprobed:** keyboard navigation; dragging a row (`draggable`); the
+**Unprobed:** dragging a row (`draggable`); the
 `followCursor` scroll when the row is above the view (only a row below was
 tried); headings inside code fences or callouts; a heading with a trailing
 `#`; what the pane does for a canvas or base leaf; the reading-mode marking
 with `followCursor` true; the text of an HTML heading.
+
+## Observed dock pane menus and keyboard, Obsidian 1.14.5
+
+Observed on 2026-11-04 on Windows 11 over CDP with real input
+(`tools/obsidian-probe/dock-menus-keys.mjs`, raw results in
+`tools/obsidian-probe/results/2026-11-04-dock-menus-keys.json`): right clicks
+through `Input.dispatchMouseEvent` with `button: "right"` after moving the
+pointer there, keys through `Input.dispatchKeyEvent`, a capture-phase
+listener on the document recording whether each `contextmenu` and `keydown`
+reached the page and whether anything called `preventDefault`, and
+`getEventListeners` on each row and its ancestors. The All properties row,
+whose menu was known, was the control.
+
+**Row menus.** The All properties row carries a `contextmenu` listener on its
+`tree-item-self`; a right click on `status` was default-prevented and raised
+the known `.menu` (Rename, Property type ▸, separator, Delete property), as
+did `count`; on `tags`, `aliases` and `cssclasses` the same menu came up with
+Rename and Delete property `is-disabled` and Property type live. The tags row
+(`common`, `project`, `project/alpha`) and the outline row (`Top heading`,
+`Second level`) have **no** `contextmenu` listener anywhere up to the
+workspace (only `click` and `auxclick`); the event reached the row, nobody
+prevented it, and no menu of any kind appeared. Obsidian has no context menu
+on those rows, so there is nothing to build.
+
+**Keyboard.** The three panes share one tree keyboard, live while the pane is
+the active leaf — after a click on its dock tab, a click in its empty space,
+or `setActiveLeaf`; `document.activeElement` stays `body` throughout, the
+keys reach the leaf's scope and the handled ones are default-prevented.
+A row click does not make the leaf active (a tag or property row hands the
+keyboard to the search box, a heading row to the editor) and does not move
+the ring.
+
+| Key | What it does |
+| --- | --- |
+| Down | the ring (`has-focus` on the `tree-item-self`) moves to the next visible row; with no ring it lands on the first row; on the last row nothing happens (no wrap) |
+| Up | the previous visible row; with no ring the **last** row; nothing on the first |
+| Left | on an open row with children: folds it (`is-collapsed`), the ring stays; on a child row: the ring climbs to the parent; on a top-level row without children: nothing |
+| Right | on a folded row: opens it; anything else, an open parent included: nothing (it does not step into the children) |
+| Enter, Space | the row's click: a tag searches `tag:#path`, a property `["key"]` (the search leaf active, its input focused), a heading puts the editor's cursor on the heading's line, column 0, with the editor focused |
+| Home, End, PageUp, Shift+Down, Escape, Delete | nothing (not prevented, the ring stays) |
+| F2 | not the pane's: the global `workspace:edit-file-title` hotkey took it to the note's title |
+
+The ring is `box-shadow: 0 0 0 2px var(--background-modifier-border-focus)`
+(`#555555` in the dark theme) on the row's own 8 px radius, from
+`body:not(.is-phone) .workspace-leaf.mod-active .tree-item-self.has-focus`:
+drawn only while the leaf is active, though the class stays on the row after
+the keyboard leaves and the ring comes back with it. The row's background and
+text are unchanged.
 
 ## Observed Bases write behavior, Obsidian 1.14.5 (installer build 1.13.7)
 

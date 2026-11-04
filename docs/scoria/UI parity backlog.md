@@ -1083,12 +1083,23 @@ runs before `capture_key_down`, so a menu that wants Escape before anything else
 keys. Everything else these panes do landed on 2026-10-22
 ([[Development#Tags, All properties and Outline panes, 2026-10-22]]).
 
-**The properties half landed 2026-11-02**: a right click on an All properties row raises Rename, Property type ▸ (the six types, the current one checked, writing `types.json`), a separator, Delete property in the warning colour; Rename prompts for the key and rewrites it in every note that carries it with the entry kept in place, Delete removes it from every note, both skipping a note with unsaved edits and taking the `types.json` entry along. **Still out**: the tag and outline rows, which wait on a probe, and the keyboard.
+**The properties half landed 2026-11-02**: a right click on an All properties row raises Rename, Property type ▸ (the six types, the current one checked, writing `types.json`), a separator, Delete property in the warning colour; Rename prompts for the key and rewrites it in every note that carries it with the entry kept in place, Delete removes it from every note, both skipping a note with unsaved edits and taking the `types.json` entry along.
+
+**Landed 2026-11-04**, after a probe with real input
+([[Specification#Observed dock pane menus and keyboard, Obsidian 1.14.5]]): the tag and
+outline rows have no context menu in Obsidian -- no `contextmenu` listener at all -- so none
+was built; Rename and Delete property are disabled on `tags`, `aliases` and `cssclasses`, as
+observed; and the three panes take the keyboard once their dock tab or their empty space is
+clicked: Down and Up move a 2 px `--background-modifier-border-focus` ring (first or last row
+when none has it, no wrap), Left folds an open row or climbs to the parent, Right opens a
+folded one, Enter and Space do what a click does. See
+[[Development#Dock pane keyboard and the outline highlight, 2026-11-04]].
 
 **Obsidian.** [[Specification#Observed all properties pane behavior, Obsidian 1.14.4 (installer build 1.13.7)]]:
 a property row's menu is Rename (`lucide-edit-3`), Property type (`lucide-menu`, with a submenu),
-a separator, Delete property (`is-warning`, `lucide-trash-2`). The tag and outline rows raised no
-menu over CDP and their keyboard was not probed, so those halves wait on a probe.
+a separator, Delete property (`is-warning`, `lucide-trash-2`). The tag and outline rows raise no
+menu and the three panes share one tree keyboard:
+[[Specification#Observed dock pane menus and keyboard, Obsidian 1.14.5]].
 
 **Fix.** The property menu on `canvas::menu::context_menu`, with Rename and Delete rewriting every
 note's frontmatter through the text crate and Property type writing `types.json`; probe the tag and
@@ -1104,6 +1115,12 @@ is the parity point; the inert first click is a flag in Obsidian that starts out
 rows -- a defect, not a behaviour -- and Scoria does not reproduce it. The outline's match colour
 stays the accent until a probe reads `suggestion-highlight`'s computed style; that single
 measurement is all that is left, and it is listed in [[Interaction probes]] rather than here.
+
+**Landed 2026-11-04**: the measurement is in (block 12 of [[Interaction probes]]). The only rule
+on `span.suggestion-highlight` is `font-weight: bold` -- no colour, no background, no token -- so
+a match is bold in the row's own colour, muted at rest and brightened under the pointer, in both
+themes; the accent is gone. See
+[[Development#Dock pane keyboard and the outline highlight, 2026-11-04]].
 
 **Scoria.** "Expand all" folds every tag on its first click and opens them on the second, and the
 outline's search matches are drawn in the accent colour.

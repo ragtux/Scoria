@@ -408,6 +408,65 @@ generated files are some 17,000 lines, mostly because JSX and TSX are
 clones of markup with JavaScript inside; they cost nothing until a fence
 names them, since a grammar's regexes compile on first use.
 
+### Dock pane keyboard and the outline highlight, 2026-11-04
+
+Probed first, on Windows this time: `tools/obsidian-probe/dock-menus-keys.mjs`
+drove Obsidian 1.14.5 with its own `--user-data-dir` on port 9235 (raw run in
+`tools/obsidian-probe/results/2026-11-04-dock-menus-keys.json`, two screenshots
+beside it), and the findings are
+[[Specification#Observed dock pane menus and keyboard, Obsidian 1.14.5]] and the
+highlight paragraph of the outline section. The 2026-10-22 run had seen no menu
+on a tag or outline row and left open whether its right click had even arrived;
+this one moved the pointer first, recorded every `contextmenu` on the document in
+the capture phase with whether it was default-prevented, and read
+`getEventListeners` up each row's ancestors. The answer is plain: those rows
+have no `contextmenu` listener, the event arrived and nobody took it, so there
+is no menu to build. The property row, the control, did raise its menu, and
+showed something new: on `tags`, `aliases` and `cssclasses` Rename and Delete
+property are `is-disabled`. The keyboard was never focus on an element --
+`document.activeElement` stays `body` -- but the active leaf's scope: once the
+pane is the active leaf (its dock tab, its empty space), Down and Up move a
+`has-focus` ring, starting at the first row or the last, stopping at the ends;
+Left folds an open parent or climbs to the parent; Right only opens a folded
+row; Enter and Space are the row's click; everything else is not the pane's.
+The highlight is one rule, `.suggestion-highlight { font-weight: bold }`.
+
+Built: `panes::tree_key` is the keyboard as a function of the visible rows
+(`NavRow`: depth, children, folded) and the ringed index, returning a
+`NavMove`, unit-tested on the probe's tags tree. The workspace has one
+`dock_tree_focus` handle for the three lists, which carry the `DockTree` key
+context and its five actions (`dock_tree::TreeUp`, `TreeDown`, `TreeLeft`,
+`TreeRight`, `TreeActivate` on enter and space); a press anywhere in a list, or
+a click on the pane's dock tab, takes the keyboard, and a row's own click then
+hands it on (the search box, the editor) as before. Each pane remembers its
+ringed row by its own key -- the tag's lowercased path, the property's name,
+the heading's index, which goes with the note as the folds do -- and the ring,
+a 2 px `--background-modifier-border-focus` border laid 2 px outside the row
+with a 10 px radius so nothing moves, is drawn only while the handle holds
+focus, as Obsidian draws it only in the `mod-active` leaf. (It was a
+zero-blur spread `BoxShadow` first, Obsidian's own shape, and on this machine
+that painted nothing at all; the PDF find bar's miss ring is drawn the same
+way and is worth a look on Windows.) The tags and properties lists gained scroll handles so the
+ring stays in view. `keyboard_is_parked` treats the handle as parked once its
+pane is off screen. The outline's matches are bold in the row's own colour
+rather than the accent, and the property menu disables Rename and Delete on the
+three reserved keys. The dump's `tags_options`, `properties_options` and
+`outline_options` gained `focused`, and `right` gained `tree_keyboard`.
+
+Seen working over the control socket on a debug build, on a copy of the
+probe's vault: the Tags tab's click gives the tree the keyboard (`DockTree` on
+the focus stack), Down twice rings `common` then `project`, Left folds
+`project` and Right opens it, Up stops on `common`, Enter searches
+`tag:#project` with the search box focused; on All properties Up from nothing
+rings the last key (`status`), Space searches `["status"]`; on the Outline
+Left climbs from `Third level under second` to `Second level`, a second Left
+folds it, Right opens it, Enter and a row click both put the cursor on the
+heading and the editor in focus. The ring was checked on a screenshot.
+
+Not built, on purpose: Escape, Home, End, F2 and Delete in the panes, which
+Obsidian leaves alone (F2 reaching the note title is the global hotkey, which
+Scoria already has).
+
 ### The command line, 2026-11-02
 
 The last line of [[#Parity (phase 4)]]. There was nothing to clone here:

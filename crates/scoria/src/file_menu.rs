@@ -458,8 +458,13 @@ pub fn items(target: &Target) -> Vec<Item> {
         // Observed through a CDP right click on a property row: Rename
         // (`lucide-edit-3`, which is `pen-line`), Property type (`lucide-menu`,
         // a submenu of the six types), a separator, Delete property
-        // (`is-warning`, `lucide-trash-2`).
-        Target::Property { ty, .. } => {
+        // (`is-warning`, `lucide-trash-2`). On `tags`, `aliases` and
+        // `cssclasses` Rename and Delete property are `is-disabled`
+        // (2026-11-04 probe); Property type stays live.
+        Target::Property { name, ty } => {
+            let reserved = ["tags", "aliases", "cssclasses"]
+                .iter()
+                .any(|k| name.eq_ignore_ascii_case(k));
             use scoria_formats::properties::PropertyType as T;
             let types = [
                 ("Checkbox", "square-check", T::Checkbox),
@@ -483,10 +488,14 @@ pub fn items(target: &Target) -> Vec<Item> {
                 })
                 .collect();
             vec![
-                item("Rename", "pen-line", S::Action, P::RenameProperty),
+                Item {
+                    disabled: reserved,
+                    ..item("Rename", "pen-line", S::Action, P::RenameProperty)
+                },
                 type_row,
                 Item {
                     warning: true,
+                    disabled: reserved,
                     ..item("Delete property", "trash-2", S::Remove, P::DeleteProperty)
                 },
             ]
@@ -1269,7 +1278,22 @@ mod tests {
             ]
         );
         assert!(items[2].warning);
+        assert!(!items[0].disabled && !items[2].disabled);
         assert_eq!(target.path(), "");
+    }
+
+    /// The three keys Obsidian defines keep their menu, but Rename and
+    /// Delete property are disabled on them.
+    #[test]
+    fn the_reserved_keys_cannot_be_renamed_or_deleted() {
+        for name in ["tags", "aliases", "cssclasses"] {
+            let items = items(&Target::Property {
+                name: name.into(),
+                ty: None,
+            });
+            let disabled: Vec<bool> = items.iter().map(|i| i.disabled).collect();
+            assert_eq!(disabled, [true, false, true], "{name}");
+        }
     }
 
     /// The editor click the plain menu came from: no selection, plain text.

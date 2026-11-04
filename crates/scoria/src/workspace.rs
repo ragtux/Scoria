@@ -85,6 +85,11 @@ actions!(
     [ToggleMode, GoBack, GoForward, OpenSearch, OpenGraph]
 );
 
+actions!(
+    dock_tree,
+    [TreeUp, TreeDown, TreeLeft, TreeRight, TreeActivate]
+);
+
 /// Runs the command with this Obsidian id (bound from the registry's hotkeys).
 #[derive(Debug, Clone, PartialEq, Action)]
 #[action(namespace = workspace, no_json)]
@@ -379,6 +384,18 @@ pub fn bind_keys(cx: &mut App, registry: &CommandRegistry) {
         })
         .collect();
     cx.bind_keys(bindings);
+    // The Tags, All properties and Outline trees, while one has the
+    // keyboard: the arrows walk and fold, Enter and Space do what a click
+    // does. Home, End, Escape, F2 and Delete are not theirs (2026-11-04).
+    let tree = Some("DockTree");
+    cx.bind_keys([
+        KeyBinding::new("up", TreeUp, tree),
+        KeyBinding::new("down", TreeDown, tree),
+        KeyBinding::new("left", TreeLeft, tree),
+        KeyBinding::new("right", TreeRight, tree),
+        KeyBinding::new("enter", TreeActivate, tree),
+        KeyBinding::new("space", TreeActivate, tree),
+    ]);
     crate::reading::view::bind_keys(cx);
 }
 
@@ -1310,6 +1327,10 @@ struct TagPaneState {
     /// Folded tags by lowercased path.
     collapsed: HashSet<String>,
     sort_menu_open: bool,
+    /// The row the keyboard is on (Obsidian's `has-focus`), by lowercased
+    /// path; it stays when the pane loses the keyboard.
+    focused: Option<String>,
+    scroll: ScrollHandle,
 }
 
 impl Default for TagPaneState {
@@ -1320,6 +1341,8 @@ impl Default for TagPaneState {
             show_search: false,
             collapsed: HashSet::new(),
             sort_menu_open: false,
+            focused: None,
+            scroll: ScrollHandle::new(),
         }
     }
 }
@@ -1331,6 +1354,9 @@ struct PropertyPaneState {
     sort: PaneSort,
     show_search: bool,
     sort_menu_open: bool,
+    /// The keyboard's row, by key.
+    focused: Option<String>,
+    scroll: ScrollHandle,
 }
 
 /// The Outline leaf's state: `followCursor` and `showSearch` from
@@ -1352,6 +1378,9 @@ struct OutlinePaneState {
     /// when `follow_cursor` is on.
     scroll_pending: bool,
     scroll: ScrollHandle,
+    /// The keyboard's row, by index into the outline; it goes with the
+    /// note, as the folds do.
+    focused: Option<usize>,
 }
 
 /// Mentions computed off the UI thread for one open note.
@@ -2795,6 +2824,12 @@ const LAST_OPEN_FILES_KEPT: usize = 10;
 
 pub struct Workspace {
     focus_handle: FocusHandle,
+    /// The keyboard of the right dock's Tags, All properties and Outline
+    /// trees (whichever is on screen): Obsidian's active side leaf.
+    dock_tree_focus: FocusHandle,
+    /// Whether that handle held focus at the last draw, which is when the
+    /// focused row wears its ring (`.workspace-leaf.mod-active` only).
+    dock_tree_keyboard: bool,
     /// The desktop's colour scheme as the window last reported it, which
     /// is what `theme: "system"` follows.
     system_dark: bool,
@@ -3408,6 +3443,8 @@ impl Workspace {
         });
         let mut ws = Workspace {
             focus_handle: cx.focus_handle(),
+            dock_tree_focus: cx.focus_handle(),
+            dock_tree_keyboard: false,
             system_dark: true,
             refocus_main: false,
             state: None,
@@ -5606,6 +5643,11 @@ impl Workspace {
         if window.focused(cx).is_none() || self.focus_handle.is_focused(window) {
             return true;
         }
+        // The dock's tree handle is out of the dispatch tree once its pane
+        // is hidden or another tab took the dock.
+        if self.dock_tree_focus.is_focused(window) && !self.dock_tree_on_screen() {
+            return true;
+        }
         let painted = self.main_view(cx);
         let unpainted =
             |view: MainView, handle: &FocusHandle| painted != view && handle.is_focused(window);
@@ -6164,6 +6206,7 @@ impl Workspace {
         self.outline_state.collapsed.clear();
         self.outline_state.file = None;
         self.outline_state.active = None;
+        self.outline_state.focused = None;
         self.backlink_sections.clear();
         self.outgoing_sections.clear();
         let current = self.current.clone();
@@ -6193,6 +6236,7 @@ impl Workspace {
         // Folds belong to the note: another note's outline opens unfolded.
         if self.outline_state.file.as_deref() != Some(path.as_str()) {
             self.outline_state.collapsed.clear();
+            self.outline_state.focused = None;
             self.outline_state.file = Some(path.clone());
             self.outline_state.scroll_pending = true;
         }
@@ -11694,10 +11738,8 @@ impl Workspace {
                         self.files_changed(vec![absolute], cx);
                     }
                 } else {
-                    match state.create_note(&path, &content) {
-                        Ok(changes) => self.after_changes(changes, cx),
-                        Err(err) => return Err(err),
-                    }
+                    let changes = state.create_note(&path, &content)?;
+                    self.after_changes(changes, cx);
                 }
                 if !silent {
                     self.open_file(path, None, cx);
@@ -11795,6 +11837,7 @@ impl Workspace {
 
         let mut right = Map::new();
         right.insert("visible".into(), json!(self.right_visible));
+        right.insert("tree_keyboard".into(), json!(self.dock_tree_keyboard));
         right.insert("width".into(), json!(self.right_width));
         right.insert(
             "tab".into(),
@@ -11825,6 +11868,7 @@ impl Workspace {
                 "show_search": self.outline_state.show_search,
                 "query": self.outline_filter.read(cx).text(),
                 "active": self.outline_state.active,
+                "focused": self.outline_state.focused,
                 "scroll": -f32::from(self.outline_state.scroll.offset().y),
             }),
         );
@@ -11864,6 +11908,7 @@ impl Workspace {
                 "show_search": self.tag_state.show_search,
                 "query": self.tag_filter.read(cx).text(),
                 "collapsed": self.tag_state.collapsed.len(),
+                "focused": self.tag_state.focused,
             }),
         );
         put_capped(
@@ -11888,6 +11933,7 @@ impl Workspace {
                 "sort": self.property_state.sort.as_str(),
                 "show_search": self.property_state.show_search,
                 "query": self.property_filter.read(cx).text(),
+                "focused": self.property_state.focused,
             }),
         );
 
@@ -13499,6 +13545,172 @@ impl Workspace {
         cx.notify();
     }
 
+    // ----- the three trees' keyboard ------------------------------------------
+
+    /// Whether the right dock shows one of the trees the keyboard walks
+    /// (an Outline saying "No headings found." has no tree).
+    fn dock_tree_on_screen(&self) -> bool {
+        self.right_visible
+            && match self.right_tab {
+                RightTab::Tags | RightTab::Properties => true,
+                RightTab::Outline => !self.outline.is_empty(),
+                RightTab::Backlinks | RightTab::Outgoing => false,
+            }
+    }
+
+    /// Gives the tree on screen the keyboard: what a click on its dock tab
+    /// or in its empty space does in Obsidian, where it makes the leaf the
+    /// active one.
+    fn focus_dock_tree(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if self.dock_tree_on_screen() {
+            window.focus(&self.dock_tree_focus, cx);
+            cx.notify();
+        }
+    }
+
+    /// A tree's list: the "DockTree" key context on the dock's handle, the
+    /// arrows and Enter bound to it, and a press anywhere in it taking the
+    /// keyboard. A row's own click runs after and moves the keyboard on
+    /// where Obsidian's does (the search box, the editor).
+    fn dock_tree(&self, cx: &mut Context<Self>) -> gpui::Div {
+        div()
+            .key_context("DockTree")
+            .track_focus(&self.dock_tree_focus)
+            .on_action(
+                cx.listener(|this, _: &TreeUp, _, cx| this.dock_tree_key(panes::NavKey::Up, cx)),
+            )
+            .on_action(
+                cx.listener(|this, _: &TreeDown, _, cx| {
+                    this.dock_tree_key(panes::NavKey::Down, cx)
+                }),
+            )
+            .on_action(
+                cx.listener(|this, _: &TreeLeft, _, cx| {
+                    this.dock_tree_key(panes::NavKey::Left, cx)
+                }),
+            )
+            .on_action(cx.listener(|this, _: &TreeRight, _, cx| {
+                this.dock_tree_key(panes::NavKey::Right, cx)
+            }))
+            .on_action(
+                cx.listener(|this, _: &TreeActivate, window, cx| {
+                    this.dock_tree_activate(window, cx)
+                }),
+            )
+            .on_mouse_down(
+                MouseButton::Left,
+                cx.listener(|this, _, window, cx| this.focus_dock_tree(window, cx)),
+            )
+    }
+
+    /// An arrow key in the tree on screen: the ring moves, or the ringed
+    /// row folds or opens, by [`panes::tree_key`] over the visible rows.
+    fn dock_tree_key(&mut self, key: panes::NavKey, cx: &mut Context<Self>) {
+        use panes::{NavMove, NavRow};
+        match self.right_tab {
+            RightTab::Tags => {
+                let rows = self.tag_rows(cx);
+                let nav: Vec<NavRow> = rows
+                    .iter()
+                    .map(|r| NavRow {
+                        depth: r.depth,
+                        has_children: r.has_children,
+                        collapsed: r.collapsed,
+                    })
+                    .collect();
+                let focused = (self.tag_state.focused.as_ref())
+                    .and_then(|k| rows.iter().position(|r| &r.key == k));
+                match panes::tree_key(&nav, focused, key) {
+                    Some(NavMove::Focus(ix)) => {
+                        self.tag_state.focused = Some(rows[ix].key.clone());
+                        self.tag_state.scroll.scroll_to_item(ix);
+                    }
+                    Some(NavMove::Fold(ix) | NavMove::Unfold(ix)) => {
+                        self.toggle_tag_fold(rows[ix].key.clone(), cx)
+                    }
+                    None => {}
+                }
+            }
+            RightTab::Properties => {
+                let rows = self.property_rows(cx);
+                let nav = vec![
+                    NavRow {
+                        depth: 0,
+                        has_children: false,
+                        collapsed: false,
+                    };
+                    rows.len()
+                ];
+                let focused = (self.property_state.focused.as_ref())
+                    .and_then(|k| rows.iter().position(|r| &r.name == k));
+                if let Some(NavMove::Focus(ix)) = panes::tree_key(&nav, focused, key) {
+                    self.property_state.focused = Some(rows[ix].name.clone());
+                    self.property_state.scroll.scroll_to_item(ix);
+                }
+            }
+            RightTab::Outline => {
+                let rows = self.outline_rows(cx);
+                let nav: Vec<NavRow> = rows
+                    .iter()
+                    .map(|r| NavRow {
+                        depth: r.depth,
+                        has_children: r.has_children,
+                        collapsed: r.collapsed,
+                    })
+                    .collect();
+                let focused = self
+                    .outline_state
+                    .focused
+                    .and_then(|f| rows.iter().position(|r| r.ix == f));
+                match panes::tree_key(&nav, focused, key) {
+                    Some(NavMove::Focus(ix)) => {
+                        self.outline_state.focused = Some(rows[ix].ix);
+                        scroll_outline_to(&self.outline_state.scroll, ix);
+                    }
+                    Some(NavMove::Fold(ix) | NavMove::Unfold(ix)) => {
+                        self.toggle_outline_fold(rows[ix].ix, cx)
+                    }
+                    None => {}
+                }
+            }
+            RightTab::Backlinks | RightTab::Outgoing => return,
+        }
+        cx.notify();
+    }
+
+    /// Enter or Space in the tree: the ringed row's click, which searches
+    /// the tag or the property (the search box taking the keyboard) or
+    /// puts the editor on the heading.
+    fn dock_tree_activate(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        match self.right_tab {
+            RightTab::Tags => {
+                let Some(key) = self.tag_state.focused.clone() else {
+                    return;
+                };
+                if let Some(row) = self.tag_rows(cx).into_iter().find(|r| r.key == key) {
+                    self.show_search(&format!("tag:#{}", row.path), Some(window), cx);
+                }
+            }
+            RightTab::Properties => {
+                let Some(name) = self.property_state.focused.clone() else {
+                    return;
+                };
+                if self.property_rows(cx).iter().any(|r| r.name == name) {
+                    self.show_search(&format!("[\"{name}\"]"), Some(window), cx);
+                }
+            }
+            RightTab::Outline => {
+                let Some(ix) = self.outline_state.focused else {
+                    return;
+                };
+                if let Some(row) = self.outline_rows(cx).into_iter().find(|r| r.ix == ix) {
+                    self.reveal_heading(row.offset, window, cx);
+                }
+            }
+            RightTab::Backlinks | RightTab::Outgoing => {}
+        }
+    }
+
     /// The headings that have children: what "Collapse all" folds.
     fn outline_parents(&self) -> Vec<usize> {
         let depths = panes::outline_depths(&self.outline);
@@ -13550,7 +13762,11 @@ impl Workspace {
     /// heading's line, column 0, scrolled to the vertical centre, and the
     /// editor takes the keyboard; in reading mode the heading scrolls to
     /// the top edge.
-    fn reveal_heading(&mut self, offset: usize, cx: &mut Context<Self>) {
+    ///
+    /// The keyboard moves at once rather than through `request_focus_main`:
+    /// the press that got here gave the dock's tree the keyboard, and a
+    /// request only lands on a keyboard nothing holds.
+    fn reveal_heading(&mut self, offset: usize, window: &mut Window, cx: &mut Context<Self>) {
         self.reading
             .update(cx, |r, cx| r.scroll_to_offset(offset, cx));
         if self.mode.is_editing() {
@@ -13559,7 +13775,8 @@ impl Workspace {
         } else {
             self.editor.update(cx, |e, cx| e.reveal_offset(offset, cx));
         }
-        self.request_focus_main(cx);
+        self.focus_main(window, cx);
+        cx.notify();
     }
 
     /// The heading whose section holds the cursor (editing) or the block at
@@ -13790,6 +14007,7 @@ impl Workspace {
         label: gpui::AnyElement,
         flair: Option<SharedString>,
         active: bool,
+        ring: bool,
         theme: &Theme,
         cx: &mut Context<Self>,
     ) -> gpui::Stateful<gpui::Div> {
@@ -13865,6 +14083,24 @@ impl Workspace {
             // 2026-11-02, `pane.tags.*`, `pane.outline.*`).
             .when(active, |d| d.bg(theme.tokens.nav_item_background_active))
             .hover(|s| s.bg(theme.tokens.nav_item_background_hover))
+            // The keyboard's row in the pane that has the keyboard:
+            // `box-shadow: 0 0 0 2px var(--background-modifier-border-focus)`,
+            // a ring outside the box, so nothing moves (2026-11-04 probe).
+            // Drawn as a 2 px border 2 px out, with the radius grown to
+            // match, since a gpui shadow fills its whole box.
+            .when(ring, |d| {
+                d.child(
+                    div()
+                        .absolute()
+                        .top(px(-2.))
+                        .left(px(-2.))
+                        .right(px(-2.))
+                        .bottom(px(-2.))
+                        .border_2()
+                        .border_color(theme.tokens.background_modifier_border_focus)
+                        .rounded(px(10.)),
+                )
+            })
             // Obsidian's `tree-item-children` guides: a hairline 12 px in
             // from each ancestor's text, the row's full pitch tall.
             .children((1..=depth).map(|k| {
@@ -13978,13 +14214,19 @@ impl Workspace {
             );
         let filter = show_search.then(|| self.render_pane_filter(RightTab::Tags, theme, cx));
         let rows = self.tag_rows(cx);
+        let ring_key = self
+            .dock_tree_keyboard
+            .then(|| self.tag_state.focused.clone())
+            .flatten();
         // Obsidian's `.tag-container`: padding 12px 12px 32px.
-        let mut list = div()
+        let mut list = self
+            .dock_tree(cx)
             .id("tags")
             .flex()
             .flex_col()
             .flex_1()
             .overflow_y_scroll()
+            .track_scroll(&self.tag_state.scroll)
             .px(px(12.))
             .pt(px(12.))
             .pb(px(32.));
@@ -14011,6 +14253,7 @@ impl Workspace {
                     Self::tree_label(label),
                     Some(row.count.to_string().into()),
                     false,
+                    ring_key.as_deref() == Some(row.key.as_str()),
                     theme,
                     cx,
                 )
@@ -14076,13 +14319,19 @@ impl Workspace {
             );
         let filter = show_search.then(|| self.render_pane_filter(RightTab::Properties, theme, cx));
         let rows = self.property_rows(cx);
+        let ring_key = self
+            .dock_tree_keyboard
+            .then(|| self.property_state.focused.clone())
+            .flatten();
         // Obsidian's `.view-content`: padding 4px 12px 32px.
-        let mut list = div()
+        let mut list = self
+            .dock_tree(cx)
             .id("properties")
             .flex()
             .flex_col()
             .flex_1()
             .overflow_y_scroll()
+            .track_scroll(&self.property_state.scroll)
             .px(px(12.))
             .pt(px(4.))
             .pb(px(32.));
@@ -14099,6 +14348,7 @@ impl Workspace {
                     Self::tree_label(row.name.clone()),
                     Some(row.count.to_string().into()),
                     false,
+                    ring_key.as_deref() == Some(row.name.as_str()),
                     theme,
                     cx,
                 )
@@ -14349,7 +14599,12 @@ impl Workspace {
                     None => false,
                 };
             }
-            let mut list = div()
+            let ring_ix = self
+                .dock_tree_keyboard
+                .then_some(self.outline_state.focused)
+                .flatten();
+            let mut list = self
+                .dock_tree(cx)
                 .id("outline")
                 .flex()
                 .flex_col()
@@ -14368,7 +14623,9 @@ impl Workspace {
                     (row.collapsed, on_fold)
                 });
                 // The text wraps; a search match is Obsidian's
-                // `suggestion-highlight`, drawn in the accent.
+                // `suggestion-highlight`: `font-weight: bold` and nothing
+                // else, so it keeps the row's colour, muted or brightened
+                // under the pointer (2026-11-04 probe, both themes).
                 let highlights: Vec<(Range<usize>, HighlightStyle)> = row
                     .highlights
                     .iter()
@@ -14377,7 +14634,7 @@ impl Workspace {
                         (
                             r.clone(),
                             HighlightStyle {
-                                color: Some(theme.tokens.interactive_accent),
+                                font_weight: Some(FontWeight::BOLD),
                                 ..HighlightStyle::default()
                             },
                         )
@@ -14395,10 +14652,13 @@ impl Workspace {
                         label,
                         None,
                         row.active,
+                        ring_ix == Some(row.ix),
                         theme,
                         cx,
                     )
-                    .on_click(cx.listener(move |this, _, _, cx| this.reveal_heading(offset, cx))),
+                    .on_click(cx.listener(move |this, _, window, cx| {
+                        this.reveal_heading(offset, window, cx)
+                    })),
                 );
             }
             list.into_any_element()
@@ -14475,7 +14735,10 @@ impl Workspace {
                     icon_name,
                     tab == which,
                     theme,
-                    move |this, _, cx| this.select_right_tab(which, cx),
+                    move |this, window, cx| {
+                        this.select_right_tab(which, cx);
+                        this.focus_dock_tree(window, cx);
+                    },
                     cx,
                 )
             })
@@ -15527,6 +15790,7 @@ impl EntityInputHandler for Workspace {
 impl Render for Workspace {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         self.corners = WindowCorners::of(window);
+        self.dock_tree_keyboard = self.dock_tree_focus.is_focused(window);
         let corners = self.corners;
         // The desktop's scheme: a vault on `theme: "system"` follows it.
         let system_dark = matches!(
