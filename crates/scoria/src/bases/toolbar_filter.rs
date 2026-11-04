@@ -42,6 +42,28 @@ use scoria_bases::rule::{
 use scoria_formats::base::{Base, Filter, View};
 use serde_json::json;
 
+/// Where the editing filter row's value field was last drawn.
+pub(super) const RULE_VALUE_KEY: u64 = 0x5255_4c45_5641_4c55;
+/// Where that field's suggestion list was last drawn.
+const RULE_VALUE_LIST_KEY: u64 = 0x5255_4c45_5641_4c4c;
+
+/// The values to offer under a filter row's value field: those `values`
+/// holding what is typed (any case), without the typed value itself or an
+/// item the row already has, as many as a cell's list shows.
+pub fn value_suggestions(values: &[String], typed: &str, taken: &[String]) -> Vec<String> {
+    let typed = typed.trim().to_lowercase();
+    values
+        .iter()
+        .filter(|v| {
+            let lower = v.to_lowercase();
+            (typed.is_empty() || (lower.contains(&typed) && lower != typed))
+                && !taken.iter().any(|t| t.eq_ignore_ascii_case(v))
+        })
+        .take(crate::bases::edit::MAX_SUGGESTIONS)
+        .cloned()
+        .collect()
+}
+
 /// The conjunction select's rows, in Obsidian's order and wording.
 pub const CONJUNCTIONS: &[(&str, &str)] = &[
     ("and", "All the following are true"),
@@ -162,7 +184,9 @@ impl BasesView {
             }
             panel = panel.child(block);
         }
-        panel.into_any_element()
+        panel
+            .children(self.render_rule_value_suggestions(theme, cx))
+            .into_any_element()
     }
 
     /// `.filter-group`: its conjunction select, its rows, and the two add
@@ -627,13 +651,16 @@ impl BasesView {
                             ),
                     );
                 }
-                pills = pills.child(div().flex_1().min_w(px(40.)).child(self.flat_text(
-                    value_field,
-                    &typed,
-                    "",
-                    theme,
-                    cx,
-                )));
+                let editing = self.toolbar.editing.as_ref() == Some(&value_field);
+                pills = pills.child(
+                    div()
+                        .relative()
+                        .flex_1()
+                        .min_w(px(40.))
+                        .h_full()
+                        .child(self.flat_text(value_field, &typed, "", theme, cx))
+                        .when(editing, |d| d.child(self.measure(RULE_VALUE_KEY))),
+                );
                 expr = expr.child(pills);
             }
             _ => {
@@ -649,18 +676,141 @@ impl BasesView {
                     }
                     _ => text,
                 };
+                let editing = self.toolbar.editing.as_ref() == Some(&value_field);
                 expr = expr.child(
                     div()
+                        .relative()
                         .flex_1()
                         .min_w(px(0.))
                         .h_full()
                         .border_l_1()
                         .border_color(theme.tokens.background_modifier_border)
-                        .child(self.flat_text(value_field, &typed, "Empty", theme, cx)),
+                        .child(self.flat_text(value_field, &typed, "Empty", theme, cx))
+                        .when(editing, |d| d.child(self.measure(RULE_VALUE_KEY))),
                 );
             }
         }
         expr.into_any_element()
+    }
+
+    /// The values the editing row's property holds across the vault, under
+    /// its value field: Obsidian's `suggestion-container mod-property-value`,
+    /// the list a table cell of that property shows (the filter run saw the
+    /// same container open on the value field, `s05` `afterEnter`). Only a
+    /// text or list value has one; a list leaves out the pills it has.
+    pub(super) fn rule_value_suggestions(&self, cx: &Context<Self>) -> Vec<String> {
+        let Some(Field::RuleValue(section, path)) = self.toolbar.editing.clone() else {
+            return Vec::new();
+        };
+        let Some((rule, kind)) = self.rule_at(section, &path) else {
+            return Vec::new();
+        };
+        let taken: Vec<String> = match (rule.operator.value_kind_for(kind), &rule.value) {
+            (ValueKind::Text, _) => Vec::new(),
+            (ValueKind::List, RuleValue::List(items)) => items.clone(),
+            (ValueKind::List, RuleValue::Text(t)) => vec![t.clone()],
+            (ValueKind::List, _) => Vec::new(),
+            _ => return Vec::new(),
+        };
+        let key = rule
+            .property
+            .strip_prefix("note.")
+            .unwrap_or(&rule.property);
+        value_suggestions(self.values_of(key), &self.field_text(cx), &taken)
+    }
+
+    /// A picked value: the text row's value, or a list row's next pill. The
+    /// field stays open on a list, for the next item.
+    pub(super) fn pick_rule_value(
+        &mut self,
+        pick: &str,
+        window: &mut gpui::Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(Field::RuleValue(section, path)) = self.toolbar.editing.clone() else {
+            return;
+        };
+        let Some((rule, kind)) = self.rule_at(section, &path) else {
+            return;
+        };
+        self.toolbar.selected = None;
+        if rule.operator.value_kind_for(kind) == ValueKind::List {
+            self.submit_rule_value(section, &path, pick, cx);
+            self.open_field(Field::RuleValue(section, path), String::new(), window, cx);
+        } else {
+            self.toolbar.editing = None;
+            self.commit_rule_value(section, &path, pick, cx);
+            self.focus_view(window, cx);
+        }
+        cx.notify();
+    }
+
+    /// The list [`BasesView::rule_value_suggestions`] answers, hung 3 px
+    /// under the value field as a cell's is.
+    pub(super) fn render_rule_value_suggestions(
+        &mut self,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> Option<AnyElement> {
+        let shown = self.rule_value_suggestions(cx);
+        // The list's box keeps a press on it from reading as one outside the
+        // panel; a list not drawn must not keep that box.
+        let field = self.anchor(RULE_VALUE_KEY).filter(|_| !shown.is_empty());
+        let Some(field) = field else {
+            self.forget_anchor(RULE_VALUE_LIST_KEY);
+            return None;
+        };
+        let at = gpui::Point::new(field.origin.x, field.origin.y + field.size.height + px(3.));
+        let selected = self.toolbar.selected;
+        let list = div()
+            .id("bases-rule-value-suggestions")
+            .relative()
+            .child(self.measure(RULE_VALUE_LIST_KEY))
+            .flex()
+            .flex_col()
+            .min_w(px(66.))
+            .max_h(px(300.))
+            .p(px(6.))
+            .bg(theme.tokens.suggestion_background)
+            .border_1()
+            .border_color(theme.tokens.background_modifier_border)
+            .rounded(px(8.))
+            .shadow_lg()
+            .text_size(px(FONT_UI_SMALL))
+            .text_color(theme.tokens.text_normal)
+            .occlude()
+            .on_mouse_down(gpui::MouseButton::Left, |_, _, cx| cx.stop_propagation())
+            .children(shown.into_iter().enumerate().map(|(ix, value)| {
+                let pick = value.clone();
+                div()
+                    .id(("bases-rule-value-suggestion", ix))
+                    .h(px(29.))
+                    .px(px(8.))
+                    .flex()
+                    .items_center()
+                    .whitespace_nowrap()
+                    .rounded(px(4.))
+                    .cursor_pointer()
+                    .when(selected == Some(ix), |d| {
+                        d.bg(theme.tokens.background_modifier_hover)
+                    })
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                    .on_click(cx.listener(move |this, _, window, cx| {
+                        cx.stop_propagation();
+                        this.pick_rule_value(&pick, window, cx);
+                    }))
+                    .child(SharedString::from(value))
+            }));
+        Some(
+            gpui::deferred(
+                gpui::anchored()
+                    .position(at)
+                    .snap_to_window_with_margin(px(8.))
+                    .child(list),
+            )
+            .with_priority(3)
+            .into_any_element(),
+        )
     }
 
     /// A value input inside the expression box: the shared field with no
@@ -683,7 +833,7 @@ impl BasesView {
             text.clone()
         };
         div()
-            .id(("bases-rule-value", hash_key(which.as_str(), 0)))
+            .id(("bases-rule-value", which.element_ix()))
             .w_full()
             .h_full()
             .px(px(8.))
@@ -1182,6 +1332,32 @@ pub fn remove_at(tree: &mut Filter, path: &[usize]) {
 mod tests {
     use super::*;
     use scoria_formats::base::Base;
+
+    #[test]
+    fn a_value_field_offers_the_propertys_values_narrowed_by_what_is_typed() {
+        let values: Vec<String> = ["doing", "done", "todo", "Archived"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+        // An empty field offers everything.
+        assert_eq!(value_suggestions(&values, "", &[]), values);
+        // Typed text narrows by containment, in any case.
+        assert_eq!(
+            value_suggestions(&values, "DO", &[]),
+            ["doing", "done", "todo"]
+        );
+        assert_eq!(value_suggestions(&values, "arch", &[]), ["Archived"]);
+        // The value already typed in full is not offered back.
+        assert_eq!(
+            value_suggestions(&values, "done", &[]),
+            Vec::<String>::new()
+        );
+        // A list row leaves out the pills it has.
+        assert_eq!(
+            value_suggestions(&values, "", &["todo".into(), "DONE".into()]),
+            ["doing", "Archived"]
+        );
+    }
 
     fn base_of(yaml: &str) -> Base {
         Base::from_yaml(yaml).expect("parses")

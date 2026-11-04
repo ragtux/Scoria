@@ -243,6 +243,19 @@ impl Field {
             Field::TableSearch => "tableSearch",
         }
     }
+
+    /// The element id a field's box is drawn under: its name, and for a
+    /// filter row's field the row too, since every row has one and two
+    /// boxes sharing an id lose each other's clicks.
+    pub fn element_ix(&self) -> usize {
+        let row = match self {
+            Field::Rule(section, path) | Field::RuleValue(section, path) => {
+                super::toolbar_filter::node_ix(*section, path)
+            }
+            _ => 0,
+        };
+        hash_key(self.as_str(), row)
+    }
 }
 
 /// An open combobox: the name its owner gave it and the entry it belongs to
@@ -610,6 +623,11 @@ impl BasesView {
 
     pub(super) fn anchor(&self, k: u64) -> Option<Bounds<Pixels>> {
         self.toolbar.anchors.borrow().get(&k).copied()
+    }
+
+    /// Drops the box recorded under `k`, for something no longer drawn.
+    pub(super) fn forget_anchor(&self, k: u64) {
+        self.toolbar.anchors.borrow_mut().remove(&k);
     }
 
     /// Forgets every box but the bar's buttons: what a panel drew is gone
@@ -1062,6 +1080,16 @@ impl BasesView {
             let handle = input.focus_handle(cx);
             window.focus(&handle, cx);
         }
+        // A value field's suggestions hang under a box known only once the
+        // field has painted: forget the last one, and ask for that frame.
+        if matches!(which, Field::RuleValue(..)) {
+            self.toolbar
+                .anchors
+                .borrow_mut()
+                .remove(&super::toolbar_filter::RULE_VALUE_KEY);
+            let entity = cx.entity();
+            window.on_next_frame(move |_, cx| entity.update(cx, |_, cx| cx.notify()));
+        }
     }
 
     fn ensure_field(&mut self, window: &mut Window, cx: &mut Context<Self>) {
@@ -1137,6 +1165,17 @@ impl BasesView {
         let Some(which) = self.toolbar.editing.clone() else {
             return;
         };
+        // Enter on an arrowed-to value suggestion takes it.
+        if matches!(which, Field::RuleValue(..)) {
+            let pick = self
+                .toolbar
+                .selected
+                .and_then(|ix| self.rule_value_suggestions(cx).get(ix).cloned());
+            if let Some(pick) = pick {
+                self.pick_rule_value(&pick, window, cx);
+                return;
+            }
+        }
         match which {
             Field::Search => self.activate_selected(window, cx),
             Field::ComboSearch => self.combo_pick_selected(window, cx),
@@ -1214,6 +1253,9 @@ impl BasesView {
     fn list_len(&self, cx: &Context<Self>) -> usize {
         if self.toolbar.combo.is_some() {
             return self.combo_list_len(cx);
+        }
+        if matches!(self.toolbar.editing, Some(Field::RuleValue(..))) {
+            return self.rule_value_suggestions(cx).len();
         }
         match (self.toolbar.panel, &self.toolbar.page) {
             (Panel::Views, Page::List) => self.views_list_len(cx),
@@ -1346,7 +1388,7 @@ impl BasesView {
         if self.toolbar.editing.as_ref() == Some(&which) {
             if let Some(input) = self.toolbar.field.clone() {
                 return div()
-                    .id(("bases-toolbar-field", hash_key(which.as_str(), 0)))
+                    .id(("bases-toolbar-field", which.element_ix()))
                     .w_full()
                     // A click inside the open field is not a click away from
                     // the panel, which is what the root would read it as.
@@ -1366,7 +1408,7 @@ impl BasesView {
             _ => 8.,
         };
         div()
-            .id(("bases-toolbar-field-shut", hash_key(which.as_str(), 0)))
+            .id(("bases-toolbar-field-shut", which.element_ix()))
             .w_full()
             .h(px(INPUT_HEIGHT))
             .pl(px(pad_left))

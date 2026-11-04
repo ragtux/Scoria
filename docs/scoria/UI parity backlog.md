@@ -1813,6 +1813,17 @@ no formula editor.
 
 **Landed 2026-11-01**: rows of property, operator and value with the observed operator lists per kind (`scoria_bases::rule`), typed values, pills, the advanced toggle both ways, Add filter, Add filter group, nested groups with their own trash, and the collapsible sections with count flairs. **Still out**: the value fields' suggestion lists.
 
+**The suggestion lists landed 2026-11-04**: a text or list row's value field opens the
+`suggestion-container mod-property-value` the run saw on it (`s05` `afterEnter`), with what a
+table cell of that property lists -- the property's values across the vault, narrowed by
+containment in any case, without the value typed in full -- and on a list row without the pills it
+has. A click or Down/Up and Enter takes a value; on a list it becomes a pill and the field stays
+open for the next. The list's *contents* on that field were not captured, only the container,
+so the cell's rule stands in for them. The same pass fixed every row's value field sharing one
+element id, which left a click on the second row's field dead. **Still out**: the pill row does
+not wrap, so a third or fourth pill pushes the field out of the expression box (its list then
+hangs past the box's right edge).
+
 **Obsidian.** A 520 px panel of two collapsible sections, **All views** and **This view**, each
 with a count flair. A group is a header select — **All the following are true** (`and`), **Any of
 the following are true** (`or`), **None of the following are true** (`not`) — and rows reading
