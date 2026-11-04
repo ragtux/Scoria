@@ -19,7 +19,7 @@
 //! | `kanban` | `imageAspectRatio` | slider | 0.25 to 2.5 step 0.05 | 0.5 |
 //! | `list` | `markers` | dropdown | `bullet`, `number`, `none` | `bullet` |
 //! | `list` | `separator` | text | any string | `", "` |
-//! | `list` | *(Indent properties)* | toggle | — | false |
+//! | `list` | `indentProperties` | toggle | `true`, `false` | `false` (absent) |
 //!
 //! Two rules decide how this module behaves, and both are observed:
 //!
@@ -37,10 +37,10 @@
 //! bounds one. The setters clamp to the slider's range, because that is the
 //! control whose writes were observed.
 //!
-//! The key the list layout's "Indent properties" toggle writes is
-//! **unprobed** — the toggle produced no write and the registration's source
-//! names it only as a minified constant — so [`ListLayout::indent_properties`]
-//! reads [`INDENT_PROPERTIES_KEY`], the plain spelling, and nothing writes it.
+//! The list layout's "Indent properties" toggle writes
+//! [`INDENT_PROPERTIES_KEY`], `indentProperties`, as a boolean: `true` when
+//! turned on and `false` when turned off, the key kept rather than dropped
+//! (probe of 2026-11-04, `tools/obsidian-probe/bases-leftovers.mjs` `s02`).
 
 use indexmap::IndexMap;
 use scoria_formats::base::{written_id, Base, PropertyConfig, View};
@@ -58,8 +58,7 @@ pub const LAYOUTS: &[(&str, &str, &str)] = &[
     ("kanban", "Kanban", "kanban-square"),
 ];
 
-/// The key the list layout's "Indent properties" toggle is assumed to write.
-/// **Unprobed**, see the module note.
+/// The key the list layout's "Indent properties" toggle writes.
 pub const INDENT_PROPERTIES_KEY: &str = "indentProperties";
 
 /// Obsidian's label for a layout, when it is one of the four registered.
@@ -343,8 +342,7 @@ pub struct ListLayout {
     pub markers: Markers,
     /// `separator`: what joins a row's property values, default `", "`.
     pub separator: String,
-    /// The "Indent properties" toggle. **Unprobed**, see the module note:
-    /// this reads [`INDENT_PROPERTIES_KEY`] and nothing writes it.
+    /// The "Indent properties" toggle, [`INDENT_PROPERTIES_KEY`].
     pub indent_properties: bool,
 }
 
@@ -536,6 +534,13 @@ pub fn set_markers(view: &mut View, markers: Markers) {
 /// `separator`, any string the text field holds.
 pub fn set_separator(view: &mut View, separator: &str) {
     set_str(view, "separator", separator);
+}
+
+/// "Indent properties": `indentProperties`, written either way. Observed:
+/// turning the toggle off writes `false` rather than removing the key.
+pub fn set_indent_properties(view: &mut View, on: bool) {
+    view.preserved
+        .insert(INDENT_PROPERTIES_KEY.to_string(), Value::Bool(on));
 }
 
 /// `limit`, which the results panel writes as a bare number; `None` drops it,
@@ -946,6 +951,25 @@ mod tests {
             v.preserved.get("markers").and_then(Value::as_str),
             Some("bullet")
         );
+    }
+
+    #[test]
+    fn indent_properties_is_written_both_ways_and_never_dropped() {
+        let mut v = view_of("views:\n  - type: list\n    name: V\n");
+        assert!(!ListLayout::of(&v).indent_properties);
+        set_indent_properties(&mut v, true);
+        assert_eq!(
+            v.preserved.get("indentProperties"),
+            Some(&Value::Bool(true))
+        );
+        assert!(ListLayout::of(&v).indent_properties);
+        // Observed: turning it off writes `false`; the key stays.
+        set_indent_properties(&mut v, false);
+        assert_eq!(
+            v.preserved.get("indentProperties"),
+            Some(&Value::Bool(false))
+        );
+        assert!(!ListLayout::of(&v).indent_properties);
     }
 
     #[test]

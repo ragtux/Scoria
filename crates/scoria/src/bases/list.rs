@@ -3,11 +3,8 @@
 //! Its keys are observed (see [`scoria_bases::layout`] and
 //! [[Specification#Observed Bases write behavior, Obsidian 1.14.5 (installer build 1.13.7)]]):
 //! `markers` (`bullet`, `number` or `none`, default `bullet`), `separator`
-//! (any string, default `", "`) and the "Indent properties" toggle, whose own
-//! key is **unprobed** — the toggle produced no write and the registration
-//! names it only as a minified constant, so
-//! [`ListLayout::indent_properties`](scoria_bases::ListLayout) reads the
-//! plain spelling and nothing writes it.
+//! (any string, default `", "`) and the "Indent properties" toggle,
+//! `indentProperties` (probe of 2026-11-04, `bases-leftovers` `s02`).
 //!
 //! The rows, the columns and the grouping are the table's: every layout draws
 //! the same resolved [`Table`](scoria_bases::Table), so a line shows the same
@@ -26,8 +23,11 @@
 //!   `separator` and led by one, because the key's own description is what
 //!   joins *a row's values* and the title is the first of them
 //!   — [`line_text`];
-//! - "Indent properties" puts the remaining values on their own lines,
-//!   indented under the title, instead of after it — [`INDENT`];
+//! - "Indent properties" puts the remaining values on their own lines under
+//!   the title, each with a bullet and no separator, instead of after it —
+//!   [`INDENT`]; this one is observed (probe of 2026-11-04), though only
+//!   under `markers: bullet`, so what the nested values carry under
+//!   `number` or `none` is a reading: a bullet, and nothing;
 //! - `markers: number` counts from 1 **inside each group**, which is what a
 //!   markdown ordered list does per list; `bullet` draws `•`, the glyph the
 //!   reading view draws for an unordered item — [`marker`];
@@ -65,10 +65,11 @@ pub const LINE_PAD: f32 = 3.;
 /// and a stop at 13 px.
 pub const MARKER_WIDTH: f32 = 20.;
 
-/// How far "Indent properties" indents a value under its title.
-/// **Unprobed**: the toggle was never driven, and this is the marker column's
-/// own width, so an indented value lines up with the title above it.
-pub const INDENT: f32 = MARKER_WIDTH;
+/// How far right of the title's text "Indent properties" starts a value's:
+/// the nested block's `padding-left`, 33.75 px (probe of 2026-11-04,
+/// `bases-leftovers` `s02`). Each value's own bullet sits in the marker
+/// column just left of it, as the title's does.
+pub const INDENT: f32 = 33.75;
 
 /// The bullet `markers: bullet` draws. **Unprobed** as a glyph; `•` is what
 /// the reading view draws for an unordered list item.
@@ -282,6 +283,11 @@ impl BasesView {
             )
             .child(SharedString::from(title_of(row)));
         let values = if self.list.indent {
+            // Observed (`bases-leftovers` `s02` `layoutOn`): the values
+            // leave the title's line for `.bases-list-item-properties.nested`,
+            // one block per value with a bullet of its own and no separator,
+            // each value's text 33.75 px right of the title's.
+            let nested_bullet = self.list.markers != Markers::None;
             div()
                 .flex()
                 .flex_col()
@@ -289,13 +295,29 @@ impl BasesView {
                 .child(title)
                 .children(body.iter().map(|value| {
                     div()
-                        .pl(px(INDENT))
+                        .flex()
+                        .flex_row()
                         .min_w_0()
-                        .whitespace_nowrap()
-                        .overflow_hidden()
-                        .text_ellipsis()
-                        .text_color(theme.tokens.text_normal)
-                        .child(SharedString::from(value.clone()))
+                        .pl(px(INDENT - MARKER_WIDTH))
+                        .when(nested_bullet, |d| {
+                            d.child(
+                                div()
+                                    .flex_shrink_0()
+                                    .w(px(MARKER_WIDTH))
+                                    .text_color(theme.tokens.list_marker_color)
+                                    .child(BULLET),
+                            )
+                        })
+                        .when(!nested_bullet, |d| d.pl(px(INDENT)))
+                        .child(
+                            div()
+                                .min_w_0()
+                                .whitespace_nowrap()
+                                .overflow_hidden()
+                                .text_ellipsis()
+                                .text_color(theme.tokens.text_normal)
+                                .child(SharedString::from(value.clone())),
+                        )
                 }))
         } else {
             div()

@@ -352,6 +352,31 @@ impl BasesView {
                         theme,
                     ),
                 );
+                // Observed (`bases-leftovers` `s02`): between Markers and
+                // Property separator, a `.checkbox-container` toggle, off by
+                // default, writing `indentProperties` either way.
+                let indent = list.indent_properties;
+                self.toolbar
+                    .record(json!({ "control": "indentProperties", "value": indent }));
+                rows.push(
+                    self.input_row(
+                        Some("Indent properties"),
+                        div()
+                            .id("bases-indent-properties")
+                            .w(px(36.))
+                            .cursor_pointer()
+                            .on_click(cx.listener(move |this, _, _, cx| {
+                                cx.stop_propagation();
+                                this.edit_view(
+                                    move |view| layout::set_indent_properties(view, !indent),
+                                    cx,
+                                );
+                            }))
+                            .child(toggle_switch(indent, theme))
+                            .into_any_element(),
+                        theme,
+                    ),
+                );
                 self.toolbar
                     .record(json!({ "control": "separator", "value": list.separator }));
                 let separator = match &self.toolbar.editing {
@@ -729,4 +754,32 @@ impl BasesView {
         }
         true
     }
+}
+
+/// A `.checkbox-container` switch, as Settings draws one: 36 by 20, the
+/// interactive accent while on and `--background-modifier-border-hover`
+/// while off, a 14 px thumb in `--toggle-thumb-color`.
+fn toggle_switch(on: bool, theme: &Theme) -> gpui::Div {
+    let ground = if on {
+        theme.tokens.interactive_accent
+    } else {
+        theme.tokens.background_modifier_border_hover
+    };
+    div()
+        .relative()
+        .w(px(36.))
+        .h(px(20.))
+        .rounded_full()
+        .bg(ground)
+        .border_1()
+        .border_color(ground)
+        .child(
+            div()
+                .absolute()
+                .top(px(2.))
+                .left(px(if on { 17. } else { 2. }))
+                .size(px(14.))
+                .rounded_full()
+                .bg(theme.tokens.toggle_thumb_color),
+        )
 }

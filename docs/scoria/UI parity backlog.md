@@ -1761,7 +1761,7 @@ one tier wider.
 
 *medium, missing-feature, medium*
 
-**Landed 2026-11-01**: the search field, the gear, the Configure page with its name field and Obsidian's labels, the header menu (Default view, Duplicate view, Delete view) and Add view naming every view `View`. **Still out**: the list layout's *Indent properties* toggle, whose key is unobserved.
+**Landed 2026-11-01**: the search field, the gear, the Configure page with its name field and Obsidian's labels, the header menu (Default view, Duplicate view, Delete view) and Add view naming every view `View`. **Still out**: the list layout's *Indent properties* toggle, whose key is unobserved. **Landed 2026-11-04** after the probe (`bases-leftovers.mjs` `s02`): the toggle sits between Markers and Property separator and writes `indentProperties: true` or `false` (never dropping the key), and the list draws each value on its own bulleted line 33.75 px in from the title, with no separator.
 
 **Obsidian.** The panel (228 px, `.bases-toolbar-views-menu`) opens with a `Search...` input that
 filters the rows live; one row per view with its layout icon, the active one `mod-active`, and a

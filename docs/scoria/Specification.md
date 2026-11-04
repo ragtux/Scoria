@@ -5844,7 +5844,7 @@ opens that view's settings.
 | `kanban` | `imageAspectRatio` | slider | 0.25 to 2.5 step 0.05 | 0.5 |
 | `list` | `markers` | dropdown | `bullet`, `number`, `none` | `bullet` |
 | `list` | `separator` | text | any string | `", "` |
-| `list` | *(Indent properties)* | toggle | — | false |
+| `list` | `indentProperties` | toggle | `true`, `false` | `false` (absent) |
 
 The four registered layouts are `table` (Table, `lucide-table`), `cards`
 (Cards, `lucide-layout-grid`), `list` (List, `lucide-list`) and `kanban`
@@ -5909,7 +5909,8 @@ outside edit; it is only canonicalized.
 submenu (the row opens something that is not a `.menu`, so its options were not
 read) and therefore what a summary chosen from the UI writes; the key the
 list layout's "Indent properties" toggle writes (the toggle produced no write,
-and the registration's source names it only as a minified constant); renaming
+and the registration's source names it only as a minified constant -- settled
+on 2026-11-04, see [[#The list layout's Indent properties, Obsidian 1.14.5]]); renaming
 a view through the Configure view page's name field; whether `groupOrder` is
 ever written by the UI; an embedded base in a note (`![[x.base]]`) and what
 `createAndEmbedBase` writes; a base inside a folder rather than the vault root;
@@ -6354,7 +6355,7 @@ marked whatever the layout, a bug); then per layout — table **Row height**
 (Short / Medium / Tall / Extra tall); cards **Card size** (50–800 step 10),
 **Image property** (clearable; `file` and every property), **Image fit** (Cover
 / Contain), **Image aspect ratio** (0.25–2.5 step 0.05); list **Markers**
-(Bullet / Number / None), **Indent properties** (checkbox, wrote nothing),
+(Bullet / Number / None), **Indent properties** (checkbox, wrote nothing in this run; `indentProperties` on 2026-11-04),
 **Property separator** (text); kanban **Column width** (200–500 step 10) and
 the three image rows. The header's menu: **Default view** (`layers-2`,
 `mod-checked`), **Duplicate view** (`files`), separator, **Delete view**
@@ -6441,6 +6442,21 @@ under the title on a card, joined by `separator` on a line, one indented line
 each under "Indent properties". A click anywhere on a card or a line opens the
 row's file. `markers: number` restarts at 1 **inside each group** and `bullet`
 draws `•`.
+
+### The list layout's Indent properties, Obsidian 1.14.5
+
+Observed on 2026-11-04 (`tools/obsidian-probe/bases-leftovers.mjs` `s02`, Windows). The
+Configure view page of a list view holds the row between **Markers** and **Property
+separator**: an `.input-row` labelled "Indent properties" with no description, holding a
+`.checkbox-container` toggle, off by default. Turning it on writes `indentProperties: true` as
+the view's last key; turning it off writes `indentProperties: false` -- the key stays, so the
+file never returns to its earlier bytes. Each write lands about 2 s after the click.
+
+With it on, a `.bases-list-item` keeps its first property (the title) on its own line, and the
+rest move to a second `.bases-list-item-properties.nested` block with `padding-left: 33.75px`:
+each `.bases-list-property` is `display: block` with a `.list-bullet` of its own, and no
+`.bases-list-separator` is drawn. An item with two values grew from 22 to 61 px. Only
+`markers: bullet` was driven.
 
 **Grouping outside a table.** Every layout takes `Table::groups` as it stands,
 so `groupBy`, `groupOrder`, the direction and the leading no-value group are
