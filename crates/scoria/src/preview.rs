@@ -4,6 +4,7 @@
 //! highlight spans, so the editor shapes exactly what these return and
 //! maps clicks back through the same pieces.
 
+use crate::reading::model::{html_inline_widget, InlineStyle, RichText};
 use scoria_markdown::highlight::{HighlightKind, HighlightSpan};
 use std::borrow::Cow;
 use std::ops::Range;
@@ -65,6 +66,19 @@ pub struct DisplayLine {
     pub decor: Decor,
     /// Formulas standing in for runs of the display text.
     pub math: Vec<InlineMath>,
+    /// Inline HTML elements drawn in place of their source.
+    pub html: Vec<InlineHtml>,
+}
+
+/// One inline HTML element, `<b>bold</b>`, drawn as what it renders to
+/// while no cursor touches it, the way Obsidian's `span.cm-html-embed`
+/// stands in for the element (probe of 2026-11-04).
+#[derive(Debug, Clone, PartialEq)]
+pub struct InlineHtml {
+    /// The rendered text's bytes in the display text.
+    pub display: Range<usize>,
+    /// Styled runs relative to `display.start`; gaps are plain.
+    pub runs: Vec<(Range<usize>, InlineStyle)>,
 }
 
 /// Lays out an inline formula for the display text: given the TeX and
@@ -101,6 +115,7 @@ impl DisplayLine {
             scale,
             decor,
             math: Vec::new(),
+            html: Vec::new(),
         }
     }
 
@@ -483,6 +498,18 @@ pub fn display_line_with(
             | HighlightKind::Tag => {}
         }
     }
+    // Each inline HTML element no cursor touches is drawn as what it
+    // renders to; a touched one keeps its source, nested elements and all.
+    let mut widgets: Vec<(Range<usize>, RichText)> = Vec::new();
+    for range in html_elements(line, spans) {
+        if touches(touch, &range) {
+            continue;
+        }
+        if let Some(rich) = html_inline_widget(&line[range.clone()]) {
+            hides.push((range.clone(), rich.text.clone().into(), HighlightKind::Html));
+            widgets.push((range, rich));
+        }
+    }
     if hides.is_empty() {
         return DisplayLine::verbatim(line, scale, decor);
     }
@@ -542,13 +569,85 @@ pub fn display_line_with(
             })
         })
         .collect();
+    let html = widgets
+        .into_iter()
+        .filter_map(|(source, rich)| {
+            pieces.iter().find_map(|p| match p {
+                Piece::Sub {
+                    display,
+                    source: s,
+                    len,
+                    kind: HighlightKind::Html,
+                } if *s == source => Some(InlineHtml {
+                    display: *display..display + len,
+                    runs: rich.runs.clone(),
+                }),
+                _ => None,
+            })
+        })
+        .collect();
     DisplayLine {
         text,
         pieces,
         scale,
         decor,
         math,
+        html,
     }
+}
+
+/// The outermost inline HTML elements of `line`: an opening tag and the
+/// closing tag of the same name that balances it, both on this line, as one
+/// byte range. Each tag is its own inline HTML span; a span holding more
+/// than one tag is a line of an HTML block, which is the block's business.
+fn html_elements(line: &str, spans: &[HighlightSpan]) -> Vec<Range<usize>> {
+    // (range, lowercase name, closing)
+    let mut tags: Vec<(Range<usize>, String, bool)> = Vec::new();
+    for span in spans.iter().filter(|s| s.kind == HighlightKind::Html) {
+        let Some(t) = line.get(span.range.clone()) else {
+            continue;
+        };
+        let Some(inner) = t.strip_prefix('<').and_then(|r| r.strip_suffix('>')) else {
+            continue;
+        };
+        if inner.contains(['<', '>']) || inner.ends_with('/') || inner.starts_with(['!', '?']) {
+            continue;
+        }
+        let (closing, rest) = match inner.strip_prefix('/') {
+            Some(rest) => (true, rest),
+            None => (false, inner),
+        };
+        let name: String = rest
+            .chars()
+            .take_while(|c| c.is_ascii_alphanumeric())
+            .collect::<String>()
+            .to_ascii_lowercase();
+        if name.is_empty() {
+            continue;
+        }
+        tags.push((span.range.clone(), name, closing));
+    }
+    let mut out: Vec<Range<usize>> = Vec::new();
+    for (i, (open, name, closing)) in tags.iter().enumerate() {
+        if *closing || out.last().is_some_and(|r| open.start < r.end) {
+            continue;
+        }
+        let mut depth = 0usize;
+        for (range, other, other_closing) in &tags[i + 1..] {
+            if other != name {
+                continue;
+            }
+            if !other_closing {
+                depth += 1;
+            } else if depth > 0 {
+                depth -= 1;
+            } else {
+                out.push(open.start..range.end);
+                break;
+            }
+        }
+    }
+    out
 }
 
 #[cfg(test)]
@@ -581,6 +680,64 @@ mod tests {
         assert_eq!(render("**b** *c*", Some(5..5)).text, "**b** c");
         assert_eq!(render("**b** *c*", Some(0..0)).text, "**b** c");
         assert_eq!(render("**b** *c*", Some(6..6)).text, "b *c*");
+    }
+
+    /// An inline HTML element no cursor touches is drawn as what it renders
+    /// to, one element from its opener to the closer that balances it; a
+    /// cursor anywhere in it, its edges included, brings the whole element's
+    /// source back (probe of 2026-11-04).
+    #[test]
+    fn inline_html_elements_render_unless_touched() {
+        let src = "a <b>bold</b> and <u>u</u> end";
+        let d = render(src, None);
+        assert_eq!(d.text, "a bold and u end");
+        let bold = InlineStyle {
+            bold: true,
+            ..InlineStyle::default()
+        };
+        assert_eq!(d.html.len(), 2);
+        assert_eq!(d.html[0].display, 2..6);
+        assert_eq!(d.html[0].runs, vec![(0..4, bold)]);
+        // Each element on its own: the cursor in one keeps the other drawn.
+        let inside_b = src.find("bold").unwrap() + 1;
+        assert_eq!(
+            render(src, Some(inside_b..inside_b)).text,
+            "a <b>bold</b> and u end"
+        );
+        // Right before the opener and right after the closer both touch.
+        assert_eq!(render(src, Some(2..2)).text, "a <b>bold</b> and u end");
+        let after = src.find("</b>").unwrap() + 4;
+        assert_eq!(
+            render(src, Some(after..after)).text,
+            "a <b>bold</b> and u end"
+        );
+        // A selection ending short of the element leaves it drawn.
+        assert_eq!(render(src, Some(0..1)).text, "a bold and u end");
+    }
+
+    #[test]
+    fn inline_html_widgets_nest_and_keep_markdown_literal() {
+        // Nested tags are one element, the outer one.
+        let d = render("x <b><i>both</i></b> y", None);
+        assert_eq!(d.text, "x both y");
+        assert_eq!(d.html.len(), 1);
+        // Markdown between the tags is not parsed in the widget.
+        assert_eq!(render("x <b>**md** in</b> y", None).text, "x **md** in y");
+        // What the overlay cannot draw keeps its source: a script, an
+        // unclosed opener, a lone `<br>`, a comment.
+        for src in [
+            "x <script>s</script> y",
+            "x <b>never closed",
+            "a<br>b",
+            "x <!-- c --> y",
+        ] {
+            let d = render(src, None);
+            assert_eq!(d.text, src, "{src:?}");
+            assert!(d.html.is_empty());
+        }
+        // A heading keeps its scale around a widget.
+        let d = render("## H <sup>2</sup>", None);
+        assert_eq!(d.text, "H 2");
     }
 
     #[test]

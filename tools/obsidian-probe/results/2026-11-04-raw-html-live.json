@@ -1,0 +1,3640 @@
+{
+ "rawHtmlLive": {
+  "fixtures": {
+   "startedAt": "2026-11-04T14:50:16.453Z",
+   "steps": {},
+   "order": [],
+   "elapsedMs": 6,
+   "wrote": [
+    "Live.md",
+    "Blocks.md"
+   ]
+  },
+  "run": {
+   "startedAt": "2026-11-04T14:50:16.538Z",
+   "steps": {
+    "01-live-preview-cursor-at-end": {
+     "ok": true,
+     "ms": 1564,
+     "state": {
+      "file": "Live.md",
+      "mode": "source",
+      "source": false
+     },
+     "cursor": {
+      "line": 21,
+      "ch": 0
+     },
+     "editor": {
+      "lines": [
+       {
+        "tag": "DIV",
+        "cls": "cm-line HyperMD-header HyperMD-header-1",
+        "text": "Live HTML probe",
+        "html": "<div class=\"cm-line HyperMD-header HyperMD-header-1\" dir=\"ltr\"><div class=\"cm-fold-indicator\" contenteditable=\"false\"><div class=\"collapse-indicator collapse-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon right-triangle\"><path d=\"M3 8L12 17L21 8\"></path></svg></div></div><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span contenteditable=\"false\"></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-header cm-header-1\">Live HTML probe</span></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "Inline: a bold word, it, under, xsup, H2O, Ctrl, mk, red, link, and abreak.",
+        "html": "<div class=\"cm-line\" dir=\"ltr\">Inline: a <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><b>bold</b></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"> word, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><i>it</i></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><u>under</u></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, x<img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><sup>sup</sup></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, H<img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><sub>2</sub></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">O, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><kbd>Ctrl</kbd></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><mark>mk</mark></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><span style=\"color: red\">red</span></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><a href=\"https://example.invalid/\" target=\"_blank\" rel=\"noopener nofollow\">link</a></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, and a<img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><br></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">break.</div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "Unknown foo tag and <script>x</script> end, <!-- a comment --> after.",
+        "html": "<div class=\"cm-line\" dir=\"ltr\">Unknown <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\">foo tag</span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"> and <span class=\"cm-bracket cm-hmd-html-begin cm-tag\">&lt;</span><span class=\"cm-tag\">script</span><span class=\"cm-bracket cm-tag\">&gt;</span><span class=\"cm-variable\">x</span><span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">script</span><span class=\"cm-bracket cm-hmd-html-end cm-tag\">&gt;</span> end, <span class=\"cm-comment\">&lt;!-- a comment --&gt;</span> after.</div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "<table>",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><span class=\"cm-bracket cm-hmd-html-begin cm-tag\">&lt;</span><span class=\"cm-tag\">table</span><span class=\"cm-bracket cm-tag\">&gt;</span></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "<tr><th>H1</th><th>H2</th></tr>",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><span class=\"cm-bracket cm-tag\">&lt;</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">th</span><span class=\"cm-bracket cm-tag\">&gt;</span>H1<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">th</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">th</span><span class=\"cm-bracket cm-tag\">&gt;</span>H2<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">th</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;</span></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "<tr><td>a</td><td><b>b</b> **md**</td></tr>",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><span class=\"cm-bracket cm-tag\">&lt;</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;</span>a<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">b</span><span class=\"cm-bracket cm-tag\">&gt;</span>b<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">b</span><span class=\"cm-bracket cm-tag\">&gt;</span> **md**<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;</span></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "</table>",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">table</span><span class=\"cm-bracket cm-hmd-html-end cm-tag\">&gt;</span></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-embed-block cm-table-widget markdown-rendered",
+        "text": "\n\n\nmd\ntable\n\n\n\n\nc\nd\n\n\n",
+        "html": "<div class=\"cm-embed-block cm-table-widget markdown-rendered\" dir=\"ltr\" contenteditable=\"false\"><div class=\"table-wrapper\"><table class=\"table-editor\" tabindex=\"-1\">\n<thead>\n<tr>\n<th dir=\"ltr\"><div class=\"table-cell-wrapper\">md</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></th>\n<th dir=\"ltr\"><div class=\"table-cell-wrapper\">table</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td dir=\"ltr\"><div class=\"table-cell-wrapper\">c</div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></td>\n<td dir=\"ltr\"><div class=\"table-cell-wrapper\">d</div></td>\n</tr>\n</tbody>\n</table><div class=\"table-row-btn\" aria-label=\"Add row below\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-plus\"><path d=\"M5 12h14\"></path><path d=\"M12 5v14\"></path></svg></div><div class=\"table-col-btn\" aria-label=\"Add column to the right\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" he"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "<table border=\"1\"><thead><tr><th align=\"left\">L</th><th align=\"right\">R</th></tr></thead><tbody><tr><td colspan=\"2\" style=\"color: red\">wide cell</td></tr><tr><td>one</td><td>two</td></tr></tbody></tab",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><span class=\"cm-bracket cm-hmd-html-begin cm-tag\">&lt;</span><span class=\"cm-tag\">table</span> <span class=\"cm-attribute\">border</span>=<span class=\"cm-string\">\"1\"</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">thead</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">th</span> <span class=\"cm-attribute\">align</span>=<span class=\"cm-string\">\"left\"</span><span class=\"cm-bracket cm-tag\">&gt;</span>L<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">th</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">th</span> <span class=\"cm-attribute\">align</span>=<span class=\"cm-string\">\"right\"</span><span class=\"cm-bracket cm-tag\">&gt;</span>R<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">th</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">thead</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">tbody</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">td</span> <span class=\"cm-attribute\">colspan</span>=<span class=\"cm-string\">\"2\"</span> <span class=\"cm-attribute\">style</span>=<span class=\"cm-string\">\"color: red\"</span><span class=\"cm-bracket cm-tag\">&gt;</span>wide cell<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;</span>one<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;</span>two<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">tbody</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">table</span><span class=\"cm-bracket cm-hmd-html-end cm-tag\">&gt;</span></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "<table><tr><td>c</td></tr></table>",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><span class=\"cm-bracket cm-hmd-html-begin cm-tag\">&lt;</span><span class=\"cm-tag\">table</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;</span>c<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">table</span><span class=\"cm-bracket cm-hmd-html-end cm-tag\">&gt;</span></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "Unclosed <b>bold never closed",
+        "html": "<div class=\"cm-line\" dir=\"ltr\">Unclosed <span class=\"cm-bracket cm-hmd-html-begin cm-tag\">&lt;</span><span class=\"cm-tag\">b</span><span class=\"cm-bracket cm-tag\">&gt;</span>bold never closed</div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line cm-active",
+        "text": "Tail paragraph.",
+        "html": "<div class=\"cm-line cm-active\" dir=\"ltr\">Tail paragraph.</div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       }
+      ],
+      "embeds": [
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><b>bold</b></span>",
+        "rect": [
+         434.8645935058594,
+         223.09375,
+         33.020835876464844,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><i>it</i></span>",
+        "rect": [
+         516.0416870117188,
+         223.09375,
+         9.3125,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><u>under</u></span>",
+        "rect": [
+         533.2083740234375,
+         223.09375,
+         41.46875,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><sup>sup</sup></span>",
+        "rect": [
+         589.875,
+         223.09375,
+         21.041667938232422,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><sub>2</sub></span>",
+        "rect": [
+         630.1354370117188,
+         223.09375,
+         7.1875,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><kbd>Ctrl</kbd></span>",
+        "rect": [
+         657.2396240234375,
+         223.09375,
+         39.8125,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><mark>mk</mark></span>",
+        "rect": [
+         704.90625,
+         223.09375,
+         21.73958396911621,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><span style=\"color: red\">red</span></span>",
+        "rect": [
+         734.5,
+         223.09375,
+         23.354167938232422,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><a href=\"https://example.invalid/\" target=\"_blank\" rel=\"noopener nofollow\">link</a></span>",
+        "rect": [
+         765.7083740234375,
+         223.09375,
+         24.760417938232422,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><br></span>",
+        "rect": [
+         837.46875,
+         223.09375,
+         0,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\">foo tag</span>",
+        "rect": [
+         447.4375,
+         298.29168701171875,
+         51.125,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-embed-block cm-table-widget markdown-rendered",
+        "tag": "DIV",
+        "html": "<div class=\"cm-embed-block cm-table-widget markdown-rendered\" dir=\"ltr\" contenteditable=\"false\"><div class=\"table-wrapper\"><table class=\"table-editor\" tabindex=\"-1\">\n<thead>\n<tr>\n<th dir=\"ltr\"><div class=\"table-cell-wrapper\">md</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></th>\n<th dir=\"ltr\"><div class=\"table-cell-wrapper\">table</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td dir=\"ltr\"><div class=\"table-cell-wrapper\">c</div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></td>\n<td dir=\"ltr\"><div class=\"table-cell-wrapper\">d</div></td>\n</tr>\n</tbody>\n</table><div class=\"table-row-btn\" aria-label=\"Add row below\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-plus\"><path d=\"M5 12h14\"></path><path d=\"M12 5v14\"></path></svg></div><div class=\"table-col-btn\" aria-label=\"Add column to the right\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" he",
+        "rect": [
+         360,
+         464.9583435058594,
+         636,
+         91.58333587646484
+        ]
+       }
+      ],
+      "tokens": [
+       {
+        "cls": "cm-html-embed",
+        "text": "bold",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "it",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "under",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "sup",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "2",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "Ctrl",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "mk",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "red",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "link",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "foo tag",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-hmd-html-begin cm-tag",
+        "text": "<",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "script",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": ">",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "</",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "script",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-hmd-html-end cm-tag",
+        "text": ">",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-hmd-html-begin cm-tag",
+        "text": "<",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "table",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": ">",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "<",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "tr",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "><",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "th",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": ">",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "</",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "th",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "><",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "th",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": ">",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "</",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "th",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "></",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "tr",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": ">",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "<",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "tr",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "><",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "td",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": ">",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       }
+      ],
+      "selections": [
+       {
+        "anchor": {
+         "line": 21,
+         "ch": 0
+        },
+        "head": {
+         "line": 21,
+         "ch": 0
+        }
+       }
+      ],
+      "hasFocus": true
+     },
+     "shot": "01-lp-cursor-at-end.png"
+    },
+    "02-cursor-inside-bold": {
+     "ok": true,
+     "ms": 517,
+     "cursor": {
+      "line": 2,
+      "ch": 15
+     },
+     "line2": {
+      "tag": "DIV",
+      "cls": "cm-line cm-active",
+      "text": "Inline: a <b>bold</b> word, it, under, xsup, H2O, Ctrl, mk, red, link, and abreak.",
+      "html": "<div class=\"cm-line cm-active\" dir=\"ltr\">Inline: a <span class=\"cm-bracket cm-hmd-html-begin cm-tag\">&lt;</span><span class=\"cm-tag\">b</span><span class=\"cm-bracket cm-tag\">&gt;</span>bold<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">b</span><span class=\"cm-bracket cm-hmd-html-end cm-tag\">&gt;</span> word, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><i>it</i></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><u>under</u></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, x<img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><sup>sup</sup></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, H<img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><sub>2</sub></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">O, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><kbd>Ctrl</kbd></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><mark>mk</mark></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><span style=\"color: red\">red</span></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><a href=\"https://example.invalid/\" target=\"_blank\" rel=\"noopener nofollow\">link</a></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, and a<img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><br></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">break.</div>"
+     },
+     "shot": "02-lp-cursor-in-bold.png"
+    },
+    "03-cursor-on-line-outside-tags": {
+     "ok": true,
+     "ms": 526,
+     "cursor": {
+      "line": 2,
+      "ch": 3
+     },
+     "line2": {
+      "tag": "DIV",
+      "cls": "cm-line cm-active",
+      "text": "Inline: a bold word, it, under, xsup, H2O, Ctrl, mk, red, link, and abreak.",
+      "html": "<div class=\"cm-line cm-active\" dir=\"ltr\">Inline: a <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><b>bold</b></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"> word, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><i>it</i></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><u>under</u></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, x<img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><sup>sup</sup></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, H<img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><sub>2</sub></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">O, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><kbd>Ctrl</kbd></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><mark>mk</mark></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><span style=\"color: red\">red</span></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><a href=\"https://example.invalid/\" target=\"_blank\" rel=\"noopener nofollow\">link</a></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, and a<img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><br></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">break.</div>"
+     },
+     "shot": "03-lp-cursor-line-start.png"
+    },
+    "04-cursor-on-the-opening-tag": {
+     "ok": true,
+     "ms": 530,
+     "cursor": {
+      "line": 2,
+      "ch": 11
+     },
+     "line2": {
+      "tag": "DIV",
+      "cls": "cm-line cm-active",
+      "text": "Inline: a <b>bold</b> word, it, under, xsup, H2O, Ctrl, mk, red, link, and abreak.",
+      "html": "<div class=\"cm-line cm-active\" dir=\"ltr\">Inline: a <span class=\"cm-bracket cm-hmd-html-begin cm-tag\">&lt;</span><span class=\"cm-tag\">b</span><span class=\"cm-bracket cm-tag\">&gt;</span>bold<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">b</span><span class=\"cm-bracket cm-hmd-html-end cm-tag\">&gt;</span> word, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><i>it</i></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><u>under</u></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, x<img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><sup>sup</sup></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, H<img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><sub>2</sub></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">O, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><kbd>Ctrl</kbd></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><mark>mk</mark></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><span style=\"color: red\">red</span></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><a href=\"https://example.invalid/\" target=\"_blank\" rel=\"noopener nofollow\">link</a></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, and a<img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><br></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">break.</div>"
+     },
+     "shot": "04-lp-cursor-in-open-tag.png"
+    },
+    "05-cursor-inside-sup": {
+     "ok": true,
+     "ms": 419,
+     "cursor": {
+      "line": 2,
+      "ch": 60
+     },
+     "line2": {
+      "tag": "DIV",
+      "cls": "cm-line cm-active",
+      "text": "Inline: a bold word, it, under, x<sup>sup</sup>, H2O, Ctrl, mk, red, link, and abreak.",
+      "html": "<div class=\"cm-line cm-active\" dir=\"ltr\">Inline: a <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><b>bold</b></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"> word, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><i>it</i></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><u>under</u></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, x<span class=\"cm-bracket cm-hmd-html-begin cm-tag\">&lt;</span><span class=\"cm-tag\">sup</span><span class=\"cm-bracket cm-tag\">&gt;</span>sup<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">sup</span><span class=\"cm-bracket cm-hmd-html-end cm-tag\">&gt;</span>, H<img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><sub>2</sub></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">O, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><kbd>Ctrl</kbd></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><mark>mk</mark></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><span style=\"color: red\">red</span></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><a href=\"https://example.invalid/\" target=\"_blank\" rel=\"noopener nofollow\">link</a></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, and a<img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><br></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">break.</div>"
+     }
+    },
+    "06-cursor-in-raw-table": {
+     "ok": true,
+     "ms": 528,
+     "cursor": {
+      "line": 8,
+      "ch": 3
+     },
+     "editor": {
+      "lines": [
+       {
+        "tag": "DIV",
+        "cls": "cm-line HyperMD-header HyperMD-header-1",
+        "text": "Live HTML probe",
+        "html": "<div class=\"cm-line HyperMD-header HyperMD-header-1\" dir=\"ltr\"><div class=\"cm-fold-indicator\" contenteditable=\"false\"><div class=\"collapse-indicator collapse-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon right-triangle\"><path d=\"M3 8L12 17L21 8\"></path></svg></div></div><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span contenteditable=\"false\"></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-header cm-header-1\">Live HTML probe</span></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "Inline: a bold word, it, under, xsup, H2O, Ctrl, mk, red, link, and abreak.",
+        "html": "<div class=\"cm-line\" dir=\"ltr\">Inline: a <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><b>bold</b></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"> word, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><i>it</i></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><u>under</u></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, x<img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><sup>sup</sup></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, H<img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><sub>2</sub></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">O, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><kbd>Ctrl</kbd></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><mark>mk</mark></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><span style=\"color: red\">red</span></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><a href=\"https://example.invalid/\" target=\"_blank\" rel=\"noopener nofollow\">link</a></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, and a<img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><br></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">break.</div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "Unknown foo tag and <script>x</script> end, <!-- a comment --> after.",
+        "html": "<div class=\"cm-line\" dir=\"ltr\">Unknown <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\">foo tag</span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"> and <span class=\"cm-bracket cm-hmd-html-begin cm-tag\">&lt;</span><span class=\"cm-tag\">script</span><span class=\"cm-bracket cm-tag\">&gt;</span><span class=\"cm-variable\">x</span><span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">script</span><span class=\"cm-bracket cm-hmd-html-end cm-tag\">&gt;</span> end, <span class=\"cm-comment\">&lt;!-- a comment --&gt;</span> after.</div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "<table>",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><span class=\"cm-bracket cm-hmd-html-begin cm-tag\">&lt;</span><span class=\"cm-tag\">table</span><span class=\"cm-bracket cm-tag\">&gt;</span></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "<tr><th>H1</th><th>H2</th></tr>",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><span class=\"cm-bracket cm-tag\">&lt;</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">th</span><span class=\"cm-bracket cm-tag\">&gt;</span>H1<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">th</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">th</span><span class=\"cm-bracket cm-tag\">&gt;</span>H2<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">th</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;</span></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line cm-active",
+        "text": "<tr><td>a</td><td><b>b</b> **md**</td></tr>",
+        "html": "<div class=\"cm-line cm-active\" dir=\"ltr\"><span class=\"cm-bracket cm-tag\">&lt;</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;</span>a<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">b</span><span class=\"cm-bracket cm-tag\">&gt;</span>b<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">b</span><span class=\"cm-bracket cm-tag\">&gt;</span> **md**<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;</span></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "</table>",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">table</span><span class=\"cm-bracket cm-hmd-html-end cm-tag\">&gt;</span></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-embed-block cm-table-widget markdown-rendered",
+        "text": "\n\n\nmd\ntable\n\n\n\n\nc\nd\n\n\n",
+        "html": "<div class=\"cm-embed-block cm-table-widget markdown-rendered\" dir=\"ltr\" contenteditable=\"false\"><div class=\"table-wrapper\"><table class=\"table-editor\" tabindex=\"-1\">\n<thead>\n<tr>\n<th dir=\"ltr\"><div class=\"table-cell-wrapper\">md</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></th>\n<th dir=\"ltr\"><div class=\"table-cell-wrapper\">table</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td dir=\"ltr\"><div class=\"table-cell-wrapper\">c</div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></td>\n<td dir=\"ltr\"><div class=\"table-cell-wrapper\">d</div></td>\n</tr>\n</tbody>\n</table><div class=\"table-row-btn\" aria-label=\"Add row below\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-plus\"><path d=\"M5 12h14\"></path><path d=\"M12 5v14\"></path></svg></div><div class=\"table-col-btn\" aria-label=\"Add column to the right\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" he"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "<table border=\"1\"><thead><tr><th align=\"left\">L</th><th align=\"right\">R</th></tr></thead><tbody><tr><td colspan=\"2\" style=\"color: red\">wide cell</td></tr><tr><td>one</td><td>two</td></tr></tbody></tab",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><span class=\"cm-bracket cm-hmd-html-begin cm-tag\">&lt;</span><span class=\"cm-tag\">table</span> <span class=\"cm-attribute\">border</span>=<span class=\"cm-string\">\"1\"</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">thead</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">th</span> <span class=\"cm-attribute\">align</span>=<span class=\"cm-string\">\"left\"</span><span class=\"cm-bracket cm-tag\">&gt;</span>L<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">th</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">th</span> <span class=\"cm-attribute\">align</span>=<span class=\"cm-string\">\"right\"</span><span class=\"cm-bracket cm-tag\">&gt;</span>R<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">th</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">thead</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">tbody</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">td</span> <span class=\"cm-attribute\">colspan</span>=<span class=\"cm-string\">\"2\"</span> <span class=\"cm-attribute\">style</span>=<span class=\"cm-string\">\"color: red\"</span><span class=\"cm-bracket cm-tag\">&gt;</span>wide cell<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;</span>one<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;</span>two<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">tbody</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">table</span><span class=\"cm-bracket cm-hmd-html-end cm-tag\">&gt;</span></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "<table><tr><td>c</td></tr></table>",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><span class=\"cm-bracket cm-hmd-html-begin cm-tag\">&lt;</span><span class=\"cm-tag\">table</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;</span>c<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">table</span><span class=\"cm-bracket cm-hmd-html-end cm-tag\">&gt;</span></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "Unclosed <b>bold never closed",
+        "html": "<div class=\"cm-line\" dir=\"ltr\">Unclosed <span class=\"cm-bracket cm-hmd-html-begin cm-tag\">&lt;</span><span class=\"cm-tag\">b</span><span class=\"cm-bracket cm-tag\">&gt;</span>bold never closed</div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "Tail paragraph.",
+        "html": "<div class=\"cm-line\" dir=\"ltr\">Tail paragraph.</div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       }
+      ],
+      "embeds": [
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><b>bold</b></span>",
+        "rect": [
+         434.8645935058594,
+         223.09375,
+         33.020835876464844,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><i>it</i></span>",
+        "rect": [
+         516.0416870117188,
+         223.09375,
+         9.3125,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><u>under</u></span>",
+        "rect": [
+         533.2083740234375,
+         223.09375,
+         41.46875,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><sup>sup</sup></span>",
+        "rect": [
+         589.875,
+         223.09375,
+         21.041667938232422,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><sub>2</sub></span>",
+        "rect": [
+         630.1354370117188,
+         223.09375,
+         7.1875,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><kbd>Ctrl</kbd></span>",
+        "rect": [
+         657.2396240234375,
+         223.09375,
+         39.8125,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><mark>mk</mark></span>",
+        "rect": [
+         704.90625,
+         223.09375,
+         21.73958396911621,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><span style=\"color: red\">red</span></span>",
+        "rect": [
+         734.5,
+         223.09375,
+         23.354167938232422,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><a href=\"https://example.invalid/\" target=\"_blank\" rel=\"noopener nofollow\">link</a></span>",
+        "rect": [
+         765.7083740234375,
+         223.09375,
+         24.760417938232422,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><br></span>",
+        "rect": [
+         837.46875,
+         223.09375,
+         0,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\">foo tag</span>",
+        "rect": [
+         447.4375,
+         298.29168701171875,
+         51.125,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-embed-block cm-table-widget markdown-rendered",
+        "tag": "DIV",
+        "html": "<div class=\"cm-embed-block cm-table-widget markdown-rendered\" dir=\"ltr\" contenteditable=\"false\"><div class=\"table-wrapper\"><table class=\"table-editor\" tabindex=\"-1\">\n<thead>\n<tr>\n<th dir=\"ltr\"><div class=\"table-cell-wrapper\">md</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></th>\n<th dir=\"ltr\"><div class=\"table-cell-wrapper\">table</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td dir=\"ltr\"><div class=\"table-cell-wrapper\">c</div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></td>\n<td dir=\"ltr\"><div class=\"table-cell-wrapper\">d</div></td>\n</tr>\n</tbody>\n</table><div class=\"table-row-btn\" aria-label=\"Add row below\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-plus\"><path d=\"M5 12h14\"></path><path d=\"M12 5v14\"></path></svg></div><div class=\"table-col-btn\" aria-label=\"Add column to the right\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" he",
+        "rect": [
+         360,
+         464.9583435058594,
+         636,
+         91.58333587646484
+        ]
+       }
+      ],
+      "tokens": [
+       {
+        "cls": "cm-html-embed",
+        "text": "bold",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "it",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "under",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "sup",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "2",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "Ctrl",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "mk",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "red",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "link",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "foo tag",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-hmd-html-begin cm-tag",
+        "text": "<",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "script",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": ">",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "</",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "script",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-hmd-html-end cm-tag",
+        "text": ">",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-hmd-html-begin cm-tag",
+        "text": "<",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "table",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": ">",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "<",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "tr",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "><",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "th",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": ">",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "</",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "th",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "><",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "th",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": ">",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "</",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "th",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "></",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "tr",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": ">",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "<",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "tr",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "><",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "td",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": ">",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       }
+      ],
+      "selections": [
+       {
+        "anchor": {
+         "line": 8,
+         "ch": 3
+        },
+        "head": {
+         "line": 8,
+         "ch": 3
+        }
+       }
+      ],
+      "hasFocus": true
+     },
+     "shot": "06-lp-cursor-in-table.png"
+    },
+    "07-cursor-on-unknown-line": {
+     "ok": true,
+     "ms": 417,
+     "cursor": {
+      "line": 4,
+      "ch": 0
+     },
+     "editor": {
+      "lines": [
+       {
+        "tag": "DIV",
+        "cls": "cm-line HyperMD-header HyperMD-header-1",
+        "text": "Live HTML probe",
+        "html": "<div class=\"cm-line HyperMD-header HyperMD-header-1\" dir=\"ltr\"><div class=\"cm-fold-indicator\" contenteditable=\"false\"><div class=\"collapse-indicator collapse-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon right-triangle\"><path d=\"M3 8L12 17L21 8\"></path></svg></div></div><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span contenteditable=\"false\"></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-header cm-header-1\">Live HTML probe</span></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "Inline: a bold word, it, under, xsup, H2O, Ctrl, mk, red, link, and abreak.",
+        "html": "<div class=\"cm-line\" dir=\"ltr\">Inline: a <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><b>bold</b></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"> word, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><i>it</i></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><u>under</u></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, x<img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><sup>sup</sup></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, H<img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><sub>2</sub></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">O, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><kbd>Ctrl</kbd></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><mark>mk</mark></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><span style=\"color: red\">red</span></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><a href=\"https://example.invalid/\" target=\"_blank\" rel=\"noopener nofollow\">link</a></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">, and a<img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><br></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\">break.</div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line cm-active",
+        "text": "Unknown foo tag and <script>x</script> end, <!-- a comment --> after.",
+        "html": "<div class=\"cm-line cm-active\" dir=\"ltr\">Unknown <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\">foo tag</span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"> and <span class=\"cm-bracket cm-hmd-html-begin cm-tag\">&lt;</span><span class=\"cm-tag\">script</span><span class=\"cm-bracket cm-tag\">&gt;</span><span class=\"cm-variable\">x</span><span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">script</span><span class=\"cm-bracket cm-hmd-html-end cm-tag\">&gt;</span> end, <span class=\"cm-comment\">&lt;!-- a comment --&gt;</span> after.</div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "<table>",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><span class=\"cm-bracket cm-hmd-html-begin cm-tag\">&lt;</span><span class=\"cm-tag\">table</span><span class=\"cm-bracket cm-tag\">&gt;</span></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "<tr><th>H1</th><th>H2</th></tr>",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><span class=\"cm-bracket cm-tag\">&lt;</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">th</span><span class=\"cm-bracket cm-tag\">&gt;</span>H1<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">th</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">th</span><span class=\"cm-bracket cm-tag\">&gt;</span>H2<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">th</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;</span></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "<tr><td>a</td><td><b>b</b> **md**</td></tr>",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><span class=\"cm-bracket cm-tag\">&lt;</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;</span>a<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">b</span><span class=\"cm-bracket cm-tag\">&gt;</span>b<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">b</span><span class=\"cm-bracket cm-tag\">&gt;</span> **md**<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;</span></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "</table>",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">table</span><span class=\"cm-bracket cm-hmd-html-end cm-tag\">&gt;</span></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-embed-block cm-table-widget markdown-rendered",
+        "text": "\n\n\nmd\ntable\n\n\n\n\nc\nd\n\n\n",
+        "html": "<div class=\"cm-embed-block cm-table-widget markdown-rendered\" dir=\"ltr\" contenteditable=\"false\"><div class=\"table-wrapper\"><table class=\"table-editor\" tabindex=\"-1\">\n<thead>\n<tr>\n<th dir=\"ltr\"><div class=\"table-cell-wrapper\">md</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></th>\n<th dir=\"ltr\"><div class=\"table-cell-wrapper\">table</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td dir=\"ltr\"><div class=\"table-cell-wrapper\">c</div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></td>\n<td dir=\"ltr\"><div class=\"table-cell-wrapper\">d</div></td>\n</tr>\n</tbody>\n</table><div class=\"table-row-btn\" aria-label=\"Add row below\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-plus\"><path d=\"M5 12h14\"></path><path d=\"M12 5v14\"></path></svg></div><div class=\"table-col-btn\" aria-label=\"Add column to the right\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" he"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "<table border=\"1\"><thead><tr><th align=\"left\">L</th><th align=\"right\">R</th></tr></thead><tbody><tr><td colspan=\"2\" style=\"color: red\">wide cell</td></tr><tr><td>one</td><td>two</td></tr></tbody></tab",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><span class=\"cm-bracket cm-hmd-html-begin cm-tag\">&lt;</span><span class=\"cm-tag\">table</span> <span class=\"cm-attribute\">border</span>=<span class=\"cm-string\">\"1\"</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">thead</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">th</span> <span class=\"cm-attribute\">align</span>=<span class=\"cm-string\">\"left\"</span><span class=\"cm-bracket cm-tag\">&gt;</span>L<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">th</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">th</span> <span class=\"cm-attribute\">align</span>=<span class=\"cm-string\">\"right\"</span><span class=\"cm-bracket cm-tag\">&gt;</span>R<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">th</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">thead</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">tbody</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">td</span> <span class=\"cm-attribute\">colspan</span>=<span class=\"cm-string\">\"2\"</span> <span class=\"cm-attribute\">style</span>=<span class=\"cm-string\">\"color: red\"</span><span class=\"cm-bracket cm-tag\">&gt;</span>wide cell<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;</span>one<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;</span>two<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">tbody</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">table</span><span class=\"cm-bracket cm-hmd-html-end cm-tag\">&gt;</span></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "<table><tr><td>c</td></tr></table>",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><span class=\"cm-bracket cm-hmd-html-begin cm-tag\">&lt;</span><span class=\"cm-tag\">table</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;</span>c<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">td</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">tr</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">table</span><span class=\"cm-bracket cm-hmd-html-end cm-tag\">&gt;</span></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "Unclosed <b>bold never closed",
+        "html": "<div class=\"cm-line\" dir=\"ltr\">Unclosed <span class=\"cm-bracket cm-hmd-html-begin cm-tag\">&lt;</span><span class=\"cm-tag\">b</span><span class=\"cm-bracket cm-tag\">&gt;</span>bold never closed</div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "Tail paragraph.",
+        "html": "<div class=\"cm-line\" dir=\"ltr\">Tail paragraph.</div>"
+       },
+       {
+        "tag": "DIV",
+        "cls": "cm-line",
+        "text": "",
+        "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+       }
+      ],
+      "embeds": [
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><b>bold</b></span>",
+        "rect": [
+         434.8645935058594,
+         223.09375,
+         33.020835876464844,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><i>it</i></span>",
+        "rect": [
+         516.0416870117188,
+         223.09375,
+         9.3125,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><u>under</u></span>",
+        "rect": [
+         533.2083740234375,
+         223.09375,
+         41.46875,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><sup>sup</sup></span>",
+        "rect": [
+         589.875,
+         223.09375,
+         21.041667938232422,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><sub>2</sub></span>",
+        "rect": [
+         630.1354370117188,
+         223.09375,
+         7.1875,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><kbd>Ctrl</kbd></span>",
+        "rect": [
+         657.2396240234375,
+         223.09375,
+         39.8125,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><mark>mk</mark></span>",
+        "rect": [
+         704.90625,
+         223.09375,
+         21.73958396911621,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><span style=\"color: red\">red</span></span>",
+        "rect": [
+         734.5,
+         223.09375,
+         23.354167938232422,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><a href=\"https://example.invalid/\" target=\"_blank\" rel=\"noopener nofollow\">link</a></span>",
+        "rect": [
+         765.7083740234375,
+         223.09375,
+         24.760417938232422,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><br></span>",
+        "rect": [
+         837.46875,
+         223.09375,
+         0,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-html-embed",
+        "tag": "SPAN",
+        "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\">foo tag</span>",
+        "rect": [
+         447.4375,
+         298.29168701171875,
+         51.125,
+         21.33333396911621
+        ]
+       },
+       {
+        "cls": "cm-embed-block cm-table-widget markdown-rendered",
+        "tag": "DIV",
+        "html": "<div class=\"cm-embed-block cm-table-widget markdown-rendered\" dir=\"ltr\" contenteditable=\"false\"><div class=\"table-wrapper\"><table class=\"table-editor\" tabindex=\"-1\">\n<thead>\n<tr>\n<th dir=\"ltr\"><div class=\"table-cell-wrapper\">md</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></th>\n<th dir=\"ltr\"><div class=\"table-cell-wrapper\">table</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td dir=\"ltr\"><div class=\"table-cell-wrapper\">c</div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></td>\n<td dir=\"ltr\"><div class=\"table-cell-wrapper\">d</div></td>\n</tr>\n</tbody>\n</table><div class=\"table-row-btn\" aria-label=\"Add row below\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-plus\"><path d=\"M5 12h14\"></path><path d=\"M12 5v14\"></path></svg></div><div class=\"table-col-btn\" aria-label=\"Add column to the right\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" he",
+        "rect": [
+         360,
+         464.9583435058594,
+         636,
+         91.58333587646484
+        ]
+       }
+      ],
+      "tokens": [
+       {
+        "cls": "cm-html-embed",
+        "text": "bold",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "it",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "under",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "sup",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "2",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "Ctrl",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "mk",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "red",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "link",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-html-embed",
+        "text": "foo tag",
+        "color": "rgb(218, 218, 218)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-hmd-html-begin cm-tag",
+        "text": "<",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "script",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": ">",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "</",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "script",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-hmd-html-end cm-tag",
+        "text": ">",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-hmd-html-begin cm-tag",
+        "text": "<",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "table",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": ">",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "<",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "tr",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "><",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "th",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": ">",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "</",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "th",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "><",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "th",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": ">",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "</",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "th",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "></",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "tr",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": ">",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "<",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "tr",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": "><",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-tag",
+        "text": "td",
+        "color": "rgb(251, 70, 76)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       },
+       {
+        "cls": "cm-bracket cm-tag",
+        "text": ">",
+        "color": "rgb(179, 179, 179)",
+        "display": "inline",
+        "fontSize": "16px",
+        "fontFamily": "\"??\", \"??\", ui-sans-serif, -apple-system, BlinkMacSystemFont"
+       }
+      ],
+      "selections": [
+       {
+        "anchor": {
+         "line": 4,
+         "ch": 0
+        },
+        "head": {
+         "line": 4,
+         "ch": 0
+        }
+       }
+      ],
+      "hasFocus": true
+     }
+    },
+    "08-lp-widget-styles": {
+     "ok": true,
+     "ms": 416,
+     "tables": [
+      {
+       "html": "<table class=\"table-editor\" tabindex=\"-1\">\n<thead>\n<tr>\n<th dir=\"ltr\"><div class=\"table-cell-wrapper\">md</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></th>\n<th dir=\"ltr\"><div class=\"table-cell-wrapper\">table</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td dir=\"ltr\"><div class=\"table-cell-wrapper\">c</div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"",
+       "table": {
+        "tag": "TABLE",
+        "cls": "table-editor",
+        "text": "\n\n\nmd\ntable\n\n\n\n\nc\nd\n\n\n",
+        "rect": [
+         376,
+         480.9583435058594,
+         107.25,
+         59.583335876464844
+        ],
+        "fontWeight": "400",
+        "fontSize": "16px",
+        "color": "rgb(218, 218, 218)",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(128, 128, 128) 0px none",
+        "padding": "0px 0px 0px 0px",
+        "textAlign": "start",
+        "verticalAlign": "baseline",
+        "lineHeight": "20.8px",
+        "borderCollapse": "collapse",
+        "width": "107.25px",
+        "display": "table",
+        "marginTop": "0px",
+        "marginBottom": "0px"
+       },
+       "parent": {
+        "tag": "DIV",
+        "cls": "table-wrapper",
+        "text": "\n\n\nmd\ntable\n\n\n\n\nc\nd\n\n\n",
+        "rect": [
+         376,
+         480.9583435058594,
+         107.25,
+         59.583335876464844
+        ],
+        "fontWeight": "400",
+        "fontSize": "16px",
+        "color": "rgb(218, 218, 218)",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(218, 218, 218) 0px none",
+        "padding": "0px 0px 0px 0px",
+        "textAlign": "start",
+        "verticalAlign": "baseline",
+        "lineHeight": "24px",
+        "borderCollapse": "separate",
+        "width": "107.25px",
+        "display": "block",
+        "marginTop": "0px",
+        "marginBottom": "0px"
+       },
+       "grand": {
+        "tag": "DIV",
+        "cls": "cm-embed-block cm-table-widget markdown-rendered",
+        "text": "\n\n\nmd\ntable\n\n\n\n\nc\nd\n\n\n",
+        "rect": [
+         360,
+         464.9583435058594,
+         636,
+         91.58333587646484
+        ],
+        "fontWeight": "400",
+        "fontSize": "16px",
+        "color": "rgb(218, 218, 218)",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(218, 218, 218) 0px none",
+        "padding": "16px 16px 16px 16px",
+        "textAlign": "start",
+        "verticalAlign": "baseline",
+        "lineHeight": "24px",
+        "borderCollapse": "separate",
+        "width": "636px",
+        "display": "block",
+        "marginTop": "0px",
+        "marginBottom": "0px"
+       },
+       "cells": [
+        {
+         "tag": "TH",
+         "cls": "",
+         "text": "md",
+         "rect": [
+          376.3333435058594,
+          481.29168701171875,
+          53.29166793823242,
+          29.45833396911621
+         ],
+         "fontWeight": "600",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0.666667px solid rgb(51, 51, 51) 0.666667px solid",
+         "padding": "0px 0px 0px 0px",
+         "textAlign": "start",
+         "verticalAlign": "top",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "53.2917px",
+         "display": "table-cell",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        },
+        {
+         "tag": "TH",
+         "cls": "",
+         "text": "table",
+         "rect": [
+          429.625,
+          481.29168701171875,
+          53.29166793823242,
+          29.45833396911621
+         ],
+         "fontWeight": "600",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0.666667px solid rgb(51, 51, 51) 0.666667px solid",
+         "padding": "0px 0px 0px 0px",
+         "textAlign": "start",
+         "verticalAlign": "top",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "53.2917px",
+         "display": "table-cell",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        },
+        {
+         "tag": "TD",
+         "cls": "",
+         "text": "c",
+         "rect": [
+          376.3333435058594,
+          510.75,
+          53.29166793823242,
+          29.45833396911621
+         ],
+         "fontWeight": "400",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0.666667px solid rgb(51, 51, 51) 0.666667px solid",
+         "padding": "0px 0px 0px 0px",
+         "textAlign": "start",
+         "verticalAlign": "top",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "53.2917px",
+         "display": "table-cell",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        },
+        {
+         "tag": "TD",
+         "cls": "",
+         "text": "d",
+         "rect": [
+          429.625,
+          510.75,
+          53.29166793823242,
+          29.45833396911621
+         ],
+         "fontWeight": "400",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0.666667px solid rgb(51, 51, 51) 0.666667px solid",
+         "padding": "0px 0px 0px 0px",
+         "textAlign": "start",
+         "verticalAlign": "top",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "53.2917px",
+         "display": "table-cell",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        }
+       ]
+      }
+     ],
+     "inline": [
+      {
+       "tg": "b",
+       "tag": "B",
+       "cls": "",
+       "text": "bold",
+       "rect": [
+        434.8645935058594,
+        223.09375,
+        33.020835876464844,
+        21.33333396911621
+       ],
+       "fontWeight": "600",
+       "fontSize": "16px",
+       "color": "rgb(218, 218, 218)",
+       "background": "rgba(0, 0, 0, 0)",
+       "border": "0px none rgb(218, 218, 218) 0px none",
+       "padding": "0px 0px 0px 0px",
+       "textAlign": "start",
+       "verticalAlign": "baseline",
+       "lineHeight": "24px",
+       "borderCollapse": "separate",
+       "width": "auto",
+       "display": "inline",
+       "marginTop": "0px",
+       "marginBottom": "0px",
+       "html": "<b>bold</b>",
+       "parentHtml": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><b>bold</b></span>"
+      },
+      {
+       "tg": "i",
+       "tag": "I",
+       "cls": "",
+       "text": "it",
+       "rect": [
+        516.0416870117188,
+        223.09375,
+        9.3125,
+        21.33333396911621
+       ],
+       "fontWeight": "400",
+       "fontSize": "16px",
+       "color": "rgb(218, 218, 218)",
+       "background": "rgba(0, 0, 0, 0)",
+       "border": "0px none rgb(218, 218, 218) 0px none",
+       "padding": "0px 0px 0px 0px",
+       "textAlign": "start",
+       "verticalAlign": "baseline",
+       "lineHeight": "24px",
+       "borderCollapse": "separate",
+       "width": "auto",
+       "display": "inline",
+       "marginTop": "0px",
+       "marginBottom": "0px",
+       "html": "<i>it</i>",
+       "parentHtml": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><i>it</i></span>"
+      },
+      {
+       "tg": "u",
+       "tag": "U",
+       "cls": "",
+       "text": "under",
+       "rect": [
+        533.2083740234375,
+        223.09375,
+        41.46875,
+        21.33333396911621
+       ],
+       "fontWeight": "400",
+       "fontSize": "16px",
+       "color": "rgb(218, 218, 218)",
+       "background": "rgba(0, 0, 0, 0)",
+       "border": "0px none rgb(218, 218, 218) 0px none",
+       "padding": "0px 0px 0px 0px",
+       "textAlign": "start",
+       "verticalAlign": "baseline",
+       "lineHeight": "24px",
+       "borderCollapse": "separate",
+       "width": "auto",
+       "display": "inline",
+       "marginTop": "0px",
+       "marginBottom": "0px",
+       "html": "<u>under</u>",
+       "parentHtml": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><u>under</u></span>"
+      },
+      {
+       "tg": "sup",
+       "tag": "SUP",
+       "cls": "",
+       "text": "sup",
+       "rect": [
+        589.875,
+        219.7604217529297,
+        21.041667938232422,
+        18
+       ],
+       "fontWeight": "400",
+       "fontSize": "13.3333px",
+       "color": "rgb(218, 218, 218)",
+       "background": "rgba(0, 0, 0, 0)",
+       "border": "0px none rgb(218, 218, 218) 0px none",
+       "padding": "0px 0px 0px 0px",
+       "textAlign": "start",
+       "verticalAlign": "super",
+       "lineHeight": "20px",
+       "borderCollapse": "separate",
+       "width": "auto",
+       "display": "inline",
+       "marginTop": "0px",
+       "marginBottom": "0px",
+       "html": "<sup>sup</sup>",
+       "parentHtml": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><sup>sup</sup></span>"
+      },
+      {
+       "tg": "sub",
+       "tag": "SUB",
+       "cls": "",
+       "text": "2",
+       "rect": [
+        630.1354370117188,
+        229.625,
+        7.1875,
+        18
+       ],
+       "fontWeight": "400",
+       "fontSize": "13.3333px",
+       "color": "rgb(218, 218, 218)",
+       "background": "rgba(0, 0, 0, 0)",
+       "border": "0px none rgb(218, 218, 218) 0px none",
+       "padding": "0px 0px 0px 0px",
+       "textAlign": "start",
+       "verticalAlign": "sub",
+       "lineHeight": "20px",
+       "borderCollapse": "separate",
+       "width": "auto",
+       "display": "inline",
+       "marginTop": "0px",
+       "marginBottom": "0px",
+       "html": "<sub>2</sub>",
+       "parentHtml": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><sub>2</sub></span>"
+      },
+      {
+       "tg": "kbd",
+       "tag": "KBD",
+       "cls": "",
+       "text": "Ctrl",
+       "rect": [
+        657.2396240234375,
+        226.36459350585938,
+        39.8125,
+        18.791667938232422
+       ],
+       "fontWeight": "400",
+       "fontSize": "14px",
+       "color": "rgb(218, 218, 218)",
+       "background": "rgb(35, 35, 35)",
+       "border": "0px none rgb(218, 218, 218) 0px none",
+       "padding": "1.4px 3.5px 1.4px 3.5px",
+       "textAlign": "start",
+       "verticalAlign": "baseline",
+       "lineHeight": "21px",
+       "borderCollapse": "separate",
+       "width": "auto",
+       "display": "inline",
+       "marginTop": "0px",
+       "marginBottom": "0px",
+       "html": "<kbd>Ctrl</kbd>",
+       "parentHtml": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><kbd>Ctrl</kbd></span>"
+      },
+      {
+       "tg": "mark",
+       "tag": "MARK",
+       "cls": "",
+       "text": "mk",
+       "rect": [
+        704.90625,
+        223.09375,
+        21.73958396911621,
+        21.33333396911621
+       ],
+       "fontWeight": "400",
+       "fontSize": "16px",
+       "color": "rgb(0, 0, 0)",
+       "background": "rgb(255, 255, 0)",
+       "border": "0px none rgb(0, 0, 0) 0px none",
+       "padding": "0px 0px 0px 0px",
+       "textAlign": "start",
+       "verticalAlign": "baseline",
+       "lineHeight": "24px",
+       "borderCollapse": "separate",
+       "width": "auto",
+       "display": "inline",
+       "marginTop": "0px",
+       "marginBottom": "0px",
+       "html": "<mark>mk</mark>",
+       "parentHtml": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><mark>mk</mark></span>"
+      },
+      {
+       "tg": "span",
+       "tag": "SPAN",
+       "cls": "",
+       "text": "",
+       "rect": [
+        376,
+        162.03125,
+        0,
+        34.66666793823242
+       ],
+       "fontWeight": "700",
+       "fontSize": "25.888px",
+       "color": "rgb(218, 218, 218)",
+       "background": "rgba(0, 0, 0, 0)",
+       "border": "0px none rgb(218, 218, 218) 0px none",
+       "padding": "0px 0px 0px 0px",
+       "textAlign": "start",
+       "verticalAlign": "baseline",
+       "lineHeight": "31.0656px",
+       "borderCollapse": "separate",
+       "width": "auto",
+       "display": "inline",
+       "marginTop": "0px",
+       "marginBottom": "0px",
+       "html": "<span contenteditable=\"false\"></span>",
+       "parentHtml": "<div class=\"cm-line HyperMD-header HyperMD-header-1\" dir=\"ltr\"><div class=\"cm-fold-indicator\" contenteditable=\"false\"><div class=\"collapse-indicator collapse-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon right-triangle\"><path d=\"M3 8L12 17L21 "
+      },
+      {
+       "tg": "a",
+       "tag": "A",
+       "cls": "",
+       "text": "link",
+       "rect": [
+        765.7083740234375,
+        223.09375,
+        24.760417938232422,
+        21.33333396911621
+       ],
+       "fontWeight": "400",
+       "fontSize": "16px",
+       "color": "rgb(166, 138, 249)",
+       "background": "rgba(0, 0, 0, 0)",
+       "border": "0px none rgb(166, 138, 249) 0px none",
+       "padding": "0px 0px 0px 0px",
+       "textAlign": "start",
+       "verticalAlign": "baseline",
+       "lineHeight": "24px",
+       "borderCollapse": "separate",
+       "width": "auto",
+       "display": "inline",
+       "marginTop": "0px",
+       "marginBottom": "0px",
+       "html": "<a href=\"https://example.invalid/\" target=\"_blank\" rel=\"noopener nofollow\">link</a>",
+       "parentHtml": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><a href=\"https://example.invalid/\" target=\"_blank\" rel=\"noopener nofollow\">link</a></span>"
+      }
+     ]
+    },
+    "09-reading-view": {
+     "ok": true,
+     "ms": 1232,
+     "sections": [
+      {
+       "cls": "markdown-preview-pusher",
+       "html": "<div class=\"markdown-preview-pusher\" style=\"width: 1px; height: 0.1px; margin-bottom: 0px;\"></div>"
+      },
+      {
+       "cls": "mod-header mod-ui",
+       "html": "<div class=\"mod-header mod-ui\"><div class=\"inline-title\" contenteditable=\"true\" spellcheck=\"true\" autocapitalize=\"on\" tabindex=\"-1\" enterkeyhint=\"done\">Live</div><div class=\"metadata-container\" tabindex=\"-1\" data-property-count=\"0\"><div class=\"metadata-error-container\" style=\"display: none;\"></div><div class=\"metadata-properties-heading\" tabindex=\"0\"><div class=\"collapse-indicator collapse-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon right-triangle\"><path d=\"M3 8L12 17L21 8\"></path></svg></div><div class=\"metadata-properties-title\">Properties</div></div><div class=\"metadata-content\"><div class=\"metadata-properties\"></div><div class=\"metadata-add-button text-icon-button\" tabindex=\"0\"><span class=\"text-button-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-plus\"><path d=\"M5 12h14\"></path><path d=\"M12 5v14\"></path></svg></span><span class=\"text-button-label\">Add property</span></div></div></div></div>"
+      },
+      {
+       "cls": "el-h1",
+       "html": "<div class=\"el-h1\"><h1 data-heading=\"Live HTML probe\" dir=\"auto\"><span class=\"heading-collapse-indicator collapse-indicator collapse-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon right-triangle\"><path d=\"M3 8L12 17L21 8\"></path></svg></span>Live HTML probe</h1></div>"
+      },
+      {
+       "cls": "el-p",
+       "html": "<div class=\"el-p\"><p dir=\"auto\">Inline: a <b>bold</b> word, <i>it</i>, <u>under</u>, x<sup>sup</sup>, H<sub>2</sub>O, <kbd>Ctrl</kbd>, <mark>mk</mark>, <span style=\"color: red\">red</span>, <a href=\"https://example.invalid/\" target=\"_blank\" rel=\"noopener nofollow\">link</a>, and a<br>break.</p></div>"
+      },
+      {
+       "cls": "el-p",
+       "html": "<div class=\"el-p\"><p dir=\"auto\">Unknown foo tag and  end,  after.</p></div>"
+      },
+      {
+       "cls": "el-table",
+       "html": "<div class=\"el-table\" dir=\"ltr\" style=\"overflow-x: auto;\"><table>\n<tbody><tr><th dir=\"ltr\">H1</th><th dir=\"ltr\">H2</th></tr>\n<tr><td dir=\"ltr\">a</td><td dir=\"ltr\"><b>b</b> **md**</td></tr>\n</tbody></table></div>"
+      },
+      {
+       "cls": "el-table",
+       "html": "<div class=\"el-table\" dir=\"ltr\" style=\"overflow-x: auto;\"><table>\n<thead>\n<tr>\n<th dir=\"ltr\">md</th>\n<th dir=\"ltr\">table</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td dir=\"ltr\">c</td>\n<td dir=\"ltr\">d</td>\n</tr>\n</tbody>\n</table></div>"
+      },
+      {
+       "cls": "el-table",
+       "html": "<div class=\"el-table\" dir=\"ltr\" style=\"overflow-x: auto;\"><table border=\"1\"><thead><tr><th align=\"left\" dir=\"ltr\">L</th><th align=\"right\" dir=\"ltr\">R</th></tr></thead><tbody><tr><td style=\"color: red\" colspan=\"2\" dir=\"ltr\">wide cell</td></tr><tr><td dir=\"ltr\">one</td><td dir=\"ltr\">two</td></tr></tbody></table></div>"
+      },
+      {
+       "cls": "el-table",
+       "html": "<div class=\"el-table\" dir=\"ltr\" style=\"overflow-x: auto;\"><table><tbody><tr><td dir=\"ltr\">c</td></tr></tbody></table></div>"
+      },
+      {
+       "cls": "el-p",
+       "html": "<div class=\"el-p\"><p dir=\"auto\">Unclosed <b>bold never closed</b></p></div>"
+      },
+      {
+       "cls": "el-p",
+       "html": "<div class=\"el-p\"><p dir=\"auto\">Tail paragraph.</p></div>"
+      },
+      {
+       "cls": "mod-footer mod-ui",
+       "html": "<div class=\"mod-footer mod-ui\"><div class=\"embedded-backlinks\" style=\"display: none;\"></div></div>"
+      }
+     ],
+     "tables": [
+      {
+       "html": "<table>\n<tbody><tr><th dir=\"ltr\">H1</th><th dir=\"ltr\">H2</th></tr>\n<tr><td dir=\"ltr\">a</td><td dir=\"ltr\"><b>b</b> **md**</td></tr>\n</tbody></table>",
+       "table": {
+        "tag": "TABLE",
+        "cls": "",
+        "text": "\nH1H2\nab **md**\n",
+        "rect": [
+         376,
+         323.0520935058594,
+         134.55209350585938,
+         59.583335876464844
+        ],
+        "fontWeight": "400",
+        "fontSize": "16px",
+        "color": "rgb(218, 218, 218)",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(128, 128, 128) 0px none",
+        "padding": "0px 0px 0px 0px",
+        "textAlign": "start",
+        "verticalAlign": "baseline",
+        "lineHeight": "20.8px",
+        "borderCollapse": "collapse",
+        "width": "134.552px",
+        "display": "table",
+        "marginTop": "16px",
+        "marginBottom": "16px"
+       },
+       "parent": {
+        "tag": "DIV",
+        "cls": "el-table",
+        "text": "\nH1H2\nab **md**\n",
+        "rect": [
+         376,
+         307.0520935058594,
+         604,
+         91.58333587646484
+        ],
+        "fontWeight": "400",
+        "fontSize": "16px",
+        "color": "rgb(218, 218, 218)",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(218, 218, 218) 0px none",
+        "padding": "0px 0px 0px 0px",
+        "textAlign": "start",
+        "verticalAlign": "baseline",
+        "lineHeight": "24px",
+        "borderCollapse": "separate",
+        "width": "604px",
+        "display": "block",
+        "marginTop": "0px",
+        "marginBottom": "0px"
+       },
+       "cells": [
+        {
+         "tag": "TH",
+         "cls": "",
+         "text": "H1",
+         "rect": [
+          376.3333435058594,
+          323.38543701171875,
+          53.29166793823242,
+          29.45833396911621
+         ],
+         "fontWeight": "600",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0.666667px solid rgb(51, 51, 51) 0.666667px solid",
+         "padding": "4px 8px 4px 8px",
+         "textAlign": "start",
+         "verticalAlign": "top",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "53.2917px",
+         "display": "table-cell",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        },
+        {
+         "tag": "TH",
+         "cls": "",
+         "text": "H2",
+         "rect": [
+          429.625,
+          323.38543701171875,
+          80.59375,
+          29.45833396911621
+         ],
+         "fontWeight": "600",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0.666667px solid rgb(51, 51, 51) 0.666667px solid",
+         "padding": "4px 8px 4px 8px",
+         "textAlign": "start",
+         "verticalAlign": "top",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "80.5938px",
+         "display": "table-cell",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        },
+        {
+         "tag": "TD",
+         "cls": "",
+         "text": "a",
+         "rect": [
+          376.3333435058594,
+          352.84375,
+          53.29166793823242,
+          29.45833396911621
+         ],
+         "fontWeight": "400",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0.666667px solid rgb(51, 51, 51) 0.666667px solid",
+         "padding": "4px 8px 4px 8px",
+         "textAlign": "start",
+         "verticalAlign": "top",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "53.2917px",
+         "display": "table-cell",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        },
+        {
+         "tag": "TD",
+         "cls": "",
+         "text": "b **md**",
+         "rect": [
+          429.625,
+          352.84375,
+          80.59375,
+          29.45833396911621
+         ],
+         "fontWeight": "400",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0.666667px solid rgb(51, 51, 51) 0.666667px solid",
+         "padding": "4px 8px 4px 8px",
+         "textAlign": "start",
+         "verticalAlign": "top",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "80.5938px",
+         "display": "table-cell",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        }
+       ],
+       "rows": [
+        {
+         "tag": "TR",
+         "cls": "",
+         "text": "H1H2",
+         "rect": [
+          376.3333435058594,
+          323.38543701171875,
+          133.8854217529297,
+          29.45833396911621
+         ],
+         "fontWeight": "400",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0px none rgb(128, 128, 128) 0px none",
+         "padding": "0px 0px 0px 0px",
+         "textAlign": "start",
+         "verticalAlign": "middle",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "133.885px",
+         "display": "table-row",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        },
+        {
+         "tag": "TR",
+         "cls": "",
+         "text": "ab **md**",
+         "rect": [
+          376.3333435058594,
+          352.84375,
+          133.8854217529297,
+          29.45833396911621
+         ],
+         "fontWeight": "400",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0px none rgb(128, 128, 128) 0px none",
+         "padding": "0px 0px 0px 0px",
+         "textAlign": "start",
+         "verticalAlign": "middle",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "133.885px",
+         "display": "table-row",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        }
+       ]
+      },
+      {
+       "html": "<table>\n<thead>\n<tr>\n<th dir=\"ltr\">md</th>\n<th dir=\"ltr\">table</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td dir=\"ltr\">c</td>\n<td dir=\"ltr\">d</td>\n</tr>\n</tbody>\n</table>",
+       "table": {
+        "tag": "TABLE",
+        "cls": "",
+        "text": "\n\n\nmd\ntable\n\n\n\n\nc\nd\n\n\n",
+        "rect": [
+         376,
+         414.63543701171875,
+         107.25,
+         59.583335876464844
+        ],
+        "fontWeight": "400",
+        "fontSize": "16px",
+        "color": "rgb(218, 218, 218)",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(128, 128, 128) 0px none",
+        "padding": "0px 0px 0px 0px",
+        "textAlign": "start",
+        "verticalAlign": "baseline",
+        "lineHeight": "20.8px",
+        "borderCollapse": "collapse",
+        "width": "107.25px",
+        "display": "table",
+        "marginTop": "16px",
+        "marginBottom": "16px"
+       },
+       "parent": {
+        "tag": "DIV",
+        "cls": "el-table",
+        "text": "\n\n\nmd\ntable\n\n\n\n\nc\nd\n\n\n",
+        "rect": [
+         376,
+         398.63543701171875,
+         604,
+         91.58333587646484
+        ],
+        "fontWeight": "400",
+        "fontSize": "16px",
+        "color": "rgb(218, 218, 218)",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(218, 218, 218) 0px none",
+        "padding": "0px 0px 0px 0px",
+        "textAlign": "start",
+        "verticalAlign": "baseline",
+        "lineHeight": "24px",
+        "borderCollapse": "separate",
+        "width": "604px",
+        "display": "block",
+        "marginTop": "0px",
+        "marginBottom": "0px"
+       },
+       "cells": [
+        {
+         "tag": "TH",
+         "cls": "",
+         "text": "md",
+         "rect": [
+          376.3333435058594,
+          414.96875,
+          53.29166793823242,
+          29.45833396911621
+         ],
+         "fontWeight": "600",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0.666667px solid rgb(51, 51, 51) 0.666667px solid",
+         "padding": "4px 8px 4px 8px",
+         "textAlign": "start",
+         "verticalAlign": "top",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "53.2917px",
+         "display": "table-cell",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        },
+        {
+         "tag": "TH",
+         "cls": "",
+         "text": "table",
+         "rect": [
+          429.625,
+          414.96875,
+          53.29166793823242,
+          29.45833396911621
+         ],
+         "fontWeight": "600",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0.666667px solid rgb(51, 51, 51) 0.666667px solid",
+         "padding": "4px 8px 4px 8px",
+         "textAlign": "start",
+         "verticalAlign": "top",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "53.2917px",
+         "display": "table-cell",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        },
+        {
+         "tag": "TD",
+         "cls": "",
+         "text": "c",
+         "rect": [
+          376.3333435058594,
+          444.4270935058594,
+          53.29166793823242,
+          29.45833396911621
+         ],
+         "fontWeight": "400",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0.666667px solid rgb(51, 51, 51) 0.666667px solid",
+         "padding": "4px 8px 4px 8px",
+         "textAlign": "start",
+         "verticalAlign": "top",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "53.2917px",
+         "display": "table-cell",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        },
+        {
+         "tag": "TD",
+         "cls": "",
+         "text": "d",
+         "rect": [
+          429.625,
+          444.4270935058594,
+          53.29166793823242,
+          29.45833396911621
+         ],
+         "fontWeight": "400",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0.666667px solid rgb(51, 51, 51) 0.666667px solid",
+         "padding": "4px 8px 4px 8px",
+         "textAlign": "start",
+         "verticalAlign": "top",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "53.2917px",
+         "display": "table-cell",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        }
+       ],
+       "rows": [
+        {
+         "tag": "TR",
+         "cls": "",
+         "text": "\nmd\ntable\n",
+         "rect": [
+          376.3333435058594,
+          414.96875,
+          106.58333587646484,
+          29.45833396911621
+         ],
+         "fontWeight": "400",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0px none rgb(128, 128, 128) 0px none",
+         "padding": "0px 0px 0px 0px",
+         "textAlign": "start",
+         "verticalAlign": "middle",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "106.583px",
+         "display": "table-row",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        },
+        {
+         "tag": "TR",
+         "cls": "",
+         "text": "\nc\nd\n",
+         "rect": [
+          376.3333435058594,
+          444.4270935058594,
+          106.58333587646484,
+          29.45833396911621
+         ],
+         "fontWeight": "400",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0px none rgb(128, 128, 128) 0px none",
+         "padding": "0px 0px 0px 0px",
+         "textAlign": "start",
+         "verticalAlign": "middle",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "106.583px",
+         "display": "table-row",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        }
+       ]
+      },
+      {
+       "html": "<table border=\"1\"><thead><tr><th align=\"left\" dir=\"ltr\">L</th><th align=\"right\" dir=\"ltr\">R</th></tr></thead><tbody><tr><td style=\"color: red\" colspan=\"2\" dir=\"ltr\">wide cell</td></tr><tr><td dir=\"ltr\">one</td><td dir=\"ltr\">two</td></tr></tbody></table>",
+       "table": {
+        "tag": "TABLE",
+        "cls": "",
+        "text": "LRwide cellonetwo",
+        "rect": [
+         376,
+         506.21875,
+         107.25,
+         89.04167175292969
+        ],
+        "fontWeight": "400",
+        "fontSize": "16px",
+        "color": "rgb(218, 218, 218)",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0.666667px outset rgb(128, 128, 128) 0.666667px outset",
+        "padding": "0px 0px 0px 0px",
+        "textAlign": "start",
+        "verticalAlign": "baseline",
+        "lineHeight": "20.8px",
+        "borderCollapse": "collapse",
+        "width": "107.25px",
+        "display": "table",
+        "marginTop": "16px",
+        "marginBottom": "16px"
+       },
+       "parent": {
+        "tag": "DIV",
+        "cls": "el-table",
+        "text": "LRwide cellonetwo",
+        "rect": [
+         376,
+         490.21875,
+         604,
+         121.04167175292969
+        ],
+        "fontWeight": "400",
+        "fontSize": "16px",
+        "color": "rgb(218, 218, 218)",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(218, 218, 218) 0px none",
+        "padding": "0px 0px 0px 0px",
+        "textAlign": "start",
+        "verticalAlign": "baseline",
+        "lineHeight": "24px",
+        "borderCollapse": "separate",
+        "width": "604px",
+        "display": "block",
+        "marginTop": "0px",
+        "marginBottom": "0px"
+       },
+       "cells": [
+        {
+         "tag": "TH",
+         "cls": "",
+         "text": "L",
+         "rect": [
+          376.3333435058594,
+          506.5520935058594,
+          53.29166793823242,
+          29.45833396911621
+         ],
+         "fontWeight": "600",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0.666667px solid rgb(51, 51, 51) 0.666667px solid",
+         "padding": "4px 8px 4px 8px",
+         "textAlign": "start",
+         "verticalAlign": "top",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "53.2917px",
+         "display": "table-cell",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        },
+        {
+         "tag": "TH",
+         "cls": "",
+         "text": "R",
+         "rect": [
+          429.625,
+          506.5520935058594,
+          53.29166793823242,
+          29.45833396911621
+         ],
+         "fontWeight": "600",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0.666667px solid rgb(51, 51, 51) 0.666667px solid",
+         "padding": "4px 8px 4px 8px",
+         "textAlign": "end",
+         "verticalAlign": "top",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "53.2917px",
+         "display": "table-cell",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        },
+        {
+         "tag": "TD",
+         "cls": "",
+         "text": "wide cell",
+         "rect": [
+          376.3333435058594,
+          536.0104370117188,
+          106.58333587646484,
+          29.45833396911621
+         ],
+         "fontWeight": "400",
+         "fontSize": "16px",
+         "color": "rgb(255, 0, 0)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0.666667px solid rgb(51, 51, 51) 0.666667px solid",
+         "padding": "4px 8px 4px 8px",
+         "textAlign": "start",
+         "verticalAlign": "top",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "106.583px",
+         "display": "table-cell",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        },
+        {
+         "tag": "TD",
+         "cls": "",
+         "text": "one",
+         "rect": [
+          376.3333435058594,
+          565.46875,
+          53.29166793823242,
+          29.45833396911621
+         ],
+         "fontWeight": "400",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0.666667px solid rgb(51, 51, 51) 0.666667px solid",
+         "padding": "4px 8px 4px 8px",
+         "textAlign": "start",
+         "verticalAlign": "top",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "53.2917px",
+         "display": "table-cell",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        },
+        {
+         "tag": "TD",
+         "cls": "",
+         "text": "two",
+         "rect": [
+          429.625,
+          565.46875,
+          53.29166793823242,
+          29.45833396911621
+         ],
+         "fontWeight": "400",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0.666667px solid rgb(51, 51, 51) 0.666667px solid",
+         "padding": "4px 8px 4px 8px",
+         "textAlign": "start",
+         "verticalAlign": "top",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "53.2917px",
+         "display": "table-cell",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        }
+       ],
+       "rows": [
+        {
+         "tag": "TR",
+         "cls": "",
+         "text": "LR",
+         "rect": [
+          376.3333435058594,
+          506.5520935058594,
+          106.58333587646484,
+          29.45833396911621
+         ],
+         "fontWeight": "400",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0px none rgb(128, 128, 128) 0px none",
+         "padding": "0px 0px 0px 0px",
+         "textAlign": "start",
+         "verticalAlign": "middle",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "106.583px",
+         "display": "table-row",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        },
+        {
+         "tag": "TR",
+         "cls": "",
+         "text": "wide cell",
+         "rect": [
+          376.3333435058594,
+          536.0104370117188,
+          106.58333587646484,
+          29.45833396911621
+         ],
+         "fontWeight": "400",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0px none rgb(128, 128, 128) 0px none",
+         "padding": "0px 0px 0px 0px",
+         "textAlign": "start",
+         "verticalAlign": "middle",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "106.583px",
+         "display": "table-row",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        },
+        {
+         "tag": "TR",
+         "cls": "",
+         "text": "onetwo",
+         "rect": [
+          376.3333435058594,
+          565.46875,
+          106.58333587646484,
+          29.45833396911621
+         ],
+         "fontWeight": "400",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0px none rgb(128, 128, 128) 0px none",
+         "padding": "0px 0px 0px 0px",
+         "textAlign": "start",
+         "verticalAlign": "middle",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "106.583px",
+         "display": "table-row",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        }
+       ]
+      },
+      {
+       "html": "<table><tbody><tr><td dir=\"ltr\">c</td></tr></tbody></table>",
+       "table": {
+        "tag": "TABLE",
+        "cls": "",
+        "text": "c",
+        "rect": [
+         376,
+         627.2604370117188,
+         52.41666793823242,
+         30.125
+        ],
+        "fontWeight": "400",
+        "fontSize": "16px",
+        "color": "rgb(218, 218, 218)",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(128, 128, 128) 0px none",
+        "padding": "0px 0px 0px 0px",
+        "textAlign": "start",
+        "verticalAlign": "baseline",
+        "lineHeight": "20.8px",
+        "borderCollapse": "collapse",
+        "width": "52.4167px",
+        "display": "table",
+        "marginTop": "16px",
+        "marginBottom": "16px"
+       },
+       "parent": {
+        "tag": "DIV",
+        "cls": "el-table",
+        "text": "c",
+        "rect": [
+         376,
+         611.2604370117188,
+         604,
+         62.125
+        ],
+        "fontWeight": "400",
+        "fontSize": "16px",
+        "color": "rgb(218, 218, 218)",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(218, 218, 218) 0px none",
+        "padding": "0px 0px 0px 0px",
+        "textAlign": "start",
+        "verticalAlign": "baseline",
+        "lineHeight": "24px",
+        "borderCollapse": "separate",
+        "width": "604px",
+        "display": "block",
+        "marginTop": "0px",
+        "marginBottom": "0px"
+       },
+       "cells": [
+        {
+         "tag": "TD",
+         "cls": "",
+         "text": "c",
+         "rect": [
+          376.3333435058594,
+          627.59375,
+          51.75,
+          29.45833396911621
+         ],
+         "fontWeight": "400",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0.666667px solid rgb(51, 51, 51) 0.666667px solid",
+         "padding": "4px 8px 4px 8px",
+         "textAlign": "start",
+         "verticalAlign": "top",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "51.75px",
+         "display": "table-cell",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        }
+       ],
+       "rows": [
+        {
+         "tag": "TR",
+         "cls": "",
+         "text": "c",
+         "rect": [
+          376.3333435058594,
+          627.59375,
+          51.75,
+          29.45833396911621
+         ],
+         "fontWeight": "400",
+         "fontSize": "16px",
+         "color": "rgb(218, 218, 218)",
+         "background": "rgba(0, 0, 0, 0)",
+         "border": "0px none rgb(128, 128, 128) 0px none",
+         "padding": "0px 0px 0px 0px",
+         "textAlign": "start",
+         "verticalAlign": "middle",
+         "lineHeight": "20.8px",
+         "borderCollapse": "collapse",
+         "width": "51.75px",
+         "display": "table-row",
+         "marginTop": "0px",
+         "marginBottom": "0px"
+        }
+       ]
+      }
+     ],
+     "inline": [
+      {
+       "tag": "B",
+       "cls": "",
+       "text": "bold",
+       "rect": [
+        434.8645935058594,
+        201.1875,
+        33.020835876464844,
+        21.33333396911621
+       ],
+       "fontWeight": "600",
+       "fontSize": "16px",
+       "color": "rgb(218, 218, 218)",
+       "background": "rgba(0, 0, 0, 0)",
+       "border": "0px none rgb(218, 218, 218) 0px none",
+       "padding": "0px 0px 0px 0px",
+       "textAlign": "start",
+       "verticalAlign": "baseline",
+       "lineHeight": "24px",
+       "borderCollapse": "separate",
+       "width": "auto",
+       "display": "inline",
+       "marginTop": "0px",
+       "marginBottom": "0px"
+      },
+      {
+       "tag": "SUP",
+       "cls": "",
+       "text": "sup",
+       "rect": [
+        589.875,
+        197.8541717529297,
+        21.041667938232422,
+        18
+       ],
+       "fontWeight": "400",
+       "fontSize": "13.3333px",
+       "color": "rgb(218, 218, 218)",
+       "background": "rgba(0, 0, 0, 0)",
+       "border": "0px none rgb(218, 218, 218) 0px none",
+       "padding": "0px 0px 0px 0px",
+       "textAlign": "start",
+       "verticalAlign": "super",
+       "lineHeight": "20px",
+       "borderCollapse": "separate",
+       "width": "auto",
+       "display": "inline",
+       "marginTop": "0px",
+       "marginBottom": "0px"
+      },
+      {
+       "tag": "SUB",
+       "cls": "",
+       "text": "2",
+       "rect": [
+        630.1354370117188,
+        207.71875,
+        7.1875,
+        18
+       ],
+       "fontWeight": "400",
+       "fontSize": "13.3333px",
+       "color": "rgb(218, 218, 218)",
+       "background": "rgba(0, 0, 0, 0)",
+       "border": "0px none rgb(218, 218, 218) 0px none",
+       "padding": "0px 0px 0px 0px",
+       "textAlign": "start",
+       "verticalAlign": "sub",
+       "lineHeight": "20px",
+       "borderCollapse": "separate",
+       "width": "auto",
+       "display": "inline",
+       "marginTop": "0px",
+       "marginBottom": "0px"
+      },
+      {
+       "tag": "KBD",
+       "cls": "",
+       "text": "Ctrl",
+       "rect": [
+        657.2396240234375,
+        204.45834350585938,
+        39.8125,
+        18.791667938232422
+       ],
+       "fontWeight": "400",
+       "fontSize": "14px",
+       "color": "rgb(218, 218, 218)",
+       "background": "rgb(35, 35, 35)",
+       "border": "0px none rgb(218, 218, 218) 0px none",
+       "padding": "1.4px 3.5px 1.4px 3.5px",
+       "textAlign": "start",
+       "verticalAlign": "baseline",
+       "lineHeight": "21px",
+       "borderCollapse": "separate",
+       "width": "auto",
+       "display": "inline",
+       "marginTop": "0px",
+       "marginBottom": "0px"
+      }
+     ],
+     "body": {
+      "tag": "P",
+      "cls": "",
+      "text": "Inline: a bold word, it, under, xsup, H2",
+      "rect": [
+       376,
+       197.1875,
+       604,
+       53.864585876464844
+      ],
+      "fontWeight": "400",
+      "fontSize": "16px",
+      "color": "rgb(218, 218, 218)",
+      "background": "rgba(0, 0, 0, 0)",
+      "border": "0px none rgb(218, 218, 218) 0px none",
+      "padding": "0px 0px 0px 0px",
+      "textAlign": "start",
+      "verticalAlign": "baseline",
+      "lineHeight": "24px",
+      "borderCollapse": "separate",
+      "width": "604px",
+      "display": "block",
+      "marginTop": "16px",
+      "marginBottom": "16px"
+     },
+     "shot": "09-reading.png"
+    },
+    "10-blocks-live-preview": {
+     "ok": true,
+     "ms": 1469,
+     "state": {
+      "file": "Blocks.md",
+      "mode": "source",
+      "source": false
+     },
+     "lines": [
+      {
+       "cls": "cm-line HyperMD-header HyperMD-header-1",
+       "html": "<div class=\"cm-line HyperMD-header HyperMD-header-1\" dir=\"ltr\"><div class=\"cm-fold-indicator\" contenteditable=\"false\"><div class=\"collapse-indicator collapse-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon right-triangle\"><path d=\"M3 8L12 17L21 8\"></path></svg></div></div><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span contenteditable=\"false\"></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-header cm-header-1\">Blocks</span></div>"
+      },
+      {
+       "cls": "cm-line",
+       "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+      },
+      {
+       "cls": "cm-html-embed cm-embed-block",
+       "html": "<div class=\"cm-html-embed cm-embed-block\" tabindex=\"-1\" contenteditable=\"false\"><div>a div block</div><div class=\"embed-actions\"><div class=\"embed-action edit-block-button\" aria-label=\"Edit this block\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-code-2\"><path d=\"m18 16 4-4-4-4\"></path><path d=\"m6 8-4 4 4 4\"></path><path d=\"m14.5 4-5 16\"></path></svg></div></div></div>"
+      },
+      {
+       "cls": "cm-line",
+       "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+      },
+      {
+       "cls": "cm-html-embed cm-embed-block",
+       "html": "<div class=\"cm-html-embed cm-embed-block\" tabindex=\"-1\" contenteditable=\"false\"><pre>a pre block</pre><div class=\"embed-actions\"><div class=\"embed-action edit-block-button\" aria-label=\"Edit this block\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-code-2\"><path d=\"m18 16 4-4-4-4\"></path><path d=\"m6 8-4 4 4 4\"></path><path d=\"m14.5 4-5 16\"></path></svg></div></div></div>"
+      },
+      {
+       "cls": "cm-line",
+       "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+      },
+      {
+       "cls": "cm-html-embed cm-embed-block",
+       "html": "<div class=\"cm-html-embed cm-embed-block\" tabindex=\"-1\" contenteditable=\"false\"><details><summary>sum</summary>body</details><div class=\"embed-actions\"><div class=\"embed-action edit-block-button\" aria-label=\"Edit this block\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-code-2\"><path d=\"m18 16 4-4-4-4\"></path><path d=\"m6 8-4 4 4 4\"></path><path d=\"m14.5 4-5 16\"></path></svg></div></div></div>"
+      },
+      {
+       "cls": "cm-line",
+       "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+      },
+      {
+       "cls": "cm-html-embed cm-embed-block",
+       "html": "<div class=\"cm-html-embed cm-embed-block\" tabindex=\"-1\" contenteditable=\"false\"><center>centered</center><div class=\"embed-actions\"><div class=\"embed-action edit-block-button\" aria-label=\"Edit this block\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-code-2\"><path d=\"m18 16 4-4-4-4\"></path><path d=\"m6 8-4 4 4 4\"></path><path d=\"m14.5 4-5 16\"></path></svg></div></div></div>"
+      },
+      {
+       "cls": "cm-line",
+       "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+      },
+      {
+       "cls": "cm-html-embed cm-embed-block",
+       "html": "<div class=\"cm-html-embed cm-embed-block\" tabindex=\"-1\" contenteditable=\"false\"><p>a p block</p><div class=\"embed-actions\"><div class=\"embed-action edit-block-button\" aria-label=\"Edit this block\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-code-2\"><path d=\"m18 16 4-4-4-4\"></path><path d=\"m6 8-4 4 4 4\"></path><path d=\"m14.5 4-5 16\"></path></svg></div></div></div>"
+      },
+      {
+       "cls": "cm-line",
+       "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+      },
+      {
+       "cls": "cm-line",
+       "html": "<div class=\"cm-line\" dir=\"ltr\"><span class=\"cm-comment\">&lt;!-- a comment block --&gt;</span></div>"
+      },
+      {
+       "cls": "cm-line",
+       "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+      },
+      {
+       "cls": "cm-line",
+       "html": "<div class=\"cm-line\" dir=\"ltr\"><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><img alt=\"img block\" src=\"nowhere.png\"></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"></div>"
+      },
+      {
+       "cls": "cm-line",
+       "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+      },
+      {
+       "cls": "cm-line",
+       "html": "<div class=\"cm-line\" dir=\"ltr\">Nested <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><b><i>both</i></b></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"> and <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><b>**md** inside</b></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"> and <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><span>[[Live]]</span></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"> end.</div>"
+      },
+      {
+       "cls": "cm-line",
+       "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+      },
+      {
+       "cls": "cm-line",
+       "html": "<div class=\"cm-line\" dir=\"ltr\">Edges <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><u>uu</u></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"> end.</div>"
+      },
+      {
+       "cls": "cm-line",
+       "html": "<div class=\"cm-line\" dir=\"ltr\"><br></div>"
+      },
+      {
+       "cls": "cm-line",
+       "html": "<div class=\"cm-line\" dir=\"ltr\">Tail.</div>"
+      },
+      {
+       "cls": "cm-line cm-active",
+       "html": "<div class=\"cm-line cm-active\" dir=\"ltr\"><br></div>"
+      }
+     ],
+     "embeds": [
+      {
+       "cls": "cm-html-embed cm-embed-block",
+       "tag": "DIV",
+       "html": "<div class=\"cm-html-embed cm-embed-block\" tabindex=\"-1\" contenteditable=\"false\"><div>a div block</div><div class=\"embed-actions\"><div class=\"embed-action edit-block-button\" aria-label=\"Edit this block\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-code-2\"><path d=\"m18 16 4-4-4-4\"></path><path d=\"m6 8-4 4 4 4\"></path><path d=\"m14.5 4-5 16\"></path></svg></div></div></div>",
+       "rect": [
+        376,
+        219.09375,
+        604,
+        24
+       ]
+      },
+      {
+       "cls": "cm-html-embed cm-embed-block",
+       "tag": "DIV",
+       "html": "<div class=\"cm-html-embed cm-embed-block\" tabindex=\"-1\" contenteditable=\"false\"><pre>a pre block</pre><div class=\"embed-actions\"><div class=\"embed-action edit-block-button\" aria-label=\"Edit this block\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-code-2\"><path d=\"m18 16 4-4-4-4\"></path><path d=\"m6 8-4 4 4 4\"></path><path d=\"m14.5 4-5 16\"></path></svg></div></div></div>",
+       "rect": [
+        376,
+        267.09375,
+        604,
+        56
+       ]
+      },
+      {
+       "cls": "cm-html-embed cm-embed-block",
+       "tag": "DIV",
+       "html": "<div class=\"cm-html-embed cm-embed-block\" tabindex=\"-1\" contenteditable=\"false\"><details><summary>sum</summary>body</details><div class=\"embed-actions\"><div class=\"embed-action edit-block-button\" aria-label=\"Edit this block\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-code-2\"><path d=\"m18 16 4-4-4-4\"></path><path d=\"m6 8-4 4 4 4\"></path><path d=\"m14.5 4-5 16\"></path></svg></div></div></div>",
+       "rect": [
+        376,
+        347.09375,
+        604,
+        24
+       ]
+      },
+      {
+       "cls": "cm-html-embed cm-embed-block",
+       "tag": "DIV",
+       "html": "<div class=\"cm-html-embed cm-embed-block\" tabindex=\"-1\" contenteditable=\"false\"><center>centered</center><div class=\"embed-actions\"><div class=\"embed-action edit-block-button\" aria-label=\"Edit this block\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-code-2\"><path d=\"m18 16 4-4-4-4\"></path><path d=\"m6 8-4 4 4 4\"></path><path d=\"m14.5 4-5 16\"></path></svg></div></div></div>",
+       "rect": [
+        376,
+        395.09375,
+        604,
+        24
+       ]
+      },
+      {
+       "cls": "cm-html-embed cm-embed-block",
+       "tag": "DIV",
+       "html": "<div class=\"cm-html-embed cm-embed-block\" tabindex=\"-1\" contenteditable=\"false\"><p>a p block</p><div class=\"embed-actions\"><div class=\"embed-action edit-block-button\" aria-label=\"Edit this block\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-code-2\"><path d=\"m18 16 4-4-4-4\"></path><path d=\"m6 8-4 4 4 4\"></path><path d=\"m14.5 4-5 16\"></path></svg></div></div></div>",
+       "rect": [
+        376,
+        443.09375,
+        604,
+        56
+       ]
+      },
+      {
+       "cls": "cm-html-embed",
+       "tag": "SPAN",
+       "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><img alt=\"img block\" src=\"nowhere.png\"></span>",
+       "rect": [
+        376,
+        572.4271240234375,
+        85.46875,
+        21.33333396911621
+       ]
+      },
+      {
+       "cls": "cm-html-embed",
+       "tag": "SPAN",
+       "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><b><i>both</i></b></span>",
+       "rect": [
+        430.71875,
+        620.4271240234375,
+        32.79166793823242,
+        21.33333396911621
+       ]
+      },
+      {
+       "cls": "cm-html-embed",
+       "tag": "SPAN",
+       "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><b>**md** inside</b></span>",
+       "rect": [
+        498.8958435058594,
+        620.4271240234375,
+        98.72917175292969,
+        21.33333396911621
+       ]
+      },
+      {
+       "cls": "cm-html-embed",
+       "tag": "SPAN",
+       "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><span>[[Live]]</span></span>",
+       "rect": [
+        633.0104370117188,
+        620.4271240234375,
+        46.75,
+        21.33333396911621
+       ]
+      },
+      {
+       "cls": "cm-html-embed",
+       "tag": "SPAN",
+       "html": "<span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><u>uu</u></span>",
+       "rect": [
+        422.47918701171875,
+        668.4271240234375,
+        18.11458396911621,
+        21.33333396911621
+       ]
+      }
+     ],
+     "shot": "10-lp-blocks.png"
+    },
+    "11-cursor-in-div-block": {
+     "ok": true,
+     "ms": 509,
+     "cursor": {
+      "line": 2,
+      "ch": 6
+     },
+     "line": {
+      "tag": "DIV",
+      "cls": "cm-line cm-active",
+      "text": "<div>a div block</div>",
+      "html": "<div class=\"cm-line cm-active\" dir=\"ltr\"><span class=\"cm-bracket cm-hmd-html-begin cm-tag\">&lt;</span><span class=\"cm-tag\">div</span><span class=\"cm-bracket cm-tag\">&gt;</span>a div block<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">div</span><span class=\"cm-bracket cm-hmd-html-end cm-tag\">&gt;</span></div>"
+     },
+     "shot": "11-lp-cursor-in-div.png"
+    },
+    "12-edge-before-open": {
+     "ok": true,
+     "ms": 416,
+     "cursor": {
+      "line": 18,
+      "ch": 6
+     },
+     "line": {
+      "tag": "DIV",
+      "cls": "cm-line cm-active",
+      "text": "Edges <u>uu</u> end.",
+      "html": "<div class=\"cm-line cm-active\" dir=\"ltr\">Edges <span class=\"cm-bracket cm-hmd-html-begin cm-tag\">&lt;</span><span class=\"cm-tag\">u</span><span class=\"cm-bracket cm-tag\">&gt;</span>uu<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">u</span><span class=\"cm-bracket cm-hmd-html-end cm-tag\">&gt;</span> end.</div>"
+     }
+    },
+    "13-edge-after-close": {
+     "ok": true,
+     "ms": 418,
+     "cursor": {
+      "line": 18,
+      "ch": 15
+     },
+     "line": {
+      "tag": "DIV",
+      "cls": "cm-line cm-active",
+      "text": "Edges <u>uu</u> end.",
+      "html": "<div class=\"cm-line cm-active\" dir=\"ltr\">Edges <span class=\"cm-bracket cm-hmd-html-begin cm-tag\">&lt;</span><span class=\"cm-tag\">u</span><span class=\"cm-bracket cm-tag\">&gt;</span>uu<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">u</span><span class=\"cm-bracket cm-hmd-html-end cm-tag\">&gt;</span> end.</div>"
+     }
+    },
+    "14-edge-inside-open": {
+     "ok": true,
+     "ms": 418,
+     "cursor": {
+      "line": 18,
+      "ch": 7
+     },
+     "line": {
+      "tag": "DIV",
+      "cls": "cm-line cm-active",
+      "text": "Edges <u>uu</u> end.",
+      "html": "<div class=\"cm-line cm-active\" dir=\"ltr\">Edges <span class=\"cm-bracket cm-hmd-html-begin cm-tag\">&lt;</span><span class=\"cm-tag\">u</span><span class=\"cm-bracket cm-tag\">&gt;</span>uu<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">u</span><span class=\"cm-bracket cm-hmd-html-end cm-tag\">&gt;</span> end.</div>"
+     }
+    },
+    "15-nested-cursor-in-inner": {
+     "ok": true,
+     "ms": 417,
+     "cursor": {
+      "line": 16,
+      "ch": 14
+     },
+     "line": {
+      "tag": "DIV",
+      "cls": "cm-line cm-active",
+      "text": "Nested <b><i>both</i></b> and **md** inside and [[Live]] end.",
+      "html": "<div class=\"cm-line cm-active\" dir=\"ltr\">Nested <span class=\"cm-bracket cm-hmd-html-begin cm-tag\">&lt;</span><span class=\"cm-tag\">b</span><span class=\"cm-bracket cm-tag\">&gt;&lt;</span><span class=\"cm-tag\">i</span><span class=\"cm-bracket cm-tag\">&gt;</span>both<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">i</span><span class=\"cm-bracket cm-tag\">&gt;&lt;/</span><span class=\"cm-tag\">b</span><span class=\"cm-bracket cm-hmd-html-end cm-tag\">&gt;</span> and <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><b>**md** inside</b></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"> and <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><span>[[Live]]</span></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"> end.</div>"
+     }
+    },
+    "16-selection-across": {
+     "ok": true,
+     "ms": 618,
+     "selectionBefore": "<div class=\"cm-line cm-active\" dir=\"ltr\">Edges <img class=\"cm-widgetBuffer\" aria-hidden=\"true\"><span class=\"cm-html-embed\" tabindex=\"-1\" contenteditable=\"false\"><u>uu</u></span><img class=\"cm-widgetBuffer\" aria-hidden=\"true\"> end.</div>",
+     "selectionIntoElement": "<div class=\"cm-line cm-active\" dir=\"ltr\">Edges <span class=\"cm-bracket cm-hmd-html-begin cm-tag\">&lt;</span><span class=\"cm-tag\">u</span><span class=\"cm-bracket cm-tag\">&gt;</span>uu<span class=\"cm-bracket cm-tag\">&lt;/</span><span class=\"cm-tag\">u</span><span class=\"cm-bracket cm-hmd-html-end cm-tag\">&gt;</span> end.</div>"
+    },
+    "17-blocks-reading": {
+     "ok": true,
+     "ms": 721,
+     "sections": [
+      "<div class=\"markdown-preview-pusher\" style=\"width: 1px; height: 0.1px; margin-bottom: 0px;\"></div>",
+      "<div class=\"mod-header mod-ui\"><div class=\"inline-title\" contenteditable=\"true\" spellcheck=\"true\" autocapitalize=\"on\" tabindex=\"-1\" enterkeyhint=\"done\">Blocks</div><div class=\"metadata-container\" tabindex=\"-1\" data-property-count=\"0\"><div class=\"metadata-error-container\" style=\"display: none;\"></div><div class=\"metadata-properties-heading\" tabindex=\"0\"><div class=\"collapse-indicator collapse-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon ri",
+      "<div class=\"el-h1\"><h1 data-heading=\"Blocks\" dir=\"auto\"><span class=\"heading-collapse-indicator collapse-indicator collapse-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon right-triangle\"><path d=\"M3 8L12 17L21 8\"></path></svg></span>Blocks</h1></div>",
+      "<div class=\"el-div\"><div>a div block</div></div>",
+      "<div class=\"el-pre\"><pre>a pre block</pre></div>",
+      "<div class=\"el-details\"><details><summary>sum</summary>body</details></div>",
+      "<div class=\"el-center\"><center>centered</center></div>",
+      "<div class=\"el-p\"><p dir=\"auto\">a p block</p></div>",
+      "<div></div>",
+      "<div class=\"el-img\"><img alt=\"img block\" src=\"nowhere.png\" referrerpolicy=\"no-referrer\"></div>",
+      "<div class=\"el-p\"><p dir=\"auto\">Nested <b><i>both</i></b> and <b><strong>md</strong> inside</b> and <span><a data-href=\"Live\" href=\"Live\" class=\"internal-link\" target=\"_blank\" rel=\"noopener nofollow\">Live</a></span> end.</p></div>",
+      "<div class=\"el-p\"><p dir=\"auto\">Edges <u>uu</u> end.</p></div>",
+      "<div class=\"el-p\"><p dir=\"auto\">Tail.</p></div>",
+      "<div class=\"mod-footer mod-ui\"><div class=\"embedded-backlinks\" style=\"display: none;\"></div></div>"
+     ],
+     "shot": "17-reading-blocks.png"
+    }
+   },
+   "order": [
+    "01-live-preview-cursor-at-end",
+    "02-cursor-inside-bold",
+    "03-cursor-on-line-outside-tags",
+    "04-cursor-on-the-opening-tag",
+    "05-cursor-inside-sup",
+    "06-cursor-in-raw-table",
+    "07-cursor-on-unknown-line",
+    "08-lp-widget-styles",
+    "09-reading-view",
+    "10-blocks-live-preview",
+    "11-cursor-in-div-block",
+    "12-edge-before-open",
+    "13-edge-after-close",
+    "14-edge-inside-open",
+    "15-nested-cursor-in-inner",
+    "16-selection-across",
+    "17-blocks-reading"
+   ],
+   "elapsedMs": 12243,
+   "version": "Error: Error: Cannot find module 'obsidian'\nRequire stack:\n- electron/js2c/renderer_init\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1390:15)\n    at a._resolveFilename (node:electron/js2c/renderer_init:2:4859)\n    at defaultResolveImpl (node:internal/modules/cjs/loader:1032:19)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1037:22)\n    at Module._load (node:internal/modules/cjs/loader:1199:37)\n    at c._load (node:electron/js2c/node_init:2:18041)\n    at s._load (node:electron/js2c/renderer_init:2:34587)\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:244:24)\n    at Module.require (node:internal/modules/cjs/loader:1470:12)",
+   "endedAt": "2026-11-04T14:50:28.779Z"
+  }
+ }
+}

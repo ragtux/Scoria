@@ -394,6 +394,40 @@ editing), and `<ins>/<samp>/<var>/<tt>/<big>`.
 
 **The block half landed 2026-11-02**: a raw `<pre>` is a code block that wraps and carries the copy button only with a `<code>` child; `<details>` folds its `<summary>` over its body, open when the tag says so; a container (`<div>`, `<p>`, `<center>`, `<span>`, `<font>`, `<small>`, `<big>`, `<section>`, `<article>`, `<ins>`, `<samp>`, `<var>`, `<tt>` and the inline tags) draws as a paragraph of its content through the same overlay inline HTML takes, with entities decoded and a leading comment dropped; each of those is a Live Preview widget. A `<table>`, `<iframe>`, `<form>` and the rest stay source. **Still out**: `sup`/`sub` at body size, Live Preview's own source transform of inline tags, and a raw table.
 
+**Landed 2026-11-04, the Live Preview transform and the raw table**, against the probe recorded in
+[[Specification#The 2026-11-04 pass: Live Preview, and a raw table]]. Obsidian replaces a whole
+inline element -- opener, content, balancing closer -- with one `cm-html-embed` widget while no
+cursor touches it, edges included, and shows the content literally (`<b>**md**</b>` draws `**md**`
+in bold). Scoria now does the same: `preview::html_elements` pairs the line's tag spans into
+outermost elements, and an untouched one is substituted by its rendering
+(`model::html_inline_widget`, the reading overlay with Markdown left literal), styled by
+`style_html_run`. A raw `<table>` block draws as a table in the reading view -- the `<thead>` row
+or a first row of `<th>` as the header, a body `<th>` bold, `align` on the first row's cells as the
+column alignment, ragged rows padded -- and stays source in Live Preview, which is what Obsidian
+does: a raw table is never a widget there.
+
+**Still out**, each a deliberate gap:
+
+- `<sup>`/`<sub>` at body size. Obsidian draws them at 5/6 of the body on a raised or lowered
+  baseline. gpui's `TextRun` has no size and no baseline offset (the pinned Zed commit: `len`,
+  `font`, `color`, `background_color`, `underline`, `strikethrough`), so a run cannot be shrunk or
+  shifted. The one per-run lever is the font's OpenType `sups`/`subs` features, which bundled
+  Inter has; but `HighlightStyle`, which the reading view styles through, carries no font features
+  (only a family override), so the reading view would need its own run builder replicating the
+  container's text style, and the features only cover the glyphs Inter draws superior (digits and
+  a few signs). Not clean enough to take; revisit if gpui gains per-run size or features in
+  `HighlightStyle`.
+- Live Preview keeps the source of an element the overlay cannot draw where Obsidian still makes
+  a widget: an unknown tag (`<foo>x</foo>` is a widget of `x` there), a lone `<br>` (a widget that
+  breaks the line, which one display line cannot hold), an element spanning lines.
+- An inline `style` attribute is not drawn in either view (`<span style="color: red">` is red in
+  Obsidian), and Live Preview's `<mark>` widget wears the theme's highlight where Obsidian's shows
+  the browser's own yellow behind black text.
+- The reading view still shows an unknown inline tag and an inline `<script>` as muted source;
+  Obsidian unwraps the first and drops the second with its content.
+- A raw table's `colspan`/`rowspan`, a cell's `style`, `border="1"`'s outset frame and a
+  `<caption>` are not drawn; a table nested in a cell leaves the block as source.
+
 **Scoria.** An HTML block that holds nothing but `<img>` tags now resolves and renders as an image
 widget in both views. Everything else — comments, `<div>`, `<pre>`, `<a>`, inline `<u>`, `<sup>`,
 `<kbd>` — still falls through to `RBlock::Html`, drawn as muted monospace source. The promotion is

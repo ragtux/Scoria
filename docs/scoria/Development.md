@@ -543,6 +543,55 @@ pick; and the drag's insertion line — the row under the pointer is washed inst
 DirectWrite's family names, which fold a few of the faces Obsidian lists on their own (`Arial
 Black`, `Arial Narrow`) into their family.
 
+### Inline HTML in Live Preview and the raw table, 2026-11-04
+
+What the raw-HTML entry of [[UI parity backlog]] still had open, taken
+against a new probe, `tools/obsidian-probe/raw-html-live.mjs`, run on
+Windows with a data directory of its own (results and screenshots under
+`tools/obsidian-probe/results/2026-11-04-raw-html-live*`, written up in
+[[Specification#The 2026-11-04 pass: Live Preview, and a raw table]]). Two
+of its answers were not what the backlog assumed.
+
+**Live Preview does not hide the tags; it replaces the element.**
+`<b>bold</b>` with no cursor in it is one `cm-html-embed` widget holding the
+rendered element, its content literal: `<b>**md**</b>` draws `**md**` in
+bold, where the reading view parses it. A cursor anywhere in the element,
+its edges included, brings back the source of that element only.
+`preview::html_elements` pairs the line's tag spans -- each inline HTML token
+is its own span, so a span holding more than one tag is an HTML block's line
+and is left alone -- into outermost elements, an opener with the closer that
+balances it on the same line; an untouched one becomes a substitution whose
+text is `model::html_inline_widget`, the reading overlay run over the
+element's own source with Markdown left as text. `DisplayLine::html` carries
+its styled runs, and `runs_for_display` paints them through
+`style_html_run` over whatever the element sits in (a heading's weight, an
+enclosing `**strong**`), never in the muted colour of its source. What the
+overlay cannot draw keeps its source: `<script>` (Obsidian agrees), an
+unclosed opener (agrees), a lone `<br>`, an unknown tag.
+
+**A raw table is never a Live Preview widget.** `<div>`, `<pre>`,
+`<details>`, `<center>` and `<p>` blocks are `cm-embed-block` widgets, which
+the 2026-11-02 work had assumed and the probe now confirms; a `<table>`, on
+one line or several, stays highlighted source with the cursor anywhere. So
+`HtmlBlockKind::Table` renders in the reading view only, and the widget
+predicate excludes it. The reading view draws it as `RBlock::Table`, because
+Obsidian gives a raw table the Markdown table's own `div.el-table` and cell
+styles: the `<thead>` row or a first row of `<th>` is the header, a body
+`<th>` is bold, the first row's `align` sets each column, ragged rows are
+padded, and with no header row the view now draws none. The table carries no
+cell spans, so nothing offers to edit it in place.
+
+`<sup>`/`<sub>` stay at body size. gpui's `TextRun` has no size or baseline
+offset; OpenType `sups`/`subs` (which bundled Inter has) could ride on the
+run's `Font`, but `HighlightStyle`, which the reading view styles through,
+cannot carry font features, so doing it would mean a second run builder for
+the reading view and glyph coverage that stops at digits. The backlog entry
+keeps it with that reason.
+
+Driven on Windows over `scoria-mcp`: the probe's two notes in Live Preview
+and the reading view, with the inline widgets, the literal Markdown in
+`<b>**md** inside</b>` and the four raw tables as the screenshots show them.
+
 ### The command line, 2026-11-02
 
 The last line of [[#Parity (phase 4)]]. There was nothing to clone here:

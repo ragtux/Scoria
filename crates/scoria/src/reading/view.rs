@@ -2146,17 +2146,24 @@ impl<'a> Renderer<'a> {
                             .border_color(t.tokens.table_border_color)
                             .rounded_sm()
                             .text_size(px(font_size))
-                            .child(
-                                div()
-                                    .flex()
-                                    .flex_row()
-                                    .bg(t.tokens.table_header_background)
-                                    .border_b_1()
-                                    .border_color(t.tokens.table_header_border_color)
-                                    .children(
-                                        header.iter().enumerate().map(|(i, c)| cell(c, 0, i, true)),
-                                    ),
-                            )
+                            // A raw `<table>` with neither `<thead>` nor a
+                            // row of `<th>` has no header row to draw.
+                            .when(!header.is_empty(), |d| {
+                                d.child(
+                                    div()
+                                        .flex()
+                                        .flex_row()
+                                        .bg(t.tokens.table_header_background)
+                                        .border_b_1()
+                                        .border_color(t.tokens.table_header_border_color)
+                                        .children(
+                                            header
+                                                .iter()
+                                                .enumerate()
+                                                .map(|(i, c)| cell(c, 0, i, true)),
+                                        ),
+                                )
+                            })
                             .children(rows.iter().enumerate().map(|(ri, row)| {
                                 div()
                                     .flex()

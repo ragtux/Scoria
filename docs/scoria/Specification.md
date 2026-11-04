@@ -2062,6 +2062,71 @@ not tried:
 **The note's bytes never change.** Both fixture notes were byte-identical after
 the whole run, rendering, clicks and all.
 
+### The 2026-11-04 pass: Live Preview, and a raw table
+
+`tools/obsidian-probe/raw-html-live.mjs` against **Obsidian 1.14.5** (the
+1.14.5 asar on the Windows installer), results in
+`tools/obsidian-probe/results/2026-11-04-raw-html-live.json` with screenshots in
+`2026-11-04-raw-html-live-shots/`. Two notes in a scratch vault, opened in Live
+Preview with the cursor placed through `editor.setCursor` and the editor
+focused, each `.cm-line` read back; then the reading view.
+
+#### Inline HTML in Live Preview
+
+**An inline element is one widget.** With no cursor in it, `<b>bold</b>` -- the
+opening tag, the content and the closing tag -- is replaced by a single
+`span.cm-html-embed[contenteditable=false]` holding the sanitized element
+(`<b>bold</b>`), between two `img.cm-widgetBuffer`s. The tags are not merely
+hidden around live text: the whole element is one replacement.
+
+| Written | Live Preview, cursor elsewhere |
+| --- | --- |
+| `<b>`, `<i>`, `<u>`, `<sup>`, `<sub>`, `<kbd>`, `<mark>`, `<span style>`, `<a href>` | one `cm-html-embed` each, rendered (the anchor gains `target="_blank" rel="noopener nofollow"`) |
+| `<b><i>both</i></b>` | **one** widget for the outer element |
+| `<b>**md** inside</b>`, `<span>[[Live]]</span>` | one widget showing `**md** inside` and `[[Live]]` **literally** -- the widget does not parse Markdown, where the reading view renders `<strong>md</strong>` and an internal link |
+| `a<br>break` | the `<br>` alone is a widget |
+| `<foo>foo tag</foo>` | a widget holding just `foo tag` (the unknown element unwrapped) |
+| `<script>x</script>` | **source**: highlighted tag tokens (`cm-tag`, `cm-bracket`), no widget |
+| `<!-- a comment -->` | source, `cm-comment` |
+| `Unclosed <b>bold never closed` | source: an opener with no closer on the line is not an element |
+
+**The cursor reveals one element, ends included.** A cursor inside `bold`, on
+the `<b>` itself, right before its `<` and right after the closer's `>` all
+turn that element back into highlighted source (`cm-hmd-html-begin` on the
+first `<`, `cm-hmd-html-end` on the last `>`); every other element on the same
+line stays a widget. A cursor in the inner `<i>` of `<b><i>both</i></b>`
+reveals the whole outer element. A selection ending one character before the
+`<` leaves the widget; one reaching into the element reveals it.
+
+Measured in the widgets: `sup` and `sub` compute `font-size: 13.3333px` against
+the 16 px body (the 5/6 ratio of the reading view's 12.5/15) with
+`vertical-align: super` / `sub`; `kbd` is 14 px on `rgb(35, 35, 35)`; `<mark>`
+in a widget is the browser's own `rgb(255, 255, 0)` behind black text, not the
+theme's highlight, which styles the `==mark==` token instead; `<span
+style="color: red">` is red.
+
+#### HTML blocks in Live Preview
+
+| Block | Live Preview, cursor elsewhere |
+| --- | --- |
+| `<div>`, `<pre>`, `<details>`, `<center>`, `<p>` | a `div.cm-html-embed.cm-embed-block` holding the rendered element and a `div.embed-actions` with an "Edit this block" button (`lucide-code-2`); a cursor on the line shows the source |
+| `<img>` alone on its line | an inline `span.cm-html-embed` inside the `.cm-line`, not an embed block |
+| `<!-- a comment block -->` | source, `cm-comment` |
+| `<table>…</table>`, multi-line or on one line, with or without `<thead>` | **source, always**: highlighted tags with the cursor anywhere in the note. A raw table is never a Live Preview widget |
+
+#### A raw table in the reading view
+
+A raw `<table>` gets the same `div.el-table` wrapper (`dir="ltr"`,
+`style="overflow-x: auto;"`) as a Markdown table, and the same computed cell
+styles: `th` at weight 600, every cell `padding: 4px 8px`, a `0.667px solid
+rgb(51, 51, 51)` border, `vertical-align: top`, 16 px, line height 20.8 px; the
+table itself `border-collapse: collapse` with 16 px margins. Markdown inside a
+cell of an HTML block is literal (`**md**` stays asterisks); `<b>` in it is
+bold. `align="right"` on a `th` computes `text-align: end`; `colspan="2"` spans
+two columns; `style="color: red"` colours the cell; `border="1"` adds an
+`outset` border to the table only. Without `<thead>` the browser wraps the rows
+in `<tbody>`, a first row of `th` cells included.
+
 ## Observed remote image behavior, Obsidian 1.14.4 (installer build 1.13.7)
 
 Observed on 2026-10-18 with a throwaway plugin in a scratch vault: a table of

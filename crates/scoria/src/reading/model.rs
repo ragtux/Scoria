@@ -864,26 +864,8 @@ impl<'v> Builder<'v> {
     /// overlay inline HTML takes, the text between them has its entities
     /// decoded and its newlines read as spaces.
     fn rich_html(&mut self, html: &str) -> RichText {
-        let mut acc = RichBuilder::default();
-        let mut rest = html.trim();
-        while !rest.is_empty() {
-            match rest.find('<') {
-                Some(0) => {
-                    let end = rest.find('>').map(|i| i + 1).unwrap_or(rest.len());
-                    acc.html(&rest[..end]);
-                    rest = &rest[end..];
-                }
-                Some(at) => {
-                    acc.push(&html_text(&rest[..at]));
-                    rest = &rest[at..];
-                }
-                None => {
-                    acc.push(&html_text(rest));
-                    rest = "";
-                }
-            }
-        }
-        acc.finish(self.id())
+        let id = self.id();
+        rich_from_html(html, id)
     }
 
     /// A raw HTML block that is not a run of images: a `<pre>` as a wrapped
@@ -923,7 +905,56 @@ impl<'v> Builder<'v> {
                 let rich = self.rich_html(&inner);
                 RBlock::Paragraph(vec![Segment::Text(rich)])
             }
+            HtmlBlockKind::Table(table) => self.html_table(table),
             HtmlBlockKind::Source => RBlock::Html(content.trim_end().to_string()),
+        }
+    }
+
+    /// A raw `<table>` drawn as the table a Markdown one is: Obsidian gives
+    /// both the same `div.el-table` and the same cell styles (probe of
+    /// 2026-11-04). A `<th>` cell in a body row is bold, the header's
+    /// weight; ragged rows are padded to the widest; the table has no
+    /// cell spans, so Live Preview never edits it in place -- it is not a
+    /// widget there at all.
+    fn html_table(&mut self, table: HtmlTable) -> RBlock {
+        let columns = table
+            .header
+            .len()
+            .max(table.rows.iter().map(Vec::len).max().unwrap_or(0));
+        let mut row_of = |cells: &[HtmlCell]| -> Vec<RichText> {
+            let mut row: Vec<RichText> = cells
+                .iter()
+                .map(|c| {
+                    let mut rich = self.rich_html(&c.html);
+                    if c.head {
+                        let len = rich.text.len();
+                        rich.runs = embolden(std::mem::take(&mut rich.runs), len);
+                    }
+                    rich
+                })
+                .collect();
+            while row.len() < columns {
+                let id = self.id();
+                row.push(RichText {
+                    id,
+                    ..RichText::default()
+                });
+            }
+            row
+        };
+        let header = if table.header.is_empty() {
+            Vec::new()
+        } else {
+            row_of(&table.header)
+        };
+        let rows: Vec<Vec<RichText>> = table.rows.iter().map(|r| row_of(r)).collect();
+        let mut alignments = table.alignments;
+        alignments.resize(columns, Alignment::None);
+        RBlock::Table {
+            alignments,
+            header,
+            rows,
+            spans: Vec::new(),
         }
     }
 
@@ -1241,6 +1272,49 @@ impl<'v> Builder<'v> {
     }
 }
 
+/// Rich text from a run of raw HTML, the tags through the inline overlay and
+/// the text between them entity-decoded with its whitespace collapsed.
+/// Markdown between the tags stays literal, which is what both a raw block
+/// and Live Preview's inline widget show.
+fn rich_from_html(html: &str, id: usize) -> RichText {
+    let mut acc = RichBuilder::default();
+    let mut rest = html.trim();
+    while !rest.is_empty() {
+        match rest.find('<') {
+            Some(0) => {
+                let end = rest.find('>').map(|i| i + 1).unwrap_or(rest.len());
+                acc.html(&rest[..end]);
+                rest = &rest[end..];
+            }
+            Some(at) => {
+                acc.push(&html_text(&rest[..at]));
+                rest = &rest[at..];
+            }
+            None => {
+                acc.push(&html_text(rest));
+                rest = "";
+            }
+        }
+    }
+    acc.finish(id)
+}
+
+/// What Live Preview draws in place of one inline HTML element (`<b>x</b>`,
+/// opener to matching closer) while no cursor touches it: the element
+/// rendered, its content literal -- `<b>**md**</b>` shows `**md**` in bold,
+/// where the reading view parses it (probe of 2026-11-04,
+/// [[Specification#Inline HTML in Live Preview]]). `None` keeps the source:
+/// an element that renders nothing (`<script>`), carries a tag the overlay
+/// cannot draw, or breaks the line (`<br>`), since one display line cannot
+/// hold a second row.
+pub fn html_inline_widget(element: &str) -> Option<RichText> {
+    let rich = rich_from_html(element, 0);
+    let drawable = !rich.text.trim().is_empty()
+        && !rich.text.contains('\n')
+        && !rich.runs.iter().any(|(_, s)| s.html);
+    drawable.then_some(rich)
+}
+
 /// Accumulates text with a style stack into one [`RichText`].
 #[derive(Default)]
 struct RichBuilder {
@@ -1548,14 +1622,205 @@ enum HtmlBlockKind {
     },
     /// A container the sanitizer keeps with its content: the inner HTML.
     Container(String),
+    /// `<table>`: its cells, read as far as a flat grid can carry them.
+    Table(HtmlTable),
     /// Anything else, drawn as source.
     Source,
 }
 
-/// Whether a raw HTML block renders as something other than its source,
-/// which is what earns it a Live Preview widget.
+/// A raw `<table>` as rows of cells' inner HTML.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+struct HtmlTable {
+    /// The `<thead>` row, or a first row of nothing but `<th>`; empty when
+    /// the table has neither.
+    header: Vec<HtmlCell>,
+    rows: Vec<Vec<HtmlCell>>,
+    /// Per column, from the `align` attribute of the first row's cells.
+    alignments: Vec<Alignment>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct HtmlCell {
+    html: String,
+    /// A `<th>` outside the header row, drawn bold.
+    head: bool,
+}
+
+/// Whether a raw HTML block renders as a Live Preview widget. Everything
+/// that renders in the reading view does, but a `<table>`: Live Preview
+/// leaves a raw table as highlighted source with the cursor anywhere
+/// (probe of 2026-11-04), while `<div>`, `<pre>`, `<details>`, `<center>`
+/// and `<p>` become `cm-html-embed` blocks.
 fn html_block_renders(content: &str) -> bool {
-    classify_html_block(content) != HtmlBlockKind::Source
+    !matches!(
+        classify_html_block(content),
+        HtmlBlockKind::Source | HtmlBlockKind::Table(_)
+    )
+}
+
+/// `runs` over a text of `len` bytes with bold laid over every byte, the
+/// gaps between them included.
+fn embolden(
+    runs: Vec<(Range<usize>, InlineStyle)>,
+    len: usize,
+) -> Vec<(Range<usize>, InlineStyle)> {
+    let bold = InlineStyle {
+        bold: true,
+        ..InlineStyle::default()
+    };
+    let mut out = Vec::new();
+    let mut at = 0;
+    for (range, mut style) in runs {
+        if range.start > at {
+            out.push((at..range.start, bold));
+        }
+        style.bold = true;
+        at = range.end;
+        out.push((range, style));
+    }
+    if at < len {
+        out.push((at..len, bold));
+    }
+    out
+}
+
+/// The cells of a raw `<table>` block, or `None` for one this grid cannot
+/// hold: a table nested in a cell, or one with no cell at all.
+fn parse_html_table(html: &str) -> Option<HtmlTable> {
+    let mut table = HtmlTable::default();
+    let mut row: Option<(Vec<HtmlCell>, bool)> = None;
+    let mut cell: Option<(String, bool, Alignment)> = None;
+    let mut in_head = false;
+    let mut first_alignments: Option<Vec<Alignment>> = None;
+    let mut depth = 0usize;
+    let finish_cell = |cell: &mut Option<(String, bool, Alignment)>,
+                       row: &mut Option<(Vec<HtmlCell>, bool)>,
+                       aligns: &mut Vec<Alignment>| {
+        if let Some((html, head, align)) = cell.take() {
+            let (cells, _) = row.get_or_insert_with(|| (Vec::new(), false));
+            cells.push(HtmlCell { html, head });
+            aligns.push(align);
+        }
+    };
+    let mut row_aligns: Vec<Alignment> = Vec::new();
+    let mut finish_row = |row: &mut Option<(Vec<HtmlCell>, bool)>,
+                          row_aligns: &mut Vec<Alignment>,
+                          table: &mut HtmlTable| {
+        let aligns = std::mem::take(row_aligns);
+        let Some((cells, head_section)) = row.take() else {
+            return;
+        };
+        if cells.is_empty() {
+            return;
+        }
+        if first_alignments.is_none() {
+            first_alignments = Some(aligns);
+        }
+        let all_th = cells.iter().all(|c| c.head);
+        if table.header.is_empty() && table.rows.is_empty() && (head_section || all_th) {
+            table.header = cells
+                .into_iter()
+                .map(|c| HtmlCell { head: false, ..c })
+                .collect();
+        } else {
+            table.rows.push(cells);
+        }
+    };
+    let mut rest = html.trim();
+    while !rest.is_empty() {
+        let (token, text) = match rest.find('<') {
+            Some(0) => {
+                let end = rest.find('>').map(|i| i + 1).unwrap_or(rest.len());
+                let token = &rest[..end];
+                rest = &rest[end..];
+                (Some(token), "")
+            }
+            Some(at) => {
+                let text = &rest[..at];
+                rest = &rest[at..];
+                (None, text)
+            }
+            None => {
+                let text = rest;
+                rest = "";
+                (None, text)
+            }
+        };
+        let Some(token) = token else {
+            if let Some((inner, ..)) = cell.as_mut() {
+                inner.push_str(text);
+            }
+            continue;
+        };
+        let (name, closing, attrs) = match html_token(token) {
+            Some(HtmlToken::Open { name, attrs }) => (name.to_ascii_lowercase(), false, attrs),
+            Some(HtmlToken::Close(name)) => (name.to_ascii_lowercase(), true, ""),
+            _ => (String::new(), false, ""),
+        };
+        match (name.as_str(), closing) {
+            ("table", false) => {
+                if depth > 0 {
+                    return None;
+                }
+                depth += 1;
+            }
+            ("table", true) => {
+                finish_cell(&mut cell, &mut row, &mut row_aligns);
+                finish_row(&mut row, &mut row_aligns, &mut table);
+                break;
+            }
+            ("thead", open_or_close) => {
+                finish_cell(&mut cell, &mut row, &mut row_aligns);
+                finish_row(&mut row, &mut row_aligns, &mut table);
+                in_head = !open_or_close;
+            }
+            ("tbody" | "tfoot", _) => {
+                finish_cell(&mut cell, &mut row, &mut row_aligns);
+                finish_row(&mut row, &mut row_aligns, &mut table);
+                in_head = false;
+            }
+            ("tr", false) => {
+                finish_cell(&mut cell, &mut row, &mut row_aligns);
+                finish_row(&mut row, &mut row_aligns, &mut table);
+                row = Some((Vec::new(), in_head));
+            }
+            ("tr", true) => {
+                finish_cell(&mut cell, &mut row, &mut row_aligns);
+                finish_row(&mut row, &mut row_aligns, &mut table);
+            }
+            ("td" | "th", false) => {
+                finish_cell(&mut cell, &mut row, &mut row_aligns);
+                if row.is_none() {
+                    row = Some((Vec::new(), in_head));
+                }
+                let align = html_attrs(attrs)
+                    .into_iter()
+                    .flatten()
+                    .find(|(n, _)| n == "align")
+                    .map(|(_, v)| match v.to_ascii_lowercase().as_str() {
+                        "left" => Alignment::Left,
+                        "center" => Alignment::Center,
+                        "right" => Alignment::Right,
+                        _ => Alignment::None,
+                    })
+                    .unwrap_or(Alignment::None);
+                cell = Some((String::new(), name == "th", align));
+            }
+            ("td" | "th", true) => finish_cell(&mut cell, &mut row, &mut row_aligns),
+            _ => {
+                if let Some((inner, ..)) = cell.as_mut() {
+                    inner.push_str(token);
+                }
+            }
+        }
+    }
+    finish_cell(&mut cell, &mut row, &mut row_aligns);
+    finish_row(&mut row, &mut row_aligns, &mut table);
+    if table.header.is_empty() && table.rows.is_empty() {
+        return None;
+    }
+    table.alignments = first_alignments.unwrap_or_default();
+    Some(table)
 }
 
 fn classify_html_block(content: &str) -> HtmlBlockKind {
@@ -1633,6 +1898,10 @@ fn classify_html_block(content: &str) -> HtmlBlockKind {
         | "u" | "mark" | "s" | "del" | "strike" | "a" => {
             HtmlBlockKind::Container(trimmed.to_string())
         }
+        "table" => match parse_html_table(trimmed) {
+            Some(table) => HtmlBlockKind::Table(table),
+            None => HtmlBlockKind::Source,
+        },
         _ => HtmlBlockKind::Source,
     }
 }
@@ -2594,7 +2863,6 @@ mod tests {
         for src in [
             "<img src=\"https://e.com/a.png\">\n",
             "<img src=\"pic.png\" width=\"50%\">\n",
-            "<table><tr><td>c</td></tr></table>\n",
         ] {
             assert!(widgets(src, &stub()).is_empty(), "{src:?} became a widget");
             let m = build("Self.md", src, &stub());
@@ -2604,6 +2872,88 @@ mod tests {
                 m.blocks[0]
             );
         }
+    }
+
+    /// A raw `<table>` is drawn as a table in the reading view -- the first
+    /// row of `<th>` as the header, Markdown in a cell literal, `align` on
+    /// the first row's cells as the column's alignment -- and stays source
+    /// in Live Preview, which never makes a raw table a widget (probe of
+    /// 2026-11-04).
+    #[test]
+    fn a_raw_table_is_a_table_in_reading_and_source_in_live_preview() {
+        let src = "<table>\n<tr><th>H1</th><th align=\"right\">H2</th></tr>\n<tr><td>a</td><td><b>b</b> **md**</td></tr>\n</table>\n";
+        assert!(widgets(src, &stub()).is_empty());
+        let m = build("Self.md", src, &stub());
+        let RBlock::Table {
+            alignments,
+            header,
+            rows,
+            spans,
+        } = &m.blocks[0]
+        else {
+            panic!("{:?}", m.blocks[0]);
+        };
+        let texts = |row: &[RichText]| row.iter().map(|c| c.text.clone()).collect::<Vec<_>>();
+        assert_eq!(texts(header), ["H1", "H2"]);
+        assert_eq!(rows.len(), 1);
+        assert_eq!(texts(&rows[0]), ["a", "b **md**"]);
+        let bold = InlineStyle {
+            bold: true,
+            ..InlineStyle::default()
+        };
+        assert_eq!(rows[0][1].runs, vec![(0..1, bold)]);
+        assert_eq!(alignments, &[Alignment::None, Alignment::Right]);
+        assert!(spans.is_empty(), "a raw table is not edited in place");
+
+        // No `<th>` row: no header, and a ragged row is padded to the
+        // widest. `<thead>` makes its row the header whatever its cells.
+        let m = build(
+            "Self.md",
+            "<table><tr><td>c</td></tr><tr><td>d</td><td>e</td></tr></table>\n",
+            &stub(),
+        );
+        let RBlock::Table { header, rows, .. } = &m.blocks[0] else {
+            panic!("{:?}", m.blocks[0]);
+        };
+        assert!(header.is_empty());
+        assert_eq!(texts(&rows[0]), ["c", ""]);
+        assert_eq!(texts(&rows[1]), ["d", "e"]);
+        let m = build(
+            "Self.md",
+            "<table border=\"1\"><thead><tr><td>L</td></tr></thead><tbody><tr><th>x</th></tr></tbody></table>\n",
+            &stub(),
+        );
+        let RBlock::Table { header, rows, .. } = &m.blocks[0] else {
+            panic!("{:?}", m.blocks[0]);
+        };
+        assert_eq!(texts(header), ["L"]);
+        // A `<th>` in the body is bold, the header's weight.
+        assert_eq!(rows[0][0].runs, vec![(0..1, bold)]);
+
+        // A table in a cell is more than the grid holds: source.
+        let m = build(
+            "Self.md",
+            "<table><tr><td><table><tr><td>x</td></tr></table></td></tr></table>\n",
+            &stub(),
+        );
+        assert!(matches!(&m.blocks[0], RBlock::Html(_)), "{:?}", m.blocks[0]);
+    }
+
+    /// Live Preview's inline element: rendered with its content literal,
+    /// or nothing for what it cannot draw.
+    #[test]
+    fn an_inline_element_widget_keeps_its_content_literal() {
+        let w = html_inline_widget("<b>**md** inside</b>").unwrap();
+        assert_eq!(w.text, "**md** inside");
+        assert!(w.runs.iter().all(|(_, s)| s.bold));
+        assert_eq!(
+            html_inline_widget("<b><i>both</i></b>").unwrap().text,
+            "both"
+        );
+        assert!(html_inline_widget("<script>x</script>").is_none());
+        assert!(html_inline_widget("<foo>x</foo>").is_none());
+        assert!(html_inline_widget("<b>a<br>b</b>").is_none());
+        assert!(html_inline_widget("<span></span>").is_none());
     }
 
     /// A raw `<pre>` is a wrapped code block whose copy button needs a
