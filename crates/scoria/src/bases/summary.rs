@@ -23,9 +23,19 @@
 //!   (`trash-2`). What the options are and compute is
 //!   [`scoria_bases::summary`]'s.
 //!
-//! **Unprobed**: what *Add summary* creates — it is drawn and inert — and
-//! whether the page's search field takes focus on open; it does here, like
-//! the properties panel's.
+//! *Add summary* (probe of 2026-11-04, `bases-leftovers` `s03`) opens an
+//! **Edit new summary** page in the same menu: a *Summary name* field, value
+//! and placeholder both `new summary`, focused; a *Formula* editor with the
+//! placeholder `values.reduce( ... )` and the validity line. The click writes
+//! nothing. Once a name and a formula are typed the base holds a top-level
+//! `summaries: {name: formula}` and the column's summary is that name, with
+//! no button pressed; Escape goes back to the list, where the new summary is
+//! listed among the built-ins by name. [`BasesView::write_new_summary`]
+//! writes when the formula parses, which is the one point the run's bytes
+//! were read after; whether Obsidian writes a half-typed formula is unseen.
+//!
+//! **Unprobed**: whether the page's search field takes focus on open; it does
+//! here, like the properties panel's.
 
 use crate::assets::icon;
 use crate::bases::cells::CELL_PAD;
@@ -39,6 +49,13 @@ use scoria_bases::summary::{class_of, compute, icon_of, options, SummaryOption, 
 use scoria_bases::Value;
 use scoria_formats::base::{Base, View};
 use serde_json::json;
+
+/// What *Add summary* names a new summary until it is renamed: the field's
+/// value and its placeholder alike.
+pub const NEW_SUMMARY_NAME: &str = "new summary";
+
+/// The Add summary page's formula placeholder, as observed.
+const FORMULA_PLACEHOLDER: &str = "values.reduce( ... )";
 
 /// The height of a summary row: the footer measured 30 px, as did the row
 /// under a group heading.
@@ -223,6 +240,102 @@ impl BasesView {
         self.close_panel(window, cx);
     }
 
+    /// *Add summary*: the Edit new summary page, its name field focused.
+    /// Nothing is written yet.
+    pub(super) fn add_summary(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.toolbar.page = Page::NewSummary {
+            name: NEW_SUMMARY_NAME.to_string(),
+            formula: String::new(),
+            written: None,
+        };
+        self.toolbar.selected = None;
+        self.open_field(Field::SummaryName, NEW_SUMMARY_NAME.to_string(), window, cx);
+        cx.notify();
+    }
+
+    /// The *Summary name* field: kept on the page, and a summary already
+    /// written is renamed with it.
+    pub(super) fn commit_summary_name(&mut self, text: &str, cx: &mut Context<Self>) {
+        let Page::NewSummary { name, .. } = &mut self.toolbar.page else {
+            return;
+        };
+        if name.as_str() == text {
+            return;
+        }
+        *name = text.to_string();
+        self.write_new_summary(cx);
+    }
+
+    /// The page's *Formula* editor: kept on the page, written once it parses.
+    pub(super) fn commit_summary_formula(&mut self, text: &str, cx: &mut Context<Self>) {
+        let Page::NewSummary { formula, .. } = &mut self.toolbar.page else {
+            return;
+        };
+        if formula.as_str() == text {
+            cx.notify();
+            return;
+        }
+        *formula = text.to_string();
+        self.write_new_summary(cx);
+    }
+
+    /// Writes the page's summary when it has a name and a formula that
+    /// parses: `summaries.<name>: <formula>` at the top of the base (moved
+    /// from the name it was written under, if that changed) and the target
+    /// column's summary set to it, as the run's file read after typing.
+    fn write_new_summary(&mut self, cx: &mut Context<Self>) {
+        let Page::NewSummary {
+            name,
+            formula,
+            written,
+        } = self.toolbar.page.clone()
+        else {
+            return;
+        };
+        let name = name.trim().to_string();
+        let ready =
+            !name.is_empty() && !formula.trim().is_empty() && scoria_bases::parse(&formula).is_ok();
+        let id = self
+            .toolbar
+            .summary
+            .and_then(|t| self.table().and_then(|tb| tb.columns.get(t.column)))
+            .map(|c| c.id.clone());
+        let (true, Some(id)) = (ready, id) else {
+            cx.notify();
+            return;
+        };
+        let ix = self.view_ix();
+        let key = name.clone();
+        self.edit_base(
+            move |base| {
+                let summaries = base.summaries.get_or_insert_with(Default::default);
+                match written.as_deref() {
+                    // A rename keeps the summary's place in the map.
+                    Some(old) if old != key => match summaries.get_index_of(old) {
+                        Some(at) => {
+                            summaries.shift_remove(old);
+                            summaries.shift_insert(at, key.clone(), formula);
+                        }
+                        None => {
+                            summaries.insert(key.clone(), formula);
+                        }
+                    },
+                    _ => {
+                        summaries.insert(key.clone(), formula);
+                    }
+                }
+                if let Some(view) = base.views.get_mut(ix) {
+                    view.summaries.retain(|k, _| !same_property(k, &id));
+                    view.summaries.insert(id, key);
+                }
+            },
+            cx,
+        );
+        if let Page::NewSummary { written, .. } = &mut self.toolbar.page {
+            *written = Some(name);
+        }
+    }
+
     /// How many rows the page's list has: the options, *Add summary*, and
     /// *Hide summary* while one is set.
     pub(super) fn summary_list_len(&self, cx: &Context<Self>) -> usize {
@@ -254,6 +367,8 @@ impl BasesView {
         if let Some((option, _)) = shown.get(ix) {
             let name = option.name.clone();
             self.pick_summary(name, window, cx);
+        } else if ix == shown.len() {
+            self.add_summary(window, cx);
         } else if ix == shown.len() + 1 && self.summary_current(target).is_some() {
             self.hide_summary(window, cx);
         }
@@ -273,6 +388,9 @@ impl BasesView {
         let Some(target) = self.toolbar.summary else {
             return div().into_any_element();
         };
+        if matches!(self.toolbar.page, Page::NewSummary { .. }) {
+            return self.render_new_summary_page(theme, cx);
+        }
         let (class, shown) = self.summary_shown(target, cx);
         let current = self
             .table()
@@ -340,15 +458,27 @@ impl BasesView {
                     .into_any_element()
             })
             .collect();
-        let mut actions: Vec<AnyElement> = vec![self.action_row(
+        let add = self.action_row(
             "bases-summary-add",
             0,
             "square-function",
             SharedString::from("Add summary"),
-            false,
+            true,
             theme,
-            |_, _, _| {},
-        )];
+            cx.listener(|this, _, window, cx| {
+                cx.stop_propagation();
+                this.add_summary(window, cx);
+            }),
+        );
+        let mut actions: Vec<AnyElement> = vec![if selected == Some(shown.len()) {
+            div()
+                .bg(theme.tokens.background_modifier_hover)
+                .rounded(px(4.))
+                .child(add)
+                .into_any_element()
+        } else {
+            add
+        }];
         let hide_row = shown.len() + 1;
         if current.is_some() {
             let on = selected == Some(hide_row);
@@ -380,6 +510,86 @@ impl BasesView {
             .child(self.search_box(Field::Search, "Find or create...", theme, cx))
             .child(self.group(rows, false, theme))
             .child(self.group(actions, true, theme))
+            .into_any_element()
+    }
+
+    /// **Edit new summary**: the name, the formula and its validity line.
+    fn render_new_summary_page(&mut self, theme: &Theme, cx: &mut Context<Self>) -> AnyElement {
+        let Page::NewSummary { name, formula, .. } = self.toolbar.page.clone() else {
+            return div().into_any_element();
+        };
+        let name_value = match &self.toolbar.editing {
+            Some(Field::SummaryName) => self.field_text(cx),
+            _ => name.clone(),
+        };
+        let typed = match &self.toolbar.editing {
+            Some(Field::Formula) => self.field_text(cx),
+            _ => formula,
+        };
+        let valid = typed.trim().is_empty() || scoria_bases::parse(&typed).is_ok();
+        self.toolbar.set_rows(vec![json!({
+            "page": "newSummary", "name": name_value, "formula": typed, "valid": valid,
+        })]);
+        // Observed: the title stays "Edit new summary" while the name is typed.
+        let title = "Edit new summary";
+        let label = div()
+            .flex()
+            .flex_row()
+            .items_center()
+            .h(px(ROW_HEIGHT))
+            .px(px(2.))
+            .py(px(4.))
+            .gap(px(4.))
+            .child(SharedString::from("Formula"))
+            .child(icon("circle-help", 14., theme.tokens.text_faint));
+        let editor = div()
+            .flex()
+            .flex_col()
+            .w_full()
+            .min_h(px(84.))
+            .p(px(6.))
+            .rounded(px(5.))
+            .bg(theme.tokens.background_modifier_form_field)
+            .border_1()
+            .border_color(theme.tokens.background_modifier_border)
+            .font_family(theme.mono_font.clone())
+            .child(self.text_box(Field::Formula, &typed, FORMULA_PLACEHOLDER, theme, cx));
+        let (status_icon, status_color, status) = if valid {
+            ("circle-check", theme.tokens.text_success, "Valid formula")
+        } else {
+            ("circle-x", theme.tokens.text_error, "Invalid formula")
+        };
+        let rows = vec![
+            self.input_row(
+                Some("Summary name"),
+                self.text_box(Field::SummaryName, &name_value, NEW_SUMMARY_NAME, theme, cx),
+                theme,
+            ),
+            div()
+                .flex()
+                .flex_col()
+                .w_full()
+                .child(label)
+                .child(editor)
+                .child(
+                    div()
+                        .pt(px(6.))
+                        .flex()
+                        .flex_row()
+                        .items_center()
+                        .gap(px(6.))
+                        .text_color(status_color)
+                        .child(icon(status_icon, 14., status_color))
+                        .child(SharedString::from(status)),
+                )
+                .into_any_element(),
+        ];
+        div()
+            .flex()
+            .flex_col()
+            .w_full()
+            .child(self.page_header(SharedString::from(title), false, theme, cx))
+            .child(self.page_form(rows))
             .into_any_element()
     }
 

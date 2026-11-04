@@ -1904,6 +1904,19 @@ Filled, Unique. A `.bases-table-footer` row holds the table's summaries and a
 
 **Landed 2026-11-01**: the type icon, the sort chevron, the 6 px accent resizer, drag-to-reorder with the drop line (writing `order`), and the whole menu per kind of column — Group by this property, Edit property... / Edit formula... opening the properties panel's page under the header, the Property type submenu writing `types.json`, Clear sort in the warning colour — with Escape closing it. Summaries are built: the footer and the row under each group heading, the Summarize page with every observed option computed (`scoria_bases::summary`), Hide summary. **Still out**: *Add summary*, drawn inert, since what it creates was never observed. See [[Development#The column header, summaries, cells and the table keyboard, 2026-11-01]].
 
+**Add summary landed 2026-11-04** after the probe (`bases-leftovers.mjs` `s03`): the row opens an
+**Edit new summary** page in the same menu -- *Summary name* (value and placeholder `new summary`,
+focused), *Formula* (placeholder `values.reduce( ... )`) and the validity line -- and the click
+writes nothing. Once the name is set and the formula parses, the base gets a top-level
+`summaries: {name: formula}` and the column's summary becomes that name; a later rename moves the
+key in place. Escape goes back to the Summarize list, where the summary is listed by name among
+the built-ins. The same pass lets a panel hung from a summary row near the window's foot slide up
+to fit, as Obsidian's did, instead of being cut off below. **Still out**: the page header's
+`more-vertical` menu (its rows were not opened), and whether Obsidian writes a half-typed
+formula -- Scoria writes each version that parses. The icon a custom summary's row wears is
+unsettled: the 2026-11-01 run drew `square-function` for `customMean` in most captures and
+`binary` in some, the 2026-11-04 run `binary` for `Doubled`.
+
 **Scoria.** Name only, no icon, no sort mark, no reorder. The menu is Hide column, Summarize...
 (inert), Sort A → Z, Sort Z → A, Clear sort, Edit property... (inert), with no icons. No Group by
 this property, no Property type, no summaries at all (`summaries` only round-trips).

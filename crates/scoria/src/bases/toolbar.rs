@@ -162,6 +162,14 @@ pub enum Page {
     Property(String),
     /// The properties panel's **Edit *name*** page for a formula, by name.
     Formula(String),
+    /// The Summarize page's **Add summary**: the name and formula being
+    /// typed, and the name already written to the base's own `summaries`,
+    /// if one is (nothing is written until the formula parses).
+    NewSummary {
+        name: String,
+        formula: String,
+        written: Option<String>,
+    },
 }
 
 /// Which of the filter panel's two sections a node belongs to: the base's
@@ -214,8 +222,10 @@ pub enum Field {
     Separator,
     /// An Edit page's "Display name".
     DisplayName,
-    /// A formula page's statement.
+    /// A formula page's statement, and the Add summary page's formula.
     Formula,
+    /// The Add summary page's "Summary name".
+    SummaryName,
     /// A filter rule in advanced mode: its statement, verbatim. The path is
     /// the node's path within its section.
     Rule(Section, Vec<usize>),
@@ -241,6 +251,7 @@ impl Field {
             Field::RuleValue(..) => "value",
             Field::GroupAdd => "groupAdd",
             Field::TableSearch => "tableSearch",
+            Field::SummaryName => "summaryName",
         }
     }
 
@@ -359,6 +370,13 @@ impl ToolbarState {
             Page::Configure(ix) => json!({ "configure": ix }),
             Page::Property(id) => json!({ "property": id }),
             Page::Formula(name) => json!({ "formula": name }),
+            Page::NewSummary {
+                name,
+                formula,
+                written,
+            } => {
+                json!({ "newSummary": { "name": name, "formula": formula, "written": written } })
+            }
         };
         json!({
             "panel": self.panel.as_str(),
@@ -1152,6 +1170,7 @@ impl BasesView {
             Field::Separator => self.commit_separator(text, cx),
             Field::DisplayName => self.commit_display_name(text, cx),
             Field::Formula => self.commit_formula(text, cx),
+            Field::SummaryName => self.commit_summary_name(text, cx),
             Field::Rule(section, path) => self.commit_rule_text(section, &path, text, cx),
             Field::RuleValue(section, path) => self.commit_rule_value(section, &path, text, cx),
             Field::GroupAdd => cx.notify(),
@@ -1221,6 +1240,12 @@ impl BasesView {
                 // leaves the field.
                 self.toolbar.editing = None;
                 self.focus_view(window, cx);
+            }
+            // Observed (`bases-leftovers` `s03`): Escape on the Add summary
+            // page goes back to the Summarize list, the summary kept.
+            Some(_) if matches!(self.toolbar.page, Page::NewSummary { .. }) => {
+                self.page_back(window, cx);
+                return;
             }
             Some(_) if self.toolbar.header_menu => self.toolbar.header_menu = false,
             Some(_) => self.close_panel(window, cx),
@@ -1299,7 +1324,11 @@ impl BasesView {
                 .map(|b| Point::new(b.origin.x, b.origin.y + b.size.height + px(2.)))
                 .unwrap_or(self.toolbar.at)
         });
-        let tallest = (window.viewport_size().height - at.y - px(8.)).max(px(120.));
+        // A panel is as tall as the window allows, not as the room under its
+        // anchor does: one hung from a summary row near the bottom slides up
+        // to fit (`snap_to_window` below), which is what Obsidian's menu did
+        // (`bases-leftovers` `s03`: moved to y 10 from a footer at y 403).
+        let tallest = (window.viewport_size().height - px(16.)).max(px(120.));
         let body = match panel {
             Panel::None => return None,
             Panel::Views => self.render_views_panel(base, theme, cx),
@@ -1542,7 +1571,9 @@ impl BasesView {
         self.toolbar.header_menu = false;
         self.toolbar.selected = None;
         match self.toolbar.panel {
-            Panel::Views | Panel::Properties => {
+            // Observed: leaving the Add summary page lands on the Summarize
+            // list, its search field ready, as the other lists' do.
+            Panel::Views | Panel::Properties | Panel::Summary => {
                 self.open_field(Field::Search, String::new(), window, cx)
             }
             _ => {
@@ -2595,6 +2626,7 @@ fn placeholder_of(which: &Field) -> &'static str {
         Field::ViewName => "View name",
         Field::TableSearch => "Find...",
         Field::Formula => "x + y",
+        Field::SummaryName => super::summary::NEW_SUMMARY_NAME,
         _ => "",
     }
 }

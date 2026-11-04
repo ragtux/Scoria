@@ -595,6 +595,10 @@ impl BasesView {
     /// The formula editor: written whenever it parses, kept in the field
     /// otherwise.
     pub(super) fn commit_formula(&mut self, text: &str, cx: &mut Context<Self>) {
+        if matches!(self.toolbar.page, Page::NewSummary { .. }) {
+            self.commit_summary_formula(text, cx);
+            return;
+        }
         let Page::Formula(name) = self.toolbar.page.clone() else {
             return;
         };
