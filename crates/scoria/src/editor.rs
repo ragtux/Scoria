@@ -298,6 +298,12 @@ struct Palette {
     /// Every match of the find query, and the selected one.
     find_match: Hsla,
     find_current: Hsla,
+    /// A task's box: `--checkbox-border-color` while open,
+    /// `--checkbox-color` filled when checked, the mark in
+    /// `--checkbox-marker-color`, as the reading view draws it.
+    checkbox: Hsla,
+    checkbox_border: Hsla,
+    checkbox_marker: Hsla,
     mono: SharedString,
 }
 
@@ -343,6 +349,9 @@ impl Palette {
                 c.a = 0.75;
                 c
             },
+            checkbox: k.checkbox_color,
+            checkbox_border: k.checkbox_border_color,
+            checkbox_marker: k.checkbox_marker_color,
             mono: t.mono_font.clone(),
         }
     }
@@ -4364,12 +4373,11 @@ fn nested_prefix(line: &str, len: usize, spans: &[HighlightSpan]) -> Option<Disp
         .filter(|s| s.range.end <= len)
         .cloned()
         .collect();
-    Some(preview::display_line_with(
-        &line[..len],
-        &spans,
-        &[],
-        &|_, _| None,
-    ))
+    let mut display = preview::display_line_with(&line[..len], &spans, &[], &|_, _| None);
+    // The marker has no text to strike: a done task's strikethrough would
+    // land on the space after its box and read as a stray `-`.
+    display.decor.task_done = false;
+    Some(display)
 }
 
 /// Pairs each widget with the lines its span covers in `text`.
@@ -5184,7 +5192,46 @@ fn runs_for_display(
     if runs.is_empty() {
         runs.push(base.to_run(0));
     }
+    if done {
+        // The gap between a done task's box and its text is not struck: a
+        // struck space reads as a stray `-` before the words.
+        for task in &display.tasks {
+            let rest = &display.text[task.display.end..];
+            let gap = rest.len() - rest.trim_start_matches([' ', '\t']).len();
+            unstrike(&mut runs, task.display.end..task.display.end + gap);
+        }
+    }
     runs
+}
+
+/// Clears the strikethrough of the display bytes `range` in `runs`,
+/// splitting a run that straddles either end.
+fn unstrike(runs: &mut Vec<TextRun>, range: Range<usize>) {
+    if range.is_empty() {
+        return;
+    }
+    let mut out = Vec::with_capacity(runs.len() + 2);
+    let mut at = 0;
+    for run in runs.drain(..) {
+        let (start, end) = (at, at + run.len);
+        at = end;
+        let (a, b) = (range.start.clamp(start, end), range.end.clamp(start, end));
+        if a == b || run.strikethrough.is_none() {
+            out.push(run);
+            continue;
+        }
+        for (from, to, strike) in [(start, a, true), (a, b, false), (b, end, true)] {
+            if to > from {
+                let mut piece = run.clone();
+                piece.len = to - from;
+                if !strike {
+                    piece.strikethrough = None;
+                }
+                out.push(piece);
+            }
+        }
+    }
+    *runs = out;
 }
 
 /// Lays an inline HTML element's own style over its run, the way the
@@ -5228,6 +5275,52 @@ fn style_html_run(run: &mut TextRun, s: InlineStyle, p: &Palette) {
             thickness: px(1.),
             wavy: false,
         });
+    }
+}
+
+/// Paints each task's box over its placeholder in `shaped`, whose first row
+/// starts at `origin`: a rounded square of about an em, at the left of the
+/// placeholder and centred on the row, outlined while open and filled with
+/// a drawn tick when checked -- the reading view's box, from the same
+/// tokens, and nothing a fallback font can turn into an emoji.
+fn paint_task_boxes(
+    shaped: &Shaped,
+    origin: Point<Pixels>,
+    em: Pixels,
+    p: &Palette,
+    window: &mut Window,
+) {
+    let rh = shaped.row_height;
+    for task in &shaped.display.tasks {
+        let Some(start) = shaped.line.position_for_index(task.display.start, rh) else {
+            continue;
+        };
+        let room = shaped
+            .line
+            .position_for_index(task.display.end, rh)
+            .filter(|end| end.y == start.y)
+            .map(|end| end.x - start.x)
+            .unwrap_or(em);
+        let side = (em * 0.9).min(room).max(px(8.));
+        let top = origin.y + start.y + (rh - side) / 2.;
+        let left = origin.x + start.x + px(1.);
+        let bounds = Bounds::new(point(left, top), size(side, side));
+        let quad = if task.checked {
+            fill(bounds, p.checkbox).border_color(p.checkbox)
+        } else {
+            fill(bounds, gpui::transparent_black()).border_color(p.checkbox_border)
+        };
+        window.paint_quad(quad.border_widths(px(1.)).corner_radii(px(3.)));
+        if task.checked {
+            let at = |x: f32, y: f32| point(left + side * x, top + side * y);
+            let mut tick = gpui::PathBuilder::stroke((side * 0.12).max(px(1.5)));
+            tick.move_to(at(0.25, 0.52));
+            tick.line_to(at(0.43, 0.70));
+            tick.line_to(at(0.76, 0.32));
+            if let Ok(path) = tick.build() {
+                window.paint_path(path, p.checkbox_marker);
+            }
+        }
     }
 }
 
@@ -6051,7 +6144,8 @@ impl Element for EditorElement {
         let line_height = prepaint.line_height;
         let content_x = prepaint.content_x;
         let font_size = prepaint.font_size;
-        let text_color = self.editor.read(cx).palette.text;
+        let palette = self.editor.read(cx).palette.clone();
+        let text_color = palette.text;
         window.with_content_mask(Some(gpui::ContentMask { bounds }), |window| {
             for quad in prepaint.decor.drain(..) {
                 window.paint_quad(quad);
@@ -6111,6 +6205,13 @@ impl Element for EditorElement {
                     );
                     crate::math::paint(&formula, baseline, em, text_color, window);
                 }
+                paint_task_boxes(
+                    shaped,
+                    origin,
+                    font_size * shaped.display.scale,
+                    &palette,
+                    window,
+                );
             }
             for w in prepaint.widgets.iter_mut() {
                 if let Some((origin, shaped)) = &w.prefix {
@@ -6118,6 +6219,7 @@ impl Element for EditorElement {
                         shaped
                             .line
                             .paint(*origin, line_height, TextAlign::Left, None, window, cx);
+                    paint_task_boxes(shaped, *origin, font_size, &palette, window);
                 }
                 w.element.paint(window, cx);
             }
@@ -6240,6 +6342,27 @@ impl Element for EditorElement {
 mod tests {
     use super::*;
 
+    #[test]
+    fn a_done_task_leaves_the_gap_after_its_box_unstruck() {
+        let d = display("- [x] done");
+        let runs = runs_for_display(&d, &[], &[], &TextStyle::default(), &Palette::default());
+        let gap = d.tasks[0].display.end;
+        let mut at = 0;
+        let mut struck = Vec::new();
+        for run in &runs {
+            struck.push((at..at + run.len, run.strikethrough.is_some()));
+            at += run.len;
+        }
+        assert_eq!(at, d.text.len(), "the runs cover the text");
+        for (range, strike) in struck {
+            if range.start > gap {
+                assert!(strike, "the words are struck: {range:?}");
+            } else if range.start >= gap {
+                assert!(!strike, "the space after the box is not: {range:?}");
+            }
+        }
+    }
+
     /// The display line for the first line of `src`, nothing touched.
     fn display(src: &str) -> DisplayLine {
         let doc = scoria_markdown::parse(src);
@@ -6261,7 +6384,10 @@ mod tests {
         };
         assert_eq!(shown("- ![[pic.png]]\n"), Some(("• ".to_string(), 0)));
         assert_eq!(shown("1. ![[pic.png]]\n"), Some(("1. ".to_string(), 0)));
-        assert_eq!(shown("- [ ] ![[pic.png]]\n"), Some(("☐ ".to_string(), 0)));
+        assert_eq!(
+            shown("- [ ] ![[pic.png]]\n"),
+            Some((format!("{} ", crate::preview::TASK_BOX), 0))
+        );
         assert_eq!(shown("> > ![[pic.png]]\n"), Some((String::new(), 2)));
         assert_eq!(
             shown("![[pic.png]]\n"),
@@ -6433,7 +6559,7 @@ mod tests {
         assert_eq!(source_index(&d, d.text.len()), 7);
 
         let d = display("- [ ] task");
-        assert_eq!(d.text, "☐ task");
+        assert_eq!(d.text, format!("{} task", crate::preview::TASK_BOX));
         assert_eq!(source_index(&d, d.text.len()), 10);
     }
 

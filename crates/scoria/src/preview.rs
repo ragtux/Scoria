@@ -56,6 +56,22 @@ pub struct InlineMath {
     pub block: bool,
 }
 
+/// A task's checkbox drawn over its placeholder: `[ ]` or `[x]`
+/// substituted by [`TASK_BOX`], on which the editor paints a box from the
+/// `--checkbox-*` tokens, the way the reading view draws it. A glyph such
+/// as `☑` would come from whatever fallback font has it, and on Windows
+/// that is a colour emoji.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TaskBox {
+    /// The placeholder's bytes in the display text.
+    pub display: Range<usize>,
+    pub checked: bool,
+}
+
+/// What a task's `[ ]` is shaped as: two figure spaces, a little over an
+/// em in the text font, room for the box and its gap to the text.
+pub const TASK_BOX: &str = "\u{2007}\u{2007}";
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct DisplayLine {
     pub text: String,
@@ -68,6 +84,8 @@ pub struct DisplayLine {
     pub math: Vec<InlineMath>,
     /// Inline HTML elements drawn in place of their source.
     pub html: Vec<InlineHtml>,
+    /// Task checkboxes drawn in place of their source.
+    pub tasks: Vec<TaskBox>,
 }
 
 /// One inline HTML element, `<b>bold</b>`, drawn as what it renders to
@@ -116,6 +134,7 @@ impl DisplayLine {
             decor,
             math: Vec::new(),
             html: Vec::new(),
+            tasks: Vec::new(),
         }
     }
 
@@ -432,14 +451,7 @@ pub fn display_line_with(
                     None => {}
                 }
             }
-            HighlightKind::Task => {
-                let glyph = if t.as_bytes().get(1) == Some(&b' ') {
-                    "☐"
-                } else {
-                    "☑"
-                };
-                hides.push((r.clone(), glyph.into(), k));
-            }
+            HighlightKind::Task => hides.push((r.clone(), TASK_BOX.into(), k)),
             HighlightKind::Callout => {
                 // `> [!type]- Title`: the type block goes, an empty title
                 // shows the type instead.
@@ -586,6 +598,24 @@ pub fn display_line_with(
             })
         })
         .collect();
+    let tasks = pieces
+        .iter()
+        .filter_map(|p| match p {
+            Piece::Sub {
+                display,
+                source,
+                len,
+                kind: HighlightKind::Task,
+            } => Some(TaskBox {
+                display: *display..display + len,
+                checked: line
+                    .as_bytes()
+                    .get(source.start + 1)
+                    .is_some_and(|b| *b != b' '),
+            }),
+            _ => None,
+        })
+        .collect();
     DisplayLine {
         text,
         pieces,
@@ -593,6 +623,7 @@ pub fn display_line_with(
         decor,
         math,
         html,
+        tasks,
     }
 }
 
@@ -828,13 +859,37 @@ mod tests {
         assert_eq!(h.scale, heading_scale(2));
         assert_eq!(render("- item", None).text, "• item");
         assert_eq!(render("1. item", None).text, "1. item");
-        assert_eq!(render("- [ ] open", None).text, "☐ open");
-        assert_eq!(render("- [x] done", None).text, "☑ done");
+        assert_eq!(render("- [ ] open", None).text, format!("{TASK_BOX} open"));
+        assert_eq!(render("- [x] done", None).text, format!("{TASK_BOX} done"));
         // Every padding the parser accepts between bullet and checkbox.
-        assert_eq!(render("-  [x] padded", None).text, "☑ padded");
-        assert_eq!(render("-    [ ] four", None).text, "☐ four");
-        assert_eq!(render("-\t[x] tabbed", None).text, "☑ tabbed");
-        assert_eq!(render("> -  [ ] quoted", None).text, "☐ quoted");
+        assert_eq!(
+            render("-  [x] padded", None).text,
+            format!("{TASK_BOX} padded")
+        );
+        assert_eq!(
+            render("-    [ ] four", None).text,
+            format!("{TASK_BOX} four")
+        );
+        assert_eq!(
+            render("-\t[x] tabbed", None).text,
+            format!("{TASK_BOX} tabbed")
+        );
+        assert_eq!(
+            render("> -  [ ] quoted", None).text,
+            format!("{TASK_BOX} quoted")
+        );
+        // The box is painted over the placeholder, open or checked.
+        assert_eq!(
+            render("- [ ] open", None).tasks,
+            vec![TaskBox {
+                display: 0..TASK_BOX.len(),
+                checked: false
+            }]
+        );
+        assert!(render("- [X] done", None).tasks[0].checked);
+        assert!(render("> -  [x] quoted", None).tasks[0].checked);
+        // A revealed task shows its source and has no box.
+        assert!(render("- [x] done", Some(3..3)).tasks.is_empty());
         let q = render("> > deep", None);
         assert_eq!(q.text, "deep");
         assert_eq!(q.decor.quote_depth, 2);
@@ -912,7 +967,7 @@ mod tests {
         assert_eq!(d.to_source(5), 9);
         let t = render("- [ ] open", None);
         assert_eq!(t.sub_at(0), Some((2..5, HighlightKind::Task)));
-        assert_eq!(t.to_source(4), 6);
+        assert_eq!(t.to_source(TASK_BOX.len() + 1), 6);
         assert!(render("plain", None).is_verbatim());
     }
 }

@@ -394,6 +394,15 @@ and the cursor maths, which is an `editor.rs` project of its own.
 
 *low, parity-gap, small* · **Filed:** 2026-11-04
 
+**Landed 2026-11-04**: the `[ ]` is now shaped as two figure spaces (`preview::TASK_BOX`), and
+the editor paints the box over them the way inline math is painted: an em-sized rounded square
+in `--checkbox-border-color`, filled with `--checkbox-color` and a stroked tick in
+`--checkbox-marker-color` when checked, both on a line and in a nested widget's marker. No glyph
+is left for a fallback font to pick. The stray `-` was a done task's strikethrough landing on
+the space after the box; that gap is no longer struck, on a nested marker or on a plain line.
+The fix did not need the non-text piece the entry predicted. Checked in the app on Windows: a
+click on the box still toggles and saves.
+
 **Scoria.** Live Preview draws a task's box as text: `preview.rs` replaces `[ ]` with `☐` and
 `[x]` with `☑` and styles them as a run. Inter has neither glyph, so the font fallback picks one,
 and on Windows 11 that is Segoe UI Emoji: a checked task is a purple-blue emoji tile, while the
