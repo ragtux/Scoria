@@ -1,0 +1,12 @@
+# A class
+class Greeter
+  def initialize(@name : String)
+  end
+
+  def greet : Nil
+    puts "Hello, #{@name}!"
+  end
+end
+
+Greeter.new("world").greet
+x = [1, 2, 3].map { |i| i * 2 } of Int32

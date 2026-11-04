@@ -1,0 +1,6 @@
+$ echo "hello" | tr a-z A-Z
+HELLO
+user@host:~/src$ git status --short
+ M README.md
+# whoami
+root

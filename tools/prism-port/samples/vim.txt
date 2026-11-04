@@ -1,0 +1,9 @@
+" Settings
+set number relativenumber
+let g:mapleader = ","
+nnoremap <leader>w :w<CR>
+function! s:Greet(name) abort
+  echo "Hello " . a:name
+  if &filetype ==# 'markdown' | setlocal spell | endif
+endfunction
+autocmd BufWritePre *.py call s:Greet('x')

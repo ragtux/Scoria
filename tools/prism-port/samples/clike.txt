@@ -1,0 +1,6 @@
+// generic C-like
+/* block */
+class Foo extends Bar implements Baz {
+  function go(x) { if (x != null) return "s" + 'c'; else throw new Error(x); }
+}
+var n = 0x1F + 1.5e3 - .5; flag = true && !false || n >= 2 ? n++ : --n;

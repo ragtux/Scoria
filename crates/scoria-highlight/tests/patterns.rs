@@ -23,11 +23,14 @@ fn every_pattern_compiles() {
             continue;
         }
         done.push(key);
-        for (kind, patterns) in &compile(g).entries {
+        let sources: Vec<_> = g.entries().collect();
+        for (kind_ix, (kind, patterns)) in compile(g).entries.iter().enumerate() {
             for (ix, pat) in patterns.iter().enumerate() {
                 seen += 1;
                 if pat.re.is_none() {
-                    bad.push(format!("{kind}[{ix}]"));
+                    let source = sources[kind_ix].1[ix].source();
+                    let why = fancy_regex::Regex::new(&source).err();
+                    bad.push(format!("{kind}[{ix}] {source}: {why:?}"));
                 }
                 if let Some(inside) = pat.inside {
                     stack.push(inside);

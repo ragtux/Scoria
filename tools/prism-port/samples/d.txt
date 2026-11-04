@@ -1,0 +1,9 @@
+import std.stdio;
+
+/// Entry
+void main(string[] args) {
+    auto xs = [1, 2, 3];
+    foreach (i, x; xs) writefln("%d: %d", i, x);
+    immutable s = q{token string};
+    static if (is(int == int)) { int y = 0x1F; }
+}

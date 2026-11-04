@@ -1,0 +1,24 @@
+import 'dart:async';
+import 'package:flutter/material.dart' as m;
+
+/// A counter.
+@immutable
+class Counter extends StatelessWidget with Mixin implements Comparable<Counter> {
+  final int start;
+  const Counter({Key? key, this.start = 0}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) => Text('count: $start ${start + 1}');
+
+  int compareTo(Counter other) => start.compareTo(other.start);
+}
+
+Future<void> main() async {
+  var xs = <int>[1, 2, 3];
+  final map = {'a': 1, "b": 2};
+  late String s;
+  await for (final x in Stream.fromIterable(xs)) { print(x ~/ 2); }
+  dynamic d = xs is List<int> ? r'raw \n' : null;
+  s = '''multi
+line''';
+}

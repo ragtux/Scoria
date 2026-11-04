@@ -1,0 +1,10 @@
+# A class
+class Animal
+  constructor: (@name) ->
+  speak: -> console.log "#{@name} speaks"
+
+square = (x) -> x * x
+###
+block
+###
+nums = (square n for n in [1..5] when n % 2 is 0)

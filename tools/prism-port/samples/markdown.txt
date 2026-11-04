@@ -1,0 +1,37 @@
+---
+title: A note
+tags: [a, b]
+---
+
+# Heading one
+
+Setext heading
+==============
+
+Some **bold**, __also bold__, *italic*, _also italic_, ~~struck~~ and `inline code`.
+A [link](https://example.com "title") and ![image](img.png) and <https://auto.link>.
+[ref]: https://example.com/ref
+
+> A quote with **bold**
+> > nested
+
+- item one
+- [ ] task
+  1. nested ordered
+* * *
+
+| Col A | Col B |
+| :---- | ----: |
+| `x`   | **y** |
+
+```js
+const x = 1; // highlighted as JavaScript
+```
+
+```unknownlang
+plain text
+```
+
+    indented code
+
+Some <span class="x">html</span> &amp; entity.

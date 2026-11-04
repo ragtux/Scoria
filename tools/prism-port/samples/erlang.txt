@@ -1,0 +1,16 @@
+%% A server
+-module(counter).
+-export([start/0, loop/1]).
+-define(TIMEOUT, 5000).
+
+start() -> spawn(fun() -> loop(0) end).
+
+loop(N) when is_integer(N), N >= 0 ->
+    receive
+        {inc, From} -> From ! {ok, N + 1}, loop(N + 1);
+        stop -> ok
+    after ?TIMEOUT -> io:format("timeout ~p~n", [N])
+    end.
+
+parse(<<"x", Rest/binary>>) -> {x, Rest};
+parse(_) -> 'quoted atom', $a, 16#FF, 2.5e3.

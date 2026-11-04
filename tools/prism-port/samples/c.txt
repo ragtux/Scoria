@@ -1,0 +1,21 @@
+#include <stdio.h>
+#include "local.h"
+#define SQUARE(x) ((x) * (x))
+#ifdef DEBUG
+#  define LOG(msg) fprintf(stderr, "%s\n", msg)
+#endif
+
+typedef struct node { int value; struct node *next; } node_t;
+enum color { RED, GREEN = 2 };
+static const unsigned long long BIG = 0xFFFFull;
+
+/* Returns the sum. */
+int sum(const node_t *n) {
+    int total = 0; // running total
+    for (; n != NULL; n = n->next) total += n->value;
+    char c = '\n'; double d = 1.5e-3f;
+    _Bool ok = sizeof(int) >= 4 && !(total < 0);
+    return ok ? total : -1;
+}
+
+int main(void) { printf("%d\n", SQUARE(3)); return EXIT_SUCCESS; }

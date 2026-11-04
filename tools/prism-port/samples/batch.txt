@@ -1,0 +1,19 @@
+@echo off
+REM A batch file
+:: also a comment
+setlocal enabledelayedexpansion
+set "NAME=world"
+set /a COUNT=1+2*3
+if exist "%~dp0config.ini" (
+    echo Found config for %NAME%
+) else (
+    echo Missing & goto :eof
+)
+for %%f in (*.txt) do (
+    echo %%f >> list.log
+    set LAST=!COUNT!
+)
+if /i "%1"=="--help" call :usage
+:usage
+echo Usage: %~nx0 [--help]
+exit /b 0

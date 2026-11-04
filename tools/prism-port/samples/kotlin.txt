@@ -1,0 +1,25 @@
+package app
+
+import kotlinx.coroutines.*
+
+/** A shape. */
+sealed class Shape(val name: String) {
+    data class Circle(val r: Double) : Shape("circle")
+    object Unit : Shape("unit")
+}
+
+@JvmStatic
+fun area(s: Shape): Double = when (s) {
+    is Shape.Circle -> Math.PI * s.r * s.r
+    else -> 0.0
+}
+
+suspend fun main(args: Array<String>) = coroutineScope {
+    val xs = listOf(1, 2, 3).map { it * 2 }.filter { it > 2 }
+    var label: String? = null
+    println("total = ${xs.sum()} and $label ?: ${label ?: "none"}")
+    val raw = """multi
+        line $xs"""
+    for (i in 0 until 10 step 2) if (i !in xs) continue
+    launch { delay(100L); 0xFF_FF + 1_000 }
+}

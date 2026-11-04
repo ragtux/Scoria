@@ -1,0 +1,33 @@
+import type { Config } from "./config";
+import * as path from 'node:path';
+
+/** A user, as the API returns it. @param id the key */
+export interface User<T extends object = {}> {
+  readonly id: number;
+  name?: string;
+  meta: Record<string, T>;
+}
+
+declare module "x" { export const v: unknown; }
+enum Color { Red = "RED", Green = 1 << 2 }
+type Pair<K, V> = [K, V] | null;
+
+abstract class Repo<T> implements Iterable<T> {
+  private items: T[] = [];
+  constructor(protected readonly name: string) {}
+  @memoize()
+  get size(): number { return this.items.length; }
+  abstract find(id: number): Promise<T | undefined>;
+  *[Symbol.iterator]() { yield* this.items; }
+}
+
+function isUser(x: any): x is User {
+  return typeof x === "object" && x !== null && "id" in x;
+}
+
+const total = [1, 2.5, 0xff, 1_000n].reduce((a, b) => a + Number(b), 0);
+let re = /^[a-z]+\d*$/gi, s = `n=${total.toFixed(2)}`;
+export default async function main(...args: string[]): Promise<void> {
+  for await (const line of readLines()) console.log(line as string);
+  if (!args.length) throw new Error(`no args`);
+}

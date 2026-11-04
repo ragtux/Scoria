@@ -1,0 +1,8 @@
+{
+  "name": "scoria",
+  "version": 1.5e3,
+  "private": true,
+  "nothing": null,
+  "list": [1, -2, "three", false],
+  "nested": { "key": "value with \"escape\"" }
+}

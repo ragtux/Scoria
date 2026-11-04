@@ -1,0 +1,12 @@
+// Gradle-ish
+plugins { id 'java' }
+
+def greet(String name = "world") {
+    println "Hello, ${name}! $name"
+}
+
+class Point { int x, y }
+def xs = [1, 2, 3].collect { it * 2 }.findAll { it > 2 }
+def map = [a: 1, b: 'two']
+def slashy = /a\d+b/
+assert xs.size() == 2 : 'size'

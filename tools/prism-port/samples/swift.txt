@@ -1,0 +1,32 @@
+import Foundation
+
+/// A point.
+@frozen public struct Point: Equatable, CustomStringConvertible {
+    var x: Double = 0, y: Double = 0
+    public var description: String { "(\(x), \(y))" }
+    static func + (lhs: Point, rhs: Point) -> Point { Point(x: lhs.x + rhs.x, y: lhs.y + rhs.y) }
+}
+
+enum Result<T> { case ok(T), err(Error) }
+
+protocol Shape { func area() -> Double }
+
+final class Circle: Shape {
+    private(set) var r: Double
+    init?(r: Double) { guard r > 0 else { return nil }; self.r = r }
+    func area() -> Double { .pi * r * r }
+}
+
+@MainActor
+func load(_ url: URL) async throws -> [String: Any]? {
+    let (data, _) = try await URLSession.shared.data(from: url)
+    defer { print("done #\(data.count)") }
+    if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] { return json }
+    let multi = """
+        hello \(url)
+        """
+    return nil ?? [:]
+}
+#if DEBUG
+let n = 0b1010 + 0o17 + 0xFF + 1_000.5e2
+#endif

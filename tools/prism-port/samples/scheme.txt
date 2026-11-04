@@ -1,0 +1,7 @@
+; Scheme
+(define (square x) (* x x))
+(define-syntax swap!
+  (syntax-rules ()
+    ((_ a b) (let ((tmp a)) (set! a b) (set! b tmp)))))
+(display (map square '(1 2 3)))
+(newline) #t #\a 1.5 "str"

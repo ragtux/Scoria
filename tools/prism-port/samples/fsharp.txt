@@ -1,0 +1,23 @@
+// A module
+module App.Shapes
+
+open System
+
+/// A shape.
+type Shape =
+    | Circle of radius: float
+    | Rect of w: float * h: float
+
+[<EntryPoint>]
+let main argv =
+    let area = function
+        | Circle r -> Math.PI * r ** 2.0
+        | Rect (w, h) -> w * h
+    let xs = [ 1; 2; 3 ] |> List.map (fun x -> x * 2)
+    printfn "%A %s" xs (sprintf "%d" 42)
+    let mutable n = 0uy
+    (* block *)
+    for i in 1 .. 10 do n <- n + 1uy
+    match argv with
+    | [||] -> 0
+    | _ -> 1

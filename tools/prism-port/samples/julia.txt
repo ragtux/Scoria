@@ -1,0 +1,22 @@
+# Julia sample
+#= block
+comment =#
+module Shapes
+export area
+
+abstract type Shape end
+struct Circle{T<:Real} <: Shape
+    r::T
+end
+
+area(c::Circle) = π * c.r^2
+function total(xs::Vector{Float64}; scale=1.0)
+    s = 0.0
+    for x in xs
+        s += x * scale
+    end
+    return s ≥ 0 ? s : -s
+end
+println("area = $(area(Circle(2.0))) and $x")
+xs = [1, 2, 3] .+ 1e-3; c = 'c'; sym = :sym; m = r"a+b"
+end

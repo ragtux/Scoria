@@ -1,0 +1,8 @@
+; Emacs lisp
+(defun greet (name &optional loud)
+  "Greet NAME."
+  (interactive "sName: ")
+  (let ((msg (format "Hello, %s" name)))
+    (if loud (upcase msg) msg)))
+(setq my-list '(1 2 3))
+(mapcar #'1+ my-list)

@@ -1,0 +1,22 @@
+package app
+
+import scala.collection.mutable.{Map => MMap}
+
+/** A trait. */
+trait Animal { def sound: String }
+case class Dog(name: String, age: Int = 3) extends Animal with Serializable {
+  override def sound: String = s"$name says woof ${age + 1}"
+}
+
+object Main extends App {
+  val xs: List[Int] = List(1, 2, 3).map(_ * 2)
+  lazy val total = xs.foldLeft(0L)(_ + _)
+  implicit val ord: Ordering[Int] = Ordering.Int
+  xs match {
+    case head :: tail if head > 1 => println(head)
+    case Nil => ()
+    case _ => throw new IllegalArgumentException("no")
+  }
+  val sym = 'sym; val c = 'c'; val raw = """triple "quoted" """
+  for (i <- 1 to 10; if i % 2 == 0) yield i
+}

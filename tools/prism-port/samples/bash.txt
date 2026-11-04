@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Deploy script
+set -euo pipefail
+readonly DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export PATH="$HOME/bin:$PATH" COUNT=0
+declare -A map=([a]=1 [b]=2)
+
+greet() {
+  local name="${1:-world}"
+  echo "hello, $name" >&2
+  printf '%s\n' 'single $quoted' | grep -E '^s' || true
+}
+
+if [[ -f /etc/os-release && $COUNT -lt 3 ]]; then
+  source /etc/os-release
+elif [ "$1" == "--help" ]; then
+  exit 0
+fi
+
+for f in ./*.md; do
+  (( COUNT++ ))
+  case "$f" in
+    *.md) cat <<EOF
+File: $f
+EOF
+    ;;
+    *) echo "skip" ;;
+  esac
+done
+files=$(ls -1 | wc -l); echo $((files * 2)) `date +%s`
+sudo apt-get install -y curl 2>/dev/null && curl -fsSL https://x.y | sh

@@ -324,7 +324,89 @@ uses behave as Obsidian's do.
 | Bases: the rest of the view | done: the cards, list and kanban layouts, the toolbar's six panels, editing through the table, the five `bases:*` commands beyond `new-file`, and an embedded `![[x.base]]`, see [[#Bases: the rest of the view, 2026-10-25]]; the toolbar and panels rebuilt to the 2026-11-01 record, see [[#The Bases toolbar and its panels, 2026-11-01]]; the embed as the live view and the leaf's chrome, see [[#The embedded base and the base leaf's chrome, 2026-11-01]]; the header, summaries, cells and keyboard, see [[#The column header, summaries, cells and the table keyboard, 2026-11-01]]; the kanban's drags and menus, see [[#The kanban board, 2026-11-02]] |
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
-| The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, see [[#The theme registry, 2026-11-02]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done but for breadth, a grammar at a time; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]] |
+| The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, see [[#The theme registry, 2026-11-02]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]] |
+
+### Syntax highlighting breadth, 2026-11-04
+
+[[UI parity backlog#Syntax highlighting covers 85 languages where Obsidian covers 171 names]],
+from eleven languages to 85, under 122 names with Prism's aliases.
+
+**The grammars are written out by a script, not by hand.** Prism builds most
+of its languages at load time: TypeScript is `extend('javascript')`, C++ is
+`extend('c')` with keys spliced in by `insertBefore`, `js-extras` reaches
+into JavaScript after it has loaded, and `jsdoc` adds a `doc-comment` to it.
+The grammar a language *ends up* with is only known once everything has
+loaded, and the key order — which is load-bearing — is the order those
+operations leave. Re-deriving that chain by hand for fifty languages is
+where a port goes wrong, so `tools/prism-port/port.js` loads Prism, walks the
+finished grammar objects and writes each one out as the crate's `static`
+data, key for key. A grammar object two languages share is written once, in
+the first one's file, and a language reaching another's top level (markup's
+`<script>` holds JavaScript) refers to it. The script also translates the
+regexes from JavaScript's syntax to `fancy-regex`'s: `/…/i` to `(?i)`, `\/`
+and the other identity escapes to the bare character (Rust reads `\<` as a
+word boundary), `[`, `&` and `~` escaped inside a class, a bare `{` that is
+no quantifier escaped, `[^]` and `[]`, `\uXXXX`, and the one pair of UTF-16
+surrogates Prism uses for "an astral character", which Rust has no
+surrogates to name. All 3,654 patterns compile.
+
+**The load order had to be Obsidian's, and the corpus settled it.** Loaded
+through Prism's own `loadLanguages()`, Prism reproduced every Obsidian sample
+but one: JavaScript's `regex-source` came out with its pattern tokenized,
+where Obsidian's `ab+c` is a bare string. That is what loading `regex`
+before `javascript` does, and the loader re-loads a language when one of its
+optional dependencies arrives. Loading `prism.js` (markup, css, clike,
+javascript) first, every other component through the loader, and `regex`
+last on its own reproduces all twenty Obsidian samples byte for byte, so
+the script loads it that way. Two finds from the walk: `xml` is not an alias
+of `markup` but a clone taken before CSS and JavaScript gave markup its
+`<style>` and `<script>`, so it is its own language (with `ssml`, `atom` and
+`rss`); and loading `cilkc` turns `c` itself into Cilk C, so `cilk-c` and
+`cilkc` are aliases of `c`, as they are in Obsidian.
+
+**A second corpus, from Prism itself.** The Obsidian corpus has twenty
+samples. `port.js` also renders a longer sample per ported language from
+`tools/prism-port/samples/` through the same Prism and writes
+`tests/corpus/prism-1.29.0.json`; since that Prism matches Obsidian on all
+twenty of Obsidian's, it stands in for Obsidian on the rest. Every
+language in the table must have a sample there
+(`every_ported_language_has_a_prism_sample`), and all 85 match byte for
+byte. It caught the hand-ported Nix, which was not Prism 1.29's grammar —
+`rec` was a keyword and `-` was not an operator — so Nix is generated now
+too. The other hand ports (clike, css, diff, go, ini, json, python, rust,
+toml, yaml) matched as written and stay hand-written.
+
+**Three hooks are ported, because they change colour.** `hooks.rs` holds
+`tokenize_language`, which is `Prism.highlight` without the stringify, and
+both views paint from it. JSX's `after-tokenize` turns the text between a
+tag's open and close into one `plain-text` token, so `<p>if "x"</p>` does
+not paint `if` as a keyword. Markdown's highlights a fenced block's body in
+the fence's language (Prism does it in its `wrap` hook; here it happens on
+the tokens, so the painter sees the runs). PHP's, through
+`markup-templating`, treats code holding a `<?` as markup with PHP islands:
+each `<?…?>` is swapped for a placeholder, the rest tokenized as markup and
+the islands put back as `php` tokens — and since the engine's nodes are
+ranges of the text it was given, the markup's ranges are mapped back from
+the placeholder text onto the source. Markup's `wrap` hook, an entity's
+`title`, is reproduced in `to_html` for the corpus only. Not ported:
+GraphQL's, which adds aliases no rule styles, and `js-templates`', which
+highlights a tagged template's body (`` html`…` ``, `` css`…` ``) in its
+tag's language — Scoria paints that body uncoloured, filed in the backlog.
+
+**What came in.** The list asked for — TypeScript, JSX, TSX, C, C++, C#,
+Java, Kotlin, Scala, Swift, Ruby, PHP, Lua, R, Haskell, SQL, GraphQL,
+Markdown, LaTeX, PowerShell, Batch, Makefile, Dockerfile — with what they
+stand on (JavaScript, markup, Bash), and, since the script makes one more
+language a sample and a line, the next tier by what notes hold: shell
+sessions, Objective-C, Dart, Perl, Julia, Elixir, Erlang, Clojure, OCaml,
+F#, Zig, SCSS, Sass, Less, regex, JSON5, Protobuf, HCL, nginx, Apache,
+properties, systemd, git, CSV, Vim, Groovy, MATLAB, Arduino, CMake,
+CoffeeScript, Crystal, D, Elm, Fortran, GLSL, Lisp, NASM, Nim, Pascal,
+Prolog, Racket, Scheme, Solidity, Tcl, VB.NET, Verilog, VHDL and WebAssembly.
+84 of the 171 names the Obsidian probe saw highlighted now resolve. The
+generated files are some 17,000 lines, mostly because JSX and TSX are
+clones of markup with JavaScript inside; they cost nothing until a fence
+names them, since a grammar's regexes compile on first use.
 
 ### The command line, 2026-11-02
 

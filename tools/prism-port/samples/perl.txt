@@ -1,0 +1,19 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+# Count words
+my %count;
+my @lines = <STDIN>;
+foreach my $line (@lines) {
+    chomp $line;
+    next if $line =~ /^\s*#/;
+    $count{$_}++ for split /\s+/, $line;
+}
+my $total = scalar keys %count;
+printf "%d words, first: %s\n", $total, $lines[0] // 'none';
+$str =~ s/foo/bar/gi;
+my $ref = { a => [1, 2, 3], b => sub { return shift * 2 } };
+print qq{interpolated $ref->{a}[0]}, q(single), "\n";
+__END__
+data here

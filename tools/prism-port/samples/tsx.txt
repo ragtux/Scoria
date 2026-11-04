@@ -1,0 +1,11 @@
+type Props = { items: string[]; onPick?: (i: number) => void };
+
+export const List: React.FC<Props> = ({ items, onPick }) => (
+  <ul className="list">
+    {items.map((item, i) => (
+      <li key={item} onClick={() => onPick?.(i)}>
+        Item {i}: {item} and some text with const in it
+      </li>
+    ))}
+  </ul>
+);

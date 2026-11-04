@@ -162,10 +162,13 @@ So Prism was **ported** rather than wrapped: `crates/scoria-highlight` is `match
 project already makes for Lucide's icons. That buys exactness, and the exactness is testable:
 `tests/corpus/obsidian-1.14.5.json` holds Obsidian's own `innerHTML` for a sample per language,
 and a ported grammar is correct when Scoria's HTML is **identical**, which compares every token's
-name, aliases, nesting and boundaries at once. Eight languages match byte for byte today.
+name, aliases, nesting and boundaries at once. All twenty of its languages match byte for byte today.
 
-What remains is breadth, one grammar at a time — a language with no port renders plain, which is
-what Obsidian does for a name Prism has not got. See [[Development#Syntax highlighting, 2026-11-02]].
+What remains is breadth — a language with no port renders plain, which is what Obsidian does for a
+name Prism has not got. Since 2026-11-04 the grammars are written out by `tools/prism-port/port.js`
+from Prism's finished grammar objects and held to a second corpus Prism itself renders, and 85
+languages are in. See [[Development#Syntax highlighting, 2026-11-02]] and
+[[Development#Syntax highlighting breadth, 2026-11-04]].
 
 ## See also
 

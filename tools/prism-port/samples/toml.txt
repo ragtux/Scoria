@@ -1,0 +1,17 @@
+# Cargo
+[package]
+name = "scoria"
+version = "0.1.0"
+edition = '2021'
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+"quoted.key" = true
+
+[[bin]]
+path = "src/main.rs"
+date = 1979-05-27T07:32:00Z
+num = +1_000.5e3
+hex = 0xDEAD
+multi = """
+text"""

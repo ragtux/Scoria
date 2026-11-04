@@ -1,0 +1,30 @@
+using System;
+using System.Collections.Generic;
+using static System.Math;
+
+namespace App.Models
+{
+    /// <summary>A person.</summary>
+    [Serializable, Obsolete("old")]
+    public sealed record Person(string Name, int Age) : IComparable<Person>
+    {
+        private readonly List<string> _tags = new();
+        public int CompareTo(Person? other) => Age.CompareTo(other?.Age ?? 0);
+        public string Describe() => $"{Name} is {Age,3:D} years ({_tags.Count} tags)";
+        public static implicit operator string(Person p) => p.Name;
+    }
+
+    internal class Program
+    {
+        static async Task<int> Main(string[] args)
+        {
+            var path = @"C:\temp\file.txt";
+            char c = 'x'; decimal m = 1.5m; ulong big = 0xFF_FFUL;
+            if (args is { Length: > 0 } && args[0] is string s) Console.WriteLine(s);
+            #region Loop
+            foreach (var p in people.Where(x => x.Age >= 18).OrderBy(x => x.Name)) { await Task.Delay(10); }
+            #endregion
+            return default;
+        }
+    }
+}

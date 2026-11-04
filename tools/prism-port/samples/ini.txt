@@ -1,0 +1,8 @@
+; comment
+# also a comment
+[section]
+key = value
+quoted = "a value"
+path=C:\data
+[other.section]
+empty =

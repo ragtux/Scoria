@@ -1,0 +1,7 @@
+#lang racket
+; A function
+(define (fact n)
+  (if (<= n 1) 1 (* n (fact (- n 1)))))
+(define xs '(1 2 3))
+(for ([x xs]) (displayln (fact x)))
+(struct point (x y) #:transparent)

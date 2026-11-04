@@ -1,0 +1,9 @@
+// Variables
+$primary: #3366ff
+=mixin($p: 4px)
+  padding: $p
+.card
+  +mixin(8px)
+  color: darken($primary, 10%)
+  &:hover
+    color: red

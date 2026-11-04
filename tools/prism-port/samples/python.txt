@@ -1,0 +1,19 @@
+#!/usr/bin/env python3
+"""Module docstring."""
+from __future__ import annotations
+import os, sys as system
+
+@dataclass(frozen=True)
+class Point(Base, metaclass=Meta):
+    x: float = 0.0
+    def dist(self, other: "Point") -> float:
+        return ((self.x - other.x) ** 2) ** 0.5
+
+async def main(*args, **kwargs):
+    name = f"value={args[0]!r:>10} {{literal}} {kwargs.get('k', None)}"
+    raw, b = r"\d+", b'bytes'
+    match args:
+        case [x, *_] if x is not None: print(x)
+        case _: pass
+    xs = [i for i in range(0x1F) if i % 2 == 0 and not i in (1j, 1_000, 1e-3)]
+    await asyncio.sleep(1); lambda y: y @ y; global G; nonlocal_ = True

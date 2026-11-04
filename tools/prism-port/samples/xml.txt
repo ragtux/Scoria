@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE note SYSTEM "note.dtd" [
+  <!ENTITY writer "Writer: Donald Duck.">
+]>
+<note xmlns:h="http://www.w3.org/TR/html4/" date='2024-01-01'>
+  <to>Tove &amp; friends &writer;</to>
+  <h:table><h:td>Apples</h:td></h:table>
+  <style>not css here { color: red }</style>
+  <![CDATA[ <raw> & unescaped ]]>
+  <empty/>
+</note>

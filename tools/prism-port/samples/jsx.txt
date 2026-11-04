@@ -1,0 +1,16 @@
+import React, { useState } from "react";
+
+export function Counter({ start = 0, label }) {
+  const [n, setN] = useState(start);
+  return (
+    <div className="counter" data-n={n} hidden>
+      <h2>{label} is if "quoted" for 3 return</h2>
+      <Button onClick={() => setN(n + 1)} disabled={n > 9}>
+        Add one &amp; more
+      </Button>
+      {n > 0 && <span style={{ color: "red" }}>{n}</span>}
+      <input type="text" value='x' />
+      <></>
+    </div>
+  );
+}

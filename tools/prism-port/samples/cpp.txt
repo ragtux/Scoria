@@ -1,0 +1,27 @@
+#include <iostream>
+#include <vector>
+#pragma once
+
+namespace geo::shapes {
+template <typename T, std::size_t N = 3>
+concept Numeric = std::is_arithmetic_v<T>;
+
+class Shape : public Base, private Mixin {
+public:
+    virtual ~Shape() = default;
+    [[nodiscard]] virtual double area() const noexcept = 0;
+    explicit Shape(int id) : id_{id} {}
+    auto operator<=>(const Shape&) const = default;
+private:
+    int id_;
+};
+}
+
+int main() {
+    std::vector<int> v{1, 2, 3};
+    auto sq = [&](int x) -> int { return x * x; };
+    for (auto& x : v) std::cout << sq(x) << '\n';
+    constexpr auto s = R"(raw "string")";
+    static_cast<void>(nullptr); delete new int(0b1010'1010);
+    co_return; std::unique_ptr<Shape> p = std::make_unique<Circle>(2.0);
+}

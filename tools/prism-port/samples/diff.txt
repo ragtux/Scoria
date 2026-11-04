@@ -1,0 +1,9 @@
+--- a/file.txt
++++ b/file.txt
+@@ -1,4 +1,4 @@
+ context line
+-removed line
++added line
+! changed line
+> right
+< left

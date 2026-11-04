@@ -1,0 +1,19 @@
+# A shell
+{ pkgs ? import <nixpkgs> {}, lib ? pkgs.lib }:
+
+let
+  version = "1.0";
+  src = ./src;
+  url = https://example.com/x.tar.gz;
+in
+pkgs.mkShell rec {
+  name = "env-${version}";
+  buildInputs = with pkgs; [ cargo rustc pkg-config ];
+  shellHook = ''
+    export FOO=${lib.escapeShellArg name}
+  '';
+  enable = true && !false;
+  count = builtins.length buildInputs + 1;
+  /* block */
+  inherit (pkgs) stdenv;
+}

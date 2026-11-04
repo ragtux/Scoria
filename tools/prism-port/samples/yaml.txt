@@ -1,0 +1,22 @@
+%YAML 1.2
+---
+# config
+name: scoria
+version: 1.2
+enabled: true
+nothing: ~
+date: 2024-01-01
+anchors: &base
+  a: 1
+merged:
+  <<: *base
+  b: "two"
+list:
+  - one
+  - 'two'
+  - !!str 3
+block: |
+  literal text
+folded: >-
+  folded text
+...

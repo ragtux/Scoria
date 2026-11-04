@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Page &lt; &#169; &#x2014;</title>
+  <style>
+    body { margin: 0 auto; color: #333; }
+    @media (max-width: 600px) { .nav > a:hover { display: none !important; } }
+  </style>
+  <script type="module">
+    import { x } from "./x.js";
+    const el = document.getElementById("app"); if (el) el.textContent = `hi ${x}`;
+  </script>
+</head>
+<body class="dark" style="font-size: 12px; color: red" onclick="go(1)">
+  <!-- a comment -->
+  <p id=bare data-x='single'>Text &amp; <b>bold</b><br/></p>
+  <![CDATA[ raw <stuff> ]]>
+  <svg:rect xmlns:svg="http://www.w3.org/2000/svg" width="10"/>
+</body>
+</html>

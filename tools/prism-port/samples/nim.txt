@@ -1,0 +1,12 @@
+# A proc
+import strutils
+
+type Point = object
+  x, y: float
+
+proc dist(p: Point): float =
+  result = sqrt(p.x * p.x + p.y * p.y)
+
+for i in 0 ..< 3:
+  echo "i = ", $i, " ", "abc".toUpperAscii
+let r = r"raw\n"

@@ -1,0 +1,10 @@
+# Load and summarize
+library(dplyr)
+df <- read.csv("data.csv", stringsAsFactors = FALSE)
+f <- function(x, na.rm = TRUE) {
+  if (is.null(x) || length(x) == 0L) return(NA)
+  mean(x[!is.na(x)]) * 1e3 + 2i
+}
+result <- df %>% filter(age >= 18) %>% summarise(m = f(score))
+for (i in seq_len(10)) print(i %% 2)
+x = c(1, 2, NaN, Inf, -Inf, NULL); `odd name` <- 'single'

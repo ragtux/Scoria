@@ -1,0 +1,19 @@
+% Preamble
+\documentclass[11pt]{article}
+\usepackage{amsmath}
+\newcommand{\R}{\mathbb{R}}
+
+\begin{document}
+\section{Introduction}\label{sec:intro}
+Inline math $a^2 + b^2 = c^2$ and display:
+\[
+  \int_0^\infty e^{-x}\,dx = 1
+\]
+\begin{equation}
+  f(x) = \sum_{n=0}^{N} \frac{x^n}{n!} \quad \text{for } x \in \R
+\end{equation}
+See \ref{sec:intro} and \cite{knuth}. \textbf{Bold} \& \emph{em}.
+\begin{verbatim}
+raw \text
+\end{verbatim}
+\end{document}

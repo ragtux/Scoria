@@ -1,0 +1,7 @@
+% Facts
+parent(tom, bob).
+parent(bob, ann).
+% Rules
+ancestor(X, Y) :- parent(X, Y).
+ancestor(X, Y) :- parent(X, Z), ancestor(Z, Y).
+?- ancestor(tom, Who), format("~w~n", [Who]).

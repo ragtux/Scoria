@@ -1,6 +1,6 @@
-//! The data formats: JSON, YAML, TOML, INI, diff and Nix.
+//! The data formats: JSON, YAML, TOML, INI and diff.
 //!
-//! Ported from Prism's `components/prism-{json,yaml,toml,ini,diff,nix}.js`,
+//! Ported from Prism's `components/prism-{json,yaml,toml,ini,diff}.js`,
 //! key for key and in the same order, which is the order the engine tries
 //! them in. JavaScript's regex flags become inline groups: `/…/i` is
 //! `(?i)…` and `/…/m` is `(?m)…`.
@@ -346,69 +346,4 @@ pub static DIFF: Grammar = Grammar::new(&[
             &DIFF_BANG,
         )],
     ),
-]);
-
-// ---- Nix ------------------------------------------------------------------
-
-/// `prism-nix.js`'s `interpolation`, whose body is Nix again.
-static NIX_INTERPOLATION: Grammar = Grammar::with_rest(
-    &[e(
-        "interpolation-punctuation",
-        &[pa(&[r"^\$\{|\}$"], 0, &["punctuation"])],
-    )],
-    &NIX,
-);
-
-static NIX_STRING: Grammar = Grammar::new(&[e(
-    "interpolation",
-    &[pi(
-        &[r"(^|(?:^|(?!\$\{).)*?[^\\])\$\{(?:[^{}]|\{[^}]*\})*\}"],
-        LB,
-        &NIX_INTERPOLATION,
-    )],
-)]);
-
-/// `prism-nix.js`.
-pub static NIX: Grammar = Grammar::new(&[
-    e("comment", &[pf(&[r"/\*[\s\S]*?\*/|#.*"], GR)]),
-    e(
-        "string",
-        &[pi(
-            &[r#""(?:[^"\\]|\\[\s\S])*"|''(?:(?!'')[\s\S]|''(?:'|\\|\$\{))*''"#],
-            GR,
-            &NIX_STRING,
-        )],
-    ),
-    e(
-        "url",
-        &[p(&[
-            r"[a-z][a-z0-9+.-]*:[\w%/?:@&=+$,\\.!~*'-]+|",
-            r"[a-zA-Z0-9%/?:@&=+$,\\.!~*'-]*(?:/[a-zA-Z0-9%/?:@&=+$,\\.!~*'-]+)+",
-        ])],
-    ),
-    e("antiquotation", &[pa(&[r"\$(?=\{)"], 0, &["important"])]),
-    e("number", &[p(&[r"\b\d+\b"])]),
-    e(
-        "keyword",
-        &[p(&[
-            r"\b(?:assert|builtins|else|if|in|inherit|let|null|or|rec|then|with)\b",
-        ])],
-    ),
-    e(
-        "function",
-        &[p(&[
-            r"\b(?:abort|add|all|any|attrNames|attrValues|baseNameOf|compareVersions|concatLists|concatMap|",
-            r"deepSeq|derivation|dirOf|div|elem(?:At)?|fetch(?:git|url|Tarball)|filter(?:Source)?|",
-            r"foldl'|fromJSON|genList|getAttr|getEnv|hasAttr|hashString|head|import|intersectAttrs|isAttrs|",
-            r"isBool|isFunction|isInt|isList|isNull|isString|length|lessThan|listToAttrs|map|mul|parseDrvName|",
-            r"pathExists|read(?:Dir|File)|removeAttrs|replaceStrings|seq|sort|stringLength|sub(?:string)?|tail|",
-            r"throw|to(?:File|JSON|Path|String|XML)|trace|typeOf)\b|\bfoldl'\B",
-        ])],
-    ),
-    e("boolean", &[p(&[r"\b(?:false|true)\b"])]),
-    e(
-        "operator",
-        &[p(&[r"[=!<>]=?|\+\+?|\|\||&&|/\\|\\/|->|[?@]"])],
-    ),
-    e("punctuation", &[p(&[r"[{}()\[\].,:;]"])]),
 ]);

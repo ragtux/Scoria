@@ -1,0 +1,8 @@
+# A proc
+proc greet {name {loud 0}} {
+    set msg "Hello, $name"
+    if {$loud} { set msg [string toupper $msg] }
+    return $msg
+}
+puts [greet world 1]
+foreach x {1 2 3} { incr total $x }

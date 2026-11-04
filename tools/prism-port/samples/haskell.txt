@@ -1,0 +1,30 @@
+{-# LANGUAGE OverloadedStrings #-}
+module Main (main) where
+
+import qualified Data.Map as M
+import Data.List (sortBy, foldl')
+
+-- | A tree.
+data Tree a = Leaf | Node (Tree a) a (Tree a)
+  deriving (Show, Eq)
+
+class Container f where
+  empty :: f a
+
+{- block
+   comment -}
+insert :: Ord a => a -> Tree a -> Tree a
+insert x Leaf = Node Leaf x Leaf
+insert x t@(Node l v r)
+  | x < v     = Node (insert x l) v r
+  | otherwise = t
+
+main :: IO ()
+main = do
+  let xs = [1, 2, 3] :: [Int]
+      c = 'c'
+  print $ foldl' (+) 0 xs `div` 2
+  mapM_ putStrLn ["a", "b\n"] >>= \_ -> return ()
+  case M.lookup "k" M.empty of
+    Just v  -> print (v :: Double, 1.5e3, 0x1F)
+    Nothing -> pure ()

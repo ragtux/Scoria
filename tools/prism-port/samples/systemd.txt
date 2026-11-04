@@ -1,0 +1,13 @@
+# A unit
+[Unit]
+Description=My service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/app --port 8080
+Restart=on-failure
+Environment="RUST_LOG=info"
+
+[Install]
+WantedBy=multi-user.target

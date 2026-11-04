@@ -1,0 +1,16 @@
+-- Create and query
+/* block comment */
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name VARCHAR(255) NOT NULL DEFAULT 'anon',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+INSERT INTO users (name) VALUES ("O'Brien"), ('it''s'), (NULL);
+WITH recent AS (SELECT * FROM users WHERE created_at > NOW() - INTERVAL 7 DAY)
+SELECT u.name, COUNT(p.id) AS posts, @var := 1.5e3
+FROM recent u
+INNER JOIN posts p ON p.user_id = u.id AND p.deleted IS NOT TRUE
+WHERE u.name LIKE '%a%' OR u.id IN (1, 2, 0x1F) AND NOT u.id BETWEEN 5 AND 9
+GROUP BY u.name HAVING COUNT(*) >= 2
+ORDER BY posts DESC LIMIT 10;
+UPDATE `users` SET name = UPPER(name) WHERE id <> 3;

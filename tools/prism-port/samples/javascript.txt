@@ -1,0 +1,27 @@
+#!/usr/bin/env node
+'use strict';
+/**
+ * Sums things.
+ * @param {number[]} xs the numbers
+ * @returns {number}
+ */
+const sum = (xs) => xs.reduce((a, b) => a + b, 0);
+import fs, { readFile as rf } from "fs";
+export { sum };
+
+class Counter extends EventTarget {
+  static #count = 0;
+  constructor(start = 0) { super(); this.value = start; }
+  inc() { Counter.#count++; return ++this.value; }
+  get double() { return this.value * 2; }
+}
+
+const obj = { "quoted": 1, bare: true, nested: { deep: null }, fn() {}, arrow: async () => {} };
+let maybe = obj?.nested?.deep ?? undefined;
+const re = /\/\*.*?\*\//g, big = 123_456n, hex = 0x1F, exp = 1.5e-3;
+document.querySelector("#app").addEventListener("click", function handler(e) {
+  window.localStorage.setItem(`k-${e.type}`, JSON.stringify({ at: Date.now() }));
+});
+try { JSON.parse("{"); } catch { console.error(new TypeError("bad")); } finally { debugger; }
+for (const [k, v] of Object.entries(obj)) if (typeof v === "function") delete obj[k];
+const { a, ...rest } = obj; label: while (false) break label;

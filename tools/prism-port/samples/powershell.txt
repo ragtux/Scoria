@@ -1,0 +1,23 @@
+# Script
+<# block
+   comment #>
+param(
+    [Parameter(Mandatory = $true)][string]$Path,
+    [int]$Count = 3
+)
+
+function Get-Thing {
+    [CmdletBinding()]
+    param([string]$Name)
+    process {
+        Write-Output "Hello $Name, $($env:USERNAME) at $(Get-Date)"
+    }
+}
+
+$items = Get-ChildItem -Path $Path -Recurse | Where-Object { $_.Length -gt 1KB }
+foreach ($i in $items) {
+    if ($i.Name -like '*.md' -and -not $i.PSIsContainer) { $i.FullName }
+    elseif ($null -eq $i) { break }
+}
+$hash = @{ Name = 'x'; Value = 42 }
+try { throw "bad" } catch [System.Exception] { Write-Error $_ } finally { $Count++ }

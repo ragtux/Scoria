@@ -1,0 +1,40 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+require 'json'
+
+module Shapes
+  class Circle < Base
+    include Comparable
+    attr_reader :radius
+    PI = 3.14159
+
+    def initialize(radius = 1.0, **opts)
+      @radius = radius
+      @@count ||= 0
+      $debug = opts.fetch(:debug, false)
+    end
+
+    def area = PI * @radius ** 2
+
+    def to_s
+      "Circle(#{@radius})"
+    end
+
+    def self.parse(str)
+      return nil unless str =~ /\Acircle:(\d+)\z/i
+      new($1.to_i)
+    end
+  end
+end
+
+[1, 2, 3].each_with_index do |x, i|
+  puts x * i if x.even?
+end
+h = { a: 1, 'b' => 2, :c => %w[x y z] }
+=begin
+block comment
+=end
+text = <<~HEREDOC
+  Hello #{h[:a]}
+HEREDOC
+lam = ->(x) { x + 1 }; sym = :"quoted sym"; r = %r{a/b}x

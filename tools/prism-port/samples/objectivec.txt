@@ -1,0 +1,17 @@
+#import <Foundation/Foundation.h>
+
+@interface Greeter : NSObject <NSCopying>
+@property (nonatomic, copy) NSString *name;
+- (void)greet:(NSString *)who times:(NSInteger)n;
+@end
+
+@implementation Greeter
+- (void)greet:(NSString *)who times:(NSInteger)n {
+    for (NSInteger i = 0; i < n; i++) {
+        NSLog(@"Hello %@, from %@", who, self.name);
+    }
+    NSArray *xs = @[@1, @2, @YES];
+    NSDictionary *d = @{@"k": @"v"};
+    BOOL ok = [xs containsObject:@1] && d != nil;
+}
+@end

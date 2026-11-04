@@ -1,0 +1,11 @@
+# Virtual host
+<VirtualHost *:80>
+    ServerName example.com
+    DocumentRoot "/var/www/html"
+    <Directory /var/www/html>
+        AllowOverride All
+        Require all granted
+    </Directory>
+    RewriteEngine On
+    RewriteRule ^/old$ /new [R=301,L]
+</VirtualHost>

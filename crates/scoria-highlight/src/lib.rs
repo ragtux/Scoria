@@ -17,10 +17,12 @@
 pub mod compiled;
 pub mod engine;
 pub mod grammar;
+pub mod hooks;
 pub mod languages;
 pub mod palette;
 
 pub use engine::{spans, to_html, tokenize, Node, Span, Token};
+pub use hooks::tokenize_language;
 pub use languages::{grammar as grammar_for, LANGUAGES};
 pub use palette::{style_of, Paint, Style};
 
@@ -44,10 +46,9 @@ pub struct Run {
 /// Runs whose style is [`Paint::Normal`] with no emphasis are dropped — they
 /// would paint what the block already paints.
 pub fn highlight(code: &str, info: Option<&str>) -> Vec<Run> {
-    let Some(grammar) = language_of(info).and_then(|n| languages::grammar(&n)) else {
+    let Some(nodes) = language_of(info).and_then(|n| hooks::tokenize_language(code, &n)) else {
         return Vec::new();
     };
-    let nodes = engine::tokenize(code, grammar);
     engine::spans(&nodes)
         .into_iter()
         .map(|s| Run {

@@ -1,0 +1,22 @@
+// Variables
+@use "sass:math";
+$primary: #3366ff !default;
+$sizes: (small: 4px, large: 16px);
+
+@mixin card($pad: 8px) {
+  padding: $pad;
+  border-radius: math.div($pad, 2);
+}
+
+.card {
+  @include card(12px);
+  color: darken($primary, 10%);
+  &:hover { color: $primary; }
+  &__title { font-weight: bold; }
+  @each $name, $size in $sizes {
+    .gap-#{$name} { margin: $size; }
+  }
+  @if $primary == red { display: none; } @else { display: block; }
+}
+%placeholder { margin: 0 }
+.x { @extend %placeholder; width: calc(100% - #{$gap * 2}); }

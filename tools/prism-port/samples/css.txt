@@ -1,0 +1,13 @@
+@import url("base.css");
+@media screen and (max-width: 600px) {
+  .nav > a:hover::before, #id[data-x="1" i] { content: "\201C"; }
+}
+:root { --accent: #ff00aa; }
+body {
+  margin: 0 auto !important;
+  color: rgba(0, 0, 0, 0.5);
+  width: calc(100% - 2em);
+  background: url(img.png) no-repeat, linear-gradient(to right, red, blue);
+  font: 12px/1.5 "Helvetica Neue", sans-serif;
+}
+li:nth-child(2n+1) { color: var(--accent); }

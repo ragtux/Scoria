@@ -1,0 +1,18 @@
+// Variables
+@primary: #3366ff;
+@import (reference) "base.less";
+
+.mixin(@pad: 8px; @r) when (@pad > 4px) {
+  padding: @pad;
+  border-radius: @r;
+}
+
+.card {
+  .mixin(12px; 4px);
+  color: darken(@primary, 10%);
+  &:hover { color: ~"@{primary}"; }
+  @media (min-width: 768px) { width: (100% / 3); }
+}
+/* block */
+#ns { .m() { color: red } }
+.use { #ns > .m(); }

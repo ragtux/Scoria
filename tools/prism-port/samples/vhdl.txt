@@ -1,0 +1,14 @@
+-- A counter
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity counter is
+  port (clk : in std_logic; q : out integer range 0 to 255);
+end entity;
+
+architecture rtl of counter is
+begin
+  process (clk) begin
+    if rising_edge(clk) then q <= 0; end if;
+  end process;
+end architecture;

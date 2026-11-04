@@ -1,0 +1,28 @@
+//! Crate docs
+use std::collections::HashMap;
+
+/// A shape.
+#[derive(Debug, Clone)]
+pub enum Shape<'a> { Circle { r: f64 }, Named(&'a str) }
+
+impl<'a> Shape<'a> {
+    pub const fn new() -> Self { Shape::Circle { r: 1.0 } }
+    fn area(&self) -> f64 {
+        match self {
+            Shape::Circle { r } => std::f64::consts::PI * r * r,
+            Shape::Named(_) => 0.0,
+        }
+    }
+}
+
+macro_rules! sq { ($x:expr) => { $x * $x }; }
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut m: HashMap<String, u32> = HashMap::new();
+    let c = b'x'; let s = r#"raw "str""#; let n = 0xFF_u8 as usize + 1_000;
+    m.insert("k".to_string(), sq!(3));
+    let f = |x: i32| -> i32 { x + 1 };
+    /* block /* nested */ */
+    if let Some(v) = m.get("k") { println!("{v} {}", f(2)); }
+    Ok(())
+}

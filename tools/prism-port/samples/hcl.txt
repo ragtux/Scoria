@@ -1,0 +1,23 @@
+# Terraform
+terraform {
+  required_version = ">= 1.5"
+}
+
+variable "region" {
+  type    = string
+  default = "eu-west-1"
+}
+
+resource "aws_instance" "web" {
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = var.size != "" ? var.size : "t3.micro"
+  count         = 2
+  tags = {
+    Name = "web-${count.index}"
+  }
+  /* block */
+  lifecycle { create_before_destroy = true }
+}
+
+output "ip" { value = aws_instance.web[*].public_ip }
+locals { list = [for s in var.items : upper(s) if s != null] }

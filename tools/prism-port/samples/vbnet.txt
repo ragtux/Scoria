@@ -1,0 +1,11 @@
+' A module
+Imports System
+Module Program
+    Sub Main(args As String())
+        Dim total As Integer = 0
+        For i As Integer = 1 To 10
+            If i Mod 2 = 0 Then total += i
+        Next
+        Console.WriteLine($"Total: {total}")
+    End Sub
+End Module

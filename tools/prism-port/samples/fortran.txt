@@ -1,0 +1,9 @@
+! A program
+program hello
+  implicit none
+  integer :: i
+  real(kind=8) :: x = 1.5d0
+  do i = 1, 10
+    if (mod(i, 2) == 0) print *, "even", i
+  end do
+end program hello

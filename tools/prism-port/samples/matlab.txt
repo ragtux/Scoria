@@ -1,0 +1,13 @@
+% Plot a sine
+%{
+block comment
+%}
+function y = f(x)
+    y = sin(x) .* exp(-x / 2);
+end
+x = linspace(0, 2*pi, 100)';
+A = [1 2; 3 4]; B = A';
+if any(x > 3) && ~isempty(A)
+    disp('big');
+end
+s = "double"; n = 1.5e3 + 2i;

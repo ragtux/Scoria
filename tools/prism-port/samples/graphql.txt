@@ -1,0 +1,28 @@
+# A query
+query GetUser($id: ID!, $first: Int = 10) @cached(ttl: 60) {
+  user(id: $id) {
+    ...UserFields
+    posts(first: $first, orderBy: {field: CREATED_AT, direction: DESC}) {
+      edges { node { title body } }
+    }
+  }
+}
+
+fragment UserFields on User {
+  id
+  name @include(if: true)
+}
+
+"""
+A user.
+"""
+type User implements Node {
+  id: ID!
+  name: String
+  score: Float @deprecated(reason: "no")
+}
+
+enum Role { ADMIN USER }
+input Filter { q: String = "x", n: Int = 3, ok: Boolean = false, none: String = null }
+scalar Date
+schema { query: Query }

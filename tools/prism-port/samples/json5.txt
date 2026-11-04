@@ -1,0 +1,8 @@
+// JSON5
+{
+  unquoted: 'single quotes',
+  "quoted": "double",
+  trailing: [1, 2, 3,],
+  hex: 0xFF, inf: Infinity, nan: NaN, plus: +1.5e3, lead: .5,
+  /* block */ nil: null, yes: true,
+}

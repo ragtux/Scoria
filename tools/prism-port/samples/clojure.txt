@@ -1,0 +1,14 @@
+;; A sample
+(ns app.core
+  (:require [clojure.string :as str]))
+
+(defn greet
+  "Greets someone."
+  [name & {:keys [loud] :or {loud false}}]
+  (let [msg (str "Hello, " name "!")]
+    (if loud (str/upper-case msg) msg)))
+
+(defmacro unless [test & body] `(if (not ~test) (do ~@body)))
+(def xs #{1 2 3})
+(->> (range 10) (filter even?) (map #(* % 2)) (reduce + 0))
+(println \a nil true 1.5 22/7 #"re.*" ^:private 'sym)

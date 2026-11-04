@@ -2353,26 +2353,37 @@ installed themes.
 dropped at zero themes as Obsidian drops it, but the button does nothing and the row carries the
 "not in Scoria yet" tag. Same reasoning as "Manage".
 
-### Syntax highlighting covers eleven languages where Obsidian covers 171
+### Syntax highlighting covers 85 languages where Obsidian covers 171 names
 
-*medium, missing-feature, large*
+*low, missing-feature, medium*
 
-**Landed 2026-11-02** as the engine and a first tranche; what follows is the gap that remains.
-See [[Development#Syntax highlighting, 2026-11-02]].
+**Landed 2026-11-02** as the engine and a first tranche of eleven, and **widened 2026-11-04** to
+85 languages under 122 names; what follows is the gap that remains. See
+[[Development#Syntax highlighting, 2026-11-02]] and
+[[Development#Syntax highlighting breadth, 2026-11-04]].
 
 **Obsidian.** Of 201 language names the probe tried, 171 produced tokens — effectively Prism's
 whole component set, including every common language and a long tail of rare ones.
 
-**Scoria.** Eleven: clike, css, diff, go, ini, json, nix, python, rust, toml, yaml. A fence whose
+**Scoria.** 85 languages, 122 names with Prism's aliases (`js`, `ts`, `sh`, `shell`, `yml`, `md`,
+`html`, `cs`, `kt`, `hs`, `rb`, `dockerfile`, `tex`, …): every common one a note holds —
+JavaScript, TypeScript, JSX, TSX, markup (HTML, XML, SVG), Bash, C, C++, C#, Java, Kotlin, Scala,
+Swift, Go, Rust, Python, Ruby, PHP, Perl, Lua, R, Julia, Haskell, Elixir, SQL, GraphQL, Markdown,
+LaTeX, PowerShell, Batch, Makefile, Dockerfile, CSS, SCSS, Less, YAML, TOML, JSON, Nix and more.
+84 of the probe's 171 highlighted names resolve, and so do six it listed as plain only because its
+sample line held nothing for them (markup, xml, diff, docker, dockerfile, latex). A fence whose
 language is not among them renders plain, which is exactly what Obsidian does for a name Prism
 has no grammar for, so the gap shows as missing colour rather than as wrong colour.
 
-**Fix.** One grammar at a time, each a data table ported from Prism's upstream source into
-`crates/scoria-highlight/src/languages/`, each verified against a sample in
-`tests/corpus/obsidian-1.14.5.json`. The ones to do next, by what a notes app sees: **javascript**
-and **typescript** (Prism's largest grammars, and the template-string recursion is the fiddly
-part), **markup** (html, xml, svg), **bash**, **sql**, **java**, **c** and **cpp** — the last four
-are `clike` with substitutions, which is already ported. Adding a sample to the corpus needs
+**Fix.** The rest of the long tail — 87 of the probe's names, among them abap, actionscript, ada,
+applescript, autohotkey, gherkin, haxe, hlsl, jq, lilypond, livescript, llvm, mongodb, plsql,
+processing, pug, puppet, purescript, qml, reason, sas, smalltalk, sparql, stylus, textile, vala,
+visual-basic and xquery: add the id to
+`PORT` in `tools/prism-port/port.js`, write a sample in `tools/prism-port/samples/`, and re-run
+the script; `every_ported_language_has_a_prism_sample` refuses an id without one. One hook is not
+ported and does change colour: `js-templates`, which highlights the body of a tagged template
+(`` html`…` ``, `` css`…` ``, `` sql`…` ``) in the language its tag names — Scoria paints that body
+uncoloured. Adding an Obsidian sample to the first corpus needs
 `tools/obsidian-probe/code-highlight.mjs` re-run against the Obsidian of the day.
 
 ## Blocked by the harness, not by the code

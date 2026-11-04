@@ -1,0 +1,28 @@
+defmodule Greeter do
+  @moduledoc """
+  Greets people.
+  """
+  @default "world"
+
+  @doc "Greets."
+  def greet(name \\ @default, opts \\ []) when is_binary(name) do
+    msg = "Hello, #{name}!"
+    if Keyword.get(opts, :loud, false), do: String.upcase(msg), else: msg
+  end
+
+  defp count(list), do: Enum.reduce(list, 0, fn _, acc -> acc + 1 end)
+
+  def run do
+    [1, 2, 3]
+    |> Enum.map(&(&1 * 2))
+    |> Enum.filter(fn x -> x > 2 end)
+    %{a: 1, "b" => 2} |> Map.keys()
+    ~r/foo(bar)?/i
+    {:ok, pid} = GenServer.start_link(__MODULE__, nil)
+    case pid do
+      nil -> :error
+      _ -> :ok
+    end
+  end
+end
+# comment

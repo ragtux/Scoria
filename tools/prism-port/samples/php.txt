@@ -1,0 +1,41 @@
+<?php
+declare(strict_types=1);
+namespace App\Http;
+
+use Illuminate\Support\Str;
+
+/**
+ * A controller.
+ * @param string $name
+ */
+#[Route('/users', methods: ['GET'])]
+final class UserController extends Controller implements HasName
+{
+    public const VERSION = 2;
+    private static ?array $cache = null;
+
+    public function __construct(private readonly UserRepo $repo) {}
+
+    public function show(int $id): ?string
+    {
+        $user = $this->repo->find($id) ?? throw new NotFound("no user $id");
+        $name = "Hello {$user->name} and ${id}";
+        $nowdoc = <<<'EOT'
+raw $text
+EOT;
+        $arr = ['a' => 1, "b" => true, 'c' => NULL];
+        foreach ($arr as $k => $v) { echo $k . PHP_EOL; }
+        return match (true) { $id > 0 => Str::upper($name), default => null };
+    }
+}
+// line comment
+# hash comment
+$fn = fn($x) => $x * 2 + 0x1F;
+?>
+<!DOCTYPE html>
+<ul class="<?= $cls ?>">
+<?php foreach ($items as $item): ?>
+  <li title="<?php echo "a ?> b"; ?>"><?= htmlspecialchars($item) ?></li>
+<?php endforeach; // done ?>
+</ul>
+<?php /* open to the end

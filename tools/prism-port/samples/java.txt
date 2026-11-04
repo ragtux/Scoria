@@ -1,0 +1,32 @@
+package com.example.app;
+
+import java.util.*;
+import static java.lang.Math.max;
+
+/**
+ * A greeter.
+ * @author someone
+ */
+@FunctionalInterface
+public interface Greeter<T extends Comparable<? super T>> {
+    String greet(T who);
+}
+
+public final class Main implements Runnable {
+    private static final long MAX = 1_000L;
+    private final Map<String, List<Integer>> map = new HashMap<>();
+    enum Mode { FAST, SLOW }
+
+    @Override
+    public void run() {
+        var list = List.of(1, 2, 3);
+        list.stream().filter(x -> x > 1).map(String::valueOf).forEach(System.out::println);
+        char c = '\t'; double d = 3.14e2; boolean ok = true && !false;
+        String text = """
+            text block
+            """;
+        try { Thread.sleep(10); } catch (InterruptedException | RuntimeException e) { throw new IllegalStateException(e); }
+        switch (Mode.FAST) { case FAST -> System.out.println("fast"); default -> {} }
+        Object o = null; if (o instanceof String s && !s.isEmpty()) synchronized (this) { assert s != null; }
+    }
+}

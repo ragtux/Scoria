@@ -1,0 +1,20 @@
+syntax = "proto3";
+package app.v1;
+
+import "google/protobuf/timestamp.proto";
+option go_package = "example.com/app/v1;appv1";
+
+// A user.
+message User {
+  int64 id = 1;
+  string name = 2 [deprecated = true];
+  repeated string tags = 3;
+  map<string, int32> scores = 4;
+  google.protobuf.Timestamp created = 5;
+  oneof contact { string email = 6; string phone = 7; }
+  enum Role { ROLE_UNSPECIFIED = 0; ADMIN = 1; }
+}
+
+service Users {
+  rpc Get (GetRequest) returns (stream User) {}
+}

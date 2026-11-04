@@ -72,7 +72,7 @@ impl Node {
         self.len() == 0
     }
 
-    fn shift(&mut self, by: usize) {
+    pub(crate) fn shift(&mut self, by: usize) {
         match self {
             Node::Text { start, end } => {
                 *start += by;
@@ -326,12 +326,76 @@ fn write_html(text: &str, nodes: &[Node], out: &mut String) {
                     out.push(' ');
                     out.push_str(alias);
                 }
-                out.push_str("\">");
-                write_html(text, &t.content, out);
+                out.push('"');
+                let mut inner = String::new();
+                write_html(text, &t.content, &mut inner);
+                if t.kind == "entity" {
+                    entity_title(&inner, out);
+                }
+                out.push('>');
+                out.push_str(&inner);
                 out.push_str("</span>");
             }
         }
     }
+}
+
+/// The `title` markup's `wrap` hook gives an entity: its own HTML with the
+/// first `&amp;` taken back to `&`, which the browser then parses as an
+/// attribute and serializes again. Only the entities Prism's own Markdown
+/// decoder knows are decoded here — `amp`, `lt`, `gt`, `quot` and numeric
+/// references — so a named one past those keeps its source; the title
+/// changes no colour, and only the corpus reads it.
+fn entity_title(inner: &str, out: &mut String) {
+    let raw = inner.replacen("&amp;", "&", 1);
+    out.push_str(" title=\"");
+    for ch in decode_entities(&raw).chars() {
+        match ch {
+            '&' => out.push_str("&amp;"),
+            '"' => out.push_str("&quot;"),
+            '<' => out.push_str("&lt;"),
+            '>' => out.push_str("&gt;"),
+            '\u{a0}' => out.push_str("&nbsp;"),
+            _ => out.push(ch),
+        }
+    }
+    out.push('"');
+}
+
+fn decode_entities(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    let mut rest = s;
+    while let Some(ix) = rest.find('&') {
+        out.push_str(&rest[..ix]);
+        rest = &rest[ix..];
+        let decoded = rest.find(';').and_then(|end| {
+            let name = &rest[1..end];
+            let ch = match name.to_ascii_lowercase().as_str() {
+                "amp" => Some('&'),
+                "lt" => Some('<'),
+                "gt" => Some('>'),
+                "quot" => Some('"'),
+                n if n.starts_with("#x") => u32::from_str_radix(&n[2..], 16)
+                    .ok()
+                    .and_then(char::from_u32),
+                n if n.starts_with('#') => n[1..].parse().ok().and_then(char::from_u32),
+                _ => None,
+            }?;
+            Some((ch, end + 1))
+        });
+        match decoded {
+            Some((ch, len)) => {
+                out.push(ch);
+                rest = &rest[len..];
+            }
+            None => {
+                out.push('&');
+                rest = &rest[1..];
+            }
+        }
+    }
+    out.push_str(rest);
+    out
 }
 
 /// What `innerHTML` gives back for a text node: the HTML serializer

@@ -1,0 +1,9 @@
+cmake_minimum_required(VERSION 3.20)
+project(app LANGUAGES CXX)
+# options
+option(BUILD_TESTS "Build tests" ON)
+set(SOURCES src/main.cpp src/util.cpp)
+add_executable(app ${SOURCES})
+if(BUILD_TESTS AND NOT WIN32)
+  target_link_libraries(app PRIVATE Threads::Threads)
+endif()

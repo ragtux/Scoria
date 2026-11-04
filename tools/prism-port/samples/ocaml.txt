@@ -1,0 +1,16 @@
+(* A module *)
+module StringMap = Map.Make (String)
+
+type shape = Circle of float | Rect of { w : float; h : float }
+
+let area = function
+  | Circle r -> 3.14159 *. r *. r
+  | Rect { w; h } -> w *. h
+
+let rec fact n = if n <= 1 then 1 else n * fact (n - 1)
+
+let () =
+  let xs = [ 1; 2; 3 ] in
+  List.iter (fun x -> Printf.printf "%d\n" x) xs;
+  print_endline ("c=" ^ String.make 1 'c');
+  ignore (0xFF + 1_000, `Poly, true && not false)
