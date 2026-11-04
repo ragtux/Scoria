@@ -3044,17 +3044,14 @@ mod tests {
         // never folds its lines. (A comment, a script and a remote `<img>`
         // used to be in this list; the first two draw nothing at all now and
         // the last is fetched -- see the tests around this one.)
-        for src in [
-            "<img src=\"pic.png\" width=\"50%\">\n",
-        ] {
-            assert!(widgets(src, &stub()).is_empty(), "{src:?} became a widget");
-            let m = build("Self.md", src, &stub());
-            assert!(
-                matches!(&m.blocks[0], RBlock::Html(_)),
-                "{src:?} -> {:?}",
-                m.blocks[0]
-            );
-        }
+        let src = "<img src=\"pic.png\" width=\"50%\">\n";
+        assert!(widgets(src, &stub()).is_empty(), "{src:?} became a widget");
+        let m = build("Self.md", src, &stub());
+        assert!(
+            matches!(&m.blocks[0], RBlock::Html(_)),
+            "{src:?} -> {:?}",
+            m.blocks[0]
+        );
     }
 
     /// A raw `<table>` is drawn as a table in the reading view -- the first
