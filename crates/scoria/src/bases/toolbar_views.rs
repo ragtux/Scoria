@@ -163,7 +163,7 @@ impl BasesView {
                                 this.show_view(ix, cx);
                                 this.configure_view(ix, cx);
                             }))
-                            .child(icon("chevron-right", ICON_SIZE, theme.tokens.text_muted)),
+                            .child(icon("chevron-right", ICON_SIZE, theme.tokens.icon_color)),
                     )
                     .into_any_element()
             })
@@ -558,9 +558,9 @@ impl BasesView {
             .flex_col()
             .min_w(px(153.))
             .p(px(6.))
-            .bg(theme.tokens.background_secondary)
+            .bg(theme.tokens.menu_background)
             .border_1()
-            .border_color(theme.tokens.tab_divider_color)
+            .border_color(theme.tokens.menu_border_color)
             .rounded(px(8.))
             .shadow_lg()
             .text_size(px(FONT_UI_SMALL))

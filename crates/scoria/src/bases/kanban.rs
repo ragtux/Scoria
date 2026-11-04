@@ -122,9 +122,11 @@ impl gpui::Render for CardMove {
             .px(px(CELL_PAD))
             .py(px(4.))
             .rounded_md()
+            // `.drag-reorder-ghost > .bases-kanban-card`: the card's own
+            // ground and ring.
             .border_1()
-            .border_color(theme.tokens.background_modifier_border)
-            .bg(theme.tokens.background_primary)
+            .border_color(crate::theme::ring(&theme.tokens.bases_kanban_card_shadow))
+            .bg(theme.tokens.bases_kanban_card_background)
             .text_size(px(FONT_UI_SMALL))
             .text_color(theme.tokens.text_normal)
             .child(SharedString::from(self.title.clone()))
@@ -452,9 +454,9 @@ impl BasesView {
             .flex_col()
             .min_w(px(134.))
             .py(px(6.))
-            .bg(theme.tokens.background_secondary)
+            .bg(theme.tokens.menu_background)
             .border_1()
-            .border_color(theme.tokens.tab_divider_color)
+            .border_color(theme.tokens.menu_border_color)
             .rounded(px(8.))
             .shadow_lg()
             .text_size(px(FONT_UI_SMALL))
@@ -603,7 +605,11 @@ impl BasesView {
                     .w(px(width))
                     .h_full()
                     .rounded(px(8.))
-                    .bg(theme.tokens.background_secondary)
+                    // `.bases-kanban-column`: its own ground in a 1 px
+                    // `--background-modifier-border` frame.
+                    .bg(theme.tokens.bases_kanban_column_background)
+                    .border_1()
+                    .border_color(theme.tokens.background_modifier_border)
                     .when(dragging_column == Some(g), |d| d.opacity(0.4))
                     .child(self.render_column_header(
                         g,
@@ -764,7 +770,7 @@ impl BasesView {
                 div()
                     .flex_shrink_0()
                     .text_size(px(FONT_UI_SMALLER))
-                    .text_color(theme.tokens.text_muted)
+                    .text_color(theme.tokens.bases_group_heading_property_color)
                     .child(SharedString::from(property))
             }))
             .children(title.map(|title| {
@@ -778,10 +784,11 @@ impl BasesView {
                     .child(SharedString::from(title))
             }))
             .child(
+                // `.bases-kanban-column-count`: muted.
                 div()
                     .flex_shrink_0()
                     .text_size(px(FONT_UI_SMALLER))
-                    .text_color(theme.tokens.text_faint)
+                    .text_color(theme.tokens.text_muted)
                     .child(SharedString::from(rows.to_string())),
             )
             .child(div().flex_1())
@@ -804,7 +811,7 @@ impl BasesView {
                         cx.stop_propagation();
                         this.add_item_in(g, cx)
                     }))
-                    .child(icon("plus", ICON_SIZE, theme.tokens.text_muted)),
+                    .child(icon("plus", ICON_SIZE, theme.tokens.icon_color)),
             )
             .into_any_element()
     }
@@ -852,10 +859,9 @@ impl BasesView {
                 div()
                     .w_full()
                     .h(px(self.kanban.card_height))
+                    // `.bases-kanban-card-drop-placeholder`: the hover wash
+                    // alone, no frame.
                     .rounded_md()
-                    .border_1()
-                    .border_dashed()
-                    .border_color(theme.tokens.interactive_accent)
                     .bg(theme.tokens.background_modifier_hover),
             )
             .into_any_element()
@@ -894,10 +900,6 @@ impl BasesView {
             // itself **unprobed**.
             .filter(|text| !text.is_empty())
             .unwrap_or_else(|| row.file.basename.clone());
-        let title_is_link = match (columns.first(), row.cells.first()) {
-            (Some(column), Some(cell)) => renders_as_link(column, cell),
-            _ => false,
-        };
         let drag_title = title.clone();
         let mut card = div()
             .id(("bases-kanban-card", g * 65536 + ix))
@@ -907,12 +909,21 @@ impl BasesView {
             .h(px(self.kanban.card_height))
             .overflow_hidden()
             .rounded(px(8.))
+            // `.bases-kanban-card`: its ground in the
+            // `--bases-kanban-card-shadow` ring and drop; under the pointer
+            // the ring and the drop deepen and the ground stays.
             .border_1()
-            .border_color(theme.tokens.background_modifier_border)
-            .bg(theme.tokens.background_primary)
+            .border_color(crate::theme::ring(&theme.tokens.bases_kanban_card_shadow))
+            .shadow(drop_of(&theme.tokens.bases_kanban_card_shadow))
+            .bg(theme.tokens.bases_kanban_card_background)
             .cursor_pointer()
             .when(faint, |d| d.opacity(0.4))
-            .hover(|s| s.bg(theme.tokens.background_modifier_hover).shadow_md())
+            .hover(|s| {
+                s.border_color(crate::theme::ring(
+                    &theme.tokens.bases_kanban_card_shadow_hover,
+                ))
+                .shadow(drop_of(&theme.tokens.bases_kanban_card_shadow_hover))
+            })
             .on_click(cx.listener(move |this, _, _, cx| this.open(path.clone(), cx)))
             // A press-and-move drags the card (`is-being-dragged`); the
             // source stays, faint, until the drop.
@@ -954,11 +965,9 @@ impl BasesView {
                         .items_center()
                         .overflow_hidden()
                         .text_size(px(FONT_UI_SMALL))
-                        .text_color(if title_is_link {
-                            theme.tokens.link_color
-                        } else {
-                            theme.tokens.text_normal
-                        })
+                        // `.bases-kanban-card-property.mod-title` makes the
+                        // link colour the normal one.
+                        .text_color(theme.tokens.text_normal)
                         .on_mouse_down(
                             MouseButton::Right,
                             cx.listener(move |this, event: &MouseDownEvent, _, cx| {
@@ -1004,7 +1013,7 @@ impl BasesView {
                                     line.text_color(if link {
                                         theme.tokens.link_color
                                     } else {
-                                        theme.tokens.text_muted
+                                        theme.tokens.text_normal
                                     })
                                     .child(
                                         div()
@@ -1049,7 +1058,7 @@ impl BasesView {
             .w_full()
             .h(px(height))
             .overflow_hidden()
-            .bg(theme.tokens.background_secondary)
+            .bg(theme.tokens.bases_kanban_cover_background)
             .children(file.map(|path| {
                 img(path)
                     .size_full()
@@ -1170,6 +1179,12 @@ pub fn card_height(cells: usize, image_height: Option<f32>) -> f32 {
         + 2. * CELL_PAD
         + CARD_TITLE_HEIGHT
         + (lines - 1) as f32 * CARD_LINE_HEIGHT
+}
+
+/// The drop under a kanban card: every layer of its shadow token after the
+/// first, which is the ring Scoria paints as the border.
+fn drop_of(layers: &[crate::theme::value::ShadowLayer]) -> Vec<gpui::BoxShadow> {
+    crate::theme::box_shadows(layers.get(1..).unwrap_or_default())
 }
 
 #[cfg(test)]

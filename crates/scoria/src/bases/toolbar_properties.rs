@@ -529,7 +529,8 @@ impl BasesView {
             .min_h(px(100.))
             .p(px(6.))
             .rounded(px(5.))
-            .bg(theme.tokens.background_modifier_hover)
+            // `.formula-editor`: a form field.
+            .bg(theme.tokens.background_modifier_form_field)
             .border_1()
             .border_color(theme.tokens.background_modifier_border)
             .font_family(theme.mono_font.clone())

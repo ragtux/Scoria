@@ -424,7 +424,7 @@ impl CanvasView {
 
     /// The colour a node's or edge's `color` paints as, `None` for the
     /// theme's default (which differs between a card, an edge and a group).
-    fn color_of(color: Option<&str>, theme: &Theme) -> Option<Hsla> {
+    pub(super) fn color_of(color: Option<&str>, theme: &Theme) -> Option<Hsla> {
         match Color::parse(color) {
             Color::Default => None,
             Color::Preset(n) => theme.canvas.preset(n),
@@ -1741,7 +1741,11 @@ impl CanvasView {
         let h = line_height + pad * 2.0;
         let centre = self.window_point(at);
         let origin = point(centre.x - w / 2.0, centre.y - h / 2.0);
-        let mut quad = fill(Bounds::new(origin, size(w, h)), theme.canvas.background);
+        // `.canvas-path-label`: the primary background.
+        let mut quad = fill(
+            Bounds::new(origin, size(w, h)),
+            theme.tokens.background_primary,
+        );
         quad.corner_radii = Corners::all(px((LABEL_RADIUS * ls) as f32));
         window.paint_quad(quad);
         let _ = line.paint(
@@ -1770,10 +1774,12 @@ impl CanvasView {
                 continue;
             }
             let frame = self.frame_bounds(node);
-            // The canvas ground under a tint of the card's colour, inside a
-            // border of that colour at 0.7 (the default colour is solid).
+            // The primary background under a tint of the card's colour,
+            // inside a border of that colour at 0.7 (the default colour is
+            // solid): `.canvas-node-container` is `--background-primary`,
+            // not `--canvas-background`.
             let color = Self::color_of(node.color.as_deref(), theme);
-            let mut quad = fill(frame, theme.canvas.background);
+            let mut quad = fill(frame, theme.tokens.background_primary);
             quad.corner_radii = Corners::all(px((CARD_RADIUS * scale) as f32));
             quad.border_widths = Edges::all(self.border_px());
             quad.border_color = self.border_color(node, theme);
@@ -1842,8 +1848,10 @@ impl CanvasView {
                     frame.size.height + ring * 2.0,
                 ),
             );
-            let color = Self::color_of(node.color.as_deref(), theme)
-                .unwrap_or(theme.tokens.interactive_accent);
+            // `.canvas-node.is-selected`: `--color-accent`, or the card's own
+            // colour when it has one.
+            let color =
+                Self::color_of(node.color.as_deref(), theme).unwrap_or(theme.tokens.color_accent);
             let mut quad = fill(outline, gpui::transparent_black());
             quad.corner_radii = Corners::all(px((CARD_RADIUS * scale) as f32) + ring);
             quad.border_widths = Edges::all(ring);
@@ -1879,7 +1887,9 @@ impl CanvasView {
         }
         if let Some(Drag::Marquee { start, end, .. }) = &self.drag {
             let r = self.screen_rect(&Rect::between(*start, *end));
-            let mut wash = theme.tokens.interactive_accent;
+            // `.canvas-selection`: `--color-accent` at 10 percent inside a
+            // 2 px frame of it.
+            let mut wash = theme.tokens.color_accent;
             wash.a = theme.canvas.wash_alpha;
             let mut quad = fill(
                 Bounds::new(
@@ -1891,8 +1901,8 @@ impl CanvasView {
                 ),
                 wash,
             );
-            quad.border_widths = Edges::all(px(1.0));
-            quad.border_color = theme.tokens.interactive_accent;
+            quad.border_widths = Edges::all(px(2.0));
+            quad.border_color = theme.tokens.color_accent;
             window.paint_quad(quad);
         }
     }
@@ -1929,16 +1939,21 @@ impl CanvasView {
                     .flex()
                     .items_center()
                     .justify_center()
+                    .group(SharedString::from(format!("{prefix}-{ix}")))
                     .bg(theme.canvas.control_bg)
                     .when(*enabled, |d| {
                         d.cursor_pointer()
-                            .hover(|s| s.bg(theme.canvas.control_group))
+                            .hover(|s| s.bg(theme.canvas.control_bg_hover))
                     })
                     .tooltip(menu::tooltip(control_label(id)))
                     .on_click(
                         cx.listener(move |this, _, window, cx| this.control_pick(id, window, cx)),
                     )
-                    .child(icon(glyph, 16.0, fg)),
+                    .child(icon(glyph, 16.0, fg).when(*enabled, |s| {
+                        s.group_hover(SharedString::from(format!("{prefix}-{ix}")), |s| {
+                            s.text_color(theme.canvas.control_fg_hover)
+                        })
+                    })),
             );
         }
         group
@@ -2017,25 +2032,32 @@ impl CanvasView {
                 .flex()
                 .items_center()
                 .justify_center()
-                .when(enabled, |d| {
-                    d.cursor_pointer()
-                        .hover(|s| s.bg(theme.canvas.control_group))
-                })
+                .group(SharedString::from(format!("canvas-card-menu-{ix}")))
+                .when(enabled, |d| d.cursor_pointer())
                 .tooltip(menu::tooltip(label))
                 .on_click(cx.listener(move |this, _, _, cx| match ix {
                     0 => this.add_card_at_center(cx),
                     1 => cx.emit(CanvasEvent::PickFile(FilePick::Note)),
                     _ => cx.emit(CanvasEvent::PickFile(FilePick::Media)),
                 }))
-                .child(icon(
-                    glyph,
-                    24.0,
-                    if enabled {
-                        theme.canvas.control_fg
-                    } else {
-                        theme.tokens.text_faint
-                    },
-                ))
+                // `.canvas-card-menu-button`: muted, and the accent under the
+                // pointer with no wash behind it.
+                .child(
+                    icon(
+                        glyph,
+                        24.0,
+                        if enabled {
+                            theme.canvas.control_fg
+                        } else {
+                            theme.tokens.text_faint
+                        },
+                    )
+                    .when(enabled, |s| {
+                        s.group_hover(SharedString::from(format!("canvas-card-menu-{ix}")), |s| {
+                            s.text_color(theme.tokens.color_accent)
+                        })
+                    }),
+                )
         };
         div()
             .absolute()
@@ -2182,10 +2204,13 @@ impl CanvasView {
                     .h(px(SWATCH))
                     .rounded_full()
                     .cursor_pointer()
+                    // `.canvas-color-picker-item`: a 2 px frame of the
+                    // primary background, and a ring of its own colour under
+                    // the pointer.
                     .bg(fill_color)
-                    .border_1()
-                    .border_color(theme.tokens.background_modifier_border)
-                    .hover(|s| s.border_color(theme.tokens.text_normal))
+                    .border_2()
+                    .border_color(theme.tokens.background_primary)
+                    .hover(move |s| s.border_color(fill_color))
                     .on_click(cx.listener(move |this, _, _, cx| {
                         this.palette_open = false;
                         this.set_color(color, cx)
@@ -2198,9 +2223,10 @@ impl CanvasView {
                 .gap(px(PALETTE_GAP))
                 .p(px(PALETTE_GAP))
                 .rounded(px(4.))
-                .bg(theme.canvas.background)
+                // `.canvas-submenu`.
+                .bg(theme.tokens.background_primary)
                 .border_1()
-                .border_color(theme.canvas.control_border)
+                .border_color(theme.tokens.background_modifier_border)
                 .shadow_md()
                 .occlude()
                 .child(swatch(
@@ -2519,7 +2545,7 @@ impl Render for CanvasView {
             .relative()
             .size_full()
             .overflow_hidden()
-            .bg(theme.tokens.background_primary)
+            .bg(theme.canvas.background)
             .child(
                 canvas(
                     move |bounds, window, cx| {

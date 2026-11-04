@@ -1159,10 +1159,13 @@ impl GraphView {
             .w(px(30.))
             .h(px(16.))
             .rounded_full()
+            // `.checkbox-container`, as in Settings: the border-hover grey
+            // off, the interactive accent on, a white thumb (probe of
+            // 2026-11-04, `theme-plugins.mjs`).
             .bg(if on {
                 theme.tokens.interactive_accent
             } else {
-                theme.tokens.background_modifier_hover
+                theme.tokens.background_modifier_border_hover
             })
             .child(
                 div()
@@ -1172,7 +1175,7 @@ impl GraphView {
                     .w(px(12.))
                     .h(px(12.))
                     .rounded_full()
-                    .bg(theme.tokens.background_primary),
+                    .bg(theme.tokens.toggle_thumb_color),
             )
     }
 
@@ -1195,7 +1198,11 @@ impl GraphView {
             .py(px(3.))
             .cursor_pointer()
             .on_click(cx.listener(move |this, _, _, cx| this.toggle_flag(key, cx)))
-            .child(div().text_color(theme.tokens.text_normal).child(label))
+            .child(
+                div()
+                    .text_color(theme.tokens.setting_item_name_color)
+                    .child(label),
+            )
             .child(Self::pill(on, theme))
     }
 
@@ -1204,9 +1211,9 @@ impl GraphView {
         let t = slider.fraction(value);
         let entity = cx.entity();
         let (track_color, fill_color, knob_color) = (
-            theme.tokens.background_modifier_hover,
-            theme.tokens.interactive_accent,
-            theme.tokens.text_normal,
+            theme.tokens.slider_track_background,
+            theme.tokens.slider_fill_background,
+            theme.tokens.slider_thumb_background,
         );
         let track = canvas(
             move |bounds, window, _| window.insert_hitbox(bounds, HitboxBehavior::Normal),
@@ -1285,7 +1292,7 @@ impl GraphView {
             .py(px(3.))
             .child(
                 div()
-                    .text_color(theme.tokens.text_normal)
+                    .text_color(theme.tokens.setting_item_name_color)
                     .child(slider.label()),
             )
             .child(
@@ -1320,10 +1327,10 @@ impl GraphView {
             .rounded_sm()
             .cursor_pointer()
             .text_size(px(13.))
-            .text_color(theme.tokens.text_muted)
+            .text_color(theme.tokens.icon_color)
             .hover(|s| {
                 s.bg(theme.tokens.background_modifier_hover)
-                    .text_color(theme.tokens.text_normal)
+                    .text_color(theme.tokens.icon_color_hover)
             })
             .child(glyph)
     }
@@ -1354,12 +1361,12 @@ impl GraphView {
                     .px_2()
                     .py(px(5.))
                     .cursor_pointer()
-                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                    .hover(|s| s.bg(theme.tokens.nav_item_background_hover))
                     .on_click(cx.listener(move |this, _, _, cx| this.toggle_section(section, cx)))
                     .child(
                         div()
                             .w(px(12.))
-                            .text_color(theme.tokens.text_muted)
+                            .text_color(theme.tokens.nav_collapse_icon_color)
                             .child(if collapsed { "▸" } else { "▾" }),
                     )
                     .child(
@@ -1375,13 +1382,15 @@ impl GraphView {
 
     fn render_controls(&self, theme: &Theme, cx: &mut Context<Self>) -> gpui::AnyElement {
         if self.config.close.unwrap_or(false) {
+            // `.graph-controls.is-close`: the cog alone on the view's own
+            // ground, its border transparent.
             return Self::icon_button("graph-controls-open", "⚙", theme)
                 .absolute()
                 .top_2()
                 .left_2()
-                .bg(theme.tokens.background_secondary)
+                .bg(theme.tokens.background_primary)
                 .border_1()
-                .border_color(theme.tokens.background_modifier_border)
+                .border_color(gpui::transparent_black())
                 .occlude()
                 .on_click(cx.listener(|this, _, _, cx| this.set_closed(false, cx)))
                 .into_any_element();
@@ -1516,11 +1525,11 @@ impl GraphView {
                         .py(px(2.))
                         .rounded_sm()
                         .cursor_pointer()
-                        .bg(theme.tokens.background_modifier_hover)
+                        .bg(theme.tokens.interactive_normal)
                         .border_1()
                         .border_color(theme.tokens.background_modifier_border)
                         .text_color(theme.tokens.text_normal)
-                        .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                        .hover(|s| s.bg(theme.tokens.interactive_hover))
                         .on_click(cx.listener(|this, _, window, cx| this.add_group(window, cx)))
                         .child("New group"),
                 )
@@ -1561,9 +1570,10 @@ impl GraphView {
             .overflow_y_scroll()
             .flex()
             .flex_col()
-            .bg(theme.tokens.background_secondary)
+            // `.graph-controls`: a menu's ground and border.
+            .bg(theme.tokens.menu_background)
             .border_1()
-            .border_color(theme.tokens.background_modifier_border)
+            .border_color(theme.tokens.menu_border_color)
             .rounded_md()
             .text_size(px(12.))
             .child(
@@ -1610,10 +1620,10 @@ impl GraphView {
             .justify_center()
             .rounded_sm()
             .cursor_pointer()
-            .text_color(theme.tokens.text_muted)
+            .text_color(theme.tokens.icon_color)
             .hover(|s| {
                 s.bg(theme.tokens.background_modifier_hover)
-                    .text_color(theme.tokens.text_normal)
+                    .text_color(theme.tokens.icon_color_hover)
             })
             .child(glyph)
     }
@@ -2187,15 +2197,22 @@ impl Render for GraphView {
                                     }
                                 }
                             }
-                            let mut edge_color = theme.tokens.text_faint;
-                            edge_color.a = if hovered.is_some() { 0.25 } else { 0.6 };
+                            // Obsidian's `.graph-view.color-line` is
+                            // `--graph-line`, opaque; `.color-arrow` is
+                            // `--text-normal` at half opacity. Both fade
+                            // while a node is hovered.
+                            let fade = if hovered.is_some() { 0.4 } else { 1.0 };
+                            let mut edge_color = theme.tokens.graph_line;
+                            edge_color.a *= fade;
+                            let mut head_color = theme.tokens.text_normal;
+                            head_color.a *= 0.5 * fade;
                             if any_plain {
                                 if let Ok(path) = plain.build() {
                                     window.paint_path(path, edge_color);
                                 }
                                 if arrows {
                                     if let Ok(path) = plain_heads.build() {
-                                        window.paint_path(path, edge_color);
+                                        window.paint_path(path, head_color);
                                     }
                                 }
                             }
@@ -2224,13 +2241,26 @@ impl Render for GraphView {
                                     continue;
                                 }
                                 let dim = hovered.is_some() && !highlight.contains(&i);
+                                // `.graph-view.color-fill-*` (probe of
+                                // 2026-11-04): an unresolved note is its
+                                // colour at half opacity; the open note is
+                                // `--graph-node-focused` and a hovered one
+                                // `.color-fill-highlight`, the interactive
+                                // accent.
                                 let mut color = match node.kind {
-                                    NodeKind::Note => node.color.unwrap_or(theme.tokens.text_muted),
-                                    NodeKind::Attachment => theme.tokens.text_faint,
-                                    NodeKind::Unresolved => theme.tokens.text_faint,
-                                    NodeKind::Tag => theme.tokens.tag_color,
+                                    NodeKind::Note => node.color.unwrap_or(theme.tokens.graph_node),
+                                    NodeKind::Attachment => theme.tokens.graph_node_attachment,
+                                    NodeKind::Unresolved => {
+                                        let mut c = theme.tokens.graph_node_unresolved;
+                                        c.a *= 0.5;
+                                        c
+                                    }
+                                    NodeKind::Tag => theme.tokens.graph_node_tag,
                                 };
-                                if Some(i) == current_ix || Some(i) == hovered {
+                                if Some(i) == current_ix {
+                                    color = theme.tokens.graph_node_focused;
+                                }
+                                if Some(i) == hovered {
                                     color = theme.tokens.interactive_accent;
                                 }
                                 if dim {
@@ -2256,7 +2286,7 @@ impl Render for GraphView {
                                     run.color = if dim {
                                         theme.tokens.text_faint
                                     } else {
-                                        theme.tokens.text_normal
+                                        theme.tokens.graph_text
                                     };
                                     let line = window.text_system().shape_line(
                                         node.label.clone(),

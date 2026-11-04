@@ -9,6 +9,9 @@
 const base = process.env.CDP_BASE || 'http://127.0.0.1:9222';
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// How long one protocol call may take. The theme probes' CSSOM walks run long
+// on a loaded machine; CDP_TIMEOUT_MS raises it for them.
+const TIMEOUT_MS = Number(process.env.CDP_TIMEOUT_MS) || 15000;
 
 async function pageTargets() {
   const ts = await (await fetch(`${base}/json`)).json();
@@ -47,7 +50,7 @@ async function openSocket(url) {
       const i = ++id;
       pending.set(i, { res, rej });
       ws.send(JSON.stringify({ id: i, method, params }));
-      setTimeout(() => { if (pending.has(i)) { pending.delete(i); rej(new Error(method + ' timeout')); } }, 15000);
+      setTimeout(() => { if (pending.has(i)) { pending.delete(i); rej(new Error(method + ' timeout')); } }, TIMEOUT_MS);
     });
   return { ws, send, on, once };
 }

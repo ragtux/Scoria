@@ -63,15 +63,16 @@ pub fn checkbox(checked: bool, theme: &Theme) -> gpui::Div {
         .w(px(theme.base_font_size))
         .h(px(theme.base_font_size))
         .border_1()
-        .border_color(theme.tokens.background_modifier_border)
+        .border_color(theme.tokens.checkbox_border_color)
         .rounded_sm()
         .when(checked, |d| {
-            d.bg(theme.tokens.interactive_accent)
-                .text_color(theme.tokens.background_primary)
+            d.bg(theme.tokens.checkbox_color)
+                .border_color(theme.tokens.checkbox_color)
+                .text_color(theme.tokens.checkbox_marker_color)
                 .child(crate::assets::icon(
                     "check",
                     theme.base_font_size - 4.,
-                    theme.tokens.background_primary,
+                    theme.tokens.checkbox_marker_color,
                 ))
         })
 }
@@ -254,10 +255,14 @@ pub const GROUP_HEIGHT: f32 = 30.;
 
 /// A `groupBy` header, shared by every layout that draws one.
 ///
-/// **Unprobed**: no grouped view's DOM was captured at all, so this is one
-/// shape for all of them — the key in muted 13 px with the group's size as a
-/// faint flair, the way the search view labels a file. A group with no key is
-/// Obsidian's "no value for this property" group, and the word it uses was
+/// The colours are probed (2026-11-04, `theme-plugins.mjs`): a grouped
+/// table sits on `--bases-table-group-background`, and its
+/// `.bases-group-heading` reads the value in the normal colour. **Unprobed**:
+/// the shape — Obsidian puts the property's name (in
+/// `--bases-group-heading-property-color`) above the value and no count;
+/// this keeps one shape for every layout, the key with the group's size as
+/// a faint flair, the way the search view labels a file. A group with no key
+/// is Obsidian's "no value for this property" group, and the word it uses was
 /// never read; "Empty" is what the property editor writes for a blank value.
 pub fn group_header(ix: usize, key: Option<&str>, rows: usize, theme: &Theme) -> AnyElement {
     div()
@@ -270,9 +275,9 @@ pub fn group_header(ix: usize, key: Option<&str>, rows: usize, theme: &Theme) ->
         .h(px(GROUP_HEIGHT))
         .px(px(CELL_PAD))
         .gap(px(8.))
-        .bg(theme.tokens.background_secondary)
+        .bg(theme.tokens.bases_table_group_background)
         .border_b_1()
-        .border_color(theme.tokens.background_modifier_border)
+        .border_color(theme.tokens.table_border_color)
         .child(
             div()
                 .min_w_0()

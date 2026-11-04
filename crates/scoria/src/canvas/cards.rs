@@ -290,7 +290,14 @@ impl Cards {
             || matches!(node.kind, NodeType::Group | NodeType::Link);
         let body = if zoomed_out && !keeps_content {
             match node.kind {
-                NodeType::Text => Cards::icon_placeholder("align-left", scale, theme),
+                NodeType::Text => {
+                    // `.canvas-icon-placeholder svg`: the card's own colour
+                    // (`--canvas-color`) at 0.3 opacity.
+                    let mut color = super::view::CanvasView::color_of(node.color.as_deref(), theme)
+                        .unwrap_or(theme.canvas.card_border);
+                    color.a *= 0.3;
+                    Cards::icon_placeholder("align-left", color, scale)
+                }
                 _ => Cards::title(&entry.title, size, scale, theme),
             }
         } else {
@@ -630,17 +637,13 @@ impl Cards {
     /// An icon over a name over a muted line, centered in the card.
     /// The zoomed-out stand-in of a text card: Obsidian's `align-left`
     /// icon, centred.
-    fn icon_placeholder(name: &'static str, scale: f32, theme: &Theme) -> AnyElement {
+    fn icon_placeholder(name: &'static str, color: gpui::Hsla, scale: f32) -> AnyElement {
         div()
             .size_full()
             .flex()
             .items_center()
             .justify_center()
-            .child(icon(
-                name,
-                PLACEHOLDER_ICON * scale,
-                theme.tokens.text_normal,
-            ))
+            .child(icon(name, PLACEHOLDER_ICON * scale, color))
             .into_any_element()
     }
 

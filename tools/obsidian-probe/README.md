@@ -82,6 +82,7 @@ Scripts, each one checklist block of `docs/scoria/Interaction probes.md`:
 | `code-highlight.mjs` | syntax highlighting: which engine each view uses (Prism in the reading view, CodeMirror in the editor) and what each emits per language; the cascade-winning declaration of every token span's colour in both themes; the collapsed class to `--code-*` table; which of 201 language names actually produce tokens; and, because Obsidian's `.token` rules are unreachable through `document.styleSheets`, what the renderer computes for a span of each candidate class placed inside a real block (`SHOTS` names the folder) | fixtures, run |
 | `appearance-tab.mjs` | Settings -> Appearance: every row's name, description, control and markup; the Themes dropdown against `app.customCss.themes` and what picking one writes; whether a theme folder counts when its manifest names something else or is missing (`THEME_IDENTITY=1` writes those fixtures); the CSS snippets sub-page with its reload and folder buttons, what each toggle writes and in which order, and which order the snippets really cascade in; the accent picker and its "Restore default"; the font sub-page; both sections with nothing installed; and Escape on a sub-page. Read through `app.setting.activeTab.containerEl` from the vault window and clicked through the popout's own page target (`SHOTS` names the folder) | fixtures, run |
 | `theme-registry.mjs` | the theme registry: every custom property declared under `:root`/`body`/`.theme-dark`/`.theme-light` with its raw declaration chain and computed value, and for every surface element the cascade-winning declaration of each painted property (`var()` intact, found by walking the CSSOM) in both themes, hover states under a real pointer, the Settings rows through the popout window's document; `theme-defaults.py` writes `crates/scoria/src/theme/defaults.rs` from the run | fixtures, run |
+| `theme-plugins.mjs` | the theme registry's second pass: the Bases, canvas, graph and PDF chrome. Each state (the view at rest, a hover, a selection, every Bases panel, the four layouts, the embeds, the graph's panel open and closed, the PDF's sidebar, find bar and menu) walks the whole view and reads one element per tag-and-class signature with the cascade-winning declaration of each painted property; `s01-rules` dumps every rule naming the four surfaces, for the states a walk cannot reach. Shares the CSSOM walk with `theme-registry.mjs` through `theme-lib.mjs` (`SHOTS` names the folder) | fixtures, run |
 | `autopair.mjs` | auto-pairing (predates the runner: start Obsidian yourself with `--remote-debugging-port=9222` on a scratch vault and run it directly) | — |
 
 `results/` keeps the raw JSON of the runs the specification cites, named by
@@ -90,6 +91,23 @@ date. A run is evidence; the interpretation of it lives in
 
 Most scripts take `ONLY_STEPS=s03,s04` to re-run a step or two, which is how a
 late step gets fixed without paying for the whole block again.
+
+## On Windows
+
+`run-block.ps1` is `run-block.sh` for Windows (2026-11-04): the same phases,
+always under `USER_DATA_DIR` (default a folder in `%TEMP%`), Obsidian started
+from `%LOCALAPPDATA%\Programs\Obsidian` with `--remote-debugging-port=$CDP_PORT`
+and killed on the way out by the PID it was started with. The data directory's
+`obsidian.json` carries `"updateDisabled": true`; without it the first launch
+fetched the newest release into the directory, deleted the `obsidian-*.asar`
+copied in from `%APPDATA%\obsidian`, and the rest of the run was on a version the
+person does not have. `CDP_TIMEOUT_MS` raises `cdp.mjs`'s 15 s limit on one
+protocol call, which the theme probes' CSSOM walks overrun on a loaded machine.
+
+```
+$env:USER_DATA_DIR = "$env:TEMP\scoria-probe-udd"; $env:CDP_PORT = 9231; $env:CDP_TIMEOUT_MS = 60000
+pwsh tools/obsidian-probe/run-block.ps1 tools/obsidian-probe/theme-plugins.mjs results.json
+```
 
 ## cdp.mjs
 

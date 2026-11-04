@@ -117,5 +117,5 @@ lines = [
     "];",
     "",
 ]
-OUT.write_text("\n".join(lines))
+OUT.write_text("\n".join(lines), newline="\n")  # LF on Windows too
 print(f"{OUT.relative_to(ROOT)}: {len(names)} tokens, {len(seen)} properties, {len(rows)} declarations")

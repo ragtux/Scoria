@@ -365,8 +365,11 @@ impl BasesView {
             .relative()
             .w_full()
             .h(px(HEADER_HEIGHT))
+            // `.bases-thead`: its own ground over a `--bases-table-border-color`
+            // rule (probe of 2026-11-04, `theme-plugins.mjs`).
+            .bg(theme.tokens.bases_table_header_background)
             .border_b_1()
-            .border_color(theme.tokens.background_modifier_border)
+            .border_color(theme.tokens.bases_table_border_color)
             .child(self.measure(HEADER_ROW_KEY))
             .children(table.columns.iter().enumerate().map(|(ix, col)| {
                 let width = self
@@ -406,11 +409,10 @@ impl BasesView {
                     .px(px(CELL_PAD))
                     .overflow_hidden()
                     .text_size(px(FONT_UI_SMALL))
-                    .text_color(theme.tokens.text_muted)
-                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                    .text_color(theme.tokens.bases_table_header_color)
+                    .hover(|s| s.bg(theme.tokens.bases_table_header_background_hover))
                     .when(ix > 0, |d| {
-                        d.border_l_1()
-                            .border_color(theme.tokens.background_modifier_border)
+                        d.border_l_1().border_color(theme.tokens.table_border_color)
                     })
                     .on_mouse_down(
                         MouseButton::Right,
@@ -428,7 +430,8 @@ impl BasesView {
                 } else {
                     cell.flex_shrink_0().w(px(width))
                 };
-                cell.child(crate::assets::icon(icon_name, 16., theme.tokens.text_muted))
+                let label_color = theme.tokens.bases_table_header_color;
+                cell.child(crate::assets::icon(icon_name, 16., label_color))
                     .child(
                         div()
                             .flex_1()
@@ -458,9 +461,10 @@ impl BasesView {
                             .w(px(GRIP_WIDTH))
                             .h_full()
                             .cursor_col_resize()
-                            // Observed: the 6 px resizer turns the accent
-                            // colour under the pointer.
-                            .hover(|s| s.bg(theme.tokens.interactive_accent))
+                            // `.bases-table-header-resizer:hover`: the
+                            // divider's hover colour (`--color-accent` only
+                            // while dragging, `is-active`).
+                            .hover(|s| s.bg(theme.tokens.divider_color_hover))
                             .on_drag(ColumnDrag { column: ix }, |drag, _, _, cx| {
                                 cx.stop_propagation();
                                 cx.new(|_| drag.clone())
@@ -537,8 +541,9 @@ impl BasesView {
             .w_full()
             .h(px(self.table_state.row_height))
             .border_b_1()
-            .border_color(theme.tokens.background_modifier_border)
-            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+            .border_color(theme.tokens.table_border_color)
+            // Transparent by default: a row has no hover wash of its own.
+            .hover(|s| s.bg(theme.tokens.bases_table_row_background_hover))
             .children(row.cells.iter().enumerate().map(|(c, cell)| {
                 let width = self
                     .table_state
@@ -564,7 +569,7 @@ impl BasesView {
                     .px(px(CELL_PAD))
                     .overflow_hidden()
                     .text_size(px(FONT_UI_SMALL))
-                    .when(c > 0, |d| d.border_l_1().border_color(theme.tokens.background_modifier_border));
+                    .when(c > 0, |d| d.border_l_1().border_color(theme.tokens.table_border_color));
                 box_ = if c == last && self.table_state.stretch_last {
                     box_.flex_1().min_w(px(width))
                 } else {
@@ -575,11 +580,15 @@ impl BasesView {
                 // anywhere else commits it.
                 if open == Some(c) {
                     if let Some(field) = field.clone() {
+                        // `.bases-td:focus-within`: the cell's active ground
+                        // inside the `--bases-table-cell-shadow-focus` ring.
                         return box_
                             .px(px(0.))
                             .border_2()
-                            .border_color(theme.tokens.interactive_accent)
-                            .bg(theme.tokens.background_primary)
+                            .border_color(crate::theme::ring(
+                                &theme.tokens.bases_table_cell_shadow_focus,
+                            ))
+                            .bg(theme.tokens.bases_table_cell_background_active)
                             .on_mouse_down_out(
                                 cx.listener(|this, _, _, cx| this.commit_cell_edit(cx)),
                             )
@@ -625,6 +634,8 @@ impl BasesView {
                     // A list draws its items as pills (`multi-select-pill`),
                     // which is what the editor keeps for a list property.
                     (Some(PropertyKind::List) | Some(PropertyKind::Tags), _) => {
+                        // `.multi-select-pill`: the pill tokens, a bordered
+                        // box as in the properties block.
                         box_.gap(px(4.)).children(list_items(cell).into_iter().map(|item| {
                             div()
                                 .flex_shrink_0()
@@ -633,9 +644,11 @@ impl BasesView {
                                 .flex()
                                 .items_center()
                                 .rounded(px(4.))
-                                .bg(theme.tokens.background_modifier_hover)
+                                .bg(theme.tokens.pill_background)
+                                .border_1()
+                                .border_color(theme.tokens.pill_border_color)
                                 .text_size(px(FONT_UI_SMALL))
-                                .text_color(theme.tokens.text_normal)
+                                .text_color(theme.tokens.pill_color)
                                 .child(SharedString::from(item))
                         }))
                     }
@@ -676,7 +689,7 @@ impl BasesView {
                                             cx.stop_propagation();
                                             cx.emit(super::view::BasesEvent::OpenDaily { date });
                                         }))
-                                        .child(crate::assets::icon("link", 16., theme.tokens.text_muted)),
+                                        .child(crate::assets::icon("link", 16., theme.tokens.icon_color)),
                                 )
                             })
                     }

@@ -900,8 +900,9 @@ viewport change alone writes nothing to the canvas file.
 
 **Scoria's divergences.** The resize handles and connection points are
 drawn (small dots in the card's colour) rather than invisible; a
-selected edge gets a translucent halo; an uncoloured selected card uses
-the accent for its ring (not observed); a link card shows its address
+selected edge gets a translucent halo (an uncoloured selected card's ring
+in `--color-accent` was observed on 2026-11-04, see
+[[#The Bases, canvas, graph and PDF chrome, 2026-11-04]]); a link card shows its address
 rather than a web view and its label is the address rather than the
 page title; *Align*, *Set background*, *Edit label*, *Add web page*,
 *Read-only*, the snapping toggles, the settings and help buttons and
@@ -7508,6 +7509,190 @@ Two findings from the table that the app had wrong: the light theme's accent (`-
 is `--color-accent-1`, `hsl(257, 88.9%, 71%)`, where Scoria painted the dark theme's `hsl(258, 88%,
 66%)` in both; and `==highlight==` is `--color-yellow` at 30 percent (`#e0de71` dark, `#e0ac00`
 light), not a flat gold. Both now come from the registry.
+
+### The Bases, canvas, graph and PDF chrome, 2026-11-04
+
+The run above left four surfaces out, and Scoria's call sites for them read whichever token the old
+short field had been. `tools/obsidian-probe/theme-plugins.mjs` (raw run in
+`tools/obsidian-probe/results/2026-11-04-theme-plugins.json`, a screenshot per state in
+`results/2026-11-04-theme-plugins-shots/`) answers the same question for them, on Windows 11 against
+Obsidian 1.14.5 (installer build 1.13.7) in a 1024 by 800 window, both base themes. It shares the
+CSSOM walk with `theme-registry.mjs` (`theme-lib.mjs`) but does not name its elements: each state walks
+the whole view and reads one element per tag-and-class signature, so a part nobody thought to list
+is still recorded. The states are the view at rest, a hover under a real pointer, a selected cell,
+card and edge, every Bases toolbar panel open, the four layouts, an embedded base and PDF, the graph's
+panel open and closed, the PDF's sidebar, find bar and Display options menu. The run also dumps every
+rule of the app's sheets that names one of the four surfaces (`s01-rules`), which is where the
+states a walk cannot reach (a focused canvas node, a dragged kanban card, a resizer under the pointer)
+are recorded.
+
+The run was made under its own `--user-data-dir` with `updateDisabled` in its `obsidian.json`. The
+first pass had not set it: Obsidian fetched 1.15.0 into the data directory on the first launch,
+deleted the 1.14.5 bundle that had been copied in, and every later launch ran 1.15.0. Nothing above is
+from that pass. (1.15.0's rules for these surfaces differ from 1.14.5's only in the filter panel's
+selectors and the spacing inside `color-mix()`.)
+
+The light theme reads the same names, with one exception: `.theme-dark .canvas-card-menu` puts the
+card menu, and the fill of its icons, on `--background-secondary`; the light theme's is
+`--background-primary`. In the table, a `hover/` row was read under the pointer and a row in italics
+comes from the rule dump rather than a walk.
+
+| Surface | Element | Reads |
+| --- | --- | --- |
+| Bases | `bases-header` | border `--bases-table-border-color` (`--bases-header-border-width`, bottom only) |
+| Bases | `bases-toolbar-item .text-icon-button` | colour `--text-muted`; the views button `--text-normal`, its `mod-aux` chevrons `--text-muted` |
+| Bases | `text-icon-button.is-active` | colour `--icon-color-active` |
+| Bases | `text-icon-button.has-active-menu` | colour `--text-normal`; background `--background-modifier-hover`; opacity `--icon-opacity-hover` |
+| Bases | `toolbar-badge` | background `--flair-background` (transparent in the bar); opacity `0.61` |
+| Bases | `bases-search-row` | border `--bases-table-border-color`; the field's `--background-modifier-form-field` and border width set to transparent and 0 |
+| Bases | `document-search-count` | colour `--text-muted` |
+| Bases | `bases-thead` | background `--bases-table-header-background`; inset bottom rule `--bases-table-border-color` |
+| Bases | `bases-table-header-label` | colour `--bases-table-header-color`; the type icon inherits it |
+| Bases | `bases-table-header-sort` | colour `--text-muted` |
+| Bases | _`bases-thead .bases-td:hover`_ | background `--bases-table-header-background-hover` |
+| Bases | _`bases-table-header-resizer:hover`_ | background `--divider-color-hover`; `--color-accent` while dragging (`is-active`) |
+| Bases | `bases-tbody` | background `--background-primary`; bottom rule `--table-border-color` |
+| Bases | `bases-tr` | top rule `--table-border-color` (`--bases-table-row-border-width`) |
+| Bases | `hover/bases-tr` | background `--bases-table-row-background-hover`, which is transparent |
+| Bases | `bases-td` | left rule `--table-border-color` (`--bases-table-column-border-width`) |
+| Bases | _`bases-td:focus-within`_ | background `--bases-table-cell-background-active`; shadow `--bases-table-cell-shadow-focus` |
+| Bases | `bases-table-container` | background `--bases-table-group-background` |
+| Bases | `bases-group-property` | colour `--bases-group-heading-property-color` |
+| Bases | `bases-table-group-summary-row` | background `--bases-table-group-background` |
+| Bases | `bases-table-footer` | background `--bases-table-summary-background`; its cells drop the column rule |
+| Bases | `summary-function-name`, `summary-content`, `summary-function-value` | colour `--text-muted` |
+| Bases | `summary-expand-button` | colour `--text-faint` |
+| Bases | _`bases-table-summary-cell:hover`_ | background `--bases-table-summary-background-hover`; the `placeholder`, otherwise at opacity 0, shows in `--text-faint` |
+| Bases | `multi-select-pill` | colour `--pill-color`; background `--pill-background`; border `--pill-border-color` |
+| Bases | `metadata-input-checkbox` | border `--checkbox-border-color` |
+| Bases | `bases-td .clickable-icon` | colour `--icon-color`, opacity 0 until the cell is hovered |
+| Bases | `bases-toolbar-menu.menu` (every panel) | background `--menu-background`; border `--menu-border-color`; shadow `--menu-shadow` |
+| Bases | `bases-toolbar-menu-item.is-selected` | background `--background-modifier-hover` |
+| Bases | `bases-toolbar-menu-item.mod-hidden` | colour `--text-faint` |
+| Bases | `bases-toolbar-menu-item-icon.clickable-icon`, `-info-icon` | colour `--icon-color` |
+| Bases | `bases-toolbar-menu-container .search-input-container` | bottom rule `--background-modifier-border`; `--search-icon-color` set to `--text-faint` |
+| Bases | `bases-toolbar-section` | bottom rule `--background-modifier-border` |
+| Bases | `bases-toolbar-section-header` | colour `--text-normal`; triangle `--nav-collapse-icon-color`; flair `--text-muted` on `--background-modifier-hover` |
+| Bases | `bases-menu-group.mod-actions` | top rule `--background-modifier-border` |
+| Bases | `combobox-button` | colour `--text-normal`; background `--background-modifier-form-field`; border `--background-modifier-border`; icons `--text-muted` |
+| Bases | `filter-expression` | background `--bases-filter-input-background`; ring `--background-modifier-border-hover` (the filter menu's `--metadata-property-box-shadow`) |
+| Bases | `filter-property-select`, `filter-operator` | background `--bases-filter-input-background`; border `--background-modifier-border` |
+| Bases | `formula-editor` | background `--background-modifier-form-field`; border `--background-modifier-border` |
+| Bases | `grip-handle` | colour `--text-faint` |
+| Bases | `bases-new-item-popover` | background `--background-primary`; border `--background-modifier-border-focus` |
+| Bases | `bases-cards-item` | background `--bases-cards-background`; shadow `--bases-cards-shadow` |
+| Bases | _`bases-cards-item:hover`_ | shadow `--bases-cards-shadow-hover` (the ground does not change) |
+| Bases | `bases-cards-cover` | background `--bases-cards-cover-background` |
+| Bases | `bases-cards-property.mod-title` | `--link-color` set to `--text-normal`: the title is never link-coloured |
+| Bases | `bases-cards-line` | colour inherited `--text-normal`; the `bases-cards-label` (`--text-muted`) is not displayed |
+| Bases | `bases-list-item` | colour inherited `--text-normal`; no hover rule |
+| Bases | `hover/bases-list-item internal-link` | colour `--link-color-hover` |
+| Bases | `bases-list-separator` | colour `--text-muted` |
+| Bases | _`bases-list-item .list-number`_ | colour `--list-marker-color` |
+| Bases | `bases-kanban-column` | background `--bases-kanban-column-background`; border `1px solid var(--background-modifier-border)` |
+| Bases | `bases-kanban-column-count` | colour `--text-muted` |
+| Bases | `bases-kanban-column-create.clickable-icon` | colour `--icon-color`; opacity 0, 1 while the header is hovered |
+| Bases | `bases-kanban-card` | background `--bases-kanban-card-background`; shadow `--bases-kanban-card-shadow` |
+| Bases | _`bases-kanban-card:hover`_ | shadow `--bases-kanban-card-shadow-hover` (the ground does not change) |
+| Bases | _`bases-kanban-card-drop-placeholder`_ | background `--background-modifier-hover`, no border |
+| Bases | `bases-kanban-card-cover` | background `--bases-kanban-cover-background` |
+| Bases | `bases-kanban-card-property.mod-title` | `--link-color` set to `--text-normal` |
+| Bases | `bases-embed .bases-view` | border `--bases-embed-border-color` |
+| Canvas | `canvas-wrapper` | background `--canvas-background` |
+| Canvas | `canvas-background circle` | fill `--canvas-dot-pattern` |
+| Canvas | `canvas-node-container` | background `--background-primary`; border `--canvas-color`; shadow `--shadow-stationary` |
+| Canvas | _`canvas-node.is-selected .canvas-node-container`_ | border `--color-accent`, ringed 2 px in it; a coloured card its own `--canvas-color` |
+| Canvas | `canvas-node-content` (coloured, group) | background `--canvas-color` at 7 percent |
+| Canvas | `canvas-group-label` | colour `--text-muted`; background `--canvas-color` at 10 percent; a coloured group's solid, in `--text-on-accent` or `--text-on-accent-inverted` |
+| Canvas | `canvas-node-label` | colour `--canvas-card-label-color` |
+| Canvas | _`canvas-icon-placeholder svg`_ | colour `--canvas-color`; opacity `0.3` |
+| Canvas | `canvas-display-path`, `canvas-path-end` | stroke and fill `--canvas-color` |
+| Canvas | `canvas-path-label` | background `--background-primary` |
+| Canvas | _`canvas-selection`_ | background `--color-accent` at 10 percent; border `2px solid var(--color-accent)` |
+| Canvas | `canvas-menu` | background `--background-primary`; border `--background-modifier-border` |
+| Canvas | `hover/canvas-menu .clickable-icon` | colour `--icon-color-hover`; background `--background-modifier-hover` |
+| Canvas | _`canvas-submenu`_ | background `--background-primary`; border `--background-modifier-border` |
+| Canvas | _`canvas-color-picker-item`_ | background `--canvas-color`; border `2px solid var(--background-primary)`; ringed in `--canvas-color` when active or hovered |
+| Canvas | `canvas-card-menu` | background `--background-secondary` (dark) or `--background-primary` (light); shadow `--input-shadow` |
+| Canvas | `canvas-card-menu-button` | colour `--text-muted`; under the pointer `--color-accent`, with no wash |
+| Canvas | `canvas-control-group` | background `--interactive-normal`; border `--background-modifier-border`; shadow `--input-shadow` |
+| Canvas | `canvas-control-item` | colour `--text-muted`; background `--background-primary` |
+| Canvas | `hover/canvas-control-item` | colour `--text-normal`; background `--interactive-hover` |
+| Canvas | `tooltip` | colour `--tooltip-color`; background `--tooltip-background`; shadow `--tooltip-shadow` |
+| Graph | _`graph-view.color-fill`_ | colour `--graph-node` |
+| Graph | _`graph-view.color-fill-tag`_, _`-attachment`_ | colour `--graph-node-tag`, `--graph-node-attachment` |
+| Graph | _`graph-view.color-fill-unresolved`_ | colour `--graph-node-unresolved`; opacity `0.5` |
+| Graph | _`graph-view.color-fill-focused`_, _`color-circle`_ | colour `--graph-node-focused` |
+| Graph | _`graph-view.color-fill-highlight`_, _`color-line-highlight`_ | colour `--interactive-accent` |
+| Graph | _`graph-view.color-line`_ | colour `--graph-line` |
+| Graph | _`graph-view.color-arrow`_ | colour `--text-normal`; opacity `0.5` |
+| Graph | _`graph-view.color-text`_ | colour `--graph-text` |
+| Graph | `graph-controls` | background `--menu-background`; border `--menu-border-color`; shadow `--shadow-s` |
+| Graph | `graph-controls.is-close` | background `--background-primary`; border transparent (`--background-secondary` in a sidebar) |
+| Graph | `graph-controls-button` | colour `--icon-color`; under the pointer `--icon-color-hover` on `--background-modifier-hover` |
+| Graph | `graph-control-section` | bottom rule `--background-modifier-border`; its `tree-item-self` `--nav-item-color`, triangle `--nav-collapse-icon-color` |
+| Graph | `setting-item-name` | colour `--setting-item-name-color` |
+| Graph | `checkbox-container` | background `--background-modifier-border-hover`, `--interactive-accent` when enabled; thumb `--toggle-thumb-color` |
+| Graph | `slider` | track `--slider-track-background`; fill `--slider-fill-background`; thumb `--slider-thumb-background` |
+| Graph | `button` | background `--interactive-normal`, `--interactive-hover` under the pointer |
+| PDF | `pdf-toolbar`, `pdf-findbar` | background `--background-primary`; bottom rule `1px solid var(--background-modifier-border)` |
+| PDF | `pdf-toolbar-divider` | background `--background-modifier-border` |
+| PDF | `pdf-toolbar .clickable-icon` | colour `--icon-color`; under the pointer `--icon-color-hover` on `--background-modifier-hover` |
+| PDF | `pdf-toolbar .clickable-icon.is-active` | colour `--icon-color-active`; background `--background-modifier-active-hover` |
+| PDF | `pdf-page-input` | colour `--text-normal`; background `--background-modifier-form-field`; border `--background-modifier-border` |
+| PDF | `pdf-page-numbers` | colour inherited `--text-normal` |
+| PDF | `pdf-find-results-count` | colour `--text-muted` |
+| PDF | _`pdf-findbar .mod-not-found`_ | `--background-modifier-border-focus` set to `--background-modifier-error` at 0.6 |
+| PDF | `pdf-container` | background `--pdf-background` |
+| PDF | `canvasWrapper` | shadow `--pdf-shadow` (the page itself is transparent) |
+| PDF | `pdf-sidebar-container` | background `--pdf-sidebar-background`; end border `--divider-color` (`--divider-width`) |
+| PDF | _`thumbnail::before`_ | shadow `--pdf-thumbnail-shadow` |
+| PDF | _`thumbnail.selected`, `thumbnail:hover`_ | border `--background-modifier-hover` (8 px) |
+| PDF | _`pdf-sidebar-resizer:hover`_ | background `--divider-color-hover` |
+| PDF | `pdf-outline-view tree-item-self` | colour `--nav-item-color`; `mod-active` `--nav-item-color-active` on `--nav-item-background-active`; triangle `--nav-collapse-icon-color`; flair `--text-faint` |
+| PDF | _`textLayer .highlight`_ | background and 2 px ring `--color-yellow`; the current match `--color-accent` |
+| PDF | Display options | a `.menu`, as the shell's |
+| PDF | `pdf-embed` | border `--background-modifier-border` (`--border-width`) |
+
+What the table found Scoria painting under the wrong name, and where the colour itself was wrong:
+
+- **The graph.** A tag node was the link accent and an attachment and an unresolved node the faint
+  grey; they are `--graph-node-tag` (green), `--graph-node-attachment` (yellow) and
+  `--graph-node-unresolved` at half opacity. A link was the faint grey at 0.6 and is `--graph-line`
+  (`#3f3f3f` / `#dadada`), opaque; the arrows are `--text-normal` at half opacity rather than the
+  link's colour. The open note is `--graph-node-focused` (`--text-accent`), not the interactive
+  accent, which only the hovered node and its links take. The panel is a menu
+  (`--menu-background`, `--menu-border-color`), its toggles the Settings toggle, its sliders the
+  Settings slider with a white thumb.
+- **Bases.** Every toolbar panel, the column and kanban menus and the view menu are `.menu`s: Scoria
+  had the right fill under `--background-secondary` and the right frame under `--tab-divider-color`.
+  A card was on the secondary background and is on the primary (`--bases-cards-background`), with a
+  ring that changes under the pointer instead of a wash; a kanban card likewise keeps its ground, and
+  a kanban column is `--background-primary-alt`, framed. A table row has no hover wash
+  (`--bases-table-row-background-hover` is transparent), a card's and a kanban card's title is never
+  link-coloured, their values and a list's are the normal colour and not muted, a summary's name and
+  value are both muted, the column resizer under the pointer is `--divider-color-hover`, and an
+  active toolbar button is `--icon-color-active` (a shade lighter than the interactive accent on the
+  dark theme) while the one whose panel is open is the normal colour on the hover wash. The text
+  boxes and comboboxes were the hover wash and are form fields; the filter rows'
+  `--bases-filter-input-background`.
+- **The canvas.** The selection, the marquee and the card menu's hover are `--color-accent`, which
+  on the light theme is a shade darker than the `--interactive-accent` Scoria used; the marquee's
+  frame is 2 px. A card's fill is `--background-primary`, not `--canvas-background`, and the
+  floating menu is the primary background, not the secondary. The light theme's card menu is the
+  primary background. A canvas tooltip is the shell's dark tooltip, not a bordered panel. The
+  zoomed-out text card's icon is the card's colour at 0.3, not the normal text colour.
+- **The PDF view.** The toolbar and find bar have a bottom rule Scoria lacked; the sidebar has an
+  end border; the toolbar's buttons are `--icon-color` at `--icon-opacity` and, while active,
+  `--icon-color-active` on `--background-modifier-active-hover`; a miss in the find bar rings in
+  `--background-modifier-error` (which on the light theme is not the dark theme's red Scoria had
+  written in); the light theme's thumbnails have a drop under their ring. The embed's page box was the
+  secondary background and is a form field, and its viewer ground is `--pdf-background`.
+
+The registry carries 35 more names for these (`--bases-*`, `--canvas-color-1` to `-6`, `--pdf-*`,
+`--flair-*`, `--slider-thumb-background`), with defaults written by `theme-defaults.py` from the
+2026-11-02 record, which already held their declarations; `theme::tests` holds them to that
+record's computed values like every other token.
 
 ## Observed Appearance tab, Obsidian 1.14.5 (installer build 1.13.7)
 

@@ -126,7 +126,7 @@ impl BasesView {
                     "bases-sort-trash",
                     ix,
                     "trash-2",
-                    theme.tokens.text_muted,
+                    theme.tokens.icon_color,
                     theme,
                     cx.listener(move |this, _, _, cx| {
                         cx.stop_propagation();
@@ -173,7 +173,7 @@ impl BasesView {
                         "bases-sort-trash",
                         ix,
                         "trash-2",
-                        theme.tokens.text_muted,
+                        theme.tokens.icon_color,
                         theme,
                         cx.listener(|this, _, window, cx| {
                             cx.stop_propagation();
@@ -297,7 +297,7 @@ impl BasesView {
                 0,
                 "trash-2",
                 if grouped {
-                    theme.tokens.text_muted
+                    theme.tokens.icon_color
                 } else {
                     theme.tokens.text_faint
                 },

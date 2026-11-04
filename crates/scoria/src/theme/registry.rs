@@ -415,6 +415,7 @@ tokens! {
     Length input_border_width = "--input-border-width";
     Color slider_track_background = "--slider-track-background";
     Color slider_fill_background = "--slider-fill-background";
+    Color slider_thumb_background = "--slider-thumb-background";
     Color slider_thumb_border_color = "--slider-thumb-border-color";
     Color checkbox_color = "--checkbox-color";
     Color checkbox_border_color = "--checkbox-border-color";
@@ -512,11 +513,56 @@ tokens! {
     Color pill_border_color = "--pill-border-color";
     Color pill_border_color_hover = "--pill-border-color-hover";
     Length pill_border_width = "--pill-border-width";
+    /// The count badge of a toolbar or a panel section (`.flair`).
+    Color flair_background = "--flair-background";
+    Color flair_color = "--flair-color";
+    // ---- Plugins: Bases (probed 2026-11-04, `theme-plugins.mjs`) ------------
+    /// The toolbar's bottom rule and the header row's.
+    Color bases_table_border_color = "--bases-table-border-color";
+    Color bases_table_header_background = "--bases-table-header-background";
+    Color bases_table_header_background_hover = "--bases-table-header-background-hover";
+    /// A column header's label and type icon.
+    Color bases_table_header_color = "--bases-table-header-color";
+    /// Transparent by default: a table row has no hover wash.
+    Color bases_table_row_background_hover = "--bases-table-row-background-hover";
+    /// The table's ground behind a group and its summary row.
+    Color bases_table_group_background = "--bases-table-group-background";
+    Color bases_table_summary_background = "--bases-table-summary-background";
+    Color bases_table_summary_background_hover = "--bases-table-summary-background-hover";
+    /// A cell being edited: its ground and its 2 px ring.
+    Color bases_table_cell_background_active = "--bases-table-cell-background-active";
+    Shadow bases_table_cell_shadow_focus = "--bases-table-cell-shadow-focus";
+    Color bases_group_heading_property_color = "--bases-group-heading-property-color";
+    Color bases_cards_background = "--bases-cards-background";
+    Color bases_cards_cover_background = "--bases-cards-cover-background";
+    /// A card's border is this shadow's ring; hovering swaps the ring, not the ground.
+    Shadow bases_cards_shadow = "--bases-cards-shadow";
+    Shadow bases_cards_shadow_hover = "--bases-cards-shadow-hover";
+    Color bases_kanban_column_background = "--bases-kanban-column-background";
+    Color bases_kanban_card_background = "--bases-kanban-card-background";
+    Color bases_kanban_cover_background = "--bases-kanban-cover-background";
+    Shadow bases_kanban_card_shadow = "--bases-kanban-card-shadow";
+    Shadow bases_kanban_card_shadow_hover = "--bases-kanban-card-shadow-hover";
+    Color bases_embed_border_color = "--bases-embed-border-color";
+    /// The filter rows' property and operator boxes.
+    Color bases_filter_input_background = "--bases-filter-input-background";
     // ---- Plugins: canvas and graph ----------------------------------------
     Color canvas_background = "--canvas-background";
     Color canvas_color = "--canvas-color";
     Color canvas_dot_pattern = "--canvas-dot-pattern";
     Color canvas_card_label_color = "--canvas-card-label-color";
+    /// The six presets a card, a group or an edge can be coloured with.
+    Color canvas_color_1 = "--canvas-color-1";
+    Color canvas_color_2 = "--canvas-color-2";
+    Color canvas_color_3 = "--canvas-color-3";
+    Color canvas_color_4 = "--canvas-color-4";
+    Color canvas_color_5 = "--canvas-color-5";
+    Color canvas_color_6 = "--canvas-color-6";
+    /// The graph paints from these through `.graph-view.color-*` elements:
+    /// a link is `--graph-line`, a note `--graph-node`, a tag and an
+    /// attachment their own hues, an unresolved note `--graph-node-unresolved`
+    /// at half opacity, the arrows `--text-normal` at half opacity, and a
+    /// hovered node and its links `--interactive-accent`.
     Color graph_line = "--graph-line";
     Color graph_node = "--graph-node";
     Color graph_node_unresolved = "--graph-node-unresolved";
@@ -524,4 +570,10 @@ tokens! {
     Color graph_node_tag = "--graph-node-tag";
     Color graph_node_attachment = "--graph-node-attachment";
     Color graph_text = "--graph-text";
+    // ---- Plugins: PDF -------------------------------------------------------
+    Color pdf_background = "--pdf-background";
+    Color pdf_sidebar_background = "--pdf-sidebar-background";
+    /// A page's frame: a 1 px ring on the dark theme, a soft drop on the light.
+    Shadow pdf_shadow = "--pdf-shadow";
+    Shadow pdf_thumbnail_shadow = "--pdf-thumbnail-shadow";
 }

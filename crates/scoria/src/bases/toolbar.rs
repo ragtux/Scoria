@@ -524,8 +524,9 @@ impl BasesView {
             .w_full()
             .h(px(HEADER_HEIGHT))
             .px(px(2.))
+            // `.bases-header`: ruled in `--bases-table-border-color`.
             .border_b_1()
-            .border_color(theme.tokens.background_modifier_border)
+            .border_color(theme.tokens.bases_table_border_color)
             .child(bar);
         let search_row = self.render_search_row(theme, cx);
         let panel = self.render_panel(&base, &view, theme, window, cx);
@@ -542,10 +543,16 @@ impl BasesView {
         )
     }
 
-    /// One `text-icon-button` of the bar.
+    /// One `text-icon-button` of the bar: muted, the views button in the
+    /// normal colour, an `is-active` one (a sort, a group, a filter, the
+    /// search showing) `--icon-color-active`, and the one whose menu is
+    /// open (`has-active-menu`) the normal colour on the hover wash. The
+    /// views button's chevrons stay muted (probe of 2026-11-04).
     fn render_bar_item(&self, item: BarItem, theme: &Theme, cx: &mut Context<Self>) -> AnyElement {
-        let color = if item.active || item.open {
-            theme.tokens.interactive_accent
+        let color = if item.open || item.id == "views" {
+            theme.tokens.text_normal
+        } else if item.active {
+            theme.tokens.icon_color_active
         } else {
             theme.tokens.text_muted
         };
@@ -579,7 +586,7 @@ impl BasesView {
             }))
             .child(icon(item.icon, ICON_SIZE, color))
             .child(div().whitespace_nowrap().child(item.label))
-            .children(item.aux.map(|n| icon(n, 14., color)))
+            .children(item.aux.map(|n| icon(n, 14., theme.tokens.text_muted)))
             .into_any_element()
     }
 
@@ -996,8 +1003,9 @@ impl BasesView {
                 .gap(px(8.))
                 .px(px(8.))
                 .py(px(4.))
+                // `.bases-search-row`: ruled like the header.
                 .border_b_1()
-                .border_color(theme.tokens.background_modifier_border)
+                .border_color(theme.tokens.bases_table_border_color)
                 .child(div().flex_1().child(self.text_box(
                     Field::TableSearch,
                     &text,
@@ -1267,9 +1275,10 @@ impl BasesView {
             .w(px(width))
             .max_h(tallest)
             .overflow_y_scroll()
-            .bg(theme.tokens.background_secondary)
+            // Every panel is a `.menu.bases-toolbar-menu`.
+            .bg(theme.tokens.menu_background)
             .border_1()
-            .border_color(theme.tokens.tab_divider_color)
+            .border_color(theme.tokens.menu_border_color)
             .rounded(px(8.))
             .shadow_lg()
             .text_size(px(FONT_UI_SMALL))
@@ -1314,10 +1323,12 @@ impl BasesView {
             .border_b_1()
             .border_color(theme.tokens.background_modifier_border)
             .child(self.text_box(which, &text, placeholder, theme, cx))
+            // `.bases-toolbar-menu-container .search-input-container` sets
+            // `--search-icon-color` to the faint colour.
             .child(div().absolute().left(px(8.)).top(px(6.)).child(icon(
                 "search",
                 ICON_SIZE,
-                theme.tokens.text_muted,
+                theme.tokens.text_faint,
             )))
             .into_any_element()
     }
@@ -1363,9 +1374,14 @@ impl BasesView {
             .flex()
             .items_center()
             .rounded_md()
-            .bg(theme.tokens.background_modifier_hover)
-            .border_1()
-            .border_color(theme.tokens.background_modifier_border)
+            // A form field; the table's own search row
+            // (`.bases-search-row`) makes the field transparent and
+            // borderless.
+            .when(which != Field::TableSearch, |d| {
+                d.bg(theme.tokens.background_modifier_form_field)
+                    .border_1()
+                    .border_color(theme.tokens.background_modifier_border)
+            })
             .cursor_text()
             .text_size(px(FONT_UI_SMALL))
             .text_color(if text.is_empty() {
@@ -1592,7 +1608,7 @@ impl BasesView {
                         "chevron-down"
                     },
                     14.,
-                    theme.tokens.text_muted,
+                    theme.tokens.nav_collapse_icon_color,
                 ));
         }
         row = row.child(SharedString::from(title));
@@ -1774,13 +1790,16 @@ impl BasesView {
             .rounded(px(4.))
             .border_1()
             .border_color(if checked {
-                theme.tokens.interactive_accent
+                theme.tokens.checkbox_color
             } else {
-                theme.tokens.background_modifier_border_focus
+                theme.tokens.checkbox_border_color
             })
             .when(checked, |d| {
-                d.bg(theme.tokens.interactive_accent)
-                    .child(icon("check", 12., gpui::white()))
+                d.bg(theme.tokens.checkbox_color).child(icon(
+                    "check",
+                    12.,
+                    theme.tokens.checkbox_marker_color,
+                ))
             })
     }
 
@@ -1867,7 +1886,7 @@ impl BasesView {
                             .top(px(6.))
                             .h(px(4.))
                             .rounded(px(2.))
-                            .bg(theme.tokens.background_modifier_border_focus),
+                            .bg(theme.tokens.slider_track_background),
                     )
                     .child(
                         div()
@@ -1877,7 +1896,7 @@ impl BasesView {
                             .h(px(4.))
                             .w(gpui::relative(fraction))
                             .rounded(px(2.))
-                            .bg(theme.tokens.interactive_accent),
+                            .bg(theme.tokens.slider_fill_background),
                     )
                     .child(
                         div()
@@ -1971,10 +1990,11 @@ impl BasesView {
         if spec.flat {
             trigger = trigger.when(open, |d| d.bg(theme.tokens.background_modifier_hover));
         } else {
+            // `.combobox-button`: a form field.
             trigger = trigger
                 .w_full()
                 .rounded(px(5.))
-                .bg(theme.tokens.background_modifier_hover)
+                .bg(theme.tokens.background_modifier_form_field)
                 .border_1()
                 .border_color(theme.tokens.background_modifier_border);
         }
@@ -2057,9 +2077,10 @@ impl BasesView {
             .flex_col()
             .w(px(COMBO_WIDTH))
             .max_h(px(300.))
-            .bg(theme.tokens.background_secondary)
+            // The list is a `.suggestion-container.combobox`.
+            .bg(theme.tokens.suggestion_background)
             .border_1()
-            .border_color(theme.tokens.tab_divider_color)
+            .border_color(theme.tokens.background_modifier_border)
             .rounded(px(8.))
             .shadow_lg()
             .text_size(px(FONT_UI_SMALL))

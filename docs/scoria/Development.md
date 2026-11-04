@@ -324,7 +324,7 @@ uses behave as Obsidian's do.
 | Bases: the rest of the view | done: the cards, list and kanban layouts, the toolbar's six panels, editing through the table, the five `bases:*` commands beyond `new-file`, and an embedded `![[x.base]]`, see [[#Bases: the rest of the view, 2026-10-25]]; the toolbar and panels rebuilt to the 2026-11-01 record, see [[#The Bases toolbar and its panels, 2026-11-01]]; the embed as the live view and the leaf's chrome, see [[#The embedded base and the base leaf's chrome, 2026-11-01]]; the header, summaries, cells and keyboard, see [[#The column header, summaries, cells and the table keyboard, 2026-11-01]]; the kanban's drags and menus, see [[#The kanban board, 2026-11-02]] |
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
-| The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, see [[#The theme registry, 2026-11-02]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]] |
+| The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]] |
 
 ### Syntax highlighting breadth, 2026-11-04
 
@@ -745,7 +745,105 @@ snippet not enabled and one missing, in both base themes.
 canvas, graph, PDF — so their mechanical names can become their own;
 and, separately, syntax highlighting (step 3). (The Appearance tab's
 pickers followed the same day:
-see [[#The Appearance tab's pickers, 2026-11-02]].)
+see [[#The Appearance tab's pickers, 2026-11-02]]; the probe of the four
+surfaces on 2026-11-04, see [[#The plugin chrome repointed, 2026-11-04]].)
+
+### The plugin chrome repointed, 2026-11-04
+
+The last of step 1: the Bases, canvas, graph and PDF call sites had been
+renamed mechanically to the token each old short field was, and now read
+the token Obsidian paints the surface from.
+
+**The probe.** `tools/obsidian-probe/theme-plugins.mjs`, on Windows 11
+against 1.14.5; the record is
+[[Specification#The Bases, canvas, graph and PDF chrome, 2026-11-04]].
+The CSSOM walk moved out of `theme-registry.mjs` into `theme-lib.mjs` so
+both scripts share it. Unlike the first probe this one names no elements:
+each state walks the whole view and reads one element per tag-and-class
+signature, which is what turned up the toolbar badge, the hidden card
+labels and the cards' title rule that nobody would have listed. What a
+walk cannot reach — a focused canvas node, a dragged kanban card, the
+graph's colour elements, which the renderer makes and drops while it
+reads them — came from a dump of every rule naming the four surfaces.
+Three things the run taught: `run-block.sh` has a Windows twin,
+`run-block.ps1`; the data directory's `obsidian.json` needs
+`updateDisabled`, because the first pass was quietly upgraded to 1.15.0
+after its first launch and had to be thrown away; and the walks overrun
+`cdp.mjs`'s 15 s call limit on a machine running five builds, so
+`CDP_TIMEOUT_MS` raises it. `theme-defaults.py` writes LF on Windows now.
+
+**The registry.** 35 more tokens: the 22 `--bases-*` the views read, the
+six `--canvas-color-N` the presets are, `--pdf-background`,
+`--pdf-sidebar-background`, `--pdf-shadow`, `--pdf-thumbnail-shadow`,
+`--flair-background`, `--flair-color` and `--slider-thumb-background`.
+Their declarations were already in the 2026-11-02 record, so `defaults.rs`
+was regenerated from it rather than from this run, and every line it had
+is byte-for-byte what it was. Two helpers read the shadow tokens:
+`theme::ring` (the colour of a `0 0 0 1px` ring, which Scoria paints as a
+border) and `theme::box_shadows` (the outer layers as gpui shadows; gpui
+has no inset). `CanvasColors` reads its presets from `--canvas-color-N`,
+has the control item's hover colours, and gives the light theme's card
+menu the primary background.
+
+**What moved.** About 150 of the four surfaces' 400 call sites changed
+token; the rest the probe confirmed. Where the colour moved too:
+
+- the graph: tags `--graph-node-tag` (green, was the accent), attachments
+  `--graph-node-attachment` (yellow, was faint), unresolved notes
+  `--graph-node-unresolved` at half opacity, links `--graph-line` opaque
+  (was the faint grey at 0.6), arrowheads `--text-normal` at half
+  opacity, the open note `--graph-node-focused`, labels `--graph-text`;
+  the panel a menu, its toggles and sliders the Settings ones, its "New
+  group" button `--interactive-normal`;
+- Bases: cards on `--bases-cards-background` with the
+  `--bases-cards-shadow` ring, deepening under the pointer instead of
+  washing; kanban cards the same, kanban columns on
+  `--bases-kanban-column-background` in a border, covers on their own
+  tokens; no row wash in the table; the header row on its own ground and
+  rule, its resizer `--divider-color-hover`; the edited cell's ring from
+  `--bases-table-cell-shadow-focus`; summary rows on the group or footer
+  ground, name and value muted, the footer without column rules and its
+  "Summary" placeholder shown only under the pointer; titles never
+  link-coloured on cards and kanban cards; card, kanban and list values
+  in the normal colour, the list's separators muted and its markers
+  `--list-marker-color`; pills and checkboxes their own tokens; text
+  boxes, comboboxes and the formula editor form fields, filter rows
+  `--bases-filter-input-background`; the toolbar's active button
+  `--icon-color-active` and its open one the normal colour; every panel
+  and menu `--menu-background` in `--menu-border-color`, the combobox
+  and cell-value lists `--suggestion-background`;
+- the canvas: the selection ring, the marquee (now 2 px) and the card
+  menu's hover `--color-accent`; a card's fill `--background-primary`;
+  the floating menu and the colour row the primary background, the
+  menu's icons `clickable-icon`s; the right-click list a menu; the
+  tooltip the shell's dark one; a control under the pointer
+  `--text-normal` on `--interactive-hover`; the zoomed-out text card's
+  icon its colour at 0.3;
+- the PDF view: the toolbar's and find bar's bottom rule, the sidebar's
+  end border, `--pdf-background` and `--pdf-sidebar-background`, the
+  pages' and thumbnails' frames from `--pdf-shadow` and
+  `--pdf-thumbnail-shadow` (the light theme's thumbnails gain their drop),
+  the buttons `--icon-color` and, active, `--icon-color-active` on
+  `--background-modifier-active-hover`, the find bar's miss ring
+  `--background-modifier-error` at 0.6 in both themes; the embed's
+  viewer ground `--pdf-background`, its page box a form field and its
+  pages framed.
+
+**Tests.** `theme::tests` gains two: the plugin tokens against the
+probed colours in both themes (with the old wrong value named beside
+each that moved), and a theme sheet that sets
+`--bases-kanban-column-background`, `--graph-node-tag`,
+`--pdf-background` and `--canvas-color-1` reaching all four.
+
+**Not done.** The group heading keeps its one shape for every layout
+(Obsidian puts the property name above the value and has no count); an
+embedded base still has no frame of its own (`--bases-embed-border-color`
+reads only on the fallback box); the graph's unresolved node is still a
+ring rather than a filled circle; a coloured group's label text is still
+chosen by theme rather than by the colour's lightness
+(`mod-foreground-light`/`-dark`); the Bases error block's colour
+(`.bases-error` is `--text-warning`) was not tied to Scoria's block,
+whose element was not identified.
 
 ### The Appearance tab's pickers, 2026-11-02
 

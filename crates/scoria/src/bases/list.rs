@@ -47,8 +47,8 @@ use crate::bases::cells::{
 use crate::bases::view::BasesView;
 use crate::theme::{Theme, FONT_UI_SMALL};
 use gpui::{
-    div, list, prelude::*, px, AnyElement, Context, ListAlignment, ListState, MouseButton,
-    MouseDownEvent, SharedString, Window,
+    div, list, prelude::*, px, AnyElement, Context, HighlightStyle, ListAlignment, ListState,
+    MouseButton, MouseDownEvent, SharedString, StyledText, Window,
 };
 use scoria_bases::{Column, ListLayout, Markers, Row};
 use serde_json::{json, Value as Json};
@@ -267,6 +267,9 @@ impl BasesView {
             } else {
                 theme.tokens.text_normal
             })
+            .when(link, |d| {
+                d.hover(|s| s.text_color(theme.tokens.link_color_hover))
+            })
             .on_click(cx.listener(move |this, _, _, cx| {
                 cx.stop_propagation();
                 this.open(path.clone(), cx)
@@ -291,7 +294,7 @@ impl BasesView {
                         .whitespace_nowrap()
                         .overflow_hidden()
                         .text_ellipsis()
-                        .text_color(theme.tokens.text_muted)
+                        .text_color(theme.tokens.text_normal)
                         .child(SharedString::from(value.clone()))
                 }))
         } else {
@@ -302,14 +305,28 @@ impl BasesView {
                 .min_w_0()
                 .child(title)
                 .when_some(trailing(&body, &separator), |d, rest| {
+                    // The values in the normal colour, each
+                    // `.bases-list-separator` before one muted.
+                    let mut runs = Vec::with_capacity(body.len());
+                    let mut at = 0;
+                    for value in &body {
+                        runs.push((
+                            at..at + separator.len(),
+                            HighlightStyle {
+                                color: Some(theme.tokens.text_muted),
+                                ..HighlightStyle::default()
+                            },
+                        ));
+                        at += separator.len() + value.len();
+                    }
                     d.child(
                         div()
                             .min_w_0()
                             .whitespace_nowrap()
                             .overflow_hidden()
                             .text_ellipsis()
-                            .text_color(theme.tokens.text_muted)
-                            .child(SharedString::from(rest)),
+                            .text_color(theme.tokens.text_normal)
+                            .child(StyledText::new(SharedString::from(rest)).with_highlights(runs)),
                     )
                 })
         };
@@ -322,14 +339,15 @@ impl BasesView {
             .px(px(CELL_PAD))
             .py(px(LINE_PAD))
             .overflow_hidden()
-            .text_size(px(FONT_UI_SMALL))
-            .hover(|s| s.bg(theme.tokens.background_modifier_hover));
+            .text_size(px(FONT_UI_SMALL));
+        // No wash under the pointer: `.bases-list-item` has no hover rule,
+        // only its link turns `--link-color-hover` (probe of 2026-11-04).
         if let Some(mark) = marker(self.list.markers, number) {
             line = line.child(
                 div()
                     .flex_shrink_0()
                     .w(px(MARKER_WIDTH))
-                    .text_color(theme.tokens.text_muted)
+                    .text_color(theme.tokens.list_marker_color)
                     .child(SharedString::from(mark)),
             );
         }

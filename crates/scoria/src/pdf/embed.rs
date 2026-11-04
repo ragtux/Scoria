@@ -588,15 +588,13 @@ impl Pages {
                 })
             })
             .tooltip(tooltip(tip))
-            .child(icon(
-                name,
-                ICON_SIZE * s,
-                if enabled {
-                    theme.tokens.text_muted
-                } else {
-                    theme.tokens.text_faint
-                },
-            ))
+            // A toolbar `clickable-icon`: `--icon-color` at `--icon-opacity`.
+            .child(if enabled {
+                icon(name, ICON_SIZE * s, theme.tokens.icon_color)
+                    .opacity(theme.tokens.icon_opacity)
+            } else {
+                icon(name, ICON_SIZE * s, theme.tokens.text_faint)
+            })
             .into_any_element()
     }
 
@@ -702,9 +700,10 @@ impl Pages {
                     .items_center()
                     .px(px(8. * s))
                     .rounded(px(4. * s))
+                    // `input.pdf-page-input`: a form field.
                     .border_1()
                     .border_color(theme.tokens.background_modifier_border)
-                    .bg(theme.tokens.background_secondary)
+                    .bg(theme.tokens.background_modifier_form_field)
                     .text_color(theme.tokens.text_normal)
                     .child(SharedString::from(bar.current.to_string())),
             )
@@ -756,6 +755,8 @@ impl Pages {
         };
         let factor = window.scale_factor();
         let absolute = self.absolute.clone();
+        // Every page is framed by `--pdf-shadow`, in an embed as in the view.
+        let frame = crate::theme::box_shadows(&self.theme.tokens.pdf_shadow);
         let column = div()
             .relative()
             .w(px(layout.content.width))
@@ -770,7 +771,8 @@ impl Pages {
                     .top(px(page.origin.y))
                     .w(px(page.size.width))
                     .h(px(page.size.height))
-                    .bg(white());
+                    .bg(white())
+                    .shadow(frame.clone());
                 if visible.contains(&ix) {
                     page_box.child(
                         img(page_source(absolute.clone(), ix, layout.scale * factor))
@@ -793,9 +795,8 @@ impl Pages {
             .flex_1()
             .min_h_0()
             .w_full()
-            // OBSERVE: the viewer's ground; the box itself is transparent in
-            // Obsidian and pdf.js's viewer is a mid grey.
-            .bg(self.theme.tokens.background_secondary)
+            // `.pdf-container`: `--pdf-background` (probe of 2026-11-04).
+            .bg(self.theme.tokens.pdf_background)
             .child(column)
             .into_any_element();
         (

@@ -1152,7 +1152,10 @@ impl PdfView {
     // ---- rendering ------------------------------------------------------------
 
     /// A toolbar `clickable-icon`: a 16 px icon in a 28 by 24 box with a 4
-    /// px radius, muted, washed on hover and when `active`.
+    /// px radius, `--icon-color` at `--icon-opacity`; under the pointer
+    /// `--icon-color-hover` on the hover wash, and while `active` (a menu
+    /// it opened is up, the sidebar is open) `--icon-color-active` on
+    /// `--background-modifier-active-hover` (probe of 2026-11-04).
     #[allow(clippy::too_many_arguments)]
     fn control(
         &self,
@@ -1174,7 +1177,10 @@ impl PdfView {
             .items_center()
             .justify_center()
             .rounded(px(4.))
-            .when(active, |d| d.bg(theme.tokens.background_modifier_hover))
+            .group(id)
+            .when(active, |d| {
+                d.bg(theme.tokens.background_modifier_active_hover)
+            })
             .when(enabled, |d| {
                 d.cursor_pointer()
                     .hover(|s| s.bg(theme.tokens.background_modifier_hover))
@@ -1184,15 +1190,19 @@ impl PdfView {
                     }))
             })
             .tooltip(tooltip(tip))
-            .child(icon(
-                name,
-                ICON_SIZE,
-                if enabled {
-                    theme.tokens.text_muted
-                } else {
-                    theme.tokens.text_faint
-                },
-            ))
+            .child(if !enabled {
+                icon(name, ICON_SIZE, theme.tokens.text_faint)
+            } else if active {
+                icon(name, ICON_SIZE, theme.tokens.icon_color_active)
+                    .opacity(theme.tokens.icon_opacity_active)
+            } else {
+                icon(name, ICON_SIZE, theme.tokens.icon_color)
+                    .opacity(theme.tokens.icon_opacity)
+                    .group_hover(id, |s| {
+                        s.opacity(theme.tokens.icon_opacity_hover)
+                            .text_color(theme.tokens.icon_color_hover)
+                    })
+            })
             .into_any_element()
     }
 
@@ -1242,6 +1252,8 @@ impl PdfView {
             .gap(px(CONTROL_GAP))
             .px(px(TOOLBAR_PAD_X))
             .bg(theme.tokens.background_primary)
+            .border_b_1()
+            .border_color(theme.tokens.background_modifier_border)
             .text_size(px(FONT_UI_SMALL))
             .text_color(theme.tokens.text_normal)
             .child(
@@ -1538,7 +1550,10 @@ impl PdfView {
             None => (None, false),
         };
         let case_sensitive = self.find.as_ref().is_some_and(|f| f.case_sensitive);
-        let miss_ring: Hsla = gpui::rgba(0xfb464c99).into();
+        // `.pdf-findbar .mod-not-found`: the focus ring becomes
+        // `--background-modifier-error` at 0.6.
+        let mut miss_ring: Hsla = theme.tokens.background_modifier_error;
+        miss_ring.a *= 0.6;
         div()
             .id("pdf-find-bar")
             .h(px(FIND_BAR_HEIGHT))
@@ -1550,6 +1565,8 @@ impl PdfView {
             .gap(px(4.))
             .p(px(6.))
             .bg(theme.tokens.background_primary)
+            .border_b_1()
+            .border_color(theme.tokens.background_modifier_border)
             .text_size(px(FONT_UI_SMALL))
             .text_color(theme.tokens.text_normal)
             .children(status.map(|text| {
@@ -1588,7 +1605,7 @@ impl PdfView {
                             .rounded(px(4.))
                             .cursor_pointer()
                             .when(case_sensitive, |d| {
-                                d.bg(theme.tokens.background_modifier_hover)
+                                d.bg(theme.tokens.background_modifier_active_hover)
                             })
                             .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                             .tooltip(tooltip("Match case"))
@@ -1602,7 +1619,15 @@ impl PdfView {
                                 let text = this.find_input.read(cx).text().to_string();
                                 this.search(text, true, cx);
                             }))
-                            .child(icon("case-sensitive", ICON_SIZE, theme.tokens.text_muted)),
+                            .child(icon(
+                                "case-sensitive",
+                                ICON_SIZE,
+                                if case_sensitive {
+                                    theme.tokens.icon_color_active
+                                } else {
+                                    theme.tokens.icon_color
+                                },
+                            )),
                     ),
             )
             .child(self.control(
@@ -1667,7 +1692,9 @@ impl PdfView {
             .flex_shrink_0()
             .overflow_y_scroll()
             .track_scroll(&self.sidebar_scroll)
-            .bg(theme.tokens.background_primary)
+            .bg(theme.tokens.pdf_sidebar_background)
+            .border_r_1()
+            .border_color(theme.tokens.divider_color)
             .text_size(px(FONT_UI_SMALL))
             .text_color(theme.tokens.text_normal)
             .on_mouse_down(
@@ -1741,12 +1768,10 @@ impl PdfView {
             }
             self.sidebar_followed = Some(self.page);
         }
+        // `.thumbnail.selected` and `:hover` colour the 8 px border with the
+        // hover wash; the image is framed by `--pdf-thumbnail-shadow`.
         let selected: Hsla = theme.tokens.background_modifier_hover;
-        let ring: Hsla = if theme.dark {
-            theme.tokens.background_modifier_border
-        } else {
-            gpui::rgba(0x00000026).into()
-        };
+        let frame = crate::theme::box_shadows(&theme.tokens.pdf_thumbnail_shadow);
         let mut column = div()
             .flex()
             .flex_col()
@@ -1760,17 +1785,11 @@ impl PdfView {
             let near = view_h <= 0.0
                 || (tops[ix] + outer >= top - view_h && tops[ix] <= top + 2.0 * view_h);
             let current = ix == self.page;
-            let mut image =
-                div()
-                    .w(px(inner_w))
-                    .h(px(h))
-                    .bg(gpui::white())
-                    .shadow(vec![BoxShadow {
-                        color: ring,
-                        offset: point(px(0.), px(0.)),
-                        blur_radius: px(0.),
-                        spread_radius: px(1.),
-                    }]);
+            let mut image = div()
+                .w(px(inner_w))
+                .h(px(h))
+                .bg(gpui::white())
+                .shadow(frame.clone());
             if near && size.width > 0.0 {
                 let scale = inner_w / size.width * window.scale_factor();
                 let _ = cache.has_page(&absolute, ix, scale);
@@ -1838,9 +1857,9 @@ impl PdfView {
                 .py(px(4.))
                 .rounded(px(4.))
                 .text_color(if on_page {
-                    theme.tokens.text_normal
+                    theme.tokens.nav_item_color_active
                 } else {
-                    theme.tokens.text_muted
+                    theme.tokens.nav_item_color
                 })
                 .child(
                     div()
@@ -1866,7 +1885,7 @@ impl PdfView {
                                         "chevron-right"
                                     },
                                     12.,
-                                    theme.tokens.text_faint,
+                                    theme.tokens.collapse_icon_color,
                                 ))
                         }),
                 )
@@ -1889,7 +1908,7 @@ impl PdfView {
             if let Some(page) = page {
                 row = row
                     .cursor_pointer()
-                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                    .hover(|s| s.bg(theme.tokens.nav_item_background_hover))
                     .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
                         cx.stop_propagation();
                         this.go_to_page(page, true, cx);
@@ -1904,7 +1923,8 @@ impl PdfView {
     /// page near the viewport is a box with its image; one further off is
     /// the box alone, so a thousand-page file asks for a handful of renders.
     /// The box is ringed by `--pdf-shadow`: a 1 px line in the dark theme,
-    /// a faint line and a soft shadow in the light one.
+    /// a faint line and a soft shadow in the light one. The pages sit on
+    /// `--pdf-background`.
     fn render_pages(
         &mut self,
         theme: &Theme,
@@ -1919,7 +1939,7 @@ impl PdfView {
             .min_w_0()
             .h_full()
             .overflow_hidden()
-            .bg(theme.tokens.background_primary)
+            .bg(theme.tokens.pdf_background)
             .on_scroll_wheel(cx.listener(|this, event, window, cx| this.wheel(event, window, cx)))
             .on_mouse_down(
                 MouseButton::Left,
@@ -1950,29 +1970,7 @@ impl PdfView {
         let top = self.scroll.y;
         let scale = layout.scale * window.scale_factor();
         let cache = documents(cx);
-        let shadow = if theme.dark {
-            vec![BoxShadow {
-                color: theme.tokens.background_modifier_border,
-                offset: point(px(0.), px(0.)),
-                blur_radius: px(0.),
-                spread_radius: px(1.),
-            }]
-        } else {
-            vec![
-                BoxShadow {
-                    color: gpui::rgba(0x0000000d).into(),
-                    offset: point(px(0.), px(0.)),
-                    blur_radius: px(0.),
-                    spread_radius: px(1.),
-                },
-                BoxShadow {
-                    color: gpui::rgba(0x0000001a).into(),
-                    offset: point(px(0.), px(2.)),
-                    blur_radius: px(8.),
-                    spread_radius: px(0.),
-                },
-            ]
-        };
+        let shadow = crate::theme::box_shadows(&theme.tokens.pdf_shadow);
         let mut column = div()
             .absolute()
             .left(px(-self.scroll.x))

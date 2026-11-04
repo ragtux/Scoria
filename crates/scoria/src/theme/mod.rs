@@ -95,14 +95,13 @@ pub struct Theme {
     pub tokens: Tokens,
 }
 
-/// The canvas view's palette. Obsidian paints the view over its primary
-/// background, cards over the secondary one, and its preset colours are the
-/// `--color-red` .. `--color-purple` tokens the callouts use too, so the
-/// values below are the ones [`Theme::callout_color`] draws for the same
-/// hues plus `--color-yellow`.
+/// The canvas view's palette. Obsidian paints the view over
+/// `--canvas-background` and a card over the primary background, and its
+/// preset colours are `--canvas-color-1` .. `-6`, which are the
+/// `--color-red` .. `--color-purple` tokens the callouts use too.
 #[derive(Debug, Clone)]
 pub struct CanvasColors {
-    /// `--canvas-background`: the view's ground and every card's fill.
+    /// `--canvas-background`: the view's ground.
     pub background: Hsla,
     /// `--canvas-color`: the border and edge colour of an uncoloured card.
     pub card_border: Hsla,
@@ -120,23 +119,29 @@ pub struct CanvasColors {
     pub wash_alpha: f32,
     /// The text on a coloured group's solid label pill.
     pub on_color: Hsla,
-    /// Control stack: a group's fill and border, a button's fill and glyph.
+    /// Control stack: a group's fill and border, a button's fill and glyph,
+    /// and a button's fill and glyph under the pointer.
     pub control_group: Hsla,
     pub control_border: Hsla,
     pub control_bg: Hsla,
     pub control_fg: Hsla,
-    /// The card menu's fill.
+    pub control_bg_hover: Hsla,
+    pub control_fg_hover: Hsla,
+    /// The card menu's fill: the secondary background on the dark theme,
+    /// the primary on the light (`.theme-dark .canvas-card-menu`).
     pub card_menu_bg: Hsla,
     /// `"1"` red, `"2"` orange, `"3"` yellow, `"4"` green, `"5"` cyan, `"6"` purple.
     pub presets: [Hsla; 6],
 }
 
 impl CanvasColors {
-    /// Obsidian 1.14.4's canvas, read from the running app: the view's
-    /// tokens and the six `--color-*` presets, plus the control stack's
-    /// colours, which are the shell's own (`--interactive-normal`, the
-    /// border, the primary background, muted text, the secondary
-    /// background).
+    /// Obsidian 1.14.5's canvas, read from the running app (the probe of
+    /// 2026-11-04, `theme-plugins.mjs`): the view's tokens and the six
+    /// `--canvas-color-*` presets, plus the control stack's colours, which
+    /// are the shell's own (`.canvas-control-group` is `--interactive-normal`
+    /// in a `--background-modifier-border` frame; an item is `--text-muted`
+    /// on the primary background, `--text-normal` on `--interactive-hover`
+    /// under the pointer).
     fn from_tokens(dark: bool, t: &Tokens) -> CanvasColors {
         CanvasColors {
             background: t.canvas_background,
@@ -151,14 +156,20 @@ impl CanvasColors {
             control_border: t.background_modifier_border,
             control_bg: t.background_primary,
             control_fg: t.text_muted,
-            card_menu_bg: t.background_secondary,
+            control_bg_hover: t.interactive_hover,
+            control_fg_hover: t.text_normal,
+            card_menu_bg: if dark {
+                t.background_secondary
+            } else {
+                t.background_primary
+            },
             presets: [
-                t.color_red,
-                t.color_orange,
-                t.color_yellow,
-                t.color_green,
-                t.color_cyan,
-                t.color_purple,
+                t.canvas_color_1,
+                t.canvas_color_2,
+                t.canvas_color_3,
+                t.canvas_color_4,
+                t.canvas_color_5,
+                t.canvas_color_6,
             ],
         }
     }
@@ -444,6 +455,31 @@ fn accent_hsl(hex: &str) -> Option<(f32, f32, f32)> {
 pub fn accent_swatch(hex: &str) -> Option<Hsla> {
     let (h, s, l) = accent_hsl(hex)?;
     Some(gpui::hsla(h / 360., s / 100., l / 100., 1.))
+}
+
+/// The colour of a shadow token's first layer. Obsidian draws the frame
+/// of a Bases card, a kanban card and an edited cell as a ring,
+/// `0 0 0 1px <colour>`, and that ring is what Scoria paints as the border;
+/// a shadow of `none` is no border at all.
+pub fn ring(layers: &[value::ShadowLayer]) -> Hsla {
+    layers
+        .first()
+        .map_or(gpui::transparent_black(), |l| l.color)
+}
+
+/// A shadow token as gpui draws it: one [`gpui::BoxShadow`] per outer
+/// layer. gpui has no inset shadow, so an inset layer is left out.
+pub fn box_shadows(layers: &[value::ShadowLayer]) -> Vec<gpui::BoxShadow> {
+    layers
+        .iter()
+        .filter(|l| !l.inset)
+        .map(|l| gpui::BoxShadow {
+            color: l.color,
+            offset: gpui::point(gpui::px(l.x), gpui::px(l.y)),
+            blur_radius: gpui::px(l.blur),
+            spread_radius: gpui::px(l.spread),
+        })
+        .collect()
 }
 
 /// The first family of a CSS-style `"Font A", Font B` list.
@@ -869,5 +905,101 @@ mod tests {
                 assert_eq!(theme.highlight_color(color), want, "{color:?}");
             }
         }
+    }
+    /// The Bases, canvas, graph and PDF chrome, by the tokens the probe of
+    /// 2026-11-04 (`theme-plugins.mjs`) saw each surface read. The values
+    /// are Obsidian's own; the colours Scoria had painted under the old
+    /// short fields' names are in the comments where they differed.
+    #[test]
+    fn the_plugin_tokens_are_the_probed_colours() {
+        let d = Theme::dark();
+        let t = &d.tokens;
+        // A Bases card sat on the secondary background (#282828); it is
+        // `--bases-cards-background`, the primary.
+        assert_eq!(hex(t.bases_cards_background), "#1c1c1c");
+        assert_eq!(hex(ring(&t.bases_cards_shadow)), "#333333");
+        assert_eq!(hex(ring(&t.bases_cards_shadow_hover)), "#3f3f3f");
+        // A kanban column was the secondary background too; it is the
+        // primary-alt one.
+        assert_eq!(hex(t.bases_kanban_column_background), "#232323");
+        assert_eq!(hex(t.bases_kanban_card_background), "#1c1c1c");
+        // The kanban card's shadow is a ring and a drop.
+        let drop = box_shadows(&t.bases_kanban_card_shadow);
+        assert_eq!(drop.len(), 2);
+        assert_eq!(
+            (drop[1].offset.y, drop[1].blur_radius),
+            (gpui::px(1.), gpui::px(2.))
+        );
+        // A table row has no hover wash, and the header has its own.
+        assert_eq!(t.bases_table_row_background_hover.a, 0.);
+        assert_eq!(
+            t.bases_table_header_background_hover,
+            t.background_modifier_hover
+        );
+        assert_eq!(hex(t.bases_table_group_background), "#232323");
+        assert_eq!(hex(t.bases_table_header_color), "#b3b3b3");
+        assert_eq!(ring(&t.bases_table_cell_shadow_focus), t.interactive_accent);
+        // The toolbar's panels are `.menu`s: the secondary background in a
+        // `--background-modifier-border-hover` frame, which is what
+        // `--tab-divider-color` happened to be.
+        assert_eq!(t.menu_background, t.background_secondary);
+        assert_eq!(hex(t.menu_border_color), "#3f3f3f");
+        assert_eq!(hex(t.bases_filter_input_background), "#2e2e2e");
+        // The graph: a tag was painted in the accent and an attachment and
+        // a link in the faint grey; they are green, yellow and `--graph-line`.
+        assert_eq!(t.graph_node_tag, t.color_green);
+        assert_eq!(t.graph_node_attachment, t.color_yellow);
+        assert_eq!(hex(t.graph_line), "#3f3f3f");
+        assert_eq!(t.graph_node, t.text_muted);
+        assert_eq!(t.graph_node_unresolved, t.text_faint);
+        assert_eq!(t.graph_node_focused, t.text_accent);
+        assert_eq!(hex(t.toggle_thumb_color), "#ffffff");
+        assert_eq!(hex(t.slider_thumb_background), "#ffffff");
+        // The canvas presets are `--canvas-color-N`, still the callout hues.
+        assert_eq!(d.canvas.preset(1), Some(t.color_red));
+        assert_eq!(d.canvas.preset(6), Some(t.color_purple));
+        assert_eq!(d.canvas.card_menu_bg, t.background_secondary);
+        // The PDF view's ground and its page frame.
+        assert_eq!(hex(t.pdf_background), "#1c1c1c");
+        assert_eq!(hex(t.pdf_sidebar_background), "#1c1c1c");
+        assert_eq!(box_shadows(&t.pdf_shadow).len(), 1);
+        assert_eq!(hex(ring(&t.pdf_shadow)), "#333333");
+
+        let l = Theme::light();
+        let t = &l.tokens;
+        assert_eq!(hex(t.bases_cards_background), "#ffffff");
+        assert_eq!(hex(t.bases_kanban_column_background), "#fafafa");
+        assert_eq!(hex(t.menu_border_color), "#dadada");
+        assert_eq!(t.graph_node_tag, t.color_green);
+        // `.theme-dark .canvas-card-menu` is the only rule that puts the card
+        // menu on the secondary background; the light theme's is primary.
+        assert_eq!(l.canvas.card_menu_bg, t.background_primary);
+        // The light theme's page frame is a faint ring and a soft drop.
+        let frame = box_shadows(&t.pdf_shadow);
+        assert_eq!(frame.len(), 2);
+        assert_eq!(hex(frame[0].color), "#0000000d");
+        assert_eq!(
+            (frame[1].offset.y, frame[1].blur_radius),
+            (gpui::px(2.), gpui::px(8.))
+        );
+    }
+
+    /// A theme that styles the plugin chrome by Obsidian's names reaches it
+    /// now: the kanban column, the graph's tag colour and the PDF's ground
+    /// were read under other names before.
+    #[test]
+    fn a_theme_reaches_the_plugin_chrome() {
+        let sheet = concat!(
+            "body { --bases-kanban-column-background: #102030; --graph-node-tag: #ff00ff;",
+            " --pdf-background: #445566; --canvas-color-1: #00ff00; }"
+        )
+        .to_string();
+        let t = tokens_from(true, &[sheet], None);
+        assert_eq!(hex(t.bases_kanban_column_background), "#102030");
+        assert_eq!(hex(t.graph_node_tag), "#ff00ff");
+        assert_eq!(hex(t.pdf_background), "#445566");
+        assert_eq!(hex(t.canvas_color_1), "#00ff00");
+        // Untouched neighbours keep Obsidian's values.
+        assert_eq!(hex(t.bases_kanban_card_background), "#1c1c1c");
     }
 }

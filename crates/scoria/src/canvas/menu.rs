@@ -58,16 +58,16 @@ pub struct Tooltip {
 impl Render for Tooltip {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = cx.global::<Theme>().clone();
+        // Obsidian's `.tooltip`: `--tooltip-color` on `--tooltip-background`
+        // under `--tooltip-shadow`, no border (probe of 2026-11-04).
         div()
             .px_2()
             .py_1()
             .rounded_md()
-            .bg(theme.tokens.background_secondary)
-            .border_1()
-            .border_color(theme.tokens.background_modifier_border)
+            .bg(theme.tokens.tooltip_background)
             .shadow_md()
             .text_size(px(12.))
-            .text_color(theme.tokens.text_normal)
+            .text_color(theme.tokens.tooltip_color)
             .child(self.text.clone())
     }
 }
@@ -93,16 +93,21 @@ pub fn icon_row(
         .gap(px(ICON_GAP))
         .p(px(ICON_PAD))
         .rounded(px(4.))
-        .bg(theme.canvas.background)
+        // `.canvas-menu`: the primary background in a border-coloured frame;
+        // its buttons are `clickable-icon`s.
+        .bg(theme.tokens.background_primary)
         .border_1()
-        .border_color(theme.canvas.control_border)
+        .border_color(theme.tokens.background_modifier_border)
         .shadow_md()
         .occlude();
+    let t = &theme.tokens;
     for (ix, item) in items.iter().enumerate() {
         let id = item.id;
+        let group: SharedString = format!("{prefix}-{ix}").into();
         row = row.child(
             div()
                 .id((prefix, ix))
+                .group(group.clone())
                 .w(px(ICON_BUTTON))
                 .h(px(ICON_BUTTON))
                 .flex()
@@ -110,14 +115,17 @@ pub fn icon_row(
                 .justify_center()
                 .rounded_sm()
                 .cursor_pointer()
-                .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                .hover(|s| s.bg(t.background_modifier_hover))
                 .tooltip(tooltip(item.label))
                 .on_click(cx.listener(move |this, _, window, cx| this.menu_pick(id, window, cx)))
-                .child(icon(
-                    item.icon,
-                    crate::theme::ICON_SIZE,
-                    theme.canvas.control_fg,
-                )),
+                .child(
+                    icon(item.icon, crate::theme::ICON_SIZE, t.icon_color)
+                        .opacity(t.icon_opacity)
+                        .group_hover(group, |s| {
+                            s.opacity(t.icon_opacity_hover)
+                                .text_color(t.icon_color_hover)
+                        }),
+                ),
         );
     }
     row
@@ -137,9 +145,9 @@ pub fn context_menu(
         .flex_col()
         .min_w(px(200.))
         .py_1()
-        .bg(theme.tokens.background_secondary)
+        .bg(theme.tokens.menu_background)
         .border_1()
-        .border_color(theme.tokens.background_modifier_border)
+        .border_color(theme.tokens.menu_border_color)
         .rounded_md()
         .shadow_lg()
         .text_size(px(13.))

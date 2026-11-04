@@ -329,10 +329,11 @@ impl BasesView {
                             .child(SharedString::from(option.name.clone())),
                     )
                     .child(
+                        // `.bases-summary-menu-item .bases-toolbar-menu-item-value`.
                         div()
                             .flex_shrink_0()
                             .text_size(px(FONT_UI_SMALLER))
-                            .text_color(theme.tokens.text_faint)
+                            .text_color(theme.tokens.text_muted)
                             .child(SharedString::from(value.clone())),
                     )
                     .child(icon("chevron-right", ICON_SIZE, theme.tokens.text_faint))
@@ -415,8 +416,15 @@ impl BasesView {
             .flex_shrink_0()
             .w_full()
             .h(px(SUMMARY_HEIGHT))
+            // A group's summary row sits on `--bases-table-group-background`,
+            // the table's footer on `--bases-table-summary-background`.
+            .bg(if group.is_some() {
+                theme.tokens.bases_table_group_background
+            } else {
+                theme.tokens.bases_table_summary_background
+            })
             .border_b_1()
-            .border_color(theme.tokens.background_modifier_border)
+            .border_color(theme.tokens.table_border_color)
             .child(self.measure(row_key))
             .children(columns.into_iter().map(|(id, c)| {
                 let width = self
@@ -445,10 +453,11 @@ impl BasesView {
                     .overflow_hidden()
                     .text_size(px(FONT_UI_SMALL))
                     .cursor_pointer()
-                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
-                    .when(c > 0, |d| {
-                        d.border_l_1()
-                            .border_color(theme.tokens.background_modifier_border)
+                    .hover(|s| s.bg(theme.tokens.bases_table_summary_background_hover))
+                    // `.bases-table-footer .bases-td` drops the column rules;
+                    // a group's summary row keeps them.
+                    .when(c > 0 && group.is_some(), |d| {
+                        d.border_l_1().border_color(theme.tokens.table_border_color)
                     })
                     .on_click(cx.listener(move |this, _, _, cx| {
                         let at = this.summary_row_anchor(c, group);
@@ -474,24 +483,29 @@ impl BasesView {
                         .child(icon("chevrons-up-down", 14., theme.tokens.text_faint)),
                 );
                 match (set, text) {
+                    // `.summary-function-name` and `.summary-content` are
+                    // both muted; the `.placeholder` is hidden until the
+                    // pointer is over the cell, then faint.
                     (Some(name), Some(value)) => cell
                         .child(
                             div()
                                 .flex_shrink_0()
                                 .whitespace_nowrap()
                                 .text_size(px(FONT_UI_SMALLER))
-                                .text_color(theme.tokens.text_faint)
+                                .text_color(theme.tokens.text_muted)
                                 .child(SharedString::from(name)),
                         )
                         .child(
                             div()
                                 .flex_shrink_0()
                                 .whitespace_nowrap()
-                                .text_color(theme.tokens.text_normal)
+                                .text_color(theme.tokens.text_muted)
                                 .child(SharedString::from(value)),
                         ),
                     _ => cell.child(
                         div()
+                            .opacity(0.)
+                            .group_hover("bases-summary-cell", |s| s.opacity(1.))
                             .text_color(theme.tokens.text_faint)
                             .child(SharedString::from("Summary")),
                     ),

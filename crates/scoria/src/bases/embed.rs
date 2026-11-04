@@ -323,7 +323,7 @@ pub fn render_fallback(base: &EmbeddedBase, theme: &Theme, open: OpenPath) -> An
         .w_full()
         .my(px(8.))
         .border_1()
-        .border_color(theme.tokens.background_modifier_border)
+        .border_color(theme.tokens.bases_embed_border_color)
         .rounded_md()
         .px_4()
         .py_3()

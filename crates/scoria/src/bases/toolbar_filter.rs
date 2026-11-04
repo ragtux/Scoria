@@ -217,7 +217,7 @@ impl BasesView {
                 "bases-group-remove",
                 ix,
                 "trash-2",
-                theme.tokens.text_muted,
+                theme.tokens.icon_color,
                 theme,
                 cx.listener(move |this, _, _, cx| {
                     cx.stop_propagation();
@@ -421,7 +421,7 @@ impl BasesView {
                             "code-xml"
                         },
                         if can_toggle {
-                            theme.tokens.text_muted
+                            theme.tokens.icon_color
                         } else {
                             theme.tokens.text_faint
                         },
@@ -451,7 +451,7 @@ impl BasesView {
                         "bases-rule-remove",
                         ix,
                         "trash-2",
-                        theme.tokens.text_muted,
+                        theme.tokens.icon_color,
                         theme,
                         cx.listener(move |this, _, _, cx| {
                             cx.stop_propagation();
@@ -502,9 +502,12 @@ impl BasesView {
             .min_w(px(0.))
             .h(px(INPUT_HEIGHT))
             .rounded(px(6.))
-            .bg(theme.tokens.background_modifier_hover)
+            // `.filter-expression`: `--bases-filter-input-background` in the
+            // ring the filter menu sets `--metadata-property-box-shadow` to,
+            // 1 px of `--background-modifier-border-hover`.
+            .bg(theme.tokens.bases_filter_input_background)
             .border_1()
-            .border_color(theme.tokens.tab_divider_color)
+            .border_color(theme.tokens.background_modifier_border_hover)
             .overflow_hidden()
             .child(self.combobox(
                 ComboSpec {
@@ -599,7 +602,11 @@ impl BasesView {
                             .px(px(6.))
                             .h(px(17.))
                             .rounded(px(4.))
-                            .bg(theme.tokens.background_modifier_hover)
+                            // `.multi-select-pill`.
+                            .bg(theme.tokens.pill_background)
+                            .border_1()
+                            .border_color(theme.tokens.pill_border_color)
+                            .text_color(theme.tokens.pill_color)
                             .text_size(px(FONT_UI_SMALL))
                             .child(SharedString::from(item.clone()))
                             .child(
@@ -616,7 +623,7 @@ impl BasesView {
                                             cx,
                                         );
                                     }))
-                                    .child(icon("x", 12., theme.tokens.text_muted)),
+                                    .child(icon("x", 12., theme.tokens.pill_color_remove)),
                             ),
                     );
                 }
@@ -732,9 +739,9 @@ impl BasesView {
                     .min_w(px(0.))
                     .h(px(INPUT_HEIGHT))
                     .rounded(px(6.))
-                    .bg(theme.tokens.background_modifier_hover)
+                    .bg(theme.tokens.bases_filter_input_background)
                     .border_1()
-                    .border_color(theme.tokens.tab_divider_color)
+                    .border_color(theme.tokens.background_modifier_border_hover)
                     .child(self.combobox(
                         ComboSpec {
                             placeholder: "Property",
@@ -750,7 +757,7 @@ impl BasesView {
                 "bases-rule-remove",
                 ix,
                 "trash-2",
-                theme.tokens.text_muted,
+                theme.tokens.icon_color,
                 theme,
                 cx.listener(|this, _, window, cx| {
                     cx.stop_propagation();
