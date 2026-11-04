@@ -92,6 +92,11 @@ pub struct BasesView {
     /// The bytes the view last read, so the workspace can tell its own write
     /// coming back through the watcher from somebody else's.
     source: String,
+    /// The last few saves' bytes. A watcher event can arrive after a later
+    /// save has landed -- live writes from the Add summary page save as
+    /// fast as a formula parses -- and an older save of the view's own must
+    /// not read as somebody else's edit and be reloaded over the newer one.
+    recent_saves: std::collections::VecDeque<String>,
     /// Which of the base's views is showing, by index into `base.views`.
     view_ix: usize,
     /// The file as it parsed, which is both what the layouts read their own
@@ -135,6 +140,7 @@ impl BasesView {
             focus: cx.focus_handle(),
             path: None,
             source: String::new(),
+            recent_saves: std::collections::VecDeque::new(),
             view_ix: 0,
             base: None,
             table: None,
@@ -165,6 +171,7 @@ impl BasesView {
         // and carries none of the last one's unsaved state.
         self.view_ix = 0;
         self.dirty = false;
+        self.recent_saves.clear();
         self.toolbar = super::toolbar::ToolbarState::default();
         self.editing = super::edit::EditState::default();
         self.resolve(cx);
@@ -258,7 +265,7 @@ impl BasesView {
 
     /// Whether the bytes on disk are the ones the view read.
     pub fn matches_file(&self, text: &str) -> bool {
-        self.source == text
+        self.source == text || self.recent_saves.iter().any(|saved| saved == text)
     }
 
     /// Whether the view holds a change the disk does not.
@@ -276,6 +283,11 @@ impl BasesView {
     /// The save landed: these are now the bytes on disk, so the watcher event
     /// that follows is the view's own write rather than somebody else's.
     pub fn mark_saved(&mut self, text: String) {
+        const KEEP: usize = 8;
+        if self.recent_saves.len() == KEEP {
+            self.recent_saves.pop_front();
+        }
+        self.recent_saves.push_back(text.clone());
         self.source = text;
         self.dirty = false;
     }

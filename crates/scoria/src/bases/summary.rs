@@ -553,7 +553,11 @@ impl BasesView {
             .border_1()
             .border_color(theme.tokens.background_modifier_border)
             .font_family(theme.mono_font.clone())
-            .child(self.text_box(Field::Formula, &typed, FORMULA_PLACEHOLDER, theme, cx));
+            .child(self.text_box(Field::Formula, &typed, FORMULA_PLACEHOLDER, theme, cx))
+            .relative()
+            .when(self.toolbar.editing == Some(Field::Formula), |d| {
+                d.child(self.measure(super::toolbar::FORMULA_EDITOR_KEY))
+            });
         let (status_icon, status_color, status) = if valid {
             ("circle-check", theme.tokens.text_success, "Valid formula")
         } else {

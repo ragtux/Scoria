@@ -1789,7 +1789,7 @@ names the view `View N` and opens Configure without the name field.
 
 *high, missing-feature, large*
 
-**Landed 2026-11-01**: the observed order and styling, scrolling inside the window, Add formula, Hide all (`order: []`), `Add "x" property`, and both gear pages — display name and property type, or the formula with its live validity line. **Still out**: the editor's completions.
+**Landed 2026-11-01**: the observed order and styling, scrolling inside the window, Add formula, Hide all (`order: []`), `Add "x" property`, and both gear pages — display name and property type, or the formula with its live validity line. **Still out**: the editor's completions. **The completions landed 2026-11-04**: typing in a formula editor -- the properties panel's and the Add summary page's -- lists the sixteen globals as `name()`, the idents `file`, `formula`, `note` and `this`, and the vault's frontmatter names, by case-insensitive prefix and in name order, each with its type icon, as the run's own `d` list (`date()`, `density`, `done`, `due`, `duration()`) shows; after `file.`, `this.`, `note.` and `formula.` the list is that receiver's, from [[Specification#The function table]]; a summary's editor adds `values`. Up/Down and Enter or a click take a row, and Escape closes the list before anything else. `bases::complete` holds the rules and their tests. **Still out**: Obsidian's description panel beside the list, the matched prefix's own style, and any receiver whose type needs the expression evaluated (`status.`, a call's result).
 
 **Obsidian.** `Find or create...` input; rows of checkbox, type icon (`info` for `file.*`, `text`,
 `binary`, `square-function`, …), name and a `chevron-right` gear; the shown columns first, then

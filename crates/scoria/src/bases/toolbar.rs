@@ -317,6 +317,9 @@ pub struct ToolbarState {
     /// A field asked for from somewhere without a window — a command, a
     /// page change — which the next render opens.
     pending_field: Option<(Field, String)>,
+    /// Escape closed the formula editor's completion list; the next
+    /// keystroke opens it again.
+    completions_closed: bool,
     /// What the field last held, so the control socket can read it without
     /// the app context a [`TextInput`] needs.
     field_value: String,
@@ -354,6 +357,7 @@ impl Default for ToolbarState {
             field: None,
             editing: None,
             pending_field: None,
+            completions_closed: false,
             field_value: String::new(),
             anchors: Rc::new(RefCell::new(HashMap::new())),
             total: None,
@@ -641,6 +645,119 @@ impl BasesView {
 
     pub(super) fn anchor(&self, k: u64) -> Option<Bounds<Pixels>> {
         self.toolbar.anchors.borrow().get(&k).copied()
+    }
+
+    /// The formula editor's completions for what it holds now: the word they
+    /// replace and the rows, empty while Escape has closed the list.
+    pub(super) fn formula_completions(
+        &self,
+        cx: &Context<Self>,
+    ) -> (std::ops::Range<usize>, Vec<super::complete::Completion>) {
+        if self.toolbar.editing != Some(Field::Formula) || self.toolbar.completions_closed {
+            return (0..0, Vec::new());
+        }
+        let text = self.field_text(cx);
+        let formulas: Vec<String> = self
+            .base()
+            .map(|b| b.formulas.keys().cloned().collect())
+            .unwrap_or_default();
+        let scope = super::complete::Scope {
+            properties: &self.property_kinds,
+            formulas: &formulas,
+            summary: matches!(self.toolbar.page, Page::NewSummary { .. }),
+        };
+        super::complete::completions(&text, &scope)
+    }
+
+    /// Puts completion `ix` in place of the word being typed; answers
+    /// whether there was one.
+    pub(super) fn accept_completion(&mut self, ix: usize, cx: &mut Context<Self>) -> bool {
+        let (range, list) = self.formula_completions(cx);
+        let Some(pick) = list.get(ix) else {
+            return false;
+        };
+        let next = super::complete::accept(&self.field_text(cx), range, pick);
+        if let Some(input) = self.toolbar.field.clone() {
+            input.update(cx, |input, cx| input.set_text(next, cx));
+        }
+        // The accepted name is whole, so the list has nothing left to offer
+        // until the next keystroke.
+        self.toolbar.completions_closed = true;
+        self.toolbar.selected = None;
+        cx.notify();
+        true
+    }
+
+    /// `.cm-tooltip-autocomplete`: the completion rows under the editor,
+    /// each its type icon and its name.
+    pub(super) fn render_formula_completions(
+        &mut self,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> Option<AnyElement> {
+        let (_, list) = self.formula_completions(cx);
+        let editor = self.anchor(FORMULA_EDITOR_KEY).filter(|_| !list.is_empty());
+        let Some(editor) = editor else {
+            self.forget_anchor(FORMULA_LIST_KEY);
+            return None;
+        };
+        let at = Point::new(
+            editor.origin.x,
+            editor.origin.y + editor.size.height + px(3.),
+        );
+        let selected = self.toolbar.selected;
+        let rows = list.into_iter().enumerate().map(|(ix, c)| {
+            div()
+                .id(("bases-formula-completion", ix))
+                .flex()
+                .flex_row()
+                .items_center()
+                .gap(px(8.))
+                .h(px(29.))
+                .px(px(8.))
+                .rounded(px(4.))
+                .cursor_pointer()
+                .when(selected == Some(ix), |d| {
+                    d.bg(theme.tokens.background_modifier_hover)
+                })
+                .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                .on_click(cx.listener(move |this, _, _, cx| {
+                    cx.stop_propagation();
+                    this.accept_completion(ix, cx);
+                }))
+                .child(icon(c.icon, ICON_SIZE, theme.tokens.text_muted))
+                .child(div().whitespace_nowrap().child(SharedString::from(c.label)))
+        });
+        let list = div()
+            .id("bases-formula-completions")
+            .relative()
+            .child(self.measure(FORMULA_LIST_KEY))
+            .flex()
+            .flex_col()
+            .min_w(px(160.))
+            .max_h(px(300.))
+            .overflow_y_scroll()
+            .p(px(6.))
+            .bg(theme.tokens.suggestion_background)
+            .border_1()
+            .border_color(theme.tokens.background_modifier_border)
+            .rounded(px(8.))
+            .shadow_lg()
+            .text_size(px(FONT_UI_SMALL))
+            .text_color(theme.tokens.text_normal)
+            .occlude()
+            .children(rows);
+        Some(
+            deferred(
+                anchored()
+                    .position(at)
+                    .anchor(Anchor::TopLeft)
+                    .snap_to_window_with_margin(px(8.))
+                    .child(list),
+            )
+            .with_priority(3)
+            .into_any_element(),
+        )
     }
 
     /// Drops the box recorded under `k`, for something no longer drawn.
@@ -1100,6 +1217,15 @@ impl BasesView {
         }
         // A value field's suggestions hang under a box known only once the
         // field has painted: forget the last one, and ask for that frame.
+        if which == Field::Formula {
+            self.toolbar.completions_closed = false;
+            self.toolbar
+                .anchors
+                .borrow_mut()
+                .remove(&FORMULA_EDITOR_KEY);
+            let entity = cx.entity();
+            window.on_next_frame(move |_, cx| entity.update(cx, |_, cx| cx.notify()));
+        }
         if matches!(which, Field::RuleValue(..)) {
             self.toolbar
                 .anchors
@@ -1169,7 +1295,11 @@ impl BasesView {
             Field::ViewName => self.commit_view_name(text, cx),
             Field::Separator => self.commit_separator(text, cx),
             Field::DisplayName => self.commit_display_name(text, cx),
-            Field::Formula => self.commit_formula(text, cx),
+            Field::Formula => {
+                self.toolbar.completions_closed = false;
+                self.toolbar.selected = None;
+                self.commit_formula(text, cx)
+            }
             Field::SummaryName => self.commit_summary_name(text, cx),
             Field::Rule(section, path) => self.commit_rule_text(section, &path, text, cx),
             Field::RuleValue(section, path) => self.commit_rule_value(section, &path, text, cx),
@@ -1184,6 +1314,14 @@ impl BasesView {
         let Some(which) = self.toolbar.editing.clone() else {
             return;
         };
+        // Enter on an arrowed-to completion takes it.
+        if which == Field::Formula {
+            if let Some(ix) = self.toolbar.selected {
+                if self.accept_completion(ix, cx) {
+                    return;
+                }
+            }
+        }
         // Enter on an arrowed-to value suggestion takes it.
         if matches!(which, Field::RuleValue(..)) {
             let pick = self
@@ -1227,6 +1365,16 @@ impl BasesView {
     /// the panel; in the search row it clears and hides the row; in a list's
     /// search field it closes the list.
     fn cancel_field(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        // Observed (`bases-leftovers` `s03`): Escape closes the editor's
+        // completion list before it does anything else.
+        if self.toolbar.editing == Some(Field::Formula)
+            && !self.formula_completions(cx).1.is_empty()
+        {
+            self.toolbar.completions_closed = true;
+            self.toolbar.selected = None;
+            cx.notify();
+            return;
+        }
         match self.toolbar.editing.clone() {
             Some(Field::TableSearch) => {
                 self.toolbar.search = None;
@@ -1281,6 +1429,9 @@ impl BasesView {
         }
         if matches!(self.toolbar.editing, Some(Field::RuleValue(..))) {
             return self.rule_value_suggestions(cx).len();
+        }
+        if self.toolbar.editing == Some(Field::Formula) {
+            return self.formula_completions(cx).1.len();
         }
         match (self.toolbar.panel, &self.toolbar.page) {
             (Panel::Views, Page::List) => self.views_list_len(cx),
@@ -1339,6 +1490,7 @@ impl BasesView {
             Panel::Properties => self.render_properties_panel(base, view, theme, cx),
             Panel::Summary => self.render_summary_panel(base, view, theme, cx),
         };
+        let completions = self.render_formula_completions(theme, cx);
         let boxed = div()
             .id(("bases-toolbar-panel", panel as usize))
             .flex()
@@ -1358,7 +1510,8 @@ impl BasesView {
             .on_mouse_down_out(cx.listener(|this, event: &MouseDownEvent, window, cx| {
                 this.press_out(event.position, window, cx)
             }))
-            .child(body);
+            .child(body)
+            .children(completions);
         Some(
             deferred(
                 anchored()
@@ -2630,6 +2783,10 @@ fn placeholder_of(which: &Field) -> &'static str {
         _ => "",
     }
 }
+
+/// Where the open formula editor was last drawn, and its completion list.
+pub(super) const FORMULA_EDITOR_KEY: u64 = 0x464f_524d_554c_4145;
+const FORMULA_LIST_KEY: u64 = 0x464f_524d_554c_4c53;
 
 /// The view an empty base shows, which is what `edit_view` materializes for
 /// a write.

@@ -30,6 +30,7 @@
 pub mod cards;
 pub mod cells;
 pub mod commands;
+pub mod complete;
 pub mod edit;
 pub mod embed;
 pub mod kanban;
