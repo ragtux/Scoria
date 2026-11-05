@@ -82,6 +82,66 @@ four small entries they carried closed nine of them, so **52 remain** — plus o
 
 ## Files view and file operations
 
+### The "Update links" prompt is two buttons and Scoria's own wording
+
+*medium, parity-gap, small* · **Filed:** 2026-11-05
+
+Found by the Writer gate's day 2, as the second half of an inverted default; the default itself is
+fixed, see [[Development#Day 2, files and links, 2026-11-05]]. Until that fix the prompt was
+unreachable on any vault that had never written `alwaysUpdateLinks`, which is why its shape had
+never been compared with Obsidian's.
+
+**Obsidian.** Three buttons, and no file name in the text
+([[Specification#The 2026-10-25 pass: real drags, and the inline rename committed]]):
+
+| | |
+| --- | --- |
+| Title | **Update links** |
+| Text | `Do you want to update internal links that link to this file?` then `This will affect 1 link in 1 file.` |
+| Buttons | **Always update**, **Just once**, **Do not update** |
+
+**Always update** is also a config writer: it turns the setting on, so the next rename does not ask.
+
+**Scoria.** Title "Update links?"; the detail names the file *with its extension* — "6 links in 6
+files point to `Data Lake Architecture.md`. Update them to the new name?" — and there are two
+buttons, "Update links" and "Don't update" (`rename_with_links`,
+`crates/scoria/src/workspace.rs:8008`). So the sentence is Scoria's, the count is phrased the other
+way round, and the third button is missing.
+
+**Fix.** Obsidian's two strings, and a third button that writes `alwaysUpdateLinks: true` before
+rewriting. `PromptSpec` carries `confirm` and `secondary` only, so the third needs a field —
+the one real change here. Worth doing with the week rather than after it: "Always update" is the
+only path by which either app writes that key, so it is also the only way the gate's harness gets
+a real copy of an `app.json` holding it.
+
+### The explorer renames in a modal where Obsidian edits the row in place
+
+*medium, parity-gap, medium* · **Filed:** 2026-11-05
+
+Observed in the Writer gate's day 2, on the gate vault: the Obsidian half's new note was named by
+typing **on the row in the file tree**, and Scoria opens a dialog in the middle of the window for
+the same thing. See [[Writer gate run#The Obsidian half, and the verdict]].
+
+**Obsidian.** The row's own label is made `contenteditable`
+([[Specification#The 2026-10-25 pass: real drags, and the inline rename committed]]): the editable
+element is `.tree-item-inner.nav-file-title-content` (`.nav-folder-title-content` for a folder), the
+row gains **`is-being-renamed`** beside `has-focus` and `is-active`, and the **basename without the
+extension** is pre-selected — `Beta`, not `Beta.md`. F2 reaches it only with focus genuinely on a
+row, which a click cannot give; the Files header's New note puts a fresh `Untitled` row straight
+into that state.
+
+**Scoria.** `F2` on a focused row and the header's New note both emit `ExplorerEvent::Rename` and
+open the centre prompt pre-filled with the basename (`explorer.rs:703`, `rename_with_links`). The
+tree has no in-place editing at all: no row state for it, and nothing in `state.docks.left.explorer`
+reports one.
+
+**Fix.** The text model is already written and already proven: `title_field.rs` is the
+`contentEditable` behaviour for Obsidian's `.view-header-title` — click-to-caret, typing while the
+file keeps its old name, Enter commits, Escape abandons — deliberately kept free of GPUI so it can
+be reused. So this is wiring `TitleField` into the tree row and painting the row's label as its own
+text, not new behaviour. Worth doing with the keyboard entry below, since F2's precondition
+(focus on a row, which only `reveal-active-file` or the tree keyboard gives) is the same one.
+
 ### Autosaving the open note re-centers the Files list and re-expands every ancestor folder
 
 *medium, bug, small*

@@ -919,9 +919,17 @@ impl VaultState {
         TrashOption::from_config(self.app().trash_option.as_deref())
     }
 
-    /// `alwaysUpdateLinks`: on by default; off means ask before rewriting.
+    /// `alwaysUpdateLinks`: **off** by default, which means a rename asks
+    /// before rewriting. Obsidian's own row says so — "Turn off to be
+    /// prompted to update links after renaming a file" — and it rendered
+    /// the toggle off on a vault whose `app.json` was `{}`
+    /// (`tools/obsidian-probe/results/2026-10-25-ui-rules.json`, and the
+    /// Files and links table of `docs/scoria/Specification.md`). The gate's
+    /// day 2 found this default inverted: a rename on a vault with no key
+    /// rewrote every link silently where Obsidian writes nothing without
+    /// consent.
     pub fn update_links_automatically(&self) -> bool {
-        self.app().always_update_links.unwrap_or(true)
+        self.app().always_update_links.unwrap_or(false)
     }
 
     /// `promptDelete`: on by default.
@@ -17520,6 +17528,33 @@ mod tests {
             "a unique name moving folders changes no shortest link"
         );
         assert_eq!(state.rename_preview("B.md", "Sub/Bee.md"), (2, 2));
+    }
+
+    /// `alwaysUpdateLinks` absent means **ask**, not rewrite. Obsidian
+    /// rendered the toggle off on a vault whose `app.json` was `{}`
+    /// (`tools/obsidian-probe/results/2026-10-25-ui-rules.json`), and its own
+    /// description is "Turn off to be prompted to update links after renaming
+    /// a file". The gate's day 2 found this inverted, which made the
+    /// "Update links?" prompt unreachable on every vault that has never
+    /// written the key — PLMCRZY among them.
+    #[test]
+    fn a_vault_with_no_always_update_links_key_asks_before_rewriting() {
+        let (_dir, state) = vault();
+        assert!(
+            state.app().always_update_links.is_none(),
+            "the fixture must not write the key, or this asserts nothing"
+        );
+        assert!(
+            !state.update_links_automatically(),
+            "no key means ask, as Obsidian's unchecked toggle does"
+        );
+        // And there is something to ask about, so the prompt is reached
+        // rather than skipped by the `links == 0` shortcut.
+        let (files, links) = state.rename_preview("A.md", "A2.md");
+        assert!(
+            files > 0 && links > 0,
+            "renaming A should affect links, got {links} in {files}"
+        );
     }
 
     /// The names the control socket calls the four modes by, both ways;

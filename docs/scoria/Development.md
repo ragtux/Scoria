@@ -310,7 +310,7 @@ the sheet, the log and the day's procedure are [[Writer gate run]], see
 | Files header | done: New note, New folder, the six sort orders, Auto-reveal current file and Expand all / Collapse all, see [[#Files header, 2026-10-21]]; the tree takes the keyboard, see [[#Explorer keyboard, 2026-10-21]] |
 | Folding | done: headings and list parents fold in Live Preview and source mode, headings collapse in the reading view, the five `editor:*fold*` commands run, and the record lives outside the vault, see [[#Folding, 2026-10-26]] |
 | Editing commands | done: the insert-block commands, the checklist cycle, Mod+L on a line without a box, the six highlight colours, Clear formatting, per-line inline toggles, the one auto-pair rule and Shift+Tab's column arithmetic, all to the 2026-10-25 probes, see [[#The settled editing commands, 2026-10-26]] |
-| The gate itself | open: the harness passes on the real vault (fifteen properties, green 2026-11-04), and the week of mixed use starts 2026-11-04 on PLMCRZY with `docs/scoria` watched beside it — the sheet and the log are [[Writer gate run]], see [[#The gate week starts, 2026-11-04]] |
+| The gate itself | open: the harness passes on the real vault (sixteen properties, green 2026-11-05), and the week of mixed use is running on PLMCRZY with `docs/scoria` watched beside it — days 1 and 2 both pass, day 2 catching an inverted `alwaysUpdateLinks` default and proving the two apps' link rewriters byte-identical. Day 3 is tables and properties. The sheet and the log are [[Writer gate run]], see [[#The gate week starts, 2026-11-04]] and [[#Day 2, files and links, 2026-11-05]] |
 
 ## Parity (phase 4)
 
@@ -327,6 +327,104 @@ uses behave as Obsidian's do.
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
+
+### Day 2, files and links, 2026-11-05
+
+The sheet's day 2 in Scoria — rename, move, delete, a note created from an unresolved link, the
+Files header's New note and New folder, two sort orders — with the run, the evidence and what is
+still owed in [[Writer gate run#Day 2, 2026-11-05]]. The writer came out of it clean on every item;
+what the day caught was a default, and the default had been hiding a feature.
+
+**`alwaysUpdateLinks` read an absent key as on; Obsidian reads it as off.** PLMCRZY's `app.json`
+holds only `vimMode`, so the rename of `Data Architecture` — 6 inbound links in 6 files, two
+aliased — rewrote all six **silently**. Obsidian would have raised its **Update links** modal and
+written nothing but the rename unless the person chose a button. The evidence was already in the
+repository: Obsidian's row reads "Turn off to be prompted to update links after renaming a file",
+and it rendered that toggle **off** on a vault whose `app.json` the probe wrote as `{}`
+(`tools/obsidian-probe/results/2026-10-25-ui-rules.json`) — PLMCRZY's situation exactly. The
+2026-10-25 drag pass, which set the key to `false` deliberately, saw the modal on every basename
+change.
+
+[[Specification]] had said both things at once: its file-operations line gave the default as on
+while its own Files and links table gave the toggle as off. The table is the probe's, so the line
+was wrong, and `CLAUDE.md`'s rule applies in the mild form — the spec disagreed with itself, and the
+observation decided it.
+
+**Two defaults, and dead code came alive.** `Workspace::update_links_automatically` now reads an
+absent key as `false` and `ALWAYS_UPDATE_LINKS`'s row default matches it. Nothing else needed
+changing, which is the part worth recording: `rename_with_links` has carried the whole ask-path
+since file operations landed — it previews the rename, skips the question when no link would move,
+and opens an "Update links?" prompt otherwise — and **one inverted default had made all of it
+unreachable on every vault that has never written the key**, which is every vault nobody has
+changed the setting in. Rebuilt, the inverse rename raised the prompt for the first time on a real
+vault, and confirming it restored the six files byte-for-byte.
+`a_vault_with_no_always_update_links_key_asks_before_rewriting` pins the default, asserting first
+that the fixture does not write the key — a default test that writes the value it is testing
+asserts nothing — and then that something is actually there to ask about, so the `links == 0`
+shortcut cannot pass it vacuously.
+
+The prompt's *shape* is not Obsidian's: two buttons where Obsidian has three, Scoria's own sentence,
+and the file name spelled with its extension. Filed as
+[[UI parity backlog#The "Update links" prompt is two buttons and Scoria's own wording]]. The missing
+third button is **Always update**, which writes `alwaysUpdateLinks: true`; `PromptSpec` has
+`confirm` and `secondary` only, so it needs a field. Worth building inside the week, because that
+button is the only path by which either app writes the key, and the week's second job is to leave
+the harness a real copy of the config files nothing has ever written.
+
+**What the day proved about the writer, beyond the sheet.** Three properties the harness cannot
+reach, each now shown on a real vault:
+
+- **The rename is its own inverse.** Six links rewritten and rewritten back left every one of the
+  six files byte-identical to `snapshot-2026-11-04b`. Both aliases survived both directions, and the
+  renamed note's own bytes — its `# Data Architecture` heading included — never moved.
+- **The link rewriter preserves a missing trailing newline.** `Infrastructure.md` and
+  `Tech Stack.md`, two of the five notes Obsidian left without a final newline on day 1, each had a
+  link rewritten and each still ends without one. Day 1 proved this of the editor; the rewriter is
+  a different write path, reading and writing the file without the editor in it at all.
+- **A move and a delete rewrite nothing.** The move, because `shortest` plus a unique basename
+  leaves `[[Legacy Projects]]` resolving from anywhere — `rename_preview("B.md", "Sub/B.md")` is
+  `(0, 0)` in the unit tests and now on a real vault too. The delete, because Obsidian rewrites no
+  links on one: the linking note came back with the same sha256, and its link reported as uncreated.
+
+**A claim withdrawn before it was filed.** The "Move file to…" chooser offered no vault-root row
+with the file at the root, which read as a missing row; with the file inside `Archive` it offers `/`.
+It excludes the folder the file is already in. Whether Obsidian does the same is unprobed, and it is
+recorded as a question rather than a gap.
+
+**The Obsidian half ran by hand, and day 2 passes.** It could not be driven from here:
+`tools/obsidian-probe/README.md` forbids pointing the harness at the gate vault while a byte-level
+run is open, and the rule is right — a probe script in the deciding vault would give it a third
+author, which is the one thing that vault is chosen for. Two of its four answers were a person's
+eyes, and one of those two mattered more than any byte in the diff.
+
+**The two link rewriters are byte-identical on a real vault**, which is the result only Obsidian
+could give. Obsidian rewrote the same 6 linking files in one batch at `00:06:02.899`–`.906` and left
+`Data Architecture.md` itself untouched at day 1's mtime — a rename's signature, since the rename is
+a directory operation and the links live elsewhere — and all six then verified OK against
+`plmcrzy-2026-11-04b.sha256`. Scoria had already renamed away and back to the same bytes, so both
+writers are exact inverses of themselves *and* agree with each other, aliases included.
+
+**The modal appeared, so the default is settled on this vault and not merely inferred.** That was
+the fix's premise, and `app.json` corroborates the button: it still holds only `vimMode`, so the
+answer was Just once rather than Always update, which writes the key. The methodological point is
+worth keeping: **the bytes could not have settled this.** "Default off, prompted, answered Just
+once" and "default on, rewrote silently" leave identical bytes — the same `app.json`, the same six
+rewritten files. A gate that reads only diffs would have confirmed the inverted default. The day's
+central finding was reachable only because someone watched the screen, which is the argument for the
+mixed-use half of this gate existing at all.
+
+**One gap filed from the other half.** Obsidian named the new note by editing the row's own label in
+the file tree; Scoria opens a centre prompt for both F2 and the header's New note. Filed as
+[[UI parity backlog#The explorer renames in a modal where Obsidian edits the row in place]] — and it
+is wiring rather than new behaviour, since `title_field.rs` is already the `contentEditable` text
+model for the view header's inline rename and was deliberately kept free of GPUI to be reused.
+
+`app.json`, `appearance.json` and `core-plugins.json` were all rewritten with identical content when
+a settings pane was opened — the documented trap, mtimes moved and no bytes — so they are attributed
+and dismissed. `snapshot-2026-11-05` closes the day.
+
+Worth saying once, because the note itself says it: **days 1 and 2 ran on the same calendar night**,
+half an hour apart. The week is a week of operations so far, not of elapsed time.
 
 ### The gate week starts, 2026-11-04
 

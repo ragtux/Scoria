@@ -236,6 +236,190 @@ write is a fixed point. The canvas is reported, not silently skipped.
 **Still open:** `workspace.json`, filed above, and the Obsidian-half protocol worked — so day 2
 is files and links.
 
+## Day 2, 2026-11-05
+
+**Dated the 5th, driven on the night of the 4th.** The Scoria half ran 23:37–23:59 on 2026-11-04,
+within half an hour of day 1 closing, because the day was asked for rather than waited for. That is
+worth stating plainly: **two days of this week ran on one calendar night**, so the week is so far a
+week of operations and not a week of elapsed time. Nothing in the gate's claim turns on the clock —
+it turns on whether either app moves a byte nobody touched — but "a week of mixed use" reads as
+seven days to anyone who has not read this paragraph.
+
+**Every sheet item for day 2 ran in Scoria, and the writer is clean on all of them.** The deciding
+evidence is below; the one failure the day found is a *default*, not a writer.
+
+**The rename is byte-exact, and it is its own inverse.** `Data Architecture` → `Data Lake
+Architecture`, the richest rename the vault has: 6 inbound links in 6 files, two of them aliased.
+The notice said "Updated 6 links in 6 files." and the diff was exactly six one-line changes —
+`[[Data Architecture|Build sheet data]]` → `[[Data Lake Architecture|Build sheet data]]` and
+`[[Data Architecture|per-year archives]]` the same, so **both aliases survived**; the renamed note's
+own bytes were untouched, its `# Data Architecture` heading included, which is right because
+Obsidian renames the file and not the text in it. Renaming it back then restored
+**every one of the six files to byte-identical with `snapshot-2026-11-04b`** — not one byte moved
+across the pair. An operation and its inverse returning the original bytes is the same shape as
+day 1's type-save-undo-save, and on a different write path.
+
+**The link rewriter preserves a missing trailing newline.** `Infrastructure.md` ends `a` and
+`Tech Stack.md` ends `1`, two of the five notes Obsidian left without a final newline on day 1;
+both had a link rewritten and both still end that way, while `PLMCRZY.md`, which has one, kept it.
+Day 1 proved the *editor* preserves this. The rewriter never goes through the editor — it reads a
+file, replaces a link and writes it back — so this is a second write path held to the same property,
+and the one the traps section above could not reach this week.
+
+**A move rewrites nothing, as the format demands.** `Legacy Projects.md` (4 inbound links) into a
+new `Archive/`: the file moved, its bytes identical, and all four linking files were left alone.
+With `newLinkFormat` absent (so `shortest`) and a unique basename, `[[Legacy Projects]]` still
+resolves from anywhere, so there is nothing to rewrite — which is what
+`rename_without_updating_links_leaves_them_dangling` already asserts in the unit tests
+(`rename_preview("B.md", "Sub/B.md")` is `(0, 0)`) and what Obsidian was observed doing on
+2026-10-25. First time it has been shown on a real vault.
+
+**A delete rewrites nothing either, and goes to the system trash.** `Day 2 Scratch.md` was deleted
+with the confirmation `promptDelete` defaults to; it landed in `~/.local/share/Trash/files/`, which
+is `trashOption`'s `system` default, and `Legacy Projects.md` — which links to it — came back with
+the **same sha256** it had before. The link then reported as uncreated (`file-plus`, no path) in
+Outgoing links. Obsidian does not rewrite links on a delete, and neither does Scoria.
+
+**A note created from an unresolved link lands at the vault root, not beside its referrer.**
+`[[Day 2 Scratch]]` was typed into `Archive/Legacy Projects.md` and followed from there; the note
+was created at the root, which is `newFileLocation`'s `root` default — the folder of the current
+file would have been `Archive/`. Typing the link also showed the one auto-pair rule supplying `]]`,
+and appending to a note with no final newline left it with none.
+
+**Two sort orders, checked against something other than the app.** `alphabetical` →
+`alphabeticalReverse` → `byModifiedTime` from the Files header's menu, and under the last one the
+rows matched `ls -t` exactly, with the `Archive` folder pinned first — folders do not move between
+orders. Sort order lives in `workspace.json`, so it leaves no evidence in the diff.
+
+### What day 2 found: `alwaysUpdateLinks` defaulted the wrong way
+
+**Scoria rewrote six files where Obsidian would have written none without being asked.** The rename
+above was silent. It should not have been: `app.json` in this vault holds only `vimMode`, so
+`alwaysUpdateLinks` is absent, and `Workspace::update_links_automatically` read an absent key as
+**on** (`unwrap_or(true)`). Obsidian reads it as off. Three things say so and none of them needed
+the gate vault:
+
+- Obsidian's own row for the setting is "Turn off to be prompted to update links after renaming a
+  file" — so off is the prompting state, and the prompt is the thing a default decides.
+- It rendered that toggle **off** on a vault whose `app.json` the probe wrote as `{}`
+  (`tools/obsidian-probe/results/2026-10-25-ui-rules.json`), which is PLMCRZY's situation exactly.
+- The 2026-10-25 drag pass, with the key set to `false` on purpose, saw the **Update links** modal
+  on every rename that changed a basename.
+
+The specification had it both ways: its file-operations line said the default was on, its own Files
+and links table said the toggle is off. The table came from the probe, so the line was the wrong
+half, and it is corrected.
+
+**The consequence is the gate's own subject.** For one keystroke on one vault, Scoria wrote seven
+files and Obsidian would have written one — the rename — unless the person pressed a button. That
+is a byte divergence produced by a default, which is the quietest way this gate can be failed, and
+it survived every one of the sixteen harness properties because the harness drives the writer
+directly and never asks what the writer should have been allowed to do.
+
+**The fix is two defaults, and it reveals a feature that was already built.**
+`update_links_automatically` now reads an absent key as `false`, the settings row's default matches,
+and `a_vault_with_no_always_update_links_key_asks_before_rewriting` pins it with the probe's
+reasoning in the comment. Nothing else had to change: `rename_with_links` has had the whole
+ask-path since the file operations landed — it previews the rename, skips the question when no link
+would move, and opens an "Update links?" prompt otherwise — and **one inverted default had made all
+of it dead code on every vault that has never written the key.** Rebuilt, the inverse rename on
+PLMCRZY raised the prompt (`op: "update-links"`) for the first time, and confirming it restored the
+six files byte-for-byte.
+
+What the prompt is *not* is Obsidian's: two buttons where Obsidian has three, its own sentence, and
+the file name spelled with its extension. That is filed as
+[[UI parity backlog#The "Update links" prompt is two buttons and Scoria's own wording]] rather than
+fixed tonight, because the missing third button — **Always update** — has to write
+`alwaysUpdateLinks: true`, and `PromptSpec` has no field for a third action. It is worth having
+inside the week: that button is the only path by which either app writes the key, so it is also the
+only way the harness gets a real `app.json` holding it, which is the week's second job.
+
+### One claim withdrawn before it was filed
+
+The "Move file to…" chooser looked like it was missing Obsidian's vault-root row: with
+`Legacy Projects.md` at the root it offered only `Archive`. With the file inside `Archive` it offers
+`/`. The chooser excludes the folder the file is already in, and the first reading was of a chooser
+doing the right thing. Whether Obsidian also excludes the current parent is unprobed — recorded as
+a question, not a gap.
+
+### The Obsidian half, and day 2's verdict
+
+Run by hand, 2026-11-05 00:04–00:08. The probe harness could not do it:
+`tools/obsidian-probe/README.md` forbids exactly this use — "Never point it at a real vault: not the
+gate vault (`~/bstore2/raga/plmcrzy/PLMCRZY`) while a byte-level gate run is open" — and the rule is
+right, because a probe script loose in the deciding vault would put a third author in a folder whose
+whole value is that it has two. So this half is a person's, and two of its four answers are a
+person's eyes.
+
+**Day 2 passes.** Everything the diff reports is an edit someone made in one of the two apps.
+Nothing moved that nobody touched, bar the three `.obsidian` files below, whose bytes did not move
+at all.
+
+**The two link rewriters are byte-identical on a real vault.** This is the day's sharpest result and
+the one only Obsidian could settle. The 6 linking files were rewritten by Obsidian in a single batch
+at `00:06:02.899`–`.906`, and `Data Architecture.md` itself was *not* touched — its mtime is still
+day 1's `21:03:06`, which is a rename's signature, since renaming a file is a directory operation
+and the links live in the other files. All six then verified **OK** against
+`plmcrzy-2026-11-04b.sha256`. So the chain is:
+
+| Step | Result |
+| --- | --- |
+| baseline `snapshot-2026-11-04b` | the six files as day 1 left them |
+| Scoria renamed away and back | byte-identical to the baseline |
+| Obsidian renamed away and back | **byte-identical to the baseline** |
+
+Both rewriters are exact inverses of themselves, and they agree with each other on the same six
+lines — `[[Data Architecture|Build sheet data]]` and `[[Data Architecture|per-year archives]]`
+included, so they agree about aliases too. Only the last write's mtime survives, which is why two
+renames show as one batch.
+
+**The modal appeared, which settles the default on this vault.** Asked whether a dialog came up on
+the rename, the answer was yes. That is the premise of the fix above, now **observed on PLMCRZY
+rather than inferred from a scratch vault** — and it settles the toggle without anyone having to
+find it, because the dialog only exists when the setting is off. `app.json` is the corroboration:
+it still holds nothing but `vimMode`, so the button pressed was **Just once** and not Always
+update, which would have written `alwaysUpdateLinks: true`.
+
+Worth keeping in view: **the bytes alone could not have settled this.** "Default off, prompted,
+answered Just once" and "default on, rewrote silently" both leave `app.json` without the key and
+both leave the six files rewritten. The diff is blind to the difference; only a person watching the
+screen is not. A gate that reads only bytes would have confirmed the wrong default.
+
+**Obsidian renames on the row, not in a modal.** The new note is `this is a new note!.md`, 0 bytes,
+created at `00:08:21`, and the name was typed **on the row in the file tree** — the
+`contenteditable` label the 2026-10-25 pass recorded. Scoria opens a centre prompt for both F2 and
+the header's New note. Filed as
+[[UI parity backlog#The explorer renames in a modal where Obsidian edits the row in place]]; the
+text model for it already exists in `title_field.rs`, written for the view header's inline rename
+and kept reusable.
+
+**The three config files Obsidian rewrites on its own, again.** `app.json`, `appearance.json` and
+`core-plugins.json` all have mtimes of `00:04:28`–`00:04:29` and **identical content** — the trap
+recorded above, fired by opening a settings pane. mtime moved, not one byte did, so they are
+attributed and dismissed.
+
+**What is left of the vault's day 2:** an empty `Archive/`, an empty `Day 2 New Note.md`, the empty
+`this is a new note!.md`, and the `See also: [[Day 2 Scratch]]` line in `Legacy Projects.md` — the
+vault's first unresolved link, which the later days can use. Every one of them a person's edit.
+
+**Day 3 is tables and properties**, and it is the one that needs the vault's lack of frontmatter:
+properties have to be created rather than edited, and setting a property's type is what writes
+`types.json`, the first of the five config files the week owes the harness.
+
+### What the day left in the vault
+
+Deliberate, and all of it a person's edit: `Legacy Projects.md` carries a
+`See also: [[Day 2 Scratch]]` line whose target was deleted, so the vault now has its first
+unresolved link — useful for the later days; an empty `Archive/` folder and an empty
+`Day 2 New Note.md`, the artifacts of the two Files-header items. Delete any of the three if you do
+not want them; nothing in the run depends on them.
+
+**No note of the user's was deleted.** The sheet says "delete one", and the note deleted was
+`Day 2 Scratch.md`, created during the day for the purpose and linked from a real note so the
+delete was still tested against inbound links. The narrowing costs the gate nothing *for bytes* —
+Obsidian rewrites no links on a delete, so a delete's only byte is the file's own disappearance —
+and it is recorded here rather than left as a silent substitution.
+
 ## The log
 
 One row per day. "Moved" is what the diff reported; "author" is the answer to the two
@@ -245,7 +429,7 @@ questions above.
 | --- | --- | --- | --- | --- | --- | --- |
 | 0 | 2026-11-04 | — | — | nothing (vault inert since 10-22) | — | baseline `snapshot-2026-11-04` taken, harness green at 15 properties |
 | 1 | 2026-11-04 | six notes, 3 source + 3 Live Preview: typed, saved, undone, saved | five notes appended to; `vimMode` off; `PLMCRZY Mindmap.canvas` opened | 5 notes +1 line each (no trailing newline now), `app.json`, the canvas rewritten compact, `workspace.json` | every one a person's edit in one of the two apps, bar the canvas (Obsidian normalizing a file authored elsewhere) and `workspace.json` (both apps, every session) | **passes** — nothing moved that nobody touched; the harness's canvas failure was the harness's, not the writer's |
-| 2 |  |  |  |  |  |  |
+| 2 | 2026-11-05 | rename with 6 aliased inbound links and back; move into a new folder and back; new folder; new note; note created from an unresolved link; delete; three sort orders | renamed `Data Architecture` and back (the modal appeared, **Just once**), new note named on the row; the three `.obsidian` files touched | the 6 link lines rewritten by each app and back to byte-identical both times; `Archive/`, `Day 2 New Note.md`, `this is a new note!.md`, one typed line in `Legacy Projects.md` | every one a person's edit in one of the two apps; the three config files moved mtimes and no bytes | **passes** — and the two link rewriters proved byte-identical on a real vault. `alwaysUpdateLinks` defaulted on where Obsidian defaults off, so Scoria's rename rewrote 6 files silently instead of asking; fixed, the ask-path it had made unreachable now runs, and the modal Obsidian showed confirms the default on this vault |
 | 3 |  |  |  |  |  |  |
 | 4 |  |  |  |  |  |  |
 | 5 |  |  |  |  |  |  |

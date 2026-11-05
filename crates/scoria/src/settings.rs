@@ -235,7 +235,7 @@ flags!(
     AUTO_CONVERT_HTML, "autoConvertHtml", auto_convert_html, true, false;
     VIM_MODE, "vimMode", vim_mode, false, false;
     FOCUS_NEW_TAB, "focusNewTab", focus_new_tab, true, false;
-    ALWAYS_UPDATE_LINKS, "alwaysUpdateLinks", always_update_links, true, false;
+    ALWAYS_UPDATE_LINKS, "alwaysUpdateLinks", always_update_links, false, false;
     USE_WIKILINKS, "useMarkdownLinks", use_markdown_links, false, true;
     SHOW_UNSUPPORTED_FILES, "showUnsupportedFiles", show_unsupported_files, false, false;
     PROMPT_DELETE, "promptDelete", prompt_delete, true, false;
