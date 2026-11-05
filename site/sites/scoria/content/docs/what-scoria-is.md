@@ -66,7 +66,7 @@ live in your notes, that difference is felt hourly.
 
 ## Who it is for, today
 
-At version 0.3.2, honestly:
+At version 0.4.0, honestly:
 
 - **Good fit now:** reading and searching a vault you maintain in Obsidian; browsing a large
   vault where a native reader is simply nicer; anyone who wants a second implementation to

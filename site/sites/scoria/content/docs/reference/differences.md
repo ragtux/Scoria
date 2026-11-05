@@ -9,7 +9,7 @@ Three kinds of difference, kept apart because they mean different things: **not 
 **deliberately different**, and **not ever**.
 
 If you are deciding whether Scoria can be your daily editor, this is the page to read. It is
-written against 0.3.2; the [release notes](/releases/) say what each version moved out of the
+written against 0.4.0; the [release notes](/releases/) say what each version moved out of the
 first list.
 
 ## Not yet

@@ -27,7 +27,7 @@ fn windows_resources() {
     let icon = manifest_dir.join("resources/windows/scoria.ico");
     println!("cargo:rerun-if-changed={}", icon.display());
 
-    // `0.3.2` is `0,3,2,0` to the resource compiler, which counts to four and takes numbers only.
+    // `0.4.0` is `0,4,0,0` to the resource compiler, which counts to four and takes numbers only.
     let version = std::env::var("CARGO_PKG_VERSION").unwrap();
     let mut parts: Vec<&str> = version.split(['.', '-', '+']).collect();
     parts.resize(4, "0");

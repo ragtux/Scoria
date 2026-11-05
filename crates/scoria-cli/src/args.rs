@@ -500,7 +500,7 @@ pub fn parse_size(value: &str) -> Option<(f32, f32)> {
         .then_some((width, height))
 }
 
-/// `scoria 0.3.2`, which is what `--version` prints.
+/// `scoria 0.4.0`, which is what `--version` prints.
 pub fn version() -> String {
     format!("scoria {}", env!("CARGO_PKG_VERSION"))
 }

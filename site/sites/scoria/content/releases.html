@@ -1,10 +1,10 @@
 ---
 title: Releases
 layout: page
-description: Every tagged release of Scoria, what landed in each, and the permanent addresses the archives live at. 0.3.2 is current: a download address that never goes stale, the recordings the README is illustrated with, and the vault they were made on.
+description: Every tagged release of Scoria, what landed in each, and the permanent addresses the archives live at. 0.4.0 is current: bases, PDFs, typeset math, the vault's own CSS theme, highlighting ported from Prism, and a command line.
 ---
 <section class="hero" style="padding-bottom:24px">
-  <span class="badge pre">Current: v0.3.2 · 23 October 2026 · MIT</span>
+  <span class="badge pre">Current: v0.4.0 · 5 November 2026 · MIT</span>
   <h1>Releases</h1>
   <p class="lede">
     A <code>v*</code> tag builds the <code>scoria</code> binary on both forges and publishes one
@@ -26,41 +26,70 @@ description: Every tagged release of Scoria, what landed in each, and the perman
 </section>
 
 <section class="band">
-  <h2>0.3.2 — an address that does not go stale</h2>
+  <h2>0.4.0 — bases, PDFs, equations and your theme</h2>
   <p class="lede">
-    Released 23 October 2026. Nothing in the application changed: this release exists to put the
-    three permanent download addresses above into a release, and it carries the recordings the
-    README and this site are illustrated with, together with the small vault they were made on.
+    Released 5 November 2026. Four things a vault holds that Scoria could not open before — a
+    <code>.base</code>, a PDF, a block of TeX, and the CSS theme you chose in Obsidian — and
+    the chrome around them: a command line of its own, Anya's mark on every platform's icon,
+    and Settings in a window rather than a modal.
   </p>
   <div class="grid">
     <div class="card">
-      <span class="k">Downloads</span>
-      <h3>Two names for every archive</h3>
-      <p>Each archive is published twice: once named for its tag, and once under a name with no
-      version in it. GitHub resolves <code>/releases/latest/download/&lt;name&gt;</code> by exact
-      file name, so the versionless one is an address that keeps working across releases — which
-      is what the buttons on this site now point at. <code>SHA256SUMS</code> lists both names, so
-      checking a download works whichever address you took.</p>
+      <span class="k">Bases</span>
+      <h3>The whole of <code>.base</code></h3>
+      <p>Obsidian's expression language is parsed into the tree Obsidian parses it into, and
+      evaluated; a base is written back in Obsidian's own bytes. All four layouts draw — table,
+      cards, list and kanban — with the toolbar, panels and menus measured off 1.14.5 surface by
+      surface. Cells edit by type, columns reorder, summarize and carry their own menu, formula
+      editors complete property names, and an embedded base draws its live view inside a note.</p>
     </div>
     <div class="card">
-      <span class="k">Recordings</span>
-      <h3>What the app actually looks like</h3>
-      <p>The README's screenshots and recordings were remade against the current window and now
-      illustrate the manual too — the three-pane shell, reading view, embeds and the canvas,
-      search and the switcher, and Live Preview completing a link. They are driven over the
-      control socket in a headless session, so they can be remade rather than curated.</p>
+      <span class="k">PDF and math</span>
+      <h3>Two more things a note can hold</h3>
+      <p>PDFs render on <code>hayro</code>: pages to pixels, the outline, the page text, and the
+      <code>#page=</code> subpath, so <code>![[doc.pdf#page=3]]</code> embeds that page and a
+      click on a PDF opens a viewer. TeX is typeset on RaTeX, KaTeX-compatible, in reading view
+      and in Live Preview both — inline and display, from the same drawing list.</p>
     </div>
     <div class="card">
-      <span class="k">The demo vault</span>
-      <h3>A field guide to scoria</h3>
-      <p>The vault the recordings are made on ships with the repository: a small geology field
-      guide with a properties table, photographs, embeds, a canvas and enough links for the graph
-      to have a shape. It is there so the recordings can be reproduced, and because screenshots
-      of an empty vault teach nothing.</p>
+      <span class="k">Appearance</span>
+      <h3>Painted from Obsidian's own variables</h3>
+      <p>Every paint site now reads a theme registry keyed on Obsidian's CSS property names, so
+      the vault's theme and its snippets load, and reload while the app runs. Appearance has its
+      theme, snippet and accent pickers. Fenced code is highlighted by a port of Prism's
+      tokenizer across 85 languages, each token taking its colour from the theme's
+      <code>--code-*</code>.</p>
+    </div>
+    <div class="card">
+      <span class="k">The command line</span>
+      <h3><code>scoria --help</code> answers</h3>
+      <p>A vault, a file, a note, a heading or a block, the panes and views to open on, and a
+      <code>--help</code> written from the flag table itself. A second run hands its argument to
+      the window already open on that vault over a socket, so there is one window per vault; the
+      Linux installer writes the desktop entry and the caller's <code>mimeapps.list</code>, so a
+      <code>.md</code> can open here.</p>
+    </div>
+    <div class="card">
+      <span class="k">The marks</span>
+      <h3>One sheet, every tile cut from it</h3>
+      <p>Anya's mark family replaces the placeholder art: the logo, the Windows
+      <code>.ico</code>, the macOS <code>.icns</code>, the hicolor theme a Linux desktop reads
+      and the site's favicon are all cuts of one drawing, and the marks' inks are now the
+      palette. Where a vault sets no accent, Scoria uses a brick one of its own rather than
+      Obsidian's purple.</p>
+    </div>
+    <div class="card">
+      <span class="k">Reading and editing</span>
+      <h3>The gaps a probe could name</h3>
+      <p>Raw HTML blocks and inline HTML in both views, remote images and embeds nested in lists
+      and quotes, folding for headings and lists, selection and copy in reading view, the
+      editor's own context menu, the inline title, <code>obsidian://</code> URIs, the vault
+      manager and Help in windows of their own, and every core-plugin options tab drawing its
+      real rows.</p>
     </div>
   </div>
   <p class="dim small" style="margin-top:18px">
-    <a href="https://github.com/ragtux/scoria/releases/tag/v0.3.2">The commit-level notes for 0.3.2 →</a>
+    <a href="https://github.com/ragtux/scoria/releases/tag/v0.4.0">The commit-level notes for 0.4.0 →</a>
   </p>
 </section>
 
@@ -76,6 +105,15 @@ description: Every tagged release of Scoria, what landed in each, and the perman
         <tr><th>Version</th><th>Date</th><th>What it was</th><th>Notes</th></tr>
       </thead>
       <tbody>
+        <tr>
+          <td><strong>0.3.2</strong></td>
+          <td>23 Oct 2026</td>
+          <td>An address that does not go stale: each archive published a second time under a
+          name with no version in it, which is what this site's download buttons point at. It
+          also carries the recordings the README and the manual are illustrated with, and the
+          small demo vault they were made on.</td>
+          <td><a href="https://github.com/ragtux/scoria/releases/tag/v0.3.2">v0.3.2</a></td>
+        </tr>
         <tr>
           <td><strong>0.3.1</strong></td>
           <td>23 Oct 2026</td>
@@ -122,10 +160,10 @@ description: Every tagged release of Scoria, what landed in each, and the perman
     </table>
   </div>
   <p class="dim small" style="margin-top:18px">
-    Scoria is before 1.0 and the minor number is where the work shows: 0.2 was writing, 0.3 is
-    the shell and the other platforms. A tag with a hyphen in it — <code>v0.4.0-rc1</code> — is
-    published as a prerelease and is not what the addresses above resolve to. Releases before
-    0.3.2 carry their archives under the tagged names only.
+    Scoria is before 1.0 and the minor number is where the work shows: 0.2 was writing, 0.3 was
+    the shell and the other platforms, 0.4 is the file types and the look. A tag with a hyphen in
+    it — <code>v0.5.0-rc1</code> — is published as a prerelease and is not what the addresses
+    above resolve to. Releases before 0.3.2 carry their archives under the tagged names only.
   </p>
 </section>
 
