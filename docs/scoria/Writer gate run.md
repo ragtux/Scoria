@@ -163,12 +163,26 @@ is narrower: Scoria does not model it *as a config type*. The layout goes out as
 `serde_json::Value` merged into the file's own JSON, so every key it did not set keeps its
 bytes — which is the mitigation, and why nothing has gone visibly wrong.
 
-The consequence is still real: **the one file both apps write on every session is the only
-file the gate never checks.** Excluding it from the daily diff remains right — both apps
-rewrite it constantly, so it is noise there — but it belongs in the harness, where reading a
-real `workspace.json` and writing it back would be byte-identical or would not. That test does
-not exist. Filed rather than fixed mid-run: it changes what the gate covers, which is not a
-day's work.
+The consequence was real: **the one file both apps write on every session was the only file the
+gate never checked.** Excluding it from the daily diff remains right — both apps rewrite it
+constantly, so it is noise there — but it belonged in the harness, and now it is there:
+`every_workspace_json_is_written_back_byte_identical`, the sixteenth property. It round-trips
+the file's own JSON through `Vault::write_config`, which is the half `scoria-vault` owns and the
+half with the bytes in it — the two-space indent, the key order, the empty containers, a byte
+order mark, the missing trailing newline, and how a number is spelled. What it cannot reach is
+whether the *layout* Scoria computes is the layout Obsidian would compute; that needs the app
+and belongs with the tab-group tests.
+
+It runs on a frozen fixture, because every vault in the repository gitignores its own
+`workspace.json` as live per-user state and a clean checkout would have nothing to test. The
+fixture is the demo vault's, as Obsidian wrote it at 20:58 tonight, kept with a README recording
+that provenance — a fixture Scoria wrote would make the test agree with itself.
+
+The test was checked against deliberate breakage rather than trusted because it was green: a
+trailing newline on the fixture fails it, and so does respelling a dock width
+`315.19744110107420` or `3.151974411010742e2`, both of which `serde_json` re-renders. That last
+one is the real reason to keep a float in the fixture — not `f32` narrowing, which is the typed
+configs' problem, and which this path does not have.
 
 The false reason is corrected where it is read as current truth — `writer_roundtrip.rs`'s
 comment and `gate.sh`'s header. The dated sections of [[Development]] keep what was believed

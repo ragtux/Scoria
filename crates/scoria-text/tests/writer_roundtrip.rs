@@ -23,6 +23,10 @@
 //!   Obsidian's own layout comes back byte-identical from the canvas writer.
 //! - **A base Obsidian saved is written back unchanged**: a `.base` in the
 //!   canonical form comes back byte-identical from the base writer.
+//! - **`workspace.json` is written back unchanged.** It has no config type --
+//!   the layout goes out as a `serde_json::Value` -- so the typed round trip
+//!   cannot name it, and both apps rewrite it every session. It gets its own
+//!   round trip over a frozen Obsidian-written fixture.
 //!
 //! The notes are the corpus; set `SCORIA_ROUNDTRIP_VAULT` to a real vault's
 //! path to run the same round trips over it as well (nothing is written to
@@ -1026,8 +1030,8 @@ fn every_config_file_is_written_back_byte_identical() {
     // into the file's own JSON, so every key it did not set keeps its bytes.
     // It is out of this round trip because there is no type to round trip,
     // and out of the gate's diffs because both apps rewrite it constantly.
-    // Nothing therefore holds that writer to Obsidian's bytes; see
-    // [[Writer gate run]], day 1.
+    // Its bytes are held by
+    // `every_workspace_json_is_written_back_byte_identical` below instead.
     //
     // The two repository sets hold eight files between them. No set in the
     // repository has a `hotkeys.json` or a `types.json`, so those two writers
@@ -1197,6 +1201,60 @@ fn every_canvas_obsidian_saved_is_written_back_byte_identical() {
         );
     }
     assert!(checked >= 3, "only {checked} canvases were round-tripped");
+}
+
+/// `workspace.json`, which has no config type to round trip and so was not
+/// round-tripped at all.
+///
+/// The exclusion above is about the *typed* round trip: `Workspace::save_layout`
+/// builds the layout as a `serde_json::Value` and hands it to
+/// `Vault::write_config`, so there is no `WorkspaceConfig` for
+/// [`config_round_trips`] to name. What that left is a file both apps rewrite
+/// on every session with nothing holding Scoria's writer to Obsidian's bytes —
+/// the one file the gate never checked (see [[Writer gate run]], day 1).
+///
+/// The half that can be held without gpui is the half `scoria-vault` owns, and
+/// it is the half with the bytes in it: the file's own JSON, written straight
+/// back, is the same bytes. That covers the merge and the formatter — the
+/// two-space indent, the key order, the empty containers, a byte order mark,
+/// the missing trailing newline, and how a number is spelled: a dock width
+/// respelled `315.19744110107420` or `3.151974411010742e2` fails here, because
+/// `serde_json` re-renders both, which is what would catch Obsidian writing a
+/// number this writer does not reproduce. What it does not cover is whether
+/// the *layout* Scoria computes is the layout Obsidian would compute, which
+/// needs the app and belongs with the tab-group tests.
+///
+/// The fixture is frozen in `scoria-vault/tests/config/` because every vault in
+/// the repository gitignores its own `workspace.json` as live per-user state;
+/// `crates/scoria-vault/tests/config/README.md` records where it came from and
+/// why it must stay a file Obsidian wrote. Any `workspace.json` the config sets
+/// happen to have on a developer's machine is round-tripped as well, the gate
+/// vault's included.
+#[test]
+fn every_workspace_json_is_written_back_byte_identical() {
+    let repo = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
+    let fixture = repo.join("scoria-vault/tests/config");
+    let (_tmp, vault) = vault_with_config(&fixture);
+    assert!(
+        config_round_trips::<serde_json::Value>(&vault, &fixture, "workspace.obsidian.json"),
+        "the frozen fixture is missing: {}",
+        fixture.display()
+    );
+    let mut checked = 1;
+
+    // Whatever the live sets have, which on a developer's machine is the docs
+    // vault's, the corpus vault's and -- when `SCORIA_ROUNDTRIP_VAULT` names
+    // one -- the gate vault's. All three are gitignored, so none is here on a
+    // clean checkout and the fixture above is what makes this test run at all.
+    for dir in config_dirs() {
+        let (_tmp, vault) = vault_with_config(&dir);
+        checked += usize::from(config_round_trips::<serde_json::Value>(
+            &vault,
+            &dir,
+            "workspace.json",
+        ));
+    }
+    assert!(checked >= 1, "no workspace.json was round-tripped");
 }
 
 /// Obsidian's canonical form for a `.base`, told apart from a hand-written one
