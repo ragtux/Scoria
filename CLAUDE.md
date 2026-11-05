@@ -39,6 +39,7 @@ docs/scoria             Obsidian vault: spec and design notes (dogfooded by Scor
 docs/scoria-demo        Obsidian vault: the geology field guide the README recordings are made on
 tools/demo-vault        the typst source of the PDF that vault embeds
 tools/prism-port        writes scoria-highlight's generated grammars and its Prism corpus from Prism 1.29 (node); change it and re-run, never hand-edit the output
+tools/writer-gate       the Writer gate's baselines and diffs: `just gate-check`, `gate-baseline`, `gate-status` (the sheet and log are docs/scoria/Writer gate run.md)
 docs/img                brand art; docs/img/marks holds Anya's marks, and marks/clast-orange.svg is the logo every other copy is cut from
 docs/img/app            README screenshots and recordings, made by tools/readme-recording over the control socket
 site                    scoria.cc: the informational site and the manual (static, node)

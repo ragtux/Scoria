@@ -286,7 +286,9 @@ browse their real vault with no missing content. Passed 2026-10-16, see
 
 Started 2026-10-17. Gate: the vault round-trips byte-identical after a week
 of mixed use in both apps. The gate run opened on 2026-10-18, see
-[[#The gate run opens, 2026-10-18]].
+[[#The gate run opens, 2026-10-18]], and the week itself starts 2026-11-04 —
+the sheet, the log and the day's procedure are [[Writer gate run]], see
+[[#The gate week starts, 2026-11-04]].
 
 | Writer item | Status |
 | --- | --- |
@@ -308,7 +310,7 @@ of mixed use in both apps. The gate run opened on 2026-10-18, see
 | Files header | done: New note, New folder, the six sort orders, Auto-reveal current file and Expand all / Collapse all, see [[#Files header, 2026-10-21]]; the tree takes the keyboard, see [[#Explorer keyboard, 2026-10-21]] |
 | Folding | done: headings and list parents fold in Live Preview and source mode, headings collapse in the reading view, the five `editor:*fold*` commands run, and the record lives outside the vault, see [[#Folding, 2026-10-26]] |
 | Editing commands | done: the insert-block commands, the checklist cycle, Mod+L on a line without a box, the six highlight colours, Clear formatting, per-line inline toggles, the one auto-pair rule and Shift+Tab's column arithmetic, all to the 2026-10-25 probes, see [[#The settled editing commands, 2026-10-26]] |
-| The gate itself | open: the harness passes on the real vault, the week of mixed use has not run, see [[#The gate run opens, 2026-10-18]] |
+| The gate itself | open: the harness passes on the real vault (fifteen properties, green 2026-11-04), and the week of mixed use starts 2026-11-04 on PLMCRZY with `docs/scoria` watched beside it — the sheet and the log are [[Writer gate run]], see [[#The gate week starts, 2026-11-04]] |
 
 ## Parity (phase 4)
 
@@ -325,6 +327,68 @@ uses behave as Obsidian's do.
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
+
+### The gate week starts, 2026-11-04
+
+The gate's other half — a week of a person using both apps on the same
+folder — is set up and running, and [[Writer gate run]] holds the sheet, the
+traps and the log. Three things had to be settled first.
+
+**The harness still passes.** Fifteen properties over the corpus and over
+PLMCRZY, green in 3.6 s with everything recompiled. Worth re-running before
+starting the week rather than trusting the 2026-10-18 result: the theme
+registry, 85 languages of highlighting and the whole Bases run landed in
+between, and a week of mixed use spent on a writer that had regressed would
+be a week wasted.
+
+**The October blocker is gone, and the clean diff means nothing.** The vault
+was registered in Obsidian on 2026-10-22 12:50 — which is what wrote its
+`app.json`, `appearance.json` and `core-plugins.json` — so "the vault is not
+registered in Obsidian yet" no longer holds. `diff -r snapshot-2026-10-25`
+is clean, but every file in it was last touched on 2026-10-22 or earlier, so
+that is the diff of an inert folder. **A clean diff over a vault nobody
+touched is zero evidence, not a pass**, and saying otherwise is the one way
+this gate can be passed without being met.
+
+The registration bought something real, though: PLMCRZY's `.obsidian` now
+holds four modelled files, and the config property's per-set
+`checked > before` assertion means they genuinely round-tripped — where
+[[#Four small entries and a URI, 2026-11-02]] recorded that set as passing
+vacuously on a `.obsidian` that held only `workspace.json`.
+
+**Two vaults, and only one decides.** The verdict rests on PLMCRZY because
+only Scoria and Obsidian ever write to it, so a moved byte has exactly two
+suspects — which is the question a diff has to answer. `docs/scoria` is the
+folder actually lived in (edited today; Obsidian rewrote its `.obsidian` on
+2026-10-30 and 2026-11-02), so it is watched for free through git, but a byte
+that moves there has a third possible author in the repo's own tooling and
+cannot settle anything. The thinness of the deciding vault is the price of
+attribution, and it is why the week is driven by a sheet covering all twenty
+Writer items rather than by organic use: ten notes used organically would
+touch three of them.
+
+`tools/writer-gate/gate.sh` is the procedure, wrapped as `just gate-check`,
+`just gate-baseline` and `just gate-status`. It keeps the layout
+[[#The gate run opens, 2026-10-18]] established — copies in
+`~/bstore2/raga/scoria-gate`, not hashes alone, because a hash says a file
+moved and the next question is always which bytes — and adds the daily shape:
+check against yesterday's snapshot, attribute whatever moved, then take
+today's. `check --from-first` gives the cumulative diff. `snapshot-2026-11-04`
+is the baseline, 17 files, its manifest verifying against the vault.
+
+Beyond the diff, the week has a second job. `templates.json`,
+`daily-notes.json`, `switcher.json`, `hotkeys.json` and `types.json` are
+modelled and written but ratcheted nowhere, because Obsidian creates none of
+them until a setting in that plugin is written and no set on this machine has
+one. Days 4 and 7 write exactly those settings, so the week should leave the
+harness its first real copy of each.
+
+One trap found in the setup and recorded in the note: this vault's `app.json`
+has `"vimMode": true`. Scoria models the setting and writes it back, but
+nothing in the editor acts on it — there is no modal editing anywhere in
+`scoria-text`. Obsidian's editor is modal this week and Scoria's is not, so
+the same keystrokes will not produce the same text. It stays as it is: it is
+the user's real setting, and the gate is about their real vault.
 
 ### Syntax highlighting breadth, 2026-11-04
 

@@ -28,6 +28,21 @@ test-lib:
 roundtrip vault:
     SCORIA_ROUNDTRIP_VAULT="{{vault}}" cargo test -p scoria-text --test writer_roundtrip
 
+gate_vault := env("SCORIA_GATE_VAULT", home_directory() / "bstore2/raga/plmcrzy/PLMCRZY")
+
+# The Writer gate's daily check: the harness, then what moved in both vaults
+gate-check:
+    just roundtrip "{{gate_vault}}"
+    tools/writer-gate/gate.sh check
+
+# The Writer gate's baseline snapshot of the deciding vault (run after a day's check)
+gate-baseline:
+    tools/writer-gate/gate.sh baseline
+
+# What the Writer gate run has snapshotted so far, and whether it can run at all
+gate-status:
+    tools/writer-gate/gate.sh status
+
 # ---- Build ---------------------------------------------------------------
 
 # Type-check the app crate (pulls gpui; slow the first time)
