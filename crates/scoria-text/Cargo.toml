@@ -20,6 +20,11 @@ unicode-segmentation = "1"
 [dev-dependencies]
 scoria-cache.workspace = true
 serde.workspace = true
+# The canvas round trip compares two canvases as JSON to tell a key-order
+# rewrite from a changed value; `preserve_order` keeps `Value`'s own keys in
+# file order, and `IndexMap`'s `PartialEq` is order-independent, which is
+# exactly the comparison that question needs.
+serde_json.workspace = true
 scoria-formats.workspace = true
 scoria-suggest.workspace = true
 scoria-templates.workspace = true

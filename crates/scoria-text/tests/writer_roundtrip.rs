@@ -990,8 +990,9 @@ fn every_config_file_is_written_back_byte_identical() {
         // Every set has to contribute, or naming a vault proves nothing
         // about its own `.obsidian` -- unless the vault keeps none of the
         // modelled files at all (a vault with only `workspace.json`, which
-        // Scoria neither models nor writes), where there is nothing to
-        // prove and the note round trips are the whole gate.
+        // Scoria does not model as a config type -- though it does write
+        // it, see the note below), where there is nothing to prove and the
+        // note round trips are the whole gate.
         let modelled = [
             "app.json",
             "appearance.json",
@@ -1018,9 +1019,15 @@ fn every_config_file_is_written_back_byte_identical() {
             dir.display()
         );
     }
-    // `workspace.json` is deliberately not here: Scoria neither models nor
-    // writes it (`docs/scoria/.obsidian` keeps it out of version control for
-    // the same reason).
+    // `workspace.json` is deliberately not here, but NOT because Scoria
+    // leaves it alone: `Workspace::save_layout` writes it on the way out,
+    // where Obsidian writes it too. What Scoria does not do is model it as a
+    // config type -- the layout goes out as a `serde_json::Value` merged
+    // into the file's own JSON, so every key it did not set keeps its bytes.
+    // It is out of this round trip because there is no type to round trip,
+    // and out of the gate's diffs because both apps rewrite it constantly.
+    // Nothing therefore holds that writer to Obsidian's bytes; see
+    // [[Writer gate run]], day 1.
     //
     // The two repository sets hold eight files between them. No set in the
     // repository has a `hotkeys.json` or a `types.json`, so those two writers
@@ -1111,6 +1118,7 @@ fn every_canvas_obsidian_saved_is_written_back_byte_identical() {
         canvases.extend(extra);
     }
     let (mut checked, mut authored_elsewhere, mut empty) = (0, Vec::new(), Vec::new());
+    let mut normalized: Vec<String> = Vec::new();
     for path in &canvases {
         let before = std::fs::read_to_string(path).unwrap();
         // `canvas:new-file` writes a zero-byte file, and Obsidian puts JSON
@@ -1129,13 +1137,50 @@ fn every_canvas_obsidian_saved_is_written_back_byte_identical() {
             authored_elsewhere.push(path.display().to_string());
             continue;
         }
-        assert_eq!(
-            canvas.to_json(),
-            before,
-            "writing {} back changed its bytes",
-            path.display()
-        );
+        let once = canvas.to_json();
+        if once != before {
+            // A node Obsidian made *in the app* is not a fixed point: on the
+            // next edited save Obsidian itself moves the geometry after
+            // `type` and the type's own keys, so `id, x, y, width, height,
+            // type, text, color` becomes `id, type, text, x, y, width,
+            // height, color`
+            // (`scoria-formats/tests/canvas_obsidian.rs::a_node_made_in_the_app_is_reordered_once_read_back`,
+            // observed on the gate vault's own canvas on 2026-10-18).
+            // `in_obsidians_layout` cannot see this: it reads the formatting,
+            // not the key order. So a real vault holding an app-made canvas
+            // would fail a byte-identity assertion that Obsidian would fail
+            // too. What must hold instead, and is strictly more than nothing:
+            //
+            //   - the rewrite only moves keys, never a value, and
+            //   - it happens once -- the second pass is a fixed point.
+            let a: serde_json::Value = serde_json::from_str(&before).unwrap();
+            let b: serde_json::Value = serde_json::from_str(&once).unwrap();
+            assert_eq!(
+                a,
+                b,
+                "writing {} back changed more than its key order",
+                path.display()
+            );
+            let twice = scoria_formats::canvas::Canvas::from_json(&once)
+                .unwrap_or_else(|e| panic!("{} did not re-parse: {e}", path.display()))
+                .to_json();
+            assert_eq!(
+                twice,
+                once,
+                "{} did not settle after one normalization",
+                path.display()
+            );
+            normalized.push(path.display().to_string());
+            continue;
+        }
         checked += 1;
+    }
+    if !normalized.is_empty() {
+        eprintln!(
+            "{} canvases reordered once, the way Obsidian reorders a node it made itself: {}",
+            normalized.len(),
+            normalized.join(", ")
+        );
     }
     if !authored_elsewhere.is_empty() {
         eprintln!(

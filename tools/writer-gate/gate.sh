@@ -17,8 +17,9 @@
 #              free evidence, but repo tooling writes there too, so a moved
 #              byte has three suspects and the verdict never rests on it.
 #
-# `workspace.json` is excluded throughout: Scoria neither models nor writes it
-# and Obsidian rewrites it constantly.
+# `workspace.json` is excluded throughout because both apps rewrite it
+# constantly -- not because Scoria leaves it alone. It writes it on the way
+# out (`Workspace::save_layout`), merged so unknown keys keep their bytes.
 #
 #   gate.sh baseline [date]        take today's snapshot of both vaults
 #   gate.sh check [snapshot]       diff both vaults (default: newest snapshot)
@@ -50,10 +51,24 @@ first()     { snapshots | head -1; }
 
 cmd_baseline() {
     local date="${1:-$(date +%F)}"
-    local dest="$GATE_DIR/snapshot-$date"
     [ -d "$VAULT" ] || die "no vault at $VAULT"
     mkdir -p "$GATE_DIR"
-    [ -e "$dest" ] && die "$dest exists already; pass another date or remove it"
+
+    # A day often needs two snapshots -- the morning baseline and the one that
+    # closes the day after both apps have run -- so a taken name gets a letter
+    # the way `plmcrzy-2026-10-18b.sha256` already does, rather than refusing.
+    local dest="$GATE_DIR/snapshot-$date"
+    if [ -e "$dest" ]; then
+        local suffix
+        for suffix in b c d e f g h i j k l m n o p q r s t u v w x y z; do
+            if [ ! -e "$GATE_DIR/snapshot-$date$suffix" ]; then
+                date="$date$suffix"
+                dest="$GATE_DIR/snapshot-$date"
+                break
+            fi
+        done
+        [ -e "$dest" ] && die "26 snapshots for one day already; pass a name"
+    fi
 
     rsync -a --exclude "$EXCLUDE" "$VAULT"/ "$dest"/
     manifest "$VAULT" > "$GATE_DIR/$SLUG-$date.sha256"

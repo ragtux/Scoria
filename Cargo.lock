@@ -5470,6 +5470,7 @@ dependencies = [
  "scoria-templates",
  "scoria-vault",
  "serde",
+ "serde_json",
  "tempfile",
  "unicode-segmentation",
 ]

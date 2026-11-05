@@ -125,15 +125,102 @@ cumulative diff, and the verdict in the log.
   `scoria-text`. So Obsidian's editor is modal this week and Scoria's is not, and the same
   keystrokes will not produce the same text. Left alone on purpose: it is the user's real
   setting, and the gate is about their real vault.
-- **`workspace.json` is excluded everywhere**, in the harness and in every diff: Scoria
-  neither models nor writes it, and Obsidian rewrites it constantly.
+- **`workspace.json` is excluded everywhere**, in the harness and in every diff — but *not*
+  because Scoria leaves it alone. It writes it on the way out, and day 1 found the stated
+  reason was wrong; see [[#Day 1, 2026-11-04]].
 - **`.claude/settings.local.json` is in the vault and in the snapshots.** If it moves, the
   author is Claude Code, not either app.
 - **Obsidian rewrites `appearance.json`, `app.json` and `core-plugins.json` on its own** when
   a settings pane is merely opened. Expect those three in a diff and attribute them before
   reading anything into them.
+- **The week cannot produce evidence about line endings or byte order marks.**
+  All ten notes are uniformly LF, no BOM, and every one ends with a newline
+  (surveyed 2026-11-04), so `an_edited_file_keeps_its_line_ending_and_byte_order_mark`
+  is covered here by the corpus alone. The uniformity cuts both ways, though: a
+  diff that shows a CRLF or a lost trailing newline is unambiguous. Adding one
+  CRLF note and one BOM note to the vault would close the gap, at the cost of
+  two files a person did not write.
 - **Don't run `--stress` or `--synthetic` against this vault.** They rewrite notes; they are
   for scratch vaults (see [[Development#The gate run opens, 2026-10-18]]).
+
+## Day 1, 2026-11-04
+
+**The Scoria half passes.** Six notes, three in Source mode (`Tech Stack`, `Infrastructure`,
+`Legacy Projects`) and three in Live Preview (`Business Model`, `Report Engine`,
+`Data Architecture`), each typed into, saved, undone and saved again. After every undo all
+seventeen files matched `plmcrzy-2026-11-04.sha256` exactly. Live Preview's display transform
+does not leak into the bytes: its writes were a single added line and nothing else. Autosave
+fired on its own two seconds after the last keystroke, with no explicit save, and wrote the
+same bytes. A quit and relaunch read the note back unchanged. The app was built from HEAD
+first — the release binary was thirteen app commits stale, and a week spent on a stale writer
+would be a week wasted.
+
+**`workspace.json` is the hole in this gate.** Quitting the app rewrote it, which contradicts
+the reason it is excluded from the harness and from every diff — "Scoria neither models nor
+writes it". `Workspace::save_layout` (`crates/scoria/src/workspace.rs:11625`) writes it
+through `Vault::write_config`, "called on the way out, where Obsidian writes it". What is true
+is narrower: Scoria does not model it *as a config type*. The layout goes out as a
+`serde_json::Value` merged into the file's own JSON, so every key it did not set keeps its
+bytes — which is the mitigation, and why nothing has gone visibly wrong.
+
+The consequence is still real: **the one file both apps write on every session is the only
+file the gate never checks.** Excluding it from the daily diff remains right — both apps
+rewrite it constantly, so it is noise there — but it belongs in the harness, where reading a
+real `workspace.json` and writing it back would be byte-identical or would not. That test does
+not exist. Filed rather than fixed mid-run: it changes what the gate covers, which is not a
+day's work.
+
+The false reason is corrected where it is read as current truth — `writer_roundtrip.rs`'s
+comment and `gate.sh`'s header. The dated sections of [[Development]] keep what was believed
+when they were written, which is what a log is for.
+
+**A driving lesson, not a bug.** `end` on a soft-wrapped paragraph goes to the end of the
+*visual* row, so the first attempt typed into the middle of `[[Web Application]]` instead of
+at the line's end. That is CodeMirror's behaviour and so Obsidian's, and
+`scoria-text/src/wrap.rs` states the rule deliberately: "Home, End, Up, Down, the selection
+highlight and the painted caret all have to agree". One `ctrl-z` restored the bytes exactly.
+Use `ctrl-end`, or the find panel, to place a cursor without wrap ambiguity.
+
+### The Obsidian half, and the verdict
+
+Five notes appended to in Obsidian (`Business Model`, `Data Architecture`, `Infrastructure`,
+`Legacy Projects`, `Tech Stack`), `vimMode` turned off, and `PLMCRZY Mindmap.canvas` opened.
+**Day 1 passes:** everything the diff reported is a person's edit in one of the two apps. Nothing
+moved that nobody touched, bar the two known cases below.
+
+Three things the day bought the gate, all of which make the vault a better test than it was
+this morning:
+
+- **Five notes now end without a trailing newline.** Obsidian does not add one, so typing at
+  the end of the last line leaves the file without it. That half-closes the gap recorded in the
+  traps above, and the harness proves Scoria preserves the absence: with the vault named,
+  `opening_every_note_and_saving_it_changes_no_bytes` passes over all five.
+- **`app.json` now holds a non-default value** (`"vimMode": false`, written by Obsidian), so the
+  config round trip covers a value a person actually changed rather than a default.
+- **`PLMCRZY Mindmap.canvas` is now in Obsidian's own layout.** Obsidian rewrote the
+  pretty-printed JSON into compact bytes on opening it; the content is identical to the key
+  (29 nodes, 30 edges, semantically equal). A canvas authored elsewhere was skipped by the
+  harness before; this one is not.
+
+**The canvas failure was the harness's, not the writer's.** That rewritten canvas made
+`every_canvas_obsidian_saved_is_written_back_byte_identical` fail, and the first reading — that
+Scoria's canvas writer mangles bytes — was wrong. Scoria wrote
+`id, type, text, x, y, width, height, color` for a file holding
+`id, x, y, width, height, type, text, color`, which is exactly the reordering
+`canvas_obsidian.rs::a_node_made_in_the_app_is_reordered_once_read_back` records Obsidian itself
+performing on an edited save — observed on *this vault's canvas* on 2026-10-18. Scoria
+reproduced Obsidian. What failed is the guard: `in_obsidians_layout` reads the formatting, not
+the key order, so it cannot tell a fixed-point canvas from one Obsidian made in the app, and any
+real vault holding the latter fails an assertion Obsidian would fail too.
+
+The fix keeps the property strong rather than excusing the file. Where the bytes differ, two
+things must now hold: the rewrite moved **only keys, never a value** (both sides compared as
+JSON, which `serde_json`'s `preserve_order` plus `IndexMap`'s order-independent `PartialEq`
+makes exactly the right comparison), and the reordering **settles in one pass** — the second
+write is a fixed point. The canvas is reported, not silently skipped.
+
+**Still open:** `workspace.json`, filed above, and the Obsidian-half protocol worked — so day 2
+is files and links.
 
 ## The log
 
@@ -143,7 +230,7 @@ questions above.
 | Day | Date | Scoria half | Obsidian half | Moved | Author | Verdict |
 | --- | --- | --- | --- | --- | --- | --- |
 | 0 | 2026-11-04 | — | — | nothing (vault inert since 10-22) | — | baseline `snapshot-2026-11-04` taken, harness green at 15 properties |
-| 1 |  |  |  |  |  |  |
+| 1 | 2026-11-04 | six notes, 3 source + 3 Live Preview: typed, saved, undone, saved | five notes appended to; `vimMode` off; `PLMCRZY Mindmap.canvas` opened | 5 notes +1 line each (no trailing newline now), `app.json`, the canvas rewritten compact, `workspace.json` | every one a person's edit in one of the two apps, bar the canvas (Obsidian normalizing a file authored elsewhere) and `workspace.json` (both apps, every session) | **passes** — nothing moved that nobody touched; the harness's canvas failure was the harness's, not the writer's |
 | 2 |  |  |  |  |  |  |
 | 3 |  |  |  |  |  |  |
 | 4 |  |  |  |  |  |  |
