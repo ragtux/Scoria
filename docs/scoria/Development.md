@@ -310,7 +310,7 @@ the sheet, the log and the day's procedure are [[Writer gate run]], see
 | Files header | done: New note, New folder, the six sort orders, Auto-reveal current file and Expand all / Collapse all, see [[#Files header, 2026-10-21]]; the tree takes the keyboard, see [[#Explorer keyboard, 2026-10-21]] |
 | Folding | done: headings and list parents fold in Live Preview and source mode, headings collapse in the reading view, the five `editor:*fold*` commands run, and the record lives outside the vault, see [[#Folding, 2026-10-26]] |
 | Editing commands | done: the insert-block commands, the checklist cycle, Mod+L on a line without a box, the six highlight colours, Clear formatting, per-line inline toggles, the one auto-pair rule and Shift+Tab's column arithmetic, all to the 2026-10-25 probes, see [[#The settled editing commands, 2026-10-26]] |
-| The gate itself | open: the harness passes on the real vault (sixteen properties, green 2026-11-05), and the week of mixed use is running on PLMCRZY with `docs/scoria` watched beside it — days 1 and 2 both pass, day 2 catching an inverted `alwaysUpdateLinks` default and proving the two apps' link rewriters byte-identical. Day 3 is tables and properties. The sheet and the log are [[Writer gate run]], see [[#The gate week starts, 2026-11-04]] and [[#Day 2, files and links, 2026-11-05]] |
+| The gate itself | open: the harness passes on the real vault (sixteen properties, green 2026-11-05), and the week of mixed use is running on PLMCRZY with `docs/scoria` watched beside it — days 1 and 2 both pass, day 2 catching an inverted `alwaysUpdateLinks` default and proving the two apps' link rewriters byte-identical. Day 3 is tables and properties. The prompt day 2's fix made reachable is now Obsidian's three buttons, and its "Always update" gives the harness its first path to an `app.json` holding `alwaysUpdateLinks`, see [[#The third button on the rename prompt, 2026-11-05]]. The sheet and the log are [[Writer gate run]], see [[#The gate week starts, 2026-11-04]] and [[#Day 2, files and links, 2026-11-05]] |
 
 ## Parity (phase 4)
 
@@ -327,6 +327,70 @@ uses behave as Obsidian's do.
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
+
+### The third button on the rename prompt, 2026-11-05
+
+The gap day 2 filed and argued for closing inside the week rather than after it
+([[UI parity backlog#The "Update links" prompt is two buttons and Scoria's own wording]]).
+"Always update" is the only control a person reaches in either app that writes
+`alwaysUpdateLinks: true`, so until it existed the gate's harness had no way to get an `app.json`
+holding the key — which is the week's second job, the same reason days 4 and 7 go looking for
+`templates.json`, `daily-notes.json`, `switcher.json`, `types.json` and `hotkeys.json`.
+
+**The modal is now Obsidian's, string for string.** Title **Update links**, two lines that name
+neither the file nor the new name — "Do you want to update internal links that link to this
+file?" and "This will affect 3 links in 2 files." — and three buttons in Obsidian's order with no
+Cancel: **Always update**, **Just once**, **Do not update**. The record is the drag pass
+(`tools/obsidian-probe/results/2026-10-25-explorer-dnd.json`, step `s05`), whose counts were both
+1, so the singular is what was observed and the plural is the inference — Obsidian writing "1 link
+in 1 file" rather than "1 link(s)" is what says it pluralises at all.
+
+**`PromptSpec` grew a row rather than a third label.** `confirm` and `secondary` name buttons but
+not their order, and the default row puts Cancel between them, so a field for a third button could
+not have produced Obsidian's three-in-a-row-with-no-Cancel. `buttons: Vec<PromptButton>` is the
+whole row when a prompt states one — each a `{ label, action, cta }`, where the action is one of
+the four things the default row already did — and empty, which every other prompt leaves it, is
+that default row built from `confirm` and `secondary` exactly as before. `detail` became a `Vec`
+in the same change, because Obsidian's two lines are two lines. The row is computed in one place
+(`Prompt::buttons`) that both the painting and the control socket's state dump read, so a driver
+can now see `["Always update", "Just once", "Do not update"]` instead of aiming at pixels.
+
+**Escape is "Do not update", which the entry had not noticed.** Obsidian has no Cancel because by
+the time its modal is up the file has already been renamed — the drag pass dismissed it with
+Escape and the linking file stayed byte-identical *while the move stood*. Scoria asked first and
+renamed after, so Escape abandoned the whole rename: a fourth answer Obsidian does not have.
+Escape and a click outside now finish the rename without rewriting. Scoria still asks before it
+renames rather than after, which is not observable — all four answers leave the same bytes — and
+is left that way because the ask-path already validates the new name before anything moves.
+
+**Always update writes the setting before it renames, and a failed write takes the rename with
+it.** The order matters for exactly the reason this button exists: a rename that rewrote links
+while `app.json` still said to ask is the divergence the day-2 fix closed, so if the config write
+cannot reach disk the prompt stays up with the error on it and nothing moves.
+
+**Driven in the app on a scratch vault**, never the gate vault, all four answers against a vault
+whose `app.json` held only `trashOption` and whose `Two.md` had no trailing newline:
+
+| Answer | The file | The 3 links in 2 files | `app.json` |
+| --- | --- | --- | --- |
+| Always update | renamed | rewritten | `alwaysUpdateLinks: true`, `trashOption` kept |
+| Just once | renamed | rewritten | untouched, byte for byte |
+| Do not update | renamed | untouched, same sha256 | untouched |
+| Escape | renamed | untouched, same sha256 | untouched |
+
+and the rename after **Always update** asked nothing and reported "Updated 3 links in 2 files.",
+which is the written key being read back.
+
+Two unit tests, both checked against deliberate breakage rather than trusted for being green:
+`the_update_links_prompt_is_obsidians_three_buttons_and_two_lines` pins the strings, the order and
+which button is accented (swapping the plural's arms and dropping the `cta` each fail it), and
+`always_update_writes_the_key_and_the_next_rename_reads_it` pins the config write — the key true
+in the file, the key already there surviving, and `update_links_automatically` reading it without
+a reload.
+
+**Still unprobed:** which of the three buttons Obsidian gives `mod-cta`. The probe recorded labels
+and not classes. Enter therefore keeps doing what it did before the third button arrived —
+updating once — and "Just once" is the accented one.
 
 ### Day 2, files and links, 2026-11-05
 

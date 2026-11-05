@@ -26,7 +26,7 @@ use crate::mentions::{Finder, Name};
 use crate::palette::{CommandPalette, PaletteCommand, PaletteEvent};
 use crate::panes::{self, PaneSort};
 use crate::pdf::view::{PdfEvent, PdfView};
-use crate::prompt::{Prompt, PromptEvent, PromptSpec};
+use crate::prompt::{Prompt, PromptAction, PromptButton, PromptEvent, PromptSpec};
 use crate::reading::{
     self, LinkTarget, PropertyItemRemoved, ReadingEvent, ReadingView, TaskMarker, TaskToggled,
 };
@@ -3311,10 +3311,8 @@ impl Workspace {
                 |this, _, event: &PromptEvent, window, cx| match event {
                     PromptEvent::Submit(value) => this.prompt_submitted(value, window, cx),
                     PromptEvent::Secondary => this.prompt_secondary(window, cx),
-                    PromptEvent::Cancel => {
-                        this.pending = None;
-                        this.close_modal(window, cx);
-                    }
+                    PromptEvent::Tertiary => this.prompt_tertiary(window, cx),
+                    PromptEvent::Cancel => this.prompt_cancelled(window, cx),
                 },
             ),
             cx.subscribe_in(
@@ -7591,7 +7589,7 @@ impl Workspace {
                 } else {
                     "Rename file".into()
                 },
-                detail: Some(path.to_string().into()),
+                detail: vec![path.to_string().into()],
                 input: Some(initial.to_string()),
                 placeholder: "Name".into(),
                 confirm: "Rename".into(),
@@ -7629,7 +7627,7 @@ impl Workspace {
                 } else {
                     "Move file to...".into()
                 },
-                detail: Some(path.to_string().into()),
+                detail: vec![path.to_string().into()],
                 input: Some(String::new()),
                 placeholder: "Type a folder".into(),
                 suggestions,
@@ -7654,11 +7652,11 @@ impl Workspace {
             },
             PromptSpec {
                 title: "New folder".into(),
-                detail: Some(if parent.is_empty() {
+                detail: vec![if parent.is_empty() {
                     "In the vault folder".into()
                 } else {
                     format!("In {parent}").into()
-                }),
+                }],
                 input: Some(initial),
                 placeholder: "Folder name".into(),
                 confirm: "Create".into(),
@@ -7687,7 +7685,7 @@ impl Workspace {
             PendingOp::Delete(path.to_string()),
             PromptSpec {
                 title: format!("Delete \"{name}\"?").into(),
-                detail: Some(where_to.into()),
+                detail: vec![where_to.into()],
                 input: None,
                 confirm: "Delete".into(),
                 ..PromptSpec::default()
@@ -7830,7 +7828,8 @@ impl Workspace {
         }
     }
 
-    /// The prompt's secondary button: "Don't update" the links.
+    /// The prompt's secondary button: "Do not update" the links, and
+    /// "Remove" on a bookmark.
     fn prompt_secondary(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         match self.pending.clone() {
             Some(PendingOp::UpdateLinks { from, to }) => {
@@ -7845,6 +7844,44 @@ impl Workspace {
             }
             _ => {}
         }
+    }
+
+    /// The prompt's third button: "Always update". It is the only control in
+    /// either app that writes `alwaysUpdateLinks: true` -- the Settings row
+    /// can write it too, but this is the path a person actually takes -- so
+    /// the setting goes out first and the rename then follows the setting it
+    /// just wrote. A write that cannot reach disk takes the rename with it:
+    /// the vault is the source of truth, and a rename that rewrote links
+    /// while the file still says to ask would be the divergence this button
+    /// exists to close.
+    fn prompt_tertiary(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(PendingOp::UpdateLinks { from, to }) = self.pending.clone() else {
+            return;
+        };
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let mut app = state.app().clone();
+        app.always_update_links = Some(true);
+        if let Err(err) = state.apply_setting(&SettingChange::App(app)) {
+            self.prompt
+                .update(cx, |p, cx| p.set_error(format!("app.json: {err}"), cx));
+            return;
+        }
+        self.finish_rename(&from, &to, true, window, cx);
+    }
+
+    /// Escape, and a click outside. On the rename prompt this is Obsidian's
+    /// "Do not update" rather than an abandoned rename: its modal comes up
+    /// after the file has moved, so dismissing it leaves the rename standing
+    /// and the links alone.
+    fn prompt_cancelled(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if let Some(PendingOp::UpdateLinks { from, to }) = self.pending.clone() {
+            self.finish_rename(&from, &to, false, window, cx);
+            return;
+        }
+        self.pending = None;
+        self.close_modal(window, cx);
     }
 
     // ----- bookmarks ---------------------------------------------------------------
@@ -7880,7 +7917,7 @@ impl Workspace {
             PendingOp::AddBookmark(draft),
             PromptSpec {
                 title: title.into(),
-                detail: detail.map(Into::into),
+                detail: detail.map(Into::into).into_iter().collect(),
                 input: Some(initial),
                 placeholder: placeholder.into(),
                 confirm: "Save".into(),
@@ -7922,7 +7959,7 @@ impl Workspace {
                 PendingOp::EditBookmark(path.to_string()),
                 PromptSpec {
                     title: "Edit bookmark".into(),
-                    detail: Some(format!("Path: {placeholder}").into()),
+                    detail: vec![format!("Path: {placeholder}").into()],
                     input: Some(String::new()),
                     placeholder: placeholder.into(),
                     confirm: "Save".into(),
@@ -8012,6 +8049,18 @@ impl Workspace {
 
     /// Renames, rewriting links right away or asking first when
     /// `alwaysUpdateLinks` is off and there are links to rewrite.
+    ///
+    /// Obsidian's modal is three buttons and no Cancel, because by the time
+    /// it is up the file has already been renamed and the only question left
+    /// is the links: "Always update" writes the setting on and rewrites,
+    /// "Just once" rewrites, "Do not update" does not, and Escape is "Do not
+    /// update" -- the drag pass dismissed it with Escape and the linking file
+    /// stayed byte-identical while the move stood
+    /// (`tools/obsidian-probe/results/2026-10-25-explorer-dnd.json`, step
+    /// `s05`). Scoria asks before it renames rather than after, which is not
+    /// observable: every one of the four answers leaves the same bytes.
+    /// Which button carries `mod-cta` was not recorded, so Enter keeps doing
+    /// what it did before the third button arrived -- updating once.
     fn rename_with_links(
         &mut self,
         from: &str,
@@ -8036,27 +8085,12 @@ impl Workspace {
             self.finish_rename(from, to, false, window, cx);
             return;
         }
-        let name = from.rsplit('/').next().unwrap_or(from);
         self.open_prompt(
             PendingOp::UpdateLinks {
                 from: from.to_string(),
                 to: to.to_string(),
             },
-            PromptSpec {
-                title: "Update links?".into(),
-                detail: Some(
-                    format!(
-                        "{links} link{} in {files} file{} point to {name}. Update them to the new name?",
-                        if links == 1 { "" } else { "s" },
-                        if files == 1 { "" } else { "s" }
-                    )
-                    .into(),
-                ),
-                input: None,
-                confirm: "Update links".into(),
-                secondary: Some("Don't update".into()),
-                ..PromptSpec::default()
-            },
+            update_links_prompt(files, links),
             window,
             cx,
         );
@@ -14402,7 +14436,7 @@ impl Workspace {
             PendingOp::RenameProperty(name.to_string()),
             PromptSpec {
                 title: "Rename property".into(),
-                detail: Some(name.to_string().into()),
+                detail: vec![name.to_string().into()],
                 input: Some(name.to_string()),
                 placeholder: "Property name".into(),
                 confirm: "Rename".into(),
@@ -15651,6 +15685,34 @@ fn leaf_view_type(path: &str) -> &'static str {
         FileKind::Audio => "audio",
         FileKind::Video => "video",
         _ => "markdown",
+    }
+}
+
+/// Obsidian's "Update links" modal, to the drag pass that caught it
+/// (`tools/obsidian-probe/results/2026-10-25-explorer-dnd.json`, step
+/// `s05`): the title, two lines that name neither the file nor the new name,
+/// and three buttons in that order with no Cancel. The probe read the
+/// second line as "This will affect 1 link in 1 file.", so Obsidian
+/// pluralises rather than writing "link(s)".
+fn update_links_prompt(files: usize, links: usize) -> PromptSpec {
+    PromptSpec {
+        title: "Update links".into(),
+        detail: vec![
+            "Do you want to update internal links that link to this file?".into(),
+            format!(
+                "This will affect {links} link{} in {files} file{}.",
+                if links == 1 { "" } else { "s" },
+                if files == 1 { "" } else { "s" }
+            )
+            .into(),
+        ],
+        input: None,
+        buttons: vec![
+            PromptButton::new("Always update", PromptAction::Tertiary),
+            PromptButton::new("Just once", PromptAction::Submit).cta(),
+            PromptButton::new("Do not update", PromptAction::Secondary),
+        ],
+        ..PromptSpec::default()
     }
 }
 
@@ -17554,6 +17616,69 @@ mod tests {
         assert!(
             files > 0 && links > 0,
             "renaming A should affect links, got {links} in {files}"
+        );
+    }
+
+    /// Obsidian's modal, string for string and button for button
+    /// (`tools/obsidian-probe/results/2026-10-25-explorer-dnd.json`, `s05`).
+    /// The counts there were both 1, which is why the singular is the case
+    /// pinned to the probe and the plural is the inference.
+    #[test]
+    fn the_update_links_prompt_is_obsidians_three_buttons_and_two_lines() {
+        let one = update_links_prompt(1, 1);
+        assert_eq!(one.title, "Update links");
+        assert_eq!(
+            one.detail,
+            vec![
+                "Do you want to update internal links that link to this file?",
+                "This will affect 1 link in 1 file."
+            ],
+            "the two lines the probe read, concatenated, were exactly these"
+        );
+        let row: Vec<(&str, PromptAction, bool)> = one
+            .buttons
+            .iter()
+            .map(|b| (b.label.as_ref(), b.action, b.cta))
+            .collect();
+        assert_eq!(
+            row,
+            vec![
+                ("Always update", PromptAction::Tertiary, false),
+                ("Just once", PromptAction::Submit, true),
+                ("Do not update", PromptAction::Secondary, false),
+            ],
+            "Obsidian's order, and no Cancel -- its modal has three buttons"
+        );
+        assert_eq!(
+            update_links_prompt(6, 6).detail[1],
+            "This will affect 6 links in 6 files.",
+            "both nouns pluralise"
+        );
+    }
+
+    /// "Always update" is the only control a person reaches in either app
+    /// that writes `alwaysUpdateLinks: true`, which is what the Writer
+    /// gate's week needs an `app.json` to hold. Writing it has to leave the
+    /// keys already in the file alone and has to be what the next rename
+    /// reads, or the button would ask again.
+    #[test]
+    fn always_update_writes_the_key_and_the_next_rename_reads_it() {
+        let (dir, state) = vault();
+        assert!(!state.update_links_automatically(), "the fixture asks");
+        let mut app = state.app().clone();
+        app.always_update_links = Some(true);
+        state.apply_setting(&SettingChange::App(app)).unwrap();
+        assert!(
+            state.update_links_automatically(),
+            "the write has to reach the config in hand, not just the file"
+        );
+        let written = fs::read_to_string(dir.path().join(".obsidian/app.json")).unwrap();
+        let json: serde_json::Value = serde_json::from_str(&written).unwrap();
+        assert_eq!(json["alwaysUpdateLinks"], serde_json::json!(true));
+        assert_eq!(
+            json["trashOption"],
+            serde_json::json!("local"),
+            "the key the file already had must survive the write"
         );
     }
 

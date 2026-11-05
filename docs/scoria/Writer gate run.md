@@ -334,6 +334,15 @@ fixed tonight, because the missing third button — **Always update** — has to
 inside the week: that button is the only path by which either app writes the key, so it is also the
 only way the harness gets a real `app.json` holding it, which is the week's second job.
 
+**Built the same day, before day 3.** The modal is now Obsidian's three buttons and its two lines,
+and "Always update" writes the key. Driven on a scratch vault — never this one — all four answers
+leave the bytes Obsidian's leave, and the rename after "Always update" asks nothing. It also turned
+up a fourth answer Scoria had that Obsidian does not: Escape abandoned the rename, where Obsidian's
+modal comes up *after* the file has moved, so dismissing it leaves the rename standing and the
+links alone. See [[Development#The third button on the rename prompt, 2026-11-05]]. The week's
+second job has its first entry; `templates.json`, `daily-notes.json`, `switcher.json`, `types.json`
+and `hotkeys.json` are still owed by days 3, 4 and 7.
+
 ### One claim withdrawn before it was filed
 
 The "Move file to…" chooser looked like it was missing Obsidian's vault-root row: with

@@ -3861,7 +3861,12 @@ modal:
 | Text | `Do you want to update internal links that link to this file?` then `This will affect 1 link in 1 file.` |
 | Buttons | **Always update**, **Just once**, **Do not update** |
 
-Dismissed with Escape, `Linker.md` stayed byte-identical.
+There is no Cancel, and the reason is the order: the file has **already moved**
+by the time the modal is up — `Dest/Alpha 1.md` is in the tree the step
+recorded — so the only question left is the links. Dismissed with Escape,
+`Linker.md` stayed byte-identical and the move stood, which makes Escape the
+same answer as **Do not update**. Which button carries `mod-cta` was not
+recorded.
 
 **There is no undo for a drag-move.** Ctrl+Z with the explorer focused after
 the file-row drop left the tree exactly as the drop had left it, and raised no

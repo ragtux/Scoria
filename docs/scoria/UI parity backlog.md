@@ -86,6 +86,14 @@ four small entries they carried closed nine of them, so **52 remain** — plus o
 
 *medium, parity-gap, small* · **Filed:** 2026-11-05
 
+**Landed 2026-11-05**: the modal is Obsidian's title, its two lines and its three buttons in its
+order, with no Cancel, and "Always update" writes `alwaysUpdateLinks: true` before it rewrites.
+`PromptSpec` grew `buttons`, a whole row of `PromptButton { label, action, cta }` that replaces
+the default `[secondary] [Cancel] [confirm]` when a prompt states its own, and `detail` became a
+`Vec` so the two lines are two lines. The row also reaches the control socket's state dump, so a
+driver can read "Always update" rather than aim at it. See
+[[Development#The third button on the rename prompt, 2026-11-05]].
+
 Found by the Writer gate's day 2, as the second half of an inverted default; the default itself is
 fixed, see [[Development#Day 2, files and links, 2026-11-05]]. Until that fix the prompt was
 unreachable on any vault that had never written `alwaysUpdateLinks`, which is why its shape had
@@ -102,17 +110,21 @@ never been compared with Obsidian's.
 
 **Always update** is also a config writer: it turns the setting on, so the next rename does not ask.
 
-**Scoria.** Title "Update links?"; the detail names the file *with its extension* — "6 links in 6
-files point to `Data Lake Architecture.md`. Update them to the new name?" — and there are two
-buttons, "Update links" and "Don't update" (`rename_with_links`,
-`crates/scoria/src/workspace.rs:8008`). So the sentence is Scoria's, the count is phrased the other
-way round, and the third button is missing.
+**Scoria, as it was.** Title "Update links?"; the detail named the file *with its extension* — "6
+links in 6 files point to `Data Lake Architecture.md`. Update them to the new name?" — and there
+were two buttons, "Update links" and "Don't update". So the sentence was Scoria's, the count was
+phrased the other way round, and the third button was missing.
 
-**Fix.** Obsidian's two strings, and a third button that writes `alwaysUpdateLinks: true` before
-rewriting. `PromptSpec` carries `confirm` and `secondary` only, so the third needs a field —
-the one real change here. Worth doing with the week rather than after it: "Always update" is the
-only path by which either app writes that key, so it is also the only way the gate's harness gets
-a real copy of an `app.json` holding it.
+**What the fix found beyond its own entry.** Obsidian has no Cancel because by the time its modal
+is up the file has already been renamed: the drag pass dismissed it with Escape and the linking
+file stayed byte-identical *while the move stood*. Scoria asked before renaming, so Escape
+abandoned the rename altogether — a fourth answer Obsidian does not have. Escape and a click
+outside are now "Do not update". Scoria still asks before it renames rather than after, which is
+not observable: all four answers leave the same bytes.
+
+Which of the three buttons carries `mod-cta` was never recorded, so Enter keeps doing what it did
+before the third button arrived — updating once — and "Just once" is the accented one. That is the
+one piece of this modal still unprobed.
 
 ### The explorer renames in a modal where Obsidian edits the row in place
 

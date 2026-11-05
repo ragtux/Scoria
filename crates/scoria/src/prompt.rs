@@ -1,7 +1,13 @@
-//! A small modal for file operations: a title, an optional text field, an
-//! optional list of suggestions the field filters (the folder picker of
-//! "Move file to..."), an error line, and one or two buttons. Enter submits,
-//! Escape cancels; Up and Down walk the suggestions.
+//! A small modal for file operations: a title, the lines under it, an
+//! optional text field, an optional list of suggestions the field filters
+//! (the folder picker of "Move file to..."), an error line, and a row of
+//! buttons. Enter submits, Escape cancels; Up and Down walk the
+//! suggestions.
+//!
+//! The button row is `[secondary] [Cancel] [confirm]` unless the spec names
+//! its own: Obsidian's "Update links" modal has three buttons in its own
+//! order and no Cancel at all, so `PromptSpec::buttons` lets a prompt state
+//! the row it was observed to have.
 
 use crate::text_input::{InputEvent, TextInput};
 use crate::theme::Theme;
@@ -30,15 +36,53 @@ pub enum PromptEvent {
     Submit(String),
     /// The secondary button.
     Secondary,
+    /// A third button beside those two: "Always update" on the rename
+    /// prompt, which writes a setting before it updates the links.
+    Tertiary,
     Cancel,
+}
+
+/// What a button in [`PromptSpec::buttons`] does when it is clicked -- the
+/// same four things the default row does.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PromptAction {
+    /// What Enter and the primary button do.
+    Submit,
+    Secondary,
+    Tertiary,
+    Cancel,
+}
+
+/// One button of a prompt's own row.
+#[derive(Debug, Clone)]
+pub struct PromptButton {
+    pub label: SharedString,
+    pub action: PromptAction,
+    /// `button.mod-cta`: the accented one. Enter does what it does.
+    pub cta: bool,
+}
+
+impl PromptButton {
+    pub fn new(label: impl Into<SharedString>, action: PromptAction) -> PromptButton {
+        PromptButton {
+            label: label.into(),
+            action,
+            cta: false,
+        }
+    }
+
+    pub fn cta(mut self) -> PromptButton {
+        self.cta = true;
+        self
+    }
 }
 
 /// What the prompt asks for.
 #[derive(Debug, Clone, Default)]
 pub struct PromptSpec {
     pub title: SharedString,
-    /// Shown under the title.
-    pub detail: Option<SharedString>,
+    /// The lines under the title, one element each.
+    pub detail: Vec<SharedString>,
     /// `Some(initial text)` shows the text field.
     pub input: Option<String>,
     pub placeholder: SharedString,
@@ -46,6 +90,10 @@ pub struct PromptSpec {
     pub suggestions: Vec<String>,
     pub confirm: SharedString,
     pub secondary: Option<SharedString>,
+    /// The whole button row, in order, for a prompt whose row is not
+    /// `[secondary] [Cancel] [confirm]`. Empty means that default row, and
+    /// `confirm` and `secondary` are then what label it.
+    pub buttons: Vec<PromptButton>,
 }
 
 pub struct Prompt {
@@ -121,8 +169,10 @@ impl Prompt {
     }
 
     /// What the prompt is asking, for the control socket's state dump: the
-    /// field's text, the suggestions it filtered down to, and the error line
-    /// a failed operation left on screen.
+    /// field's text, the suggestions it filtered down to, the error line a
+    /// failed operation left on screen, and the buttons in the order they
+    /// are painted -- which is the only way a driver can tell "Always
+    /// update" from "Just once" without aiming at pixels.
     pub fn describe(&self, rows: usize, cx: &App) -> Value {
         let total = self.filtered.len();
         let shown: Vec<&str> = self
@@ -131,13 +181,31 @@ impl Prompt {
             .take(rows)
             .filter_map(|(ix, _)| self.spec.suggestions.get(*ix).map(String::as_str))
             .collect();
+        let row = self.buttons();
+        let buttons: Vec<&str> = row.iter().map(|b| b.label.as_ref()).collect();
         json!({
             "query": self.input.read(cx).text(),
             "selected": self.selected,
             "rows": shown,
             "rows_total": if total > shown.len() { Some(total) } else { None },
             "error": self.error,
+            "buttons": buttons,
         })
+    }
+
+    /// The button row: the spec's own, or the default
+    /// `[secondary] [Cancel] [confirm]`.
+    fn buttons(&self) -> Vec<PromptButton> {
+        if !self.spec.buttons.is_empty() {
+            return self.spec.buttons.clone();
+        }
+        let mut row = Vec::new();
+        if let Some(label) = self.spec.secondary.clone() {
+            row.push(PromptButton::new(label, PromptAction::Secondary));
+        }
+        row.push(PromptButton::new("Cancel", PromptAction::Cancel));
+        row.push(PromptButton::new(self.spec.confirm.clone(), PromptAction::Submit).cta());
+        row
     }
 
     fn refresh(&mut self, cx: &mut Context<Self>) {
@@ -255,9 +323,9 @@ impl Render for Prompt {
         // than on a bare wrapper around it: gpui hit-tests the element that
         // registered the listener, and the wrapper's box is not the box the
         // user aims at.
-        let button = |id: &'static str, label: SharedString, primary: bool, theme: &Theme| {
+        let button = |ix: usize, label: SharedString, primary: bool, theme: &Theme| {
             div()
-                .id(id)
+                .id(("prompt-button", ix))
                 .px_3()
                 .py_1()
                 .rounded_md()
@@ -308,12 +376,17 @@ impl Render for Prompt {
                     .text_color(theme.tokens.text_normal)
                     .child(self.spec.title.clone()),
             )
-            .children(self.spec.detail.clone().map(|d| {
-                div()
-                    .text_size(px(13.))
-                    .text_color(theme.tokens.text_muted)
-                    .child(d)
-            }))
+            .when(!self.spec.detail.is_empty(), |d| {
+                d.child(
+                    div()
+                        .flex()
+                        .flex_col()
+                        .gap_1()
+                        .text_size(px(13.))
+                        .text_color(theme.tokens.text_muted)
+                        .children(self.spec.detail.clone()),
+                )
+            })
             .when(self.spec.input.is_some(), |d| d.child(self.input.clone()))
             .when(count > 0, |d| {
                 d.child(
@@ -335,18 +408,18 @@ impl Render for Prompt {
                     .justify_end()
                     .gap_2()
                     .mt_1()
-                    .children(self.spec.secondary.clone().map(|label| {
-                        button("prompt-secondary", label, false, &theme)
-                            .on_click(cx.listener(|_, _, _, cx| cx.emit(PromptEvent::Secondary)))
-                    }))
-                    .child(
-                        button("prompt-cancel", "Cancel".into(), false, &theme)
-                            .on_click(cx.listener(|_, _, _, cx| cx.emit(PromptEvent::Cancel))),
-                    )
-                    .child(
-                        button("prompt-confirm", self.spec.confirm.clone(), true, &theme)
-                            .on_click(cx.listener(|this, _, _, cx| this.submit(cx))),
-                    ),
+                    .children(self.buttons().into_iter().enumerate().map(
+                        |(ix, PromptButton { label, action, cta })| {
+                            button(ix, label, cta, &theme).on_click(cx.listener(
+                                move |this, _, _, cx| match action {
+                                    PromptAction::Submit => this.submit(cx),
+                                    PromptAction::Secondary => cx.emit(PromptEvent::Secondary),
+                                    PromptAction::Tertiary => cx.emit(PromptEvent::Tertiary),
+                                    PromptAction::Cancel => cx.emit(PromptEvent::Cancel),
+                                },
+                            ))
+                        },
+                    )),
             )
     }
 }
