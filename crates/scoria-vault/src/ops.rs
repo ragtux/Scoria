@@ -346,9 +346,13 @@ impl Vault {
             .collect()
     }
 
-    /// Renames or moves a file or folder. Returns every file that moved as
-    /// `(old path, new path)`, so links can be rewritten.
-    pub fn rename(&mut self, from: &str, to: &str) -> Result<Vec<(String, String)>, OpError> {
+    /// Whether [`Vault::rename`] would go through, without doing it: the
+    /// name, the source, a destination already taken, and a folder moved
+    /// into itself. A caller that has somewhere better to put the refusal
+    /// than a failed rename asks this first -- the file tree's inline
+    /// rename, which keeps its field open on a name the filesystem would
+    /// not take.
+    pub fn check_rename(&self, from: &str, to: &str) -> Result<(), OpError> {
         let from = from.trim_matches('/');
         let to = to.trim_matches('/');
         validate_path(to)?;
@@ -357,7 +361,7 @@ impl Vault {
             return Err(OpError::NotFound(from.to_string()));
         }
         if from == to {
-            return Ok(Vec::new());
+            return Ok(());
         }
         let to_abs = self.entry_path(to)?;
         // A case-only rename of the same entry is allowed; anything else
@@ -370,6 +374,20 @@ impl Vault {
         if to.starts_with(&format!("{from}/")) {
             return Err(OpError::InvalidName("Cannot move a folder into itself."));
         }
+        Ok(())
+    }
+
+    /// Renames or moves a file or folder. Returns every file that moved as
+    /// `(old path, new path)`, so links can be rewritten.
+    pub fn rename(&mut self, from: &str, to: &str) -> Result<Vec<(String, String)>, OpError> {
+        let from = from.trim_matches('/');
+        let to = to.trim_matches('/');
+        self.check_rename(from, to)?;
+        if from == to {
+            return Ok(Vec::new());
+        }
+        let from_abs = self.entry_path(from)?;
+        let to_abs = self.entry_path(to)?;
         if let Some(parent) = to_abs.parent() {
             std::fs::create_dir_all(parent).map_err(io("create folder", parent))?;
         }
@@ -878,6 +896,41 @@ mod tests {
         v.rename("Renamed A.md", "renamed a.md").unwrap();
         assert!(paths(&v).contains(&"renamed a.md"));
         assert!(v.rename("renamed a.md", "renamed a.md").unwrap().is_empty());
+    }
+
+    /// The file tree's inline rename asks before it closes its field, so
+    /// `check_rename` has to give the same answer `rename` would and
+    /// change nothing while it does: a refused name leaves the field open
+    /// over a vault that still looks exactly as it did.
+    #[test]
+    fn check_rename_answers_for_rename_without_touching_anything() {
+        let (_dir, mut v) = vault();
+        let before = paths(&v).join("|");
+        assert!(matches!(
+            v.check_rename("A.md", "Untitled.md"),
+            Err(OpError::DestinationExists)
+        ));
+        assert!(matches!(
+            v.check_rename("A.md", ""),
+            Err(OpError::InvalidName(_))
+        ));
+        assert!(matches!(
+            v.check_rename("Nope.md", "X.md"),
+            Err(OpError::NotFound(_))
+        ));
+        assert!(matches!(
+            v.check_rename("Inbox", "Inbox/Deeper"),
+            Err(OpError::InvalidName(_))
+        ));
+        // The allowed ones: a free name, a case-only rename of the same
+        // file, and a rename onto itself.
+        assert!(v.check_rename("A.md", "Free.md").is_ok());
+        assert!(v.check_rename("A.md", "a.md").is_ok());
+        assert!(v.check_rename("A.md", "A.md").is_ok());
+        assert_eq!(paths(&v).join("|"), before, "asking must not move a byte");
+        // And what it allows, `rename` does.
+        v.rename("A.md", "Free.md").unwrap();
+        assert!(paths(&v).contains(&"Free.md"));
     }
 
     #[test]

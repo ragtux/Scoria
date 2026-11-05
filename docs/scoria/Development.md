@@ -307,7 +307,7 @@ the sheet, the log and the day's procedure are [[Writer gate run]], see
 | Canvas view | done: a `.canvas` opens in the main area, pans, zooms, selects, moves, resizes, draws edges, colours, groups, copies, pastes and undoes, cards are typed into, the menus, controls and commands are Obsidian's, and it autosaves in Obsidian's bytes, see [[#Canvas view, 2026-10-21]] and [[#Canvas view, measured, 2026-10-21]] |
 | Tab groups | done: Split right, Split down, the four focus commands, draggable dividers and `workspace.json`'s `main` tree, see [[#Tab groups, 2026-10-20]]; tabs drag between groups and onto split edges, see [[#Dragging tabs, 2026-10-21]]; the strip's hover is Obsidian's inner box, see [[#Tab hover, 2026-10-22]] |
 | Bookmarks | done: the pane, the seven commands and `bookmarks.json` in Obsidian's bytes, see [[#Bookmarks, 2026-10-20]] |
-| Files header | done: New note, New folder, the six sort orders, Auto-reveal current file and Expand all / Collapse all, see [[#Files header, 2026-10-21]]; the tree takes the keyboard, see [[#Explorer keyboard, 2026-10-21]] |
+| Files header | done: New note, New folder, the six sort orders, Auto-reveal current file and Expand all / Collapse all, see [[#Files header, 2026-10-21]]; the tree takes the keyboard, see [[#Explorer keyboard, 2026-10-21]], and a row renames on the row rather than in a dialog, see [[#The file tree renames on the row, 2026-11-05]] |
 | Folding | done: headings and list parents fold in Live Preview and source mode, headings collapse in the reading view, the five `editor:*fold*` commands run, and the record lives outside the vault, see [[#Folding, 2026-10-26]] |
 | Editing commands | done: the insert-block commands, the checklist cycle, Mod+L on a line without a box, the six highlight colours, Clear formatting, per-line inline toggles, the one auto-pair rule and Shift+Tab's column arithmetic, all to the 2026-10-25 probes, see [[#The settled editing commands, 2026-10-26]] |
 | The gate itself | open: the harness passes on the real vault (sixteen properties, green 2026-11-05), and the week of mixed use is running on PLMCRZY with `docs/scoria` watched beside it — days 1 and 2 both pass, day 2 catching an inverted `alwaysUpdateLinks` default and proving the two apps' link rewriters byte-identical. Day 3 is tables and properties. The prompt day 2's fix made reachable is now Obsidian's three buttons, and its "Always update" gives the harness its first path to an `app.json` holding `alwaysUpdateLinks`, see [[#The third button on the rename prompt, 2026-11-05]]. The sheet and the log are [[Writer gate run]], see [[#The gate week starts, 2026-11-04]] and [[#Day 2, files and links, 2026-11-05]] |
@@ -327,6 +327,78 @@ uses behave as Obsidian's do.
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
+
+### The file tree renames on the row, 2026-11-05
+
+The other gap day 2 filed
+([[UI parity backlog#The explorer renames in a modal where Obsidian edits the row in place]]).
+Obsidian names a file on the row in the tree; Scoria opened a dialog in the middle of the window.
+F2 on a focused row and the menu's "Rename..." now both turn the row's own label into a field
+with the name selected, and no dialog appears on either path.
+
+**One implementation, not a second one.** Obsidian has two inline renames — the view header's
+`.view-header-title` and the tree's `.nav-file-title-content` — and they behave alike, so the
+header's machinery was lifted into `inline_field.rs` and the header was moved onto it in the same
+change rather than the tree getting a copy. The module holds the shaping and painting (the text as
+a shaped line, with the selection and the caret drawn into it), the press that lands the caret at
+the offset the pointer hit, the platform input method's half so composition and dead keys work,
+and the editing keys — the same `text_input` actions under the same key context, so a field edited
+in place takes the keys a field in a box does. A host says only where its field is and what
+committing means: `Host::editing`, `Host::commit`, `Host::cancel`, three methods each for the
+workspace and the explorer. `title_field.rs`, the text model, is unchanged and still free of GPUI.
+The extraction is what makes the tree's field *proven* rather than new, because the code it runs
+is the code the header has been running since 2026-10-29.
+
+**What the tree's field does, each line of it measured.** The 2026-10-25 pass is the record
+([[Specification#The 2026-10-25 pass: real drags, and the inline rename committed]]), and every
+row of its table was driven in the app afterwards on a scratch vault:
+
+| | Obsidian | Scoria |
+| --- | --- | --- |
+| F2 on a focused row | the label becomes the editor, the **basename** selected (`Beta`, `cover` — never the extension) | the same |
+| typing | the name changes on the row, the file keeps its old one | the same |
+| Enter on a free name | renamed, editor closes | renamed, editor closes, then the Update links prompt where links move |
+| Enter on a `.png` | `cover` → `renamed cover` gives `renamed cover.png`, the extension kept unasked | the same |
+| Enter on a taken name | **refused silently**: tree unchanged, no notice, no modal, the editor stays open | the same |
+| Enter on an empty name | the same | the same |
+| Escape | the editor closes, the name is as it was, the row keeps its ring | the same |
+| the menu's "Rename..." | the same editor, name selected, no modal | the same |
+| a press inside the field | — | the caret lands where the pointer did, as the header's does |
+
+**The silent refusal cost a split in the vault.** Obsidian's answer to a name the filesystem will
+not take is to *leave the field open* and say nothing — the probe typed `Alpha` over an existing
+`Dest/Alpha.md` and then an empty name, and both times the tree was unchanged, `notices` was empty
+and the editor was still up with the typed text. That is not this crate's usual habit, and the row
+is the right place for it: the field is where the answer is, so there is nowhere a notice would
+belong. But it only works if the refusal is known *before* the field closes, and Scoria's
+collision check lived inside `Vault::rename`, which cannot be asked without doing the rename. So
+`Vault::check_rename` is now the validation half on its own — the name, the source, a destination
+already taken, a folder moved into itself — and `rename` calls it, which is what keeps the two
+answers from drifting. `check_rename_answers_for_rename_without_touching_anything` pins both
+halves: every refusal, the three allowed cases (a free name, a case-only rename, a rename onto
+itself), and that asking moves no byte.
+
+The first attempt closed the field and raised the Update links prompt on a colliding name, which
+the app caught and no test would have.
+
+**A field is painted, so it needs a height.** The first build put the shaped line in the row and
+drew nothing at all: a `canvas` has no size of its own, and the row's label had no height to give
+it. The state dump was right the whole time — `renaming: { text: "Beta", selection: [0, 4] }` —
+which is the argument for the control socket seeing what the painting sees.
+
+**The keyboard, and the ways a field has to go away.** An open field takes the keyboard under the
+`TextInput` context, so the tree's own keys are off while it is up and Enter and Escape reach the
+field; `MenuFocus`, the "focus while open, restore after" helper a menu uses, puts the keyboard
+back on the tree afterwards. Four things close a field besides Enter and Escape: a press on
+another row, the context menu opening, the tree being focused or revealed from outside, and the
+row leaving the tree. The last is the one that matters — a field whose row no longer exists is
+painted by nothing and would hold the keyboard with nothing on screen.
+
+**Still as it was:** the view header's menu "Rename..." and `workspace:edit-file-title` keep the
+centre prompt, and so does the Files header's New note. What Obsidian does on those is either
+unprobed or different in its own way, which is filed as
+[[UI parity backlog#The Files header's New folder asks for a name before it creates anything]] —
+and correcting that is how this entry's own claim about New note turned out to be wrong.
 
 ### The third button on the rename prompt, 2026-11-05
 

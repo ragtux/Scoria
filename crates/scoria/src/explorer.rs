@@ -19,15 +19,25 @@
 //! Enter opens a file or toggles a folder, F2 and Delete act on the row,
 //! and Escape hands the keyboard back to the main area — what the
 //! 2026-10-21 `explorer-keyboard` probe saw Obsidian do.
+//!
+//! A row renames **in place**, the way Obsidian's does: F2 and the menu's
+//! "Rename..." turn the row's own label into a field
+//! ([`crate::inline_field`], shared with the view header's title), with the
+//! name selected and no dialog anywhere. The explorer does not rename
+//! anything itself -- Enter reports the typed name as
+//! [`ExplorerEvent::RenameTo`] and the workspace closes the field only if
+//! the rename went through.
 
 use crate::assets::icon;
 use crate::canvas::menu::tooltip;
 use crate::file_menu::{self, Menu, Pick, Target};
+use crate::inline_field;
 use crate::theme::{Theme, ICON_SIZE};
 use gpui::{
-    actions, anchored, deferred, div, point, prelude::*, px, uniform_list, App, ClickEvent,
-    Context, EventEmitter, FocusHandle, Focusable, FontWeight, KeyBinding, MouseButton, Pixels,
-    Point, ScrollStrategy, SharedString, UniformListScrollHandle, Window,
+    actions, anchored, canvas, deferred, div, point, prelude::*, px, uniform_list, App, Bounds,
+    ClickEvent, Context, ElementInputHandler, EntityInputHandler, EventEmitter, FocusHandle,
+    Focusable, FontWeight, KeyBinding, MouseButton, MouseDownEvent, Pixels, Point, ScrollStrategy,
+    SharedString, UTF16Selection, UniformListScrollHandle, Window,
 };
 use scoria_formats::FileKind;
 use scoria_search::natural_cmp;
@@ -442,6 +452,17 @@ pub fn display_name(file_name: &str) -> &str {
 
 pub enum ExplorerEvent {
     Open(String),
+    /// Enter in a row being renamed in place: the name typed into the
+    /// label, without the extension the row never showed. The workspace
+    /// validates it and renames; the field stays open until it says the
+    /// rename went through, which is what Obsidian does with a name the
+    /// filesystem refuses (the 2026-10-25 pass typed a colliding name and
+    /// an empty one and the editor stayed up with neither a notice nor a
+    /// modal).
+    RenameTo {
+        path: String,
+        name: String,
+    },
     /// A Ctrl+click: the file goes to a new tab.
     OpenInNewTab(String),
     /// The header's "New note": what the `file-explorer:new-file` command
@@ -546,6 +567,25 @@ pub struct FileExplorer {
     /// survives a re-sort; it may be hidden under a collapsed folder, and
     /// then the next key starts over from the open file.
     focused: Option<String>,
+    /// The row being renamed in place, if any (Obsidian's
+    /// `is-being-renamed`).
+    renaming: Option<RowEdit>,
+    /// The keyboard an open field holds, and where it goes back to: the
+    /// same "focus while open, restore after" helper a menu uses.
+    rename_focus: file_menu::MenuFocus,
+}
+
+/// A row whose label is being typed into.
+struct RowEdit {
+    /// The file or folder the field opened on. The edit is dropped if that
+    /// row leaves the tree, so a commit can only ever rename what the row
+    /// showed.
+    path: String,
+    /// The text and the input method's composition in it.
+    editing: inline_field::Editing,
+    /// Where the label was last painted, which is what a click inside it
+    /// is measured against. `None` until the first paint.
+    layout: Option<inline_field::Layout>,
 }
 
 impl Focusable for FileExplorer {
@@ -568,12 +608,15 @@ impl FileExplorer {
             menu_focus: file_menu::MenuFocus::new(cx),
             focus_handle: cx.focus_handle(),
             focused: None,
+            renaming: None,
+            rename_focus: file_menu::MenuFocus::new(cx),
         }
     }
 
     /// Gives the tree the keyboard, on the row it had or none: what
     /// `file-explorer:open` does.
     pub fn focus_tree(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.end_rename(cx);
         window.focus(&self.focus_handle, cx);
         cx.notify();
     }
@@ -581,10 +624,42 @@ impl FileExplorer {
     /// Expands to `path`, puts the focus ring on its row and gives the tree
     /// the keyboard: `file-explorer:reveal-active-file`.
     pub fn reveal_and_focus(&mut self, path: &str, window: &mut Window, cx: &mut Context<Self>) {
+        self.end_rename(cx);
         self.reveal(path, cx);
         self.focused = Some(path.to_string());
         window.focus(&self.focus_handle, cx);
         cx.notify();
+    }
+
+    /// Turns a row's own label into a field with the whole name selected:
+    /// what F2 on a focused row and the menu's "Rename..." both do in
+    /// Obsidian (`tools/obsidian-probe/results/2026-10-25-explorer-dnd.json`,
+    /// steps `s09` and `s11`). The name is the one the row shows, so a
+    /// file's extension is neither selected nor typed over.
+    pub fn start_rename(&mut self, path: &str, cx: &mut Context<Self>) {
+        self.reveal(path, cx);
+        let Some(row) = self
+            .tree
+            .visible_index(path)
+            .and_then(|ix| self.tree.row(ix).cloned())
+        else {
+            return;
+        };
+        self.focused = Some(row.path.clone());
+        self.renaming = Some(RowEdit {
+            path: row.path,
+            editing: inline_field::Editing::selected(row.name),
+            layout: None,
+        });
+        cx.notify();
+    }
+
+    /// Closes the field, with the keyboard going back to the tree. Called
+    /// when the rename went through, and by Escape.
+    pub fn end_rename(&mut self, cx: &mut Context<Self>) {
+        if self.renaming.take().is_some() {
+            cx.notify();
+        }
     }
 
     /// The visible index of the focused row, if it is on a visible row.
@@ -721,6 +796,16 @@ impl FileExplorer {
         tree.expand_folders(&expanded);
         tree.set_sort(self.tree.sort());
         self.tree = tree;
+        // A row that is no longer in the tree cannot paint the field that
+        // is on it, and a field nothing paints would hold the keyboard
+        // with nothing on screen.
+        let gone = self
+            .renaming
+            .as_ref()
+            .is_some_and(|edit| self.tree.visible_index(&edit.path).is_none());
+        if gone {
+            self.renaming = None;
+        }
         cx.notify();
     }
 
@@ -844,6 +929,15 @@ impl FileExplorer {
             "rows": shown,
             "rows_total": if total > shown.len() { Some(total) } else { None },
             "menu": self.menu.as_ref().map(file_menu::describe),
+            "renaming": self.renaming.as_ref().map(|edit| {
+                let field = &edit.editing.field;
+                json!({
+                    "path": edit.path,
+                    "text": field.text(),
+                    "cursor": field.cursor(),
+                    "selection": [field.selection().start, field.selection().end],
+                })
+            }),
         })
     }
 
@@ -851,6 +945,9 @@ impl FileExplorer {
     /// on the open file's row puts the keyboard on that row; a click that
     /// opens a file hands the keyboard to the editor, as Obsidian's does.
     fn click(&mut self, ix: usize, new_tab: bool, window: &mut Window, cx: &mut Context<Self>) {
+        // A press on another row is the end of an open rename: the field
+        // keeps what it has, the way Escape does.
+        self.end_rename(cx);
         let Some(row) = self.tree.row(ix).cloned() else {
             return;
         };
@@ -872,6 +969,9 @@ impl FileExplorer {
     }
 
     fn open_menu(&mut self, ix: usize, position: Point<Pixels>, cx: &mut Context<Self>) {
+        // The menu takes the keyboard, so an open field would be left
+        // holding a caret it can no longer be typed into.
+        self.end_rename(cx);
         if let Some(row) = self.tree.row(ix).cloned() {
             let target = match row.is_folder {
                 true => Target::Folder(row.path),
@@ -1138,6 +1238,104 @@ impl FileExplorer {
         )
     }
 
+    /// The label of the row being renamed, painted as a shaped line so the
+    /// caret and the selection sit in the running text and a click lands
+    /// the caret where the pointer was -- the same painting the view
+    /// header's title field uses.
+    fn render_rename_field(
+        &self,
+        ix: usize,
+        name: SharedString,
+        theme: Theme,
+        cx: &mut Context<Self>,
+    ) -> impl IntoElement {
+        let read_entity = cx.entity();
+        let paint_entity = cx.entity();
+        let read_focus = self.rename_focus.handle.clone();
+        let paint_focus = self.rename_focus.handle.clone();
+        let color = theme.tokens.nav_item_color_active;
+        let caret_color = theme.tokens.text_normal;
+        let mut selection_color = theme.tokens.interactive_accent;
+        selection_color.a = if theme.dark { 0.35 } else { 0.25 };
+        let field = canvas(
+            move |bounds, window, cx| {
+                let explorer = read_entity.read(cx);
+                let edit = explorer.renaming.as_ref();
+                let text: SharedString = match edit {
+                    Some(edit) => edit.editing.field.text().to_string().into(),
+                    None => name.clone(),
+                };
+                let scroll_x = edit
+                    .and_then(|e| e.layout.as_ref())
+                    .map(|l| l.scroll_x)
+                    .unwrap_or(px(0.));
+                inline_field::shape(
+                    text,
+                    edit.map(|e| &e.editing),
+                    color,
+                    read_focus.is_focused(window),
+                    bounds,
+                    scroll_x,
+                    window,
+                )
+            },
+            move |bounds, prepaint: inline_field::Prepaint, window, cx| {
+                window.handle_input(
+                    &paint_focus,
+                    ElementInputHandler::new(bounds, paint_entity.clone()),
+                    cx,
+                );
+                let layout =
+                    inline_field::paint(prepaint, bounds, selection_color, caret_color, window, cx);
+                paint_entity.update(cx, |explorer, _| {
+                    if let Some(edit) = explorer.renaming.as_mut() {
+                        edit.layout = Some(layout);
+                    }
+                });
+            },
+        )
+        .size_full();
+        // The press is taken here rather than on the row: a row being
+        // renamed does not open on a click, and the caret has to land
+        // where the pointer was.
+        div()
+            .id(("rename-field", ix))
+            .size_full()
+            .cursor_text()
+            .on_mouse_down(
+                MouseButton::Left,
+                cx.listener(|this, event: &MouseDownEvent, window, cx| {
+                    cx.stop_propagation();
+                    this.rename_clicked(event, window, cx);
+                }),
+            )
+            .child(field)
+    }
+
+    /// A press inside the open field: the caret goes to the offset the
+    /// pointer landed on, and a double press takes the word it landed in.
+    fn rename_clicked(
+        &mut self,
+        event: &MouseDownEvent,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(edit) = self.renaming.as_mut() else {
+            return;
+        };
+        let Some(layout) = edit.layout.clone() else {
+            return;
+        };
+        let Some(at) = layout.offset_for(event.position, edit.editing.field.text()) else {
+            return;
+        };
+        edit.editing
+            .field
+            .click(at, event.click_count, event.modifiers.shift);
+        window.focus(&self.rename_focus.handle, cx);
+        cx.notify();
+    }
+
     fn render_rows(
         &mut self,
         range: Range<usize>,
@@ -1159,6 +1357,7 @@ impl FileExplorer {
                     }
                 });
                 let name: SharedString = row.name.clone().into();
+                let renaming = self.renaming.as_ref().is_some_and(|e| e.path == row.path);
                 let tag: Option<SharedString> = row.tag.clone().map(Into::into);
                 // A file no view can open reads like any other row
                 // (`is-unsupported` sets no colour of its own: the probe
@@ -1203,12 +1402,15 @@ impl FileExplorer {
                             s.bg(t.nav_item_background_hover)
                                 .text_color(t.nav_item_color_hover)
                         })
-                        .on_click(
-                            cx.listener(move |this, event: &gpui::ClickEvent, window, cx| {
-                                let modifiers = event.modifiers();
-                                this.click(ix, modifiers.control || modifiers.platform, window, cx)
-                            }),
-                        )
+                        .when(!renaming, |d| {
+                            d.on_click(cx.listener(
+                                move |this, event: &gpui::ClickEvent, window, cx| {
+                                    let modifiers = event.modifiers();
+                                    let new_tab = modifiers.control || modifiers.platform;
+                                    this.click(ix, new_tab, window, cx)
+                                },
+                            ))
+                        })
                         .on_mouse_down(
                             MouseButton::Right,
                             cx.listener(move |this, event: &gpui::MouseDownEvent, _, cx| {
@@ -1239,7 +1441,18 @@ impl FileExplorer {
                                 .overflow_hidden()
                                 .whitespace_nowrap()
                                 .text_ellipsis()
-                                .child(name),
+                                .when(!renaming, |d| d.child(name.clone()))
+                                // The field paints itself on a canvas,
+                                // which has no size of its own: without a
+                                // height to fill it draws nothing at all.
+                                .when(renaming, |d| {
+                                    d.h_full().child(self.render_rename_field(
+                                        ix,
+                                        name,
+                                        theme.clone(),
+                                        cx,
+                                    ))
+                                }),
                         )
                         .children(tag.map(|tag| {
                             // Obsidian's `nav-file-tag`: small upper-case
@@ -1258,6 +1471,135 @@ impl FileExplorer {
     }
 }
 
+/// Enter and Escape in a row being renamed. Enter only *reports* the name:
+/// the workspace owns the validator and the link rewrite, and closes the
+/// field with [`FileExplorer::end_rename`] once the rename has happened.
+/// Escape leaves the name as it was and the row keeps the focus ring, which
+/// is what the 2026-10-25 pass saw.
+impl inline_field::Host for FileExplorer {
+    fn editing(&mut self) -> Option<&mut inline_field::Editing> {
+        self.renaming.as_mut().map(|edit| &mut edit.editing)
+    }
+
+    fn commit(&mut self, _window: &mut Window, cx: &mut Context<Self>) {
+        let Some(edit) = self.renaming.as_ref() else {
+            return;
+        };
+        cx.emit(ExplorerEvent::RenameTo {
+            path: edit.path.clone(),
+            name: edit.editing.field.text().trim().to_string(),
+        });
+    }
+
+    fn cancel(&mut self, _window: &mut Window, cx: &mut Context<Self>) {
+        self.end_rename(cx);
+    }
+}
+
+/// Typed, composed and pasted text in a row being renamed; the halves are
+/// [`inline_field`]'s, shared with the view header's title field. The
+/// handler is registered by the label's own element against the field's own
+/// focus handle, so it only ever sees text meant for that row.
+impl EntityInputHandler for FileExplorer {
+    fn text_for_range(
+        &mut self,
+        range_utf16: Range<usize>,
+        adjusted_range: &mut Option<Range<usize>>,
+        _window: &mut Window,
+        _cx: &mut Context<Self>,
+    ) -> Option<String> {
+        inline_field::text_for_range(
+            &self.renaming.as_ref()?.editing,
+            range_utf16,
+            adjusted_range,
+        )
+    }
+
+    fn selected_text_range(
+        &mut self,
+        _ignore_disabled_input: bool,
+        _window: &mut Window,
+        _cx: &mut Context<Self>,
+    ) -> Option<UTF16Selection> {
+        Some(inline_field::selected_text_range(
+            &self.renaming.as_ref()?.editing,
+        ))
+    }
+
+    fn marked_text_range(
+        &self,
+        _window: &mut Window,
+        _cx: &mut Context<Self>,
+    ) -> Option<Range<usize>> {
+        inline_field::marked_text_range(&self.renaming.as_ref()?.editing)
+    }
+
+    fn unmark_text(&mut self, _window: &mut Window, _cx: &mut Context<Self>) {
+        if let Some(edit) = self.renaming.as_mut() {
+            edit.editing.marked = None;
+        }
+    }
+
+    fn replace_text_in_range(
+        &mut self,
+        range_utf16: Option<Range<usize>>,
+        new_text: &str,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(edit) = self.renaming.as_mut() else {
+            return;
+        };
+        inline_field::replace_text_in_range(&mut edit.editing, range_utf16, new_text);
+        cx.notify();
+    }
+
+    fn replace_and_mark_text_in_range(
+        &mut self,
+        range_utf16: Option<Range<usize>>,
+        new_text: &str,
+        new_selected_range: Option<Range<usize>>,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(edit) = self.renaming.as_mut() else {
+            return;
+        };
+        inline_field::replace_and_mark_text_in_range(
+            &mut edit.editing,
+            range_utf16,
+            new_text,
+            new_selected_range,
+        );
+        cx.notify();
+    }
+
+    fn bounds_for_range(
+        &mut self,
+        range_utf16: Range<usize>,
+        element_bounds: Bounds<Pixels>,
+        _window: &mut Window,
+        _cx: &mut Context<Self>,
+    ) -> Option<Bounds<Pixels>> {
+        let edit = self.renaming.as_ref()?;
+        Some(inline_field::bounds_for_range(
+            &edit.editing,
+            edit.layout.as_ref()?,
+            range_utf16,
+            element_bounds,
+        ))
+    }
+
+    fn character_index_for_point(
+        &mut self,
+        _point: Point<Pixels>,
+        _window: &mut Window,
+        _cx: &mut Context<Self>,
+    ) -> Option<usize> {
+        None
+    }
+}
+
 impl Render for FileExplorer {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let count = self.tree.len();
@@ -1265,15 +1607,28 @@ impl Render for FileExplorer {
         // closed one hands the keyboard back where it was.
         let menu_open = self.menu.is_some() || self.sort_menu_open;
         self.menu_focus.sync(menu_open, window, cx);
+        // A row being renamed holds the keyboard under the crate's field
+        // context, so Enter, Escape and the editing keys go to the field
+        // and the tree's own keys are off while it is open.
+        let renaming = self.renaming.is_some();
+        self.rename_focus.sync(renaming, window, cx);
         let menu = self.render_menu(cx);
         let header = self.render_header(cx);
-        div()
+        let root = div()
             .size_full()
             .flex()
             .flex_col()
-            .key_context("Explorer")
-            .track_focus(&self.focus_handle)
-            .on_action(cx.listener(Self::focus_up))
+            .when(renaming, |d| {
+                inline_field::bind_keys(
+                    d.key_context("TextInput")
+                        .track_focus(&self.rename_focus.handle),
+                    cx,
+                )
+            })
+            .when(!renaming, |d| {
+                d.key_context("Explorer").track_focus(&self.focus_handle)
+            });
+        root.on_action(cx.listener(Self::focus_up))
             .on_action(cx.listener(Self::focus_down))
             .on_action(cx.listener(Self::focus_left))
             .on_action(cx.listener(Self::focus_right))
@@ -1609,6 +1964,7 @@ mod menu_tests {
             | ExplorerEvent::NewCanvas { folder }
             | ExplorerEvent::NewBase { folder } => Some(folder),
             ExplorerEvent::NewFolder { parent } => Some(parent),
+            ExplorerEvent::RenameTo { path, .. } => Some(path),
             ExplorerEvent::NewNoteFromHeader | ExplorerEvent::LeaveFocus => None,
         }
     }

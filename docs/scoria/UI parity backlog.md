@@ -130,6 +130,12 @@ one piece of this modal still unprobed.
 
 *medium, parity-gap, medium* · **Filed:** 2026-11-05
 
+**Landed 2026-11-05**: F2 on a focused row and the menu's "Rename..." both turn the row's own
+label into a field with the name selected, and there is no dialog on either path. The behaviour
+lives in `inline_field.rs`, which the view header's title field was moved onto in the same change,
+so the two inline renames Obsidian has are one implementation here. See
+[[Development#The file tree renames on the row, 2026-11-05]].
+
 Observed in the Writer gate's day 2, on the gate vault: the Obsidian half's new note was named by
 typing **on the row in the file tree**, and Scoria opens a dialog in the middle of the window for
 the same thing. See [[Writer gate run#The Obsidian half, and the verdict]].
@@ -153,6 +159,40 @@ file keeps its old name, Enter commits, Escape abandons — deliberately kept fr
 be reused. So this is wiring `TitleField` into the tree row and painting the row's label as its own
 text, not new behaviour. Worth doing with the keyboard entry below, since F2's precondition
 (focus on a row, which only `reveal-active-file` or the tree keyboard gives) is the same one.
+
+**One claim in this entry was wrong, and is withdrawn.** It read the gate log as saying the Files
+header's **New note** puts the fresh row into that state. The 2026-10-25 pass says otherwise, and
+the spec has carried the measurement all along
+([[Specification#The 2026-10-25 pass: real drags, and the inline rename committed]]): New **note**
+opens the file in a new tab *with the note's own inline title focused*, and it is New **folder**
+that creates `Untitled/` and puts its row into inline rename, Escape keeping the folder under that
+name. Both header buttons are therefore their own change and neither is in the one above —
+Scoria's New folder still asks for the name before it creates anything, which is the opposite
+order. Filed below.
+
+### The Files header's New folder asks for a name before it creates anything
+
+*low, parity-gap, small* · **Filed:** 2026-11-05
+
+Found while landing the row's inline rename above, by checking its claim about New note against
+the measurement rather than the gate log.
+
+**Obsidian** ([[Specification#The 2026-10-25 pass: real drags, and the inline rename committed]],
+the header table). **New folder** creates `Untitled/` at the vault root *first* and puts its row
+straight into inline rename (`is-being-renamed`, `contenteditable`) — so Escape keeps the folder,
+under the name `Untitled`. **New note** is the other shape: `Untitled.md` in the folder
+`newFileLocation` names, opened in a new tab **with the note's own inline title focused**, not the
+tree row.
+
+**Scoria.** New folder opens the centre prompt and creates nothing until it is confirmed
+(`start_new_folder`), so Escape leaves no folder; New note creates the file and then opens the
+rename prompt (`new_note`). Neither matches, and they are wrong in different directions.
+
+**Fix.** New folder: create `Untitled` (or the next free number) and call
+`FileExplorer::start_rename` on its row, which is now there. New note: focus the note's inline
+title in the editor instead of opening a prompt — which needs the inline title to be a field the
+app can focus, and that is `show_inline_title`'s widget rather than the view header's, so check
+what it has before costing this.
 
 ### Autosaving the open note re-centers the Files list and re-expands every ancestor folder
 

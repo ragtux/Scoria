@@ -22,6 +22,7 @@ use crate::file_menu::{self, Pick};
 use crate::fold;
 use crate::graph::{GraphEvent, GraphView};
 use crate::help::HelpWindow;
+use crate::inline_field;
 use crate::mentions::{Finder, Name};
 use crate::palette::{CommandPalette, PaletteCommand, PaletteEvent};
 use crate::panes::{self, PaneSort};
@@ -33,22 +34,20 @@ use crate::reading::{
 use crate::search::{CopyEntry, SearchEvent, SearchPane};
 use crate::settings::{self, SettingChange, SettingsEvent, SettingsView, SettingsWindow};
 use crate::switcher::{QuickSwitcher, SwitcherEvent};
-use crate::text_input::{self, InputEvent, TextInput};
+use crate::text_input::{InputEvent, TextInput};
 use crate::theme::{
     Theme, FONT_UI_SMALL, FONT_UI_SMALLER, HEADER_HEIGHT, ICON_SIZE, RIBBON_WIDTH, SIDEBAR_WIDTH,
     TAB_CURVE,
 };
-use crate::title_field::{self, TitleField};
 use crate::vaults::VaultManager;
 use crate::watch;
 use gpui::{
-    actions, anchored, canvas, deferred, div, fill, point, prelude::*, px, relative, rgb, rgba,
-    size, transparent_black, Action, Anchor, App, Bounds, BoxShadow, ClickEvent, ClipboardItem,
-    Context, CursorStyle, Decorations, DragMoveEvent, ElementInputHandler, Entity,
-    EntityInputHandler, FocusHandle, Focusable, FontWeight, Global, HighlightStyle, HitboxBehavior,
-    Hsla, KeyBinding, MouseButton, MouseDownEvent, PathBuilder, Pixels, ResizeEdge, ScrollHandle,
-    ShapedLine, SharedString, StyledText, Subscription, Task, TextAlign, Tiling, UTF16Selection,
-    Window, WindowControlArea,
+    actions, anchored, canvas, deferred, div, point, prelude::*, px, relative, rgb, rgba,
+    transparent_black, Action, Anchor, App, Bounds, BoxShadow, ClickEvent, ClipboardItem, Context,
+    CursorStyle, Decorations, DragMoveEvent, ElementInputHandler, Entity, EntityInputHandler,
+    FocusHandle, Focusable, FontWeight, Global, HighlightStyle, HitboxBehavior, Hsla, KeyBinding,
+    MouseButton, MouseDownEvent, PathBuilder, Pixels, ResizeEdge, ScrollHandle, SharedString,
+    StyledText, Subscription, Task, Tiling, UTF16Selection, Window, WindowControlArea,
 };
 use rayon::prelude::*;
 use scoria_cache::{
@@ -982,6 +981,13 @@ impl VaultState {
 
     /// The rewrites a rename would need, without doing anything:
     /// `(files, links)`.
+    /// Whether the rename would go through, without doing it.
+    pub fn check_rename(&self, from: &str, to: &str) -> Result<(), String> {
+        self.vault()
+            .check_rename(from, to)
+            .map_err(|e| e.user_message())
+    }
+
     pub fn rename_preview(&self, from: &str, to: &str) -> (usize, usize) {
         let plan = self.vault().rename_plan(from, to);
         let texts = self.texts();
@@ -1957,36 +1963,9 @@ struct TitleEdit {
     /// The file the field opened on. The edit is dropped if that leaf moves
     /// on, so a commit can only ever rename the file the title showed.
     path: String,
-    field: TitleField,
-    /// The composition the platform's input method has in the field, if
-    /// any: the bytes it will replace with the committed text.
-    marked: Option<Range<usize>>,
-}
-
-/// Where a group's header title was last painted and how its text was
-/// shaped: what a click is measured against to find the offset it landed
-/// on, and what the input method is told when it asks where the text is.
-#[derive(Clone)]
-struct TitleLayout {
-    bounds: Bounds<Pixels>,
-    line: ShapedLine,
-    line_height: Pixels,
-    scroll_x: Pixels,
-}
-
-/// What a header title works out before it paints.
-struct TitlePrepaint {
-    line: ShapedLine,
-    cursor_x: Pixels,
-    /// The selection's two edges in the shaped line, when there is one.
-    selection_x: Option<Range<Pixels>>,
-    scroll_x: Pixels,
-    line_height: Pixels,
-    /// An edit is open on this group, so the platform's input method is
-    /// pointed at the field.
-    editing: bool,
-    /// The field has the keyboard, so it carries a caret.
-    caret: bool,
+    /// The text being typed and the input method's composition in it, the
+    /// same pair the file tree's row rename holds.
+    editing: inline_field::Editing,
 }
 
 /// The payload of a divider drag: which split, and the boundary between
@@ -2963,7 +2942,7 @@ pub struct Workspace {
     title_edit: Option<TitleEdit>,
     /// Where each group's header title was painted and how it was shaped,
     /// left by the last frame: what a click on a title is measured against.
-    title_layout: HashMap<u64, TitleLayout>,
+    title_layout: HashMap<u64, inline_field::Layout>,
     /// `workspace.json` as it was read at load, `None` when the vault has
     /// none; what the quit write is merged into.
     layout: Option<Value>,
@@ -3256,7 +3235,16 @@ impl Workspace {
                     ExplorerEvent::NewFolder { parent } => {
                         this.start_new_folder(parent, window, cx)
                     }
-                    ExplorerEvent::Rename(path) => this.start_rename(path, window, cx),
+                    // Obsidian renames a tree row on the row, not in a
+                    // dialog, and F2 and the menu's "Rename..." both do it
+                    // (the 2026-10-25 pass, steps `s09` and `s11`).
+                    ExplorerEvent::Rename(path) => {
+                        let path = path.clone();
+                        this.explorer.update(cx, |e, cx| e.start_rename(&path, cx));
+                    }
+                    ExplorerEvent::RenameTo { path, name } => {
+                        this.commit_row_rename(path.clone(), name, window, cx)
+                    }
                     ExplorerEvent::Move(path) => this.start_move(path, window, cx),
                     ExplorerEvent::Duplicate(path) => this.duplicate(path, cx),
                     ExplorerEvent::Delete(path) => this.start_delete(path, window, cx),
@@ -7573,6 +7561,42 @@ impl Workspace {
         self.create_note_for(name, Some(window), cx);
     }
 
+    /// Enter in a tree row's own label. The field holds the name the row
+    /// showed, so this goes through the same validator and the same rename
+    /// the prompt's box does -- one path, one link rewrite.
+    ///
+    /// A name the filesystem would refuse leaves the field open and says
+    /// nothing, which is Obsidian's behaviour rather than this crate's
+    /// usual one: the 2026-10-25 pass typed a colliding name (`Alpha` over
+    /// `Dest/Alpha.md`) and then an empty one, and both times the tree was
+    /// unchanged, the editor still up with the typed text, and `notices`
+    /// empty. The row is where the answer is, so there is nowhere a notice
+    /// would belong.
+    fn commit_row_rename(
+        &mut self,
+        from: String,
+        value: &str,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Ok(to) = self.renamed_path(&from, value) else {
+            return;
+        };
+        // The filesystem's own refusals -- a name already taken above all
+        // -- have to be known *before* the field closes, because the field
+        // is where they are reported by staying open.
+        let allowed = self
+            .state
+            .as_ref()
+            .map(|s| s.check_rename(&from, &to))
+            .unwrap_or(Ok(()));
+        if allowed.is_err() {
+            return;
+        }
+        self.explorer.update(cx, |e, cx| e.end_rename(cx));
+        self.rename_with_links(&from, &to, window, cx);
+    }
+
     fn start_rename(&mut self, path: &str, window: &mut Window, cx: &mut Context<Self>) {
         let is_folder = self
             .state
@@ -8719,107 +8743,42 @@ impl Workspace {
         let caret_color = theme.tokens.text_normal;
         let body = canvas(
             move |bounds, window, cx| {
-                let style = window.text_style();
-                let font_size = style.font_size.to_pixels(window.rem_size());
-                let line_height = window.line_height();
                 let ws = read_entity.read(cx);
                 let edit = ws.title_edit.as_ref().filter(|e| e.group == id);
                 let text: SharedString = match edit {
-                    Some(edit) => edit.field.text().to_string().into(),
+                    Some(edit) => edit.editing.field.text().to_string().into(),
                     None => title.clone(),
                 };
-                let cursor = edit.map(|e| e.field.cursor()).unwrap_or(0);
-                let selection = edit.map(|e| e.field.selection()).filter(|s| !s.is_empty());
-                let mut run = style.to_run(text.len());
-                run.color = color;
-                let line = window
-                    .text_system()
-                    .shape_line(text.clone(), font_size, &[run], None);
-                let cursor_x = if text.is_empty() {
-                    px(0.)
-                } else {
-                    line.x_for_index(cursor)
-                };
-                let selection_x =
-                    selection.map(|s| line.x_for_index(s.start)..line.x_for_index(s.end));
-                // A title too long for the header scrolls to keep the
-                // caret in view, the way the crate's other field does.
-                let width = bounds.size.width;
-                let mut scroll_x = ws
+                let scroll_x = ws
                     .title_layout
                     .get(&id)
                     .map(|l| l.scroll_x)
                     .unwrap_or(px(0.));
-                if cursor_x - scroll_x > width - px(2.) {
-                    scroll_x = cursor_x - width + px(2.);
-                }
-                if cursor_x - scroll_x < px(0.) {
-                    scroll_x = cursor_x;
-                }
-                if line.width < width {
-                    scroll_x = px(0.);
-                }
-                TitlePrepaint {
-                    line,
-                    cursor_x,
-                    selection_x,
+                inline_field::shape(
+                    text,
+                    edit.map(|e| &e.editing),
+                    color,
+                    read_focus.is_focused(window),
+                    bounds,
                     scroll_x,
-                    line_height,
-                    editing: edit.is_some(),
-                    caret: edit.is_some() && read_focus.is_focused(window),
-                }
+                    window,
+                )
             },
-            move |bounds, prepaint: TitlePrepaint, window, cx| {
+            move |bounds, prepaint: inline_field::Prepaint, window, cx| {
                 // The platform's input method is pointed at the field only
                 // while one is open: the title is not a tab stop, and
                 // nothing types into it until a click puts a caret there.
-                if prepaint.editing {
+                if editing {
                     window.handle_input(
                         &paint_focus,
                         ElementInputHandler::new(bounds, paint_entity.clone()),
                         cx,
                     );
                 }
-                let y = bounds.origin.y + (bounds.size.height - prepaint.line_height) / 2.;
-                let origin = point(bounds.origin.x - prepaint.scroll_x, y);
-                window.with_content_mask(Some(gpui::ContentMask { bounds }), |window| {
-                    if let Some(selection) = &prepaint.selection_x {
-                        window.paint_quad(fill(
-                            Bounds::from_corners(
-                                point(origin.x + selection.start, y),
-                                point(origin.x + selection.end, y + prepaint.line_height),
-                            ),
-                            selection_color,
-                        ));
-                    }
-                    let _ = prepaint.line.paint(
-                        origin,
-                        prepaint.line_height,
-                        TextAlign::Left,
-                        None,
-                        window,
-                        cx,
-                    );
-                    if prepaint.caret {
-                        window.paint_quad(fill(
-                            Bounds::new(
-                                point(origin.x + prepaint.cursor_x, y + px(2.)),
-                                size(px(1.5), prepaint.line_height - px(4.)),
-                            ),
-                            caret_color,
-                        ));
-                    }
-                });
+                let layout =
+                    inline_field::paint(prepaint, bounds, selection_color, caret_color, window, cx);
                 paint_entity.update(cx, |ws, _| {
-                    ws.title_layout.insert(
-                        id,
-                        TitleLayout {
-                            bounds,
-                            line: prepaint.line,
-                            line_height: prepaint.line_height,
-                            scroll_x: prepaint.scroll_x,
-                        },
-                    );
+                    ws.title_layout.insert(id, layout);
                 });
             },
         )
@@ -8850,81 +8809,8 @@ impl Workspace {
         }
         // The keys only come here while a field is open, and they are the
         // crate's own field keys: the same context, so the same bindings.
-        host.track_focus(&self.title_focus)
-            .key_context("TextInput")
-            .on_action(cx.listener(|this, _: &text_input::Left, _, cx| {
-                this.with_title_field(cx, |f| f.step(false, false))
-            }))
-            .on_action(cx.listener(|this, _: &text_input::Right, _, cx| {
-                this.with_title_field(cx, |f| f.step(true, false))
-            }))
-            .on_action(cx.listener(|this, _: &text_input::SelectLeft, _, cx| {
-                this.with_title_field(cx, |f| f.step(false, true))
-            }))
-            .on_action(cx.listener(|this, _: &text_input::SelectRight, _, cx| {
-                this.with_title_field(cx, |f| f.step(true, true))
-            }))
-            .on_action(cx.listener(|this, _: &text_input::WordLeft, _, cx| {
-                this.with_title_field(cx, |f| f.step_word(false, false))
-            }))
-            .on_action(cx.listener(|this, _: &text_input::WordRight, _, cx| {
-                this.with_title_field(cx, |f| f.step_word(true, false))
-            }))
-            .on_action(cx.listener(|this, _: &text_input::SelectWordLeft, _, cx| {
-                this.with_title_field(cx, |f| f.step_word(false, true))
-            }))
-            .on_action(cx.listener(|this, _: &text_input::SelectWordRight, _, cx| {
-                this.with_title_field(cx, |f| f.step_word(true, true))
-            }))
-            .on_action(cx.listener(|this, _: &text_input::Home, _, cx| {
-                this.with_title_field(cx, |f| f.move_to_edge(false, false))
-            }))
-            .on_action(cx.listener(|this, _: &text_input::End, _, cx| {
-                this.with_title_field(cx, |f| f.move_to_edge(true, false))
-            }))
-            .on_action(cx.listener(|this, _: &text_input::SelectHome, _, cx| {
-                this.with_title_field(cx, |f| f.move_to_edge(false, true))
-            }))
-            .on_action(cx.listener(|this, _: &text_input::SelectEnd, _, cx| {
-                this.with_title_field(cx, |f| f.move_to_edge(true, true))
-            }))
-            .on_action(cx.listener(|this, _: &text_input::SelectAll, _, cx| {
-                this.with_title_field(cx, |f| f.select_all())
-            }))
-            .on_action(cx.listener(|this, _: &text_input::Backspace, _, cx| {
-                this.with_title_field(cx, |f| f.backspace())
-            }))
-            .on_action(cx.listener(|this, _: &text_input::Delete, _, cx| {
-                this.with_title_field(cx, |f| f.delete())
-            }))
-            .on_action(
-                cx.listener(|this, _: &text_input::DeleteWordBackward, _, cx| {
-                    this.with_title_field(cx, |f| f.delete_word_back())
-                }),
-            )
-            .on_action(cx.listener(|this, _: &text_input::Clear, _, cx| {
-                this.with_title_field(cx, |f| {
-                    f.select_all();
-                    f.insert("");
-                })
-            }))
-            .on_action(cx.listener(|this, _: &text_input::Copy, _, cx| this.title_copy(false, cx)))
-            .on_action(cx.listener(|this, _: &text_input::Cut, _, cx| this.title_copy(true, cx)))
-            .on_action(cx.listener(|this, _: &text_input::Paste, _, cx| this.title_paste(cx)))
-            .on_action(
-                cx.listener(|this, _: &text_input::Submit, window, cx| {
-                    this.commit_title(window, cx)
-                }),
-            )
-            .on_action(
-                cx.listener(|this, _: &text_input::Cancel, window, cx| {
-                    this.cancel_title(window, cx)
-                }),
-            )
-            // Ctrl+E in a field is swallowed rather than toggling the mode
-            // behind it, as it is in every other field here.
-            .on_action(cx.listener(|_, _: &text_input::Swallow, _, _| {}))
-            .into_any_element()
+        let host = host.track_focus(&self.title_focus).key_context("TextInput");
+        inline_field::bind_keys(host, cx).into_any_element()
     }
 
     /// A click on a view-header title: Obsidian's focuses the field and
@@ -8943,10 +8829,6 @@ impl Workspace {
         let Some(layout) = self.title_layout.get(&group).cloned() else {
             return;
         };
-        let x = event.position.x - layout.bounds.origin.x + layout.scroll_x;
-        if x > layout.line.width + px(4.) {
-            return;
-        }
         // A click in another group's header makes that group active first,
         // so the edit always belongs to the leaf the keyboard is in.
         self.activate_group(group, cx);
@@ -8959,18 +8841,15 @@ impl Workspace {
             _ => TitleEdit {
                 group,
                 path,
-                field: TitleField::new(name),
-                marked: None,
+                editing: inline_field::Editing::new(name),
             },
         };
-        let mut at = layout
-            .line
-            .closest_index_for_x(x)
-            .min(edit.field.text().len());
-        while !edit.field.text().is_char_boundary(at) {
-            at -= 1;
-        }
-        edit.field
+        let Some(at) = layout.offset_for(event.position, edit.editing.field.text()) else {
+            self.title_edit = None;
+            return;
+        };
+        edit.editing
+            .field
             .click(at, event.click_count, event.modifiers.shift);
         self.title_edit = Some(edit);
         // The field's focus handle only joins the dispatch tree with the
@@ -8983,39 +8862,6 @@ impl Workspace {
         cx.notify();
     }
 
-    /// Applies an editing key to the open title field.
-    fn with_title_field(&mut self, cx: &mut Context<Self>, f: impl FnOnce(&mut TitleField)) {
-        if let Some(edit) = self.title_edit.as_mut() {
-            f(&mut edit.field);
-            edit.marked = None;
-            cx.notify();
-        }
-    }
-
-    fn title_copy(&mut self, cut: bool, cx: &mut Context<Self>) {
-        let Some(edit) = self.title_edit.as_mut() else {
-            return;
-        };
-        let range = edit.field.selection();
-        if range.is_empty() {
-            return;
-        }
-        let text = edit.field.text()[range.clone()].to_string();
-        cx.write_to_clipboard(ClipboardItem::new_string(text));
-        if cut {
-            edit.field.replace(range, "");
-            edit.marked = None;
-            cx.notify();
-        }
-    }
-
-    fn title_paste(&mut self, cx: &mut Context<Self>) {
-        let Some(text) = cx.read_from_clipboard().and_then(|item| item.text()) else {
-            return;
-        };
-        self.with_title_field(cx, |f| f.insert(&text));
-    }
-
     /// Enter in the view-header title: the file takes the typed name. The
     /// field holds the stem, so this goes through the same path the rename
     /// prompt's box does -- one validator, one rename, one link rewrite.
@@ -9025,7 +8871,7 @@ impl Workspace {
         let Some(edit) = self.title_edit.take() else {
             return;
         };
-        let value = edit.field.text().trim().to_string();
+        let value = edit.editing.field.text().trim().to_string();
         let to = match self.renamed_path(&edit.path, &value) {
             Ok(to) => to,
             Err(err) => {
@@ -12022,8 +11868,8 @@ impl Workspace {
             "view_title": self.title_edit.as_ref().map(|edit| json!({
                 "group": edit.group,
                 "file": edit.path,
-                "text": edit.field.text(),
-                "cursor": edit.field.cursor(),
+                "text": edit.editing.field.text(),
+                "cursor": edit.editing.field.cursor(),
             })),
             "notices": self.notices.texts(),
             "focus": {
@@ -15716,25 +15562,27 @@ fn update_links_prompt(files: usize, links: usize) -> PromptSpec {
     }
 }
 
-/// Where typed or composed text lands in the title field: the range the
-/// platform named, else the composition it has open, else the selection --
-/// so a keystroke with text selected replaces it.
-fn title_input_range(edit: &TitleEdit, range_utf16: Option<Range<usize>>) -> Range<usize> {
-    let text = edit.field.text();
-    range_utf16
-        .map(|r| title_field::utf16_to_byte(text, r.start)..title_field::utf16_to_byte(text, r.end))
-        .or_else(|| edit.marked.clone())
-        .unwrap_or_else(|| edit.field.selection())
+/// Enter and Escape in the view header's title field.
+impl inline_field::Host for Workspace {
+    fn editing(&mut self) -> Option<&mut inline_field::Editing> {
+        self.title_edit.as_mut().map(|edit| &mut edit.editing)
+    }
+
+    fn commit(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.commit_title(window, cx);
+    }
+
+    fn cancel(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.cancel_title(window, cx);
+    }
 }
 
 /// Typed, composed and pasted text while the view header's title is being
-/// renamed in place. Text comes in through GPUI's input handler so IME
-/// composition and dead keys work, as they do in the crate's other field.
-///
-/// The handler is registered by the title's own element against the title's
-/// own focus handle (see [`Workspace::render_title`]), so it only ever sees
-/// text meant for that field; with no field open every method answers as an
-/// empty one would.
+/// renamed in place; [`inline_field`] is the half the file tree's row
+/// rename shares. The handler is registered by the title's own element
+/// against the title's own focus handle (see [`Workspace::render_title`]),
+/// so it only ever sees text meant for that field; with no field open every
+/// method answers as an empty one would.
 impl EntityInputHandler for Workspace {
     fn text_for_range(
         &mut self,
@@ -15743,14 +15591,11 @@ impl EntityInputHandler for Workspace {
         _window: &mut Window,
         _cx: &mut Context<Self>,
     ) -> Option<String> {
-        let edit = self.title_edit.as_ref()?;
-        let text = edit.field.text();
-        let start = title_field::utf16_to_byte(text, range_utf16.start);
-        let end = title_field::utf16_to_byte(text, range_utf16.end);
-        adjusted_range.replace(
-            title_field::byte_to_utf16(text, start)..title_field::byte_to_utf16(text, end),
-        );
-        Some(text[start..end].to_string())
+        inline_field::text_for_range(
+            &self.title_edit.as_ref()?.editing,
+            range_utf16,
+            adjusted_range,
+        )
     }
 
     fn selected_text_range(
@@ -15759,14 +15604,9 @@ impl EntityInputHandler for Workspace {
         _window: &mut Window,
         _cx: &mut Context<Self>,
     ) -> Option<UTF16Selection> {
-        let edit = self.title_edit.as_ref()?;
-        let text = edit.field.text();
-        let selection = edit.field.selection();
-        Some(UTF16Selection {
-            range: title_field::byte_to_utf16(text, selection.start)
-                ..title_field::byte_to_utf16(text, selection.end),
-            reversed: edit.field.reversed(),
-        })
+        Some(inline_field::selected_text_range(
+            &self.title_edit.as_ref()?.editing,
+        ))
     }
 
     fn marked_text_range(
@@ -15774,18 +15614,12 @@ impl EntityInputHandler for Workspace {
         _window: &mut Window,
         _cx: &mut Context<Self>,
     ) -> Option<Range<usize>> {
-        let edit = self.title_edit.as_ref()?;
-        let marked = edit.marked.clone()?;
-        let text = edit.field.text();
-        Some(
-            title_field::byte_to_utf16(text, marked.start)
-                ..title_field::byte_to_utf16(text, marked.end),
-        )
+        inline_field::marked_text_range(&self.title_edit.as_ref()?.editing)
     }
 
     fn unmark_text(&mut self, _window: &mut Window, _cx: &mut Context<Self>) {
         if let Some(edit) = self.title_edit.as_mut() {
-            edit.marked = None;
+            edit.editing.marked = None;
         }
     }
 
@@ -15799,9 +15633,7 @@ impl EntityInputHandler for Workspace {
         let Some(edit) = self.title_edit.as_mut() else {
             return;
         };
-        let range = title_input_range(edit, range_utf16);
-        edit.field.replace(range, new_text);
-        edit.marked = None;
+        inline_field::replace_text_in_range(&mut edit.editing, range_utf16, new_text);
         cx.notify();
     }
 
@@ -15816,14 +15648,12 @@ impl EntityInputHandler for Workspace {
         let Some(edit) = self.title_edit.as_mut() else {
             return;
         };
-        let range = title_input_range(edit, range_utf16);
-        let landed = edit.field.replace(range.clone(), new_text);
-        let marked = range.start..range.start + landed;
-        if let Some(selected) = new_selected_range {
-            let at = marked.start + title_field::utf16_to_byte(new_text, selected.end);
-            edit.field.move_to(at, false);
-        }
-        edit.marked = Some(marked);
+        inline_field::replace_and_mark_text_in_range(
+            &mut edit.editing,
+            range_utf16,
+            new_text,
+            new_selected_range,
+        );
         cx.notify();
     }
 
@@ -15836,16 +15666,11 @@ impl EntityInputHandler for Workspace {
     ) -> Option<Bounds<Pixels>> {
         let edit = self.title_edit.as_ref()?;
         let layout = self.title_layout.get(&edit.group)?;
-        let text = edit.field.text();
-        let start = title_field::utf16_to_byte(text, range_utf16.start);
-        let end = title_field::utf16_to_byte(text, range_utf16.end);
-        let x0 = element_bounds.origin.x - layout.scroll_x;
-        Some(Bounds::from_corners(
-            point(x0 + layout.line.x_for_index(start), element_bounds.origin.y),
-            point(
-                x0 + layout.line.x_for_index(end),
-                element_bounds.origin.y + layout.line_height,
-            ),
+        Some(inline_field::bounds_for_range(
+            &edit.editing,
+            layout,
+            range_utf16,
+            element_bounds,
         ))
     }
 
@@ -16232,6 +16057,7 @@ impl Render for Workspace {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::title_field::TitleField;
     use std::fs;
     use std::path::Path;
 
