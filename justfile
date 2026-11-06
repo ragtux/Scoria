@@ -2,11 +2,9 @@
 #
 # On NixOS run the gpui recipes (check, build, run, ...) inside `nix-shell`,
 # which supplies the X11, Wayland and Vulkan libraries: `nix-shell --run 'just run <vault>'`.
-# On macOS a repo on a network share is mounted with the quarantine flag, and
-# every build script cargo writes there triggers a Gatekeeper prompt, so the
-# target directory defaults to a local cache unless CARGO_TARGET_DIR is set.
 
-export CARGO_TARGET_DIR := env("CARGO_TARGET_DIR", if os() == "macos" { home_directory() / ".cache/cargo-target/scoria" } else { justfile_directory() / "target" })
+# The recipes below name the binaries through this, so it is always set.
+export CARGO_TARGET_DIR := env("CARGO_TARGET_DIR", justfile_directory() / "target")
 
 docs_vault := justfile_directory() / "docs/scoria"
 

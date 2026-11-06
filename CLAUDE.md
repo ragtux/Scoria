@@ -48,9 +48,12 @@ site                    scoria.cc: the informational site and the manual (static
 ## Commands
 
 On NixOS run these inside `nix-shell` (`shell.nix` supplies gpui's X11, Wayland, and Vulkan libraries).
-The `justfile` wraps every command below (`just` lists them); on macOS it points `CARGO_TARGET_DIR` at
-`~/.cache/cargo-target/scoria`, because a repo on a quarantined network share makes Gatekeeper prompt
-for every build script written there.
+The `justfile` wraps every command below (`just` lists them) and exports `CARGO_TARGET_DIR`, which
+defaults to the repo's `target/`. The repo sits on an SMB share that a Linux machine also builds in.
+On the Mac, `build.build-dir` in `~/.cargo/config.toml` keeps intermediate artifacts on the local disk:
+smbfs has no fcntl locks, which incremental compilation needs. If the share is ever mounted with the
+quarantine flag again, binaries written there make Gatekeeper prompt; point `CARGO_TARGET_DIR` at a
+local directory then.
 gpui is a git dependency pinned to a Zed release commit (see the note in `Cargo.toml`); the crates.io
 release is stale and crashes on NVIDIA. Bump the pin on its own, one release at a time, and run the
 app on a real GPU before committing.
