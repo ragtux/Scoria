@@ -21,56 +21,81 @@ Things Obsidian does that Scoria intends to do and does not.
 | | |
 |---|---|
 | **Math** | Typeset with a KaTeX-compatible engine rather than MathJax: the common syntax renders alike, a MathJax-only command shows its source in red. No `\newcommand` across formulas, no `\require` |
-| **HTML in notes** | Parsed, shown as literal text |
-| **Remote images** | `![](https://…)` does not load. Local images do |
+| **Some HTML in notes** | Inline tags, `<details>`, `<pre>`, container tags and raw tables render. Not yet: an inline `style` attribute, `<sup>` and `<sub>` at a smaller size and raised or lowered (they draw at body size), `<iframe>`, `<form>` and other tags Scoria has no drawing for (they show as source), and a raw table's `colspan`, `rowspan` and `<caption>` |
+| **An image in a line of text** | An image embed that shares its paragraph with text breaks the paragraph in reading view; a remote image in a heading or a table cell stays a link |
 | **Mermaid diagrams** | Not rendered |
-| **PDF viewing and export** | A PDF opens in a viewer with Obsidian's toolbar, sidebar and find bar, and `![[x.pdf]]` embeds it; the text cannot be selected or copied, and there is no export |
-| **Audio and video players** | Recognized as file kinds; no player |
-| **Heading folding** | Headings do not collapse |
+| **Code highlighting in rarer languages** | Fenced code is highlighted by a port of Prism: 85 languages under 122 names, against the 171 names Obsidian's Prism highlights. A block in any other language renders plain |
+| **PDF text, spreads and export** | A PDF opens in a viewer with Obsidian's toolbar, sidebar and find bar, and `![[x.pdf]]` embeds it. The text cannot be selected or copied, there are no two-page spreads and no Adapt to theme, a password-protected PDF does not open, and a note cannot be exported to PDF (`workspace:export-pdf`) |
+| **Audio and video players** | Recognized as file kinds; no player, in a tab or embedded |
+| **A canvas embedded in a note** | `![[Board.canvas]]` is not drawn; the file opens in a view of its own |
 
-### Views
+### Views and windows
 
 | | |
 |---|---|
-| **Bases** | The Bases YAML format is implemented and round-trips; there is no base view. Canvas has one |
-| **A canvas embedded in a note** | `![[Board.canvas]]` is not drawn; the file opens in a view of its own |
-| **Popout windows** | In: the five window commands, **Open in new window** on the menus, tab drags between windows, and popouts reopened on launch. On Wayland a dragged tab stays in its own window, and a popout's recorded zoom is not applied. See [the window](/docs/app/window/#popout-windows) |
-| **Stacked tabs** | Tabs and split groups are in; stacking them is not |
-| **Multiple vaults in one window** | Run Scoria once per vault |
-| **Local graph depth beyond 1**, arrows, timelapse, screenshot export | See [the graph](/docs/app/graph/) |
-| **Local graph as a side pane** | The graph is a full view |
+| **Popout windows, the remaining corners** | In: the five window commands, **Open in new window** on the menus, tab drags between windows, and popouts reopened on launch. On Wayland a dragged tab stays in its own window, and a popout's recorded zoom is not applied. On X11, after the window manager un-maximizes a popout, Scoria has the window's position wrong until it is moved, so drags to and from it do nothing (a gpui bug). The tab menu has no **Link with tab** and no **Open linked view**, since Scoria has no linked panes. Popouts have not been tried on Windows. See [the window](/docs/app/window/#popout-windows) |
+| **Stacked tabs** | Tabs and split groups are in; stacking them (`workspace:toggle-stacked-tabs`) is not |
+| **Workspaces** | The Workspaces plugin's saved layouts (`workspaces:*`) are not implemented |
+| **A second vault beside the first** | Opening or switching to another vault from inside Scoria replaces the one in the window, where Obsidian opens it in a window of its own. Run Scoria again to have both open |
+| **The local graph as a side pane** | The graph, global or local, is a view of the main area, and `Ctrl + G` returns to the note. `graph:animate` is not a command yet (the timelapse button is there), and the graph has no screenshot export. See [the graph](/docs/app/graph/) |
+| **Bases: cell selection** | Shift-click selection of table cells, with copy and paste over it, is not built |
+| **Canvas export and options** | `canvas:export-as-image` is not implemented, and the Canvas plugin's settings (default location, wheel and drag behavior, snapping, card names, the zoom threshold) are written for Obsidian but not acted on |
 
 ### Editing
 
 | | |
 |---|---|
+| **Note composer** | Merge a file into another, extract a selection or a heading to a new note (`note-composer:*`): not implemented |
+| **Random note, Unique note creator** | `random-note`, `zk-prefixer` and `insert-unique-link` are not implemented |
+| **Slash commands** | Typing `/` in the editor offers no commands |
+| **Renaming a heading** | `editor:rename-heading`, which renames a heading and the links to it, is not implemented |
 | **File recovery** | Obsidian keeps its snapshots in IndexedDB outside the vault, so it is out of the round-trip work rather than next in it |
-| **Editing properties in reading view** | The reading view's properties table is read-only; Live Preview's is not |
+| **Editing properties in reading view** | A property's value pill can be removed there; keys, values, the type menu and **Add property** are edited in Live Preview or Source mode only |
+| **Editing the title in reading view** | The inline title is an editable field in Live Preview and Source mode; in reading view it is plain text. `F2` works everywhere |
 | **Vim mode** | `vimMode` is read, not implemented |
-| **Line numbers, indent guides, inline title, right-to-left** | Read and shown in Settings, not acted on |
-| **Spellcheck** | — |
-| **`Ctrl + hover` page previews** | — |
+| **Line numbers, indentation guides, right-to-left** | Read and shown in Settings, not acted on. `editor:toggle-line-numbers` and `editor:toggle-readable-line-length` are not commands yet, though readable line length itself is honored |
+| **Spellcheck** | No spellcheck, and `editor:toggle-spellcheck` is not a command yet |
+| **Page previews** | Hovering a link (`Ctrl` + hover in the editor) shows no preview |
+| **Pasting and attachments** | A paste is text: copied HTML is not converted to Markdown, and a pasted or dropped image or file is not saved as an attachment. `editor:attach-file` and `editor:download-attachments` are not implemented. Put the file in the folder yourself |
+
+### Panes and plugins
+
+| | |
+|---|---|
+| **Footnotes view** | `footnotes:open`: not implemented |
+| **Backlinks at the bottom of a note** | `backlink:toggle-backlinks-in-document` and the Backlinks setting that turns it on are not implemented; the Backlinks pane is |
+| **File properties pane** | `properties:open-local`, the current note's properties in a side pane: not implemented. The vault-wide **All properties** pane is |
+| **Slides, Audio recorder, Web viewer, Format converter** | `slides:start`, `audio-recorder:*`, `webviewer:*` and `markdown-importer:open` are not implemented |
 
 ### Files and settings
 
 | | |
 |---|---|
-| **Writing `graph.json`** | Graph forces and filters are read, not written back |
-| **Drag and drop in Files** | Use `file-explorer:move-file` |
-| **Inline title editing** | Use `F2` |
-| **Pasting or dropping attachments** | Put the file in the folder yourself |
+| **New folder** | Asks for a name in a prompt first, where Obsidian creates `Untitled` and renames it on the row |
 | **System trash on Windows and macOS** | Implemented on Linux (freedesktop trash with a `.trashinfo` record); elsewhere it falls back to the vault's `.trash/` |
-| **Themes (`cssTheme`)** | Base theme, accent color and fonts are honored; a CSS theme is not. Tier 3 |
-| **A few Settings controls** | Most rows write. The font families, spellcheck languages, excluded files, accent color and the theme list do not, because the control Obsidian offers for them is one Scoria has not built |
+| **Excluded files** | `userIgnoreFilters` is shown in Settings but cannot be edited there, and search, the graph and unlinked mentions do not hide what it excludes |
+| **Settings Scoria does not act on yet** | The rows write what Obsidian writes, bar Spellcheck languages, Excluded files and Override config folder, and the option tabs of plugins Scoria does not have, which show their values only. Rows for behavior Scoria lacks are written for Obsidian and marked "not in Scoria yet": Language, Show tab title bar, Native menus, Always focus new tabs, Convert pasted HTML to Markdown, the attachment location rows, and the plugin options above. **Custom app icon** takes effect on X11 only. See [Settings](/docs/settings/) |
 | **Search result context menu** | Sorting, copying, collapsing and the keyboard are in; a result has no right-click menu yet. See [search](/docs/app/search/) |
-| **A context menu on a Tags or Outline row** | Files, Backlinks, Outgoing links, Bookmarks and All properties rows have one; these two do not yet |
-| **Vault-wide search and replace** | Replace works within one note |
+| **URI links from a browser on macOS** | A URI given on the command line works on all three platforms; a `scoria://` or `obsidian://` link clicked in a browser does not reach Scoria on macOS yet |
+
+### Commands
+
+The command palette lists only what Scoria can run. Beyond the ones named above, these
+Obsidian commands are not implemented yet:
+
+| | |
+|---|---|
+| **Window** | `window:zoom-in`, `window:zoom-out`, `window:reset-zoom`, `window:toggle-always-on-top` |
+| **App** | `app:increase-font-size`, `app:decrease-font-size`, `app:toggle-ribbon`, `theme:toggle-light-dark`, `app:open-file`, `app:reload`, `app:show-debug-info`, `app:show-release-notes`, `app:toggle-default-new-pane-mode`, `app:migrate-frontmatter` |
+| **Files** | `workspace:copy-path`, `workspace:copy-full-path`, `workspace:copy-url`, `workspace:show-trash`, `open-with-default-app:open`, `open-with-default-app:show` (Copy path, Open in default app and Show in system explorer are on the file menus) |
+| **Editor** | `markdown:add-alias`, `editor:context-menu` |
 
 ### Markdown edge cases
 
-Two of the 1,009 corpus notes do not match Obsidian's output, on three constructs: nested
-delimiter runs such as `****a****`, `==== four ==x===y==`, and a wikilink inside Markdown
-link text (which Obsidian splits the link on). See [compatibility](/docs/reference/compatibility/).
+One of the 1,009 corpus notes does not match Obsidian's output: a hand-written probe of inline
+edge cases, on how runs of `*` and `_` pair up when they are ambiguous on purpose
+(`_a_b _a_`, `*a **b* c**`, `****a****`, `**a*b**c*`, `~~*a*~~`) and on
+`==== four ==x===y==`. See [compatibility](/docs/reference/compatibility/).
 
 ## Deliberately different
 
@@ -84,12 +109,28 @@ other byte alone. This is a difference in Scoria's favor and it is not going to 
 
 **The command palette lists only runnable commands.** This matches how Obsidian hides a
 command whose check callback fails, but the effect is more visible here because more commands
-are unimplemented. The [Hotkeys tab](/docs/hotkeys/) still lists all 244 ids so your
-bindings are visible.
+are unimplemented. The [Hotkeys tab](/docs/hotkeys/) still lists every command Obsidian names
+on desktop — 227 of the 244 ids — so your bindings are visible.
 
-**The default font is Liberation Sans.** Not a taste decision: the pinned GPUI cannot select
-weights from a variable font, so with a single-file variable font nothing renders bold.
-Liberation Sans ships static Bold faces. Your `appearance.json` fonts override it.
+**The default font is Inter, on every platform.** Obsidian's default stack starts with the
+system's interface font (`ui-sans-serif`, `-apple-system`, `system-ui`, `Segoe UI`) and falls
+back to Inter, which is what it renders on Linux; on macOS and Windows it normally renders the
+system's font. Scoria bundles Inter's static faces and uses them everywhere, because the pinned
+GPUI cannot select weights from a variable font. The font families in `appearance.json`
+override it.
+
+**The default accent is brick, not purple.** With no accent color set, Scoria's accent is
+`hsl(14, 62%, 46%)`, a brick from the logo's palette, where Obsidian's is a purple. It is declared exactly
+where Obsidian declares its own, so an accent set in Settings, or a theme's, still wins, and
+nothing is written to your vault.
+
+**A second bold over task lines removes the bold.** Over `- [ ] **task**` lines Obsidian's
+second `Ctrl + B` changes nothing; Scoria's strips the bold, as it does over any other line.
+
+**The URI scheme Scoria registers is `scoria://`.** Obsidian owns `obsidian://` on a machine
+that has it; Scoria reads `open`, `new`, `search` and `daily` under its own name, and takes
+`obsidian://` too when its desktop entry is installed to claim it. A URI that names another
+vault is refused rather than switching the window to it.
 
 ## Not ever
 
@@ -102,8 +143,15 @@ What is planned instead is a **native plugin API of Scoria's own** (tier 4, the 
 Your `community-plugins.json` and plugin manifests are read and listed in Settings, so you can
 see what your vault has — they are simply not executed.
 
+**A theme's CSS rules will not apply.** Scoria reads a theme's custom properties and drops
+its selector rules, pseudo-elements, layout overrides and animations; with no DOM there is
+nothing for a rule to select. See [tier 3](/docs/reference/compatibility/#tier-3-themes). Nor
+does Scoria browse or download community themes: put a theme in `.obsidian/themes/` and pick
+it in Settings.
+
 **Obsidian Sync, Publish and the commercial services** are Obsidian's products, not file
-formats. Scoria has nothing to do with them. Use any file-level sync — git, Syncthing,
+formats, and their commands (`sync:*`, `publish:*`) will not exist in Scoria. Scoria has
+nothing to do with them. Use any file-level sync — git, Syncthing,
 Dropbox, or Obsidian Sync itself: they all move files, and files are all Scoria needs.
 
 ## Keeping this page honest
