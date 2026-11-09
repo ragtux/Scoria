@@ -1029,6 +1029,12 @@ impl TextBuffer {
         table::table_at(&self.text, self.head).is_some()
     }
 
+    /// Whether a table command would write anything at the cursor: what the
+    /// palette lists, since Obsidian hides one whose check fails.
+    pub fn table_command_applies(&self, cmd: table::TableCommand) -> bool {
+        table::table_at(&self.text, self.head).is_some_and(|at| table::applies(&at, cmd))
+    }
+
     /// Runs a table command at the cursor. The whole table is rewritten, as
     /// Obsidian rewrites it, and the cursor stays in the cell it was in.
     /// `false` when the cursor is not in a table or the command cannot

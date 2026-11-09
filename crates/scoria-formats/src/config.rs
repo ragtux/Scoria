@@ -847,6 +847,31 @@ pub struct PropertyTypes {
     pub extra: Map<String, Value>,
 }
 
+impl PropertyTypes {
+    /// The entries Obsidian adds to `types.json` whenever it writes the file
+    /// and finds them missing: the built-in keys, each pinned to its reserved
+    /// type. Observed on the gate vault, Obsidian 1.15.0, 2026-11-09: a file
+    /// Scoria had written with one key came back as that key, then these
+    /// three, then the keys the session assigned -- so they are appended
+    /// after whatever the file holds, in this order, and before the new key.
+    pub const DEFAULTS: [(&'static str, &'static str); 3] = [
+        ("aliases", "aliases"),
+        ("cssclasses", "multitext"),
+        ("tags", "tags"),
+    ];
+
+    /// Appends the missing defaults. Every writer of the file calls this
+    /// first, so a new `types.json` opens with the three and an old one
+    /// gains them where Obsidian would put them.
+    pub fn seed_defaults(&mut self) {
+        for (key, ty) in Self::DEFAULTS {
+            if !self.types.contains_key(key) {
+                self.types.insert(key.to_string(), ty.to_string());
+            }
+        }
+    }
+}
+
 /// The type names Obsidian 1.14.4 registers (`registeredTypeWidgets`), which
 /// are the values `types.json` carries. `text`, `multitext`, `number`,
 /// `checkbox`, `date`, `datetime`, `tags` and `aliases` are the property
@@ -1028,5 +1053,32 @@ mod tests {
         let hk: Hotkeys = serde_json::from_str(text).unwrap();
         assert_eq!(hk["editor:toggle-bold"][0].key, "B");
         assert!(hk["app:reload"].is_empty());
+    }
+
+    #[test]
+    fn types_json_is_seeded_the_way_obsidian_seeds_it() {
+        // The bytes Obsidian 1.15.0 left on the gate vault (2026-11-09) after
+        // a session that found `status` alone in the file and assigned two
+        // more keys: the one it found, the three defaults, the new ones.
+        let observed = "{\n  \"types\": {\n    \"status\": \"date\",\n    \"aliases\": \"aliases\",\n    \"cssclasses\": \"multitext\",\n    \"tags\": \"tags\",\n    \"draft\": \"checkbox\",\n    \"scoria\": \"multitext\"\n  }\n}";
+        let mut types = PropertyTypes::default();
+        types.types.insert("status".into(), "date".into());
+        types.seed_defaults();
+        types.types.insert("draft".into(), "checkbox".into());
+        types.seed_defaults();
+        types.types.insert("scoria".into(), "multitext".into());
+        assert_eq!(serde_json::to_string_pretty(&types).unwrap(), observed);
+        // A fresh file opens with the three.
+        let mut fresh = PropertyTypes::default();
+        fresh.seed_defaults();
+        fresh.types.insert("status".into(), "multitext".into());
+        assert_eq!(
+            fresh.types.keys().collect::<Vec<_>>(),
+            ["aliases", "cssclasses", "tags", "status"]
+        );
+        // Seeding twice adds nothing.
+        let again = fresh.clone();
+        fresh.seed_defaults();
+        assert_eq!(fresh, again);
     }
 }

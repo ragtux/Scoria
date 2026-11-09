@@ -798,6 +798,9 @@ impl VaultState {
         ty: scoria_formats::properties::PropertyType,
     ) -> Result<PropertyTypes, String> {
         let mut types = self.property_types.write().expect("property types lock");
+        // Obsidian seeds the built-in keys on every write of the file, before
+        // the key being assigned.
+        types.seed_defaults();
         types.types.insert(key.to_string(), ty.as_str().to_string());
         self.vault()
             .write_config("types.json", &*types)
@@ -811,6 +814,7 @@ impl VaultState {
         let Some(ty) = types.types.shift_remove(from) else {
             return Ok(());
         };
+        types.seed_defaults();
         types.types.insert(to.to_string(), ty);
         self.vault()
             .write_config("types.json", &*types)
@@ -823,6 +827,7 @@ impl VaultState {
         if types.types.shift_remove(key).is_none() {
             return Ok(());
         }
+        types.seed_defaults();
         self.vault()
             .write_config("types.json", &*types)
             .map_err(|e| e.to_string())
@@ -5478,8 +5483,12 @@ impl Workspace {
                 return false;
             }
         }
-        if TableCommand::from_id(id).is_some() {
-            return self.mode.is_editing() && self.editor.read(cx).in_table();
+        // Obsidian's table commands are check callbacks: hidden outside Live
+        // Preview, and hidden when the one asked for has nothing to do --
+        // "Move row up" is not offered in the first body row (1.15.0, the
+        // palette on the gate vault, 2026-11-08).
+        if let Some(cmd) = TableCommand::from_id(id) {
+            return self.mode.is_editing() && self.editor.read(cx).table_command_applies(cmd);
         }
         // `graph:open-local` is a checkCallback: with every markdown leaf
         // detached Obsidian does not list the id at all, rather than offer a

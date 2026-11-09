@@ -57,8 +57,10 @@ impl TableCommand {
     }
 }
 
-/// A table as the commands work on it: the header is row 0, so moving the
-/// first body row up swaps it with the header the way Obsidian's does.
+/// A table as the commands work on it: the header is row 0. The first body
+/// row does not move up into it: Obsidian 1.15.0 hides "Move row up" there
+/// (the palette on the gate vault, 2026-11-08), where the 1.14.4 plugin
+/// probe had recorded a swap with the header.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Table {
     pub alignments: Vec<Alignment>,
@@ -280,6 +282,16 @@ pub fn table_at(text: &str, offset: usize) -> Option<TableAt> {
 /// cannot apply — deleting the only column, or moving the first column
 /// left.
 pub fn apply(at: &TableAt, cmd: TableCommand) -> Option<TableEdit> {
+    applies_inner(at, cmd)
+}
+
+/// Whether `cmd` would write anything at `at`. Obsidian hides a table
+/// command whose check fails, so the palette asks this before listing one.
+pub fn applies(at: &TableAt, cmd: TableCommand) -> bool {
+    applies_inner(at, cmd).is_some()
+}
+
+fn applies_inner(at: &TableAt, cmd: TableCommand) -> Option<TableEdit> {
     let mut t = at.table.clone();
     let (mut row, mut col) = (at.row, at.col);
     let rows = t.rows.len();
@@ -293,7 +305,9 @@ pub fn apply(at: &TableAt, cmd: TableCommand) -> Option<TableEdit> {
             row += 1;
         }
         TableCommand::RowUp => {
-            if row == 0 {
+            // Row 1 is the first body row; the header is not a row it can
+            // change places with.
+            if row <= 1 {
                 return None;
             }
             t.rows.swap(row, row - 1);
@@ -631,10 +645,14 @@ mod tests {
             run(PADDED, "1", TableCommand::RowAfter),
             "| A   | B   |\n| --- | --- |\n| 1   | 2   |\n|     |     |\n| 3   | 4   |\n"
         );
-        // The first body row swaps with the header; the delimiter stays put.
+        // The first body row has nowhere to go: it does not swap with the
+        // header (Obsidian 1.15.0 hides the command there). The second
+        // swaps with the first.
+        let first = table_at(PADDED, PADDED.find('1').unwrap()).unwrap();
+        assert_eq!(apply(&first, TableCommand::RowUp), None);
         assert_eq!(
-            run(PADDED, "1", TableCommand::RowUp),
-            "| 1   | 2   |\n| --- | --- |\n| A   | B   |\n| 3   | 4   |\n"
+            run(PADDED, "3", TableCommand::RowUp),
+            "| A   | B   |\n| --- | --- |\n| 3   | 4   |\n| 1   | 2   |\n"
         );
         assert_eq!(
             run(PADDED, "1", TableCommand::RowDown),
@@ -766,6 +784,16 @@ mod tests {
         // Nothing is above the header, nothing is left of the first column.
         assert_eq!(apply(&at, TableCommand::RowUp), None);
         assert_eq!(apply(&at, TableCommand::ColLeft), None);
+        assert!(!applies(&at, TableCommand::RowUp));
+        assert!(applies(&at, TableCommand::RowDown));
+        // The first body row cannot move up either, and the last cannot
+        // move down.
+        let at = table_at(PADDED, PADDED.find('1').unwrap()).unwrap();
+        assert!(!applies(&at, TableCommand::RowUp));
+        assert!(applies(&at, TableCommand::RowDown));
+        let at = table_at(PADDED, PADDED.find('3').unwrap()).unwrap();
+        assert!(applies(&at, TableCommand::RowUp));
+        assert!(!applies(&at, TableCommand::RowDown));
         let one = "| A |\n| --- |\n| 1 |\n";
         let at = table_at(one, one.find('1').unwrap()).unwrap();
         assert_eq!(apply(&at, TableCommand::ColDelete), None);

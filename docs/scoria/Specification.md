@@ -313,7 +313,15 @@ Types, from `registeredTypeWidgets`:
   `datetime` — `datetime` is only ever assigned.
 - `types.json` is written in insertion order, seeded with `aliases: aliases`,
   `cssclasses: multitext` and `tags: tags` before any assigned key, with
-  two-space indentation and no trailing newline.
+  two-space indentation and no trailing newline. **Observed on the gate vault,
+  Obsidian 1.15.0, 2026-11-09:** given a file holding `status` alone (Scoria's,
+  unseeded), a session that assigned two types left `status`, then the three
+  defaults, then the two new keys — the file's own keys stay first, the missing
+  defaults are appended, and assigned keys follow. A key renamed inside one
+  note's properties (`status` → `draft` → `scoria`) left every old entry in
+  place: only the value's new key was added. Scoria seeds on every write of the
+  file since 2026-11-09 (`PropertyTypes::seed_defaults`); the copy it wrote on
+  2026-11-08 held the one key and nothing else.
 
 Commands and settings:
 
@@ -459,6 +467,15 @@ in raw source mode it never does, so **Obsidian's table commands are a Live
 Preview feature**; the 186 runs where the check passed are what is recorded
 here.
 
+**Move row up in the first body row, Obsidian 1.15.0.** Seen on the gate vault on 2026-11-08
+(a person at the palette, not a probe): in Live Preview with the caret in the first body row's
+first cell, the palette's `move row` lists only *Table: Move row down*. The command's check
+fails there, so a first body row never changes places with the header. Scoria matches since
+2026-11-09: `table::apply` refuses it, and the palette lists a table command only when it would
+write something (`table::applies`), so a last row's Move row down, a first column's Move column
+left and a last column's Move column right are hidden on the same rule, which is inferred from
+this one observation rather than seen.
+
 Any table command **rewrites the whole table**, not the row or column it
 was asked about. The written form is the same every time:
 
@@ -481,7 +498,7 @@ What each command does, with the cursor in some cell:
 | Command | Effect |
 | --- | --- |
 | `table-row-before`, `table-row-after` | an empty row above or below |
-| `table-row-up`, `table-row-down` | swap with the row the other side; the first body row swaps with the **header**, delimiter staying put |
+| `table-row-up`, `table-row-down` | swap with the row the other side. The 1.14.4 runs recorded the first body row swapping with the **header**, delimiter staying put; **1.15.0 does not offer `table-row-up` there** — see below |
 | `table-row-copy` | the row again, directly below |
 | `table-row-delete` | the row; deleting the header promotes the next row into it |
 | `table-col-before`, `table-col-after` | an empty column either side, alignment `None` |

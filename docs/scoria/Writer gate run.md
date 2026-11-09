@@ -484,9 +484,59 @@ now covers it: the sixteen properties pass with the vault named. It was written 
 Scoria's idea of the format and not yet Obsidian's. The Obsidian half should set a type in Obsidian and
 compare, which is the check that matters.
 
-**What is left for the Obsidian half:** the same table commands in Obsidian on the same notes (and the
-*Move row up* question above), the property's value edited in Obsidian's Properties pane, and a property
-type set there, to compare `types.json` byte for byte against Scoria's. Then `just gate-baseline`.
+### The Obsidian half, 2026-11-08
+
+Run by hand, 23:49–23:58, Obsidian 1.15.0 in Live Preview, on a note of the person's own making rather
+than the one Scoria used: `Day 2 New Note` (day 2's empty artifact) renamed to `Day 3 New Note` on its
+row, a five-column table typed into it, the table commands run from the palette, two rows appended, and
+a line of text typed after it. Day 2's table note was left alone, which is right for attribution — its
+only change this day is Scoria's front matter.
+
+**The table bytes agree with Scoria's writer.** What Obsidian left is a table padded to its widest cell
+with `---` at the minimum three, Align left written as `:--` at the delimiter's width, and the two
+appended rows as `|     |` cells — the shapes recorded on 2026-10-18 and the ones `scoria_text::table`
+writes; the harness opened and saved the note tonight without moving a byte (sixteen properties green
+with the vault named). The commands ran without an undo between them, so the note holds their sum
+rather than a round trip, and that is a person's edit either way.
+
+**Move row up is not offered in the first body row.** The question day 3's Scoria half asked is answered
+by a screenshot of the palette: caret in the first body row's first cell, query `move row`, and the
+only table row is *Table: Move row down*. Obsidian's check fails there, so the first body row never
+swaps with the header — which is what Scoria did, from the 1.14.4 plugin probe. It is an edit Scoria
+would make and Obsidian would not, so it is fixed the same night: `table::apply` refuses it, and the
+palette now lists a table command only when it would write something, see
+[[UI parity backlog#Move row up swapped the first body row with the header]]. No dialog appeared at any
+point of the half.
+
+**The three config files moved mtimes and no bytes**, again, at 23:49 — the known trap.
+
+**`types.json`, Obsidian's own, 00:29.** The first pass of the half never reached it — the note Obsidian
+was on has no properties — so the table note was opened in Obsidian afterwards and its `status` given
+Checkbox, then List. What happened was not quite that: the key was renamed rather than the value set,
+`status` → `draft` (Checkbox, value `true`) → `scoria` (List, the `true` kept as a quoted string and
+two items typed), and the file Obsidian wrote is the day's result:
+
+```
+{ "types": { "status": "date", "aliases": "aliases", "cssclasses": "multitext",
+             "tags": "tags", "draft": "checkbox", "scoria": "multitext" } }
+```
+
+(pretty-printed, two spaces, no trailing newline — the shape Scoria's copy already had). Three things
+in it. **Obsidian seeds `aliases`, `cssclasses` and `tags`** on writing the file, after the keys it
+found and before the ones assigned; the specification had said so from the documentation, and Scoria's
+writer had never done it — the `types.json` Scoria made on the 8th held one key. Fixed:
+`PropertyTypes::seed_defaults` runs before every write, pinned by a test against these bytes. **A key
+renamed in one note leaves its old entry** (`status` and `draft` both stayed), which is what Scoria
+does for a per-note rename too. And **`status` is `date`**, where Scoria had left `datetime`: a pick
+nobody reported, most likely the Date row on the way to Checkbox — the empty `Invalid date.md` created
+at 00:26 is what a date-typed `status` holding `draft` renders as, followed as a link. Left in the
+vault on purpose. The harness, rerun with the vault named, round-trips the six-key file and the new
+front matter (`scoria:` with a quoted `"true"` and two items) byte for byte: sixteen properties green.
+
+**Day 3 passes.** Every file the diff reports is a person's edit in one of the two apps, and the
+day paid the week's second job its first real coin: a `types.json` in Obsidian's own bytes, which
+showed Scoria's to be short by three entries — a divergence the harness could not have seen, since
+it only ever read back what Scoria wrote.
 
 ## The log
 
@@ -498,7 +548,7 @@ questions above.
 | 0 | 2026-11-04 | — | — | nothing (vault inert since 10-22) | — | baseline `snapshot-2026-11-04` taken, harness green at 15 properties |
 | 1 | 2026-11-04 | six notes, 3 source + 3 Live Preview: typed, saved, undone, saved | five notes appended to; `vimMode` off; `Mindmap.canvas` opened | 5 notes +1 line each (no trailing newline now), `app.json`, the canvas rewritten compact, `workspace.json` | every one a person's edit in one of the two apps, bar the canvas (Obsidian normalizing a file authored elsewhere) and `workspace.json` (both apps, every session) | **passes** — nothing moved that nobody touched; the harness's canvas failure was the harness's, not the writer's |
 | 2 | 2026-11-05 | rename with 6 aliased inbound links and back; move into a new folder and back; new folder; new note; note created from an unresolved link; delete; three sort orders | renamed `Note F` and back (the modal appeared, **Just once**), new note named on the row; the three `.obsidian` files touched | the 6 link lines rewritten by each app and back to byte-identical both times; `Archive/`, `Day 2 New Note.md`, `this is a new note!.md`, one typed line in `Note C.md` | every one a person's edit in one of the two apps; the three config files moved mtimes and no bytes | **passes** — and the two link rewriters proved byte-identical on a real vault. `alwaysUpdateLinks` defaulted on where Obsidian defaults off, so Scoria's rename rewrote 6 files silently instead of asking; fixed, the ask-path it had made unreachable now runs, and the modal Obsidian showed confirms the default on this vault |
-| 3 | 2026-11-08 | 14 of the 15 table commands on `Note F`, each checked and undone to byte-identical; first front matter added, folded and unfolded; property type set from the sidebar menu (Checkbox, then List) | not run | front matter on `Note F` (`---`, `status:`, `---`), `.obsidian/types.json` created | both a person's edit in Scoria; nothing moved that nobody touched | **Scoria half passes** — and a menu bug found and fixed (a click on a submenu row closed the menu and wrote nothing), which is what produced the first `types.json` |
+| 3 | 2026-11-08 | 14 of the 15 table commands on `Note F`, each checked and undone to byte-identical; first front matter added, folded and unfolded; property type set from the sidebar menu (Checkbox, then List) | `Day 2 New Note` renamed on the row to `Day 3 New Note` and a table built and commanded in it; `Note F`'s property renamed twice with a type each time, an empty `Invalid date.md` on the way; the three `.obsidian` files touched | `Note F`'s front matter (Scoria's `status:`, then Obsidian's `scoria:` list), the renamed note with its table, `Invalid date.md`, `types.json` (Scoria's one key, then Obsidian's six) | every one a person's edit in one of the two apps; the three config files moved mtimes and no bytes | **passes** — Obsidian's `types.json` showed Scoria's unseeded (fixed: the three defaults on every write), the palette showed Move row up hidden in the first body row (fixed), and a submenu bug fell on the Scoria half |
 | 4 |  |  |  |  |  |  |
 | 5 |  |  |  |  |  |  |
 | 6 |  |  |  |  |  |  |

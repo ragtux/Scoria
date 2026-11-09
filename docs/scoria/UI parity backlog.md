@@ -2773,6 +2773,21 @@ went blank line, header cell, first body cell. **Still out**: the reading view's
 behaviour when the title loses focus (a press elsewhere abandons it here), and a re-pad on entering a
 table.
 
+### Move row up swapped the first body row with the header
+
+*low, parity-gap, small* · **Filed:** 2026-11-08, from the Writer gate's day 3 ([[Writer gate run#Day 3, 2026-11-08]]).
+
+**Obsidian.** 1.15.0, Live Preview, caret in the first body row: the palette offers *Table: Move row
+down* and no *Move row up*. The check fails, so the row stays under the header.
+
+**Scoria.** `table::apply` swapped the first body row with the header, as the 1.14.4 plugin probe had
+recorded, and the palette offered the command anywhere in a table.
+
+**Landed 2026-11-09**: the first body row no longer moves up, and the palette lists a table command
+only when it would write something (`table::applies`, through `can_run`), which also hides Move row
+down in the last row and the two column moves at the edges — inferred from the one case seen, and
+recorded as such in [[Specification#Observed table editing behavior, Obsidian 1.14.4]].
+
 ### A table has no row or column handles
 
 Filed from `tools/obsidian-probe/table-handles.mjs`

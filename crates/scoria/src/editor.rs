@@ -1073,8 +1073,10 @@ impl Editor {
 
     /// Whether the cursor is in a table: the table commands are offered
     /// only then, the way Obsidian's check callback hides them.
-    pub fn in_table(&self) -> bool {
-        self.buf.in_table()
+    /// Whether `cmd` would do anything at the cursor; the palette lists a
+    /// table command only when it would.
+    pub fn table_command_applies(&self, cmd: TableCommand) -> bool {
+        self.buf.table_command_applies(cmd)
     }
 
     /// Runs one of Obsidian's table commands at the cursor, rewriting the
