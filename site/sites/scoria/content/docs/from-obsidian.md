@@ -47,7 +47,7 @@ Be realistic about this list before you make Scoria your daily reader.
   not open. A `.canvas` does, in a canvas view of its own.
 - **A few settings controls.** Most rows write; the font pickers, spellcheck languages,
   excluded files, accent color and the theme list do not.
-- **Popout windows and multiple vaults in one window**, PDF export, heading folding,
+- **Multiple vaults in one window**, PDF export, heading folding,
   drag-and-drop in Files, inline title editing, pasting attachments.
 
 The full list, kept honest, is [what differs from
@@ -98,7 +98,9 @@ Not bugs, just differences you will notice in the first ten minutes:
 
 - **It starts immediately.** There is no splash: the vault is scanned on a background
   thread while the window is already up.
-- **One window, one vault.** Run it twice for two vaults. Popout windows do not exist here.
+- **One vault per window.** Run it twice for two vaults. Popout windows are in: move a tab
+  out with *Move to new window*, and they reopen where you left them, in Obsidian's
+  `workspace.json` shape. See [the window](/docs/app/window/#popout-windows).
 - **Tabs and splits, but no stacked tabs.** `Ctrl + T` opens a tab, Split right and Split
   down divide the main area into groups, a tab drags between them, and `Ctrl + Alt + ←` /
   `→` still walk the history of what you have opened.

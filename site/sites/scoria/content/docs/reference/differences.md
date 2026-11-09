@@ -34,7 +34,7 @@ Things Obsidian does that Scoria intends to do and does not.
 |---|---|
 | **Bases** | The Bases YAML format is implemented and round-trips; there is no base view. Canvas has one |
 | **A canvas embedded in a note** | `![[Board.canvas]]` is not drawn; the file opens in a view of its own |
-| **Popout windows** | — |
+| **Popout windows** | In: the five window commands, **Open in new window** on the menus, tab drags between windows, and popouts reopened on launch. On Wayland a dragged tab stays in its own window, and a popout's recorded zoom is not applied. See [the window](/docs/app/window/#popout-windows) |
 | **Stacked tabs** | Tabs and split groups are in; stacking them is not |
 | **Multiple vaults in one window** | Run Scoria once per vault |
 | **Local graph depth beyond 1**, arrows, timelapse, screenshot export | See [the graph](/docs/app/graph/) |
@@ -63,7 +63,7 @@ Things Obsidian does that Scoria intends to do and does not.
 | **Themes (`cssTheme`)** | Base theme, accent color and fonts are honored; a CSS theme is not. Tier 3 |
 | **A few Settings controls** | Most rows write. The font families, spellcheck languages, excluded files, accent color and the theme list do not, because the control Obsidian offers for them is one Scoria has not built |
 | **Search result context menu** | Sorting, copying, collapsing and the keyboard are in; a result has no right-click menu yet. See [search](/docs/app/search/) |
-| **A context menu on a side-pane row** | The Files view's is the only one in the app so far |
+| **A context menu on a Tags or Outline row** | Files, Backlinks, Outgoing links, Bookmarks and All properties rows have one; these two do not yet |
 | **Vault-wide search and replace** | Replace works within one note |
 
 ### Markdown edge cases

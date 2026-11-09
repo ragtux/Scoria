@@ -93,16 +93,24 @@ Right-click a file or a folder for:
 
 | On a file | On a folder |
 |---|---|
-| New note | New note (in that folder) |
-| New folder | New folder |
-| Rename… | Rename… |
-| Make a copy | — |
-| Delete | Delete |
+| Open in new tab | New note (in that folder) |
+| Open to the right | New folder |
+| Open in new window | New canvas |
+| Make a copy | New base |
+| Move file to... | Make a copy |
+| Bookmark... | Move folder to... |
+| Copy path | Search in folder |
+| Open in default app | Bookmark... |
+| Show in system explorer | Copy path |
+| Rename... | Show in system explorer |
+| Delete | Rename... |
+| | Delete |
 
-Moving is not in this menu: run `file-explorer:move-file`, which opens a fuzzy folder
-picker. Each of the others is a command too, so it can have a key of its own —
-`file-explorer:new-file`, `file-explorer:new-folder`, `workspace:edit-file-title` (`F2`),
-`file-explorer:duplicate-file`, `app:delete-file`.
+**Open in new window** opens the file in a [popout window](/docs/app/window/#popout-windows)
+of its own. A right click on the empty space below the last row offers the four New rows
+alone, rooted at the vault. Several rows are commands too, so they can have a key of their
+own — `file-explorer:new-file`, `file-explorer:new-folder`, `file-explorer:move-file`,
+`workspace:edit-file-title` (`F2`), `file-explorer:duplicate-file`, `app:delete-file`.
 
 Renaming and moving rewrite the links in the rest of the vault. What exactly that means —
 which links change, which are left byte for byte, what happens to aliases — is the subject
@@ -125,8 +133,6 @@ takes everything under it out of the index.
   the tree will notice.
 - **Inline naming of a new folder.** The header's New folder opens a prompt and creates the
   folder at the vault root.
-- **A context menu on a row of the other panes.** The Files menu is the only one in the app
-  so far.
 
 ## Bookmarks
 

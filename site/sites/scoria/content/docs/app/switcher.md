@@ -49,7 +49,7 @@ Type part of a command's name and press Enter to run it. The order is Obsidian's
 Fuzzy matching is over command *names*, the ones you see — *Toggle reading view*, not
 `markdown:toggle-preview`.
 
-> **Note** The palette lists only the commands Scoria can actually run — 127 of them today.
+> **Note** The palette lists only the commands Scoria can actually run — 132 of them today.
 > This is the same way Obsidian hides a command whose check callback fails, and it means the
 > palette never offers you something that does nothing. Every command id is still listed in
 > Settings' [Hotkeys](/docs/hotkeys/) tab, so you can see and keep bindings for features that

@@ -1,13 +1,14 @@
 ---
 title: The window
-description: A tour of Scoria's window — the left dock with Files and Search, the note in the middle, the right dock with Backlinks, Outgoing links, Outline and Tags, the status bar, and how navigation works.
+description: A tour of Scoria's window — the left dock with Files and Search, the note in the middle, the right dock with Backlinks, Outgoing links, Outline and Tags, the status bar, popout windows, and how navigation works.
 ---
 
 # The window
 
-Scoria opens one window on one vault, in a three-part shell: a dock on the left, the open
+Scoria opens one vault window per vault, in a three-part shell: a dock on the left, the open
 note in the middle, a dock on the right. Both docks can be hidden, which leaves the note
-alone on screen.
+alone on screen. Tabs can also be taken out into [popout windows](#popout-windows) of their
+own.
 
 ```
 ┌─────────────┬────────────────────────────────┬──────────────┐
@@ -52,11 +53,57 @@ The middle is a tab strip over one or more tab groups. `Ctrl + T` opens a tab,
 `workspace:split-vertical` (Split right) and `workspace:split-horizontal` (Split down)
 divide the area into groups, the dividers between groups drag, and a tab drags between
 groups or onto a group's edge to make a new one. `Ctrl + Tab` and `Ctrl + 1`…`8` walk the
-tabs, and `editor:focus-left` and its three siblings move between groups. The `main`
-tree is written back to `workspace.json` in the shape Obsidian writes it.
+tabs, and `editor:focus-left` and its three siblings move between groups. The layout is
+written back to `workspace.json` in the shape Obsidian writes it, and the next launch opens
+on it again.
 
-> **Note** Scoria still opens its own default layout rather than restoring the one it
-> saved. Popout windows do not exist here.
+Right-click a tab's header for its menu: **Close**, **Close others** and **Close all** (the
+last two when the group has more than one tab), **Pin** or **Unpin**, **Move to new
+window**, **Split right**, **Split down** and **Open in new window**, followed by the
+tab's file rows — Move, Bookmark, Copy path, Rename, Delete and the rest of the [file
+menu](/docs/app/files/#the-right-click-menu). The view header's **More options** offers the
+same split and window rows.
+
+## Popout windows
+
+A popout window is a second window on the same vault that holds tabs and nothing else: no
+ribbon, no docks, no status bar. It is titled like the vault window, after the note in
+front, and inside it tabs, splits, the dividers and `Ctrl + T` all work as they do in the
+main area.
+
+| To | Do |
+|---|---|
+| Move the current tab into a new window | `workspace:move-to-new-window`, or **Move to new window** on the tab's right-click menu |
+| Open a copy of the current tab in a new window | `workspace:open-in-new-window`, or **Open in new window** on the tab's menu or the view header's **More options** |
+| Open an empty window | `workspace:new-window` |
+| Open the link under the cursor in a new window | `Ctrl + Alt + Shift + Enter` (`editor:open-link-in-new-window`) |
+| Open a file in a new window | **Open in new window** on its right-click menu — in Files, on a Backlinks or Outgoing links row, a bookmark, a Bases row or card, or a link in the editor |
+| Close a window | `Ctrl + Shift + W` (`workspace:close-window`), the window's own close button, or closing its last tab |
+
+Moving the only tab of the vault window leaves an empty tab behind, as Obsidian does. A
+link to a note that does not exist creates it, as following one does. `Ctrl + Shift + W`
+closes the window it is pressed in: in a popout, that popout and its tabs; in the vault
+window, Scoria itself, with every popout going with it.
+
+**Focus follows the desktop.** The window you bring forward — by clicking it, with
+`Alt + Tab`, however your desktop does it — makes its own most recent tab the active one,
+so commands, hotkeys and the history act there. The quick switcher, the command palette,
+the prompts, the right-click menus and notices all come up in the window you raised them
+from, and a note picked in a popout's switcher opens in that popout.
+
+**Tabs drag between windows.** A tab dropped on another window's tab strip joins it there,
+and dropped on the edge of its content splits it, exactly as within one window. A popout
+whose last tab leaves closes; a tab let go over no window stays where it was.
+
+**Popouts come back.** When Scoria quits with popouts open, each is written to
+`workspace.json`'s `floating` section with its position, size and maximized state, in the
+shape Obsidian writes it, and both apps reopen them there on the next launch. A recorded
+position that is on no display any more is centered instead.
+
+> **Note** On Wayland a dragged tab stays in the window it started in, because a Wayland
+> window is not told where it sits on the screen; reordering and splitting inside the window
+> still work. A popout's recorded zoom is kept in the file but not applied. Popouts have so
+> far been exercised on Linux; the Windows and macOS builds are still to be tried with them.
 
 ## The right dock
 
@@ -115,7 +162,7 @@ Every shortcut in Scoria is an Obsidian command bound from its default hotkey, s
 vault's `hotkeys.json` rebinds or unbinds all of them. The one exception is `Ctrl + Q`,
 which quits.
 
-The 127 commands Scoria can actually run are the ones the command palette offers; the rest
+The 132 commands Scoria can actually run are the ones the command palette offers; the rest
 are still listed in Settings' Hotkeys tab, so you can see your bindings for commands that
 do not do anything yet. The full list is in [commands and
 hotkeys](/docs/reference/commands/).

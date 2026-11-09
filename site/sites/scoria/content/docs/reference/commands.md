@@ -1,13 +1,13 @@
 ---
 title: Commands and hotkeys
-description: The commands Scoria registers — the 244 Obsidian command ids, the 41 with a default hotkey, and the 127 Scoria can actually run today, with every id and default key listed.
+description: The commands Scoria registers — the 244 Obsidian command ids, the 41 with a default hotkey, and the 132 Scoria can actually run today, with every id and default key listed.
 ---
 
 # Commands and hotkeys
 
 Scoria registers **244 command ids** — the exact strings Obsidian registers, so your
 `hotkeys.json` matches them — of which **227 have an observed desktop name**. **41** carry a
-default hotkey. **127** do something in Scoria today.
+default hotkey. **132** do something in Scoria today.
 
 Those four numbers are different things and the difference is the point:
 
@@ -19,7 +19,7 @@ Those four numbers are different things and the difference is the point:
   palette](/docs/app/switcher/) offers only these; the [Hotkeys tab](/docs/hotkeys/) lists
   all 244, so you can see your bindings for everything else.
 
-Some of the 127 are runnable only in the right place, which is also how Obsidian treats
+Some of the 132 are runnable only in the right place, which is also how Obsidian treats
 them: **37** need an editor on screen with the keyboard in it, so they leave the palette in
 a reading leaf, and the **fifteen table commands** that act on an existing table are offered
 only while the cursor is in one. `graph:open-local` is not offered with no file open. The palette, the hotkey and the
@@ -38,7 +38,7 @@ commands below, which are `Ctrl` everywhere.
 |---|---|---|---|
 | Add file property | `markdown:add-metadata-property` | `Ctrl + ;` | Yes |
 | Close current tab | `workspace:close` | `Ctrl + W` | Yes |
-| Close window | `workspace:close-window` | `Ctrl + Shift + W` | — |
+| Close window | `workspace:close-window` | `Ctrl + Shift + W` | Yes |
 | Command palette: Open command palette | `command-palette:open` | `Ctrl + P` | Yes |
 | Create new note | `file-explorer:new-file` | `Ctrl + N` | Yes |
 | Create note to the right | `file-explorer:new-file-in-new-pane` | `Ctrl + Shift + N` | Yes |
@@ -55,7 +55,7 @@ commands below, which are `Ctrl` everywhere.
 | New tab | `workspace:new-tab` | `Ctrl + T` | Yes |
 | Open help | `app:open-help` | `F1` | Yes |
 | Open link under cursor in new tab | `editor:open-link-in-new-leaf` | `Ctrl + Enter` | Yes |
-| Open link under cursor in new window | `editor:open-link-in-new-window` | `Ctrl + Alt + Shift + Enter` | — |
+| Open link under cursor in new window | `editor:open-link-in-new-window` | `Ctrl + Alt + Shift + Enter` | Yes |
 | Open link under cursor to the right | `editor:open-link-in-new-split` | `Ctrl + Alt + Enter` | Yes |
 | Open settings | `app:open-settings` | `Ctrl + ,` | Yes |
 | Quick switcher: Open quick switcher | `switcher:open` | `Ctrl + O` | Yes |
@@ -71,8 +71,8 @@ commands below, which are `Ctrl` everywhere.
 | Toggle reading view | `markdown:toggle-preview` | `Ctrl + E` | Yes |
 | Undo close tab | `workspace:undo-close-pane` | `Ctrl + Shift + T` | Yes |
 
-> **Note** The two dashes are the two window commands: a popout window and a second window
-> do not exist here. Their ids are registered and your bindings for them are kept.
+> **Note** `Ctrl + Shift + W` closes the window it is pressed in: a popout, or in the vault
+> window, Scoria itself. See [popout windows](/docs/app/window/#popout-windows).
 
 ## Runnable commands with no default key
 
@@ -121,8 +121,11 @@ in `hotkeys.json`. Several are worth binding on day one: `editor:toggle-source`,
 | Make a copy of the current file | `file-explorer:duplicate-file` |
 | Manage vaults | `app:open-vault` |
 | Move current file to another folder | `file-explorer:move-file` |
+| Move current tab to new window | `workspace:move-to-new-window` |
 | Move line down | `editor:swap-line-down` |
 | Move line up | `editor:swap-line-up` |
+| New window | `workspace:new-window` |
+| Open current tab in new window | `workspace:open-in-new-window` |
 | Open sandbox vault | `app:open-sandbox-vault` |
 | Open vault... | `app:open-another-vault` |
 | Outgoing links: Open outgoing links for the current file | `outgoing-links:open-for-current` |

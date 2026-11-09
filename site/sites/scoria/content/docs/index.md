@@ -32,7 +32,7 @@ so in place, rather than describing Obsidian's behavior and leaving you to find 
 
 | Page | What it covers |
 |---|---|
-| [The window](/docs/app/window/) | The three panes, tabs, history, the ribbon, what is where |
+| [The window](/docs/app/window/) | The three panes, tabs, popout windows, history, what is where |
 | [The Files view](/docs/app/files/) | The file tree, the header's sort orders, the keyboard, bookmarks |
 | [Reading view](/docs/app/reading-view/) | How a finished note is displayed, and what is not drawn yet |
 | [Editing a note](/docs/app/editing/) | Live Preview and Source mode, smart lists, auto-pairing, saving, undo |

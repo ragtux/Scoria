@@ -107,9 +107,10 @@ is.
 
 ### One window per vault
 
-Scoria shows one vault per window and one window per process, so a second `scoria` on a vault
-that is already open does not start a second copy: it hands the note, file or URI to the window
-that has the vault and raises it, then exits. That is how `scoria ~/notes Basalt` behaves like a
+Scoria runs one process per vault — its vault window and any [popout
+windows](/docs/app/window/#popout-windows) it has opened — so a second `scoria` on a vault that
+is already open does not start a second copy: it hands the note, file or URI to the vault window
+and raises it, then exits. That is how `scoria ~/notes Basalt` behaves like a
 "go to this note" command from a terminal or a hotkey, and how a `scoria://` link opens in the
 window you are already looking at.
 

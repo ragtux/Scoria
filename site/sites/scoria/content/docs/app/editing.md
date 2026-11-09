@@ -58,6 +58,11 @@ Links inside an embed widget are clickable, and follow.
 In Live Preview, a click on a rendered link follows it. In Source mode, `Ctrl + click` does
 — a plain click puts the cursor there, which is what you want when the markers are showing.
 
+From the keyboard, with the cursor in a link: `Alt + Enter` follows it, `Ctrl + Enter` opens
+it in a new tab, `Ctrl + Alt + Enter` to the right, and `Ctrl + Alt + Shift + Enter` in a
+new [popout window](/docs/app/window/#popout-windows). A right click on a link offers the
+same three as **Open in new tab**, **Open to the right** and **Open in new window**.
+
 ## Source mode
 
 Every character of the file, with syntax highlighting and nothing hidden. This is the mode

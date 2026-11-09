@@ -118,6 +118,13 @@ what is typed into it — lives in that leaf of `.obsidian/workspace.json` and i
 startup and written back in place. A vault Obsidian never laid out gets Obsidian's default
 docks written for it, so nothing is lost on quit.
 
+## Right-click menus
+
+A right click on a Backlinks or Outgoing links row opens the menu of the file it stands for:
+**Open in new tab**, **Open to the right**, **Open in new window** (a [popout
+window](/docs/app/window/#popout-windows)), then the file's own rows. An All properties row
+has a menu of its own: Rename, Property type and Delete property.
+
 ## Keeping up with the vault
 
 All five panes follow the vault. A note saved in another window, a file added by git, a
@@ -126,8 +133,7 @@ link counts, because a note appearing can make a link elsewhere resolve.
 
 ## Not yet
 
-- A right-click menu on a pane row. The [Files view](/docs/app/files/)'s is the only one in
-  the app so far.
+- A right-click menu on a Tags or Outline row.
 - The keyboard in these panes, and dragging a row.
 - Per-match "Show more context" chevrons in the Outgoing links pane.
 - A local-graph side pane (the [graph](/docs/app/graph/) has a local mode of its own).
