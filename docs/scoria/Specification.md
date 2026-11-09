@@ -485,7 +485,7 @@ command opened was 980 × 759 inner (1012 × 801 outer); every later one 1024 ×
 
 **What `workspace.json` records.** Before any popout exists the file has **no `floating`
 key** (the in-memory `floatingSplit` exists, with no children). With one or more open, a
-`floating` object follows `right` and precedes `active`:
+`floating` object follows `right` (and `left-ribbon`, when the file has it) and precedes `active`:
 
 ```json
 "floating": {
@@ -513,8 +513,9 @@ bounds after that — `x`, `y`, `width`, `height` (the inner size), `maximize`, 
 that order. Leaves inside it are ordinary leaves; `active` names a popout's leaf when that is
 the active one, and `lastOpenFiles` fills as usual. After the one window `close-window` closed,
 the file listed the three left; after `win.close()` on those three the read 2.5 s later still
-listed them, so either the save waits longer or a window closed that way does not request one —
-unsettled, and the vault was not reopened to see what a stale entry does on launch.
+listed them — but the layout Obsidian serializes in memory (`s06` `after.serialized`) had **no
+`floating` key at all** by then, so the key goes with the last popout and the file was only
+waiting for its save. The vault was not reopened to see what a stale entry does on launch.
 
 **Still unprobed.** What a popout restores to on the next launch (position, size, the
 `maximize` flag); dragging a tab between a popout and the main window; whether a popout's tab

@@ -233,7 +233,12 @@ pub const METHODS: &[MethodSpec] = &[
             ParamType::Str,
             true,
             "A command id such as `editor:toggle-bold`; `list_commands` has them all.",
-        )],
+        ), p(
+                "window",
+                ParamType::Str,
+                false,
+                "Which window the command runs in, as a hotkey pressed there would: `main`, or a popout's id as `state.groups.windows` lists it. Default: the window the active group is in. `workspace:close-window` closes this window.",
+            )],
     ),
     m(
         "keys",
@@ -243,7 +248,12 @@ pub const METHODS: &[MethodSpec] = &[
             ParamType::StrList,
             true,
             "GPUI keystrokes, e.g. `[\"ctrl-shift-f\", \"enter\"]`.",
-        )],
+        ), p(
+                "window",
+                ParamType::Str,
+                false,
+                "Which window takes the input: `main`, or a popout's id as `state.groups.windows` lists it. Default: the Settings window while it is up, else the window the active group is in.",
+            )],
     ),
     m(
         "type",
@@ -253,7 +263,12 @@ pub const METHODS: &[MethodSpec] = &[
             ParamType::Str,
             true,
             "The text to insert at the cursor. Newlines insert lines.",
-        )],
+        ), p(
+                "window",
+                ParamType::Str,
+                false,
+                "Which window takes the input: `main`, or a popout's id as `state.groups.windows` lists it. Default: the Settings window while it is up, else the window the active group is in.",
+            )],
     ),
     m(
         "click",
@@ -289,6 +304,12 @@ pub const METHODS: &[MethodSpec] = &[
                 false,
                 "Modifiers held down: any of `ctrl`, `alt`, `shift`, `cmd`.",
             ),
+            p(
+                "window",
+                ParamType::Str,
+                false,
+                "Which window takes the input: `main`, or a popout's id as `state.groups.windows` lists it. Default: the Settings window while it is up, else the window the active group is in.",
+            ),
         ],
     ),
     m(
@@ -319,6 +340,12 @@ pub const METHODS: &[MethodSpec] = &[
                 ParamType::StrList,
                 false,
                 "Modifiers held down: any of `ctrl`, `alt`, `shift`, `cmd`.",
+            ),
+            p(
+                "window",
+                ParamType::Str,
+                false,
+                "Which window takes the input: `main`, or a popout's id as `state.groups.windows` lists it. Default: the Settings window while it is up, else the window the active group is in.",
             ),
         ],
     ),
@@ -355,6 +382,12 @@ pub const METHODS: &[MethodSpec] = &[
                 ParamType::Str,
                 false,
                 "`lines` or `pixels`. Default lines.",
+            ),
+            p(
+                "window",
+                ParamType::Str,
+                false,
+                "Which window takes the input: `main`, or a popout's id as `state.groups.windows` lists it. Default: the Settings window while it is up, else the window the active group is in.",
             ),
         ],
     ),
@@ -412,6 +445,12 @@ pub const METHODS: &[MethodSpec] = &[
                 ParamType::Num,
                 false,
                 "New height in logical pixels.",
+            ),
+            p(
+                "window",
+                ParamType::Str,
+                false,
+                "Which window takes the input: `main`, or a popout's id as `state.groups.windows` lists it. Default: the Settings window while it is up, else the window the active group is in.",
             ),
         ],
     ),

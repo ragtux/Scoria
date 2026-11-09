@@ -368,6 +368,120 @@ focus and the control socket following; 3. the five commands and the menu rows, 
 over the socket; 4. restore on launch; 5. drags between windows, if gpui's drag crosses
 windows at all. Each step lands on its own.
 
+**Step 1 landed, 2026-11-09.** `WindowNode` — an id, the group tree, and the node's own keys as
+read — sits beside `layout_tree` as `windows`; its groups are in `groups` but not in the main
+tree, so `close_group` and the last-tab rule count the main area's groups alone. `read_floating`
+reads `floating` as `main` is read (a window whose files are all gone is dropped), and
+`restore_layout` makes the popouts' groups without showing them; `active` naming one of their
+leaves falls back to the main area until step 2. `layout_json` writes `floating` right before
+`active` through `window_node_json`, which puts `children` and `direction` after `type` and the
+bounds after those, and drops the key when no window is left — which needed `save_layout` to
+write the file whole (`replace_config`) instead of merging into it: the merge kept every key the
+fresh value had taken out, a sidebar's `collapsed` among them. The round-trip test reads the
+probe's four-popout `workspace.json` (`crates/scoria/tests/fixtures/workspace-four-popouts.json`)
+and writes it back byte for byte; over the socket, `groups.windows` lists each window's id,
+bounds and tree. Checked in the app on a scratch vault seeded with that file: the write differed
+in `active` alone, plus the `collapsed` a sidebar toggle removed.
+
+**Step 2 landed, 2026-11-09.** `crates/scoria/src/popout.rs` is the `PopoutWindow` view: it holds
+the workspace and a `WindowNode` id, redraws on the workspace's notifications, and its render asks
+`Workspace::render_popout` for that window's groups — drawn through `render_layout` and the same
+`render_group`, under `window_controls`, with no ribbon, docks or status bar, inside `client_frame`.
+A `rendering_window` field names the popout while its groups render, which is how the strips know
+their window's corners (the window buttons' padding, no sidebar toggles) and how a `DividerDrag`
+names its tree; `tree`/`tree_mut` pick a popout's tree or the main area's, and `place_beside`,
+`close_group`, `focus_neighbor` and the dimension helpers go through them, so a popout can be split
+and closes with its last group. `workspace:move-to-new-window` is the one command wired: the active
+tab leaves for a new group in a new window (the main area's only group is left holding an empty
+tab, as observed; any other emptied group closes), opened with `cx.defer` because a window's first
+frame is drawn inside `open_window`, and that frame reads the workspace — opening it from the
+workspace's own update was a circular lease. The popout opens at 1024 × 800 inner, centered, and
+its node records the bounds every frame — the surface less the frame's margin on each untiled
+edge, since gpui's own inner bounds lag the inset by a configure and a window the compositor never
+resized would be written at its outer size — so `floating` carries where the window ended up. The title follows the window's own most recently active group, and so does the
+main window's now. Focus: `focus_main` puts the keyboard on the window the active group is in
+(`active_window_handle`, without asking whether the window is up, since a window inside its own
+update is out of the app's table and reads as closed), and each window's render honours
+`refocus_main` for its own active group only. Closing: the desktop's close and the window buttons
+run `drop_popout` (every group closed, the node gone, the keyboard back on the main area); a
+popout's last tab closing closes the group and the window, which from inside the window itself is
+done by the popout's render noticing its node is gone. The control socket follows the active group:
+`keys`, `type`, `click`, `mouse`, `scroll`, `window`, `state` and `focus` act on or describe that
+window, `state.groups.active_window` and `state.window.popout` say which, each window in
+`state.groups.windows` has `open` and `title`, and the input methods take `window` (`"main"` or a
+popout's id) for the one thing a person does that nothing else can — clicking into the other
+window. Checked in a headless sway session over the socket: move, type into the popout (the text
+reached the file), click back into the main window and into the popout by id, close the popout's
+tab, the desktop's close, and a quit with a popout open wrote `floating` with the compositor's
+size (900 × 700) and `active` naming the popout's leaf. Left for the later steps: the other four
+commands and the menu rows (3), reopening popouts on launch (4), drags between windows (5); the
+file menu and the modals still draw in the main window whichever window raised them, and a new
+group's editor subscribes its find fields to the window it was made in.
+
+**Step 3 landed, 2026-11-09.** The other four commands, each a few lines over what step 2 built:
+`workspace:open-in-new-window` copies the active tab the way a split does (`copy_of_active_tab`,
+now shared with `split_beside`) into `open_group_in_new_window`; `workspace:new-window` sends one
+empty tab there; `editor:open-link-in-new-window` resolves the link against the source note
+*before* the window opens — the new window's tab has no note to resolve from — then opens the
+file in it, or makes the note a dangling link names, as following one does (an external link goes
+to the browser, there being nothing to show in a window); and `workspace:close-window` closes the
+window the command ran in, which is the focused one as the probe saw Obsidian pick it, not the
+one holding the active group: a popout's groups go through `drop_popout` and the window with
+them, and the main window's is the title bar's ×, edits and layout saved first, the popouts going
+down with the workspace. The menu row: **Open in new window** (`lucide-picture-in-picture-2`, now
+bundled) sits third in the `open` section of every menu the captures had it on — the Files view's
+file row, a Links row, a Bases row, a bookmark (a group opens one window per note, inferred from
+its "Open to the right" splitting once per note), the editor's link menu, and the view header's
+More options after Split down, where it copies the leaf as the command does; everywhere else it
+is a fresh tab on the row's file, as "Open to the right" makes one. The socket's `command` method
+took a `window` parameter like the input methods, and runs the command in the active group's
+window by default — a hotkey pressed there would — which is what lets `close-window` reach a
+popout from outside. Checked in a headless sway session over the socket on a scratch copy of the
+demo vault: new-window (one empty tab, "New tab - vault - Scoria", the active window), close-window
+by default and by name, open-in-new-window (Home in both the popout's group and the main one),
+Ctrl+Shift+W dispatched inside the popout, open-link-in-new-window on `[[Field card]]` from source
+mode (Field card in the popout, Home untouched in the main area), the Files view's row through the
+real menu (right click, the row read back over the socket, a click on it), and close-window named
+`main` with a popout open, which quit the app and wrote `floating` with that popout. Left for the
+later steps: reopening popouts on launch (4) and drags between windows (5); the tab header's own
+menu (Close, Pin, Link with tab, Move to new window) is not drawn at all, so its "Move to new
+window" row waits on that menu rather than on this; the canvas file card's menu has no open rows
+yet either. The site's manual still describes v0.5.0 and gets the window commands with the release.
+
+**Step 4 landed, 2026-11-09.** `restore_layout` makes the popouts' groups beside the main area's,
+fills every group's views (the active one last), lets `active` name a popout's leaf, and ends in
+`open_restored_popouts`, which opens each window at its recorded place through the same
+`show_popout` the commands use: `maximize` honoured, a position on no display any more centred,
+the window holding the active group opened last so it is the one in front, and the vault window
+asked to come forward when the active group is its own — which a Wayland compositor may refuse
+without an input token, so the active group also **follows the desktop's focus**:
+`window_activated` makes the focused window's most recently used group active, in the main window
+and in every popout, the way Obsidian's active leaf follows the window in front. Before this, a
+window brought forward with Alt+Tab took the keys into the group of another. `zoom` is kept but
+not applied.
+
+Getting the size to survive a relaunch took three corrections, each found by reopening the probe's
+four-popout file three times in a headless sway session and reading what was written back. The
+rule: the opener asks for the inner size plus the frame's margin when Scoria's own frame is on
+(Linux), and the recorder takes that same margin back off — **what Scoria asked for, not the
+frame the compositor settled on**, because that is not known for some frames and a window opened
+and recorded by the same rule reopens at the size it closed at whatever it got (step 2's recorder
+read the negotiated decorations, and a window that came up with the desktop's frame grew by the
+margin on every launch, 47 px a time in an XWayland run). The inset is set in the window's
+constructor, before the first commit. And during the negotiation gpui reads Scoria's frame, then
+the desktop's, then Scoria's again (sway does this with or without `border csd`); in the middle
+phase the inset is 0, the compositor takes the whole surface for the window, and configures it at
+that once the inset is back, so the window grows by exactly the margin on both axes — that grow,
+before anything else changed the size, is put back once with `window.resize`. A window measuring
+within a pixel of the size it was opened for is written at that size, against a fractional
+scale's rounding. Checked: three launches, every popout written back at Obsidian's 980 × 759 and
+1024 × 800; a fresh `new-window` records 1024 × 800; `active` round-trips. With a virtual keyboard
+on the seat (`wtype -s 90000 -k F24`, held for the length of the drive — headless sway has no
+keyboard otherwise, and gpui reads a window as active only on a keyboard enter), focusing Alpha,
+Beta, the empty popout and the vault window with `swaymsg` moved `groups.active_window` each time,
+and text typed through that keyboard landed in the window in front. Left: drags between windows
+(step 5), the file menu and modals still drawing in the main window, and the tab header's menu.
+
 ### The week's leftovers, 2026-11-09
 
 The verdict of [[Writer gate run]] named five things left open. Four needed no desk, only an

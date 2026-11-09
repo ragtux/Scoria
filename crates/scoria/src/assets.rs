@@ -113,6 +113,7 @@ icons!(
     "panel-right",
     "pen-line",
     "pencil",
+    "picture-in-picture-2",
     "pin",
     "plus",
     "quote",

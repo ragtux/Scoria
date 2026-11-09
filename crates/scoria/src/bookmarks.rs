@@ -44,6 +44,10 @@ pub enum BookmarkEvent {
     },
     /// "Open to the right" on a file bookmark: the note in a new split.
     OpenToRight(String),
+    /// "Open in new window" on a file bookmark: the note in a popout
+    /// window of its own; a group opens one per note, the way its "Open to
+    /// the right" splits once per note (inferred from that, not observed).
+    OpenInNewWindow(String),
     /// A search bookmark: the Search pane with this query.
     Search(String),
     Graph,
@@ -641,6 +645,16 @@ impl BookmarksPane {
                 (Some(i), None) if i.kind() == "group" => {
                     for (path, _) in group_files(i) {
                         cx.emit(BookmarkEvent::OpenToRight(path));
+                    }
+                }
+                (Some(i), None) if i.kind() == "graph" => cx.emit(BookmarkEvent::Graph),
+                _ => {}
+            },
+            Pick::OpenInNewWindow => match (&item, file) {
+                (_, Some((path, _))) => cx.emit(BookmarkEvent::OpenInNewWindow(path)),
+                (Some(i), None) if i.kind() == "group" => {
+                    for (path, _) in group_files(i) {
+                        cx.emit(BookmarkEvent::OpenInNewWindow(path));
                     }
                 }
                 (Some(i), None) if i.kind() == "graph" => cx.emit(BookmarkEvent::Graph),

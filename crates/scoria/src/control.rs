@@ -21,6 +21,7 @@
 //! carry a deadline and report `timed_out` rather than leaving a client
 //! blocked on a reply that can no longer come.
 
+use crate::popout::PopoutWindow;
 use crate::workspace::{context_names, ViewMode, Workspace};
 use gpui::{
     point, prelude::*, px, size, AnyWindowHandle, App, AsyncApp, Keystroke, Modifiers, MouseButton,
@@ -263,13 +264,77 @@ impl Ctl<'_> {
 
     /// The window a caller is driving: the Settings window while it is up,
     /// since Settings is a window of its own rather than a modal over the
-    /// workspace, and the workspace's own otherwise. Coordinates are
+    /// workspace; otherwise the window the active group is in, which is a
+    /// popout's when the active tab was moved out to one, and the
+    /// workspace's own window the rest of the time. Coordinates are
     /// window-local, so this is also the window a click is aimed at.
-    fn input_window(&mut self) -> AnyWindowHandle {
+    ///
+    /// A request may name the window instead (`window`: `"main"`, or a
+    /// popout's id as `state.groups.windows` lists it), which is how a
+    /// caller clicks into the main window while a popout holds the active
+    /// group — the one thing a person does that no other method can.
+    fn input_window(&mut self, named: Option<&str>) -> Result<AnyWindowHandle, String> {
         let main = self.win;
+        let wanted = match named {
+            None => None,
+            Some("main") => return Ok(main.into()),
+            Some(id) => Some(
+                id.parse::<u64>()
+                    .map_err(|_| format!("window must be \"main\" or a popout id, not {id:?}"))?,
+            ),
+        };
         self.cx
-            .update(|cx| main.read(cx).ok().and_then(|ws| ws.settings_window(cx)))
-            .unwrap_or_else(|| main.into())
+            .update(|cx| {
+                let ws = main.read(cx).ok()?;
+                Some(match wanted {
+                    Some(id) => ws
+                        .popout_window(id, cx)
+                        .ok_or_else(|| format!("no open popout window {id}")),
+                    None => Ok(ws
+                        .settings_window(cx)
+                        .unwrap_or_else(|| ws.active_window(cx))),
+                })
+            })
+            .unwrap_or(Ok(main.into()))
+    }
+
+    /// Runs `f` with the workspace inside the window a command runs in:
+    /// the one named, else the window the active group is in, which is
+    /// where a person's hotkey would land. The difference from
+    /// [`Ctl::workspace`] is the window `f` sees, and the one command that
+    /// reads it is `workspace:close-window`, which closes the window it
+    /// ran in. The workspace is the main window's root; a popout's root
+    /// knows it.
+    fn command<R>(
+        &mut self,
+        named: Option<&str>,
+        f: impl FnOnce(&mut Workspace, &mut Window, &mut Context<Workspace>) -> Result<R, String>,
+    ) -> Result<R, String> {
+        let main = self.win;
+        let target = match named {
+            Some(_) => self.input_window(named)?,
+            None => self
+                .cx
+                .update(|cx| main.read(cx).ok().map(|ws| ws.active_window(cx)))
+                .unwrap_or(main.into()),
+        };
+        if target == AnyWindowHandle::from(main) {
+            return self.workspace(f);
+        }
+        match self.cx.update_window(target, |root, window, cx| {
+            let popout = root
+                .downcast::<PopoutWindow>()
+                .map_err(|_| "that window is not a popout".to_string())?;
+            let ws = popout
+                .read(cx)
+                .workspace()
+                .upgrade()
+                .ok_or_else(|| "the workspace is gone".to_string())?;
+            ws.update(cx, |ws, cx| f(ws, window, cx))
+        }) {
+            Ok(result) => result,
+            Err(error) => Err(error.to_string()),
+        }
     }
 
     /// Runs `f` against [`Ctl::input_window`]. Every event a user would
@@ -277,9 +342,10 @@ impl Ctl<'_> {
     /// workspace's own window whatever is in front of it.
     fn input<R>(
         &mut self,
+        named: Option<&str>,
         f: impl FnOnce(&mut Window, &mut App) -> Result<R, String>,
     ) -> Result<R, String> {
-        let target = self.input_window();
+        let target = self.input_window(named)?;
         match self.cx.update_window(target, |_, window, cx| f(window, cx)) {
             Ok(result) => result,
             Err(error) => Err(error.to_string()),
@@ -321,9 +387,14 @@ fn handle(
         "state" => {
             let text = request.bool_param("text", false);
             let rows = request.opt_usize("rows").unwrap_or(50);
+            // Described from the window the active group is in, so the
+            // focus and the window size are the ones a caller looking at
+            // a popout sees.
             ctl.workspace(|ws, window, cx| {
                 ws.ensure_reading_built(cx);
-                Ok(ws.describe(text, rows, window, cx))
+                Ok(ws.in_active_window(window, cx, |ws, window, cx| {
+                    ws.describe(text, rows, window, cx)
+                }))
             })
             .map(Some)
         }
@@ -391,7 +462,7 @@ fn handle(
         }
         "command" => {
             let id = request.str_param("id")?;
-            ctl.workspace(|ws, window, cx| {
+            ctl.command(request.opt_str("window"), |ws, window, cx| {
                 ws.run_command(id, window, cx);
                 Ok(json!({"status": ws.status_text()}))
             })
@@ -403,7 +474,7 @@ fn handle(
                 .iter()
                 .map(|name| Keystroke::parse(name).map_err(|error| error.to_string()))
                 .collect::<Result<Vec<_>, String>>()?;
-            ctl.input(|window, cx| {
+            ctl.input(request.opt_str("window"), |window, cx| {
                 let handled = strokes
                     .into_iter()
                     .map(|stroke| window.dispatch_keystroke(stroke, cx))
@@ -414,10 +485,18 @@ fn handle(
         }
         "type" => {
             let text = request.str_param("text")?;
-            match ctl.workspace(|ws, window, cx| Ok(ws.type_target(window, cx)))? {
+            // Where the text goes is a question for the window the active
+            // group is in, a popout's included.
+            let target = ctl.workspace(|ws, window, cx| {
+                Ok(ws.in_active_window(window, cx, |ws, window, cx| ws.type_target(window, cx)))
+            })?;
+            match target {
                 "editor" | "canvas-editor" => ctl
                     .workspace(|ws, window, cx| {
-                        Ok(json!({"target": ws.type_into_focused(text, window, cx)}))
+                        let target = ws.in_active_window(window, cx, |ws, window, cx| {
+                            ws.type_into_focused(text, window, cx)
+                        });
+                        Ok(json!({"target": target}))
                     })
                     .map(Some),
                 // Outside the workspace lease: one keystroke carrying the
@@ -425,7 +504,7 @@ fn handle(
                 // delivering it re-enters whatever view is focused, which
                 // may be the workspace itself.
                 "input" => ctl
-                    .input(|window, cx| {
+                    .input(request.opt_str("window"), |window, cx| {
                         let typed = Keystroke {
                             key_char: Some(text.to_string()),
                             ..Keystroke::default()
@@ -442,7 +521,7 @@ fn handle(
             let button = button(request.opt_str("button"))?;
             let modifiers = modifiers(request)?;
             let click_count = request.opt_usize("count").unwrap_or(1);
-            ctl.input(|window, cx| {
+            ctl.input(request.opt_str("window"), |window, cx| {
                 // The move goes first so gpui's hover state and the hitboxes
                 // an `on_click` was registered against agree on what is under
                 // the pointer when the press lands.
@@ -509,7 +588,7 @@ fn handle(
                 }),
                 other => return Err(format!("unknown mouse action: {other}")),
             };
-            ctl.input(|window, cx| {
+            ctl.input(request.opt_str("window"), |window, cx| {
                 window.dispatch_event(event, cx);
                 Ok(json!({"ok": true}))
             })
@@ -525,7 +604,7 @@ fn handle(
                 other => return Err(format!("unknown scroll unit: {other}")),
             };
             let modifiers = modifiers(request)?;
-            ctl.input(|window, cx| {
+            ctl.input(request.opt_str("window"), |window, cx| {
                 window.dispatch_event(
                     PlatformInput::ScrollWheel(ScrollWheelEvent {
                         position,
@@ -567,9 +646,12 @@ fn handle(
                 if let Some(name) = set {
                     ws.focus_view(name, window, cx)?;
                 }
-                Ok(json!({
-                    "name": ws.focus_name(window, cx),
-                    "context_stack": context_names(window),
+                // Reported from the window the active group is in.
+                Ok(ws.in_active_window(window, cx, |ws, window, cx| {
+                    json!({
+                        "name": ws.focus_name(window, cx),
+                        "context_stack": context_names(window),
+                    })
                 }))
             })
             .map(Some)
@@ -596,7 +678,7 @@ fn handle(
                     Ok(())
                 })?;
             }
-            let result = ctl.input(|window, _| {
+            let result = ctl.input(request.opt_str("window"), |window, _| {
                 if activate {
                     window.activate_window();
                 }
@@ -769,7 +851,7 @@ fn wait_idle(
     let (counter, stop) = (drawn.clone(), done.clone());
     // The front window, so a wait after a click in Settings waits for the
     // frames that click asked for.
-    ctl.input(move |window, _| {
+    ctl.input(None, move |window, _| {
         chain_frames(frames, counter, stop, window);
         Ok(())
     })?;

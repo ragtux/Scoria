@@ -607,6 +607,8 @@ pub enum ExplorerEvent {
     /// "Open to the right": a new tab group beside the active one showing
     /// this file.
     OpenToRight(String),
+    /// "Open in new window": this file in a popout window of its own.
+    OpenInNewWindow(String),
     /// "Copy path": the vault-relative path onto the clipboard.
     CopyPath(String),
     /// "Open in default app": hand the file to the desktop.
@@ -629,6 +631,7 @@ fn event_for(pick: Pick, target: &Target) -> Option<ExplorerEvent> {
     Some(match pick {
         Pick::OpenInNewTab => E::OpenInNewTab(path()),
         Pick::OpenToRight => E::OpenToRight(path()),
+        Pick::OpenInNewWindow => E::OpenInNewWindow(path()),
         Pick::Duplicate => E::Duplicate(path()),
         Pick::Move => E::Move(path()),
         Pick::Bookmark => E::Bookmark(path()),
@@ -2257,6 +2260,7 @@ mod menu_tests {
             | ExplorerEvent::Delete(p)
             | ExplorerEvent::Bookmark(p)
             | ExplorerEvent::OpenToRight(p)
+            | ExplorerEvent::OpenInNewWindow(p)
             | ExplorerEvent::CopyPath(p)
             | ExplorerEvent::OpenInDefaultApp(p)
             | ExplorerEvent::ShowInSystemExplorer(p)

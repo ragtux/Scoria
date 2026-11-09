@@ -178,6 +178,10 @@ pub enum Section {
 pub enum Pick {
     OpenInNewTab,
     OpenToRight,
+    /// "Open in new window": the file in a popout window of its own
+    /// (`workspace:open-in-new-window` on the view header's menu, where
+    /// it copies the leaf; a fresh tab on the row's file everywhere else).
+    OpenInNewWindow,
     /// The view header's "Split right" and "Split down":
     /// `workspace:split-vertical` and `split-horizontal` on the leaf's
     /// own group.
@@ -394,14 +398,16 @@ pub fn right_click_caret(selection: &Range<usize>, at: usize) -> Option<usize> {
 
 /// The menu for a target, in Obsidian's order.
 ///
-/// Three of the captured items are left out rather than drawn dead, because
-/// Scoria has no command behind them: **Open in new window** (no second
-/// window), **Merge entire file with...** (no merge) and **Open version
-/// history** (no file history). Listing a row that cannot run is what
-/// the command palette refuses to do, and the menu refuses it too; the gaps
-/// are entries in `docs/scoria/UI parity backlog.md`. Dropping the only item
-/// of a section drops its separator with it, so the `view` section's
-/// separator is absent here where the capture has it.
+/// Two of the captured items are left out rather than drawn dead, because
+/// Scoria has no command behind them: **Merge entire file with...** (no
+/// merge) and **Open version history** (no file history). Listing a row
+/// that cannot run is what the command palette refuses to do, and the menu
+/// refuses it too; the gaps are entries in `docs/scoria/UI parity
+/// backlog.md`. Dropping the only item of a section drops its separator
+/// with it, so the `view` section's separator is absent here where the
+/// capture has it. **Open in new window** was a third until the popout
+/// windows landed (2026-11-09); it wears `lucide-picture-in-picture-2`
+/// in every capture.
 ///
 /// Obsidian's file row has no creation items at all — Scoria's menu used to
 /// offer "New note" and "New folder" on a file, which is the one thing here
@@ -417,6 +423,12 @@ pub fn items(target: &Target) -> Vec<Item> {
                 "separator-vertical",
                 S::Open,
                 P::OpenToRight,
+            ),
+            item(
+                "Open in new window",
+                "picture-in-picture-2",
+                S::Open,
+                P::OpenInNewWindow,
             ),
             item("Make a copy", "files", S::Action, P::Duplicate),
             item("Move file to...", "folder-tree", S::Action, P::Move),
@@ -492,6 +504,12 @@ pub fn items(target: &Target) -> Vec<Item> {
                 S::Open,
                 P::OpenToRight,
             ),
+            item(
+                "Open in new window",
+                "picture-in-picture-2",
+                S::Open,
+                P::OpenInNewWindow,
+            ),
             item("Rename...", "pen-line", S::Action, P::Rename),
             item("Move file to...", "folder-tree", S::Action, P::Move),
             item("Bookmark...", "bookmark", S::Action, P::Bookmark),
@@ -526,9 +544,8 @@ pub fn items(target: &Target) -> Vec<Item> {
             // Observed per kind (2026-11-07, `s06`): the open rows on what
             // opens in a leaf, Rename and Edit... on every item, Reveal on
             // what is in the Files view, Remove in the danger pair. "Open in
-            // new window" is left out as on every other menu here (no
-            // second window), and a group takes the header's two actions in
-            // place of Edit....
+            // new window" rides with them since the popouts landed, and a
+            // group takes the header's two actions in place of Edit....
             use BookmarkKind as K;
             let open = [
                 item("Open in new tab", "file-plus", S::Open, P::OpenInNewTab),
@@ -537,6 +554,12 @@ pub fn items(target: &Target) -> Vec<Item> {
                     "separator-vertical",
                     S::Open,
                     P::OpenToRight,
+                ),
+                item(
+                    "Open in new window",
+                    "picture-in-picture-2",
+                    S::Open,
+                    P::OpenInNewWindow,
                 ),
             ];
             let rename = item("Rename", "pencil", S::Action, P::Rename);
@@ -615,10 +638,9 @@ pub fn items(target: &Target) -> Vec<Item> {
                 },
             ]
         }
-        // Observed on a base leaf; "Open in new window", "Open version
-        // history" and the "Open linked view" submenu are left out, as the
-        // file row's are, and dropping the two `view` rows drops their
-        // separator. "Copy path" is a submenu there (as Obsidian URL / from
+        // Observed on a base leaf; "Open version history" and the "Open
+        // linked view" submenu are left out, as the file row's are, and
+        // dropping the two `view` rows drops their separator. "Copy path" is a submenu there (as Obsidian URL / from
         // vault folder / from system root) and one row here, like the file
         // row's. Obsidian draws `lucide-edit-3` on Rename, which is
         // `pen-line`.
@@ -631,6 +653,12 @@ pub fn items(target: &Target) -> Vec<Item> {
                 "separator-vertical",
                 S::Open,
                 P::OpenToRight,
+            ),
+            item(
+                "Open in new window",
+                "picture-in-picture-2",
+                S::Open,
+                P::OpenInNewWindow,
             ),
             item("Rename...", "pen-line", S::Action, P::Rename),
             item("Move file to...", "folder-tree", S::Action, P::Move),
@@ -659,6 +687,12 @@ pub fn items(target: &Target) -> Vec<Item> {
         Target::View(_) => vec![
             item("Split right", "separator-vertical", S::Open, P::SplitRight),
             item("Split down", "separator-horizontal", S::Open, P::SplitDown),
+            item(
+                "Open in new window",
+                "picture-in-picture-2",
+                S::Open,
+                P::OpenInNewWindow,
+            ),
             item("Rename...", "pen-line", S::Action, P::Rename),
             item("Move file to...", "folder-tree", S::Action, P::Move),
             item("Bookmark...", "bookmark", S::Action, P::Bookmark),
@@ -705,11 +739,10 @@ fn item(label: &'static str, icon: &'static str, section: Section, pick: Pick) -
 /// Four of the captured rows open submenus nobody has read — **Format**,
 /// **Paragraph**, **Insert** and, on a wikilink, **Copy path** — so the
 /// three text ones are left out whole and Copy path keeps the one flat row
-/// the rest of Scoria's menus give it. Five more are left out for want of a
+/// the rest of Scoria's menus give it. Four more are left out for want of a
 /// command: **Extract current selection...** (no note composer), **Edit
-/// link** and **Edit tag** (no inline rename of a link or a tag), **Open in
-/// new window** (no second window) and **Start presentation** (no
-/// presentation mode). Dropping the only row of a section drops its
+/// link** and **Edit tag** (no inline rename of a link or a tag) and
+/// **Start presentation** (no presentation mode). Dropping the only row of a section drops its
 /// separator with it, which is why the pair the capture has between Start
 /// presentation and the system rows is one separator here.
 fn editor_items(click: &EditorClick) -> Vec<Item> {
@@ -729,6 +762,12 @@ fn editor_items(click: &EditorClick) -> Vec<Item> {
             "separator-vertical",
             S::Open,
             P::OpenToRight,
+        ));
+        out.push(item(
+            "Open in new window",
+            "picture-in-picture-2",
+            S::Open,
+            P::OpenInNewWindow,
         ));
     }
     out.push(item("Add link", "link", S::SelectionLink, P::AddLink));
@@ -1222,8 +1261,8 @@ mod tests {
     use gpui::AssetSource;
 
     /// [[Specification#The file explorer's context menus]], the file-row
-    /// table, minus the three items Scoria has no command for -- Open in new
-    /// window, Merge entire file with... and Open version history. Dropping
+    /// table, minus the two items Scoria has no command for -- Merge entire
+    /// file with... and Open version history. Dropping
     /// Open version history empties the `view` section, so the separator the
     /// capture has around it is gone too; every other separator is where
     /// Obsidian put it, including the pair above Rename.
@@ -1234,6 +1273,7 @@ mod tests {
             [
                 "Open in new tab",
                 "Open to the right",
+                "Open in new window",
                 "---",
                 "Make a copy",
                 "Move file to...",
@@ -1294,16 +1334,17 @@ mod tests {
 
     /// The 2026-10-22 probe's `s13-context-menu`, read off a Links row of
     /// the Outgoing links pane (`results/2026-10-22-outgoing-links.json`),
-    /// minus "Open in new window": Rename sits with Move and Bookmark under
-    /// one separator rather than in a `danger` pair, there is no Make a copy
-    /// and no Delete, and "Reveal file in navigation" closes the list.
+    /// whole: Rename sits with Move and Bookmark under one separator rather
+    /// than in a `danger` pair, there is no Make a copy and no Delete, and
+    /// "Reveal file in navigation" closes the list.
     #[test]
-    fn a_linked_rows_menu_is_the_probes_list_without_open_in_new_window() {
+    fn a_linked_rows_menu_is_the_probes_list() {
         assert_eq!(
             drawn(&Target::Linked("Notes/Plan.md".into())),
             [
                 "Open in new tab",
                 "Open to the right",
+                "Open in new window",
                 "---",
                 "Rename...",
                 "Move file to...",
@@ -1319,8 +1360,8 @@ mod tests {
     }
 
     /// The view header's More options over a base leaf (`s02` `moreOptions`,
-    /// 2026-11-01), minus "Open in new window", the two `view` rows and
-    /// their separator: the splits, Rename with Move and Bookmark, Copy
+    /// 2026-11-01), minus the two `view` rows and their separator: the
+    /// splits and the window row, Rename with Move and Bookmark, Copy
     /// path, the three system rows, and "Delete file" after the danger
     /// pair.
     #[test]
@@ -1330,6 +1371,7 @@ mod tests {
             [
                 "Split right",
                 "Split down",
+                "Open in new window",
                 "---",
                 "Rename...",
                 "Move file to...",
@@ -1352,7 +1394,7 @@ mod tests {
     }
 
     /// A Bases row's name cell, card or list link (`s24` `linkMenu`), minus
-    /// "Open in new window", the `view` rows and their separator.
+    /// the `view` rows and their separator.
     #[test]
     fn a_bases_rows_menu_is_the_links_list_without_the_rows_it_cannot_run() {
         assert_eq!(
@@ -1360,6 +1402,7 @@ mod tests {
             [
                 "Open in new tab",
                 "Open to the right",
+                "Open in new window",
                 "---",
                 "Rename...",
                 "Move file to...",
@@ -1553,9 +1596,9 @@ mod tests {
         assert_eq!(tag.path(), "", "a tag names no file");
     }
 
-    /// `s01-editor-menu-live`'s `onWikilink`, minus Open in new window,
-    /// Edit link, Paragraph, Insert and Start presentation: the two Open
-    /// rows above the text rows, then Copy path, the action three and the
+    /// `s01-editor-menu-live`'s `onWikilink`, minus Edit link, Paragraph,
+    /// Insert and Start presentation: the three Open rows above the text
+    /// rows, then Copy path, the action three and the
     /// system three. Dropping Start presentation empties the `view`
     /// section, so the capture's two consecutive separators are one here.
     #[test]
@@ -1570,6 +1613,7 @@ mod tests {
             [
                 "Open in new tab",
                 "Open to the right",
+                "Open in new window",
                 "---",
                 "Add link",
                 "Add external link",
@@ -1699,7 +1743,8 @@ mod tests {
         assert_eq!(value["target"], "linked");
         assert_eq!(value["path"], "Notes/Plan.md");
         assert_eq!(value["items"][0], "Open in new tab");
-        assert_eq!(value["items"][2], "---");
+        assert_eq!(value["items"][2], "Open in new window");
+        assert_eq!(value["items"][3], "---");
     }
 
     /// The icon of every item in every menu is bundled and is the name
@@ -1799,7 +1844,7 @@ mod tests {
     }
 
     /// Every Bookmarks pane menu as the 2026-11-07 probe captured it
-    /// (`s06`, `s13`), less "Open in new window", which no menu here draws.
+    /// (`s06`, `s13`), the window row included since the popouts landed.
     #[test]
     fn a_bookmark_row_menu_is_the_one_obsidian_draws_for_its_kind() {
         let menu = |kind| {
@@ -1808,7 +1853,12 @@ mod tests {
                 path: String::new(),
             })
         };
-        let open = ["Open in new tab", "Open to the right", "---"];
+        let open = [
+            "Open in new tab",
+            "Open to the right",
+            "Open in new window",
+            "---",
+        ];
         let file = [
             "Rename",
             "Edit...",

@@ -412,7 +412,10 @@ every file's bytes verbatim. **No link is rewritten** -- this entry assumed a fo
 rewrite the links of the notes it copies, and that is unobserved; a byte-identical copy loses
 nothing, so it waits for a probe. OBSERVE: what Obsidian does to the links of a copied folder's
 notes. Three items are still out: *Open in new window* (no second window), *Merge entire file
-with...* and *Open version history*.
+with...* and *Open version history*. **Landed 2026-11-09**: *Open in new window* is drawn on every
+menu that had it, since the popout windows exist (multi-window step 3, see
+[[Development#Multi-window, the design, 2026-11-09]]), and `open-link-in-new-window` runs; the
+two others stay out.
 
 **Obsidian.** The captured menus
 ([[Specification#The file explorer's context menus]]) hold five rows the
@@ -1245,7 +1248,8 @@ rewrites the matched range to `[[Name]]` through the text crate's edit plan.
 every view that raises it, and every Backlinks and Outgoing links row that stands for a file raises
 it -- the probe's list for a Links row, which differs from the explorer's (Rename sits with Move and
 Bookmark under one separator, there is no Make a copy and no Delete, and "Reveal file in navigation"
-is extra). "Open in new window" is left out, as everywhere else. The row icons are the explorer's for
+is extra). "Open in new window" was left out, as everywhere else, until the popouts landed
+(2026-11-09). The row icons are the explorer's for
 the same labels: the 2026-10-22 probe read the labels and separators but not the icons, and
 "Reveal file in navigation" has no explorer twin, so its `folder-open` is marked OBSERVE in the code.
 
@@ -2121,7 +2125,7 @@ rows then `n more rows`, the subpath ignored; a cards, list or kanban view is dr
 
 *medium, parity-gap, small*
 
-**Landed 2026-11-01**: the leaf's icon is `lucide-table` (observed on the tab header, `s15` `tabMenu.tab`); the base leaf's header draws **More options** alone — Bookmark is zero-rect there as on a note — with the observed rows less the three Scoria cannot run (Open in new window, Open version history, Open linked view); every ribbon button carries its observed tooltip; a new base is one `file name` column over every file of the vault. The doubled separator before Rename on the explorer's `.base` row is Obsidian's own (`s01` `baseFileMenu` has the pair), so it stays.
+**Landed 2026-11-01**: the leaf's icon is `lucide-table` (observed on the tab header, `s15` `tabMenu.tab`); the base leaf's header draws **More options** alone — Bookmark is zero-rect there as on a note — with the observed rows less the three Scoria cannot run (Open in new window, Open version history, Open linked view; Open in new window is drawn since 2026-11-09, the popouts); every ribbon button carries its observed tooltip; a new base is one `file name` column over every file of the vault. The doubled separator before Rename on the explorer's `.base` row is Obsidian's own (`s01` `baseFileMenu` has the pair), so it stays.
 
 **Obsidian.** The tab icon is `table` and the title the stem; the view header is the title with
 no icon, back and forward, **Bookmark** and **More options** (`more-vertical`): Split right ·
@@ -2544,7 +2548,8 @@ Obsidian does not register them on desktop. Both triage passes checked and agree
 RUNNABLE would create palette rows Obsidian has no command for, shown as raw ids, and would desync
 the Hotkeys tab — which is also why fifteen ids still report a name equal to their id. The same
 held for `open-link-in-new-leaf`, `-split` and `-window` until tabs existed; `-leaf` is runnable now
-that they do, while `-split` and `-window` still wait on splits and windows.
+that they do, while `-split` and `-window` still wait on splits and windows (`-split` landed with
+the tab groups, `-window` with the popout windows on 2026-11-09).
 
 ## The Appearance tab, against the probe of 2026-11-02
 

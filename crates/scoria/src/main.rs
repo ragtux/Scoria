@@ -36,6 +36,7 @@ mod mentions;
 mod palette;
 mod panes;
 mod pdf;
+mod popout;
 mod preview;
 mod prompt;
 mod properties;

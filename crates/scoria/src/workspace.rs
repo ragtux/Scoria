@@ -29,6 +29,7 @@ use crate::mentions::{Finder, Name};
 use crate::palette::{CommandPalette, PaletteCommand, PaletteEvent};
 use crate::panes::{self, PaneSort};
 use crate::pdf::view::{PdfEvent, PdfView};
+use crate::popout::PopoutWindow;
 use crate::prompt::{Prompt, PromptAction, PromptButton, PromptEvent, PromptRow, PromptSpec};
 use crate::reading::{
     self, LinkTarget, PropertyItemRemoved, ReadingEvent, ReadingView, TaskMarker, TaskToggled,
@@ -164,6 +165,7 @@ pub const EDITOR_ONLY: &[&str] = &[
     "editor:insert-wikilink",
     "editor:open-link-in-new-leaf",
     "editor:open-link-in-new-split",
+    "editor:open-link-in-new-window",
     "editor:set-heading",
     "editor:set-heading-0",
     "editor:set-heading-1",
@@ -346,6 +348,10 @@ pub const RUNNABLE: &[&str] = &[
     "workspace:undo-close-pane",
     "workspace:split-vertical",
     "workspace:split-horizontal",
+    "workspace:move-to-new-window",
+    "workspace:open-in-new-window",
+    "workspace:new-window",
+    "workspace:close-window",
     "workspace:close-tab-group",
     "workspace:close-others-tab-group",
     "editor:focus-left",
@@ -353,6 +359,7 @@ pub const RUNNABLE: &[&str] = &[
     "editor:focus-top",
     "editor:focus-bottom",
     "editor:open-link-in-new-split",
+    "editor:open-link-in-new-window",
     "app:delete-file",
     "backlink:open",
     "backlink:open-backlinks",
@@ -1857,6 +1864,110 @@ impl Layout {
     }
 }
 
+/// One popout window, as `workspace.json`'s `floating` split records it
+/// (see [[Specification#Observed popout windows, Obsidian 1.15.0]]): a
+/// root split over tab groups, like `main`, with the window's place on the
+/// screen on the node. A [`PopoutWindow`] paints one while `handle` names
+/// a live gpui window; a node restored from the file has none until the
+/// window is opened (see [[Development#Multi-window, the design, 2026-11-09]]).
+#[derive(Debug, Clone, PartialEq)]
+struct WindowNode {
+    id: u64,
+    /// The groups and how they are split. The root is always a split, and
+    /// its own `node` map goes unwritten: a `window` node has its own key
+    /// order, so its keys live in `node` below.
+    tree: Layout,
+    /// The node's own keys as read -- `id`, `type`, and after `direction`
+    /// the bounds `x`, `y`, `width`, `height` (the inner size), `maximize`
+    /// and `zoom`, plus anything unknown -- less `children` and
+    /// `direction`, which the tree supplies.
+    node: Map<String, Value>,
+    /// The gpui window showing this node, while one is open.
+    handle: Option<gpui::WindowHandle<PopoutWindow>>,
+    /// What that window's title bar says, set only when it changes.
+    title: SharedString,
+    /// The inner size the window was opened for, written back as long as
+    /// the window measures within a pixel of it: a fractional display
+    /// scale rounds the surface, and the file would lose a pixel a launch.
+    opened_for: Option<(i32, i32)>,
+}
+
+impl WindowNode {
+    /// A window Scoria opened: Obsidian's keys in Obsidian's order, not
+    /// maximized, at zoom 0.
+    fn new(id: u64, tree: Layout, bounds: WindowBounds) -> WindowNode {
+        let mut node = Map::new();
+        node.insert("id".into(), json!(leaf_id()));
+        node.insert("type".into(), json!("window"));
+        node.insert("x".into(), json!(bounds.x));
+        node.insert("y".into(), json!(bounds.y));
+        node.insert("width".into(), json!(bounds.width));
+        node.insert("height".into(), json!(bounds.height));
+        node.insert("maximize".into(), json!(false));
+        node.insert("zoom".into(), json!(0));
+        WindowNode::from_node(id, tree, node)
+    }
+
+    /// A window as the file described it, not yet shown.
+    fn from_node(id: u64, tree: Layout, node: Map<String, Value>) -> WindowNode {
+        WindowNode {
+            id,
+            tree,
+            node,
+            handle: None,
+            title: SharedString::default(),
+            opened_for: None,
+        }
+    }
+
+    /// Records where the window is now: the bounds as whole numbers and
+    /// the `maximize` flag, each in the slot it has, or at the end for a
+    /// node that never had one.
+    fn set_bounds(&mut self, bounds: WindowBounds, maximized: bool) {
+        for (key, value) in [
+            ("x", json!(bounds.x)),
+            ("y", json!(bounds.y)),
+            ("width", json!(bounds.width)),
+            ("height", json!(bounds.height)),
+            ("maximize", json!(maximized)),
+        ] {
+            self.node.insert(key.into(), value);
+        }
+    }
+
+    /// Whether the gpui window is still up.
+    fn is_open(&self, cx: &App) -> bool {
+        self.handle.is_some_and(|h| h.read(cx).is_ok())
+    }
+
+    /// The recorded position and inner size, when all four are there.
+    fn bounds(&self) -> Option<WindowBounds> {
+        let number = |key: &str| {
+            self.node
+                .get(key)
+                .and_then(Value::as_f64)
+                .map(|v| v.round() as i32)
+        };
+        Some(WindowBounds {
+            x: number("x")?,
+            y: number("y")?,
+            width: number("width")?,
+            height: number("height")?,
+        })
+    }
+}
+
+/// A popout's place on the screen as `workspace.json` records it: the
+/// position and the inner size, in logical pixels; Obsidian writes whole
+/// numbers.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct WindowBounds {
+    x: i32,
+    y: i32,
+    width: i32,
+    height: i32,
+}
+
 /// One tab group: a strip of tabs with its own editor and reading view, so
 /// two groups can show two notes at once. The active group's tabs and the
 /// note on screen live in the workspace's own fields; a group that is not
@@ -1985,6 +2096,9 @@ struct TitleEdit {
 /// which two of its children.
 #[derive(Debug, Clone)]
 struct DividerDrag {
+    /// The popout window whose tree the split is in; `None` for the main
+    /// area's.
+    window: Option<u64>,
     path: Vec<usize>,
     before: usize,
 }
@@ -2632,6 +2746,56 @@ pub(crate) fn client_frame(
         )
 }
 
+/// The frame's margin a popout's surface carries on each side beyond its
+/// inner size: with Scoria's own frame on Linux the shadow is drawn inside
+/// the window, so the window is asked for that much more than the inner
+/// size `workspace.json` records, and the recorder takes the same margin
+/// back off (see [`Workspace::render_popout`]). It follows what Scoria
+/// asked for, not the frame the compositor settled on: that is not known
+/// until some frames in, and a window opened and recorded by the same
+/// rule reopens at the size it closed at whichever frame it got.
+pub(crate) fn popout_margin() -> Pixels {
+    if crate::hidden_frame() && cfg!(target_os = "linux") {
+        FRAME_SHADOW
+    } else {
+        px(0.)
+    }
+}
+
+/// The surface asked for a popout whose inner size is `width` × `height`.
+fn popout_outer_size(width: f32, height: f32) -> gpui::Size<Pixels> {
+    let margin = popout_margin() * 2.;
+    gpui::size(px(width) + margin, px(height) + margin)
+}
+
+/// Where a popout opens: at the place `workspace.json` recorded for it,
+/// maximized when it was, and centered at that size when the recorded
+/// position is on no display any more, as after a monitor was unplugged.
+/// With nothing recorded it is Obsidian's popout size, centered.
+fn popout_placement(recorded: Option<(WindowBounds, bool)>, cx: &App) -> gpui::WindowBounds {
+    let Some((recorded, maximized)) = recorded else {
+        let (width, height) = crate::popout::INNER_SIZE;
+        return gpui::WindowBounds::Windowed(Bounds::centered(
+            None,
+            popout_outer_size(width, height),
+            cx,
+        ));
+    };
+    let size = popout_outer_size(recorded.width as f32, recorded.height as f32);
+    let origin = gpui::point(px(recorded.x as f32), px(recorded.y as f32));
+    let on_screen = cx.displays().iter().any(|d| d.bounds().contains(&origin));
+    let bounds = if on_screen {
+        Bounds::new(origin, size)
+    } else {
+        Bounds::centered(None, size, cx)
+    };
+    if maximized {
+        gpui::WindowBounds::Maximized(bounds)
+    } else {
+        gpui::WindowBounds::Windowed(bounds)
+    }
+}
+
 /// The frame-related window options every window of Scoria's opens with,
 /// the main one included in spirit: the desktop's frame when the frame
 /// style is `native`, Scoria's own otherwise, with the transparent margin
@@ -2935,6 +3099,17 @@ pub struct Workspace {
     active_group: usize,
     /// How the groups are split, as `workspace.json`'s `main` records it.
     layout_tree: Layout,
+    /// The popout windows `floating` records, each over groups of its own
+    /// that are in `groups` but not in `layout_tree`.
+    windows: Vec<WindowNode>,
+    /// The main window: where the groups of `layout_tree` are, and so
+    /// where the keyboard goes when the active group is one of them.
+    main_window: gpui::AnyWindowHandle,
+    /// The popout whose groups are being drawn, while [`Workspace::render_popout`]
+    /// runs; `None` while the main window renders. The group renderers
+    /// read it for the tree their group is in.
+    rendering_window: Option<u64>,
+    /// The next group's id; a window takes its id from the same counter.
     next_group_id: u64,
     /// Group ids, most recently active first: where focus goes when a group
     /// closes, and which group a focus command lands in.
@@ -3282,6 +3457,9 @@ impl Workspace {
                     ExplorerEvent::OpenToRight(path) => {
                         this.open_to_right(path.clone(), window, cx)
                     }
+                    ExplorerEvent::OpenInNewWindow(path) => {
+                        this.open_path_in_new_window(path.clone(), window, cx)
+                    }
                     ExplorerEvent::CopyPath(path) => this.copy_path(path, cx),
                     ExplorerEvent::OpenInDefaultApp(path) => this.open_in_default_app(path, cx),
                     ExplorerEvent::ShowInSystemExplorer(path) => {
@@ -3312,6 +3490,9 @@ impl Workspace {
                     }
                     BookmarkEvent::OpenToRight(path) => {
                         this.open_to_right(path.clone(), window, cx)
+                    }
+                    BookmarkEvent::OpenInNewWindow(path) => {
+                        this.open_path_in_new_window(path.clone(), window, cx)
                     }
                     BookmarkEvent::Search(query) => this.show_search(query, Some(window), cx),
                     BookmarkEvent::Graph => this.show_graph(false, window, cx),
@@ -3495,6 +3676,13 @@ impl Workspace {
             ),
         ];
         let mut subscriptions = subscriptions;
+        // The desktop's focus moving to this window takes the active group
+        // with it, as it does for a popout (see `window_activated`).
+        subscriptions.push(cx.observe_window_activation(window, |ws, window, cx| {
+            if window.is_window_active() {
+                ws.window_activated(None, cx);
+            }
+        }));
         subscriptions.extend(view_subscriptions(
             &editor, &reading, &canvas, &bases, &pdf, cx,
         ));
@@ -3573,6 +3761,9 @@ impl Workspace {
             groups,
             active_group: 0,
             layout_tree: Layout::split(SplitDirection::Vertical, vec![Layout::Group(0)]),
+            windows: Vec::new(),
+            main_window: window.window_handle(),
+            rendering_window: None,
             next_group_id: 1,
             group_mru: vec![0],
             dragging_tab: false,
@@ -3688,6 +3879,7 @@ impl Workspace {
         for id in ids {
             self.close_group(id, false, cx);
         }
+        self.windows.clear();
         self.closed_tabs.clear();
         self.detached = None;
         self.layout = None;
@@ -5236,6 +5428,12 @@ impl Workspace {
             "workspace:new-tab" => self.new_tab(cx),
             "workspace:close" => self.close_tab(self.active_tab, cx),
             "workspace:close-others" => self.close_other_tabs(cx),
+            "workspace:move-to-new-window" => self.move_to_new_window(window, cx),
+            "workspace:open-in-new-window" => self.open_in_new_window(window, cx),
+            "workspace:new-window" => {
+                self.new_window(window, cx);
+            }
+            "workspace:close-window" => self.close_window(window, cx),
             "workspace:split-vertical" => self.split(SplitDirection::Vertical, window, cx),
             "workspace:split-horizontal" => self.split(SplitDirection::Horizontal, window, cx),
             "workspace:close-tab-group" => {
@@ -5256,6 +5454,13 @@ impl Workspace {
                     if let Some(target) = self.editor.read(cx).link_target_at_cursor() {
                         self.split(SplitDirection::Vertical, window, cx);
                         self.follow_link(target, cx);
+                    }
+                }
+            }
+            "editor:open-link-in-new-window" => {
+                if self.editing_or_report(id, window, cx) {
+                    if let Some(target) = self.editor.read(cx).link_target_at_cursor() {
+                        self.open_link_in_new_window(target, window, cx);
                     }
                 }
             }
@@ -5824,14 +6029,27 @@ impl Workspace {
     /// meant for it reach nothing.
     fn focus_main(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         self.refocus_main = false;
-        match self.main_view(cx) {
-            MainView::Reading => window.focus(&self.reading.focus_handle(cx), cx),
-            MainView::Editor => window.focus(&self.editor.focus_handle(cx), cx),
-            MainView::Graph => window.focus(&self.graph.focus_handle(cx), cx),
-            MainView::Canvas => window.focus(&self.canvas.focus_handle(cx), cx),
-            MainView::Bases => window.focus(&self.bases.focus_handle(cx), cx),
-            MainView::Pdf => window.focus(&self.pdf.focus_handle(cx), cx),
-            MainView::Empty => window.focus(&self.focus_handle, cx),
+        let handle = match self.main_view(cx) {
+            MainView::Reading => self.reading.focus_handle(cx),
+            MainView::Editor => self.editor.focus_handle(cx),
+            MainView::Graph => self.graph.focus_handle(cx),
+            MainView::Canvas => self.canvas.focus_handle(cx),
+            MainView::Bases => self.bases.focus_handle(cx),
+            MainView::Pdf => self.pdf.focus_handle(cx),
+            MainView::Empty => self.focus_handle.clone(),
+        };
+        // gpui's focus is per window, and the active group's views are
+        // painted in one window only: the keyboard goes there, whichever
+        // window the request came from. A window cannot be updated from
+        // within its own update, so the request from another window is
+        // the one that crosses over.
+        let target = self.active_window_handle();
+        if target == window.window_handle() {
+            window.focus(&handle, cx);
+        } else {
+            target
+                .update(cx, |_, window, cx| window.focus(&handle, cx))
+                .ok();
         }
     }
 
@@ -8761,6 +8979,7 @@ impl Workspace {
                     cell.style().flex_grow = Some(grow.max(0.01));
                     if ix > 0 {
                         let drag = DividerDrag {
+                            window: self.rendering_window,
                             path: split_path.clone(),
                             before: ix - 1,
                         };
@@ -8802,12 +9021,15 @@ impl Workspace {
     fn render_group(&self, ix: usize, theme: &Theme, cx: &mut Context<Self>) -> gpui::AnyElement {
         let view = self.group_view(ix);
         let id = view.id;
+        // The tree being drawn: the main area's, or the popout's whose
+        // window is rendering.
+        let tree = self.tree(self.rendering_window);
         let mut order = Vec::new();
-        self.layout_tree.groups(&mut order);
+        tree.groups(&mut order);
         // The corner groups: top left is the first group however the
         // splits run, top right needs the tree's shape.
         let first = order.first() == Some(&id);
-        let last = self.layout_tree.top_right() == Some(id);
+        let last = tree.top_right() == Some(id);
         div()
             .id(("group", id))
             .flex()
@@ -9647,8 +9869,9 @@ impl Workspace {
         self.remember_closed(ix, tab);
         if self.tabs.is_empty() {
             // A group whose last tab closes goes with it, as Obsidian's
-            // does, unless it is the only one.
-            if self.groups.len() > 1 {
+            // does, unless it is the main area's only one. A popout's goes
+            // whatever the main area holds, and its window with it.
+            if self.active_group_in_popout() || self.main_group_count() > 1 {
                 self.tabs.push(Tab::empty(self.default_mode()));
                 self.active_tab = 0;
                 let id = self.active_group_id();
@@ -9856,33 +10079,11 @@ impl Workspace {
         self.stash_active_group();
         let from = self.active_group_id();
         let (tab, mode_before_graph) = match path {
-            None => (
-                Tab {
-                    path: self.current.clone(),
-                    mode: self.mode,
-                    history: self.history.clone(),
-                    history_ix: self.history_ix,
-                    leaf: None,
-                    view_state: self
-                        .tabs
-                        .get(self.active_tab)
-                        .and_then(|t| t.view_state.clone()),
-                },
-                self.mode_before_graph,
-            ),
+            None => (self.copy_of_active_tab(), self.mode_before_graph),
             Some(path) => {
-                let mode = self.default_mode();
-                (
-                    Tab {
-                        path: Some(path),
-                        mode,
-                        history: Vec::new(),
-                        history_ix: 0,
-                        leaf: None,
-                        view_state: None,
-                    },
-                    mode,
-                )
+                let tab = self.fresh_tab(path);
+                let mode = tab.mode;
+                (tab, mode)
             }
         };
         let id = self.new_group(tab.mode, window, cx);
@@ -9904,6 +10105,38 @@ impl Workspace {
         }
     }
 
+    /// A twin of the active tab, which is what a split and "Open in new
+    /// window" on a view header show: the same note, mode, history and
+    /// view state. Call with the active group stashed, so the `view_state`
+    /// copied is the one the stash just wrote.
+    fn copy_of_active_tab(&self) -> Tab {
+        Tab {
+            path: self.current.clone(),
+            mode: self.mode,
+            history: self.history.clone(),
+            history_ix: self.history_ix,
+            leaf: None,
+            view_state: self
+                .tabs
+                .get(self.active_tab)
+                .and_then(|t| t.view_state.clone()),
+        }
+    }
+
+    /// A fresh tab on `path`, with no history and no view state to inherit,
+    /// in the vault's default view mode the way any first open is: what
+    /// "Open to the right" and a row's "Open in new window" show.
+    fn fresh_tab(&self, path: String) -> Tab {
+        Tab {
+            path: Some(path),
+            mode: self.default_mode(),
+            history: Vec::new(),
+            history_ix: 0,
+            leaf: None,
+            view_state: None,
+        }
+    }
+
     /// Puts group `new` into the layout beside group `from`, after it or
     /// before it along `direction`, and settles the `dimension`: halved
     /// between the two when they became siblings, moved onto the split that
@@ -9913,7 +10146,13 @@ impl Workspace {
             return;
         };
         let dimension = self.groups[from_ix].dimension();
-        match self.layout_tree.insert_beside(from, new, direction, after) {
+        // The tree `from` is in: a popout's groups split inside their own
+        // window.
+        let window = self.window_of_group(from);
+        match self
+            .tree_mut(window)
+            .insert_beside(from, new, direction, after)
+        {
             Some(false) => {
                 if let Some(d) = dimension {
                     self.groups[from_ix].set_dimension(Some(d / 2.0));
@@ -9924,15 +10163,564 @@ impl Workspace {
             }
             Some(true) => {
                 self.groups[from_ix].set_dimension(None);
-                if let Some(mut path) = self.layout_tree.path_to(from) {
+                let tree = self.tree_mut(window);
+                if let Some(mut path) = tree.path_to(from) {
                     path.pop();
-                    if let Some(Layout::Split { node, .. }) = self.layout_tree.node_at_mut(&path) {
+                    if let Some(Layout::Split { node, .. }) = tree.node_at_mut(&path) {
                         set_dimension(node, dimension);
                     }
                 }
             }
             None => {}
         }
+    }
+
+    /// The popout window group `id` is in, by the window's id; `None` for
+    /// a group of the main area.
+    fn window_of_group(&self, id: u64) -> Option<u64> {
+        self.windows
+            .iter()
+            .find(|w| w.tree.contains(id))
+            .map(|w| w.id)
+    }
+
+    /// The layout tree of a popout, or the main area's for `None`. A
+    /// window that is gone reads as the main area, which is where its
+    /// groups' paths would resolve to nothing.
+    fn tree(&self, window: Option<u64>) -> &Layout {
+        window
+            .and_then(|id| self.windows.iter().find(|w| w.id == id))
+            .map(|w| &w.tree)
+            .unwrap_or(&self.layout_tree)
+    }
+
+    fn tree_mut(&mut self, window: Option<u64>) -> &mut Layout {
+        match window.and_then(|id| self.windows.iter().position(|w| w.id == id)) {
+            Some(wix) => &mut self.windows[wix].tree,
+            None => &mut self.layout_tree,
+        }
+    }
+
+    /// Whether the active group is a popout's.
+    fn active_group_in_popout(&self) -> bool {
+        self.window_of_group(self.active_group_id()).is_some()
+    }
+
+    /// The window the active group is in: the popout's while that is open,
+    /// the main window otherwise. Where the keyboard belongs, and the
+    /// window the control socket drives.
+    pub fn active_window(&self, cx: &App) -> gpui::AnyWindowHandle {
+        self.window_of_group(self.active_group_id())
+            .and_then(|id| self.windows.iter().find(|w| w.id == id))
+            .filter(|w| w.is_open(cx))
+            .and_then(|w| w.handle)
+            .map(Into::into)
+            .unwrap_or(self.main_window)
+    }
+
+    /// The same without asking whether the window is up, for the code
+    /// that may be running inside that window's own update: a window
+    /// being updated is out of the app's table and reads as closed there.
+    /// An update through a handle that really is closed fails harmlessly.
+    fn active_window_handle(&self) -> gpui::AnyWindowHandle {
+        self.window_of_group(self.active_group_id())
+            .and_then(|id| self.windows.iter().find(|w| w.id == id))
+            .and_then(|w| w.handle)
+            .map(Into::into)
+            .unwrap_or(self.main_window)
+    }
+
+    // ----- popout windows ----------------------------------------------------------
+
+    /// The desktop gave window `win` (a popout's id, `None` for the vault
+    /// window) the focus: unless the active group is already one of its
+    /// own, the group of it used most recently becomes the active one and
+    /// takes the keyboard, the way Obsidian's active leaf follows the
+    /// window in front. Without it, keys typed into a window brought
+    /// forward from the desktop would reach the group of another — and at
+    /// launch, which window is in front is the compositor's choice.
+    pub(crate) fn window_activated(&mut self, win: Option<u64>, cx: &mut Context<Self>) {
+        if self.window_of_group(self.active_group_id()) == win {
+            return;
+        }
+        let mut in_window = Vec::new();
+        self.tree(win).groups(&mut in_window);
+        let Some(group) = self
+            .group_mru
+            .iter()
+            .copied()
+            .find(|g| in_window.contains(g))
+            .or_else(|| in_window.first().copied())
+        else {
+            return;
+        };
+        self.activate_group(group, cx);
+        self.refocus_main = true;
+        cx.notify();
+    }
+
+    /// Popout `id`'s window while it is open, for the control socket.
+    pub fn popout_window(&self, id: u64, cx: &App) -> Option<gpui::AnyWindowHandle> {
+        self.windows
+            .iter()
+            .find(|w| w.id == id)
+            .filter(|w| w.is_open(cx))
+            .and_then(|w| w.handle)
+            .map(Into::into)
+    }
+
+    /// One popout window's content, drawn for [`PopoutWindow`] every frame
+    /// of that window: its groups through the renderers the main area
+    /// uses, under the window buttons, with no ribbon, docks or status bar
+    /// (see [[Specification#Observed popout windows, Obsidian 1.15.0]]).
+    /// `None` once the window's node is gone, which tells the view to
+    /// close. Nothing here may `notify`: the view redraws on the
+    /// workspace's notifications, and one raised from its own render would
+    /// never let the frames stop.
+    pub(crate) fn render_popout(
+        &mut self,
+        id: u64,
+        theme: &Theme,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> Option<gpui::AnyElement> {
+        let wix = self.windows.iter().position(|w| w.id == id)?;
+        // The first frame is drawn while the window is still being opened,
+        // before the opener could record its handle: the window itself is
+        // the handle, and the keyboard below needs it to find this window.
+        if self.windows[wix].handle.is_none() {
+            self.windows[wix].handle = window.window_handle().downcast::<PopoutWindow>();
+        }
+        // Where the window is, for `workspace.json`: the window's place on
+        // the screen (always 0, 0 on Wayland, as Obsidian's probe recorded
+        // it too) and its inner size, as whole numbers. The inner size is
+        // the surface less the margin `popout_margin` asked for on every
+        // edge that is not tiled, which is how the opener grew it: gpui's
+        // own inner bounds lag the inset by a configure, and the frame the
+        // compositor settles on is not known for some frames.
+        let outer = window.window_bounds().get_bounds();
+        let viewport = window.viewport_size();
+        let tiling = match window.window_decorations() {
+            Decorations::Client { tiling } => tiling,
+            Decorations::Server => Tiling::default(),
+        };
+        let margin = |tiled: bool| if tiled { px(0.) } else { popout_margin() };
+        let whole = |p: Pixels| f32::from(p).round() as i32;
+        let mut width = whole(viewport.width - margin(tiling.left) - margin(tiling.right));
+        let mut height = whole(viewport.height - margin(tiling.top) - margin(tiling.bottom));
+        // While the frame is negotiated a compositor may see the window
+        // with no inset — gpui starts at Scoria's frame, hears the
+        // desktop's, then Scoria's again (sway does this) — take the whole
+        // surface for the window's size, and configure it at that once the
+        // inset is back: the inner size grown by the margin on every edge.
+        // Exactly that grow, before anything else changed the size, is put
+        // back once; anything else is the window's real size.
+        let grow = whole(popout_margin() * 2.);
+        match self.windows[wix].opened_for {
+            Some((w, h)) if (w - width).abs() <= 1 && (h - height).abs() <= 1 => {
+                (width, height) = (w, h);
+            }
+            Some((w, h))
+                if grow > 0
+                    && matches!(window.window_decorations(), Decorations::Client { .. })
+                    && tiling == Tiling::default()
+                    && (width - w - grow).abs() <= 1
+                    && (height - h - grow).abs() <= 1 =>
+            {
+                let back = popout_outer_size(w as f32, h as f32);
+                window.defer(cx, move |window, _| window.resize(back));
+                (width, height) = (w, h);
+            }
+            Some(_) => self.windows[wix].opened_for = None,
+            None => {}
+        }
+        self.windows[wix].set_bounds(
+            WindowBounds {
+                x: whole(outer.origin.x),
+                y: whole(outer.origin.y),
+                width,
+                height,
+            },
+            window.is_maximized(),
+        );
+        // The title follows the window's own active tab, in the vault
+        // window's pattern.
+        let title = self.popout_title(wix);
+        if self.windows[wix].title != title {
+            window.set_window_title(&title);
+            self.windows[wix].title = title;
+        }
+        // The frame is this window's: the strips and the buttons read
+        // these, and the main window's render sets them back for itself.
+        self.corners = WindowCorners::of(window);
+        self.frameless = frameless(window);
+        self.fullscreen = window.is_fullscreen();
+        // The keyboard, as the main window's render puts it on its own
+        // groups: only an active group of this window is this window's.
+        if self.window_of_group(self.active_group_id()) == Some(id)
+            && std::mem::take(&mut self.refocus_main)
+            && self.modal == Modal::None
+            && self.keyboard_is_parked(window, cx)
+        {
+            self.focus_main(window, cx);
+        }
+        let tree = self.windows[wix].tree.clone();
+        self.rendering_window = Some(id);
+        let body = self.render_layout(&tree, &mut Vec::new(), theme, cx);
+        self.rendering_window = None;
+        let corners = self.corners;
+        // macOS has the desktop's traffic lights instead. The close
+        // button closes the window's groups the way the desktop's close
+        // does, then the window itself, which only the window can do from
+        // inside its own update.
+        let controls = (self.frameless && !self.mac_frame()).then(|| {
+            let this = cx.weak_entity();
+            window_controls(theme, window, corners, move |window, cx| {
+                this.update(cx, |ws, cx| ws.drop_popout(id, cx)).ok();
+                window.remove_window();
+            })
+        });
+        // The hotkeys stand down behind a modal, as in the main window;
+        // the modal itself is the main window's to draw.
+        let hotkeys_live = self.modal == Modal::None;
+        Some(
+            div()
+                .key_context("Workspace")
+                .track_focus(&self.focus_handle)
+                .when(hotkeys_live, |d| {
+                    d.on_action(cx.listener(Self::toggle_mode))
+                        .on_action(cx.listener(Self::go_back))
+                        .on_action(cx.listener(Self::go_forward))
+                        .on_action(cx.listener(Self::open_search_action))
+                        .on_action(cx.listener(Self::open_graph_action))
+                        .on_action(cx.listener(Self::run_command_action))
+                })
+                .relative()
+                .flex()
+                .flex_col()
+                .size_full()
+                .bg(theme.tokens.background_primary)
+                .map(|d| corners.apply(d))
+                .font_family(theme.ui_font.clone())
+                .text_size(px(crate::theme::FONT_UI_MEDIUM))
+                .text_color(theme.tokens.text_normal)
+                .child(
+                    div()
+                        .flex()
+                        .flex_col()
+                        .flex_1()
+                        .min_w_0()
+                        .min_h_0()
+                        .overflow_hidden()
+                        .child(body),
+                )
+                .children(controls)
+                .into_any_element(),
+        )
+    }
+
+    /// A popout's title: `<leaf> - <vault> - Scoria`, the leaf being the
+    /// active tab of the window's most recently active group.
+    fn popout_title(&self, wix: usize) -> SharedString {
+        let leaf = self.window_leaf_title(&self.windows[wix].tree);
+        format!("{leaf} - {} - Scoria", self.vault_name).into()
+    }
+
+    /// The leaf a window's title names: the active tab of the most
+    /// recently active group among `tree`'s, so each window's title
+    /// follows its own groups ("New tab" for an empty one).
+    fn window_leaf_title(&self, tree: &Layout) -> SharedString {
+        let mut order = Vec::new();
+        tree.groups(&mut order);
+        let group = self
+            .group_mru
+            .iter()
+            .copied()
+            .find(|g| order.contains(g))
+            .or_else(|| order.first().copied());
+        let (path, mode) = group
+            .and_then(|g| self.group_ix(g))
+            .map(|ix| {
+                let view = self.group_view(ix);
+                (view.current, view.mode)
+            })
+            .unwrap_or((None, ViewMode::Reading));
+        leaf_title(path.as_deref(), mode)
+    }
+
+    /// `workspace:move-to-new-window`: the active tab leaves for a popout
+    /// of its own, which takes the focus. The group it leaves keeps the
+    /// rest of its tabs; emptied, it closes, unless it is the main area's
+    /// only group, which is left holding an empty tab the way Obsidian
+    /// leaves it (observed, the popout probe).
+    fn move_to_new_window(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.flush_save(cx);
+        self.stash_active_group();
+        let from_ix = self.active_group;
+        let from_id = self.active_group_id();
+        let at = self.groups[from_ix].active_tab;
+        let Some(tab) = self.take_tab(from_ix, at, cx) else {
+            return;
+        };
+        let emptied = self.groups[from_ix].tabs.is_empty();
+        let main_only =
+            emptied && self.window_of_group(from_id).is_none() && self.main_group_count() == 1;
+        if main_only {
+            // Its views still show the tab that left.
+            let mode = self.default_mode();
+            self.groups[from_ix].tabs.push(Tab::empty(mode));
+            self.groups[from_ix].active_tab = 0;
+            self.load_group(from_ix, cx);
+            self.load_tab(cx);
+            self.stash_active_group();
+        }
+        if self
+            .open_group_in_new_window(vec![tab.clone()], 0, window, cx)
+            .is_none()
+        {
+            // No group, no move: the tab goes back where it was.
+            if main_only {
+                self.groups[from_ix].tabs.clear();
+            }
+            let group = &mut self.groups[from_ix];
+            let at = at.min(group.tabs.len());
+            group.tabs.insert(at, tab);
+            group.active_tab = at;
+            self.load_group(from_ix, cx);
+            self.load_tab(cx);
+            return;
+        }
+        if emptied && !main_only {
+            self.close_group(from_id, false, cx);
+        }
+    }
+
+    /// `workspace:open-in-new-window`, and the view header's "Open in new
+    /// window": a copy of the active tab opens in a popout of its own and
+    /// the source tab stays where it is (observed, the popout probe). The
+    /// copy is the one a split makes.
+    fn open_in_new_window(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.flush_save(cx);
+        self.stash_active_group();
+        let tab = self.copy_of_active_tab();
+        self.open_group_in_new_window(vec![tab], 0, window, cx);
+    }
+
+    /// A row's "Open in new window" (the Files view, a Links row, a Bases
+    /// row, a bookmark): a fresh tab on `path` in a popout of its own, the
+    /// way "Open to the right" puts one in a new group.
+    fn open_path_in_new_window(
+        &mut self,
+        path: String,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.flush_save(cx);
+        self.stash_active_group();
+        let tab = self.fresh_tab(path);
+        self.open_group_in_new_window(vec![tab], 0, window, cx);
+    }
+
+    /// `workspace:new-window`: a popout holding one empty tab ("New tab"),
+    /// as observed. The window's id, for a caller that goes on to fill the
+    /// tab.
+    fn new_window(&mut self, window: &mut Window, cx: &mut Context<Self>) -> Option<u64> {
+        self.flush_save(cx);
+        self.stash_active_group();
+        let mode = self.default_mode();
+        self.open_group_in_new_window(vec![Tab::empty(mode)], 0, window, cx)
+    }
+
+    /// `workspace:close-window` (Mod+Shift+W): closes the window the
+    /// command ran in — the focused one, as the probe saw Obsidian pick
+    /// it, not the one holding the active group. A popout's groups close
+    /// and the window goes; the main window is the vault's, so closing it
+    /// is what the title bar's × does, edits and layout saved first, and
+    /// the popouts go down with the workspace.
+    fn close_window(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let here = window.window_handle();
+        let popout = self
+            .windows
+            .iter()
+            .find(|w| w.handle.map(gpui::AnyWindowHandle::from) == Some(here))
+            .map(|w| w.id);
+        match popout {
+            Some(id) => self.drop_popout(id, cx),
+            None => self.on_quit(cx),
+        }
+        window.remove_window();
+    }
+
+    /// `editor:open-link-in-new-window` (Mod+Alt+Shift+Enter): the link
+    /// under the caret opens in a popout of its own and the source tab is
+    /// left as it was (observed). The link is resolved against the source
+    /// note before the window opens, since the new window's tab has no
+    /// note to resolve it from; a dangling link makes its note there, the
+    /// way following one does. An external link has nothing to show in a
+    /// window and goes to the browser as it would from the note.
+    fn open_link_in_new_window(
+        &mut self,
+        target: LinkTarget,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let LinkTarget::Internal(body) = target else {
+            self.follow_link(target, cx);
+            return;
+        };
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let source = self.current.clone().unwrap_or_default();
+        let resolved = state.cache().resolve(&body, &source).map(str::to_string);
+        if self.new_window(window, cx).is_none() {
+            return;
+        }
+        let parsed = scoria_markdown::parse_linktext(&body);
+        match resolved {
+            Some(path) => self.open_file(path, parsed.subpath, cx),
+            None => {
+                let name = parsed.path.to_string();
+                self.create_note_for(&name, None, cx);
+            }
+        }
+    }
+
+    /// A new group holding `tabs`, in a popout window of its own, made the
+    /// active group with the keyboard to follow. The window opens at
+    /// Obsidian's popout size, centered — after this update, since
+    /// opening a window draws its first frame, and that frame reads the
+    /// workspace, which is being updated here. `None` only when the group
+    /// could not be made; a desktop that gives no window is reported then,
+    /// and the groups it would have shown close.
+    fn open_group_in_new_window(
+        &mut self,
+        tabs: Vec<Tab>,
+        active_tab: usize,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> Option<u64> {
+        let mode = tabs
+            .get(active_tab)
+            .map(|t| t.mode)
+            .unwrap_or_else(|| self.default_mode());
+        let (inner_w, inner_h) = crate::popout::INNER_SIZE;
+        let window_id = self.next_group_id;
+        self.next_group_id += 1;
+        let id = self.new_group(mode, window, cx);
+        let ix = self.group_ix(id)?;
+        self.groups[ix].tabs = tabs;
+        self.groups[ix].active_tab = active_tab;
+        self.windows.push(WindowNode::new(
+            window_id,
+            Layout::split(SplitDirection::Vertical, vec![Layout::Group(id)]),
+            WindowBounds {
+                x: 0,
+                y: 0,
+                width: inner_w as i32,
+                height: inner_h as i32,
+            },
+        ));
+        self.load_group(ix, cx);
+        self.load_tab(cx);
+        self.refocus_main = true;
+        self.show_popout(window_id, None, cx);
+        cx.notify();
+        Some(window_id)
+    }
+
+    /// Opens the gpui window for popout `window_id`, after this update:
+    /// a window's first frame is drawn inside `open_window` and reads the
+    /// workspace, which is being updated here. `recorded` is the place
+    /// `workspace.json` gave the window and whether it was maximized; a
+    /// new window, or one recorded off every display, opens centered. A
+    /// desktop that gives no window is reported, and the groups the window
+    /// would have shown close.
+    fn show_popout(
+        &mut self,
+        window_id: u64,
+        recorded: Option<(WindowBounds, bool)>,
+        cx: &mut Context<Self>,
+    ) {
+        if let Some(w) = self.windows.iter_mut().find(|w| w.id == window_id) {
+            let (width, height) = crate::popout::INNER_SIZE;
+            w.opened_for = Some(
+                recorded
+                    .filter(|(_, maximized)| !maximized)
+                    .map_or((width as i32, height as i32), |(b, _)| (b.width, b.height)),
+            );
+        }
+        let this = cx.entity();
+        cx.defer(move |cx| {
+            let bounds = popout_placement(recorded, cx);
+            let opened = PopoutWindow::open(this.clone(), window_id, bounds, cx);
+            this.update(cx, |ws, cx| match opened {
+                Ok(handle) => {
+                    if let Some(w) = ws.windows.iter_mut().find(|w| w.id == window_id) {
+                        w.handle = Some(handle);
+                    }
+                    cx.notify();
+                }
+                Err(err) => {
+                    ws.report(format!("Could not open a window: {err}"), cx);
+                    ws.drop_popout(window_id, cx);
+                }
+            });
+        });
+    }
+
+    /// Reopens the popouts `workspace.json` recorded, at their recorded
+    /// places, once the vault window is up: the one holding the active
+    /// group last, so it is the one in front, and the vault window raised
+    /// again afterwards when the active group is its own (see
+    /// [[Development#Multi-window, the design, 2026-11-09]]).
+    fn open_restored_popouts(&mut self, cx: &mut Context<Self>) {
+        let active = self.window_of_group(self.active_group_id());
+        let mut order: Vec<(u64, Option<(WindowBounds, bool)>)> = self
+            .windows
+            .iter()
+            .filter(|w| w.handle.is_none())
+            .map(|w| {
+                let maximized = w
+                    .node
+                    .get("maximize")
+                    .and_then(Value::as_bool)
+                    .unwrap_or(false);
+                (w.id, w.bounds().map(|b| (b, maximized)))
+            })
+            .collect();
+        if order.is_empty() {
+            return;
+        }
+        order.sort_by_key(|(id, _)| Some(*id) == active);
+        for (id, recorded) in order {
+            self.show_popout(id, recorded, cx);
+        }
+        if active.is_none() {
+            let main = self.main_window;
+            cx.defer(move |cx| {
+                main.update(cx, |_, window, _| window.activate_window())
+                    .ok();
+            });
+        }
+    }
+
+    /// Closes popout `id`'s groups, which takes its node with the last
+    /// one, and puts the keyboard back on whatever group is active then.
+    /// The gpui window is the caller's: the desktop's close goes on to
+    /// close it, and the window buttons close it themselves.
+    pub(crate) fn drop_popout(&mut self, id: u64, cx: &mut Context<Self>) {
+        let Some(w) = self.windows.iter().find(|w| w.id == id) else {
+            return;
+        };
+        let mut groups = Vec::new();
+        w.tree.groups(&mut groups);
+        for g in groups {
+            self.close_group(g, true, cx);
+        }
+        self.windows.retain(|w| w.id != id);
+        self.refocus_main = true;
+        cx.notify();
     }
 
     // ----- dragging tabs ---------------------------------------------------------
@@ -10221,7 +11009,8 @@ impl Workspace {
         let Some(ix) = self.group_ix(id) else {
             return;
         };
-        if self.groups.len() == 1 {
+        let in_window = self.windows.iter().position(|w| w.tree.contains(id));
+        if in_window.is_none() && self.main_group_count() == 1 {
             self.flush_save(cx);
             self.stash_active_tab();
             let tabs = std::mem::take(&mut self.tabs);
@@ -10250,23 +11039,39 @@ impl Workspace {
                 self.remember_closed(i, tab);
             }
         }
-        let mut parent = self.layout_tree.path_to(id).unwrap_or_default();
+        let window = in_window.map(|wix| self.windows[wix].id);
+        let mut parent = self.tree(window).path_to(id).unwrap_or_default();
         parent.pop();
-        self.layout_tree.remove(id);
+        self.tree_mut(window).remove(id);
         self.groups.remove(ix);
         self.group_mru.retain(|g| *g != id);
-        // The split the group left, or the nearest one still standing when
-        // it was the split's last child and went with it.
-        loop {
-            if matches!(
-                self.layout_tree.node_at(&parent),
-                Some(Layout::Split { .. })
-            ) {
-                self.renormalise_dimensions(&parent);
-                break;
+        let mut left = Vec::new();
+        self.tree(window).groups(&mut left);
+        if let (Some(wix), true) = (in_window, left.is_empty()) {
+            // A popout's last group: the window goes with it, the way
+            // Obsidian's closes. Its gpui window is taken down here when
+            // this runs from another window; from inside the window itself
+            // the popout's own render notices the node is gone and closes.
+            let node = self.windows.remove(wix);
+            if let Some(handle) = node.handle {
+                handle
+                    .update(cx, |_, window, _| window.remove_window())
+                    .ok();
             }
-            if parent.pop().is_none() {
-                break;
+        } else {
+            // The split the group left, or the nearest one still standing
+            // when it was the split's last child and went with it.
+            loop {
+                if matches!(
+                    self.tree(window).node_at(&parent),
+                    Some(Layout::Split { .. })
+                ) {
+                    self.renormalise_dimensions(window, &parent);
+                    break;
+                }
+                if parent.pop().is_none() {
+                    break;
+                }
             }
         }
         if was_active {
@@ -10283,6 +11088,14 @@ impl Workspace {
         }
     }
 
+    /// How many groups the main area holds: `groups` counts the popouts'
+    /// groups too.
+    fn main_group_count(&self) -> usize {
+        let mut order = Vec::new();
+        self.layout_tree.groups(&mut order);
+        order.len()
+    }
+
     /// The `dimension` of a node of the layout: a group's lives on the
     /// group, a split's on the split.
     fn dimension_of(&self, node: &Layout) -> Option<f64> {
@@ -10292,8 +11105,10 @@ impl Workspace {
         }
     }
 
-    fn set_dimension_at(&mut self, path: &[usize], dimension: Option<f64>) {
-        match self.layout_tree.node_at_mut(path) {
+    /// Sets the `dimension` of the node at `path` of a window's tree (the
+    /// main area's for `None`).
+    fn set_dimension_at(&mut self, window: Option<u64>, path: &[usize], dimension: Option<f64>) {
+        match self.tree_mut(window).node_at_mut(path) {
             Some(Layout::Group(id)) => {
                 let id = *id;
                 if let Some(ix) = self.group_ix(id) {
@@ -10308,8 +11123,8 @@ impl Workspace {
     /// After a child left the split at `path`, the rest share its room: their
     /// `dimension`s scaled back to a hundred, or dropped when one is left,
     /// which is what Obsidian wrote in both cases.
-    fn renormalise_dimensions(&mut self, path: &[usize]) {
-        let Some(Layout::Split { children, .. }) = self.layout_tree.node_at(path) else {
+    fn renormalise_dimensions(&mut self, window: Option<u64>, path: &[usize]) {
+        let Some(Layout::Split { children, .. }) = self.tree(window).node_at(path) else {
             return;
         };
         let dims: Vec<Option<f64>> = children.iter().map(|c| self.dimension_of(c)).collect();
@@ -10328,7 +11143,7 @@ impl Workspace {
         for (ix, d) in scaled.into_iter().enumerate() {
             let mut child = path.to_vec();
             child.push(ix);
-            self.set_dimension_at(&child, d);
+            self.set_dimension_at(window, &child, d);
         }
     }
 
@@ -10347,7 +11162,7 @@ impl Workspace {
             direction,
             children,
             ..
-        }) = self.layout_tree.node_at(&drag.path)
+        }) = self.tree(drag.window).node_at(&drag.path)
         else {
             return;
         };
@@ -10387,7 +11202,7 @@ impl Workspace {
         for (ix, d) in dims.into_iter().enumerate() {
             let mut child = drag.path.clone();
             child.push(ix);
-            self.set_dimension_at(&child, Some(d));
+            self.set_dimension_at(drag.window, &child, Some(d));
         }
         cx.notify();
     }
@@ -10396,9 +11211,12 @@ impl Workspace {
     /// group on that side — of the groups there, the one used most recently,
     /// which is where Obsidian's went.
     fn focus_neighbor(&mut self, direction: SplitDirection, forward: bool, cx: &mut Context<Self>) {
+        // Within the active group's own window: a popout's groups are
+        // neighbours of each other, not of the main area's.
+        let active = self.active_group_id();
         let candidates = self
-            .layout_tree
-            .neighbors(self.active_group_id(), direction, forward);
+            .tree(self.window_of_group(active))
+            .neighbors(active, direction, forward);
         let target = self
             .group_mru
             .iter()
@@ -10993,23 +11811,29 @@ impl Workspace {
         let active_ix = view.active_tab;
         let group = view.id;
         let group_active = view.active;
-        let show_ribbon = self.show_ribbon();
         let frameless = self.frameless;
         let mac = self.mac_frame();
+        // A popout has no sidebars and no ribbon: its corner strips are
+        // the window's corners whatever the main window shows, and no
+        // toggle is drawn in them (observed, the popout probe).
+        let popout = self.rendering_window.is_some();
+        let show_ribbon = !popout && self.show_ribbon();
+        let left_open = !popout && self.left_visible;
+        let right_open = !popout && self.right_visible;
         // The window buttons overlay the right end of whichever header is
         // in the window's top right corner: this strip's, when the right
         // sidebar is collapsed and this is the last group. macOS has none.
-        let under_controls = frameless && !mac && last && !self.right_visible;
+        let under_controls = frameless && !mac && last && !right_open;
         // The strip in the window's top-left corner, with the left sidebar
         // collapsed, keeps clear of the traffic lights on macOS.
-        let left_space = if first && !self.left_visible {
+        let left_space = if first && !left_open {
             self.frame_left_space()
         } else {
             0.
         };
         let menu_open = self.tab_list_menu == Some(group);
-        let at_left = first && !self.show_ribbon() && !self.left_visible;
-        let at_right = last && !self.right_visible;
+        let at_left = first && !show_ribbon && !left_open;
+        let at_right = last && !right_open;
         div()
             .flex()
             .flex_row()
@@ -11052,9 +11876,10 @@ impl Workspace {
             // Without the ribbon a collapsed left sidebar would have no
             // way back from the window; macOS keeps the toggle here, after
             // the traffic lights, ribbon or not.
-            .when(first && !self.left_visible && (!show_ribbon || mac), |d| {
-                d.child(self.sidebar_toggle(true, theme, cx).mb(px(8.)).mr(px(2.)))
-            })
+            .when(
+                first && !popout && !left_open && (!show_ribbon || mac),
+                |d| d.child(self.sidebar_toggle(true, theme, cx).mb(px(8.)).mr(px(2.))),
+            )
             .children(tabs.iter().enumerate().map(|(ix, tab)| {
                 let active = ix == active_ix;
                 let divider = !active && ix + 1 != active_ix;
@@ -11295,7 +12120,7 @@ impl Workspace {
             // window buttons): it never moves into the sidebar's own header.
             // On macOS it keeps to the window's top-right corner, which is
             // the right dock's own header while that dock is open.
-            .when(last && !(mac && self.right_visible), |d| {
+            .when(last && !popout && !(mac && right_open), |d| {
                 d.child(self.sidebar_toggle(false, theme, cx).mb(px(8.)))
             })
             // The drop bar: an accent bar astride the boundary the dragged
@@ -11462,8 +12287,8 @@ impl Workspace {
     }
 
     /// Restores the layout `workspace.json` records: the main area's tab
-    /// groups and how they are split, the active leaf, each sidebar's
-    /// collapse state and its tab.
+    /// groups and how they are split, the popout windows and theirs, the
+    /// active leaf (in either), each sidebar's collapse state and its tab.
     fn restore_layout(
         &mut self,
         state: &Arc<VaultState>,
@@ -11495,32 +12320,50 @@ impl Workspace {
             })
             .unwrap_or_default();
         let default_mode = self.default_mode();
-        let spec = layout.get("main").and_then(|main| {
-            // A leaf naming a file the vault no longer has is dropped, the
-            // way Obsidian drops one it cannot open.
-            read_main(main, default_mode, &|file| {
-                state.vault().absolute(file).is_file()
-            })
-        });
+        // A leaf naming a file the vault no longer has is dropped, the way
+        // Obsidian drops one it cannot open.
+        let known = |file: &str| state.vault().absolute(file).is_file();
+        let spec = layout
+            .get("main")
+            .and_then(|main| read_main(main, default_mode, &known));
+        let windows = layout
+            .get("floating")
+            .map(|floating| read_floating(floating, default_mode, &known))
+            .unwrap_or_default();
+        let main_restored = spec.is_some();
+        let mut leaf_ids: Vec<(String, u64, usize)> = Vec::new();
         if let Some(spec) = spec {
             // The groups the file describes replace the one the window
             // opened with; its views were empty.
             let placeholder = self.active_group_id();
-            let mut leaf_ids: Vec<(String, u64, usize)> = Vec::new();
             let tree = self.materialize(spec, &mut leaf_ids, window, cx);
             self.layout_tree = tree;
             if let Some(ix) = self.group_ix(placeholder) {
                 self.groups.remove(ix);
                 self.group_mru.retain(|g| *g != placeholder);
             }
+        }
+        // The popouts' groups, each window a node whose gpui window opens
+        // once this vault window is up.
+        let main_leaves = leaf_ids.len();
+        for spec in windows {
+            let tree = self.materialize(spec.tree, &mut leaf_ids, window, cx);
+            let id = self.next_group_id;
+            self.next_group_id += 1;
+            self.windows
+                .push(WindowNode::from_node(id, tree, spec.node));
+        }
+        if main_restored || !self.windows.is_empty() {
+            // `active` may name a popout's leaf; without one on record it
+            // is the main area's first leaf with a file.
             let active_id = layout.get("active").and_then(Value::as_str);
+            let main_leaf_ids = &leaf_ids[..main_leaves];
             let (group, tab) = leaf_ids
                 .iter()
                 .find(|(id, _, _)| Some(id.as_str()) == active_id)
                 .map(|(_, g, t)| (*g, Some(*t)))
                 .or_else(|| {
-                    // No active leaf on record: the first with a file.
-                    leaf_ids
+                    main_leaf_ids
                         .iter()
                         .find(|(_, g, t)| {
                             self.group_ix(*g)
@@ -11528,16 +12371,20 @@ impl Workspace {
                         })
                         .map(|(_, g, t)| (*g, Some(*t)))
                 })
-                .or_else(|| leaf_ids.first().map(|(_, g, _)| (*g, None)))
+                .or_else(|| main_leaf_ids.first().map(|(_, g, _)| (*g, None)))
                 .unwrap_or((self.groups[0].id, None));
             if let (Some(ix), Some(tab)) = (self.group_ix(group), tab) {
                 self.groups[ix].active_tab = tab;
             }
-            // Fill every group's views, the active one last so its note is
+            // Every group's views filled, the main area's in layout order
+            // and then each popout's, the active one last so its note is
             // the one the explorer, graph and right dock follow.
             let mut order = Vec::new();
             self.layout_tree.groups(&mut order);
-            for id in order.into_iter().filter(|id| *id != group).chain([group]) {
+            for w in &self.windows {
+                w.tree.groups(&mut order);
+            }
+            for &id in order.iter().filter(|id| **id != group).chain([&group]) {
                 if let Some(ix) = self.group_ix(id) {
                     self.active_group = ix;
                     self.load_group(ix, cx);
@@ -11546,14 +12393,12 @@ impl Workspace {
                 }
             }
             // The most recently used order Obsidian would have: the active
-            // group first, the rest in layout order.
-            self.group_mru = {
-                let mut mru = vec![group];
-                let mut order = Vec::new();
-                self.layout_tree.groups(&mut order);
-                mru.extend(order.into_iter().filter(|g| *g != group));
-                mru
-            };
+            // group first, the rest in that order.
+            self.group_mru = std::iter::once(group)
+                .chain(order.into_iter().filter(|g| *g != group))
+                .collect();
+            self.refocus_main = true;
+            self.open_restored_popouts(cx);
         }
         let collapsed = |dock: &str| {
             layout
@@ -11822,6 +12667,31 @@ impl Workspace {
                 object.insert("main".into(), main);
             }
         }
+        // `floating` while a popout exists, in its place or else right
+        // before `active` (after the docks and the ribbon, where Obsidian
+        // puts it); no key at all once none does, as Obsidian's own
+        // serialization has none then (observed, `s06` of the popout probe).
+        let windows: Vec<Value> = self
+            .windows
+            .iter()
+            .map(|w| self.window_json(w, &mut active_id))
+            .collect();
+        if windows.is_empty() {
+            object.shift_remove("floating");
+        } else {
+            let existing = object.get("floating").and_then(Value::as_object).cloned();
+            let floating = floating_json(existing.as_ref(), windows);
+            match object.get_mut("floating") {
+                Some(slot) => *slot = floating,
+                None => {
+                    let at = object
+                        .keys()
+                        .position(|k| k == "active")
+                        .unwrap_or(object.len());
+                    object.shift_insert(at, "floating".into(), floating);
+                }
+            }
+        }
         object.insert("active".into(), active_id);
         for (dock, visible, width) in [
             ("left", self.left_visible, self.left_width),
@@ -11882,11 +12752,6 @@ impl Workspace {
                 } else {
                     (self.groups[ix].tabs.clone(), self.groups[ix].active_tab)
                 };
-                let mut map = self.groups[ix].node.clone();
-                if !map.contains_key("id") {
-                    map.shift_insert(0, "id".into(), json!(leaf_id()));
-                }
-                map.insert("type".into(), json!("tabs"));
                 let leaves: Vec<Value> = tabs.iter().map(leaf_json).collect();
                 if active {
                     *active_id = leaves
@@ -11895,39 +12760,44 @@ impl Workspace {
                         .cloned()
                         .unwrap_or(Value::Null);
                 }
-                map.shift_remove("children");
-                map.shift_remove("currentTab");
-                map.insert("children".into(), Value::Array(leaves));
-                if active_tab > 0 {
-                    map.insert("currentTab".into(), json!(active_tab));
-                }
-                Value::Object(map)
+                tabs_node_json(self.groups[ix].node.clone(), leaves, active_tab)
             }
             Layout::Split {
                 direction,
                 children,
                 node,
-            } => {
-                let mut map = node.clone();
-                if !map.contains_key("id") {
-                    map.shift_insert(0, "id".into(), json!(leaf_id()));
-                }
-                map.insert("type".into(), json!("split"));
-                map.shift_remove("children");
-                map.shift_remove("direction");
-                map.insert(
-                    "children".into(),
-                    Value::Array(
-                        children
-                            .iter()
-                            .map(|c| self.layout_node_json(c, active_id))
-                            .collect(),
-                    ),
-                );
-                map.insert("direction".into(), json!(direction.as_str()));
-                Value::Object(map)
-            }
+            } => split_node_json(
+                node.clone(),
+                children
+                    .iter()
+                    .map(|c| self.layout_node_json(c, active_id))
+                    .collect(),
+                *direction,
+            ),
         }
+    }
+
+    /// One `window` node of `floating`: the window's own keys around its
+    /// groups, written as `main`'s are.
+    fn window_json(&self, w: &WindowNode, active_id: &mut Value) -> Value {
+        let (direction, children) = match &w.tree {
+            Layout::Split {
+                direction,
+                children,
+                ..
+            } => (*direction, children.iter().collect::<Vec<_>>()),
+            // The root is a split by construction; a bare group is wrapped
+            // the way Obsidian's root always wraps one.
+            group @ Layout::Group(_) => (SplitDirection::Vertical, vec![group]),
+        };
+        window_node_json(
+            &w.node,
+            children
+                .into_iter()
+                .map(|c| self.layout_node_json(c, active_id))
+                .collect(),
+            direction,
+        )
     }
 
     /// Writes `workspace.json` back if the session changed the layout.
@@ -11940,7 +12810,10 @@ impl Workspace {
         if self.layout.as_ref() == Some(&fresh) {
             return;
         }
-        if let Err(err) = state.vault().write_config("workspace.json", &fresh) {
+        // The whole file, not a merge into it: `fresh` already carries
+        // every key the file had, and a merge would keep a `floating` the
+        // last popout's closing took out.
+        if let Err(err) = state.vault().replace_config("workspace.json", &fresh) {
             self.report(format!("workspace.json could not be written: {err}"), cx);
             return;
         }
@@ -12113,7 +12986,32 @@ impl Workspace {
         // group's, as it was before there could be more than one.
         let groups = json!({
             "active": self.active_group_id(),
+            // The popout window the active group is in, `null` for the
+            // main window: the window the socket's input goes to.
+            "active_window": self.window_of_group(self.active_group_id()),
             "layout": self.layout_tree_json(&self.layout_tree),
+            // The popout windows the layout holds; `open` says whether a
+            // gpui window is showing one (a restored popout has none yet).
+            "windows": self
+                .windows
+                .iter()
+                .map(|w| {
+                    json!({
+                        "id": w.id,
+                        // A window being described from inside its own
+                        // update is out of the app's table for the moment.
+                        "open": w.is_open(cx)
+                            || w.handle.is_some_and(|h| {
+                                gpui::AnyWindowHandle::from(h) == window.window_handle()
+                            }),
+                        "title": w.title,
+                        "bounds": w.bounds().map(|b| {
+                            json!({"x": b.x, "y": b.y, "width": b.width, "height": b.height})
+                        }),
+                        "layout": self.layout_tree_json(&w.tree),
+                    })
+                })
+                .collect::<Vec<Value>>(),
             "items": self
                 .groups
                 .iter()
@@ -12304,9 +13202,51 @@ impl Workspace {
                 "height": window.viewport_size().height.as_f32(),
                 "scale": window.scale_factor(),
                 "active": window.is_window_active(),
-                "title": self.window_title(),
+                "title": self.described_title(window),
+                // The popout being described, `null` for the main window.
+                "popout": self.popout_of_window(window.window_handle()),
             },
         })
+    }
+
+    /// The title of `window`: a popout's own, or the main window's.
+    fn described_title(&self, window: &Window) -> SharedString {
+        self.popout_of_window(window.window_handle())
+            .and_then(|id| self.windows.iter().find(|w| w.id == id))
+            .map(|w| w.title.clone())
+            .unwrap_or_else(|| self.window_title())
+    }
+
+    /// The id of the popout `handle` shows, if it is one.
+    fn popout_of_window(&self, handle: gpui::AnyWindowHandle) -> Option<u64> {
+        self.windows
+            .iter()
+            .find(|w| {
+                w.handle
+                    .is_some_and(|h| gpui::AnyWindowHandle::from(h) == handle)
+            })
+            .map(|w| w.id)
+    }
+
+    /// Runs `f` with the window the active group is in, which is the one
+    /// a caller of the control socket is looking at: `window` itself when
+    /// that is it, the popout otherwise (its own update, nested in this
+    /// one). The popout gone, `window` stands in.
+    pub fn in_active_window<R>(
+        &mut self,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+        f: impl FnOnce(&mut Self, &mut Window, &mut App) -> R,
+    ) -> R {
+        let target = self.active_window_handle();
+        if target == window.window_handle() {
+            return f(self, window, cx);
+        }
+        let mut f = Some(f);
+        match target.update(cx, |_, target, cx| (f.take().unwrap())(self, target, cx)) {
+            Ok(result) => result,
+            Err(_) => (f.take().unwrap())(self, window, cx),
+        }
     }
 
     /// The overlay that is up, if any: its kind plus whatever the modal
@@ -12424,7 +13364,7 @@ impl Workspace {
         &mut self,
         text: &str,
         window: &mut Window,
-        cx: &mut Context<Self>,
+        cx: &mut App,
     ) -> &'static str {
         match self.type_target(window, cx) {
             "editor" => {
@@ -13043,8 +13983,7 @@ impl Workspace {
 
     /// What a pick on that menu does: the handlers the explorer's events
     /// already route to, plus the two rows the explorer's menu has no twin
-    /// of, plus the editor menu's own rows. "Open in new window" is not
-    /// offered (no second window).
+    /// of, plus the editor menu's own rows.
     fn file_menu_pick(
         &mut self,
         pick: Pick,
@@ -13056,6 +13995,12 @@ impl Workspace {
         match pick {
             Pick::OpenInNewTab => self.open_in_new_tab(path, None, cx),
             Pick::OpenToRight => self.open_to_right(path, window, cx),
+            // The view header's "Open in new window" copies the leaf, as
+            // `workspace:open-in-new-window` does; a row's opens its file.
+            Pick::OpenInNewWindow => match target {
+                file_menu::Target::View(_) => self.open_in_new_window(window, cx),
+                _ => self.open_path_in_new_window(path, window, cx),
+            },
             // The view header's splits act on the group the header belongs
             // to, which the button made active before the menu opened.
             Pick::SplitRight => self.split(SplitDirection::Vertical, window, cx),
@@ -15166,6 +16111,69 @@ enum LayoutSpec {
     },
 }
 
+/// A `window` node of `floating` as read: its groups as a split whose root
+/// `node` map is empty, and the window's own keys beside it. Pure, like
+/// [`LayoutSpec`].
+#[derive(Debug, Clone, PartialEq)]
+struct WindowSpec {
+    tree: LayoutSpec,
+    node: Map<String, Value>,
+}
+
+/// Reads `floating`: every `window` child, read as `main` is read -- a
+/// window whose files are all gone is dropped with them -- with its own
+/// keys less `children` and `direction`, which the tree carries. A child of
+/// any other type is left out; Obsidian writes no other kind.
+fn read_floating(
+    floating: &Value,
+    default_mode: ViewMode,
+    known: &dyn Fn(&str) -> bool,
+) -> Vec<WindowSpec> {
+    floating
+        .get("children")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter(|w| w.get("type").and_then(Value::as_str) == Some("window"))
+        .filter_map(|w| {
+            let object = w.as_object()?;
+            let children = read_children(w, default_mode, known);
+            if children.is_empty() {
+                return None;
+            }
+            let direction = SplitDirection::parse(w.get("direction").and_then(Value::as_str));
+            let mut own = object.clone();
+            own.shift_remove("children");
+            own.shift_remove("direction");
+            Some(WindowSpec {
+                tree: LayoutSpec::Split {
+                    direction,
+                    children,
+                    node: Map::new(),
+                },
+                node: own,
+            })
+        })
+        .collect()
+}
+
+/// A split's (or a window's) children read, the ones with nothing left
+/// dropped.
+fn read_children(
+    node: &Value,
+    default_mode: ViewMode,
+    known: &dyn Fn(&str) -> bool,
+) -> Vec<LayoutSpec> {
+    node.get("children")
+        .and_then(Value::as_array)
+        .map(|c| {
+            c.iter()
+                .filter_map(|child| read_main(child, default_mode, known))
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
 /// Reads `main`. A `tabs` node with no leaf left (every file gone) is
 /// dropped, and a split with no child left goes with its children; a split
 /// with one child stays nested as Obsidian keeps it. `known` says whether a
@@ -15207,15 +16215,7 @@ fn read_main(
             }))
         }
         Some("split") => {
-            let children: Vec<LayoutSpec> = node
-                .get("children")
-                .and_then(Value::as_array)
-                .map(|c| {
-                    c.iter()
-                        .filter_map(|child| read_main(child, default_mode, known))
-                        .collect()
-                })
-                .unwrap_or_default();
+            let children = read_children(node, default_mode, known);
             if children.is_empty() {
                 return None;
             }
@@ -15541,6 +16541,78 @@ fn leaf_id() -> String {
     x = x.wrapping_mul(0x94D0_49BB_1331_11EB);
     x ^= x >> 31;
     format!("{x:016x}")
+}
+
+/// A `tabs` node over its leaves: the keys it was read with (or a fresh
+/// `id`), `children` and `currentTab` rewritten at the end, the latter only
+/// when it is not the first (as Obsidian leaves it out then).
+fn tabs_node_json(mut map: Map<String, Value>, leaves: Vec<Value>, active_tab: usize) -> Value {
+    if !map.contains_key("id") {
+        map.shift_insert(0, "id".into(), json!(leaf_id()));
+    }
+    map.insert("type".into(), json!("tabs"));
+    map.shift_remove("children");
+    map.shift_remove("currentTab");
+    map.insert("children".into(), Value::Array(leaves));
+    if active_tab > 0 {
+        map.insert("currentTab".into(), json!(active_tab));
+    }
+    Value::Object(map)
+}
+
+/// A `split` node over its children, `direction` after them as Obsidian
+/// writes it.
+fn split_node_json(
+    mut map: Map<String, Value>,
+    children: Vec<Value>,
+    direction: SplitDirection,
+) -> Value {
+    if !map.contains_key("id") {
+        map.shift_insert(0, "id".into(), json!(leaf_id()));
+    }
+    map.insert("type".into(), json!("split"));
+    map.shift_remove("children");
+    map.shift_remove("direction");
+    map.insert("children".into(), Value::Array(children));
+    map.insert("direction".into(), json!(direction.as_str()));
+    Value::Object(map)
+}
+
+/// A `window` node of `floating`, in Obsidian's key order: `id`, `type`,
+/// `children`, `direction`, then the rest of the window's own keys (the
+/// bounds, `maximize`, `zoom`, anything unknown) as they came.
+fn window_node_json(
+    own: &Map<String, Value>,
+    children: Vec<Value>,
+    direction: SplitDirection,
+) -> Value {
+    let mut map = Map::new();
+    map.insert(
+        "id".into(),
+        own.get("id").cloned().unwrap_or_else(|| json!(leaf_id())),
+    );
+    map.insert("type".into(), json!("window"));
+    map.insert("children".into(), Value::Array(children));
+    map.insert("direction".into(), json!(direction.as_str()));
+    for (key, value) in own {
+        if !matches!(key.as_str(), "id" | "type" | "children" | "direction") {
+            map.insert(key.clone(), value.clone());
+        }
+    }
+    Value::Object(map)
+}
+
+/// The `floating` split over the windows: the node the file had with its
+/// children replaced, or a fresh one.
+fn floating_json(existing: Option<&Map<String, Value>>, windows: Vec<Value>) -> Value {
+    let mut map = existing.cloned().unwrap_or_default();
+    if !map.contains_key("id") {
+        map.shift_insert(0, "id".into(), json!(leaf_id()));
+    }
+    map.insert("type".into(), json!("floating"));
+    map.shift_remove("children");
+    map.insert("children".into(), Value::Array(windows));
+    Value::Object(map)
 }
 
 /// The `workspace.json` leaf for a tab: the one it was restored from with
@@ -15925,7 +16997,10 @@ impl Render for Workspace {
         // is the first moment a focus asked for elsewhere can land. A modal
         // owns the keyboard while it is up, and closing one focuses the main
         // area anyway, so the request is dropped rather than queued.
-        if std::mem::take(&mut self.refocus_main)
+        // A popout's render does the same for an active group of its own
+        // (see `render_popout`), so this window only acts on its own.
+        if !self.active_group_in_popout()
+            && std::mem::take(&mut self.refocus_main)
             && self.modal == Modal::None
             && self.keyboard_is_parked(window, cx)
         {
@@ -15960,7 +17035,7 @@ impl Render for Workspace {
         // The active leaf's name, which is the window title's first part:
         // "New tab" with nothing open, as Obsidian's reads
         // (`New tab - <vault> - Obsidian 1.14.5`).
-        let title = leaf_title(self.current.as_deref(), self.mode);
+        let title = self.window_leaf_title(&self.layout_tree);
 
         let main_body: gpui::AnyElement = if let Some(loading) = &self.loading {
             div()
@@ -17181,6 +18256,200 @@ mod tests {
         };
         assert_eq!(children.len(), 1, "the horizontal split had nothing left");
         assert!(read_main(&nested_main(), ViewMode::LivePreview, &|_| false).is_none());
+    }
+
+    /// Obsidian 1.15.0's `workspace.json` with four popouts open, as the
+    /// probe recorded it (`tools/obsidian-probe/results/2026-11-09-popout-windows.json`,
+    /// `s04-new-window`): the vault window holding one empty tab, a window
+    /// each on Beta, Alpha and Gamma, and a fourth on an empty tab, which
+    /// is the active leaf.
+    const FOUR_POPOUTS: &str = include_str!("../tests/fixtures/workspace-four-popouts.json");
+
+    /// A `LayoutSpec` written back the way the workspace writes its groups,
+    /// so the reading and the writing can be checked without a window.
+    fn spec_json(spec: &LayoutSpec) -> Value {
+        match spec {
+            LayoutSpec::Group(group) => tabs_node_json(
+                group.node.clone(),
+                group.tabs.iter().map(|(_, t)| leaf_json(t)).collect(),
+                group.active_tab,
+            ),
+            LayoutSpec::Split {
+                direction,
+                children,
+                node,
+            } => split_node_json(
+                node.clone(),
+                children.iter().map(spec_json).collect(),
+                *direction,
+            ),
+        }
+    }
+
+    fn window_spec_json(w: &WindowSpec) -> Value {
+        let LayoutSpec::Split {
+            direction,
+            children,
+            ..
+        } = &w.tree
+        else {
+            panic!("a window's root is a split");
+        };
+        window_node_json(
+            &w.node,
+            children.iter().map(spec_json).collect(),
+            *direction,
+        )
+    }
+
+    #[test]
+    fn floating_is_read_as_windows_over_groups_with_their_bounds() {
+        let layout: Value = serde_json::from_str(FOUR_POPOUTS).unwrap();
+        let windows = read_floating(&layout["floating"], ViewMode::LivePreview, &|_| true);
+        assert_eq!(windows.len(), 4);
+        let first = &windows[0];
+        assert_eq!(first.node.get("id"), Some(&json!("fbe32d82ccdfaec7")));
+        assert_eq!(first.node.get("type"), Some(&json!("window")));
+        assert!(!first.node.contains_key("children") && !first.node.contains_key("direction"));
+        assert_eq!(
+            first.node.keys().collect::<Vec<_>>(),
+            ["id", "type", "x", "y", "width", "height", "maximize", "zoom"]
+        );
+        let LayoutSpec::Split {
+            direction,
+            children,
+            node,
+        } = &first.tree
+        else {
+            panic!("a window's root is a split");
+        };
+        assert_eq!(*direction, SplitDirection::Vertical);
+        assert!(node.is_empty(), "the window's keys live on the window");
+        let LayoutSpec::Group(group) = &children[0] else {
+            panic!("one group");
+        };
+        assert_eq!(group.tabs[0].1.path.as_deref(), Some("Beta.md"));
+        assert_eq!(group.tabs[0].1.mode, ViewMode::LivePreview);
+        // The recorded bounds come through the node the workspace keeps.
+        let node = WindowNode::from_node(
+            1,
+            Layout::split(SplitDirection::Vertical, vec![Layout::Group(1)]),
+            first.node.clone(),
+        );
+        assert_eq!(
+            node.bounds(),
+            Some(WindowBounds {
+                x: 16,
+                y: 10,
+                width: 980,
+                height: 759
+            })
+        );
+        // The fourth window holds an empty tab, which is a tab here too.
+        let LayoutSpec::Split { children, .. } = &windows[3].tree else {
+            panic!("a split");
+        };
+        let LayoutSpec::Group(group) = &children[0] else {
+            panic!("one group");
+        };
+        assert_eq!(group.tabs[0].1.path, None);
+        // No `floating` key, no windows; and a `floating` with none is none.
+        assert!(read_floating(
+            &json!({"id": "x", "type": "floating", "children": []}),
+            ViewMode::LivePreview,
+            &|_| true
+        )
+        .is_empty());
+    }
+
+    #[test]
+    fn a_window_whose_files_are_all_gone_is_dropped() {
+        let layout: Value = serde_json::from_str(FOUR_POPOUTS).unwrap();
+        let windows = read_floating(&layout["floating"], ViewMode::LivePreview, &|f| {
+            f != "Gamma.md"
+        });
+        assert_eq!(
+            windows.len(),
+            3,
+            "Gamma's window went; the empty tab's stays"
+        );
+        assert_eq!(windows[2].node.get("id"), Some(&json!("b3bc438a3f884b7d")));
+    }
+
+    /// The Writer gate's rule for the whole file, applied to `floating`:
+    /// read Obsidian's bytes into the model and write them back, and
+    /// nothing moves. `main` goes through the same writer, so the test
+    /// covers the file as the workspace writes it, `active` and
+    /// `lastOpenFiles` untouched here because the pure writers do not set
+    /// them.
+    #[test]
+    fn obsidians_popout_layout_round_trips_byte_for_byte() {
+        let layout: Value = serde_json::from_str(FOUR_POPOUTS).unwrap();
+        let main = read_main(&layout["main"], ViewMode::LivePreview, &|_| true).unwrap();
+        let windows = read_floating(&layout["floating"], ViewMode::LivePreview, &|_| true);
+        let mut written = layout.clone();
+        written["main"] = spec_json(&main);
+        let existing = layout["floating"].as_object().cloned();
+        written["floating"] = floating_json(
+            existing.as_ref(),
+            windows.iter().map(window_spec_json).collect(),
+        );
+        assert_eq!(
+            serde_json::to_string_pretty(&written).unwrap(),
+            FOUR_POPOUTS
+        );
+    }
+
+    /// A window Scoria opens is written with Obsidian's keys in Obsidian's
+    /// order, the bounds as whole numbers, and a `floating` the file never
+    /// had gets a fresh node.
+    #[test]
+    fn a_fresh_window_node_writes_obsidians_keys_in_obsidians_order() {
+        let tree = Layout::split(SplitDirection::Vertical, vec![Layout::Group(3)]);
+        let w = WindowNode::new(
+            1,
+            tree.clone(),
+            WindowBounds {
+                x: 16,
+                y: 10,
+                width: 1024,
+                height: 800,
+            },
+        );
+        let Layout::Split { direction, .. } = &tree else {
+            panic!("a split");
+        };
+        let group = json!({"id": "g", "type": "tabs", "children": []});
+        let written = window_node_json(&w.node, vec![group], *direction);
+        assert_eq!(
+            written.as_object().unwrap().keys().collect::<Vec<_>>(),
+            [
+                "id",
+                "type",
+                "children",
+                "direction",
+                "x",
+                "y",
+                "width",
+                "height",
+                "maximize",
+                "zoom"
+            ]
+        );
+        assert_eq!(written["type"], json!("window"));
+        assert_eq!(written["direction"], json!("vertical"));
+        assert_eq!(written["x"], json!(16), "a whole number, not 16.0");
+        assert_eq!(written["height"], json!(800));
+        assert_eq!(written["maximize"], json!(false));
+        assert_eq!(written["zoom"], json!(0));
+        assert_eq!(written["id"].as_str().unwrap().len(), 16);
+        let floating = floating_json(None, vec![written]);
+        assert_eq!(
+            floating.as_object().unwrap().keys().collect::<Vec<_>>(),
+            ["id", "type", "children"]
+        );
+        assert_eq!(floating["type"], json!("floating"));
+        assert_eq!(floating["children"].as_array().unwrap().len(), 1);
     }
 
     #[test]
