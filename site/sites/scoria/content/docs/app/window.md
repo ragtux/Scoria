@@ -57,12 +57,20 @@ tabs, and `editor:focus-left` and its three siblings move between groups. The la
 written back to `workspace.json` in the shape Obsidian writes it, and the next launch opens
 on it again.
 
-Right-click a tab's header for its menu: **Close**, **Close others** and **Close all** (the
-last two when the group has more than one tab), **Pin** or **Unpin**, **Move to new
-window**, **Split right**, **Split down** and **Open in new window**, followed by the
-tab's file rows — Move, Bookmark, Copy path, Rename, Delete and the rest of the [file
-menu](/docs/app/files/#the-right-click-menu). The view header's **More options** offers the
-same split and window rows.
+Right-click a tab's header for its menu: **Close**, **Close others**, **Close tabs after**
+and **Close all** (the others only when the group has more than one tab, and Close tabs
+after only when there is a tab to its right), **Pin** or **Unpin**, and **Move to new
+window**. On the tab in front the menu goes on with **Split right**, **Split down** and
+**Open in new window**, then the tab's file rows — Rename, Move, Bookmark, Copy path,
+Delete and the rest of the [file menu](/docs/app/files/#the-right-click-menu), plus **Add
+file property**, **Find...** and **Replace...** on a note. The right click does not bring
+the tab to the front. The view header's **More options** offers the same split and window
+rows.
+
+A pinned tab shows a pin where its close button was; click the pin to unpin it. A note
+opened from a pinned tab — a link followed, a file picked in the quick switcher — opens in
+a new tab, `Ctrl + W` unpins it rather than closing it, and Close others and Close all
+leave it open. **Toggle pin** in the command palette pins and unpins the tab in front.
 
 ## Popout windows
 
@@ -162,7 +170,7 @@ Every shortcut in Scoria is an Obsidian command bound from its default hotkey, s
 vault's `hotkeys.json` rebinds or unbinds all of them. The one exception is `Ctrl + Q`,
 which quits.
 
-The 132 commands Scoria can actually run are the ones the command palette offers; the rest
+The 133 commands Scoria can actually run are the ones the command palette offers; the rest
 are still listed in Settings' Hotkeys tab, so you can see your bindings for commands that
 do not do anything yet. The full list is in [commands and
 hotkeys](/docs/reference/commands/).
