@@ -949,6 +949,88 @@ down where Obsidian counts per depth — found by the comparison this week exist
 day. The vault went to `gate.sh baseline` as `snapshot-2026-11-09e` after the first pass and
 `snapshot-2026-11-09f` after the second.
 
+## Day 7, 2026-11-09
+
+**The Scoria half passes; the Obsidian half has not run.** Chrome, bookmarks and settings, driven over the
+control socket in a headless sway session, 10:43–10:48, on `Note D` (a 50-line note with three tables under
+three H2s, untouched since day 1's appended line, no final newline). The binary was rebuilt from the working
+tree first: day 6's two format fixes were in the tree and not in the binary. The morning `gate-check` found
+nothing moved since `snapshot-2026-11-09f` and sixteen properties green.
+
+**Chrome wrote nothing to the vault but `workspace.json`, which is the expected answer.** `workspace:split-vertical`
+made a second group beside the first showing the same note in the same mode and took the focus;
+`split-horizontal` split that one into a column of two, so the tree was a vertical split of group 1 and a
+horizontal split of groups 2 and 3, every group on `Note D`. A new tab in the bottom-right group opened a
+second note, and that tab was dragged by its header onto the left group's one tab: it landed first in that
+group, became its active tab, and the group it left kept its remaining tab — the layout tree unchanged, the
+`groups` dump and the screenshot agreeing. Quitting wrote the three groups and four leaves to `workspace.json`
+in Obsidian's shape (one leaf `"source": false` for the Live Preview tab, three `true`), excluded from the diff
+as always, but the thing the Obsidian half opens onto.
+
+**Bookmarks wrote the spec's bytes, and the section bookmark wrote the day's one note edit.** `bookmarks:open`
+showed the pane in the left dock, empty ("No bookmarks found"); there was no `bookmarks.json`.
+
+- **`bookmark-current-view`** opened "Add bookmark" with Path, Title and Bookmark group, and Enter on the
+  empty Title wrote the file into being: `{"items": [{"type": "file", "ctime": …, "path": "Note D.md"}]}`,
+  two-space indented, no trailing newline, no `title` key — the shape probed on 2026-10-20.
+- **`bookmark-current-heading`** with the caret on the third H2 (line 39), the Title typed as `Day 7 heading`:
+  a second item appended with `subpath` `"#<heading>"` and `title` last, the first item's bytes untouched.
+- **`bookmark-current-section`** with the caret inside the intro paragraph (line 3), which had no id: ` ^055971`
+  went onto the end of that line — six characters after a space, the one change in the note, its last line
+  still without a newline — and the third item appended with `subpath` `"#^055971"`. The id is the byte
+  Obsidian writes into a target for the same command, so it is a person's edit.
+
+The pane listed the three rows with the file, heading and block icons, the file row `is-active`; every view
+header on the note showed the filled Bookmarked action in all three groups. A click on the heading row put
+the caret on line 39 and scrolled the editor to it, the block row back to line 3, the file row to the top of
+the note. The harness's `every_config_file_is_written_back_byte_identical` now reads a real `bookmarks.json`
+— Scoria's bytes, so worth what day 3's `types.json` was worth until Obsidian rewrote it.
+
+**Settings of all three shapes wrote the probed bytes, each key appended after the vault's own.** `app.json`
+was `{\n  "vimMode": false\n}` and `appearance.json` was `{}`. In the Editor tab the **toggle** Readable
+line length (on → off) wrote `"readableLineLength": false`; the **dropdown** Default view for new tabs, its
+popover's second row, wrote `"defaultViewMode": "preview"` — the value, not the label; the **slider** Indent
+visual width, its first cell, wrote `"tabSize": 2`. In Appearance the Font size slider wrote
+`"baseFontSize": 19` as `appearance.json`'s first key (the click was aimed at 18 and landed one cell over;
+a plain integer either way). Each write was the whole file, two-space indent, no trailing newline, `vimMode`
+first and the new keys in the order they were written — the spec's rule that a key once written stays. The
+Hotkeys tab listed 204 commands with their defaults, none `custom`, and `hotkeys.json` did not exist: that
+file is the Obsidian half's to create, as the sheet says. Escape closed the window; the main window redrew
+at the new size with the line length unlimited.
+
+**One view fault found and fixed, not a writer's.** The Settings rows list kept one scroll offset across
+tabs, so Appearance opened scrolled to where Editor had been left, its first two rows off the top.
+`select_tab` now resets a tracked `ScrollHandle` (`items_scroll`), verified live after a rebuild: Appearance
+opens at Base color scheme after Editor was scrolled to its end.
+
+**Two driving notes.** `open` by name onto a group whose active tab held another note replaced that tab's
+note rather than switching to the existing tab — Obsidian's explorer does the same — and opened it in the
+vault's default mode, so the bookmarks ran in Live Preview where the splits had been Source; the heading and
+section commands need an editing mode and had one. Under sway's `for_window` rule the Settings window came
+up 1400 by 900 like the main one and off the output's edge until moved by title.
+
+**What the diff reports, 10:48.** `app.json` (three keys appended), `appearance.json` (its first key),
+`bookmarks.json` (new, three items), `Note D` (one line, the block id). Every one is Scoria's, and every one
+a person's edit. The three config files Obsidian touches did not move: Obsidian did not run.
+`workspace.json` rewritten on quit, excluded as always. `gate.sh check --from-first` lists the week:
+`Archive/`, `Daily/`, `Templates/`, `.trash/`, four new notes, eight notes changed, both canvases, and seven
+`.obsidian` files (`app`, `appearance`, `bookmarks`, `daily-notes`, `templates`, `types`, and `workspace`
+excluded) — every line of it attributed in the days above. The harness, with the vault named, is sixteen
+green after the half.
+
+**For the Obsidian half.** (1) Launch and look before touching anything: three groups — the left with two
+tabs of `Note D`, the right a column of two — and which pane the left dock shows. (2) Bookmarks pane: three
+rows (the note, `Day 7 heading` with the heading icon, `Note D#^055971` with the block icon); click each;
+the view header's Bookmarked icon on the note. (3) Bookmark another note from its header or
+`bookmarks:bookmark-current-view`, then Remove the plain `Note D` item from its row menu: compare
+`bookmarks.json` byte for byte — Scoria's remaining two items kept, the new one appended last. (4) Settings
+→ Editor should show Readable line length off, Default view Reading view, Indent visual width 2, and
+Appearance Font size 19. Put each back (on, Editing view, 4, 16) and compare `app.json` and
+`appearance.json`: the keys kept with their default values, in Scoria's order. (5) Hotkeys: bind one chord
+to a command with no default (Bookmarks: Show bookmarks is a good one) — `hotkeys.json` exists afterwards;
+its bytes are the week's last first copy. (6) Split right and down yourself, drag a tab between groups, quit.
+(7) `just gate-check`, then `gate.sh check --from-first`, and the verdict in the log.
+
 ## The log
 
 One row per day. "Moved" is what the diff reported; "author" is the answer to the two
@@ -963,4 +1045,4 @@ questions above.
 | 4 | 2026-11-09 | all six suggesters accepted into `Note C` (`[[`, `[[Note#`, `![[`, `#tag`, an alias added to `Note F` for the purpose, a block whose id was written into `Note F`), the first accept and a ten-edit stretch undone to byte-identical; `Templates/` and a template note made in the UI, `templates.json` and `daily-notes.json` written from Settings, the template inserted, yesterday's note made by following a `[[Daily/…]]` link, today's created from the template, stepped back and forward | Settings: Templates time format changed and restored and a date format added, Daily notes dropdown moved and restored; the template inserted in `Note C`; today's note opened, typed into, stepped back and forward; the five suggesters accepted in today's daily note, the block one writing an own-line id under a heading of `Note F` | `Templates/` and `Daily/` (three notes), `Note C` (the morning's ten lines, then Obsidian's template), `Note F` (two alias lines, Scoria's inline id, Obsidian's own-line id), `templates.json` (Scoria's two keys, Obsidian's third appended), `daily-notes.json` (rewritten by Obsidian byte-identical, twice), `.trash/Untitled.canvas` (empty) | every one a person's edit in one of the two apps; the three config files Obsidian rewrites at launch did not move (it was not relaunched) | **passes** — Obsidian rewrote both of the config files Scoria had created and kept Scoria's bytes; the two apps read each other's alias and template settings, and both refuse a daily note whose folder is missing with the same notice; the 1.15.0 Daily notes tab matches the spec, and Obsidian's delete went to `.trash` where Scoria's went to the system trash |
 | 5 | 2026-11-09 | both canvases: pan, zoom, select, move, resize, colour, an edge, a group, duplicate (copy/paste needs the desk's clipboard), undo and typing into a card, each undone to byte-identical; `Canvas 2`'s first edit rewrote every node line into the edited-save key order the spec records, the data unchanged | one card of `Canvas 2` moved by hand; `Canvas 1` not opened | `Canvas 1`: Scoria's three lines (the typed suffix, a colour, an edge); `Canvas 2`: every node line once, into the edited-save order, then the moved card's line to the end of the array; `workspace.json` | every one a person's edit in one of the two apps; the key-order rewrite is the spec's rule, done once by Scoria and accepted by Obsidian 1.15.0, which kept the 28 other lines byte for byte | **passes** — Scoria's canvas writer is a fixed point of Obsidian's; the moved card came back last in the array, which Scoria's drag did not do (fixed: the first movement of a drag raises the selection, undone with the move); copy/paste waits on the desk |
 | 6 | 2026-11-09 | on `Note B`: the checklist cycle, Mod+L as a keystroke, the six colours and the plain highlight, Clear formatting, the six inline and three line toggles, Shift+Tab's arithmetic — each checked on disk and round-tripped byte-identical, most without undo; the five fold commands in both modes and reading view, record outside the vault | Mod+L on a box, a colour over the plain highlight, yellow-again on the yellow one, Mod+B over two whole bullet lines, the reading-view click, a numbered toggle over four lines with two nested; folds; the three config files moved at launch, no bytes | `Note B`: Scoria's six lines, four of them rewritten by Obsidian's gestures (`- [ ]` and `- [x]`, `==🔵…==`, the yellow highlight gone), two bullet lines bolded, the four under the H2 numbered per depth; `workspace.json` | every one a person's edit in one of the two apps; the three config files moved mtimes and no bytes | **passes** — three shared gestures byte-identical between the apps; Mod+B over whole bullet lines gave `- **text**` where Scoria wrote `**- text**` (fixed: a line's piece starts after its list marker), and the numbered toggle counts per depth where Scoria counted straight down (fixed); two view faults fixed on the Scoria half (a fold over the scroll anchor left a blank pane, a no-op Clear formatting pushed an empty undo step) |
-| 7 |  |  |  |  |  |  |
+| 7 | 2026-11-09 | split right and down, a tab dragged between groups, the layout written; the Bookmarks pane, a view, a titled heading and a section bookmarked into a new `bookmarks.json` (the section writing its block id into `Note D`), the rows clicked; a toggle, a dropdown and two sliders written to `app.json` and `appearance.json`; the Hotkeys tab read, `hotkeys.json` left for Obsidian | *pending* | `Note D` (one line, the block id), `app.json` (three keys), `appearance.json` (its first key), `bookmarks.json` (new) | every one Scoria's, every one a person's edit | *pending* — the Scoria half passes; one view fault fixed (Settings tabs shared a scroll offset) |

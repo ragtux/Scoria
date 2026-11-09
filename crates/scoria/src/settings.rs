@@ -36,11 +36,11 @@ use crate::workspace::{
     Workspace,
 };
 use gpui::{
-    actions, canvas, deferred, div, hsla, linear_color_stop, linear_gradient, prelude::*, px, size,
-    uniform_list, App, Bounds, Context, Entity, EventEmitter, FocusHandle, Focusable, FontWeight,
-    Hsla, KeyBinding, KeyDownEvent, Keystroke, MouseButton, MouseDownEvent, MouseMoveEvent,
-    MouseUpEvent, Pixels, Point, Rgba, SharedString, Subscription, UniformListScrollHandle,
-    WeakEntity, Window, WindowBounds, WindowHandle, WindowOptions,
+    actions, canvas, deferred, div, hsla, linear_color_stop, linear_gradient, point, prelude::*,
+    px, size, uniform_list, App, Bounds, Context, Entity, EventEmitter, FocusHandle, Focusable,
+    FontWeight, Hsla, KeyBinding, KeyDownEvent, Keystroke, MouseButton, MouseDownEvent,
+    MouseMoveEvent, MouseUpEvent, Pixels, Point, Rgba, ScrollHandle, SharedString, Subscription,
+    UniformListScrollHandle, WeakEntity, Window, WindowBounds, WindowHandle, WindowOptions,
 };
 use scoria_commands::{hotkey_label, keystroke, Command};
 use scoria_formats::config::{
@@ -2067,6 +2067,10 @@ pub struct SettingsView {
     /// Indices into `all_commands` after search and filter.
     hotkey_rows: Vec<usize>,
     hotkey_scroll: UniformListScrollHandle,
+    /// The open tab's rows. Switching tabs puts it back to the top: Obsidian
+    /// rebuilds a tab's content when it is shown, so Appearance never opens
+    /// where Editor was left (gate day 7, 2026-11-09).
+    items_scroll: ScrollHandle,
     /// The command whose ⊕ was clicked: the next chord pressed is its new
     /// binding, Escape backs out.
     capturing: Option<String>,
@@ -2158,6 +2162,7 @@ impl SettingsView {
             all_commands: Vec::new(),
             hotkey_rows: Vec::new(),
             hotkey_scroll: UniformListScrollHandle::new(),
+            items_scroll: ScrollHandle::new(),
             capturing: None,
             menu: None,
             picker: None,
@@ -2362,6 +2367,7 @@ impl SettingsView {
         // the user, so leaving the tab is one of the moments that writes.
         self.dismiss_open_controls(cx);
         self.tab = tab;
+        self.items_scroll.set_offset(point(px(0.), px(0.)));
         // A page belongs to the tab that opened it.
         self.page = None;
         self.focus_tab(window, cx);
@@ -5437,7 +5443,11 @@ impl Render for SettingsView {
             None if tab == Tab::Hotkeys => self.render_hotkeys(&theme, cx).into_any_element(),
             None => {
                 let items = self.items(tab);
-                let mut list = div().id("settings-items").overflow_y_scroll().size_full();
+                let mut list = div()
+                    .id("settings-items")
+                    .overflow_y_scroll()
+                    .track_scroll(&self.items_scroll)
+                    .size_full();
                 for item in &items {
                     list = list.child(self.render_item(item, &theme, cx));
                 }
