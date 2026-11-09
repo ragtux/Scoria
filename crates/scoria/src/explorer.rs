@@ -538,6 +538,10 @@ fn event_for(pick: Pick, target: &Target) -> Option<ExplorerEvent> {
         | Pick::RenameProperty
         | Pick::DeleteProperty
         | Pick::SetPropertyType(_)
+        | Pick::EditBookmark
+        | Pick::RemoveBookmark
+        | Pick::BookmarkActiveTab
+        | Pick::NewBookmarkGroup
         | Pick::AddLink
         | Pick::AddExternalLink
         | Pick::SearchForSelection

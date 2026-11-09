@@ -18,7 +18,7 @@
       "ts": 1792691453533
      },
      "0260ef8a33e2e677": {
-      "path": "/home/ragtux/bstore2/raga/plmcrzy/PLMCRZY",
+      "path": "/home/user/vaults/Gate vault",
       "ts": 1792691430471
      },
      "c8f23ccaf2d52dc0": {
@@ -310,7 +310,7 @@
        "ts": 1792691453533
       },
       "0260ef8a33e2e677": {
-       "path": "/home/ragtux/bstore2/raga/plmcrzy/PLMCRZY",
+       "path": "/home/user/vaults/Gate vault",
        "ts": 1792691430471
       },
       "c8f23ccaf2d52dc0": {
@@ -471,8 +471,8 @@
           "box-shadow": "none",
           "border": "0px none rgb(218, 218, 218)"
          },
-         "title": "PLMCRZY",
-         "titleHtml": "PLMCRZY",
+         "title": "Gate vault",
+         "titleHtml": "Gate vault",
          "titleStyle": {
           "display": "block",
           "opacity": "1",
@@ -500,8 +500,8 @@
          },
          "icon": null,
          "aria": null,
-         "text": "PLMCRZY",
-         "html": "<div class=\"menu-item tappable\"><div class=\"menu-item-icon\"></div><div class=\"menu-item-title\">PLMCRZY</div></div>"
+         "text": "Gate vault",
+         "html": "<div class=\"menu-item tappable\"><div class=\"menu-item-icon\"></div><div class=\"menu-item-title\">Gate vault</div></div>"
         },
         {
          "cls": "menu-item tappable",

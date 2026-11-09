@@ -2672,6 +2672,37 @@ ported and does change colour: `js-templates`, which highlights the body of a ta
 uncoloured. Adding an Obsidian sample to the first corpus needs
 `tools/obsidian-probe/code-highlight.mjs` re-run against the Obsidian of the day.
 
+## The Bookmarks pane, against the probe of 2026-11-07
+
+Filed from `tools/obsidian-probe/bookmarks-pane.mjs`
+([[Specification#Observed bookmarks pane, Obsidian 1.15.0]]). The pane itself was rebuilt the same
+day — [[Development#The Bookmarks pane, against Obsidian 1.15.0, 2026-11-07]] — and what follows
+is what that left.
+
+### "Edit bookmark" is the one-field prompt; Obsidian's is setting rows with a group dropdown
+
+**Obsidian.** Rows: Path (a disabled field), URL or Query; Title; "Bookmark group", a dropdown of
+the groups with nested ones indented — then a red Remove on the left, Cancel and Save on the right.
+"Add bookmark" has the same rows. Moving an item between groups from here is the only way that is
+not a drag.
+
+**Scoria.** Path, URL or Query as a line of detail text over one Title field, and Remove, Cancel,
+Save in a row. Save and Remove do what Obsidian's do; there is no way to choose a group. Needs a
+dropdown row in `prompt.rs`.
+
+### A note dragged in from the Files pane is not bookmarked
+
+**Obsidian.** Dropped on the Bookmarks pane, a note from Files becomes a `file` item at the drop
+(`s16`). **Scoria.** The Files view has no drag source at all, so this waits on the explorer's
+drags (block 5 of [[Interaction probes]]).
+
+### The view header has no filled bookmark on a bookmarked note
+
+**Obsidian 1.15.0** draws a filled `bookmark` action in the view header of a bookmarked note, to the
+left of the mode button, and none on a note that is not bookmarked — which is why 1.14.5's
+was measured zero-rect on an unbookmarked note. **Scoria** draws no bookmark action there. Unprobed:
+what a click on it does (likely "Edit bookmark").
+
 ## Blocked by the harness, not by the code
 
 Five things could not be settled from outside the process. They are not findings and not fixes —

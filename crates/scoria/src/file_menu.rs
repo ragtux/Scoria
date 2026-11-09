@@ -197,6 +197,16 @@ pub enum Pick {
     DeleteProperty,
     /// "Property type" ▸ one of the six: `types.json`.
     SetPropertyType(scoria_formats::properties::PropertyType),
+    // ----- the Bookmarks pane's rows ------------------------------------------
+    /// "Edit...": the "Edit bookmark" modal on the row's item.
+    EditBookmark,
+    /// "Remove": the item out of `bookmarks.json`, the note left alone.
+    RemoveBookmark,
+    /// A group's "Bookmark the active tab...", into that group.
+    BookmarkActiveTab,
+    /// "New group": in the group right-clicked, or at the top level from
+    /// the pane's empty space.
+    NewBookmarkGroup,
 }
 
 /// One row of a context menu: what Obsidian draws, and what a click reports.
@@ -256,6 +266,26 @@ pub enum Target {
         name: String,
         ty: Option<scoria_formats::properties::PropertyType>,
     },
+    /// A row of the Bookmarks pane, or the pane's empty space when `kind`
+    /// is [`BookmarkKind::Blank`]
+    /// (`tools/obsidian-probe/results/2026-11-07-bookmarks-pane.json`,
+    /// `s06`). `path` is the file or folder a `file` or `folder` item
+    /// points at, which "Reveal file in navigation" acts on.
+    Bookmark { kind: BookmarkKind, path: String },
+}
+
+/// What a Bookmarks pane row stands for, as far as its menu is concerned:
+/// a heading, a block and an attachment are all `file` items and take the
+/// file's menu.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BookmarkKind {
+    File,
+    Folder,
+    Search,
+    Url,
+    Graph,
+    Group,
+    Blank,
 }
 
 /// A right click in the editor: what it landed on, and the selection as it
@@ -305,6 +335,7 @@ impl Target {
             | Target::Linked(p)
             | Target::View(p)
             | Target::Row(p) => p,
+            Target::Bookmark { path, .. } => path,
             Target::Blank | Target::Property { .. } => "",
             Target::Editor(click) => match &click.spot {
                 Spot::Link(path) => path,
@@ -461,6 +492,60 @@ pub fn items(target: &Target) -> Vec<Item> {
         // (`is-warning`, `lucide-trash-2`). On `tags`, `aliases` and
         // `cssclasses` Rename and Delete property are `is-disabled`
         // (2026-11-04 probe); Property type stays live.
+        Target::Bookmark { kind, .. } => {
+            // Observed per kind (2026-11-07, `s06`): the open rows on what
+            // opens in a leaf, Rename and Edit... on every item, Reveal on
+            // what is in the Files view, Remove in the danger pair. "Open in
+            // new window" is left out as on every other menu here (no
+            // second window), and a group takes the header's two actions in
+            // place of Edit....
+            use BookmarkKind as K;
+            let open = [
+                item("Open in new tab", "file-plus", S::Open, P::OpenInNewTab),
+                item(
+                    "Open to the right",
+                    "separator-vertical",
+                    S::Open,
+                    P::OpenToRight,
+                ),
+            ];
+            let rename = item("Rename", "pencil", S::Action, P::Rename);
+            let edit = item("Edit...", "wrench", S::Action, P::EditBookmark);
+            let reveal = item(
+                "Reveal file in navigation",
+                "folder-open",
+                S::System,
+                P::RevealInNavigation,
+            );
+            let remove = item("Remove", "trash-2", S::Danger, P::RemoveBookmark);
+            match kind {
+                K::File => [&open[..], &[rename, edit, reveal, remove]].concat(),
+                K::Folder => vec![rename, edit, reveal, remove],
+                K::Search | K::Url => vec![rename, edit, remove],
+                K::Graph => [&open[..], &[rename, edit, remove]].concat(),
+                K::Group => [
+                    &open[..],
+                    &[
+                        rename,
+                        item(
+                            "Bookmark the active tab...",
+                            "bookmark-plus",
+                            S::Action,
+                            P::BookmarkActiveTab,
+                        ),
+                        item("New group", "folder-plus", S::Action, P::NewBookmarkGroup),
+                        remove,
+                    ],
+                ]
+                .concat(),
+                K::Blank => vec![item(
+                    "New group",
+                    "folder-plus",
+                    S::ActionPrimary,
+                    P::NewBookmarkGroup,
+                )],
+            }
+        }
         Target::Property { name, ty } => {
             let reserved = ["tags", "aliases", "cssclasses"]
                 .iter()
@@ -743,6 +828,7 @@ pub fn describe(menu: &Menu) -> Value {
         Target::View(_) => "view",
         Target::Row(_) => "row",
         Target::Property { .. } => "property",
+        Target::Bookmark { .. } => "bookmark",
     };
     let items = items(&menu.target);
     let disabled: Vec<String> = items
@@ -817,7 +903,11 @@ pub fn render<V: 'static>(
     );
     let mut previous: Option<Section> = None;
     for (ix, item) in items(&menu.target).into_iter().enumerate() {
-        for n in 0..separators_above(previous, item.section) {
+        // Obsidian emits two separators before the danger pair but draws
+        // only the first: the second is `display: none` (its rect is zero
+        // in every capture, 2026-11-07 `s06`). The model keeps both, so
+        // [`drawn`] still matches the DOM; the eye sees one line.
+        for n in 0..separators_above(previous, item.section).min(1) {
             list = list.child(
                 div()
                     .id(("file-menu-separator", ix * 2 + n))
@@ -1666,5 +1756,49 @@ mod tests {
         } else {
             assert_eq!(commands.last().unwrap().program, "xdg-open");
         }
+    }
+
+    /// Every Bookmarks pane menu as the 2026-11-07 probe captured it
+    /// (`s06`, `s13`), less "Open in new window", which no menu here draws.
+    #[test]
+    fn a_bookmark_row_menu_is_the_one_obsidian_draws_for_its_kind() {
+        let menu = |kind| {
+            drawn(&Target::Bookmark {
+                kind,
+                path: String::new(),
+            })
+        };
+        let open = ["Open in new tab", "Open to the right", "---"];
+        let file = [
+            "Rename",
+            "Edit...",
+            "---",
+            "Reveal file in navigation",
+            "---",
+            "---",
+            "Remove",
+        ];
+        assert_eq!(menu(BookmarkKind::File), [&open[..], &file].concat());
+        assert_eq!(menu(BookmarkKind::Folder), file);
+        let plain = ["Rename", "Edit...", "---", "---", "Remove"];
+        assert_eq!(menu(BookmarkKind::Search), plain);
+        assert_eq!(menu(BookmarkKind::Url), plain);
+        assert_eq!(menu(BookmarkKind::Graph), [&open[..], &plain].concat());
+        assert_eq!(
+            menu(BookmarkKind::Group),
+            [
+                &open[..],
+                &[
+                    "Rename",
+                    "Bookmark the active tab...",
+                    "New group",
+                    "---",
+                    "---",
+                    "Remove"
+                ]
+            ]
+            .concat()
+        );
+        assert_eq!(menu(BookmarkKind::Blank), ["New group"]);
     }
 }

@@ -136,6 +136,19 @@ impl Bookmark {
             .unwrap_or_default()
     }
 
+    /// A title typed on the row or in "Edit bookmark": written as `title`,
+    /// in its place when the item has one and after everything else when
+    /// it has not — `Beta.md` renamed on the row came back
+    /// `type, ctime, path, title` (2026-11-07 probe, `s12`).
+    pub fn set_title(&mut self, title: &str) {
+        self.0.insert("title".into(), json!(title));
+    }
+
+    /// Takes the title out, so the item shows its default name again.
+    pub fn clear_title(&mut self) {
+        self.0.shift_remove("title");
+    }
+
     pub fn set_items(&mut self, items: Vec<Bookmark>) {
         self.0.insert(
             "items".into(),
@@ -252,6 +265,99 @@ impl Bookmarks {
             false
         }
         remove(&mut self.items, path)
+    }
+
+    /// The bookmark at `at`, a path of indexes into groups.
+    pub fn get(&self, at: &[usize]) -> Option<Bookmark> {
+        let (first, rest) = at.split_first()?;
+        let mut item = self.items.get(*first)?.clone();
+        for ix in rest {
+            item = item.items().get(*ix)?.clone();
+        }
+        Some(item)
+    }
+
+    /// Changes the bookmark at `at` in place; false when there is none.
+    pub fn update_at(&mut self, at: &[usize], change: impl FnOnce(&mut Bookmark)) -> bool {
+        fn update(
+            items: &mut [Bookmark],
+            at: &[usize],
+            change: impl FnOnce(&mut Bookmark),
+        ) -> bool {
+            match at {
+                [] => false,
+                [ix] => match items.get_mut(*ix) {
+                    Some(item) => {
+                        change(item);
+                        true
+                    }
+                    None => false,
+                },
+                [ix, rest @ ..] => {
+                    let Some(group) = items.get_mut(*ix) else {
+                        return false;
+                    };
+                    let mut members = group.items();
+                    let done = update(&mut members, rest, change);
+                    if done {
+                        group.set_items(members);
+                    }
+                    done
+                }
+            }
+        }
+        update(&mut self.items, at, change)
+    }
+
+    /// Puts `item` at `at`: the last index is its position in the list the
+    /// rest of the path names (the top level, or a group's items), clamped
+    /// to that list's end. False when the path does not name a group.
+    pub fn insert_at(&mut self, at: &[usize], item: Bookmark) -> bool {
+        fn insert(items: &mut Vec<Bookmark>, at: &[usize], item: Bookmark) -> bool {
+            match at {
+                [] => false,
+                [ix] => {
+                    items.insert((*ix).min(items.len()), item);
+                    true
+                }
+                [ix, rest @ ..] => {
+                    let Some(group) = items.get_mut(*ix).filter(|g| g.kind() == "group") else {
+                        return false;
+                    };
+                    let mut members = group.items();
+                    let done = insert(&mut members, rest, item);
+                    if done {
+                        group.set_items(members);
+                    }
+                    done
+                }
+            }
+        }
+        insert(&mut self.items, at, item)
+    }
+
+    /// Moves the bookmark at `from` so it lands at `to`, where `to` is an
+    /// insertion path read against the list *before* the move (what a drop
+    /// indicator points at). A group cannot go inside itself. Returns the
+    /// path the item ends up at, or `None` when nothing moved.
+    pub fn move_item(&mut self, from: &[usize], to: &[usize]) -> Option<Vec<usize>> {
+        if from.is_empty() || to.is_empty() || to.starts_with(from) && to.len() > from.len() {
+            return None;
+        }
+        // Taking `from` out shifts every later sibling, and anything inside
+        // them, one place up.
+        let mut target = to.to_vec();
+        let depth = from.len() - 1;
+        if target.len() > depth && target[..depth] == from[..depth] && target[depth] > from[depth] {
+            target[depth] -= 1;
+        }
+        let item = self.remove_at(from)?;
+        if self.insert_at(&target, item.clone()) {
+            Some(target)
+        } else {
+            self.insert_at(from, item);
+            None
+        }
     }
 
     /// Removes the bookmark at `at`, a path of indexes into groups.
@@ -408,5 +514,90 @@ mod tests {
             Some("B.md".into())
         );
         assert!(parsed.remove_at(&[9]).is_none());
+    }
+
+    /// The probe's vault, cut down: Alpha, Gamma, then Group one holding
+    /// Beta and a nested group.
+    fn sample() -> Bookmarks {
+        let mut b = Bookmarks::default();
+        b.push(Bookmark::file("Alpha.md", None, None, 1));
+        b.push(Bookmark::file("Gamma.md", None, None, 2));
+        b.push(Bookmark::group(
+            Some("Group one"),
+            vec![
+                Bookmark::file("Beta.md", None, None, 3),
+                Bookmark::group(Some("Nested"), vec![], 4),
+            ],
+            5,
+        ));
+        b
+    }
+
+    fn titles(items: &[Bookmark]) -> Vec<String> {
+        items.iter().map(Bookmark::display_title).collect()
+    }
+
+    /// A title typed on the row lands after `path` on an item that had
+    /// none, which is the order Obsidian wrote for `Beta.md` renamed on its
+    /// row, and replaces a group's title where it stands.
+    #[test]
+    fn a_title_set_on_a_row_goes_last_or_stays_in_place() {
+        let mut b = sample();
+        assert!(b.update_at(&[2, 0], |i| i.set_title("Beta renamed")));
+        let beta = b.get(&[2, 0]).unwrap().as_value();
+        let keys: Vec<&String> = beta.as_object().unwrap().keys().collect();
+        assert_eq!(keys, ["type", "ctime", "path", "title"]);
+        assert!(b.update_at(&[2], |i| i.set_title("Renamed group")));
+        let group = b.get(&[2]).unwrap().as_value();
+        let keys: Vec<&String> = group.as_object().unwrap().keys().collect();
+        assert_eq!(keys, ["type", "ctime", "items", "title"]);
+        assert_eq!(b.get(&[2, 0]).unwrap().display_title(), "Beta renamed");
+        assert!(!b.update_at(&[7], |i| i.set_title("x")));
+    }
+
+    /// Dropped above a row, an item takes that row's place; dropped on a
+    /// group it becomes the group's first member, which is where
+    /// `Image.png` landed when the probe dropped it on "Group one".
+    #[test]
+    fn a_drop_above_a_row_or_onto_a_group_lands_where_obsidian_put_it() {
+        let mut b = sample();
+        assert_eq!(b.move_item(&[1], &[0]), Some(vec![0]));
+        assert_eq!(titles(&b.items), ["Gamma", "Alpha", "Group one"]);
+        let mut b = sample();
+        assert_eq!(b.move_item(&[0], &[2, 0]), Some(vec![1, 0]));
+        assert_eq!(titles(&b.items), ["Gamma", "Group one"]);
+        assert_eq!(titles(&b.items[1].items()), ["Alpha", "Beta", "Nested"]);
+        // Out of a group to the top level, below everything.
+        let mut b = sample();
+        assert_eq!(b.move_item(&[2, 0], &[3]), Some(vec![3]));
+        assert_eq!(titles(&b.items), ["Alpha", "Gamma", "Group one", "Beta"]);
+        // Later in the same list: the gap it leaves is closed first.
+        let mut b = sample();
+        assert_eq!(b.move_item(&[0], &[2]), Some(vec![1]));
+        assert_eq!(titles(&b.items), ["Gamma", "Alpha", "Group one"]);
+    }
+
+    #[test]
+    fn a_group_cannot_be_dropped_inside_itself() {
+        let mut b = sample();
+        let before = b.clone();
+        assert_eq!(b.move_item(&[2], &[2, 1, 0]), None);
+        assert_eq!(b.move_item(&[2], &[2, 0]), None);
+        assert_eq!(b, before);
+    }
+
+    /// A file dragged in from the Files pane is a new item at the drop.
+    #[test]
+    fn an_item_inserted_at_a_drop_takes_that_place() {
+        let mut b = sample();
+        assert!(b.insert_at(&[1], Bookmark::file("New.md", None, None, 9)));
+        assert!(b.insert_at(&[3, 2], Bookmark::file("Deep.md", None, None, 9)));
+        assert!(b.insert_at(&[99], Bookmark::file("End.md", None, None, 9)));
+        assert!(!b.insert_at(&[0, 0], Bookmark::file("Not a group.md", None, None, 9)));
+        assert_eq!(
+            titles(&b.items),
+            ["Alpha", "New", "Gamma", "Group one", "End"]
+        );
+        assert_eq!(titles(&b.items[3].items()), ["Beta", "Nested", "Deep"]);
     }
 }

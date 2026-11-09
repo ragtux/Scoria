@@ -15,7 +15,7 @@ This note is that remaining pass, done by hand. Each block closes the `**Unprobe
 paragraph of one specification section.
 
 > [!warning] Not in the gate vault
-> Use a disposable scratch vault. **Not** `~/bstore2/raga/plmcrzy/PLMCRZY` — a
+> Use a disposable scratch vault. **Not** `$SCORIA_GATE_VAULT` — a
 > byte-level gate run is measuring it — and not `docs/scoria`. Each block names the
 > fixture notes it needs.
 

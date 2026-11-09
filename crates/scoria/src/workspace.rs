@@ -39,6 +39,7 @@ use crate::theme::{
     Theme, FONT_UI_SMALL, FONT_UI_SMALLER, HEADER_HEIGHT, ICON_SIZE, RIBBON_WIDTH, SIDEBAR_WIDTH,
     TAB_CURVE,
 };
+use crate::tree;
 use crate::vaults::VaultManager;
 use crate::watch;
 use gpui::{
@@ -1326,7 +1327,7 @@ fn outline_headings(meta: &CachedMetadata) -> Vec<panes::Heading> {
 }
 
 /// What a tree row's fold triangle does when clicked.
-type FoldAction = Box<dyn Fn(&mut Workspace, &mut Context<Workspace>) + 'static>;
+type FoldAction = tree::FoldAction<Workspace>;
 
 /// The Tags leaf's state: the four keys Obsidian keeps for it in
 /// `workspace.json`, plus the folds, which it does not save.
@@ -1544,11 +1545,12 @@ enum PendingOp {
         from: String,
         to: String,
     },
-    /// "Add bookmark": the title for this draft.
-    AddBookmark(BookmarkDraft),
-    /// "Edit bookmark" on a note that already has one: Save keeps it,
-    /// Remove takes it out.
-    EditBookmark(String),
+    /// "Add bookmark": the title for this draft, and the group (by index
+    /// path, empty for the top level) it goes into.
+    AddBookmark(BookmarkDraft, Vec<usize>),
+    /// "Edit bookmark" on the item at this index path: Save writes the
+    /// title, Remove takes it out.
+    EditBookmark(Vec<usize>),
 }
 
 /// One tab of the main area: what it shows and where it has been. The
@@ -2851,6 +2853,10 @@ pub struct Workspace {
     explorer: Entity<FileExplorer>,
     search: Entity<SearchPane>,
     bookmarks: Entity<BookmarksPane>,
+    /// The group a bookmark being made goes into, by index path; empty for
+    /// the top level. Set only while a group's "Bookmark the active tab..."
+    /// opens its prompt.
+    bookmark_into: Vec<usize>,
     switcher: Entity<QuickSwitcher>,
     chooser: Entity<Chooser>,
     /// What the chooser's pick means while it is open.
@@ -3130,7 +3136,7 @@ impl Workspace {
         let tag_filter = cx.new(pane_filter_input);
         let property_filter = cx.new(pane_filter_input);
         let outline_filter = cx.new(pane_filter_input);
-        let bookmarks = cx.new(BookmarksPane::new);
+        let bookmarks = cx.new(|cx| BookmarksPane::new(window, cx));
         let switcher = cx.new(QuickSwitcher::new);
         let chooser = cx.new(Chooser::new);
         let palette = cx.new(CommandPalette::new);
@@ -3269,10 +3275,21 @@ impl Workspace {
                 &bookmarks,
                 window,
                 |this, _, event: &BookmarkEvent, window, cx| match event {
-                    BookmarkEvent::Open { path, subpath } => {
+                    BookmarkEvent::Open {
+                        path,
+                        subpath,
+                        new_tab,
+                    } => {
                         let link = format!("{path}{}", subpath.as_deref().unwrap_or(""));
                         let parsed = scoria_markdown::parse_linktext(&link);
-                        this.open_file(path.clone(), parsed.subpath, cx);
+                        if *new_tab {
+                            this.open_in_new_tab(path.clone(), parsed.subpath, cx);
+                        } else {
+                            this.open_file(path.clone(), parsed.subpath, cx);
+                        }
+                    }
+                    BookmarkEvent::OpenToRight(path) => {
+                        this.open_to_right(path.clone(), window, cx)
                     }
                     BookmarkEvent::Search(query) => this.show_search(query, Some(window), cx),
                     BookmarkEvent::Graph => this.show_graph(false, window, cx),
@@ -3283,14 +3300,35 @@ impl Workspace {
                         cx.notify();
                     }
                     BookmarkEvent::Url(url) => cx.open_url(url),
-                    BookmarkEvent::AddCurrent => this.start_bookmark_current_view(window, cx),
-                    BookmarkEvent::NewGroup => this.start_new_bookmark_group(window, cx),
+                    BookmarkEvent::Reveal(path) => this.reveal_in_navigation(path, window, cx),
+                    BookmarkEvent::AddCurrent { into } => {
+                        this.bookmark_into = into.clone();
+                        this.start_bookmark_current_view(window, cx);
+                        this.bookmark_into.clear();
+                    }
+                    BookmarkEvent::NewGroup { into } => this.new_bookmark_group(into, cx),
+                    BookmarkEvent::Edit(at) => this.start_edit_bookmark(at.clone(), window, cx),
                     BookmarkEvent::Remove(at) => {
                         let at = at.clone();
                         this.change_bookmarks(cx, move |b| {
                             b.remove_at(&at);
                         });
                     }
+                    BookmarkEvent::SetTitle { at, title } => {
+                        let (at, title) = (at.clone(), title.clone());
+                        this.change_bookmarks(cx, move |b| {
+                            b.update_at(&at, |item| item.set_title(&title));
+                        });
+                    }
+                    BookmarkEvent::Move { from, to } => {
+                        let (from, to) = (from.clone(), to.clone());
+                        this.change_bookmarks(cx, move |b| {
+                            b.move_item(&from, &to);
+                        });
+                    }
+                    // `workspace.json` goes out with the pane's filter in it
+                    // when the layout is saved, on the way out.
+                    BookmarkEvent::LeafState => {}
                 },
             ),
             cx.subscribe_in(
@@ -3455,6 +3493,7 @@ impl Workspace {
             explorer,
             search,
             bookmarks,
+            bookmark_into: Vec::new(),
             switcher,
             chooser,
             chooser_purpose: ChooserPurpose::default(),
@@ -7839,15 +7878,17 @@ impl Workspace {
                 }
             }
             PendingOp::UpdateLinks { from, to } => self.finish_rename(&from, &to, true, window, cx),
-            PendingOp::AddBookmark(draft) => {
+            PendingOp::AddBookmark(draft, into) => {
                 self.pending = None;
                 self.close_modal(window, cx);
-                self.finish_bookmark(draft, value, cx);
+                self.finish_bookmark(draft, into, value, cx);
             }
-            // Save on "Edit bookmark" changes nothing, as Obsidian's did.
-            PendingOp::EditBookmark(_) => {
+            // Save writes the title when it changed; left as it was, it
+            // writes nothing, as Obsidian's did.
+            PendingOp::EditBookmark(at) => {
                 self.pending = None;
                 self.close_modal(window, cx);
+                self.finish_edit_bookmark(at, value, cx);
             }
         }
     }
@@ -7859,11 +7900,11 @@ impl Workspace {
             Some(PendingOp::UpdateLinks { from, to }) => {
                 self.finish_rename(&from, &to, false, window, cx);
             }
-            Some(PendingOp::EditBookmark(path)) => {
+            Some(PendingOp::EditBookmark(at)) => {
                 self.pending = None;
                 self.close_modal(window, cx);
                 self.change_bookmarks(cx, move |b| {
-                    b.remove_last_file(&path);
+                    b.remove_at(&at);
                 });
             }
             _ => {}
@@ -7937,8 +7978,9 @@ impl Workspace {
             BookmarkDraft::Graph => placeholder.clone(),
             _ => String::new(),
         };
+        let into = std::mem::take(&mut self.bookmark_into);
         self.open_prompt(
-            PendingOp::AddBookmark(draft),
+            PendingOp::AddBookmark(draft, into),
             PromptSpec {
                 title: title.into(),
                 detail: detail.map(Into::into).into_iter().collect(),
@@ -7977,22 +8019,9 @@ impl Workspace {
             self.start_bookmark(BookmarkDraft::Folder(path.to_string()), window, cx);
             return;
         }
-        if state.bookmarks().has_file(path) {
-            let placeholder = Bookmark::file(path, None, None, 0).display_title();
-            self.open_prompt(
-                PendingOp::EditBookmark(path.to_string()),
-                PromptSpec {
-                    title: "Edit bookmark".into(),
-                    detail: vec![format!("Path: {placeholder}").into()],
-                    input: Some(String::new()),
-                    placeholder: placeholder.into(),
-                    confirm: "Save".into(),
-                    secondary: Some("Remove".into()),
-                    ..PromptSpec::default()
-                },
-                window,
-                cx,
-            );
+        let edit = last_file_bookmark(&state.bookmarks().items, path);
+        if let Some(at) = edit {
+            self.start_edit_bookmark(at, window, cx);
             return;
         }
         self.start_bookmark(
@@ -8005,14 +8034,98 @@ impl Workspace {
         );
     }
 
-    /// "New group": an empty group with the name typed.
-    fn start_new_bookmark_group(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        self.start_bookmark(BookmarkDraft::Tabs(Vec::new()), window, cx);
+    /// "New group": an "Untitled group" at the end of the top level, or of
+    /// the group whose menu asked, with its row's title open to be typed
+    /// over — no modal (2026-11-07 probe, `s12`).
+    fn new_bookmark_group(&mut self, into: &[usize], cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let len = if into.is_empty() {
+            state.bookmarks().items.len()
+        } else {
+            let group = state.bookmarks().get(into);
+            group.map(|g| g.items().len()).unwrap_or(0)
+        };
+        let mut at = into.to_vec();
+        at.push(len);
+        let group = Bookmark::group(Some("Untitled group"), Vec::new(), now_millis());
+        let target = at.clone();
+        self.change_bookmarks(cx, move |b| {
+            b.insert_at(&target, group);
+        });
+        self.left_visible = true;
+        self.left_tab = LeftTab::Bookmarks;
+        self.bookmarks.update(cx, |p, cx| p.start_rename(&at, cx));
+    }
+
+    /// "Edit bookmark" on an item: its path, query or url shown, the Title
+    /// field holding the title it has (empty, with the default as its
+    /// placeholder, when it has none), Remove, Cancel and Save
+    /// (2026-11-07 probe, `s11b`). Obsidian's modal also has a "Bookmark
+    /// group" dropdown, which this prompt cannot draw yet.
+    fn start_edit_bookmark(&mut self, at: Vec<usize>, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let Some(item) = state.bookmarks().get(&at) else {
+            return;
+        };
+        let mut fallback = item.clone();
+        fallback.clear_title();
+        let placeholder = fallback.display_title();
+        let detail = match item.kind() {
+            "search" => Some(format!("Query: {}", item.query().unwrap_or(""))),
+            "url" => Some(format!("URL: {}", item.url().unwrap_or(""))),
+            "file" | "folder" => Some(format!("Path: {placeholder}")),
+            _ => None,
+        };
+        self.open_prompt(
+            PendingOp::EditBookmark(at),
+            PromptSpec {
+                title: "Edit bookmark".into(),
+                detail: detail.map(Into::into).into_iter().collect(),
+                input: Some(item.title().unwrap_or("").to_string()),
+                placeholder: placeholder.into(),
+                confirm: "Save".into(),
+                secondary: Some("Remove".into()),
+                ..PromptSpec::default()
+            },
+            window,
+            cx,
+        );
+    }
+
+    fn finish_edit_bookmark(&mut self, at: Vec<usize>, title: &str, cx: &mut Context<Self>) {
+        let title = title.trim().to_string();
+        let current = self
+            .state
+            .as_ref()
+            .and_then(|s| s.bookmarks().get(&at))
+            .map(|i| i.title().unwrap_or("").to_string());
+        if current.as_deref() == Some(title.as_str()) {
+            return;
+        }
+        self.change_bookmarks(cx, move |b| {
+            b.update_at(&at, |item| {
+                if title.is_empty() && item.kind() != "graph" {
+                    item.clear_title();
+                } else if !title.is_empty() {
+                    item.set_title(&title);
+                }
+            });
+        });
     }
 
     /// The prompt answered: the item for the draft, with the typed title if
     /// any, appended and written.
-    fn finish_bookmark(&mut self, draft: BookmarkDraft, title: &str, cx: &mut Context<Self>) {
+    fn finish_bookmark(
+        &mut self,
+        draft: BookmarkDraft,
+        into: Vec<usize>,
+        title: &str,
+        cx: &mut Context<Self>,
+    ) {
         let Some(state) = self.state.clone() else {
             return;
         };
@@ -8043,7 +8156,19 @@ impl Workspace {
                 Bookmark::group(Some(&name), members, now_millis())
             }
         };
-        self.change_bookmarks(cx, move |b| b.push(item));
+        // Into a group: at the end of its members.
+        self.change_bookmarks(cx, move |b| {
+            if into.is_empty() {
+                b.push(item);
+            } else {
+                let len = b.get(&into).map(|g| g.items().len()).unwrap_or(0);
+                let mut at = into;
+                at.push(len);
+                if !b.insert_at(&at, item.clone()) {
+                    b.push(item);
+                }
+            }
+        });
     }
 
     /// Applies a change to the bookmarks, writes the file and redraws the
@@ -8064,9 +8189,23 @@ impl Workspace {
             return;
         };
         let items = state.bookmarks().items.clone();
+        // A bookmark of a note that is not there is not drawn.
+        let mut missing = std::collections::HashSet::new();
+        fn walk(items: &[Bookmark], vault: &Vault, out: &mut std::collections::HashSet<String>) {
+            for item in items {
+                match (item.kind(), item.path()) {
+                    ("file", Some(path)) if !vault.exists(path) => {
+                        out.insert(path.to_string());
+                    }
+                    ("group", _) => walk(&item.items(), vault, out),
+                    _ => {}
+                }
+            }
+        }
+        walk(&items, &state.vault(), &mut missing);
         let current = self.current.clone();
         self.bookmarks.update(cx, |b, cx| {
-            b.set_items(items, cx);
+            b.set_items(items, missing, cx);
             b.set_active(current, cx);
         });
     }
@@ -11233,6 +11372,9 @@ impl Workspace {
         if let Some(state) = leaf_state(layout, "left", "search") {
             self.search.update(cx, |s, cx| s.restore(state, cx));
         }
+        if let Some(state) = leaf_state(layout, "left", "bookmarks") {
+            self.bookmarks.update(cx, |b, cx| b.restore(state, cx));
+        }
         if let Some(state) = leaf_state(layout, "right", "backlink") {
             let b = &mut self.backlink_state;
             b.collapse_all = flag(state, "collapseAll");
@@ -11330,6 +11472,7 @@ impl Workspace {
             if let Some(left) = object.get_mut("left") {
                 set_explorer_leaf_state(left, sort, auto_reveal);
                 set_leaf_state(left, "search", &self.search.read(cx).leaf_state(cx));
+                set_leaf_state(left, "bookmarks", &self.bookmarks.read(cx).leaf_state(cx));
             }
         }
         // The Backlinks and Outgoing links leaves' own state, likewise.
@@ -11723,7 +11866,10 @@ impl Workspace {
         );
         left.insert("explorer".into(), self.explorer.read(cx).describe(rows));
         left.insert("search".into(), self.search.read(cx).describe(rows, cx));
-        left.insert("bookmarks".into(), self.bookmarks.read(cx).describe(rows));
+        left.insert(
+            "bookmarks".into(),
+            self.bookmarks.read(cx).describe(rows, cx),
+        );
 
         let mut right = Map::new();
         right.insert("visible".into(), json!(self.right_visible));
@@ -11948,11 +12094,11 @@ impl Workspace {
                 Some(PendingOp::UpdateLinks { from, to }) => {
                     json!({"op": "update-links", "from": from, "to": to})
                 }
-                Some(PendingOp::AddBookmark(draft)) => {
-                    json!({"op": "add-bookmark", "placeholder": draft.placeholder()})
+                Some(PendingOp::AddBookmark(draft, into)) => {
+                    json!({"op": "add-bookmark", "placeholder": draft.placeholder(), "into": into})
                 }
-                Some(PendingOp::EditBookmark(path)) => {
-                    json!({"op": "edit-bookmark", "path": path})
+                Some(PendingOp::EditBookmark(at)) => {
+                    json!({"op": "edit-bookmark", "at": at})
                 }
             },
         );
@@ -12415,10 +12561,6 @@ impl Workspace {
             )
     }
 
-    /// A pane's own header button: Obsidian's `nav-action-button`, 28 by
-    /// 24 with a 4 px radius, `--icon-color` at `--icon-opacity` until the
-    /// pointer is over it; an `is-active` one sits on the hover wash in
-    /// `--icon-color-focused` (probe of 2026-11-02, `clickable-icon.active`).
     fn nav_button(
         id: &'static str,
         icon_name: &'static str,
@@ -12426,41 +12568,7 @@ impl Workspace {
         active: bool,
         theme: &Theme,
     ) -> gpui::Stateful<gpui::Div> {
-        let t = &theme.tokens;
-        div()
-            .id(id)
-            .group(id)
-            .flex_shrink_0()
-            .w(px(28.))
-            .h(px(24.))
-            .flex()
-            .items_center()
-            .justify_center()
-            .rounded(px(4.))
-            .cursor_pointer()
-            .when(active, |d| d.bg(t.background_modifier_hover))
-            .hover(|s| s.bg(t.background_modifier_hover))
-            .tooltip(tooltip(label))
-            .child(
-                icon(
-                    icon_name,
-                    ICON_SIZE,
-                    if active {
-                        t.icon_color_focused
-                    } else {
-                        t.icon_color
-                    },
-                )
-                .opacity(if active {
-                    t.icon_opacity_active
-                } else {
-                    t.icon_opacity
-                })
-                .group_hover(id, |s| {
-                    s.opacity(t.icon_opacity_hover)
-                        .text_color(t.icon_color_hover)
-                }),
-            )
+        tree::nav_button(id, icon_name, label, active, theme)
     }
 
     /// The Backlinks pane: Obsidian's four header actions (collapse,
@@ -12721,6 +12829,12 @@ impl Workspace {
                     self.start_rename_property(name, window, cx);
                 }
             }
+            // The Bookmarks pane's own rows: its menu is drawn and picked
+            // in the pane, never through this one.
+            Pick::EditBookmark
+            | Pick::RemoveBookmark
+            | Pick::BookmarkActiveTab
+            | Pick::NewBookmarkGroup => {}
             Pick::DeleteProperty => {
                 if let file_menu::Target::Property { name, .. } = target {
                     self.delete_property_everywhere(name, cx);
@@ -13325,18 +13439,8 @@ impl Workspace {
 
     // ----- the Tags, All properties and Outline panes ---------------------------
 
-    /// Obsidian's `nav-header`: 40 px, 8 px of padding, the buttons
-    /// centred 2 px apart.
     fn pane_header() -> gpui::Div {
-        div()
-            .flex_shrink_0()
-            .h(px(HEADER_HEIGHT))
-            .p(px(8.))
-            .flex()
-            .flex_row()
-            .items_center()
-            .justify_center()
-            .gap(px(2.))
+        tree::header()
     }
 
     /// The filter field of a pane, by pane.
@@ -13740,44 +13844,12 @@ impl Workspace {
         cx: &mut Context<Self>,
     ) -> gpui::Div {
         let input = self.pane_filter(which).clone();
-        let has_text = !input.read(cx).text().is_empty();
-        // Obsidian's `search-input-container`: the field's text starts
-        // 30 px in, behind a magnifier at the left.
-        div().flex_shrink_0().px(px(8.)).pb(px(8.)).child(
-            div()
-                .relative()
-                .w_full()
-                .h(px(30.))
-                .child(input)
-                .child(
-                    div()
-                        .absolute()
-                        .left(px(8.))
-                        .top(px(0.))
-                        .h(px(30.))
-                        .flex()
-                        .items_center()
-                        .child(icon("search", 14., theme.tokens.text_muted)),
-                )
-                .children(has_text.then(|| {
-                    div()
-                        .id(("pane-filter-clear", which as usize))
-                        .absolute()
-                        .right(px(2.))
-                        .top(px(0.))
-                        .w(px(28.))
-                        .h(px(30.))
-                        .flex()
-                        .items_center()
-                        .justify_center()
-                        .cursor_pointer()
-                        .rounded_full()
-                        .tooltip(tooltip("Clear search"))
-                        .on_click(cx.listener(move |this, _, window, cx| {
-                            this.clear_pane_filter(which, window, cx)
-                        }))
-                        .child(icon("x", 14., theme.tokens.text_muted))
-                })),
+        tree::filter_field(
+            ("pane-filter-clear", which as usize),
+            input,
+            theme,
+            cx,
+            move |this, window, cx| this.clear_pane_filter(which, window, cx),
         )
     }
 
@@ -13880,14 +13952,6 @@ impl Workspace {
         )
     }
 
-    /// Obsidian's `tree-item-self`: 25 px tall at a 27 px pitch,
-    /// `padding: 4px 8px 4px 24px` with 17 px more on the left per level of
-    /// depth, an 8 px radius, 13 px muted text that brightens under the
-    /// pointer (or when `active`, the Outline's `is-active` mark), a faint
-    /// flair at the right edge, a fold triangle or an icon in the gutter
-    /// 20 px before the text, and an indentation guide for every level.
-    /// A `wrap` label wraps at 17 px per line; the others are cut with an
-    /// ellipsis.
     #[allow(clippy::too_many_arguments)]
     fn tree_row(
         id: (&'static str, usize),
@@ -13901,145 +13965,13 @@ impl Workspace {
         theme: &Theme,
         cx: &mut Context<Self>,
     ) -> gpui::Stateful<gpui::Div> {
-        let text_x = 24. + 17. * depth as f32;
-        let gutter = match (fold, icon_name) {
-            (Some((collapsed, on_fold)), _) => Some(
-                div()
-                    .id((id.0, id.1 + 1_000_000))
-                    .absolute()
-                    .left(px(text_x - 20.))
-                    .top(px(4.))
-                    .w(px(16.))
-                    .h(px(17.))
-                    .flex()
-                    .items_center()
-                    .justify_center()
-                    .opacity(0.85)
-                    .cursor_pointer()
-                    .on_click(cx.listener(move |this, _, _, cx| {
-                        on_fold(this, cx);
-                        cx.stop_propagation();
-                    }))
-                    .child(
-                        div()
-                            .text_color(theme.tokens.collapse_icon_color)
-                            .group_hover("tree-row", |s| {
-                                s.text_color(theme.tokens.icon_color_hover)
-                            })
-                            .child(icon(
-                                if collapsed {
-                                    "chevron-right"
-                                } else {
-                                    "chevron-down"
-                                },
-                                10.,
-                                theme.tokens.collapse_icon_color,
-                            )),
-                    ),
-            ),
-            (None, Some(name)) => Some(
-                div()
-                    .id((id.0, id.1 + 1_000_000))
-                    .absolute()
-                    .left(px(text_x - 20.))
-                    .top(px(4.))
-                    .w(px(16.))
-                    .h(px(17.))
-                    .flex()
-                    .items_center()
-                    .justify_center()
-                    .opacity(theme.tokens.icon_opacity)
-                    .child(icon(name, 14., theme.tokens.icon_color)),
-            ),
-            (None, None) => None,
-        };
-        div()
-            .id(id)
-            .group("tree-row")
-            .relative()
-            .w_full()
-            .flex_shrink_0()
-            .min_h(px(25.))
-            .mb(px(2.))
-            .pl(px(text_x))
-            .pr(px(8.))
-            .py(px(4.))
-            .flex()
-            .flex_row()
-            .items_start()
-            .rounded(px(8.))
-            .cursor_pointer()
-            // A `tree-item-self`: the nav item's colours (probe of
-            // 2026-11-02, `pane.tags.*`, `pane.outline.*`).
-            .when(active, |d| d.bg(theme.tokens.nav_item_background_active))
-            .hover(|s| s.bg(theme.tokens.nav_item_background_hover))
-            // The keyboard's row in the pane that has the keyboard:
-            // `box-shadow: 0 0 0 2px var(--background-modifier-border-focus)`,
-            // a ring outside the box, so nothing moves (2026-11-04 probe).
-            // Drawn as a 2 px border 2 px out, with the radius grown to
-            // match, since a gpui shadow fills its whole box.
-            .when(ring, |d| {
-                d.child(
-                    div()
-                        .absolute()
-                        .top(px(-2.))
-                        .left(px(-2.))
-                        .right(px(-2.))
-                        .bottom(px(-2.))
-                        .border_2()
-                        .border_color(theme.tokens.background_modifier_border_focus)
-                        .rounded(px(10.)),
-                )
-            })
-            // Obsidian's `tree-item-children` guides: a hairline 12 px in
-            // from each ancestor's text, the row's full pitch tall.
-            .children((1..=depth).map(|k| {
-                div()
-                    .absolute()
-                    .left(px(17. * k as f32 - 5.))
-                    .top(px(0.))
-                    .bottom(px(-2.))
-                    .w(px(1.))
-                    .bg(theme.tokens.nav_indentation_guide_color)
-            }))
-            .children(gutter)
-            .child(
-                div()
-                    .flex_1()
-                    .min_w_0()
-                    .text_size(px(FONT_UI_SMALL))
-                    .line_height(px(17.))
-                    .text_color(if active {
-                        theme.tokens.nav_item_color_active
-                    } else {
-                        theme.tokens.nav_item_color
-                    })
-                    .group_hover("tree-row", |s| {
-                        s.text_color(theme.tokens.nav_item_color_hover)
-                    })
-                    .child(label),
-            )
-            .children(flair.map(|count| {
-                div()
-                    .flex_shrink_0()
-                    .pl(px(4.))
-                    .pt(px(3.))
-                    .text_size(px(FONT_UI_SMALLER))
-                    .line_height(px(12.))
-                    .text_color(theme.tokens.text_faint)
-                    .group_hover("tree-row", |s| s.text_color(theme.tokens.text_muted))
-                    .child(count)
-            }))
+        tree::row(
+            id, depth, fold, icon_name, label, flair, active, ring, theme, cx,
+        )
     }
 
-    /// A one-line label cut with an ellipsis.
     fn tree_label(text: impl Into<SharedString>) -> gpui::AnyElement {
-        div()
-            .whitespace_nowrap()
-            .overflow_hidden()
-            .text_ellipsis()
-            .child(text.into())
-            .into_any_element()
+        tree::label(text)
     }
 
     /// The Tags pane: sort, nested, expand-all and search buttons, the
@@ -15097,12 +15029,8 @@ fn dock_current_view(layout: &Value, dock: &str) -> Option<String> {
     leaf.get("state")?.get("type")?.as_str().map(str::to_string)
 }
 
-/// A pane's filter field: Obsidian's `search-input-container`, its text
-/// 30 px in to leave room for the magnifier drawn over it.
 fn pane_filter_input(cx: &mut Context<TextInput>) -> TextInput {
-    let mut input = TextInput::new("Search...", cx);
-    input.set_pad_left(px(30.));
-    input
+    tree::filter_input(cx)
 }
 
 /// Scrolls the Outline so the marked row is in view with Obsidian's
@@ -16052,6 +15980,23 @@ impl Render for Workspace {
             .children(notices);
         client_frame(content.into_any_element(), &theme, window)
     }
+}
+
+/// The index path of the plain bookmark of `path` added last, wherever it
+/// sits: the one Obsidian's lookup by path finds, and so the one "Edit
+/// bookmark" opens on for a note already bookmarked.
+fn last_file_bookmark(items: &[Bookmark], path: &str) -> Option<Vec<usize>> {
+    for ix in (0..items.len()).rev() {
+        if items[ix].kind() == "group" {
+            if let Some(mut rest) = last_file_bookmark(&items[ix].items(), path) {
+                rest.insert(0, ix);
+                return Some(rest);
+            }
+        } else if items[ix].is_file(path) {
+            return Some(vec![ix]);
+        }
+    }
+    None
 }
 
 #[cfg(test)]

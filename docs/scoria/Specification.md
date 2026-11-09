@@ -5077,6 +5077,80 @@ pane when they were tried); the order of `folder` and `url` keys as the UI
 writes them; the "Bookmark group" dropdown; renaming and dragging items; the
 search filter.
 
+## Observed bookmarks pane, Obsidian 1.15.0
+
+`tools/obsidian-probe/bookmarks-pane.mjs`, run 2026-11-07 in a scratch vault under its own
+`--user-data-dir`; the record is `tools/obsidian-probe/results/2026-11-07-bookmarks-pane.json`
+with a screenshot per state beside it. It settles most of what
+[[#Observed bookmarks behavior, Obsidian 1.14.4 (installer build 1.13.7)]] left unprobed.
+
+**The pane at rest.** The `nav-header` is the dock panes' own: four `nav-action-button`s, 28 by
+24, centred — "Bookmark the active tab..." (`lucide-bookmark-plus`), "New group"
+(`lucide-folder-plus`), "Collapse all" (`lucide-chevrons-down-up`, which becomes "Expand all" with
+`lucide-chevrons-up-down` once every group is folded), "Show search filter" (`lucide-search`,
+`is-active` while the filter shows). The first row sits 4 px under the header. Every row is a
+`tree-item-self bookmark is-clickable`, 25 px at a 27 px pitch, `padding: 4px 8px 4px 24px` plus
+17 px a level, radius 8, `--nav-item-color` brightening to `--nav-item-color-hover` on the
+`--nav-item-background-hover` wash. The gutter icon is 16 by 17 at `--icon-opacity` (.85):
+`lucide-file` for a note or an attachment, `lucide-heading` for a heading, `lucide-toy-brick` for a
+block, `lucide-folder`, `lucide-search`, `lucide-git-fork` for the graph and `lucide-globe-2` for a
+url; a group (`mod-collapsible`) has the `right-triangle` fold in that place, turned a quarter when
+folded, and its members sit behind the 1 px indentation guide. **Titles wrap**
+(`white-space: pre-wrap`); nothing is cut with an ellipsis. A note's title drops `.md`, an
+attachment keeps its extension (`Image.png`). **A bookmark of a file that is not in the vault is
+not drawn**: its row is in the DOM with `display: none`. The open note's own row is `is-active`
+(the wash, the bright text); its heading and block rows are not, and nothing above a marked row in
+a group is marked. With no items the pane says "No bookmarks found", centred, muted.
+
+**Clicks.** A row opens its target; Ctrl and the middle button open a note in a new tab. A click
+anywhere on a group row folds it, the triangle included. Folds are not written to `workspace.json`:
+the leaf's state is only `{"showSearch", "searchQuery"}`. A folder row shows the Files pane with
+the folder focused. Ctrl over a note row raises the page preview.
+
+**The menus**, by kind, with their icons (separators as `---`; Obsidian writes two before Remove
+and hides the second, so one line shows):
+
+| Row | Items |
+| --- | --- |
+| note, heading, block, attachment | Open in new tab (`file-plus`) · Open to the right (`separator-vertical`) · Open in new window (`picture-in-picture-2`) --- Rename (`pencil`) · Edit... (`wrench`) --- Reveal file in navigation (`folder-open`) --- Remove (`trash-2`) |
+| folder | Rename · Edit... --- Reveal file in navigation --- Remove |
+| search, url | Rename · Edit... --- Remove |
+| graph | the three open rows --- Rename · Edit... --- Remove |
+| group | the three open rows --- Rename · Bookmark the active tab... (`bookmark-plus`) · New group (`folder-plus`) --- Remove |
+| the pane's empty space | New group |
+
+The right-clicked row wears `has-active-menu`, a ring, while its menu is up. Escape closes a menu.
+
+**Rename is on the row.** The label becomes `contenteditable` with its text selected and the row
+takes `is-being-renamed` (a 2 px `--interactive-accent` ring). Enter or a click elsewhere commits;
+Escape abandons; an emptied field writes nothing. A title typed on a row is written as `title`, last
+when the item had none (`type, ctime, path, title`). **New group** writes
+`{"type": "group", "ctime", "items": [], "title": "Untitled group"}` at the end of the list and
+opens that row's title for typing, with no modal.
+
+**Edit... is "Edit bookmark"**: setting rows — Path (a disabled field holding `Alpha`,
+`Alpha#Second heading`), URL or Query; Title (holding the title, or empty with the default name as
+placeholder); "Bookmark group" (a dropdown of the groups, nested ones indented with non-breaking
+spaces) — then Remove (`mod-destructive`, on the left), Cancel, Save.
+
+**The filter** is the panes' `search-input-container` ("Search...", a clear button). It keeps the
+rows whose title holds the query, ignoring case, and the groups above them: `al` kept the three
+Alpha rows and the `alpha` search, `beta` kept Group one over Beta, `del` Group one › Nested group ›
+Delta. Nothing is highlighted. Escape empties it and hides it.
+
+**The keyboard** is the dock trees' ([[#Observed dock pane menus and keyboard, Obsidian 1.14.5]]):
+Up and Down move `has-focus`, Right and Left fold, Home and End do nothing, Enter opens.
+
+**Drags.** A row drags with `text/plain` of its title, the row `is-selected is-being-dragged`
+(accent fill, white text) under a 300 px `drag-ghost`. Over a row's top edge a `drop-indicator`
+(a 4 px accent bar) marks the place above it; over a group's middle the group takes
+`is-being-dragged-over` (the accent at a tenth) and the drop makes the item the group's **first**
+member. A note dragged in from the Files pane is added as a new `file` item where it is dropped.
+
+**Unprobed:** where a drop over a row's lower half or a group's edges lands (taken as below the row,
+and beside the group, by halves and quarters); what the filter does to folded groups; what a
+group's open rows do; Remove on a group with members.
+
 ## Observed file explorer header behavior, Obsidian 1.14.4 (installer build 1.13.7)
 
 Read from a running Obsidian on Linux over CDP on 2026-10-21 with

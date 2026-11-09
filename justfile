@@ -26,7 +26,7 @@ test-lib:
 roundtrip vault:
     SCORIA_ROUNDTRIP_VAULT="{{vault}}" cargo test -p scoria-text --test writer_roundtrip
 
-gate_vault := env("SCORIA_GATE_VAULT", home_directory() / "bstore2/raga/plmcrzy/PLMCRZY")
+gate_vault := env("SCORIA_GATE_VAULT")
 
 # The Writer gate's daily check: the harness, then what moved in both vaults
 gate-check:

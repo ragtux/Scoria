@@ -18,14 +18,14 @@ corpus and over the real vault, green again on 2026-11-04 after the themes, high
 Bases work that landed since [[Development#The gate run opens, 2026-10-18]]. Nothing is
 written to the vault — every edit happens in a buffer in memory.
 
-**The mixed-use half has not run.** Not for want of a blocker: PLMCRZY was registered in
+**The mixed-use half has not run.** Not for want of a blocker: the gate vault was registered in
 Obsidian on 2026-10-22 12:50 (which is what created its `app.json`, `appearance.json` and
 `core-plugins.json`), so the one thing the October note was waiting on is done. The reason
 is simpler — nothing has been edited in that vault since, so the clean
 `diff -r snapshot-2026-10-25` is the diff of an inert folder. **A clean diff over a vault
 nobody touched is zero evidence, not a pass.** That is the whole of what this week is for.
 
-One thing the registration already bought: PLMCRZY's `.obsidian` now holds four modelled
+One thing the registration already bought: the gate vault's `.obsidian` now holds four modelled
 files, so the config property covers a real person's set rather than passing vacuously the
 way [[Development#Four small entries and a URI, 2026-11-02]] recorded.
 
@@ -33,7 +33,7 @@ way [[Development#Four small entries and a URI, 2026-11-02]] recorded.
 
 | Vault | Writers | Evidence | Weight |
 | --- | --- | --- | --- |
-| `~/bstore2/raga/plmcrzy/PLMCRZY` | Scoria and Obsidian only | snapshot and `diff -r` | **the verdict rests here** |
+| `$SCORIA_GATE_VAULT` | Scoria and Obsidian only | snapshot and `diff -r` | **the verdict rests here** |
 | `docs/scoria` | Scoria, Obsidian *and* the repo's tooling | git | watched, never decisive |
 
 The deciding vault is the thin one because attribution is what the gate needs: a moved byte
@@ -52,7 +52,7 @@ just gate-baseline     # today's snapshot, so tomorrow's diff is one day wide
 
 `tools/writer-gate/gate.sh` is the whole of it; `just gate-status` says what has been
 snapshotted and whether the vault is still registered. Snapshots and hash manifests live in
-`~/bstore2/raga/scoria-gate` and are deliberately copies rather than hashes alone: a hash
+`$SCORIA_GATE_DIR` and are deliberately copies rather than hashes alone: a hash
 says a file moved, and the next question is always *which bytes*. `gate.sh check --from-first`
 gives the cumulative diff across the whole run.
 
@@ -145,10 +145,10 @@ cumulative diff, and the verdict in the log.
 
 ## Day 1, 2026-11-04
 
-**The Scoria half passes.** Six notes, three in Source mode (`Tech Stack`, `Infrastructure`,
-`Legacy Projects`) and three in Live Preview (`Business Model`, `Report Engine`,
-`Data Architecture`), each typed into, saved, undone and saved again. After every undo all
-seventeen files matched `plmcrzy-2026-11-04.sha256` exactly. Live Preview's display transform
+**The Scoria half passes.** Six notes, three in Source mode (`Note A`, `Note B`,
+`Note C`) and three in Live Preview (`Note D`, `Note E`,
+`Note F`), each typed into, saved, undone and saved again. After every undo all
+seventeen files matched `<vault>-2026-11-04.sha256` exactly. Live Preview's display transform
 does not leak into the bytes: its writes were a single added line and nothing else. Autosave
 fired on its own two seconds after the last keystroke, with no explicit save, and wrote the
 same bytes. A quit and relaunch read the note back unchanged. The app was built from HEAD
@@ -189,7 +189,7 @@ comment and `gate.sh`'s header. The dated sections of [[Development]] keep what 
 when they were written, which is what a log is for.
 
 **A driving lesson, not a bug.** `end` on a soft-wrapped paragraph goes to the end of the
-*visual* row, so the first attempt typed into the middle of `[[Web Application]]` instead of
+*visual* row, so the first attempt typed into the middle of `[[Note G]]` instead of
 at the line's end. That is CodeMirror's behaviour and so Obsidian's, and
 `scoria-text/src/wrap.rs` states the rule deliberately: "Home, End, Up, Down, the selection
 highlight and the painted caret all have to agree". One `ctrl-z` restored the bytes exactly.
@@ -197,8 +197,8 @@ Use `ctrl-end`, or the find panel, to place a cursor without wrap ambiguity.
 
 ### The Obsidian half, and the verdict
 
-Five notes appended to in Obsidian (`Business Model`, `Data Architecture`, `Infrastructure`,
-`Legacy Projects`, `Tech Stack`), `vimMode` turned off, and `PLMCRZY Mindmap.canvas` opened.
+Five notes appended to in Obsidian (`Note D`, `Note F`, `Note B`,
+`Note C`, `Note A`), `vimMode` turned off, and `Mindmap.canvas` opened.
 **Day 1 passes:** everything the diff reported is a person's edit in one of the two apps. Nothing
 moved that nobody touched, bar the two known cases below.
 
@@ -211,7 +211,7 @@ this morning:
   `opening_every_note_and_saving_it_changes_no_bytes` passes over all five.
 - **`app.json` now holds a non-default value** (`"vimMode": false`, written by Obsidian), so the
   config round trip covers a value a person actually changed rather than a default.
-- **`PLMCRZY Mindmap.canvas` is now in Obsidian's own layout.** Obsidian rewrote the
+- **`Mindmap.canvas` is now in Obsidian's own layout.** Obsidian rewrote the
   pretty-printed JSON into compact bytes on opening it; the content is identical to the key
   (29 nodes, 30 edges, semantically equal). A canvas authored elsewhere was skipped by the
   harness before; this one is not.
@@ -248,27 +248,26 @@ seven days to anyone who has not read this paragraph.
 **Every sheet item for day 2 ran in Scoria, and the writer is clean on all of them.** The deciding
 evidence is below; the one failure the day found is a *default*, not a writer.
 
-**The rename is byte-exact, and it is its own inverse.** `Data Architecture` → `Data Lake
-Architecture`, the richest rename the vault has: 6 inbound links in 6 files, two of them aliased.
+**The rename is byte-exact, and it is its own inverse.** `Note F` → `Note F renamed`, the richest rename the vault has: 6 inbound links in 6 files, two of them aliased.
 The notice said "Updated 6 links in 6 files." and the diff was exactly six one-line changes —
-`[[Data Architecture|Build sheet data]]` → `[[Data Lake Architecture|Build sheet data]]` and
-`[[Data Architecture|per-year archives]]` the same, so **both aliases survived**; the renamed note's
-own bytes were untouched, its `# Data Architecture` heading included, which is right because
+`[[Note F|first alias]]` → `[[Note F renamed|first alias]]` and
+`[[Note F|second alias]]` the same, so **both aliases survived**; the renamed note's
+own bytes were untouched, its `# Note F` heading included, which is right because
 Obsidian renames the file and not the text in it. Renaming it back then restored
 **every one of the six files to byte-identical with `snapshot-2026-11-04b`** — not one byte moved
 across the pair. An operation and its inverse returning the original bytes is the same shape as
 day 1's type-save-undo-save, and on a different write path.
 
-**The link rewriter preserves a missing trailing newline.** `Infrastructure.md` ends `a` and
-`Tech Stack.md` ends `1`, two of the five notes Obsidian left without a final newline on day 1;
-both had a link rewritten and both still end that way, while `PLMCRZY.md`, which has one, kept it.
+**The link rewriter preserves a missing trailing newline.** `Note B.md` ends `a` and
+`Note A.md` ends `1`, two of the five notes Obsidian left without a final newline on day 1;
+both had a link rewritten and both still end that way, while the vault's home note, which has one, kept it.
 Day 1 proved the *editor* preserves this. The rewriter never goes through the editor — it reads a
 file, replaces a link and writes it back — so this is a second write path held to the same property,
 and the one the traps section above could not reach this week.
 
-**A move rewrites nothing, as the format demands.** `Legacy Projects.md` (4 inbound links) into a
+**A move rewrites nothing, as the format demands.** `Note C.md` (4 inbound links) into a
 new `Archive/`: the file moved, its bytes identical, and all four linking files were left alone.
-With `newLinkFormat` absent (so `shortest`) and a unique basename, `[[Legacy Projects]]` still
+With `newLinkFormat` absent (so `shortest`) and a unique basename, `[[Note C]]` still
 resolves from anywhere, so there is nothing to rewrite — which is what
 `rename_without_updating_links_leaves_them_dangling` already asserts in the unit tests
 (`rename_preview("B.md", "Sub/B.md")` is `(0, 0)`) and what Obsidian was observed doing on
@@ -276,12 +275,12 @@ resolves from anywhere, so there is nothing to rewrite — which is what
 
 **A delete rewrites nothing either, and goes to the system trash.** `Day 2 Scratch.md` was deleted
 with the confirmation `promptDelete` defaults to; it landed in `~/.local/share/Trash/files/`, which
-is `trashOption`'s `system` default, and `Legacy Projects.md` — which links to it — came back with
+is `trashOption`'s `system` default, and `Note C.md` — which links to it — came back with
 the **same sha256** it had before. The link then reported as uncreated (`file-plus`, no path) in
 Outgoing links. Obsidian does not rewrite links on a delete, and neither does Scoria.
 
 **A note created from an unresolved link lands at the vault root, not beside its referrer.**
-`[[Day 2 Scratch]]` was typed into `Archive/Legacy Projects.md` and followed from there; the note
+`[[Day 2 Scratch]]` was typed into `Archive/Note C.md` and followed from there; the note
 was created at the root, which is `newFileLocation`'s `root` default — the folder of the current
 file would have been `Archive/`. Typing the link also showed the one auto-pair rule supplying `]]`,
 and appending to a note with no final newline left it with none.
@@ -302,7 +301,7 @@ the gate vault:
 - Obsidian's own row for the setting is "Turn off to be prompted to update links after renaming a
   file" — so off is the prompting state, and the prompt is the thing a default decides.
 - It rendered that toggle **off** on a vault whose `app.json` the probe wrote as `{}`
-  (`tools/obsidian-probe/results/2026-10-25-ui-rules.json`), which is PLMCRZY's situation exactly.
+  (`tools/obsidian-probe/results/2026-10-25-ui-rules.json`), which is the gate vault's situation exactly.
 - The 2026-10-25 drag pass, with the key set to `false` on purpose, saw the **Update links** modal
   on every rename that changed a basename.
 
@@ -323,7 +322,7 @@ reasoning in the comment. Nothing else had to change: `rename_with_links` has ha
 ask-path since the file operations landed — it previews the rename, skips the question when no link
 would move, and opens an "Update links?" prompt otherwise — and **one inverted default had made all
 of it dead code on every vault that has never written the key.** Rebuilt, the inverse rename on
-PLMCRZY raised the prompt (`op: "update-links"`) for the first time, and confirming it restored the
+The gate vault raised the prompt (`op: "update-links"`) for the first time, and confirming it restored the
 six files byte-for-byte.
 
 What the prompt is *not* is Obsidian's: two buttons where Obsidian has three, its own sentence, and
@@ -346,7 +345,7 @@ and `hotkeys.json` are still owed by days 3, 4 and 7.
 ### One claim withdrawn before it was filed
 
 The "Move file to…" chooser looked like it was missing Obsidian's vault-root row: with
-`Legacy Projects.md` at the root it offered only `Archive`. With the file inside `Archive` it offers
+`Note C.md` at the root it offered only `Archive`. With the file inside `Archive` it offers
 `/`. The chooser excludes the folder the file is already in, and the first reading was of a chooser
 doing the right thing. Whether Obsidian also excludes the current parent is unprobed — recorded as
 a question, not a gap.
@@ -355,7 +354,7 @@ a question, not a gap.
 
 Run by hand, 2026-11-05 00:04–00:08. The probe harness could not do it:
 `tools/obsidian-probe/README.md` forbids exactly this use — "Never point it at a real vault: not the
-gate vault (`~/bstore2/raga/plmcrzy/PLMCRZY`) while a byte-level gate run is open" — and the rule is
+gate vault (`$SCORIA_GATE_VAULT`) while a byte-level gate run is open" — and the rule is
 right, because a probe script loose in the deciding vault would put a third author in a folder whose
 whole value is that it has two. So this half is a person's, and two of its four answers are a
 person's eyes.
@@ -366,10 +365,10 @@ at all.
 
 **The two link rewriters are byte-identical on a real vault.** This is the day's sharpest result and
 the one only Obsidian could settle. The 6 linking files were rewritten by Obsidian in a single batch
-at `00:06:02.899`–`.906`, and `Data Architecture.md` itself was *not* touched — its mtime is still
+at `00:06:02.899`–`.906`, and `Note F.md` itself was *not* touched — its mtime is still
 day 1's `21:03:06`, which is a rename's signature, since renaming a file is a directory operation
 and the links live in the other files. All six then verified **OK** against
-`plmcrzy-2026-11-04b.sha256`. So the chain is:
+`<vault>-2026-11-04b.sha256`. So the chain is:
 
 | Step | Result |
 | --- | --- |
@@ -378,12 +377,12 @@ and the links live in the other files. All six then verified **OK** against
 | Obsidian renamed away and back | **byte-identical to the baseline** |
 
 Both rewriters are exact inverses of themselves, and they agree with each other on the same six
-lines — `[[Data Architecture|Build sheet data]]` and `[[Data Architecture|per-year archives]]`
+lines — `[[Note F|first alias]]` and `[[Note F|second alias]]`
 included, so they agree about aliases too. Only the last write's mtime survives, which is why two
 renames show as one batch.
 
 **The modal appeared, which settles the default on this vault.** Asked whether a dialog came up on
-the rename, the answer was yes. That is the premise of the fix above, now **observed on PLMCRZY
+the rename, the answer was yes. That is the premise of the fix above, now **observed on the gate vault
 rather than inferred from a scratch vault** — and it settles the toggle without anyone having to
 find it, because the dialog only exists when the setting is off. `app.json` is the corroboration:
 it still holds nothing but `vimMode`, so the button pressed was **Just once** and not Always
@@ -408,7 +407,7 @@ recorded above, fired by opening a settings pane. mtime moved, not one byte did,
 attributed and dismissed.
 
 **What is left of the vault's day 2:** an empty `Archive/`, an empty `Day 2 New Note.md`, the empty
-`this is a new note!.md`, and the `See also: [[Day 2 Scratch]]` line in `Legacy Projects.md` — the
+`this is a new note!.md`, and the `See also: [[Day 2 Scratch]]` line in `Note C.md` — the
 vault's first unresolved link, which the later days can use. Every one of them a person's edit.
 
 **Day 3 is tables and properties**, and it is the one that needs the vault's lack of frontmatter:
@@ -417,7 +416,7 @@ properties have to be created rather than edited, and setting a property's type 
 
 ### What the day left in the vault
 
-Deliberate, and all of it a person's edit: `Legacy Projects.md` carries a
+Deliberate, and all of it a person's edit: `Note C.md` carries a
 `See also: [[Day 2 Scratch]]` line whose target was deleted, so the vault now has its first
 unresolved link — useful for the later days; an empty `Archive/` folder and an empty
 `Day 2 New Note.md`, the artifacts of the two Files-header items. Delete any of the three if you do
@@ -429,6 +428,66 @@ delete was still tested against inbound links. The narrowing costs the gate noth
 Obsidian rewrites no links on a delete, so a delete's only byte is the file's own disappearance —
 and it is recorded here rather than left as a silent substitution.
 
+## Day 3, 2026-11-08
+
+**The Scoria half passes; the Obsidian half has not run.** Tables and properties, driven over the
+control socket on `Note F`, the vault's note with the most tables, in Source mode with the cursor in
+the first table's first body row. The binary was rebuilt from the working tree first, as on day 1.
+
+**Every table command run is byte-exact against its own undo.** For each of fourteen of the fifteen commands the file on
+disk was read after autosave, and compared with `snapshot-2026-11-05`, then the command was undone and
+the file compared again: *add row above and below, move row down, move row up, duplicate row, delete
+row, add column left and right, move column right, duplicate column, delete column, and align left,
+center and right*. Every command moved bytes the way an edit should, and every undo returned the file
+**byte-identical to the snapshot** (`cmp`, not a hash). Two things worth knowing about what they did:
+
+- **Every table command re-pads the whole table.** Adding a row to a two-column table rewrote the header
+  and the delimiter row to the widest cell (a header of two short cells became one padded to the widest cell in each column). That is Obsidian's behaviour too, and it is why the diff of a
+  one-row edit shows the header changed.
+- **`diff` hunks overstate a move.** Move row down reported `9,10c9,11`, which read like an added line.
+  The line count was unchanged (91 before and after) and the rows had simply swapped.
+
+Not covered: only one note's tables, and *Move column left* was not run (the cursor sat in the first
+column, where it has nothing to move past). The other eight notes with tables are untested this week.
+
+**One question for the Obsidian half.** *Move row up* on the first body row swapped it with the header:
+the bold first body row became the header and the old header became a body row. Whether Obsidian
+does that, refuses, or does nothing is unprobed. It is an edit, not a stray byte, so the gate is not
+affected, but it is a question for a person at Obsidian.
+
+**Properties.** `markdown:add-metadata-property` gave the note its first front matter:
+`---`, `status:`, `---` and nothing else, the empty value Obsidian writes too. It is the only change to
+the note's bytes this day. Folding it with `editor:toggle-fold-properties` and unfolding it again left
+the note's bytes alone, as a fold lives in the view and not the file.
+
+A driving error cost a few undos and is recorded because it looks like a writer fault: Enter after the
+property's name commits the name with an empty value, so the "draft" typed next landed in the note body
+after the closing fence, not in the value. Three `ctrl-z` returned the file to the front matter alone.
+It was not the writer's.
+
+**`types.json` now exists, and it took a real bug to get it.** Setting a property's type from the All
+properties row's menu is what writes the file, and in Scoria that did nothing: *Property type ▸* opened
+its submenu, a click on *List* closed the whole menu, and nothing was written. The cause was in
+`file_menu.rs`. The menu closes on a press outside its list box, gpui decides "outside" from the list's
+own bounds, and the submenu is drawn beside the list, outside them, so a press on a submenu row closed
+the menu on the way down, before the click that picks the row arrived. The first fix, a flag set while the
+pointer was over the submenu, did not work either: the flag was made afresh in every render, and gpui
+reports a hover only when it changes, so after the re-render the submenu's own opening causes it read
+`false` again. A temporary log of the three handlers showed `submenu hover true` followed by
+`mouse_down_out over_submenu=false` on every click, which is what gave it away; the flag now outlives the
+frame. Driven by hand afterwards, Checkbox and List wrote `"checkbox"` and `"multitext"`. The bug never
+touched a vault's bytes: it was a menu that did nothing.
+
+The file is `{ "types": { "status": "multitext" } }`, pretty-printed with a two-space indent. It is the
+first real copy of `types.json` the harness has had, and `every_config_obsidian_saved_is_written_back_byte_identical`
+now covers it: the sixteen properties pass with the vault named. It was written by Scoria, so it is
+Scoria's idea of the format and not yet Obsidian's. The Obsidian half should set a type in Obsidian and
+compare, which is the check that matters.
+
+**What is left for the Obsidian half:** the same table commands in Obsidian on the same notes (and the
+*Move row up* question above), the property's value edited in Obsidian's Properties pane, and a property
+type set there, to compare `types.json` byte for byte against Scoria's. Then `just gate-baseline`.
+
 ## The log
 
 One row per day. "Moved" is what the diff reported; "author" is the answer to the two
@@ -437,9 +496,9 @@ questions above.
 | Day | Date | Scoria half | Obsidian half | Moved | Author | Verdict |
 | --- | --- | --- | --- | --- | --- | --- |
 | 0 | 2026-11-04 | — | — | nothing (vault inert since 10-22) | — | baseline `snapshot-2026-11-04` taken, harness green at 15 properties |
-| 1 | 2026-11-04 | six notes, 3 source + 3 Live Preview: typed, saved, undone, saved | five notes appended to; `vimMode` off; `PLMCRZY Mindmap.canvas` opened | 5 notes +1 line each (no trailing newline now), `app.json`, the canvas rewritten compact, `workspace.json` | every one a person's edit in one of the two apps, bar the canvas (Obsidian normalizing a file authored elsewhere) and `workspace.json` (both apps, every session) | **passes** — nothing moved that nobody touched; the harness's canvas failure was the harness's, not the writer's |
-| 2 | 2026-11-05 | rename with 6 aliased inbound links and back; move into a new folder and back; new folder; new note; note created from an unresolved link; delete; three sort orders | renamed `Data Architecture` and back (the modal appeared, **Just once**), new note named on the row; the three `.obsidian` files touched | the 6 link lines rewritten by each app and back to byte-identical both times; `Archive/`, `Day 2 New Note.md`, `this is a new note!.md`, one typed line in `Legacy Projects.md` | every one a person's edit in one of the two apps; the three config files moved mtimes and no bytes | **passes** — and the two link rewriters proved byte-identical on a real vault. `alwaysUpdateLinks` defaulted on where Obsidian defaults off, so Scoria's rename rewrote 6 files silently instead of asking; fixed, the ask-path it had made unreachable now runs, and the modal Obsidian showed confirms the default on this vault |
-| 3 |  |  |  |  |  |  |
+| 1 | 2026-11-04 | six notes, 3 source + 3 Live Preview: typed, saved, undone, saved | five notes appended to; `vimMode` off; `Mindmap.canvas` opened | 5 notes +1 line each (no trailing newline now), `app.json`, the canvas rewritten compact, `workspace.json` | every one a person's edit in one of the two apps, bar the canvas (Obsidian normalizing a file authored elsewhere) and `workspace.json` (both apps, every session) | **passes** — nothing moved that nobody touched; the harness's canvas failure was the harness's, not the writer's |
+| 2 | 2026-11-05 | rename with 6 aliased inbound links and back; move into a new folder and back; new folder; new note; note created from an unresolved link; delete; three sort orders | renamed `Note F` and back (the modal appeared, **Just once**), new note named on the row; the three `.obsidian` files touched | the 6 link lines rewritten by each app and back to byte-identical both times; `Archive/`, `Day 2 New Note.md`, `this is a new note!.md`, one typed line in `Note C.md` | every one a person's edit in one of the two apps; the three config files moved mtimes and no bytes | **passes** — and the two link rewriters proved byte-identical on a real vault. `alwaysUpdateLinks` defaulted on where Obsidian defaults off, so Scoria's rename rewrote 6 files silently instead of asking; fixed, the ask-path it had made unreachable now runs, and the modal Obsidian showed confirms the default on this vault |
+| 3 | 2026-11-08 | 14 of the 15 table commands on `Note F`, each checked and undone to byte-identical; first front matter added, folded and unfolded; property type set from the sidebar menu (Checkbox, then List) | not run | front matter on `Note F` (`---`, `status:`, `---`), `.obsidian/types.json` created | both a person's edit in Scoria; nothing moved that nobody touched | **Scoria half passes** — and a menu bug found and fixed (a click on a submenu row closed the menu and wrote nothing), which is what produced the first `types.json` |
 | 4 |  |  |  |  |  |  |
 | 5 |  |  |  |  |  |  |
 | 6 |  |  |  |  |  |  |

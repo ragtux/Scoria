@@ -11,7 +11,7 @@
 #
 # Two vaults, for the reason recorded in [[Writer gate run]]:
 #
-#   PLMCRZY    the deciding vault. Only Scoria and Obsidian ever write to it,
+#   the gate vault  the deciding vault. Only Scoria and Obsidian ever write to it,
 #              so a moved byte has exactly two suspects. Snapshot and diff.
 #   docs/scoria the vault that is actually lived in, watched through git --
 #              free evidence, but repo tooling writes there too, so a moved
@@ -28,8 +28,8 @@
 #
 set -euo pipefail
 
-GATE_DIR="${SCORIA_GATE_DIR:-$HOME/bstore2/raga/scoria-gate}"
-VAULT="${SCORIA_GATE_VAULT:-$HOME/bstore2/raga/plmcrzy/PLMCRZY}"
+GATE_DIR="${SCORIA_GATE_DIR:-$HOME/.local/share/scoria-gate}"
+VAULT="${SCORIA_GATE_VAULT:?set SCORIA_GATE_VAULT to the gate vault (the real vault the gate runs on)}"
 REPO="$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)"
 DOCS="$REPO/docs/scoria"
 EXCLUDE=workspace.json
@@ -56,7 +56,7 @@ cmd_baseline() {
 
     # A day often needs two snapshots -- the morning baseline and the one that
     # closes the day after both apps have run -- so a taken name gets a letter
-    # the way `plmcrzy-2026-10-18b.sha256` already does, rather than refusing.
+    # the way `<vault>-2026-10-18b.sha256` already does, rather than refusing.
     local dest="$GATE_DIR/snapshot-$date"
     if [ -e "$dest" ]; then
         local suffix

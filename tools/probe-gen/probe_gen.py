@@ -784,7 +784,7 @@ def guard_real_vault(vault):
     """Never render into a vault somebody cares about."""
     resolved = vault.resolve()
     for forbidden in (
-        Path.home() / "bstore2/raga/plmcrzy",
+        Path(os.environ.get("SCORIA_GATE_VAULT", "/nonexistent-gate-vault")),
         REPO / "docs/scoria",
         REPO / "docs/scoria-demo",
         CORPUS / "vault",

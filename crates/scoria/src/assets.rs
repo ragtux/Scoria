@@ -157,6 +157,11 @@ icons!(
     "arrow-down-wide-narrow",
     "circle-x",
     "circle-check-big",
+    "bookmark-plus",
+    "folder",
+    "globe-2",
+    "toy-brick",
+    "wrench",
 );
 
 /// The logo, the one bundled asset that is not a monochrome icon. It is

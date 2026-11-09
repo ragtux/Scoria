@@ -48,6 +48,7 @@ mod switcher;
 mod text_input;
 mod theme;
 mod title_field;
+mod tree;
 mod uri;
 mod vaults;
 mod watch;

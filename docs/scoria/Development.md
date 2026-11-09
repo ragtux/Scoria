@@ -328,6 +328,43 @@ uses behave as Obsidian's do.
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
 
+### The Bookmarks pane, against Obsidian 1.15.0, 2026-11-07
+
+The pane was the last dock pane never measured: text glyphs for icons, 24 px rows cut with an
+ellipsis, a heading-style header, a one-item menu. `tools/obsidian-probe/bookmarks-pane.mjs` drove a
+real 1.15.0 over it under its own `--user-data-dir`, and the pane is rebuilt to the record
+([[Specification#Observed bookmarks pane, Obsidian 1.15.0]]).
+
+**One tree for every dock pane.** `nav_button`, `pane_header`, `tree_row` and the filter field moved
+out of `workspace.rs` into `crates/scoria/src/tree.rs`, generic over the host view, so the Bookmarks
+pane — its own entity — draws with the code the Tags, All properties and Outline panes use, and a
+measurement taken on one moves them all. The workspace keeps one-line wrappers.
+
+**What it does now.** Lucide icons per kind (five fetched from Lucide: `bookmark-plus`, `folder`,
+`globe-2`, `toy-brick`, `wrench`); rows that wrap; bookmarks of missing files not drawn; the active
+mark on the open note's own row; "Collapse all" turning into "Expand all"; the search filter with
+the groups above a match, its state in the leaf's `showSearch`/`searchQuery`; the tree keyboard;
+Ctrl and middle clicks to a new tab; each kind's menu (a `Target::Bookmark` in `file_menu.rs`,
+pinned by a test against the capture) with the row ringed while it is up; Rename on the row through
+`inline_field`; New group as an "Untitled group" named on its row; a group's "Bookmark the active
+tab..." landing in that group; drags that reorder or drop into a group, with the drop bar and the
+accent fill. The model's moves (`get`, `update_at`, `insert_at`, `move_item`, `set_title`) are in
+`scoria-formats::bookmarks` with their own tests.
+
+**Every menu changed a little.** Obsidian writes two separators before a danger item and hides the
+second; Scoria drew both. `file_menu::render` now draws one line per break, while `drawn` still
+reports both, as the DOM has them.
+
+**Checked over the control socket** on the probe's fixture vault: the pane against the
+screenshot, a row's menu, Rename writing `title` after `path`, New group's bytes
+(`type, ctime, items: [], title`), a click elsewhere committing a name, the filter's `del`, Escape
+hiding it, the ring under the arrows, Collapse all. **Not driven:** a drag, since the socket has no
+drag; it rests on the unit tests of `move_item`, `drop_zone` and `insertion_path`.
+
+**Left open**, and filed in [[UI parity backlog#The Bookmarks pane, against the probe of 2026-11-07]]:
+the "Edit bookmark" modal's look and its "Bookmark group" dropdown, a note dragged in from the
+Files pane, and the view header's filled bookmark icon on a bookmarked note.
+
 ### The file tree renames on the row, 2026-11-05
 
 The other gap day 2 filed

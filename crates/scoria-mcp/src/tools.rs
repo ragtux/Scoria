@@ -595,7 +595,7 @@ mod tests {
     fn a_read_only_wrapper_does_not_wait() {
         let fake = Fake::start(
             "state",
-            vec![("state", json!({"vault": {"name": "PLMCRZY"}}))],
+            vec![("state", json!({"vault": {"name": "Field notes"}}))],
         );
         let mut app = fake.app();
         let result = called(&mut app, "scoria_state", json!({"rows": 5}));
