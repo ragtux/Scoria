@@ -2788,9 +2788,20 @@ commands.
 (`table::move_line`, tested). Pressing a handle commits the open cell, selects the line and leaves the
 caret alone; Escape, a click on a cell and a click anywhere else clear the selection. The drop bar tracks the pointer
 beyond the table (clamped to the nearest edge line) and a release anywhere drops the line, because the
-editor's own mouse-up makes the move rather than a drop target on the grid. **Still out**: the
-"+" bars that append a row or column, and the drag has only been exercised by its unit tests, not driven
-(the control socket has no drag).
+editor's own mouse-up makes the move rather than a drop target on the grid. **Still out**: the drag has
+only been exercised by its unit tests, not driven (the control socket has no drag).
+
+**The "+" bars landed 2026-11-08**: "Add row below" under the last row and "Add column to the right"
+past the last column, 16 px strips as long as the table with a `plus` in the middle, invisible until
+hovered, with the resize cursors Obsidian's carry. A click commits the open cell, appends the line
+through `table::append_line` (the row and column commands at the table's last line, so the table is
+re-padded as Obsidian's is) and opens the new row's first cell or the new column's header cell, which
+is where the probe found Obsidian's cursor. The bar is not a handle, so it also drops a handle's
+selection. Driven on a scratch vault over the socket: a click just past the last column wrote a fourth
+`|     |` column with the header cell open, a click just under the last row wrote `|     |     |     |     |`
+with its first cell open, and typing there landed in the file. Seen in passing: typing into an empty
+cell inserts before its padding (`|xy     |`), because the parser's span for an empty cell is zero-width
+at the cell's start; what Obsidian writes there is not probed.
 
 ## Blocked by the harness, not by the code
 

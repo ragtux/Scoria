@@ -412,6 +412,35 @@ pub fn move_line(at: &TableAt, columns: bool, from: usize, slot: usize) -> Optio
     Some(TableEdit { text, cursor })
 }
 
+/// Appends an empty row under the last row, or an empty column to the
+/// right of the last when `columns` is set: what the "+" bar below a table
+/// and the one to its right do (probe of 2026-11-08, `table-handles`). The
+/// table is re-padded as a command re-pads it, and the cursor lands in the
+/// new row's first cell or the new column's header cell, where Obsidian's
+/// does.
+pub fn append_line(at: &TableAt, columns: bool) -> Option<TableEdit> {
+    // The commands insert beside the cursor and leave it on the line it was
+    // in, so it is put in the last row's first cell for a row and the last
+    // column's header cell for a column: the new line's first cell is then
+    // where the cursor lands.
+    let mut at = at.clone();
+    let (row, col) = if columns {
+        (0, at.table.columns().checked_sub(1)?)
+    } else {
+        (at.table.rows.len().checked_sub(1)?, 0)
+    };
+    at.row = row;
+    at.col = col;
+    apply(
+        &at,
+        if columns {
+            TableCommand::ColAfter
+        } else {
+            TableCommand::RowAfter
+        },
+    )
+}
+
 fn insert_column(t: &mut Table, at: usize, align: Alignment, cells: Option<Vec<String>>) {
     for (ix, r) in t.rows.iter_mut().enumerate() {
         let cell = cells
@@ -533,6 +562,38 @@ mod tests {
     fn the_header_is_a_row_that_can_be_dragged() {
         let (out, _) = dragged(THREE, false, 0, 2).unwrap();
         assert!(out.starts_with("| 1   | 2   | 3   |\n| --- | --- | --- |\n| A   | B   | C   |\n"));
+    }
+
+    #[test]
+    fn the_plus_bars_append_a_row_below_and_a_column_to_the_right() {
+        // The bytes and the cursor Obsidian 1.15.0 left after a click on
+        // each bar, from the probe's `s08-add-buttons`.
+        let src = "intro\n\n| A   | B   | C   |\n| --- | --- | --- |\n| 1   | 2   | 3   |\n| 4   | 5   | 6   |\n| 7   | 8   | 9   |\n\nafter\n";
+        let at = table_at(src, src.find("| A").unwrap()).expect("a table");
+        let row = append_line(&at, false).expect("a row appends");
+        let mut out = src.to_string();
+        out.replace_range(at.span.clone(), &row.text);
+        assert_eq!(
+            out,
+            "intro\n\n| A   | B   | C   |\n| --- | --- | --- |\n| 1   | 2   | 3   |\n| 4   | 5   | 6   |\n| 7   | 8   | 9   |\n|     |     |     |\n\nafter\n"
+        );
+        // The new row's first cell, at the cell's start as every edit's
+        // cursor is (Obsidian's sits at its end: the cell is empty).
+        let cursor = at.span.start + row.cursor;
+        assert_eq!(&out[cursor - 2..cursor + 5], "|     |");
+        assert_eq!(out[..cursor].matches('\n').count(), 7);
+
+        let col = append_line(&at, true).expect("a column appends");
+        let mut out = src.to_string();
+        out.replace_range(at.span.clone(), &col.text);
+        assert_eq!(
+            out,
+            "intro\n\n| A   | B   | C   |     |\n| --- | --- | --- | --- |\n| 1   | 2   | 3   |     |\n| 4   | 5   | 6   |     |\n| 7   | 8   | 9   |     |\n\nafter\n"
+        );
+        // The new column's header cell, on the header line.
+        let cursor = at.span.start + col.cursor;
+        assert_eq!(&out[cursor - 2..cursor + 5], "|     |");
+        assert_eq!(out[..cursor].matches('\n').count(), 2);
     }
 
     #[test]

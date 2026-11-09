@@ -646,13 +646,18 @@ moved row's first cell (`6:2` for the row dropped last) or the moved column's he
 **The "+" bars.** `.table-row-btn` ("Add row below", `cursor: s-resize`) is a full-width bar under the
 last row and `.table-col-btn` ("Add column to the right", `e-resize`) a full-height bar to the right of the
 last column, each with a `lucide-plus` centred in it, invisible until hovered. A click appends a padded
-empty row or column. Scoria does not draw them yet.
+empty row or column, and the cursor lands in the new row's first cell or the new column's header
+cell (`s08-add-buttons`: `|     |     |     |` under row 7 with the cursor at `7:6`, a fourth
+`|     |` column with it at `2:24`).
 
 **Scoria matches the handles** since 2026-11-08: the grips (hidden until hovered), selecting a line,
 the outline and tint, and the drag with its bar and the drop's before-or-after rule, through
 `scoria_text::table::move_line`. A press on a handle strip is the handle's alone, so the editor does not
 move the caret under it. While a handle is held the bar follows the pointer out of the table too, clamped to the nearest
-edge line, and a release anywhere in the window drops the line where the bar was. **Not matched:** the "+" bars, the accent bar's exact weight and tint (taken
+edge line, and a release anywhere in the window drops the line where the bar was. The "+" bars
+too, since 2026-11-08: 16 px strips under the last row and past the last column, hidden until
+hovered, that append through the table commands (`scoria_text::table::append_line`, tested against
+the probe's bytes) and open the new line's first cell. **Not matched:** the accent bar's exact weight and tint (taken
 from the screenshots, not measured), and the selection's effect on the keyboard, which was not probed.
 **Untested by driving:** the drag itself, which the control socket cannot make; the move it performs is
 unit-tested.

@@ -4304,6 +4304,10 @@ impl Editor {
                 }
                 return;
             }
+            TableAction::Append { table, axis } => {
+                self.append_table_line(table, axis, window, cx);
+                return;
+            }
         };
         // A click on a cell ends a handle's selection.
         self.table_select = None;
@@ -4353,6 +4357,52 @@ impl Editor {
         });
         if let Some(after) = table::table_at(self.buf.text(), start + edit.cursor) {
             let (row, col) = if columns { (0, dest) } else { (dest, 0) };
+            if let Some(cell) = after.cells.get(row).and_then(|r| r.get(col)).cloned() {
+                self.open_cell(cell, cx);
+            }
+        }
+    }
+
+    /// A click on a table's "+" bar: the open cell is written, an empty row
+    /// is appended under the table (`Row`) or an empty column to its right
+    /// (`Col`), the table is re-padded, and the new line's first cell opens
+    /// — the new row's first cell, or the new column's header cell, where
+    /// Obsidian 1.15.0 puts the cursor (probe of 2026-11-08). The bar is not
+    /// a handle, so a line a handle had selected is let go.
+    fn append_table_line(
+        &mut self,
+        table: usize,
+        axis: TableAxis,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.commit_property_field(Some(window), cx);
+        self.commit_table_field(Some(window), cx, None);
+        self.table_select = None;
+        self.table_drag = None;
+        let Some(at) = table::table_at(self.buf.text(), table) else {
+            cx.notify();
+            return;
+        };
+        let columns = axis == TableAxis::Col;
+        let Some(edit) = table::append_line(&at, columns) else {
+            cx.notify();
+            return;
+        };
+        let start = at.span.start;
+        self.edit(
+            at.span.clone(),
+            &edit.text,
+            EditKind::Other,
+            Some(window),
+            cx,
+        );
+        if let Some(after) = table::table_at(self.buf.text(), start + edit.cursor) {
+            let (row, col) = if columns {
+                (0, after.table.columns().saturating_sub(1))
+            } else {
+                (after.table.rows.len().saturating_sub(1), 0)
+            };
             if let Some(cell) = after.cells.get(row).and_then(|r| r.get(col)).cloned() {
                 self.open_cell(cell, cx);
             }

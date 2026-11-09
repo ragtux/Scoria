@@ -573,6 +573,9 @@ pub enum TableAction {
         index: usize,
         after: bool,
     },
+    /// A click on the "+" bar under the table (`Row`) or to its right
+    /// (`Col`): an empty line is appended there.
+    Append { table: usize, axis: TableAxis },
 }
 
 /// Whether a handle moves a row or a column.
@@ -2417,11 +2420,59 @@ impl<'a> Renderer<'a> {
                         _ => drawn.into_any_element(),
                     }
                 };
+                // The "+" bars (probe of 2026-11-08): "Add row below", a
+                // 16 px strip as wide as the table under its last row, and
+                // "Add column to the right", a 16 px strip as tall as the
+                // table past its last column, each with a `plus` centred in
+                // it and invisible until hovered. A click appends an empty
+                // padded line there. They sit in the table's margin, so the
+                // outer box is the one they are placed against.
+                let plus = |axis: TableAxis| -> Option<AnyElement> {
+                    let host = host.filter(|_| handles)?;
+                    let id = table_id?;
+                    let act = host.on_action.clone();
+                    let base = div()
+                        .id(match axis {
+                            TableAxis::Row => ("table-row-btn", id),
+                            TableAxis::Col => ("table-col-btn", id),
+                        })
+                        .absolute()
+                        .flex()
+                        .items_center()
+                        .justify_center()
+                        .opacity(0.)
+                        .hover(|s| s.opacity(1.))
+                        .child(icon("plus", 16., t.tokens.text_faint));
+                    let base = match axis {
+                        TableAxis::Row => base
+                            .left(px(0.))
+                            .bottom(px(-16.))
+                            .w(px(table_width))
+                            .h(px(16.))
+                            .cursor(CursorStyle::ResizeDown),
+                        TableAxis::Col => base
+                            .top(px(0.))
+                            .left(px(table_width))
+                            .h_full()
+                            .w(px(16.))
+                            .cursor(CursorStyle::ResizeRight),
+                    };
+                    Some(
+                        base.on_mouse_down(MouseButton::Left, move |_, window, cx| {
+                            cx.stop_propagation();
+                            act(TableAction::Append { table: id, axis }, window, cx);
+                        })
+                        .into_any_element(),
+                    )
+                };
                 // The table is as wide as its columns, like an HTML table.
                 div()
                     .mb(gap)
+                    .relative()
                     .flex()
                     .flex_row()
+                    .children(plus(TableAxis::Row))
+                    .children(plus(TableAxis::Col))
                     .child({
                         let grid = div()
                             .w(px(table_width))
