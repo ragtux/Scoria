@@ -2182,7 +2182,10 @@ impl<'a> Renderer<'a> {
                         .flex_shrink_0()
                         .px_2()
                         .py_1()
-                        .border_r_1()
+                        // A line between columns only: the table's own border
+                        // is the last column's right edge, and a cell border
+                        // as well would draw it twice.
+                        .when(ix != last_col, |d| d.border_r_1())
                         .border_color(t.tokens.table_border_color)
                         .when(head, |d| {
                             d.font_weight(FontWeight::SEMIBOLD)
