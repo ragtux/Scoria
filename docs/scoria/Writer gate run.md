@@ -711,7 +711,8 @@ Obsidian's copies of both files, both daily notes and the two block ids.
 
 ## Day 5, 2026-11-09
 
-**The Scoria half ran; its verdict waits on the Obsidian half.** Both canvases, driven over the
+**Day 5 passes: Obsidian 1.15.0 kept every line Scoria's canvas writer had written.** The Scoria half
+first. Both canvases, driven over the
 control socket in a headless sway session, 01:17–01:42, from the baseline `snapshot-2026-11-09c`.
 Window coordinates for a node came from the socket's `canvas` dump (`origin`, `size`, `viewport`,
 `scale`) and the file's own `x, y, width, height`, so every click was aimed at a known card. The two
@@ -773,6 +774,40 @@ right` by `facing_side`'s tie-break, which no hand reproduces; and at scale 0.33
 is 17 pixels, so its centre is inside the 10-pixel connector hit and a click there drew an edge into
 empty space and made a new card, as Obsidian's connector does — undone with the rest.
 
+### The Obsidian half, 2026-11-09
+
+**One card of `Canvas 2` moved by hand, and the file came back as Scoria's bytes bar that card's
+line.** Obsidian saved it at 09:16:28 (`workspace.json` eight seconds before). The diff against
+`snapshot-2026-11-09c` is the 29 node lines, and reading it next to what Scoria had left: 28 of the 29
+are Scoria's lines, byte for byte, in Scoria's order, the edited-save order `id, type, text, x, y,
+width, height, color` included; the edges and the file's head and tail did not change. So the rule the
+specification records from the 1.14.4 probe holds in 1.15.0, Scoria's writer is a fixed point of
+Obsidian's, and the 28 lines the morning had to answer for are answered: Obsidian would have rewritten
+them the same way on its own first edit, and did not touch them on the second.
+
+**The moved card's line went to the end of the array.** It moved 180 by 200 units, on the 20-unit grid,
+and its line left its place among the nodes (eleventh) for the last. The array is the z-order, and
+Obsidian's drag lifts the dragged card to the top; nothing on the sheet asked for it, and no probe had
+recorded it, because the 2026-10-19 probe moved nodes through the API, not by hand. **Scoria's drag did
+not do this**: the morning's move on `Canvas 2` left its card where it was in the array, and so did
+every move on `Canvas 1`. A person dragging a card in Scoria and then in Obsidian would have had the
+two apps write different files for the same gesture. `scoria-canvas` already had `raise_selection`
+(the spec notes it has no menu home in 1.14.5); the view never called it. Fixed today: the first
+movement of a drag past the threshold raises the selection, inside the move's own undo step, so the
+undo puts the order back with the position (`crates/scoria/src/canvas/view.rs`, test
+`a_raise_inside_a_move_is_one_undo_step_with_it`). A card already on top records no step. Whether a
+click that selects without dragging raises too is unprobed, and the spec says so:
+[[Specification#Observed canvas write behavior, Obsidian 1.14.4 (installer build 1.13.7)]].
+
+**`Canvas 1` was not written by Obsidian**: its mtime is still Scoria's 01:37 save, so it was not
+opened and closed there (an unedited close would have rewritten it). The day's sheet asked for one
+node moved, and `Canvas 2` supplied the one that mattered. Scoria's three lines on `Canvas 1` (the
+typed suffix, the colour, the edge) stand for Obsidian to read another day. Copy and paste on a card
+still want the desk's clipboard; the write path they share with duplicate is covered.
+
+**The harness**: sixteen properties green over the vault after the Obsidian half, at 09:30. The
+verdict is in the log. The vault goes to `gate.sh baseline` as `snapshot-2026-11-09d`.
+
 ## The log
 
 One row per day. "Moved" is what the diff reported; "author" is the answer to the two
@@ -785,6 +820,6 @@ questions above.
 | 2 | 2026-11-05 | rename with 6 aliased inbound links and back; move into a new folder and back; new folder; new note; note created from an unresolved link; delete; three sort orders | renamed `Note F` and back (the modal appeared, **Just once**), new note named on the row; the three `.obsidian` files touched | the 6 link lines rewritten by each app and back to byte-identical both times; `Archive/`, `Day 2 New Note.md`, `this is a new note!.md`, one typed line in `Note C.md` | every one a person's edit in one of the two apps; the three config files moved mtimes and no bytes | **passes** — and the two link rewriters proved byte-identical on a real vault. `alwaysUpdateLinks` defaulted on where Obsidian defaults off, so Scoria's rename rewrote 6 files silently instead of asking; fixed, the ask-path it had made unreachable now runs, and the modal Obsidian showed confirms the default on this vault |
 | 3 | 2026-11-08 | 14 of the 15 table commands on `Note F`, each checked and undone to byte-identical; first front matter added, folded and unfolded; property type set from the sidebar menu (Checkbox, then List) | `Day 2 New Note` renamed on the row to `Day 3 New Note` and a table built and commanded in it; `Note F`'s property renamed twice with a type each time, an empty `Invalid date.md` on the way; the three `.obsidian` files touched | `Note F`'s front matter (Scoria's `status:`, then Obsidian's `scoria:` list), the renamed note with its table, `Invalid date.md`, `types.json` (Scoria's one key, then Obsidian's six) | every one a person's edit in one of the two apps; the three config files moved mtimes and no bytes | **passes** — Obsidian's `types.json` showed Scoria's unseeded (fixed: the three defaults on every write), the palette showed Move row up hidden in the first body row (fixed), and a submenu bug fell on the Scoria half |
 | 4 | 2026-11-09 | all six suggesters accepted into `Note C` (`[[`, `[[Note#`, `![[`, `#tag`, an alias added to `Note F` for the purpose, a block whose id was written into `Note F`), the first accept and a ten-edit stretch undone to byte-identical; `Templates/` and a template note made in the UI, `templates.json` and `daily-notes.json` written from Settings, the template inserted, yesterday's note made by following a `[[Daily/…]]` link, today's created from the template, stepped back and forward | Settings: Templates time format changed and restored and a date format added, Daily notes dropdown moved and restored; the template inserted in `Note C`; today's note opened, typed into, stepped back and forward; the five suggesters accepted in today's daily note, the block one writing an own-line id under a heading of `Note F` | `Templates/` and `Daily/` (three notes), `Note C` (the morning's ten lines, then Obsidian's template), `Note F` (two alias lines, Scoria's inline id, Obsidian's own-line id), `templates.json` (Scoria's two keys, Obsidian's third appended), `daily-notes.json` (rewritten by Obsidian byte-identical, twice), `.trash/Untitled.canvas` (empty) | every one a person's edit in one of the two apps; the three config files Obsidian rewrites at launch did not move (it was not relaunched) | **passes** — Obsidian rewrote both of the config files Scoria had created and kept Scoria's bytes; the two apps read each other's alias and template settings, and both refuse a daily note whose folder is missing with the same notice; the 1.15.0 Daily notes tab matches the spec, and Obsidian's delete went to `.trash` where Scoria's went to the system trash |
-| 5 | 2026-11-09 | both canvases: pan, zoom, select, move, resize, colour, an edge, a group, duplicate (copy/paste needs the desk's clipboard), undo and typing into a card, each undone to byte-identical; `Canvas 2`'s first edit rewrote every node line into the edited-save key order the spec records, the data unchanged |  |  |  |  |
+| 5 | 2026-11-09 | both canvases: pan, zoom, select, move, resize, colour, an edge, a group, duplicate (copy/paste needs the desk's clipboard), undo and typing into a card, each undone to byte-identical; `Canvas 2`'s first edit rewrote every node line into the edited-save key order the spec records, the data unchanged | one card of `Canvas 2` moved by hand; `Canvas 1` not opened | `Canvas 1`: Scoria's three lines (the typed suffix, a colour, an edge); `Canvas 2`: every node line once, into the edited-save order, then the moved card's line to the end of the array; `workspace.json` | every one a person's edit in one of the two apps; the key-order rewrite is the spec's rule, done once by Scoria and accepted by Obsidian 1.15.0, which kept the 28 other lines byte for byte | **passes** — Scoria's canvas writer is a fixed point of Obsidian's; the moved card came back last in the array, which Scoria's drag did not do (fixed: the first movement of a drag raises the selection, undone with the move); copy/paste waits on the desk |
 | 6 |  |  |  |  |  |  |
 | 7 |  |  |  |  |  |  |

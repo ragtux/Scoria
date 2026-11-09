@@ -310,7 +310,7 @@ the sheet, the log and the day's procedure are [[Writer gate run]], see
 | Files header | done: New note, New folder, the six sort orders, Auto-reveal current file and Expand all / Collapse all, see [[#Files header, 2026-10-21]]; the tree takes the keyboard, see [[#Explorer keyboard, 2026-10-21]], and a row renames on the row rather than in a dialog, see [[#The file tree renames on the row, 2026-11-05]] |
 | Folding | done: headings and list parents fold in Live Preview and source mode, headings collapse in the reading view, the five `editor:*fold*` commands run, and the record lives outside the vault, see [[#Folding, 2026-10-26]] |
 | Editing commands | done: the insert-block commands, the checklist cycle, Mod+L on a line without a box, the six highlight colours, Clear formatting, per-line inline toggles, the one auto-pair rule and Shift+Tab's column arithmetic, all to the 2026-10-25 probes, see [[#The settled editing commands, 2026-10-26]] |
-| The gate itself | open: the harness passes on the real vault (sixteen properties, green 2026-11-05), and the week of mixed use is running on the gate vault with `docs/scoria` watched beside it — days 1, 2 and 3 all pass: day 2 caught an inverted `alwaysUpdateLinks` default and proved the two apps' link rewriters byte-identical, and day 3 brought the first `types.json` in Obsidian's bytes, which showed Scoria's writer leaving out the three seeded defaults (fixed, with Move row up hidden in the first body row as Obsidian 1.15.0 hides it), see [[Writer gate run#Day 3, 2026-11-08]]. Day 4 passes too (2026-11-09): all six suggesters, templates and daily notes in both apps, and the harness has its first `templates.json` and `daily-notes.json` — written by Scoria, rewritten by Obsidian the same night with Scoria's bytes kept, see [[Writer gate run#Day 4, 2026-11-09]]. The prompt day 2's fix made reachable is now Obsidian's three buttons, and its "Always update" gives the harness its first path to an `app.json` holding `alwaysUpdateLinks`, see [[#The third button on the rename prompt, 2026-11-05]]. The sheet and the log are [[Writer gate run]], see [[#The gate week starts, 2026-11-04]] and [[#Day 2, files and links, 2026-11-05]] |
+| The gate itself | open: the harness passes on the real vault (sixteen properties, green 2026-11-05), and the week of mixed use is running on the gate vault with `docs/scoria` watched beside it — days 1, 2 and 3 all pass: day 2 caught an inverted `alwaysUpdateLinks` default and proved the two apps' link rewriters byte-identical, and day 3 brought the first `types.json` in Obsidian's bytes, which showed Scoria's writer leaving out the three seeded defaults (fixed, with Move row up hidden in the first body row as Obsidian 1.15.0 hides it), see [[Writer gate run#Day 3, 2026-11-08]]. Day 4 passes too (2026-11-09): all six suggesters, templates and daily notes in both apps, and the harness has its first `templates.json` and `daily-notes.json` — written by Scoria, rewritten by Obsidian the same night with Scoria's bytes kept, see [[Writer gate run#Day 4, 2026-11-09]]. Day 5 passes (2026-11-09): both canvases over the socket, and Obsidian 1.15.0 kept Scoria's edited-save key order byte for byte, so the canvas writer is a fixed point of Obsidian's; the one divergence was the view's, a dragged card now rises to the end of the array as Obsidian's does, see [[#Day 5, a dragged card rises, 2026-11-09]]. The prompt day 2's fix made reachable is now Obsidian's three buttons, and its "Always update" gives the harness its first path to an `app.json` holding `alwaysUpdateLinks`, see [[#The third button on the rename prompt, 2026-11-05]]. The sheet and the log are [[Writer gate run]], see [[#The gate week starts, 2026-11-04]] and [[#Day 2, files and links, 2026-11-05]] |
 
 ## Parity (phase 4)
 
@@ -327,6 +327,25 @@ uses behave as Obsidian's do.
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
+
+### Day 5, a dragged card rises, 2026-11-09
+
+The Writer gate's canvas day, [[Writer gate run#Day 5, 2026-11-09]]. The Scoria half ran every
+operation on both of the gate vault's canvases over the control socket and undid each to
+byte-identical, and the first edit to the canvas Obsidian had rewritten on day 1 moved all of its
+node lines into the edited-save key order the specification records — the rule's prediction, and a
+28-line bet on Obsidian 1.15.0 still following a 1.14.4 probe. It does: one card moved by hand in
+Obsidian came back with the other 28 lines byte for byte. Scoria's canvas writer is a fixed point of
+Obsidian's.
+
+The same save showed the one thing the API probe could not: a card dragged by hand goes to the end
+of the nodes array. Obsidian's drag lifts the card to the top of the z-order, and the array is the
+z-order. Scoria's view had `Scene::raise_selection` and never called it, so its drags left the line
+in place. Now the first movement of a drag past the threshold raises the selection, inside the
+move's `begin`/`commit`, so one undo restores the order with the position and a card already on
+top records no step (`crates/scoria/src/canvas/view.rs`, `scoria-canvas` test
+`a_raise_inside_a_move_is_one_undo_step_with_it`). Whether selecting without dragging raises too
+is unprobed; the specification's write-behavior section carries the observation and that gap.
 
 ### Live Preview tables, driven, 2026-11-08
 

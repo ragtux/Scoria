@@ -921,6 +921,16 @@ Consequences, each observed:
   `Untitled group`.
 - A file with no `edges` key gets one appended after `nodes` on its first
   edited save.
+- **A dragged node goes to the end of the array** (1.15.0, the gate vault,
+  2026-11-09, day 5 of the Writer gate week): one card moved by hand came
+  back last among the nodes, its line otherwise the same shape, and the
+  other 28 lines were kept byte for byte in the order the file had — which
+  was Scoria's edited-save order, so the rule above still holds in 1.15.0
+  and Scoria's output is a fixed point of Obsidian's. The drag raises the
+  card to the top of the z-order, and the array is the z-order. Scoria's
+  view raises the selection on the first movement of a drag
+  (`Scene::raise_selection`, undone with the move). Whether a click that
+  selects without dragging raises too is unprobed.
 
 **Unprobed:** a canvas whose node geometry is fractional after a drag at an
 odd zoom (the writer formats `0.5` as JavaScript would, but exponent forms
@@ -1023,7 +1033,9 @@ selection by 20 units, with Shift by 100. Delete and Backspace remove
 the selection, Escape ends editing and leaves the card selected, Enter
 on a selected card edits it, Ctrl+C puts the selection on the clipboard
 as JSON Canvas text and Ctrl+V pastes it (plain text pastes as a new
-card), Ctrl+D duplicates. Snapping (grid and objects, both on by default
+card), Ctrl+D duplicates. Dragging a card lifts it to the top of the
+z-order, the end of the nodes array (1.15.0, see the write behavior
+above). Snapping (grid and objects, both on by default
 in the Canvas settings tab) is off while Alt is held. A card emptied
 during editing is removed when editing ends; a click outside ends it.
 

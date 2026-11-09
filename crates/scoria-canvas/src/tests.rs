@@ -1537,6 +1537,39 @@ fn raise_selection_lifts_cards_in_their_order_and_leaves_groups() {
     assert_eq!(ids(&scene.canvas), ["g", "c", "a", "b"]);
 }
 
+#[test]
+fn a_raise_inside_a_move_is_one_undo_step_with_it() {
+    let mut scene = Scene::new(canvas(
+        vec![
+            card("a", 0.0, 0.0, 1.0, 1.0),
+            card("b", 10.0, 0.0, 1.0, 1.0),
+            card("c", 20.0, 0.0, 1.0, 1.0),
+        ],
+        vec![],
+    ));
+    scene.selection = Selection::only_node("a");
+    scene.begin();
+    scene.raise_selection();
+    scene.move_selection(5.0, 5.0);
+    scene.commit();
+    assert_eq!(ids(&scene.canvas), ["b", "c", "a"]);
+    assert_eq!(scene.undo_depth(), 1);
+    assert!(scene.undo());
+    assert_eq!(ids(&scene.canvas), ["a", "b", "c"]);
+    assert_eq!(
+        (scene.node("a").unwrap().x, scene.node("a").unwrap().y),
+        (0.0, 0.0)
+    );
+
+    // A card already on top: the raise changes nothing, and a drag that
+    // never moved records no step.
+    scene.selection = Selection::only_node("c");
+    scene.begin();
+    scene.raise_selection();
+    scene.commit();
+    assert_eq!(scene.undo_depth(), 0);
+}
+
 // ---- Scene: groups ------------------------------------------------------------------------------
 
 #[test]

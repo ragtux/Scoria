@@ -1207,6 +1207,14 @@ impl CanvasView {
                 if !moved && !far {
                     return;
                 }
+                if !moved {
+                    // The first movement lifts the dragged cards to the top
+                    // of the z-order, as Obsidian's drag does (the gate
+                    // vault, 2026-11-09: the moved node came back last in
+                    // the array). `begin` ran at the press, so the undo of
+                    // the move puts the order back too.
+                    self.scene.raise_selection();
+                }
                 // Back to the unsnapped positions plus the new delta, then
                 // the snap of the pressed card carries everything with it.
                 self.scene
