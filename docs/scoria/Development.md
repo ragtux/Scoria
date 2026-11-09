@@ -288,7 +288,10 @@ Started 2026-10-17. Gate: the vault round-trips byte-identical after a week
 of mixed use in both apps. The gate run opened on 2026-10-18, see
 [[#The gate run opens, 2026-10-18]], and the week itself starts 2026-11-04 —
 the sheet, the log and the day's procedure are [[Writer gate run]], see
-[[#The gate week starts, 2026-11-04]].
+[[#The gate week starts, 2026-11-04]]. **The week ran 2026-11-04 to
+2026-11-09 and the gate passes**: every byte that moved in the gate vault is a
+person's edit in one of the two apps, see [[Writer gate run#The verdict, 2026-11-09]]
+and [[#Day 7, the week closes, 2026-11-09]].
 
 | Writer item | Status |
 | --- | --- |
@@ -327,6 +330,33 @@ uses behave as Obsidian's do.
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
+
+### Day 7, the week closes, 2026-11-09
+
+The last day of [[Writer gate run]]: chrome, bookmarks, settings and a hotkey. Scoria's half
+split right and down, dragged a tab between groups, bookmarked a view, a titled heading and a
+section (the section writing its block id into the note, as Obsidian's does), and wrote a
+toggle, a dropdown and two sliders — the gate vault's first `bookmarks.json`, three keys on
+`app.json`, the first on `appearance.json`. Obsidian's half rewrote all of them and **kept every
+byte Scoria had written**, appending its own: the bookmark writer is a fixed point of Obsidian's
+the way the canvas writer proved to be on day 5. `hotkeys.json` is Obsidian's, from nothing — the
+last config file the harness had no real copy of — and Scoria reads it (`theme:switch` shows its
+`Alt + T`, `custom`; the command itself has no handler yet).
+
+**The day's finding was the harness's, on the watched vault.** Obsidian had rewritten
+`docs/scoria/.obsidian/workspace.json`, and `every_workspace_json_is_written_back_byte_identical`
+failed on a dock width: `231.65450286865234` came back `231.65450286865232`, one ulp lower, a
+different double. `ryu` prints both right, so the loss was serde_json's default float parser,
+which is a fast path that is not correctly rounded in the last bit; the workspace `Cargo.toml`
+now turns on `float_roundtrip`, and sixteen are green with the gate vault named. Every
+`.obsidian` file goes through that parser; the deciding vault's own widths happened to parse
+exactly, which is why six days never showed it.
+
+One view fault fixed with the day, not a writer's: the Settings rows list kept one scroll
+offset across tabs, so Appearance opened scrolled where Editor had been left (`select_tab` resets
+a tracked handle now). Open after the week: the second
+Mod+B over `- **text**` lines and the numbered toggle's second press (day 6), copy and paste on a
+canvas (day 5), and `theme:switch`.
 
 ### Day 6, the marker stays outside the bold, 2026-11-09
 

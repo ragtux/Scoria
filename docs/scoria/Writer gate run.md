@@ -18,7 +18,9 @@ corpus and over the real vault, green again on 2026-11-04 after the themes, high
 Bases work that landed since [[Development#The gate run opens, 2026-10-18]]. Nothing is
 written to the vault — every edit happens in a buffer in memory.
 
-**The mixed-use half has not run.** Not for want of a blocker: the gate vault was registered in
+**Update, 2026-11-09: the week has run and the gate passes — see [[#The verdict, 2026-11-09]].** What follows is the state the run opened in.
+
+**The mixed-use half had not run.** Not for want of a blocker: the gate vault was registered in
 Obsidian on 2026-10-22 12:50 (which is what created its `app.json`, `appearance.json` and
 `core-plugins.json`), so the one thing the October note was waiting on is done. The reason
 is simpler — nothing has been edited in that vault since, so the clean
@@ -77,6 +79,8 @@ create any of them until a setting in that plugin is written. `hotkeys.json` and
 are in the same position. Day 4 and day 7 below write exactly those settings, so the week
 should leave the harness with its first real copy of each — worth more to the project than
 the diff itself.
+
+**Day 7 delivered the last two**: `hotkeys.json`, written by Obsidian from nothing, and `bookmarks.json`, written by Scoria and rewritten by Obsidian with Scoria's items kept verbatim; day 3 had delivered `types.json` the same way. Every config writer the harness has is now ratcheted to a file a real Obsidian wrote, see [[#The Obsidian half, 2026-11-09]].
 
 **Day 4 delivered two of them** — `templates.json` and `daily-notes.json`, written by Scoria on
 2026-11-09 and rewritten by Obsidian the same night, one byte-identical and one with Obsidian's own
@@ -1031,6 +1035,76 @@ to a command with no default (Bookmarks: Show bookmarks is a good one) — `hotk
 its bytes are the week's last first copy. (6) Split right and down yourself, drag a tab between groups, quit.
 (7) `just gate-check`, then `gate.sh check --from-first`, and the verdict in the log.
 
+### The Obsidian half, 2026-11-09
+
+Run by hand, Obsidian 1.15.0, from the seven-step list above; the gate vault launched 11:57:38 (the
+`core-plugins.json` mtime), `workspace.json` last written 12:11:11. Attribution is by mtime and bytes,
+since the diff against `snapshot-2026-11-09f` holds both halves. Before it, a detour: the docs vault was the
+one open in Obsidian from 11:31, and three bookmarks were made there at 11:55 before the right vault was
+opened — which is what made the day's finding, below.
+
+**Obsidian kept every byte Scoria wrote and appended its own.** Five files moved in the Obsidian half:
+
+- **`bookmarks.json`, 12:01:04.** `Note C` bookmarked from its header (`ctime` 12:00:27) and the plain `Note D`
+  item removed from its row menu. Obsidian rewrote the file whole: Scoria's two remaining items are in it
+  **verbatim** — the same `ctime`s, the same key order, `title` last on the heading item — and the new one is
+  last, in the same two-space, no-trailing-newline shape. Scoria's bookmark writer is a fixed point of
+  Obsidian's, the way the canvas writer proved to be on day 5.
+- **`hotkeys.json`, 12:06:08 — the week's last first copy.** `Alt+T` bound to "Change theme..." wrote
+  `{"theme:switch": [{"modifiers": ["Alt"], "key": "T"}]}` over seven lines: two-space indent, the one-element
+  arrays expanded one line per element, no trailing newline. Scoria reads it: on a scratch copy the Hotkeys
+  tab's row for that command read `Alt + T` and `custom`. The chord itself did nothing, because `theme:switch`
+  has no handler in Scoria yet — the binding applied, the command is missing, which is a separate entry.
+- **`app.json`, 12:04:33.** Default view back to Editing view wrote `"defaultViewMode": "source"` and Indent
+  visual width back to 4 wrote `"tabSize": 4` — the two values changed inside Scoria's bytes, `vimMode` first,
+  the keys in Scoria's order, the defaults kept as the spec's rule says. `readableLineLength` is still `false`:
+  the toggle was not flipped back, or was flipped twice; the bytes cannot tell, and either is a person's.
+- **`appearance.json`, 12:04:33.** Rewritten in the same second as `app.json` with **identical bytes**,
+  `"baseFontSize": 19` — Obsidian writes both files when a setting is committed; the slider was not moved,
+  or moved and put back. An mtime without a byte, the narrowed day-4 trap in a fourth form.
+- **`core-plugins.json`, 11:57:38.** The launch, no bytes.
+
+`Note D` did not move: its mtime is still Scoria's 10:44:51, so the pane's three clicks and the header's
+"Edit bookmark" wrote nothing, and the block id Scoria appended is untouched. `workspace.json`, excluded as
+always, holds Obsidian's final layout — three groups side by side, `Note D`, a fourth note, `Note D`, all
+three leaves in reading view because the new tabs opened while `defaultViewMode` was Scoria's `preview`, one
+app reading the other's setting again. Launched on a scratch copy, Scoria restored the three groups with the
+two reading-view tabs reading. What Obsidian showed on its own launch, before anything was touched, was
+not recorded; the layout Scoria had written was the three groups of the morning.
+
+**The finding, and it was the harness's.** With the gate vault named, the harness ran after the half and
+`every_workspace_json_is_written_back_byte_identical` **failed** — on the docs vault's `workspace.json`,
+which Obsidian had rewritten at 11:31. One byte: a dock width of `231.65450286865234` came back
+`231.65450286865232`, and those are different doubles, one ulp apart. `ryu` prints both correctly from the
+parsed value, so the loss was on the way in: serde_json's default float parser is a fast path that is not
+correctly rounded in the last bit, and `float_roundtrip` is the feature that makes it so. Turned on in the
+workspace `Cargo.toml`; sixteen green with the vault named, and the format crates' tests unchanged. Every
+config file goes through that parser, so this was a writer fault waiting for a seventeen-digit number — the
+gate vault's own widths (`279.68965911865234`, `319.6085205078125`) happened to parse exactly, which is why
+six days of the deciding vault never showed it. The watched vault earned its column.
+
+The detour left `docs/scoria/.obsidian/bookmarks.json`, three items Obsidian wrote from no file — an
+Obsidian-first copy of the one config the harness only had Scoria's bytes for, if it is kept.
+
+### The verdict, 2026-11-09
+
+**Day 7 passes**, and with it **the Writer gate's mixed-use half**. `gate.sh check --from-first` against
+`snapshot-2026-10-18` lists twenty-two lines: `Archive/`, `Daily/`, `Templates/`, `.trash/`, four new notes,
+eight notes changed, both canvases, and seven `.obsidian` files (`app`, `appearance`, `bookmarks`,
+`daily-notes`, `hotkeys`, `templates`, `types`; `workspace` excluded). Every one of them is attributed in the
+seven days above to a person's edit in one of the two apps, bar three app rewrites that were each read and
+understood: Obsidian compacting a canvas authored elsewhere (day 1), Scoria's one-time edited-save key order
+on a canvas (day 5, the spec's rule, accepted by Obsidian byte for byte), and the mtimes Obsidian moves on
+three config files at launch, never a byte. Nothing was rewritten that nobody touched.
+
+What the week changed in Scoria, each found by the comparison and fixed with its day: `alwaysUpdateLinks`
+defaulting on (day 2); `types.json` unseeded, a palette row hidden, a submenu (day 3); a dragged canvas card
+not raised (day 5); Mod+B taking the list marker, a numbered toggle counting straight down, a fold over the
+scroll anchor, an empty undo step (day 6); Settings tabs sharing a scroll offset, and serde_json's lossy
+float path (day 7). What it left open: the second Mod+B over `- **text**` lines and the numbered toggle's
+second press (day 6), copy and paste on a canvas (day 5, needs a desk), and `theme:switch` without a handler.
+The vault went to `gate.sh baseline` as `snapshot-2026-11-09g`.
+
 ## The log
 
 One row per day. "Moved" is what the diff reported; "author" is the answer to the two
@@ -1045,4 +1119,4 @@ questions above.
 | 4 | 2026-11-09 | all six suggesters accepted into `Note C` (`[[`, `[[Note#`, `![[`, `#tag`, an alias added to `Note F` for the purpose, a block whose id was written into `Note F`), the first accept and a ten-edit stretch undone to byte-identical; `Templates/` and a template note made in the UI, `templates.json` and `daily-notes.json` written from Settings, the template inserted, yesterday's note made by following a `[[Daily/…]]` link, today's created from the template, stepped back and forward | Settings: Templates time format changed and restored and a date format added, Daily notes dropdown moved and restored; the template inserted in `Note C`; today's note opened, typed into, stepped back and forward; the five suggesters accepted in today's daily note, the block one writing an own-line id under a heading of `Note F` | `Templates/` and `Daily/` (three notes), `Note C` (the morning's ten lines, then Obsidian's template), `Note F` (two alias lines, Scoria's inline id, Obsidian's own-line id), `templates.json` (Scoria's two keys, Obsidian's third appended), `daily-notes.json` (rewritten by Obsidian byte-identical, twice), `.trash/Untitled.canvas` (empty) | every one a person's edit in one of the two apps; the three config files Obsidian rewrites at launch did not move (it was not relaunched) | **passes** — Obsidian rewrote both of the config files Scoria had created and kept Scoria's bytes; the two apps read each other's alias and template settings, and both refuse a daily note whose folder is missing with the same notice; the 1.15.0 Daily notes tab matches the spec, and Obsidian's delete went to `.trash` where Scoria's went to the system trash |
 | 5 | 2026-11-09 | both canvases: pan, zoom, select, move, resize, colour, an edge, a group, duplicate (copy/paste needs the desk's clipboard), undo and typing into a card, each undone to byte-identical; `Canvas 2`'s first edit rewrote every node line into the edited-save key order the spec records, the data unchanged | one card of `Canvas 2` moved by hand; `Canvas 1` not opened | `Canvas 1`: Scoria's three lines (the typed suffix, a colour, an edge); `Canvas 2`: every node line once, into the edited-save order, then the moved card's line to the end of the array; `workspace.json` | every one a person's edit in one of the two apps; the key-order rewrite is the spec's rule, done once by Scoria and accepted by Obsidian 1.15.0, which kept the 28 other lines byte for byte | **passes** — Scoria's canvas writer is a fixed point of Obsidian's; the moved card came back last in the array, which Scoria's drag did not do (fixed: the first movement of a drag raises the selection, undone with the move); copy/paste waits on the desk |
 | 6 | 2026-11-09 | on `Note B`: the checklist cycle, Mod+L as a keystroke, the six colours and the plain highlight, Clear formatting, the six inline and three line toggles, Shift+Tab's arithmetic — each checked on disk and round-tripped byte-identical, most without undo; the five fold commands in both modes and reading view, record outside the vault | Mod+L on a box, a colour over the plain highlight, yellow-again on the yellow one, Mod+B over two whole bullet lines, the reading-view click, a numbered toggle over four lines with two nested; folds; the three config files moved at launch, no bytes | `Note B`: Scoria's six lines, four of them rewritten by Obsidian's gestures (`- [ ]` and `- [x]`, `==🔵…==`, the yellow highlight gone), two bullet lines bolded, the four under the H2 numbered per depth; `workspace.json` | every one a person's edit in one of the two apps; the three config files moved mtimes and no bytes | **passes** — three shared gestures byte-identical between the apps; Mod+B over whole bullet lines gave `- **text**` where Scoria wrote `**- text**` (fixed: a line's piece starts after its list marker), and the numbered toggle counts per depth where Scoria counted straight down (fixed); two view faults fixed on the Scoria half (a fold over the scroll anchor left a blank pane, a no-op Clear formatting pushed an empty undo step) |
-| 7 | 2026-11-09 | split right and down, a tab dragged between groups, the layout written; the Bookmarks pane, a view, a titled heading and a section bookmarked into a new `bookmarks.json` (the section writing its block id into `Note D`), the rows clicked; a toggle, a dropdown and two sliders written to `app.json` and `appearance.json`; the Hotkeys tab read, `hotkeys.json` left for Obsidian | *pending* | `Note D` (one line, the block id), `app.json` (three keys), `appearance.json` (its first key), `bookmarks.json` (new) | every one Scoria's, every one a person's edit | *pending* — the Scoria half passes; one view fault fixed (Settings tabs shared a scroll offset) |
+| 7 | 2026-11-09 | split right and down, a tab dragged between groups, the layout written; the Bookmarks pane, a view, a titled heading and a section bookmarked into a new `bookmarks.json` (the section writing its block id into `Note D`), the rows clicked; a toggle, a dropdown and two sliders written to `app.json` and `appearance.json`; the Hotkeys tab read, `hotkeys.json` left for Obsidian | the pane's three rows clicked and the header's Edit bookmark opened (nothing written); `Note C` bookmarked and the plain `Note D` item removed; Default view and Indent visual width put back; `Alt+T` bound to Change theme...; three groups made and a tab dragged; three bookmarks made in the docs vault by mistake first | `bookmarks.json` (Scoria's three items, then Obsidian's rewrite: two kept verbatim, one appended), `hotkeys.json` (Obsidian's, new), `app.json` (Scoria's three keys, two values changed back by Obsidian), `appearance.json` (Scoria's one key, rewritten identical), `Note D` (one line, the block id); the docs vault's `workspace.json` and a new `bookmarks.json` | every one a person's edit in one of the two apps; `core-plugins.json` moved its mtime at launch and no byte, `appearance.json` its mtime on a settings commit and no byte | **passes** — Obsidian kept Scoria's bookmarks and settings bytes verbatim and appended its own; `hotkeys.json` is Obsidian's first copy and Scoria reads it; the harness caught serde_json's lossy float parse on the docs vault's `workspace.json` (fixed: `float_roundtrip`); one Settings scroll fault fixed. **The mixed-use half of the Writer gate passes**, see [[#The verdict, 2026-11-09]] |
