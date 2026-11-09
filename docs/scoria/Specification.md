@@ -651,7 +651,8 @@ empty row or column. Scoria does not draw them yet.
 **Scoria matches the handles** since 2026-11-08: the grips (hidden until hovered), selecting a line,
 the outline and tint, and the drag with its bar and the drop's before-or-after rule, through
 `scoria_text::table::move_line`. A press on a handle strip is the handle's alone, so the editor does not
-move the caret under it. **Not matched:** the "+" bars, the accent bar's exact weight and tint (taken
+move the caret under it. While a handle is held the bar follows the pointer out of the table too, clamped to the nearest
+edge line, and a release anywhere in the window drops the line where the bar was. **Not matched:** the "+" bars, the accent bar's exact weight and tint (taken
 from the screenshots, not measured), and the selection's effect on the keyboard, which was not probed.
 **Untested by driving:** the drag itself, which the control socket cannot make; the move it performs is
 unit-tested.

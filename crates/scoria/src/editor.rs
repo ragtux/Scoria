@@ -4304,19 +4304,6 @@ impl Editor {
                 }
                 return;
             }
-            TableAction::Drop {
-                table,
-                axis,
-                from,
-                target,
-            } => {
-                self.table_drag = None;
-                if let Some((index, after)) = target {
-                    self.move_table_line(table, axis, from, index + usize::from(after), window, cx);
-                }
-                cx.notify();
-                return;
-            }
         };
         // A click on a cell ends a handle's selection.
         self.table_select = None;
@@ -6893,17 +6880,34 @@ impl Element for EditorElement {
             }
         });
         let editor = self.editor.clone();
-        window.on_mouse_event(move |event: &MouseUpEvent, phase, _window, cx| {
+        let entity_for_drop = self.editor.clone();
+        window.on_mouse_event(move |event: &MouseUpEvent, phase, window, cx| {
             if phase == DispatchPhase::Bubble && event.button == MouseButton::Left {
                 editor.update(cx, |editor, cx| {
                     editor.dragging = false;
                     if editor.thumb_drag.take().is_some() {
                         cx.notify();
                     }
-                    // A handle let go anywhere ends its drag; the drop itself
-                    // carries what it needs, so this only clears the marks.
-                    if editor.table_drag.take().is_some() {
+                    // A handle let go anywhere ends its drag, and the line moves
+                    // to the gap the bar was last on: the release need not be
+                    // over the table.
+                    if let Some(drag) = editor.table_drag.take() {
                         cx.notify();
+                        if let Some((index, after)) = drag.target {
+                            let entity = entity_for_drop.clone();
+                            window.defer(cx, move |window, cx| {
+                                entity.update(cx, |editor, cx| {
+                                    editor.move_table_line(
+                                        drag.table,
+                                        drag.axis,
+                                        drag.from,
+                                        index + usize::from(after),
+                                        window,
+                                        cx,
+                                    )
+                                });
+                            });
+                        }
                     }
                 });
             }

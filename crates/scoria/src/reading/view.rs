@@ -29,7 +29,6 @@ use scoria_formats::FileKind;
 use scoria_highlight::{highlight, Paint};
 use scoria_markdown::Alignment;
 use serde_json::{json, Value};
-use std::cell::Cell;
 use std::collections::{HashMap, HashSet};
 use std::ops::Range;
 use std::rc::Rc;
@@ -574,14 +573,6 @@ pub enum TableAction {
         index: usize,
         after: bool,
     },
-    /// The handle was let go over the table; `target` is the last gap it was
-    /// held over, if any.
-    Drop {
-        table: usize,
-        axis: TableAxis,
-        from: usize,
-        target: Option<(usize, bool)>,
-    },
 }
 
 /// Whether a handle moves a row or a column.
@@ -591,15 +582,14 @@ pub enum TableAxis {
     Col,
 }
 
-/// The line a table handle has in hand, carried by gpui's drag. `target` is
-/// shared with the drag so the drop reads the last gap it was held over
-/// without waiting on the document's own copy of it.
+/// The line a table handle has in hand, carried by gpui's drag. Where it
+/// would land is the document's to keep (the editor sees the release, which
+/// can be anywhere in the window), so this only says what is held.
 #[derive(Clone)]
 pub struct TableLineDrag {
     pub table: usize,
     pub axis: TableAxis,
     pub from: usize,
-    pub target: Rc<Cell<Option<(usize, bool)>>>,
 }
 
 /// What a dragged handle shows under the pointer. Obsidian draws no ghost
@@ -2271,36 +2261,59 @@ impl<'a> Renderer<'a> {
                                 }
                             }
                         }
-                        // A handle is held over this cell: which gap is
-                        // decided by the half of the cell under the pointer.
+                        // A handle is held over the table, or past it. One cell
+                        // per line answers for it: a column's header cell, a
+                        // row's first cell. The gap is the half of the line the
+                        // pointer is over, and a pointer beyond either end of
+                        // the table takes the nearest edge, so the bar keeps
+                        // following it out of the table.
                         let over = host.on_action.clone();
                         drawn = drawn.on_drag_move(
                             move |event: &DragMoveEvent<TableLineDrag>, window, cx| {
                                 let drag = event.drag(cx).clone();
-                                if drag.table != id || !event.bounds.contains(&event.event.position)
-                                {
+                                if drag.table != id {
                                     return;
                                 }
-                                let (index, after) = match drag.axis {
-                                    TableAxis::Row => {
-                                        (row, event.event.position.y > event.bounds.center().y)
+                                let at = event.event.position;
+                                let b = event.bounds;
+                                let target = match drag.axis {
+                                    TableAxis::Row if ix == 0 => {
+                                        if row == 0 && at.y < b.top() {
+                                            Some((0, false))
+                                        } else if row == last_row && at.y >= b.bottom() {
+                                            Some((last_row, true))
+                                        } else if at.y >= b.top() && at.y < b.bottom() {
+                                            Some((row, at.y > b.center().y))
+                                        } else {
+                                            None
+                                        }
                                     }
-                                    TableAxis::Col => {
-                                        (ix, event.event.position.x > event.bounds.center().x)
+                                    TableAxis::Col if row == 0 => {
+                                        if ix == 0 && at.x < b.left() {
+                                            Some((0, false))
+                                        } else if ix == last_col && at.x >= b.right() {
+                                            Some((last_col, true))
+                                        } else if at.x >= b.left() && at.x < b.right() {
+                                            Some((ix, at.x > b.center().x))
+                                        } else {
+                                            None
+                                        }
                                     }
+                                    _ => None,
                                 };
-                                drag.target.set(Some((index, after)));
-                                over(
-                                    TableAction::DragOver {
-                                        table: id,
-                                        axis: drag.axis,
-                                        from: drag.from,
-                                        index,
-                                        after,
-                                    },
-                                    window,
-                                    cx,
-                                );
+                                if let Some((index, after)) = target {
+                                    over(
+                                        TableAction::DragOver {
+                                            table: id,
+                                            axis: drag.axis,
+                                            from: drag.from,
+                                            index,
+                                            after,
+                                        },
+                                        window,
+                                        cx,
+                                    );
+                                }
                             },
                         );
                         // The handles: a grip above each column and left of
@@ -2317,7 +2330,6 @@ impl<'a> Renderer<'a> {
                                 table: id,
                                 axis,
                                 from: index,
-                                target: Rc::new(Cell::new(None)),
                             };
                             let base = div()
                                 .id(match axis {
@@ -2403,7 +2415,6 @@ impl<'a> Renderer<'a> {
                     }
                 };
                 // The table is as wide as its columns, like an HTML table.
-                let drop_host = host.map(|h| h.on_action.clone());
                 div()
                     .mb(gap)
                     .flex()
@@ -2449,27 +2460,8 @@ impl<'a> Renderer<'a> {
                                             .map(|(i, c)| cell(c, ri + 1, i, false)),
                                     )
                             }));
-                        // Let go over the table: the move is the editor's to make.
-                        match (handles, drop_host, table_id) {
-                            (true, Some(act), Some(id)) => grid
-                                .id(("table", id))
-                                .on_drop(move |drag: &TableLineDrag, window, cx| {
-                                    if drag.table == id {
-                                        act(
-                                            TableAction::Drop {
-                                                table: id,
-                                                axis: drag.axis,
-                                                from: drag.from,
-                                                target: drag.target.get(),
-                                            },
-                                            window,
-                                            cx,
-                                        );
-                                    }
-                                })
-                                .into_any_element(),
-                            _ => grid.into_any_element(),
-                        }
+                        // The release is the editor's to see, wherever it is.
+                        grid.into_any_element()
                     })
                     .into_any_element()
             }

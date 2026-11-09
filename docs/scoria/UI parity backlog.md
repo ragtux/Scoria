@@ -2786,7 +2786,9 @@ commands.
 
 **Landed 2026-11-08**: the grips, the selection outline, the drag and its drop bar, and the move itself
 (`table::move_line`, tested). Pressing a handle commits the open cell, selects the line and leaves the
-caret alone; Escape, a click on a cell and a click anywhere else clear the selection. **Still out**: the
+caret alone; Escape, a click on a cell and a click anywhere else clear the selection. The drop bar tracks the pointer
+beyond the table (clamped to the nearest edge line) and a release anywhere drops the line, because the
+editor's own mouse-up makes the move rather than a drop target on the grid. **Still out**: the
 "+" bars that append a row or column, and the drag has only been exercised by its unit tests, not driven
 (the control socket has no drag).
 
