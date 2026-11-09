@@ -16,11 +16,11 @@ use crate::properties::{PROPERTIES_FOLD_ID, PROPERTY_ID_BASE};
 use crate::theme::Theme;
 use gpui::{
     actions, canvas, div, img, list, prelude::*, px, AnyElement, App, Bounds, ClipboardItem,
-    Context, DispatchPhase, Element, ElementId, EventEmitter, FocusHandle, Focusable, Font,
-    FontStyle, FontWeight, GlobalElementId, HighlightStyle, Hitbox, HitboxBehavior, Hsla,
-    InspectorElementId, InteractiveText, KeyBinding, LayoutId, ListAlignment, ListOffset,
-    ListState, MouseButton, MouseDownEvent, ObjectFit, Pixels, Point, SharedString, SharedUri,
-    StrikethroughStyle, StyledText, Task, TextLayout, TextRun, UnderlineStyle, Window,
+    Context, CursorStyle, DispatchPhase, DragMoveEvent, Element, ElementId, Entity, EventEmitter,
+    FocusHandle, Focusable, Font, FontStyle, FontWeight, GlobalElementId, HighlightStyle, Hitbox,
+    HitboxBehavior, Hsla, InspectorElementId, InteractiveText, KeyBinding, LayoutId, ListAlignment,
+    ListOffset, ListState, MouseButton, MouseDownEvent, ObjectFit, Pixels, Point, SharedString,
+    SharedUri, StrikethroughStyle, StyledText, Task, TextLayout, TextRun, UnderlineStyle, Window,
     WindowTextSystem,
 };
 use scoria_formats::config::PropertyTypes;
@@ -29,6 +29,7 @@ use scoria_formats::FileKind;
 use scoria_highlight::{highlight, Paint};
 use scoria_markdown::Alignment;
 use serde_json::{json, Value};
+use std::cell::Cell;
 use std::collections::{HashMap, HashSet};
 use std::ops::Range;
 use std::rc::Rc;
@@ -557,6 +558,75 @@ pub type PropertyHandler = Rc<dyn Fn(PropertyAction, &mut Window, &mut App)>;
 pub enum TableAction {
     /// Start typing in the cell standing for these bytes.
     Edit { span: Range<usize> },
+    /// A press on a row or column handle: that line is selected. `table`
+    /// names the table by where its first cell starts.
+    Select {
+        table: usize,
+        axis: TableAxis,
+        index: usize,
+    },
+    /// A handle's line is held over `index`: it would land before it, or
+    /// after it when `after` is set.
+    DragOver {
+        table: usize,
+        axis: TableAxis,
+        from: usize,
+        index: usize,
+        after: bool,
+    },
+    /// The handle was let go over the table; `target` is the last gap it was
+    /// held over, if any.
+    Drop {
+        table: usize,
+        axis: TableAxis,
+        from: usize,
+        target: Option<(usize, bool)>,
+    },
+}
+
+/// Whether a handle moves a row or a column.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TableAxis {
+    Row,
+    Col,
+}
+
+/// The line a table handle has in hand, carried by gpui's drag. `target` is
+/// shared with the drag so the drop reads the last gap it was held over
+/// without waiting on the document's own copy of it.
+#[derive(Clone)]
+pub struct TableLineDrag {
+    pub table: usize,
+    pub axis: TableAxis,
+    pub from: usize,
+    pub target: Rc<Cell<Option<(usize, bool)>>>,
+}
+
+/// What a dragged handle shows under the pointer. Obsidian draws no ghost
+/// (the line itself is outlined and the gap marked), so this is nothing.
+pub struct TableGhost;
+
+impl Render for TableGhost {
+    fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+        div().size(px(0.))
+    }
+}
+
+/// The row or column a handle press selected, drawn outlined and tinted.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TableSelect {
+    pub table: usize,
+    pub axis: TableAxis,
+    pub index: usize,
+}
+
+/// A handle's line being dragged and the gap it is held over.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TableDragView {
+    pub table: usize,
+    pub axis: TableAxis,
+    pub from: usize,
+    pub target: Option<(usize, bool)>,
 }
 
 /// What a table cell does when clicked.
@@ -569,6 +639,9 @@ pub(crate) struct TableHost {
     /// The cell being typed into: the bytes it stands for and the text in
     /// hand, which has not reached the document yet.
     pub cell: Option<(Range<usize>, Field)>,
+    /// The row or column a handle press selected, and the drag in progress.
+    pub select: Option<TableSelect>,
+    pub drag: Option<TableDragView>,
     pub on_action: TableHandler,
 }
 
@@ -2079,6 +2152,19 @@ impl<'a> Renderer<'a> {
                 });
                 let columns = self.column_widths(header, rows, font_size, editing);
                 let table_width: f32 = columns.iter().sum();
+                // A table is named by where its first cell starts, which is
+                // what the handles' actions carry back.
+                let table_id = spans.first().and_then(|r| r.first()).map(|s| s.start);
+                let handles = host.is_some() && table_id.is_some() && !header.is_empty();
+                let last_row = rows.len();
+                let last_col = columns.len().saturating_sub(1);
+                let accent = t.tokens.interactive_accent;
+                let selected = host
+                    .and_then(|h| h.select)
+                    .filter(|s| Some(s.table) == table_id);
+                let dragging = host
+                    .and_then(|h| h.drag)
+                    .filter(|d| Some(d.table) == table_id);
                 // `row` is 0 for the header, so the span of every cell is
                 // where the model put it.
                 let cell = |text: &RichText, row: usize, ix: usize, head: bool| -> AnyElement {
@@ -2096,7 +2182,12 @@ impl<'a> Renderer<'a> {
                     // `--table-header-color` at `--table-header-weight`
                     // (600) on `--table-header-background`, which is
                     // transparent (probe of 2026-11-02, `preview.th`).
-                    let drawn = div()
+                    let mut drawn = div()
+                        .id((
+                            "table-cell",
+                            span.as_ref().map(|s| s.start).unwrap_or(row * 4096 + ix),
+                        ))
+                        .relative()
                         .w(px(width))
                         .flex_shrink_0()
                         .px_2()
@@ -2116,12 +2207,192 @@ impl<'a> Renderer<'a> {
                             Some(field) => d.child(self.property_field(field, false)),
                             None => d.child(self.rich(text)),
                         });
+                    if handles {
+                        let id = table_id.unwrap_or(0);
+                        let host = host.expect("handles are only drawn with a host");
+                        // The selected row or column: an accent outline and
+                        // a tint over each of its cells (probe of 2026-11-08).
+                        if let Some(sel) = selected {
+                            let hit = match sel.axis {
+                                TableAxis::Row => sel.index == row,
+                                TableAxis::Col => sel.index == ix,
+                            };
+                            if hit {
+                                let mut tint = accent;
+                                tint.a = 0.15;
+                                let mut over = div()
+                                    .absolute()
+                                    .top(px(-1.))
+                                    .left(px(-1.))
+                                    .right(px(-1.))
+                                    .bottom(px(-1.))
+                                    .bg(tint)
+                                    .border_color(accent);
+                                over = match sel.axis {
+                                    TableAxis::Row => over
+                                        .border_t_2()
+                                        .border_b_2()
+                                        .when(ix == 0, |d| d.border_l_2())
+                                        .when(ix == last_col, |d| d.border_r_2()),
+                                    TableAxis::Col => over
+                                        .border_l_2()
+                                        .border_r_2()
+                                        .when(row == 0, |d| d.border_t_2())
+                                        .when(row == last_row, |d| d.border_b_2()),
+                                };
+                                drawn = drawn.child(over);
+                            }
+                        }
+                        // The gap a held line would land in: a thick accent
+                        // bar along the edge of the row or column it is
+                        // over, on the side the pointer is.
+                        if let Some(drag) = dragging {
+                            if let Some((at, after)) = drag.target {
+                                let on_it = match drag.axis {
+                                    TableAxis::Row => at == row,
+                                    TableAxis::Col => at == ix,
+                                };
+                                if on_it {
+                                    let bar = div().absolute().bg(accent);
+                                    drawn = drawn.child(match (drag.axis, after) {
+                                        (TableAxis::Row, false) => {
+                                            bar.top(px(-2.)).left(px(0.)).right(px(0.)).h(px(4.))
+                                        }
+                                        (TableAxis::Row, true) => {
+                                            bar.bottom(px(-2.)).left(px(0.)).right(px(0.)).h(px(4.))
+                                        }
+                                        (TableAxis::Col, false) => {
+                                            bar.left(px(-2.)).top(px(0.)).bottom(px(0.)).w(px(4.))
+                                        }
+                                        (TableAxis::Col, true) => {
+                                            bar.right(px(-2.)).top(px(0.)).bottom(px(0.)).w(px(4.))
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                        // A handle is held over this cell: which gap is
+                        // decided by the half of the cell under the pointer.
+                        let over = host.on_action.clone();
+                        drawn = drawn.on_drag_move(
+                            move |event: &DragMoveEvent<TableLineDrag>, window, cx| {
+                                let drag = event.drag(cx).clone();
+                                if drag.table != id || !event.bounds.contains(&event.event.position)
+                                {
+                                    return;
+                                }
+                                let (index, after) = match drag.axis {
+                                    TableAxis::Row => {
+                                        (row, event.event.position.y > event.bounds.center().y)
+                                    }
+                                    TableAxis::Col => {
+                                        (ix, event.event.position.x > event.bounds.center().x)
+                                    }
+                                };
+                                drag.target.set(Some((index, after)));
+                                over(
+                                    TableAction::DragOver {
+                                        table: id,
+                                        axis: drag.axis,
+                                        from: drag.from,
+                                        index,
+                                        after,
+                                    },
+                                    window,
+                                    cx,
+                                );
+                            },
+                        );
+                        // The handles: a grip above each column and left of
+                        // each row, there to be hovered (opacity 0 until
+                        // then), pressed to select the line and dragged to
+                        // move it. The row handle of the header sits with
+                        // the first column's.
+                        let make = |axis: TableAxis, index: usize| -> AnyElement {
+                            let held = dragging.is_some_and(|d| d.axis == axis && d.from == index);
+                            let chosen =
+                                selected.is_some_and(|s| s.axis == axis && s.index == index);
+                            let act = host.on_action.clone();
+                            let drag = TableLineDrag {
+                                table: id,
+                                axis,
+                                from: index,
+                                target: Rc::new(Cell::new(None)),
+                            };
+                            let base = div()
+                                .id(match axis {
+                                    TableAxis::Col => ("table-col-handle", id * 64 + index),
+                                    TableAxis::Row => ("table-row-handle", id * 64 + index),
+                                })
+                                .absolute()
+                                .flex()
+                                .items_center()
+                                .justify_center()
+                                .cursor(if held {
+                                    CursorStyle::ClosedHand
+                                } else {
+                                    CursorStyle::OpenHand
+                                })
+                                .opacity(if held || chosen { 1. } else { 0. })
+                                .hover(|s| s.opacity(1.))
+                                .when(held, |d| d.bg(accent))
+                                .child(icon(
+                                    match axis {
+                                        TableAxis::Col => "grip-horizontal",
+                                        TableAxis::Row => "grip-vertical",
+                                    },
+                                    14.,
+                                    if held {
+                                        gpui::white()
+                                    } else {
+                                        t.tokens.text_faint
+                                    },
+                                ));
+                            let base = match axis {
+                                TableAxis::Col => base
+                                    .top(px(-14.))
+                                    .left(px(0.))
+                                    .w_full()
+                                    .h(px(14.))
+                                    .rounded_tl(px(4.))
+                                    .rounded_tr(px(4.)),
+                                TableAxis::Row => base
+                                    .left(px(-14.))
+                                    .top(px(0.))
+                                    .h_full()
+                                    .w(px(14.))
+                                    .rounded_tl(px(4.))
+                                    .rounded_bl(px(4.)),
+                            };
+                            base.on_mouse_down(MouseButton::Left, move |_, window, cx| {
+                                cx.stop_propagation();
+                                act(
+                                    TableAction::Select {
+                                        table: id,
+                                        axis,
+                                        index,
+                                    },
+                                    window,
+                                    cx,
+                                );
+                            })
+                            .on_drag(drag, |_, _, _, cx: &mut App| -> Entity<TableGhost> {
+                                cx.new(|_| TableGhost)
+                            })
+                            .into_any_element()
+                        };
+                        if head {
+                            drawn = drawn.child(make(TableAxis::Col, ix));
+                        }
+                        if ix == 0 {
+                            drawn = drawn.child(make(TableAxis::Row, row));
+                        }
+                    }
                     // A cell is clicked into, the way a property row is.
                     match (host, span) {
                         (Some(host), Some(span)) => {
                             let on_action = host.on_action.clone();
                             drawn
-                                .id(("table-cell", span.start))
                                 .cursor_text()
                                 .on_mouse_down(MouseButton::Left, move |_, window, cx| {
                                     on_action(TableAction::Edit { span: span.clone() }, window, cx);
@@ -2132,12 +2403,13 @@ impl<'a> Renderer<'a> {
                     }
                 };
                 // The table is as wide as its columns, like an HTML table.
+                let drop_host = host.map(|h| h.on_action.clone());
                 div()
                     .mb(gap)
                     .flex()
                     .flex_row()
-                    .child(
-                        div()
+                    .child({
+                        let grid = div()
                             .w(px(table_width))
                             .flex_shrink_0()
                             .flex()
@@ -2176,8 +2448,29 @@ impl<'a> Renderer<'a> {
                                             .enumerate()
                                             .map(|(i, c)| cell(c, ri + 1, i, false)),
                                     )
-                            })),
-                    )
+                            }));
+                        // Let go over the table: the move is the editor's to make.
+                        match (handles, drop_host, table_id) {
+                            (true, Some(act), Some(id)) => grid
+                                .id(("table", id))
+                                .on_drop(move |drag: &TableLineDrag, window, cx| {
+                                    if drag.table == id {
+                                        act(
+                                            TableAction::Drop {
+                                                table: id,
+                                                axis: drag.axis,
+                                                from: drag.from,
+                                                target: drag.target.get(),
+                                            },
+                                            window,
+                                            cx,
+                                        );
+                                    }
+                                })
+                                .into_any_element(),
+                            _ => grid.into_any_element(),
+                        }
+                    })
                     .into_any_element()
             }
             RBlock::Math(text) => self.math_block(text, gap),

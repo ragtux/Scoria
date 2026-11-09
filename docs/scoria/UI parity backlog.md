@@ -2773,6 +2773,23 @@ went blank line, header cell, first body cell. **Still out**: the reading view's
 behaviour when the title loses focus (a press elsewhere abandons it here), and a re-pad on entering a
 table.
 
+### A table has no row or column handles
+
+Filed from `tools/obsidian-probe/table-handles.mjs`
+([[Specification#Observed table handles, Obsidian 1.15.0]]).
+
+**Obsidian.** A grip above each column and left of each row, shown while hovered, that selects the line
+when pressed and moves it when dragged, with an accent bar marking where it would land.
+
+**Scoria.** The table was a grid with no handles, so a row or column could only be moved with the table
+commands.
+
+**Landed 2026-11-08**: the grips, the selection outline, the drag and its drop bar, and the move itself
+(`table::move_line`, tested). Pressing a handle commits the open cell, selects the line and leaves the
+caret alone; Escape, a click on a cell and a click anywhere else clear the selection. **Still out**: the
+"+" bars that append a row or column, and the drag has only been exercised by its unit tests, not driven
+(the control socket has no drag).
+
 ## Blocked by the harness, not by the code
 
 Five things could not be settled from outside the process. They are not findings and not fixes —

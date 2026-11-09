@@ -366,6 +366,52 @@ pub fn apply(at: &TableAt, cmd: TableCommand) -> Option<TableEdit> {
     Some(TableEdit { text, cursor })
 }
 
+/// Where row or column `from` ends up when it is dropped into the gap
+/// `slot`, counted in the order before the move: the gap after the last
+/// line is `len`, and a line dropped into the gap either side of itself
+/// stays where it is.
+pub fn move_destination(from: usize, slot: usize) -> usize {
+    if from < slot {
+        slot - 1
+    } else {
+        slot
+    }
+}
+
+/// Moves one row, or one column when `columns` is set, to the gap `slot`:
+/// what dragging a row or column handle does. The header is a row like any
+/// other, so it can be dragged and a body row dropped above it, as the
+/// move commands treat it; a column takes its alignment with it. `None`
+/// when the drop leaves the line where it was or names a gap that is not
+/// there. The cursor lands in the moved line's first cell, which is where
+/// Obsidian's (probe of 2026-11-08, `table-handles`).
+pub fn move_line(at: &TableAt, columns: bool, from: usize, slot: usize) -> Option<TableEdit> {
+    let mut t = at.table.clone();
+    let len = if columns { t.columns() } else { t.rows.len() };
+    if from >= len || slot > len {
+        return None;
+    }
+    let dest = move_destination(from, slot);
+    if dest == from {
+        return None;
+    }
+    if columns {
+        for r in &mut t.rows {
+            let cell = r.remove(from);
+            r.insert(dest, cell);
+        }
+        let align = t.alignments.remove(from);
+        t.alignments.insert(dest, align);
+    } else {
+        let row = t.rows.remove(from);
+        t.rows.insert(dest, row);
+    }
+    let text = t.render();
+    let (row, col) = if columns { (0, dest) } else { (dest, 0) };
+    let cursor = t.cursor_at(&text, row, col);
+    Some(TableEdit { text, cursor })
+}
+
 fn insert_column(t: &mut Table, at: usize, align: Alignment, cells: Option<Vec<String>>) {
     for (ix, r) in t.rows.iter_mut().enumerate() {
         let cell = cells
@@ -438,6 +484,67 @@ mod tests {
     }
 
     const PADDED: &str = "| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n";
+
+    /// Drags `from` into the gap `slot` and returns the document and where
+    /// the cursor landed in it.
+    fn dragged(src: &str, columns: bool, from: usize, slot: usize) -> Option<(String, usize)> {
+        let at = table_at(src, 2).expect("a table");
+        let edit = move_line(&at, columns, from, slot)?;
+        let mut out = src.to_string();
+        out.replace_range(at.span.clone(), &edit.text);
+        Some((out, at.span.start + edit.cursor))
+    }
+
+    const THREE: &str =
+        "| A | B | C |\n| --- | --- | --- |\n| 1 | 2 | 3 |\n| 4 | 5 | 6 |\n| 7 | 8 | 9 |\n";
+
+    #[test]
+    fn a_dragged_row_lands_in_the_gap_and_the_cursor_in_its_first_cell() {
+        // Probe of 2026-11-08. The header is row 0, so the rows 1, 4 and 7 are 1, 2 and 3:
+        // row 4 below 7, row 4 above 1, row 1 below 4, row 7 above 4.
+        let (out, at) = dragged(THREE, false, 2, 4).unwrap();
+        assert_eq!(
+            out,
+            "| A   | B   | C   |\n| --- | --- | --- |\n| 1   | 2   | 3   |\n| 7   | 8   | 9   |\n| 4   | 5   | 6   |\n"
+        );
+        assert_eq!(&out[at..at + 1], "4");
+        let (out, _) = dragged(THREE, false, 2, 1).unwrap();
+        assert!(out.contains("| 4   | 5   | 6   |\n| 1   | 2   | 3   |\n| 7   | 8   | 9   |\n"));
+        let (out, _) = dragged(THREE, false, 1, 3).unwrap();
+        assert!(out.contains("| 4   | 5   | 6   |\n| 1   | 2   | 3   |\n| 7   | 8   | 9   |\n"));
+        let (out, _) = dragged(THREE, false, 3, 2).unwrap();
+        assert!(out.contains("| 1   | 2   | 3   |\n| 7   | 8   | 9   |\n| 4   | 5   | 6   |\n"));
+    }
+
+    #[test]
+    fn a_dragged_column_takes_its_alignment_and_the_cursor_goes_to_its_header() {
+        let src = "| A | B | C |\n| --- | :-: | --: |\n| 1 | 2 | 3 |\n";
+        let (out, at) = dragged(src, true, 1, 3).unwrap();
+        assert_eq!(
+            out,
+            "| A   |   C |  B  |\n| --- | --: | :-: |\n| 1   |   3 |  2  |\n"
+        );
+        assert_eq!(&out[at..at + 3], " B ");
+        let (out, _) = dragged(src, true, 1, 0).unwrap();
+        assert!(out.starts_with("|  B  | A   |   C |\n| :-: | --- | --: |\n"));
+    }
+
+    #[test]
+    fn the_header_is_a_row_that_can_be_dragged() {
+        let (out, _) = dragged(THREE, false, 0, 2).unwrap();
+        assert!(out.starts_with("| 1   | 2   | 3   |\n| --- | --- | --- |\n| A   | B   | C   |\n"));
+    }
+
+    #[test]
+    fn a_drop_that_changes_nothing_writes_nothing() {
+        // Either gap beside the line, and a gap that is not there.
+        assert!(dragged(THREE, false, 2, 2).is_none());
+        assert!(dragged(THREE, false, 2, 3).is_none());
+        assert!(dragged(THREE, true, 0, 1).is_none());
+        assert!(dragged(THREE, false, 2, 9).is_none());
+        assert_eq!(move_destination(3, 5), 4);
+        assert_eq!(move_destination(3, 2), 2);
+    }
 
     #[test]
     fn any_command_rewrites_the_whole_table() {

@@ -166,6 +166,7 @@ icons!(
     "toy-brick",
     "wrench",
     "bookmark-filled",
+    "grip-horizontal",
 );
 
 /// The logo, the one bundled asset that is not a monochrome icon. It is

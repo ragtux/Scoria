@@ -1,0 +1,2687 @@
+{
+ "tableHandles": {
+  "fixtures": {
+   "startedAt": "2026-11-09T03:45:12.628Z",
+   "steps": {},
+   "order": [],
+   "elapsedMs": 1
+  },
+  "run": {
+   "startedAt": "2026-11-09T03:45:13.793Z",
+   "steps": {
+    "s00-no-cell-focused": {
+     "ok": true,
+     "ms": 2259,
+     "seedOk": true,
+     "widget": {
+      "wrapClass": "cm-embed-block cm-table-widget markdown-rendered",
+      "tableRect": {
+       "x": 178.21119689941406,
+       "y": 218.00645446777344,
+       "w": 165.33404541015625,
+       "h": 118.62068176269531
+      },
+      "extras": [
+       {
+        "tag": "DIV",
+        "cls": "table-wrapper",
+        "label": null,
+        "icon": "svg-icon lucide-grip-horizontal",
+        "rect": {
+         "x": 178.21119689941406,
+         "y": 218.00645446777344,
+         "w": 165.33404541015625,
+         "h": 118.62068176269531
+        },
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "auto",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(218, 218, 218)",
+        "radius": "0px",
+        "parent": "cm-embed-block cm-table-widget markdown-rendered"
+       },
+       {
+        "tag": "DIV",
+        "cls": "table-row-btn",
+        "label": "Add row below",
+        "icon": "svg-icon lucide-plus",
+        "rect": {
+         "x": 178.21119689941406,
+         "y": 336.62713623046875,
+         "w": 165.33404541015625,
+         "h": 15.991377830505371
+        },
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": "0",
+        "cursor": "s-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "table-wrapper"
+       },
+       {
+        "tag": "svg",
+        "cls": "svg-icon lucide-plus",
+        "label": null,
+        "icon": null,
+        "rect": {
+         "x": 252.87713623046875,
+         "y": 336.2823181152344,
+         "w": 15.991377830505371,
+         "h": 15.991377830505371
+        },
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "s-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "table-row-btn"
+       },
+       {
+        "tag": "path",
+        "cls": "",
+        "label": null,
+        "icon": null,
+        "rect": {
+         "x": 256.20867919921875,
+         "y": 344.2779846191406,
+         "w": 9.328317642211914,
+         "h": 0
+        },
+        "display": "inline",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "s-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "[object SVGAnimatedString]"
+       },
+       {
+        "tag": "path",
+        "cls": "",
+        "label": null,
+        "icon": null,
+        "rect": {
+         "x": 260.8728332519531,
+         "y": 339.61383056640625,
+         "w": 0,
+         "h": 9.328317642211914
+        },
+        "display": "inline",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "s-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "[object SVGAnimatedString]"
+       },
+       {
+        "tag": "DIV",
+        "cls": "table-col-btn",
+        "label": "Add column to the right",
+        "icon": "svg-icon lucide-plus",
+        "rect": {
+         "x": 343.54522705078125,
+         "y": 218.00645446777344,
+         "w": 15.991377830505371,
+         "h": 118.62068176269531
+        },
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": "0",
+        "cursor": "e-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "table-wrapper"
+       },
+       {
+        "tag": "svg",
+        "cls": "svg-icon lucide-plus",
+        "label": null,
+        "icon": null,
+        "rect": {
+         "x": 343.54522705078125,
+         "y": 269.32110595703125,
+         "w": 15.30172348022461,
+         "h": 15.991377830505371
+        },
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "e-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "table-col-btn"
+       },
+       {
+        "tag": "path",
+        "cls": "",
+        "label": null,
+        "icon": null,
+        "rect": {
+         "x": 346.73309326171875,
+         "y": 277.3168029785156,
+         "w": 8.92601203918457,
+         "h": 0
+        },
+        "display": "inline",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "e-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "[object SVGAnimatedString]"
+       },
+       {
+        "tag": "path",
+        "cls": "",
+        "label": null,
+        "icon": null,
+        "rect": {
+         "x": 351.19610595703125,
+         "y": 272.8537902832031,
+         "w": 0,
+         "h": 8.92599105834961
+        },
+        "display": "inline",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "e-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "[object SVGAnimatedString]"
+       }
+      ],
+      "html": "<div class=\"cm-embed-block cm-table-widget markdown-rendered\" dir=\"ltr\" contenteditable=\"false\"><div class=\"table-wrapper\"><table class=\"table-editor\" tabindex=\"-1\">\n<thead>\n<tr>\n<th dir=\"ltr\"><div class=\"table-cell-wrapper\">A</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></th>\n<th dir=\"ltr\"><div class=\"table-cell-wrapper\">B</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div></th>\n<th dir=\"ltr\"><div class=\"table-cell-wrapper\">C</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">1</div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></td>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">2</div></td>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">3</div></td>\n</tr>\n<tr>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">4</div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></td>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">5</div></td>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">6</div></td>\n</tr>\n<tr>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">7</div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></td>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">8</div></td>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">9</div></td>\n</tr>\n</tbody>\n</table><div class=\"table-row-btn\" aria-label=\"Add row below\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-plus\"><path d=\"M5 12h14\"></path><path d=\"M12 5v14\"></path></svg></div><div class=\"table-col-btn\" aria-label=\"Add column to the right\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-plus\"><path d=\"M5 12h14\"></path><path d=\"M12 5v14\"></path></svg></div></div></div>",
+      "cellRects": [
+       {
+        "text": "A",
+        "tag": "TH",
+        "x": 178.55601501464844,
+        "y": 218.3512725830078,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "B",
+        "tag": "TH",
+        "x": 233.43748474121094,
+        "y": 218.3512725830078,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "C",
+        "tag": "TH",
+        "x": 288.3189392089844,
+        "y": 218.3512725830078,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "1",
+        "tag": "TD",
+        "x": 178.55601501464844,
+        "y": 247.8340301513672,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "2",
+        "tag": "TD",
+        "x": 233.43748474121094,
+        "y": 247.8340301513672,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "3",
+        "tag": "TD",
+        "x": 288.3189392089844,
+        "y": 247.8340301513672,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "4",
+        "tag": "TD",
+        "x": 178.55601501464844,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "5",
+        "tag": "TD",
+        "x": 233.43748474121094,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "6",
+        "tag": "TD",
+        "x": 288.3189392089844,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "7",
+        "tag": "TD",
+        "x": 178.55601501464844,
+        "y": 306.799560546875,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "8",
+        "tag": "TD",
+        "x": 233.43748474121094,
+        "y": 306.799560546875,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "9",
+        "tag": "TD",
+        "x": 288.3189392089844,
+        "y": 306.799560546875,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       }
+      ]
+     },
+     "shot": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/9917b6ff-0b3e-4d75-b46f-ca975d1001de/scratchpad/th-shots/01-no-focus.png"
+    },
+    "s01-cell-focused": {
+     "ok": true,
+     "ms": 2359,
+     "seedOk": true,
+     "click": {
+      "x": 233.43748474121094,
+      "y": 277.3168029785156,
+      "w": 54.88146209716797,
+      "h": 29.482755661010742,
+      "cx": 260.8782157897949,
+      "cy": 292.058180809021
+     },
+     "widget": {
+      "wrapClass": "cm-embed-block cm-table-widget markdown-rendered has-focus",
+      "tableRect": {
+       "x": 178.21119689941406,
+       "y": 218.00645446777344,
+       "w": 165.33404541015625,
+       "h": 118.62068176269531
+      },
+      "extras": [
+       {
+        "tag": "DIV",
+        "cls": "table-wrapper",
+        "label": null,
+        "icon": "svg-icon lucide-grip-horizontal",
+        "rect": {
+         "x": 178.21119689941406,
+         "y": 218.00645446777344,
+         "w": 165.33404541015625,
+         "h": 118.62068176269531
+        },
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "auto",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(218, 218, 218)",
+        "radius": "0px",
+        "parent": "cm-embed-block cm-table-widget markdown-rendered has-focus"
+       },
+       {
+        "tag": "DIV",
+        "cls": "table-row-btn",
+        "label": "Add row below",
+        "icon": "svg-icon lucide-plus",
+        "rect": {
+         "x": 178.21119689941406,
+         "y": 336.62713623046875,
+         "w": 165.33404541015625,
+         "h": 15.991377830505371
+        },
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": "0",
+        "cursor": "s-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "table-wrapper"
+       },
+       {
+        "tag": "svg",
+        "cls": "svg-icon lucide-plus",
+        "label": null,
+        "icon": null,
+        "rect": {
+         "x": 252.87713623046875,
+         "y": 336.2823181152344,
+         "w": 15.991377830505371,
+         "h": 15.991377830505371
+        },
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "s-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "table-row-btn"
+       },
+       {
+        "tag": "path",
+        "cls": "",
+        "label": null,
+        "icon": null,
+        "rect": {
+         "x": 256.20867919921875,
+         "y": 344.2779846191406,
+         "w": 9.328317642211914,
+         "h": 0
+        },
+        "display": "inline",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "s-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "[object SVGAnimatedString]"
+       },
+       {
+        "tag": "path",
+        "cls": "",
+        "label": null,
+        "icon": null,
+        "rect": {
+         "x": 260.8728332519531,
+         "y": 339.61383056640625,
+         "w": 0,
+         "h": 9.328317642211914
+        },
+        "display": "inline",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "s-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "[object SVGAnimatedString]"
+       },
+       {
+        "tag": "DIV",
+        "cls": "table-col-btn",
+        "label": "Add column to the right",
+        "icon": "svg-icon lucide-plus",
+        "rect": {
+         "x": 343.54522705078125,
+         "y": 218.00645446777344,
+         "w": 15.991377830505371,
+         "h": 118.62068176269531
+        },
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": "0",
+        "cursor": "e-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "table-wrapper"
+       },
+       {
+        "tag": "svg",
+        "cls": "svg-icon lucide-plus",
+        "label": null,
+        "icon": null,
+        "rect": {
+         "x": 343.54522705078125,
+         "y": 269.32110595703125,
+         "w": 15.30172348022461,
+         "h": 15.991377830505371
+        },
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "e-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "table-col-btn"
+       },
+       {
+        "tag": "path",
+        "cls": "",
+        "label": null,
+        "icon": null,
+        "rect": {
+         "x": 346.73309326171875,
+         "y": 277.3168029785156,
+         "w": 8.92601203918457,
+         "h": 0
+        },
+        "display": "inline",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "e-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "[object SVGAnimatedString]"
+       },
+       {
+        "tag": "path",
+        "cls": "",
+        "label": null,
+        "icon": null,
+        "rect": {
+         "x": 351.19610595703125,
+         "y": 272.8537902832031,
+         "w": 0,
+         "h": 8.92599105834961
+        },
+        "display": "inline",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "e-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "[object SVGAnimatedString]"
+       }
+      ],
+      "html": "<div class=\"cm-embed-block cm-table-widget markdown-rendered has-focus\" dir=\"ltr\" contenteditable=\"false\"><div class=\"table-wrapper\"><table class=\"table-editor\" tabindex=\"-1\">\n<thead>\n<tr>\n<th dir=\"ltr\"><div class=\"table-cell-wrapper\">A</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></th>\n<th dir=\"ltr\" class=\"mod-active-col-handle\"><div class=\"table-cell-wrapper\">B</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div></th>\n<th dir=\"ltr\"><div class=\"table-cell-wrapper\">C</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">1</div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></td>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">2</div></td>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">3</div></td>\n</tr>\n<tr>\n<td dir=\"auto\" class=\"mod-active-row-handle\"><div class=\"table-cell-wrapper\">4</div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></td>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\" style=\"display: none;\">5</div><div class=\"table-cell-wrapper\" data-ignore-swipe=\"true\"><div class=\"cm-s-obsidian mod-cm6 node-insert-event is-live-preview\"><div class=\"cm-editor cm-focused ͼ1 ͼ2 \"><div class=\"cm-announced\" aria-live=\"polite\"></div><div tabindex=\"-1\" class=\"cm-scroller\"><div spellcheck=\"true\" autocorrect=\"on\" autocapitalize=\"on\" writingsuggestions=\"false\" translate=\"no\" contenteditable=\"true\" class=\"cm-content cm-lineWrapping\" role=\"textbox\" aria-multiline=\"true\" data-language=\"hypermd\" style=\"tab-size: 4;\"><div class=\"cm-line cm-active\" dir=\"auto\">5</div></div><div class=\"cm-layer cm-layer-above cm-cursorLayer\" aria-hidden=\"true\" style=\"z-index: 150; animation-duration: 1200ms;\"></div><div class=\"cm-layer cm-selectionLayer\" aria-hidden=\"true\" style=\"z-index: -2;\"></div></div></div></div></div></td>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">6</div></td>\n</tr>\n<tr>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">7</div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></td>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">8</div></td>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">9</div></td>\n</tr>\n</tbody>\n</table><div class=\"table-row-btn\" aria-label=\"Add row below\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-plus\"><path d=\"M5 12h14\"></path><path d=\"M12 5v14\"></path></svg></div><div class=\"table-col-btn\" aria-label=\"Add column to the right\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"curren",
+      "cellRects": [
+       {
+        "text": "A",
+        "tag": "TH",
+        "x": 178.55601501464844,
+        "y": 218.3512725830078,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "B",
+        "tag": "TH",
+        "x": 233.43748474121094,
+        "y": 218.3512725830078,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "C",
+        "tag": "TH",
+        "x": 288.3189392089844,
+        "y": 218.3512725830078,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "1",
+        "tag": "TD",
+        "x": 178.55601501464844,
+        "y": 247.8340301513672,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "2",
+        "tag": "TD",
+        "x": 233.43748474121094,
+        "y": 247.8340301513672,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "3",
+        "tag": "TD",
+        "x": 288.3189392089844,
+        "y": 247.8340301513672,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "4",
+        "tag": "TD",
+        "x": 178.55601501464844,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "55",
+        "tag": "TD",
+        "x": 233.43748474121094,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "6",
+        "tag": "TD",
+        "x": 288.3189392089844,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "7",
+        "tag": "TD",
+        "x": 178.55601501464844,
+        "y": 306.799560546875,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "8",
+        "tag": "TD",
+        "x": 233.43748474121094,
+        "y": 306.799560546875,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "9",
+        "tag": "TD",
+        "x": 288.3189392089844,
+        "y": 306.799560546875,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       }
+      ]
+     },
+     "shot": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/9917b6ff-0b3e-4d75-b46f-ca975d1001de/scratchpad/th-shots/02-focused-middle.png",
+     "firstCell": null
+    },
+    "s02-other-cells-and-edges": {
+     "ok": true,
+     "ms": 5140,
+     "seedOk": true,
+     "firstBody": {
+      "wrapClass": "cm-embed-block cm-table-widget markdown-rendered has-focus",
+      "tableRect": {
+       "x": 178.21119689941406,
+       "y": 218.00645446777344,
+       "w": 165.33404541015625,
+       "h": 118.62068176269531
+      },
+      "extras": [
+       {
+        "tag": "DIV",
+        "cls": "table-wrapper",
+        "label": null,
+        "icon": "svg-icon lucide-grip-horizontal",
+        "rect": {
+         "x": 178.21119689941406,
+         "y": 218.00645446777344,
+         "w": 165.33404541015625,
+         "h": 118.62068176269531
+        },
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "auto",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(218, 218, 218)",
+        "radius": "0px",
+        "parent": "cm-embed-block cm-table-widget markdown-rendered has-focus"
+       },
+       {
+        "tag": "DIV",
+        "cls": "table-row-btn",
+        "label": "Add row below",
+        "icon": "svg-icon lucide-plus",
+        "rect": {
+         "x": 178.21119689941406,
+         "y": 336.62713623046875,
+         "w": 165.33404541015625,
+         "h": 15.991377830505371
+        },
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": "0",
+        "cursor": "s-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "table-wrapper"
+       },
+       {
+        "tag": "svg",
+        "cls": "svg-icon lucide-plus",
+        "label": null,
+        "icon": null,
+        "rect": {
+         "x": 252.87713623046875,
+         "y": 336.2823181152344,
+         "w": 15.991377830505371,
+         "h": 15.991377830505371
+        },
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "s-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "table-row-btn"
+       },
+       {
+        "tag": "path",
+        "cls": "",
+        "label": null,
+        "icon": null,
+        "rect": {
+         "x": 256.20867919921875,
+         "y": 344.2779846191406,
+         "w": 9.328317642211914,
+         "h": 0
+        },
+        "display": "inline",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "s-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "[object SVGAnimatedString]"
+       },
+       {
+        "tag": "path",
+        "cls": "",
+        "label": null,
+        "icon": null,
+        "rect": {
+         "x": 260.8728332519531,
+         "y": 339.61383056640625,
+         "w": 0,
+         "h": 9.328317642211914
+        },
+        "display": "inline",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "s-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "[object SVGAnimatedString]"
+       },
+       {
+        "tag": "DIV",
+        "cls": "table-col-btn",
+        "label": "Add column to the right",
+        "icon": "svg-icon lucide-plus",
+        "rect": {
+         "x": 343.54522705078125,
+         "y": 218.00645446777344,
+         "w": 15.991377830505371,
+         "h": 118.62068176269531
+        },
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": "0",
+        "cursor": "e-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "table-wrapper"
+       },
+       {
+        "tag": "svg",
+        "cls": "svg-icon lucide-plus",
+        "label": null,
+        "icon": null,
+        "rect": {
+         "x": 343.54522705078125,
+         "y": 269.32110595703125,
+         "w": 15.30172348022461,
+         "h": 15.991377830505371
+        },
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "e-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "table-col-btn"
+       },
+       {
+        "tag": "path",
+        "cls": "",
+        "label": null,
+        "icon": null,
+        "rect": {
+         "x": 346.73309326171875,
+         "y": 277.3168029785156,
+         "w": 8.92601203918457,
+         "h": 0
+        },
+        "display": "inline",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "e-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "[object SVGAnimatedString]"
+       },
+       {
+        "tag": "path",
+        "cls": "",
+        "label": null,
+        "icon": null,
+        "rect": {
+         "x": 351.19610595703125,
+         "y": 272.8537902832031,
+         "w": 0,
+         "h": 8.92599105834961
+        },
+        "display": "inline",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "e-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "[object SVGAnimatedString]"
+       }
+      ],
+      "html": "<div class=\"cm-embed-block cm-table-widget markdown-rendered has-focus\" dir=\"ltr\" contenteditable=\"false\"><div class=\"table-wrapper\"><table class=\"table-editor\" tabindex=\"-1\">\n<thead>\n<tr>\n<th dir=\"ltr\" class=\"mod-active-col-handle\"><div class=\"table-cell-wrapper\">A</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></th>\n<th dir=\"ltr\"><div class=\"table-cell-wrapper\">B</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div></th>\n<th dir=\"ltr\"><div class=\"table-cell-wrapper\">C</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td dir=\"auto\" class=\"mod-active-row-handle\"><div class=\"table-cell-wrapper\" style=\"display: none;\">1</div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div><div class=\"table-cell-wrapper\" data-ignore-swipe=\"true\"><div class=\"cm-s-obsidian mod-cm6 node-insert-event is-live-preview\"><div class=\"cm-editor cm-focused ͼ1 ͼ2 \"><div class=\"cm-announced\" aria-live=\"polite\"></div><div tabindex=\"-1\" class=\"cm-scroller\"><div spellcheck=\"true\" autocorrect=\"on\" autocapitalize=\"on\" writingsuggestions=\"false\" translate=\"no\" contenteditable=\"true\" class=\"cm-content cm-lineWrapping\" role=\"textbox\" aria-multiline=\"true\" data-language=\"hypermd\" style=\"tab-size: 4;\"><div class=\"cm-line cm-active\" dir=\"auto\">1</div></div><div class=\"cm-layer cm-layer-above cm-cursorLayer\" aria-hidden=\"true\" style=\"z-index: 150; animation-duration: 1200ms;\"></div><div class=\"cm-layer cm-selectionLayer\" aria-hidden=\"true\" style=\"z-index: -2;\"></div></div></div></div></div></td>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">2</div></td>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">3</div></td>\n</tr>\n<tr>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">4</div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></td>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">5</div></td>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">6</div></td>\n</tr>\n<tr>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">7</div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></td>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">8</div></td>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">9</div></td>\n</tr>\n</tbody>\n</table><div class=\"table-row-btn\" aria-label=\"Add row below\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-plus\"><path d=\"M5 12h14\"></path><path d=\"M12 5v14\"></path></svg></div><div class=\"table-col-btn\" aria-label=\"Add column to the right\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"curren",
+      "cellRects": [
+       {
+        "text": "A",
+        "tag": "TH",
+        "x": 178.55601501464844,
+        "y": 218.3512725830078,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "B",
+        "tag": "TH",
+        "x": 233.43748474121094,
+        "y": 218.3512725830078,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "C",
+        "tag": "TH",
+        "x": 288.3189392089844,
+        "y": 218.3512725830078,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "11",
+        "tag": "TD",
+        "x": 178.55601501464844,
+        "y": 247.8340301513672,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "2",
+        "tag": "TD",
+        "x": 233.43748474121094,
+        "y": 247.8340301513672,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "3",
+        "tag": "TD",
+        "x": 288.3189392089844,
+        "y": 247.8340301513672,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "4",
+        "tag": "TD",
+        "x": 178.55601501464844,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "5",
+        "tag": "TD",
+        "x": 233.43748474121094,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "6",
+        "tag": "TD",
+        "x": 288.3189392089844,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "7",
+        "tag": "TD",
+        "x": 178.55601501464844,
+        "y": 306.799560546875,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "8",
+        "tag": "TD",
+        "x": 233.43748474121094,
+        "y": 306.799560546875,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "9",
+        "tag": "TD",
+        "x": 288.3189392089844,
+        "y": 306.799560546875,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       }
+      ]
+     },
+     "shot1": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/9917b6ff-0b3e-4d75-b46f-ca975d1001de/scratchpad/th-shots/03-focused-first.png",
+     "seedOk2": true,
+     "lastBody": {
+      "wrapClass": "cm-embed-block cm-table-widget markdown-rendered has-focus",
+      "tableRect": {
+       "x": 178.21119689941406,
+       "y": 218.00645446777344,
+       "w": 165.33404541015625,
+       "h": 118.62068176269531
+      },
+      "extras": [
+       {
+        "tag": "DIV",
+        "cls": "table-wrapper",
+        "label": null,
+        "icon": "svg-icon lucide-grip-horizontal",
+        "rect": {
+         "x": 178.21119689941406,
+         "y": 218.00645446777344,
+         "w": 165.33404541015625,
+         "h": 118.62068176269531
+        },
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "auto",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(218, 218, 218)",
+        "radius": "0px",
+        "parent": "cm-embed-block cm-table-widget markdown-rendered has-focus"
+       },
+       {
+        "tag": "DIV",
+        "cls": "table-row-btn",
+        "label": "Add row below",
+        "icon": "svg-icon lucide-plus",
+        "rect": {
+         "x": 178.21119689941406,
+         "y": 336.62713623046875,
+         "w": 165.33404541015625,
+         "h": 15.991377830505371
+        },
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": "0",
+        "cursor": "s-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "table-wrapper"
+       },
+       {
+        "tag": "svg",
+        "cls": "svg-icon lucide-plus",
+        "label": null,
+        "icon": null,
+        "rect": {
+         "x": 252.87713623046875,
+         "y": 336.2823181152344,
+         "w": 15.991377830505371,
+         "h": 15.991377830505371
+        },
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "s-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "table-row-btn"
+       },
+       {
+        "tag": "path",
+        "cls": "",
+        "label": null,
+        "icon": null,
+        "rect": {
+         "x": 256.20867919921875,
+         "y": 344.2779846191406,
+         "w": 9.328317642211914,
+         "h": 0
+        },
+        "display": "inline",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "s-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "[object SVGAnimatedString]"
+       },
+       {
+        "tag": "path",
+        "cls": "",
+        "label": null,
+        "icon": null,
+        "rect": {
+         "x": 260.8728332519531,
+         "y": 339.61383056640625,
+         "w": 0,
+         "h": 9.328317642211914
+        },
+        "display": "inline",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "s-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "[object SVGAnimatedString]"
+       },
+       {
+        "tag": "DIV",
+        "cls": "table-col-btn",
+        "label": "Add column to the right",
+        "icon": "svg-icon lucide-plus",
+        "rect": {
+         "x": 343.54522705078125,
+         "y": 218.00645446777344,
+         "w": 15.991377830505371,
+         "h": 118.62068176269531
+        },
+        "display": "flex",
+        "visibility": "visible",
+        "opacity": "0",
+        "cursor": "e-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "table-wrapper"
+       },
+       {
+        "tag": "svg",
+        "cls": "svg-icon lucide-plus",
+        "label": null,
+        "icon": null,
+        "rect": {
+         "x": 343.54522705078125,
+         "y": 269.32110595703125,
+         "w": 15.30172348022461,
+         "h": 15.991377830505371
+        },
+        "display": "block",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "e-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "table-col-btn"
+       },
+       {
+        "tag": "path",
+        "cls": "",
+        "label": null,
+        "icon": null,
+        "rect": {
+         "x": 346.73309326171875,
+         "y": 277.3168029785156,
+         "w": 8.92601203918457,
+         "h": 0
+        },
+        "display": "inline",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "e-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "[object SVGAnimatedString]"
+       },
+       {
+        "tag": "path",
+        "cls": "",
+        "label": null,
+        "icon": null,
+        "rect": {
+         "x": 351.19610595703125,
+         "y": 272.8537902832031,
+         "w": 0,
+         "h": 8.92599105834961
+        },
+        "display": "inline",
+        "visibility": "visible",
+        "opacity": "1",
+        "cursor": "e-resize",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "0px",
+        "parent": "[object SVGAnimatedString]"
+       }
+      ],
+      "html": "<div class=\"cm-embed-block cm-table-widget markdown-rendered has-focus\" dir=\"ltr\" contenteditable=\"false\"><div class=\"table-wrapper\"><table class=\"table-editor\" tabindex=\"-1\">\n<thead>\n<tr>\n<th dir=\"ltr\"><div class=\"table-cell-wrapper\">A</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></th>\n<th dir=\"ltr\"><div class=\"table-cell-wrapper\">B</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div></th>\n<th dir=\"ltr\" class=\"mod-active-col-handle\"><div class=\"table-cell-wrapper\">C</div><div class=\"table-col-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-horizontal\"><circle cx=\"12\" cy=\"9\" r=\"1\"></circle><circle cx=\"19\" cy=\"9\" r=\"1\"></circle><circle cx=\"5\" cy=\"9\" r=\"1\"></circle><circle cx=\"12\" cy=\"15\" r=\"1\"></circle><circle cx=\"19\" cy=\"15\" r=\"1\"></circle><circle cx=\"5\" cy=\"15\" r=\"1\"></circle></svg></div></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">1</div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></td>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">2</div></td>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">3</div></td>\n</tr>\n<tr>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">4</div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></td>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">5</div></td>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">6</div></td>\n</tr>\n<tr>\n<td dir=\"auto\" class=\"mod-active-row-handle\"><div class=\"table-cell-wrapper\">7</div><div class=\"table-row-drag-handle\" data-ignore-swipe=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-grip-vertical\"><circle cx=\"9\" cy=\"12\" r=\"1\"></circle><circle cx=\"9\" cy=\"5\" r=\"1\"></circle><circle cx=\"9\" cy=\"19\" r=\"1\"></circle><circle cx=\"15\" cy=\"12\" r=\"1\"></circle><circle cx=\"15\" cy=\"5\" r=\"1\"></circle><circle cx=\"15\" cy=\"19\" r=\"1\"></circle></svg></div></td>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\">8</div></td>\n<td dir=\"auto\"><div class=\"table-cell-wrapper\" style=\"display: none;\">9</div><div class=\"table-cell-wrapper\" data-ignore-swipe=\"true\"><div class=\"cm-s-obsidian mod-cm6 node-insert-event is-live-preview\"><div class=\"cm-editor cm-focused ͼ1 ͼ2 \"><div class=\"cm-announced\" aria-live=\"polite\"></div><div tabindex=\"-1\" class=\"cm-scroller\"><div spellcheck=\"true\" autocorrect=\"on\" autocapitalize=\"on\" writingsuggestions=\"false\" translate=\"no\" contenteditable=\"true\" class=\"cm-content cm-lineWrapping\" role=\"textbox\" aria-multiline=\"true\" data-language=\"hypermd\" style=\"tab-size: 4;\"><div class=\"cm-line cm-active\" dir=\"auto\">9</div></div><div class=\"cm-layer cm-layer-above cm-cursorLayer\" aria-hidden=\"true\" style=\"z-index: 150; animation-duration: 1200ms;\"></div><div class=\"cm-layer cm-selectionLayer\" aria-hidden=\"true\" style=\"z-index: -2;\"></div></div></div></div></div></td>\n</tr>\n</tbody>\n</table><div class=\"table-row-btn\" aria-label=\"Add row below\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-plus\"><path d=\"M5 12h14\"></path><path d=\"M12 5v14\"></path></svg></div><div class=\"table-col-btn\" aria-label=\"Add column to the right\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"curren",
+      "cellRects": [
+       {
+        "text": "A",
+        "tag": "TH",
+        "x": 178.55601501464844,
+        "y": 218.3512725830078,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "B",
+        "tag": "TH",
+        "x": 233.43748474121094,
+        "y": 218.3512725830078,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "C",
+        "tag": "TH",
+        "x": 288.3189392089844,
+        "y": 218.3512725830078,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "1",
+        "tag": "TD",
+        "x": 178.55601501464844,
+        "y": 247.8340301513672,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "2",
+        "tag": "TD",
+        "x": 233.43748474121094,
+        "y": 247.8340301513672,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "3",
+        "tag": "TD",
+        "x": 288.3189392089844,
+        "y": 247.8340301513672,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "4",
+        "tag": "TD",
+        "x": 178.55601501464844,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "5",
+        "tag": "TD",
+        "x": 233.43748474121094,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "6",
+        "tag": "TD",
+        "x": 288.3189392089844,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "7",
+        "tag": "TD",
+        "x": 178.55601501464844,
+        "y": 306.799560546875,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "8",
+        "tag": "TD",
+        "x": 233.43748474121094,
+        "y": 306.799560546875,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       },
+       {
+        "text": "99",
+        "tag": "TD",
+        "x": 288.3189392089844,
+        "y": 306.799560546875,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742
+       }
+      ]
+     },
+     "shot2": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/9917b6ff-0b3e-4d75-b46f-ca975d1001de/scratchpad/th-shots/04-focused-last.png"
+    },
+    "s03-handle-geometry-and-state": {
+     "ok": true,
+     "ms": 7535,
+     "seedOk": true,
+     "unfocused": {
+      "widgetClass": "cm-embed-block cm-table-widget markdown-rendered",
+      "cols": [
+       {
+        "kind": "col",
+        "cell": "A",
+        "cellTag": "TH",
+        "cellClass": "",
+        "rect": {
+         "x": 178.90084838867188,
+         "y": 204.69825744628906,
+         "w": 54.19180679321289,
+         "h": 13.997843742370605
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 4px 0px 0px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-horizontal",
+        "svgRect": {
+         "x": 197.9956817626953,
+         "y": 203.70687866210938,
+         "w": 15.991377830505371,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       },
+       {
+        "kind": "col",
+        "cell": "B",
+        "cellTag": "TH",
+        "cellClass": "",
+        "rect": {
+         "x": 233.78231811523438,
+         "y": 204.69825744628906,
+         "w": 54.19180679321289,
+         "h": 13.997843742370605
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 4px 0px 0px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-horizontal",
+        "svgRect": {
+         "x": 252.87713623046875,
+         "y": 203.70687866210938,
+         "w": 15.991377830505371,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       },
+       {
+        "kind": "col",
+        "cell": "C",
+        "cellTag": "TH",
+        "cellClass": "",
+        "rect": {
+         "x": 288.6637878417969,
+         "y": 204.69825744628906,
+         "w": 54.19180679321289,
+         "h": 13.997843742370605
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 4px 0px 0px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-horizontal",
+        "svgRect": {
+         "x": 307.75860595703125,
+         "y": 203.70687866210938,
+         "w": 15.991377830505371,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       }
+      ],
+      "rows": [
+       {
+        "kind": "row",
+        "cell": "A",
+        "cellTag": "TH",
+        "cellClass": "",
+        "rect": {
+         "x": 164.9029998779297,
+         "y": 218.69610595703125,
+         "w": 13.997843742370605,
+         "h": 28.793102264404297
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 0px 0px 4px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-vertical",
+        "svgRect": {
+         "x": 164.9029998779297,
+         "y": 225.0969696044922,
+         "w": 13.997843742370605,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       },
+       {
+        "kind": "row",
+        "cell": "1",
+        "cellTag": "TD",
+        "cellClass": "",
+        "rect": {
+         "x": 164.9029998779297,
+         "y": 248.17886352539062,
+         "w": 13.997843742370605,
+         "h": 28.793102264404297
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 0px 0px 4px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-vertical",
+        "svgRect": {
+         "x": 164.9029998779297,
+         "y": 254.57972717285156,
+         "w": 13.997843742370605,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       },
+       {
+        "kind": "row",
+        "cell": "4",
+        "cellTag": "TD",
+        "cellClass": "",
+        "rect": {
+         "x": 164.9029998779297,
+         "y": 277.66162109375,
+         "w": 13.997843742370605,
+         "h": 28.793102264404297
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 0px 0px 4px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-vertical",
+        "svgRect": {
+         "x": 164.9029998779297,
+         "y": 284.0624694824219,
+         "w": 13.997843742370605,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       },
+       {
+        "kind": "row",
+        "cell": "7",
+        "cellTag": "TD",
+        "cellClass": "",
+        "rect": {
+         "x": 164.9029998779297,
+         "y": 307.1443786621094,
+         "w": 13.997843742370605,
+         "h": 28.793102264404297
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 0px 0px 4px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-vertical",
+        "svgRect": {
+         "x": 164.9029998779297,
+         "y": 313.54522705078125,
+         "w": 13.997843742370605,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       }
+      ]
+     },
+     "focusedOn5": {
+      "widgetClass": "cm-embed-block cm-table-widget markdown-rendered has-focus",
+      "cols": [
+       {
+        "kind": "col",
+        "cell": "A",
+        "cellTag": "TH",
+        "cellClass": "",
+        "rect": {
+         "x": 178.90084838867188,
+         "y": 204.69825744628906,
+         "w": 54.19180679321289,
+         "h": 13.997843742370605
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 4px 0px 0px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-horizontal",
+        "svgRect": {
+         "x": 197.9956817626953,
+         "y": 203.70687866210938,
+         "w": 15.991377830505371,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       },
+       {
+        "kind": "col",
+        "cell": "B",
+        "cellTag": "TH",
+        "cellClass": "mod-active-col-handle",
+        "rect": {
+         "x": 233.78231811523438,
+         "y": 204.69825744628906,
+         "w": 54.19180679321289,
+         "h": 13.997843742370605
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 4px 0px 0px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-horizontal",
+        "svgRect": {
+         "x": 252.87713623046875,
+         "y": 203.70687866210938,
+         "w": 15.991377830505371,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       },
+       {
+        "kind": "col",
+        "cell": "C",
+        "cellTag": "TH",
+        "cellClass": "",
+        "rect": {
+         "x": 288.6637878417969,
+         "y": 204.69825744628906,
+         "w": 54.19180679321289,
+         "h": 13.997843742370605
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 4px 0px 0px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-horizontal",
+        "svgRect": {
+         "x": 307.75860595703125,
+         "y": 203.70687866210938,
+         "w": 15.991377830505371,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       }
+      ],
+      "rows": [
+       {
+        "kind": "row",
+        "cell": "A",
+        "cellTag": "TH",
+        "cellClass": "",
+        "rect": {
+         "x": 164.9029998779297,
+         "y": 218.69610595703125,
+         "w": 13.997843742370605,
+         "h": 28.793102264404297
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 0px 0px 4px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-vertical",
+        "svgRect": {
+         "x": 164.9029998779297,
+         "y": 225.0969696044922,
+         "w": 13.997843742370605,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       },
+       {
+        "kind": "row",
+        "cell": "1",
+        "cellTag": "TD",
+        "cellClass": "",
+        "rect": {
+         "x": 164.9029998779297,
+         "y": 248.17886352539062,
+         "w": 13.997843742370605,
+         "h": 28.793102264404297
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 0px 0px 4px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-vertical",
+        "svgRect": {
+         "x": 164.9029998779297,
+         "y": 254.57972717285156,
+         "w": 13.997843742370605,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       },
+       {
+        "kind": "row",
+        "cell": "4",
+        "cellTag": "TD",
+        "cellClass": "mod-active-row-handle",
+        "rect": {
+         "x": 164.9029998779297,
+         "y": 277.66162109375,
+         "w": 13.997843742370605,
+         "h": 28.793102264404297
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 0px 0px 4px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-vertical",
+        "svgRect": {
+         "x": 164.9029998779297,
+         "y": 284.0624694824219,
+         "w": 13.997843742370605,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       },
+       {
+        "kind": "row",
+        "cell": "7",
+        "cellTag": "TD",
+        "cellClass": "",
+        "rect": {
+         "x": 164.9029998779297,
+         "y": 307.1443786621094,
+         "w": 13.997843742370605,
+         "h": 28.793102264404297
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 0px 0px 4px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-vertical",
+        "svgRect": {
+         "x": 164.9029998779297,
+         "y": 313.54522705078125,
+         "w": 13.997843742370605,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       }
+      ]
+     },
+     "shot": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/9917b6ff-0b3e-4d75-b46f-ca975d1001de/scratchpad/th-shots/05-focused-on-5.png",
+     "seedOk2": true,
+     "focusedOn1": {
+      "widgetClass": "cm-embed-block cm-table-widget markdown-rendered has-focus",
+      "cols": [
+       {
+        "kind": "col",
+        "cell": "A",
+        "cellTag": "TH",
+        "cellClass": "mod-active-col-handle",
+        "rect": {
+         "x": 178.90084838867188,
+         "y": 204.69825744628906,
+         "w": 54.19180679321289,
+         "h": 13.997843742370605
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 4px 0px 0px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-horizontal",
+        "svgRect": {
+         "x": 197.9956817626953,
+         "y": 203.70687866210938,
+         "w": 15.991377830505371,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       },
+       {
+        "kind": "col",
+        "cell": "B",
+        "cellTag": "TH",
+        "cellClass": "",
+        "rect": {
+         "x": 233.78231811523438,
+         "y": 204.69825744628906,
+         "w": 54.19180679321289,
+         "h": 13.997843742370605
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 4px 0px 0px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-horizontal",
+        "svgRect": {
+         "x": 252.87713623046875,
+         "y": 203.70687866210938,
+         "w": 15.991377830505371,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       },
+       {
+        "kind": "col",
+        "cell": "C",
+        "cellTag": "TH",
+        "cellClass": "",
+        "rect": {
+         "x": 288.6637878417969,
+         "y": 204.69825744628906,
+         "w": 54.19180679321289,
+         "h": 13.997843742370605
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 4px 0px 0px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-horizontal",
+        "svgRect": {
+         "x": 307.75860595703125,
+         "y": 203.70687866210938,
+         "w": 15.991377830505371,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       }
+      ],
+      "rows": [
+       {
+        "kind": "row",
+        "cell": "A",
+        "cellTag": "TH",
+        "cellClass": "mod-active-col-handle",
+        "rect": {
+         "x": 164.9029998779297,
+         "y": 218.69610595703125,
+         "w": 13.997843742370605,
+         "h": 28.793102264404297
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 0px 0px 4px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-vertical",
+        "svgRect": {
+         "x": 164.9029998779297,
+         "y": 225.0969696044922,
+         "w": 13.997843742370605,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       },
+       {
+        "kind": "row",
+        "cell": "11",
+        "cellTag": "TD",
+        "cellClass": "mod-active-row-handle",
+        "rect": {
+         "x": 164.9029998779297,
+         "y": 248.17886352539062,
+         "w": 13.997843742370605,
+         "h": 28.793102264404297
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 0px 0px 4px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-vertical",
+        "svgRect": {
+         "x": 164.9029998779297,
+         "y": 254.57972717285156,
+         "w": 13.997843742370605,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       },
+       {
+        "kind": "row",
+        "cell": "4",
+        "cellTag": "TD",
+        "cellClass": "",
+        "rect": {
+         "x": 164.9029998779297,
+         "y": 277.66162109375,
+         "w": 13.997843742370605,
+         "h": 28.793102264404297
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 0px 0px 4px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-vertical",
+        "svgRect": {
+         "x": 164.9029998779297,
+         "y": 284.0624694824219,
+         "w": 13.997843742370605,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       },
+       {
+        "kind": "row",
+        "cell": "7",
+        "cellTag": "TD",
+        "cellClass": "",
+        "rect": {
+         "x": 164.9029998779297,
+         "y": 307.1443786621094,
+         "w": 13.997843742370605,
+         "h": 28.793102264404297
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 0px 0px 4px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-vertical",
+        "svgRect": {
+         "x": 164.9029998779297,
+         "y": 313.54522705078125,
+         "w": 13.997843742370605,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       }
+      ]
+     },
+     "seedOk3": true,
+     "focusedOn9": {
+      "widgetClass": "cm-embed-block cm-table-widget markdown-rendered has-focus",
+      "cols": [
+       {
+        "kind": "col",
+        "cell": "A",
+        "cellTag": "TH",
+        "cellClass": "",
+        "rect": {
+         "x": 178.90084838867188,
+         "y": 204.69825744628906,
+         "w": 54.19180679321289,
+         "h": 13.997843742370605
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 4px 0px 0px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-horizontal",
+        "svgRect": {
+         "x": 197.9956817626953,
+         "y": 203.70687866210938,
+         "w": 15.991377830505371,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       },
+       {
+        "kind": "col",
+        "cell": "B",
+        "cellTag": "TH",
+        "cellClass": "",
+        "rect": {
+         "x": 233.78231811523438,
+         "y": 204.69825744628906,
+         "w": 54.19180679321289,
+         "h": 13.997843742370605
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 4px 0px 0px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-horizontal",
+        "svgRect": {
+         "x": 252.87713623046875,
+         "y": 203.70687866210938,
+         "w": 15.991377830505371,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       },
+       {
+        "kind": "col",
+        "cell": "C",
+        "cellTag": "TH",
+        "cellClass": "mod-active-col-handle",
+        "rect": {
+         "x": 288.6637878417969,
+         "y": 204.69825744628906,
+         "w": 54.19180679321289,
+         "h": 13.997843742370605
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 4px 0px 0px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-horizontal",
+        "svgRect": {
+         "x": 307.75860595703125,
+         "y": 203.70687866210938,
+         "w": 15.991377830505371,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       }
+      ],
+      "rows": [
+       {
+        "kind": "row",
+        "cell": "A",
+        "cellTag": "TH",
+        "cellClass": "",
+        "rect": {
+         "x": 164.9029998779297,
+         "y": 218.69610595703125,
+         "w": 13.997843742370605,
+         "h": 28.793102264404297
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 0px 0px 4px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-vertical",
+        "svgRect": {
+         "x": 164.9029998779297,
+         "y": 225.0969696044922,
+         "w": 13.997843742370605,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       },
+       {
+        "kind": "row",
+        "cell": "1",
+        "cellTag": "TD",
+        "cellClass": "",
+        "rect": {
+         "x": 164.9029998779297,
+         "y": 248.17886352539062,
+         "w": 13.997843742370605,
+         "h": 28.793102264404297
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 0px 0px 4px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-vertical",
+        "svgRect": {
+         "x": 164.9029998779297,
+         "y": 254.57972717285156,
+         "w": 13.997843742370605,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       },
+       {
+        "kind": "row",
+        "cell": "4",
+        "cellTag": "TD",
+        "cellClass": "",
+        "rect": {
+         "x": 164.9029998779297,
+         "y": 277.66162109375,
+         "w": 13.997843742370605,
+         "h": 28.793102264404297
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 0px 0px 4px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-vertical",
+        "svgRect": {
+         "x": 164.9029998779297,
+         "y": 284.0624694824219,
+         "w": 13.997843742370605,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       },
+       {
+        "kind": "row",
+        "cell": "7",
+        "cellTag": "TD",
+        "cellClass": "mod-active-row-handle",
+        "rect": {
+         "x": 164.9029998779297,
+         "y": 307.1443786621094,
+         "w": 13.997843742370605,
+         "h": 28.793102264404297
+        },
+        "opacity": "0",
+        "visibility": "visible",
+        "display": "flex",
+        "cursor": "grab",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(102, 102, 102)",
+        "radius": "4px 0px 0px 4px",
+        "pos": "absolute",
+        "icon": "svg-icon lucide-grip-vertical",
+        "svgRect": {
+         "x": 164.9029998779297,
+         "y": 313.54522705078125,
+         "w": 13.997843742370605,
+         "h": 15.991377830505371
+        },
+        "borderColor": "rgb(102, 102, 102)",
+        "borderWidth": "0px",
+        "zIndex": "auto"
+       }
+      ]
+     }
+    },
+    "s04-hover-each-handle": {
+     "ok": true,
+     "ms": 3548,
+     "seedOk": true,
+     "colB": {
+      "kind": "col",
+      "cell": "B",
+      "cellTag": "TH",
+      "cellClass": "mod-active-col-handle",
+      "rect": {
+       "x": 233.78231811523438,
+       "y": 204.69825744628906,
+       "w": 54.19180679321289,
+       "h": 13.997843742370605
+      },
+      "opacity": "0",
+      "visibility": "visible",
+      "display": "flex",
+      "cursor": "grab",
+      "bg": "rgba(0, 0, 0, 0)",
+      "color": "rgb(102, 102, 102)",
+      "radius": "4px 4px 0px 0px",
+      "pos": "absolute",
+      "icon": "svg-icon lucide-grip-horizontal",
+      "svgRect": {
+       "x": 252.87713623046875,
+       "y": 203.70687866210938,
+       "w": 15.991377830505371,
+       "h": 15.991377830505371
+      },
+      "borderColor": "rgb(102, 102, 102)",
+      "borderWidth": "0px",
+      "zIndex": "auto"
+     },
+     "row4": {
+      "kind": "row",
+      "cell": "4",
+      "cellTag": "TD",
+      "cellClass": "mod-active-row-handle",
+      "rect": {
+       "x": 164.9029998779297,
+       "y": 277.66162109375,
+       "w": 13.997843742370605,
+       "h": 28.793102264404297
+      },
+      "opacity": "0",
+      "visibility": "visible",
+      "display": "flex",
+      "cursor": "grab",
+      "bg": "rgba(0, 0, 0, 0)",
+      "color": "rgb(102, 102, 102)",
+      "radius": "4px 0px 0px 4px",
+      "pos": "absolute",
+      "icon": "svg-icon lucide-grip-vertical",
+      "svgRect": {
+       "x": 164.9029998779297,
+       "y": 284.0624694824219,
+       "w": 13.997843742370605,
+       "h": 15.991377830505371
+      },
+      "borderColor": "rgb(102, 102, 102)",
+      "borderWidth": "0px",
+      "zIndex": "auto"
+     },
+     "hover": {
+      "colB": {
+       "kind": "col",
+       "cell": "B",
+       "cellTag": "TH",
+       "cellClass": "mod-active-col-handle",
+       "rect": {
+        "x": 233.78231811523438,
+        "y": 204.69825744628906,
+        "w": 54.19180679321289,
+        "h": 13.997843742370605
+       },
+       "opacity": "1",
+       "visibility": "visible",
+       "display": "flex",
+       "cursor": "grab",
+       "bg": "rgba(0, 0, 0, 0)",
+       "color": "rgb(102, 102, 102)",
+       "radius": "4px 4px 0px 0px",
+       "pos": "absolute",
+       "icon": "svg-icon lucide-grip-horizontal",
+       "svgRect": {
+        "x": 252.87713623046875,
+        "y": 203.70687866210938,
+        "w": 15.991377830505371,
+        "h": 15.991377830505371
+       },
+       "borderColor": "rgb(102, 102, 102)",
+       "borderWidth": "0px",
+       "zIndex": "auto"
+      },
+      "colBShot": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/9917b6ff-0b3e-4d75-b46f-ca975d1001de/scratchpad/th-shots/06-hover-colB.png",
+      "row4": {
+       "kind": "row",
+       "cell": "4",
+       "cellTag": "TD",
+       "cellClass": "mod-active-row-handle",
+       "rect": {
+        "x": 164.9029998779297,
+        "y": 277.66162109375,
+        "w": 13.997843742370605,
+        "h": 28.793102264404297
+       },
+       "opacity": "1",
+       "visibility": "visible",
+       "display": "flex",
+       "cursor": "grab",
+       "bg": "rgba(0, 0, 0, 0)",
+       "color": "rgb(102, 102, 102)",
+       "radius": "4px 0px 0px 4px",
+       "pos": "absolute",
+       "icon": "svg-icon lucide-grip-vertical",
+       "svgRect": {
+        "x": 164.9029998779297,
+        "y": 284.0624694824219,
+        "w": 13.997843742370605,
+        "h": 15.991377830505371
+       },
+       "borderColor": "rgb(102, 102, 102)",
+       "borderWidth": "0px",
+       "zIndex": "auto"
+      },
+      "row4Shot": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/9917b6ff-0b3e-4d75-b46f-ca975d1001de/scratchpad/th-shots/06-hover-row4.png"
+     }
+    },
+    "s05-click-each-handle": {
+     "ok": true,
+     "ms": 19256,
+     "clicks": {
+      "colB": {
+       "handle": {
+        "x": 233.78231811523438,
+        "y": 204.69825744628906,
+        "w": 54.19180679321289,
+        "h": 13.997843742370605
+       },
+       "menu": null,
+       "after": {
+        "value": "intro\n\n| A   | B   | C   |\n| --- | --- | --- |\n| 1   | 2   | 3   |\n| 4   | 5   | 6   |\n| 7   | 8   | 9   |\n\nafter\n",
+        "cursor": {
+         "line": 5,
+         "ch": 9
+        }
+       },
+       "shot": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/9917b6ff-0b3e-4d75-b46f-ca975d1001de/scratchpad/th-shots/07-click-colB.png"
+      },
+      "row4": {
+       "handle": {
+        "x": 164.9029998779297,
+        "y": 277.66162109375,
+        "w": 13.997843742370605,
+        "h": 28.793102264404297
+       },
+       "menu": null,
+       "after": {
+        "value": "intro\n\n| A   | B   | C   |\n| --- | --- | --- |\n| 1   | 2   | 3   |\n| 4   | 5   | 6   |\n| 7   | 8   | 9   |\n\nafter\n",
+        "cursor": {
+         "line": 5,
+         "ch": 9
+        }
+       },
+       "shot": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/9917b6ff-0b3e-4d75-b46f-ca975d1001de/scratchpad/th-shots/07-click-row4.png"
+      },
+      "colA": {
+       "handle": {
+        "x": 178.90084838867188,
+        "y": 204.69825744628906,
+        "w": 54.19180679321289,
+        "h": 13.997843742370605
+       },
+       "menu": null,
+       "after": {
+        "value": "intro\n\n| A   | B   | C   |\n| --- | --- | --- |\n| 1   | 2   | 3   |\n| 4   | 5   | 6   |\n| 7   | 8   | 9   |\n\nafter\n",
+        "cursor": {
+         "line": 5,
+         "ch": 9
+        }
+       },
+       "shot": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/9917b6ff-0b3e-4d75-b46f-ca975d1001de/scratchpad/th-shots/07-click-colA.png"
+      },
+      "row1": {
+       "handle": {
+        "x": 164.9029998779297,
+        "y": 248.17886352539062,
+        "w": 13.997843742370605,
+        "h": 28.793102264404297
+       },
+       "menu": null,
+       "after": {
+        "value": "intro\n\n| A   | B   | C   |\n| --- | --- | --- |\n| 1   | 2   | 3   |\n| 4   | 5   | 6   |\n| 7   | 8   | 9   |\n\nafter\n",
+        "cursor": {
+         "line": 5,
+         "ch": 9
+        }
+       },
+       "shot": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/9917b6ff-0b3e-4d75-b46f-ca975d1001de/scratchpad/th-shots/07-click-row1.png"
+      },
+      "colC": {
+       "handle": {
+        "x": 288.6637878417969,
+        "y": 204.69825744628906,
+        "w": 54.19180679321289,
+        "h": 13.997843742370605
+       },
+       "menu": null,
+       "after": {
+        "value": "intro\n\n| A   | B   | C   |\n| --- | --- | --- |\n| 1   | 2   | 3   |\n| 4   | 5   | 6   |\n| 7   | 8   | 9   |\n\nafter\n",
+        "cursor": {
+         "line": 5,
+         "ch": 9
+        }
+       },
+       "shot": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/9917b6ff-0b3e-4d75-b46f-ca975d1001de/scratchpad/th-shots/07-click-colC.png"
+      },
+      "row7": {
+       "handle": {
+        "x": 164.9029998779297,
+        "y": 307.1443786621094,
+        "w": 13.997843742370605,
+        "h": 28.793102264404297
+       },
+       "menu": null,
+       "after": {
+        "value": "intro\n\n| A   | B   | C   |\n| --- | --- | --- |\n| 1   | 2   | 3   |\n| 4   | 5   | 6   |\n| 7   | 8   | 9   |\n\nafter\n",
+        "cursor": {
+         "line": 5,
+         "ch": 9
+        }
+       },
+       "shot": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/9917b6ff-0b3e-4d75-b46f-ca975d1001de/scratchpad/th-shots/07-click-row7.png"
+      }
+     },
+     "seedOk": true
+    },
+    "s06-drag-row-handle": {
+     "ok": true,
+     "ms": 15814,
+     "cases": {
+      "row4-down-below-7": {
+       "before": "intro\n\n| A | B | C |\n| --- | --- | --- |\n| 1 | 2 | 3 |\n| 4 | 5 | 6 |\n| 7 | 8 | 9 |\n\nafter\n",
+       "during": [
+        {
+         "cls": "cm-embed-block cm-table-widget markdown-rendered is-dragging has-focus has-selection",
+         "drag": [
+          "mod-active-col-handle",
+          "table-col-drag-handle",
+          "table-row-drag-handle",
+          "table-col-drag-handle",
+          "table-col-drag-handle",
+          "table-row-drag-handle",
+          "mod-active-row-handle is-selected mod-dragging start top bottom",
+          "table-row-drag-handle",
+          "cm-s-obsidian mod-cm6 node-insert-event is-live-preview",
+          "is-selected mod-dragging top bottom",
+          "is-selected mod-dragging end top bottom",
+          "table-row-drag-handle"
+         ]
+        }
+       ],
+       "after": {
+        "value": "intro\n\n| A   | B   | C   |\n| --- | --- | --- |\n| 1   | 2   | 3   |\n| 7   | 8   | 9   |\n| 4   | 5   | 6   |\n\nafter\n",
+        "cursor": {
+         "line": 6,
+         "ch": 2
+        }
+       },
+       "shot": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/9917b6ff-0b3e-4d75-b46f-ca975d1001de/scratchpad/th-shots/09-after-row4-down-below-7.png"
+      },
+      "row4-up-above-1": {
+       "before": "intro\n\n| A | B | C |\n| --- | --- | --- |\n| 1 | 2 | 3 |\n| 4 | 5 | 6 |\n| 7 | 8 | 9 |\n\nafter\n",
+       "during": [
+        {
+         "cls": "cm-embed-block cm-table-widget markdown-rendered is-dragging has-focus has-selection",
+         "drag": [
+          "mod-active-col-handle",
+          "table-col-drag-handle",
+          "table-row-drag-handle",
+          "table-col-drag-handle",
+          "table-col-drag-handle",
+          "table-row-drag-handle",
+          "mod-active-row-handle is-selected mod-dragging start top bottom",
+          "table-row-drag-handle",
+          "cm-s-obsidian mod-cm6 node-insert-event is-live-preview",
+          "is-selected mod-dragging top bottom",
+          "is-selected mod-dragging end top bottom",
+          "table-row-drag-handle"
+         ]
+        }
+       ],
+       "after": {
+        "value": "intro\n\n| A   | B   | C   |\n| --- | --- | --- |\n| 4   | 5   | 6   |\n| 1   | 2   | 3   |\n| 7   | 8   | 9   |\n\nafter\n",
+        "cursor": {
+         "line": 4,
+         "ch": 2
+        }
+       },
+       "shot": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/9917b6ff-0b3e-4d75-b46f-ca975d1001de/scratchpad/th-shots/09-after-row4-up-above-1.png"
+      },
+      "row1-down-below-4": {
+       "before": "intro\n\n| A | B | C |\n| --- | --- | --- |\n| 1 | 2 | 3 |\n| 4 | 5 | 6 |\n| 7 | 8 | 9 |\n\nafter\n",
+       "during": [
+        {
+         "cls": "cm-embed-block cm-table-widget markdown-rendered is-dragging has-focus has-selection",
+         "drag": [
+          "mod-active-col-handle",
+          "table-col-drag-handle",
+          "table-row-drag-handle",
+          "table-col-drag-handle",
+          "table-col-drag-handle",
+          "mod-active-row-handle is-selected mod-dragging start top bottom",
+          "table-row-drag-handle",
+          "cm-s-obsidian mod-cm6 node-insert-event is-live-preview",
+          "is-selected mod-dragging top bottom",
+          "is-selected mod-dragging end top bottom",
+          "table-row-drag-handle",
+          "table-row-drag-handle"
+         ]
+        }
+       ],
+       "after": {
+        "value": "intro\n\n| A   | B   | C   |\n| --- | --- | --- |\n| 4   | 5   | 6   |\n| 1   | 2   | 3   |\n| 7   | 8   | 9   |\n\nafter\n",
+        "cursor": {
+         "line": 5,
+         "ch": 2
+        }
+       },
+       "shot": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/9917b6ff-0b3e-4d75-b46f-ca975d1001de/scratchpad/th-shots/09-after-row1-down-below-4.png"
+      },
+      "row7-up-above-4": {
+       "before": "intro\n\n| A | B | C |\n| --- | --- | --- |\n| 1 | 2 | 3 |\n| 4 | 5 | 6 |\n| 7 | 8 | 9 |\n\nafter\n",
+       "during": [
+        {
+         "cls": "cm-embed-block cm-table-widget markdown-rendered is-dragging has-focus has-selection",
+         "drag": [
+          "mod-active-col-handle",
+          "table-col-drag-handle",
+          "table-row-drag-handle",
+          "table-col-drag-handle",
+          "table-col-drag-handle",
+          "table-row-drag-handle",
+          "table-row-drag-handle",
+          "mod-active-row-handle is-selected mod-dragging start top bottom",
+          "table-row-drag-handle",
+          "cm-s-obsidian mod-cm6 node-insert-event is-live-preview",
+          "is-selected mod-dragging top bottom",
+          "is-selected mod-dragging end top bottom"
+         ]
+        }
+       ],
+       "after": {
+        "value": "intro\n\n| A   | B   | C   |\n| --- | --- | --- |\n| 1   | 2   | 3   |\n| 7   | 8   | 9   |\n| 4   | 5   | 6   |\n\nafter\n",
+        "cursor": {
+         "line": 5,
+         "ch": 2
+        }
+       },
+       "shot": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/9917b6ff-0b3e-4d75-b46f-ca975d1001de/scratchpad/th-shots/09-after-row7-up-above-4.png"
+      }
+     },
+     "seedOk": true,
+     "shotMid": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/9917b6ff-0b3e-4d75-b46f-ca975d1001de/scratchpad/th-shots/08-drag-row-mid.png"
+    },
+    "s07-drag-col-handle": {
+     "ok": true,
+     "ms": 15823,
+     "cases": {
+      "colB-right-of-C": {
+       "during": [
+        {
+         "cls": "cm-embed-block cm-table-widget markdown-rendered is-dragging has-focus has-selection",
+         "drag": [
+          "mod-active-row-handle",
+          "table-col-drag-handle",
+          "table-row-drag-handle",
+          "mod-active-col-handle is-selected mod-dragging start end top",
+          "table-col-drag-handle",
+          "cm-s-obsidian mod-cm6 node-insert-event is-live-preview",
+          "table-col-drag-handle",
+          "table-row-drag-handle",
+          "is-selected mod-dragging start end",
+          "table-row-drag-handle",
+          "is-selected mod-dragging start end",
+          "table-row-drag-handle"
+         ]
+        }
+       ],
+       "after": {
+        "value": "intro\n\n| A   | C   | B   |\n| --- | --- | --- |\n| 1   | 3   | 2   |\n| 4   | 6   | 5   |\n| 7   | 9   | 8   |\n\nafter\n",
+        "cursor": {
+         "line": 2,
+         "ch": 14
+        }
+       },
+       "shot": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/9917b6ff-0b3e-4d75-b46f-ca975d1001de/scratchpad/th-shots/11-after-colB-right-of-C.png"
+      },
+      "colB-left-of-A": {
+       "during": [
+        {
+         "cls": "cm-embed-block cm-table-widget markdown-rendered is-dragging has-focus has-selection",
+         "drag": [
+          "mod-active-row-handle",
+          "table-col-drag-handle",
+          "table-row-drag-handle",
+          "mod-active-col-handle is-selected mod-dragging start end top",
+          "table-col-drag-handle",
+          "cm-s-obsidian mod-cm6 node-insert-event is-live-preview",
+          "table-col-drag-handle",
+          "table-row-drag-handle",
+          "is-selected mod-dragging start end",
+          "table-row-drag-handle",
+          "is-selected mod-dragging start end",
+          "table-row-drag-handle"
+         ]
+        }
+       ],
+       "after": {
+        "value": "intro\n\n| B   | A   | C   |\n| --- | --- | --- |\n| 2   | 1   | 3   |\n| 5   | 4   | 6   |\n| 8   | 7   | 9   |\n\nafter\n",
+        "cursor": {
+         "line": 2,
+         "ch": 2
+        }
+       },
+       "shot": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/9917b6ff-0b3e-4d75-b46f-ca975d1001de/scratchpad/th-shots/11-after-colB-left-of-A.png"
+      },
+      "colA-right-of-B": {
+       "during": [
+        {
+         "cls": "cm-embed-block cm-table-widget markdown-rendered is-dragging has-focus has-selection",
+         "drag": [
+          "mod-active-row-handle mod-active-col-handle is-selected mod-dragging start end top",
+          "table-col-drag-handle",
+          "table-row-drag-handle",
+          "cm-s-obsidian mod-cm6 node-insert-event is-live-preview",
+          "table-col-drag-handle",
+          "table-col-drag-handle",
+          "is-selected mod-dragging start end",
+          "table-row-drag-handle",
+          "is-selected mod-dragging start end",
+          "table-row-drag-handle",
+          "is-selected mod-dragging start end bottom",
+          "table-row-drag-handle"
+         ]
+        }
+       ],
+       "after": {
+        "value": "intro\n\n| B   | A   | C   |\n| --- | --- | --- |\n| 2   | 1   | 3   |\n| 5   | 4   | 6   |\n| 8   | 7   | 9   |\n\nafter\n",
+        "cursor": {
+         "line": 2,
+         "ch": 8
+        }
+       },
+       "shot": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/9917b6ff-0b3e-4d75-b46f-ca975d1001de/scratchpad/th-shots/11-after-colA-right-of-B.png"
+      },
+      "colC-left-of-B": {
+       "during": [
+        {
+         "cls": "cm-embed-block cm-table-widget markdown-rendered is-dragging has-focus has-selection",
+         "drag": [
+          "mod-active-row-handle",
+          "table-col-drag-handle",
+          "table-row-drag-handle",
+          "table-col-drag-handle",
+          "mod-active-col-handle is-selected mod-dragging start end top",
+          "table-col-drag-handle",
+          "cm-s-obsidian mod-cm6 node-insert-event is-live-preview",
+          "table-row-drag-handle",
+          "is-selected mod-dragging start end",
+          "table-row-drag-handle",
+          "is-selected mod-dragging start end",
+          "table-row-drag-handle"
+         ]
+        }
+       ],
+       "after": {
+        "value": "intro\n\n| A   | C   | B   |\n| --- | --- | --- |\n| 1   | 3   | 2   |\n| 4   | 6   | 5   |\n| 7   | 9   | 8   |\n\nafter\n",
+        "cursor": {
+         "line": 2,
+         "ch": 8
+        }
+       },
+       "shot": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/9917b6ff-0b3e-4d75-b46f-ca975d1001de/scratchpad/th-shots/11-after-colC-left-of-B.png"
+      }
+     },
+     "seedOk": true,
+     "shotMid": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/9917b6ff-0b3e-4d75-b46f-ca975d1001de/scratchpad/th-shots/10-drag-col-mid.png"
+    },
+    "s08-add-buttons": {
+     "ok": true,
+     "ms": 14477,
+     "seedOk": true,
+     "adds": [
+      {
+       "cls": "table-row-btn",
+       "label": "Add row below",
+       "rect": {
+        "x": 178.21119689941406,
+        "y": 336.62713623046875,
+        "w": 165.33404541015625,
+        "h": 15.991377830505371
+       }
+      },
+      {
+       "cls": "svg-icon lucide-plus",
+       "label": null,
+       "rect": {
+        "x": 252.87713623046875,
+        "y": 336.2823181152344,
+        "w": 15.991377830505371,
+        "h": 15.991377830505371
+       }
+      },
+      {
+       "cls": "table-col-btn",
+       "label": "Add column to the right",
+       "rect": {
+        "x": 343.54522705078125,
+        "y": 218.00645446777344,
+        "w": 15.991377830505371,
+        "h": 118.62068176269531
+       }
+      },
+      {
+       "cls": "svg-icon lucide-plus",
+       "label": null,
+       "rect": {
+        "x": 343.54522705078125,
+        "y": 269.32110595703125,
+        "w": 15.30172348022461,
+        "h": 15.991377830505371
+       }
+      }
+     ],
+     "clicks": [
+      {
+       "i": 0,
+       "cls": "table-row-btn",
+       "label": "Add row below",
+       "after": {
+        "value": "intro\n\n| A   | B   | C   |\n| --- | --- | --- |\n| 1   | 2   | 3   |\n| 4   | 5   | 6   |\n| 7   | 8   | 9   |\n|     |     |     |\n\nafter\n",
+        "cursor": {
+         "line": 7,
+         "ch": 6
+        }
+       }
+      },
+      {
+       "i": 1,
+       "cls": "svg-icon lucide-plus",
+       "label": null,
+       "after": {
+        "value": "intro\n\n| A   | B   | C   |\n| --- | --- | --- |\n| 1   | 2   | 3   |\n| 4   | 5   | 6   |\n| 7   | 8   | 9   |\n|     |     |     |\n\nafter\n",
+        "cursor": {
+         "line": 7,
+         "ch": 6
+        }
+       }
+      },
+      {
+       "i": 2,
+       "cls": "table-col-btn",
+       "label": "Add column to the right",
+       "after": {
+        "value": "intro\n\n| A   | B   | C   |     |\n| --- | --- | --- | --- |\n| 1   | 2   | 3   |     |\n| 4   | 5   | 6   |     |\n| 7   | 8   | 9   |     |\n\nafter\n",
+        "cursor": {
+         "line": 2,
+         "ch": 24
+        }
+       }
+      },
+      {
+       "i": 3,
+       "cls": "svg-icon lucide-plus",
+       "label": null,
+       "after": {
+        "value": "intro\n\n| A   | B   | C   |     |\n| --- | --- | --- | --- |\n| 1   | 2   | 3   |     |\n| 4   | 5   | 6   |     |\n| 7   | 8   | 9   |     |\n\nafter\n",
+        "cursor": {
+         "line": 2,
+         "ch": 24
+        }
+       }
+      }
+     ],
+     "seedOk2": true
+    }
+   },
+   "order": [
+    "s00-no-cell-focused",
+    "s01-cell-focused",
+    "s02-other-cells-and-edges",
+    "s03-handle-geometry-and-state",
+    "s04-hover-each-handle",
+    "s05-click-each-handle",
+    "s06-drag-row-handle",
+    "s07-drag-col-handle",
+    "s08-add-buttons"
+   ],
+   "elapsedMs": 86265,
+   "vaultPath": "/tmp/scoria-probe-vault.b1bwvv"
+  },
+  "after-restart": {
+   "startedAt": "2026-11-09T03:46:58.249Z",
+   "steps": {},
+   "order": [],
+   "elapsedMs": 2
+  }
+ }
+}

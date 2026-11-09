@@ -605,6 +605,57 @@ while the title has one. An arrow key entering a table opens its first cell, and
 cell that is closed by anything but moving away. **Not matched:** a press elsewhere abandons an open title
 where Obsidian's blur behaviour is unprobed, and the reading view's inline title is still not a field.
 
+## Observed table handles, Obsidian 1.15.0
+
+Observed 2026-11-08 by `tools/obsidian-probe/table-handles.mjs` (results and screenshots in
+`tools/obsidian-probe/results/2026-11-08-table-handles*`), over real clicks and drags, on a three-column,
+three-row table in Live Preview.
+
+**The handles are in the cells.** Each header `th` holds a `.table-col-drag-handle`
+(`lucide-grip-horizontal`) and the first `th` and each body row's first `td` a `.table-row-drag-handle`
+(`lucide-grip-vertical`), so the header row has a row handle too. They are positioned outside the grid:
+a column handle is 14 px tall and as wide as its column, sitting just above the header; a row handle is
+14 px wide and as tall as its row, just left of the first column, both with 4 px outer corners. At rest
+and with the cell focused they are `opacity: 0`; **hovering the handle's own strip** makes it 1, so the
+grip appears where the pointer is and not for the cell that has the caret. The cursor is `grab`, the colour
+`#666`. The widget carries `has-focus` while a cell has the caret, and the cell the caret is in is marked
+`mod-active-col-handle` / `mod-active-row-handle`.
+
+**Pressing a handle selects the whole row or column, and opens no menu** (neither a click nor a ctrl
+click). The selection is a 2 px accent outline with rounded corners and a faint accent tint over the
+line, the grip stays visible, and the table gets `has-selection`; a drag adds `is-dragging` to the widget
+and `is-selected mod-dragging` to the handle. While dragging, the held handle is filled with the accent
+and its dots turn white, the held line stays outlined, and **a 4 px accent bar** is drawn along the
+edge of the row (above or below) or column (left or right) the line would land beside.
+
+**A drop lands before or after the line under the pointer, by its half.** Row handles, the header as
+row 0 (rows 1, 4, 7 are 1, 2, 3):
+
+| Drag | Result |
+| --- | --- |
+| row 4, released over the lower half of row 7 | order 1, 7, 4 |
+| row 4, over the upper half of row 1 | 4, 1, 7 |
+| row 1, over the lower half of row 4 | 4, 1, 7 |
+| row 7, over the upper half of row 4 | 1, 7, 4 |
+
+Column handles behave the same, left and right halves: B over the right half of C gave A C B, B over
+the left half of A gave B A C, A over the right half of B gave B A C, and C over the left half of B gave
+A C B. The table is re-padded by the drop, and **the cursor lands in the moved line's first cell**: the
+moved row's first cell (`6:2` for the row dropped last) or the moved column's header cell.
+
+**The "+" bars.** `.table-row-btn` ("Add row below", `cursor: s-resize`) is a full-width bar under the
+last row and `.table-col-btn` ("Add column to the right", `e-resize`) a full-height bar to the right of the
+last column, each with a `lucide-plus` centred in it, invisible until hovered. A click appends a padded
+empty row or column. Scoria does not draw them yet.
+
+**Scoria matches the handles** since 2026-11-08: the grips (hidden until hovered), selecting a line,
+the outline and tint, and the drag with its bar and the drop's before-or-after rule, through
+`scoria_text::table::move_line`. A press on a handle strip is the handle's alone, so the editor does not
+move the caret under it. **Not matched:** the "+" bars, the accent bar's exact weight and tint (taken
+from the screenshots, not measured), and the selection's effect on the keyboard, which was not probed.
+**Untested by driving:** the drag itself, which the control socket cannot make; the move it performs is
+unit-tested.
+
 ## Observed block reference behavior, Obsidian 1.14.4
 
 Observed with a throwaway plugin in a scratch vault (see

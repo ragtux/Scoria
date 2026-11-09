@@ -31,7 +31,7 @@ use crate::reading::model::{
 };
 use crate::reading::view::{LinkHandler, Renderer, ToggleHandler};
 use crate::reading::view::{PropertiesHost, PropertyAction};
-use crate::reading::view::{TableAction, TableHost};
+use crate::reading::view::{TableAction, TableAxis, TableDragView, TableHost, TableSelect};
 use crate::suggest::{Anchor, SuggestState};
 use crate::text_input::{InputEvent, TextInput};
 use crate::theme::Theme;
@@ -685,6 +685,10 @@ pub struct Editor {
     /// The table cell being typed into. Like a properties field, the keys
     /// go to it while it is open and the document changes once, on commit.
     table_field: Option<CellEdit>,
+    /// The row or column a handle press selected, and the handle drag in
+    /// progress, drawn by the table widget.
+    table_select: Option<TableSelect>,
+    table_drag: Option<TableDragView>,
     /// The note's inline title while it is being edited: Obsidian's
     /// `.inline-title` is a field in its resting state, entered by a click or
     /// by Arrow Up from the first line.
@@ -799,6 +803,8 @@ impl Editor {
             hover_line: None,
             property_menu: None,
             table_field: None,
+            table_select: None,
+            table_drag: None,
             title_edit: None,
             title_layout: Rc::new(RefCell::new(None)),
             title_hit: Rc::new(Cell::new(None)),
@@ -3187,6 +3193,8 @@ impl Editor {
         if self.title_edit.is_some() {
             // Escape puts the title back and the caret in the document.
             self.leave_title(window, cx);
+        } else if self.table_select.take().is_some() {
+            cx.notify();
         } else if self.suggest.is_some() {
             self.close_suggest(cx);
         } else if self.table_field.is_some() {
@@ -4265,7 +4273,53 @@ impl Editor {
     /// A click on a table cell: commit whatever field was open, then take
     /// this cell's text into a new one.
     fn table_action(&mut self, action: TableAction, window: &mut Window, cx: &mut Context<Self>) {
-        let TableAction::Edit { span } = action;
+        let span = match action {
+            TableAction::Edit { span } => span,
+            // A press on a handle selects its line. The open cell is written
+            // first so the bytes the move works on are current.
+            TableAction::Select { table, axis, index } => {
+                self.commit_property_field(Some(window), cx);
+                self.commit_table_field(Some(window), cx, None);
+                self.table_select = Some(TableSelect { table, axis, index });
+                self.table_drag = None;
+                cx.notify();
+                return;
+            }
+            TableAction::DragOver {
+                table,
+                axis,
+                from,
+                index,
+                after,
+            } => {
+                let view = TableDragView {
+                    table,
+                    axis,
+                    from,
+                    target: Some((index, after)),
+                };
+                if self.table_drag != Some(view) {
+                    self.table_drag = Some(view);
+                    cx.notify();
+                }
+                return;
+            }
+            TableAction::Drop {
+                table,
+                axis,
+                from,
+                target,
+            } => {
+                self.table_drag = None;
+                if let Some((index, after)) = target {
+                    self.move_table_line(table, axis, from, index + usize::from(after), window, cx);
+                }
+                cx.notify();
+                return;
+            }
+        };
+        // A click on a cell ends a handle's selection.
+        self.table_select = None;
         self.commit_property_field(Some(window), cx);
         // The click arrives in the coordinates the widget was built from,
         // which the commit may shift.
@@ -4273,6 +4327,49 @@ impl Editor {
             .commit_table_field(Some(window), cx, Some(span.clone()))
             .unwrap_or(span);
         self.open_cell(span, cx);
+    }
+
+    /// Drops the row or column `from` of the table starting at `table` into
+    /// the gap `slot` (counted before the move), which is what letting go of
+    /// a handle does. The table is rewritten as the move commands rewrite it,
+    /// the moved line stays selected, and the cursor opens its first cell.
+    fn move_table_line(
+        &mut self,
+        table: usize,
+        axis: TableAxis,
+        from: usize,
+        slot: usize,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.commit_table_field(Some(window), cx, None);
+        let Some(at) = table::table_at(self.buf.text(), table) else {
+            return;
+        };
+        let columns = axis == TableAxis::Col;
+        let Some(edit) = table::move_line(&at, columns, from, slot) else {
+            return;
+        };
+        let start = at.span.start;
+        self.edit(
+            at.span.clone(),
+            &edit.text,
+            EditKind::Other,
+            Some(window),
+            cx,
+        );
+        let dest = table::move_destination(from, slot);
+        self.table_select = Some(TableSelect {
+            table,
+            axis,
+            index: dest,
+        });
+        if let Some(after) = table::table_at(self.buf.text(), start + edit.cursor) {
+            let (row, col) = if columns { (0, dest) } else { (dest, 0) };
+            if let Some(cell) = after.cells.get(row).and_then(|r| r.get(col)).cloned() {
+                self.open_cell(cell, cx);
+            }
+        }
     }
 
     /// Takes the cell's text into a field for typing.
@@ -4575,6 +4672,32 @@ impl Editor {
     /// (their links and cells take their own clicks), and a math block
     /// opens for editing at the clicked row. Returns true when the click
     /// was consumed.
+    /// Whether `position` is on a table's handle strip: the 14 px above its
+    /// header or left of its first column, which the table widget paints
+    /// outside its own bounds. The handle takes the press, so the editor
+    /// must not also put the caret where it landed.
+    fn on_table_handle(&self, position: Point<Pixels>) -> bool {
+        if !self.live_preview {
+            return false;
+        }
+        let strip = px(14.);
+        self.layout.widgets.iter().any(|w| {
+            let b = w.bounds;
+            let above = position.x >= b.origin.x
+                && position.x < b.origin.x + b.size.width
+                && position.y >= b.origin.y - strip
+                && position.y < b.origin.y;
+            let left = position.y >= b.origin.y
+                && position.y < b.origin.y + b.size.height
+                && position.x >= b.origin.x - strip
+                && position.x < b.origin.x;
+            (above || left)
+                && self.widgets.iter().any(|(l, widget)| {
+                    *l == w.lines && matches!(widget.block, RBlock::Table { .. })
+                })
+        })
+    }
+
     fn click_widget(&mut self, position: Point<Pixels>, cx: &mut Context<Self>) -> bool {
         let Some(w) = self
             .layout
@@ -4658,8 +4781,16 @@ impl Editor {
                 return;
             }
         }
+        // A press on a table's row or column handle is the handle's alone.
+        if self.on_table_handle(event.position) {
+            return;
+        }
         // A press anywhere else abandons an open title: nothing is renamed.
         if self.title_edit.take().is_some() {
+            cx.notify();
+        }
+        // ...and a selected table row or column.
+        if self.table_select.take().is_some() {
             cx.notify();
         }
         if self.click_widget(event.position, cx) {
@@ -6002,6 +6133,8 @@ impl Element for EditorElement {
                     .table_field
                     .as_ref()
                     .map(|c| (c.span.clone(), c.field.clone())),
+                select: editor.table_select,
+                drag: editor.table_drag,
                 on_action: Rc::new({
                     let entity = entity.clone();
                     move |action, window, cx| {
@@ -6765,6 +6898,11 @@ impl Element for EditorElement {
                 editor.update(cx, |editor, cx| {
                     editor.dragging = false;
                     if editor.thumb_drag.take().is_some() {
+                        cx.notify();
+                    }
+                    // A handle let go anywhere ends its drag; the drop itself
+                    // carries what it needs, so this only clears the marks.
+                    if editor.table_drag.take().is_some() {
                         cx.notify();
                     }
                 });
