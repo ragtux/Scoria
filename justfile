@@ -26,10 +26,13 @@ test-lib:
 roundtrip vault:
     SCORIA_ROUNDTRIP_VAULT="{{vault}}" cargo test -p scoria-text --test writer_roundtrip
 
-gate_vault := env("SCORIA_GATE_VAULT")
+# Read with a default: just evaluates every variable on every run, so a required
+# env() here would break all the other recipes when the gate vault is not set.
+gate_vault := env("SCORIA_GATE_VAULT", "")
 
 # The Writer gate's daily check: the harness, then what moved in both vaults
 gate-check:
+    @[ -n "{{gate_vault}}" ] || { echo "gate-check: set SCORIA_GATE_VAULT to the gate vault" >&2; exit 1; }
     just roundtrip "{{gate_vault}}"
     tools/writer-gate/gate.sh check
 
