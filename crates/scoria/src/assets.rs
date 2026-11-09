@@ -8,7 +8,10 @@
 //! own drawings rather than Lucide's — `links-coming-in` and
 //! `links-going-out` on the right dock's Backlinks and Outgoing links tabs —
 //! so Scoria draws its own under the same names: Lucide's chain at the top
-//! left with a horizontal arrow beneath it, pointing in or out. The font is Inter (SIL OFL,
+//! left with a horizontal arrow beneath it, pointing in or out.
+//! `bookmark-filled` is Lucide's `bookmark` with `fill="currentColor"`: the
+//! view header's "Bookmarked" action is that icon filled and stroked in the
+//! accent (2026-11-07), and gpui paints an SVG's fill only where it has one. The font is Inter (SIL OFL,
 //! `assets/fonts/LICENSE-Inter.txt`), the family at the head of Obsidian's
 //! own interface and text font stacks, in the static faces the pinned gpui
 //! can pick weights from (a variable font renders every weight as regular).
@@ -162,6 +165,7 @@ icons!(
     "globe-2",
     "toy-brick",
     "wrench",
+    "bookmark-filled",
 );
 
 /// The logo, the one bundled asset that is not a monochrome icon. It is

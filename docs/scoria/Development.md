@@ -310,7 +310,7 @@ the sheet, the log and the day's procedure are [[Writer gate run]], see
 | Files header | done: New note, New folder, the six sort orders, Auto-reveal current file and Expand all / Collapse all, see [[#Files header, 2026-10-21]]; the tree takes the keyboard, see [[#Explorer keyboard, 2026-10-21]], and a row renames on the row rather than in a dialog, see [[#The file tree renames on the row, 2026-11-05]] |
 | Folding | done: headings and list parents fold in Live Preview and source mode, headings collapse in the reading view, the five `editor:*fold*` commands run, and the record lives outside the vault, see [[#Folding, 2026-10-26]] |
 | Editing commands | done: the insert-block commands, the checklist cycle, Mod+L on a line without a box, the six highlight colours, Clear formatting, per-line inline toggles, the one auto-pair rule and Shift+Tab's column arithmetic, all to the 2026-10-25 probes, see [[#The settled editing commands, 2026-10-26]] |
-| The gate itself | open: the harness passes on the real vault (sixteen properties, green 2026-11-05), and the week of mixed use is running on PLMCRZY with `docs/scoria` watched beside it — days 1 and 2 both pass, day 2 catching an inverted `alwaysUpdateLinks` default and proving the two apps' link rewriters byte-identical. Day 3 is tables and properties. The prompt day 2's fix made reachable is now Obsidian's three buttons, and its "Always update" gives the harness its first path to an `app.json` holding `alwaysUpdateLinks`, see [[#The third button on the rename prompt, 2026-11-05]]. The sheet and the log are [[Writer gate run]], see [[#The gate week starts, 2026-11-04]] and [[#Day 2, files and links, 2026-11-05]] |
+| The gate itself | open: the harness passes on the real vault (sixteen properties, green 2026-11-05), and the week of mixed use is running on the gate vault with `docs/scoria` watched beside it — days 1 and 2 both pass, day 2 catching an inverted `alwaysUpdateLinks` default and proving the two apps' link rewriters byte-identical. Day 3 is tables and properties. The prompt day 2's fix made reachable is now Obsidian's three buttons, and its "Always update" gives the harness its first path to an `app.json` holding `alwaysUpdateLinks`, see [[#The third button on the rename prompt, 2026-11-05]]. The sheet and the log are [[Writer gate run]], see [[#The gate week starts, 2026-11-04]] and [[#Day 2, files and links, 2026-11-05]] |
 
 ## Parity (phase 4)
 
@@ -361,9 +361,43 @@ screenshot, a row's menu, Rename writing `title` after `path`, New group's bytes
 hiding it, the ring under the arrows, Collapse all. **Not driven:** a drag, since the socket has no
 drag; it rests on the unit tests of `move_item`, `drop_zone` and `insertion_path`.
 
-**Left open**, and filed in [[UI parity backlog#The Bookmarks pane, against the probe of 2026-11-07]]:
-the "Edit bookmark" modal's look and its "Bookmark group" dropdown, a note dragged in from the
-Files pane, and the view header's filled bookmark icon on a bookmarked note.
+**The same day, the two bookmark modals and the header action.** `PromptSpec` gained `rows`:
+a prompt drawn as Obsidian's settings-style modal — a fixed field, the text field and a dropdown,
+each a `setting-item`, and a danger button alone at the left — measured off the probe's DOM. "Add
+bookmark" and "Edit bookmark" use it, the dropdown listing the groups depth first, indented as
+Obsidian indents them; a group's own "Bookmark the active tab..." preselects that group, and Save
+on "Edit bookmark" moves the item when the group changed. Two traps, both found by driving it: the
+dropdown's list hangs below the modal, so a pick there was a press outside the modal and cancelled
+it; and the list is drawn deferred, so a pick took the keyboard away and Enter did nothing. A
+second probe, `view-header-bookmark.mjs`, settled the header action: "Bookmarked", filled in the
+accent, only while the file has a bookmark, and a click opens "Edit bookmark" — built with a
+filled cut of Lucide's `bookmark`.
+
+**Then the Files view's drags**, which closed that last item. A third probe,
+`explorer-drag-look.mjs`, measured what the 2026-10-25 pass had only named: the dragged row's
+accent fill, the target folder's whole block washed with its name in the accent, no wash at the
+root, and the ghost — icon and name, then `Move into “Dest”` — 5 px off the pointer. The explorer's
+rows are now a drag source carrying a `FileDrag`; the target is the folder under the pointer (a
+file row's parent, the root below the rows), and a drop moves through the same rename path as
+"Move file to...", so links follow `alwaysUpdateLinks` and the "Update links" question, and a
+clash takes `available_path`'s ` 1`. A drop on the folder the item is in, or a folder on itself or
+below itself, does nothing (`explorer::drop_moves`). The Bookmarks pane takes the same payload,
+and its dock tab opens under a held drag, since Scoria shows one left pane at a time.
+
+**Driven, not only tested.** The control socket's `mouse` method makes real gpui drags (a move
+that names the held button), so `Gamma` → `sub`, a Files row through the Bookmarks tab to above
+Alpha, `Image.png` into "Group one", and `Alpha` onto a `sub` that already has an `Alpha.md`
+(arriving as `sub/Alpha 1.md`, the other untouched) all ran in the app with the bytes checked.
+Once in that session a click and `file-explorer:open` were both ignored until a stray mouse-up
+went in — consistent with a drag gpui still held — and five attempts to repeat the sequence never
+did; noted, not explained.
+
+**Bookmarks follow renames.** The clash drop showed the bookmarks of `Alpha.md` left pointing at
+nothing — true of every rename Scoria made, not only drags. `bookmarks-rename.mjs` settled what
+Obsidian writes: each `path` rewritten in place, folders taking their contents, a delete leaving
+the bookmark. `Bookmarks::rename_path` does that from `finish_rename`, and only writes when a
+bookmark is touched.
+
 
 ### The file tree renames on the row, 2026-11-05
 
@@ -508,13 +542,13 @@ Files header's New note and New folder, two sort orders — with the run, the ev
 still owed in [[Writer gate run#Day 2, 2026-11-05]]. The writer came out of it clean on every item;
 what the day caught was a default, and the default had been hiding a feature.
 
-**`alwaysUpdateLinks` read an absent key as on; Obsidian reads it as off.** PLMCRZY's `app.json`
-holds only `vimMode`, so the rename of `Data Architecture` — 6 inbound links in 6 files, two
+**`alwaysUpdateLinks` read an absent key as on; Obsidian reads it as off.** The gate vault's `app.json`
+holds only `vimMode`, so the rename of `Note F` — 6 inbound links in 6 files, two
 aliased — rewrote all six **silently**. Obsidian would have raised its **Update links** modal and
 written nothing but the rename unless the person chose a button. The evidence was already in the
 repository: Obsidian's row reads "Turn off to be prompted to update links after renaming a file",
 and it rendered that toggle **off** on a vault whose `app.json` the probe wrote as `{}`
-(`tools/obsidian-probe/results/2026-10-25-ui-rules.json`) — PLMCRZY's situation exactly. The
+(`tools/obsidian-probe/results/2026-10-25-ui-rules.json`) — the gate vault's situation exactly. The
 2026-10-25 drag pass, which set the key to `false` deliberately, saw the modal on every basename
 change.
 
@@ -549,13 +583,13 @@ reach, each now shown on a real vault:
 
 - **The rename is its own inverse.** Six links rewritten and rewritten back left every one of the
   six files byte-identical to `snapshot-2026-11-04b`. Both aliases survived both directions, and the
-  renamed note's own bytes — its `# Data Architecture` heading included — never moved.
-- **The link rewriter preserves a missing trailing newline.** `Infrastructure.md` and
-  `Tech Stack.md`, two of the five notes Obsidian left without a final newline on day 1, each had a
+  renamed note's own bytes — its `# Note F` heading included — never moved.
+- **The link rewriter preserves a missing trailing newline.** `Note B.md` and
+  `Note A.md`, two of the five notes Obsidian left without a final newline on day 1, each had a
   link rewritten and each still ends without one. Day 1 proved this of the editor; the rewriter is
   a different write path, reading and writing the file without the editor in it at all.
 - **A move and a delete rewrite nothing.** The move, because `shortest` plus a unique basename
-  leaves `[[Legacy Projects]]` resolving from anywhere — `rename_preview("B.md", "Sub/B.md")` is
+  leaves `[[Note C]]` resolving from anywhere — `rename_preview("B.md", "Sub/B.md")` is
   `(0, 0)` in the unit tests and now on a real vault too. The delete, because Obsidian rewrites no
   links on one: the linking note came back with the same sha256, and its link reported as uncreated.
 
@@ -572,9 +606,9 @@ eyes, and one of those two mattered more than any byte in the diff.
 
 **The two link rewriters are byte-identical on a real vault**, which is the result only Obsidian
 could give. Obsidian rewrote the same 6 linking files in one batch at `00:06:02.899`–`.906` and left
-`Data Architecture.md` itself untouched at day 1's mtime — a rename's signature, since the rename is
+`Note F.md` itself untouched at day 1's mtime — a rename's signature, since the rename is
 a directory operation and the links live elsewhere — and all six then verified OK against
-`plmcrzy-2026-11-04b.sha256`. Scoria had already renamed away and back to the same bytes, so both
+`<vault>-2026-11-04b.sha256`. Scoria had already renamed away and back to the same bytes, so both
 writers are exact inverses of themselves *and* agree with each other, aliases included.
 
 **The modal appeared, so the default is settled on this vault and not merely inferred.** That was
@@ -606,7 +640,7 @@ folder — is set up and running, and [[Writer gate run]] holds the sheet, the
 traps and the log. Three things had to be settled first.
 
 **The harness still passes.** Fifteen properties over the corpus and over
-PLMCRZY, green in 3.6 s with everything recompiled. Worth re-running before
+The gate vault, green in 3.6 s with everything recompiled. Worth re-running before
 starting the week rather than trusting the 2026-10-18 result: the theme
 registry, 85 languages of highlighting and the whole Bases run landed in
 between, and a week of mixed use spent on a writer that had regressed would
@@ -621,13 +655,13 @@ that is the diff of an inert folder. **A clean diff over a vault nobody
 touched is zero evidence, not a pass**, and saying otherwise is the one way
 this gate can be passed without being met.
 
-The registration bought something real, though: PLMCRZY's `.obsidian` now
+The registration bought something real, though: the gate vault's `.obsidian` now
 holds four modelled files, and the config property's per-set
 `checked > before` assertion means they genuinely round-tripped — where
 [[#Four small entries and a URI, 2026-11-02]] recorded that set as passing
 vacuously on a `.obsidian` that held only `workspace.json`.
 
-**Two vaults, and only one decides.** The verdict rests on PLMCRZY because
+**Two vaults, and only one decides.** The verdict rests on the gate vault because
 only Scoria and Obsidian ever write to it, so a moved byte has exactly two
 suspects — which is the question a diff has to answer. `docs/scoria` is the
 folder actually lived in (edited today; Obsidian rewrote its `.obsidian` on
@@ -641,7 +675,7 @@ touch three of them.
 `tools/writer-gate/gate.sh` is the procedure, wrapped as `just gate-check`,
 `just gate-baseline` and `just gate-status`. It keeps the layout
 [[#The gate run opens, 2026-10-18]] established — copies in
-`~/bstore2/raga/scoria-gate`, not hashes alone, because a hash says a file
+`$SCORIA_GATE_DIR`, not hashes alone, because a hash says a file
 moved and the next question is always which bytes — and adds the daily shape:
 check against yesterday's snapshot, attribute whatever moved, then take
 today's. `check --from-first` gives the cumulative diff. `snapshot-2026-11-04`
@@ -3186,7 +3220,7 @@ forward: scope a group by the *change*, not by the file, and when a change needs
 one agent both — a handoff note across a wave boundary costs more than the conflict it avoids.
 
 **Where it ended.** 501 tests pass, clippy is clean across the workspace, and the Writer gate over
-the real PLMCRZY vault still round-trips 14/14 byte-identical, which is the number that matters:
+the real gate vault still round-trips 14/14 byte-identical, which is the number that matters:
 nothing in a campaign's worth of UI work moved a byte in a vault, and the one path that *was*
 moving bytes it should not — the grapheme split — is closed. Of the 95 findings the waves worked
 from, 54 are fixed. Of the second pass's other 79, 27 were already fixed by that work and two more
@@ -3426,8 +3460,8 @@ same. That asymmetry is recorded rather than copied.
 
 **Checked against the real vault.** The harness has a new property: every
 `.canvas` in Obsidian's layout is written back byte-identical. The gate
-vault's `Data Pipeline Mindmap.canvas`, the 4731-byte file Obsidian wrote
-on 2026-10-18, passes; `PLMCRZY Mindmap.canvas` is reported as authored
+vault's `Mindmap.canvas`, the 4731-byte file Obsidian wrote
+on 2026-10-18, passes; `Mindmap.canvas` is reported as authored
 elsewhere, since Obsidian itself will rewrite it whole the first time it is
 saved there. Nothing in the app calls the writer yet; when phase 4 does,
 the bytes are settled.
@@ -3553,7 +3587,7 @@ sequence from `onLayoutReady`, each in its own `try`/`catch` behind a 25 s
 later hang could not cost the earlier answers. A local HTTP server on
 127.0.0.1:8731 served images and logged request headers. `obsidian.json` was
 backed up, pointed at the scratch vault, and restored byte-identical after
-each of the four launches. The gate vault was untouched: PLMCRZY's mtimes all
+each of the four launches. The gate vault was untouched: the gate vault's mtimes all
 predate the run and it still matches `snapshot-2026-10-18` exactly.
 
 Three traps, all new:
@@ -3649,7 +3683,7 @@ every hash matches. So Obsidian rewrites its config set on open and reproduces
 it exactly — which is the behavior `Vault::write_config` was built to match,
 now confirmed from the other side.
 
-**`Data Pipeline Mindmap.canvas` changed.** The pre-open bytes were recovered
+**`Mindmap.canvas` changed.** The pre-open bytes were recovered
 from Obsidian's own file-recovery store
 (`~/.config/obsidian/IndexedDB/app_obsidian.md_0.indexeddb.leveldb`, the
 canvas text sitting in the log in the clear) and they hash to the baseline
@@ -3685,7 +3719,7 @@ and a formatter that holds a node on one line.
 Every Writer item is done, so the gate is the work. It has two halves. The
 half that is ours to decide — every path from a keystroke to a file's bytes —
 is the harness, and it now passes over the real vault: all thirteen
-properties, `SCORIA_ROUNDTRIP_VAULT=~/bstore2/raga/plmcrzy/PLMCRZY`,
+properties, `SCORIA_ROUNDTRIP_VAULT="$SCORIA_GATE_VAULT"`,
 nothing written to the vault (checked after the run by mtime, as the harness
 promises: every edit happens in a buffer in memory). The other half is a week
 of a person using both apps on the same folder, which has not run.
@@ -3695,7 +3729,7 @@ It is a copy, not a list of hashes: a hash says a file moved, and the next
 question is always *which bytes*.
 
 ```
-GATE=~/bstore2/raga/scoria-gate; VAULT=~/bstore2/raga/plmcrzy/PLMCRZY
+GATE=$SCORIA_GATE_DIR; VAULT=$SCORIA_GATE_VAULT
 rsync -a --exclude workspace.json "$VAULT"/ "$GATE"/snapshot-<date>/   # take it
 diff -r "$GATE"/snapshot-<date> "$VAULT" --exclude workspace.json      # after the week
 ```
@@ -3711,7 +3745,7 @@ its paths are relative to the vault root, so it only means anything run from
 there:
 
 ```
-( cd "$VAULT" && sha256sum -c "$GATE"/plmcrzy-2026-10-18b.sha256 )
+( cd "$VAULT" && sha256sum -c "$GATE"/vault-2026-10-18b.sha256 )
 ```
 
 The vault is not registered in Obsidian yet (`~/.config/obsidian/obsidian.json`
@@ -3726,7 +3760,7 @@ configs rather than the notes:
   a person's notes but never their `.obsidian` — the set that has what a repo
   fixture cannot invent: files missing outright, an `appearance.json` that is
   a bare `{}`, no trailing newline on any of them. It now includes the named
-  vault's, and all four of PLMCRZY's round-trip byte-identical.
+  vault's, and all four of the gate vault's round-trip byte-identical.
 - **The test could not tell whether the vault had run.** It asserted
   `checked >= 7` against a total the two repository sets reach on their own
   (they hold eight files between them). Each set now has to contribute a file
@@ -3744,7 +3778,7 @@ configs rather than the notes:
 
 **Thin, and worth saying plainly:** the real vault adds ten hand-written notes
 to the corpus's thousand. Pointing the harness at the whole
-`~/bstore2/raga/plmcrzy` tree finds 214 more `.md` files, but they are
+the gate vault's parent tree finds 214 more `.md` files, but they are
 `node_modules` READMEs rather than notes a person wrote — breadth of Markdown,
 not breadth of vault. The corpus is still what covers the shapes; the real
 vault covers that a real `.obsidian` survives a write.

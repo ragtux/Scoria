@@ -111,7 +111,7 @@ never been compared with Obsidian's.
 **Always update** is also a config writer: it turns the setting on, so the next rename does not ask.
 
 **Scoria, as it was.** Title "Update links?"; the detail named the file *with its extension* — "6
-links in 6 files point to `Data Lake Architecture.md`. Update them to the new name?" — and there
+links in 6 files point to `Note F renamed.md`. Update them to the new name?" — and there
 were two buttons, "Update links" and "Don't update". So the sentence was Scoria's, the count was
 phrased the other way round, and the third button was missing.
 
@@ -2690,11 +2690,20 @@ not a drag.
 Save in a row. Save and Remove do what Obsidian's do; there is no way to choose a group. Needs a
 dropdown row in `prompt.rs`.
 
+**Landed 2026-11-07**: `PromptSpec::rows` draws a prompt as setting rows (a fixed field, the text
+field, a dropdown) with a danger button at the left; both bookmark modals use it, the dropdown
+preselects the item's group (or the group whose menu asked), and Save moves the item.
+
 ### A note dragged in from the Files pane is not bookmarked
 
 **Obsidian.** Dropped on the Bookmarks pane, a note from Files becomes a `file` item at the drop
 (`s16`). **Scoria.** The Files view has no drag source at all, so this waits on the explorer's
 drags (block 5 of [[Interaction probes]]).
+
+**Landed 2026-11-07**, with the explorer's drags: a Files row drags with Obsidian's ghost, washes
+its target folder, and drops by moving (numbered on a clash, links by the rename rules); held over
+the Bookmarks tab it opens that pane, and dropped there it is a new bookmark at the drop. A rename
+of any kind now carries bookmarks with it, as Obsidian's does.
 
 ### The view header has no filled bookmark on a bookmarked note
 
@@ -2702,6 +2711,44 @@ drags (block 5 of [[Interaction probes]]).
 left of the mode button, and none on a note that is not bookmarked — which is why 1.14.5's
 was measured zero-rect on an unbookmarked note. **Scoria** draws no bookmark action there. Unprobed:
 what a click on it does (likely "Edit bookmark").
+
+**Landed 2026-11-07**, after `view-header-bookmark.mjs` settled it: "Bookmarked" is drawn first in
+the header's actions while the file has a plain bookmark, filled in `--icon-color-active`, and a
+click opens "Edit bookmark" on it.
+
+## The table cell keyboard, against the probe of 2026-11-08
+
+Filed from `tools/obsidian-probe/table-keys.mjs`
+([[Specification#Observed table cell keyboard, Obsidian 1.15.0]]), after a report that Enter at the
+end of a table would not end it and that typing stopped working in the app.
+
+### The table cell keyboard is a field that never lets go
+
+**Obsidian.** The caret lives in the editor, inside the table's source; there is no separate cell
+field. Enter in the last row appends a row, Tab in the last cell appends a row, and the way out is
+Arrow Down (or Arrow Right at the end of the last cell), which puts the caret at column 0 of the line
+after the table. Escape does nothing. A click into a cell re-pads the table.
+
+**Scoria.** A click opens a `CellEdit` (`table_field`) that owns the keys. Enter on the last row only
+commits it, Tab on the last cell falls through to the editor, Escape *discards* the cell, and nothing
+but Escape, a click on another cell or a note switch ever closes it, so a caret that has moved out of
+the table (Arrow keys, a click below it, a table command, an undo) leaves the field open and **every
+key goes to a cell nobody can see**. Seen live on 2026-11-08: the editor caret on the last line of a note,
+`field: "cell"`, typing swallowed until Escape. Three things to do, in this order of importance:
+close the field whenever the caret leaves the cell's table; make Arrow Down and Arrow Right at the end
+of the last cell leave the table to the next line; make Enter in the last row and Tab in the last cell
+append a row. Whether a click should re-pad the table is a byte question and wants its own decision.
+
+**Landed 2026-11-08**: all three, and one more the probe showed. Arrow Up/Down walk the cells while one
+is open, leaving above the header or below the last row; Arrow Right at the end of the last cell leaves
+below; Enter in the last row and Tab in the last cell append a row (`RowAfter`) and open the cell in the
+same column or the first. A click that is not on a cell, undo, redo, a table command and any other
+movement through the document close the field first, which is what the stuck typing was. **Escape now
+writes the cell** instead of discarding it, because Obsidian's typed text is already in the note and a
+discard could lose it. Driven on a scratch vault: Enter and Tab appended padded rows, Arrow Down put a
+typed character on the line after the table, Arrow Up on the line before it, a click on the paragraph
+below left typing working, and Escape kept `4w`. **Still out**: the re-pad on entering a cell, and the
+table commands, which act on the buffer's caret and so do nothing for an open cell.
 
 ## Blocked by the harness, not by the code
 

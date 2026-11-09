@@ -17,7 +17,9 @@ use crate::canvas::{CanvasEvent, CanvasView};
 use crate::chooser::{Chooser, ChooserEvent, Row as ChooserRow};
 use crate::copy_results::{CopyResults, CopyResultsEvent};
 use crate::editor::{Editor, EditorEvent};
-use crate::explorer::{display_name, kind_name, ExplorerEvent, FileExplorer, FileTree, SortOrder};
+use crate::explorer::{
+    self, display_name, kind_name, ExplorerEvent, FileExplorer, FileTree, SortOrder,
+};
 use crate::file_menu::{self, Pick};
 use crate::fold;
 use crate::graph::{GraphEvent, GraphView};
@@ -27,7 +29,7 @@ use crate::mentions::{Finder, Name};
 use crate::palette::{CommandPalette, PaletteCommand, PaletteEvent};
 use crate::panes::{self, PaneSort};
 use crate::pdf::view::{PdfEvent, PdfView};
-use crate::prompt::{Prompt, PromptAction, PromptButton, PromptEvent, PromptSpec};
+use crate::prompt::{Prompt, PromptAction, PromptButton, PromptEvent, PromptRow, PromptSpec};
 use crate::reading::{
     self, LinkTarget, PropertyItemRemoved, ReadingEvent, ReadingView, TaskMarker, TaskToggled,
 };
@@ -1545,12 +1547,12 @@ enum PendingOp {
         from: String,
         to: String,
     },
-    /// "Add bookmark": the title for this draft, and the group (by index
-    /// path, empty for the top level) it goes into.
-    AddBookmark(BookmarkDraft, Vec<usize>),
+    /// "Add bookmark": the title for this draft, and the groups its
+    /// "Bookmark group" dropdown lists, by index path, in its order.
+    AddBookmark(BookmarkDraft, Vec<Vec<usize>>),
     /// "Edit bookmark" on the item at this index path: Save writes the
-    /// title, Remove takes it out.
-    EditBookmark(Vec<usize>),
+    /// title and the group, Remove takes it out. The groups as above.
+    EditBookmark(Vec<usize>, Vec<Vec<usize>>),
 }
 
 /// One tab of the main area: what it shows and where it has been. The
@@ -3252,6 +3254,9 @@ impl Workspace {
                         this.commit_row_rename(path.clone(), name, window, cx)
                     }
                     ExplorerEvent::Move(path) => this.start_move(path, window, cx),
+                    ExplorerEvent::MoveInto { path, folder } => {
+                        this.drop_into_folder(path, folder, window, cx)
+                    }
                     ExplorerEvent::Duplicate(path) => this.duplicate(path, cx),
                     ExplorerEvent::Delete(path) => this.start_delete(path, window, cx),
                     ExplorerEvent::Bookmark(path) => this.start_bookmark_path(path, window, cx),
@@ -3324,6 +3329,19 @@ impl Workspace {
                         let (from, to) = (from.clone(), to.clone());
                         this.change_bookmarks(cx, move |b| {
                             b.move_item(&from, &to);
+                        });
+                    }
+                    BookmarkEvent::AddPath { path, folder, to } => {
+                        let item = if *folder {
+                            Bookmark::folder(path, None, now_millis())
+                        } else {
+                            Bookmark::file(path, None, None, now_millis())
+                        };
+                        let to = to.clone();
+                        this.change_bookmarks(cx, move |b| {
+                            if !b.insert_at(&to, item.clone()) {
+                                b.push(item);
+                            }
                         });
                     }
                     // `workspace.json` goes out with the pane's filter in it
@@ -4278,7 +4296,11 @@ impl Workspace {
             let vault = state.vault();
             FileTree::new(vault.files(), vault.folders(), show_unsupported)
         };
-        self.explorer.update(cx, |e, cx| e.set_tree(tree, cx));
+        let vault_name = state.vault().name();
+        self.explorer.update(cx, |e, cx| {
+            e.set_vault_name(vault_name);
+            e.set_tree(tree, cx)
+        });
         self.refresh_tag_tree(&state);
         self.refresh_property_rows(&state);
         self.switcher
@@ -7663,6 +7685,38 @@ impl Workspace {
         );
     }
 
+    /// A row dropped on a folder in the Files view (2026-10-25
+    /// `explorer-dnd`): it moves there under the name it had, numbered
+    /// `Name 1` when that name is taken, the existing file untouched. Links
+    /// follow the rename rules: rewritten at once with `alwaysUpdateLinks`,
+    /// otherwise the "Update links" question when a link would change. A
+    /// drag-move has no undo, in Obsidian or here.
+    fn drop_into_folder(
+        &mut self,
+        path: &str,
+        folder: &str,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let to = {
+            let vault = state.vault();
+            let is_folder = vault.absolute(path).is_dir();
+            if !explorer::drop_moves(path, is_folder, folder) {
+                return;
+            }
+            let name = path.rsplit('/').next().unwrap_or(path);
+            let (stem, ext) = match name.rsplit_once('.') {
+                Some((stem, ext)) if !is_folder && !stem.is_empty() => (stem, ext),
+                _ => (name, ""),
+            };
+            vault.available_path(folder, stem, ext)
+        };
+        self.rename_with_links(path, &to, window, cx);
+    }
+
     fn start_move(&mut self, path: &str, window: &mut Window, cx: &mut Context<Self>) {
         let Some(state) = self.state.clone() else {
             return;
@@ -7878,17 +7932,19 @@ impl Workspace {
                 }
             }
             PendingOp::UpdateLinks { from, to } => self.finish_rename(&from, &to, true, window, cx),
-            PendingOp::AddBookmark(draft, into) => {
+            PendingOp::AddBookmark(draft, groups) => {
+                let into = self.chosen_group(&groups, cx);
                 self.pending = None;
                 self.close_modal(window, cx);
                 self.finish_bookmark(draft, into, value, cx);
             }
             // Save writes the title when it changed; left as it was, it
             // writes nothing, as Obsidian's did.
-            PendingOp::EditBookmark(at) => {
+            PendingOp::EditBookmark(at, groups) => {
+                let into = self.chosen_group(&groups, cx);
                 self.pending = None;
                 self.close_modal(window, cx);
-                self.finish_edit_bookmark(at, value, cx);
+                self.finish_edit_bookmark(at, into, value, cx);
             }
         }
     }
@@ -7900,7 +7956,7 @@ impl Workspace {
             Some(PendingOp::UpdateLinks { from, to }) => {
                 self.finish_rename(&from, &to, false, window, cx);
             }
-            Some(PendingOp::EditBookmark(at)) => {
+            Some(PendingOp::EditBookmark(at, _)) => {
                 self.pending = None;
                 self.close_modal(window, cx);
                 self.change_bookmarks(cx, move |b| {
@@ -7959,34 +8015,41 @@ impl Workspace {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
         let placeholder = draft.placeholder();
-        let (title, detail) = match &draft {
-            BookmarkDraft::Tabs(paths) => (
-                format!("Add {} bookmarks", paths.len()),
-                Some("Title".to_string()),
-            ),
-            BookmarkDraft::Graph => ("Add bookmark".to_string(), Some("Title".to_string())),
-            BookmarkDraft::Search(query) => {
-                ("Add bookmark".to_string(), Some(format!("Query: {query}")))
+        let title = match &draft {
+            BookmarkDraft::Tabs(paths) => format!("Add {} bookmarks", paths.len()),
+            _ => "Add bookmark".to_string(),
+        };
+        // The rows "Add bookmark" was observed with (2026-10-20): the
+        // target as a fixed field — none for the graph and for a group of
+        // tabs — then Title, then Bookmark group.
+        let fixed = match &draft {
+            BookmarkDraft::Search(query) => Some(("Query", query.clone())),
+            BookmarkDraft::File { .. } | BookmarkDraft::Folder(_) => {
+                Some(("Path", placeholder.clone()))
             }
-            BookmarkDraft::File { .. } | BookmarkDraft::Folder(_) => (
-                "Add bookmark".to_string(),
-                Some(format!("Path: {placeholder}")),
-            ),
+            BookmarkDraft::Graph | BookmarkDraft::Tabs(_) => None,
         };
         let initial = match &draft {
             BookmarkDraft::Graph => placeholder.clone(),
             _ => String::new(),
         };
+        // A group's own "Bookmark the active tab..." opens on that group.
         let into = std::mem::take(&mut self.bookmark_into);
+        let groups = bookmark_groups(&state.bookmarks().items, None);
+        let selected = groups.iter().position(|(at, _)| *at == into);
+        let rows = bookmark_rows(fixed, &groups, selected);
         self.open_prompt(
-            PendingOp::AddBookmark(draft, into),
+            PendingOp::AddBookmark(draft, groups.into_iter().map(|(at, _)| at).collect()),
             PromptSpec {
                 title: title.into(),
-                detail: detail.map(Into::into).into_iter().collect(),
                 input: Some(initial),
                 placeholder: placeholder.into(),
                 confirm: "Save".into(),
+                rows,
                 ..PromptSpec::default()
             },
             window,
@@ -8059,11 +8122,11 @@ impl Workspace {
         self.bookmarks.update(cx, |p, cx| p.start_rename(&at, cx));
     }
 
-    /// "Edit bookmark" on an item: its path, query or url shown, the Title
-    /// field holding the title it has (empty, with the default as its
-    /// placeholder, when it has none), Remove, Cancel and Save
-    /// (2026-11-07 probe, `s11b`). Obsidian's modal also has a "Bookmark
-    /// group" dropdown, which this prompt cannot draw yet.
+    /// "Edit bookmark" on an item (2026-11-07 probe, `s11b`): its path,
+    /// url or query in a disabled field, Title holding the title it has
+    /// (empty, with the default name as its placeholder, when it has none),
+    /// the "Bookmark group" dropdown on the group it is in, and Remove at
+    /// the left of Cancel and Save.
     fn start_edit_bookmark(&mut self, at: Vec<usize>, window: &mut Window, cx: &mut Context<Self>) {
         let Some(state) = self.state.clone() else {
             return;
@@ -8074,21 +8137,31 @@ impl Workspace {
         let mut fallback = item.clone();
         fallback.clear_title();
         let placeholder = fallback.display_title();
-        let detail = match item.kind() {
-            "search" => Some(format!("Query: {}", item.query().unwrap_or(""))),
-            "url" => Some(format!("URL: {}", item.url().unwrap_or(""))),
-            "file" | "folder" => Some(format!("Path: {placeholder}")),
+        let fixed = match item.kind() {
+            "search" => Some(("Query", item.query().unwrap_or("").to_string())),
+            "url" => Some(("URL", item.url().unwrap_or("").to_string())),
+            "file" | "folder" => Some(("Path", placeholder.clone())),
             _ => None,
         };
+        // The item's own group is preselected; an item cannot be put in
+        // itself, so a group is not offered its own members.
+        let groups = bookmark_groups(&state.bookmarks().items, Some(&at));
+        let parent = &at[..at.len().saturating_sub(1)];
+        let selected = groups.iter().position(|(g, _)| g.as_slice() == parent);
+        let rows = bookmark_rows(fixed, &groups, selected);
         self.open_prompt(
-            PendingOp::EditBookmark(at),
+            PendingOp::EditBookmark(at, groups.into_iter().map(|(g, _)| g).collect()),
             PromptSpec {
                 title: "Edit bookmark".into(),
-                detail: detail.map(Into::into).into_iter().collect(),
                 input: Some(item.title().unwrap_or("").to_string()),
                 placeholder: placeholder.into(),
                 confirm: "Save".into(),
-                secondary: Some("Remove".into()),
+                rows,
+                buttons: vec![
+                    PromptButton::new("Remove", PromptAction::Secondary).danger(),
+                    PromptButton::new("Cancel", PromptAction::Cancel),
+                    PromptButton::new("Save", PromptAction::Submit).cta(),
+                ],
                 ..PromptSpec::default()
             },
             window,
@@ -8096,24 +8169,58 @@ impl Workspace {
         );
     }
 
-    fn finish_edit_bookmark(&mut self, at: Vec<usize>, title: &str, cx: &mut Context<Self>) {
+    /// The group the open prompt's dropdown holds, by index path; the top
+    /// level when it holds none.
+    fn chosen_group(&self, groups: &[Vec<usize>], cx: &App) -> Vec<usize> {
+        self.prompt
+            .read(cx)
+            .choice()
+            .and_then(|ix| groups.get(ix).cloned())
+            .unwrap_or_default()
+    }
+
+    /// Save on "Edit bookmark": the title when it changed, then the item
+    /// moved to the end of the group chosen when that is not the one it is
+    /// in. Left as it was, it writes nothing, as Obsidian's did.
+    fn finish_edit_bookmark(
+        &mut self,
+        at: Vec<usize>,
+        into: Vec<usize>,
+        title: &str,
+        cx: &mut Context<Self>,
+    ) {
         let title = title.trim().to_string();
         let current = self
             .state
             .as_ref()
             .and_then(|s| s.bookmarks().get(&at))
             .map(|i| i.title().unwrap_or("").to_string());
-        if current.as_deref() == Some(title.as_str()) {
+        let retitle = current.as_deref() != Some(title.as_str());
+        let parent = at[..at.len().saturating_sub(1)].to_vec();
+        let regroup = into != parent;
+        if !retitle && !regroup {
             return;
         }
         self.change_bookmarks(cx, move |b| {
-            b.update_at(&at, |item| {
-                if title.is_empty() && item.kind() != "graph" {
-                    item.clear_title();
-                } else if !title.is_empty() {
-                    item.set_title(&title);
-                }
-            });
+            if retitle {
+                b.update_at(&at, |item| {
+                    if title.is_empty() && item.kind() != "graph" {
+                        item.clear_title();
+                    } else if !title.is_empty() {
+                        item.set_title(&title);
+                    }
+                });
+            }
+            if regroup {
+                let len = if into.is_empty() {
+                    b.items.len()
+                } else {
+                    b.get(&into).map(|g| g.items().len()).unwrap_or(0)
+                };
+                let mut to = into;
+                to.push(len);
+                b.move_item(&at, &to);
+            }
         });
     }
 
@@ -8277,6 +8384,14 @@ impl Workspace {
             Ok(outcome) => {
                 self.pending = None;
                 self.close_modal(window, cx);
+                // Bookmarks follow the file, as Obsidian's do — whatever
+                // the links did (2026-11-07 `bookmarks-rename`).
+                if state.bookmarks().has_path_under(from) {
+                    let (from, to) = (from.to_string(), to.to_string());
+                    self.change_bookmarks(cx, move |b| {
+                        b.rename_path(&from, &to);
+                    });
+                }
                 self.apply_rename(outcome, cx);
             }
             Err(err) => self.prompt.update(cx, |p, cx| p.set_error(err, cx)),
@@ -8764,32 +8879,83 @@ impl Workspace {
                     })
                     .child(self.render_title(view, title.clone(), title_color, theme, cx)),
             )
-            .child(if let Some(path) = base_leaf.clone() {
-                self.render_base_header_actions(id, path, theme, cx)
-            } else {
+            // "Bookmarked": the leaf's file has a bookmark, so the header
+            // draws its bookmark filled in the accent, before the other
+            // actions; a click opens "Edit bookmark" on it. A file with no
+            // bookmark has the action in the DOM at zero size, so nothing
+            // is drawn (`view-header-bookmark.json`, 2026-11-07).
+            .child(
                 div()
                     .flex()
                     .flex_row()
                     .gap(px(2.))
-                    .child(
-                        icon_button("graph", "git-fork", theme)
-                            .when(view.mode == ViewMode::Graph, |d| {
-                                d.bg(theme.tokens.background_modifier_hover)
+                    .children(self.render_bookmarked_action(view, theme, cx))
+                    .child(if let Some(path) = base_leaf.clone() {
+                        self.render_base_header_actions(id, path, theme, cx)
+                    } else {
+                        div()
+                            .flex()
+                            .flex_row()
+                            .gap(px(2.))
+                            .child(
+                                icon_button("graph", "git-fork", theme)
+                                    .when(view.mode == ViewMode::Graph, |d| {
+                                        d.bg(theme.tokens.background_modifier_hover)
+                                    })
+                                    .on_click(cx.listener(move |this, _, window, cx| {
+                                        this.activate_group(id, cx);
+                                        this.open_graph_action(&OpenGraph, window, cx)
+                                    })),
+                            )
+                            .when(header_shows_mode_switch(&view.current, view.mode), |d| {
+                                d.child(icon_button("mode", mode_icon, theme).on_click(
+                                    cx.listener(move |this, _, window, cx| {
+                                        this.activate_group(id, cx);
+                                        this.toggle_mode(&ToggleMode, window, cx)
+                                    }),
+                                ))
                             })
-                            .on_click(cx.listener(move |this, _, window, cx| {
-                                this.activate_group(id, cx);
-                                this.open_graph_action(&OpenGraph, window, cx)
-                            })),
-                    )
-                    .when(header_shows_mode_switch(&view.current, view.mode), |d| {
-                        d.child(icon_button("mode", mode_icon, theme).on_click(cx.listener(
-                            move |this, _, window, cx| {
-                                this.activate_group(id, cx);
-                                this.toggle_mode(&ToggleMode, window, cx)
-                            },
-                        )))
-                    })
-            })
+                    }),
+            )
+    }
+
+    fn render_bookmarked_action(
+        &self,
+        view: &GroupView,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> Option<gpui::Stateful<gpui::Div>> {
+        let path = view.current.clone()?;
+        let state = self.state.as_ref()?;
+        if !state.bookmarks().has_file(&path) {
+            return None;
+        }
+        let id = view.id;
+        let t = &theme.tokens;
+        Some(
+            div()
+                .id(("bookmarked", id as usize))
+                .flex_shrink_0()
+                .w(px(28.))
+                .h(px(24.))
+                .flex()
+                .items_center()
+                .justify_center()
+                .rounded(px(4.))
+                .cursor_pointer()
+                .hover(|s| s.bg(t.background_modifier_hover))
+                .child(icon("bookmark-filled", ICON_SIZE, t.icon_color_active))
+                .on_click(cx.listener(move |this, _, window, cx| {
+                    this.activate_group(id, cx);
+                    let at = this
+                        .state
+                        .as_ref()
+                        .and_then(|s| last_file_bookmark(&s.bookmarks().items, &path));
+                    if let Some(at) = at {
+                        this.start_edit_bookmark(at, window, cx);
+                    }
+                })),
+        )
     }
 
     /// A base leaf's view actions, observed
@@ -12094,11 +12260,11 @@ impl Workspace {
                 Some(PendingOp::UpdateLinks { from, to }) => {
                     json!({"op": "update-links", "from": from, "to": to})
                 }
-                Some(PendingOp::AddBookmark(draft, into)) => {
-                    json!({"op": "add-bookmark", "placeholder": draft.placeholder(), "into": into})
+                Some(PendingOp::AddBookmark(draft, groups)) => {
+                    json!({"op": "add-bookmark", "placeholder": draft.placeholder(), "groups": groups})
                 }
-                Some(PendingOp::EditBookmark(at)) => {
-                    json!({"op": "edit-bookmark", "at": at})
+                Some(PendingOp::EditBookmark(at, groups)) => {
+                    json!({"op": "edit-bookmark", "at": at, "groups": groups})
                 }
             },
         );
@@ -15787,18 +15953,34 @@ impl Render for Workspace {
                         )
                     }))
                     .when(bookmarks_on, |d| {
-                        d.child(self.dock_tab(
-                            "Bookmarks",
-                            "bookmark",
-                            left_tab == LeftTab::Bookmarks,
-                            &theme,
-                            |this, window, cx| {
-                                this.leave_search_field(window, cx);
-                                this.left_tab = LeftTab::Bookmarks;
-                                cx.notify();
-                            },
-                            cx,
-                        ))
+                        // A Files row held over the tab opens the pane, as
+                        // a drag held over a tab header does in Obsidian, so
+                        // the row can be dropped among the bookmarks.
+                        d.child(
+                            div()
+                                .child(self.dock_tab(
+                                    "Bookmarks",
+                                    "bookmark",
+                                    left_tab == LeftTab::Bookmarks,
+                                    &theme,
+                                    |this, window, cx| {
+                                        this.leave_search_field(window, cx);
+                                        this.left_tab = LeftTab::Bookmarks;
+                                        cx.notify();
+                                    },
+                                    cx,
+                                ))
+                                .on_drag_move(cx.listener(
+                                    |this, event: &DragMoveEvent<explorer::FileDrag>, _, cx| {
+                                        if event.bounds.contains(&event.event.position)
+                                            && this.left_tab != LeftTab::Bookmarks
+                                        {
+                                            this.left_tab = LeftTab::Bookmarks;
+                                            cx.notify();
+                                        }
+                                    },
+                                )),
+                        )
                     })
                     .child(window_handle(
                         div().id("left-dock-space").flex_1().h_full(),
@@ -15999,9 +16181,98 @@ fn last_file_bookmark(items: &[Bookmark], path: &str) -> Option<Vec<usize>> {
     None
 }
 
+/// Every group in the bookmarks, depth first, with the label the
+/// "Bookmark group" dropdown gives it: its title behind four non-breaking
+/// spaces a level (2026-11-07 probe, `s11b`). `except` leaves out an item
+/// and everything inside it.
+fn bookmark_groups(items: &[Bookmark], except: Option<&[usize]>) -> Vec<(Vec<usize>, String)> {
+    fn walk(
+        items: &[Bookmark],
+        at: &mut Vec<usize>,
+        except: Option<&[usize]>,
+        out: &mut Vec<(Vec<usize>, String)>,
+    ) {
+        for (ix, item) in items.iter().enumerate() {
+            at.push(ix);
+            if item.kind() == "group" && except != Some(at.as_slice()) {
+                let indent = "\u{a0}".repeat(4 * (at.len() - 1));
+                out.push((at.clone(), format!("{indent}{}", item.display_title())));
+                walk(&item.items(), at, except, out);
+            }
+            at.pop();
+        }
+    }
+    let mut out = Vec::new();
+    walk(items, &mut Vec::new(), except, &mut out);
+    out
+}
+
+/// The rows of the two bookmark modals: the target in a fixed field when
+/// there is one, Title, and Bookmark group.
+fn bookmark_rows(
+    fixed: Option<(&'static str, String)>,
+    groups: &[(Vec<usize>, String)],
+    selected: Option<usize>,
+) -> Vec<PromptRow> {
+    let mut rows = Vec::new();
+    if let Some((name, value)) = fixed {
+        rows.push(PromptRow::Fixed {
+            name: name.into(),
+            value: value.into(),
+        });
+    }
+    rows.push(PromptRow::Input {
+        name: "Title".into(),
+    });
+    rows.push(PromptRow::Choice {
+        name: "Bookmark group".into(),
+        options: groups
+            .iter()
+            .map(|(_, label)| label.clone().into())
+            .collect(),
+        selected,
+    });
+    rows
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The "Bookmark group" dropdown of the probe's vault (`s11b`): the
+    /// groups depth first, a nested one behind four non-breaking spaces,
+    /// and an item's own subtree never offered to it.
+    #[test]
+    fn the_bookmark_group_dropdown_lists_groups_depth_first_and_indented() {
+        let items = vec![
+            Bookmark::file("Alpha.md", None, None, 1),
+            Bookmark::group(
+                Some("Group one"),
+                vec![
+                    Bookmark::file("Beta.md", None, None, 2),
+                    Bookmark::group(Some("Nested group"), vec![], 3),
+                ],
+                4,
+            ),
+            Bookmark::group(Some("Empty group"), vec![], 5),
+        ];
+        let groups = bookmark_groups(&items, None);
+        let labels: Vec<&str> = groups.iter().map(|(_, l)| l.as_str()).collect();
+        assert_eq!(
+            labels,
+            [
+                "Group one",
+                "\u{a0}\u{a0}\u{a0}\u{a0}Nested group",
+                "Empty group"
+            ]
+        );
+        assert_eq!(groups[1].0, [1, 1]);
+        let without: Vec<Vec<usize>> = bookmark_groups(&items, Some(&[1]))
+            .into_iter()
+            .map(|(at, _)| at)
+            .collect();
+        assert_eq!(without, [vec![2]]);
+    }
     use crate::title_field::TitleField;
     use std::fs;
     use std::path::Path;
@@ -17369,7 +17640,7 @@ mod tests {
     /// description is "Turn off to be prompted to update links after renaming
     /// a file". The gate's day 2 found this inverted, which made the
     /// "Update links?" prompt unreachable on every vault that has never
-    /// written the key — PLMCRZY among them.
+    /// written the key — the gate vault among them.
     #[test]
     fn a_vault_with_no_always_update_links_key_asks_before_rewriting() {
         let (_dir, state) = vault();

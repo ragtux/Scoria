@@ -36,6 +36,8 @@ use gpui::{
     FocusHandle, KeyBinding, Pixels, Point, SharedString, Stateful, Window,
 };
 use serde_json::{json, Value};
+use std::cell::Cell;
+
 use std::ops::Range;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
@@ -99,6 +101,30 @@ pub fn menu_box<V: 'static>(
     cx: &mut Context<V>,
     on_close: impl Fn(&mut V, &mut Context<V>) + 'static,
 ) -> Stateful<gpui::Div> {
+    menu_box_with_submenu(list, focus, cx, on_close, Rc::new(Cell::new(false)))
+}
+
+thread_local! {
+    /// Whether the pointer rests on an open submenu. It outlives a frame
+    /// because gpui reports a hover only when it *changes*: a flag made
+    /// afresh in each render would read `false` again after the re-render
+    /// the submenu's own opening causes, and never see the hover again.
+    static OVER_SUBMENU: Rc<Cell<bool>> = Rc::new(Cell::new(false));
+}
+
+/// [`menu_box`] for a menu with a submenu drawn beside the list.
+/// gpui decides "outside" from the list's own bounds, and a submenu stands
+/// beside them, so a press on one of its rows would close the menu on the
+/// way down, before the click that picks the row ever lands. `over_submenu`
+/// is set while the pointer rests on the submenu, and a press then is not
+/// outside.
+pub fn menu_box_with_submenu<V: 'static>(
+    list: Stateful<gpui::Div>,
+    focus: &FocusHandle,
+    cx: &mut Context<V>,
+    on_close: impl Fn(&mut V, &mut Context<V>) + 'static,
+    over_submenu: Rc<Cell<bool>>,
+) -> Stateful<gpui::Div> {
     let on_close = Rc::new(on_close);
     list.track_focus(focus)
         .key_context("Menu")
@@ -107,7 +133,11 @@ pub fn menu_box<V: 'static>(
             let on_close = on_close.clone();
             move |this, _: &CloseMenu, _, cx| on_close(this, cx)
         }))
-        .on_mouse_down_out(cx.listener(move |this, _, _, cx| on_close(this, cx)))
+        .on_mouse_down_out(cx.listener(move |this, _, _, cx| {
+            if !over_submenu.get() {
+                on_close(this, cx)
+            }
+        }))
 }
 
 /// Obsidian's `data-section` on a menu item. Items are grouped by it in the
@@ -876,7 +906,12 @@ pub fn render<V: 'static>(
     // A submenu opens beside its row on the right, or on the left when the
     // menu stands near the window's right edge and there is no room.
     let flip_submenu = menu.position.x + px(180. + 140.) > viewport_width;
-    let mut list = menu_box(
+    let over_submenu = OVER_SUBMENU.with(Rc::clone);
+    if !menu.submenu {
+        // A menu closed under the pointer never hears the hover end.
+        over_submenu.set(false);
+    }
+    let mut list = menu_box_with_submenu(
         // Obsidian's `.menu`: `--menu-background` inside a
         // `--menu-border-color` line, rows in `--text-normal` at the small
         // UI size, icons `--text-muted`, a warning row `--text-error`, the
@@ -900,6 +935,7 @@ pub fn render<V: 'static>(
             let on_close = on_close.clone();
             move |this, cx| on_close(this, cx)
         },
+        over_submenu.clone(),
     );
     let mut previous: Option<Section> = None;
     for (ix, item) in items(&menu.target).into_iter().enumerate() {
@@ -994,7 +1030,11 @@ pub fn render<V: 'static>(
                 .border_color(theme.tokens.menu_border_color)
                 .rounded_md()
                 .shadow_lg()
-                .occlude();
+                .occlude()
+                .on_hover({
+                    let over_submenu = over_submenu.clone();
+                    move |hovered: &bool, _, _| over_submenu.set(*hovered)
+                });
             for (sx, subitem) in item.submenu.iter().enumerate() {
                 let pick = subitem.pick;
                 let on_close = on_close.clone();

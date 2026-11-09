@@ -521,6 +521,53 @@ columns it reported came from an unfocused editor and disagreed with
 themselves), and whether a column's width counts characters or display
 columns for CJK and emoji.
 
+## Observed table cell keyboard, Obsidian 1.15.0
+
+Observed 2026-11-08 by `tools/obsidian-probe/table-keys.mjs` (results in
+`tools/obsidian-probe/results/2026-11-08-table-keys.json`), driving real clicks and keys over CDP in a
+scratch vault: a two-column table, a header and two body rows, in Live Preview, with the table as the
+last thing in the note, with one blank line after it, and with a paragraph after it. It answers the
+"unprobed" sentence above for the keyboard.
+
+**There is no separate cell field.** A click on a cell leaves focus on the editor's own `cm-content`
+and puts the caret *inside the cell's source* (`| 1   | 2   |`, line 4, column 3). `activeElement` is
+the editor in every case, so there is nothing that can be left open or closed: Escape does nothing at
+all (caret and bytes unmoved, still in the cell), and typing goes into the source at the caret,
+growing the cell as it is typed.
+
+**A click into a cell re-pads the whole table.** `| A | B |` / `| --- | --- |` / `| 1 | 2 |` became
+`| A   | B   |` / `| --- | --- |` / `| 1   | 2   |` on the first click, with nothing typed. The note
+above says typing re-pads nothing, and that stays true (typing `Z` into `1` wrote `| 1Z  |`, the width
+the click had already set), but a table is not left ragged once a caret has been in it.
+
+| Key, from | What happens |
+| --- | --- |
+| Enter, a cell not in the last row | the caret goes to the same column of the next row; no bytes change |
+| Enter, a cell in the last row | **a new empty row is appended** (`|     |     |`) and the caret goes to the same column of it. Enter again appends another; Enter never leaves the table, at the end of the note, before a blank line or before a paragraph |
+| Tab, the last cell of the last row | a new empty row is appended and the caret goes to its **first** cell; Tab again moves to its second |
+| Tab, any other cell | the next cell in reading order, wrapping to the next row's first cell |
+| Shift+Tab, the first body cell | the last cell of the header row |
+| Arrow Down, a cell in the last row | **leaves the table**: the caret goes to column 0 of the line after it, and focus is the editor outside the table. At the end of a note that ends with a newline that is the empty last line, and a second Arrow Down stays there. With a blank line then a paragraph, it is the blank line |
+| Arrow Right, the end of the last cell of the last row | the same as Arrow Down: column 0 of the next line |
+| Arrow Up, a cell of the first body row | the header row's cell (still in the table) |
+| Escape | nothing |
+| Shift+Enter | writes `<br>` at the caret and re-pads the column (`4` became `4<br>`) |
+| Ctrl+Enter | nothing |
+
+So Enter cannot end a table, and Arrow Down is the way out; typing after Arrow Down lands on the line
+after the table (`Q` typed there wrote `Q` after the table's last newline).
+
+**Scoria matches the keys** since 2026-11-08, within one difference of model: its cell is still a field
+that holds the keys while it is open, where Obsidian's caret is simply in the source. So Enter in the last
+row and Tab in the last cell append a row (through the same `RowAfter` the table command uses, which
+re-pads the table), Arrow Down from the last row and Arrow Right at the end of its last cell leave to
+the next line (adding a newline when the table ends the note without one), Arrow Up from the header
+row goes to the end of the line before the table, and Escape **writes** the cell and closes it, since in
+Obsidian what was typed is already in the note. Any other caret move or a click that is not on a cell
+closes the field first, so the keys can never go to a cell the caret has left. **Not matched:** a click
+into a cell does not re-pad the table the way Obsidian's does. See
+[[UI parity backlog#The table cell keyboard is a field that never lets go]].
+
 ## Observed block reference behavior, Obsidian 1.14.4
 
 Observed with a throwaway plugin in a scratch vault (see
@@ -5133,6 +5180,22 @@ opens that row's title for typing, with no modal.
 placeholder); "Bookmark group" (a dropdown of the groups, nested ones indented with non-breaking
 spaces) — then Remove (`mod-destructive`, on the left), Cancel, Save.
 
+The modal is `modal mod-bookmark mod-lg`: 560 px, 16 px of padding, radius 12, a 24 px close
+button 7 px from the top and 13 from the right, the title at 15 px semibold 11 px over the rows.
+Each row is a `setting-item`: the name at 13 px on the left, the control on the right, 16 px of
+padding either side of a 1 px rule between rows; the two text fields are 348 by 30, the disabled
+one with the plain border. The dropdown is 140 px or more, `--interactive-normal`, 30 px tall,
+`padding: 0 31px 0 10px`, and lists only the groups — an item at the top level shows it blank.
+The buttons are 22 px under the rows: Remove (the error colour on a tenth of itself) alone at the
+left, Cancel and Save at the right. Save with a different group moves the item into it (where in
+the group is unprobed; Scoria puts it last). "Add bookmark" is the same modal without Remove.
+
+**The view header's bookmark action** (`tools/obsidian-probe/view-header-bookmark.mjs`): on a note
+that has a plain bookmark, the first of the header's actions is "Bookmarked", `lucide-bookmark`
+filled and stroked in `--icon-color-active`, 28 by 24, left of the mode button; on any other note
+it is "Bookmark" at `display: none`. It follows a bookmark added or removed while the note is
+open. A click opens "Edit bookmark" on that bookmark; no tooltip came up under the pointer.
+
 **The filter** is the panes' `search-input-container` ("Search...", a clear button). It keeps the
 rows whose title holds the query, ignoring case, and the groups above them: `al` kept the three
 Alpha rows and the `alpha` search, `beta` kept Group one over Beta, `del` Group one › Nested group ›
@@ -5150,6 +5213,31 @@ member. A note dragged in from the Files pane is added as a new `file` item wher
 **Unprobed:** where a drop over a row's lower half or a group's edges lands (taken as below the row,
 and beside the group, by halves and quarters); what the filter does to folded groups; what a
 group's open rows do; Remove on a group with members.
+
+## Observed explorer drag look and bookmark renames, Obsidian 1.15.0
+
+Two probes of 2026-11-07, each in a scratch vault under its own `--user-data-dir`.
+
+**A drag held in the Files view** (`tools/obsidian-probe/explorer-drag-look.mjs`, nothing
+dropped). The dragged row is `is-being-dragged`: `--interactive-accent` fill, white text, radius 8.
+The target is the folder under the pointer — a folder row's own, a file row's parent, the vault root
+below the rows or over a root file — and a folder target's whole `tree-item` (its row and the rows
+inside it) is `is-being-dragged-over`: the accent at a tenth, radius 4, the folder's name in
+`--text-accent`. The root target washes nothing. A folder over its own parent is still washed and
+labelled; the drop there moves nothing. The ghost (`drag-ghost`) is 85 % black, `6px 8px`, radius
+4, a `0 2px 8px` shadow, at most 300 px, 5 px below and right of the pointer: `lucide-file` (or
+`lucide-folder-open` for a folder) at 0.7 and the name at 13 px weight 500, then
+`drag-ghost-action` — `Move into “Dest”`, the vault's own name for the root — at 12 px and 0.7. A
+folder's drag carries only its name as `text/plain`. What a drop does is
+[[#The 2026-10-25 pass: real drags, and the inline rename committed]].
+
+**What a rename does to `bookmarks.json`** (`tools/obsidian-probe/bookmarks-rename.mjs`, through
+`fileManager.renameFile`). Every `file` and `folder` item whose `path` is the renamed path, or lies
+inside a renamed folder, takes the new path **in place**: no other key moves, a heading's and a
+block's `subpath` and a `title` stay, and members of groups follow too. Renamed, moved, a folder
+renamed and moved with a note inside it, and an attachment all wrote the same shape. A delete left
+the bookmark where it was, which is why the pane hides bookmarks of missing files rather than
+dropping them.
 
 ## Observed file explorer header behavior, Obsidian 1.14.4 (installer build 1.13.7)
 

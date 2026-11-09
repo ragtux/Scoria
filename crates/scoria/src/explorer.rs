@@ -35,17 +35,19 @@ use crate::inline_field;
 use crate::theme::{Theme, ICON_SIZE};
 use gpui::{
     actions, anchored, canvas, deferred, div, point, prelude::*, px, uniform_list, App, Bounds,
-    ClickEvent, Context, ElementInputHandler, EntityInputHandler, EventEmitter, FocusHandle,
-    Focusable, FontWeight, KeyBinding, MouseButton, MouseDownEvent, Pixels, Point, ScrollStrategy,
-    SharedString, UTF16Selection, UniformListScrollHandle, Window,
+    ClickEvent, Context, DragMoveEvent, ElementInputHandler, EntityInputHandler, EventEmitter,
+    FocusHandle, Focusable, FontWeight, KeyBinding, MouseButton, MouseDownEvent, Pixels, Point,
+    ScrollStrategy, SharedString, UTF16Selection, UniformListScrollHandle, Window,
 };
 use scoria_formats::FileKind;
 use scoria_search::natural_cmp;
 use scoria_vault::VaultFile;
 use serde_json::{json, Value};
+use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, HashSet};
 use std::ops::Range;
+use std::rc::Rc;
 
 /// The font size of a row's extension tag.
 const TAG_SIZE: f32 = 10.0;
@@ -173,6 +175,112 @@ pub struct Row {
     pub depth: usize,
     pub is_folder: bool,
     pub kind: FileKind,
+}
+
+/// A row dragged out of the Files view. Obsidian's drag carries an
+/// `obsidian://open` url for a file and the bare name for a folder
+/// (2026-10-25); inside Scoria the path is what every drop target needs.
+/// `action` is the ghost's second line, which the target under the pointer
+/// writes ("Move into “Dest”") and clears when it has nothing to say.
+#[derive(Clone)]
+pub struct FileDrag {
+    pub path: String,
+    pub folder: bool,
+    pub name: SharedString,
+    pub action: Rc<RefCell<Option<SharedString>>>,
+}
+
+impl FileDrag {
+    pub fn set_action(&self, action: Option<SharedString>) {
+        *self.action.borrow_mut() = action;
+    }
+}
+
+/// The ghost under the pointer: Obsidian's `drag-ghost` (2026-11-07
+/// `explorer-drag-look`): 85 % black, `6px 8px`, radius 4, a shadow, at most
+/// 300 px; the icon (`lucide-file`, `lucide-folder-open` for a folder) at 0.7
+/// and the name at 13 px weight 500, then the action at 12 px and 0.7.
+///
+/// gpui draws a drag's view where the row was grabbed, so the view pads
+/// itself by the grab point to sit 5 px below and right of the pointer,
+/// where Obsidian's sits (`s03`: the ghost at the pointer plus 5).
+pub struct FileGhost(pub FileDrag, pub Point<Pixels>);
+
+impl Render for FileGhost {
+    fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
+        let action = self.0.action.borrow().clone();
+        let white = gpui::white();
+        let mut faded = white;
+        faded.a = 0.7;
+        let grab = self.1;
+        div().pl(grab.x + px(5.)).pt(grab.y + px(5.)).child(
+            div()
+                .max_w(px(300.))
+                .px(px(8.))
+                .py(px(6.))
+                .rounded(px(4.))
+                .bg(gpui::hsla(0., 0., 0., 0.85))
+                .shadow_md()
+                .text_size(px(13.))
+                .font_weight(FontWeight::MEDIUM)
+                .text_color(white)
+                .child(
+                    div()
+                        .flex()
+                        .flex_row()
+                        .items_center()
+                        .child(div().mr(px(4.)).child(icon(
+                            if self.0.folder { "folder-open" } else { "file" },
+                            ICON_SIZE,
+                            faded,
+                        )))
+                        .child(self.0.name.clone()),
+                )
+                .children(action.map(|a| {
+                    div()
+                        .pt(px(2.))
+                        .text_size(px(12.))
+                        .text_color(faded)
+                        .child(a)
+                })),
+        )
+    }
+}
+
+/// The folder a drop over a row lands in: a folder row is its own target,
+/// a file row its folder's (`""` at the root), which is what Obsidian
+/// washed when a file was held over a file row (`s02`, `s03`).
+pub fn drop_folder(row_path: &str, row_is_folder: bool) -> String {
+    if row_is_folder {
+        row_path.to_string()
+    } else {
+        row_path
+            .rsplit_once('/')
+            .map(|(dir, _)| dir.to_string())
+            .unwrap_or_default()
+    }
+}
+
+/// The ghost's action line for a target folder: `Move into “Dest”`, the
+/// vault's own name standing for the root (`s03`).
+pub fn move_into_label(folder: &str, vault_name: &str) -> String {
+    let name = if folder.is_empty() {
+        vault_name
+    } else {
+        folder.rsplit('/').next().unwrap_or(folder)
+    };
+    format!("Move into \u{201c}{name}\u{201d}")
+}
+
+/// Whether dropping `path` in `folder` moves anything: not into the folder
+/// it is already in, and a folder not into itself or anything inside it,
+/// which Obsidian refused by leaving the tree byte-identical (2026-10-25).
+pub fn drop_moves(path: &str, path_is_folder: bool, folder: &str) -> bool {
+    let parent = path.rsplit_once('/').map(|(d, _)| d).unwrap_or("");
+    if parent == folder {
+        return false;
+    }
+    !(path_is_folder && (folder == path || folder.starts_with(&format!("{path}/"))))
 }
 
 /// A file as its folder holds it: what the sort orders need of it.
@@ -452,6 +560,11 @@ pub fn display_name(file_name: &str) -> &str {
 
 pub enum ExplorerEvent {
     Open(String),
+    /// A row dropped in a folder (`""` for the vault root).
+    MoveInto {
+        path: String,
+        folder: String,
+    },
     /// Enter in a row being renamed in place: the name typed into the
     /// label, without the extension the row never showed. The workspace
     /// validates it and renames; the field stays open until it says the
@@ -577,6 +690,14 @@ pub struct FileExplorer {
     /// The keyboard an open field holds, and where it goes back to: the
     /// same "focus while open, restore after" helper a menu uses.
     rename_focus: file_menu::MenuFocus,
+    /// The vault's name, which the ghost says for a drop at the root.
+    vault_name: String,
+    /// While a row is dragged: the row, and the folder the pointer is over
+    /// (`""` for the root), with where the pointer was when a row claimed
+    /// it, so the list's own handler can tell a row's move from its own.
+    dragging: Option<String>,
+    drop: Option<String>,
+    drop_claim: Option<Point<Pixels>>,
 }
 
 /// A row whose label is being typed into.
@@ -614,6 +735,10 @@ impl FileExplorer {
             focused: None,
             renaming: None,
             rename_focus: file_menu::MenuFocus::new(cx),
+            vault_name: String::new(),
+            dragging: None,
+            drop: None,
+            drop_claim: None,
         }
     }
 
@@ -809,6 +934,72 @@ impl FileExplorer {
             .is_some_and(|edit| self.tree.visible_index(&edit.path).is_none());
         if gone {
             self.renaming = None;
+        }
+        cx.notify();
+    }
+
+    pub fn set_vault_name(&mut self, name: String) {
+        self.vault_name = name;
+    }
+
+    /// The pointer over a row while a row is dragged: the folder it would
+    /// land in becomes the target, and the ghost says so.
+    fn drag_over_row(
+        &mut self,
+        ix: usize,
+        event: &DragMoveEvent<FileDrag>,
+        cx: &mut Context<Self>,
+    ) {
+        if !event.bounds.contains(&event.event.position) {
+            return;
+        }
+        let Some(row) = self.tree.row(ix) else {
+            return;
+        };
+        let drag = event.drag(cx).clone();
+        let folder = drop_folder(&row.path, row.is_folder);
+        self.drop_claim = Some(event.event.position);
+        self.dragged_over(drag, Some(folder), cx);
+    }
+
+    /// The pointer anywhere while a row is dragged: inside the list but on
+    /// no row is the vault root (`s04`); outside it, no target at all.
+    fn drag_over_list(&mut self, event: &DragMoveEvent<FileDrag>, cx: &mut Context<Self>) {
+        if self.drop_claim == Some(event.event.position) {
+            return;
+        }
+        let drag = event.drag(cx).clone();
+        let inside = event.bounds.contains(&event.event.position);
+        self.dragged_over(drag, inside.then(String::new), cx);
+    }
+
+    fn dragged_over(&mut self, drag: FileDrag, folder: Option<String>, cx: &mut Context<Self>) {
+        drag.set_action(
+            folder
+                .as_deref()
+                .map(|f| move_into_label(f, &self.vault_name).into()),
+        );
+        let dragging = Some(drag.path.clone());
+        if self.drop != folder || self.dragging != dragging {
+            self.drop = folder;
+            self.dragging = dragging;
+            cx.notify();
+        }
+        // The ghost reads the action when it is drawn.
+        cx.refresh_windows();
+    }
+
+    fn dropped(&mut self, drag: &FileDrag, cx: &mut Context<Self>) {
+        let target = self.drop.take();
+        self.dragging = None;
+        self.drop_claim = None;
+        if let Some(folder) = target {
+            if drop_moves(&drag.path, drag.folder, &folder) {
+                cx.emit(ExplorerEvent::MoveInto {
+                    path: drag.path.clone(),
+                    folder,
+                });
+            }
         }
         cx.notify();
     }
@@ -1363,6 +1554,32 @@ impl FileExplorer {
                 let name: SharedString = row.name.clone().into();
                 let renaming = self.renaming.as_ref().is_some_and(|e| e.path == row.path);
                 let tag: Option<SharedString> = row.tag.clone().map(Into::into);
+                // A drag in progress: the dragged row is `is-being-dragged`
+                // (the accent fill, white text); the target folder's whole
+                // block — its row and the rows inside it — is
+                // `is-being-dragged-over`, the accent at a tenth with a 4 px
+                // radius, and the folder's own name turns accent
+                // (2026-11-07 `explorer-drag-look`). The root target has no
+                // wash.
+                let dragged = self.dragging.as_deref() == Some(row.path.as_str());
+                let in_block = |path: &str| {
+                    self.drop.as_deref().is_some_and(|t| {
+                        !t.is_empty() && (path == t || path.starts_with(&format!("{t}/")))
+                    })
+                };
+                let washed = in_block(&row.path);
+                let block_top = washed && self.drop.as_deref() == Some(row.path.as_str());
+                let block_end = washed
+                    && !self
+                        .tree
+                        .row(ix + 1)
+                        .is_some_and(|next| in_block(&next.path));
+                let drag = FileDrag {
+                    path: row.path.clone(),
+                    folder: row.is_folder,
+                    name: row.name.clone().into(),
+                    action: Rc::new(RefCell::new(None)),
+                };
                 // A file no view can open reads like any other row
                 // (`is-unsupported` sets no colour of its own: the probe
                 // of 2026-11-02 found `--nav-item-color` on it); only its
@@ -1406,6 +1623,21 @@ impl FileExplorer {
                             s.bg(t.nav_item_background_hover)
                                 .text_color(t.nav_item_color_hover)
                         })
+                        .relative()
+                        .when(block_top, |d| d.text_color(t.text_accent))
+                        .when(dragged, |d| {
+                            d.bg(t.interactive_accent).text_color(gpui::white())
+                        })
+                        .when(!renaming, |d| {
+                            d.on_drag(drag, |drag, grab, _, cx| {
+                                cx.new(|_| FileGhost(drag.clone(), grab))
+                            })
+                            .on_drag_move(cx.listener(
+                                move |this, event: &DragMoveEvent<FileDrag>, _, cx| {
+                                    this.drag_over_row(ix, event, cx)
+                                },
+                            ))
+                        })
                         .when(!renaming, |d| {
                             d.on_click(cx.listener(
                                 move |this, event: &gpui::ClickEvent, window, cx| {
@@ -1425,6 +1657,24 @@ impl FileExplorer {
                                 this.open_menu(ix, event.position, cx)
                             }),
                         )
+                        // The wash runs through the 2 px gap under every
+                        // row of the block but the last, so the block reads
+                        // as one box; the row's 2 px ring border is inside it.
+                        .when(washed, |d| {
+                            let mut wash = t.interactive_accent;
+                            wash.a = 0.1;
+                            d.child(
+                                div()
+                                    .absolute()
+                                    .top(px(-2.))
+                                    .left(px(-2.))
+                                    .right(px(-2.))
+                                    .bottom(px(if block_end { -2. } else { -4. }))
+                                    .bg(wash)
+                                    .when(block_top, |d| d.rounded_t(px(4.)))
+                                    .when(block_end, |d| d.rounded_b(px(4.))),
+                            )
+                        })
                         .child(
                             div()
                                 .w(px(16.))
@@ -1616,6 +1866,12 @@ impl Render for FileExplorer {
         // and the tree's own keys are off while it is open.
         let renaming = self.renaming.is_some();
         self.rename_focus.sync(renaming, window, cx);
+        // A drag that ended anywhere but in the list leaves nothing behind.
+        if !cx.has_active_drag() && (self.dragging.is_some() || self.drop.is_some()) {
+            self.dragging = None;
+            self.drop = None;
+            self.drop_claim = None;
+        }
         let menu = self.render_menu(cx);
         let header = self.render_header(cx);
         let root = div()
@@ -1657,6 +1913,13 @@ impl Render for FileExplorer {
                             this.open_blank_menu(event.position, cx)
                         }),
                     )
+                    // Rows claim a drag over them first; anywhere else in
+                    // the list is the root, and the drop lands wherever the
+                    // target last was.
+                    .on_drag_move(cx.listener(|this, event: &DragMoveEvent<FileDrag>, _, cx| {
+                        this.drag_over_list(event, cx)
+                    }))
+                    .on_drop(cx.listener(|this, drag: &FileDrag, _, cx| this.dropped(drag, cx)))
                     .child(
                         uniform_list("file-explorer", count, cx.processor(Self::render_rows))
                             .track_scroll(&self.scroll)
@@ -1671,6 +1934,40 @@ impl Render for FileExplorer {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Where a drop lands and what the ghost says, from the 2026-11-07
+    /// holds: a folder row is its own target, a file row its folder's, a
+    /// root file the vault's.
+    #[test]
+    fn a_drop_lands_in_the_folder_under_the_pointer() {
+        assert_eq!(drop_folder("Dest", true), "Dest");
+        assert_eq!(drop_folder("Inbox/Item.md", false), "Inbox");
+        assert_eq!(drop_folder("Other.md", false), "");
+        assert_eq!(
+            move_into_label("Inbox/Deep", "vault"),
+            "Move into \u{201c}Deep\u{201d}"
+        );
+        assert_eq!(
+            move_into_label("", "My vault"),
+            "Move into \u{201c}My vault\u{201d}"
+        );
+    }
+
+    /// The moves Obsidian made and refused on 2026-10-25: into another
+    /// folder yes; into the folder it is in, and a folder into itself or
+    /// below itself, nothing.
+    #[test]
+    fn a_drop_moves_only_somewhere_else() {
+        assert!(drop_moves("Root.md", false, "Dest"));
+        assert!(drop_moves("Inbox/Item.md", false, ""));
+        assert!(drop_moves("Deep", true, "Dest"));
+        assert!(!drop_moves("Inbox/Item.md", false, "Inbox"));
+        assert!(!drop_moves("Root.md", false, ""));
+        assert!(!drop_moves("Deep", true, "Deep"));
+        assert!(!drop_moves("Deep", true, "Deep/Sub"));
+        // A sibling whose name starts the same is not inside.
+        assert!(drop_moves("Deep", true, "Deeper"));
+    }
 
     fn files(paths: &[&str]) -> Vec<VaultFile> {
         paths
@@ -1968,7 +2265,9 @@ mod menu_tests {
             | ExplorerEvent::NewCanvas { folder }
             | ExplorerEvent::NewBase { folder } => Some(folder),
             ExplorerEvent::NewFolder { parent } => Some(parent),
-            ExplorerEvent::RenameTo { path, .. } => Some(path),
+            ExplorerEvent::RenameTo { path, .. } | ExplorerEvent::MoveInto { path, .. } => {
+                Some(path)
+            }
             ExplorerEvent::NewNoteFromHeader | ExplorerEvent::LeaveFocus => None,
         }
     }

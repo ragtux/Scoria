@@ -360,6 +360,53 @@ impl Bookmarks {
         }
     }
 
+    /// Whether any `file` or `folder` item points at `path` or inside it,
+    /// so a rename that touches no bookmark writes nothing.
+    pub fn has_path_under(&self, path: &str) -> bool {
+        self.clone().rename_path(path, path)
+    }
+
+    /// Follows a rename: every `file` and `folder` item whose path is `from`,
+    /// or lies inside it when `from` is a folder, takes the new path, its
+    /// subpath, title and key order untouched. What Obsidian 1.15.0 wrote
+    /// for a note renamed and moved, its heading and block bookmarks, a
+    /// folder renamed and moved with a note inside it in a group, and an
+    /// attachment (`tools/obsidian-probe/results/2026-11-07-bookmarks-rename.json`);
+    /// a delete it left alone. Returns whether anything changed.
+    pub fn rename_path(&mut self, from: &str, to: &str) -> bool {
+        fn walk(items: &mut [Bookmark], from: &str, to: &str) -> bool {
+            let mut changed = false;
+            for item in items.iter_mut() {
+                match item.kind() {
+                    "file" | "folder" => {
+                        let Some(path) = item.path() else { continue };
+                        let new = if path == from {
+                            Some(to.to_string())
+                        } else {
+                            path.strip_prefix(from)
+                                .filter(|rest| rest.starts_with('/'))
+                                .map(|rest| format!("{to}{rest}"))
+                        };
+                        if let Some(new) = new {
+                            item.0.insert("path".into(), json!(new));
+                            changed = true;
+                        }
+                    }
+                    "group" => {
+                        let mut members = item.items();
+                        if walk(&mut members, from, to) {
+                            item.set_items(members);
+                            changed = true;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            changed
+        }
+        walk(&mut self.items, from, to)
+    }
+
     /// Removes the bookmark at `at`, a path of indexes into groups.
     pub fn remove_at(&mut self, at: &[usize]) -> Option<Bookmark> {
         fn remove(items: &mut Vec<Bookmark>, at: &[usize]) -> Option<Bookmark> {
@@ -599,5 +646,54 @@ mod tests {
             ["Alpha", "New", "Gamma", "Group one", "End"]
         );
         assert_eq!(titles(&b.items[3].items()), ["Beta", "Nested", "Deep"]);
+    }
+
+    /// The probe's transitions, byte for byte: a rename rewrites `path` in
+    /// place and nothing else, inside groups too, and a folder takes the
+    /// notes under it along.
+    #[test]
+    fn a_rename_rewrites_the_paths_obsidian_rewrote() {
+        let before = r##"{
+  "items": [
+    {
+      "type": "file",
+      "ctime": 1,
+      "path": "Note.md",
+      "subpath": "#^blk",
+      "title": "Titled block"
+    },
+    {
+      "type": "folder",
+      "ctime": 2,
+      "path": "Folder"
+    },
+    {
+      "type": "group",
+      "ctime": 3,
+      "items": [
+        {
+          "type": "file",
+          "ctime": 4,
+          "path": "Folder/Inner.md"
+        }
+      ],
+      "title": "G"
+    },
+    {
+      "type": "file",
+      "ctime": 5,
+      "path": "Folderish.md"
+    }
+  ]
+}"##;
+        let mut b: Bookmarks = serde_json::from_str(before).unwrap();
+        assert!(b.rename_path("Note.md", "Dest/Renamed.md"));
+        assert!(b.rename_path("Folder", "Dest/Folder2"));
+        assert!(!b.rename_path("Absent.md", "Elsewhere.md"));
+        let after = before
+            .replace("\"Note.md\"", "\"Dest/Renamed.md\"")
+            .replace("\"Folder\"", "\"Dest/Folder2\"")
+            .replace("\"Folder/Inner.md\"", "\"Dest/Folder2/Inner.md\"");
+        assert_eq!(b.to_json(), after);
     }
 }

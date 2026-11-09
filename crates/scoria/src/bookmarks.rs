@@ -17,6 +17,7 @@
 //! every change comes out as a [`BookmarkEvent`] and comes back through
 //! [`BookmarksPane::set_items`].
 
+use crate::explorer::FileDrag;
 use crate::file_menu::{self, BookmarkKind, Pick, Target};
 use crate::inline_field;
 use crate::text_input::{InputEvent, TextInput};
@@ -73,6 +74,13 @@ pub enum BookmarkEvent {
     /// the list before the move.
     Move {
         from: Vec<usize>,
+        to: Vec<usize>,
+    },
+    /// A row of the Files view dropped here: a new `file` (or `folder`)
+    /// item at the insertion path `to` (2026-11-07 probe, `s16`).
+    AddPath {
+        path: String,
+        folder: bool,
         to: Vec<usize>,
     },
     /// The filter was shown, hidden or typed into: `workspace.json` holds
@@ -259,20 +267,23 @@ pub struct BookmarkDrag {
 
 /// The ghost under the pointer: Obsidian's `drag-ghost`, the title in
 /// white on `--drag-ghost-background`, 300 px wide (`s14`).
-struct Ghost(SharedString);
+struct Ghost(SharedString, Point<Pixels>);
 
 impl Render for Ghost {
     fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
-        div()
-            .w(px(300.))
-            .px(px(8.))
-            .py(px(6.))
-            .rounded(px(4.))
-            .bg(gpui::hsla(0., 0., 0., 0.85))
-            .shadow_md()
-            .text_size(px(crate::theme::FONT_UI_SMALL))
-            .text_color(gpui::white())
-            .child(self.0.clone())
+        let grab = self.1;
+        div().pl(grab.x + px(5.)).pt(grab.y + px(5.)).child(
+            div()
+                .w(px(300.))
+                .px(px(8.))
+                .py(px(6.))
+                .rounded(px(4.))
+                .bg(gpui::hsla(0., 0., 0., 0.85))
+                .shadow_md()
+                .text_size(px(crate::theme::FONT_UI_SMALL))
+                .text_color(gpui::white())
+                .child(self.0.clone()),
+        )
     }
 }
 
@@ -313,6 +324,12 @@ pub struct BookmarksPane {
     /// The row being dragged, and the drop the pointer is over.
     dragging: Option<String>,
     drop: Option<(String, Zone)>,
+    /// Where the pointer was when a row last claimed the drop, so the
+    /// list's own handler can clear a target the pointer has left; and
+    /// whether a row has already taken the drop, so the list does not act
+    /// on the same release again.
+    drop_claim: Option<Point<Pixels>>,
+    drop_taken: bool,
     _subscriptions: Vec<Subscription>,
 }
 
@@ -357,6 +374,8 @@ impl BookmarksPane {
             rename_focus: file_menu::MenuFocus::new(cx),
             dragging: None,
             drop: None,
+            drop_claim: None,
+            drop_taken: false,
             _subscriptions: vec![subscription],
         }
     }
@@ -893,6 +912,7 @@ impl BookmarksPane {
             row.clone(),
             row.clone(),
         );
+        let (file_move_row, file_drop_row) = (row.clone(), row.clone());
         let mut el = tree::row(
             ("bookmark", ix),
             row.depth,
@@ -968,7 +988,7 @@ impl BookmarksPane {
                         key: row.key.clone(),
                         title: title.clone(),
                     },
-                    |drag, _, _, cx| cx.new(|_| Ghost(drag.title.clone())),
+                    |drag, grab, _, cx| cx.new(|_| Ghost(drag.title.clone(), grab)),
                 );
         }
         el.on_mouse_down(
@@ -991,12 +1011,48 @@ impl BookmarksPane {
                 // Nothing drops on itself or inside itself.
                 let inside = move_row.at.starts_with(&drag.at);
                 let next = (!inside).then(|| (move_row.key.clone(), zone));
+                this.drop_claim = Some(event.event.position);
                 if this.drop != next {
                     this.drop = next;
                     cx.notify();
                 }
             }),
         )
+        // A row of the Files view held over this one: the same places a
+        // bookmark drag has, and no "Move into" under the ghost.
+        .on_drag_move(
+            cx.listener(move |this, event: &DragMoveEvent<FileDrag>, _, cx| {
+                if !event.bounds.contains(&event.event.position) {
+                    return;
+                }
+                event.drag(cx).set_action(None);
+                this.drop_claim = Some(event.event.position);
+                let y = f32::from(event.event.position.y - event.bounds.top());
+                let height = f32::from(event.bounds.size.height);
+                let zone = drop_zone(y, height, file_move_row.item.kind() == "group");
+                let next = Some((file_move_row.key.clone(), zone));
+                if this.drop != next {
+                    this.drop = next;
+                    cx.notify();
+                }
+            }),
+        )
+        .on_drop(cx.listener(move |this, drag: &FileDrag, _, cx| {
+            let zone = this
+                .drop
+                .take()
+                .filter(|(k, _)| *k == file_drop_row.key)
+                .map(|(_, z)| z);
+            this.drop_taken = true;
+            if let Some(zone) = zone {
+                cx.emit(BookmarkEvent::AddPath {
+                    path: drag.path.clone(),
+                    folder: drag.folder,
+                    to: insertion_path(&file_drop_row.at, zone),
+                });
+            }
+            cx.notify();
+        }))
         .on_drop(cx.listener(move |this, drag: &BookmarkDrag, _, cx| {
             let zone = this
                 .drop
@@ -1024,6 +1080,17 @@ fn item_at(items: &[Bookmark], at: &[usize]) -> Option<Bookmark> {
         item = item.items().get(*ix)?.clone();
     }
     Some(item)
+}
+
+impl BookmarksPane {
+    /// A move no row claimed: the pointer is over the empty space or
+    /// outside the pane, so the drop marker goes.
+    fn drag_left_rows(&mut self, position: Point<Pixels>, cx: &mut Context<Self>) {
+        if self.drop_claim != Some(position) && self.drop.is_some() {
+            self.drop = None;
+            cx.notify();
+        }
+    }
 }
 
 /// Every file item in a group, members of nested groups included.
@@ -1059,10 +1126,13 @@ impl Render for BookmarksPane {
             }
         }
         // A drag that ended anywhere but on a row leaves nothing behind.
-        if cx.has_active_drag() {
-        } else if self.dragging.is_some() || self.drop.is_some() {
+        if !cx.has_active_drag() {
+            self.drop_taken = false;
+        }
+        if !cx.has_active_drag() && (self.dragging.is_some() || self.drop.is_some()) {
             self.dragging = None;
             self.drop = None;
+            self.drop_claim = None;
         }
         let keyboard = self.focus_handle.is_focused(window);
         let rows = self.rows(cx);
@@ -1101,7 +1171,28 @@ impl Render for BookmarksPane {
                 cx.listener(|this, event: &MouseDownEvent, _, cx| {
                     this.open_menu(None, event.position, cx)
                 }),
-            );
+            )
+            // A Files row dropped on the empty space below the rows goes
+            // last. A row's own drop takes the target first, so this only
+            // acts when no row is under the pointer.
+            .on_drag_move(cx.listener(|this, event: &DragMoveEvent<FileDrag>, _, cx| {
+                this.drag_left_rows(event.event.position, cx)
+            }))
+            .on_drag_move(
+                cx.listener(|this, event: &DragMoveEvent<BookmarkDrag>, _, cx| {
+                    this.drag_left_rows(event.event.position, cx)
+                }),
+            )
+            .on_drop(cx.listener(|this, drag: &FileDrag, _, cx| {
+                if std::mem::take(&mut this.drop_taken) || this.drop.is_some() {
+                    return;
+                }
+                cx.emit(BookmarkEvent::AddPath {
+                    path: drag.path.clone(),
+                    folder: drag.folder,
+                    to: vec![this.items.len()],
+                });
+            }));
         let menu = self.menu.as_ref().map(|menu| {
             file_menu::render(
                 menu,
