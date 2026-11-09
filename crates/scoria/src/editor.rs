@@ -4845,6 +4845,36 @@ impl Editor {
         cx.notify();
     }
 
+    /// `editor:context-menu` ("Show context menu under cursor"): the menu a
+    /// right click raises, raised at the caret instead of the pointer. The
+    /// caret is inside its own selection, so a selection is kept and is
+    /// both the Search row's text and what Cut and Copy act on; the link
+    /// under the caret decides the rows as a click's does. Drawn under the
+    /// caret's row, at the caret's x, from the last frame's layout; with no
+    /// frame laid out yet there is nowhere to draw it and nothing opens.
+    pub fn context_menu_at_caret(&mut self, cx: &mut Context<Self>) -> bool {
+        let Some(shaped) = self.layout.cursor_line.clone() else {
+            return false;
+        };
+        let cursor = self.cursor();
+        let (row, x) = shaped.row_and_x(cursor.col);
+        let rh = shaped.row_height;
+        let position = point(
+            self.layout.content_x + x,
+            self.layout.cursor_top + rh * (row + 1) as f32,
+        );
+        let selection = self.buf.clipboard_text(&[self.buf.selection()]);
+        let link = self.link_at(cursor.line, cursor.col, false);
+        let selected = !selection.is_empty();
+        cx.emit(EditorEvent::ContextMenu {
+            position,
+            selection,
+            selected,
+            link,
+        });
+        true
+    }
+
     fn mouse_down(&mut self, event: &MouseDownEvent, window: &mut Window, cx: &mut Context<Self>) {
         window.focus(&self.focus_handle, cx);
         if self.scrollbar_mouse_down(event.position, window, cx) {

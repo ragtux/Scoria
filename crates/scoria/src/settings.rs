@@ -1357,6 +1357,25 @@ impl SettingChange {
     }
 }
 
+/// The `app.json` flag a toggle command flips: `editor:toggle-readable-line-length`
+/// and `editor:toggle-line-numbers` are the Editor tab's "Readable line
+/// length" and "Line numbers" rows run from the palette, so each writes
+/// through the very flag the row does, and the row and the command cannot
+/// disagree about the key or about what its absence means.
+fn command_flag(id: &str) -> Option<AppFlag> {
+    match id {
+        "editor:toggle-readable-line-length" => Some(READABLE_LINE_LENGTH),
+        "editor:toggle-line-numbers" => Some(SHOW_LINE_NUMBER),
+        _ => None,
+    }
+}
+
+/// What a toggle command writes: `app` with its row's flag flipped, or
+/// `None` for an id that is not one of them.
+pub fn toggle_command(id: &str, app: &AppConfig) -> Option<SettingChange> {
+    command_flag(id).map(|flag| SettingChange::App(flag.toggled(app)))
+}
+
 impl Flag {
     fn is_on(&self, state: &VaultState) -> bool {
         match self {
@@ -6727,6 +6746,59 @@ mod tests {
             state.app().focus_new_tab,
             Some(false),
             "the toggle's own value was dropped"
+        );
+    }
+
+    /// `editor:toggle-readable-line-length` and `editor:toggle-line-numbers`
+    /// are the Editor tab's two rows run as commands: each builds exactly
+    /// the change a click on its row builds, and writes only its own key.
+    #[test]
+    fn the_toggle_commands_write_what_their_editor_rows_write() {
+        for (id, row, key) in [
+            (
+                "editor:toggle-readable-line-length",
+                "Readable line length",
+                "readableLineLength",
+            ),
+            (
+                "editor:toggle-line-numbers",
+                "Line numbers",
+                "showLineNumber",
+            ),
+        ] {
+            let (dir, _) = vault();
+            let path = dir.path().join(".obsidian/app.json");
+            std::fs::write(&path, "{\n  \"tabSize\": 2\n}").unwrap();
+            let state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+            let flag = SettingsView::editor_items(&state)
+                .into_iter()
+                .find(|i| i.name.as_ref() == row)
+                .and_then(|i| i.flag)
+                .unwrap_or_else(|| panic!("no {row} row"));
+            let before = flag.is_on(&state);
+            let change = toggle_command(id, &state.app()).expect(id);
+            assert_eq!(change, flag.toggled(&state), "{id} and its row differ");
+            state.apply_setting(&change).unwrap();
+            assert_eq!(flag.is_on(&state), !before, "{id} did not flip {key}");
+            let written = std::fs::read_to_string(&path).unwrap();
+            let json: serde_json::Value = serde_json::from_str(&written).unwrap();
+            let keys: Vec<&str> = json
+                .as_object()
+                .unwrap()
+                .keys()
+                .map(|k| k.as_str())
+                .collect();
+            assert_eq!(keys, ["tabSize", key], "{id} wrote {written}");
+            assert_eq!(json[key], serde_json::Value::Bool(!before));
+            // Run again, it puts the value back and keeps the key.
+            state
+                .apply_setting(&toggle_command(id, &state.app()).unwrap())
+                .unwrap();
+            assert_eq!(flag.is_on(&state), before);
+        }
+        assert_eq!(
+            toggle_command("editor:toggle-bold", &AppConfig::default()),
+            None
         );
     }
 

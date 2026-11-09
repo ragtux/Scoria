@@ -146,6 +146,7 @@ pub const EDITOR_ONLY: &[&str] = &[
     "editor:add-cursor-above",
     "editor:add-cursor-below",
     "editor:clear-formatting",
+    "editor:context-menu",
     "editor:cycle-list-checklist",
     "editor:delete-paragraph",
     "editor:fold-all",
@@ -290,6 +291,10 @@ pub const RUNNABLE: &[&str] = &[
     "markdown:add-metadata-property",
     "markdown:clear-metadata-properties",
     "editor:toggle-fold-properties",
+    "editor:toggle-readable-line-length",
+    "editor:toggle-line-numbers",
+    "editor:context-menu",
+    "editor:focus",
     "editor:insert-table",
     "insert-template",
     "insert-current-date",
@@ -5230,6 +5235,34 @@ impl Workspace {
                 if self.note_has_keys(window, cx) {
                     self.editor
                         .update(cx, |e, cx| e.clear_properties(window, cx));
+                }
+            }
+            // The Editor tab's two rows as commands: the same `app.json`
+            // write a click on the row makes, applied the same way, so the
+            // open Settings window and the views follow it. Line numbers
+            // are written for Obsidian to read; Scoria draws no gutter yet,
+            // which the row says ("not in Scoria yet").
+            "editor:toggle-readable-line-length" | "editor:toggle-line-numbers" => {
+                if let Some(state) = self.state.clone() {
+                    if let Some(change) = settings::toggle_command(id, &state.app()) {
+                        self.change_setting(change, cx);
+                    }
+                }
+            }
+            // "Show context menu under cursor": a right click's menu, at the
+            // caret.
+            "editor:context-menu" => {
+                if self.editing_or_report(id, window, cx) {
+                    self.editor.update(cx, |e, cx| e.context_menu_at_caret(cx));
+                }
+            }
+            // "Focus on last note": the keyboard back on the note the main
+            // area shows, wherever it was -- a dock tree, the search field.
+            // What it does when the active tab is a canvas, a base or a PDF
+            // is unprobed, so only a note takes it.
+            "editor:focus" => {
+                if matches!(self.main_view(cx), MainView::Editor | MainView::Reading) {
+                    self.focus_main(window, cx);
                 }
             }
             "editor:toggle-fold-properties" => {
