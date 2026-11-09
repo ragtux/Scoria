@@ -2852,7 +2852,7 @@ impl<'a> Renderer<'a> {
     /// reading view takes through [`ReadingHost::on_remove_item`]; the fields,
     /// type menu and add-row control are the way the reading view still
     /// differs from Obsidian's (it edits properties in reading view too).
-    fn properties(&self, entries: &[Property]) -> AnyElement {
+    pub(crate) fn properties(&self, entries: &[Property]) -> AnyElement {
         let t = self.theme;
         let base = t.base_font_size;
         let host = self.properties_host;

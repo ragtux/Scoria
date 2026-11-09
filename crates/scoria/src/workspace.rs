@@ -380,6 +380,7 @@ pub const RUNNABLE: &[&str] = &[
     "outline:open-for-current",
     "tag-pane:open",
     "properties:open",
+    "properties:open-local",
     "bookmarks:open",
     "bookmarks:bookmark-current-view",
     "bookmarks:bookmark-current-search",
@@ -1336,6 +1337,10 @@ enum RightTab {
     /// All properties: every key in the vault with its type and count.
     Properties,
     Outline,
+    /// File properties (`file-properties`): the open note's properties
+    /// block. Not one of a fresh vault's default leaves, so it has a tab
+    /// only once `properties:open-local` made its leaf or the file has one.
+    FileProperties,
 }
 
 /// The Outline pane's headings for one note's metadata, whether that
@@ -3301,6 +3306,11 @@ pub struct Workspace {
     property_entries: Vec<PropertyEntry>,
     property_state: PropertyPaneState,
     property_filter: Entity<TextInput>,
+    /// Whether the right dock has a File properties leaf: `workspace.json`
+    /// had one, or `properties:open-local` added it this session.
+    file_properties_open: bool,
+    /// The File properties pane's folded blocks: its Properties heading.
+    file_properties_folds: HashSet<usize>,
     /// Matcher over every note name and alias, rebuilt when files change.
     name_finder: Option<Arc<Finder>>,
     mention_generation: u64,
@@ -3913,6 +3923,8 @@ impl Workspace {
             property_entries: Vec::new(),
             property_state: PropertyPaneState::default(),
             property_filter,
+            file_properties_open: false,
+            file_properties_folds: HashSet::new(),
             name_finder: None,
             mention_generation: 0,
             status: "Pass a vault folder as the first argument".into(),
@@ -5013,6 +5025,12 @@ impl Workspace {
             "outline" => RightTab::Outline,
             "tags" => RightTab::Tags,
             "properties" => RightTab::Properties,
+            "file-properties" => {
+                // Its leaf is made the first time it is asked for, as
+                // `properties:open-local` makes it in Obsidian.
+                self.file_properties_open = true;
+                RightTab::FileProperties
+            }
             _ => RightTab::Backlinks,
         };
         self.select_right_tab(which, cx);
@@ -5794,6 +5812,10 @@ impl Workspace {
             "properties:open" => {
                 self.right_visible = true;
                 self.show_right_tab("properties", cx);
+            }
+            "properties:open-local" => {
+                self.right_visible = true;
+                self.show_right_tab("file-properties", cx);
             }
             "app:open-help" => self.open_help(window, cx),
             // "Manage vaults" raises the vault manager; Obsidian's does
@@ -13007,8 +13029,12 @@ impl Workspace {
             Some("outline") => self.right_tab = RightTab::Outline,
             Some("tag") => self.right_tab = RightTab::Tags,
             Some("all-properties") => self.right_tab = RightTab::Properties,
+            Some("file-properties") => self.right_tab = RightTab::FileProperties,
             _ => {}
         }
+        self.file_properties_open = layout
+            .get("right")
+            .is_some_and(|right| leaf_of_kind(right, "file-properties").is_some());
         self.layout = Some(layout);
     }
 
@@ -13151,10 +13177,21 @@ impl Workspace {
         let (left_tab, right_tab) = (self.left_tab as usize, self.right_tab as usize);
         for (dock, tab) in [("left", left_tab), ("right", right_tab)] {
             if !object.get(dock).is_some_and(Value::is_object) {
-                object.insert(
-                    dock.into(),
-                    default_dock_json(dock, self.current.as_deref(), tab),
-                );
+                let mut json = default_dock_json(dock, self.current.as_deref(), tab);
+                // A File properties leaf opened in a vault that had no
+                // docks goes after the defaults, and may be the open tab.
+                if dock == "right"
+                    && self.file_properties_open
+                    && push_file_properties_leaf(&mut json, self.current.as_deref())
+                {
+                    set_dock_current_tab(&mut json, tab);
+                }
+                object.insert(dock.into(), json);
+            }
+        }
+        if self.file_properties_open {
+            if let Some(right) = object.get_mut("right") {
+                push_file_properties_leaf(right, self.current.as_deref());
             }
         }
         // The Files leaf's own state, where the file has that leaf.
@@ -13227,6 +13264,8 @@ impl Workspace {
                     ("searchQuery", json!(self.outline_filter.read(cx).text())),
                 ],
             );
+            // File properties keeps only the note it shows.
+            set_leaf_state(right, "file-properties", &[("file", json!(self.current))]);
         }
         let mut active_id = Value::Null;
         let main = self.layout_node_json(&self.layout_tree, &mut active_id);
@@ -13627,6 +13666,7 @@ impl Workspace {
                 RightTab::Outline => "outline",
                 RightTab::Tags => "tags",
                 RightTab::Properties => "properties",
+                RightTab::FileProperties => "file-properties",
             }),
         );
         right.insert(
@@ -13706,6 +13746,21 @@ impl Workspace {
                 })
                 .collect(),
             rows,
+        );
+        right.insert(
+            "file_properties".into(),
+            json!({
+                "open": self.file_properties_open,
+                "file": self.file_properties_note(cx).map(|(path, _)| path),
+                "folded": self
+                    .file_properties_folds
+                    .contains(&crate::properties::PROPERTIES_FOLD_ID),
+                "rows": self
+                    .file_property_rows(cx)
+                    .iter()
+                    .map(|r| json!({"key": r.key, "type": r.ty.as_str(), "value": r.edit_text}))
+                    .collect::<Vec<Value>>(),
+            }),
         );
         right.insert(
             "properties_options".into(),
@@ -15505,7 +15560,7 @@ impl Workspace {
             && match self.right_tab {
                 RightTab::Tags | RightTab::Properties => true,
                 RightTab::Outline => !self.outline.is_empty(),
-                RightTab::Backlinks | RightTab::Outgoing => false,
+                RightTab::Backlinks | RightTab::Outgoing | RightTab::FileProperties => false,
             }
     }
 
@@ -15624,7 +15679,7 @@ impl Workspace {
                     None => {}
                 }
             }
-            RightTab::Backlinks | RightTab::Outgoing => return,
+            RightTab::Backlinks | RightTab::Outgoing | RightTab::FileProperties => return,
         }
         cx.notify();
     }
@@ -15658,7 +15713,7 @@ impl Workspace {
                     self.reveal_heading(row.offset, window, cx);
                 }
             }
-            RightTab::Backlinks | RightTab::Outgoing => {}
+            RightTab::Backlinks | RightTab::Outgoing | RightTab::FileProperties => {}
         }
     }
 
@@ -16452,6 +16507,123 @@ impl Workspace {
             .into_any_element()
     }
 
+    /// The note File properties shows and its text: the open note when it
+    /// is Markdown, read from the buffer while the editor holds it (so the
+    /// rows follow typing) and from the index otherwise.
+    fn file_properties_note(&self, cx: &App) -> Option<(String, Arc<String>)> {
+        let path = self.current.clone()?;
+        if FileKind::from_path(&path) != FileKind::Markdown {
+            return None;
+        }
+        let editor = self.editor.read(cx);
+        if editor.name.as_ref() == path.as_str() {
+            return Some((path, Arc::new(editor.text().to_string())));
+        }
+        let text = self.state.as_ref()?.texts().get(&path).cloned()?;
+        Some((path, text))
+    }
+
+    /// File properties' rows: the open note's properties block, each key at
+    /// the type `types.json` assigns it, in the block's own order.
+    fn file_property_rows(&self, cx: &App) -> Vec<crate::properties::Row> {
+        let Some((_, text)) = self.file_properties_note(cx) else {
+            return Vec::new();
+        };
+        let Some(block) = scoria_cache::note_properties(&text) else {
+            return Vec::new();
+        };
+        let types = self
+            .state
+            .as_ref()
+            .map(|s| s.property_types().clone())
+            .unwrap_or_default();
+        let mut next_id = crate::properties::PROPERTY_ID_BASE;
+        crate::properties::rows(
+            &block.entries,
+            |key| scoria_formats::properties::type_of(key, &block.entries, &types),
+            &mut next_id,
+        )
+    }
+
+    /// File properties (`properties:open-local`): the open note's
+    /// properties drawn as its reading view draws them, under the same
+    /// foldable "Properties" heading Obsidian's pane carries (probe of
+    /// 2026-10-19), links and tags in a value clickable. With no Markdown
+    /// note open it says Obsidian's "No properties found.".
+    fn render_file_properties_pane(
+        &mut self,
+        theme: &Theme,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> gpui::AnyElement {
+        let block = self.file_properties_note(cx).map(|(_, text)| {
+            scoria_cache::note_properties(&text)
+                .map(|b| b.entries)
+                .unwrap_or_default()
+        });
+        let Some(block) = block else {
+            // Obsidian's `.pane-empty`, as the Outline draws it.
+            return div()
+                .flex_1()
+                .px(px(12.))
+                .child(
+                    div()
+                        .my(px(8.))
+                        .px(px(16.))
+                        .py(px(24.))
+                        .text_size(px(FONT_UI_SMALL))
+                        .text_color(theme.tokens.text_faint)
+                        .text_center()
+                        .child("No properties found."),
+                )
+                .into_any_element();
+        };
+        let types = self
+            .state
+            .as_ref()
+            .map(|s| s.property_types().clone())
+            .unwrap_or_default();
+        let this = cx.entity().downgrade();
+        let on_link: reading::view::LinkHandler = Rc::new(move |target, _, cx| {
+            let _ = this.update(cx, |this, cx| this.follow_link(target, cx));
+        });
+        let this = cx.entity().downgrade();
+        let on_toggle: reading::view::ToggleHandler = Rc::new(move |id, cx| {
+            let _ = this.update(cx, |this, cx| {
+                if !this.file_properties_folds.remove(&id) {
+                    this.file_properties_folds.insert(id);
+                }
+                cx.notify();
+            });
+        });
+        let available = (self.right_width as f32 - 24.).max(100.);
+        let renderer = reading::view::Renderer::new(
+            theme,
+            window.text_system().clone(),
+            available,
+            &self.file_properties_folds,
+            &types,
+            // Read-only for now: the pane's fields are not wired to an
+            // editor of their own.
+            None,
+            None,
+            on_link,
+            on_toggle,
+        );
+        let content = renderer.properties(&block);
+        div()
+            .id("file-properties")
+            .flex()
+            .flex_col()
+            .size_full()
+            .overflow_y_scroll()
+            .px(px(12.))
+            .pt(px(8.))
+            .text_color(theme.tokens.text_normal)
+            .child(content)
+            .into_any_element()
+    }
+
     /// Whether a left-dock pane's core plugin is on, by its id.
     fn left_pane_enabled(&self, id: &str) -> bool {
         self.state
@@ -16467,15 +16639,24 @@ impl Workspace {
             RightTab::Backlinks => "backlink",
             RightTab::Outgoing => "outgoing-link",
             RightTab::Tags => "tag-pane",
-            RightTab::Properties => "properties",
+            RightTab::Properties | RightTab::FileProperties => "properties",
             RightTab::Outline => "outline",
         };
+        // File properties has a tab only while it has a leaf.
+        if tab == RightTab::FileProperties && !self.file_properties_open {
+            return false;
+        }
         self.state
             .as_ref()
             .is_none_or(|state| state.core_plugin_enabled(id))
     }
 
-    fn render_right_dock(&mut self, theme: &Theme, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render_right_dock(
+        &mut self,
+        theme: &Theme,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> impl IntoElement {
         // The pane whose plugin was just turned off has no tab any more,
         // so it cannot be the one on screen either: the first that is
         // still on takes over, as Obsidian moves to a neighbouring leaf.
@@ -16486,6 +16667,7 @@ impl Workspace {
                 RightTab::Tags,
                 RightTab::Properties,
                 RightTab::Outline,
+                RightTab::FileProperties,
             ]
             .into_iter()
             .find(|t| self.pane_enabled(*t))
@@ -16500,6 +16682,7 @@ impl Workspace {
             RightTab::Outline => self.render_outline_pane(theme, cx),
             RightTab::Tags => self.render_tags_pane(theme, cx),
             RightTab::Properties => self.render_properties_pane(theme, cx),
+            RightTab::FileProperties => self.render_file_properties_pane(theme, window, cx),
         };
         // A pane whose core plugin is off is not offered: Obsidian takes
         // the view away with the plugin.
@@ -16577,6 +16760,13 @@ impl Workspace {
                         cx,
                     ))
                     .children(tab_button(self, "Outline", "list", RightTab::Outline, cx))
+                    .children(tab_button(
+                        self,
+                        "File properties",
+                        "info",
+                        RightTab::FileProperties,
+                        cx,
+                    ))
                     .child(window_handle(
                         div().id("right-dock-space").flex_1().h_full(),
                         frameless,
@@ -17162,6 +17352,65 @@ fn default_dock_json(dock: &str, current: Option<&str>, tab: usize) -> Value {
         "direction": "horizontal",
         "width": SIDEBAR_WIDTH as i64,
     })
+}
+
+/// Adds a File properties leaf to a dock that has none, as Obsidian's
+/// `properties:open-local` does: last in the dock's first tab group, with
+/// the state, icon and title its `workspace.json` gives the view (probe of
+/// 2026-10-19), `file` left out when no note is open. `false` when the dock
+/// already had one, or has no tab group to put it in.
+fn push_file_properties_leaf(dock: &mut Value, current: Option<&str>) -> bool {
+    if leaf_of_kind(dock, "file-properties").is_some() {
+        return false;
+    }
+    fn first_tabs(node: &mut Value) -> Option<&mut Value> {
+        if node.get("type").and_then(Value::as_str) == Some("tabs") {
+            return Some(node);
+        }
+        node.get_mut("children")?
+            .as_array_mut()?
+            .iter_mut()
+            .find_map(first_tabs)
+    }
+    let Some(children) = first_tabs(dock)
+        .and_then(|group| group.get_mut("children"))
+        .and_then(Value::as_array_mut)
+    else {
+        return false;
+    };
+    let mut state = Map::new();
+    if let Some(file) = current {
+        state.insert("file".into(), json!(file));
+    }
+    children.push(json!({
+        "id": leaf_id(),
+        "type": "leaf",
+        "state": {
+            "type": "file-properties",
+            "state": state,
+            "icon": "lucide-info",
+            "title": "File properties",
+        },
+    }));
+    true
+}
+
+/// Points a dock's first tab group at its `tab`th leaf, clamped to the
+/// leaves it has.
+fn set_dock_current_tab(dock: &mut Value, tab: usize) {
+    let Some(group) = dock
+        .get_mut("children")
+        .and_then(Value::as_array_mut)
+        .and_then(|c| c.first_mut())
+        .and_then(Value::as_object_mut)
+    else {
+        return;
+    };
+    let len = group
+        .get("children")
+        .and_then(Value::as_array)
+        .map_or(0, Vec::len);
+    group.insert("currentTab".into(), json!(tab.min(len.saturating_sub(1))));
 }
 
 /// The first leaf of view type `kind` anywhere under a dock's tree, as
@@ -18049,7 +18298,7 @@ impl Render for Workspace {
                     .when(left_visible, |d| d.child(left))
                     .child(main)
                     .when(right_visible, |d| {
-                        d.child(self.render_right_dock(&theme, cx))
+                        d.child(self.render_right_dock(&theme, window, cx))
                     }),
             )
             .child(status_bar)
@@ -18408,6 +18657,93 @@ mod tests {
             .map(|l| l["state"]["type"].as_str().unwrap())
             .collect();
         assert_eq!(kinds, ["file-explorer", "search", "bookmarks"]);
+    }
+
+    /// `properties:open-local` in a dock without the view appends the leaf
+    /// Obsidian 1.13.7 wrote on 2026-10-19: last in the right dock's tab
+    /// group, after the Outline, with that state, icon and title in that
+    /// key order. A second run adds nothing, and with no note open the
+    /// `file` key is left out.
+    #[test]
+    fn file_properties_leaf_is_appended_in_obsidians_shape() {
+        let mut right = default_dock_json("right", Some("Note A.md"), 4);
+        assert!(push_file_properties_leaf(&mut right, Some("Note A.md")));
+        assert!(!push_file_properties_leaf(&mut right, Some("Note A.md")));
+        let leaves = right["children"][0]["children"].as_array().unwrap();
+        assert_eq!(leaves.len(), 6);
+        let leaf = &leaves[5];
+        assert_eq!(leaf["id"].as_str().unwrap().len(), 16);
+        let observed = json!({
+            "type": "leaf",
+            "state": {
+                "type": "file-properties",
+                "state": {"file": "Note A.md"},
+                "icon": "lucide-info",
+                "title": "File properties"
+            }
+        });
+        let mut without_id = leaf.clone();
+        without_id.as_object_mut().unwrap().shift_remove("id");
+        assert_eq!(without_id, observed);
+        let outer: Vec<&String> = leaf.as_object().unwrap().keys().collect();
+        assert_eq!(outer, ["id", "type", "state"]);
+        let inner: Vec<&String> = leaf["state"].as_object().unwrap().keys().collect();
+        assert_eq!(inner, ["type", "state", "icon", "title"]);
+
+        let mut bare = default_dock_json("right", None, 0);
+        assert!(push_file_properties_leaf(&mut bare, None));
+        assert_eq!(
+            bare["children"][0]["children"][5]["state"]["state"],
+            json!({})
+        );
+
+        // A dock with no tab group has nowhere to put it.
+        let mut empty = json!({"type": "split", "children": []});
+        assert!(!push_file_properties_leaf(&mut empty, Some("A.md")));
+    }
+
+    /// The leaf's `file` follows the open note through the state writer,
+    /// and a `currentTab` pointing at it reads back as the File properties
+    /// view, so a restart lands on the pane it left.
+    #[test]
+    fn file_properties_leaf_state_follows_the_note_and_is_the_current_tab() {
+        let mut layout = json!({"right": default_dock_json("right", Some("A.md"), 0)});
+        push_file_properties_leaf(&mut layout["right"], Some("A.md"));
+        set_dock_current_tab(&mut layout["right"], 5);
+        set_leaf_state(
+            &mut layout["right"],
+            "file-properties",
+            &[("file", json!("B.md"))],
+        );
+        assert_eq!(
+            leaf_state(&layout, "right", "file-properties"),
+            Some(&json!({"file": "B.md"}))
+        );
+        assert_eq!(
+            dock_current_view(&layout, "right").as_deref(),
+            Some("file-properties")
+        );
+        set_dock_current_tab(&mut layout["right"], 99);
+        assert_eq!(
+            layout["right"]["children"][0]["currentTab"], 5,
+            "clamped to the leaves the group has"
+        );
+        set_leaf_state(
+            &mut layout["right"],
+            "file-properties",
+            &[("file", Value::Null)],
+        );
+        assert_eq!(
+            leaf_state(&layout, "right", "file-properties"),
+            Some(&json!({}))
+        );
+    }
+
+    /// `properties:open-local` is runnable, so the palette offers it and
+    /// its hotkey (none by default) binds.
+    #[test]
+    fn file_properties_command_is_runnable() {
+        assert!(RUNNABLE.contains(&"properties:open-local"));
     }
 
     /// The Backlinks and Outgoing links leaves' state round trips: read
