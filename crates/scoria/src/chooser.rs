@@ -19,12 +19,15 @@ use serde_json::{json, Value};
 use std::ops::Range;
 
 /// One thing that can be picked.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Row {
     /// What the row reads, and what the query matches.
     pub label: String,
     /// What the pick means; a vault path for the template chooser.
     pub value: String,
+    /// A tag at the row's right end, Obsidian's `span.flair.mod-pop`:
+    /// "Active" on the theme the "Change theme..." list is already on.
+    pub flair: Option<String>,
 }
 
 pub enum ChooserEvent {
@@ -209,6 +212,7 @@ impl Chooser {
                     .collect();
                 let label = StyledText::new(SharedString::from(m.row.label.clone()))
                     .with_highlights(highlights);
+                let flair = m.row.flair.clone();
                 Some(
                     div()
                         .id(("chooser-row", ix))
@@ -218,6 +222,8 @@ impl Chooser {
                         .flex()
                         .flex_row()
                         .items_center()
+                        .justify_between()
+                        .gap_2()
                         .rounded_sm()
                         .cursor_pointer()
                         .when(selected, |d| d.bg(theme.tokens.background_modifier_hover))
@@ -234,7 +240,19 @@ impl Chooser {
                                 .overflow_hidden()
                                 .text_ellipsis()
                                 .child(label),
-                        ),
+                        )
+                        .when_some(flair, |d, flair| {
+                            d.child(
+                                div()
+                                    .flex_none()
+                                    .px_2()
+                                    .rounded_md()
+                                    .bg(theme.tokens.background_modifier_hover)
+                                    .text_size(px(11.))
+                                    .text_color(theme.tokens.text_muted)
+                                    .child(SharedString::from(flair)),
+                            )
+                        }),
                 )
             })
             .collect()

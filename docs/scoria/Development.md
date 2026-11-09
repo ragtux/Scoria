@@ -331,6 +331,48 @@ uses behave as Obsidian's do.
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
 
+### The week's leftovers, 2026-11-09
+
+The verdict of [[Writer gate run]] named five things left open. Four needed no desk, only an
+observation, and one probe took them all (`tools/obsidian-probe/gate-leftovers.mjs`, results
+`results/2026-11-09-gate-leftovers.json`, Obsidian 1.15.0 under its own data directory): what
+the second Mod+B does over `- **text**` lines, what the numbered toggle's second press leaves,
+what `theme:switch` opens, and which button of the Update links prompt carries `mod-cta`. The
+fifth, the table's re-pad on *entering* a cell, had been observed on 2026-11-08 and was waiting
+on a decision, not a probe.
+
+**What the probe said, and what changed.** The second Mod+B strips `- **one**` / `- **two**`
+back to the bullets, and so does Scoria's — no change — but **one whole bullet line selected** is
+wrapped after its marker too (`- **one**`, the selection kept from the line start), where
+Scoria's single-line path had wrapped marker and all; `wrap_pieces` now starts a one-line piece
+at the item's text and the selection keeps its own start when it took the marker in
+(`one_whole_list_line_is_wrapped_after_its_marker`). One quirk recorded and not copied: over
+task lines Obsidian's second press changes nothing, the bold staying; Scoria strips, and the spec
+says why. The numbered toggle's second press **leaves bare lines**, indentation kept, and a
+third numbers them again — Scoria's `line_prefix_plan` already did exactly that, now pinned by
+`numbered_list_second_press_leaves_bare_lines`. `theme:switch` opens a **suggester prompt** —
+Default with an Active flair, then the installed themes — and a pick writes `cssTheme`; the
+workspace now opens its chooser with those rows (`ChooserPurpose::Theme`, a `flair` on
+`chooser::Row`) and writes through the Appearance tab's own `SettingChange::Appearance`, so the
+command is in `RUNNABLE` and `Alt + T` from `hotkeys.json` reaches it. **No button of the Update
+links prompt is accented** and focus starts on Always update; Scoria's "Just once" lost its
+`.cta()`, and Enter keeps updating once because the probe's Enter did nothing it could see.
+Every observation is in [[Specification]] beside the paragraph it extends.
+
+**The decision on the cell.** Obsidian re-pads a table on the first click into a cell with
+nothing typed, and the ground rule is Obsidian's bytes, so Scoria's `open_cell` now does the
+same: `table::repad` renders the table the writer's way, the editor applies it as one undo step
+when the bytes differ, and the cell opens on its padded span (every entry path goes through
+`open_cell`, so arrow keys and Tab re-pad too, which is a reading beyond the click). A padded
+table is untouched, so a cell click on the gate vault's tables — all of them padded by day 3's
+commands — writes nothing.
+
+**Two harness traps.** This session's shell exports `LD_LIBRARY_PATH` for an alsa-lib, and
+Obsidian's electron then fails on `GLIBC_2.43' not found` before a window opens; `env -u
+LD_LIBRARY_PATH` in front of `run-block.sh` is the fix, written into the probe README. And a
+script that does not close its CDP socket keeps `node` alive after its last step, so the runner
+waits on it; the results file was complete, the kill was the way out.
+
 ### Day 7, the week closes, 2026-11-09
 
 The last day of [[Writer gate run]]: chrome, bookmarks, settings and a hotkey. Scoria's half
@@ -341,7 +383,7 @@ toggle, a dropdown and two sliders — the gate vault's first `bookmarks.json`, 
 byte Scoria had written**, appending its own: the bookmark writer is a fixed point of Obsidian's
 the way the canvas writer proved to be on day 5. `hotkeys.json` is Obsidian's, from nothing — the
 last config file the harness had no real copy of — and Scoria reads it (`theme:switch` shows its
-`Alt + T`, `custom`; the command itself has no handler yet).
+`Alt + T`, `custom`; the command got its handler that evening, see [[#The week's leftovers, 2026-11-09]]).
 
 **The day's finding was the harness's, on the watched vault.** Obsidian had rewritten
 `docs/scoria/.obsidian/workspace.json`, and `every_workspace_json_is_written_back_byte_identical`

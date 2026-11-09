@@ -1105,6 +1105,13 @@ float path (day 7). What it left open: the second Mod+B over `- **text**` lines 
 second press (day 6), copy and paste on a canvas (day 5, needs a desk), and `theme:switch` without a handler.
 The vault went to `gate.sh baseline` as `snapshot-2026-11-09g`.
 
+The same evening a probe answered what a desk was not needed for (`gate-leftovers.mjs`, see
+[[Development#The week's leftovers, 2026-11-09]]): the second Mod+B strips (Scoria already did), the
+numbered toggle's second press leaves bare lines (Scoria already did), one whole bullet line is wrapped
+after its marker (Scoria now does), `theme:switch` opens a suggester that Scoria now has, and no button
+of the Update links prompt is accented, so Scoria's "Just once" lost its accent. Copy and paste on a
+canvas is the one item still waiting on a desk.
+
 ## The log
 
 One row per day. "Moved" is what the diff reported; "author" is the answer to the two

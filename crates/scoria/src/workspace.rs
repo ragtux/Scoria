@@ -216,6 +216,7 @@ pub const BASE_ONLY: &[&str] = &[
 /// the way Obsidian hides commands whose check callback fails.
 pub const RUNNABLE: &[&str] = &[
     "command-palette:open",
+    "theme:switch",
     "editor:save-file",
     "editor:toggle-source",
     "editor:open-search",
@@ -1640,6 +1641,9 @@ enum ChooserPurpose {
     CanvasGroup,
     /// `bases:change-view`: the showing base's views, by index.
     BasesView,
+    /// `theme:switch`: "Default" and the vault's installed themes; the
+    /// pick is written as `cssTheme`.
+    Theme,
 }
 
 /// How Obsidian names a split's axis: a `vertical` split lays its children
@@ -3460,6 +3464,12 @@ impl Workspace {
                             this.focus_main(window, cx);
                             cx.notify();
                         }
+                        ChooserPurpose::Theme => {
+                            this.modal = Modal::None;
+                            this.pick_theme(value.clone(), cx);
+                            this.focus_main(window, cx);
+                            cx.notify();
+                        }
                         ChooserPurpose::BasesView => {
                             this.modal = Modal::None;
                             // The row carries the view's index into
@@ -4067,6 +4077,7 @@ impl Workspace {
                 rows.push(ChooserRow {
                     label: basename(&file.path).to_string(),
                     value: file.path.clone(),
+                    flair: None,
                 });
             }
         }
@@ -4078,6 +4089,59 @@ impl Workspace {
             c.open(rows, "Type name of a template...", empty, window, cx)
         });
         cx.notify();
+    }
+
+    /// `theme:switch`, "Change theme...": Obsidian 1.15.0 opens a prompt
+    /// with no placeholder listing "Default" first, an "Active" flair on
+    /// the row the vault is on, then the installed themes; a pick writes
+    /// `cssTheme` (`""` for Default) to `appearance.json` and restyles at
+    /// once (probe of 2026-11-09, `gate-leftovers` step s03).
+    fn open_theme_chooser(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let current = state.appearance().css_theme.clone().unwrap_or_default();
+        let mut rows = vec![ChooserRow {
+            label: "Default".to_string(),
+            value: String::new(),
+            flair: None,
+        }];
+        rows.extend(
+            state
+                .vault()
+                .css_themes()
+                .into_iter()
+                .map(|name| ChooserRow {
+                    label: name.clone(),
+                    value: name,
+                    flair: None,
+                }),
+        );
+        for row in &mut rows {
+            if row.value == current {
+                row.flair = Some("Active".to_string());
+            }
+        }
+        self.close_editor_suggest(cx);
+        self.chooser_purpose = ChooserPurpose::Theme;
+        self.modal = Modal::Chooser;
+        self.chooser
+            .update(cx, |c, cx| c.open(rows, "", "No themes", window, cx));
+        cx.notify();
+    }
+
+    /// Writes the theme the chooser picked, the way the Appearance tab's
+    /// dropdown does; the row already on is left alone.
+    fn pick_theme(&mut self, name: String, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let mut next = state.appearance().clone();
+        if next.css_theme.clone().unwrap_or_default() == name {
+            return;
+        }
+        next.css_theme = Some(name);
+        self.change_setting(SettingChange::Appearance(next), cx);
     }
 
     /// "Add note from vault" and "Add media from vault": the chooser over
@@ -4110,6 +4174,7 @@ impl Workspace {
                     crate::canvas::FilePick::Media => f.path.clone(),
                 },
                 value: f.path.clone(),
+                flair: None,
             })
             .collect();
         rows.sort_by(|a, b| a.label.cmp(&b.label));
@@ -4137,7 +4202,11 @@ impl Workspace {
             .read(cx)
             .group_targets()
             .into_iter()
-            .map(|(label, id)| ChooserRow { label, value: id })
+            .map(|(label, id)| ChooserRow {
+                label,
+                value: id,
+                flair: None,
+            })
             .collect();
         self.chooser_purpose = ChooserPurpose::CanvasGroup;
         self.modal = Modal::Chooser;
@@ -5071,6 +5140,7 @@ impl Workspace {
                     self.open_template_chooser(window, cx);
                 }
             }
+            "theme:switch" => self.open_theme_chooser(window, cx),
             "daily-notes" => self.open_daily(None, window, cx),
             "daily-notes:goto-prev" => self.open_daily(Some(false), window, cx),
             "daily-notes:goto-next" => self.open_daily(Some(true), window, cx),
@@ -7189,6 +7259,7 @@ impl Workspace {
             .map(|(ix, label)| ChooserRow {
                 label,
                 value: ix.to_string(),
+                flair: None,
             })
             .collect();
         // A base that did not parse has no views to switch between, and a
@@ -8347,8 +8418,11 @@ impl Workspace {
     /// (`tools/obsidian-probe/results/2026-10-25-explorer-dnd.json`, step
     /// `s05`). Scoria asks before it renames rather than after, which is not
     /// observable: every one of the four answers leaves the same bytes.
-    /// Which button carries `mod-cta` was not recorded, so Enter keeps doing
-    /// what it did before the third button arrived -- updating once.
+    /// None of the three carries `mod-cta` (probe of 2026-11-09,
+    /// `gate-leftovers` step s04: every button's class is empty, and focus
+    /// starts on "Always update"); Enter keeps doing what it did before the
+    /// third button arrived -- updating once -- since the probe's Enter
+    /// left Obsidian's modal up and nothing written.
     fn rename_with_links(
         &mut self,
         from: &str,
@@ -15688,7 +15762,7 @@ fn update_links_prompt(files: usize, links: usize) -> PromptSpec {
         input: None,
         buttons: vec![
             PromptButton::new("Always update", PromptAction::Tertiary),
-            PromptButton::new("Just once", PromptAction::Submit).cta(),
+            PromptButton::new("Just once", PromptAction::Submit),
             PromptButton::new("Do not update", PromptAction::Secondary),
         ],
         ..PromptSpec::default()
@@ -17730,10 +17804,10 @@ mod tests {
             row,
             vec![
                 ("Always update", PromptAction::Tertiary, false),
-                ("Just once", PromptAction::Submit, true),
+                ("Just once", PromptAction::Submit, false),
                 ("Do not update", PromptAction::Secondary, false),
             ],
-            "Obsidian's order, and no Cancel -- its modal has three buttons"
+            "Obsidian's order, no accent on any, and no Cancel -- its modal has three buttons"
         );
         assert_eq!(
             update_links_prompt(6, 6).detail[1],

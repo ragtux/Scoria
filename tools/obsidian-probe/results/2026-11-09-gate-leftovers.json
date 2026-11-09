@@ -1,0 +1,899 @@
+{
+ "gateLeftovers": {
+  "fixtures": {
+   "startedAt": "2026-11-09T18:38:55.384Z",
+   "steps": {},
+   "order": [],
+   "elapsedMs": 1
+  },
+  "run": {
+   "startedAt": "2026-11-09T18:38:56.586Z",
+   "steps": {
+    "s00-context": {
+     "ok": true,
+     "ms": 674,
+     "opened": {
+      "leaves": 1,
+      "file": "Probe.md",
+      "state": {
+       "file": "Probe.md",
+       "mode": "source",
+       "source": false
+      }
+     },
+     "versions": {
+      "apiVersion": "undefined",
+      "appVersion": "undefined"
+     },
+     "commands": {
+      "theme:switch": {
+       "name": "Change theme...",
+       "hasCallback": true,
+       "hasEditorCallback": false,
+       "hasCheck": false
+      },
+      "theme:use-dark": null,
+      "theme:use-light": null,
+      "editor:toggle-bold": {
+       "name": "Toggle bold",
+       "hasCallback": false,
+       "hasEditorCallback": true,
+       "hasCheck": true
+      },
+      "editor:toggle-numbered-list": {
+       "name": "Toggle numbered list",
+       "hasCallback": false,
+       "hasEditorCallback": false,
+       "hasCheck": true
+      }
+     },
+     "themes": {
+      "installed": [
+       "Probe Theme"
+      ],
+      "theme": "",
+      "setting": ""
+     }
+    },
+    "s01-bold-second-press-over-bullets": {
+     "ok": true,
+     "ms": 3168,
+     "twoBullets": {
+      "in": "- one\n- two",
+      "caret": [
+       {
+        "line": 0,
+        "ch": 0
+       },
+       {
+        "line": 1,
+        "ch": 5
+       }
+      ],
+      "seedOk": true,
+      "out": [
+       "- **one**\n- **two**",
+       "- one\n- two"
+      ],
+      "steps": [
+       {
+        "value": "- **one**\n- **two**",
+        "cursor": {
+         "line": 1,
+         "ch": 7
+        },
+        "from": {
+         "line": 0,
+         "ch": 0
+        },
+        "to": {
+         "line": 1,
+         "ch": 7
+        },
+        "sel": "- **one**\n- **two",
+        "ran": true
+       },
+       {
+        "value": "- one\n- two",
+        "cursor": {
+         "line": 1,
+         "ch": 5
+        },
+        "from": {
+         "line": 0,
+         "ch": 0
+        },
+        "to": {
+         "line": 1,
+         "ch": 5
+        },
+        "sel": "- one\n- two",
+        "ran": true
+       }
+      ]
+     },
+     "overBoldBullets": {
+      "in": "- **one**\n- **two**",
+      "caret": [
+       {
+        "line": 0,
+        "ch": 0
+       },
+       {
+        "line": 1,
+        "ch": 9
+       }
+      ],
+      "seedOk": true,
+      "out": [
+       "- one\n- two"
+      ],
+      "steps": [
+       {
+        "value": "- one\n- two",
+        "cursor": {
+         "line": 1,
+         "ch": 5
+        },
+        "from": {
+         "line": 0,
+         "ch": 0
+        },
+        "to": {
+         "line": 1,
+         "ch": 5
+        },
+        "sel": "- one\n- two",
+        "ran": true
+       }
+      ]
+     },
+     "oneBullet": {
+      "in": "- one",
+      "caret": [
+       {
+        "line": 0,
+        "ch": 0
+       },
+       {
+        "line": 0,
+        "ch": 5
+       }
+      ],
+      "seedOk": true,
+      "out": [
+       "- **one**",
+       "- one"
+      ],
+      "steps": [
+       {
+        "value": "- **one**",
+        "cursor": {
+         "line": 0,
+         "ch": 7
+        },
+        "from": {
+         "line": 0,
+         "ch": 0
+        },
+        "to": {
+         "line": 0,
+         "ch": 7
+        },
+        "sel": "- **one",
+        "ran": true
+       },
+       {
+        "value": "- one",
+        "cursor": {
+         "line": 0,
+         "ch": 5
+        },
+        "from": {
+         "line": 0,
+         "ch": 0
+        },
+        "to": {
+         "line": 0,
+         "ch": 5
+        },
+        "sel": "- one",
+        "ran": true
+       }
+      ]
+     },
+     "oneBulletText": {
+      "in": "- one",
+      "caret": [
+       {
+        "line": 0,
+        "ch": 2
+       },
+       {
+        "line": 0,
+        "ch": 5
+       }
+      ],
+      "seedOk": true,
+      "out": [
+       "- **one**",
+       "- one"
+      ],
+      "steps": [
+       {
+        "value": "- **one**",
+        "cursor": {
+         "line": 0,
+         "ch": 7
+        },
+        "from": {
+         "line": 0,
+         "ch": 4
+        },
+        "to": {
+         "line": 0,
+         "ch": 7
+        },
+        "sel": "one",
+        "ran": true
+       },
+       {
+        "value": "- one",
+        "cursor": {
+         "line": 0,
+         "ch": 5
+        },
+        "from": {
+         "line": 0,
+         "ch": 2
+        },
+        "to": {
+         "line": 0,
+         "ch": 5
+        },
+        "sel": "one",
+        "ran": true
+       }
+      ]
+     },
+     "tasks": {
+      "in": "- [ ] one\n- [x] two",
+      "caret": [
+       {
+        "line": 0,
+        "ch": 0
+       },
+       {
+        "line": 1,
+        "ch": 9
+       }
+      ],
+      "seedOk": true,
+      "out": [
+       "- [ ] **one**\n- [x] **two**",
+       "- [ ] **one**\n- [x] **two**"
+      ],
+      "steps": [
+       {
+        "value": "- [ ] **one**\n- [x] **two**",
+        "cursor": {
+         "line": 1,
+         "ch": 11
+        },
+        "from": {
+         "line": 0,
+         "ch": 0
+        },
+        "to": {
+         "line": 1,
+         "ch": 11
+        },
+        "sel": "- [ ] **one**\n- [x] **two",
+        "ran": true
+       },
+       {
+        "value": "- [ ] **one**\n- [x] **two**",
+        "cursor": {
+         "line": 1,
+         "ch": 11
+        },
+        "from": {
+         "line": 0,
+         "ch": 0
+        },
+        "to": {
+         "line": 1,
+         "ch": 11
+        },
+        "sel": "- [ ] **one**\n- [x] **two",
+        "ran": true
+       }
+      ]
+     },
+     "numbered": {
+      "in": "1. one\n2. two",
+      "caret": [
+       {
+        "line": 0,
+        "ch": 0
+       },
+       {
+        "line": 1,
+        "ch": 6
+       }
+      ],
+      "seedOk": true,
+      "out": [
+       "1. **one**\n2. **two**",
+       "1. one\n2. two"
+      ],
+      "steps": [
+       {
+        "value": "1. **one**\n2. **two**",
+        "cursor": {
+         "line": 1,
+         "ch": 8
+        },
+        "from": {
+         "line": 0,
+         "ch": 0
+        },
+        "to": {
+         "line": 1,
+         "ch": 8
+        },
+        "sel": "1. **one**\n2. **two",
+        "ran": true
+       },
+       {
+        "value": "1. one\n2. two",
+        "cursor": {
+         "line": 1,
+         "ch": 6
+        },
+        "from": {
+         "line": 0,
+         "ch": 0
+        },
+        "to": {
+         "line": 1,
+         "ch": 6
+        },
+        "sel": "1. one\n2. two",
+        "ran": true
+       }
+      ]
+     },
+     "italicsTwoBullets": {
+      "in": "- one\n- two",
+      "caret": [
+       {
+        "line": 0,
+        "ch": 0
+       },
+       {
+        "line": 1,
+        "ch": 5
+       }
+      ],
+      "seedOk": true,
+      "out": [
+       "- *one*\n- *two*",
+       "- one\n- two"
+      ],
+      "steps": [
+       {
+        "value": "- *one*\n- *two*",
+        "cursor": {
+         "line": 1,
+         "ch": 6
+        },
+        "from": {
+         "line": 0,
+         "ch": 0
+        },
+        "to": {
+         "line": 1,
+         "ch": 6
+        },
+        "sel": "- *one*\n- *two",
+        "ran": true
+       },
+       {
+        "value": "- one\n- two",
+        "cursor": {
+         "line": 1,
+         "ch": 5
+        },
+        "from": {
+         "line": 0,
+         "ch": 0
+        },
+        "to": {
+         "line": 1,
+         "ch": 5
+        },
+        "sel": "- one\n- two",
+        "ran": true
+       }
+      ]
+     }
+    },
+    "s02-numbered-second-press-over-bullets": {
+     "ok": true,
+     "ms": 2249,
+     "flat": {
+      "in": "- a\n- b\n- c\n- d",
+      "caret": [
+       {
+        "line": 0,
+        "ch": 0
+       },
+       {
+        "line": 3,
+        "ch": 3
+       }
+      ],
+      "seedOk": true,
+      "out": [
+       "1. a\n2. b\n3. c\n4. d",
+       "a\nb\nc\nd"
+      ],
+      "steps": [
+       {
+        "value": "1. a\n2. b\n3. c\n4. d",
+        "cursor": {
+         "line": 3,
+         "ch": 4
+        },
+        "from": {
+         "line": 0,
+         "ch": 0
+        },
+        "to": {
+         "line": 3,
+         "ch": 4
+        },
+        "sel": "1. a\n2. b\n3. c\n4. d",
+        "ran": true
+       },
+       {
+        "value": "a\nb\nc\nd",
+        "cursor": {
+         "line": 3,
+         "ch": 1
+        },
+        "from": {
+         "line": 0,
+         "ch": 0
+        },
+        "to": {
+         "line": 3,
+         "ch": 1
+        },
+        "sel": "a\nb\nc\nd",
+        "ran": true
+       }
+      ]
+     },
+     "nested": {
+      "in": "- a\n\t- b\n\t- c\n- d",
+      "caret": [
+       {
+        "line": 0,
+        "ch": 0
+       },
+       {
+        "line": 3,
+        "ch": 3
+       }
+      ],
+      "seedOk": true,
+      "out": [
+       "1. a\n\t1. b\n\t2. c\n2. d",
+       "a\n\tb\n\tc\nd"
+      ],
+      "steps": [
+       {
+        "value": "1. a\n\t1. b\n\t2. c\n2. d",
+        "cursor": {
+         "line": 3,
+         "ch": 4
+        },
+        "from": {
+         "line": 0,
+         "ch": 0
+        },
+        "to": {
+         "line": 3,
+         "ch": 4
+        },
+        "sel": "1. a\n\t1. b\n\t2. c\n2. d",
+        "ran": true
+       },
+       {
+        "value": "a\n\tb\n\tc\nd",
+        "cursor": {
+         "line": 3,
+         "ch": 1
+        },
+        "from": {
+         "line": 0,
+         "ch": 0
+        },
+        "to": {
+         "line": 3,
+         "ch": 1
+        },
+        "sel": "a\n\tb\n\tc\nd",
+        "ran": true
+       }
+      ]
+     },
+     "nestedThrice": {
+      "in": "- a\n\t- b\n\t- c\n- d",
+      "caret": [
+       {
+        "line": 0,
+        "ch": 0
+       },
+       {
+        "line": 3,
+        "ch": 3
+       }
+      ],
+      "seedOk": true,
+      "out": [
+       "1. a\n\t1. b\n\t2. c\n2. d",
+       "a\n\tb\n\tc\nd",
+       "1. a\n\t1. b\n\t2. c\n2. d"
+      ],
+      "steps": [
+       {
+        "value": "1. a\n\t1. b\n\t2. c\n2. d",
+        "cursor": {
+         "line": 3,
+         "ch": 4
+        },
+        "from": {
+         "line": 0,
+         "ch": 0
+        },
+        "to": {
+         "line": 3,
+         "ch": 4
+        },
+        "sel": "1. a\n\t1. b\n\t2. c\n2. d",
+        "ran": true
+       },
+       {
+        "value": "a\n\tb\n\tc\nd",
+        "cursor": {
+         "line": 3,
+         "ch": 1
+        },
+        "from": {
+         "line": 0,
+         "ch": 0
+        },
+        "to": {
+         "line": 3,
+         "ch": 1
+        },
+        "sel": "a\n\tb\n\tc\nd",
+        "ran": true
+       },
+       {
+        "value": "1. a\n\t1. b\n\t2. c\n2. d",
+        "cursor": {
+         "line": 3,
+         "ch": 4
+        },
+        "from": {
+         "line": 0,
+         "ch": 3
+        },
+        "to": {
+         "line": 3,
+         "ch": 4
+        },
+        "sel": "a\n\t1. b\n\t2. c\n2. d",
+        "ran": true
+       }
+      ]
+     },
+     "bulletOverNumbered": {
+      "in": "1. a\n2. b",
+      "caret": [
+       {
+        "line": 0,
+        "ch": 0
+       },
+       {
+        "line": 1,
+        "ch": 4
+       }
+      ],
+      "seedOk": true,
+      "out": [
+       "- a\n- b",
+       "a\nb"
+      ],
+      "steps": [
+       {
+        "value": "- a\n- b",
+        "cursor": {
+         "line": 1,
+         "ch": 3
+        },
+        "from": {
+         "line": 0,
+         "ch": 0
+        },
+        "to": {
+         "line": 1,
+         "ch": 3
+        },
+        "sel": "- a\n- b",
+        "ran": true
+       },
+       {
+        "value": "a\nb",
+        "cursor": {
+         "line": 1,
+         "ch": 1
+        },
+        "from": {
+         "line": 0,
+         "ch": 0
+        },
+        "to": {
+         "line": 1,
+         "ch": 1
+        },
+        "sel": "a\nb",
+        "ran": true
+       }
+      ]
+     }
+    },
+    "s03-theme-switch": {
+     "ok": true,
+     "ms": 2510,
+     "before": "{}",
+     "ran": true,
+     "modal": {
+      "containerCls": "modal-container mod-dim",
+      "cls": "modal-container mod-dim",
+      "title": null,
+      "inputs": [
+       {
+        "cls": "prompt-input",
+        "placeholder": "",
+        "value": "",
+        "type": "text"
+       }
+      ],
+      "buttons": [],
+      "prompt": {
+       "tag": "DIV",
+       "cls": "prompt",
+       "text": "DefaultActiveProbe Theme"
+      },
+      "items": [
+       {
+        "cls": "suggestion-item is-selected",
+        "text": "DefaultActive",
+        "html": "Default<span class=\"flair mod-pop\">Active</span>"
+       },
+       {
+        "cls": "suggestion-item",
+        "text": "Probe Theme",
+        "html": "Probe Theme"
+       }
+      ]
+     },
+     "suggest": null,
+     "activeElement": {
+      "tag": "INPUT",
+      "cls": "prompt-input",
+      "text": ""
+     },
+     "itemCount": 2,
+     "themeRow": 1,
+     "selectedBeforeEnter": "Probe Theme",
+     "afterPick": {
+      "modal": null,
+      "appearance": "{}",
+      "theme": {
+       "theme": "Probe Theme",
+       "setting": "Probe Theme",
+       "bodyClass": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-focused"
+      }
+     },
+     "secondOpen": {
+      "containerCls": "modal-container mod-dim",
+      "cls": "modal-container mod-dim",
+      "title": null,
+      "inputs": [
+       {
+        "cls": "prompt-input",
+        "placeholder": "",
+        "value": "",
+        "type": "text"
+       }
+      ],
+      "buttons": [],
+      "prompt": {
+       "tag": "DIV",
+       "cls": "prompt",
+       "text": "DefaultProbe ThemeActive"
+      },
+      "items": [
+       {
+        "cls": "suggestion-item is-selected",
+        "text": "Default",
+        "html": "Default"
+       },
+       {
+        "cls": "suggestion-item",
+        "text": "Probe ThemeActive",
+        "html": "Probe Theme<span class=\"flair mod-pop\">Active</span>"
+       }
+      ]
+     },
+     "defaultRow": 0,
+     "afterDefault": {
+      "appearance": "{\n  \"cssTheme\": \"Probe Theme\"\n}",
+      "theme": {
+       "theme": "",
+       "setting": ""
+      }
+     },
+     "closed": null
+    },
+    "s04-update-links-buttons": {
+     "ok": true,
+     "ms": 1972,
+     "alwaysUpdateLinks": false,
+     "linkerBefore": "See [[Alpha]] and [[Alpha|the alias]].\n",
+     "rename": {
+      "modal": {
+       "containerCls": "modal-container mod-confirmation mod-dim",
+       "cls": "modal",
+       "title": {
+        "tag": "DIV",
+        "cls": "modal-title",
+        "text": "Update links"
+       },
+       "content": "Do you want to update internal links that link to this file?This will affect 2 links in 1 file.",
+       "inputs": [],
+       "buttons": [
+        {
+         "tag": "BUTTON",
+         "cls": "",
+         "text": "Always update"
+        },
+        {
+         "tag": "BUTTON",
+         "cls": "",
+         "text": "Just once"
+        },
+        {
+         "tag": "BUTTON",
+         "cls": "",
+         "text": "Do not update"
+        }
+       ],
+       "prompt": null,
+       "items": []
+      },
+      "files": [
+       "Alpha 1.md",
+       "Linker.md",
+       "Probe.md"
+      ]
+     },
+     "ctaButtons": [
+      {
+       "text": "Always update",
+       "cls": "",
+       "cta": false,
+       "focused": true
+      },
+      {
+       "text": "Just once",
+       "cls": "",
+       "cta": false,
+       "focused": false
+      },
+      {
+       "text": "Do not update",
+       "cls": "",
+       "cta": false,
+       "focused": false
+      }
+     ],
+     "activeElement": {
+      "tag": "BUTTON",
+      "cls": "",
+      "text": "Always update"
+     },
+     "afterEnter": {
+      "modal": {
+       "containerCls": "modal-container mod-confirmation mod-dim",
+       "cls": "modal",
+       "title": {
+        "tag": "DIV",
+        "cls": "modal-title",
+        "text": "Update links"
+       },
+       "content": "Do you want to update internal links that link to this file?This will affect 2 links in 1 file.",
+       "inputs": [],
+       "buttons": [
+        {
+         "tag": "BUTTON",
+         "cls": "",
+         "text": "Always update"
+        },
+        {
+         "tag": "BUTTON",
+         "cls": "",
+         "text": "Just once"
+        },
+        {
+         "tag": "BUTTON",
+         "cls": "",
+         "text": "Do not update"
+        }
+       ],
+       "prompt": null,
+       "items": []
+      },
+      "linker": "See [[Alpha]] and [[Alpha|the alias]].\n",
+      "app": "{}"
+     },
+     "modalAfterEnter": {
+      "containerCls": "modal-container mod-confirmation mod-dim",
+      "cls": "modal",
+      "title": {
+       "tag": "DIV",
+       "cls": "modal-title",
+       "text": "Update links"
+      },
+      "content": "Do you want to update internal links that link to this file?This will affect 2 links in 1 file.",
+      "inputs": [],
+      "buttons": [
+       {
+        "tag": "BUTTON",
+        "cls": "",
+        "text": "Always update"
+       },
+       {
+        "tag": "BUTTON",
+        "cls": "",
+        "text": "Just once"
+       },
+       {
+        "tag": "BUTTON",
+        "cls": "",
+        "text": "Do not update"
+       }
+      ],
+      "prompt": null,
+      "items": []
+     }
+    }
+   },
+   "order": [
+    "s00-context",
+    "s01-bold-second-press-over-bullets",
+    "s02-numbered-second-press-over-bullets",
+    "s03-theme-switch",
+    "s04-update-links-buttons"
+   ],
+   "elapsedMs": 10623,
+   "vaultPath": "/tmp/scoria-probe-vault.WCD9wU"
+  }
+ }
+}

@@ -1465,8 +1465,20 @@ bullet lines wrote `- **text one**` and `- **text two**` — the pair around the
 ([[Writer gate run#Day 6, 2026-11-09]]). Scoria now starts each line's piece
 at the item's own text (`lists::parse_prefix(..).content`, so a task box and
 an ordered marker are skipped too, which is the one parser's reading and not
-an observation). Only bullets and only a multi-line selection were observed;
-a single whole bullet line selected, and quote markers, are unprobed.
+an observation). Probed on 2026-11-09 against 1.15.0 (`gate-leftovers.mjs`,
+step s01), the rest of the shape: **one whole bullet line selected** is
+wrapped the same way (`- one` → `- **one**`), and the selection afterwards
+runs from the line start over the whole wrapped text (0..7 on that line),
+not from the text; the **second press strips** (`- **one**` / `- **two**`
+back to `- one` / `- two`, the selection back to the lines), seeded as
+what the first press leaves as well as pressed twice; numbered items
+(`1. **one**`) and italics strip the same way. The one exception is
+Obsidian's own: over task lines, `- [ ] **one**` / `- [x] **two**`, the
+second press **changes nothing** — the bold stays and the selection stays —
+where every other marker strips. Scoria strips there too, on purpose: the
+wrap and its undo are one rule in `wrap_pieces`, and a second Mod+B that
+does nothing reads as a bug rather than a behaviour to copy; it is the one
+divergence this paragraph knows of. Quote markers are still unprobed.
 
 **The numbered toggle counts per depth.** The same day, by hand: `toggle-numbered-list` once
 over four bullet lines of which one (the third) was nested by a tab wrote `1.`, `2.`, `\t1.`,
@@ -1474,7 +1486,13 @@ over four bullet lines of which one (the third) was nested by a tab wrote `1.`, 
 rule above ("an item follows its previous sibling at its depth, one with none restarts at
 1"). The probe's `a` / `b` / `c` / `d` row, all at one depth, is unchanged by it. The first
 line's indentation before the toggle is not certain (see [[Writer gate run#Day 6, 2026-11-09]]);
-the numbering is.
+the numbering is. The probe of 2026-11-09 (`gate-leftovers.mjs`, step s02) ran the same shape
+from a file: `- a` / `\t- b` / `\t- c` / `- d` gave `1. a` / `\t1. b` / `\t2. c` / `2. d`, so the
+per-depth count holds for a nested pair too. **The second press leaves bare lines**, their
+indentation kept (`a` / `\tb` / `\tc` / `d`): the bullets are not remembered, so the toggle does
+not round-trip and undo is the way back; a third press numbers them again as the first did. The
+bullet toggle over numbered lines replaces the numbers (`1. a` / `2. b` → `- a` / `- b`) and a
+second press strips to bare lines the same way. Scoria's `line_prefix_plan` does all of this.
 
 The mixed-selection rule for the line toggles is **remove only when every
 line already has the prefix**, which is what Scoria does:
@@ -4055,8 +4073,15 @@ There is no Cancel, and the reason is the order: the file has **already moved**
 by the time the modal is up — `Dest/Alpha 1.md` is in the tree the step
 recorded — so the only question left is the links. Dismissed with Escape,
 `Linker.md` stayed byte-identical and the move stood, which makes Escape the
-same answer as **Do not update**. Which button carries `mod-cta` was not
-recorded.
+same answer as **Do not update**. **No button carries `mod-cta`**: probed on
+2026-11-09 against 1.15.0 (`gate-leftovers.mjs`, step s04, the modal raised
+by `app.fileManager.renameFile` from `Alpha.md` to `Alpha 1.md` with two
+links in one file), every one of the three buttons has an empty class, the
+modal's container is `modal-container mod-confirmation mod-dim`, and focus
+starts on **Always update**. Enter there, sent as a key event, left the
+modal up and the linking file and `app.json` unchanged, so Enter is bound to
+nothing the probe could see. Scoria's prompt accents none of the three either;
+its Enter keeps updating once, which is its own reading.
 
 **There is no undo for a drag-move.** Ctrl+Z with the explorer focused after
 the file-row drop left the tree exactly as the drop had left it, and raised no
@@ -8231,6 +8256,20 @@ through".
 the container count stay at 0), so what it opens is unrecorded; it is Obsidian's community theme
 browser, which needs the network. "Check for updates" was not probed either. "Custom app icon" and
 "Quick font size adjustment" were probed on 2026-11-04; see below.
+
+### Change theme..., Obsidian 1.15.0
+
+`theme:switch` ("Change theme...", the command `hotkeys.json` showed on the gate vault's day 7)
+opens a suggester prompt, not a settings page: a `.modal-container.mod-dim` holding a `.prompt`
+with a `.prompt-input` whose placeholder is empty, and one `.suggestion-item` per choice —
+**Default** first, carrying a `span.flair.mod-pop` reading **Active** when no theme is set, then
+the installed themes by name (`Probe Theme`, the one installed; with one there is no order to
+observe). Arrow keys move the selection and Enter picks: the body restyles at once, `cssTheme`
+goes to the name, and the write reaches `appearance.json` after a delay (the file still read `{}`
+700 ms after the pick, and `{"cssTheme": "Probe Theme"}` after the next pick). Picking Default
+writes `""`, the same value the Appearance tab's dropdown writes for it. Probed on 2026-11-09
+(`gate-leftovers.mjs`, step s03). Scoria opens its chooser with the same rows and the Active
+flair, and the pick goes through the Appearance tab's own write.
 
 ## Observed font pages, quick font size and app icon, Obsidian 1.14.5
 

@@ -37,6 +37,13 @@ so the probe's copy runs beside the one on the desktop, keeps its own
 copied in once so the run is on the version the person runs. `CDP_PORT` picks the
 port (default 9222); use another one when a desktop Obsidian may hold 9222.
 
+A shell that exports `LD_LIBRARY_PATH` (the Claude Code session's does, for an
+alsa-lib) breaks Obsidian's electron with `GLIBC_2.43' not found` before any
+window opens, and the runner then reports no booted `app` twice. Run it as
+`env -u LD_LIBRARY_PATH tools/obsidian-probe/run-block.sh …` from such a shell.
+A script that leaves its CDP socket open at the end keeps `node` alive and the
+runner waiting after its last step; end with `c.close()` or `process.exit(0)`.
+
 Scripts, each one checklist block of `docs/scoria/Interaction probes.md`:
 
 | Script | Block | Phases |
@@ -59,6 +66,7 @@ Scripts, each one checklist block of `docs/scoria/Interaction probes.md`:
 | `bookmarks-pane.mjs` | the Bookmarks pane's look and interactions on 1.15.0: markup and computed styles of the header and every kind of row, hover and tooltips, the active mark, each kind's right-click menu with icons, Collapse all and a group's fold, the search filter under real keys, Ctrl and middle clicks, Rename on the row, Edit bookmark, New group, drags that reorder, nest and add from Files with the drop indicator, the keyboard, the light theme and the empty state (`SHOTS` names the folder) | fixtures, run |
 | `table-keys.mjs` | the Live Preview table's keyboard from inside a cell: Enter, Tab, Shift+Tab, Escape, the arrows, Shift+Enter and Ctrl+Enter, above all from the last cell of the last row, with the table at the end of the note, before a blank line and before a paragraph; where the caret and focus are afterwards; what typing does after each way out; and the re-pad a click into a cell causes | fixtures, run |
 | `inline-title-and-table-entry.mjs` | the note's inline title (`.inline-title`) and which cell an arrow key entering a Live Preview table lands in: the title's markup and resting styles, hover, click, double click, Select All, Arrow Down, Tab, Enter, Escape, Arrow Right and Arrow Up from the first line, and what Enter renames; Arrow Down and Arrow Up into a table from two columns and what typing then does | fixtures, run |
+| `gate-leftovers.mjs` | the four observations the Writer gate's week left open: Mod+B's second press over whole bullet, task and numbered lines and over one whole bullet line; the numbered toggle's second and third press over flat and nested bullets; what `theme:switch` opens, lists and writes with one theme installed; which "Update links" button is accented and where focus starts | fixtures, run |
 | `table-handles.mjs` | the Live Preview table's row and column handles and "+" bars: their markup, geometry, resting and hovered opacity, what pressing one selects and draws, the bytes a drag leaves in both directions for rows and columns, the drop's before-or-after rule, and where the cursor lands (`SHOTS` names the folder) | fixtures, run |
 | `view-header-bookmark.mjs` | the view header's bookmark action on a bookmarked and an unbookmarked note: label, icon, fill and colours, its place among the actions, hover, what a click opens, and whether it follows a bookmark added or removed while the note is open | fixtures, run |
 | `explorer-drag-look.mjs` | the Files view with a drag held and never dropped: the dragged row, the target folder's wash and name colour, the root target, and the drag ghost's markup, text and styles, over a folder, a file in a folder, a root file, the space below the rows and with a folder dragged (`SHOTS` names the folder) | fixtures, run |

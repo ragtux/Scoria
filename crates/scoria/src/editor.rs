@@ -4420,7 +4420,14 @@ impl Editor {
     }
 
     /// Takes the cell's text into a field for typing.
+    ///
+    /// A ragged table is re-padded first, as one undo step: Obsidian 1.15.0
+    /// rewrites the table on the first click into a cell, with nothing
+    /// typed, so a table is not left ragged once a caret has been in it
+    /// (the `inline-title-and-table-entry` probe of 2026-11-08). The cell
+    /// then opens on its padded bytes.
     fn open_cell(&mut self, span: Range<usize>, cx: &mut Context<Self>) {
+        let span = self.repad_table_at(span, cx);
         let Some(was) = self.buf.text().get(span.clone()).map(str::to_string) else {
             return;
         };
@@ -4436,6 +4443,29 @@ impl Editor {
             was,
         });
         cx.notify();
+    }
+
+    /// Re-pads the table holding the cell `span` when its bytes are not
+    /// already what the writer pads them to, and returns the cell's span
+    /// afterwards; a padded table and a span outside any table come back
+    /// as they were.
+    fn repad_table_at(&mut self, span: Range<usize>, cx: &mut Context<Self>) -> Range<usize> {
+        let Some(at) = table::table_at(self.buf.text(), span.start) else {
+            return span;
+        };
+        if at.cells.get(at.row).and_then(|r| r.get(at.col)) != Some(&span) {
+            return span;
+        }
+        let edit = table::repad(&at);
+        if self.buf.text().get(at.span.clone()) == Some(edit.text.as_str()) {
+            return span;
+        }
+        let (row, col) = (at.row, at.col);
+        let start = at.span.start;
+        self.edit(at.span, &edit.text, EditKind::Other, None, cx);
+        table::table_at(self.buf.text(), start + edit.cursor)
+            .and_then(|after| after.cells.get(row)?.get(col).cloned())
+            .unwrap_or(span)
     }
 
     /// Writes the open cell back into the document, if it changed.

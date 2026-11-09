@@ -1161,8 +1161,13 @@ impl TextBuffer {
             let pieces = self.wrap_pieces(sel.range(), marker);
             // One line keeps the selection on its text; several keep it on
             // the whole of the wrapped text, markers included, so that a
-            // second press finds a pair inside each line's part.
-            let outer = pieces.len() > 1;
+            // second press finds a pair inside each line's part. So does
+            // one whole list line, whose piece starts after the marker the
+            // selection took in: Obsidian 1.15.0 left `- **one**` selected
+            // from its line start (probe of 2026-11-09, `gate-leftovers`).
+            let outer =
+                pieces.len() > 1 || pieces.first().is_some_and(|p| p.start > sel.range().start);
+            let sel_start = (sel.range().start as isize + delta) as usize;
             let mut first: Option<usize> = None;
             let mut last = 0;
             for range in pieces {
@@ -1214,7 +1219,14 @@ impl TextBuffer {
                 first.get_or_insert(start);
                 last = end;
             }
-            let (start, end) = (first.unwrap_or(sel.range().start), last);
+            // Selected from before a marker, the selection keeps that start:
+            // Obsidian's stays at the line start over `- **one**`.
+            let start = if outer {
+                sel_start
+            } else {
+                first.unwrap_or(sel_start)
+            };
+            let end = last;
             after.push(Sel {
                 anchor: if reversed { end } else { start },
                 head: if reversed { start } else { end },
@@ -1255,7 +1267,17 @@ impl TextBuffer {
         let first = self.cursor_at(range.start).line;
         let last = self.cursor_at(range.end).line;
         if first == last {
-            return vec![range];
+            // One whole list line is wrapped after its marker too:
+            // Obsidian 1.15.0 wrote `- **one**` for `- one` selected whole
+            // (probe of 2026-11-09, `gate-leftovers`, step s01).
+            let lr = self.line_range(first);
+            let content = lr.start + lists::parse_prefix(self.line_text(first)).content;
+            let start = if range.start < content {
+                content.min(range.end)
+            } else {
+                range.start
+            };
+            return std::iter::once(start..range.end).collect();
         }
         (first..=last)
             .filter_map(|l| {
@@ -1847,6 +1869,36 @@ mod tests {
         assert_eq!(buf.text(), "- **one**\n- [ ] **two**\n\t1. **three**\n");
         assert!(buf.toggle_wrap("**"));
         assert_eq!(buf.text(), "- one\n- [ ] two\n\t1. three\n");
+    }
+
+    /// One whole bullet line selected: Obsidian 1.15.0 wrote `- **one**`
+    /// and left the whole line selected, markers included; the second
+    /// press restored it (`gate-leftovers` step s01, `oneBullet`). The
+    /// text alone selected is wrapped as any word is (`oneBulletText`).
+    #[test]
+    fn one_whole_list_line_is_wrapped_after_its_marker() {
+        let mut buf = TextBuffer::from_file("- one\n");
+        buf.set_cursor(5, Some(0));
+        assert!(buf.toggle_wrap("**"));
+        assert_eq!(buf.text(), "- **one**\n");
+        assert_eq!(buf.selection(), 0..9);
+        assert!(buf.toggle_wrap("**"));
+        assert_eq!(buf.text(), "- one\n");
+        assert_eq!(buf.selection(), 0..5);
+        let mut buf = TextBuffer::from_file("- one\n");
+        buf.set_cursor(5, Some(2));
+        assert!(buf.toggle_wrap("**"));
+        assert_eq!(buf.text(), "- **one**\n");
+        assert_eq!(buf.selection(), 4..7);
+        assert!(buf.toggle_wrap("**"));
+        assert_eq!(buf.text(), "- one\n");
+        // A numbered line the same way (`numbered`).
+        let mut buf = TextBuffer::from_file("1. one\n2. two\n");
+        buf.set_cursor(13, Some(0));
+        assert!(buf.toggle_wrap("**"));
+        assert_eq!(buf.text(), "1. **one**\n2. **two**\n");
+        assert!(buf.toggle_wrap("**"));
+        assert_eq!(buf.text(), "1. one\n2. two\n");
     }
 
     /// The six colour commands, through the buffer: the wrap and its undo.

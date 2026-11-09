@@ -1150,6 +1150,46 @@ mod tests {
         );
     }
 
+    /// The second press over lines the first made numbered leaves bare
+    /// lines, their indentation kept, and a third numbers them again:
+    /// Obsidian 1.15.0 on `- a`, `\t- b`, `\t- c`, `- d` (probe of
+    /// 2026-11-09, `gate-leftovers` step s02). The bullets are not
+    /// remembered, so the toggle does not round-trip; undo does.
+    #[test]
+    fn numbered_list_second_press_leaves_bare_lines() {
+        let text = "- a\n\t- b\n\t- c\n- d\n";
+        let s = starts(text);
+        let once = apply(text, line_prefix_plan(text, &s, 0..4, LinePrefix::Ordered));
+        assert_eq!(once, "1. a\n\t1. b\n\t2. c\n2. d\n");
+        let s1 = starts(&once);
+        let twice = apply(
+            &once,
+            line_prefix_plan(&once, &s1, 0..4, LinePrefix::Ordered),
+        );
+        assert_eq!(twice, "a\n\tb\n\tc\nd\n");
+        let s2 = starts(&twice);
+        assert_eq!(
+            apply(
+                &twice,
+                line_prefix_plan(&twice, &s2, 0..4, LinePrefix::Ordered)
+            ),
+            once
+        );
+        // And the bullet toggle over numbered lines replaces, then strips.
+        let text = "1. a\n2. b\n";
+        let s = starts(text);
+        let once = apply(text, line_prefix_plan(text, &s, 0..2, LinePrefix::Bullet));
+        assert_eq!(once, "- a\n- b\n");
+        let s1 = starts(&once);
+        assert_eq!(
+            apply(
+                &once,
+                line_prefix_plan(&once, &s1, 0..2, LinePrefix::Bullet)
+            ),
+            "a\nb\n"
+        );
+    }
+
     #[test]
     fn blockquote_toggles_one_level() {
         let text = "a\nb\n";

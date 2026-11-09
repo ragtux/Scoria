@@ -426,6 +426,22 @@ pub fn move_line(at: &TableAt, columns: bool, from: usize, slot: usize) -> Optio
     Some(TableEdit { text, cursor })
 }
 
+/// The table at `at` written as a command writes it, every cell padded to
+/// its column, with the cursor at the start of the cell it was in. The
+/// caller compares the text with the bytes it replaces: a table that is
+/// already padded is left alone.
+///
+/// Obsidian 1.15.0 rewrites a table this way on the first click into a
+/// cell, with nothing typed (`| A | B |` became `| A   | B   |`), so a
+/// table is not left ragged once a caret has been in it, even though
+/// typing itself re-pads nothing ([[Specification#Observed table
+/// behavior]], the `inline-title-and-table-entry` probe of 2026-11-08).
+pub fn repad(at: &TableAt) -> TableEdit {
+    let text = at.table.render();
+    let cursor = at.table.cursor_at(&text, at.row, at.col);
+    TableEdit { text, cursor }
+}
+
 /// Appends an empty row under the last row, or an empty column to the
 /// right of the last when `columns` is set: what the "+" bar below a table
 /// and the one to its right do (probe of 2026-11-08, `table-handles`). The
@@ -699,6 +715,23 @@ mod tests {
             run(PADDED, "A", TableCommand::ColDelete),
             "| B   |\n| --- |\n| 2   |\n| 4   |\n"
         );
+    }
+
+    /// A ragged table is re-padded as a click into a cell re-pads it, the
+    /// cursor staying in the cell; one already padded renders to itself.
+    #[test]
+    fn repad_pads_every_cell_and_keeps_the_cursor_in_its_cell() {
+        let text = "x\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4444 |\n\ny\n";
+        let at = table_at(text, text.find("| 3").unwrap() + 2).expect("a table");
+        let edit = repad(&at);
+        assert_eq!(
+            edit.text,
+            "| A   | B    |\n| --- | ---- |\n| 1   | 2    |\n| 3   | 4444 |"
+        );
+        assert_eq!(&edit.text[edit.cursor..edit.cursor + 1], "3");
+        let padded = format!("x\n\n{}\n\ny\n", edit.text);
+        let at = table_at(&padded, padded.find("| 3").unwrap() + 2).expect("a table");
+        assert_eq!(repad(&at).text, edit.text);
     }
 
     #[test]
