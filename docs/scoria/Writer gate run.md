@@ -79,8 +79,8 @@ should leave the harness with its first real copy of each — worth more to the 
 the diff itself.
 
 **Day 4 delivered two of them** — `templates.json` and `daily-notes.json`, written by Scoria on
-2026-11-09; the Obsidian half of that day is to write the same two from Obsidian's tabs and compare,
-see [[#Day 4, 2026-11-09]].
+2026-11-09 and rewritten by Obsidian the same night, one byte-identical and one with Obsidian's own
+key appended to Scoria's bytes, see [[#Day 4, 2026-11-09]].
 
 ## The sheet
 
@@ -135,8 +135,9 @@ cumulative diff, and the verdict in the log.
 - **`.claude/settings.local.json` is in the vault and in the snapshots.** If it moves, the
   author is Claude Code, not either app.
 - **Obsidian rewrites `appearance.json`, `app.json` and `core-plugins.json` on its own** when
-  a settings pane is merely opened. Expect those three in a diff and attribute them before
-  reading anything into them.
+  it starts (days 2 and 3; day 4's Obsidian half opened Settings twice in a running session and
+  they did not move). Expect those three in a diff and attribute them before reading anything
+  into them.
 - **The week cannot produce evidence about line endings or byte order marks.**
   All ten notes are uniformly LF, no BOM, and every one ends with a newline
   (surveyed 2026-11-04), so `an_edited_file_keeps_its_line_ending_and_byte_order_mark`
@@ -640,6 +641,61 @@ the inserted template and the link to the 8th); on `Note F` the alias `lake` and
 and the two config files with the folders, formats and template path above. Delete any of it after the
 Obsidian half; nothing later in the run depends on it.
 
+### The Obsidian half, 2026-11-09
+
+Run by hand, 01:01–01:11, Obsidian 1.15.0, from the list the Scoria half left; attribution is by
+mtime and bytes, since the diff against `snapshot-2026-11-09` holds both halves.
+
+**`templates.json` came back with Scoria's bytes kept, 01:01.** Time format changed to `HH:mm` and back,
+then Date format set to `YYYY-MM-DD`, a key Scoria had not written. Obsidian's file is
+`{\n  "folder": "Templates",\n  "timeFormat": "HH:mm:ss",\n  "dateFormat": "YYYY-MM-DD"\n}`: Scoria's two
+keys byte for byte and in Scoria's order, the new key appended, two-space indent, no final newline.
+
+**`daily-notes.json` came back byte-identical, 01:02.** The Date format dropdown was moved and set back to
+`2026.11.09`; the mtime moved and **not one of the 91 bytes did**. That is the comparison day 3's
+`types.json` taught the run to insist on — Obsidian rewriting a file Scoria wrote — and this time it
+found nothing.
+
+**The template inserted in `Note C`, 01:05.** `# Note C`, a blank line, `Created 2026-11-09 at 01:05:27
+from the template.` and a final newline: `{{time}}` rendered in the `HH:mm:ss` Scoria had written, so
+Obsidian read Scoria's `templates.json` and acted on it, and the template's trailing newline came along
+as it did in Scoria's insertion. A blank line precedes the block (a person's Enter, or two; not
+recorded). `Note C` now ends in a newline for the first time since day 1, because the template's last
+byte is now the file's.
+
+**Daily notes, 01:11.** Today's note was opened, not recreated — its 00:50:35 template line is still its
+first text — and `we are here!` typed into it; previous and next were stepped, and the 8th's empty
+file kept its 00:50:34 mtime, so the stepping wrote nothing.
+
+**The suggesters ran in today's daily note rather than in `Note C`**, which the mtimes say and the
+diff of `Note C` (only the template) confirms. Every accepted form is the one Scoria wrote in the
+morning: `[[Note F#Heading]]`, `![[Name.canvas]]`, `#day4 ` with the trailing space, and
+`[[Note F|lake]]` — the alias Scoria typed into `Note F`'s front matter was offered by Obsidian's
+suggester, so the two apps read each other's front matter. The block row picked was a heading rather
+than the paragraph that carries `^bf1a61`, so whether Obsidian reuses an existing id stays open; what
+it answered instead is the other placement. **Obsidian wrote `^71cf71` under the heading**, turning
+`## H\n\n| table` into `## H\n\n^71cf71\n\n| table` — the shape
+[[Specification#Observed block reference behavior, Obsidian 1.14.4]] records and
+`an_own_line_id_takes_a_blank_line_either_side` pins, so Scoria would have written the same bytes.
+Both block-id placements have now been seen on the real vault, inline from Scoria and own-line from
+Obsidian, each the other's shape.
+
+**The three config files did not move.** `app.json`, `appearance.json` and `core-plugins.json` still
+carry 23:49:07 from the 8th, though Settings was opened twice tonight. The trap above says a pane
+"merely opened" rewrites them; days 2 and 3's moves each came with Obsidian being *started*, and
+tonight it had been running since 23:49. The trap is narrower than written: launch, not the pane.
+
+**Step 6 did not run.** The person reports no *New file location* row on 1.15.0's Daily notes tab,
+which the 1.14.5 probe recorded and Scoria's tab is drawn from. The file still holds `"folder":
+"Daily"`, so the setting exists; what the row is called now is to be read off the tab and the
+specification corrected. `workspace.json` moved at 01:07, excluded as always.
+
+**Day 4 passes.** Every file in the diff is a person's edit in one of the two apps, and the day's
+second job closed properly: Scoria wrote the week's first `templates.json` and `daily-notes.json`,
+Obsidian rewrote both, and returned one byte-identical and the other with its own key appended to
+Scoria's bytes. The harness, rerun with the vault named after both halves, is sixteen green over
+Obsidian's copies of both files, both daily notes and the two block ids.
+
 ## The log
 
 One row per day. "Moved" is what the diff reported; "author" is the answer to the two
@@ -651,7 +707,7 @@ questions above.
 | 1 | 2026-11-04 | six notes, 3 source + 3 Live Preview: typed, saved, undone, saved | five notes appended to; `vimMode` off; `Mindmap.canvas` opened | 5 notes +1 line each (no trailing newline now), `app.json`, the canvas rewritten compact, `workspace.json` | every one a person's edit in one of the two apps, bar the canvas (Obsidian normalizing a file authored elsewhere) and `workspace.json` (both apps, every session) | **passes** — nothing moved that nobody touched; the harness's canvas failure was the harness's, not the writer's |
 | 2 | 2026-11-05 | rename with 6 aliased inbound links and back; move into a new folder and back; new folder; new note; note created from an unresolved link; delete; three sort orders | renamed `Note F` and back (the modal appeared, **Just once**), new note named on the row; the three `.obsidian` files touched | the 6 link lines rewritten by each app and back to byte-identical both times; `Archive/`, `Day 2 New Note.md`, `this is a new note!.md`, one typed line in `Note C.md` | every one a person's edit in one of the two apps; the three config files moved mtimes and no bytes | **passes** — and the two link rewriters proved byte-identical on a real vault. `alwaysUpdateLinks` defaulted on where Obsidian defaults off, so Scoria's rename rewrote 6 files silently instead of asking; fixed, the ask-path it had made unreachable now runs, and the modal Obsidian showed confirms the default on this vault |
 | 3 | 2026-11-08 | 14 of the 15 table commands on `Note F`, each checked and undone to byte-identical; first front matter added, folded and unfolded; property type set from the sidebar menu (Checkbox, then List) | `Day 2 New Note` renamed on the row to `Day 3 New Note` and a table built and commanded in it; `Note F`'s property renamed twice with a type each time, an empty `Invalid date.md` on the way; the three `.obsidian` files touched | `Note F`'s front matter (Scoria's `status:`, then Obsidian's `scoria:` list), the renamed note with its table, `Invalid date.md`, `types.json` (Scoria's one key, then Obsidian's six) | every one a person's edit in one of the two apps; the three config files moved mtimes and no bytes | **passes** — Obsidian's `types.json` showed Scoria's unseeded (fixed: the three defaults on every write), the palette showed Move row up hidden in the first body row (fixed), and a submenu bug fell on the Scoria half |
-| 4 | 2026-11-09 | all six suggesters accepted into `Note C` (`[[`, `[[Note#`, `![[`, `#tag`, an alias added to `Note F` for the purpose, a block whose id was written into `Note F`), the first accept and a ten-edit stretch undone to byte-identical; `Templates/` and a template note made in the UI, `templates.json` and `daily-notes.json` written from Settings, the template inserted, yesterday's note made by following a `[[Daily/…]]` link, today's created from the template, stepped back and forward |  |  |  |  |
+| 4 | 2026-11-09 | all six suggesters accepted into `Note C` (`[[`, `[[Note#`, `![[`, `#tag`, an alias added to `Note F` for the purpose, a block whose id was written into `Note F`), the first accept and a ten-edit stretch undone to byte-identical; `Templates/` and a template note made in the UI, `templates.json` and `daily-notes.json` written from Settings, the template inserted, yesterday's note made by following a `[[Daily/…]]` link, today's created from the template, stepped back and forward | Settings: Templates time format changed and restored and a date format added, Daily notes dropdown moved and restored; the template inserted in `Note C`; today's note opened, typed into, stepped back and forward; the five suggesters accepted in today's daily note, the block one writing an own-line id under a heading of `Note F` | `Templates/` and `Daily/` (three notes), `Note C` (the morning's ten lines, then Obsidian's template), `Note F` (two alias lines, Scoria's inline id, Obsidian's own-line id), `templates.json` (Scoria's two keys, Obsidian's third appended), `daily-notes.json` (rewritten by Obsidian byte-identical) | every one a person's edit in one of the two apps; the three config files Obsidian rewrites at launch did not move (it was not relaunched) | **passes** — Obsidian rewrote both of the config files Scoria had created and kept Scoria's bytes; the two apps read each other's alias and template settings; a 1.15.0 Daily notes row has been renamed since the 1.14.5 probe (open) |
 | 5 |  |  |  |  |  |  |
 | 6 |  |  |  |  |  |  |
 | 7 |  |  |  |  |  |  |
