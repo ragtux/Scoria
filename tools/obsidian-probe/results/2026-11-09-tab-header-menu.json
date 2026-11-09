@@ -1,0 +1,4336 @@
+{
+ "tabHeaderMenu": {
+  "fixtures": {
+   "startedAt": "2026-11-09T22:08:55.206Z",
+   "steps": {},
+   "order": [],
+   "elapsedMs": 1
+  },
+  "run": {
+   "startedAt": "2026-11-09T22:08:56.383Z",
+   "steps": {
+    "s00-context": {
+     "ok": true,
+     "ms": 2,
+     "version": {
+      "title": "New tab - tabmenu - Obsidian 1.15.0",
+      "apiVersion": null,
+      "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+      "win": [
+       1024,
+       800
+      ]
+     },
+     "commands": {
+      "workspace:close": {
+       "name": "Close current tab",
+       "keys": [
+        {
+         "modifiers": [
+          "Mod"
+         ],
+         "key": "W"
+        }
+       ]
+      },
+      "workspace:close-others": {
+       "name": "Close all other tabs",
+       "keys": null
+      },
+      "workspace:close-tab-group": {
+       "name": "Close this tab group",
+       "keys": null
+      },
+      "workspace:close-others-tab-group": {
+       "name": "Close others in tab group",
+       "keys": null
+      },
+      "workspace:toggle-pin": {
+       "name": "Toggle pin",
+       "keys": null
+      },
+      "workspace:move-to-new-window": {
+       "name": "Move current tab to new window",
+       "keys": null
+      },
+      "workspace:open-in-new-window": {
+       "name": "Open current tab in new window",
+       "keys": null
+      },
+      "workspace:split-vertical": {
+       "name": "Split right",
+       "keys": null
+      },
+      "workspace:split-horizontal": {
+       "name": "Split down",
+       "keys": null
+      },
+      "workspace:copy-path": {
+       "name": "Copy current file path from vault folder",
+       "keys": null
+      },
+      "workspace:copy-full-path": {
+       "name": "Copy current file path from system root",
+       "keys": null
+      },
+      "workspace:copy-url": {
+       "name": "Copy Obsidian URL for current file",
+       "keys": null
+      },
+      "workspace:edit-file-title": {
+       "name": "Rename file",
+       "keys": [
+        {
+         "modifiers": [],
+         "key": "F2"
+        }
+       ]
+      },
+      "file-explorer:reveal-active-file": {
+       "name": "Files: Reveal current file in navigation",
+       "keys": null
+      },
+      "open-with-default-app:open": {
+       "name": "Open in default app",
+       "keys": null
+      },
+      "open-with-default-app:show": {
+       "name": "Show in system explorer",
+       "keys": null
+      }
+     }
+    },
+    "s01-single-md": {
+     "ok": true,
+     "ms": 3930,
+     "leaves": [
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Alpha.md",
+       "title": "Alpha",
+       "pinned": false,
+       "group": null,
+       "active": true,
+       "popout": false
+      }
+     ],
+     "header": {
+      "x": 51.9935302734375,
+      "y": 5.9913787841796875,
+      "w": 199.99998474121094,
+      "h": 34.310340881347656,
+      "cx": 151.99352264404297,
+      "cy": 23.146549224853516,
+      "label": "Alpha"
+     },
+     "menus": [
+      {
+       "cls": "menu",
+       "rect": [
+        154,
+        25,
+        202,
+        737
+       ],
+       "rows": [
+        {
+         "title": "Close",
+         "section": "close",
+         "icon": "svg-icon lucide-x",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "sep": true,
+         "drawn": true
+        },
+        {
+         "title": "Pin",
+         "section": "pane",
+         "icon": "svg-icon lucide-pin",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Link with tab...",
+         "section": "pane",
+         "icon": "svg-icon lucide-link",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Backlinks in document",
+         "section": "pane",
+         "icon": "svg-icon links-coming-in",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Reading view",
+         "section": "pane",
+         "icon": "svg-icon lucide-book-open",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Source mode",
+         "section": "pane",
+         "icon": "svg-icon lucide-code-2",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "sep": true,
+         "drawn": true
+        },
+        {
+         "title": "Move to new window",
+         "section": "open",
+         "icon": "svg-icon lucide-picture-in-picture",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Split right",
+         "section": "open",
+         "icon": "svg-icon lucide-separator-vertical",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Split down",
+         "section": "open",
+         "icon": "svg-icon lucide-separator-horizontal",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Open in new window",
+         "section": "open",
+         "icon": "svg-icon lucide-picture-in-picture-2",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "sep": true,
+         "drawn": true
+        },
+        {
+         "title": "Rename...",
+         "section": "action",
+         "icon": "svg-icon lucide-edit-3",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Move file to...",
+         "section": "action",
+         "icon": "svg-icon lucide-folder-tree",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Bookmark...",
+         "section": "action",
+         "icon": "svg-icon lucide-bookmark",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Merge entire file with...",
+         "section": "action",
+         "icon": "svg-icon lucide-git-merge",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Add file property",
+         "section": "action",
+         "icon": "svg-icon lucide-plus-circle",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Export to PDF...",
+         "section": "action",
+         "icon": "svg-icon lucide-file-down",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "sep": true,
+         "drawn": true
+        },
+        {
+         "title": "Find...",
+         "section": "find",
+         "icon": "svg-icon lucide-file-search",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Replace...",
+         "section": "find",
+         "icon": "svg-icon lucide-file-search",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "sep": true,
+         "drawn": true
+        },
+        {
+         "title": "Copy path",
+         "section": null,
+         "icon": "svg-icon lucide-clipboard",
+         "cls": "menu-item tappable has-submenu",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": true,
+         "extra": [
+          "menu-item-icon mod-submenu"
+         ],
+         "drawn": true
+        },
+        {
+         "sep": true,
+         "drawn": true
+        },
+        {
+         "title": "Open version history",
+         "section": "view",
+         "icon": "svg-icon lucide-history",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Open linked view",
+         "section": null,
+         "icon": "svg-icon lucide-link",
+         "cls": "menu-item tappable has-submenu",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": true,
+         "extra": [
+          "menu-item-icon mod-submenu"
+         ],
+         "drawn": true
+        },
+        {
+         "sep": true,
+         "drawn": true
+        },
+        {
+         "title": "Open in default app",
+         "section": "system",
+         "icon": "svg-icon lucide-arrow-up-right",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Show in system explorer",
+         "section": "system",
+         "icon": "svg-icon lucide-arrow-up-right",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Reveal file in navigation",
+         "section": "system",
+         "icon": "svg-icon lucide-folder-open",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "sep": true,
+         "drawn": true
+        },
+        {
+         "sep": true,
+         "drawn": false
+        },
+        {
+         "title": "Delete file",
+         "section": "danger",
+         "icon": "svg-icon lucide-trash-2",
+         "cls": "menu-item tappable is-warning",
+         "disabled": false,
+         "warning": true,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        }
+       ]
+      }
+     ],
+     "submenus": {
+      "Copy path": [
+       {
+        "cls": "menu",
+        "rect": [
+         352,
+         544,
+         158,
+         88
+        ],
+        "rows": [
+         {
+          "title": "as Obsidian URL",
+          "section": "copy",
+          "icon": "svg-icon lucide-link",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "from vault folder",
+          "section": "copy",
+          "icon": "svg-icon vault",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "from system root",
+          "section": "copy",
+          "icon": "svg-icon lucide-hard-drive",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         }
+        ]
+       }
+      ],
+      "Open linked view": [
+       {
+        "cls": "menu",
+        "rect": [
+         352,
+         607,
+         177,
+         138
+        ],
+        "rows": [
+         {
+          "title": "Open local graph",
+          "section": "linked",
+          "icon": "svg-icon lucide-git-fork",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Open backlinks",
+          "section": "linked",
+          "icon": "svg-icon links-coming-in",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Open outgoing links",
+          "section": "linked",
+          "icon": "svg-icon links-going-out",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Open file properties",
+          "section": "linked",
+          "icon": "svg-icon lucide-info",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Open outline",
+          "section": "linked",
+          "icon": "svg-icon lucide-list",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         }
+        ]
+       }
+      ]
+     }
+    },
+    "s02-three-md": {
+     "ok": true,
+     "ms": 3308,
+     "leaves": [
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Alpha.md",
+       "title": "Alpha",
+       "pinned": false,
+       "group": null,
+       "active": false,
+       "popout": false
+      },
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Beta.md",
+       "title": "Beta",
+       "pinned": false,
+       "group": null,
+       "active": true,
+       "popout": false
+      },
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Folder/Gamma.md",
+       "title": "Gamma",
+       "pinned": false,
+       "group": null,
+       "active": false,
+       "popout": false
+      }
+     ],
+     "menus": [
+      {
+       "cls": "menu",
+       "rect": [
+        354,
+        2,
+        202,
+        800
+       ],
+       "rows": [
+        {
+         "title": "Close",
+         "section": "close",
+         "icon": "svg-icon lucide-x",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Close others",
+         "section": "close",
+         "icon": "svg-icon lucide-x",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Close tabs after",
+         "section": "close",
+         "icon": "svg-icon lucide-x",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Close all",
+         "section": "close",
+         "icon": "svg-icon lucide-x",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "sep": true,
+         "drawn": true
+        },
+        {
+         "title": "Pin",
+         "section": "pane",
+         "icon": "svg-icon lucide-pin",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Link with tab...",
+         "section": "pane",
+         "icon": "svg-icon lucide-link",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Backlinks in document",
+         "section": "pane",
+         "icon": "svg-icon links-coming-in",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Reading view",
+         "section": "pane",
+         "icon": "svg-icon lucide-book-open",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Source mode",
+         "section": "pane",
+         "icon": "svg-icon lucide-code-2",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "sep": true,
+         "drawn": true
+        },
+        {
+         "title": "Move to new window",
+         "section": "open",
+         "icon": "svg-icon lucide-picture-in-picture",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Split right",
+         "section": "open",
+         "icon": "svg-icon lucide-separator-vertical",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Split down",
+         "section": "open",
+         "icon": "svg-icon lucide-separator-horizontal",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Open in new window",
+         "section": "open",
+         "icon": "svg-icon lucide-picture-in-picture-2",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "sep": true,
+         "drawn": true
+        },
+        {
+         "title": "Rename...",
+         "section": "action",
+         "icon": "svg-icon lucide-edit-3",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Move file to...",
+         "section": "action",
+         "icon": "svg-icon lucide-folder-tree",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Bookmark...",
+         "section": "action",
+         "icon": "svg-icon lucide-bookmark",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Merge entire file with...",
+         "section": "action",
+         "icon": "svg-icon lucide-git-merge",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Add file property",
+         "section": "action",
+         "icon": "svg-icon lucide-plus-circle",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Export to PDF...",
+         "section": "action",
+         "icon": "svg-icon lucide-file-down",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "sep": true,
+         "drawn": true
+        },
+        {
+         "title": "Find...",
+         "section": "find",
+         "icon": "svg-icon lucide-file-search",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Replace...",
+         "section": "find",
+         "icon": "svg-icon lucide-file-search",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "sep": true,
+         "drawn": true
+        },
+        {
+         "title": "Copy path",
+         "section": null,
+         "icon": "svg-icon lucide-clipboard",
+         "cls": "menu-item tappable has-submenu",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": true,
+         "extra": [
+          "menu-item-icon mod-submenu"
+         ],
+         "drawn": true
+        },
+        {
+         "sep": true,
+         "drawn": true
+        },
+        {
+         "title": "Open version history",
+         "section": "view",
+         "icon": "svg-icon lucide-history",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Open linked view",
+         "section": null,
+         "icon": "svg-icon lucide-link",
+         "cls": "menu-item tappable has-submenu",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": true,
+         "extra": [
+          "menu-item-icon mod-submenu"
+         ],
+         "drawn": true
+        },
+        {
+         "sep": true,
+         "drawn": true
+        },
+        {
+         "title": "Open in default app",
+         "section": "system",
+         "icon": "svg-icon lucide-arrow-up-right",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Show in system explorer",
+         "section": "system",
+         "icon": "svg-icon lucide-arrow-up-right",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Reveal file in navigation",
+         "section": "system",
+         "icon": "svg-icon lucide-folder-open",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "sep": true,
+         "drawn": true
+        },
+        {
+         "sep": true,
+         "drawn": false
+        },
+        {
+         "title": "Delete file",
+         "section": "danger",
+         "icon": "svg-icon lucide-trash-2",
+         "cls": "menu-item tappable is-warning",
+         "disabled": false,
+         "warning": true,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        }
+       ]
+      }
+     ],
+     "inactiveTab": {
+      "menus": [
+       {
+        "cls": "menu",
+        "rect": [
+         154,
+         25,
+         182,
+         213
+        ],
+        "rows": [
+         {
+          "title": "Close",
+          "section": "close",
+          "icon": "svg-icon lucide-x",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Close others",
+          "section": "close",
+          "icon": "svg-icon lucide-x",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Close tabs after",
+          "section": "close",
+          "icon": "svg-icon lucide-x",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Close all",
+          "section": "close",
+          "icon": "svg-icon lucide-x",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Pin",
+          "section": "pane",
+          "icon": "svg-icon lucide-pin",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Link with tab...",
+          "section": "pane",
+          "icon": "svg-icon lucide-link",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Move to new window",
+          "section": "open",
+          "icon": "svg-icon lucide-picture-in-picture",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         }
+        ]
+       }
+      ]
+     },
+     "activeAfterRightClickOnInactive": [
+      "Beta.md"
+     ]
+    },
+    "s03-close-others": {
+     "ok": true,
+     "ms": 2687,
+     "before": [
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Alpha.md",
+       "title": "Alpha",
+       "pinned": false,
+       "group": null,
+       "active": false,
+       "popout": false
+      },
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Beta.md",
+       "title": "Beta",
+       "pinned": false,
+       "group": null,
+       "active": false,
+       "popout": false
+      },
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Folder/Gamma.md",
+       "title": "Gamma",
+       "pinned": false,
+       "group": null,
+       "active": true,
+       "popout": false
+      }
+     ],
+     "clicked": {
+      "clicked": "Close others"
+     },
+     "after": [
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Beta.md",
+       "title": "Beta",
+       "pinned": false,
+       "group": null,
+       "active": true,
+       "popout": false
+      }
+     ],
+     "ui": {
+      "menus": 0,
+      "modals": [],
+      "prompts": [],
+      "notices": [],
+      "bodyCls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-focused",
+      "focus": "div.cm-content cm-lineWrapping"
+     }
+    },
+    "s04-close-all": {
+     "ok": true,
+     "ms": 3188,
+     "before": [
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Alpha.md",
+       "title": "Alpha",
+       "pinned": false,
+       "group": null,
+       "active": false,
+       "popout": false
+      },
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Beta.md",
+       "title": "Beta",
+       "pinned": false,
+       "group": null,
+       "active": true,
+       "popout": false
+      },
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Folder/Gamma.md",
+       "title": "Gamma",
+       "pinned": false,
+       "group": null,
+       "active": false,
+       "popout": false
+      }
+     ],
+     "clicked": {
+      "clicked": "Close all"
+     },
+     "after": [
+      {
+       "type": "empty",
+       "deferred": false,
+       "file": null,
+       "title": "New tab",
+       "pinned": false,
+       "group": null,
+       "active": true,
+       "popout": false
+      }
+     ],
+     "headers": [
+      {
+       "label": "New tab",
+       "type": "empty",
+       "cls": "workspace-tab-header tappable mod-active is-active",
+       "inRoot": true,
+       "inSide": false,
+       "status": [],
+       "closeBtn": true,
+       "closeBtnShown": true
+      }
+     ],
+     "ui": {
+      "menus": 0,
+      "modals": [],
+      "prompts": [],
+      "notices": [],
+      "bodyCls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-focused",
+      "focus": "body.theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-focused"
+     }
+    },
+    "s05-pin": {
+     "ok": true,
+     "ms": 6336,
+     "before": [
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Alpha.md",
+       "title": "Alpha",
+       "pinned": false,
+       "group": null,
+       "active": true,
+       "popout": false
+      },
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Beta.md",
+       "title": "Beta",
+       "pinned": false,
+       "group": null,
+       "active": false,
+       "popout": false
+      }
+     ],
+     "clicked": {
+      "clicked": "Pin"
+     },
+     "afterPin": {
+      "leaves": [
+       {
+        "type": "markdown",
+        "deferred": false,
+        "file": "Alpha.md",
+        "title": "Alpha",
+        "pinned": true,
+        "group": null,
+        "active": true,
+        "popout": false
+       },
+       {
+        "type": "markdown",
+        "deferred": false,
+        "file": "Beta.md",
+        "title": "Beta",
+        "pinned": false,
+        "group": null,
+        "active": false,
+        "popout": false
+       }
+      ],
+      "viewState": {
+       "type": "markdown",
+       "state": {
+        "file": "Alpha.md",
+        "mode": "source",
+        "source": false
+       },
+       "pinned": true,
+       "icon": "lucide-file",
+       "title": "Alpha"
+      },
+      "headers": [
+       {
+        "label": "Alpha",
+        "type": "markdown",
+        "cls": "workspace-tab-header tappable mod-active is-active",
+        "inRoot": true,
+        "inSide": false,
+        "status": [
+         {
+          "cls": "workspace-tab-header-status-icon mod-pinned",
+          "svg": "svg-icon lucide-pin",
+          "aria": "Unpin"
+         }
+        ],
+        "closeBtn": true,
+        "closeBtnShown": false
+       },
+       {
+        "label": "Beta",
+        "type": "markdown",
+        "cls": "workspace-tab-header tappable",
+        "inRoot": true,
+        "inSide": false,
+        "status": [],
+        "closeBtn": true,
+        "closeBtnShown": false
+       }
+      ],
+      "pinHtml": "<div class=\"workspace-tab-header-status-container\"><div class=\"workspace-tab-header-status-icon mod-pinned\" aria-label=\"Unpin\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-pin\"></path></path></svg></div></div>"
+     },
+     "menuPinned": {
+      "menus": [
+       {
+        "cls": "menu",
+        "rect": [
+         154,
+         2,
+         202,
+         800
+        ],
+        "rows": [
+         {
+          "title": "Close",
+          "section": "close",
+          "icon": "svg-icon lucide-x",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Close others",
+          "section": "close",
+          "icon": "svg-icon lucide-x",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Close tabs after",
+          "section": "close",
+          "icon": "svg-icon lucide-x",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Close all",
+          "section": "close",
+          "icon": "svg-icon lucide-x",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Unpin",
+          "section": "pane",
+          "icon": "svg-icon lucide-pin",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Link with tab...",
+          "section": "pane",
+          "icon": "svg-icon lucide-link",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Backlinks in document",
+          "section": "pane",
+          "icon": "svg-icon links-coming-in",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Reading view",
+          "section": "pane",
+          "icon": "svg-icon lucide-book-open",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Source mode",
+          "section": "pane",
+          "icon": "svg-icon lucide-code-2",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Move to new window",
+          "section": "open",
+          "icon": "svg-icon lucide-picture-in-picture",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Split right",
+          "section": "open",
+          "icon": "svg-icon lucide-separator-vertical",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Split down",
+          "section": "open",
+          "icon": "svg-icon lucide-separator-horizontal",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Open in new window",
+          "section": "open",
+          "icon": "svg-icon lucide-picture-in-picture-2",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Rename...",
+          "section": "action",
+          "icon": "svg-icon lucide-edit-3",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Move file to...",
+          "section": "action",
+          "icon": "svg-icon lucide-folder-tree",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Bookmark...",
+          "section": "action",
+          "icon": "svg-icon lucide-bookmark",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Merge entire file with...",
+          "section": "action",
+          "icon": "svg-icon lucide-git-merge",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Add file property",
+          "section": "action",
+          "icon": "svg-icon lucide-plus-circle",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Export to PDF...",
+          "section": "action",
+          "icon": "svg-icon lucide-file-down",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Find...",
+          "section": "find",
+          "icon": "svg-icon lucide-file-search",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Replace...",
+          "section": "find",
+          "icon": "svg-icon lucide-file-search",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Copy path",
+          "section": null,
+          "icon": "svg-icon lucide-clipboard",
+          "cls": "menu-item tappable has-submenu",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": true,
+          "extra": [
+           "menu-item-icon mod-submenu"
+          ],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Open version history",
+          "section": "view",
+          "icon": "svg-icon lucide-history",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Open linked view",
+          "section": null,
+          "icon": "svg-icon lucide-link",
+          "cls": "menu-item tappable has-submenu",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": true,
+          "extra": [
+           "menu-item-icon mod-submenu"
+          ],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Open in default app",
+          "section": "system",
+          "icon": "svg-icon lucide-arrow-up-right",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Show in system explorer",
+          "section": "system",
+          "icon": "svg-icon lucide-arrow-up-right",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Reveal file in navigation",
+          "section": "system",
+          "icon": "svg-icon lucide-folder-open",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": false
+         },
+         {
+          "title": "Delete file",
+          "section": "danger",
+          "icon": "svg-icon lucide-trash-2",
+          "cls": "menu-item tappable is-warning",
+          "disabled": false,
+          "warning": true,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         }
+        ]
+       }
+      ]
+     },
+     "pinIcon": {
+      "cls": "workspace-tab-header-status-icon mod-pinned",
+      "aria": "Unpin",
+      "rect": [
+       225.0215301513672,
+       11.648706436157227,
+       19.97844696044922,
+       19.97844696044922
+      ],
+      "cx": 235.0107536315918,
+      "cy": 21.637929916381836,
+      "cursor": "default"
+     },
+     "afterCtrlW": {
+      "leaves": [
+       {
+        "type": "markdown",
+        "deferred": false,
+        "file": "Alpha.md",
+        "title": "Alpha",
+        "pinned": false,
+        "group": null,
+        "active": true,
+        "popout": false
+       },
+       {
+        "type": "markdown",
+        "deferred": false,
+        "file": "Beta.md",
+        "title": "Beta",
+        "pinned": false,
+        "group": null,
+        "active": false,
+        "popout": false
+       }
+      ],
+      "ui": {
+       "menus": 0,
+       "modals": [],
+       "prompts": [],
+       "notices": [],
+       "bodyCls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-focused",
+       "focus": "div.cm-content cm-lineWrapping"
+      }
+     },
+     "ranClose": true,
+     "afterCloseCmd": {
+      "leaves": [
+       {
+        "type": "markdown",
+        "deferred": false,
+        "file": "Beta.md",
+        "title": "Beta",
+        "pinned": false,
+        "group": null,
+        "active": true,
+        "popout": false
+       }
+      ],
+      "ui": {
+       "menus": 0,
+       "modals": [],
+       "prompts": [],
+       "notices": [],
+       "bodyCls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-focused",
+       "focus": "div.cm-content cm-lineWrapping"
+      }
+     },
+     "afterCloseButton": null,
+     "unpin": null
+    },
+    "s06-link-with-tab": {
+     "ok": true,
+     "ms": 3968,
+     "before": [
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Alpha.md",
+       "title": "Alpha",
+       "pinned": false,
+       "group": null,
+       "active": true,
+       "popout": false
+      },
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Beta.md",
+       "title": "Beta",
+       "pinned": false,
+       "group": null,
+       "active": false,
+       "popout": false
+      }
+     ],
+     "clicked": {
+      "clicked": "Link with tab..."
+     },
+     "ui": {
+      "menus": 0,
+      "modals": [],
+      "prompts": [],
+      "notices": [],
+      "bodyCls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-focused",
+      "focus": "body.theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-focused"
+     },
+     "dom": {
+      "bodyCls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-focused",
+      "novel": [
+       "div.titlebar",
+       "script.",
+       "script.",
+       "script.",
+       "script.",
+       "script.",
+       "script.",
+       "script.",
+       "script.",
+       "script.",
+       "script.",
+       "script.",
+       "script.",
+       "script.",
+       "div.app-container"
+      ],
+      "overlays": [],
+      "leafCls": [
+       "workspace-leaf mod-active",
+       "workspace-leaf"
+      ],
+      "tooltips": []
+     },
+     "hovered": {
+      "ui": {
+       "menus": 0,
+       "modals": [],
+       "prompts": [],
+       "notices": [],
+       "bodyCls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-focused",
+       "focus": "body.theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-focused"
+      },
+      "overlays": [],
+      "leafCls": [
+       "workspace-leaf mod-active",
+       "workspace-leaf"
+      ]
+     },
+     "afterEscape": {
+      "ui": {
+       "menus": 0,
+       "modals": [],
+       "prompts": [],
+       "notices": [],
+       "bodyCls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-focused",
+       "focus": "div.cm-content cm-lineWrapping"
+      },
+      "leaves": [
+       {
+        "type": "markdown",
+        "deferred": false,
+        "file": "Alpha.md",
+        "title": "Alpha",
+        "pinned": false,
+        "group": null,
+        "active": true,
+        "popout": false
+       },
+       {
+        "type": "markdown",
+        "deferred": false,
+        "file": "Beta.md",
+        "title": "Beta",
+        "pinned": false,
+        "group": null,
+        "active": false,
+        "popout": false
+       }
+      ],
+      "overlays": 0
+     }
+    },
+    "s07-empty-tab": {
+     "ok": true,
+     "ms": 3953,
+     "leaves": [
+      {
+       "type": "empty",
+       "deferred": false,
+       "file": null,
+       "title": "New tab",
+       "pinned": false,
+       "group": null,
+       "active": true,
+       "popout": false
+      }
+     ],
+     "header": {
+      "x": 51.9935302734375,
+      "y": 5.9913787841796875,
+      "w": 199.99998474121094,
+      "h": 34.310340881347656,
+      "cx": 151.99352264404297,
+      "cy": 23.146549224853516,
+      "label": "New tab"
+     },
+     "menus": [
+      {
+       "cls": "menu",
+       "rect": [
+        154,
+        25,
+        182,
+        188
+       ],
+       "rows": [
+        {
+         "title": "Close",
+         "section": "close",
+         "icon": "svg-icon lucide-x",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "sep": true,
+         "drawn": true
+        },
+        {
+         "title": "Pin",
+         "section": "pane",
+         "icon": "svg-icon lucide-pin",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Link with tab...",
+         "section": "pane",
+         "icon": "svg-icon lucide-link",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "sep": true,
+         "drawn": true
+        },
+        {
+         "title": "Move to new window",
+         "section": "open",
+         "icon": "svg-icon lucide-picture-in-picture",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Split right",
+         "section": "open",
+         "icon": "svg-icon lucide-separator-vertical",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        },
+        {
+         "title": "Split down",
+         "section": "open",
+         "icon": "svg-icon lucide-separator-horizontal",
+         "cls": "menu-item tappable",
+         "disabled": false,
+         "warning": false,
+         "checked": false,
+         "submenu": false,
+         "extra": [],
+         "drawn": true
+        }
+       ]
+      }
+     ],
+     "submenus": {},
+     "withOthers": {
+      "leaves": [
+       {
+        "type": "markdown",
+        "deferred": false,
+        "file": "Alpha.md",
+        "title": "Alpha",
+        "pinned": false,
+        "group": null,
+        "active": false,
+        "popout": false
+       },
+       {
+        "type": "empty",
+        "deferred": false,
+        "file": null,
+        "title": "New tab",
+        "pinned": false,
+        "group": null,
+        "active": true,
+        "popout": false
+       }
+      ],
+      "menus": [
+       {
+        "cls": "menu",
+        "rect": [
+         354,
+         25,
+         182,
+         238
+        ],
+        "rows": [
+         {
+          "title": "Close",
+          "section": "close",
+          "icon": "svg-icon lucide-x",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Close others",
+          "section": "close",
+          "icon": "svg-icon lucide-x",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Close all",
+          "section": "close",
+          "icon": "svg-icon lucide-x",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Pin",
+          "section": "pane",
+          "icon": "svg-icon lucide-pin",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Link with tab...",
+          "section": "pane",
+          "icon": "svg-icon lucide-link",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Move to new window",
+          "section": "open",
+          "icon": "svg-icon lucide-picture-in-picture",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Split right",
+          "section": "open",
+          "icon": "svg-icon lucide-separator-vertical",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Split down",
+          "section": "open",
+          "icon": "svg-icon lucide-separator-horizontal",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         }
+        ]
+       }
+      ]
+     }
+    },
+    "s08-canvas-base": {
+     "ok": true,
+     "ms": 7785,
+     "canvas": {
+      "leaves": [
+       {
+        "type": "canvas",
+        "deferred": false,
+        "file": "Board.canvas",
+        "title": "Board",
+        "pinned": false,
+        "group": null,
+        "active": true,
+        "popout": false
+       }
+      ],
+      "menus": [
+       {
+        "cls": "menu",
+        "rect": [
+         154,
+         25,
+         202,
+         550
+        ],
+        "rows": [
+         {
+          "title": "Close",
+          "section": "close",
+          "icon": "svg-icon lucide-x",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Pin",
+          "section": "pane",
+          "icon": "svg-icon lucide-pin",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Link with tab...",
+          "section": "pane",
+          "icon": "svg-icon lucide-link",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Move to new window",
+          "section": "open",
+          "icon": "svg-icon lucide-picture-in-picture",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Split right",
+          "section": "open",
+          "icon": "svg-icon lucide-separator-vertical",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Split down",
+          "section": "open",
+          "icon": "svg-icon lucide-separator-horizontal",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Open in new window",
+          "section": "open",
+          "icon": "svg-icon lucide-picture-in-picture-2",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Rename...",
+          "section": "action",
+          "icon": "svg-icon lucide-edit-3",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Move file to...",
+          "section": "action",
+          "icon": "svg-icon lucide-folder-tree",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Bookmark...",
+          "section": "action",
+          "icon": "svg-icon lucide-bookmark",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Export as image",
+          "section": "action",
+          "icon": "svg-icon lucide-image",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Copy path",
+          "section": null,
+          "icon": "svg-icon lucide-clipboard",
+          "cls": "menu-item tappable has-submenu",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": true,
+          "extra": [
+           "menu-item-icon mod-submenu"
+          ],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Open version history",
+          "section": "view",
+          "icon": "svg-icon lucide-history",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Open linked view",
+          "section": null,
+          "icon": "svg-icon lucide-link",
+          "cls": "menu-item tappable has-submenu",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": true,
+          "extra": [
+           "menu-item-icon mod-submenu"
+          ],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Open in default app",
+          "section": "system",
+          "icon": "svg-icon lucide-arrow-up-right",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Show in system explorer",
+          "section": "system",
+          "icon": "svg-icon lucide-arrow-up-right",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Reveal file in navigation",
+          "section": "system",
+          "icon": "svg-icon lucide-folder-open",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": false
+         },
+         {
+          "title": "Delete file",
+          "section": "danger",
+          "icon": "svg-icon lucide-trash-2",
+          "cls": "menu-item tappable is-warning",
+          "disabled": false,
+          "warning": true,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         }
+        ]
+       }
+      ],
+      "submenus": {
+       "Copy path": [
+        {
+         "cls": "menu",
+         "rect": [
+          352,
+          357,
+          158,
+          88
+         ],
+         "rows": [
+          {
+           "title": "as Obsidian URL",
+           "section": "copy",
+           "icon": "svg-icon lucide-link",
+           "cls": "menu-item tappable",
+           "disabled": false,
+           "warning": false,
+           "checked": false,
+           "submenu": false,
+           "extra": [],
+           "drawn": true
+          },
+          {
+           "title": "from vault folder",
+           "section": "copy",
+           "icon": "svg-icon vault",
+           "cls": "menu-item tappable",
+           "disabled": false,
+           "warning": false,
+           "checked": false,
+           "submenu": false,
+           "extra": [],
+           "drawn": true
+          },
+          {
+           "title": "from system root",
+           "section": "copy",
+           "icon": "svg-icon lucide-hard-drive",
+           "cls": "menu-item tappable",
+           "disabled": false,
+           "warning": false,
+           "checked": false,
+           "submenu": false,
+           "extra": [],
+           "drawn": true
+          }
+         ]
+        }
+       ],
+       "Open linked view": [
+        {
+         "cls": "menu",
+         "rect": [
+          352,
+          420,
+          147,
+          38
+         ],
+         "rows": [
+          {
+           "title": "Open backlinks",
+           "section": "linked",
+           "icon": "svg-icon links-coming-in",
+           "cls": "menu-item tappable",
+           "disabled": false,
+           "warning": false,
+           "checked": false,
+           "submenu": false,
+           "extra": [],
+           "drawn": true
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "base": {
+      "leaves": [
+       {
+        "type": "bases",
+        "deferred": false,
+        "file": "Table.base",
+        "title": "Table",
+        "pinned": false,
+        "group": null,
+        "active": true,
+        "popout": false
+       }
+      ],
+      "menus": [
+       {
+        "cls": "menu",
+        "rect": [
+         154,
+         25,
+         202,
+         525
+        ],
+        "rows": [
+         {
+          "title": "Close",
+          "section": "close",
+          "icon": "svg-icon lucide-x",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Pin",
+          "section": "pane",
+          "icon": "svg-icon lucide-pin",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Link with tab...",
+          "section": "pane",
+          "icon": "svg-icon lucide-link",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Move to new window",
+          "section": "open",
+          "icon": "svg-icon lucide-picture-in-picture",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Split right",
+          "section": "open",
+          "icon": "svg-icon lucide-separator-vertical",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Split down",
+          "section": "open",
+          "icon": "svg-icon lucide-separator-horizontal",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Open in new window",
+          "section": "open",
+          "icon": "svg-icon lucide-picture-in-picture-2",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Rename...",
+          "section": "action",
+          "icon": "svg-icon lucide-edit-3",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Move file to...",
+          "section": "action",
+          "icon": "svg-icon lucide-folder-tree",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Bookmark...",
+          "section": "action",
+          "icon": "svg-icon lucide-bookmark",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Copy path",
+          "section": null,
+          "icon": "svg-icon lucide-clipboard",
+          "cls": "menu-item tappable has-submenu",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": true,
+          "extra": [
+           "menu-item-icon mod-submenu"
+          ],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Open version history",
+          "section": "view",
+          "icon": "svg-icon lucide-history",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Open linked view",
+          "section": null,
+          "icon": "svg-icon lucide-link",
+          "cls": "menu-item tappable has-submenu",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": true,
+          "extra": [
+           "menu-item-icon mod-submenu"
+          ],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Open in default app",
+          "section": "system",
+          "icon": "svg-icon lucide-arrow-up-right",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Show in system explorer",
+          "section": "system",
+          "icon": "svg-icon lucide-arrow-up-right",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Reveal file in navigation",
+          "section": "system",
+          "icon": "svg-icon lucide-folder-open",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": false
+         },
+         {
+          "title": "Delete file",
+          "section": "danger",
+          "icon": "svg-icon lucide-trash-2",
+          "cls": "menu-item tappable is-warning",
+          "disabled": false,
+          "warning": true,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         }
+        ]
+       }
+      ],
+      "submenus": {
+       "Copy path": [
+        {
+         "cls": "menu",
+         "rect": [
+          352,
+          332,
+          158,
+          88
+         ],
+         "rows": [
+          {
+           "title": "as Obsidian URL",
+           "section": "copy",
+           "icon": "svg-icon lucide-link",
+           "cls": "menu-item tappable",
+           "disabled": false,
+           "warning": false,
+           "checked": false,
+           "submenu": false,
+           "extra": [],
+           "drawn": true
+          },
+          {
+           "title": "from vault folder",
+           "section": "copy",
+           "icon": "svg-icon vault",
+           "cls": "menu-item tappable",
+           "disabled": false,
+           "warning": false,
+           "checked": false,
+           "submenu": false,
+           "extra": [],
+           "drawn": true
+          },
+          {
+           "title": "from system root",
+           "section": "copy",
+           "icon": "svg-icon lucide-hard-drive",
+           "cls": "menu-item tappable",
+           "disabled": false,
+           "warning": false,
+           "checked": false,
+           "submenu": false,
+           "extra": [],
+           "drawn": true
+          }
+         ]
+        }
+       ],
+       "Open linked view": [
+        {
+         "cls": "menu",
+         "rect": [
+          352,
+          395,
+          147,
+          38
+         ],
+         "rows": [
+          {
+           "title": "Open backlinks",
+           "section": "linked",
+           "icon": "svg-icon links-coming-in",
+           "cls": "menu-item tappable",
+           "disabled": false,
+           "warning": false,
+           "checked": false,
+           "submenu": false,
+           "extra": [],
+           "drawn": true
+          }
+         ]
+        }
+       ]
+      }
+     }
+    },
+    "s09-sidebar": {
+     "ok": true,
+     "ms": 5932,
+     "setup": [
+      {
+       "label": "Backlinks",
+       "type": "backlink",
+       "cls": "workspace-tab-header tappable is-active"
+      },
+      {
+       "label": "Outgoing links",
+       "type": "outgoing-link",
+       "cls": "workspace-tab-header tappable"
+      },
+      {
+       "label": "Tags",
+       "type": "tag",
+       "cls": "workspace-tab-header tappable"
+      },
+      {
+       "label": "All properties",
+       "type": "all-properties",
+       "cls": "workspace-tab-header tappable"
+      },
+      {
+       "label": "Outline",
+       "type": "outline",
+       "cls": "workspace-tab-header tappable"
+      }
+     ],
+     "backlink": {
+      "menus": [
+       {
+        "cls": "menu",
+        "rect": [
+         748,
+         21,
+         182,
+         188
+        ],
+        "rows": [
+         {
+          "title": "Close",
+          "section": "close",
+          "icon": "svg-icon lucide-x",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Pin",
+          "section": "pane",
+          "icon": "svg-icon lucide-pin",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Link with tab...",
+          "section": "pane",
+          "icon": "svg-icon lucide-link",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Move to new window",
+          "section": "open",
+          "icon": "svg-icon lucide-picture-in-picture",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Split right",
+          "section": "open",
+          "icon": "svg-icon lucide-separator-vertical",
+          "cls": "menu-item tappable is-disabled",
+          "disabled": true,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Split down",
+          "section": "open",
+          "icon": "svg-icon lucide-separator-horizontal",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         }
+        ]
+       }
+      ],
+      "submenus": {}
+     },
+     "outline": {
+      "menus": [
+       {
+        "cls": "menu",
+        "rect": [
+         685,
+         21,
+         182,
+         138
+        ],
+        "rows": [
+         {
+          "title": "Close",
+          "section": "close",
+          "icon": "svg-icon lucide-x",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Pin",
+          "section": "pane",
+          "icon": "svg-icon lucide-pin",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Link with tab...",
+          "section": "pane",
+          "icon": "svg-icon lucide-link",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Move to new window",
+          "section": "open",
+          "icon": "svg-icon lucide-picture-in-picture",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         }
+        ]
+       }
+      ],
+      "submenus": {}
+     },
+     "fileExplorer": {
+      "menus": [
+       {
+        "cls": "menu",
+        "rect": [
+         68,
+         21,
+         86,
+         38
+        ],
+        "rows": [
+         {
+          "title": "Close",
+          "section": "close",
+          "icon": "svg-icon lucide-x",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         }
+        ]
+       }
+      ]
+     }
+    },
+    "s10-move-to-new-window": {
+     "ok": true,
+     "ms": 19193,
+     "before": [
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Alpha.md",
+       "title": "Alpha",
+       "pinned": false,
+       "group": null,
+       "active": true,
+       "popout": false
+      },
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Beta.md",
+       "title": "Beta",
+       "pinned": false,
+       "group": null,
+       "active": false,
+       "popout": false
+      }
+     ],
+     "clicked": {
+      "clicked": "Move to new window"
+     },
+     "after": {
+      "all": [
+       {
+        "type": "markdown",
+        "deferred": false,
+        "file": "Beta.md",
+        "title": "Beta",
+        "pinned": false,
+        "group": null,
+        "active": false,
+        "popout": false
+       },
+       {
+        "type": "file-explorer",
+        "deferred": false,
+        "file": null,
+        "title": "Files",
+        "pinned": false,
+        "group": null,
+        "active": false,
+        "popout": false
+       },
+       {
+        "type": "search",
+        "deferred": false,
+        "file": null,
+        "title": "Search",
+        "pinned": false,
+        "group": null,
+        "active": false,
+        "popout": false
+       },
+       {
+        "type": "bookmarks",
+        "deferred": false,
+        "file": null,
+        "title": "Bookmarks",
+        "pinned": false,
+        "group": null,
+        "active": false,
+        "popout": false
+       },
+       {
+        "type": "backlink",
+        "deferred": false,
+        "file": "Alpha.md",
+        "title": "Backlinks",
+        "pinned": false,
+        "group": null,
+        "active": false,
+        "popout": false
+       },
+       {
+        "type": "outgoing-link",
+        "deferred": false,
+        "file": "Alpha.md",
+        "title": "Outgoing links",
+        "pinned": false,
+        "group": null,
+        "active": false,
+        "popout": false
+       },
+       {
+        "type": "tag",
+        "deferred": false,
+        "file": null,
+        "title": "Tags",
+        "pinned": false,
+        "group": null,
+        "active": false,
+        "popout": false
+       },
+       {
+        "type": "all-properties",
+        "deferred": false,
+        "file": null,
+        "title": "All properties",
+        "pinned": false,
+        "group": null,
+        "active": false,
+        "popout": false
+       },
+       {
+        "type": "outline",
+        "deferred": false,
+        "file": "Alpha.md",
+        "title": "Outline",
+        "pinned": false,
+        "group": null,
+        "active": false,
+        "popout": false
+       },
+       {
+        "type": "markdown",
+        "deferred": false,
+        "file": "Alpha.md",
+        "title": "Alpha",
+        "pinned": false,
+        "group": null,
+        "active": true,
+        "popout": true
+       }
+      ],
+      "root": [
+       {
+        "type": "markdown",
+        "deferred": false,
+        "file": "Beta.md",
+        "title": "Beta",
+        "pinned": false,
+        "group": null,
+        "active": false,
+        "popout": false
+       }
+      ],
+      "floating": 1
+     },
+     "popoutTarget": true,
+     "popTitle": "Alpha - tabmenu - Obsidian 1.15.0",
+     "popoutMenu": {
+      "menus": [
+       {
+        "cls": "menu",
+        "rect": [
+         110,
+         2,
+         202,
+         737
+        ],
+        "rows": [
+         {
+          "title": "Close",
+          "section": "close",
+          "icon": "svg-icon lucide-x",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Pin",
+          "section": "pane",
+          "icon": "svg-icon lucide-pin",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Link with tab...",
+          "section": "pane",
+          "icon": "svg-icon lucide-link",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Backlinks in document",
+          "section": "pane",
+          "icon": "svg-icon links-coming-in",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Reading view",
+          "section": "pane",
+          "icon": "svg-icon lucide-book-open",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Source mode",
+          "section": "pane",
+          "icon": "svg-icon lucide-code-2",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Move to new window",
+          "section": "open",
+          "icon": "svg-icon lucide-picture-in-picture",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Split right",
+          "section": "open",
+          "icon": "svg-icon lucide-separator-vertical",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Split down",
+          "section": "open",
+          "icon": "svg-icon lucide-separator-horizontal",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Open in new window",
+          "section": "open",
+          "icon": "svg-icon lucide-picture-in-picture-2",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Rename...",
+          "section": "action",
+          "icon": "svg-icon lucide-edit-3",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Move file to...",
+          "section": "action",
+          "icon": "svg-icon lucide-folder-tree",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Bookmark...",
+          "section": "action",
+          "icon": "svg-icon lucide-bookmark",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Merge entire file with...",
+          "section": "action",
+          "icon": "svg-icon lucide-git-merge",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Add file property",
+          "section": "action",
+          "icon": "svg-icon lucide-plus-circle",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Export to PDF...",
+          "section": "action",
+          "icon": "svg-icon lucide-file-down",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Find...",
+          "section": "find",
+          "icon": "svg-icon lucide-file-search",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Replace...",
+          "section": "find",
+          "icon": "svg-icon lucide-file-search",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Copy path",
+          "section": null,
+          "icon": "svg-icon lucide-clipboard",
+          "cls": "menu-item tappable has-submenu",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": true,
+          "extra": [
+           "menu-item-icon mod-submenu"
+          ],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Open version history",
+          "section": "view",
+          "icon": "svg-icon lucide-history",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Open linked view",
+          "section": null,
+          "icon": "svg-icon lucide-link",
+          "cls": "menu-item tappable has-submenu",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": true,
+          "extra": [
+           "menu-item-icon mod-submenu"
+          ],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "title": "Open in default app",
+          "section": "system",
+          "icon": "svg-icon lucide-arrow-up-right",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Show in system explorer",
+          "section": "system",
+          "icon": "svg-icon lucide-arrow-up-right",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "title": "Reveal file in navigation",
+          "section": "system",
+          "icon": "svg-icon lucide-folder-open",
+          "cls": "menu-item tappable",
+          "disabled": false,
+          "warning": false,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": true
+         },
+         {
+          "sep": true,
+          "drawn": false
+         },
+         {
+          "title": "Delete file",
+          "section": "danger",
+          "icon": "svg-icon lucide-trash-2",
+          "cls": "menu-item tappable is-warning",
+          "disabled": false,
+          "warning": true,
+          "checked": false,
+          "submenu": false,
+          "extra": [],
+          "drawn": true
+         }
+        ]
+       }
+      ],
+      "submenus": {
+       "Copy path": [
+        {
+         "cls": "menu",
+         "rect": [
+          308,
+          521,
+          158,
+          88
+         ],
+         "rows": [
+          {
+           "title": "as Obsidian URL",
+           "section": "copy",
+           "icon": "svg-icon lucide-link",
+           "cls": "menu-item tappable",
+           "disabled": false,
+           "warning": false,
+           "checked": false,
+           "submenu": false,
+           "extra": [],
+           "drawn": true
+          },
+          {
+           "title": "from vault folder",
+           "section": "copy",
+           "icon": "svg-icon vault",
+           "cls": "menu-item tappable",
+           "disabled": false,
+           "warning": false,
+           "checked": false,
+           "submenu": false,
+           "extra": [],
+           "drawn": true
+          },
+          {
+           "title": "from system root",
+           "section": "copy",
+           "icon": "svg-icon lucide-hard-drive",
+           "cls": "menu-item tappable",
+           "disabled": false,
+           "warning": false,
+           "checked": false,
+           "submenu": false,
+           "extra": [],
+           "drawn": true
+          }
+         ]
+        }
+       ],
+       "Open linked view": [
+        {
+         "cls": "menu",
+         "rect": [
+          308,
+          584,
+          177,
+          138
+         ],
+         "rows": [
+          {
+           "title": "Open local graph",
+           "section": "linked",
+           "icon": "svg-icon lucide-git-fork",
+           "cls": "menu-item tappable",
+           "disabled": false,
+           "warning": false,
+           "checked": false,
+           "submenu": false,
+           "extra": [],
+           "drawn": true
+          },
+          {
+           "title": "Open backlinks",
+           "section": "linked",
+           "icon": "svg-icon links-coming-in",
+           "cls": "menu-item tappable",
+           "disabled": false,
+           "warning": false,
+           "checked": false,
+           "submenu": false,
+           "extra": [],
+           "drawn": true
+          },
+          {
+           "title": "Open outgoing links",
+           "section": "linked",
+           "icon": "svg-icon links-going-out",
+           "cls": "menu-item tappable",
+           "disabled": false,
+           "warning": false,
+           "checked": false,
+           "submenu": false,
+           "extra": [],
+           "drawn": true
+          },
+          {
+           "title": "Open file properties",
+           "section": "linked",
+           "icon": "svg-icon lucide-info",
+           "cls": "menu-item tappable",
+           "disabled": false,
+           "warning": false,
+           "checked": false,
+           "submenu": false,
+           "extra": [],
+           "drawn": true
+          },
+          {
+           "title": "Open outline",
+           "section": "linked",
+           "icon": "svg-icon lucide-list",
+           "cls": "menu-item tappable",
+           "disabled": false,
+           "warning": false,
+           "checked": false,
+           "submenu": false,
+           "extra": [],
+           "drawn": true
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "popoutMoveClick": {
+      "clicked": "Move to new window"
+     },
+     "popoutMoveAfter": {
+      "newTargets": 1,
+      "floating": 1,
+      "leaves": [
+       {
+        "type": "markdown",
+        "deferred": false,
+        "file": "Beta.md",
+        "title": "Beta",
+        "pinned": false,
+        "group": null,
+        "active": false,
+        "popout": false
+       },
+       {
+        "type": "file-explorer",
+        "deferred": false,
+        "file": null,
+        "title": "Files",
+        "pinned": false,
+        "group": null,
+        "active": false,
+        "popout": false
+       },
+       {
+        "type": "search",
+        "deferred": false,
+        "file": null,
+        "title": "Search",
+        "pinned": false,
+        "group": null,
+        "active": false,
+        "popout": false
+       },
+       {
+        "type": "bookmarks",
+        "deferred": false,
+        "file": null,
+        "title": "Bookmarks",
+        "pinned": false,
+        "group": null,
+        "active": false,
+        "popout": false
+       },
+       {
+        "type": "backlink",
+        "deferred": false,
+        "file": "Alpha.md",
+        "title": "Backlinks",
+        "pinned": false,
+        "group": null,
+        "active": false,
+        "popout": false
+       },
+       {
+        "type": "outgoing-link",
+        "deferred": false,
+        "file": "Alpha.md",
+        "title": "Outgoing links",
+        "pinned": false,
+        "group": null,
+        "active": false,
+        "popout": false
+       },
+       {
+        "type": "tag",
+        "deferred": false,
+        "file": null,
+        "title": "Tags",
+        "pinned": false,
+        "group": null,
+        "active": false,
+        "popout": false
+       },
+       {
+        "type": "all-properties",
+        "deferred": false,
+        "file": null,
+        "title": "All properties",
+        "pinned": false,
+        "group": null,
+        "active": false,
+        "popout": false
+       },
+       {
+        "type": "outline",
+        "deferred": false,
+        "file": "Alpha.md",
+        "title": "Outline",
+        "pinned": false,
+        "group": null,
+        "active": false,
+        "popout": false
+       },
+       {
+        "type": "markdown",
+        "deferred": false,
+        "file": "Alpha.md",
+        "title": "Alpha",
+        "pinned": false,
+        "group": null,
+        "active": true,
+        "popout": true
+       }
+      ]
+     },
+     "viaCommand": {
+      "before": [
+       {
+        "type": "markdown",
+        "deferred": false,
+        "file": "Alpha.md",
+        "title": "Alpha",
+        "pinned": false,
+        "group": null,
+        "active": true,
+        "popout": false
+       },
+       {
+        "type": "markdown",
+        "deferred": false,
+        "file": "Beta.md",
+        "title": "Beta",
+        "pinned": false,
+        "group": null,
+        "active": false,
+        "popout": false
+       }
+      ],
+      "after": {
+       "all": [
+        {
+         "type": "markdown",
+         "deferred": false,
+         "file": "Beta.md",
+         "title": "Beta",
+         "pinned": false,
+         "group": null,
+         "active": false,
+         "popout": false
+        },
+        {
+         "type": "file-explorer",
+         "deferred": false,
+         "file": null,
+         "title": "Files",
+         "pinned": false,
+         "group": null,
+         "active": false,
+         "popout": false
+        },
+        {
+         "type": "search",
+         "deferred": false,
+         "file": null,
+         "title": "Search",
+         "pinned": false,
+         "group": null,
+         "active": false,
+         "popout": false
+        },
+        {
+         "type": "bookmarks",
+         "deferred": false,
+         "file": null,
+         "title": "Bookmarks",
+         "pinned": false,
+         "group": null,
+         "active": false,
+         "popout": false
+        },
+        {
+         "type": "backlink",
+         "deferred": false,
+         "file": "Alpha.md",
+         "title": "Backlinks",
+         "pinned": false,
+         "group": null,
+         "active": false,
+         "popout": false
+        },
+        {
+         "type": "outgoing-link",
+         "deferred": false,
+         "file": "Alpha.md",
+         "title": "Outgoing links",
+         "pinned": false,
+         "group": null,
+         "active": false,
+         "popout": false
+        },
+        {
+         "type": "tag",
+         "deferred": false,
+         "file": null,
+         "title": "Tags",
+         "pinned": false,
+         "group": null,
+         "active": false,
+         "popout": false
+        },
+        {
+         "type": "all-properties",
+         "deferred": false,
+         "file": null,
+         "title": "All properties",
+         "pinned": false,
+         "group": null,
+         "active": false,
+         "popout": false
+        },
+        {
+         "type": "outline",
+         "deferred": false,
+         "file": "Alpha.md",
+         "title": "Outline",
+         "pinned": false,
+         "group": null,
+         "active": false,
+         "popout": false
+        },
+        {
+         "type": "markdown",
+         "deferred": false,
+         "file": "Alpha.md",
+         "title": "Alpha",
+         "pinned": false,
+         "group": null,
+         "active": true,
+         "popout": true
+        }
+       ],
+       "root": [
+        {
+         "type": "markdown",
+         "deferred": false,
+         "file": "Beta.md",
+         "title": "Beta",
+         "pinned": false,
+         "group": null,
+         "active": false,
+         "popout": false
+        }
+       ],
+       "floating": 1
+      }
+     }
+    },
+    "s11-pin-behaviour": {
+     "ok": true,
+     "ms": 26723,
+     "setup": [
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Alpha.md",
+       "title": "Alpha",
+       "pinned": false,
+       "group": null,
+       "active": true,
+       "popout": false
+      },
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Beta.md",
+       "title": "Beta",
+       "pinned": false,
+       "group": null,
+       "active": false,
+       "popout": false
+      }
+     ],
+     "pinnedWorkspace": {
+      "mainRaw": "\"main\": {\n    \"id\": \"43e159e330bd18fa\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"59e4bf2271f17bd2\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"726a32fa984bda69\",\n            \"type\": \"leaf\",\n            \"pinned\": true,\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"pinned\": true,\n              \"icon\": \"lucide-file\",\n              \"title\": \"Alpha\"\n            }\n          },\n          {\n            \"id\": \"0d023b6abc26927a\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Beta.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Beta\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"vertical\"\n  },\n  "
+     },
+     "unpinClick": {
+      "clicked": "Unpin"
+     },
+     "unpinnedWorkspace": {
+      "mainRaw": "\"main\": {\n    \"id\": \"43e159e330bd18fa\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"59e4bf2271f17bd2\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"726a32fa984bda69\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Alpha.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Alpha\"\n            }\n          },\n          {\n            \"id\": \"0d023b6abc26927a\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Beta.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Beta\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"vertical\"\n  },\n  "
+     },
+     "pinnedHeader": {
+      "tag": "div",
+      "cls": "workspace-tab-header tappable mod-active is-active",
+      "aria": "Alpha",
+      "display": "flex",
+      "children": [
+       {
+        "tag": "div",
+        "cls": "workspace-tab-header-inner",
+        "aria": null,
+        "display": "flex",
+        "children": [
+         {
+          "tag": "div",
+          "cls": "workspace-tab-header-inner-icon",
+          "aria": null,
+          "display": "none",
+          "children": [
+           {
+            "tag": "svg",
+            "cls": "svg-icon lucide-file",
+            "aria": null,
+            "display": "inline",
+            "children": []
+           }
+          ]
+         },
+         {
+          "tag": "div",
+          "cls": "workspace-tab-header-inner-title",
+          "aria": null,
+          "display": "block",
+          "children": []
+         },
+         {
+          "tag": "div",
+          "cls": "workspace-tab-header-status-container",
+          "aria": null,
+          "display": "flex",
+          "children": [
+           {
+            "tag": "div",
+            "cls": "workspace-tab-header-status-icon mod-pinned",
+            "aria": "Unpin",
+            "display": "flex",
+            "children": [
+             {
+              "tag": "svg",
+              "cls": "svg-icon lucide-pin",
+              "aria": null,
+              "display": "block",
+              "children": []
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "tag": "div",
+          "cls": "workspace-tab-header-inner-close-button",
+          "aria": "Close",
+          "display": "none",
+          "children": [
+           {
+            "tag": "svg",
+            "cls": "svg-icon lucide-x",
+            "aria": null,
+            "display": "inline",
+            "children": []
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "pinHoverTooltip": [],
+     "afterPinIconClick": {
+      "cursor": "default",
+      "pinned": [
+       [
+        "Alpha",
+        false
+       ],
+       [
+        "Beta",
+        false
+       ]
+      ]
+     },
+     "setup2": [
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Alpha.md",
+       "title": "Alpha",
+       "pinned": true,
+       "group": null,
+       "active": true,
+       "popout": false
+      }
+     ],
+     "followLink": true,
+     "afterFollowLink": [
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Alpha.md",
+       "title": "Alpha",
+       "pinned": true,
+       "group": null,
+       "active": false,
+       "popout": false
+      },
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Beta.md",
+       "title": "Beta",
+       "pinned": false,
+       "group": null,
+       "active": true,
+       "popout": false
+      }
+     ],
+     "afterQuickSwitcher": [
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Alpha.md",
+       "title": "Alpha",
+       "pinned": true,
+       "group": null,
+       "active": false,
+       "popout": false
+      },
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Folder/Gamma.md",
+       "title": "Gamma",
+       "pinned": false,
+       "group": null,
+       "active": true,
+       "popout": false
+      }
+     ],
+     "afterReadingLinkClick": [
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Alpha.md",
+       "title": "Alpha",
+       "pinned": true,
+       "group": null,
+       "active": false,
+       "popout": false
+      },
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Beta.md",
+       "title": "Beta",
+       "pinned": false,
+       "group": null,
+       "active": true,
+       "popout": false
+      }
+     ],
+     "setup3": [
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Alpha.md",
+       "title": "Alpha",
+       "pinned": true,
+       "group": null,
+       "active": false,
+       "popout": false
+      },
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Beta.md",
+       "title": "Beta",
+       "pinned": false,
+       "group": null,
+       "active": true,
+       "popout": false
+      },
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Folder/Gamma.md",
+       "title": "Gamma",
+       "pinned": false,
+       "group": null,
+       "active": false,
+       "popout": false
+      }
+     ],
+     "closeOthersClick": {
+      "clicked": "Close others"
+     },
+     "afterCloseOthersWithPinned": [
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Alpha.md",
+       "title": "Alpha",
+       "pinned": true,
+       "group": null,
+       "active": false,
+       "popout": false
+      },
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Beta.md",
+       "title": "Beta",
+       "pinned": false,
+       "group": null,
+       "active": true,
+       "popout": false
+      }
+     ],
+     "setup4": [
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Alpha.md",
+       "title": "Alpha",
+       "pinned": true,
+       "group": null,
+       "active": false,
+       "popout": false
+      },
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Beta.md",
+       "title": "Beta",
+       "pinned": false,
+       "group": null,
+       "active": true,
+       "popout": false
+      },
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Folder/Gamma.md",
+       "title": "Gamma",
+       "pinned": false,
+       "group": null,
+       "active": false,
+       "popout": false
+      }
+     ],
+     "closeAllClick": {
+      "clicked": "Close all"
+     },
+     "afterCloseAllWithPinned": [
+      {
+       "type": "markdown",
+       "deferred": false,
+       "file": "Alpha.md",
+       "title": "Alpha",
+       "pinned": true,
+       "group": null,
+       "active": true,
+       "popout": false
+      }
+     ]
+    }
+   },
+   "order": [
+    "s00-context",
+    "s01-single-md",
+    "s02-three-md",
+    "s03-close-others",
+    "s04-close-all",
+    "s05-pin",
+    "s06-link-with-tab",
+    "s07-empty-tab",
+    "s08-canvas-base",
+    "s09-sidebar",
+    "s10-move-to-new-window",
+    "s11-pin-behaviour"
+   ],
+   "elapsedMs": 87065,
+   "vaultPath": "<scratch>/tabmenu",
+   "version": {
+    "title": "New tab - tabmenu - Obsidian 1.15.0",
+    "apiVersion": null,
+    "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+    "win": [
+     1024,
+     800
+    ]
+   }
+  }
+ }
+}

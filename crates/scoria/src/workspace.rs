@@ -334,6 +334,7 @@ pub const RUNNABLE: &[&str] = &[
     "workspace:new-tab",
     "workspace:close",
     "workspace:close-others",
+    "workspace:toggle-pin",
     "workspace:next-tab",
     "workspace:previous-tab",
     "workspace:goto-tab-1",
@@ -1617,6 +1618,10 @@ struct Tab {
     /// leaf is the file alone (observed), and the PDF view remembers its
     /// own place for the session.
     view_state: Option<Value>,
+    /// Pinned (`workspace:toggle-pin`, the tab header's Pin): read from
+    /// and written to the leaf's `pinned`, and kept by the tab whatever
+    /// file it moves on to.
+    pinned: bool,
 }
 
 impl Tab {
@@ -1628,6 +1633,7 @@ impl Tab {
             history_ix: 0,
             leaf: None,
             view_state: None,
+            pinned: false,
         }
     }
 
@@ -2258,6 +2264,11 @@ struct TabDragPreview {
     title: SharedString,
     /// Where in the tab the press landed.
     grab: gpui::Point<gpui::Pixels>,
+    /// The window the tab was picked up in. gpui paints the active drag in
+    /// every window that draws a frame, each at its own last pointer, so
+    /// the window a cross-window drag lights up would otherwise show a
+    /// frozen ghost wherever the pointer last left it (seen on X11).
+    source: gpui::AnyWindowHandle,
 }
 
 /// From the pointer's hotspot to the drag ghost's top left corner. The
@@ -2267,7 +2278,10 @@ struct TabDragPreview {
 const DRAG_GHOST_GAP: f32 = 8.;
 
 impl Render for TabDragPreview {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        if window.window_handle() != self.source {
+            return div().into_any_element();
+        }
         let theme = cx.global::<Theme>().clone();
         // The offset is padding on a wrapper rather than a margin on the
         // card: the layout drops a root element's margin, and the card is
@@ -2301,6 +2315,7 @@ impl Render for TabDragPreview {
                     .text_ellipsis()
                     .child(self.title.clone()),
             )
+            .into_any_element()
     }
 }
 
@@ -5487,8 +5502,11 @@ impl Workspace {
                 }
             }
             "workspace:new-tab" => self.new_tab(cx),
+            // A pinned tab is unpinned by the close, not closed (observed).
+            "workspace:close" if self.active_tab_pinned() => self.toggle_pin(cx),
             "workspace:close" => self.close_tab(self.active_tab, cx),
             "workspace:close-others" => self.close_other_tabs(cx),
+            "workspace:toggle-pin" => self.toggle_pin(cx),
             "workspace:move-to-new-window" => self.move_to_new_window(window, cx),
             "workspace:open-in-new-window" => self.open_in_new_window(window, cx),
             "workspace:new-window" => {
@@ -6224,6 +6242,11 @@ impl Workspace {
             self.current = Some(path);
             return;
         };
+        // A pinned tab keeps its file: anything opened from it — a link
+        // followed, a switcher pick — goes to a new tab (observed).
+        if self.active_tab_pinned() && self.current.as_deref() != Some(path.as_str()) {
+            self.new_tab(cx);
+        }
         // The graph is a toggle, not a place a note can open in: a note
         // asked for from anywhere shows the note.
         if self.mode == ViewMode::Graph {
@@ -9395,6 +9418,89 @@ impl Workspace {
         cx.notify();
     }
 
+    /// A right click on tab `ix` of group `id`: the tab header's menu at
+    /// the click. The click leaves the active tab where it was (observed),
+    /// so the rows name their tab, and an inactive tab's menu is the short
+    /// one ([`file_menu::Target::Tab`]).
+    fn open_tab_menu(
+        &mut self,
+        id: u64,
+        ix: usize,
+        position: gpui::Point<Pixels>,
+        cx: &mut Context<Self>,
+    ) {
+        self.stash_active_group();
+        let Some(gix) = self.group_ix(id) else {
+            return;
+        };
+        let group = &self.groups[gix];
+        let Some(tab) = group.tabs.get(ix) else {
+            return;
+        };
+        self.file_menu = Some(file_menu::Menu {
+            position,
+            submenu: false,
+            anchor: Anchor::TopLeft,
+            target: file_menu::Target::Tab {
+                group: id,
+                ix,
+                path: tab.path.clone().unwrap_or_default(),
+                tabs: group.tabs.len(),
+                pinned: tab.pinned,
+                active: gix == self.active_group && ix == group.active_tab,
+            },
+        });
+        cx.notify();
+    }
+
+    /// A tab header row picked: its group made active, the rows that close
+    /// or move it acting on its index, the rest on the active tab — which
+    /// only an active tab's menu offers.
+    fn tab_menu_pick(
+        &mut self,
+        pick: Pick,
+        group: u64,
+        ix: usize,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.activate_group(group, cx);
+        if self.active_group_id() != group || ix >= self.tabs.len() {
+            return;
+        }
+        match pick {
+            Pick::CloseTab => self.close_tab(ix, cx),
+            Pick::CloseOthers => self.close_tabs_but(|i, t| i == ix || t.pinned, Some(ix), cx),
+            Pick::CloseAfter => self.close_tabs_but(|i, t| i <= ix || t.pinned, Some(ix), cx),
+            Pick::CloseAll => self.close_all_tabs(cx),
+            Pick::TogglePin => {
+                self.stash_active_tab();
+                self.tabs[ix].pinned = !self.tabs[ix].pinned;
+                self.stash_active_group();
+                cx.notify();
+            }
+            Pick::MoveToNewWindow => {
+                self.activate_tab(ix, cx);
+                self.move_to_new_window(window, cx);
+            }
+            _ => {}
+        }
+    }
+
+    /// `workspace:toggle-pin`: the active tab pinned or unpinned.
+    fn toggle_pin(&mut self, cx: &mut Context<Self>) {
+        self.stash_active_tab();
+        if let Some(tab) = self.tabs.get_mut(self.active_tab) {
+            tab.pinned = !tab.pinned;
+            self.stash_active_group();
+            cx.notify();
+        }
+    }
+
+    fn active_tab_pinned(&self) -> bool {
+        self.tabs.get(self.active_tab).is_some_and(|t| t.pinned)
+    }
+
     /// The view header's title, Obsidian's `.view-header-title`: a field
     /// that is editable where it stands, so a single click starts an edit
     /// (see [[Specification#The view-header title is an inline rename
@@ -9795,6 +9901,7 @@ impl Workspace {
         let view_state = slot
             .filter(|t| t.path == self.current)
             .and_then(|t| t.view_state.clone());
+        let pinned = slot.is_some_and(|t| t.pinned);
         let tab = Tab {
             path: self.current.clone(),
             mode: self.mode,
@@ -9802,6 +9909,7 @@ impl Workspace {
             history_ix: self.history_ix,
             leaf,
             view_state,
+            pinned,
         };
         match self.tabs.get_mut(self.active_tab) {
             Some(slot) => *slot = tab,
@@ -9964,17 +10072,72 @@ impl Workspace {
         }
     }
 
-    /// `workspace:close-others`: every tab but the active one.
+    /// `workspace:close-others`: every tab but the active one and the
+    /// pinned ones, which the tab header's Close others keeps (observed).
     fn close_other_tabs(&mut self, cx: &mut Context<Self>) {
+        let active = self.active_tab;
+        self.close_tabs_but(|i, t| i == active || t.pinned, Some(active), cx);
+    }
+
+    /// The tab header's "Close all": every tab of the active group but the
+    /// pinned ones, the first of which is left active (observed). With none
+    /// pinned they close one by one from the right, so the group goes the
+    /// way its last close takes it — the main area's only group left
+    /// holding an empty tab.
+    fn close_all_tabs(&mut self, cx: &mut Context<Self>) {
         self.stash_active_tab();
-        let keep = self.tabs.remove(self.active_tab);
-        let others = std::mem::take(&mut self.tabs);
-        for (ix, tab) in others.into_iter().enumerate() {
-            self.remember_closed(ix, tab);
+        if self.tabs.iter().any(|t| t.pinned) {
+            return self.close_tabs_but(|_, t| t.pinned, None, cx);
         }
-        self.tabs.push(keep);
-        self.active_tab = 0;
-        cx.notify();
+        let group = self.active_group_id();
+        for ix in (0..self.tabs.len()).rev() {
+            if self.active_group_id() != group {
+                break;
+            }
+            self.tabs[ix].pinned = false;
+            self.close_tab(ix, cx);
+        }
+    }
+
+    /// Closes every tab of the active group `keep` turns down, which must
+    /// keep one. `prefer` is the tab to leave active when it is kept; else
+    /// the active one stays if kept, else the first kept.
+    fn close_tabs_but(
+        &mut self,
+        keep: impl Fn(usize, &Tab) -> bool,
+        prefer: Option<usize>,
+        cx: &mut Context<Self>,
+    ) {
+        self.flush_save(cx);
+        self.stash_active_tab();
+        let old_active = self.active_tab;
+        let mut kept = Vec::new();
+        let (mut preferred, mut was_active) = (None, None);
+        for (i, tab) in std::mem::take(&mut self.tabs).into_iter().enumerate() {
+            if keep(i, &tab) {
+                if Some(i) == prefer {
+                    preferred = Some(kept.len());
+                }
+                if i == old_active {
+                    was_active = Some(kept.len());
+                }
+                kept.push(tab);
+            } else {
+                self.remember_closed(i, tab);
+            }
+        }
+        debug_assert!(!kept.is_empty());
+        if kept.is_empty() {
+            kept.push(Tab::empty(self.default_mode()));
+        }
+        self.tabs = kept;
+        let active = preferred.or(was_active).unwrap_or(0);
+        self.active_tab = active;
+        if was_active == Some(active) {
+            cx.notify();
+        } else {
+            self.load_tab(cx);
+        }
     }
 
     /// `workspace:undo-close-pane`: the most recently closed tab, back
@@ -10182,6 +10345,7 @@ impl Workspace {
                 .tabs
                 .get(self.active_tab)
                 .and_then(|t| t.view_state.clone()),
+            pinned: false,
         }
     }
 
@@ -10196,6 +10360,7 @@ impl Workspace {
             history_ix: 0,
             leaf: None,
             view_state: None,
+            pinned: false,
         }
     }
 
@@ -12124,6 +12289,7 @@ impl Workspace {
             )
             .children(tabs.iter().enumerate().map(|(ix, tab)| {
                 let active = ix == active_ix;
+                let pinned = tab.pinned;
                 let divider = !active && ix + 1 != active_ix;
                 let title = tab.title();
                 let drag = TabDrag {
@@ -12212,11 +12378,16 @@ impl Workspace {
                     }))
                     // Picking the tab up: the ghost is its title, and the
                     // workspace is told so every group shows its zones.
-                    .on_drag(drag, move |drag, grab, _, cx| {
+                    .on_drag(drag, move |drag, grab, window, cx| {
                         let picked = drag.clone();
                         this.update(cx, |w, cx| w.begin_tab_drag(picked, cx)).ok();
                         let title = drag.title.clone();
-                        cx.new(|_| TabDragPreview { title, grab })
+                        let source = window.window_handle();
+                        cx.new(|_| TabDragPreview {
+                            title,
+                            grab,
+                            source,
+                        })
                     })
                     // Where the tab is, for the strip's drop bar; a tab
                     // dropped on it lands at the bar, else in front of it.
@@ -12239,6 +12410,13 @@ impl Workspace {
                         cx.listener(move |this, _, _, cx| {
                             this.activate_group(group, cx);
                             this.close_tab(ix, cx)
+                        }),
+                    )
+                    .on_mouse_down(
+                        gpui::MouseButton::Right,
+                        cx.listener(move |this, e: &MouseDownEvent, _, cx| {
+                            cx.stop_propagation();
+                            this.open_tab_menu(group, ix, e.position, cx)
                         }),
                     )
                     // The inner box: the title and the close button, padded
@@ -12283,19 +12461,31 @@ impl Workspace {
                                     .items_center()
                                     .justify_center()
                                     .rounded(px(8.))
-                                    .when(!active, |d| {
+                                    // A pinned tab shows its pin in the
+                                    // close button's place, always, and a
+                                    // click on it unpins.
+                                    .when(!active && !pinned, |d| {
                                         d.invisible().group_hover("tab", |s| s.visible())
                                     })
                                     .on_click(cx.listener(move |this, _, _, cx| {
                                         cx.stop_propagation();
                                         this.activate_group(group, cx);
-                                        this.close_tab(ix, cx);
+                                        if pinned {
+                                            this.activate_tab(ix, cx);
+                                            this.toggle_pin(cx);
+                                        } else {
+                                            this.close_tab(ix, cx);
+                                        }
                                     }))
                                     .child(
-                                        icon("x", 14., theme.tokens.tab_text_color_focused_active)
-                                            .group_hover("tab-close", |s| {
-                                                s.text_color(theme.tokens.text_normal)
-                                            }),
+                                        icon(
+                                            if pinned { "pin" } else { "x" },
+                                            14.,
+                                            theme.tokens.tab_text_color_focused_active,
+                                        )
+                                        .group_hover("tab-close", |s| {
+                                            s.text_color(theme.tokens.text_normal)
+                                        }),
                                     ),
                             ),
                     )
@@ -13225,8 +13415,7 @@ impl Workspace {
         );
         file.insert("history_ix".into(), json!(self.history_ix));
 
-        let tab_json =
-            |t: &Tab| json!({"path": t.path, "mode": t.mode.as_str(), "title": t.title()});
+        let tab_json = |t: &Tab| json!({"path": t.path, "mode": t.mode.as_str(), "title": t.title(), "pinned": t.pinned});
         let tabs = json!({
             "active": self.active_tab,
             "items": self.tab_snapshots().iter().map(tab_json).collect::<Vec<Value>>(),
@@ -14248,12 +14437,27 @@ impl Workspace {
     ) {
         let path = target.path().to_string();
         match pick {
+            Pick::CloseTab
+            | Pick::CloseOthers
+            | Pick::CloseAfter
+            | Pick::CloseAll
+            | Pick::TogglePin
+            | Pick::MoveToNewWindow => {
+                if let file_menu::Target::Tab { group, ix, .. } = target {
+                    self.tab_menu_pick(pick, *group, *ix, window, cx);
+                }
+            }
+            Pick::AddFileProperty => self.run_command("markdown:add-metadata-property", window, cx),
+            Pick::Find => self.run_command("editor:open-search", window, cx),
+            Pick::Replace => self.run_command("editor:open-search-replace", window, cx),
             Pick::OpenInNewTab => self.open_in_new_tab(path, None, cx),
             Pick::OpenToRight => self.open_to_right(path, window, cx),
             // The view header's "Open in new window" copies the leaf, as
             // `workspace:open-in-new-window` does; a row's opens its file.
             Pick::OpenInNewWindow => match target {
-                file_menu::Target::View(_) => self.open_in_new_window(window, cx),
+                file_menu::Target::View(_) | file_menu::Target::Tab { .. } => {
+                    self.open_in_new_window(window, cx)
+                }
                 _ => self.open_path_in_new_window(path, window, cx),
             },
             // The view header's splits act on the group the header belongs
@@ -16598,7 +16802,12 @@ fn tab_from_leaf(
         .and_then(Value::as_str);
     let inner = leaf.get("state").and_then(|s| s.get("state"));
     let file = inner.and_then(|s| s.get("file")).and_then(Value::as_str);
-    let tab = match (view, file) {
+    let pinned = leaf
+        .get("state")
+        .and_then(|s| s.get("pinned"))
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    let mut tab = match (view, file) {
         (_, Some(file)) => {
             if !known(file) {
                 return None;
@@ -16623,6 +16832,7 @@ fn tab_from_leaf(
                 history_ix: 1,
                 leaf: Some(leaf.clone()),
                 view_state: inner.and_then(|s| s.get("viewState")).cloned(),
+                pinned: false,
             }
         }
         (Some("empty"), None) => Tab {
@@ -16635,6 +16845,7 @@ fn tab_from_leaf(
         },
         _ => return None,
     };
+    tab.pinned = pinned;
     Some((id.to_string(), tab))
 }
 
@@ -17045,7 +17256,38 @@ fn leaf_json(tab: &Tab) -> Value {
             state.insert("title".into(), json!(title));
         }
     }
+    set_pinned(&mut leaf, tab.pinned);
     leaf
+}
+
+/// Obsidian writes a pinned leaf's `"pinned": true` twice — on the leaf
+/// after `type`, and in its `state` after the inner `state` — and an
+/// unpinned one without either key, never `false` (observed,
+/// `tools/obsidian-probe/results/2026-11-09-tab-header-menu.json`). A key
+/// already in place is left where it is.
+fn set_pinned(leaf: &mut Value, pinned: bool) {
+    fn put_after(map: &mut serde_json::Map<String, Value>, after: &str, pinned: bool) {
+        if !pinned {
+            map.shift_remove("pinned");
+            return;
+        }
+        if map.contains_key("pinned") {
+            map.insert("pinned".into(), json!(true));
+            return;
+        }
+        let at = map
+            .keys()
+            .position(|k| k == after)
+            .map_or(map.len(), |i| i + 1);
+        map.shift_insert(at, "pinned".into(), json!(true));
+    }
+    let Some(outer) = leaf.as_object_mut() else {
+        return;
+    };
+    put_after(outer, "type", pinned);
+    if let Some(state) = outer.get_mut("state").and_then(Value::as_object_mut) {
+        put_after(state, "state", pinned);
+    }
 }
 
 /// The Lucide icon Obsidian records on a file's leaf: the dashboard for a
@@ -18105,15 +18347,18 @@ mod tests {
     /// on a file the vault no longer has. Entries before the cursor take it
     /// back with them; the notes it can still reach do not change.
     fn leaf(id: &str, file: &str, mode: &str, source: bool) -> Value {
+        // A pinned leaf, in the shape Obsidian writes one (the
+        // tab-header probe's `pinnedWorkspace`).
         json!({
             "id": id,
             "type": "leaf",
+            "pinned": true,
             "state": {
                 "type": "markdown",
                 "state": {"file": file, "mode": mode, "source": source},
+                "pinned": true,
                 "icon": "lucide-file",
                 "title": file.rsplit('/').next().unwrap().trim_end_matches(".md"),
-                "pinned": true,
             },
         })
     }
@@ -18131,6 +18376,7 @@ mod tests {
             history_ix: 1,
             leaf: Some(read.clone()),
             view_state: None,
+            pinned: true,
         };
         assert_eq!(leaf_json(&tab), read);
     }
@@ -18145,6 +18391,7 @@ mod tests {
             history_ix: 0,
             leaf: Some(read.clone()),
             view_state: None,
+            pinned: true,
         };
         let written = leaf_json(&tab);
         assert_eq!(written["id"], read["id"]);
@@ -18172,6 +18419,7 @@ mod tests {
             history_ix: 0,
             leaf: None,
             view_state: Some(json!({"x": 100, "y": -20, "zoom": -1})),
+            pinned: false,
         };
         let written = leaf_json(&tab);
         assert_eq!(written["state"]["type"], json!("canvas"));
@@ -18202,6 +18450,7 @@ mod tests {
             history_ix: 0,
             leaf: None,
             view_state: None,
+            pinned: false,
         };
         let written = leaf_json(&tab);
         assert_eq!(written["state"]["type"], json!("bases"));
@@ -18244,6 +18493,7 @@ mod tests {
             history_ix: 0,
             leaf: None,
             view_state: None,
+            pinned: false,
         };
         let written = leaf_json(&tab);
         assert_eq!(written["state"]["type"], json!("pdf"));
@@ -18275,6 +18525,40 @@ mod tests {
         assert_eq!(leaf_json(&restored), read, "never moved: written as read");
     }
 
+    /// Pinning writes `pinned` twice, in Obsidian's places, byte for byte
+    /// against the probe's file; unpinning takes both keys out.
+    #[test]
+    fn a_pinned_leaf_is_written_in_obsidians_shape() {
+        let probed = r#"{
+  "id": "726a32fa984bda69",
+  "type": "leaf",
+  "pinned": true,
+  "state": {
+    "type": "markdown",
+    "state": {
+      "file": "Alpha.md",
+      "mode": "source",
+      "source": false
+    },
+    "pinned": true,
+    "icon": "lucide-file",
+    "title": "Alpha"
+  }
+}"#;
+        let read: Value = serde_json::from_str(probed).unwrap();
+        let known = |_: &str| true;
+        let (_, mut tab) = tab_from_leaf(&read, ViewMode::LivePreview, &known).unwrap();
+        assert!(tab.pinned);
+        tab.pinned = false;
+        let unpinned = leaf_json(&tab);
+        assert!(unpinned.get("pinned").is_none());
+        assert!(unpinned["state"].get("pinned").is_none());
+        tab.leaf = Some(unpinned);
+        tab.pinned = true;
+        let pinned = serde_json::to_string_pretty(&leaf_json(&tab)).unwrap();
+        assert_eq!(pinned, probed);
+    }
+
     #[test]
     fn a_tab_that_moved_to_another_note_gets_a_fresh_leaf() {
         let read = leaf("a1072f377b3d1c69", "Old.md", "source", false);
@@ -18285,6 +18569,7 @@ mod tests {
             history_ix: 0,
             leaf: Some(read),
             view_state: None,
+            pinned: false,
         };
         let written = leaf_json(&tab);
         let id = written["id"].as_str().unwrap();

@@ -149,6 +149,12 @@ pub fn menu_box_with_submenu<V: 'static>(
 /// separators that leaves.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Section {
+    /// `close`: the tab header menu's Close, Close others and Close all.
+    Close,
+    /// `pane`: the tab header menu's Pin.
+    Pane,
+    /// `find`: a markdown tab's Find... and Replace....
+    Find,
     /// The folder row's and the empty space's creation items.
     ActionPrimary,
     /// The file row's "Open in..." items.
@@ -176,6 +182,25 @@ pub enum Section {
 /// [`Target`], so a menu can never act on the wrong row.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Pick {
+    // ----- the tab header's own rows ------------------------------------------
+    /// "Close": the right-clicked tab, pinned or not.
+    CloseTab,
+    /// "Close others": every other tab of its group but the pinned ones.
+    CloseOthers,
+    /// "Close tabs after": the tabs to its right but the pinned ones.
+    CloseAfter,
+    /// "Close all": every tab of its group but the pinned ones.
+    CloseAll,
+    /// "Pin" / "Unpin": `workspace:toggle-pin` on the tab.
+    TogglePin,
+    /// "Move to new window": `workspace:move-to-new-window` on the tab.
+    MoveToNewWindow,
+    /// A markdown tab's "Add file property", "Find..." and "Replace...":
+    /// `markdown:add-metadata-property`, `editor:open-search` and
+    /// `editor:open-search-replace`.
+    AddFileProperty,
+    Find,
+    Replace,
     OpenInNewTab,
     OpenToRight,
     /// "Open in new window": the file in a popout window of its own
@@ -306,6 +331,23 @@ pub enum Target {
     /// `s06`). `path` is the file or folder a `file` or `folder` item
     /// points at, which "Reveal file in navigation" acts on.
     Bookmark { kind: BookmarkKind, path: String },
+    /// A right click on a tab header
+    /// (`tools/obsidian-probe/results/2026-11-09-tab-header-menu.json`):
+    /// the close rows, Pin, the leaf's window and split rows, then the
+    /// view header's file rows. A right click does not make the tab
+    /// active, and an inactive tab's menu stops after Move to new window.
+    /// `group` and `ix` name the tab; `path` is its file, empty for a tab
+    /// with none; `tabs` is how many its group holds, since Close others
+    /// and Close all are drawn only beside another tab, and Close tabs
+    /// after only with one to its right; `pinned` names the Pin row.
+    Tab {
+        group: u64,
+        ix: usize,
+        path: String,
+        tabs: usize,
+        pinned: bool,
+        active: bool,
+    },
 }
 
 /// What a Bookmarks pane row stands for, as far as its menu is concerned:
@@ -369,7 +411,7 @@ impl Target {
             | Target::Linked(p)
             | Target::View(p)
             | Target::Row(p) => p,
-            Target::Bookmark { path, .. } => path,
+            Target::Bookmark { path, .. } | Target::Tab { path, .. } => path,
             Target::Blank | Target::Property { .. } => "",
             Target::Editor(click) => match &click.spot {
                 Spot::Link(path) => path,
@@ -684,6 +726,14 @@ pub fn items(target: &Target) -> Vec<Item> {
             ),
             item("Delete file", "trash-2", S::Danger, P::Delete),
         ],
+        Target::Tab {
+            ix,
+            path,
+            tabs,
+            pinned,
+            active,
+            ..
+        } => tab_items(path, *ix, *tabs, *pinned, *active),
         Target::View(_) => vec![
             item("Split right", "separator-vertical", S::Open, P::SplitRight),
             item("Split down", "separator-horizontal", S::Open, P::SplitDown),
@@ -718,6 +768,79 @@ pub fn items(target: &Target) -> Vec<Item> {
             item("Delete file", "trash-2", S::Danger, P::Delete),
         ],
     }
+}
+
+/// The tab header's menu, as the 2026-11-09 probe drew it. Left out for
+/// want of anything behind them: **Link with tab...** (no linked panes,
+/// and the probe saw no trace of what it starts), a markdown tab's
+/// **Backlinks in document** and its two view-mode rows (their labels in
+/// the other modes were not captured), **Merge entire file with...**,
+/// **Export to PDF...**, a canvas's **Export as image**, **Open version
+/// history** and the **Open linked view** submenu; Copy path keeps the one
+/// flat row the other menus give it.
+fn tab_items(path: &str, ix: usize, tabs: usize, pinned: bool, active: bool) -> Vec<Item> {
+    use Pick as P;
+    use Section as S;
+    let mut out = vec![item("Close", "x", S::Close, P::CloseTab)];
+    if tabs > 1 {
+        out.push(item("Close others", "x", S::Close, P::CloseOthers));
+        if ix + 1 < tabs {
+            out.push(item("Close tabs after", "x", S::Close, P::CloseAfter));
+        }
+        out.push(item("Close all", "x", S::Close, P::CloseAll));
+    }
+    out.push(item(
+        if pinned { "Unpin" } else { "Pin" },
+        "pin",
+        S::Pane,
+        P::TogglePin,
+    ));
+    out.push(item(
+        "Move to new window",
+        "picture-in-picture",
+        S::Open,
+        P::MoveToNewWindow,
+    ));
+    if !active {
+        return out;
+    }
+    out.push(item(
+        "Split right",
+        "separator-vertical",
+        S::Open,
+        P::SplitRight,
+    ));
+    out.push(item(
+        "Split down",
+        "separator-horizontal",
+        S::Open,
+        P::SplitDown,
+    ));
+    if path.is_empty() {
+        return out;
+    }
+    let markdown = path.to_ascii_lowercase().ends_with(".md");
+    for row in items(&Target::View(path.to_string())) {
+        if row.pick == P::SplitRight || row.pick == P::SplitDown {
+            continue;
+        }
+        let after_bookmark = row.pick == P::Bookmark;
+        let before_copy = row.pick == P::CopyPath;
+        if markdown && before_copy {
+            out.push(item("Find...", "file-search", S::Find, P::Find));
+            out.push(item("Replace...", "file-search", S::Find, P::Replace));
+        }
+        out.push(row);
+        if markdown && after_bookmark {
+            out.push(item(
+                "Add file property",
+                "circle-plus",
+                S::Action,
+                P::AddFileProperty,
+            ));
+        }
+    }
+    out
 }
 
 /// One row, enabled.
@@ -898,6 +1021,7 @@ pub fn describe(menu: &Menu) -> Value {
         Target::Row(_) => "row",
         Target::Property { .. } => "property",
         Target::Bookmark { .. } => "bookmark",
+        Target::Tab { .. } => "tab",
     };
     let items = items(&menu.target);
     let disabled: Vec<String> = items
@@ -1390,6 +1514,125 @@ mod tests {
         assert_eq!(
             Target::View("Shelf/Rocks.base".into()).path(),
             "Shelf/Rocks.base"
+        );
+    }
+
+    fn tab(path: &str, ix: usize, tabs: usize, pinned: bool, active: bool) -> Target {
+        Target::Tab {
+            group: 1,
+            ix,
+            path: path.into(),
+            tabs,
+            pinned,
+            active,
+        }
+    }
+
+    /// The tab header's menu over the middle of three markdown tabs, the
+    /// active one (`2026-11-09-tab-header-menu.json`, cases 1 and 2), minus
+    /// the rows `tab_items` names as left out — which takes the `view`
+    /// section's separator with them.
+    #[test]
+    fn a_markdown_tabs_menu_is_the_probes_list_without_the_rows_it_cannot_run() {
+        let target = tab("Notes/Alpha.md", 1, 3, false, true);
+        assert_eq!(
+            drawn(&target),
+            [
+                "Close",
+                "Close others",
+                "Close tabs after",
+                "Close all",
+                "---",
+                "Pin",
+                "---",
+                "Move to new window",
+                "Split right",
+                "Split down",
+                "Open in new window",
+                "---",
+                "Rename...",
+                "Move file to...",
+                "Bookmark...",
+                "Add file property",
+                "---",
+                "Find...",
+                "Replace...",
+                "---",
+                "Copy path",
+                "---",
+                "Open in default app",
+                "Show in system explorer",
+                "Reveal file in navigation",
+                "---",
+                "---",
+                "Delete file",
+            ]
+        );
+        assert_eq!(target.path(), "Notes/Alpha.md");
+    }
+
+    /// The last of two tabs has no Close tabs after; a canvas has no
+    /// markdown rows; a pinned tab's row reads Unpin.
+    #[test]
+    fn a_last_canvas_tab_has_no_close_after_and_no_markdown_rows() {
+        assert_eq!(
+            drawn(&tab("Board.canvas", 1, 2, true, true)),
+            [
+                "Close",
+                "Close others",
+                "Close all",
+                "---",
+                "Unpin",
+                "---",
+                "Move to new window",
+                "Split right",
+                "Split down",
+                "Open in new window",
+                "---",
+                "Rename...",
+                "Move file to...",
+                "Bookmark...",
+                "---",
+                "Copy path",
+                "---",
+                "Open in default app",
+                "Show in system explorer",
+                "Reveal file in navigation",
+                "---",
+                "---",
+                "Delete file",
+            ]
+        );
+    }
+
+    /// An inactive tab's menu stops after Move to new window, and an empty
+    /// tab's after the splits (cases 2 and 4).
+    #[test]
+    fn an_inactive_tab_and_an_empty_tab_have_the_short_menus() {
+        assert_eq!(
+            drawn(&tab("Alpha.md", 0, 3, false, false)),
+            [
+                "Close",
+                "Close others",
+                "Close tabs after",
+                "Close all",
+                "---",
+                "Pin",
+                "---",
+                "Move to new window",
+            ]
+        );
+        assert_eq!(
+            drawn(&tab("", 0, 1, false, true)),
+            [
+                "Close",
+                "---",
+                "Pin",
+                "---",
+                "Move to new window",
+                "Split right",
+                "Split down",
+            ]
         );
     }
 

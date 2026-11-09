@@ -645,10 +645,19 @@ fn event_for(pick: Pick, target: &Target) -> Option<ExplorerEvent> {
         Pick::NewCanvas => E::NewCanvas { folder: path() },
         Pick::NewBase => E::NewBase { folder: path() },
         Pick::SearchInFolder => E::SearchInFolder(path()),
-        // "Reveal file in navigation" reveals *in* the explorer, the splits
-        // are the view header's, and the rest are the editor menu's rows,
+        // "Reveal file in navigation" reveals *in* the explorer, the tab
+        // rows are the tab header's, the splits are the view header's, and the rest are the editor menu's rows,
         // which act on the editor.
         Pick::RevealInNavigation
+        | Pick::CloseTab
+        | Pick::CloseOthers
+        | Pick::CloseAfter
+        | Pick::CloseAll
+        | Pick::AddFileProperty
+        | Pick::Find
+        | Pick::Replace
+        | Pick::TogglePin
+        | Pick::MoveToNewWindow
         | Pick::SplitRight
         | Pick::SplitDown
         | Pick::RenameProperty
