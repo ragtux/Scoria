@@ -78,6 +78,10 @@ are in the same position. Day 4 and day 7 below write exactly those settings, so
 should leave the harness with its first real copy of each — worth more to the project than
 the diff itself.
 
+**Day 4 delivered two of them** — `templates.json` and `daily-notes.json`, written by Scoria on
+2026-11-09; the Obsidian half of that day is to write the same two from Obsidian's tabs and compare,
+see [[#Day 4, 2026-11-09]].
+
 ## The sheet
 
 Every Writer item from [[Development#Writer (phase 3)]], spread over seven days. The vault
@@ -538,6 +542,104 @@ day paid the week's second job its first real coin: a `types.json` in Obsidian's
 showed Scoria's to be short by three entries — a divergence the harness could not have seen, since
 it only ever read back what Scoria wrote.
 
+## Day 4, 2026-11-09
+
+**The Scoria half passes; the Obsidian half has not run.** Autocompletion, templates and daily notes,
+driven over the control socket in a headless sway session, 00:43–00:51, on `Note C` (the one note in
+the vault without a table) in Source mode with the cursor at the end of the file. The binary was
+rebuilt from the working tree first, as on day 1: the release build was five source files stale. The
+morning `gate-check` found nothing moved since `snapshot-2026-11-09` and sixteen properties green.
+
+**All six suggesters ran, and each wrote what Obsidian writes.** The popup's rows were read from the
+socket's `editor.suggest` after every keystroke, and the file after every accept:
+
+- **`[[`** offered every file, notes before the two canvases, most recently modified first; a prefix
+  narrowed it to `Note F`, and Enter wrote `[[Note F]]` — the `]]` the auto-pair had already put in was
+  consumed, not doubled. Six `ctrl-z` returned the file **byte-identical to the snapshot** (`cmp`).
+- **`[[Note F#`** listed the note's headings in document order, the H1 first; a query that matched one
+  second-level heading made it the only row, and Enter wrote `[[Note F#Heading]]`.
+- **`![[`** offered the same files; the second of the two canvas rows wrote
+  `![[Name.canvas]]`, extension and all, which is how a canvas embeds.
+- **`#`**: the vault had no tag, so neither `#` nor `#day4` opened a popup and the tag was left as typed.
+  After the save that indexed it, `#d` offered `day4` and Enter wrote `#day4 ` — with the trailing
+  space Obsidian's tag accept writes.
+- **An alias.** The vault had none, so `aliases:` and `  - lake` were typed into `Note F`'s front matter
+  in Source mode (two lines added, nothing else in the file moved). Back in `Note C`, `[[lak` offered
+  the alias as its one row and Enter wrote `[[Note F|lake]]`.
+- **`[[Note F#^`** listed `Note F`'s blocks by their text — headings, paragraphs, tables and list items,
+  each list item once on its own and once inside its parent. A query narrowed it to the first paragraph,
+  and Enter wrote `[[Note F#^bf1a61]]` in `Note C` **and ` ^bf1a61` onto the end of that paragraph in
+  `Note F`**, a note not in front at the time. That is the one path this week that writes into a file
+  other than the one being edited: the id went inline after the paragraph's last character, and the
+  98-line file's diff is the two alias lines and that one line.
+
+**Three driving faults, no writer faults.** A heading query that matched nothing closed the popup, so
+the next Enter was a newline inside the link and the auto-paired `]]` rode along onto the lines typed
+after it; that is CodeMirror's behaviour and so Obsidian's. Ten `ctrl-z` returned the note byte-identical
+to the snapshot — which is evidence of its own: ten mixed edits (typing, two accepts, newlines) undone
+to the original bytes. The tag suggester offered nothing for `#d` before the file was saved, because it
+reads the cache and the cache reads the file; Enter on a closed popup is again a newline. The third is
+under daily notes.
+
+**Templates.** `Templates/` came from `file-explorer:new-folder` (the prompt, the name typed, Create).
+*New note* on the folder's context menu created `Templates/Untitled.md` and opened the rename prompt on
+it; renamed there to `Day 4 Template`, then three lines typed in Source mode — `# {{title}}`, a blank
+line, `Created {{date}} at {{time}} from the template.` and a final newline. In Settings → Templates
+the folder field took `Templates` and Enter, and **`templates.json` existed**:
+`{\n  "folder": "Templates"\n}`. Time format `HH:mm:ss` was then appended as `"timeFormat"` — the key
+in Obsidian's spelling, two-space indent, no trailing newline, the shape probed on 2026-10-30.
+`insert-template` in `Note C` opened the chooser with the folder's one row; Enter inserted the three lines
+with `{{title}}` as the note's name, `{{date}}` as `2026-11-09` (the field left empty, so the default)
+and `{{time}}` as `00:50:16` in the format just set; the template's own final newline came with it.
+
+**Daily notes.** In Settings → Daily notes the Date format dropdown's second row (labelled with today,
+`2026.11.09`) wrote `{"format": "YYYY.MM.DD"}` — the pattern, not the label — then New file location
+`Daily` added `"folder"` and Template file location `Templates/Day 4 Template` added `"template"`, the
+keys in the order they were written; **`daily-notes.json` existed** after the first of the three.
+Then `daily-notes` with no `Daily/` folder yet, and **nothing was created**. The script had not read
+the notice and went on; the next step made the folder, and only afterwards was the reason looked up:
+Obsidian writes nothing when the folder is missing and says
+*Failed to create daily note. Folder “Daily” not found.*, which `the_configured_folder_has_to_exist_already`
+pins and Scoria reports the same way. A refusal Obsidian makes, and a driver that did not look.
+
+The folder came from a link: `Yesterday: [[Daily/2026.11.08` typed into `Note C` (the suggester offered
+the path as its literal row), and `editor:follow-link` created `Daily/2026.11.08.md`, empty, folder and
+all — a link that names a folder creates in that folder, where day 2's bare name went to the root.
+`daily-notes` then created `Daily/2026.11.09.md` from the template, 64 bytes:
+`# 2026.11.09`, a blank line, `Created 2026-11-09 at 00:50:35 from the template.` and the final newline.
+`daily-notes:goto-prev` opened the 8th; again, *No previous daily note*. `goto-next` opened the 9th;
+again, *No next daily note*. A second `daily-notes` with today's note in place opened it and wrote
+nothing: both notes kept their bytes and their mtimes through the stepping.
+
+**What the diff reports, 00:51.** `Daily/` (two notes), `Templates/` (one), `Note C` (ten lines appended
+after the day-1 line, the file still without a final newline because the last line typed has none),
+`Note F` (two front-matter lines and one block id), `daily-notes.json` and `templates.json`. Every one
+is Scoria's, and every one a person's edit — the block id included, since it is the byte Obsidian also
+writes into a target on accepting a block. The three config files Obsidian touches when a settings pane
+opens did not move: Obsidian did not run. `workspace.json` was rewritten on quit, excluded as always.
+
+**The harness, with the vault named, is sixteen green** — and `every_config_file_is_written_back_byte_identical`
+now reads a real `templates.json` and a real `daily-notes.json`, the two files
+[[#What the week has to produce beyond a diff]] asked day 4 for. Both are Scoria's bytes, though, which
+is what day 3's `types.json` showed to be worth less than it looks: Scoria's writer agreed with itself
+for three weeks and was short three keys. The Obsidian half should open both tabs and change a field in
+each, and that comparison is the one that counts.
+
+**For the Obsidian half.** (1) Settings → Templates and Daily notes: change one field on each and compare
+key order and spelling. (2) Insert the template in Obsidian: whether `{{time}}` honours `HH:mm:ss`, and
+whether the trailing newline comes along. (3) Open today's daily note from the ribbon or the command and
+step back and forward. (4) `[[Note F#^` on the paragraph that now carries `^bf1a61`: Obsidian should offer
+the existing id and write no second one; accept a block that has none and compare where the id lands.
+(5) `#d` should offer `day4`.
+
+### What the day left in the vault
+
+All of it deliberate and a person's edit: `Templates/Day 4 Template.md`, an empty `Daily/2026.11.08.md`
+and the templated `Daily/2026.11.09.md`; ten lines on the end of `Note C` (the five accepted completions,
+the inserted template and the link to the 8th); on `Note F` the alias `lake` and the block id `^bf1a61`;
+and the two config files with the folders, formats and template path above. Delete any of it after the
+Obsidian half; nothing later in the run depends on it.
+
 ## The log
 
 One row per day. "Moved" is what the diff reported; "author" is the answer to the two
@@ -549,7 +651,7 @@ questions above.
 | 1 | 2026-11-04 | six notes, 3 source + 3 Live Preview: typed, saved, undone, saved | five notes appended to; `vimMode` off; `Mindmap.canvas` opened | 5 notes +1 line each (no trailing newline now), `app.json`, the canvas rewritten compact, `workspace.json` | every one a person's edit in one of the two apps, bar the canvas (Obsidian normalizing a file authored elsewhere) and `workspace.json` (both apps, every session) | **passes** — nothing moved that nobody touched; the harness's canvas failure was the harness's, not the writer's |
 | 2 | 2026-11-05 | rename with 6 aliased inbound links and back; move into a new folder and back; new folder; new note; note created from an unresolved link; delete; three sort orders | renamed `Note F` and back (the modal appeared, **Just once**), new note named on the row; the three `.obsidian` files touched | the 6 link lines rewritten by each app and back to byte-identical both times; `Archive/`, `Day 2 New Note.md`, `this is a new note!.md`, one typed line in `Note C.md` | every one a person's edit in one of the two apps; the three config files moved mtimes and no bytes | **passes** — and the two link rewriters proved byte-identical on a real vault. `alwaysUpdateLinks` defaulted on where Obsidian defaults off, so Scoria's rename rewrote 6 files silently instead of asking; fixed, the ask-path it had made unreachable now runs, and the modal Obsidian showed confirms the default on this vault |
 | 3 | 2026-11-08 | 14 of the 15 table commands on `Note F`, each checked and undone to byte-identical; first front matter added, folded and unfolded; property type set from the sidebar menu (Checkbox, then List) | `Day 2 New Note` renamed on the row to `Day 3 New Note` and a table built and commanded in it; `Note F`'s property renamed twice with a type each time, an empty `Invalid date.md` on the way; the three `.obsidian` files touched | `Note F`'s front matter (Scoria's `status:`, then Obsidian's `scoria:` list), the renamed note with its table, `Invalid date.md`, `types.json` (Scoria's one key, then Obsidian's six) | every one a person's edit in one of the two apps; the three config files moved mtimes and no bytes | **passes** — Obsidian's `types.json` showed Scoria's unseeded (fixed: the three defaults on every write), the palette showed Move row up hidden in the first body row (fixed), and a submenu bug fell on the Scoria half |
-| 4 |  |  |  |  |  |  |
+| 4 | 2026-11-09 | all six suggesters accepted into `Note C` (`[[`, `[[Note#`, `![[`, `#tag`, an alias added to `Note F` for the purpose, a block whose id was written into `Note F`), the first accept and a ten-edit stretch undone to byte-identical; `Templates/` and a template note made in the UI, `templates.json` and `daily-notes.json` written from Settings, the template inserted, yesterday's note made by following a `[[Daily/…]]` link, today's created from the template, stepped back and forward |  |  |  |  |
 | 5 |  |  |  |  |  |  |
 | 6 |  |  |  |  |  |  |
 | 7 |  |  |  |  |  |  |
