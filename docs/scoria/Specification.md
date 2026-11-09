@@ -517,10 +517,23 @@ listed them — but the layout Obsidian serializes in memory (`s06` `after.seria
 `floating` key at all** by then, so the key goes with the last popout and the file was only
 waiting for its save. The vault was not reopened to see what a stale entry does on launch.
 
-**Still unprobed.** What a popout restores to on the next launch (position, size, the
-`maximize` flag); dragging a tab between a popout and the main window; whether a popout's tab
-strip offers Split right and Split down (its root is a split, so a popout can hold several
-groups); the `window:*` commands.
+**Tab drags between windows** (`tools/obsidian-probe/drag-between-windows.mjs`, results
+`results/2026-11-09-drag-between-windows.json`; the vault window holding Alpha and Gamma, a popout
+holding Beta; each drag started for real in the window it leaves and played into the other
+window's page, as the desktop carries it). A window's drop zones take a tab from another window
+exactly as they take one from their own: Alpha dropped on the popout's tab strip after Beta joined
+the popout's group there, the insertion bar (`workspace-drop-overlay`, 10 × 34) at the boundary
+while over it, and became that group's tab on show (the popout's title turned to Alpha's) while
+the active leaf stayed in the vault window; Alpha dropped near the right edge of the vault window's
+content split it to the right (the overlay over the right part of the content, 227 of 1024), and
+became the active leaf. A popout's **last** tab dragged out (Beta onto the vault window's strip,
+after Gamma) **closes the popout**; `floating` then has no children and `workspace.json` loses the
+key. A tab **let go outside every window makes no new window**: neither a drag cancelled off the
+page nor a `dragend` with the pointer left of the window moved the tab or opened a popout.
+
+**Still unprobed.** What a popout restores to on Obsidian's next launch (position, size, the
+`maximize` flag); whether a popout's tab strip offers Split right and Split down (its root is a
+split, so a popout can hold several groups); the `window:*` commands.
 
 ## Observed table editing behavior, Obsidian 1.14.4
 

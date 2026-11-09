@@ -482,6 +482,40 @@ Beta, the empty popout and the vault window with `swaymsg` moved `groups.active_
 and text typed through that keyboard landed in the window in front. Left: drags between windows
 (step 5), the file menu and modals still drawing in the main window, and the tab header's menu.
 
+**Step 5 landed, 2026-11-09: tab drags between windows, where the platform allows.** Observed first
+([[Specification#Observed popout windows, Obsidian 1.15.0]], `drag-between-windows.mjs`): another
+window's strip and content take a dragged tab exactly as their own do, a popout whose last tab
+leaves closes, and a tab let go over no window makes nothing. gpui keeps the drag app-wide but
+dispatches its drop only in the window that gets the release, and while the button is held the
+desktop's implicit grab sends every move and the release to the window the drag started in — the
+other window never hears it. So the source window does the work: its root's `on_drag_move` puts
+the pointer on the screen (its own `window.bounds()` origin plus the position), finds the other
+window whose screen bounds hold it, and runs the existing `tab_drag_moved` / `strip_drag_moved`
+over that window's groups in that window's coordinates, from bounds every strip, tab and content
+area measures while a drag is on (`measure_for_drag`, a `canvas` child writing into
+`DragBounds`); the other window draws the lit zone or bar from the shared state. The root's
+`on_mouse_up_out` drops there through the same `drop_tab_at_bar` / `drop_tab_on_group`, and the
+active group then follows the desktop's focus, still on the source window — as Obsidian's active
+leaf stayed with its focused window. **Wayland is left out**: a Wayland window is never told where
+it is on the screen, so there the drag stays in its window (`compositor_name() == "Wayland"`);
+crossing would need gpui to start a real `wl_data_device` drag. The drag ghost is drawn only in the
+source window, where gpui draws it. Two fixes came with it: a tab dragged out of the main area's
+only group leaves that group an empty tab (`keep_last_main_group`) rather than going through
+`close_group`, whose last-group rule works on the active group — by then the target, whose tabs it
+would have emptied; and the end-of-drag clean-up runs in every window's frame (`tab_drag_frame`),
+not the main window's alone, so a drag ending in a popout no longer leaves the zones drawn
+elsewhere. Checked under XWayland in a headless sway at scale 1, over the socket (which plays the
+grab, every event to the source window) and with a real pointer — a `zwlr_virtual_pointer_v1`
+client fed moves, press and release on stdin, since headless sway has no pointer and XTEST through
+XWayland reaches nothing: vault window → popout strip (the bar lit in the popout, the tab after
+Beta), popout → the vault window's right edge (the zone lit there, a split), a popout's last tab
+out (the popout closed, its X11 window gone), the main area's only tab out (an empty tab left), a
+drop over no window (nothing), and on Wayland a drag out of the window changing nothing while a
+reorder inside it still works. In that harness a window's last frame after a drop reached the
+screen only with its next one — the render log had the right strips and a pointer move over the
+window showed them — which matches XWayland under a headless compositor rather than anything
+here; a real X11, macOS or Windows desktop is still to be tried.
+
 ### The week's leftovers, 2026-11-09
 
 The verdict of [[Writer gate run]] named five things left open. Four needed no desk, only an

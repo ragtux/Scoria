@@ -2113,6 +2113,46 @@ struct TabDrag {
     title: SharedString,
 }
 
+/// What a tab drag measured of the layout, each in its own window's
+/// coordinates: a group's strip, its content (the drop zones' area) and
+/// its tabs. Written as the frames are laid out, read by the hit test of a
+/// drag that left its window.
+#[derive(Default)]
+struct DragBounds {
+    strips: HashMap<u64, gpui::Bounds<Pixels>>,
+    contents: HashMap<u64, gpui::Bounds<Pixels>>,
+    tabs: HashMap<(u64, usize), gpui::Bounds<Pixels>>,
+}
+
+/// Which of [`DragBounds`]' maps a measured element goes in.
+#[derive(Clone, Copy)]
+enum DragPart {
+    Strip(u64),
+    Content(u64),
+    Tab(u64, usize),
+}
+
+/// An invisible child over the whole of its parent that writes where the
+/// parent was laid out into `bounds`, for a drag in another window.
+fn measure_for_drag(bounds: &Rc<RefCell<DragBounds>>, part: DragPart) -> impl IntoElement {
+    let bounds = bounds.clone();
+    canvas(
+        move |b, _, _| {
+            let mut all = bounds.borrow_mut();
+            match part {
+                DragPart::Strip(g) => all.strips.insert(g, b),
+                DragPart::Content(g) => all.contents.insert(g, b),
+                DragPart::Tab(g, ix) => all.tabs.insert((g, ix), b),
+            };
+        },
+        |_, _, _, _| {},
+    )
+    .absolute()
+    .top_0()
+    .left_0()
+    .size_full()
+}
+
 /// Where a tab dragged over a group's content would land: in the group's
 /// strip, or in a new group on one of its sides.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -3118,6 +3158,15 @@ pub struct Workspace {
     /// when the drag starts and cleared when the next frame finds no drag
     /// under way, however the drag ended.
     dragging_tab: bool,
+    /// The tab being dragged, for a drop in another window: the release
+    /// reaches only the window the drag started in, where gpui's own drop
+    /// targets are not under the pointer.
+    tab_drag: Option<TabDrag>,
+    /// Where every strip, tab and group content was laid out while a tab is
+    /// dragged, in its own window's coordinates, for the hit test a drag
+    /// out of its window runs over the others (see
+    /// [`Workspace::cross_window_drag_moved`]).
+    drag_bounds: Rc<RefCell<DragBounds>>,
     /// Which group's content the dragged tab is over, and where in it.
     tab_drop: Option<(u64, DropZone)>,
     /// The accent bar between two tabs of the strip the dragged tab is
@@ -3767,6 +3816,8 @@ impl Workspace {
             next_group_id: 1,
             group_mru: vec![0],
             dragging_tab: false,
+            tab_drag: None,
+            drag_bounds: Rc::default(),
             tab_drop: None,
             drop_bar: None,
             tab_bounds: HashMap::new(),
@@ -9086,6 +9137,7 @@ impl Workspace {
             .on_drop(cx.listener(move |this, drag: &TabDrag, window, cx| {
                 this.drop_tab_on_group(drag, id, window, cx)
             }))
+            .child(measure_for_drag(&self.drag_bounds, DragPart::Content(id)))
             .when_some(zone, |d, zone| {
                 let half = relative(0.5);
                 d.child(
@@ -10364,6 +10416,7 @@ impl Workspace {
         {
             self.focus_main(window, cx);
         }
+        self.tab_drag_frame(window, cx);
         let tree = self.windows[wix].tree.clone();
         self.rendering_window = Some(id);
         let body = self.render_layout(&tree, &mut Vec::new(), theme, cx);
@@ -10387,6 +10440,16 @@ impl Workspace {
             div()
                 .key_context("Workspace")
                 .track_focus(&self.focus_handle)
+                // A tab dragged out of this window: the moves and the
+                // release reach this window only, so this is where the
+                // other windows' zones are found and dropped on.
+                .on_drag_move(cx.listener(|this, e: &DragMoveEvent<TabDrag>, window, cx| {
+                    this.cross_window_drag_moved(e.bounds, e.event.position, window, cx)
+                }))
+                .on_mouse_up_out(
+                    gpui::MouseButton::Left,
+                    cx.listener(|this, _, window, cx| this.cross_window_drop(window, cx)),
+                )
                 .when(hotkeys_live, |d| {
                     d.on_action(cx.listener(Self::toggle_mode))
                         .on_action(cx.listener(Self::go_back))
@@ -10728,8 +10791,10 @@ impl Workspace {
     /// A tab drag started: every group paints its drop zones from the next
     /// frame on. Called from the drag's own constructor, which runs with
     /// the app rather than this view, so it comes in through a weak handle.
-    fn begin_tab_drag(&mut self, cx: &mut Context<Self>) {
+    fn begin_tab_drag(&mut self, drag: TabDrag, cx: &mut Context<Self>) {
         self.dragging_tab = true;
+        self.tab_drag = Some(drag);
+        *self.drag_bounds.borrow_mut() = DragBounds::default();
         self.tab_drop = None;
         self.drop_bar = None;
         self.tab_bounds.clear();
@@ -10804,6 +10869,143 @@ impl Workspace {
         };
         self.drop_bar = Some(next);
         cx.notify();
+    }
+
+    /// Each window's frame during a tab drag. A drag that ended anywhere
+    /// but on a drop zone just stops: gpui drops it on the mouse up and
+    /// redraws the window it ended in, and this is where the zones learn
+    /// to go away — in every window, so the others are asked to redraw
+    /// once (after this frame: a notify from a render is lost). A sliding
+    /// drop bar needs a frame per step until it lands.
+    fn tab_drag_frame(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if self.dragging_tab && !cx.has_active_drag() {
+            self.dragging_tab = false;
+            self.tab_drag = None;
+            self.tab_drop = None;
+            self.drop_bar = None;
+            self.tab_bounds.clear();
+            let this = cx.entity();
+            cx.defer(move |cx| this.update(cx, |_, cx| cx.notify()));
+        }
+        if self.drop_bar.is_some_and(|b| !b.settled(Instant::now())) {
+            window.request_animation_frame();
+        }
+    }
+
+    /// The window `window` is, as the layout names it: a popout's id, or
+    /// `None` for the vault window.
+    fn window_id_of(&self, window: &Window) -> Option<u64> {
+        let here = window.window_handle();
+        self.windows
+            .iter()
+            .find(|w| w.handle.map(gpui::AnyWindowHandle::from) == Some(here))
+            .map(|w| w.id)
+    }
+
+    /// The dragged tab moved, heard by the window it was picked up in,
+    /// which hears every move however far the pointer goes (`root` is
+    /// that window's root, `position` the pointer in its coordinates).
+    /// Off the window, the pointer is put on the screen — the window's
+    /// place plus the position — and each other window's groups light
+    /// their zones and drop bar for it in their own coordinates, with the
+    /// same tests a drag in their own window runs, over the bounds their
+    /// last frames measured; it lights nothing there once it is back.
+    /// A Wayland window is never told where it is, so there the drag
+    /// stays in its own window (see [[Development#Multi-window, the
+    /// design, 2026-11-09]]). Two windows overlapping under the pointer
+    /// are taken in the order the layout lists them: which is in front is
+    /// the desktop's to know.
+    fn cross_window_drag_moved(
+        &mut self,
+        root: gpui::Bounds<Pixels>,
+        position: gpui::Point<Pixels>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if !self.dragging_tab || cx.compositor_name() == "Wayland" {
+            return;
+        }
+        let source = self.window_id_of(window);
+        let screen = window.bounds().origin + position;
+        let inside = root.contains(&position);
+        let mut others: Vec<(Option<u64>, gpui::AnyWindowHandle)> = self
+            .windows
+            .iter()
+            .filter(|w| Some(w.id) != source)
+            .filter_map(|w| w.handle.map(|h| (Some(w.id), h.into())))
+            .collect();
+        if source.is_some() {
+            others.insert(0, (None, self.main_window));
+        }
+        let placed: Vec<(Option<u64>, gpui::Bounds<Pixels>)> = others
+            .into_iter()
+            .filter_map(|(id, handle)| {
+                handle
+                    .update(cx, |_, w, _| w.bounds())
+                    .ok()
+                    .map(|b| (id, b))
+            })
+            .collect();
+        let over = (!inside)
+            .then(|| {
+                placed
+                    .iter()
+                    .find(|(_, b)| b.contains(&screen))
+                    .map(|(id, _)| *id)
+            })
+            .flatten();
+        // Nowhere near any window, for the windows the pointer is not over.
+        let away = gpui::point(px(-1e6), px(-1e6));
+        let measured = self.drag_bounds.clone();
+        let measured = measured.borrow();
+        for (id, bounds) in &placed {
+            let local = if over == Some(*id) {
+                screen - bounds.origin
+            } else {
+                away
+            };
+            let mut groups = Vec::new();
+            self.tree(*id).groups(&mut groups);
+            for g in groups {
+                if let Some(content) = measured.contents.get(&g) {
+                    self.tab_drag_moved(g, *content, local, cx);
+                }
+                if let Some(strip) = measured.strips.get(&g) {
+                    for (key, b) in measured.tabs.iter().filter(|((tg, _), _)| *tg == g) {
+                        self.tab_bounds.insert(*key, *b);
+                    }
+                    self.strip_drag_moved(g, *strip, local, cx);
+                }
+            }
+        }
+    }
+
+    /// The button came up outside the window the drag started in: a drop
+    /// on the zone or strip another window has lit lands there as a drop
+    /// in that window would, and the active group then follows the
+    /// desktop's focus, which a drag leaves on the window it started in —
+    /// the way Obsidian's active leaf stayed with the focused window when a
+    /// tab was dropped into another (see [[Specification#Observed popout
+    /// windows, Obsidian 1.15.0]]). Let go over no window, the drag just
+    /// ends: Obsidian makes no window of it either.
+    fn cross_window_drop(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(drag) = self.tab_drag.clone() else {
+            return;
+        };
+        let source = self.window_id_of(window);
+        let foreign = |g: u64| self.window_of_group(g) != source;
+        if let Some(bar) = self.drop_bar.filter(|b| foreign(b.group)) {
+            self.drop_tab_at_bar(&drag, bar.group, None, cx);
+        } else if let Some((g, _)) = self.tab_drop.filter(|(g, _)| foreign(*g)) {
+            self.drop_tab_on_group(&drag, g, window, cx);
+        } else {
+            return;
+        }
+        self.tab_drag = None;
+        let source_open = source.is_none_or(|id| self.windows.iter().any(|w| w.id == id));
+        if source_open {
+            self.window_activated(source, cx);
+        }
     }
 
     /// A tab dropped on group `to`'s strip lands where the drop bar says,
@@ -10908,6 +11110,26 @@ impl Workspace {
         Some(tab)
     }
 
+    /// Group `ix`, which a dragged tab just left empty, when it is the main
+    /// area's only group: it keeps an empty tab, shown at once, as
+    /// `move-to-new-window` leaves it (observed), rather than going through
+    /// `close_group`, whose last-group rule works on the active group and
+    /// by now the active one is where the tab went. Every group must be
+    /// stashed. Says whether it stays.
+    fn keep_last_main_group(&mut self, ix: usize, cx: &mut Context<Self>) -> bool {
+        let id = self.groups[ix].id;
+        if self.window_of_group(id).is_some() || self.main_group_count() > 1 {
+            return false;
+        }
+        let empty = Tab::empty(self.default_mode());
+        self.groups[ix].tabs.push(empty);
+        self.groups[ix].active_tab = 0;
+        self.load_group(ix, cx);
+        self.load_tab(cx);
+        self.stash_active_group();
+        true
+    }
+
     /// Moves the dragged tab to group `to`, before its tab `at` or at the
     /// end, and makes it the active tab of the active group. In its own
     /// group that is a reorder. A group left with nothing closes, as one
@@ -10935,7 +11157,7 @@ impl Workspace {
             let Some(tab) = self.take_tab(from_ix, drag.tab, cx) else {
                 return;
             };
-            empty = self.groups[from_ix].tabs.is_empty();
+            empty = self.groups[from_ix].tabs.is_empty() && !self.keep_last_main_group(from_ix, cx);
             tab
         };
         // What the target's views show now: the tab that was active there,
@@ -10984,7 +11206,7 @@ impl Workspace {
         let Some(tab) = self.take_tab(from_ix, drag.tab, cx) else {
             return;
         };
-        let empty = self.groups[from_ix].tabs.is_empty();
+        let empty = self.groups[from_ix].tabs.is_empty() && !self.keep_last_main_group(from_ix, cx);
         let id = self.new_group(tab.mode, window, cx);
         self.place_beside(beside, id, direction, after);
         let Some(ix) = self.group_ix(id) else {
@@ -11860,6 +12082,9 @@ impl Workspace {
             .on_drop(cx.listener(move |this, drag: &TabDrag, _, cx| {
                 this.drop_tab_at_bar(drag, group, None, cx)
             }))
+            .when(self.dragging_tab, |d| {
+                d.child(measure_for_drag(&self.drag_bounds, DragPart::Strip(group)))
+            })
             // The strip's outline is a hairline along its bottom edge rather
             // than a border, so the active tab, which reaches the edge, paints
             // over it and joins the view header below without a seam. The
@@ -11971,7 +12196,8 @@ impl Workspace {
                     // Picking the tab up: the ghost is its title, and the
                     // workspace is told so every group shows its zones.
                     .on_drag(drag, move |drag, grab, _, cx| {
-                        this.update(cx, |w, cx| w.begin_tab_drag(cx)).ok();
+                        let picked = drag.clone();
+                        this.update(cx, |w, cx| w.begin_tab_drag(picked, cx)).ok();
                         let title = drag.title.clone();
                         cx.new(|_| TabDragPreview { title, grab })
                     })
@@ -11982,6 +12208,12 @@ impl Workspace {
                             this.tab_bounds.insert((group, ix), e.bounds);
                         }
                     }))
+                    .when(self.dragging_tab, |d| {
+                        d.child(measure_for_drag(
+                            &self.drag_bounds,
+                            DragPart::Tab(group, ix),
+                        ))
+                    })
                     .on_drop(cx.listener(move |this, drag: &TabDrag, _, cx| {
                         this.drop_tab_at_bar(drag, group, Some(ix), cx)
                     }))
@@ -17018,19 +17250,7 @@ impl Render for Workspace {
                 }
             }
         }
-        // A drag that ended anywhere but on a drop zone just stops: gpui
-        // drops it on the mouse up and redraws, and this is where the zones
-        // learn to go away.
-        if self.dragging_tab && !cx.has_active_drag() {
-            self.dragging_tab = false;
-            self.tab_drop = None;
-            self.drop_bar = None;
-            self.tab_bounds.clear();
-        }
-        // A sliding drop bar needs a frame per step until it lands.
-        if self.drop_bar.is_some_and(|b| !b.settled(Instant::now())) {
-            window.request_animation_frame();
-        }
+        self.tab_drag_frame(window, cx);
         let theme = cx.global::<Theme>().clone();
         // The active leaf's name, which is the window title's first part:
         // "New tab" with nothing open, as Obsidian's reads
@@ -17307,6 +17527,16 @@ impl Render for Workspace {
         let content = div()
             .key_context("Workspace")
             .track_focus(&self.focus_handle)
+            // A tab dragged out of this window: the moves and the
+            // release reach this window only, so this is where the
+            // other windows' zones are found and dropped on.
+            .on_drag_move(cx.listener(|this, e: &DragMoveEvent<TabDrag>, window, cx| {
+                this.cross_window_drag_moved(e.bounds, e.event.position, window, cx)
+            }))
+            .on_mouse_up_out(
+                gpui::MouseButton::Left,
+                cx.listener(|this, _, window, cx| this.cross_window_drop(window, cx)),
+            )
             .when(hotkeys_live, |d| {
                 d.on_action(cx.listener(Self::toggle_mode))
                     .on_action(cx.listener(Self::go_back))

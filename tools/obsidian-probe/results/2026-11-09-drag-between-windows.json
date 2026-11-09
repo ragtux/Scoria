@@ -1,0 +1,1099 @@
+{
+ "dragBetweenWindows": {
+  "fixtures": {
+   "startedAt": "2026-11-09T20:57:54.726Z",
+   "steps": {},
+   "order": [],
+   "elapsedMs": 0
+  },
+  "run": {
+   "startedAt": "2026-11-09T20:57:55.889Z",
+   "steps": {
+    "s00-setup": {
+     "ok": true,
+     "ms": 1672,
+     "layout": {
+      "root": {
+       "type": "split",
+       "children": [
+        {
+         "type": "tabs",
+         "children": [
+          {
+           "type": "leaf",
+           "file": "Alpha.md"
+          },
+          {
+           "type": "leaf",
+           "file": "Gamma.md"
+          }
+         ]
+        }
+       ],
+       "direction": "vertical"
+      },
+      "floating": {
+       "type": "floating",
+       "children": [
+        {
+         "type": "window",
+         "children": [
+          {
+           "type": "tabs",
+           "children": [
+            {
+             "type": "leaf",
+             "file": "Beta.md"
+            }
+           ]
+          }
+         ],
+         "direction": "vertical",
+         "win": {
+          "inner": [
+           1024,
+           800
+          ],
+          "screen": [
+           0,
+           0
+          ],
+          "title": "Beta - probe-vault - Obsidian 1.15.0"
+         }
+        }
+       ]
+      },
+      "floatingCount": 1,
+      "active": {
+       "file": "Gamma.md",
+       "popout": false
+      },
+      "mainScreen": [
+       0,
+       0,
+       1056,
+       842
+      ]
+     }
+    },
+    "s01-main-tab-to-popout-strip": {
+     "ok": true,
+     "ms": 2312,
+     "from": [
+      452,
+      23
+     ],
+     "to": [
+      614.4,
+      20
+     ],
+     "dragData": {
+      "mimeTypes": [
+       "text/plain"
+      ],
+      "items": [
+       {
+        "mime": "text/plain",
+        "data": ""
+       }
+      ],
+      "dragOperationsMask": -1
+     },
+     "draggable": null,
+     "overTarget": {
+      "overlay": [
+       {
+        "cls": "workspace-drop-overlay",
+        "rect": [
+         203,
+         6,
+         10,
+         34
+        ],
+        "display": "block"
+       }
+      ],
+      "indicator": [],
+      "dragOver": [],
+      "bodyClass": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-grabbing is-popout-window"
+     },
+     "afterDrop": {
+      "root": {
+       "type": "split",
+       "children": [
+        {
+         "type": "tabs",
+         "children": [
+          {
+           "type": "leaf",
+           "file": "Gamma.md"
+          }
+         ]
+        }
+       ],
+       "direction": "vertical"
+      },
+      "floating": {
+       "type": "floating",
+       "children": [
+        {
+         "type": "window",
+         "children": [
+          {
+           "type": "tabs",
+           "children": [
+            {
+             "type": "leaf",
+             "file": "Beta.md"
+            },
+            {
+             "type": "leaf",
+             "file": "Alpha.md"
+            }
+           ]
+          }
+         ],
+         "direction": "vertical",
+         "win": {
+          "inner": [
+           1024,
+           800
+          ],
+          "screen": [
+           0,
+           0
+          ],
+          "title": "Alpha - probe-vault - Obsidian 1.15.0"
+         }
+        }
+       ]
+      },
+      "floatingCount": 1,
+      "active": {
+       "file": "Gamma.md",
+       "popout": false
+      },
+      "mainScreen": [
+       0,
+       0,
+       1056,
+       842
+      ]
+     },
+     "after": {
+      "root": {
+       "type": "split",
+       "children": [
+        {
+         "type": "tabs",
+         "children": [
+          {
+           "type": "leaf",
+           "file": "Gamma.md"
+          }
+         ]
+        }
+       ],
+       "direction": "vertical"
+      },
+      "floating": {
+       "type": "floating",
+       "children": [
+        {
+         "type": "window",
+         "children": [
+          {
+           "type": "tabs",
+           "children": [
+            {
+             "type": "leaf",
+             "file": "Beta.md"
+            },
+            {
+             "type": "leaf",
+             "file": "Alpha.md"
+            }
+           ]
+          }
+         ],
+         "direction": "vertical",
+         "win": {
+          "inner": [
+           1024,
+           800
+          ],
+          "screen": [
+           0,
+           0
+          ],
+          "title": "Alpha - probe-vault - Obsidian 1.15.0"
+         }
+        }
+       ]
+      },
+      "floatingCount": 1,
+      "active": {
+       "file": "Gamma.md",
+       "popout": false
+      },
+      "mainScreen": [
+       0,
+       0,
+       1056,
+       842
+      ]
+     }
+    },
+    "s02-popout-tab-to-main-right-edge": {
+     "ok": true,
+     "ms": 2330,
+     "from": [
+      308,
+      23
+     ],
+     "to": [
+      990,
+      420
+     ],
+     "dragData": {
+      "mimeTypes": [
+       "text/plain"
+      ],
+      "items": [
+       {
+        "mime": "text/plain",
+        "data": ""
+       }
+      ],
+      "dragOperationsMask": -1
+     },
+     "draggable": null,
+     "overTarget": {
+      "overlay": [
+       {
+        "cls": "workspace-drop-overlay",
+        "rect": [
+         797,
+         0,
+         227,
+         800
+        ],
+        "display": "block"
+       }
+      ],
+      "indicator": [],
+      "dragOver": [],
+      "bodyClass": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-grabbing"
+     },
+     "afterDrop": {
+      "root": {
+       "type": "split",
+       "children": [
+        {
+         "type": "tabs",
+         "children": [
+          {
+           "type": "leaf",
+           "file": "Gamma.md"
+          }
+         ]
+        },
+        {
+         "type": "tabs",
+         "children": [
+          {
+           "type": "leaf",
+           "file": "Alpha.md"
+          }
+         ]
+        }
+       ],
+       "direction": "vertical"
+      },
+      "floating": {
+       "type": "floating",
+       "children": [
+        {
+         "type": "window",
+         "children": [
+          {
+           "type": "tabs",
+           "children": [
+            {
+             "type": "leaf",
+             "file": "Beta.md"
+            }
+           ]
+          }
+         ],
+         "direction": "vertical",
+         "win": {
+          "inner": [
+           1024,
+           800
+          ],
+          "screen": [
+           0,
+           0
+          ],
+          "title": "Beta - probe-vault - Obsidian 1.15.0"
+         }
+        }
+       ]
+      },
+      "floatingCount": 1,
+      "active": {
+       "file": "Alpha.md",
+       "popout": false
+      },
+      "mainScreen": [
+       0,
+       0,
+       1056,
+       842
+      ]
+     },
+     "after": {
+      "root": {
+       "type": "split",
+       "children": [
+        {
+         "type": "tabs",
+         "children": [
+          {
+           "type": "leaf",
+           "file": "Gamma.md"
+          }
+         ]
+        },
+        {
+         "type": "tabs",
+         "children": [
+          {
+           "type": "leaf",
+           "file": "Alpha.md"
+          }
+         ]
+        }
+       ],
+       "direction": "vertical"
+      },
+      "floating": {
+       "type": "floating",
+       "children": [
+        {
+         "type": "window",
+         "children": [
+          {
+           "type": "tabs",
+           "children": [
+            {
+             "type": "leaf",
+             "file": "Beta.md"
+            }
+           ]
+          }
+         ],
+         "direction": "vertical",
+         "win": {
+          "inner": [
+           1024,
+           800
+          ],
+          "screen": [
+           0,
+           0
+          ],
+          "title": "Beta - probe-vault - Obsidian 1.15.0"
+         }
+        }
+       ]
+      },
+      "floatingCount": 1,
+      "active": {
+       "file": "Alpha.md",
+       "popout": false
+      },
+      "mainScreen": [
+       0,
+       0,
+       1056,
+       842
+      ]
+     }
+    },
+    "s03-popout-last-tab-to-main-strip": {
+     "ok": true,
+     "ms": 8327,
+     "from": [
+      108,
+      23
+     ],
+     "to": [
+      548,
+      20
+     ],
+     "before": {
+      "root": {
+       "type": "split",
+       "children": [
+        {
+         "type": "tabs",
+         "children": [
+          {
+           "type": "leaf",
+           "file": "Gamma.md"
+          }
+         ]
+        },
+        {
+         "type": "tabs",
+         "children": [
+          {
+           "type": "leaf",
+           "file": "Alpha.md"
+          }
+         ]
+        }
+       ],
+       "direction": "vertical"
+      },
+      "floating": {
+       "type": "floating",
+       "children": [
+        {
+         "type": "window",
+         "children": [
+          {
+           "type": "tabs",
+           "children": [
+            {
+             "type": "leaf",
+             "file": "Beta.md"
+            }
+           ]
+          }
+         ],
+         "direction": "vertical",
+         "win": {
+          "inner": [
+           1024,
+           800
+          ],
+          "screen": [
+           0,
+           0
+          ],
+          "title": "Beta - probe-vault - Obsidian 1.15.0"
+         }
+        }
+       ]
+      },
+      "floatingCount": 1,
+      "active": {
+       "file": "Alpha.md",
+       "popout": false
+      },
+      "mainScreen": [
+       0,
+       0,
+       1056,
+       842
+      ]
+     },
+     "dragData": {
+      "mimeTypes": [
+       "text/plain"
+      ],
+      "items": [
+       {
+        "mime": "text/plain",
+        "data": ""
+       }
+      ],
+      "dragOperationsMask": -1
+     },
+     "draggable": null,
+     "overTarget": {
+      "overlay": [
+       {
+        "cls": "workspace-drop-overlay",
+        "rect": [
+         547,
+         6,
+         10,
+         34
+        ],
+        "display": "block"
+       }
+      ],
+      "indicator": [],
+      "dragOver": [],
+      "bodyClass": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-grabbing"
+     },
+     "afterDrop": {
+      "root": {
+       "type": "split",
+       "children": [
+        {
+         "type": "tabs",
+         "children": [
+          {
+           "type": "leaf",
+           "file": "Gamma.md"
+          },
+          {
+           "type": "leaf",
+           "file": "Beta.md"
+          }
+         ]
+        },
+        {
+         "type": "tabs",
+         "children": [
+          {
+           "type": "leaf",
+           "file": "Alpha.md"
+          }
+         ]
+        }
+       ],
+       "direction": "vertical"
+      },
+      "floating": {
+       "type": "floating",
+       "children": []
+      },
+      "floatingCount": 0,
+      "active": {
+       "file": "Alpha.md",
+       "popout": false
+      },
+      "mainScreen": [
+       0,
+       0,
+       1056,
+       842
+      ]
+     },
+     "after": {
+      "root": {
+       "type": "split",
+       "children": [
+        {
+         "type": "tabs",
+         "children": [
+          {
+           "type": "leaf",
+           "file": "Gamma.md"
+          },
+          {
+           "type": "leaf",
+           "file": "Beta.md"
+          }
+         ]
+        },
+        {
+         "type": "tabs",
+         "children": [
+          {
+           "type": "leaf",
+           "file": "Alpha.md"
+          }
+         ]
+        }
+       ],
+       "direction": "vertical"
+      },
+      "floating": {
+       "type": "floating",
+       "children": []
+      },
+      "floatingCount": 0,
+      "active": {
+       "file": "Alpha.md",
+       "popout": false
+      },
+      "mainScreen": [
+       0,
+       0,
+       1056,
+       842
+      ]
+     }
+    },
+    "s04-main-tab-dropped-outside": {
+     "ok": true,
+     "ms": 1916,
+     "from": [
+      417.5,
+      23
+     ],
+     "before": {
+      "root": {
+       "type": "split",
+       "children": [
+        {
+         "type": "tabs",
+         "children": [
+          {
+           "type": "leaf",
+           "file": "Gamma.md"
+          },
+          {
+           "type": "leaf",
+           "file": "Beta.md"
+          }
+         ]
+        },
+        {
+         "type": "tabs",
+         "children": [
+          {
+           "type": "leaf",
+           "file": "Alpha.md"
+          }
+         ]
+        }
+       ],
+       "direction": "vertical"
+      },
+      "floating": {
+       "type": "floating",
+       "children": []
+      },
+      "floatingCount": 0,
+      "active": {
+       "file": "Alpha.md",
+       "popout": false
+      },
+      "mainScreen": [
+       0,
+       0,
+       1056,
+       842
+      ]
+     },
+     "dragData": {
+      "mimeTypes": [
+       "text/plain"
+      ],
+      "items": [
+       {
+        "mime": "text/plain",
+        "data": ""
+       }
+      ],
+      "dragOperationsMask": -1
+     },
+     "draggable": null,
+     "overOffPage": {
+      "overlay": [
+       {
+        "cls": "workspace-drop-overlay",
+        "rect": [
+         44,
+         0,
+         300,
+         800
+        ],
+        "display": "block"
+       }
+      ],
+      "indicator": [],
+      "dragOver": [],
+      "bodyClass": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-grabbing"
+     },
+     "after": {
+      "root": {
+       "type": "split",
+       "children": [
+        {
+         "type": "tabs",
+         "children": [
+          {
+           "type": "leaf",
+           "file": "Gamma.md"
+          },
+          {
+           "type": "leaf",
+           "file": "Beta.md"
+          }
+         ]
+        },
+        {
+         "type": "tabs",
+         "children": [
+          {
+           "type": "leaf",
+           "file": "Alpha.md"
+          }
+         ]
+        }
+       ],
+       "direction": "vertical"
+      },
+      "floating": {
+       "type": "floating",
+       "children": []
+      },
+      "floatingCount": 0,
+      "active": {
+       "file": "Alpha.md",
+       "popout": false
+      },
+      "mainScreen": [
+       0,
+       0,
+       1056,
+       842
+      ]
+     }
+    },
+    "s05-synthetic-dragend-outside": {
+     "ok": true,
+     "ms": 1580,
+     "from": [
+      548.5,
+      23
+     ],
+     "before": {
+      "root": {
+       "type": "split",
+       "children": [
+        {
+         "type": "tabs",
+         "children": [
+          {
+           "type": "leaf",
+           "file": "Gamma.md"
+          },
+          {
+           "type": "leaf",
+           "file": "Beta.md"
+          }
+         ]
+        },
+        {
+         "type": "tabs",
+         "children": [
+          {
+           "type": "leaf",
+           "file": "Alpha.md"
+          }
+         ]
+        }
+       ],
+       "direction": "vertical"
+      },
+      "floating": {
+       "type": "floating",
+       "children": []
+      },
+      "floatingCount": 0,
+      "active": {
+       "file": "Alpha.md",
+       "popout": false
+      },
+      "mainScreen": [
+       0,
+       0,
+       1056,
+       842
+      ]
+     },
+     "dispatched": {
+      "ok": true,
+      "dropEffect": "none"
+     },
+     "after": {
+      "root": {
+       "type": "split",
+       "children": [
+        {
+         "type": "tabs",
+         "children": [
+          {
+           "type": "leaf",
+           "file": "Gamma.md"
+          },
+          {
+           "type": "leaf",
+           "file": "Beta.md"
+          }
+         ]
+        },
+        {
+         "type": "tabs",
+         "children": [
+          {
+           "type": "leaf",
+           "file": "Alpha.md"
+          }
+         ]
+        }
+       ],
+       "direction": "vertical"
+      },
+      "floating": {
+       "type": "floating",
+       "children": []
+      },
+      "floatingCount": 0,
+      "active": {
+       "file": "Alpha.md",
+       "popout": false
+      },
+      "mainScreen": [
+       0,
+       0,
+       1056,
+       842
+      ]
+     }
+    }
+   },
+   "order": [
+    "s00-setup",
+    "s01-main-tab-to-popout-strip",
+    "s02-popout-tab-to-main-right-edge",
+    "s03-popout-last-tab-to-main-strip",
+    "s04-main-tab-dropped-outside",
+    "s05-synthetic-dragend-outside"
+   ],
+   "elapsedMs": 20695,
+   "vaultPath": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/3a7f451b-2255-4978-a9ed-f5e9bf47a140/scratchpad/probe-vault",
+   "title": "New tab - probe-vault - Obsidian 1.15.0",
+   "workspaceJson": {
+    "main": {
+     "id": "ff24cdc79b5b4ff7",
+     "type": "split",
+     "children": [
+      {
+       "id": "44d2a2ec0f39bbcb",
+       "type": "tabs",
+       "children": [
+        {
+         "id": "ef4171626262ce2b",
+         "type": "leaf",
+         "state": {
+          "type": "markdown",
+          "state": {
+           "file": "Gamma.md",
+           "mode": "source",
+           "source": false
+          },
+          "icon": "lucide-file",
+          "title": "Gamma"
+         }
+        },
+        {
+         "id": "8a6ad66cab788199",
+         "type": "leaf",
+         "state": {
+          "type": "markdown",
+          "state": {
+           "file": "Beta.md",
+           "mode": "source",
+           "source": false
+          },
+          "icon": "lucide-file",
+          "title": "Beta"
+         }
+        }
+       ],
+       "currentTab": 1
+      },
+      {
+       "id": "3edfc53f3b3a06db",
+       "type": "tabs",
+       "children": [
+        {
+         "id": "614fe9138e02df36",
+         "type": "leaf",
+         "state": {
+          "type": "markdown",
+          "state": {
+           "file": "Alpha.md",
+           "mode": "source",
+           "source": false
+          },
+          "icon": "lucide-file",
+          "title": "Alpha"
+         }
+        }
+       ]
+      }
+     ],
+     "direction": "vertical"
+    },
+    "left": {
+     "id": "e605de17efe2e02f",
+     "type": "split",
+     "children": [
+      {
+       "id": "9539ddb0de17f023",
+       "type": "tabs",
+       "children": [
+        {
+         "id": "f48c3ee9066aa873",
+         "type": "leaf",
+         "state": {
+          "type": "file-explorer",
+          "state": {
+           "sortOrder": "alphabetical",
+           "autoReveal": false,
+           "showSearch": false,
+           "searchQuery": ""
+          },
+          "icon": "lucide-folder-closed",
+          "title": "Files"
+         }
+        },
+        {
+         "id": "f4f0650dc28101a2",
+         "type": "leaf",
+         "state": {
+          "type": "search",
+          "state": {
+           "query": "",
+           "matchingCase": false,
+           "explainSearch": false,
+           "collapseAll": false,
+           "extraContext": false,
+           "sortOrder": "alphabetical"
+          },
+          "icon": "lucide-search",
+          "title": "Search"
+         }
+        },
+        {
+         "id": "ad7956e48e70fd03",
+         "type": "leaf",
+         "state": {
+          "type": "bookmarks",
+          "state": {
+           "showSearch": false,
+           "searchQuery": ""
+          },
+          "icon": "lucide-bookmark",
+          "title": "Bookmarks"
+         }
+        }
+       ]
+      }
+     ],
+     "direction": "horizontal",
+     "width": 300
+    },
+    "right": {
+     "id": "44ce3ef9eee9950c",
+     "type": "split",
+     "children": [
+      {
+       "id": "eee979e3b404c8e9",
+       "type": "tabs",
+       "children": [
+        {
+         "id": "12b5f59f841aef0f",
+         "type": "leaf",
+         "state": {
+          "type": "backlink",
+          "state": {
+           "file": "Alpha.md",
+           "collapseAll": false,
+           "extraContext": false,
+           "sortOrder": "alphabetical",
+           "showSearch": false,
+           "searchQuery": "",
+           "backlinkCollapsed": false,
+           "unlinkedCollapsed": true
+          },
+          "icon": "links-coming-in",
+          "title": "Backlinks"
+         }
+        },
+        {
+         "id": "4de1dc0a271898de",
+         "type": "leaf",
+         "state": {
+          "type": "outgoing-link",
+          "state": {
+           "file": "Alpha.md",
+           "linksCollapsed": false,
+           "unlinkedCollapsed": true
+          },
+          "icon": "links-going-out",
+          "title": "Outgoing links"
+         }
+        },
+        {
+         "id": "a1fbe9fd36c5e1cc",
+         "type": "leaf",
+         "state": {
+          "type": "tag",
+          "state": {
+           "sortOrder": "frequency",
+           "useHierarchy": true,
+           "showSearch": false,
+           "searchQuery": ""
+          },
+          "icon": "lucide-tags",
+          "title": "Tags"
+         }
+        },
+        {
+         "id": "bdbcb38b919a1e50",
+         "type": "leaf",
+         "state": {
+          "type": "all-properties",
+          "state": {
+           "sortOrder": "frequency",
+           "showSearch": false,
+           "searchQuery": ""
+          },
+          "icon": "lucide-archive",
+          "title": "All properties"
+         }
+        },
+        {
+         "id": "6ade120cf5796c17",
+         "type": "leaf",
+         "state": {
+          "type": "outline",
+          "state": {
+           "file": "Alpha.md",
+           "followCursor": false,
+           "showSearch": false,
+           "searchQuery": ""
+          },
+          "icon": "lucide-list",
+          "title": "Outline"
+         }
+        }
+       ]
+      }
+     ],
+     "direction": "horizontal",
+     "width": 300,
+     "collapsed": true
+    },
+    "left-ribbon": {
+     "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+     }
+    },
+    "active": "614fe9138e02df36",
+    "lastOpenFiles": [
+     "Gamma.md"
+    ]
+   }
+  }
+ }
+}

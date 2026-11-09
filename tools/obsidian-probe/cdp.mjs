@@ -13,7 +13,8 @@ export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // on a loaded machine; CDP_TIMEOUT_MS raises it for them.
 const TIMEOUT_MS = Number(process.env.CDP_TIMEOUT_MS) || 15000;
 
-async function pageTargets() {
+/** Every page target's debugger URL: the vault window and each popout window. */
+export async function pageTargets() {
   const ts = await (await fetch(`${base}/json`)).json();
   return ts.filter((x) => x.type === 'page').map((x) => x.webSocketDebuggerUrl);
 }
@@ -87,8 +88,9 @@ export async function waitForObsidian(timeoutMs = 90000) {
   throw new Error('no Obsidian vault window with a booted `app` within ' + timeoutMs + 'ms');
 }
 
-export async function connect() {
-  const url = await waitForObsidian();
+/** A client on the vault window, or on the page target `targetUrl` (a popout's, from `pageTargets`). */
+export async function connect(targetUrl) {
+  const url = targetUrl || await waitForObsidian();
   const { ws, send, on, once } = await openSocket(url);
 
   /** Run `expr` (a function body; may `await`; `app` is in scope) in the renderer, return its value. */
