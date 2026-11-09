@@ -5272,7 +5272,7 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "scoria"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "async-channel 2.5.0",
@@ -5312,7 +5312,7 @@ dependencies = [
 
 [[package]]
 name = "scoria-bases"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "chrono",
  "indexmap",
@@ -5323,7 +5323,7 @@ dependencies = [
 
 [[package]]
 name = "scoria-bench"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "rayon",
  "scoria-cache",
@@ -5333,7 +5333,7 @@ dependencies = [
 
 [[package]]
 name = "scoria-cache"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "scoria-formats",
  "scoria-markdown",
@@ -5343,7 +5343,7 @@ dependencies = [
 
 [[package]]
 name = "scoria-canvas"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "scoria-formats",
  "serde_json",
@@ -5351,7 +5351,7 @@ dependencies = [
 
 [[package]]
 name = "scoria-cli"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "scoria-control",
  "scoria-formats",
@@ -5362,7 +5362,7 @@ dependencies = [
 
 [[package]]
 name = "scoria-commands"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "scoria-formats",
  "serde_json",
@@ -5370,7 +5370,7 @@ dependencies = [
 
 [[package]]
 name = "scoria-control"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -5379,7 +5379,7 @@ dependencies = [
 
 [[package]]
 name = "scoria-formats"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "indexmap",
  "serde",
@@ -5389,7 +5389,7 @@ dependencies = [
 
 [[package]]
 name = "scoria-highlight"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "fancy-regex 0.16.2",
  "serde",
@@ -5398,18 +5398,18 @@ dependencies = [
 
 [[package]]
 name = "scoria-llm-mcp"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "serde_json",
 ]
 
 [[package]]
 name = "scoria-markdown"
-version = "0.4.0"
+version = "0.5.0"
 
 [[package]]
 name = "scoria-math"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "ab_glyph",
  "ratex-font",
@@ -5421,7 +5421,7 @@ dependencies = [
 
 [[package]]
 name = "scoria-mcp"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "scoria-control",
  "serde",
@@ -5430,14 +5430,14 @@ dependencies = [
 
 [[package]]
 name = "scoria-pdf"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "hayro",
 ]
 
 [[package]]
 name = "scoria-search"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "regex",
  "serde_yaml",
@@ -5445,7 +5445,7 @@ dependencies = [
 
 [[package]]
 name = "scoria-suggest"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "scoria-cache",
  "scoria-formats",
@@ -5456,11 +5456,11 @@ dependencies = [
 
 [[package]]
 name = "scoria-templates"
-version = "0.4.0"
+version = "0.5.0"
 
 [[package]]
 name = "scoria-text"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "regex",
  "scoria-cache",
@@ -5477,7 +5477,7 @@ dependencies = [
 
 [[package]]
 name = "scoria-vault"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "indexmap",
  "libc",

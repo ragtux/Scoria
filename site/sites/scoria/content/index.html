@@ -5,7 +5,7 @@ description: Scoria is a native knowledge base written in Rust that opens Obsidi
 ---
 <section class="hero">
   <img class="mark" src="/assets/logo.svg" alt="" width="189" height="135">
-  <span class="badge pre">Early days · v0.4.0 · reading is solid, writing is young</span>
+  <span class="badge pre">Early days · v0.5.0 · reading and writing both gated</span>
   <h1>Your vault, opened natively.</h1>
   <p class="lede">
     Scoria is a knowledge base written in Rust that opens an
@@ -21,7 +21,7 @@ description: Scoria is a native knowledge base written in Rust that opens Obsidi
     <a class="btn" href="/docs/">Read the manual</a>
   </div>
   <p class="dim small" style="margin-top:22px">
-    Version 0.4.0, free software under the MIT license, with the
+    Version 0.5.0, free software under the MIT license, with the
     <a href="https://github.com/ragtux/scoria">source on GitHub</a>. All three builds run on
     real hardware; none of them is code signed — see
     <a href="#where-it-is">where it is</a> before you point it at a vault you care about.
@@ -41,7 +41,7 @@ description: Scoria is a native knowledge base written in Rust that opens Obsidi
 <section class="band" id="get-it">
   <h2>Get it</h2>
   <p class="lede">
-    One archive per platform, built from the <code>v0.4.0</code> tag with a
+    One archive per platform, built from the <code>v0.5.0</code> tag with a
     <code>SHA256SUMS</code> file over all three. There is no installer and nothing to configure:
     the archive holds a single binary, and the binary takes the path to your vault.
   </p>
@@ -76,7 +76,7 @@ description: Scoria is a native knowledge base written in Rust that opens Obsidi
   </div>
   <p class="dim small" style="margin-top:18px">
     Those three addresses always point at the newest release.
-    <a href="/releases/">What is in 0.4.0, and every release before it →</a> ·
+    <a href="/releases/">What is in 0.5.0, and every release before it →</a> ·
     <a href="/download/">Checksums, signatures and building from source →</a>
   </p>
 </section>
@@ -149,7 +149,8 @@ description: Scoria is a native knowledge base written in Rust that opens Obsidi
     Scoria is built in phases, and the gate for each is a sentence about a person rather than a
     feature list. Phase 2's gate — a daily user browses their real vault with no missing
     content — is met. Phase 3's, that a vault round-trips byte-identical after a week of mixed
-    use in both apps, is the one being worked on now.
+    use in both apps, was met on 9 November 2026. Phase 4, parity with the core plugins, is the
+    one being worked on now.
   </p>
   <div class="grid">
     <div class="card">
@@ -162,24 +163,25 @@ description: Scoria is a native knowledge base written in Rust that opens Obsidi
       <p style="margin-top:.8em"><a href="/docs/app/window/">The window →</a></p>
     </div>
     <div class="card">
-      <span class="k">Writing <span class="tag soon">In progress</span></span>
+      <span class="k">Writing <span class="tag now">Done</span></span>
       <h3>Editing, and notes that move</h3>
       <p>Live Preview and Source mode with soft wrap, find and replace, multiple cursors, smart
       lists and autosave. New note, rename, move, copy and delete all rewrite the links in the
       rest of the vault the way Obsidian does, keeping each link's style and alias. Frontmatter
       is a typed properties table, <code>[[</code> and <code>#</code> complete against the vault,
       the sixteen table commands edit a table cell by cell, and templates, daily notes, tab
-      groups and bookmarks are in. What is left is the gate itself: a week of mixed use in both
-      apps with the vault still byte-identical.</p>
+      groups and bookmarks are in. The gate was a week of mixed use in both apps on a real
+      vault, every changed byte attributed to a person's edit; it passed on 9 November 2026.</p>
       <p style="margin-top:.8em"><a href="/docs/app/editing/">Editing a note →</a></p>
     </div>
     <div class="card">
       <span class="k">Parity <span class="tag soon">Started</span></span>
-      <h3>Canvas, Bases, math, themes</h3>
+      <h3>Canvas, Bases, PDF, math, themes</h3>
       <p>A <code>.canvas</code> opens in the main area and pans, zooms, selects, moves, resizes,
-      draws edges and autosaves in Obsidian's bytes. Bases round-trip on disk but have no view
-      yet, and MathJax, HTML in notes, remote images and PDF export are still ahead, as is the
-      variable-level subset of Obsidian's CSS custom properties that makes themes work.</p>
+      draws edges and autosaves in Obsidian's bytes; a <code>.base</code> opens in all four of
+      its layouts; a PDF opens in a viewer; TeX is typeset; the vault's CSS theme and snippets
+      load. Still ahead: a second window, MathJax-only syntax, Mermaid, PDF export, and the
+      rest of Prism's grammars.</p>
       <p style="margin-top:.8em"><a href="/docs/reference/differences/">What differs →</a></p>
     </div>
     <div class="card">
@@ -233,10 +235,10 @@ description: Scoria is a native knowledge base written in Rust that opens Obsidi
 <section class="band" id="where-it-is">
   <h2>Where it is, plainly</h2>
   <p class="notice">
-    <strong>Scoria is v0.4.0 and the writing half is mid-flight.</strong> Keep a backup of any
-    vault you open with it, and if the vault matters, let Scoria read it and let Obsidian write
-    it until the round-trip gate is met. Reading a vault is well covered; editing is newer code
-    against files you cannot get back.
+    <strong>Scoria is v0.5.0, and the round-trip gate is met.</strong> A week of mixed use in
+    both apps left a real vault byte-identical, bar the edits people made. That is one vault and
+    one week, so keep a backup of any vault you open with it: the editor is still the newest
+    code in the project, against files you cannot get back.
   </p>
   <div class="grid">
     <div class="card">

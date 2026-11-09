@@ -66,16 +66,17 @@ live in your notes, that difference is felt hourly.
 
 ## Who it is for, today
 
-At version 0.4.0, honestly:
+At version 0.5.0, honestly:
 
 - **Good fit now:** reading and searching a vault you maintain in Obsidian; browsing a large
   vault where a native reader is simply nicer; anyone who wants a second implementation to
   exist and is willing to file bugs against one.
-- **Workable with care:** editing notes, with a backup and preferably after a round-trip
-  test on a scratch copy. The editor is real — Live Preview, Source mode, find and replace,
-  multiple cursors, link-rewriting renames — but it is the newest code in the project.
-- **Not yet:** anyone who needs Bases, rendered math, Mermaid diagrams, PDFs, community
-  plugins or CSS themes.
+- **Workable with care:** editing notes, with a backup. The editor is real — Live Preview,
+  Source mode, find and replace, multiple cursors, link-rewriting renames, tables, properties
+  — and it has passed a week of mixed use beside Obsidian with the vault byte-identical, but
+  that is one vault and one week, and it is the newest code in the project.
+- **Not yet:** anyone who needs a second window, Mermaid diagrams, MathJax-only syntax,
+  community plugins, or a Prism grammar outside the 85 ported.
 
 ## Where to go next
 

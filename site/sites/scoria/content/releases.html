@@ -1,10 +1,10 @@
 ---
 title: Releases
 layout: page
-description: Every tagged release of Scoria, what landed in each, and the permanent addresses the archives live at. 0.4.0 is current: bases, PDFs, typeset math, the vault's own CSS theme, highlighting ported from Prism, and a command line.
+description: Every tagged release of Scoria, what landed in each, and the permanent addresses the archives live at. 0.5.0 is current: the Writer gate passed after a week of mixed use, the Bookmarks pane, table handles, renames on the row, and what the week's comparison fixed.
 ---
 <section class="hero" style="padding-bottom:24px">
-  <span class="badge pre">Current: v0.4.0 · 5 November 2026 · MIT</span>
+  <span class="badge pre">Current: v0.5.0 · 9 November 2026 · MIT</span>
   <h1>Releases</h1>
   <p class="lede">
     A <code>v*</code> tag builds the <code>scoria</code> binary on both forges and publishes one
@@ -26,70 +26,66 @@ description: Every tagged release of Scoria, what landed in each, and the perman
 </section>
 
 <section class="band">
-  <h2>0.4.0 — bases, PDFs, equations and your theme</h2>
+  <h2>0.5.0 — the Writer gate passes</h2>
   <p class="lede">
-    Released 5 November 2026. Four things a vault holds that Scoria could not open before — a
-    <code>.base</code>, a PDF, a block of TeX, and the CSS theme you chose in Obsidian — and
-    the chrome around them: a command line of its own, Anya's mark on every platform's icon,
-    and Settings in a window rather than a modal.
+    Released 9 November 2026. The gate for the writing phase was a sentence about a person: a
+    vault round-trips byte-identical after a week of mixed use in both apps. A real vault spent
+    seven days being edited in Scoria and in Obsidian in turn, and every byte that moved was a
+    person's edit in one of the two; the comparison found and fixed what it was there to find.
   </p>
   <div class="grid">
     <div class="card">
-      <span class="k">Bases</span>
-      <h3>The whole of <code>.base</code></h3>
-      <p>Obsidian's expression language is parsed into the tree Obsidian parses it into, and
-      evaluated; a base is written back in Obsidian's own bytes. All four layouts draw — table,
-      cards, list and kanban — with the toolbar, panels and menus measured off 1.14.5 surface by
-      surface. Cells edit by type, columns reorder, summarize and carry their own menu, formula
-      editors complete property names, and an embedded base draws its live view inside a note.</p>
+      <span class="k">The gate</span>
+      <h3>Seven days, two apps, one vault</h3>
+      <p>Notes, renames, moves, tables, suggesters, templates, daily notes, both canvases, the
+      editing and fold commands, splits, bookmarks and settings — each day's half in Scoria over
+      its control socket, the other half by hand in Obsidian 1.15.0, the vault diffed against a
+      baseline after each. Obsidian kept every byte Scoria wrote to <code>bookmarks.json</code>
+      and to the canvases, so those writers are fixed points of its own.</p>
     </div>
     <div class="card">
-      <span class="k">PDF and math</span>
-      <h3>Two more things a note can hold</h3>
-      <p>PDFs render on <code>hayro</code>: pages to pixels, the outline, the page text, and the
-      <code>#page=</code> subpath, so <code>![[doc.pdf#page=3]]</code> embeds that page and a
-      click on a PDF opens a viewer. TeX is typeset on RaTeX, KaTeX-compatible, in reading view
-      and in Live Preview both — inline and display, from the same drawing list.</p>
+      <span class="k">What it fixed</span>
+      <h3>Found by the comparison</h3>
+      <p><code>alwaysUpdateLinks</code> defaulting on; <code>types.json</code> unseeded; a
+      dragged canvas card not raised to the end; Mod+B taking the list marker; the numbered
+      toggle counting straight down where Obsidian counts per depth; a fold over the scroll
+      anchor; Settings tabs sharing a scroll offset; and serde_json's float parser dropping an
+      ulp on a dock width, which <code>float_roundtrip</code> now keeps.</p>
     </div>
     <div class="card">
-      <span class="k">Appearance</span>
-      <h3>Painted from Obsidian's own variables</h3>
-      <p>Every paint site now reads a theme registry keyed on Obsidian's CSS property names, so
-      the vault's theme and its snippets load, and reload while the app runs. Appearance has its
-      theme, snippet and accent pickers. Fenced code is highlighted by a port of Prism's
-      tokenizer across 85 languages, each token taking its colour from the theme's
-      <code>--code-*</code>.</p>
+      <span class="k">Bookmarks</span>
+      <h3>The pane, against 1.15.0</h3>
+      <p>Files, folders, headings, blocks, searches, graphs and groups, each with Obsidian's
+      icon, menu and rename on the row; drag a note in from Files and it is bookmarked at the
+      drop; the view header's bookmark action; and the writer that Obsidian re-read and kept
+      byte for byte.</p>
     </div>
     <div class="card">
-      <span class="k">The command line</span>
-      <h3><code>scoria --help</code> answers</h3>
-      <p>A vault, a file, a note, a heading or a block, the panes and views to open on, and a
-      <code>--help</code> written from the flag table itself. A second run hands its argument to
-      the window already open on that vault over a socket, so there is one window per vault; the
-      Linux installer writes the desktop entry and the caller's <code>mimeapps.list</code>, so a
-      <code>.md</code> can open here.</p>
+      <span class="k">Tables</span>
+      <h3>Handles, bars and a padded entry</h3>
+      <p>Live Preview tables grew Obsidian's row and column handles that drag to reorder, the
+      "+" bars that append a row or a column, keys that leave a table the way Obsidian's do, and
+      the re-pad on the first click into a cell. The inline title is a field, and arrow keys
+      enter a table from the text around it.</p>
     </div>
     <div class="card">
-      <span class="k">The marks</span>
-      <h3>One sheet, every tile cut from it</h3>
-      <p>Anya's mark family replaces the placeholder art: the logo, the Windows
-      <code>.ico</code>, the macOS <code>.icns</code>, the hicolor theme a Linux desktop reads
-      and the site's favicon are all cuts of one drawing, and the marks' inks are now the
-      palette. Where a vault sets no accent, Scoria uses a brick one of its own rather than
-      Obsidian's purple.</p>
+      <span class="k">Files</span>
+      <h3>Renames on the row</h3>
+      <p>A file tree row renames in place rather than in a dialog, new notes and folders are
+      named on their row, and the Update links prompt has Obsidian's three buttons — Always
+      update, Just once, Do not update — with none of them accented, as none is in Obsidian.</p>
     </div>
     <div class="card">
-      <span class="k">Reading and editing</span>
-      <h3>The gaps a probe could name</h3>
-      <p>Raw HTML blocks and inline HTML in both views, remote images and embeds nested in lists
-      and quotes, folding for headings and lists, selection and copy in reading view, the
-      editor's own context menu, the inline title, <code>obsidian://</code> URIs, the vault
-      manager and Help in windows of their own, and every core-plugin options tab drawing its
-      real rows.</p>
+      <span class="k">Commands</span>
+      <h3>Change theme, and the probes</h3>
+      <p><code>theme:switch</code> opens its suggester — Default with an Active flair, then the
+      installed themes — so <code>hotkeys.json</code>'s binding reaches it. The week's open
+      questions were settled by a probe against 1.15.0 and recorded in the specification beside
+      the behaviour each one extends.</p>
     </div>
   </div>
   <p class="dim small" style="margin-top:18px">
-    <a href="https://github.com/ragtux/scoria/releases/tag/v0.4.0">The commit-level notes for 0.4.0 →</a>
+    <a href="https://github.com/ragtux/scoria/releases/tag/v0.5.0">The commit-level notes for 0.5.0 →</a>
   </p>
 </section>
 
@@ -105,6 +101,16 @@ description: Every tagged release of Scoria, what landed in each, and the perman
         <tr><th>Version</th><th>Date</th><th>What it was</th><th>Notes</th></tr>
       </thead>
       <tbody>
+        <tr>
+          <td><strong>0.4.0</strong></td>
+          <td>5 Nov 2026</td>
+          <td>Bases, PDFs, equations and your theme: a <code>.base</code> opens in all four
+          layouts with its toolbar and is written back in Obsidian's bytes, PDFs render on
+          hayro, TeX is typeset on RaTeX, the vault's CSS theme and snippets load through a
+          registry of Obsidian's own variables with Prism's grammars ported for code, and a
+          command line, Anya's marks on every icon, and Settings in a window of its own.</td>
+          <td><a href="https://github.com/ragtux/scoria/releases/tag/v0.4.0">v0.4.0</a></td>
+        </tr>
         <tr>
           <td><strong>0.3.2</strong></td>
           <td>23 Oct 2026</td>

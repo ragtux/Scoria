@@ -10,7 +10,7 @@
   <img alt="100% Rust" src="https://img.shields.io/badge/100%25-Rust-FF5721?style=flat-square&logo=rust&logoColor=white">
   <img alt="Linux, Windows, macOS" src="https://img.shields.io/badge/Linux%20%7C%20Windows%20%7C%20macOS-2b2b2b?style=flat-square">
   <img alt="MIT licensed" src="https://img.shields.io/badge/license-MIT-2b2b2b?style=flat-square">
-  <img alt="Early alpha, v0.4.0" src="https://img.shields.io/badge/status-early%20alpha%20·%20v0.4.0-f2545b?style=flat-square">
+  <img alt="Early alpha, v0.5.0" src="https://img.shields.io/badge/status-early%20alpha%20·%20v0.5.0-f2545b?style=flat-square">
   <a href="https://github.com/ragtux/scoria/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/ragtux/Scoria/ci.yml?branch=main&style=flat-square&label=CI"></a>
 </p>
 
@@ -42,7 +42,7 @@ palette, its type scale and its Lucide icons, all read off a running copy rather
 
 ## Status
 
-Reader done, Writer in progress. `scoria-markdown` parses CommonMark (all 652 spec examples), the
+Reader done, Writer done: the vault round-tripped byte-identical through a week of mixed use in both apps, closed 9 November 2026. `scoria-markdown` parses CommonMark (all 652 spec examples), the
 GitHub extensions Obsidian uses, and Obsidian's own syntax into one tree with byte spans, and renders
 it to reading-view HTML that matches Obsidian 1.13.7 on 1007 of 1009 corpus notes; the metadata
 cache, the editor and the link rewriter are all built from that tree. The application opens a real
@@ -180,7 +180,7 @@ at [scoria.cc](https://scoria.cc), whose site is built from `site/` in this repo
 | --- | --- | --- |
 | 1. Spike | 50k-line editor, parser conformance corpus, 2 s vault index | Done |
 | 2. Reader | A daily user browses their real vault with no missing content | Done: Files, reading view, Backlinks, Outgoing links, Outline, Tags, Search, quick switcher, graph, command palette, the Settings window, file watching |
-| 3. Writer | The vault round-trips byte-identical after a week of mixed use in both apps | In progress: Source mode, Live Preview, find and replace, file operations with link rewriting, properties, autocompletion, table editing, block references, templates, daily notes, tab groups, bookmarks, the round-trip harness and the Settings toggles are done; every Settings control Obsidian offers as one writes; and the editing commands the 2026-10-25 probes settled (insert blocks, the checklist cycle, highlight colours, Clear formatting, auto-pairing) are in; file recovery is out of phase 3 |
+| 3. Writer | The vault round-trips byte-identical after a week of mixed use in both apps | Done, 9 November 2026: seven days of mixed use on a real vault, every changed byte attributed to a person's edit in one of the two apps (`docs/scoria/Writer gate run.md`). Source mode, Live Preview, find and replace, file operations with link rewriting, properties, autocompletion, table editing with handles, block references, templates, daily notes, tab groups, bookmarks, the round-trip harness, every Settings control Obsidian offers, and the editing commands; file recovery is out of phase 3 |
 | 4. Parity | Core plugin parity | Started: the canvas view and the canvas writer are done, and a `.base` is parsed, written back, evaluated — its expression language is held to 277 of Obsidian's parse trees and 1044 of its answers — and opens in all four of its layouts with its toolbar; a `.pdf` opens in a viewer and embeds; `$x$` and `$$x$$` are typeset (KaTeX's syntax, where Obsidian's MathJax takes more); a vault's CSS theme and snippets load and the Appearance tab picks them, with fenced code highlighted from Prism's own grammars; `obsidian://` URIs, the command line and the desktop entry are in |
 | 5. Ecosystem | Native plugin SDK | Not started |
 
