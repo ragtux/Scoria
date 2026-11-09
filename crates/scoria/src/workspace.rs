@@ -368,6 +368,10 @@ pub const RUNNABLE: &[&str] = &[
     "editor:open-link-in-new-split",
     "editor:open-link-in-new-window",
     "app:delete-file",
+    "workspace:copy-path",
+    "workspace:copy-full-path",
+    "open-with-default-app:open",
+    "open-with-default-app:show",
     "backlink:open",
     "backlink:open-backlinks",
     "outgoing-links:open",
@@ -5654,6 +5658,32 @@ impl Workspace {
             "app:delete-file" => {
                 if let Some(current) = self.current.clone() {
                     self.start_delete(&current, window, cx);
+                }
+            }
+            // The file menu's rows for the active file, by their command
+            // names: "Copy current file path from vault folder" is the path
+            // the menu's "Copy path" writes, "...from system root" the same
+            // file's absolute path, and "Open in default app" / "Show in
+            // system explorer" the menu's two rows of the same names.
+            "workspace:copy-path" => {
+                if let Some(current) = self.current.clone() {
+                    self.copy_path(&current, cx);
+                }
+            }
+            "workspace:copy-full-path" => {
+                if let (Some(state), Some(current)) = (self.state.clone(), self.current.clone()) {
+                    let text = full_path_text(state.vault().absolute(&current));
+                    cx.write_to_clipboard(ClipboardItem::new_string(text));
+                }
+            }
+            "open-with-default-app:open" => {
+                if let Some(current) = self.current.clone() {
+                    self.open_in_default_app(&current, cx);
+                }
+            }
+            "open-with-default-app:show" => {
+                if let Some(current) = self.current.clone() {
+                    self.show_in_system_explorer(&current, cx);
                 }
             }
             "backlink:open" | "backlink:open-backlinks" => {
@@ -18106,6 +18136,19 @@ fn bookmark_rows(
     rows
 }
 
+/// What `workspace:copy-full-path` ("Copy current file path from system
+/// root") puts on the clipboard: the file's path from the root of the file
+/// system, in the platform's own form. The vault root is kept as it was
+/// opened, so a relative one is made absolute against the working folder
+/// here; symbolic links are not resolved, since the path the vault was
+/// opened by is the one its owner knows it by.
+fn full_path_text(absolute: PathBuf) -> String {
+    std::path::absolute(&absolute)
+        .unwrap_or(absolute)
+        .to_string_lossy()
+        .into_owned()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -18185,6 +18228,57 @@ mod tests {
         fs::write(r.join("Sub/S.md"), "[A](../A.md) [[B]]\n").unwrap();
         let state = VaultState::load(&r.to_path_buf()).unwrap();
         (dir, state)
+    }
+
+    /// `workspace:copy-full-path` copies the file from the file system's
+    /// root, its folders joined with the platform's separator, while
+    /// `workspace:copy-path` copies the vault-relative `Sub/S.md` as is.
+    #[test]
+    fn copy_full_path_is_the_vault_root_joined_with_the_vault_path() {
+        let (dir, state) = vault();
+        let text = full_path_text(state.vault().absolute("Sub/S.md"));
+        let expected = dir.path().join("Sub").join("S.md");
+        assert_eq!(text, expected.to_string_lossy());
+        assert!(Path::new(&text).is_absolute());
+        assert!(Path::new(&text).is_file());
+    }
+
+    /// A vault opened by a relative path still copies an absolute one, made
+    /// against the working folder, as the command's name promises.
+    #[test]
+    fn copy_full_path_of_a_relatively_opened_vault_is_absolute() {
+        let text = full_path_text(PathBuf::from("vault").join("Note.md"));
+        let expected = std::env::current_dir()
+            .unwrap()
+            .join("vault")
+            .join("Note.md");
+        assert_eq!(text, expected.to_string_lossy());
+    }
+
+    /// The four file commands of the window cluster are runnable and are
+    /// Obsidian's ids; the ones whose behaviour is not yet observed are not.
+    #[test]
+    fn file_commands_of_the_window_cluster_are_runnable() {
+        let known = scoria_commands::known_ids();
+        for id in [
+            "workspace:copy-path",
+            "workspace:copy-full-path",
+            "open-with-default-app:open",
+            "open-with-default-app:show",
+        ] {
+            assert!(RUNNABLE.contains(&id), "{id} runnable");
+            assert!(known.contains(&id), "{id} is Obsidian's");
+        }
+        for id in [
+            "workspace:copy-url",
+            "workspace:show-trash",
+            "app:toggle-ribbon",
+            "theme:toggle-light-dark",
+            "window:zoom-in",
+            "app:increase-font-size",
+        ] {
+            assert!(!RUNNABLE.contains(&id), "{id} waits on a probe");
+        }
     }
 
     /// A link written in a property is an outgoing link like any other,
