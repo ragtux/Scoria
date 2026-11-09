@@ -1599,6 +1599,14 @@ impl Editor {
     /// hidden lines.
     fn refresh_folds(&mut self) {
         self.hidden = self.folds.resolve(&self.foldables);
+        // A fold that closes over the scroll anchor would leave the pane
+        // blank (the gate's day 6 saw it: fold-more up to the H1 with the
+        // view scrolled to its middle); the view shows the fold's own line
+        // instead.
+        if let Some(line) = fold::hiding_line(&self.hidden, self.scroll_line) {
+            self.scroll_line = line;
+            self.scroll_px = px(0.);
+        }
     }
 
     /// A cursor that arrived inside a fold — a link into the section, a

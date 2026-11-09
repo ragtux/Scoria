@@ -808,6 +808,92 @@ still want the desk's clipboard; the write path they share with duplicate is cov
 **The harness**: sixteen properties green over the vault after the Obsidian half, at 09:30. The
 verdict is in the log. The vault goes to `gate.sh baseline` as `snapshot-2026-11-09d`.
 
+## Day 6, 2026-11-09
+
+**The Scoria half passes; the Obsidian half has not run.** Editing commands and folding, driven over the
+control socket in a headless sway session, 09:28–09:39, on `Note B` (the one ending in `a` with no final
+newline: 95 lines, eleven headings, four flat bullet lists under the `###` headings and the H2s, and no
+checkbox or nested list anywhere — the vault has neither, so both had to be made). Source mode for the
+commands, both modes for the folds. The binary was rebuilt from the working tree first, as every day: day
+5's canvas fix was in the tree and not in the binary. The morning `gate-check` found nothing moved since
+`snapshot-2026-11-09d` and sixteen properties green.
+
+**Every editing command wrote the spec's bytes, and every round trip came back byte-identical** — most
+of them without undo: a three-press cycle, a pair of toggles, a colour applied and removed. The check
+after every command was a save and a byte comparison of the file on disk against the snapshot, not a read
+of the buffer. Line numbers below are the socket's, zero-based.
+
+- **`cycle-list-checklist`** on a bullet: `- [ ] `, `- [x] `, bullet — three presses and the file was
+  byte-identical to the snapshot again, no undo. A paragraph became `- `, `- [ ] `, `- [x] `, the caret
+  riding from ch 3 to ch 9; an empty line `- `, `- [ ] `, `- [x] `. Three undos each, byte-identical.
+- **Mod+L as the keystroke `ctrl-l`**: `- [ ] ` on a bullet with no box, then `[x]`, then `[ ]`, the
+  caret moving with the insert; `- [ ] ### …` on a heading line; over three bullets all gain `- [ ] `,
+  all go `[x]`, all go `[ ]`; the mixed selection (one with a box, two without) inverted each line and
+  swapped back on the second press — the period-two row, as recorded.
+- **The six colours**: plain `==w==`, red over it inserted the emoji, blue replaced it in place, blue
+  again removed the whole highlight — four commands, no undo, byte-identical. Each colour with a bare
+  caret on a word inside parentheses wrote `==<emoji>w==` and the same colour again removed it. Over two
+  whole bullet lines a colour wraps per line, `==🟢- …==` on each. The plain toggle with a bare caret,
+  twice, byte-identical.
+- **Clear formatting**: a bullet line with a code span lost its `- ` and its backticks; `## heading`
+  became its text; a line whose only markup is a wikilink did not change; the coloured highlight lost
+  marks, emoji and the line's `- ` together; a bare caret inside `==…==` changed nothing.
+- **The inline toggles over two whole bullet lines**: bold, italics, strikethrough, code and inline math
+  each wrapped each line *marker included* (`**- text**`), comments wrapped the pair as one; the second
+  press restored the bytes in all six. A selection from mid-line to mid-line took the markers at its
+  edges (`- one **two three**` / `**- four fi**ve` for a selection from `two` to inside `five`); a bare caret took the word under it.
+- **The line toggles over four bullets**: bullet removed and restored; blockquote wrote `> - …` and
+  restored; numbered replaced the bullets with `1.`–`4.`, and the second press left bare lines, not
+  bullets — that pair does not round-trip, two undos do. Three bullets and a bare line: the bare one
+  gains. A blank line inside the selection: blockquote prefixed it `> `, numbered skipped it and went on
+  to number the heading after it (`2. ## …`).
+- **Shift+Tab**, `useTab` and `tabSize` absent from `app.json` (so tab, 4): Tab wrote `\t`, Shift+Tab
+  took it back; three spaces went to none, five to one, `\t ` to one space, three spaces before a
+  paragraph to none, a top-level item did not change; `indent-list` and `unindent-list` gave the same
+  bytes as the keys.
+
+**Folding wrote nothing.** The five commands in Source mode and again in Live Preview, the note's bytes
+compared after each: `toggle-fold` on the H2 at 66 recorded `{66,72}`, the trailing blank included; on
+the list parent at 68 (made by the two Tabs below) `{68,70}`, its last child; on a paragraph nothing.
+`fold-more` from a bullet at 50 folded `{49,53}`, then `{41,65}`, then `{0,94}`, then nothing more;
+`fold-less` peeled the outermost first. `fold-all` set twelve ranges, one per foldable line, and
+`unfold-all` none. The last heading folded to 94, the end of the file, and the first to 94 as well. The
+folds crossed the mode switch; reading view showed the folded H2 collapsed behind its indicator
+(screenshot), and the editor read the same three folds at full extent on the way back. Leaving the note
+wrote `~/.config/scoria/note-fold/<id>.json` in Obsidian's shape (`{"folds":[{from,to}…],"lines":95}`),
+outside the vault; coming back restored them; `unfold-all` before quitting emptied the store to `{}`.
+
+**Two faults found and fixed, neither a writer's.** (1) `fold-more` up to the H1 with the view scrolled
+to the note's middle left the pane blank: the scroll anchor was inside the fold and nothing was drawn,
+not even the placeholder. `refresh_folds` now moves the anchor to the hiding fold's own line
+(`fold::hiding_line`, `crates/scoria/src/fold.rs`), verified live in both modes: the one `# …` line.
+(2) Clear formatting over a selection with nothing to clear pushed an empty undo step — the prefix pass
+emitted an empty cut for every selected line without a prefix — so the `ctrl-z` after it did nothing.
+Found because an undo count came out one short. `clear_formatting_plan` drops empty cuts now, with
+tests in `format.rs` and `buffer.rs` (`clear_formatting_needs_a_selection_and_keeps_it`).
+
+**Two driving artefacts.** Offsets computed from the file on disk before the buffer was saved put the
+caret on the wrong line once: the first attempt to leave `- [x]` on 44 flipped it back to `- [ ]`
+(the helper saves first now). And `set_selection` onto a hidden line — the socket can put the caret
+inside a closed fold, which a person cannot — left the fold closed until the next reveal, a mode switch,
+which opened the fold hiding the caret and looked like the switch dropping a heading fold. With the
+caret on a visible line both nested folds survived the switch in both directions.
+
+**What the diff reports, 09:39.** `Note B` alone, six lines: `- [x]` on 44 (the cycle, twice),
+`- [ ]` on 45 (Mod+L), a plain highlight on a word of 46, a yellow highlight on a word of 56, and a tab
+before 69 and 70 (the nested pair). Every one is Scoria's, and every one a person's edit. The three
+config files Obsidian touches did not move: Obsidian did not run. `workspace.json` was rewritten on
+quit, excluded as always. The harness, with the vault named, is sixteen green after the half.
+
+**For the Obsidian half.** (1) Open `Note B`: the yellow highlight should render without its emoji, the
+two boxes as checkboxes, the nested pair under a list parent with a fold indicator. (2) Click the box on
+44 in reading view (`- [ ]`) and Mod+L on 45 (`- [x]`), and compare bytes. (3) `toggle-highlight-yellow`
+on the yellow word removes it; a colour over the plain highlight on 46 inserts an emoji. (4) Toggle bold
+over two whole bullet lines: does Obsidian wrap the `- ` too (`**- text**`)? The probe's rows were plain
+lines. (5) `toggle-numbered-list` over bullets and again: `1.` then bare lines, or the bullets back?
+(6) Shift+Tab the two nested lines back and compare bytes. (7) Fold the H2 and the list parent, switch
+modes, and `fold-more` from inside a section with the view scrolled down.
+
 ## The log
 
 One row per day. "Moved" is what the diff reported; "author" is the answer to the two
@@ -821,5 +907,5 @@ questions above.
 | 3 | 2026-11-08 | 14 of the 15 table commands on `Note F`, each checked and undone to byte-identical; first front matter added, folded and unfolded; property type set from the sidebar menu (Checkbox, then List) | `Day 2 New Note` renamed on the row to `Day 3 New Note` and a table built and commanded in it; `Note F`'s property renamed twice with a type each time, an empty `Invalid date.md` on the way; the three `.obsidian` files touched | `Note F`'s front matter (Scoria's `status:`, then Obsidian's `scoria:` list), the renamed note with its table, `Invalid date.md`, `types.json` (Scoria's one key, then Obsidian's six) | every one a person's edit in one of the two apps; the three config files moved mtimes and no bytes | **passes** — Obsidian's `types.json` showed Scoria's unseeded (fixed: the three defaults on every write), the palette showed Move row up hidden in the first body row (fixed), and a submenu bug fell on the Scoria half |
 | 4 | 2026-11-09 | all six suggesters accepted into `Note C` (`[[`, `[[Note#`, `![[`, `#tag`, an alias added to `Note F` for the purpose, a block whose id was written into `Note F`), the first accept and a ten-edit stretch undone to byte-identical; `Templates/` and a template note made in the UI, `templates.json` and `daily-notes.json` written from Settings, the template inserted, yesterday's note made by following a `[[Daily/…]]` link, today's created from the template, stepped back and forward | Settings: Templates time format changed and restored and a date format added, Daily notes dropdown moved and restored; the template inserted in `Note C`; today's note opened, typed into, stepped back and forward; the five suggesters accepted in today's daily note, the block one writing an own-line id under a heading of `Note F` | `Templates/` and `Daily/` (three notes), `Note C` (the morning's ten lines, then Obsidian's template), `Note F` (two alias lines, Scoria's inline id, Obsidian's own-line id), `templates.json` (Scoria's two keys, Obsidian's third appended), `daily-notes.json` (rewritten by Obsidian byte-identical, twice), `.trash/Untitled.canvas` (empty) | every one a person's edit in one of the two apps; the three config files Obsidian rewrites at launch did not move (it was not relaunched) | **passes** — Obsidian rewrote both of the config files Scoria had created and kept Scoria's bytes; the two apps read each other's alias and template settings, and both refuse a daily note whose folder is missing with the same notice; the 1.15.0 Daily notes tab matches the spec, and Obsidian's delete went to `.trash` where Scoria's went to the system trash |
 | 5 | 2026-11-09 | both canvases: pan, zoom, select, move, resize, colour, an edge, a group, duplicate (copy/paste needs the desk's clipboard), undo and typing into a card, each undone to byte-identical; `Canvas 2`'s first edit rewrote every node line into the edited-save key order the spec records, the data unchanged | one card of `Canvas 2` moved by hand; `Canvas 1` not opened | `Canvas 1`: Scoria's three lines (the typed suffix, a colour, an edge); `Canvas 2`: every node line once, into the edited-save order, then the moved card's line to the end of the array; `workspace.json` | every one a person's edit in one of the two apps; the key-order rewrite is the spec's rule, done once by Scoria and accepted by Obsidian 1.15.0, which kept the 28 other lines byte for byte | **passes** — Scoria's canvas writer is a fixed point of Obsidian's; the moved card came back last in the array, which Scoria's drag did not do (fixed: the first movement of a drag raises the selection, undone with the move); copy/paste waits on the desk |
-| 6 |  |  |  |  |  |  |
+| 6 | 2026-11-09 | on `Note B`: the checklist cycle, Mod+L as a keystroke, the six colours and the plain highlight, Clear formatting, the six inline and three line toggles, Shift+Tab's arithmetic — each checked on disk and round-tripped byte-identical, most without undo; the five fold commands in both modes and reading view, record outside the vault | — | `Note B`: two checkboxes, two highlights (one yellow), two lines nested by a tab; `workspace.json` | every one Scoria's and a person's edit; the three config files did not move (Obsidian did not run) | **Scoria half passes** — no writer fault; two view faults fixed (a fold over the scroll anchor left a blank pane; a no-op Clear formatting pushed an empty undo step); Obsidian half pending |
 | 7 |  |  |  |  |  |  |

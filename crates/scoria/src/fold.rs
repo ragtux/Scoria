@@ -356,6 +356,17 @@ pub fn is_hidden(hidden: &[(usize, usize)], line: usize) -> bool {
     hidden.iter().any(|&(a, b)| a <= line && line <= b)
 }
 
+/// The line whose fold hides `line`, when one does: the outermost fold's
+/// own line, which is what a view anchored inside the fold has to show
+/// instead.
+pub fn hiding_line(hidden: &[(usize, usize)], line: usize) -> Option<usize> {
+    hidden
+        .iter()
+        .filter(|&&(a, b)| a <= line && line <= b)
+        .map(|&(a, _)| a.saturating_sub(1))
+        .min()
+}
+
 /// The end of the hidden run `line` is in, when it is in one.
 pub fn hidden_end(hidden: &[(usize, usize)], line: usize) -> Option<usize> {
     hidden
@@ -569,6 +580,11 @@ mod tests {
         assert!(is_hidden(&[(20, 26)], 23));
         assert!(!is_hidden(&[(20, 26)], 19));
         assert_eq!(hidden_end(&[(20, 26)], 23), Some(26));
+        // The scroll anchor inside a fold moves to the fold's line; nested
+        // folds give the outermost one, the only line of the three visible.
+        assert_eq!(hiding_line(&[(20, 26)], 23), Some(19));
+        assert_eq!(hiding_line(&[(1, 94), (42, 65), (50, 53)], 50), Some(0));
+        assert_eq!(hiding_line(&[(20, 26)], 19), None);
         // A jump into the section unfolds it.
         assert!(folds.unfold_hiding(&fs, 21));
         assert!(folds.keys().is_empty());

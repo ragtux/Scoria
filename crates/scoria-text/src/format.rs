@@ -519,6 +519,9 @@ pub fn clear_formatting_plan(
     }
     cuts.sort_by_key(|r| r.start);
     cuts.dedup();
+    // A line with no prefix contributes an empty cut; an edit plan of empty
+    // cuts would still be recorded as an undo step that changes nothing.
+    cuts.retain(|r| !r.is_empty());
     cuts.into_iter().map(|r| (r, String::new())).collect()
 }
 
@@ -991,6 +994,10 @@ mod tests {
         };
         let whole = |text: &str| clear(text, 0..text.len());
         assert_eq!(whole("**bold _italic_ text**"), "bold italic text");
+        // Nothing to clear is no plan at all, not a plan of empty cuts:
+        // the gate's day 6 found a no-op run left an undo step behind.
+        let s = starts("nothing to clear\n| a | b |\n");
+        assert!(clear_formatting_plan("nothing to clear\n| a | b |\n", &s, 0..26).is_empty());
         assert_eq!(
             clear("**bold _italic_ text**", 7..16),
             "**bold italic text**"

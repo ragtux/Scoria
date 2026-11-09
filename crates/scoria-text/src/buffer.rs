@@ -1931,6 +1931,12 @@ mod tests {
         assert!(buf.clear_formatting());
         assert_eq!(buf.text(), "bold it\n");
         assert_eq!(buf.selection(), 0..7);
+        // A selection with nothing to clear is a no-op and leaves no undo
+        // step: the gate's day 6 found one ctrl-z going to such a step.
+        let mut buf = TextBuffer::from_file("see [[Other|alias]] end\n| a | b |\n");
+        buf.set_cursor(33, Some(0));
+        assert!(!buf.clear_formatting());
+        assert!(!buf.can_undo());
     }
 
     #[test]
