@@ -810,7 +810,8 @@ verdict is in the log. The vault goes to `gate.sh baseline` as `snapshot-2026-11
 
 ## Day 6, 2026-11-09
 
-**The Scoria half passes; the Obsidian half has not run.** Editing commands and folding, driven over the
+**Day 6 passes: Obsidian's bytes agreed with Scoria's on three of four shared gestures, and the fourth was
+Scoria's to fix.** The Scoria half first. Editing commands and folding, driven over the
 control socket in a headless sway session, 09:28–09:39, on `Note B` (the one ending in `a` with no final
 newline: 95 lines, eleven headings, four flat bullet lists under the `###` headings and the H2s, and no
 checkbox or nested list anywhere — the vault has neither, so both had to be made). Source mode for the
@@ -894,6 +895,48 @@ lines. (5) `toggle-numbered-list` over bullets and again: `1.` then bare lines, 
 (6) Shift+Tab the two nested lines back and compare bytes. (7) Fold the H2 and the list parent, switch
 modes, and `fold-more` from inside a section with the view scrolled down.
 
+### The Obsidian half, 2026-11-09
+
+Run by hand, Obsidian 1.15.0, from the seven-step list above; launched 09:47, `Note B` saved 10:17:46,
+`workspace.json` 10:18:10. Attribution is by mtime and bytes, since the diff against
+`snapshot-2026-11-09d` holds both halves.
+
+**Four of Scoria's six lines came back changed, each by the gesture the list asked for, and three of
+the four are the bytes Scoria wrote for the same gesture this morning.** Mod+L on 45 turned Scoria's
+`- [ ] ` into `- [x] ` — the three bytes Scoria's `ctrl-l` wrote. A colour over the plain highlight on
+46 inserted its emoji directly after the opening `==` (`==🔵…==`), which is the shape Scoria's red-over-plain
+wrote this morning. `toggle-highlight-yellow` on the yellow word of 56 took the whole highlight off, marks
+and emoji, back to the snapshot's bytes — Scoria's same-colour-again did the same. Shift+Tab on the two
+tab-nested lines 69 and 70 returned them to the snapshot's bytes exactly, so the two apps' outdent of
+`\t- …` agree, as Scoria's K1 round trip already said.
+
+**The fourth disagrees, and Scoria was wrong.** Mod+B over the two whole bullet lines 60 and 61 wrote
+`- **text**` on each: the pair around the item's own text, the `- ` left outside. Scoria's morning run
+wrote `**- text**`, marker included, on the same two lines and read it as the probe's rule
+("a selection that starts and ends mid-line still takes the inline markers at the selection edges")
+applied to a line start. The probe's rows were plain lines, and a list line is the case they did not
+cover. Fixed: each line's piece of a multi-line wrap now starts at the item's own text
+(`lists::parse_prefix(..).content`), so a task box and an ordered marker are skipped too — the parser's
+reading, not an observation, and said so in
+[[Specification#Observed editing command behavior, Obsidian 1.14.5 (installer build 1.13.7)]]; test
+`a_multi_line_selection_is_wrapped_per_line`. Whether the second Mod+B was pressed is not recorded: the
+bold is still in the file, so either it was not, or Obsidian's second press over `- **text**` lines does
+not strip. A single whole bullet line selected is unprobed.
+
+**Three things the file cannot say.** Line 44's `- [x]` is unchanged, so the reading-view click of step
+2 either was not made or was made twice; `toggle-numbered-list` over the four bullets and again was
+undone before the save, so what the second press left (bullets or bare lines) is not in the bytes; and
+the folds of step 7 wrote nothing, which is the expected answer and the only one a diff can give.
+
+**The config files.** `app.json`, `appearance.json` and `core-plugins.json` moved their mtimes at
+09:47:30–31, the launch, and not one byte — the narrowed trap of day 4 holding again. The other four
+`.obsidian` files did not move. `workspace.json` rewritten, excluded as always.
+
+**Day 6 passes.** Every byte that moved is a person's edit in one of the two apps; nothing was rewritten
+that nobody touched. The harness, with the vault named after both halves, is sixteen green. The day's
+one divergence was a writer's (`**- text**` for `- **text**`), found by the comparison this week exists
+for, and fixed with the day. The vault goes to `gate.sh baseline`.
+
 ## The log
 
 One row per day. "Moved" is what the diff reported; "author" is the answer to the two
@@ -907,5 +950,5 @@ questions above.
 | 3 | 2026-11-08 | 14 of the 15 table commands on `Note F`, each checked and undone to byte-identical; first front matter added, folded and unfolded; property type set from the sidebar menu (Checkbox, then List) | `Day 2 New Note` renamed on the row to `Day 3 New Note` and a table built and commanded in it; `Note F`'s property renamed twice with a type each time, an empty `Invalid date.md` on the way; the three `.obsidian` files touched | `Note F`'s front matter (Scoria's `status:`, then Obsidian's `scoria:` list), the renamed note with its table, `Invalid date.md`, `types.json` (Scoria's one key, then Obsidian's six) | every one a person's edit in one of the two apps; the three config files moved mtimes and no bytes | **passes** — Obsidian's `types.json` showed Scoria's unseeded (fixed: the three defaults on every write), the palette showed Move row up hidden in the first body row (fixed), and a submenu bug fell on the Scoria half |
 | 4 | 2026-11-09 | all six suggesters accepted into `Note C` (`[[`, `[[Note#`, `![[`, `#tag`, an alias added to `Note F` for the purpose, a block whose id was written into `Note F`), the first accept and a ten-edit stretch undone to byte-identical; `Templates/` and a template note made in the UI, `templates.json` and `daily-notes.json` written from Settings, the template inserted, yesterday's note made by following a `[[Daily/…]]` link, today's created from the template, stepped back and forward | Settings: Templates time format changed and restored and a date format added, Daily notes dropdown moved and restored; the template inserted in `Note C`; today's note opened, typed into, stepped back and forward; the five suggesters accepted in today's daily note, the block one writing an own-line id under a heading of `Note F` | `Templates/` and `Daily/` (three notes), `Note C` (the morning's ten lines, then Obsidian's template), `Note F` (two alias lines, Scoria's inline id, Obsidian's own-line id), `templates.json` (Scoria's two keys, Obsidian's third appended), `daily-notes.json` (rewritten by Obsidian byte-identical, twice), `.trash/Untitled.canvas` (empty) | every one a person's edit in one of the two apps; the three config files Obsidian rewrites at launch did not move (it was not relaunched) | **passes** — Obsidian rewrote both of the config files Scoria had created and kept Scoria's bytes; the two apps read each other's alias and template settings, and both refuse a daily note whose folder is missing with the same notice; the 1.15.0 Daily notes tab matches the spec, and Obsidian's delete went to `.trash` where Scoria's went to the system trash |
 | 5 | 2026-11-09 | both canvases: pan, zoom, select, move, resize, colour, an edge, a group, duplicate (copy/paste needs the desk's clipboard), undo and typing into a card, each undone to byte-identical; `Canvas 2`'s first edit rewrote every node line into the edited-save key order the spec records, the data unchanged | one card of `Canvas 2` moved by hand; `Canvas 1` not opened | `Canvas 1`: Scoria's three lines (the typed suffix, a colour, an edge); `Canvas 2`: every node line once, into the edited-save order, then the moved card's line to the end of the array; `workspace.json` | every one a person's edit in one of the two apps; the key-order rewrite is the spec's rule, done once by Scoria and accepted by Obsidian 1.15.0, which kept the 28 other lines byte for byte | **passes** — Scoria's canvas writer is a fixed point of Obsidian's; the moved card came back last in the array, which Scoria's drag did not do (fixed: the first movement of a drag raises the selection, undone with the move); copy/paste waits on the desk |
-| 6 | 2026-11-09 | on `Note B`: the checklist cycle, Mod+L as a keystroke, the six colours and the plain highlight, Clear formatting, the six inline and three line toggles, Shift+Tab's arithmetic — each checked on disk and round-tripped byte-identical, most without undo; the five fold commands in both modes and reading view, record outside the vault | — | `Note B`: two checkboxes, two highlights (one yellow), two lines nested by a tab; `workspace.json` | every one Scoria's and a person's edit; the three config files did not move (Obsidian did not run) | **Scoria half passes** — no writer fault; two view faults fixed (a fold over the scroll anchor left a blank pane; a no-op Clear formatting pushed an empty undo step); Obsidian half pending |
+| 6 | 2026-11-09 | on `Note B`: the checklist cycle, Mod+L as a keystroke, the six colours and the plain highlight, Clear formatting, the six inline and three line toggles, Shift+Tab's arithmetic — each checked on disk and round-tripped byte-identical, most without undo; the five fold commands in both modes and reading view, record outside the vault | Mod+L on a box, a colour over the plain highlight, yellow-again on the yellow one, Mod+B over two whole bullet lines, Shift+Tab on the nested pair; folds; the three config files moved at launch, no bytes | `Note B`: Scoria's six lines, four of them rewritten by Obsidian's gestures (`- [x]`, `==🔵…==`, the yellow highlight gone, the nesting gone) and two bullet lines bolded; `workspace.json` | every one a person's edit in one of the two apps; the three config files moved mtimes and no bytes | **passes** — three of the four shared gestures byte-identical between the apps; Mod+B over whole bullet lines gave `- **text**` where Scoria wrote `**- text**` (fixed: a line's piece starts after its list marker); two view faults fixed on the Scoria half (a fold over the scroll anchor left a blank pane, a no-op Clear formatting pushed an empty undo step) |
 | 7 |  |  |  |  |  |  |

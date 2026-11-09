@@ -1458,6 +1458,16 @@ and `1. one` / *(blank)* / `2. three` — the numbering counts only the lines it
 writes), but the blockquote toggle prefixes it too (`> one` / `> ` /
 `> three`), and the inline toggles wrap the non-blank lines only.
 
+**A list item selected whole is wrapped after its marker.** Observed on the
+gate vault on 2026-11-09, Obsidian 1.15.0, by hand: Mod+B over two whole
+bullet lines wrote `- **text one**` and `- **text two**` — the pair around the item's text, the
+`- ` left outside it — where Scoria had written `**- …**` the same morning
+([[Writer gate run#Day 6, 2026-11-09]]). Scoria now starts each line's piece
+at the item's own text (`lists::parse_prefix(..).content`, so a task box and
+an ordered marker are skipped too, which is the one parser's reading and not
+an observation). Only bullets and only a multi-line selection were observed;
+a single whole bullet line selected, and quote markers, are unprobed.
+
 The mixed-selection rule for the line toggles is **remove only when every
 line already has the prefix**, which is what Scoria does:
 

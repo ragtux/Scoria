@@ -1260,7 +1260,16 @@ impl TextBuffer {
         (first..=last)
             .filter_map(|l| {
                 let lr = self.line_range(l);
-                let piece = range.start.max(lr.start)..range.end.min(lr.end);
+                let mut piece = range.start.max(lr.start)..range.end.min(lr.end);
+                // A piece that starts inside a list item's prefix wraps the
+                // item's own text, not its marker: Obsidian 1.15.0 made
+                // `- **text**` of two whole bullet lines on the gate vault
+                // (day 6), where the marker-included wrap had read
+                // `**- text**`.
+                let content = lr.start + lists::parse_prefix(self.line_text(l)).content;
+                if piece.start < content {
+                    piece.start = content.min(piece.end);
+                }
                 (piece.start < piece.end && !self.text[piece.clone()].trim().is_empty())
                     .then_some(piece)
             })
@@ -1830,6 +1839,14 @@ mod tests {
         buf.set_cursor(10, Some(1));
         assert!(buf.toggle_wrap("`"));
         assert_eq!(buf.text(), "o`ne`\n`two`\n`th`ree\n");
+        // List items selected whole are wrapped after their marker, as
+        // Obsidian 1.15.0 wrote on the gate vault's day 6; twice restores.
+        let mut buf = TextBuffer::from_file("- one\n- [ ] two\n\t1. three\n");
+        buf.set_cursor(25, Some(0));
+        assert!(buf.toggle_wrap("**"));
+        assert_eq!(buf.text(), "- **one**\n- [ ] **two**\n\t1. **three**\n");
+        assert!(buf.toggle_wrap("**"));
+        assert_eq!(buf.text(), "- one\n- [ ] two\n\t1. three\n");
     }
 
     /// The six colour commands, through the buffer: the wrap and its undo.
