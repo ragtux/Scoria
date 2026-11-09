@@ -2948,6 +2948,10 @@ pub struct Workspace {
     title_focus: FocusHandle,
     /// The header title being renamed in place, if any.
     title_edit: Option<TitleEdit>,
+    /// A name the note's inline title asked the file to take, waiting for a
+    /// frame: the subscription that hears it has no window, and a rename may
+    /// raise the "Update links?" prompt.
+    pending_title_rename: Option<String>,
     /// Where each group's header title was painted and how it was shaped,
     /// left by the last frame: what a click on a title is measured against.
     title_layout: HashMap<u64, inline_field::Layout>,
@@ -3125,6 +3129,10 @@ fn view_subscriptions(
                 selected,
                 link,
             } => this.open_editor_menu(*position, selection.clone(), *selected, link.clone(), cx),
+            EditorEvent::RenameTo(value) => {
+                this.pending_title_rename = Some(value.clone());
+                cx.notify();
+            }
             EditorEvent::Reported(message) => this.report(message.clone(), cx),
         }),
     ]
@@ -3558,6 +3566,7 @@ impl Workspace {
             tab_bounds: HashMap::new(),
             title_focus: cx.focus_handle(),
             title_edit: None,
+            pending_title_rename: None,
             title_layout: HashMap::new(),
             layout: None,
             layout_restored: false,
@@ -9192,6 +9201,25 @@ impl Workspace {
         cx.notify();
     }
 
+    /// Enter in the note's own inline title: the open file takes the typed
+    /// name through the path the view-header title and the rename prompt use,
+    /// so the same validator and the same link rewrite apply. A name the
+    /// filesystem would refuse is reported and nothing moves.
+    fn rename_from_inline_title(
+        &mut self,
+        value: &str,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(from) = self.current.clone() else {
+            return;
+        };
+        match self.renamed_path(&from, value.trim()) {
+            Ok(to) => self.rename_with_links(&from, &to, window, cx),
+            Err(err) => self.report(err, cx),
+        }
+    }
+
     /// Escape in the view-header title: the edit is abandoned and nothing
     /// is renamed, as Obsidian's does.
     fn cancel_title(&mut self, window: &mut Window, cx: &mut Context<Self>) {
@@ -12289,8 +12317,9 @@ impl Workspace {
     /// belongs to no file with text nothing ever saves.
     fn typed_text_target(focus: &str, painted: MainView) -> &'static str {
         match focus {
-            // A property row or a table cell is the editor's own field.
-            "editor" | "property-field" | "cell-field" => match painted {
+            // A property row, a table cell or the inline title is the
+            // editor's own field.
+            "editor" | "property-field" | "cell-field" | "title-field" => match painted {
                 MainView::Editor => "editor",
                 _ => "none",
             },
@@ -12354,6 +12383,7 @@ impl Workspace {
             // without taking the focus.
             return match self.editor.read(cx).field_kind() {
                 Some("cell") => "cell-field",
+                Some("title") => "title-field",
                 Some(_) => "property-field",
                 None => "editor",
             };
@@ -15781,6 +15811,11 @@ impl EntityInputHandler for Workspace {
 impl Render for Workspace {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         self.corners = WindowCorners::of(window);
+        if let Some(value) = self.pending_title_rename.take() {
+            cx.defer_in(window, move |this, window, cx| {
+                this.rename_from_inline_title(&value, window, cx)
+            });
+        }
         self.dock_tree_keyboard = self.dock_tree_focus.is_focused(window);
         let corners = self.corners;
         // The desktop's scheme: a vault on `theme: "system"` follows it.
@@ -17963,7 +17998,7 @@ mod tests {
     /// that would otherwise refuse it.
     #[test]
     fn typing_reaches_no_editor_the_main_area_is_not_painting() {
-        for focus in ["editor", "property-field", "cell-field"] {
+        for focus in ["editor", "property-field", "cell-field", "title-field"] {
             assert_eq!(
                 Workspace::typed_text_target(focus, MainView::Editor),
                 "editor"

@@ -2750,6 +2750,29 @@ typed character on the line after the table, Arrow Up on the line before it, a c
 below left typing working, and Escape kept `4w`. **Still out**: the re-pad on entering a cell, and the
 table commands, which act on the buffer's caret and so do nothing for an open cell.
 
+### The inline title is not a field, and an arrow key into a table loses the caret
+
+Filed from `tools/obsidian-probe/inline-title-and-table-entry.mjs`
+([[Specification#Observed inline title and table entry, Obsidian 1.15.0]]), after a report that the
+note's title could not be edited or selected and that the caret vanished when arrowing down through a
+table.
+
+**Obsidian.** The inline title is a `contenteditable` field: a click edits it, Arrow Up from the first
+line enters it selected, Arrow Down, Tab and Escape return to the document, Enter renames the file. An
+arrow key into a table puts the caret in its first cell.
+
+**Scoria.** The inline title was only painted, and a table is always folded to its grid, so the
+editor's own caret in its lines was never drawn and no field was open to take the keys.
+
+**Landed 2026-11-08**: both. The title is the editor's own field (`title_edit`), with a selection, the
+editing keys and the clipboard, painted through `inline_field` and renamed through the workspace's
+`rename_with_links`; an arrow key entering a table opens its first cell, and the caret follows the open
+cell. Driven on a scratch vault: a click put the caret mid-word and typing edited it, Escape restored
+it, Arrow Up selected it, Enter renamed the file, Arrow Down left it, and three Downs from above a table
+went blank line, header cell, first body cell. **Still out**: the reading view's inline title, Obsidian's
+behaviour when the title loses focus (a press elsewhere abandons it here), and a re-pad on entering a
+table.
+
 ## Blocked by the harness, not by the code
 
 Five things could not be settled from outside the process. They are not findings and not fixes —

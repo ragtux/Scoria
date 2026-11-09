@@ -1,0 +1,1552 @@
+{
+ "titleAndTable": {
+  "fixtures": {
+   "startedAt": "2026-11-09T02:46:33.291Z",
+   "steps": {},
+   "order": [],
+   "elapsedMs": 1
+  },
+  "run": {
+   "startedAt": "2026-11-09T02:46:34.486Z",
+   "steps": {
+    "s00-context": {
+     "ok": true,
+     "ms": 1856,
+     "seedOk": true,
+     "snapshot": {
+      "cursor": {
+       "line": 0,
+       "ch": 0
+      },
+      "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+      "active": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "editable": true,
+       "inTable": false,
+       "inEditor": true,
+       "inTitle": false,
+       "text": "intro line here\n\n\nA\nB\n\n\n\n\n1\n2\n"
+      },
+      "sel": {
+       "text": "",
+       "collapsed": true,
+       "anchorOffset": 0,
+       "anchorIn": {
+        "tag": "DIV",
+        "inTable": false,
+        "inTitle": false,
+        "inEditor": true,
+        "cell": null
+       }
+      },
+      "title": {
+       "text": "Probe Note",
+       "editable": true
+      },
+      "file": "Probe Note.md"
+     },
+     "config": {
+      "showInlineTitle": true
+     }
+    },
+    "s01-arrow-down-into-table-from-column-0": {
+     "ok": true,
+     "ms": 3909,
+     "seedOk": true,
+     "start": {
+      "cursor": {
+       "line": 0,
+       "ch": 0
+      },
+      "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+      "active": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "editable": true,
+       "inTable": false,
+       "inEditor": true,
+       "inTitle": false,
+       "text": "intro line here\n\n\nA\nB\n\n\n\n\n1\n2\n"
+      },
+      "sel": {
+       "text": "",
+       "collapsed": true,
+       "anchorOffset": 0,
+       "anchorIn": {
+        "tag": "DIV",
+        "inTable": false,
+        "inTitle": false,
+        "inEditor": true,
+        "cell": null
+       }
+      },
+      "title": {
+       "text": "Probe Note",
+       "editable": true
+      },
+      "file": "Probe Note.md"
+     },
+     "after": [
+      {
+       "cursor": {
+        "line": 1,
+        "ch": 0
+       },
+       "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": false,
+        "inEditor": true,
+        "inTitle": false,
+        "text": "intro line here\n\n\nA\nB\n\n\n\n\n1\n2\n"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": false,
+         "inTitle": false,
+         "inEditor": true,
+         "cell": null
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "ArrowDown"
+      },
+      {
+       "cursor": {
+        "line": 2,
+        "ch": 2
+       },
+       "value": "intro line here\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "inTitle": false,
+        "text": "A"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": true,
+         "inTitle": false,
+         "inEditor": true,
+         "cell": "AA"
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "ArrowDown"
+      },
+      {
+       "cursor": {
+        "line": 4,
+        "ch": 2
+       },
+       "value": "intro line here\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "inTitle": false,
+        "text": "1"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": true,
+         "inTitle": false,
+         "inEditor": true,
+         "cell": "11"
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "ArrowDown"
+      },
+      {
+       "cursor": {
+        "line": 5,
+        "ch": 2
+       },
+       "value": "intro line here\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "inTitle": false,
+        "text": "3"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": true,
+         "inTitle": false,
+         "inEditor": true,
+         "cell": "33"
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "ArrowDown"
+      },
+      {
+       "cursor": {
+        "line": 6,
+        "ch": 0
+       },
+       "value": "intro line here\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": false,
+        "inEditor": true,
+        "inTitle": false,
+        "text": "intro line here\n\n\nA\nB\n\n\n\n\n1\n2\n"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": false,
+         "inTitle": false,
+         "inEditor": true,
+         "cell": null
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "ArrowDown"
+      },
+      {
+       "cursor": {
+        "line": 7,
+        "ch": 0
+       },
+       "value": "intro line here\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": false,
+        "inEditor": true,
+        "inTitle": false,
+        "text": "intro line here\n\n\nA\nB\n\n\n\n\n1\n2\n"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": false,
+         "inTitle": false,
+         "inEditor": true,
+         "cell": null
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "ArrowDown"
+      }
+     ]
+    },
+    "s02-arrow-down-into-table-from-column-8": {
+     "ok": true,
+     "ms": 3295,
+     "seedOk": true,
+     "start": {
+      "cursor": {
+       "line": 0,
+       "ch": 8
+      },
+      "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+      "active": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "editable": true,
+       "inTable": false,
+       "inEditor": true,
+       "inTitle": false,
+       "text": "intro line here\n\n\nA\nB\n\n\n\n\n1\n2\n"
+      },
+      "sel": {
+       "text": "",
+       "collapsed": true,
+       "anchorOffset": 8,
+       "anchorIn": {
+        "tag": "DIV",
+        "inTable": false,
+        "inTitle": false,
+        "inEditor": true,
+        "cell": null
+       }
+      },
+      "title": {
+       "text": "Probe Note",
+       "editable": true
+      },
+      "file": "Probe Note.md"
+     },
+     "after": [
+      {
+       "cursor": {
+        "line": 1,
+        "ch": 0
+       },
+       "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": false,
+        "inEditor": true,
+        "inTitle": false,
+        "text": "intro line here\n\n\nA\nB\n\n\n\n\n1\n2\n"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": false,
+         "inTitle": false,
+         "inEditor": true,
+         "cell": null
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "ArrowDown"
+      },
+      {
+       "cursor": {
+        "line": 2,
+        "ch": 2
+       },
+       "value": "intro line here\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "inTitle": false,
+        "text": "A"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": true,
+         "inTitle": false,
+         "inEditor": true,
+         "cell": "AA"
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "ArrowDown"
+      },
+      {
+       "cursor": {
+        "line": 4,
+        "ch": 2
+       },
+       "value": "intro line here\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "inTitle": false,
+        "text": "1"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": true,
+         "inTitle": false,
+         "inEditor": true,
+         "cell": "11"
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "ArrowDown"
+      },
+      {
+       "cursor": {
+        "line": 5,
+        "ch": 2
+       },
+       "value": "intro line here\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "inTitle": false,
+        "text": "3"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": true,
+         "inTitle": false,
+         "inEditor": true,
+         "cell": "33"
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "ArrowDown"
+      }
+     ]
+    },
+    "s03-arrow-up-into-table-from-below": {
+     "ok": true,
+     "ms": 3801,
+     "seedOk": true,
+     "start": {
+      "cursor": {
+       "line": 7,
+       "ch": 3
+      },
+      "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+      "active": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "editable": true,
+       "inTable": false,
+       "inEditor": true,
+       "inTitle": false,
+       "text": "intro line here\n\n\nA\nB\n\n\n\n\n1\n2\n"
+      },
+      "sel": {
+       "text": "",
+       "collapsed": true,
+       "anchorOffset": 3,
+       "anchorIn": {
+        "tag": "DIV",
+        "inTable": false,
+        "inTitle": false,
+        "inEditor": true,
+        "cell": null
+       }
+      },
+      "title": {
+       "text": "Probe Note",
+       "editable": true
+      },
+      "file": "Probe Note.md"
+     },
+     "after": [
+      {
+       "cursor": {
+        "line": 6,
+        "ch": 0
+       },
+       "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": false,
+        "inEditor": true,
+        "inTitle": false,
+        "text": "intro line here\n\n\nA\nB\n\n\n\n\n1\n2\n"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": false,
+         "inTitle": false,
+         "inEditor": true,
+         "cell": null
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "ArrowUp"
+      },
+      {
+       "cursor": {
+        "line": 5,
+        "ch": 2
+       },
+       "value": "intro line here\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "inTitle": false,
+        "text": "3"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": true,
+         "inTitle": false,
+         "inEditor": true,
+         "cell": "33"
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "ArrowUp"
+      },
+      {
+       "cursor": {
+        "line": 4,
+        "ch": 2
+       },
+       "value": "intro line here\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "inTitle": false,
+        "text": "1"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": true,
+         "inTitle": false,
+         "inEditor": true,
+         "cell": "11"
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "ArrowUp"
+      },
+      {
+       "cursor": {
+        "line": 2,
+        "ch": 2
+       },
+       "value": "intro line here\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "inTitle": false,
+        "text": "A"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": true,
+         "inTitle": false,
+         "inEditor": true,
+         "cell": "AA"
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "ArrowUp"
+      },
+      {
+       "cursor": {
+        "line": 1,
+        "ch": 0
+       },
+       "value": "intro line here\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": false,
+        "inEditor": true,
+        "inTitle": false,
+        "text": "intro line here\n\n\nA\nB\n\n\n\n\n1\n2\n"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": false,
+         "inTitle": false,
+         "inEditor": true,
+         "cell": null
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "ArrowUp"
+      }
+     ]
+    },
+    "s04-typing-with-caret-in-table-cell-after-arrows": {
+     "ok": true,
+     "ms": 3599,
+     "seedOk": true,
+     "afterArrows": {
+      "cursor": {
+       "line": 5,
+       "ch": 2
+      },
+      "value": "intro line here\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n\nafter line here\n",
+      "active": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "editable": true,
+       "inTable": true,
+       "inEditor": true,
+       "inTitle": false,
+       "text": "3"
+      },
+      "sel": {
+       "text": "",
+       "collapsed": true,
+       "anchorOffset": 0,
+       "anchorIn": {
+        "tag": "DIV",
+        "inTable": true,
+        "inTitle": false,
+        "inEditor": true,
+        "cell": "33"
+       }
+      },
+      "title": {
+       "text": "Probe Note",
+       "editable": true
+      },
+      "file": "Probe Note.md",
+      "key": "ArrowDown"
+     },
+     "typed": [
+      {
+       "cursor": {
+        "line": 5,
+        "ch": 3
+       },
+       "value": "intro line here\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| Z3  | 4   |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "inTitle": false,
+        "text": "Z3"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 1,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": true,
+         "inTitle": false,
+         "inEditor": true,
+         "cell": "3Z3"
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "\"Z\""
+      }
+     ]
+    },
+    "s10-inline-title-markup": {
+     "ok": true,
+     "ms": 4925,
+     "seedOk": true,
+     "styles": {
+      "cls": "inline-title",
+      "tag": "DIV",
+      "editable": true,
+      "contenteditable": "true",
+      "tabindex": "-1",
+      "spellcheck": "true",
+      "enterkeyhint": "done",
+      "text": "Probe Note",
+      "cursor": "auto",
+      "bg": "rgba(0, 0, 0, 0)",
+      "color": "rgb(218, 218, 218)",
+      "fontSize": "25.888px",
+      "fontWeight": "700",
+      "outline": "rgb(218, 218, 218) none 2.75862px",
+      "userSelect": "text",
+      "parent": "cm-sizer",
+      "rect": {
+       "x": 178.21119689941406,
+       "y": 110.02154541015625,
+       "w": 699.9999389648438,
+       "h": 31.056032180786133
+      }
+     },
+     "readingStyles": {
+      "cls": "inline-title",
+      "editable": true,
+      "cursor": "auto",
+      "text": "Probe Note"
+     }
+    },
+    "s11-hover-and-click": {
+     "ok": true,
+     "ms": 2465,
+     "seedOk": true,
+     "restingStyle": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "outline": "rgb(218, 218, 218) none 2.75862px",
+      "boxShadow": "none",
+      "cursor": "auto"
+     },
+     "hoverRect": {
+      "x": 178.21119689941406,
+      "y": 110.02154541015625,
+      "w": 699.9999389648438,
+      "h": 31.056032180786133,
+      "cx": 528.2111663818359,
+      "cy": 125.54956150054932
+     },
+     "hoverStyle": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "outline": "rgb(218, 218, 218) none 2.75862px",
+      "boxShadow": "none",
+      "cursor": "auto"
+     },
+     "click": {
+      "x": 178.21119689941406,
+      "y": 110.02154541015625,
+      "w": 699.9999389648438,
+      "h": 31.056032180786133,
+      "cx": 528.2111663818359,
+      "cy": 125.54956150054932
+     },
+     "afterClick": {
+      "cursor": {
+       "line": 0,
+       "ch": 0
+      },
+      "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+      "active": {
+       "tag": "DIV",
+       "cls": "inline-title",
+       "editable": true,
+       "inTable": false,
+       "inEditor": true,
+       "inTitle": true,
+       "text": "Probe Note"
+      },
+      "sel": {
+       "text": "",
+       "collapsed": true,
+       "anchorOffset": 10,
+       "anchorIn": {
+        "tag": "DIV",
+        "inTable": false,
+        "inTitle": true,
+        "inEditor": true,
+        "cell": null
+       }
+      },
+      "title": {
+       "text": "Probe Note",
+       "editable": true
+      },
+      "file": "Probe Note.md"
+     },
+     "afterClickStyle": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "outline": "rgb(218, 218, 218) none 2.75862px",
+      "boxShadow": "none"
+     }
+    },
+    "s12-double-click-and-select-all": {
+     "ok": true,
+     "ms": 2715,
+     "seedOk": true,
+     "afterDouble": {
+      "cursor": {
+       "line": 0,
+       "ch": 0
+      },
+      "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+      "active": {
+       "tag": "DIV",
+       "cls": "inline-title",
+       "editable": true,
+       "inTable": false,
+       "inEditor": true,
+       "inTitle": true,
+       "text": "Probe Note"
+      },
+      "sel": {
+       "text": "",
+       "collapsed": true,
+       "anchorOffset": 10,
+       "anchorIn": {
+        "tag": "DIV",
+        "inTable": false,
+        "inTitle": true,
+        "inEditor": true,
+        "cell": null
+       }
+      },
+      "title": {
+       "text": "Probe Note",
+       "editable": true
+      },
+      "file": "Probe Note.md"
+     },
+     "selectAll": {
+      "cursor": {
+       "line": 0,
+       "ch": 0
+      },
+      "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+      "active": {
+       "tag": "DIV",
+       "cls": "inline-title",
+       "editable": true,
+       "inTable": false,
+       "inEditor": true,
+       "inTitle": true,
+       "text": "Probe Note"
+      },
+      "sel": {
+       "text": "Probe Note",
+       "collapsed": false,
+       "anchorOffset": 0,
+       "anchorIn": {
+        "tag": "DIV",
+        "inTable": false,
+        "inTitle": true,
+        "inEditor": true,
+        "cell": null
+       }
+      },
+      "title": {
+       "text": "Probe Note",
+       "editable": true
+      },
+      "file": "Probe Note.md",
+      "key": "a+ctrl"
+     }
+    },
+    "s13-arrow-keys-in-title": {
+     "ok": true,
+     "ms": 12978,
+     "seedOk": true,
+     "down": [
+      {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": false,
+        "inEditor": true,
+        "inTitle": false,
+        "text": "intro line here\n\n\nA\nB\n\n\n\n\n1\n2\n"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": false,
+         "inTitle": false,
+         "inEditor": true,
+         "cell": null
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "ArrowDown"
+      },
+      {
+       "cursor": {
+        "line": 1,
+        "ch": 0
+       },
+       "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": false,
+        "inEditor": true,
+        "inTitle": false,
+        "text": "intro line here\n\n\nA\nB\n\n\n\n\n1\n2\n"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": false,
+         "inTitle": false,
+         "inEditor": true,
+         "cell": null
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "ArrowDown"
+      }
+     ],
+     "seedOk2": true,
+     "endDown": [
+      {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "inline-title",
+        "editable": true,
+        "inTable": false,
+        "inEditor": true,
+        "inTitle": true,
+        "text": "Probe Note"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 10,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": false,
+         "inTitle": true,
+         "inEditor": true,
+         "cell": null
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "End"
+      },
+      {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": false,
+        "inEditor": true,
+        "inTitle": false,
+        "text": "intro line here\n\n\nA\nB\n\n\n\n\n1\n2\n"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": false,
+         "inTitle": false,
+         "inEditor": true,
+         "cell": null
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "ArrowDown"
+      }
+     ],
+     "seedOk3": true,
+     "rightAtEnd": [
+      {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "inline-title",
+        "editable": true,
+        "inTable": false,
+        "inEditor": true,
+        "inTitle": true,
+        "text": "Probe Note"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 10,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": false,
+         "inTitle": true,
+         "inEditor": true,
+         "cell": null
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "End"
+      },
+      {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "inline-title",
+        "editable": true,
+        "inTable": false,
+        "inEditor": true,
+        "inTitle": true,
+        "text": "Probe Note"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 10,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": false,
+         "inTitle": true,
+         "inEditor": true,
+         "cell": null
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "ArrowRight"
+      }
+     ],
+     "seedOk4": true,
+     "tab": [
+      {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": false,
+        "inEditor": true,
+        "inTitle": false,
+        "text": "intro line here\n\n\nA\nB\n\n\n\n\n1\n2\n"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": false,
+         "inTitle": false,
+         "inEditor": true,
+         "cell": null
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "Tab"
+      }
+     ],
+     "seedOk5": true,
+     "enter": [
+      {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": false,
+        "inEditor": true,
+        "inTitle": false,
+        "text": "intro line here\n\n\nA\nB\n\n\n\n\n1\n2\n"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": false,
+         "inTitle": false,
+         "inEditor": true,
+         "cell": null
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "Enter"
+      }
+     ]
+    },
+    "s14-arrow-up-from-first-line": {
+     "ok": true,
+     "ms": 5022,
+     "seedOk": true,
+     "fromCol0": [
+      {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "inline-title",
+        "editable": true,
+        "inTable": false,
+        "inEditor": true,
+        "inTitle": true,
+        "text": "Probe Note"
+       },
+       "sel": {
+        "text": "Probe Note",
+        "collapsed": false,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": false,
+         "inTitle": true,
+         "inEditor": true,
+         "cell": null
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "ArrowUp"
+      }
+     ],
+     "seedOk2": true,
+     "fromCol8": [
+      {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "inline-title",
+        "editable": true,
+        "inTable": false,
+        "inEditor": true,
+        "inTitle": true,
+        "text": "Probe Note"
+       },
+       "sel": {
+        "text": "Probe Note",
+        "collapsed": false,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": false,
+         "inTitle": true,
+         "inEditor": true,
+         "cell": null
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "ArrowUp"
+      }
+     ],
+     "then": [
+      {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": false,
+        "inEditor": true,
+        "inTitle": false,
+        "text": "intro line here\n\n\nA\nB\n\n\n\n\n1\n2\n"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": false,
+         "inTitle": false,
+         "inEditor": true,
+         "cell": null
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "ArrowDown"
+      }
+     ]
+    },
+    "s15-typing-and-escape-and-enter-rename": {
+     "ok": true,
+     "ms": 6236,
+     "seedOk": true,
+     "typed": [
+      {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "inline-title",
+        "editable": true,
+        "inTable": false,
+        "inEditor": true,
+        "inTitle": true,
+        "text": "Probe NoteX"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 11,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": false,
+         "inTitle": true,
+         "inEditor": true,
+         "cell": null
+        }
+       },
+       "title": {
+        "text": "Probe NoteX",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "\"X\""
+      },
+      {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": false,
+        "inEditor": true,
+        "inTitle": false,
+        "text": "intro line here\n\n\nA\nB\n\n\n\n\n1\n2\n"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": false,
+         "inTitle": false,
+         "inEditor": true,
+         "cell": null
+        }
+       },
+       "title": {
+        "text": "Probe Note",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "Escape"
+      }
+     ],
+     "files1": [
+      "Other.md",
+      "Probe Note.md"
+     ],
+     "seedOk2": true,
+     "typed2": [
+      {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "inline-title",
+        "editable": true,
+        "inTable": false,
+        "inEditor": true,
+        "inTitle": true,
+        "text": "Probe NoteY"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 11,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": false,
+         "inTitle": true,
+         "inEditor": true,
+         "cell": null
+        }
+       },
+       "title": {
+        "text": "Probe NoteY",
+        "editable": true
+       },
+       "file": "Probe Note.md",
+       "key": "\"Y\""
+      },
+      {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": false,
+        "inEditor": true,
+        "inTitle": false,
+        "text": "intro line here\n\n\nA\nB\n\n\n\n\n1\n2\n"
+       },
+       "sel": {
+        "text": "",
+        "collapsed": true,
+        "anchorOffset": 0,
+        "anchorIn": {
+         "tag": "DIV",
+         "inTable": false,
+         "inTitle": false,
+         "inEditor": true,
+         "cell": null
+        }
+       },
+       "title": {
+        "text": "Probe NoteY",
+        "editable": true
+       },
+       "file": "Probe NoteY.md",
+       "key": "Enter"
+      }
+     ],
+     "files2": [
+      "Other.md",
+      "Probe NoteY.md"
+     ],
+     "afterEnterSnap": {
+      "cursor": {
+       "line": 0,
+       "ch": 0
+      },
+      "value": "intro line here\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n\nafter line here\n",
+      "active": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "editable": true,
+       "inTable": false,
+       "inEditor": true,
+       "inTitle": false,
+       "text": "intro line here\n\n\nA\nB\n\n\n\n\n1\n2\n"
+      },
+      "sel": {
+       "text": "",
+       "collapsed": true,
+       "anchorOffset": 0,
+       "anchorIn": {
+        "tag": "DIV",
+        "inTable": false,
+        "inTitle": false,
+        "inEditor": true,
+        "cell": null
+       }
+      },
+      "title": {
+       "text": "Probe NoteY",
+       "editable": true
+      },
+      "file": "Probe NoteY.md"
+     }
+    }
+   },
+   "order": [
+    "s00-context",
+    "s01-arrow-down-into-table-from-column-0",
+    "s02-arrow-down-into-table-from-column-8",
+    "s03-arrow-up-into-table-from-below",
+    "s04-typing-with-caret-in-table-cell-after-arrows",
+    "s10-inline-title-markup",
+    "s11-hover-and-click",
+    "s12-double-click-and-select-all",
+    "s13-arrow-keys-in-title",
+    "s14-arrow-up-from-first-line",
+    "s15-typing-and-escape-and-enter-rename"
+   ],
+   "elapsedMs": 50854,
+   "vaultPath": "/tmp/scoria-probe-vault.pSfQ2L"
+  },
+  "after-restart": {
+   "startedAt": "2026-11-09T02:47:43.535Z",
+   "steps": {},
+   "order": [],
+   "elapsedMs": 1
+  }
+ }
+}

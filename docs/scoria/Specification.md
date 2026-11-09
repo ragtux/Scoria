@@ -568,6 +568,43 @@ closes the field first, so the keys can never go to a cell the caret has left. *
 into a cell does not re-pad the table the way Obsidian's does. See
 [[UI parity backlog#The table cell keyboard is a field that never lets go]].
 
+## Observed inline title and table entry, Obsidian 1.15.0
+
+Observed 2026-11-08 by `tools/obsidian-probe/inline-title-and-table-entry.mjs` (results in
+`tools/obsidian-probe/results/2026-11-08-inline-title-and-table-entry.json`), over real clicks and keys
+in a scratch vault, in Live Preview.
+
+**The inline title is a field in its resting state.** `div.inline-title` is `contenteditable="true"`,
+`tabindex="-1"`, `enterkeyhint="done"`, `spellcheck="true"`, a child of `.cm-sizer` above the first line,
+25.888 px at weight 700, with no hover, focus or active change at all (background, outline and shadow
+identical resting, hovered and focused). It is the same element in reading view. Its keys:
+
+| Key, from | What happens |
+| --- | --- |
+| a click | the caret goes where the pointer landed; a click past the text puts it at the end; a double click takes the word |
+| Select All | selects the title's text and nothing of the document |
+| Arrow Down | focus goes to the editor with the caret at line 0, column 0 (from the start or the end of the title); a second Arrow Down goes to line 1 |
+| Tab | the same: focus to the editor, caret at 0:0, nothing renamed |
+| Enter | the same, and a changed name renames the file (`Probe NoteY.md` after typing `Y` at the end); an unchanged name renames nothing |
+| Escape | the title reads as it did before the edit, the file keeps its name, and focus goes to the editor at 0:0 |
+| Arrow Right at the end | stays in the title |
+| Arrow Up from line 0, any column | **enters the title with all of its text selected** |
+
+**A table is entered at its first cell, from any column.** With the caret on the line above a table,
+Arrow Down puts it at the start of the header row's first cell (line 2, column 2, after `| `), whether the
+caret was at column 0 or column 8; the delimiter row is passed over, and the next presses go down the
+first column. With the caret on the line below, Arrow Up lands in the last row's first cell. The DOM
+selection is inside the cell and typing goes into it (`Z` typed there wrote `| Z3  |` into the `3`).
+Arrow Down from the last row goes to the line after the table. Entering also re-pads the table.
+
+**Scoria matches both** since 2026-11-08. The inline title is a field the editor owns: a click opens it,
+Arrow Up from the first line enters it selected, the editing keys, Select All and the clipboard work in
+it, Enter hands a changed name to the workspace (the validator and link rewrite the view-header title
+uses), Tab, Arrow Down and Escape return to the document, and the document's own caret is not drawn
+while the title has one. An arrow key entering a table opens its first cell, and the caret stays in a
+cell that is closed by anything but moving away. **Not matched:** a press elsewhere abandons an open title
+where Obsidian's blur behaviour is unprobed, and the reading view's inline title is still not a field.
+
 ## Observed block reference behavior, Obsidian 1.14.4
 
 Observed with a throwaway plugin in a scratch vault (see

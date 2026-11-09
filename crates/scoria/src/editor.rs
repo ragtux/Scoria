@@ -22,6 +22,7 @@
 //! `scoria-text/tests/writer_roundtrip.rs` hold that over the corpus).
 
 use crate::fold::{self, Foldable};
+use crate::inline_field;
 use crate::math::SpaceWidths;
 use crate::preview::{self, DisplayLine, Piece};
 use crate::properties::{self, Field, Part, PillStep, Target};
@@ -55,6 +56,7 @@ use scoria_text::{
     autopair, find, shifted, wrap, BlockInsert, Cursor, Cursors, EditKind, LinePrefix, LinkSyntax,
     Sel, TextBuffer,
 };
+use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::ops::Range;
 use std::rc::Rc;
@@ -209,6 +211,9 @@ pub enum EditorEvent {
         selected: bool,
         link: Option<LinkTarget>,
     },
+    /// Enter in the note's inline title: the file takes the typed name. The
+    /// workspace owns renames, and the validator and link rewrite with them.
+    RenameTo(String),
     /// Something the editor could not do, for the status bar.
     Reported(SharedString),
     /// A property's type was chosen from its menu; the workspace records it
@@ -680,6 +685,15 @@ pub struct Editor {
     /// The table cell being typed into. Like a properties field, the keys
     /// go to it while it is open and the document changes once, on commit.
     table_field: Option<CellEdit>,
+    /// The note's inline title while it is being edited: Obsidian's
+    /// `.inline-title` is a field in its resting state, entered by a click or
+    /// by Arrow Up from the first line.
+    title_edit: Option<inline_field::Editing>,
+    /// Where the open title was last painted, which a click is measured
+    /// against, and the box the title occupies while the top of the note is
+    /// in view (written at paint, read by the next press).
+    title_layout: Rc<RefCell<Option<inline_field::Layout>>>,
+    title_hit: Rc<Cell<Option<Bounds<Pixels>>>>,
     /// The open autocompletion popup, with the rows it is offering.
     suggest: Option<SuggestState>,
     /// The vault the suggester reads; `None` until one is open.
@@ -785,6 +799,9 @@ impl Editor {
             hover_line: None,
             property_menu: None,
             table_field: None,
+            title_edit: None,
+            title_layout: Rc::new(RefCell::new(None)),
+            title_hit: Rc::new(Cell::new(None)),
             suggest: None,
             suggest_vault: None,
             link_options: suggest::Options::default(),
@@ -813,6 +830,7 @@ impl Editor {
         self.buf.load(&raw);
         self.suggest = None;
         self.table_field = None;
+        self.title_edit = None;
         // Fold ids are per-note counters, so another note's would collapse
         // whichever callout happened to land on the same number.
         self.callout_folds.clear();
@@ -853,6 +871,7 @@ impl Editor {
         let (head, anchor) = (self.buf.head, self.buf.anchor);
         self.suggest = None;
         self.table_field = None;
+        self.title_edit = None;
         self.buf.load(&raw);
         self.buf.head = self.buf.clamp_offset(head);
         self.buf.anchor = self.buf.clamp_offset(anchor);
@@ -1210,6 +1229,9 @@ impl Editor {
     /// the app in place of a keyboard: one character at a time through the
     /// same insertion, so the two cannot disagree about auto-pairing.
     pub fn type_text(&mut self, text: &str, window: &mut Window, cx: &mut Context<Self>) {
+        if self.title_apply(cx, |f| f.insert(text)) {
+            return;
+        }
         if let Some(field) = self.active_field() {
             field.insert(text);
             cx.notify();
@@ -1475,7 +1497,9 @@ impl Editor {
     /// The field the keys are going to while one is open: a property row's
     /// or a table cell's.
     pub fn field_kind(&self) -> Option<&'static str> {
-        if self.property_field.is_some() {
+        if self.title_edit.is_some() {
+            Some("title")
+        } else if self.property_field.is_some() {
             Some("property")
         } else if self.table_field.is_some() {
             Some("cell")
@@ -2307,6 +2331,7 @@ impl Editor {
         // the cursor has left the query.
         self.update_suggest(false, cx);
         self.reveal_cursor(window);
+        self.ensure_cell_at_caret(true, cx);
         cx.notify();
     }
 
@@ -2340,6 +2365,7 @@ impl Editor {
         // the cursor has left the query.
         self.update_suggest(false, cx);
         self.reveal_cursor(window);
+        self.ensure_cell_at_caret(true, cx);
         cx.notify();
     }
 
@@ -2538,6 +2564,9 @@ impl Editor {
     }
 
     fn move_left(&mut self, _: &MoveLeft, window: &mut Window, cx: &mut Context<Self>) {
+        if self.title_apply(cx, |f| f.step(false, false)) {
+            return;
+        }
         if let Some(f) = self.active_field() {
             f.left();
             cx.notify();
@@ -2547,6 +2576,9 @@ impl Editor {
     }
 
     fn move_right(&mut self, _: &MoveRight, window: &mut Window, cx: &mut Context<Self>) {
+        if self.title_apply(cx, |f| f.step(true, false)) {
+            return;
+        }
         // At the end of the last cell of the last row Arrow Right leaves the
         // table, as Arrow Down does (Obsidian 1.15.0).
         if let Some(cell) = self.table_field.as_ref() {
@@ -2568,10 +2600,16 @@ impl Editor {
     }
 
     fn select_left(&mut self, _: &SelectLeft, window: &mut Window, cx: &mut Context<Self>) {
+        if self.title_apply(cx, |f| f.step(false, true)) {
+            return;
+        }
         self.horizontal(true, true, window, cx);
     }
 
     fn select_right(&mut self, _: &SelectRight, window: &mut Window, cx: &mut Context<Self>) {
+        if self.title_apply(cx, |f| f.step(true, true)) {
+            return;
+        }
         self.horizontal(false, true, window, cx);
     }
 
@@ -2582,6 +2620,10 @@ impl Editor {
         // Leaving the line forgets the closers auto-pairing planted on it:
         // coming back and typing one writes it (Specification.md,
         // "Observed auto-pair behavior").
+        // In the inline title there is nothing above to go to.
+        if self.title_edit.is_some() {
+            return;
+        }
         // In a table cell the arrows walk the cells, as they walk the source
         // in Obsidian, where there is no separate field to leave open.
         if self.property_field.is_none() {
@@ -2592,12 +2634,32 @@ impl Editor {
                 return;
             }
         }
+        // Arrow Up from the first line enters the inline title with its text
+        // selected, from any column (probe of 2026-11-08).
+        if self.table_field.is_none()
+            && self.property_field.is_none()
+            && self.inline_title().is_some()
+            && self.buf.extra.is_empty()
+            && self.buf.cursor_at(self.buf.head).line == 0
+        {
+            let head = self.buf.head;
+            let goal = self.buf.goal;
+            let (target, _) = self.vertical_target(window, head, goal, -1);
+            if target == head && self.enter_title_from_above(cx) {
+                return;
+            }
+        }
         self.buf.forget_planted();
         self.vertical(-1, false, window, cx);
     }
 
     fn move_down(&mut self, _: &MoveDown, window: &mut Window, cx: &mut Context<Self>) {
         if self.suggest_step(1, cx) {
+            return;
+        }
+        // Arrow Down from the inline title goes to the document's first line.
+        if self.title_edit.is_some() {
+            self.leave_title(window, cx);
             return;
         }
         if self.property_field.is_none() {
@@ -2621,12 +2683,18 @@ impl Editor {
     }
 
     fn move_word_left(&mut self, _: &MoveWordLeft, window: &mut Window, cx: &mut Context<Self>) {
+        if self.title_apply(cx, |f| f.step_word(false, false)) {
+            return;
+        }
         self.move_each(false, window, cx, |this, _, s| {
             (this.buf.word_left(s.head), None)
         });
     }
 
     fn move_word_right(&mut self, _: &MoveWordRight, window: &mut Window, cx: &mut Context<Self>) {
+        if self.title_apply(cx, |f| f.step_word(true, false)) {
+            return;
+        }
         self.move_each(false, window, cx, |this, _, s| {
             (this.buf.word_right(s.head), None)
         });
@@ -2638,6 +2706,9 @@ impl Editor {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
+        if self.title_apply(cx, |f| f.step_word(false, true)) {
+            return;
+        }
         self.move_each(true, window, cx, |this, _, s| {
             (this.buf.word_left(s.head), None)
         });
@@ -2649,6 +2720,9 @@ impl Editor {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
+        if self.title_apply(cx, |f| f.step_word(true, true)) {
+            return;
+        }
         self.move_each(true, window, cx, |this, _, s| {
             (this.buf.word_right(s.head), None)
         });
@@ -2685,6 +2759,9 @@ impl Editor {
         if self.suggest_step(isize::MIN, cx) {
             return;
         }
+        if self.title_apply(cx, |f| f.move_to_edge(false, false)) {
+            return;
+        }
         if let Some(f) = self.active_field() {
             f.home();
             cx.notify();
@@ -2695,6 +2772,9 @@ impl Editor {
 
     fn line_end(&mut self, _: &LineEnd, window: &mut Window, cx: &mut Context<Self>) {
         if self.suggest_step(isize::MAX, cx) {
+            return;
+        }
+        if self.title_apply(cx, |f| f.move_to_edge(true, false)) {
             return;
         }
         if let Some(f) = self.active_field() {
@@ -2754,6 +2834,10 @@ impl Editor {
 
     /// Ctrl+A, and the context menu's "Select all" row.
     pub fn select_all_text(&mut self, cx: &mut Context<Self>) {
+        // The inline title is the one field with a selection to take.
+        if self.title_apply(cx, |f| f.select_all()) {
+            return;
+        }
         // An open field takes the keys the way backspace and delete give
         // them to it. It carries a caret and no selection, so there is
         // nothing for Ctrl+A to take; what it must not do is select the
@@ -2770,6 +2854,9 @@ impl Editor {
     fn backspace(&mut self, _: &Backspace, window: &mut Window, cx: &mut Context<Self>) {
         // A properties field has the pill gesture behind it, so it takes the
         // press through its own path.
+        if self.title_apply(cx, |f| f.backspace()) {
+            return;
+        }
         if self.property_field.is_some() {
             self.backspace_property_field(window, cx);
             return;
@@ -2795,6 +2882,9 @@ impl Editor {
     }
 
     fn delete(&mut self, _: &Delete, window: &mut Window, cx: &mut Context<Self>) {
+        if self.title_apply(cx, |f| f.delete()) {
+            return;
+        }
         if let Some(f) = self.active_field() {
             f.delete();
             cx.notify();
@@ -2814,6 +2904,9 @@ impl Editor {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
+        if self.title_apply(cx, |f| f.delete_word_back()) {
+            return;
+        }
         self.delete_all(|buf, at| buf.word_left(at)..at, EditKind::Other, window, cx);
     }
 
@@ -2836,6 +2929,11 @@ impl Editor {
     /// With several cursors, or a selection, a plain newline at each.
     fn newline(&mut self, _: &Newline, window: &mut Window, cx: &mut Context<Self>) {
         if self.accept_suggestion(Accept::Whole, window, cx) {
+            return;
+        }
+        // Enter in the inline title takes the name and goes to the document.
+        if self.title_edit.is_some() {
+            self.commit_title(window, cx);
             return;
         }
         // Enter in a properties field commits it, as Obsidian's does, and in
@@ -2871,6 +2969,11 @@ impl Editor {
     /// the ordered lists it touches), and inserts the step anywhere else.
     fn tab(&mut self, _: &Tab, window: &mut Window, cx: &mut Context<Self>) {
         if self.accept_suggestion(Accept::Inside, window, cx) {
+            return;
+        }
+        // Tab leaves the inline title for the document without renaming.
+        if self.title_edit.is_some() {
+            self.leave_title(window, cx);
             return;
         }
         // Tab walks the cells of a table, committing each as it leaves it,
@@ -2930,6 +3033,7 @@ impl Editor {
         if self.buf.undo() {
             self.after_edit(Some(window), cx);
         }
+        self.ensure_cell_at_caret(false, cx);
     }
 
     fn redo(&mut self, _: &Redo, window: &mut Window, cx: &mut Context<Self>) {
@@ -2937,6 +3041,7 @@ impl Editor {
         if self.buf.redo() {
             self.after_edit(Some(window), cx);
         }
+        self.ensure_cell_at_caret(false, cx);
     }
 
     fn copy(&mut self, _: &Copy, _: &mut Window, cx: &mut Context<Self>) {
@@ -2945,6 +3050,15 @@ impl Editor {
 
     /// Ctrl+C, and the context menu's Copy row.
     pub fn copy_selection(&mut self, cx: &mut Context<Self>) {
+        if let Some(edit) = self.title_edit.as_ref() {
+            let range = edit.field.selection();
+            if !range.is_empty() {
+                cx.write_to_clipboard(ClipboardItem::new_string(
+                    edit.field.text()[range].to_string(),
+                ));
+            }
+            return;
+        }
         if self.field_kind().is_some() {
             return;
         }
@@ -2960,6 +3074,11 @@ impl Editor {
 
     /// Ctrl+X, and the context menu's Cut row.
     pub fn cut_selection(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if self.title_edit.is_some() {
+            self.copy_selection(cx);
+            self.title_apply(cx, |f| f.insert(""));
+            return;
+        }
         if self.field_kind().is_some() {
             return;
         }
@@ -2986,6 +3105,9 @@ impl Editor {
             return;
         };
         // Into the open field, which drops the newlines a row cannot hold.
+        if self.title_apply(cx, |f| f.insert(&text)) {
+            return;
+        }
         if let Some(field) = self.active_field() {
             field.insert(&text);
             cx.notify();
@@ -3062,13 +3184,17 @@ impl Editor {
     /// Escape: closes the autocompletion popup first, then writes an open
     /// table cell or abandons an open property field, then drops extra cursors, then closes the panel.
     fn close_find(&mut self, _: &CloseFind, window: &mut Window, cx: &mut Context<Self>) {
-        if self.suggest.is_some() {
+        if self.title_edit.is_some() {
+            // Escape puts the title back and the caret in the document.
+            self.leave_title(window, cx);
+        } else if self.suggest.is_some() {
             self.close_suggest(cx);
         } else if self.table_field.is_some() {
             // Obsidian's cell has no field to abandon: what was typed is
             // already in the note, and Escape leaves it there (probe of
             // 2026-11-08). So the cell is written, not thrown away.
             self.commit_table_field(Some(window), cx, None);
+            self.ensure_cell_at_caret(false, cx);
         } else if self.cancel_property_field(cx) {
         } else if !self.buf.extra.is_empty() && self.focus_handle.is_focused(window) {
             self.buf.collapse_cursors();
@@ -3995,6 +4121,147 @@ impl Editor {
         }
     }
 
+    /// Runs `f` on the open inline title and says whether there was one.
+    /// Any edit drops the composition the input method was holding.
+    fn title_apply(
+        &mut self,
+        cx: &mut Context<Self>,
+        f: impl FnOnce(&mut crate::title_field::TitleField),
+    ) -> bool {
+        match self.title_edit.as_mut() {
+            Some(edit) => {
+                f(&mut edit.field);
+                edit.marked = None;
+                cx.notify();
+                true
+            }
+            None => false,
+        }
+    }
+
+    /// The inline title opened with its text selected, which is where Arrow
+    /// Up from the first line leaves it (probe of 2026-11-08).
+    fn enter_title_from_above(&mut self, cx: &mut Context<Self>) -> bool {
+        let Some(title) = self.inline_title().map(str::to_string) else {
+            return false;
+        };
+        self.title_edit = Some(inline_field::Editing::selected(title));
+        cx.notify();
+        true
+    }
+
+    /// Leaves the inline title for the document: the caret goes to the start
+    /// of the first line, and the title is as it was unless it was committed.
+    fn leave_title(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.title_edit = None;
+        self.move_to(0, false, window, cx);
+    }
+
+    /// Enter in the inline title: a changed, non-empty name asks the workspace
+    /// to rename the file, and either way the caret goes to the document.
+    fn commit_title(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(edit) = self.title_edit.take() else {
+            return;
+        };
+        let typed = edit.field.text().trim().to_string();
+        let was = self.inline_title().map(str::to_string).unwrap_or_default();
+        if !typed.is_empty() && typed != was {
+            cx.emit(EditorEvent::RenameTo(typed));
+        }
+        self.move_to(0, false, window, cx);
+    }
+
+    /// A press on the inline title: the caret goes where the pointer landed,
+    /// a double click takes the word, and a press past the text puts the
+    /// caret at its end. The text is shaped here because the title is
+    /// painted as a plain line until it is entered.
+    fn click_title(&mut self, event: &MouseDownEvent, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(bounds) = self.title_hit.get() else {
+            return;
+        };
+        let Some(title) = self.inline_title().map(str::to_string) else {
+            return;
+        };
+        let was_open = self.title_edit.is_some();
+        let mut edit = self
+            .title_edit
+            .take()
+            .unwrap_or_else(|| inline_field::Editing::new(title.clone()));
+        let text = edit.field.text().to_string();
+        // An open title was painted as a field, so its own layout measures the
+        // press; a resting one is shaped here.
+        let measured = if was_open {
+            self.title_layout
+                .borrow()
+                .as_ref()
+                .and_then(|layout| layout.offset_for(event.position, &text))
+        } else {
+            None
+        };
+        let at = measured.unwrap_or_else(|| {
+            self.shaped_title_offset(window, &text, event.position.x - bounds.origin.x)
+        });
+        edit.field
+            .click(at, event.click_count, event.modifiers.shift);
+        self.title_edit = Some(edit);
+        cx.notify();
+    }
+
+    /// The byte offset in `text` nearest `x` (from the title's left edge) when
+    /// it is drawn at the title's size and weight.
+    fn shaped_title_offset(&self, window: &mut Window, text: &str, x: Pixels) -> usize {
+        let Some(style) = self.layout.text_style.as_ref() else {
+            return text.len();
+        };
+        let (scale, weight, _) = crate::theme::heading_style(1);
+        let mut run = style.to_run(text.len());
+        run.font.weight = FontWeight(weight);
+        let line = window.text_system().shape_line(
+            SharedString::from(text.to_string()),
+            self.layout.font_size * scale,
+            &[run],
+            None,
+        );
+        let mut at = line.closest_index_for_x(x).min(text.len());
+        while !text.is_char_boundary(at) {
+            at -= 1;
+        }
+        at
+    }
+
+    /// Opens the cell the caret is in when it has been left in a table's
+    /// lines with no field open, so the keys always have somewhere visible
+    /// to go (Obsidian's caret is simply in the cell). `first` takes the
+    /// row's first cell, which is where an arrow key entering the table
+    /// puts it; otherwise it is the cell the caret is in.
+    fn ensure_cell_at_caret(&mut self, first: bool, cx: &mut Context<Self>) {
+        if !self.live_preview
+            || self.table_field.is_some()
+            || self.property_field.is_some()
+            || self.title_edit.is_some()
+            || !self.buf.extra.is_empty()
+            || self.buf.anchor != self.buf.head
+        {
+            return;
+        }
+        let head = self.buf.head;
+        let line = self.buf.cursor_at(head).line;
+        let in_table_widget = self
+            .widgets
+            .iter()
+            .any(|(l, w)| l.contains(&line) && matches!(w.block, RBlock::Table { .. }));
+        if !in_table_widget {
+            return;
+        }
+        let Some(at) = table::table_at(self.buf.text(), head) else {
+            return;
+        };
+        let col = if first { 0 } else { at.col };
+        if let Some(cell) = at.cells.get(at.row).and_then(|r| r.get(col)).cloned() {
+            self.open_cell(cell, cx);
+        }
+    }
+
     /// A click on a table cell: commit whatever field was open, then take
     /// this cell's text into a new one.
     fn table_action(&mut self, action: TableAction, window: &mut Window, cx: &mut Context<Self>) {
@@ -4013,6 +4280,12 @@ impl Editor {
         let Some(was) = self.buf.text().get(span.clone()).map(str::to_string) else {
             return;
         };
+        // The document's caret goes with the cell, as Obsidian's does: it is
+        // in the cell's source, so leaving the cell by any other means finds
+        // it where the cell was.
+        self.buf.collapse_cursors();
+        self.buf.head = span.start;
+        self.buf.anchor = span.start;
         self.table_field = Some(CellEdit {
             span,
             field: Field::new(Target::New, Part::Value, was.clone()),
@@ -4376,6 +4649,18 @@ impl Editor {
         window.focus(&self.focus_handle, cx);
         if self.scrollbar_mouse_down(event.position, window, cx) {
             return;
+        }
+        // The inline title is a field in its resting state.
+        if let Some(bounds) = self.title_hit.get() {
+            if bounds.contains(&event.position) && event.button == MouseButton::Left {
+                self.commit_table_field(Some(window), cx, None);
+                self.click_title(event, window, cx);
+                return;
+            }
+        }
+        // A press anywhere else abandons an open title: nothing is renamed.
+        if self.title_edit.take().is_some() {
+            cx.notify();
         }
         if self.click_widget(event.position, cx) {
             return;
@@ -4818,6 +5103,12 @@ impl EntityInputHandler for Editor {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
+        // The inline title takes them with its selection, as a field does.
+        if let Some(edit) = self.title_edit.as_mut() {
+            inline_field::replace_text_in_range(edit, range_utf16, new_text);
+            cx.notify();
+            return;
+        }
         // A properties field takes the keystrokes while it is open; the
         // document changes once, when the field commits.
         if let Some(field) = self.active_field() {
@@ -5758,18 +6049,70 @@ impl Element for EditorElement {
             ));
             let lead = if scroll_line == 0 { header_h } else { px(0.) };
             let mut header = None;
+            editor.title_hit.set(None);
             if scroll_line == 0 {
                 if let Some(title) = title {
                     let (scale, weight, line_height) = crate::theme::heading_style(1);
                     let h1 = font_size * scale;
-                    let mut element = div()
-                        .w(content_width)
-                        .text_size(h1)
-                        .line_height(h1 * line_height)
-                        .font_weight(FontWeight(weight))
-                        .text_color(palette.text)
-                        .child(title)
-                        .into_any_element();
+                    let origin = point(content_x, y + px(crate::reading::view::HEADER_TOP));
+                    let mut element = match editor.title_edit.clone() {
+                        // Entered: the title is a field, painted as a shaped
+                        // line with its selection and caret, the way the
+                        // view header's is.
+                        Some(edit) => {
+                            let layout_slot = editor.title_layout.clone();
+                            let prev = layout_slot
+                                .borrow()
+                                .as_ref()
+                                .map(|l| l.scroll_x)
+                                .unwrap_or(px(0.));
+                            let text = SharedString::from(edit.field.text().to_string());
+                            let color = palette.text;
+                            let mut selection = palette.selection;
+                            selection.a = selection.a.max(0.3);
+                            let shape_edit = edit.clone();
+                            div()
+                                .w(content_width)
+                                .h(h1 * line_height)
+                                .text_size(h1)
+                                .font_weight(FontWeight(weight))
+                                .text_color(color)
+                                .child(
+                                    gpui::canvas(
+                                        move |bounds, window, _| {
+                                            inline_field::shape(
+                                                text.clone(),
+                                                Some(&shape_edit),
+                                                color,
+                                                true,
+                                                bounds,
+                                                prev,
+                                                window,
+                                            )
+                                        },
+                                        move |bounds, prepaint, window, cx| {
+                                            let layout = inline_field::paint(
+                                                prepaint, bounds, selection, color, window, cx,
+                                            );
+                                            *layout_slot.borrow_mut() = Some(layout);
+                                        },
+                                    )
+                                    .size_full(),
+                                )
+                                .into_any_element()
+                        }
+                        None => {
+                            *editor.title_layout.borrow_mut() = None;
+                            div()
+                                .w(content_width)
+                                .text_size(h1)
+                                .line_height(h1 * line_height)
+                                .font_weight(FontWeight(weight))
+                                .text_color(palette.text)
+                                .child(title)
+                                .into_any_element()
+                        }
+                    };
                     element.layout_as_root(
                         size(
                             AvailableSpace::Definite(content_width),
@@ -5778,11 +6121,11 @@ impl Element for EditorElement {
                         window,
                         cx,
                     );
-                    element.prepaint_at(
-                        point(content_x, y + px(crate::reading::view::HEADER_TOP)),
-                        window,
-                        cx,
-                    );
+                    element.prepaint_at(origin, window, cx);
+                    editor.title_hit.set(Some(Bounds::new(
+                        origin,
+                        size(content_width, h1 * line_height),
+                    )));
                     header = Some(element);
                 }
                 y += header_h;
@@ -6211,7 +6554,9 @@ impl Element for EditorElement {
                         &palette,
                     ))
                 });
-            if !focused {
+            // The caret is in the inline title while that is open, and a
+            // document caret drawn as well would be a second one.
+            if !focused || editor.title_edit.is_some() {
                 cursor_quads.clear();
             }
             let fits = scroll_line == 0
