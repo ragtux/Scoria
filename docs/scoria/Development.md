@@ -516,6 +516,24 @@ screen only with its next one — the render log had the right strips and a poin
 window showed them — which matches XWayland under a headless compositor rather than anything
 here; a real X11, macOS or Windows desktop is still to be tried.
 
+**Modals and the file menu draw in their own window, 2026-11-09.** Until now every modal (the
+quick switcher, the palette, the prompts, the choosers, Copy results) and the file menu was drawn by
+the vault window's render alone, so one raised from a popout came up behind it, in the other
+window, while its input held the keyboard in the popout. Now `overlay_home` latches a window when
+one goes up: the active group's, which is where the keys or the click that raised it came from (a
+right click and the header's More options both make their group active first). The window's render
+draws the overlay only when it is that window (`render_modal_overlay`, `render_file_menu`), and the
+menu's keyboard is taken and given back by that window's render alone (`sync_menu_focus`). Another
+window's "no menu here" would otherwise throw away the place to go back to. A popout closed under
+its overlay hands it back to the vault window. The node's handle stands for the window being open,
+because reading the handle fails inside that window's own render, where its root is leased: the
+first try did that, and nothing drew anywhere. The socket's `modal.window` names the popout, or
+null for the vault window. Checked over the socket in a headless sway: the switcher opened and
+picked from inside a popout (the note opened in the popout's group), the editor's right-click menu
+drawn at the click in the popout, with Escape and a pick (Select all) returning the keyboard to the
+editor there; the palette raised from the vault window drawn in the vault window, and one raised
+and dismissed in the popout. Notices still show in the vault window's corner.
+
 ### The week's leftovers, 2026-11-09
 
 The verdict of [[Writer gate run]] named five things left open. Four needed no desk, only an

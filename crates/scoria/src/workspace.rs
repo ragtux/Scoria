@@ -3222,6 +3222,14 @@ pub struct Workspace {
     /// The keyboard the open menu -- the file menu or a pane's sort menu --
     /// holds, and where it goes back to when the menu closes.
     menu_focus: file_menu::MenuFocus,
+    /// The window that took the menu's keyboard (`None` for the vault
+    /// window): the one whose render gives it back when the menu closes.
+    menu_window: Option<u64>,
+    /// The window the modal or file menu that is up draws in, latched when
+    /// it goes up: the window of the group that was active then, which is
+    /// the window the keys or the click that raised it came from. `None`
+    /// while nothing is up; `Some(None)` is the vault window.
+    overlay_window: Option<Option<u64>>,
     /// The box of each group's **More options** button as last painted, by
     /// group id, so the menu it opens can hang right-aligned under it.
     header_boxes: Rc<RefCell<HashMap<u64, Bounds<Pixels>>>>,
@@ -3841,6 +3849,8 @@ impl Workspace {
             sort_menu_at: point(px(0.), px(0.)),
             file_menu: None,
             menu_focus: file_menu::MenuFocus::new(cx),
+            menu_window: None,
+            overlay_window: None,
             header_boxes: Rc::new(RefCell::new(HashMap::new())),
             embed_views: embed_views.clone(),
             embed_subscriptions: HashMap::new(),
@@ -10417,6 +10427,11 @@ impl Workspace {
             self.focus_main(window, cx);
         }
         self.tab_drag_frame(window, cx);
+        // A modal or file menu raised from this window is this window's to
+        // draw, and its keyboard is this window's to hold.
+        self.sync_menu_focus(Some(id), window, cx);
+        let overlay = self.render_modal_overlay(Some(id));
+        let file_menu = self.render_file_menu(Some(id), theme, window, cx);
         let tree = self.windows[wix].tree.clone();
         self.rendering_window = Some(id);
         let body = self.render_layout(&tree, &mut Vec::new(), theme, cx);
@@ -10433,8 +10448,8 @@ impl Workspace {
                 window.remove_window();
             })
         });
-        // The hotkeys stand down behind a modal, as in the main window;
-        // the modal itself is the main window's to draw.
+        // The hotkeys stand down behind a modal, in every window: a modal
+        // holds the workspace's keyboard wherever it is drawn.
         let hotkeys_live = self.modal == Modal::None;
         Some(
             div()
@@ -10478,6 +10493,8 @@ impl Workspace {
                         .child(body),
                 )
                 .children(controls)
+                .children(overlay)
+                .children(file_menu)
                 .into_any_element(),
         )
     }
@@ -13501,6 +13518,12 @@ impl Workspace {
                 Modal::Chooser => "chooser",
             }),
         );
+        // The popout it draws in, by id, or null for the vault window (and
+        // with nothing up). Settings is a window of its own.
+        modal.insert(
+            "window".into(),
+            json!(self.overlay_window.flatten().filter(|_| !settings_up)),
+        );
         // The four list modals fill these in; with no modal up they stay
         // empty rather than disappearing.
         modal.insert("query".into(), Value::Null);
@@ -14316,10 +14339,14 @@ impl Workspace {
     /// it is drawn at the workspace's root rather than inside a dock.
     fn render_file_menu(
         &mut self,
+        here: Option<u64>,
         theme: &Theme,
         window: &Window,
         cx: &mut Context<Self>,
     ) -> Option<gpui::AnyElement> {
+        if self.overlay_home() != here {
+            return None;
+        }
         let menu = self.file_menu.as_ref()?;
         let target = menu.target.clone();
         let focus = self.menu_focus.handle.clone();
@@ -14340,6 +14367,98 @@ impl Workspace {
                 }
             },
         ))
+    }
+
+    /// The window the modal or file menu that is up draws in, latching it
+    /// on the first ask: the active group's window, which is where the keys
+    /// or the click that raised it were. A window closed since reads as the
+    /// vault window, so an overlay never goes undrawn. A window counts as
+    /// there while it has a node and a handle: reading the handle would
+    /// fail inside that window's own render, where its root is leased.
+    fn overlay_home(&mut self) -> Option<u64> {
+        if self.modal == Modal::None && self.file_menu.is_none() {
+            self.overlay_window = None;
+            return None;
+        }
+        let home = match self.overlay_window {
+            Some(home) => home,
+            None => {
+                let home = self.window_of_group(self.active_group_id());
+                self.overlay_window = Some(home);
+                home
+            }
+        };
+        home.filter(|id| {
+            self.windows
+                .iter()
+                .any(|w| w.id == *id && w.handle.is_some())
+        })
+    }
+
+    /// Hands the keyboard to an open menu, or back from a closed one, in
+    /// window `here`: the file menu in the window it draws in, the panes'
+    /// sort menus in the vault window, which alone has the panes. A window
+    /// the menu is not in leaves the focus alone, or its "closed" would
+    /// throw away the other window's place to go back to.
+    fn sync_menu_focus(&mut self, here: Option<u64>, window: &mut Window, cx: &mut Context<Self>) {
+        let home = self.overlay_home();
+        let open = (self.file_menu.is_some() && home == here)
+            || (here.is_none()
+                && (self.backlink_state.sort_menu_open
+                    || self.tag_state.sort_menu_open
+                    || self.property_state.sort_menu_open));
+        if open {
+            self.menu_window = here;
+            self.menu_focus.sync(true, window, cx);
+        } else if self.menu_window == here {
+            self.menu_focus.sync(false, window, cx);
+        }
+    }
+
+    /// The modal that is up, centred near the top of window `here` when it
+    /// is the window the modal belongs to.
+    ///
+    /// Every overlay occludes: a modal in Obsidian owns the pointer as
+    /// well as the keyboard, and without this the editor's raw window
+    /// listeners take the mouse-down that landed on the modal and focus
+    /// the note behind it, leaving the modal visible but keyboard-dead.
+    /// Occluding costs nothing a modal wants — a click outside still
+    /// reaches each list modal's `on_mouse_down_out`, which is bounds
+    /// based rather than hitbox based, and Settings closes on its own
+    /// backdrop click.
+    fn render_modal_overlay(&mut self, here: Option<u64>) -> Option<gpui::AnyElement> {
+        if self.overlay_home() != here {
+            return None;
+        }
+        match self.modal {
+            Modal::None => None,
+            Modal::Switcher
+            | Modal::Palette
+            | Modal::Prompt
+            | Modal::Chooser
+            | Modal::CopyResults => {
+                let child: gpui::AnyElement = match self.modal {
+                    Modal::Switcher => self.switcher.clone().into_any_element(),
+                    Modal::Palette => self.palette.clone().into_any_element(),
+                    Modal::Chooser => self.chooser.clone().into_any_element(),
+                    Modal::CopyResults => self.copy_results.clone().into_any_element(),
+                    _ => self.prompt.clone().into_any_element(),
+                };
+                Some(
+                    div()
+                        .occlude()
+                        .absolute()
+                        .inset_0()
+                        .flex()
+                        .flex_row()
+                        .justify_center()
+                        .items_start()
+                        .pt(px(90.))
+                        .child(child)
+                        .into_any_element(),
+                )
+            }
+        }
     }
 
     /// "Change sort order" for the Backlinks pane: the six orders in three
@@ -17216,11 +17335,7 @@ impl Render for Workspace {
         }
         // An open menu holds the keyboard, so Escape reaches it first; a
         // closed one hands the keyboard back where it was.
-        let menu_open = self.file_menu.is_some()
-            || self.backlink_state.sort_menu_open
-            || self.tag_state.sort_menu_open
-            || self.property_state.sort_menu_open;
-        self.menu_focus.sync(menu_open, window, cx);
+        self.sync_menu_focus(None, window, cx);
         if let Some(kind) = self.pending_canvas_pick.take() {
             self.open_canvas_file_chooser(kind, window, cx);
         }
@@ -17449,43 +17564,9 @@ impl Render for Workspace {
                     .child(SharedString::from(text))
             }));
 
-        // Every overlay occludes: a modal in Obsidian owns the pointer as
-        // well as the keyboard, and without this the editor's raw window
-        // listeners take the mouse-down that landed on the modal and focus
-        // the note behind it, leaving the modal visible but keyboard-dead.
-        // Occluding costs nothing a modal wants — a click outside still
-        // reaches each list modal's `on_mouse_down_out`, which is bounds
-        // based rather than hitbox based, and Settings closes on its own
-        // backdrop click.
-        let overlay: Option<gpui::AnyElement> = match self.modal {
-            Modal::None => None,
-            Modal::Switcher
-            | Modal::Palette
-            | Modal::Prompt
-            | Modal::Chooser
-            | Modal::CopyResults => {
-                let child: gpui::AnyElement = match self.modal {
-                    Modal::Switcher => self.switcher.clone().into_any_element(),
-                    Modal::Palette => self.palette.clone().into_any_element(),
-                    Modal::Chooser => self.chooser.clone().into_any_element(),
-                    Modal::CopyResults => self.copy_results.clone().into_any_element(),
-                    _ => self.prompt.clone().into_any_element(),
-                };
-                Some(
-                    div()
-                        .occlude()
-                        .absolute()
-                        .inset_0()
-                        .flex()
-                        .flex_row()
-                        .justify_center()
-                        .items_start()
-                        .pt(px(90.))
-                        .child(child)
-                        .into_any_element(),
-                )
-            }
-        };
+        // The modal and the file menu draw in the window they came up in:
+        // this one, unless that was a popout.
+        let overlay = self.render_modal_overlay(None);
         // Obsidian reports an outcome with a Notice in the corner rather
         // than in the status bar, and the probe notes put it bottom right.
         let notices = (!self.notices.live.is_empty()).then(|| {
@@ -17581,7 +17662,7 @@ impl Render for Workspace {
             // and Outgoing links rows, the editor's text, a link in the
             // reading view -- positioned at the click and drawn over
             // everything else, so no dock's clipping can cut it off.
-            .children(self.render_file_menu(&theme, window, cx))
+            .children(self.render_file_menu(None, &theme, window, cx))
             .children(notices);
         client_frame(content.into_any_element(), &theme, window)
     }
