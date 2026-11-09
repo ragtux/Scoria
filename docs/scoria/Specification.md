@@ -535,6 +535,54 @@ page nor a `dragend` with the pointer left of the window moved the tab or opened
 `maximize` flag); whether a popout's tab strip offers Split right and Split down (its root is a
 split, so a popout can hold several groups); the `window:*` commands.
 
+## Observed tab header menu and pinned tabs, Obsidian 1.15.0
+
+Probed 2026-11-09 over CDP with real right-clicks (`tools/obsidian-probe/tab-header-menu.mjs`,
+results `tools/obsidian-probe/results/2026-11-09-tab-header-menu.json`), Obsidian 1.15.0 under
+its own data directory.
+
+**The menu on a markdown tab, alone in its group:** Close (`close`, `lucide-x`), ---, Pin
+(`pane`, `lucide-pin`), Link with tab... (`pane`, `lucide-link`), Backlinks in document,
+Reading view, Source mode (`pane`, the last two as the tab stood in Live Preview), ---, Move to
+new window (`open`, `lucide-picture-in-picture`), Split right, Split down, Open in new window,
+---, Rename..., Move file to..., Bookmark..., Merge entire file with..., Add file property
+(`lucide-plus-circle`), Export to PDF... (all `action`), ---, Find..., Replace... (`find`,
+`lucide-file-search`), ---, Copy path (no section, a submenu: as Obsidian URL, from vault
+folder, from system root), ---, Open version history (`view`), Open linked view (a submenu:
+local graph, backlinks, outgoing links, file properties, outline), ---, Open in default app,
+Show in system explorer, Reveal file in navigation (`system`), the danger pair, Delete file
+(`is-warning`). Beside other tabs the close section is Close, Close others, **Close tabs after**
+(only with a tab to the right), Close all. A canvas or base tab has none of the markdown rows
+(a canvas adds Export as image), and its Open linked view holds Open backlinks alone. An empty
+tab's menu stops after Split down; a popout's tab has the same menu as the vault window's,
+Move to new window included (it moves the tab into a fresh window). A sidebar tab has Close,
+Pin, Link with tab..., Move to new window, Split right (disabled) and Split down; the Files
+view's has Close alone.
+
+**A right click does not make the tab active**, and an inactive tab's menu is short: the close
+rows, Pin, Link with tab..., Move to new window — no splits and no file rows.
+
+**Effects.** Close others leaves the clicked tab, active. Close all leaves one empty "New tab"
+when nothing is pinned. Move to new window from the menu is `workspace:move-to-new-window`.
+Link with tab... closed the menu and left no trace the probe could find (no modal, notice,
+class or overlay): unresolved.
+
+**Pinned tabs.** Pin sets the leaf's `pinned`, and the row reads **Unpin**. The header draws
+`div.workspace-tab-header-status-icon.mod-pinned` (`lucide-pin`, `aria-label="Unpin"`) and hides
+the close button, on the active tab too; a click on the pin unpins. `workspace:close` (Mod+W)
+on a pinned tab **unpins it** and leaves it open. A link followed in a pinned tab, a link
+clicked in its reading view and a quick-switcher pick all **open a new tab**, which becomes
+active. Close others and Close all **keep pinned tabs**; Close all with one pinned leaves only
+it, active, and adds no empty tab. `workspace.json` writes `"pinned": true` twice, on the leaf
+after `type` and in its `state` after the inner `state`:
+
+```
+{"id": "…", "type": "leaf", "pinned": true, "state": {"type": "markdown", "state": {…}, "pinned": true, "icon": "lucide-file", "title": "Alpha"}}
+```
+
+and unpinning removes both keys rather than writing `false`. `workspace:toggle-pin`,
+`workspace:close-others` and `workspace:close-others-tab-group` have no default hotkey.
+
 ## Observed table editing behavior, Obsidian 1.14.4
 
 Observed with a throwaway plugin in a scratch vault (see

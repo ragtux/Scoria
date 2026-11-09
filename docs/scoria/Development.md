@@ -514,7 +514,7 @@ drop over no window (nothing), and on Wayland a drag out of the window changing 
 reorder inside it still works. In that harness a window's last frame after a drop reached the
 screen only with its next one — the render log had the right strips and a pointer move over the
 window showed them — which matches XWayland under a headless compositor rather than anything
-here; a real X11, macOS or Windows desktop is still to be tried.
+here; the other desktops were tried the same day, see [[#Drags on X11 and macOS, 2026-11-09]].
 
 **Modals and the file menu draw in their own window, 2026-11-09.** Until now every modal (the
 quick switcher, the palette, the prompts, the choosers, Copy results) and the file menu was drawn by
@@ -546,6 +546,55 @@ beside it, the popout's id or null for each. Checked over the socket in a headle
 raised in the vault window read null and stayed null once `workspace:new-window` had opened a
 popout; one raised there read the popout's id and was drawn in the popout's corner with the vault
 window's empty (grim); closing the popout turned both to null.
+
+**The tab header's menu and pinned tabs, 2026-11-09.** The last row the popouts waited on, *Move to
+new window* on a tab, needed the tab header's own menu, which was not drawn at all. Probed first
+(`tools/obsidian-probe/tab-header-menu.mjs`, [[Specification#Observed tab header menu and pinned tabs, Obsidian 1.15.0]]),
+then built as `file_menu::Target::Tab`: the close rows (Close tabs after only with a tab to the
+right, Close others and Close all only beside another), Pin or Unpin, Move to new window, and on the
+active tab the splits, Open in new window and the view header's file rows, a markdown tab adding
+Add file property, Find... and Replace.... A right click leaves the active tab where it is, so the
+target names its group and index and the close and move rows act on that tab (`tab_menu_pick`);
+an inactive tab's menu stops after Move to new window, as Obsidian's did. Left out for want of
+anything behind them: Link with tab... (no linked panes, and the probe found no trace of what it
+starts), Backlinks in document and the two view-mode rows (their labels in the other modes were
+not captured), Merge, Export to PDF, Export as image, Open version history and the Open linked
+view submenu. **Pinning** came with it: `Tab::pinned`, read from the leaf and kept whatever file
+the tab moves to; `workspace:toggle-pin` is wired; a pinned tab draws its pin where the close
+button was, always, and a click on it unpins; `workspace:close` on it unpins instead of closing;
+`open_file` from a pinned tab opens a new tab first, which covers every way of opening a file;
+Close others, Close all and `workspace:close-others` keep pinned tabs, Close all leaving the first
+of them active. `set_pinned` writes `"pinned": true` after the leaf's `type` and again after its
+state's inner `state`, and drops both when unpinned, byte for byte against the probe's file
+(`a_pinned_leaf_is_written_in_obsidians_shape`). The socket's tabs carry `pinned`. Checked over the
+socket in a headless sway: the inactive tab's short menu and the active tab's long one, Pin, a note
+opened from the pinned tab landing in a new one, Ctrl+W unpinning, Close others and Close all from
+the menu keeping the pinned tab, Move to new window on an inactive pinned tab carrying the pin into
+the popout, and the quit writing both keys.
+
+### Drags on X11 and macOS, 2026-11-09
+
+Step 5's drags were checked under XWayland only. On a real X server (Xvfb with openbox, a
+reparenting window manager, real XTEST input through `xdotool`), every case passed: a vault tab
+onto the popout's strip, a popout tab onto the vault window's right edge (a split), a popout's last
+tab out (the popout and its X window gone), the main area's only tab out (an empty tab left), the
+only tab of another main group out (the group gone), and a drop over no window from either side
+(nothing). Two things came out of it. **The ghost**: gpui paints the active drag in every window
+that draws a frame, each at its own last pointer, so the window a drag lit up showed a frozen ghost
+where the pointer had last left it; `TabDragPreview` now names its source window and draws nothing
+elsewhere. **Positions after an un-maximize (gpui, not fixed)**: gpui's X11 backend takes a
+`ConfigureNotify`'s `x`/`y` as the window's place on the screen, but a real (non-synthetic) one
+under a reparenting window manager is relative to the manager's frame, and `set_bounds` drops the
+origin on a resize. After openbox un-maximized a popout, `window.bounds()` read (1, 20) with the
+window at (1551, 320): every drag to or from it then did nothing until a plain move sent a
+synthetic event, and `floating` recorded the wrong place. The fix belongs in gpui
+(`translate_coordinates` to the root for a non-synthetic event); it waits on a gpui pin bump or an
+upstream change. On macOS the drags were driven over the socket only (from ssh the app may not
+inject input or capture the screen): vault tab onto the popout's strip, popout tab onto the vault
+window's strip, and drops over no window all passed, and an instrumented build showed the screen
+arithmetic right; the split onto an edge and a popout's last tab out were not run, a person having
+come to the machine. **Windows is untried**: the test box was offline. The control socket works
+there, so the same drive plus a `SendInput` script in a `schtasks /it` task is what it takes.
 
 ### The week's leftovers, 2026-11-09
 
