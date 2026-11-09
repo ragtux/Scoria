@@ -630,11 +630,30 @@ pub fn line_prefix_plan(
             has_prefix(&lists::parse_prefix(lt), kind)
         });
     let mut edits = Vec::new();
-    let mut number = 1;
+    // Numbering runs per depth: an item follows its previous sibling at its
+    // depth and one with none restarts at 1, so `- a` / `- b` / `\t- c` /
+    // `- d` becomes `1.` / `2.` / `\t1.` / `3.` — the bytes Obsidian 1.15.0
+    // wrote on the gate vault's day 6 (the smart-list rule, see
+    // `lists::renumber_block`). The stack holds (indent width, last number).
+    let mut depths: Vec<(usize, usize)> = Vec::new();
     for l in touched {
         let lt = line_text(text, line_starts, l);
         let start = line_starts[l];
         let p = lists::parse_prefix(lt);
+        let indent = p.indent.len() + p.list_indent.len();
+        while depths.last().is_some_and(|&(w, _)| w > indent) {
+            depths.pop();
+        }
+        let number = match depths.last_mut() {
+            Some((w, n)) if *w == indent => {
+                *n += 1;
+                *n
+            }
+            _ => {
+                depths.push((indent, 1));
+                1
+            }
+        };
         match kind {
             LinePrefix::Quote => {
                 if all {
@@ -663,9 +682,7 @@ pub fn line_prefix_plan(
                     continue;
                 }
                 let with = if ordered {
-                    let n = format!("{number}. ");
-                    number += 1;
-                    n
+                    format!("{number}. ")
                 } else {
                     "- ".to_string()
                 };
@@ -1122,6 +1139,14 @@ mod tests {
         assert_eq!(
             apply(text, line_prefix_plan(text, &s, 0..2, LinePrefix::Ordered)),
             "1. one\n2. two\n"
+        );
+        // Per depth, as Obsidian 1.15.0 wrote on the gate vault (day 6): a
+        // nested item restarts at 1 and takes no top-level number.
+        let text = "- a\n- b\n\t- c\n- d\n";
+        let s = starts(text);
+        assert_eq!(
+            apply(text, line_prefix_plan(text, &s, 0..4, LinePrefix::Ordered)),
+            "1. a\n2. b\n\t1. c\n3. d\n"
         );
     }
 

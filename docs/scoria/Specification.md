@@ -1468,6 +1468,14 @@ an ordered marker are skipped too, which is the one parser's reading and not
 an observation). Only bullets and only a multi-line selection were observed;
 a single whole bullet line selected, and quote markers, are unprobed.
 
+**The numbered toggle counts per depth.** The same day, by hand: `toggle-numbered-list` once
+over four bullet lines of which one (the third) was nested by a tab wrote `1.`, `2.`, `\t1.`,
+`3.` — the nested item restarts at 1 and takes no top-level number, which is the smart-list
+rule above ("an item follows its previous sibling at its depth, one with none restarts at
+1"). The probe's `a` / `b` / `c` / `d` row, all at one depth, is unchanged by it. The first
+line's indentation before the toggle is not certain (see [[Writer gate run#Day 6, 2026-11-09]]);
+the numbering is.
+
 The mixed-selection rule for the line toggles is **remove only when every
 line already has the prefix**, which is what Scoria does:
 
