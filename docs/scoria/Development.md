@@ -532,7 +532,20 @@ null for the vault window. Checked over the socket in a headless sway: the switc
 picked from inside a popout (the note opened in the popout's group), the editor's right-click menu
 drawn at the click in the popout, with Escape and a pick (Select all) returning the keyboard to the
 editor there; the palette raised from the vault window drawn in the vault window, and one raised
-and dismissed in the popout. Notices still show in the vault window's corner.
+and dismissed in the popout. Notices followed the same day.
+
+**Notices show in their own window, 2026-11-09.** A notice went up in the vault window's corner
+whatever window raised it. In Obsidian a Notice shows in the active window, so each notice now
+records the active group's window when it goes up (`report`), and keeps it: one raised in the
+vault window stays there after a popout takes the focus, and a renewal of the same text moves it
+to the window of the renewal. Each window's render draws only its own (`render_notices`), the
+popout 16 px off its bottom edge since it has no status bar. A popout closed under its notices
+hands them to the vault window, by the same test as the overlays (`popout_open`, the handle
+standing for the window). The socket keeps `notices` as the texts and adds `notices_window`
+beside it, the popout's id or null for each. Checked over the socket in a headless sway: a notice
+raised in the vault window read null and stayed null once `workspace:new-window` had opened a
+popout; one raised there read the popout's id and was drawn in the popout's corner with the vault
+window's empty (grim); closing the popout turned both to null.
 
 ### The week's leftovers, 2026-11-09
 

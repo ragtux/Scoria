@@ -1488,6 +1488,17 @@ const NOTICE_LIFETIME: Duration = Duration::from_secs(5);
 struct Notice {
     id: u64,
     text: SharedString,
+    /// The popout it shows in, by id, or `None` for the vault window:
+    /// the window that was active when it went up, as in Obsidian.
+    window: Option<u64>,
+}
+
+impl Notice {
+    /// The window it draws in: its own while that is still open (`open`
+    /// says which popouts are), the vault window once that one closed.
+    fn home(&self, open: &impl Fn(u64) -> bool) -> Option<u64> {
+        self.window.filter(|id| open(*id))
+    }
 }
 
 /// The transient messages, oldest first. The status bar is for what stays
@@ -1500,17 +1511,33 @@ struct Notices {
 }
 
 impl Notices {
-    /// Shows `text` and returns the id to expire it by. A message already
-    /// on screen is renewed rather than stacked: the autosave retries on a
-    /// timer, so the same refusal arrives over and over.
-    fn push(&mut self, text: SharedString) -> u64 {
+    /// Shows `text` in `window` (`None` for the vault window) and returns
+    /// the id to expire it by. A message already on screen is renewed
+    /// rather than stacked, in the window of the renewal: the autosave
+    /// retries on a timer, so the same refusal arrives over and over.
+    fn push(&mut self, text: SharedString, window: Option<u64>) -> u64 {
         self.live.retain(|n| n.text != text);
         self.last_id += 1;
         self.live.push(Notice {
             id: self.last_id,
             text,
+            window,
         });
         self.last_id
+    }
+
+    /// The messages window `here` draws, oldest first.
+    fn in_window<'a>(
+        &'a self,
+        here: Option<u64>,
+        open: &'a impl Fn(u64) -> bool,
+    ) -> impl Iterator<Item = &'a Notice> + 'a {
+        self.live.iter().filter(move |n| n.home(open) == here)
+    }
+
+    /// The window each message draws in, in the order of `texts`.
+    fn windows(&self, open: &impl Fn(u64) -> bool) -> Vec<Option<u64>> {
+        self.live.iter().map(|n| n.home(open)).collect()
     }
 
     /// Drops the message with this id, if it is still the one on screen.
@@ -7433,8 +7460,11 @@ impl Workspace {
         self.show_search(&query, Some(window), cx);
     }
 
+    /// Puts up a notice in the window that is active now, the active
+    /// group's, where it stays even after another window takes the focus.
     fn report(&mut self, message: impl Into<SharedString>, cx: &mut Context<Self>) {
-        let id = self.notices.push(message.into());
+        let home = self.window_of_group(self.active_group_id());
+        let id = self.notices.push(message.into(), home);
         cx.spawn(async move |this, cx| {
             cx.background_executor().timer(NOTICE_LIFETIME).await;
             this.update(cx, |ws, cx| {
@@ -10597,6 +10627,9 @@ impl Workspace {
         self.sync_menu_focus(Some(id), window, cx);
         let overlay = self.render_modal_overlay(Some(id));
         let file_menu = self.render_file_menu(Some(id), theme, window, cx);
+        // So are the notices that went up while it was the active window;
+        // it has no status bar to clear.
+        let notices = self.render_notices(Some(id), px(16.), theme);
         let tree = self.windows[wix].tree.clone();
         self.rendering_window = Some(id);
         let body = self.render_layout(&tree, &mut Vec::new(), theme, cx);
@@ -10660,6 +10693,7 @@ impl Workspace {
                 .children(controls)
                 .children(overlay)
                 .children(file_menu)
+                .children(notices)
                 .into_any_element(),
         )
     }
@@ -13631,6 +13665,9 @@ impl Workspace {
                 "cursor": edit.editing.field.cursor(),
             })),
             "notices": self.notices.texts(),
+            // The window each of those draws in, the popout's id or null
+            // for the vault window.
+            "notices_window": self.notices.windows(&|id| self.popout_open(id)),
             "focus": {
                 "name": self.focus_name(window, cx),
                 "context_stack": context_names(window),
@@ -14592,11 +14629,55 @@ impl Workspace {
                 home
             }
         };
-        home.filter(|id| {
-            self.windows
-                .iter()
-                .any(|w| w.id == *id && w.handle.is_some())
-        })
+        home.filter(|id| self.popout_open(*id))
+    }
+
+    /// Whether popout `id` is open: it has a node and a handle. Reading
+    /// the handle would fail inside that window's own render, where its
+    /// root is leased, so the handle stands for the window.
+    fn popout_open(&self, id: u64) -> bool {
+        self.windows
+            .iter()
+            .any(|w| w.id == id && w.handle.is_some())
+    }
+
+    /// The notices window `here` draws, stacked in its bottom-right corner
+    /// (`bottom` above the edge: the vault window clears its status bar).
+    /// Obsidian reports an outcome with a Notice in the corner rather
+    /// than in the status bar, and the probe notes put it bottom right.
+    fn render_notices(
+        &self,
+        here: Option<u64>,
+        bottom: Pixels,
+        theme: &Theme,
+    ) -> Option<gpui::AnyElement> {
+        let open = |id| self.popout_open(id);
+        let mut shown = self.notices.in_window(here, &open).peekable();
+        shown.peek()?;
+        Some(
+            div()
+                .absolute()
+                .bottom(bottom)
+                .right(px(16.))
+                .flex()
+                .flex_col()
+                .items_end()
+                .gap_1()
+                .children(shown.map(|notice| {
+                    div()
+                        .max_w(px(360.))
+                        .px_3()
+                        .py_1()
+                        .rounded_md()
+                        .bg(theme.tokens.background_secondary)
+                        .border_1()
+                        .border_color(theme.tokens.background_modifier_border)
+                        .text_size(px(12.))
+                        .text_color(theme.tokens.text_normal)
+                        .child(notice.text.clone())
+                }))
+                .into_any_element(),
+        )
     }
 
     /// Hands the keyboard to an open menu, or back from a closed one, in
@@ -17809,31 +17890,8 @@ impl Render for Workspace {
         // The modal and the file menu draw in the window they came up in:
         // this one, unless that was a popout.
         let overlay = self.render_modal_overlay(None);
-        // Obsidian reports an outcome with a Notice in the corner rather
-        // than in the status bar, and the probe notes put it bottom right.
-        let notices = (!self.notices.live.is_empty()).then(|| {
-            div()
-                .absolute()
-                .bottom(px(30.))
-                .right(px(16.))
-                .flex()
-                .flex_col()
-                .items_end()
-                .gap_1()
-                .children(self.notices.live.iter().map(|notice| {
-                    div()
-                        .max_w(px(360.))
-                        .px_3()
-                        .py_1()
-                        .rounded_md()
-                        .bg(theme.tokens.background_secondary)
-                        .border_1()
-                        .border_color(theme.tokens.background_modifier_border)
-                        .text_size(px(12.))
-                        .text_color(theme.tokens.text_normal)
-                        .child(notice.text.clone())
-                }))
-        });
+        // The notices that went up while this window was the active one.
+        let notices = self.render_notices(None, px(30.), &theme);
 
         let left_visible = self.left_visible;
         let right_visible = self.right_visible;
@@ -20015,8 +20073,8 @@ mod tests {
     #[test]
     fn a_notice_expires_by_id_and_leaves_the_newer_one() {
         let mut n = Notices::default();
-        let first = n.push("The cursor is not in a table".into());
-        let second = n.push("A.md saved".into());
+        let first = n.push("The cursor is not in a table".into(), None);
+        let second = n.push("A.md saved".into(), None);
         assert_eq!(n.latest().map(|t| t.as_ref()), Some("A.md saved"));
 
         n.expire(first);
@@ -20032,8 +20090,8 @@ mod tests {
     #[test]
     fn a_repeated_notice_is_renewed_rather_than_stacked() {
         let mut n = Notices::default();
-        let first = n.push("A.md changed on disk".into());
-        let again = n.push("A.md changed on disk".into());
+        let first = n.push("A.md changed on disk".into(), None);
+        let again = n.push("A.md changed on disk".into(), None);
         assert_ne!(first, again);
         assert_eq!(n.texts(), vec!["A.md changed on disk".to_string()]);
 
@@ -20052,10 +20110,45 @@ mod tests {
     #[test]
     fn clearing_takes_every_notice_down() {
         let mut n = Notices::default();
-        n.push("one".into());
-        n.push("two".into());
+        n.push("one".into(), None);
+        n.push("two".into(), None);
         n.clear();
         assert!(n.latest().is_none());
-        assert_eq!(n.push("three".into()), 3, "ids keep counting up");
+        assert_eq!(n.push("three".into(), None), 3, "ids keep counting up");
+    }
+
+    /// A notice stays in the window it went up in, whichever window has
+    /// the focus later, and falls back to the vault window once its popout
+    /// closes; a renewal moves it to the window of the renewal.
+    #[test]
+    fn a_notice_draws_in_its_own_window_until_that_closes() {
+        let mut n = Notices::default();
+        n.push("in the vault window".into(), None);
+        n.push("in the popout".into(), Some(7));
+        let texts = |it: &mut dyn Iterator<Item = &Notice>| -> Vec<String> {
+            it.map(|n| n.text.to_string()).collect()
+        };
+
+        let open = |id| id == 7;
+        assert_eq!(
+            texts(&mut n.in_window(None, &open)),
+            vec!["in the vault window"]
+        );
+        assert_eq!(
+            texts(&mut n.in_window(Some(7), &open)),
+            vec!["in the popout"]
+        );
+        assert_eq!(n.windows(&open), vec![None, Some(7)]);
+
+        let closed = |_| false;
+        assert_eq!(
+            texts(&mut n.in_window(None, &closed)),
+            vec!["in the vault window", "in the popout"],
+            "a closed popout hands its notices to the vault window"
+        );
+        assert_eq!(n.windows(&closed), vec![None, None]);
+
+        n.push("in the vault window".into(), Some(7));
+        assert_eq!(n.windows(&open), vec![Some(7), Some(7)]);
     }
 }
