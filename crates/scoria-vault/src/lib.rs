@@ -191,6 +191,22 @@ impl Vault {
         self.files.iter().filter(|f| f.kind == FileKind::Markdown)
     }
 
+    /// The note Random note's *Open random note* lands on for a given
+    /// `roll`: one of the vault's Markdown files, `roll` reduced modulo
+    /// their count, so a uniform roll is a uniform pick. `None` in a vault
+    /// with no note. The candidates are the Markdown files and nothing else
+    /// -- "Opens a random markdown file", Obsidian's own plugin list --
+    /// which keeps canvases, bases, PDFs and images out. **Unprobed**:
+    /// whether Obsidian leaves the active note out of the draw; it is in it
+    /// here.
+    pub fn random_note(&self, roll: u64) -> Option<&VaultFile> {
+        let count = self.markdown_files().count() as u64;
+        if count == 0 {
+            return None;
+        }
+        self.markdown_files().nth((roll % count) as usize)
+    }
+
     /// Absolute path for a vault-relative path.
     pub fn absolute(&self, rel: &str) -> PathBuf {
         self.root
@@ -792,6 +808,30 @@ mod tests {
         assert_eq!(vault.markdown_files().count(), 2);
         assert_eq!(vault.files()[3].kind, FileKind::Image);
         assert_eq!(vault.folders(), ["Projects"], "dot-folders are not listed");
+    }
+
+    #[test]
+    fn a_random_note_is_a_markdown_file_and_every_one_can_come_up() {
+        let dir = sample_vault();
+        let vault = Vault::open(dir.path()).unwrap();
+        // Board.canvas and pic.PNG sit before and after the notes in the
+        // file list; no roll lands on either, and both notes come up.
+        let picks: std::collections::BTreeSet<&str> = (0..8)
+            .map(|roll| vault.random_note(roll).unwrap().path.as_str())
+            .collect();
+        assert_eq!(
+            picks.into_iter().collect::<Vec<_>>(),
+            ["Note.md", "Projects/Plan.md"]
+        );
+        assert_eq!(
+            vault.random_note(u64::MAX).unwrap().kind,
+            FileKind::Markdown
+        );
+
+        let empty = tempfile::tempdir().unwrap();
+        fs::write(empty.path().join("Board.canvas"), "{}").unwrap();
+        let vault = Vault::open(empty.path()).unwrap();
+        assert!(vault.random_note(3).is_none(), "a canvas is not a note");
     }
 
     #[test]

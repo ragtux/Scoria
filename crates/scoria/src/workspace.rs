@@ -302,6 +302,7 @@ pub const RUNNABLE: &[&str] = &[
     "daily-notes",
     "daily-notes:goto-prev",
     "daily-notes:goto-next",
+    "random-note",
     "editor:table-row-before",
     "editor:table-row-after",
     "editor:table-row-up",
@@ -4260,6 +4261,34 @@ impl Workspace {
         }
     }
 
+    /// Random note's *Open random note*: one of the vault's Markdown files,
+    /// drawn uniformly and opened in the tab in hand, the way the daily
+    /// note opens. Nothing is written. **Unprobed**: whether Obsidian opens
+    /// it in the active tab or a new one, and whether it can draw the note
+    /// already open; this does the first and allows the second.
+    fn open_random_note(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let roll = {
+            use std::hash::{BuildHasher, Hasher};
+            let mut h = std::collections::hash_map::RandomState::new().build_hasher();
+            h.write_u128(
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_nanos())
+                    .unwrap_or(0),
+            );
+            h.finish()
+        };
+        let Some(path) = state.vault().random_note(roll).map(|f| f.path.clone()) else {
+            return self.report("No notes in this vault", cx);
+        };
+        self.open_file(path, None, cx);
+        let mode = self.editing_mode();
+        self.set_mode(mode, window, cx);
+    }
+
     /// A date cell's *Open daily note* (`lucide-link`, observed on every
     /// date cell of a base, `s08` `addControl` and `s24` `dateHover`): the
     /// daily note named after that day, opened, or created from the
@@ -5476,6 +5505,7 @@ impl Workspace {
             "daily-notes" => self.open_daily(None, window, cx),
             "daily-notes:goto-prev" => self.open_daily(Some(false), window, cx),
             "daily-notes:goto-next" => self.open_daily(Some(true), window, cx),
+            "random-note" => self.open_random_note(window, cx),
             _ if TableCommand::from_id(id).is_some() => {
                 let cmd = TableCommand::from_id(id).expect("checked above");
                 if self.editing_or_report(id, window, cx) {
