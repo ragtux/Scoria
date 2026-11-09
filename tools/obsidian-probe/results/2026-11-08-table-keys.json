@@ -1,0 +1,2902 @@
+{
+ "tableKeys": {
+  "fixtures": {
+   "startedAt": "2026-11-09T01:52:38.970Z",
+   "steps": {},
+   "order": [],
+   "elapsedMs": 0
+  },
+  "run": {
+   "startedAt": "2026-11-09T01:52:40.189Z",
+   "steps": {
+    "s00-context": {
+     "ok": true,
+     "ms": 2267,
+     "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+     "version": "1.13.7",
+     "seedOk": true,
+     "snapshot": {
+      "value": "intro\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n| 3 | 4 |\n",
+      "cursor": {
+       "line": 0,
+       "ch": 0
+      },
+      "sel": "",
+      "lines": 7,
+      "active": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "editable": true,
+       "inTable": false,
+       "inEditor": true,
+       "text": "intro\n\n\nA\nB\n\n\n\n\n1\n2\n\n\n3\n4\n\n\n"
+      },
+      "widgetRows": 2,
+      "widgetCells": [
+       [
+        "1",
+        "2"
+       ],
+       [
+        "3",
+        "4"
+       ]
+      ],
+      "widgetPresent": true
+     },
+     "clickLast": {
+      "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(2) td:nth-child(2)",
+      "rect": {
+       "x": 233.43748474121094,
+       "y": 277.3168029785156,
+       "w": 54.88146209716797,
+       "h": 29.482755661010742,
+       "cx": 260.8782157897949,
+       "cy": 292.058180809021
+      }
+     },
+     "afterClick": {
+      "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+      "cursor": {
+       "line": 5,
+       "ch": 9
+      },
+      "sel": "",
+      "lines": 7,
+      "active": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "editable": true,
+       "inTable": true,
+       "inEditor": true,
+       "text": "4"
+      },
+      "widgetRows": 2,
+      "widgetCells": [
+       [
+        "1",
+        "2"
+       ],
+       [
+        "3",
+        "44"
+       ]
+      ],
+      "widgetPresent": true
+     }
+    },
+    "s01-enter-last-cell-table-at-end": {
+     "ok": true,
+     "ms": 8843,
+     "enterOnce": {
+      "file": "AtEnd.md",
+      "cell": [
+       2,
+       2
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(2) td:nth-child(2)",
+       "rect": {
+        "x": 233.43748474121094,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 260.8782157897949,
+        "cy": 292.058180809021
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+       "cursor": {
+        "line": 5,
+        "ch": 9
+       },
+       "sel": "",
+       "lines": 7,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "4"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "1",
+         "2"
+        ],
+        [
+         "3",
+         "44"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n|     |     |\n",
+        "cursor": {
+         "line": 6,
+         "ch": 12
+        },
+        "sel": "",
+        "lines": 8,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": ""
+        },
+        "widgetRows": 3,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ],
+         [
+          "",
+          ""
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Enter"
+       }
+      ]
+     },
+     "enterTwice": {
+      "file": "AtEnd.md",
+      "cell": [
+       2,
+       2
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(2) td:nth-child(2)",
+       "rect": {
+        "x": 233.43748474121094,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 260.8782157897949,
+        "cy": 292.058180809021
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+       "cursor": {
+        "line": 5,
+        "ch": 9
+       },
+       "sel": "",
+       "lines": 7,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "4"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "1",
+         "2"
+        ],
+        [
+         "3",
+         "44"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n|     |     |\n",
+        "cursor": {
+         "line": 6,
+         "ch": 12
+        },
+        "sel": "",
+        "lines": 8,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": ""
+        },
+        "widgetRows": 3,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ],
+         [
+          "",
+          ""
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Enter"
+       },
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n|     |     |\n|     |     |\n",
+        "cursor": {
+         "line": 7,
+         "ch": 12
+        },
+        "sel": "",
+        "lines": 9,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": ""
+        },
+        "widgetRows": 4,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ],
+         [
+          "",
+          ""
+         ],
+         [
+          "",
+          ""
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Enter"
+       }
+      ]
+     },
+     "enterThrice": {
+      "file": "AtEnd.md",
+      "cell": [
+       2,
+       2
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(2) td:nth-child(2)",
+       "rect": {
+        "x": 233.43748474121094,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 260.8782157897949,
+        "cy": 292.058180809021
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+       "cursor": {
+        "line": 5,
+        "ch": 9
+       },
+       "sel": "",
+       "lines": 7,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "4"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "1",
+         "2"
+        ],
+        [
+         "3",
+         "44"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n|     |     |\n",
+        "cursor": {
+         "line": 6,
+         "ch": 12
+        },
+        "sel": "",
+        "lines": 8,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": ""
+        },
+        "widgetRows": 3,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ],
+         [
+          "",
+          ""
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Enter"
+       },
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n|     |     |\n|     |     |\n",
+        "cursor": {
+         "line": 7,
+         "ch": 12
+        },
+        "sel": "",
+        "lines": 9,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": ""
+        },
+        "widgetRows": 4,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ],
+         [
+          "",
+          ""
+         ],
+         [
+          "",
+          ""
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Enter"
+       },
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n|     |     |\n|     |     |\n|     |     |\n",
+        "cursor": {
+         "line": 8,
+         "ch": 12
+        },
+        "sel": "",
+        "lines": 10,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": ""
+        },
+        "widgetRows": 5,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ],
+         [
+          "",
+          ""
+         ],
+         [
+          "",
+          ""
+         ],
+         [
+          "",
+          ""
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Enter"
+       }
+      ]
+     }
+    },
+    "s02-enter-last-cell-other-endings": {
+     "ok": true,
+     "ms": 5628,
+     "blankAfter": {
+      "file": "AtEndBlank.md",
+      "cell": [
+       2,
+       2
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(2) td:nth-child(2)",
+       "rect": {
+        "x": 233.43748474121094,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 260.8782157897949,
+        "cy": 292.058180809021
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n\n",
+       "cursor": {
+        "line": 5,
+        "ch": 9
+       },
+       "sel": "",
+       "lines": 8,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "4"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "1",
+         "2"
+        ],
+        [
+         "3",
+         "44"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n|     |     |\n\n",
+        "cursor": {
+         "line": 6,
+         "ch": 12
+        },
+        "sel": "",
+        "lines": 9,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": ""
+        },
+        "widgetRows": 3,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ],
+         [
+          "",
+          ""
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Enter"
+       },
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n|     |     |\n|     |     |\n\n",
+        "cursor": {
+         "line": 7,
+         "ch": 12
+        },
+        "sel": "",
+        "lines": 10,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": ""
+        },
+        "widgetRows": 4,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ],
+         [
+          "",
+          ""
+         ],
+         [
+          "",
+          ""
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Enter"
+       }
+      ]
+     },
+     "textAfter": {
+      "file": "Followed.md",
+      "cell": [
+       2,
+       2
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(2) td:nth-child(2)",
+       "rect": {
+        "x": 233.43748474121094,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 260.8782157897949,
+        "cy": 292.058180809021
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n\nafter\n",
+       "cursor": {
+        "line": 5,
+        "ch": 9
+       },
+       "sel": "",
+       "lines": 9,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "4"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "1",
+         "2"
+        ],
+        [
+         "3",
+         "44"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n|     |     |\n\nafter\n",
+        "cursor": {
+         "line": 6,
+         "ch": 12
+        },
+        "sel": "",
+        "lines": 10,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": ""
+        },
+        "widgetRows": 3,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ],
+         [
+          "",
+          ""
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Enter"
+       },
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n|     |     |\n|     |     |\n\nafter\n",
+        "cursor": {
+         "line": 7,
+         "ch": 12
+        },
+        "sel": "",
+        "lines": 11,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": ""
+        },
+        "widgetRows": 4,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ],
+         [
+          "",
+          ""
+         ],
+         [
+          "",
+          ""
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Enter"
+       }
+      ]
+     }
+    },
+    "s03-enter-middle-and-first-row": {
+     "ok": true,
+     "ms": 7676,
+     "firstRowFirstCol": {
+      "file": "AtEnd.md",
+      "cell": [
+       1,
+       1
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(1) td:nth-child(1)",
+       "rect": {
+        "x": 178.55601501464844,
+        "y": 247.8340301513672,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 205.99674606323242,
+        "cy": 262.57540798187256
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+       "cursor": {
+        "line": 4,
+        "ch": 3
+       },
+       "sel": "",
+       "lines": 7,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "1"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "11",
+         "2"
+        ],
+        [
+         "3",
+         "4"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+        "cursor": {
+         "line": 5,
+         "ch": 3
+        },
+        "sel": "3",
+        "lines": 7,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": "3"
+        },
+        "widgetRows": 2,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "33",
+          "4"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Enter"
+       }
+      ]
+     },
+     "firstRowSecondCol": {
+      "file": "AtEnd.md",
+      "cell": [
+       1,
+       2
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(1) td:nth-child(2)",
+       "rect": {
+        "x": 233.43748474121094,
+        "y": 247.8340301513672,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 260.8782157897949,
+        "cy": 262.57540798187256
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+       "cursor": {
+        "line": 4,
+        "ch": 9
+       },
+       "sel": "",
+       "lines": 7,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "2"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "1",
+         "22"
+        ],
+        [
+         "3",
+         "4"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+        "cursor": {
+         "line": 5,
+         "ch": 9
+        },
+        "sel": "4",
+        "lines": 7,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": "4"
+        },
+        "widgetRows": 2,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "44"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Enter"
+       }
+      ]
+     },
+     "lastRowFirstCol": {
+      "file": "AtEnd.md",
+      "cell": [
+       2,
+       1
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(2) td:nth-child(1)",
+       "rect": {
+        "x": 178.55601501464844,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 205.99674606323242,
+        "cy": 292.058180809021
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+       "cursor": {
+        "line": 5,
+        "ch": 3
+       },
+       "sel": "",
+       "lines": 7,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "3"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "1",
+         "2"
+        ],
+        [
+         "33",
+         "4"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n|     |     |\n",
+        "cursor": {
+         "line": 6,
+         "ch": 6
+        },
+        "sel": "",
+        "lines": 8,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": ""
+        },
+        "widgetRows": 3,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ],
+         [
+          "",
+          ""
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Enter"
+       }
+      ]
+     }
+    },
+    "s04-escape-and-arrows-from-last-cell": {
+     "ok": true,
+     "ms": 18351,
+     "escape": {
+      "file": "AtEnd.md",
+      "cell": [
+       2,
+       2
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(2) td:nth-child(2)",
+       "rect": {
+        "x": 233.43748474121094,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 260.8782157897949,
+        "cy": 292.058180809021
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+       "cursor": {
+        "line": 5,
+        "ch": 9
+       },
+       "sel": "",
+       "lines": 7,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "4"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "1",
+         "2"
+        ],
+        [
+         "3",
+         "44"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+        "cursor": {
+         "line": 5,
+         "ch": 9
+        },
+        "sel": "",
+        "lines": 7,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": "4"
+        },
+        "widgetRows": 2,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "44"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Escape"
+       }
+      ]
+     },
+     "arrowDown": {
+      "file": "AtEnd.md",
+      "cell": [
+       2,
+       2
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(2) td:nth-child(2)",
+       "rect": {
+        "x": 233.43748474121094,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 260.8782157897949,
+        "cy": 292.058180809021
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+       "cursor": {
+        "line": 5,
+        "ch": 9
+       },
+       "sel": "",
+       "lines": 7,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "4"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "1",
+         "2"
+        ],
+        [
+         "3",
+         "44"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+        "cursor": {
+         "line": 6,
+         "ch": 0
+        },
+        "sel": "",
+        "lines": 7,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": false,
+         "inEditor": true,
+         "text": "intro\n\n\nA\nB\n\n\n\n\n1\n2\n\n\n3\n4\n\n\n"
+        },
+        "widgetRows": 2,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "ArrowDown"
+       }
+      ]
+     },
+     "arrowDownTwice": {
+      "file": "AtEnd.md",
+      "cell": [
+       2,
+       2
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(2) td:nth-child(2)",
+       "rect": {
+        "x": 233.43748474121094,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 260.8782157897949,
+        "cy": 292.058180809021
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+       "cursor": {
+        "line": 5,
+        "ch": 9
+       },
+       "sel": "",
+       "lines": 7,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "4"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "1",
+         "2"
+        ],
+        [
+         "3",
+         "44"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+        "cursor": {
+         "line": 6,
+         "ch": 0
+        },
+        "sel": "",
+        "lines": 7,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": false,
+         "inEditor": true,
+         "text": "intro\n\n\nA\nB\n\n\n\n\n1\n2\n\n\n3\n4\n\n\n"
+        },
+        "widgetRows": 2,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "ArrowDown"
+       },
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+        "cursor": {
+         "line": 6,
+         "ch": 0
+        },
+        "sel": "",
+        "lines": 7,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": false,
+         "inEditor": true,
+         "text": "intro\n\n\nA\nB\n\n\n\n\n1\n2\n\n\n3\n4\n\n\n"
+        },
+        "widgetRows": 2,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "ArrowDown"
+       }
+      ]
+     },
+     "arrowDownFollowed": {
+      "file": "Followed.md",
+      "cell": [
+       2,
+       2
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(2) td:nth-child(2)",
+       "rect": {
+        "x": 233.43748474121094,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 260.8782157897949,
+        "cy": 292.058180809021
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n\nafter\n",
+       "cursor": {
+        "line": 5,
+        "ch": 9
+       },
+       "sel": "",
+       "lines": 9,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "4"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "1",
+         "2"
+        ],
+        [
+         "3",
+         "44"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n\nafter\n",
+        "cursor": {
+         "line": 6,
+         "ch": 0
+        },
+        "sel": "",
+        "lines": 9,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": false,
+         "inEditor": true,
+         "text": "intro\n\n\nA\nB\n\n\n\n\n1\n2\n\n\n3\n4\n\n\naf"
+        },
+        "widgetRows": 2,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "ArrowDown"
+       }
+      ]
+     },
+     "arrowRight": {
+      "file": "AtEnd.md",
+      "cell": [
+       2,
+       2
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(2) td:nth-child(2)",
+       "rect": {
+        "x": 233.43748474121094,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 260.8782157897949,
+        "cy": 292.058180809021
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+       "cursor": {
+        "line": 5,
+        "ch": 9
+       },
+       "sel": "",
+       "lines": 7,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "4"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "1",
+         "2"
+        ],
+        [
+         "3",
+         "44"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+        "cursor": {
+         "line": 6,
+         "ch": 0
+        },
+        "sel": "",
+        "lines": 7,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": false,
+         "inEditor": true,
+         "text": "intro\n\n\nA\nB\n\n\n\n\n1\n2\n\n\n3\n4\n\n\n"
+        },
+        "widgetRows": 2,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "ArrowRight"
+       }
+      ]
+     },
+     "arrowUpFirstRow": {
+      "file": "AtEnd.md",
+      "cell": [
+       1,
+       1
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(1) td:nth-child(1)",
+       "rect": {
+        "x": 178.55601501464844,
+        "y": 247.8340301513672,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 205.99674606323242,
+        "cy": 262.57540798187256
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+       "cursor": {
+        "line": 4,
+        "ch": 3
+       },
+       "sel": "",
+       "lines": 7,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "1"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "11",
+         "2"
+        ],
+        [
+         "3",
+         "4"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+        "cursor": {
+         "line": 2,
+         "ch": 2
+        },
+        "sel": "",
+        "lines": 7,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": "A"
+        },
+        "widgetRows": 2,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "ArrowUp"
+       }
+      ]
+     },
+     "arrowUpFirstRowFollowed": {
+      "file": "Followed.md",
+      "cell": [
+       1,
+       1
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(1) td:nth-child(1)",
+       "rect": {
+        "x": 178.55601501464844,
+        "y": 247.8340301513672,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 205.99674606323242,
+        "cy": 262.57540798187256
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n\nafter\n",
+       "cursor": {
+        "line": 4,
+        "ch": 3
+       },
+       "sel": "",
+       "lines": 9,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "1"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "11",
+         "2"
+        ],
+        [
+         "3",
+         "4"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n\nafter\n",
+        "cursor": {
+         "line": 2,
+         "ch": 2
+        },
+        "sel": "",
+        "lines": 9,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": "A"
+        },
+        "widgetRows": 2,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "ArrowUp"
+       }
+      ]
+     }
+    },
+    "s05-tab-and-shift-keys": {
+     "ok": true,
+     "ms": 15854,
+     "tabLastCell": {
+      "file": "AtEnd.md",
+      "cell": [
+       2,
+       2
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(2) td:nth-child(2)",
+       "rect": {
+        "x": 233.43748474121094,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 260.8782157897949,
+        "cy": 292.058180809021
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+       "cursor": {
+        "line": 5,
+        "ch": 9
+       },
+       "sel": "",
+       "lines": 7,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "4"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "1",
+         "2"
+        ],
+        [
+         "3",
+         "44"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n|     |     |\n",
+        "cursor": {
+         "line": 6,
+         "ch": 6
+        },
+        "sel": "",
+        "lines": 8,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": ""
+        },
+        "widgetRows": 3,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ],
+         [
+          "",
+          ""
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Tab"
+       }
+      ]
+     },
+     "tabLastCellTwice": {
+      "file": "AtEnd.md",
+      "cell": [
+       2,
+       2
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(2) td:nth-child(2)",
+       "rect": {
+        "x": 233.43748474121094,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 260.8782157897949,
+        "cy": 292.058180809021
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+       "cursor": {
+        "line": 5,
+        "ch": 9
+       },
+       "sel": "",
+       "lines": 7,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "4"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "1",
+         "2"
+        ],
+        [
+         "3",
+         "44"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n|     |     |\n",
+        "cursor": {
+         "line": 6,
+         "ch": 6
+        },
+        "sel": "",
+        "lines": 8,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": ""
+        },
+        "widgetRows": 3,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ],
+         [
+          "",
+          ""
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Tab"
+       },
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n|     |     |\n",
+        "cursor": {
+         "line": 6,
+         "ch": 12
+        },
+        "sel": "",
+        "lines": 8,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": ""
+        },
+        "widgetRows": 3,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ],
+         [
+          "",
+          ""
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Tab"
+       }
+      ]
+     },
+     "tabFirstCell": {
+      "file": "AtEnd.md",
+      "cell": [
+       1,
+       1
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(1) td:nth-child(1)",
+       "rect": {
+        "x": 178.55601501464844,
+        "y": 247.8340301513672,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 205.99674606323242,
+        "cy": 262.57540798187256
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+       "cursor": {
+        "line": 4,
+        "ch": 3
+       },
+       "sel": "",
+       "lines": 7,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "1"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "11",
+         "2"
+        ],
+        [
+         "3",
+         "4"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+        "cursor": {
+         "line": 4,
+         "ch": 9
+        },
+        "sel": "2",
+        "lines": 7,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": "2"
+        },
+        "widgetRows": 2,
+        "widgetCells": [
+         [
+          "1",
+          "22"
+         ],
+         [
+          "3",
+          "4"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Tab"
+       }
+      ]
+     },
+     "shiftTabFirstCell": {
+      "file": "AtEnd.md",
+      "cell": [
+       1,
+       1
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(1) td:nth-child(1)",
+       "rect": {
+        "x": 178.55601501464844,
+        "y": 247.8340301513672,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 205.99674606323242,
+        "cy": 262.57540798187256
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+       "cursor": {
+        "line": 4,
+        "ch": 3
+       },
+       "sel": "",
+       "lines": 7,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "1"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "11",
+         "2"
+        ],
+        [
+         "3",
+         "4"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+        "cursor": {
+         "line": 2,
+         "ch": 9
+        },
+        "sel": "B",
+        "lines": 7,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": "B"
+        },
+        "widgetRows": 2,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Tab+shift"
+       }
+      ]
+     },
+     "shiftEnter": {
+      "file": "AtEnd.md",
+      "cell": [
+       2,
+       2
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(2) td:nth-child(2)",
+       "rect": {
+        "x": 233.43748474121094,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 260.8782157897949,
+        "cy": 292.058180809021
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+       "cursor": {
+        "line": 5,
+        "ch": 9
+       },
+       "sel": "",
+       "lines": 7,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "4"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "1",
+         "2"
+        ],
+        [
+         "3",
+         "44"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B     |\n| --- | ----- |\n| 1   | 2     |\n| 3   | 4<br> |\n",
+        "cursor": {
+         "line": 5,
+         "ch": 13
+        },
+        "sel": "",
+        "lines": 7,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": "4"
+        },
+        "widgetRows": 2,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "44"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Enter+shift"
+       }
+      ]
+     },
+     "ctrlEnter": {
+      "file": "AtEnd.md",
+      "cell": [
+       2,
+       2
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(2) td:nth-child(2)",
+       "rect": {
+        "x": 233.43748474121094,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 260.8782157897949,
+        "cy": 292.058180809021
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+       "cursor": {
+        "line": 5,
+        "ch": 9
+       },
+       "sel": "",
+       "lines": 7,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "4"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "1",
+         "2"
+        ],
+        [
+         "3",
+         "44"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+        "cursor": {
+         "line": 5,
+         "ch": 9
+        },
+        "sel": "",
+        "lines": 7,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": "4"
+        },
+        "widgetRows": 2,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "44"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Enter+ctrl"
+       }
+      ]
+     }
+    },
+    "s06-click-cell-then-click-away": {
+     "ok": true,
+     "ms": 2860,
+     "seedOk": true,
+     "clickCell": {
+      "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(1) td:nth-child(1)",
+      "rect": {
+       "x": 178.55601501464844,
+       "y": 247.8340301513672,
+       "w": 54.88146209716797,
+       "h": 29.482755661010742,
+       "cx": 205.99674606323242,
+       "cy": 262.57540798187256
+      }
+     },
+     "inCell": {
+      "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n\nafter\n",
+      "cursor": {
+       "line": 4,
+       "ch": 3
+      },
+      "sel": "",
+      "lines": 9,
+      "active": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "editable": true,
+       "inTable": true,
+       "inEditor": true,
+       "text": "1"
+      },
+      "widgetRows": 2,
+      "widgetCells": [
+       [
+        "11",
+        "2"
+       ],
+       [
+        "3",
+        "4"
+       ]
+      ],
+      "widgetPresent": true
+     },
+     "afterTextRect": {
+      "x": 178.21119689941406,
+      "y": 371.1314392089844,
+      "w": 699.9999389648438,
+      "h": 23.99784278869629,
+      "cx": 528.2111663818359,
+      "cy": 383.1303606033325
+     },
+     "cmLines": [
+      "intro",
+      "",
+      "1",
+      "",
+      "after",
+      ""
+     ],
+     "target": {
+      "x": 184.21119689941406,
+      "y": 359.1325273513794
+     },
+     "afterClickAway": {
+      "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n\nafter\n",
+      "cursor": {
+       "line": 7,
+       "ch": 1
+      },
+      "sel": "",
+      "lines": 9,
+      "active": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "editable": true,
+       "inTable": false,
+       "inEditor": true,
+       "text": "intro\n\n\nA\nB\n\n\n\n\n1\n2\n\n\n3\n4\n\n\naf"
+      },
+      "widgetRows": 2,
+      "widgetCells": [
+       [
+        "1",
+        "2"
+       ],
+       [
+        "3",
+        "4"
+       ]
+      ],
+      "widgetPresent": true
+     },
+     "typed": [
+      {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n\naZfter\n",
+       "cursor": {
+        "line": 7,
+        "ch": 2
+       },
+       "sel": "",
+       "lines": 9,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": false,
+        "inEditor": true,
+        "text": "intro\n\n\nA\nB\n\n\n\n\n1\n2\n\n\n3\n4\n\n\naZ"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "1",
+         "2"
+        ],
+        [
+         "3",
+         "4"
+        ]
+       ],
+       "widgetPresent": true,
+       "key": "\"Z\""
+      }
+     ]
+    },
+    "s07-type-in-cell-then-leave": {
+     "ok": true,
+     "ms": 8585,
+     "typeThenEscape": {
+      "file": "AtEnd.md",
+      "cell": [
+       1,
+       1
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(1) td:nth-child(1)",
+       "rect": {
+        "x": 178.55601501464844,
+        "y": 247.8340301513672,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 205.99674606323242,
+        "cy": 262.57540798187256
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+       "cursor": {
+        "line": 4,
+        "ch": 3
+       },
+       "sel": "",
+       "lines": 7,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "1"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "11",
+         "2"
+        ],
+        [
+         "3",
+         "4"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1Z  | 2   |\n| 3   | 4   |\n",
+        "cursor": {
+         "line": 4,
+         "ch": 4
+        },
+        "sel": "",
+        "lines": 7,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": "1Z"
+        },
+        "widgetRows": 2,
+        "widgetCells": [
+         [
+          "11Z",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "\"Z\""
+       },
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1Z  | 2   |\n| 3   | 4   |\n",
+        "cursor": {
+         "line": 4,
+         "ch": 4
+        },
+        "sel": "",
+        "lines": 7,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": "1Z"
+        },
+        "widgetRows": 2,
+        "widgetCells": [
+         [
+          "11Z",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Escape"
+       }
+      ]
+     },
+     "typeThenEnter": {
+      "file": "AtEnd.md",
+      "cell": [
+       1,
+       1
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(1) td:nth-child(1)",
+       "rect": {
+        "x": 178.55601501464844,
+        "y": 247.8340301513672,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 205.99674606323242,
+        "cy": 262.57540798187256
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+       "cursor": {
+        "line": 4,
+        "ch": 3
+       },
+       "sel": "",
+       "lines": 7,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "1"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "11",
+         "2"
+        ],
+        [
+         "3",
+         "4"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1Z  | 2   |\n| 3   | 4   |\n",
+        "cursor": {
+         "line": 4,
+         "ch": 4
+        },
+        "sel": "",
+        "lines": 7,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": "1Z"
+        },
+        "widgetRows": 2,
+        "widgetCells": [
+         [
+          "11Z",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "\"Z\""
+       },
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1Z  | 2   |\n| 3   | 4   |\n",
+        "cursor": {
+         "line": 5,
+         "ch": 3
+        },
+        "sel": "3",
+        "lines": 7,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": "3"
+        },
+        "widgetRows": 2,
+        "widgetCells": [
+         [
+          "1Z",
+          "2"
+         ],
+         [
+          "33",
+          "4"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Enter"
+       }
+      ]
+     },
+     "typeThenTab": {
+      "file": "AtEnd.md",
+      "cell": [
+       1,
+       1
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(1) td:nth-child(1)",
+       "rect": {
+        "x": 178.55601501464844,
+        "y": 247.8340301513672,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 205.99674606323242,
+        "cy": 262.57540798187256
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+       "cursor": {
+        "line": 4,
+        "ch": 3
+       },
+       "sel": "",
+       "lines": 7,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "1"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "11",
+         "2"
+        ],
+        [
+         "3",
+         "4"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1Z  | 2   |\n| 3   | 4   |\n",
+        "cursor": {
+         "line": 4,
+         "ch": 4
+        },
+        "sel": "",
+        "lines": 7,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": "1Z"
+        },
+        "widgetRows": 2,
+        "widgetCells": [
+         [
+          "11Z",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "\"Z\""
+       },
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1Z  | 2   |\n| 3   | 4   |\n",
+        "cursor": {
+         "line": 4,
+         "ch": 9
+        },
+        "sel": "2",
+        "lines": 7,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": "2"
+        },
+        "widgetRows": 2,
+        "widgetCells": [
+         [
+          "1Z",
+          "22"
+         ],
+         [
+          "3",
+          "4"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Tab"
+       }
+      ]
+     }
+    },
+    "s08-typing-after-leaving": {
+     "ok": true,
+     "ms": 8766,
+     "afterEscape": {
+      "file": "AtEnd.md",
+      "cell": [
+       2,
+       2
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(2) td:nth-child(2)",
+       "rect": {
+        "x": 233.43748474121094,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 260.8782157897949,
+        "cy": 292.058180809021
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+       "cursor": {
+        "line": 5,
+        "ch": 9
+       },
+       "sel": "",
+       "lines": 7,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "4"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "1",
+         "2"
+        ],
+        [
+         "3",
+         "44"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+        "cursor": {
+         "line": 5,
+         "ch": 9
+        },
+        "sel": "",
+        "lines": 7,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": "4"
+        },
+        "widgetRows": 2,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "44"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Escape"
+       },
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4Q  |\n",
+        "cursor": {
+         "line": 5,
+         "ch": 10
+        },
+        "sel": "",
+        "lines": 7,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": "4Q"
+        },
+        "widgetRows": 2,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "44Q"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "\"Q\""
+       }
+      ]
+     },
+     "afterEnter": {
+      "file": "AtEnd.md",
+      "cell": [
+       2,
+       2
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(2) td:nth-child(2)",
+       "rect": {
+        "x": 233.43748474121094,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 260.8782157897949,
+        "cy": 292.058180809021
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+       "cursor": {
+        "line": 5,
+        "ch": 9
+       },
+       "sel": "",
+       "lines": 7,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "4"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "1",
+         "2"
+        ],
+        [
+         "3",
+         "44"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n|     |     |\n",
+        "cursor": {
+         "line": 6,
+         "ch": 12
+        },
+        "sel": "",
+        "lines": 8,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": ""
+        },
+        "widgetRows": 3,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ],
+         [
+          "",
+          ""
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "Enter"
+       },
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n|     | Q   |\n",
+        "cursor": {
+         "line": 6,
+         "ch": 9
+        },
+        "sel": "",
+        "lines": 8,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": true,
+         "inEditor": true,
+         "text": "Q"
+        },
+        "widgetRows": 3,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ],
+         [
+          "",
+          "Q"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "\"Q\""
+       }
+      ]
+     },
+     "afterArrowDown": {
+      "file": "AtEnd.md",
+      "cell": [
+       2,
+       2
+      ],
+      "seedOk": true,
+      "click": {
+       "clicked": ".markdown-source-view table.table-editor tbody tr:nth-child(2) td:nth-child(2)",
+       "rect": {
+        "x": 233.43748474121094,
+        "y": 277.3168029785156,
+        "w": 54.88146209716797,
+        "h": 29.482755661010742,
+        "cx": 260.8782157897949,
+        "cy": 292.058180809021
+       }
+      },
+      "before": {
+       "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+       "cursor": {
+        "line": 5,
+        "ch": 9
+       },
+       "sel": "",
+       "lines": 7,
+       "active": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "editable": true,
+        "inTable": true,
+        "inEditor": true,
+        "text": "4"
+       },
+       "widgetRows": 2,
+       "widgetCells": [
+        [
+         "1",
+         "2"
+        ],
+        [
+         "3",
+         "44"
+        ]
+       ],
+       "widgetPresent": true
+      },
+      "after": [
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\n",
+        "cursor": {
+         "line": 6,
+         "ch": 0
+        },
+        "sel": "",
+        "lines": 7,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": false,
+         "inEditor": true,
+         "text": "intro\n\n\nA\nB\n\n\n\n\n1\n2\n\n\n3\n4\n\n\n"
+        },
+        "widgetRows": 2,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "ArrowDown"
+       },
+       {
+        "value": "intro\n\n| A   | B   |\n| --- | --- |\n| 1   | 2   |\n| 3   | 4   |\nQ",
+        "cursor": {
+         "line": 6,
+         "ch": 1
+        },
+        "sel": "",
+        "lines": 7,
+        "active": {
+         "tag": "DIV",
+         "cls": "cm-content cm-lineWrapping",
+         "editable": true,
+         "inTable": false,
+         "inEditor": true,
+         "text": "intro\n\n\nA\nB\n\n\n\n\n1\n2\n\n\n3\n4\n\n\nQ"
+        },
+        "widgetRows": 2,
+        "widgetCells": [
+         [
+          "1",
+          "2"
+         ],
+         [
+          "3",
+          "4"
+         ]
+        ],
+        "widgetPresent": true,
+        "key": "\"Q\""
+       }
+      ]
+     }
+    }
+   },
+   "order": [
+    "s00-context",
+    "s01-enter-last-cell-table-at-end",
+    "s02-enter-last-cell-other-endings",
+    "s03-enter-middle-and-first-row",
+    "s04-escape-and-arrows-from-last-cell",
+    "s05-tab-and-shift-keys",
+    "s06-click-cell-then-click-away",
+    "s07-type-in-cell-then-leave",
+    "s08-typing-after-leaving"
+   ],
+   "elapsedMs": 78878,
+   "vaultPath": "/tmp/scoria-probe-vault.rmFcJ1"
+  },
+  "after-restart": {
+   "startedAt": "2026-11-09T01:54:17.260Z",
+   "steps": {},
+   "order": [],
+   "elapsedMs": 2
+  }
+ }
+}

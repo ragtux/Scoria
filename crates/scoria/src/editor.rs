@@ -1060,6 +1060,7 @@ impl Editor {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> bool {
+        self.commit_table_field(Some(window), cx, None);
         if !self.buf.table_command(cmd) {
             return false;
         }
@@ -2292,6 +2293,9 @@ impl Editor {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
+        // The field owns the keys only while the caret is in its cell: a
+        // move through the document (Home, End, a page, a jump) ends it.
+        self.commit_table_field(Some(window), cx, None);
         self.buf.collapse_cursors();
         self.buf.head = self.buf.clamp_offset(offset);
         if !select {
@@ -2315,6 +2319,7 @@ impl Editor {
         cx: &mut Context<Self>,
         mut target: impl FnMut(&Self, &mut Window, Sel) -> (usize, Option<f32>),
     ) {
+        self.commit_table_field(Some(window), cx, None);
         let cursors = self.buf.cursors();
         let mut sels = Vec::with_capacity(cursors.sels.len());
         for s in &cursors.sels {
@@ -2542,6 +2547,18 @@ impl Editor {
     }
 
     fn move_right(&mut self, _: &MoveRight, window: &mut Window, cx: &mut Context<Self>) {
+        // At the end of the last cell of the last row Arrow Right leaves the
+        // table, as Arrow Down does (Obsidian 1.15.0).
+        if let Some(cell) = self.table_field.as_ref() {
+            if self.property_field.is_none()
+                && cell.field.cursor >= cell.field.text.len()
+                && self.cell_is_last_of_table(&cell.span.clone())
+            {
+                let span = cell.span.clone();
+                self.leave_table(span, window, cx);
+                return;
+            }
+        }
         if let Some(f) = self.active_field() {
             f.right();
             cx.notify();
@@ -2565,6 +2582,16 @@ impl Editor {
         // Leaving the line forgets the closers auto-pairing planted on it:
         // coming back and typing one writes it (Specification.md,
         // "Observed auto-pair behavior").
+        // In a table cell the arrows walk the cells, as they walk the source
+        // in Obsidian, where there is no separate field to leave open.
+        if self.property_field.is_none() {
+            if let Some(span) = self.table_field.as_ref().map(|c| c.span.clone()) {
+                if !self.step_table_cell(0, -1, window, cx) {
+                    self.leave_table_above(span, window, cx);
+                }
+                return;
+            }
+        }
         self.buf.forget_planted();
         self.vertical(-1, false, window, cx);
     }
@@ -2572,6 +2599,14 @@ impl Editor {
     fn move_down(&mut self, _: &MoveDown, window: &mut Window, cx: &mut Context<Self>) {
         if self.suggest_step(1, cx) {
             return;
+        }
+        if self.property_field.is_none() {
+            if let Some(span) = self.table_field.as_ref().map(|c| c.span.clone()) {
+                if !self.step_table_cell(0, 1, window, cx) {
+                    self.leave_table(span, window, cx);
+                }
+                return;
+            }
         }
         self.buf.forget_planted();
         self.vertical(1, false, window, cx);
@@ -2810,11 +2845,12 @@ impl Editor {
             self.enter_property_field(window, cx);
             return;
         }
-        // In a table cell it commits and drops into the cell below, or just
-        // commits on the last row.
-        if self.table_field.is_some() {
+        // In a table cell it commits and drops into the cell below; on the
+        // last row it appends a row and drops into the same column of it, as
+        // Obsidian's does. Enter never leaves the table: Arrow Down does.
+        if let Some(span) = self.table_field.as_ref().map(|c| c.span.clone()) {
             if !self.step_table_cell(0, 1, window, cx) {
-                self.commit_table_field(Some(window), cx, None);
+                self.append_table_row(span, false, window, cx);
             }
             return;
         }
@@ -2837,8 +2873,12 @@ impl Editor {
         if self.accept_suggestion(Accept::Inside, window, cx) {
             return;
         }
-        // Tab walks the cells of a table, committing each as it leaves it.
-        if self.table_field.is_some() && self.step_table_cell(1, 0, window, cx) {
+        // Tab walks the cells of a table, committing each as it leaves it,
+        // and past the last cell appends a row and lands in its first cell.
+        if let Some(span) = self.table_field.as_ref().map(|c| c.span.clone()) {
+            if !self.step_table_cell(1, 0, window, cx) {
+                self.append_table_row(span, true, window, cx);
+            }
             return;
         }
         // Tab commits a key field and moves to that property's value, as
@@ -2872,7 +2912,8 @@ impl Editor {
     /// Shift+Tab: removes one indentation step from the selected lines,
     /// renumbering the ordered lists it touches.
     fn outdent(&mut self, _: &Outdent, window: &mut Window, cx: &mut Context<Self>) {
-        if self.table_field.is_some() && self.step_table_cell(-1, 0, window, cx) {
+        if self.table_field.is_some() {
+            self.step_table_cell(-1, 0, window, cx);
             return;
         }
         if self
@@ -2884,12 +2925,15 @@ impl Editor {
     }
 
     fn undo(&mut self, _: &Undo, window: &mut Window, cx: &mut Context<Self>) {
+        // The cell was opened on bytes the undo is about to change.
+        self.table_field = None;
         if self.buf.undo() {
             self.after_edit(Some(window), cx);
         }
     }
 
     fn redo(&mut self, _: &Redo, window: &mut Window, cx: &mut Context<Self>) {
+        self.table_field = None;
         if self.buf.redo() {
             self.after_edit(Some(window), cx);
         }
@@ -3015,12 +3059,17 @@ impl Editor {
         cx.notify();
     }
 
-    /// Escape: closes the autocompletion popup first, then abandons an open
-    /// field, then drops extra cursors, then closes the panel.
+    /// Escape: closes the autocompletion popup first, then writes an open
+    /// table cell or abandons an open property field, then drops extra cursors, then closes the panel.
     fn close_find(&mut self, _: &CloseFind, window: &mut Window, cx: &mut Context<Self>) {
         if self.suggest.is_some() {
             self.close_suggest(cx);
-        } else if self.cancel_table_field(cx) || self.cancel_property_field(cx) {
+        } else if self.table_field.is_some() {
+            // Obsidian's cell has no field to abandon: what was typed is
+            // already in the note, and Escape leaves it there (probe of
+            // 2026-11-08). So the cell is written, not thrown away.
+            self.commit_table_field(Some(window), cx, None);
+        } else if self.cancel_property_field(cx) {
         } else if !self.buf.extra.is_empty() && self.focus_handle.is_focused(window) {
             self.buf.collapse_cursors();
             cx.notify();
@@ -4005,13 +4054,100 @@ impl Editor {
         })
     }
 
-    /// Drops the open cell without writing it.
-    fn cancel_table_field(&mut self, cx: &mut Context<Self>) -> bool {
-        let had = self.table_field.take().is_some();
-        if had {
-            cx.notify();
+    /// Whether `span` is the last cell of the last row of its table, which
+    /// is where Arrow Right leaves the table.
+    fn cell_is_last_of_table(&self, span: &Range<usize>) -> bool {
+        let Some(at) = table::table_at(self.buf.text(), span.start) else {
+            return false;
+        };
+        at.cells
+            .last()
+            .and_then(|row| row.last())
+            .is_some_and(|last| last.start == span.start)
+    }
+
+    /// Enter on the last row, or Tab past the last cell: commits the open
+    /// cell, appends an empty row, and opens the cell of it in the same
+    /// column (`first` false) or the first (`first` true), as Obsidian 1.15.0
+    /// does. `span` is the cell it was in, taken before stepping out of it:
+    /// the step has already committed and closed the field by the time this
+    /// runs. Nothing happens when the table cannot be found again.
+    fn append_table_row(
+        &mut self,
+        span: Range<usize>,
+        first: bool,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(mut at) = table::table_at(self.buf.text(), span.start) else {
+            return;
+        };
+        // The column the cell sits in, in the last row it was stepped out of.
+        let Some(col) = at
+            .cells
+            .last()
+            .and_then(|row| row.iter().position(|s| s.start == span.start))
+        else {
+            return;
+        };
+        at.row = at.table.rows.len() - 1;
+        at.col = col;
+        let Some(edit) = table::apply(&at, TableCommand::RowAfter) else {
+            return;
+        };
+        let start = at.span.start;
+        self.edit(
+            at.span.clone(),
+            &edit.text,
+            EditKind::Other,
+            Some(window),
+            cx,
+        );
+        let Some(after) = table::table_at(self.buf.text(), start + edit.cursor) else {
+            return;
+        };
+        let want = if first { 0 } else { col };
+        if let Some(cell) = after.cells.last().and_then(|row| row.get(want)).cloned() {
+            self.open_cell(cell, cx);
         }
-        had
+    }
+
+    /// Arrow Down from the last row, or Arrow Right at the end of its last
+    /// cell: the cell is committed and the caret goes to column 0 of the
+    /// line after the table — the way out Obsidian 1.15.0 has, since Enter
+    /// only appends rows. A table that ends the note without a newline gets
+    /// one, so there is a line to go to.
+    fn leave_table(&mut self, span: Range<usize>, window: &mut Window, cx: &mut Context<Self>) {
+        self.commit_table_field(Some(window), cx, None);
+        let Some(at) = table::table_at(self.buf.text(), span.start) else {
+            return;
+        };
+        let end = at.span.end;
+        let len = self.buf.text().len();
+        if end >= len {
+            self.edit(len..len, "\n", EditKind::Other, Some(window), cx);
+            self.move_to(len + 1, false, window, cx);
+        } else {
+            // The table's span excludes its newline; the next line starts after it.
+            self.move_to(end + 1, false, window, cx);
+        }
+    }
+
+    /// Arrow Up from the header row: the caret goes to the end of the line
+    /// before the table, when there is one.
+    fn leave_table_above(
+        &mut self,
+        span: Range<usize>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.commit_table_field(Some(window), cx, None);
+        let Some(at) = table::table_at(self.buf.text(), span.start) else {
+            return;
+        };
+        if at.span.start > 0 {
+            self.move_to(at.span.start - 1, false, window, cx);
+        }
     }
 
     /// Opens the next cell in reading order (`dx`) or the cell below
@@ -4247,9 +4383,16 @@ impl Editor {
         if self.click_rendered(event, window, cx) {
             return;
         }
-        let Some(at) = self.offset_at_point(window, event.position) else {
+        let Some(mut at) = self.offset_at_point(window, event.position) else {
             return;
         };
+        // A click that is not on a cell ends the open one. Its commit may
+        // change the cell's length, so the click's offset moves with it.
+        if self.table_field.is_some() {
+            if let Some(moved) = self.commit_table_field(Some(window), cx, Some(at..at)) {
+                at = moved.start;
+            }
+        }
         self.buf.goal = None;
         self.buf.marked = None;
         if event.modifiers.alt && event.click_count == 1 {
