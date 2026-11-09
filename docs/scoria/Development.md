@@ -331,6 +331,43 @@ uses behave as Obsidian's do.
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
 
+### Multi-window, the design, 2026-11-09
+
+Phase 4's one recurring blocker: *Open in new window* in every file menu, the `-window`
+family of commands and `editor:open-link-in-new-window` all wait on a second window. The first
+step was the observation, `tools/obsidian-probe/popout-windows.mjs`, recorded in
+[[Specification#Observed popout windows, Obsidian 1.15.0]]: a popout is a root split of tab
+groups and nothing else — no ribbon, docks or status bar — titled like the vault window; the
+five commands move, copy, open a link into, open empty, and close one; and `workspace.json`
+grows a `floating` split of `window` nodes, each a split with `x`, `y`, `width`, `height`,
+`maximize`, `zoom` after its `direction`, absent until the first popout exists.
+
+**The design, on what the code already has.** Every `TabGroup` owns its editor, reading view,
+canvas, bases and PDF entities (the stash of `stash_active_group`), so a popout is a shell
+over groups, not a second workspace: a `PopoutWindow` view per window, holding the
+`Entity<Workspace>` and a window id, whose render asks the workspace for the groups assigned to
+that window and draws them through `render_group` with the strip's new-tab and tab-list buttons
+and no sidebar toggles, inside the same `frame_window_options` frame the Settings and Vaults
+windows use. The workspace keeps a `Vec<WindowNode>` beside its root layout — id, the group
+tree, bounds — that `layout_json` writes as `floating` after `right` (and omits while empty)
+and `restore_layout` reopens on launch at the recorded bounds. The commands: `move-to-new-window`
+takes the active tab out into a fresh window, leaving an empty tab when the group would be
+empty; `open-in-new-window` copies it; `open-link-in-new-window` resolves the link and opens it
+in a fresh window; `new-window` opens an empty one; `close-window` closes the focused window and
+drops its groups; the file menus and the tab header's rows call the same three. Focus: gpui's
+focus is per window, so `focus_main` and `refocus_main` have to act on the window the active
+group is in, which means `active_group` carries its window; the control socket's `Scope::win`
+becomes "the window the active group is in", with the Settings window's rule as the precedent.
+What the gate-vault's `workspace.json` must survive: a `floating` key written by Obsidian is
+held byte-identical by the layout writer today (unknown keys ride along), and must stay so
+when Scoria starts writing its own.
+
+**Order of work.** 1. the layout model and writer with the round-trip test over Obsidian's
+recorded bytes; 2. `PopoutWindow` rendering one existing group in a second gpui window, with
+focus and the control socket following; 3. the five commands and the menu rows, each checked
+over the socket; 4. restore on launch; 5. drags between windows, if gpui's drag crosses
+windows at all. Each step lands on its own.
+
 ### The week's leftovers, 2026-11-09
 
 The verdict of [[Writer gate run]] named five things left open. Four needed no desk, only an

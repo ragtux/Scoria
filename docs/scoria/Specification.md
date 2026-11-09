@@ -456,6 +456,71 @@ beyond typing the character, and whether typing `[[` auto-pairs the closing
 brackets. Scoria does auto-pair `[` per the rows below, so `[[` there gives
 `[[]]` with the suggester opening inside; what Obsidian does is still unread.
 
+## Observed popout windows, Obsidian 1.15.0
+
+Probed 2026-11-09 with `tools/obsidian-probe/popout-windows.mjs` (results
+`results/2026-11-09-popout-windows.json`), on a three-note vault with both sidebars collapsed. A
+popout is reached from the vault window as `app.workspace.floatingSplit.children[i].win`, so
+its document was read without a second CDP target. The tab header menus were not re-read
+here (a dispatched `contextmenu` gave a bare "Close"); the rows are in the captures above.
+
+**What a popout window is.** `body` carries `is-popout-window` beside the vault window's
+classes, and holds `div.titlebar` then `div.app-container > .horizontal-main-container >
+.workspace > .workspace-split.mod-vertical.mod-root.workspace-window`: **no ribbon, no left or
+right split, no status bar**, only a root split of tab groups. Its tab strip has the new-tab
+button and the tab-list chevron but no sidebar toggles. The title is the vault window's
+pattern, `<title> - <vault> - Obsidian 1.15.0`, following the active tab. The window the first
+command opened was 980 × 759 inner (1012 × 801 outer); every later one 1024 × 800
+(1056 × 842), all at screen 0, 0 in the probe's session.
+
+| Command | Default hotkey | What it did |
+| --- | --- | --- |
+| `workspace:move-to-new-window` | — | the active tab left for a new popout and the main group was left holding an `empty` leaf ("New tab"); the moved leaf kept its view and file |
+| `workspace:open-in-new-window` | — | a **copy** of the active tab opened in a new popout; the source tab stayed where it was |
+| `editor:open-link-in-new-window` | Mod+Alt+Shift+Enter | the link under the caret opened in a new popout, the source tab unchanged |
+| `workspace:new-window` | — | a new popout holding one `empty` leaf ("New tab") |
+| `workspace:close-window` | Mod+Shift+W | closed one window: the focused one (the newest, `is-focused`), not the one whose leaf had just been made active through the API |
+| `window:toggle-always-on-top` | — | has a check callback; not run |
+| `window:zoom-in`, `zoom-out`, `reset-zoom` | — | not run |
+
+**What `workspace.json` records.** Before any popout exists the file has **no `floating`
+key** (the in-memory `floatingSplit` exists, with no children). With one or more open, a
+`floating` object follows `right` and precedes `active`:
+
+```json
+"floating": {
+  "id": "6cbce64fbbb29530",
+  "type": "floating",
+  "children": [
+    {
+      "id": "fbe32d82ccdfaec7",
+      "type": "window",
+      "children": [ { "id": "…", "type": "tabs", "children": [ { "id": "…", "type": "leaf", "state": { … } } ] } ],
+      "direction": "vertical",
+      "x": 16,
+      "y": 10,
+      "width": 980,
+      "height": 759,
+      "maximize": false,
+      "zoom": 0
+    }
+  ]
+},
+```
+
+A `window` node is a split (`direction` after its `children`, as `main` writes it) with its
+bounds after that — `x`, `y`, `width`, `height` (the inner size), `maximize`, `zoom` — in
+that order. Leaves inside it are ordinary leaves; `active` names a popout's leaf when that is
+the active one, and `lastOpenFiles` fills as usual. After the one window `close-window` closed,
+the file listed the three left; after `win.close()` on those three the read 2.5 s later still
+listed them, so either the save waits longer or a window closed that way does not request one —
+unsettled, and the vault was not reopened to see what a stale entry does on launch.
+
+**Still unprobed.** What a popout restores to on the next launch (position, size, the
+`maximize` flag); dragging a tab between a popout and the main window; whether a popout's tab
+strip offers Split right and Split down (its root is a split, so a popout can hold several
+groups); the `window:*` commands.
+
 ## Observed table editing behavior, Obsidian 1.14.4
 
 Observed with a throwaway plugin in a scratch vault (see
