@@ -2788,8 +2788,9 @@ commands.
 (`table::move_line`, tested). Pressing a handle commits the open cell, selects the line and leaves the
 caret alone; Escape, a click on a cell and a click anywhere else clear the selection. The drop bar tracks the pointer
 beyond the table (clamped to the nearest edge line) and a release anywhere drops the line, because the
-editor's own mouse-up makes the move rather than a drop target on the grid. **Still out**: the drag has
-only been exercised by its unit tests, not driven (the control socket has no drag).
+editor's own mouse-up makes the move rather than a drop target on the grid. **Driven 2026-11-08** in a
+headless sway session, since the socket's `mouse` method does make a drag: the probe's eight drags all gave its
+orders and undid to byte-identical, see [[Development#Live Preview tables, driven, 2026-11-08]].
 
 **The "+" bars landed 2026-11-08**: "Add row below" under the last row and "Add column to the right"
 past the last column, 16 px strips as long as the table with a `plus` in the middle, invisible until

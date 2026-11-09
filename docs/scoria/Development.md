@@ -295,7 +295,7 @@ the sheet, the log and the day's procedure are [[Writer gate run]], see
 | Source mode | done, see [[#Source editor, 2026-10-16]] |
 | Live Preview | done, see [[#Live Preview, 2026-10-16]] |
 | File operations and link rewriting | done, see [[#File operations, 2026-10-17]] |
-| Tables (editing) | done: the sixteen commands and editable cells, see [[#Table editing, 2026-10-18]] |
+| Tables (editing) | done: the sixteen commands and editable cells, see [[#Table editing, 2026-10-18]]; the cell keyboard, the inline title, the row and column handles and the "+" bars, to the 2026-11-08 probes, see [[#Live Preview tables, driven, 2026-11-08]] |
 | Properties | done, see [[#Properties, 2026-10-18]] |
 | Autocompletion | links, headings, aliases, embeds, tags and block references, see [[#Autocompletion, 2026-10-18]] and [[#Block references, 2026-10-18]] |
 | Templates | done: the three commands and the chooser, see [[#Templates, 2026-10-18]] |
@@ -327,6 +327,60 @@ uses behave as Obsidian's do.
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
+
+### Live Preview tables, driven, 2026-11-08
+
+Three reports from the desk — Enter at the end of a table would not end it and typing then stopped
+working; the note's title could not be edited; the caret vanished when arrowing down through a table —
+turned into three probes against Obsidian 1.15.0 (`table-keys.mjs`, `inline-title-and-table-entry.mjs`,
+`table-handles.mjs`), three records in [[Specification]], and the evening's five commits. The backlog
+holds the per-entry account under [[UI parity backlog#The table cell keyboard, against the probe of 2026-11-08]];
+this is the shape of it and what the drive at the end settled.
+
+**The cell field lets go.** The stuck typing was a `CellEdit` that nothing closed when the caret left its
+table, so every key went to a cell nobody could see. A cell now closes on undo, redo, a table command, a
+click off the grid and any movement through the document; Arrow Up and Down walk the cells and leave above
+the header or below the last row; Enter in the last row and Tab in the last cell append a row; Escape
+writes the cell rather than discarding it, because Obsidian's typed text is already in the note.
+
+**The inline title is the editor's field** (`title_edit`): a click edits it, Arrow Up from the first line
+enters it selected, Enter hands a changed name to `rename_with_links`, Tab, Arrow Down and Escape return to
+the document. An arrow key into a table opens its first cell, which is where Obsidian puts the caret.
+
+**The handles and the "+" bars.** Grips above each column and left of each row, hidden until their strip is
+hovered; a press selects the line, a drag moves it with the accent bar marking the edge it would land
+beside, before or after by the pointer's half (`scoria_text::table::move_line`); 16 px strips under the last
+row and past the last column append a line (`table::append_line`) and open its first cell. The commit
+messages carry the mechanics: the bar follows the pointer out of the table, clamped to the nearest edge
+line, and the editor's own mouse-up makes the move, so a release anywhere drops the line.
+
+**The drag was driven after all.** Both records said the control socket could not make one; the
+Bookmarks entry of the day before had already used `mouse` with a `button` on a `move`, which is exactly
+a gpui drag. It ran in a **private headless sway session** rather than on the desktop:
+`nix-shell -p sway grim`, `WLR_BACKENDS=headless WLR_RENDERER=gles2` with a 2400×1600 output at scale 2,
+Scoria launched *inside the repo's own `nix-shell`* against that `WAYLAND_DISPLAY` (launched from the
+sway shell it panicked with `NoWaylandLib`), `grim -o HEADLESS-1` for the screenshots, and the eight
+drags the probe recorded replayed from the screenshot's geometry — nothing on the desktop touched or
+captured, which is the same arrangement `tools/readme-recording` uses. All eight gave the probe's
+orders (1 7 4, 4 1 7, 4 1 7, 1 7 4; A C B, B A C, B A C, A C B); the cursor landed in the moved row's
+first cell (`6:2` for the row dropped last, the probe's own position) or the moved column's header cell;
+the drop re-padded every cell to the delimiter's three characters, as the probe's bytes are padded;
+autosave wrote the same bytes; and Escape then Undo returned the buffer and the file to byte-identical
+each time. The screenshots show the grip appearing beside the hovered row alone, and while held the
+handle filled in the accent with white dots, the row outlined and tinted, and the 4 px bar drawn under row 7,
+where the pointer's lower half said the row would land.
+
+Two traps for the next headless drive. A Unix socket path is at most 108 bytes, and the session's
+scratch directory is longer than that: sway's `Unable to bind IPC socket` and the app's missing socket
+were both that, and `/run/user/<uid>` is the place for them. And a screenshot of a scaled output is
+physical pixels: window-local logical is the image coordinate divided by the scale, less the window's
+position, which the first attempt got wrong by a factor and aimed every drag at the sidebar. The window
+reports `active: false` in that session and takes every mouse and key event regardless.
+
+**Still out:** the re-pad on *entering* a cell, which is a byte question (Obsidian rewrites the table on a
+click into it) and wants its own decision before the gate week closes; the table commands, which act on
+the buffer's caret and so do nothing for an open cell; the reading view's inline title; and what the title
+does when it loses focus, which the probe did not ask.
 
 ### The Bookmarks pane, against Obsidian 1.15.0, 2026-11-07
 

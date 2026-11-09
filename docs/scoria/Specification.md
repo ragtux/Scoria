@@ -659,8 +659,10 @@ too, since 2026-11-08: 16 px strips under the last row and past the last column,
 hovered, that append through the table commands (`scoria_text::table::append_line`, tested against
 the probe's bytes) and open the new line's first cell. **Not matched:** the accent bar's exact weight and tint (taken
 from the screenshots, not measured), and the selection's effect on the keyboard, which was not probed.
-**Untested by driving:** the drag itself, which the control socket cannot make; the move it performs is
-unit-tested.
+**Driven 2026-11-08**, over the control socket's `mouse` method in a headless sway session: all eight of the
+drags above gave the probe's orders, the cursor landed in the moved row's first cell (`6:2` for the row
+dropped last) or the moved column's header cell, the drop re-padded the cells to the delimiter's width, and
+Undo returned the file to its bytes on disk every time.
 
 ## Observed block reference behavior, Obsidian 1.14.4
 

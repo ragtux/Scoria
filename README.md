@@ -53,7 +53,8 @@ search results modal; the quick switcher, the graph, the command palette and a S
 writes. Notes
 open in Live Preview or Source mode with find and replace, multiple cursors, auto-pairing and autosave; `[[`,
 `![[` and `#` autocomplete against the vault's files, aliases, headings, tags and block references; Obsidian's
-sixteen table commands add, move and align rows and columns and tables are edited cell by cell; new note,
+sixteen table commands add, move and align rows and columns, tables are edited cell by cell and their rows
+and columns drag by Obsidian's handles; new note,
 rename, move, copy and delete rewrite links the way Obsidian does, and frontmatter is an editable,
 typed properties table that rewrites only the lines it changes. A `.canvas` opens in a canvas view
 that pans, zooms, selects, moves, resizes, draws edges, groups and undoes, and autosaves in
