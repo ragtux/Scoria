@@ -1,0 +1,342 @@
+{
+ "viewHeaderBookmark": {
+  "fixtures": {
+   "startedAt": "2026-11-08T01:02:25.474Z",
+   "steps": {},
+   "order": []
+  },
+  "run": {
+   "startedAt": "2026-11-08T01:02:26.648Z",
+   "steps": {
+    "s01-marked": {
+     "ok": true,
+     "actions": [
+      {
+       "cls": "clickable-icon view-action mod-bookmark mod-bookmarked mod-filled",
+       "label": "Bookmarked",
+       "icon": "svg-icon lucide-bookmark",
+       "rect": [
+        928,
+        47,
+        28,
+        24
+       ],
+       "display": "flex",
+       "color": "rgb(166, 138, 249)",
+       "bg": "rgba(0, 0, 0, 0)",
+       "opacity": "1",
+       "svg": {
+        "fill": "rgb(166, 138, 249)",
+        "stroke": "rgb(166, 138, 249)",
+        "color": "rgb(166, 138, 249)",
+        "opacity": "0.85",
+        "w": "16px"
+       }
+      },
+      {
+       "cls": "clickable-icon view-action",
+       "label": "Current view: editing\nClick to read\nCtrl+Click to open to the right",
+       "icon": "svg-icon lucide-book-open",
+       "rect": [
+        956,
+        47,
+        28,
+        24
+       ],
+       "display": "flex",
+       "color": "rgb(179, 179, 179)",
+       "bg": "rgba(0, 0, 0, 0)",
+       "opacity": "1",
+       "svg": {
+        "fill": "none",
+        "stroke": "rgb(179, 179, 179)",
+        "color": "rgb(179, 179, 179)",
+        "opacity": "0.85",
+        "w": "16px"
+       }
+      },
+      {
+       "cls": "clickable-icon view-action",
+       "label": "More options",
+       "icon": "svg-icon lucide-more-vertical",
+       "rect": [
+        984,
+        47,
+        28,
+        24
+       ],
+       "display": "flex",
+       "color": "rgb(179, 179, 179)",
+       "bg": "rgba(0, 0, 0, 0)",
+       "opacity": "1",
+       "svg": {
+        "fill": "none",
+        "stroke": "rgb(179, 179, 179)",
+        "color": "rgb(179, 179, 179)",
+        "opacity": "0.85",
+        "w": "16px"
+       }
+      }
+     ],
+     "shot": "01-marked.png"
+    },
+    "s02-plain": {
+     "ok": true,
+     "actions": [
+      {
+       "cls": "clickable-icon view-action mod-bookmark",
+       "label": "Bookmark",
+       "icon": "svg-icon lucide-bookmark",
+       "rect": [
+        0,
+        0,
+        0,
+        0
+       ],
+       "display": "none",
+       "color": "rgb(179, 179, 179)",
+       "bg": "rgba(0, 0, 0, 0)",
+       "opacity": "1",
+       "svg": {
+        "fill": "none",
+        "stroke": "rgb(179, 179, 179)",
+        "color": "rgb(179, 179, 179)",
+        "opacity": "0.85",
+        "w": "16px"
+       }
+      },
+      {
+       "cls": "clickable-icon view-action",
+       "label": "Current view: editing\nClick to read\nCtrl+Click to open to the right",
+       "icon": "svg-icon lucide-book-open",
+       "rect": [
+        956,
+        47,
+        28,
+        24
+       ],
+       "display": "flex",
+       "color": "rgb(179, 179, 179)",
+       "bg": "rgba(0, 0, 0, 0)",
+       "opacity": "1",
+       "svg": {
+        "fill": "none",
+        "stroke": "rgb(179, 179, 179)",
+        "color": "rgb(179, 179, 179)",
+        "opacity": "0.85",
+        "w": "16px"
+       }
+      },
+      {
+       "cls": "clickable-icon view-action",
+       "label": "More options",
+       "icon": "svg-icon lucide-more-vertical",
+       "rect": [
+        984,
+        47,
+        28,
+        24
+       ],
+       "display": "flex",
+       "color": "rgb(179, 179, 179)",
+       "bg": "rgba(0, 0, 0, 0)",
+       "opacity": "1",
+       "svg": {
+        "fill": "none",
+        "stroke": "rgb(179, 179, 179)",
+        "color": "rgb(179, 179, 179)",
+        "opacity": "0.85",
+        "w": "16px"
+       }
+      }
+     ],
+     "shot": "02-plain.png"
+    },
+    "s03-hover": {
+     "ok": true,
+     "tooltip": [],
+     "hovered": {
+      "bg": "oklch(0.999994 0.0000497986 none / 0.067)",
+      "color": "rgb(166, 138, 249)",
+      "svgFill": "rgb(166, 138, 249)"
+     },
+     "shot": "03-hover.png"
+    },
+    "s04-click": {
+     "ok": true,
+     "modal": {
+      "title": "Edit bookmark",
+      "text": "Edit bookmark\nPath\nTitle\nBookmark group\nRemove\nCancel\nSave",
+      "buttons": [
+       "Remove",
+       "Cancel",
+       "Save"
+      ]
+     },
+     "menu": [],
+     "shot": "04-click.png",
+     "changed": false
+    },
+    "s05-unbookmark-while-open": {
+     "ok": true,
+     "actions": [
+      {
+       "cls": "clickable-icon view-action mod-bookmark",
+       "label": "Bookmark",
+       "icon": "svg-icon lucide-bookmark",
+       "rect": [
+        0,
+        0,
+        0,
+        0
+       ],
+       "display": "none",
+       "color": "rgb(179, 179, 179)",
+       "bg": "rgba(0, 0, 0, 0)",
+       "opacity": "1",
+       "svg": {
+        "fill": "none",
+        "stroke": "rgb(179, 179, 179)",
+        "color": "rgb(179, 179, 179)",
+        "opacity": "0.85",
+        "w": "16px"
+       }
+      },
+      {
+       "cls": "clickable-icon view-action",
+       "label": "Current view: editing\nClick to read\nCtrl+Click to open to the right",
+       "icon": "svg-icon lucide-book-open",
+       "rect": [
+        956,
+        47,
+        28,
+        24
+       ],
+       "display": "flex",
+       "color": "rgb(179, 179, 179)",
+       "bg": "rgba(0, 0, 0, 0)",
+       "opacity": "1",
+       "svg": {
+        "fill": "none",
+        "stroke": "rgb(179, 179, 179)",
+        "color": "rgb(179, 179, 179)",
+        "opacity": "0.85",
+        "w": "16px"
+       }
+      },
+      {
+       "cls": "clickable-icon view-action",
+       "label": "More options",
+       "icon": "svg-icon lucide-more-vertical",
+       "rect": [
+        984,
+        47,
+        28,
+        24
+       ],
+       "display": "flex",
+       "color": "rgb(179, 179, 179)",
+       "bg": "rgba(0, 0, 0, 0)",
+       "opacity": "1",
+       "svg": {
+        "fill": "none",
+        "stroke": "rgb(179, 179, 179)",
+        "color": "rgb(179, 179, 179)",
+        "opacity": "0.85",
+        "w": "16px"
+       }
+      }
+     ],
+     "file": "{\n  \"items\": []\n}"
+    },
+    "s06-bookmark-while-open": {
+     "ok": true,
+     "modal": {
+      "title": "Add bookmark",
+      "text": "Add bookmark\nPath\nTitle\nBookmark group\nCancel\nSave",
+      "buttons": [
+       "Cancel",
+       "Save"
+      ]
+     },
+     "actions": [
+      {
+       "cls": "clickable-icon view-action mod-bookmark mod-bookmarked mod-filled",
+       "label": "Bookmarked",
+       "icon": "svg-icon lucide-bookmark",
+       "rect": [
+        928,
+        47,
+        28,
+        24
+       ],
+       "display": "flex",
+       "color": "rgb(166, 138, 249)",
+       "bg": "oklch(0.999994 0.0000497986 none / 0.067)",
+       "opacity": "1",
+       "svg": {
+        "fill": "rgb(166, 138, 249)",
+        "stroke": "rgb(166, 138, 249)",
+        "color": "rgb(166, 138, 249)",
+        "opacity": "1",
+        "w": "16px"
+       }
+      },
+      {
+       "cls": "clickable-icon view-action",
+       "label": "Current view: editing\nClick to read\nCtrl+Click to open to the right",
+       "icon": "svg-icon lucide-book-open",
+       "rect": [
+        956,
+        47,
+        28,
+        24
+       ],
+       "display": "flex",
+       "color": "rgb(179, 179, 179)",
+       "bg": "rgba(0, 0, 0, 0)",
+       "opacity": "1",
+       "svg": {
+        "fill": "none",
+        "stroke": "rgb(179, 179, 179)",
+        "color": "rgb(179, 179, 179)",
+        "opacity": "0.85",
+        "w": "16px"
+       }
+      },
+      {
+       "cls": "clickable-icon view-action",
+       "label": "More options",
+       "icon": "svg-icon lucide-more-vertical",
+       "rect": [
+        984,
+        47,
+        28,
+        24
+       ],
+       "display": "flex",
+       "color": "rgb(179, 179, 179)",
+       "bg": "rgba(0, 0, 0, 0)",
+       "opacity": "1",
+       "svg": {
+        "fill": "none",
+        "stroke": "rgb(179, 179, 179)",
+        "color": "rgb(179, 179, 179)",
+        "opacity": "0.85",
+        "w": "16px"
+       }
+      }
+     ]
+    }
+   },
+   "order": [
+    "s01-marked",
+    "s02-plain",
+    "s03-hover",
+    "s04-click",
+    "s05-unbookmark-while-open",
+    "s06-bookmark-while-open"
+   ]
+  }
+ }
+}

@@ -1,0 +1,59 @@
+{
+ "bookmarksRename": {
+  "fixtures": {
+   "startedAt": "2026-11-08T01:44:40.201Z",
+   "steps": {},
+   "order": []
+  },
+  "run": {
+   "startedAt": "2026-11-08T01:44:41.385Z",
+   "steps": {
+    "s01-rename-note": {
+     "ok": true,
+     "changed": true,
+     "after": "{\n  \"items\": [\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000000,\n      \"path\": \"Renamed.md\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000001,\n      \"path\": \"Renamed.md\",\n      \"subpath\": \"#Head\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000002,\n      \"path\": \"Renamed.md\",\n      \"subpath\": \"#^blk\",\n      \"title\": \"Titled block\"\n    },\n    {\n      \"type\": \"folder\",\n      \"ctime\": 1792373000003,\n      \"path\": \"Folder\"\n    },\n    {\n      \"type\": \"group\",\n      \"ctime\": 1792373000004,\n      \"items\": [\n        {\n          \"type\": \"file\",\n          \"ctime\": 1792373000005,\n          \"path\": \"Folder/Inner.md\"\n        }\n      ],\n      \"title\": \"G\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000006,\n      \"path\": \"pic.png\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000007,\n      \"path\": \"Gone.md\"\n    }\n  ]\n}",
+     "modal": null
+    },
+    "s02-move-note": {
+     "ok": true,
+     "changed": true,
+     "after": "{\n  \"items\": [\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000000,\n      \"path\": \"Dest/Renamed.md\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000001,\n      \"path\": \"Dest/Renamed.md\",\n      \"subpath\": \"#Head\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000002,\n      \"path\": \"Dest/Renamed.md\",\n      \"subpath\": \"#^blk\",\n      \"title\": \"Titled block\"\n    },\n    {\n      \"type\": \"folder\",\n      \"ctime\": 1792373000003,\n      \"path\": \"Folder\"\n    },\n    {\n      \"type\": \"group\",\n      \"ctime\": 1792373000004,\n      \"items\": [\n        {\n          \"type\": \"file\",\n          \"ctime\": 1792373000005,\n          \"path\": \"Folder/Inner.md\"\n        }\n      ],\n      \"title\": \"G\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000006,\n      \"path\": \"pic.png\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000007,\n      \"path\": \"Gone.md\"\n    }\n  ]\n}",
+     "modal": null
+    },
+    "s03-rename-folder": {
+     "ok": true,
+     "changed": true,
+     "after": "{\n  \"items\": [\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000000,\n      \"path\": \"Dest/Renamed.md\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000001,\n      \"path\": \"Dest/Renamed.md\",\n      \"subpath\": \"#Head\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000002,\n      \"path\": \"Dest/Renamed.md\",\n      \"subpath\": \"#^blk\",\n      \"title\": \"Titled block\"\n    },\n    {\n      \"type\": \"folder\",\n      \"ctime\": 1792373000003,\n      \"path\": \"Folder2\"\n    },\n    {\n      \"type\": \"group\",\n      \"ctime\": 1792373000004,\n      \"items\": [\n        {\n          \"type\": \"file\",\n          \"ctime\": 1792373000005,\n          \"path\": \"Folder2/Inner.md\"\n        }\n      ],\n      \"title\": \"G\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000006,\n      \"path\": \"pic.png\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000007,\n      \"path\": \"Gone.md\"\n    }\n  ]\n}",
+     "modal": null
+    },
+    "s04-move-folder": {
+     "ok": true,
+     "changed": true,
+     "after": "{\n  \"items\": [\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000000,\n      \"path\": \"Dest/Renamed.md\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000001,\n      \"path\": \"Dest/Renamed.md\",\n      \"subpath\": \"#Head\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000002,\n      \"path\": \"Dest/Renamed.md\",\n      \"subpath\": \"#^blk\",\n      \"title\": \"Titled block\"\n    },\n    {\n      \"type\": \"folder\",\n      \"ctime\": 1792373000003,\n      \"path\": \"Dest/Folder2\"\n    },\n    {\n      \"type\": \"group\",\n      \"ctime\": 1792373000004,\n      \"items\": [\n        {\n          \"type\": \"file\",\n          \"ctime\": 1792373000005,\n          \"path\": \"Dest/Folder2/Inner.md\"\n        }\n      ],\n      \"title\": \"G\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000006,\n      \"path\": \"pic.png\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000007,\n      \"path\": \"Gone.md\"\n    }\n  ]\n}",
+     "modal": null
+    },
+    "s05-rename-attachment": {
+     "ok": true,
+     "changed": true,
+     "after": "{\n  \"items\": [\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000000,\n      \"path\": \"Dest/Renamed.md\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000001,\n      \"path\": \"Dest/Renamed.md\",\n      \"subpath\": \"#Head\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000002,\n      \"path\": \"Dest/Renamed.md\",\n      \"subpath\": \"#^blk\",\n      \"title\": \"Titled block\"\n    },\n    {\n      \"type\": \"folder\",\n      \"ctime\": 1792373000003,\n      \"path\": \"Dest/Folder2\"\n    },\n    {\n      \"type\": \"group\",\n      \"ctime\": 1792373000004,\n      \"items\": [\n        {\n          \"type\": \"file\",\n          \"ctime\": 1792373000005,\n          \"path\": \"Dest/Folder2/Inner.md\"\n        }\n      ],\n      \"title\": \"G\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000006,\n      \"path\": \"picture.png\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000007,\n      \"path\": \"Gone.md\"\n    }\n  ]\n}",
+     "modal": null
+    },
+    "s06-delete-note": {
+     "ok": true,
+     "changed": false,
+     "after": "{\n  \"items\": [\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000000,\n      \"path\": \"Dest/Renamed.md\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000001,\n      \"path\": \"Dest/Renamed.md\",\n      \"subpath\": \"#Head\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000002,\n      \"path\": \"Dest/Renamed.md\",\n      \"subpath\": \"#^blk\",\n      \"title\": \"Titled block\"\n    },\n    {\n      \"type\": \"folder\",\n      \"ctime\": 1792373000003,\n      \"path\": \"Dest/Folder2\"\n    },\n    {\n      \"type\": \"group\",\n      \"ctime\": 1792373000004,\n      \"items\": [\n        {\n          \"type\": \"file\",\n          \"ctime\": 1792373000005,\n          \"path\": \"Dest/Folder2/Inner.md\"\n        }\n      ],\n      \"title\": \"G\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000006,\n      \"path\": \"picture.png\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000007,\n      \"path\": \"Gone.md\"\n    }\n  ]\n}",
+     "modal": null
+    }
+   },
+   "order": [
+    "s01-rename-note",
+    "s02-move-note",
+    "s03-rename-folder",
+    "s04-move-folder",
+    "s05-rename-attachment",
+    "s06-delete-note"
+   ],
+   "before": "{\n  \"items\": [\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000000,\n      \"path\": \"Note.md\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000001,\n      \"path\": \"Note.md\",\n      \"subpath\": \"#Head\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000002,\n      \"path\": \"Note.md\",\n      \"subpath\": \"#^blk\",\n      \"title\": \"Titled block\"\n    },\n    {\n      \"type\": \"folder\",\n      \"ctime\": 1792373000003,\n      \"path\": \"Folder\"\n    },\n    {\n      \"type\": \"group\",\n      \"ctime\": 1792373000004,\n      \"items\": [\n        {\n          \"type\": \"file\",\n          \"ctime\": 1792373000005,\n          \"path\": \"Folder/Inner.md\"\n        }\n      ],\n      \"title\": \"G\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000006,\n      \"path\": \"pic.png\"\n    },\n    {\n      \"type\": \"file\",\n      \"ctime\": 1792373000007,\n      \"path\": \"Gone.md\"\n    }\n  ]\n}"
+  }
+ }
+}

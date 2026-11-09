@@ -1,0 +1,1167 @@
+{
+ "explorerDragLook": {
+  "fixtures": {
+   "startedAt": "2026-11-08T01:32:05.448Z",
+   "steps": {},
+   "order": []
+  },
+  "run": {
+   "startedAt": "2026-11-08T01:32:06.643Z",
+   "steps": {
+    "s00-open": {
+     "ok": true,
+     "shot": "00-tree.png"
+    },
+    "s01-file-over-folder": {
+     "ok": true,
+     "started": true,
+     "payload": [
+      {
+       "mimeType": "text/plain",
+       "data": "obsidian://open?vault=scoria-probe-vault.1zmOPd&file=Root"
+      },
+      {
+       "mimeType": "text/uri-list",
+       "data": "obsidian://open?vault=scoria-probe-vault.1zmOPd&file=Root"
+      }
+     ],
+     "look": {
+      "marked": [
+       {
+        "cls": "tree-item nav-folder is-being-dragged-over",
+        "rect": [
+         56,
+         84,
+         276,
+         52
+        ],
+        "style": {
+         "background-color": "oklch(0.603458 0.21722 292.49 / 0.1)",
+         "color": "rgb(218, 218, 218)",
+         "border": "0px none rgb(218, 218, 218)",
+         "border-radius": "4px",
+         "box-shadow": "none",
+         "outline": "rgb(218, 218, 218) none 3px",
+         "opacity": "1"
+        },
+        "title": {
+         "cls": "tree-item-self nav-folder-title is-clickable mod-collapsible",
+         "style": {
+          "background-color": "rgba(0, 0, 0, 0)",
+          "color": "rgb(166, 138, 249)",
+          "border": "0px none rgb(166, 138, 249)",
+          "border-radius": "8px",
+          "box-shadow": "none",
+          "outline": "rgb(166, 138, 249) none 3px",
+          "opacity": "1"
+         },
+         "rect": [
+          56,
+          84,
+          276,
+          25
+         ]
+        }
+       },
+       {
+        "cls": "tree-item-self nav-file-title tappable is-clickable is-being-dragged",
+        "rect": [
+         56,
+         246,
+         276,
+         25
+        ],
+        "style": {
+         "background-color": "rgb(138, 92, 245)",
+         "color": "rgb(255, 255, 255)",
+         "border": "0px none rgb(255, 255, 255)",
+         "border-radius": "8px",
+         "box-shadow": "none",
+         "outline": "rgb(255, 255, 255) none 3px",
+         "opacity": "1"
+        },
+        "title": null
+       }
+      ],
+      "ghost": {
+       "html": "<div class=\"drag-ghost\"><div class=\"drag-ghost-self\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-file\"><path d=\"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z\"></path><path d=\"M14 2v5a1 1 0 0 0 1 1h5\"></path></svg><span>Root</span></div><div class=\"drag-ghost-action\">Move into “Dest”</div></div>",
+       "text": "Root\nMove into “Dest”",
+       "rect": [
+        0,
+        800,
+        112,
+        46
+       ],
+       "style": {
+        "background-color": "rgba(0, 0, 0, 0.85)",
+        "color": "rgb(255, 255, 255)",
+        "padding": "6px 8px",
+        "border-radius": "4px",
+        "box-shadow": "rgba(0, 0, 0, 0.3) 0px 2px 8px 0px",
+        "font-size": "13px",
+        "width": "111.797px",
+        "max-width": "300px"
+       },
+       "kids": [
+        {
+         "cls": "drag-ghost-self",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "flex",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "svg-icon lucide-file",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px 4px 0px 0px",
+          "padding": "0px",
+          "display": "block",
+          "opacity": "0.7"
+         }
+        },
+        {
+         "cls": "",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "inline",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "inline",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "",
+         "text": "Root",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "block",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "drag-ghost-action",
+         "text": "Move into “Dest”",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "12px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "2px 0px 0px",
+          "display": "block",
+          "opacity": "0.7"
+         }
+        }
+       ]
+      }
+     },
+     "shot": "01-file-over-folder.png"
+    },
+    "s02-file-over-file-in-folder": {
+     "ok": true,
+     "started": true,
+     "payload": [
+      {
+       "mimeType": "text/plain",
+       "data": "obsidian://open?vault=scoria-probe-vault.1zmOPd&file=Root"
+      },
+      {
+       "mimeType": "text/uri-list",
+       "data": "obsidian://open?vault=scoria-probe-vault.1zmOPd&file=Root"
+      }
+     ],
+     "look": {
+      "marked": [
+       {
+        "cls": "tree-item nav-folder is-being-dragged-over",
+        "rect": [
+         56,
+         138,
+         276,
+         79
+        ],
+        "style": {
+         "background-color": "oklch(0.603458 0.21722 292.49 / 0.1)",
+         "color": "rgb(218, 218, 218)",
+         "border": "0px none rgb(218, 218, 218)",
+         "border-radius": "4px",
+         "box-shadow": "none",
+         "outline": "rgb(218, 218, 218) none 3px",
+         "opacity": "1"
+        },
+        "title": {
+         "cls": "tree-item-self nav-folder-title is-clickable mod-collapsible",
+         "style": {
+          "background-color": "rgba(0, 0, 0, 0)",
+          "color": "rgb(166, 138, 249)",
+          "border": "0px none rgb(166, 138, 249)",
+          "border-radius": "8px",
+          "box-shadow": "none",
+          "outline": "rgb(166, 138, 249) none 3px",
+          "opacity": "1"
+         },
+         "rect": [
+          56,
+          138,
+          276,
+          25
+         ]
+        }
+       },
+       {
+        "cls": "tree-item-self nav-file-title tappable is-clickable is-being-dragged",
+        "rect": [
+         56,
+         246,
+         276,
+         25
+        ],
+        "style": {
+         "background-color": "rgb(138, 92, 245)",
+         "color": "rgb(255, 255, 255)",
+         "border": "0px none rgb(255, 255, 255)",
+         "border-radius": "8px",
+         "box-shadow": "none",
+         "outline": "rgb(255, 255, 255) none 3px",
+         "opacity": "1"
+        },
+        "title": null
+       }
+      ],
+      "ghost": {
+       "html": "<div class=\"drag-ghost\"><div class=\"drag-ghost-self\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-file\"><path d=\"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z\"></path><path d=\"M14 2v5a1 1 0 0 0 1 1h5\"></path></svg><span>Root</span></div><div class=\"drag-ghost-action\">Move into “Inbox”</div></div>",
+       "text": "Root\nMove into “Inbox”",
+       "rect": [
+        0,
+        800,
+        118,
+        46
+       ],
+       "style": {
+        "background-color": "rgba(0, 0, 0, 0.85)",
+        "color": "rgb(255, 255, 255)",
+        "padding": "6px 8px",
+        "border-radius": "4px",
+        "box-shadow": "rgba(0, 0, 0, 0.3) 0px 2px 8px 0px",
+        "font-size": "13px",
+        "width": "118.297px",
+        "max-width": "300px"
+       },
+       "kids": [
+        {
+         "cls": "drag-ghost-self",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "flex",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "svg-icon lucide-file",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px 4px 0px 0px",
+          "padding": "0px",
+          "display": "block",
+          "opacity": "0.7"
+         }
+        },
+        {
+         "cls": "",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "inline",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "inline",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "",
+         "text": "Root",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "block",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "drag-ghost-action",
+         "text": "Move into “Inbox”",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "12px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "2px 0px 0px",
+          "display": "block",
+          "opacity": "0.7"
+         }
+        }
+       ]
+      }
+     },
+     "shot": "02-file-over-file-in-folder.png"
+    },
+    "s03-file-over-root-file": {
+     "ok": true,
+     "started": true,
+     "payload": [
+      {
+       "mimeType": "text/plain",
+       "data": "obsidian://open?vault=scoria-probe-vault.1zmOPd&file=Inbox%2FItem"
+      },
+      {
+       "mimeType": "text/uri-list",
+       "data": "obsidian://open?vault=scoria-probe-vault.1zmOPd&file=Inbox%2FItem"
+      }
+     ],
+     "look": {
+      "marked": [
+       {
+        "cls": "nav-files-container node-insert-event is-being-dragged-over",
+        "rect": [
+         44,
+         80,
+         300,
+         678
+        ],
+        "style": {
+         "background-color": "rgba(0, 0, 0, 0)",
+         "color": "rgb(218, 218, 218)",
+         "border": "0px none rgb(218, 218, 218)",
+         "border-radius": "0px",
+         "box-shadow": "none",
+         "outline": "rgb(218, 218, 218) none 3px",
+         "opacity": "1"
+        },
+        "title": null
+       },
+       {
+        "cls": "tree-item-self nav-file-title tappable is-clickable is-being-dragged",
+        "rect": [
+         56,
+         192,
+         276,
+         25
+        ],
+        "style": {
+         "background-color": "rgb(138, 92, 245)",
+         "color": "rgb(255, 255, 255)",
+         "border": "0px none rgb(255, 255, 255)",
+         "border-radius": "8px",
+         "box-shadow": "none",
+         "outline": "rgb(255, 255, 255) none 3px",
+         "opacity": "1"
+        },
+        "title": null
+       }
+      ],
+      "ghost": {
+       "html": "<div class=\"drag-ghost\" style=\"left: 0px; top: 0px; translate: 199px 209px;\"><div class=\"drag-ghost-self\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-file\"><path d=\"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z\"></path><path d=\"M14 2v5a1 1 0 0 0 1 1h5\"></path></svg><span>Item</span></div><div class=\"drag-ghost-action\">Move into “scoria-probe-vault.1zmOPd”</div></div>",
+       "text": "Item\nMove into “scoria-probe-vault.1zmOPd”",
+       "rect": [
+        199,
+        209,
+        241,
+        46
+       ],
+       "style": {
+        "background-color": "rgba(0, 0, 0, 0.85)",
+        "color": "rgb(255, 255, 255)",
+        "padding": "6px 8px",
+        "border-radius": "4px",
+        "box-shadow": "rgba(0, 0, 0, 0.3) 0px 2px 8px 0px",
+        "font-size": "13px",
+        "width": "240.922px",
+        "max-width": "300px"
+       },
+       "kids": [
+        {
+         "cls": "drag-ghost-self",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "flex",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "svg-icon lucide-file",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px 4px 0px 0px",
+          "padding": "0px",
+          "display": "block",
+          "opacity": "0.7"
+         }
+        },
+        {
+         "cls": "",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "inline",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "inline",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "",
+         "text": "Item",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "block",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "drag-ghost-action",
+         "text": "Move into “scoria-probe-vault.1zmOPd”",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "12px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "2px 0px 0px",
+          "display": "block",
+          "opacity": "0.7"
+         }
+        }
+       ]
+      }
+     },
+     "shot": "03-file-over-root-file.png"
+    },
+    "s04-file-below-rows": {
+     "ok": true,
+     "started": true,
+     "payload": [
+      {
+       "mimeType": "text/plain",
+       "data": "obsidian://open?vault=scoria-probe-vault.1zmOPd&file=Inbox%2FItem"
+      },
+      {
+       "mimeType": "text/uri-list",
+       "data": "obsidian://open?vault=scoria-probe-vault.1zmOPd&file=Inbox%2FItem"
+      }
+     ],
+     "look": {
+      "marked": [
+       {
+        "cls": "nav-files-container node-insert-event is-being-dragged-over",
+        "rect": [
+         44,
+         80,
+         300,
+         678
+        ],
+        "style": {
+         "background-color": "rgba(0, 0, 0, 0)",
+         "color": "rgb(218, 218, 218)",
+         "border": "0px none rgb(218, 218, 218)",
+         "border-radius": "0px",
+         "box-shadow": "none",
+         "outline": "rgb(218, 218, 218) none 3px",
+         "opacity": "1"
+        },
+        "title": null
+       },
+       {
+        "cls": "tree-item-self nav-file-title tappable is-clickable is-being-dragged",
+        "rect": [
+         56,
+         192,
+         276,
+         25
+        ],
+        "style": {
+         "background-color": "rgb(138, 92, 245)",
+         "color": "rgb(255, 255, 255)",
+         "border": "0px none rgb(255, 255, 255)",
+         "border-radius": "8px",
+         "box-shadow": "none",
+         "outline": "rgb(255, 255, 255) none 3px",
+         "opacity": "1"
+        },
+        "title": null
+       }
+      ],
+      "ghost": {
+       "html": "<div class=\"drag-ghost\"><div class=\"drag-ghost-self\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-file\"><path d=\"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z\"></path><path d=\"M14 2v5a1 1 0 0 0 1 1h5\"></path></svg><span>Item</span></div><div class=\"drag-ghost-action\">Move into “scoria-probe-vault.1zmOPd”</div></div>",
+       "text": "Item\nMove into “scoria-probe-vault.1zmOPd”",
+       "rect": [
+        0,
+        800,
+        241,
+        46
+       ],
+       "style": {
+        "background-color": "rgba(0, 0, 0, 0.85)",
+        "color": "rgb(255, 255, 255)",
+        "padding": "6px 8px",
+        "border-radius": "4px",
+        "box-shadow": "rgba(0, 0, 0, 0.3) 0px 2px 8px 0px",
+        "font-size": "13px",
+        "width": "240.922px",
+        "max-width": "300px"
+       },
+       "kids": [
+        {
+         "cls": "drag-ghost-self",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "flex",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "svg-icon lucide-file",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px 4px 0px 0px",
+          "padding": "0px",
+          "display": "block",
+          "opacity": "0.7"
+         }
+        },
+        {
+         "cls": "",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "inline",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "inline",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "",
+         "text": "Item",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "block",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "drag-ghost-action",
+         "text": "Move into “scoria-probe-vault.1zmOPd”",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "12px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "2px 0px 0px",
+          "display": "block",
+          "opacity": "0.7"
+         }
+        }
+       ]
+      }
+     },
+     "shot": "04-file-below-rows.png"
+    },
+    "s05-folder-over-folder": {
+     "ok": true,
+     "started": true,
+     "payload": [
+      {
+       "mimeType": "text/plain",
+       "data": "Deep"
+      }
+     ],
+     "look": {
+      "marked": [
+       {
+        "cls": "tree-item nav-folder is-being-dragged-over",
+        "rect": [
+         56,
+         84,
+         276,
+         52
+        ],
+        "style": {
+         "background-color": "oklch(0.603458 0.21722 292.49 / 0.1)",
+         "color": "rgb(218, 218, 218)",
+         "border": "0px none rgb(218, 218, 218)",
+         "border-radius": "4px",
+         "box-shadow": "none",
+         "outline": "rgb(218, 218, 218) none 3px",
+         "opacity": "1"
+        },
+        "title": {
+         "cls": "tree-item-self nav-folder-title is-clickable mod-collapsible",
+         "style": {
+          "background-color": "rgba(0, 0, 0, 0)",
+          "color": "rgb(166, 138, 249)",
+          "border": "0px none rgb(166, 138, 249)",
+          "border-radius": "8px",
+          "box-shadow": "none",
+          "outline": "rgb(166, 138, 249) none 3px",
+          "opacity": "1"
+         },
+         "rect": [
+          56,
+          84,
+          276,
+          25
+         ]
+        }
+       },
+       {
+        "cls": "tree-item-self nav-folder-title is-clickable mod-collapsible is-being-dragged",
+        "rect": [
+         56,
+         165,
+         276,
+         25
+        ],
+        "style": {
+         "background-color": "rgb(138, 92, 245)",
+         "color": "rgb(255, 255, 255)",
+         "border": "0px none rgb(255, 255, 255)",
+         "border-radius": "8px",
+         "box-shadow": "none",
+         "outline": "rgb(255, 255, 255) none 3px",
+         "opacity": "1"
+        },
+        "title": null
+       }
+      ],
+      "ghost": {
+       "html": "<div class=\"drag-ghost\"><div class=\"drag-ghost-self\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-folder-open\"><path d=\"m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2\"></path></svg><span>Deep</span></div><div class=\"drag-ghost-action\">Move into “Dest”</div></div>",
+       "text": "Deep\nMove into “Dest”",
+       "rect": [
+        0,
+        800,
+        112,
+        46
+       ],
+       "style": {
+        "background-color": "rgba(0, 0, 0, 0.85)",
+        "color": "rgb(255, 255, 255)",
+        "padding": "6px 8px",
+        "border-radius": "4px",
+        "box-shadow": "rgba(0, 0, 0, 0.3) 0px 2px 8px 0px",
+        "font-size": "13px",
+        "width": "111.797px",
+        "max-width": "300px"
+       },
+       "kids": [
+        {
+         "cls": "drag-ghost-self",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "flex",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "svg-icon lucide-folder-open",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px 4px 0px 0px",
+          "padding": "0px",
+          "display": "block",
+          "opacity": "0.7"
+         }
+        },
+        {
+         "cls": "",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "inline",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "",
+         "text": "Deep",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "block",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "drag-ghost-action",
+         "text": "Move into “Dest”",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "12px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "2px 0px 0px",
+          "display": "block",
+          "opacity": "0.7"
+         }
+        }
+       ]
+      }
+     },
+     "shot": "05-folder-over-folder.png"
+    },
+    "s06-file-over-own-folder": {
+     "ok": true,
+     "started": true,
+     "payload": [
+      {
+       "mimeType": "text/plain",
+       "data": "obsidian://open?vault=scoria-probe-vault.1zmOPd&file=Inbox%2FItem"
+      },
+      {
+       "mimeType": "text/uri-list",
+       "data": "obsidian://open?vault=scoria-probe-vault.1zmOPd&file=Inbox%2FItem"
+      }
+     ],
+     "look": {
+      "marked": [
+       {
+        "cls": "tree-item nav-folder is-being-dragged-over",
+        "rect": [
+         56,
+         138,
+         276,
+         79
+        ],
+        "style": {
+         "background-color": "oklch(0.603458 0.21722 292.49 / 0.1)",
+         "color": "rgb(218, 218, 218)",
+         "border": "0px none rgb(218, 218, 218)",
+         "border-radius": "4px",
+         "box-shadow": "none",
+         "outline": "rgb(218, 218, 218) none 3px",
+         "opacity": "1"
+        },
+        "title": {
+         "cls": "tree-item-self nav-folder-title is-clickable mod-collapsible",
+         "style": {
+          "background-color": "rgba(0, 0, 0, 0)",
+          "color": "rgb(166, 138, 249)",
+          "border": "0px none rgb(166, 138, 249)",
+          "border-radius": "8px",
+          "box-shadow": "none",
+          "outline": "rgb(166, 138, 249) none 3px",
+          "opacity": "1"
+         },
+         "rect": [
+          56,
+          138,
+          276,
+          25
+         ]
+        }
+       },
+       {
+        "cls": "tree-item-self nav-file-title tappable is-clickable is-being-dragged",
+        "rect": [
+         56,
+         192,
+         276,
+         25
+        ],
+        "style": {
+         "background-color": "rgb(138, 92, 245)",
+         "color": "rgb(255, 255, 255)",
+         "border": "0px none rgb(255, 255, 255)",
+         "border-radius": "8px",
+         "box-shadow": "none",
+         "outline": "rgb(255, 255, 255) none 3px",
+         "opacity": "1"
+        },
+        "title": null
+       }
+      ],
+      "ghost": {
+       "html": "<div class=\"drag-ghost\"><div class=\"drag-ghost-self\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-file\"><path d=\"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z\"></path><path d=\"M14 2v5a1 1 0 0 0 1 1h5\"></path></svg><span>Item</span></div><div class=\"drag-ghost-action\">Move into “Inbox”</div></div>",
+       "text": "Item\nMove into “Inbox”",
+       "rect": [
+        0,
+        800,
+        118,
+        46
+       ],
+       "style": {
+        "background-color": "rgba(0, 0, 0, 0.85)",
+        "color": "rgb(255, 255, 255)",
+        "padding": "6px 8px",
+        "border-radius": "4px",
+        "box-shadow": "rgba(0, 0, 0, 0.3) 0px 2px 8px 0px",
+        "font-size": "13px",
+        "width": "118.297px",
+        "max-width": "300px"
+       },
+       "kids": [
+        {
+         "cls": "drag-ghost-self",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "flex",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "svg-icon lucide-file",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px 4px 0px 0px",
+          "padding": "0px",
+          "display": "block",
+          "opacity": "0.7"
+         }
+        },
+        {
+         "cls": "",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "inline",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "inline",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "",
+         "text": "Item",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "block",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "drag-ghost-action",
+         "text": "Move into “Inbox”",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "12px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "2px 0px 0px",
+          "display": "block",
+          "opacity": "0.7"
+         }
+        }
+       ]
+      }
+     },
+     "shot": "06-file-over-own-folder.png"
+    },
+    "s07-file-over-editor": {
+     "ok": true,
+     "look": {
+      "marked": [
+       {
+        "cls": "nav-files-container node-insert-event is-being-dragged-over",
+        "rect": [
+         44,
+         80,
+         300,
+         678
+        ],
+        "style": {
+         "background-color": "rgba(0, 0, 0, 0)",
+         "color": "rgb(218, 218, 218)",
+         "border": "0px none rgb(218, 218, 218)",
+         "border-radius": "0px",
+         "box-shadow": "none",
+         "outline": "rgb(218, 218, 218) none 3px",
+         "opacity": "1"
+        },
+        "title": null
+       },
+       {
+        "cls": "tree-item-self nav-file-title tappable is-clickable is-being-dragged",
+        "rect": [
+         56,
+         246,
+         276,
+         25
+        ],
+        "style": {
+         "background-color": "rgb(138, 92, 245)",
+         "color": "rgb(255, 255, 255)",
+         "border": "0px none rgb(255, 255, 255)",
+         "border-radius": "8px",
+         "box-shadow": "none",
+         "outline": "rgb(255, 255, 255) none 3px",
+         "opacity": "1"
+        },
+        "title": null
+       }
+      ],
+      "ghost": {
+       "html": "<div class=\"drag-ghost\"><div class=\"drag-ghost-self\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-file\"><path d=\"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z\"></path><path d=\"M14 2v5a1 1 0 0 0 1 1h5\"></path></svg><span>Root</span></div><div class=\"drag-ghost-action\">Move into “scoria-probe-vault.1zmOPd”</div></div>",
+       "text": "Root\nMove into “scoria-probe-vault.1zmOPd”",
+       "rect": [
+        0,
+        800,
+        241,
+        46
+       ],
+       "style": {
+        "background-color": "rgba(0, 0, 0, 0.85)",
+        "color": "rgb(255, 255, 255)",
+        "padding": "6px 8px",
+        "border-radius": "4px",
+        "box-shadow": "rgba(0, 0, 0, 0.3) 0px 2px 8px 0px",
+        "font-size": "13px",
+        "width": "240.922px",
+        "max-width": "300px"
+       },
+       "kids": [
+        {
+         "cls": "drag-ghost-self",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "flex",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "svg-icon lucide-file",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px 4px 0px 0px",
+          "padding": "0px",
+          "display": "block",
+          "opacity": "0.7"
+         }
+        },
+        {
+         "cls": "",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "inline",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "",
+         "text": "",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "inline",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "",
+         "text": "Root",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "13px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "0px",
+          "display": "block",
+          "opacity": "1"
+         }
+        },
+        {
+         "cls": "drag-ghost-action",
+         "text": "Move into “scoria-probe-vault.1zmOPd”",
+         "style": {
+          "color": "rgb(255, 255, 255)",
+          "font-size": "12px",
+          "font-weight": "500",
+          "margin": "0px",
+          "padding": "2px 0px 0px",
+          "display": "block",
+          "opacity": "0.7"
+         }
+        }
+       ]
+      }
+     },
+     "shot": "07-file-over-editor.png"
+    }
+   },
+   "order": [
+    "s00-open",
+    "s01-file-over-folder",
+    "s02-file-over-file-in-folder",
+    "s03-file-over-root-file",
+    "s04-file-below-rows",
+    "s05-folder-over-folder",
+    "s06-file-over-own-folder",
+    "s07-file-over-editor"
+   ]
+  }
+ }
+}
