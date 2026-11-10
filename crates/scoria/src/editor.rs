@@ -4849,8 +4849,8 @@ impl Editor {
     /// right click raises, raised at the caret instead of the pointer. The
     /// caret is inside its own selection, so a selection is kept and is
     /// both the Search row's text and what Cut and Copy act on; the link
-    /// under the caret decides the rows as a click's does. Drawn under the
-    /// caret's row, at the caret's x, from the last frame's layout; with no
+    /// under the caret decides the rows as a click's does. Drawn at the
+    /// caret, by [`caret_menu_point`], from the last frame's layout; with no
     /// frame laid out yet there is nowhere to draw it and nothing opens.
     pub fn context_menu_at_caret(&mut self, cx: &mut Context<Self>) -> bool {
         let Some(shaped) = self.layout.cursor_line.clone() else {
@@ -4859,10 +4859,13 @@ impl Editor {
         let cursor = self.cursor();
         let (row, x) = shaped.row_and_x(cursor.col);
         let rh = shaped.row_height;
-        let position = point(
-            self.layout.content_x + x,
-            self.layout.cursor_top + rh * (row + 1) as f32,
+        let top = self.layout.cursor_top + rh * row as f32;
+        let (left, top) = caret_menu_point(
+            f32::from(self.layout.content_x + x),
+            f32::from(top),
+            f32::from(top + rh),
         );
+        let position = point(px(left), px(top));
         let selection = self.buf.clipboard_text(&[self.buf.selection()]);
         let link = self.link_at(cursor.line, cursor.col, false);
         let selected = !selection.is_empty();
@@ -7088,9 +7091,35 @@ impl Element for EditorElement {
     }
 }
 
+/// Where `editor:context-menu` puts the menu's top-left corner for a caret
+/// at `left` on a line box from `top` to `bottom`. Obsidian 1.15.0 opened
+/// it 1 to 2 px right of and below the caret's left and its line's middle
+/// (not under the line), which over the five readings of
+/// `tools/obsidian-probe/results/2026-11-09-app-window-commands.json` is
+/// that point a pixel on, rounded up.
+fn caret_menu_point(left: f32, top: f32, bottom: f32) -> (f32, f32) {
+    let middle = (top + bottom) / 2.;
+    ((left + 1.).ceil(), (middle + 1.).ceil())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The probe's five carets (`coordsAtPos` left, top and bottom) and the
+    /// menu corner each gave, Live Preview and Source mode alike.
+    #[test]
+    fn the_caret_menu_opens_a_pixel_past_the_caret_at_its_lines_middle() {
+        for (left, top, bottom, corner) in [
+            (638.94, 229.5, 251.5, (640., 242.)),
+            (685.83, 229.5, 251.5, (687., 242.)),
+            (806.75, 229.5, 251.5, (808., 242.)),
+            (752.84, 277.5, 299.5, (754., 290.)),
+            (638.94, 213.5, 235.5, (640., 226.)),
+        ] {
+            assert_eq!(caret_menu_point(left, top, bottom), corner, "{left}");
+        }
+    }
 
     #[test]
     fn a_done_task_leaves_the_gap_after_its_box_unstruck() {

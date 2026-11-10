@@ -1357,23 +1357,60 @@ impl SettingChange {
     }
 }
 
-/// The `app.json` flag a toggle command flips: `editor:toggle-readable-line-length`
+/// The flag a toggle command flips: `editor:toggle-readable-line-length`
 /// and `editor:toggle-line-numbers` are the Editor tab's "Readable line
-/// length" and "Line numbers" rows run from the palette, so each writes
-/// through the very flag the row does, and the row and the command cannot
-/// disagree about the key or about what its absence means.
-fn command_flag(id: &str) -> Option<AppFlag> {
+/// length" and "Line numbers" rows run from the palette, and
+/// `app:toggle-ribbon` is the Interface tab's "Show ribbon" (`showRibbon`
+/// in `appearance.json`, appended and then kept over two runs, Obsidian
+/// 1.15.0), so each writes through the very flag the row does, and the row
+/// and the command cannot disagree about the key or about what its absence
+/// means.
+fn command_flag(id: &str) -> Option<Flag> {
     match id {
-        "editor:toggle-readable-line-length" => Some(READABLE_LINE_LENGTH),
-        "editor:toggle-line-numbers" => Some(SHOW_LINE_NUMBER),
+        "editor:toggle-readable-line-length" => Some(Flag::App(READABLE_LINE_LENGTH)),
+        "editor:toggle-line-numbers" => Some(Flag::App(SHOW_LINE_NUMBER)),
+        "app:toggle-ribbon" => Some(Flag::Appearance(SHOW_RIBBON)),
         _ => None,
     }
 }
 
-/// What a toggle command writes: `app` with its row's flag flipped, or
-/// `None` for an id that is not one of them.
-pub fn toggle_command(id: &str, app: &AppConfig) -> Option<SettingChange> {
-    command_flag(id).map(|flag| SettingChange::App(flag.toggled(app)))
+/// What a toggle command writes: its row's file with the flag flipped, or
+/// `None` for an id that is not one of them. The config is read and let go
+/// in here, so the caller holds no read guard when it writes the change.
+pub fn toggle_command(id: &str, state: &VaultState) -> Option<SettingChange> {
+    command_flag(id).map(|flag| flag.toggled(state))
+}
+
+/// `app:toggle-default-new-pane-mode` ("Toggle default mode for new
+/// tabs"): `defaultViewMode` in `app.json` flipped between `source` and
+/// `preview`, an absent key reading as `source` the way the dropdown reads
+/// it, and the notice Obsidian 1.15.0 showed for each direction.
+pub fn toggle_default_view_mode(app: &AppConfig) -> (SettingChange, &'static str) {
+    let mut next = app.clone();
+    let reading = app.default_view_mode.as_deref() == Some("preview");
+    let (value, notice) = if reading {
+        ("source", "Switched default view mode to editing view.")
+    } else {
+        ("preview", "Switched default view mode to reading view.")
+    };
+    next.default_view_mode = Some(value.to_string());
+    (SettingChange::App(next), notice)
+}
+
+/// `theme:toggle-light-dark` over a base theme the file names: `obsidian`
+/// (dark) and `moonstone` (light) swapped, the other keys kept. Under
+/// `system`, a missing key (which Obsidian reads as `system`) or anything
+/// else it writes nothing and answers `None`; the caller flips the
+/// session's scheme instead (Obsidian 1.15.0, all four starting points).
+pub fn toggle_light_dark(appearance: &AppearanceConfig) -> Option<AppearanceConfig> {
+    let swapped = match appearance.theme.as_deref() {
+        Some("obsidian") => "moonstone",
+        Some("moonstone") => "obsidian",
+        _ => return None,
+    };
+    let mut next = appearance.clone();
+    next.theme = Some(swapped.to_string());
+    Some(next)
 }
 
 impl Flag {
@@ -6776,7 +6813,7 @@ mod tests {
                 .and_then(|i| i.flag)
                 .unwrap_or_else(|| panic!("no {row} row"));
             let before = flag.is_on(&state);
-            let change = toggle_command(id, &state.app()).expect(id);
+            let change = toggle_command(id, &state).expect(id);
             assert_eq!(change, flag.toggled(&state), "{id} and its row differ");
             state.apply_setting(&change).unwrap();
             assert_eq!(flag.is_on(&state), !before, "{id} did not flip {key}");
@@ -6791,16 +6828,128 @@ mod tests {
             assert_eq!(keys, ["tabSize", key], "{id} wrote {written}");
             assert_eq!(json[key], serde_json::Value::Bool(!before));
             // Run again, it puts the value back and keeps the key.
-            // Its own statement: `app()` is a read guard and the write
-            // takes the lock.
-            let again = toggle_command(id, &state.app()).unwrap();
+            // `toggle_command` lets its read guard go before returning, so
+            // the write can take the lock.
+            let again = toggle_command(id, &state).unwrap();
             state.apply_setting(&again).unwrap();
             assert_eq!(flag.is_on(&state), before);
         }
+        let (_dir, state) = vault();
+        assert_eq!(toggle_command("editor:toggle-bold", &state), None);
+    }
+
+    /// `app:toggle-ribbon` is the Interface tab's "Show ribbon" row: over
+    /// two runs it appends `showRibbon: false` after the keys already there
+    /// and then writes `true`, keeping the key, which are Obsidian 1.15.0's
+    /// bytes; `workspace.json` and `app.json` are not touched.
+    #[test]
+    fn toggle_ribbon_writes_show_ribbon_after_the_keys_already_there() {
+        let (dir, _) = vault();
+        let config = dir.path().join(".obsidian");
+        let path = config.join("appearance.json");
+        std::fs::write(&path, "{\n  \"baseFontSizeAction\": true\n}").unwrap();
+        let app_before = std::fs::read(config.join("app.json")).ok();
+        let layout_before = std::fs::read(config.join("workspace.json")).ok();
+        let state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        let flag = SettingsView::interface_items(&state)
+            .into_iter()
+            .find(|i| i.name.as_ref() == "Show ribbon")
+            .and_then(|i| i.flag)
+            .expect("a Show ribbon row");
+        let change = toggle_command("app:toggle-ribbon", &state).unwrap();
         assert_eq!(
-            toggle_command("editor:toggle-bold", &AppConfig::default()),
-            None
+            change,
+            flag.toggled(&state),
+            "the command and its row differ"
         );
+        state.apply_setting(&change).unwrap();
+        assert_eq!(
+            std::fs::read_to_string(&path).unwrap(),
+            "{\n  \"baseFontSizeAction\": true,\n  \"showRibbon\": false\n}"
+        );
+        let again = toggle_command("app:toggle-ribbon", &state).unwrap();
+        state.apply_setting(&again).unwrap();
+        assert_eq!(
+            std::fs::read_to_string(&path).unwrap(),
+            "{\n  \"baseFontSizeAction\": true,\n  \"showRibbon\": true\n}"
+        );
+        assert_eq!(std::fs::read(config.join("app.json")).ok(), app_before);
+        assert_eq!(
+            std::fs::read(config.join("workspace.json")).ok(),
+            layout_before
+        );
+    }
+
+    /// The three rows of the probe: from no key, from `source` and from
+    /// `preview`, with the notice each showed; an unknown key rides along.
+    #[test]
+    fn toggle_default_view_mode_flips_source_and_preview_with_its_notices() {
+        let (dir, _) = vault();
+        let path = dir.path().join(".obsidian/app.json");
+        std::fs::write(&path, "{}").unwrap();
+        let state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        let (change, notice) = toggle_default_view_mode(&state.app());
+        assert_eq!(notice, "Switched default view mode to reading view.");
+        state.apply_setting(&change).unwrap();
+        assert_eq!(
+            std::fs::read_to_string(&path).unwrap(),
+            "{\n  \"defaultViewMode\": \"preview\"\n}"
+        );
+        let (change, notice) = toggle_default_view_mode(&state.app());
+        assert_eq!(notice, "Switched default view mode to editing view.");
+        state.apply_setting(&change).unwrap();
+        assert_eq!(
+            std::fs::read_to_string(&path).unwrap(),
+            "{\n  \"defaultViewMode\": \"source\"\n}"
+        );
+        let (change, notice) = toggle_default_view_mode(&state.app());
+        assert_eq!(notice, "Switched default view mode to reading view.");
+        state.apply_setting(&change).unwrap();
+
+        std::fs::write(
+            &path,
+            "{\n  \"probeUnknown\": [1, 2],\n  \"defaultViewMode\": \"preview\"\n}",
+        )
+        .unwrap();
+        let state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        let (change, _) = toggle_default_view_mode(&state.app());
+        state.apply_setting(&change).unwrap();
+        let json: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+        assert_eq!(json["defaultViewMode"], "source");
+        assert_eq!(json["probeUnknown"], serde_json::json!([1, 2]));
+    }
+
+    /// `obsidian` and `moonstone` swap, the file's other keys kept; under
+    /// `system`, no key, or a value Obsidian does not know, nothing is
+    /// written.
+    #[test]
+    fn toggle_light_dark_swaps_the_two_base_themes_and_leaves_system_alone() {
+        let (dir, _) = vault();
+        let path = dir.path().join(".obsidian/appearance.json");
+        std::fs::write(
+            &path,
+            "{\n  \"accentColor\": \"#ff5721\",\n  \"theme\": \"obsidian\",\n  \"probeUnknown\": true\n}",
+        )
+        .unwrap();
+        let state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        let next = toggle_light_dark(&state.appearance()).expect("a swap");
+        state
+            .apply_setting(&SettingChange::Appearance(next))
+            .unwrap();
+        assert_eq!(
+            std::fs::read_to_string(&path).unwrap(),
+            "{\n  \"accentColor\": \"#ff5721\",\n  \"theme\": \"moonstone\",\n  \"probeUnknown\": true\n}"
+        );
+        let back = toggle_light_dark(&state.appearance()).expect("a swap");
+        assert_eq!(back.theme.as_deref(), Some("obsidian"));
+        for theme in [Some("system"), None, Some("probe")] {
+            let config = AppearanceConfig {
+                theme: theme.map(str::to_string),
+                ..AppearanceConfig::default()
+            };
+            assert_eq!(toggle_light_dark(&config), None, "{theme:?}");
+        }
     }
 
     /// Obsidian words this one the other way round: the control is "Use

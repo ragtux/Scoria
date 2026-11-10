@@ -215,6 +215,17 @@ pub const BASE_ONLY: &[&str] = &[
     "bases:copy-table",
 ];
 
+/// The ids that act on the active file and are offered only while there is
+/// one: Obsidian 1.15.0's palette listed none of them with an empty tab
+/// active, and every one with a note or an image.
+pub const ACTIVE_FILE_ONLY: &[&str] = &[
+    "workspace:copy-path",
+    "workspace:copy-full-path",
+    "workspace:copy-url",
+    "open-with-default-app:open",
+    "open-with-default-app:show",
+];
+
 /// Command ids the workspace can run today; the palette lists only these,
 /// the way Obsidian hides commands whose check callback fails.
 pub const RUNNABLE: &[&str] = &[
@@ -370,8 +381,15 @@ pub const RUNNABLE: &[&str] = &[
     "app:delete-file",
     "workspace:copy-path",
     "workspace:copy-full-path",
+    "workspace:copy-url",
+    "workspace:show-trash",
     "open-with-default-app:open",
     "open-with-default-app:show",
+    "app:toggle-ribbon",
+    "app:toggle-default-new-pane-mode",
+    "theme:toggle-light-dark",
+    "app:increase-font-size",
+    "app:decrease-font-size",
     "backlink:open",
     "backlink:open-backlinks",
     "outgoing-links:open",
@@ -3095,6 +3113,11 @@ pub struct Workspace {
     /// The desktop's colour scheme as the window last reported it, which
     /// is what `theme: "system"` follows.
     system_dark: bool,
+    /// `theme:toggle-light-dark` run under `theme: "system"` (or no key):
+    /// Obsidian writes nothing then and only flips the body's scheme for
+    /// the session, so this turns the desktop's answer over until the
+    /// command runs again or writes a base theme.
+    scheme_flipped: bool,
     /// Set when something changed what the main area shows and the keyboard
     /// has to follow it; [`Workspace::render`] is where it is honoured.
     refocus_main: bool,
@@ -3827,6 +3850,7 @@ impl Workspace {
             dock_tree_focus: cx.focus_handle(),
             dock_tree_keyboard: false,
             system_dark: true,
+            scheme_flipped: false,
             refocus_main: false,
             state: None,
             vault_name: "No vault".into(),
@@ -4825,6 +4849,29 @@ impl Workspace {
         self.reload_theme(cx);
     }
 
+    /// `theme:toggle-light-dark`: with `obsidian` or `moonstone` in
+    /// `appearance.json` the other is written through the same change the
+    /// Appearance tab's dropdown makes; under `system` or no key nothing is
+    /// written and the session's scheme is turned over instead.
+    fn toggle_light_dark(&mut self, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        // Its own statement: `appearance()` is a read guard, and
+        // `change_setting` takes the write lock.
+        let swapped = settings::toggle_light_dark(&state.appearance());
+        match swapped {
+            Some(next) => {
+                self.scheme_flipped = false;
+                self.change_setting(SettingChange::Appearance(next), cx);
+            }
+            None => {
+                self.scheme_flipped = !self.scheme_flipped;
+                self.reload_theme(cx);
+            }
+        }
+    }
+
     /// Rebuilds the theme global from `appearance.json` as it is on disk
     /// and the sheets it names, and repaints.
     pub fn reload_theme(&mut self, cx: &mut Context<Self>) {
@@ -4832,7 +4879,8 @@ impl Workspace {
             return;
         };
         let config = state.reload_appearance();
-        let mut theme = Theme::load(&state.root, &state.config_dir(), &config, self.system_dark);
+        let system_dark = self.system_dark != self.scheme_flipped;
+        let mut theme = Theme::load(&state.root, &state.config_dir(), &config, system_dark);
         crate::theme::fonts::keep_quick_size(&mut theme, cx);
         cx.set_global(theme);
         cx.notify();
@@ -5293,30 +5341,62 @@ impl Workspace {
             // open Settings window and the views follow it. Line numbers
             // are written for Obsidian to read; Scoria draws no gutter yet,
             // which the row says ("not in Scoria yet").
-            "editor:toggle-readable-line-length" | "editor:toggle-line-numbers" => {
-                // Built in a statement of its own: `app()` is a read guard,
-                // and `change_setting` takes the write lock.
+            //
+            // "Toggle ribbon" is the Interface tab's "Show ribbon" the same
+            // way: `showRibbon` in `appearance.json`, no notice, and the
+            // layout file untouched (Obsidian 1.15.0).
+            "editor:toggle-readable-line-length"
+            | "editor:toggle-line-numbers"
+            | "app:toggle-ribbon" => {
+                // Built in a statement of its own: the config is read under
+                // a guard, and `change_setting` takes the write lock.
                 let change = self
                     .state
                     .as_ref()
-                    .and_then(|state| settings::toggle_command(id, &state.app()));
+                    .and_then(|state| settings::toggle_command(id, state));
                 if let Some(change) = change {
                     self.change_setting(change, cx);
                 }
             }
+            // "Toggle default mode for new tabs": `defaultViewMode` flipped,
+            // and the notice Obsidian shows for the way it went.
+            "app:toggle-default-new-pane-mode" => {
+                let toggled = self
+                    .state
+                    .as_ref()
+                    .map(|state| settings::toggle_default_view_mode(&state.app()));
+                if let Some((change, notice)) = toggled {
+                    self.change_setting(change, cx);
+                    self.report(notice, cx);
+                }
+            }
+            "theme:toggle-light-dark" => self.toggle_light_dark(cx),
+            // One pixel up or down, 10 to 30, for the session; see
+            // `fonts::step_font_size` for why nothing is written.
+            "app:increase-font-size" | "app:decrease-font-size" => {
+                let steps = if id == "app:increase-font-size" {
+                    1
+                } else {
+                    -1
+                };
+                crate::theme::fonts::step_font_size(steps, cx);
+                cx.refresh_windows();
+            }
             // "Show context menu under cursor": a right click's menu, at the
-            // caret.
+            // caret. In the reading view Obsidian 1.15.0 neither offered it
+            // nor opened anything, so a hotkey there is silent too.
             "editor:context-menu" => {
-                if self.editing_or_report(id, window, cx) {
+                if self.mode.is_editing() && self.note_has_keys(window, cx) {
                     self.editor.update(cx, |e, cx| e.context_menu_at_caret(cx));
                 }
             }
-            // "Focus on last note": the keyboard back on the note the main
-            // area shows, wherever it was -- a dock tree, the search field.
-            // What it does when the active tab is a canvas, a base or a PDF
-            // is unprobed, so only a note takes it.
+            // "Focus on last note": the keyboard back on the note's editor
+            // the main area shows, wherever it was -- a dock tree, the
+            // search field. It never switches tabs: over a canvas, an empty
+            // tab or a note in the reading view Obsidian 1.15.0 did nothing
+            // visible, so only an editor on screen takes it.
             "editor:focus" => {
-                if matches!(self.main_view(cx), MainView::Editor | MainView::Reading) {
+                if self.main_view(cx) == MainView::Editor {
                     self.focus_main(window, cx);
                 }
             }
@@ -5683,15 +5763,45 @@ impl Workspace {
             // the menu's "Copy path" writes, "...from system root" the same
             // file's absolute path, and "Open in default app" / "Show in
             // system explorer" the menu's two rows of the same names.
+            //
+            // The menu row is silent, but the commands are not: each says
+            // "Copied to your clipboard", and the URL "URL copied to your
+            // clipboard" (Obsidian 1.15.0).
             "workspace:copy-path" => {
                 if let Some(current) = self.current.clone() {
                     self.copy_path(&current, cx);
+                    self.report("Copied to your clipboard", cx);
                 }
             }
             "workspace:copy-full-path" => {
                 if let (Some(state), Some(current)) = (self.state.clone(), self.current.clone()) {
                     let text = full_path_text(state.vault().absolute(&current));
                     cx.write_to_clipboard(ClipboardItem::new_string(text));
+                    self.report("Copied to your clipboard", cx);
+                }
+            }
+            "workspace:copy-url" => {
+                if let (Some(state), Some(current)) = (self.state.clone(), self.current.clone()) {
+                    let name = vault_folder_name(&state.root);
+                    let url = crate::uri::open_url(&name, &current);
+                    cx.write_to_clipboard(ClipboardItem::new_string(url));
+                    self.report("URL copied to your clipboard", cx);
+                }
+            }
+            // "Show trash", offered only under `trashOption: "local"`: the
+            // vault's `.trash` shown in its parent the way "Show in system
+            // explorer" shows a file, or, with no such folder, Obsidian's
+            // notice naming the absolute path.
+            "workspace:show-trash" => {
+                if let Some(state) = self.state.clone() {
+                    if state.trash_option() == TrashOption::Local {
+                        let trash = state.vault().absolute(TRASH_FOLDER);
+                        if trash.exists() {
+                            self.show_in_system_explorer(TRASH_FOLDER, cx);
+                        } else {
+                            self.report(missing_file_notice(&full_path_text(trash)), cx);
+                        }
+                    }
                 }
             }
             "open-with-default-app:open" => {
@@ -5998,6 +6108,24 @@ impl Workspace {
         if id == "graph:open-local" {
             return self.current.is_some();
         }
+        // The active file's commands are check callbacks too: with an
+        // empty tab active Obsidian 1.15.0 offered none of them, and with a
+        // note or an image it offered all five.
+        if ACTIVE_FILE_ONLY.contains(&id) {
+            return self.current.is_some();
+        }
+        // "Show trash" only where there is a trash of the vault's own.
+        if id == "workspace:show-trash" {
+            return self
+                .state
+                .as_ref()
+                .is_some_and(|state| state.trash_option() == TrashOption::Local);
+        }
+        // "Focus on last note" whenever a Markdown leaf exists, in any
+        // mode and any tab.
+        if id == "editor:focus" {
+            return self.has_markdown_leaf();
+        }
         if EDITOR_ONLY.contains(&id) {
             return self.mode.is_editing() && self.note_has_keys(window, cx);
         }
@@ -6010,6 +6138,27 @@ impl Workspace {
             return self.main_view(cx) == MainView::Bases;
         }
         true
+    }
+
+    /// Whether any tab of any group, popouts' included, is a Markdown leaf.
+    /// The active group's live fields stand for its active tab, whose slot
+    /// may not have been stashed yet.
+    fn has_markdown_leaf(&self) -> bool {
+        let live = std::iter::once((self.current.as_deref(), self.mode == ViewMode::Graph));
+        let mine = self
+            .tabs
+            .iter()
+            .enumerate()
+            .filter(|(ix, _)| *ix != self.active_tab)
+            .map(|(_, t)| (t.path.as_deref(), t.mode == ViewMode::Graph));
+        let others = self
+            .groups
+            .iter()
+            .enumerate()
+            .filter(|(ix, _)| *ix != self.active_group)
+            .flat_map(|(_, g)| g.tabs.iter())
+            .map(|t| (t.path.as_deref(), t.mode == ViewMode::Graph));
+        any_markdown_leaf(live.chain(mine).chain(others))
     }
 
     fn note_has_keys(&self, window: &Window, cx: &App) -> bool {
@@ -18398,6 +18547,47 @@ fn full_path_text(absolute: PathBuf) -> String {
         .into_owned()
 }
 
+/// The vault's own trash folder, at the vault root, where
+/// `trashOption: "local"` moves a deleted file.
+const TRASH_FOLDER: &str = ".trash";
+
+/// The vault's name as `workspace:copy-url` writes it: its folder's name,
+/// read from the absolute root so a vault opened as `.` (or as the empty
+/// path, which is the working folder too) is still named. The last plain
+/// component is the name: `absolute` keeps a trailing `.`.
+fn vault_folder_name(root: &Path) -> String {
+    let absolute = match root.as_os_str().is_empty() {
+        true => std::env::current_dir(),
+        false => std::path::absolute(root),
+    }
+    .unwrap_or_else(|_| root.to_path_buf());
+    absolute
+        .components()
+        .rev()
+        .find_map(|c| match c {
+            Component::Normal(name) => Some(name.to_string_lossy().into_owned()),
+            _ => None,
+        })
+        .unwrap_or_default()
+}
+
+/// Obsidian's notice for a path that is not there, as "Show trash" showed
+/// it with no `.trash` folder: the absolute path in curly quotes.
+fn missing_file_notice(absolute: &str) -> String {
+    format!("The file or folder \u{201c}{absolute}\u{201d} does not exist.")
+}
+
+/// Whether any of `leaves` is a Markdown leaf, which is what
+/// `editor:focus` ("Focus on last note") is offered on: each is a tab's file
+/// and whether the tab shows the graph instead. A canvas, a base, a PDF,
+/// an image or an empty tab is not one (Obsidian 1.15.0: with an empty tab
+/// and a canvas only, the palette did not list it).
+fn any_markdown_leaf<'a>(mut leaves: impl Iterator<Item = (Option<&'a str>, bool)>) -> bool {
+    leaves.any(|(path, graph)| {
+        !graph && path.is_some_and(|p| FileKind::from_path(p) == FileKind::Markdown)
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -18504,30 +18694,92 @@ mod tests {
         assert_eq!(text, expected.to_string_lossy());
     }
 
-    /// The four file commands of the window cluster are runnable and are
-    /// Obsidian's ids; the ones whose behaviour is not yet observed are not.
+    /// The window cluster's commands the 2026-11-09 probe settled are
+    /// runnable and are Obsidian's ids; the ones gpui blocks, the tab
+    /// switcher Obsidian does not register on desktop, and the three whose
+    /// screens are not Scoria's to show are not.
     #[test]
-    fn file_commands_of_the_window_cluster_are_runnable() {
+    fn the_observed_app_and_window_commands_are_runnable() {
         let known = scoria_commands::known_ids();
         for id in [
             "workspace:copy-path",
             "workspace:copy-full-path",
+            "workspace:copy-url",
+            "workspace:show-trash",
             "open-with-default-app:open",
             "open-with-default-app:show",
+            "app:toggle-ribbon",
+            "app:toggle-default-new-pane-mode",
+            "theme:toggle-light-dark",
+            "app:increase-font-size",
+            "app:decrease-font-size",
         ] {
             assert!(RUNNABLE.contains(&id), "{id} runnable");
             assert!(known.contains(&id), "{id} is Obsidian's");
         }
         for id in [
-            "workspace:copy-url",
-            "workspace:show-trash",
-            "app:toggle-ribbon",
-            "theme:toggle-light-dark",
             "window:zoom-in",
-            "app:increase-font-size",
+            "window:zoom-out",
+            "window:reset-zoom",
+            "window:toggle-always-on-top",
+            "app:show-tab-switcher",
+            "app:show-debug-info",
+            "app:show-release-notes",
+            "app:open-file",
         ] {
-            assert!(!RUNNABLE.contains(&id), "{id} waits on a probe");
+            assert!(!RUNNABLE.contains(&id), "{id} is left unrunnable");
         }
+        for id in ACTIVE_FILE_ONLY {
+            assert!(RUNNABLE.contains(id), "{id} runnable");
+        }
+    }
+
+    /// The URL's vault is the folder's name, a relatively opened vault's
+    /// too.
+    #[test]
+    fn the_copied_urls_vault_is_the_folders_name() {
+        assert_eq!(
+            vault_folder_name(Path::new("/tmp/x/Probe Vault")),
+            "Probe Vault"
+        );
+        let here = std::env::current_dir().unwrap();
+        let name = here.file_name().unwrap().to_string_lossy().into_owned();
+        assert_eq!(vault_folder_name(Path::new(".")), name);
+        assert_eq!(vault_folder_name(Path::new("")), name);
+    }
+
+    /// Show trash's notice with no `.trash` folder, the path in curly
+    /// quotes, as Obsidian 1.15.0 wrote it.
+    #[test]
+    fn show_trash_names_the_missing_folder_in_curly_quotes() {
+        assert_eq!(
+            missing_file_notice("/tmp/claude-1000/appwin/main/Probe Vault/.trash"),
+            "The file or folder \u{201c}/tmp/claude-1000/appwin/main/Probe Vault/.trash\u{201d} does not exist."
+        );
+        assert_eq!(TRASH_FOLDER, ".trash");
+    }
+
+    /// Focus on last note is offered while any tab is a note: an empty tab
+    /// and a canvas alone do not count, nor do an image, a PDF, a base or a
+    /// tab showing the graph.
+    #[test]
+    fn focus_on_last_note_is_offered_only_with_a_markdown_leaf() {
+        assert!(!any_markdown_leaf(
+            [(None, false), (Some("Board.canvas"), false)].into_iter()
+        ));
+        assert!(!any_markdown_leaf(
+            [
+                (Some("img/pic.png"), false),
+                (Some("Paper.pdf"), false),
+                (Some("Rocks.base"), false),
+                (Some("Note.md"), true),
+            ]
+            .into_iter()
+        ));
+        assert!(any_markdown_leaf(
+            [(Some("Board.canvas"), false), (Some("Note A.md"), false)].into_iter()
+        ));
+        assert!(!any_markdown_leaf(std::iter::empty()));
     }
 
     /// A link written in a property is an outgoing link like any other,
