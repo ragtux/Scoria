@@ -1295,13 +1295,30 @@ const COMPOSER_REPLACEMENT_TEXT: Typed = Typed {
             .unwrap_or_else(|| "link".to_string())
     },
     write: |state, value| {
-        let mut next = state.note_composer().clone();
+        // The plugin saves its whole options object, so the first pick on
+        // a vault with no file writes `askBeforeMerging: true` before the
+        // key it set (2026-11-09).
+        let mut next = state.note_composer().clone().with_defaults();
         next.replacement_text = Some(value.to_string());
         SettingChange::NoteComposer(next)
     },
     shape: None,
     label_of: None,
     local: None,
+};
+
+/// The Note composer tab's "Template file location": the template's path
+/// with `.md`, `""` once cleared (2026-11-09).
+const COMPOSER_TEMPLATE: TextField = TextField {
+    key: "template",
+    placeholder: "Example: folder/note",
+    prefix: "",
+    read: |state| state.note_composer().template.clone().unwrap_or_default(),
+    write: |state, value| {
+        let mut next = state.note_composer().clone().with_defaults();
+        next.template = Some(value.to_string());
+        SettingChange::NoteComposer(next)
+    },
 };
 
 /// The Web viewer tab's "Search engine". Picking `custom` also wrote
@@ -3501,26 +3518,24 @@ impl SettingsView {
                         "What to show in place of the selected text after extracting it.",
                         state,
                         COMPOSER_REPLACEMENT_TEXT,
-                    )
-                    .not_yet(),
-                    // A file suggester, drawn as a plain text field the way
-                    // the Daily notes tab draws its own template path. That
-                    // one writes `template`, a key `DailyNotesConfig`
-                    // already carried; this tab's went unobserved, so the
-                    // row is empty and writes nothing.
-                    text(
+                    ),
+                    // A file suggester in Obsidian (`combobox-button
+                    // mod-file`), drawn as a plain text field the way the
+                    // Daily notes tab draws its own template path; what is
+                    // typed is what the suggester stores, the path with
+                    // `.md` (2026-11-09).
+                    field(
                         "Template file location",
                         "Template file to use when merging or extracting. Available variables: {{content}}, {{fromTitle}}, {{newTitle}}, {{date:FORMAT}}, e.g. {{date:YYYY-MM-DD}}.",
-                        "",
-                    )
-                    .not_yet(),
+                        state,
+                        COMPOSER_TEMPLATE,
+                    ),
                     toggle(
                         "Confirm file merge",
                         "Prompt before merge two files.",
                         ASK_BEFORE_MERGING.is_on(c),
                         Flag::NoteComposer(ASK_BEFORE_MERGING),
-                    )
-                    .not_yet(),
+                    ),
                 ]
             }
             // Three fields, each writing its own key (2026-11-09). The
@@ -5966,7 +5981,13 @@ mod tests {
                     SettingChange::Webviewer(c) => serde_json::to_value(c).unwrap(),
                     other => panic!("{} wrote {other:?}", typed.key),
                 };
-                let object = json.as_object().expect("an object");
+                let mut object = json.as_object().expect("an object").clone();
+                // The Note composer saves its whole options object, so its
+                // first write carries `askBeforeMerging: true` too
+                // (2026-11-09) -- observed, not a stray key.
+                if typed.key == "replacementText" {
+                    assert_eq!(object.remove("askBeforeMerging"), Some(json!(true)));
+                }
                 assert_eq!(
                     object.len(),
                     1,
@@ -6352,10 +6373,38 @@ mod tests {
     }
 
     /// The Note composer tab: the dropdown writes `replacementText`, the
-    /// toggle `askBeforeMerging`, and the template row -- a file suggester
-    /// whose key went unobserved -- writes nothing at all.
+    /// field `template` and the toggle `askBeforeMerging`, and the first
+    /// write on a vault with no file carries `askBeforeMerging: true`
+    /// before its own key, as Obsidian's did (2026-11-09).
     #[test]
-    fn the_note_composer_tab_writes_the_two_keys_the_probe_saw() {
+    fn the_note_composer_tab_writes_its_three_keys_the_way_obsidian_does() {
+        let (dir, state) = vault();
+        let file = dir.path().join(".obsidian/note-composer.json");
+        state
+            .apply_setting(&(COMPOSER_REPLACEMENT_TEXT.write)(&state, "embed"))
+            .unwrap();
+        assert_eq!(
+            std::fs::read_to_string(&file).unwrap(),
+            "{\n  \"askBeforeMerging\": true,\n  \"replacementText\": \"embed\"\n}"
+        );
+        let state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        state
+            .apply_setting(&(COMPOSER_TEMPLATE.write)(&state, "Templates/Composer.md"))
+            .unwrap();
+        let state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        assert_eq!((COMPOSER_TEMPLATE.read)(&state), "Templates/Composer.md");
+        state
+            .apply_setting(&(COMPOSER_TEMPLATE.write)(&state, ""))
+            .unwrap();
+        let json: Value = serde_json::from_str(&std::fs::read_to_string(&file).unwrap()).unwrap();
+        assert_eq!(json["template"], json!(""), "cleared, not removed");
+        let items = SettingsView::plugin_items(&state, &[], "note-composer", None);
+        assert!(items.iter().all(|i| i.honored == Honored::Live));
+        assert!(items[1].field.is_some());
+    }
+
+    #[test]
+    fn the_note_composer_tabs_dropdown_and_toggle_round_trip() {
         let (dir, mut state) = vault();
         assert_eq!(
             plugin_rows(&state, "note-composer"),
@@ -6374,12 +6423,7 @@ mod tests {
             items[1].desc.as_ref(),
             "Template file to use when merging or extracting. Available variables: {{content}}, {{fromTitle}}, {{newTitle}}, {{date:FORMAT}}, e.g. {{date:YYYY-MM-DD}}."
         );
-        assert!(
-            items[1].field.is_none() && items[1].typed.is_none(),
-            "the template row would write a key nobody observed"
-        );
         assert_eq!(items[2].control, Control::Toggle(true), "on by default");
-        assert!(items.iter().all(|i| i.honored == Honored::No));
 
         for (label, value) in COMPOSER_REPLACEMENT_TEXT.options {
             state
@@ -7669,6 +7713,8 @@ mod tests {
                 "Show all file types",
                 // The Backlinks tab's one, read by the backlinks block.
                 "Show backlinks at the bottom of notes",
+                // The Note composer's, read by `note-composer:merge-file`.
+                "Confirm file merge",
             ],
             "a toggle claims Scoria reads it"
         );
@@ -7694,7 +7740,6 @@ mod tests {
             "Outline",
             "Bases",
             "Graph view",
-            "Confirm file merge",
             "Open external links",
             "Enable ad blocker",
         ] {
