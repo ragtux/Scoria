@@ -356,6 +356,278 @@ fn rebuild_markdown_link(original: &str, target: &Target<'_>) -> Option<String> 
     Some(out)
 }
 
+// ------------------------------------------------------------ heading rename
+//
+// `editor:rename-heading`, observed in Obsidian 1.15.0 (the 2026-11-09
+// `panes-workspaces-headings` probe, `SCEN=rh`):
+//
+// - Only an ATX heading is renamed; a setext heading is not offered, though
+//   the cache lists it.
+// - The heading line receives the name as typed, its marker and level kept.
+// - Every link to the heading follows, in the note itself (`[[#Old]]`,
+//   `[[Note#Old]]`) and in every other note: wikilinks, embeds and Markdown
+//   links, the bare and the `<…>` destination alike. The heading is matched
+//   ignoring case (`[[Note#old]]` follows), and only as the whole subpath:
+//   `[[Note#Parent#Old]]` is left pointing at the old name.
+// - Only the subpath changes. The written path stays as written, and the
+//   display text is never touched, even when it is the old heading.
+// - In a link, `#`, `|` and `^` in the new name become a space, while `[` and
+//   `]` are written raw (`[[Note#Br]ack]]`, which no longer parses as the
+//   link it was). A Markdown destination writes a space as `%20`, and raw
+//   inside `<…>`.
+// - A link already written as the new name is left alone, and one differing
+//   only in case is rewritten: saving the name unchanged leaves the heading's
+//   note byte-identical but still turns `[[Note#old]]` into `[[Note#Old]]`.
+// - `alwaysUpdateLinks` is not consulted.
+
+/// The ATX heading a heading rename starts from.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AtxHeading {
+    /// The heading's text, without its marker: what the rename field holds
+    /// and what links are matched against.
+    pub text: String,
+    pub level: u8,
+    /// The text's bytes in the note.
+    pub span: std::ops::Range<usize>,
+    /// The offset the heading's line starts at, where the caret ends up.
+    pub line_start: usize,
+}
+
+/// The ATX heading on zero-based `line` of `text`, from the one Markdown
+/// parser. `None` off a heading, on either line of a setext heading, and on
+/// a heading with no text.
+pub fn atx_heading_at(text: &str, line: u32) -> Option<AtxHeading> {
+    let doc = scoria_markdown::parse(text);
+    let lines = scoria_markdown::LineIndex::new(text);
+    let mut found = None;
+    scoria_markdown::walk_blocks(&doc.blocks, &mut |block| {
+        if found.is_some() {
+            return;
+        }
+        let scoria_markdown::BlockKind::Heading {
+            level,
+            content,
+            setext: false,
+        } = &block.kind
+        else {
+            return;
+        };
+        if lines.pos(block.span.start).line != line {
+            return;
+        }
+        let (Some(first), Some(last)) = (content.first(), content.last()) else {
+            return;
+        };
+        let raw = &text[first.span.start..last.span.end];
+        let lead = raw.len() - raw.trim_start().len();
+        let start = first.span.start + lead;
+        let end = start + raw.trim().len();
+        if start == end {
+            return;
+        }
+        let line_start = text[..block.span.start].rfind('\n').map_or(0, |i| i + 1);
+        found = Some(AtxHeading {
+            text: text[start..end].to_string(),
+            level: *level,
+            span: start..end,
+            line_start,
+        });
+    });
+    found
+}
+
+/// The new name as a link subpath writes it: `#`, `|` and `^` become a space.
+fn heading_link_text(name: &str) -> String {
+    name.chars()
+        .map(|c| if matches!(c, '#' | '|' | '^') { ' ' } else { c })
+        .collect()
+}
+
+/// What a heading rename writes.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HeadingRename {
+    /// The heading as it was.
+    pub heading: AtxHeading,
+    /// Edits to the heading's own note, over the text the plan was given, in
+    /// file order: the heading line and the note's own links to it.
+    pub own: Vec<(std::ops::Range<usize>, String)>,
+    /// Every other note whose links to the heading change.
+    pub rewrites: Vec<Rewrite>,
+}
+
+/// The byte range of a link's subpath text (after its first `#`) within
+/// `original`, and whether it is a Markdown destination inside `<…>`
+/// (`Some(false)` for a bare one, `None` for a wikilink).
+fn subpath_range(original: &str) -> Option<(std::ops::Range<usize>, Option<bool>)> {
+    if let Some(prefix) = ["![[", "[["].iter().find(|p| original.starts_with(**p)) {
+        let inner_start = prefix.len();
+        let inner = original[inner_start..].strip_suffix("]]")?;
+        let target = match inner.find('|') {
+            Some(i) => &inner[..i],
+            None => inner,
+        };
+        // `[[Note#H\|alias]]` in a table keeps its backslash.
+        let target = target.trim_end().trim_end_matches('\\').trim_end();
+        let hash = target.find('#')?;
+        return Some((inner_start + hash + 1..inner_start + target.len(), None));
+    }
+    let bang = usize::from(original.starts_with('!'));
+    let rest = original[bang..].strip_prefix('[')?.strip_suffix(')')?;
+    let split = rest.rfind("](")?;
+    let dest_at = bang + 1 + split + 2;
+    let dest_and_tail = &original[dest_at..original.len() - 1];
+    let lead = dest_and_tail.len() - dest_and_tail.trim_start().len();
+    let body = &dest_and_tail[lead..];
+    let (angle, dest_start, dest) = if let Some(b) = body.strip_prefix('<') {
+        (true, dest_at + lead + 1, &b[..b.find('>')?])
+    } else {
+        let end = body.find(char::is_whitespace).unwrap_or(body.len());
+        (false, dest_at + lead, &body[..end])
+    };
+    let hash = dest.find('#')?;
+    Some((dest_start + hash + 1..dest_start + dest.len(), Some(angle)))
+}
+
+/// The edits that point `meta`'s links to `target#old` at the new name
+/// instead, over `text`. `source` is the note's own path.
+fn heading_link_edits(
+    text: &str,
+    meta: &CachedMetadata,
+    source: &str,
+    target: &str,
+    old: &str,
+    new_link: &str,
+    resolver: &LinkResolver,
+) -> Vec<(std::ops::Range<usize>, String)> {
+    let mut edits = Vec::new();
+    for link in meta.links.iter().chain(meta.embeds.iter()) {
+        let parsed = scoria_markdown::parse_linktext(&link.link);
+        let Some(scoria_markdown::Subpath::Headings(headings)) = &parsed.subpath else {
+            continue;
+        };
+        // The whole subpath has to be the heading: `#Parent#Old` is not.
+        if headings.len() != 1 || headings[0].to_lowercase() != old.to_lowercase() {
+            continue;
+        }
+        if resolver.resolve(&link.link, source) != Some(target) {
+            continue;
+        }
+        let Some((range, angle)) = subpath_range(&link.original) else {
+            continue;
+        };
+        let written = match angle {
+            Some(false) => new_link.replace(' ', "%20"),
+            _ => new_link.to_string(),
+        };
+        let at = link.position.start.offset;
+        let range = at + range.start..at + range.end;
+        if text.get(range.clone()) == Some(written.as_str()) {
+            continue;
+        }
+        edits.push((range, written));
+    }
+    edits
+}
+
+impl MetadataCache {
+    /// Plans `editor:rename-heading` for the ATX heading on `line` of the
+    /// note at `path`, renamed to `name`. `own_text` is the note as the
+    /// editor holds it (unsaved edits included), so its own edits are planned
+    /// over that; every other note is planned over `texts`, the index's text,
+    /// as [`MetadataCache::plan_rename_rewrites`] plans a file rename.
+    ///
+    /// `None` when the line is not an ATX heading or `name` is empty, which
+    /// is when Obsidian writes nothing.
+    pub fn plan_heading_rename(
+        &self,
+        path: &str,
+        own_text: &str,
+        line: u32,
+        name: &str,
+        texts: &dyn Fn(&str) -> Option<String>,
+    ) -> Option<HeadingRename> {
+        if name.is_empty() {
+            return None;
+        }
+        let heading = atx_heading_at(own_text, line)?;
+        let new_link = heading_link_text(name);
+        let resolver = self.resolver();
+        let mut own: Vec<(std::ops::Range<usize>, String)> = Vec::new();
+        if heading.text != name {
+            own.push((heading.span.clone(), name.to_string()));
+        }
+        let own_meta = crate::index_markdown(own_text);
+        for edit in heading_link_edits(
+            own_text,
+            &own_meta,
+            path,
+            path,
+            &heading.text,
+            &new_link,
+            resolver,
+        ) {
+            // A link written inside the heading's own text goes with it.
+            if edit.0.start < heading.span.end && heading.span.start < edit.0.end {
+                continue;
+            }
+            own.push(edit);
+        }
+        own.sort_by_key(|(r, _)| r.start);
+
+        let mut rewrites = Vec::new();
+        let sources: BTreeSet<&str> = self.sources_linking_to(path).collect();
+        for source in sources {
+            if source == path {
+                continue;
+            }
+            let (Some(meta), Some(text)) = (self.file(source), texts(source)) else {
+                continue;
+            };
+            let mut edits = heading_link_edits(
+                &text,
+                meta,
+                source,
+                path,
+                &heading.text,
+                &new_link,
+                resolver,
+            );
+            if edits.is_empty() {
+                continue;
+            }
+            edits.sort_by_key(|(r, _)| r.start);
+            let links = edits.len();
+            rewrites.push(Rewrite {
+                old_path: source.to_string(),
+                new_path: source.to_string(),
+                text: apply_edits(&text, &edits),
+                links,
+            });
+        }
+        Some(HeadingRename {
+            heading,
+            own,
+            rewrites,
+        })
+    }
+}
+
+/// `text` with `edits` (in file order, not overlapping) applied.
+pub fn apply_edits(text: &str, edits: &[(std::ops::Range<usize>, String)]) -> String {
+    let mut out = String::with_capacity(text.len() + 32);
+    let mut at = 0;
+    for (range, new) in edits {
+        if range.start < at {
+            continue;
+        }
+        out.push_str(&text[at..range.start]);
+        out.push_str(new);
+        at = range.end;
+    }
+    out.push_str(&text[at..]);
+    out
+}
+
 impl MetadataCache {
     /// Plans every note rewrite a rename batch needs: notes linking to a
     /// renamed file, and the renamed notes themselves (for links that would
@@ -657,6 +929,204 @@ mod tests {
             out["B.md"].lines().nth(1).unwrap(),
             "related: \"[[Ä (b) 100%]]\""
         );
+    }
+
+    // --------------------------------------------------- heading rename
+    //
+    // Every byte below is the 2026-11-09 probe's (`panes-workspaces-
+    // headings.json`, key `rh`): the seed it wrote before each case and
+    // what both files held after it.
+
+    const RH_NOTE: &str = "# Parent\n\n## Old\n\nUnder old. Self [[#Old]] and [[#Old|self alias]] and [[Note#Old]].\n\nSetext Old\n----------\n\nUnder setext.\n";
+    const RH_LINKER: &str = "A [[Note#Old]]\nB [[Note#Old|alias]]\nC ![[Note#Old]]\nD [x](Note.md#Old)\nE [[Note#Parent#Old]]\nF [[Note#Old|Old]]\nG [[Note#old]]\nH [[Note#Old|Note > Old]]\nI [y](<Note.md#Old>)\nJ [[Note#Setext Old]] and [z](Note.md#Setext%20Old)\nK [[Note]]\n";
+
+    fn rh_cache() -> MetadataCache {
+        MetadataCache::new(
+            LinkResolver::new(["Note.md", "Linker.md"]),
+            [
+                ("Note.md", index_markdown(RH_NOTE)),
+                ("Linker.md", index_markdown(RH_LINKER)),
+            ],
+        )
+    }
+
+    /// Renames the heading on line 2 of `Note.md` (the caret's `{line: 2,
+    /// ch: 4}`) and returns both files as the plan leaves them.
+    fn rh_rename(name: &str) -> Option<(String, String)> {
+        let cache = rh_cache();
+        let texts = |p: &str| match p {
+            "Note.md" => Some(RH_NOTE.to_string()),
+            "Linker.md" => Some(RH_LINKER.to_string()),
+            _ => None,
+        };
+        let plan = cache.plan_heading_rename("Note.md", RH_NOTE, 2, name, &texts)?;
+        let note = apply_edits(RH_NOTE, &plan.own);
+        let linker = plan
+            .rewrites
+            .iter()
+            .find(|r| r.old_path == "Linker.md")
+            .map(|r| r.text.clone())
+            .unwrap_or_else(|| RH_LINKER.to_string());
+        assert!(plan.rewrites.iter().all(|r| r.old_path != "Note.md"));
+        Some((note, linker))
+    }
+
+    #[test]
+    fn heading_rename_writes_the_probes_bytes_in_every_link_form() {
+        let (note, linker) = rh_rename("New").unwrap();
+        assert_eq!(
+            note,
+            "# Parent\n\n## New\n\nUnder old. Self [[#New]] and [[#New|self alias]] and [[Note#New]].\n\nSetext Old\n----------\n\nUnder setext.\n"
+        );
+        assert_eq!(
+            linker,
+            "A [[Note#New]]\nB [[Note#New|alias]]\nC ![[Note#New]]\nD [x](Note.md#New)\nE [[Note#Parent#Old]]\nF [[Note#New|Old]]\nG [[Note#New]]\nH [[Note#New|Note > Old]]\nI [y](<Note.md#New>)\nJ [[Note#Setext Old]] and [z](Note.md#Setext%20Old)\nK [[Note]]\n"
+        );
+        // The Save button's run (`Clicked`) is the same rewrite.
+        let (note, linker) = rh_rename("Clicked").unwrap();
+        assert!(note.contains("## Clicked\n") && note.contains("[[Note#Clicked]]."));
+        assert!(linker.starts_with("A [[Note#Clicked]]\nB [[Note#Clicked|alias]]\n"));
+    }
+
+    #[test]
+    fn heading_rename_never_touches_display_text() {
+        let (_, linker) = rh_rename("New").unwrap();
+        let lines: Vec<&str> = linker.lines().collect();
+        assert_eq!(
+            lines[5], "F [[Note#New|Old]]",
+            "an alias equal to the old heading stays"
+        );
+        assert_eq!(lines[7], "H [[Note#New|Note > Old]]");
+        assert_eq!(lines[3], "D [x](Note.md#New)");
+    }
+
+    #[test]
+    fn heading_rename_leaves_a_nested_heading_path_alone() {
+        let (_, linker) = rh_rename("New").unwrap();
+        assert_eq!(linker.lines().nth(4).unwrap(), "E [[Note#Parent#Old]]");
+    }
+
+    #[test]
+    fn heading_rename_rewrites_a_case_different_link() {
+        let (_, linker) = rh_rename("New").unwrap();
+        assert_eq!(linker.lines().nth(6).unwrap(), "G [[Note#New]]");
+    }
+
+    #[test]
+    fn heading_rename_to_the_same_name_still_normalises_a_case_different_link() {
+        let (note, linker) = rh_rename("Old").unwrap();
+        assert_eq!(note, RH_NOTE, "the heading's note is left byte-identical");
+        assert_eq!(
+            linker,
+            "A [[Note#Old]]\nB [[Note#Old|alias]]\nC ![[Note#Old]]\nD [x](Note.md#Old)\nE [[Note#Parent#Old]]\nF [[Note#Old|Old]]\nG [[Note#Old]]\nH [[Note#Old|Note > Old]]\nI [y](<Note.md#Old>)\nJ [[Note#Setext Old]] and [z](Note.md#Setext%20Old)\nK [[Note]]\n"
+        );
+        let cache = rh_cache();
+        let plan = cache
+            .plan_heading_rename("Note.md", RH_NOTE, 2, "Old", &|p| match p {
+                "Linker.md" => Some(RH_LINKER.to_string()),
+                _ => None,
+            })
+            .unwrap();
+        assert!(plan.own.is_empty());
+        assert_eq!(plan.rewrites[0].links, 1, "only G changes");
+    }
+
+    #[test]
+    fn heading_rename_turns_hash_pipe_and_caret_into_spaces_in_links() {
+        for (typed, link) in [("Ha#sh", "Ha sh"), ("Pi|pe", "Pi pe"), ("Ca^ret", "Ca ret")] {
+            let (note, linker) = rh_rename(typed).unwrap();
+            let enc = link.replace(' ', "%20");
+            assert_eq!(
+                note,
+                format!("# Parent\n\n## {typed}\n\nUnder old. Self [[#{link}]] and [[#{link}|self alias]] and [[Note#{link}]].\n\nSetext Old\n----------\n\nUnder setext.\n"),
+                "{typed}: the heading line takes the name as typed"
+            );
+            assert_eq!(
+                linker,
+                format!("A [[Note#{link}]]\nB [[Note#{link}|alias]]\nC ![[Note#{link}]]\nD [x](Note.md#{enc})\nE [[Note#Parent#Old]]\nF [[Note#{link}|Old]]\nG [[Note#{link}]]\nH [[Note#{link}|Note > Old]]\nI [y](<Note.md#{link}>)\nJ [[Note#Setext Old]] and [z](Note.md#Setext%20Old)\nK [[Note]]\n"),
+                "{typed}"
+            );
+        }
+    }
+
+    #[test]
+    fn heading_rename_writes_brackets_raw_even_where_the_link_breaks() {
+        let (note, linker) = rh_rename("Br[ack").unwrap();
+        assert_eq!(
+            note,
+            "# Parent\n\n## Br[ack\n\nUnder old. Self [[#Br[ack]] and [[#Br[ack|self alias]] and [[Note#Br[ack]].\n\nSetext Old\n----------\n\nUnder setext.\n"
+        );
+        assert_eq!(
+            linker,
+            "A [[Note#Br[ack]]\nB [[Note#Br[ack|alias]]\nC ![[Note#Br[ack]]\nD [x](Note.md#Br[ack)\nE [[Note#Parent#Old]]\nF [[Note#Br[ack|Old]]\nG [[Note#Br[ack]]\nH [[Note#Br[ack|Note > Old]]\nI [y](<Note.md#Br[ack>)\nJ [[Note#Setext Old]] and [z](Note.md#Setext%20Old)\nK [[Note]]\n"
+        );
+        let (note, linker) = rh_rename("Br]ack").unwrap();
+        assert_eq!(
+            note,
+            "# Parent\n\n## Br]ack\n\nUnder old. Self [[#Br]ack]] and [[#Br]ack|self alias]] and [[Note#Br]ack]].\n\nSetext Old\n----------\n\nUnder setext.\n"
+        );
+        assert_eq!(
+            linker,
+            "A [[Note#Br]ack]]\nB [[Note#Br]ack|alias]]\nC ![[Note#Br]ack]]\nD [x](Note.md#Br]ack)\nE [[Note#Parent#Old]]\nF [[Note#Br]ack|Old]]\nG [[Note#Br]ack]]\nH [[Note#Br]ack|Note > Old]]\nI [y](<Note.md#Br]ack>)\nJ [[Note#Setext Old]] and [z](Note.md#Setext%20Old)\nK [[Note]]\n"
+        );
+    }
+
+    #[test]
+    fn heading_rename_encodes_a_space_in_a_bare_destination_and_not_in_angle_brackets() {
+        let (note, linker) = rh_rename("Src New").unwrap();
+        assert_eq!(
+            note,
+            "# Parent\n\n## Src New\n\nUnder old. Self [[#Src New]] and [[#Src New|self alias]] and [[Note#Src New]].\n\nSetext Old\n----------\n\nUnder setext.\n"
+        );
+        assert_eq!(
+            linker,
+            "A [[Note#Src New]]\nB [[Note#Src New|alias]]\nC ![[Note#Src New]]\nD [x](Note.md#Src%20New)\nE [[Note#Parent#Old]]\nF [[Note#Src New|Old]]\nG [[Note#Src New]]\nH [[Note#Src New|Note > Old]]\nI [y](<Note.md#Src New>)\nJ [[Note#Setext Old]] and [z](Note.md#Setext%20Old)\nK [[Note]]\n"
+        );
+        let (_, linker) = rh_rename("Two Words").unwrap();
+        assert!(linker.contains("D [x](Note.md#Two%20Words)\n"));
+        assert!(linker.contains("I [y](<Note.md#Two Words>)\n"));
+    }
+
+    #[test]
+    fn heading_rename_with_an_empty_name_plans_nothing() {
+        assert_eq!(rh_rename(""), None);
+    }
+
+    #[test]
+    fn only_an_atx_heading_line_is_renamable() {
+        let h = atx_heading_at(RH_NOTE, 2).unwrap();
+        assert_eq!((h.text.as_str(), h.level), ("Old", 2));
+        assert_eq!(&RH_NOTE[h.span.clone()], "Old");
+        assert_eq!(h.line_start, RH_NOTE.find("## Old").unwrap());
+        assert_eq!(atx_heading_at(RH_NOTE, 0).unwrap().text, "Parent");
+        // Off a heading, and on either line of the setext heading the cache
+        // does list.
+        assert!(atx_heading_at(RH_NOTE, 4).is_none());
+        assert!(atx_heading_at(RH_NOTE, 6).is_none());
+        assert!(atx_heading_at(RH_NOTE, 7).is_none());
+        assert!(index_markdown(RH_NOTE)
+            .headings
+            .iter()
+            .any(|h| h.heading == "Setext Old"));
+        assert_eq!(
+            rh_cache().plan_heading_rename("Note.md", RH_NOTE, 6, "X", &|_| None),
+            None
+        );
+    }
+
+    /// The heading's own note is planned over the editor's text, unsaved
+    /// edits and all, not over the index's copy of the file.
+    #[test]
+    fn heading_rename_plans_the_own_note_over_the_text_it_is_given() {
+        let buffer = "typed first\n# Parent\n\n## Old\n\nSelf [[#Old]].\n";
+        let plan = rh_cache()
+            .plan_heading_rename("Note.md", buffer, 3, "New", &|_| None)
+            .unwrap();
+        assert_eq!(
+            apply_edits(buffer, &plan.own),
+            "typed first\n# Parent\n\n## New\n\nSelf [[#New]].\n"
+        );
+        assert_eq!(plan.heading.line_start, buffer.find("## Old").unwrap());
     }
 
     #[test]

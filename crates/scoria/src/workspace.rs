@@ -167,6 +167,7 @@ pub const EDITOR_ONLY: &[&str] = &[
     "editor:open-link-in-new-leaf",
     "editor:open-link-in-new-split",
     "editor:open-link-in-new-window",
+    "editor:rename-heading",
     "editor:set-heading",
     "editor:set-heading-0",
     "editor:set-heading-1",
@@ -307,6 +308,7 @@ pub const RUNNABLE: &[&str] = &[
     "editor:context-menu",
     "editor:focus",
     "editor:insert-table",
+    "editor:rename-heading",
     "insert-template",
     "insert-current-date",
     "insert-current-time",
@@ -1177,6 +1179,50 @@ impl VaultState {
         })
     }
 
+    /// Writes the notes a heading rename rewrites (none of them moves) and
+    /// indexes them, with [`VaultState::rename`]'s rule for a note that
+    /// changed underneath: each was planned from the index's text, so a
+    /// file that is no longer that text keeps its own bytes and is returned
+    /// as stale. Returns the changes and the stale paths.
+    pub fn write_link_rewrites(
+        &self,
+        plan: &[scoria_cache::Rewrite],
+    ) -> Result<(Changes, Vec<String>), String> {
+        let mut stale: Vec<String> = Vec::new();
+        let mut written: Vec<&scoria_cache::Rewrite> = Vec::new();
+        for rw in plan {
+            let absolute = self
+                .vault()
+                .write_path(&rw.new_path)
+                .map_err(|e| e.to_string())?;
+            let planned_from = self.texts().get(&rw.old_path).map(|t| t.to_string());
+            match (std::fs::read_to_string(&absolute), planned_from) {
+                (Ok(on_disk), Some(was)) if on_disk == was => {}
+                _ => {
+                    stale.push(rw.new_path.clone());
+                    continue;
+                }
+            }
+            scoria_vault::write_no_follow(&absolute, rw.text.as_bytes())
+                .map_err(|e| format!("Could not update links in {}: {e}", rw.new_path))?;
+            written.push(rw);
+        }
+        let mut changes = Changes::default();
+        let mut cache = self.cache.write().unwrap_or_else(|e| e.into_inner());
+        let mut texts = self.texts.write().unwrap_or_else(|e| e.into_inner());
+        for rw in written {
+            let text = Arc::new(rw.text.clone());
+            cache.insert_file(rw.new_path.clone(), index_markdown(&text));
+            texts.insert(rw.new_path.clone(), text);
+            changes
+                .files
+                .push(FileChange::Modified(rw.new_path.clone()));
+            changes.notes.push(rw.new_path.clone());
+        }
+        cache.reresolve();
+        Ok((changes, stale))
+    }
+
     /// Deletes a file or folder per `trashOption` and drops it from the index.
     pub fn trash(&self, path: &str) -> Result<Changes, String> {
         let removed = self
@@ -1627,6 +1673,12 @@ enum PendingOp {
     /// "Edit bookmark" on the item at this index path: Save writes the
     /// title and the group, Remove takes it out. The groups as above.
     EditBookmark(Vec<usize>, Vec<Vec<usize>>),
+    /// `editor:rename-heading`: the note and the zero-based line of the
+    /// ATX heading being renamed.
+    RenameHeading {
+        path: String,
+        line: u32,
+    },
 }
 
 /// One tab of the main area: what it shows and where it has been. The
@@ -5330,6 +5382,11 @@ impl Workspace {
                         .update(cx, |e, cx| e.add_property_row(window, cx));
                 }
             }
+            "editor:rename-heading" => {
+                if self.editing_or_report(id, window, cx) {
+                    self.start_rename_heading(window, cx);
+                }
+            }
             "markdown:clear-metadata-properties" => {
                 if self.note_has_keys(window, cx) {
                     self.editor
@@ -6125,6 +6182,14 @@ impl Workspace {
         // mode and any tab.
         if id == "editor:focus" {
             return self.has_markdown_leaf();
+        }
+        // A check callback in Obsidian 1.15.0 (2026-11-09): "Rename this
+        // heading..." is offered only with the caret on an ATX heading line,
+        // in Live Preview or Source mode.
+        if id == "editor:rename-heading" {
+            return self.mode.is_editing()
+                && self.note_has_keys(window, cx)
+                && self.editor.read(cx).heading_to_rename().is_some();
         }
         if EDITOR_ONLY.contains(&id) {
             return self.mode.is_editing() && self.note_has_keys(window, cx);
@@ -8570,6 +8635,9 @@ impl Workspace {
                 self.rename_property_everywhere(&from, value, cx);
                 self.close_modal(window, cx);
             }
+            PendingOp::RenameHeading { path, line } => {
+                self.finish_rename_heading(&path, line, value, window, cx);
+            }
             PendingOp::Rename(from) => {
                 // The box holds the stem, which is what `renamed_path`
                 // takes -- the same path and the same validator the view
@@ -9177,6 +9245,111 @@ impl Workspace {
         };
         if let Some(notice) = notice {
             self.report(notice, cx);
+        }
+    }
+
+    /// `editor:rename-heading` ("Rename this heading..."): the file-rename
+    /// modal's shape, titled "Rename heading", its field holding the
+    /// heading's text without the marker, all of it selected, then Save
+    /// (accented) and Cancel -- Obsidian 1.15.0, the 2026-11-09 probe. Off
+    /// an ATX heading line it opens nothing, which is what Obsidian's run on
+    /// a setext heading did.
+    fn start_rename_heading(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(path) = self.current.clone() else {
+            return;
+        };
+        let (heading, line) = {
+            let e = self.editor.read(cx);
+            (e.heading_to_rename(), e.cursor().line as u32)
+        };
+        let Some(heading) = heading else {
+            return;
+        };
+        self.open_prompt(
+            PendingOp::RenameHeading { path, line },
+            PromptSpec {
+                title: "Rename heading".into(),
+                input: Some(heading.text),
+                buttons: vec![
+                    PromptButton::new("Save", PromptAction::Submit).cta(),
+                    PromptButton::new("Cancel", PromptAction::Cancel),
+                ],
+                ..PromptSpec::default()
+            },
+            window,
+            cx,
+        );
+    }
+
+    /// Save in the "Rename heading" modal. An empty name keeps the modal
+    /// open and writes nothing. Otherwise the heading's note takes the new
+    /// heading line and its own links as one undo step, planned over the
+    /// buffer, and is written at once -- Obsidian's files were already
+    /// rewritten 0.7 s after Enter, a direct write and not the autosave --
+    /// and every other note linking to the heading is rewritten on disk
+    /// through [`VaultState::write_link_rewrites`], which leaves a note
+    /// that changed underneath alone. `alwaysUpdateLinks` is not asked:
+    /// with it off Obsidian wrote the same bytes and showed no prompt.
+    fn finish_rename_heading(
+        &mut self,
+        path: &str,
+        line: u32,
+        name: &str,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if name.is_empty() {
+            return;
+        }
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        self.pending = None;
+        self.close_modal(window, cx);
+        let own_text = {
+            let e = self.editor.read(cx);
+            (e.name.as_ref() == path && self.current.as_deref() == Some(path))
+                .then(|| e.text().to_string())
+        };
+        let Some(own_text) = own_text else {
+            return;
+        };
+        // Both guards are dropped before anything takes a write lock.
+        let plan = {
+            let texts = state.texts();
+            state
+                .cache()
+                .plan_heading_rename(path, &own_text, line, name, &|p| {
+                    texts.get(p).map(|t| t.to_string())
+                })
+        };
+        let Some(plan) = plan else {
+            return;
+        };
+        if !plan.own.is_empty() {
+            let heading = plan.heading.clone();
+            let edits = plan.own.clone();
+            self.editor.update(cx, |e, cx| {
+                e.apply_heading_rename(edits, &heading, window, cx)
+            });
+            self.flush_save(cx);
+        }
+        match state.write_link_rewrites(&plan.rewrites) {
+            Ok((changes, stale)) => {
+                self.after_changes(changes, cx);
+                if !stale.is_empty() {
+                    let n = stale.len();
+                    self.report(
+                        format!(
+                            "{n} file{} changed on disk and {} left alone",
+                            plural(n),
+                            if n == 1 { "was" } else { "were" }
+                        ),
+                        cx,
+                    );
+                }
+            }
+            Err(err) => self.report(err, cx),
         }
     }
 
@@ -14098,6 +14271,9 @@ impl Workspace {
                 }
                 Some(PendingOp::EditBookmark(at, groups)) => {
                     json!({"op": "edit-bookmark", "at": at, "groups": groups})
+                }
+                Some(PendingOp::RenameHeading { path, line }) => {
+                    json!({"op": "rename-heading", "path": path, "line": line})
                 }
             },
         );
@@ -20329,6 +20505,95 @@ mod tests {
             .unwrap_err();
         assert!(err.to_string().contains("not found"), "{err}");
         assert!(!dir.path().join("NoSuchFolder").exists());
+    }
+
+    /// The probe's heading-rename vault: `Note.md` and its `Linker.md`.
+    fn heading_vault(app_json: &str) -> (tempfile::TempDir, VaultState) {
+        let dir = tempfile::tempdir().unwrap();
+        let r = dir.path();
+        fs::create_dir_all(r.join(".obsidian")).unwrap();
+        fs::write(r.join(".obsidian/app.json"), app_json).unwrap();
+        fs::write(r.join("Note.md"), "# Parent\n\n## Old\n\nUnder old. Self [[#Old]] and [[#Old|self alias]] and [[Note#Old]].\n\nSetext Old\n----------\n\nUnder setext.\n").unwrap();
+        fs::write(r.join("Linker.md"), "A [[Note#Old]]\nB [[Note#Old|alias]]\nC ![[Note#Old]]\nD [x](Note.md#Old)\nE [[Note#Parent#Old]]\nF [[Note#Old|Old]]\nG [[Note#old]]\nH [[Note#Old|Note > Old]]\nI [y](<Note.md#Old>)\nJ [[Note#Setext Old]] and [z](Note.md#Setext%20Old)\nK [[Note]]\n").unwrap();
+        let state = VaultState::load(&r.to_path_buf()).unwrap();
+        (dir, state)
+    }
+
+    fn plan_heading(state: &VaultState, own: &str, name: &str) -> scoria_cache::HeadingRename {
+        let texts = state.texts();
+        state
+            .cache()
+            .plan_heading_rename("Note.md", own, 2, name, &|p| {
+                texts.get(p).map(|t| t.to_string())
+            })
+            .unwrap()
+    }
+
+    /// `editor:rename-heading` writes every linking note on disk and in the
+    /// index, with the probe's bytes -- and the same bytes with
+    /// `alwaysUpdateLinks` off, which Obsidian does not consult here.
+    #[test]
+    fn heading_rename_rewrites_linking_notes_on_disk_whatever_always_update_links_says() {
+        let expected = "A [[Note#New]]\nB [[Note#New|alias]]\nC ![[Note#New]]\nD [x](Note.md#New)\nE [[Note#Parent#Old]]\nF [[Note#New|Old]]\nG [[Note#New]]\nH [[Note#New|Note > Old]]\nI [y](<Note.md#New>)\nJ [[Note#Setext Old]] and [z](Note.md#Setext%20Old)\nK [[Note]]\n";
+        for app in [
+            r#"{"alwaysUpdateLinks":true}"#,
+            r#"{"alwaysUpdateLinks":false}"#,
+        ] {
+            let (dir, state) = heading_vault(app);
+            let own = fs::read_to_string(dir.path().join("Note.md")).unwrap();
+            let plan = plan_heading(&state, &own, "New");
+            assert_eq!(
+                scoria_cache::apply_edits(&own, &plan.own),
+                "# Parent\n\n## New\n\nUnder old. Self [[#New]] and [[#New|self alias]] and [[Note#New]].\n\nSetext Old\n----------\n\nUnder setext.\n"
+            );
+            let (changes, stale) = state.write_link_rewrites(&plan.rewrites).unwrap();
+            assert!(stale.is_empty());
+            assert_eq!(changes.notes, vec!["Linker.md".to_string()]);
+            assert_eq!(
+                fs::read_to_string(dir.path().join("Linker.md")).unwrap(),
+                expected,
+                "{app}"
+            );
+            assert_eq!(state.texts()["Linker.md"].as_str(), expected);
+            // The index follows: the rewritten links point at the new heading.
+            assert!(state
+                .cache()
+                .file("Linker.md")
+                .unwrap()
+                .links
+                .iter()
+                .any(|l| l.link == "Note#New"));
+        }
+    }
+
+    /// A linking note another app saved since it was indexed keeps its own
+    /// bytes, as a file rename leaves it.
+    #[test]
+    fn heading_rename_leaves_a_linking_note_that_changed_underneath_alone() {
+        let (dir, state) = heading_vault("{}");
+        let own = fs::read_to_string(dir.path().join("Note.md")).unwrap();
+        let plan = plan_heading(&state, &own, "New");
+        let theirs = "A [[Note#Old]] and the other app's edit\n";
+        fs::write(dir.path().join("Linker.md"), theirs).unwrap();
+        let (changes, stale) = state.write_link_rewrites(&plan.rewrites).unwrap();
+        assert_eq!(stale, vec!["Linker.md".to_string()]);
+        assert!(changes.files.is_empty());
+        assert_eq!(
+            fs::read_to_string(dir.path().join("Linker.md")).unwrap(),
+            theirs
+        );
+    }
+
+    /// The command runs the way its siblings do: offered only with an
+    /// editor holding the keys.
+    #[test]
+    fn rename_heading_is_a_runnable_editor_command() {
+        let known = scoria_commands::known_ids();
+        for id in ["editor:rename-heading"] {
+            assert!(RUNNABLE.contains(&id), "{id} runnable");
+            assert!(EDITOR_ONLY.contains(&id), "{id} needs the note");
+            assert!(known.contains(&id), "{id} is Obsidian's");
+        }
     }
 
     #[test]

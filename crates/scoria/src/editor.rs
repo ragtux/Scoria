@@ -3643,6 +3643,39 @@ impl Editor {
             .map(|h| format!("#{}", h.heading.trim()))
     }
 
+    /// The ATX heading the caret's line is, which is when
+    /// `editor:rename-heading` is offered: not off a heading, and not on
+    /// either line of a setext heading (Obsidian 1.15.0, 2026-11-09).
+    pub fn heading_to_rename(&self) -> Option<scoria_cache::AtxHeading> {
+        scoria_cache::atx_heading_at(self.buf.text(), self.cursor().line as u32)
+    }
+
+    /// Applies a heading rename's edits to the note itself as one undo step.
+    /// When the heading line changed the caret ends at the start of that
+    /// line, where Obsidian leaves it; otherwise it stays where it was.
+    pub fn apply_heading_rename(
+        &mut self,
+        edits: Vec<(Range<usize>, String)>,
+        heading: &scoria_cache::AtxHeading,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let renamed = edits.iter().any(|(r, _)| *r == heading.span);
+        let at = if renamed {
+            heading.line_start
+        } else {
+            self.buf.head
+        };
+        // The caret in post-edit coordinates: shifted by every edit before it.
+        let shift: isize = edits
+            .iter()
+            .filter(|(r, _)| r.end <= at)
+            .map(|(r, t)| t.len() as isize - r.len() as isize)
+            .sum();
+        let cursor = (at as isize + shift).max(0) as usize;
+        self.edit_many(edits, cursor, None, window, cx);
+    }
+
     /// The id of the block under the cursor, written into the note first
     /// when it has none — what "Bookmark block under cursor..." does. The
     /// buffer, not the disk, is what the cursor is in, so the block is

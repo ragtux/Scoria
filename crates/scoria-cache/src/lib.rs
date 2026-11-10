@@ -11,7 +11,10 @@ pub mod properties;
 pub mod resolver;
 pub mod vault;
 
-pub use links::{basename, link_path, rewrite_note, LinkFormat, Rewrite};
+pub use links::{
+    apply_edits, atx_heading_at, basename, link_path, rewrite_note, AtxHeading, HeadingRename,
+    LinkFormat, Rewrite,
+};
 pub use properties::note_properties;
 pub use resolver::LinkResolver;
 pub use scoria_markdown::{LineIndex, Loc, Pos, Span};
