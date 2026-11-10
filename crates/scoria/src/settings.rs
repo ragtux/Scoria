@@ -44,6 +44,9 @@ use gpui::{
 };
 use scoria_commands::{hotkey_label, keystroke, Command};
 use scoria_formats::config::{
+    js_number, FileRecoveryConfig, FILE_RECOVERY_DEFAULT_INTERVAL, FILE_RECOVERY_DEFAULT_KEEP_DAYS,
+};
+use scoria_formats::config::{
     AppConfig, AppearanceConfig, BacklinkConfig, CanvasConfig, CorePlugins, DailyNotesConfig,
     Hotkey, Hotkeys, NoteComposerConfig, PagePreviewConfig, SwitcherConfig, TemplatesConfig,
     WebviewerConfig, ZkPrefixerConfig, CORE_PLUGINS, DAILY_NOTE_DEFAULT_FORMAT,
@@ -1139,6 +1142,84 @@ const ZK_FORMAT: TextField = TextField {
     },
 };
 
+// ----- the File recovery tab -------------------------------------------------
+//
+// Observed on 1.15.0 on 2026-11-09 (`tools/obsidian-probe/results/
+// 2026-11-09-file-recovery.json`, step `s05-settings-typed`, real keys in the
+// Settings window): a field commits when it loses focus, and the first write
+// puts the plugin's whole options in the file, `intervalMinutes` then
+// `keepDays`, the untouched one at its default. "Snapshot interval" took 10,
+// 0 and 2.5 and refused -1; "History length" took 30 and 7 and refused 0 and
+// 0.5 — read here as "at least 1". A field emptied is left alone (inferred:
+// Obsidian wrote nothing for an emptied interval already at 0, and wrote 0
+// for an emptied history length, which this does not copy).
+
+/// "Snapshot interval": minutes, any number from 0.
+const RECOVERY_INTERVAL: TextField = TextField {
+    key: "intervalMinutes",
+    placeholder: "",
+    prefix: "",
+    read: |state| {
+        number_text(
+            state.file_recovery().interval_minutes.as_ref(),
+            FILE_RECOVERY_DEFAULT_INTERVAL,
+        )
+    },
+    write: |state, value| recovery_change(state, value, 0.0, |c, n| c.interval_minutes = Some(n)),
+};
+
+/// "History length": days, any number from 1.
+const RECOVERY_KEEP_DAYS: TextField = TextField {
+    key: "keepDays",
+    placeholder: "",
+    prefix: "",
+    read: |state| {
+        number_text(
+            state.file_recovery().keep_days.as_ref(),
+            FILE_RECOVERY_DEFAULT_KEEP_DAYS,
+        )
+    },
+    write: |state, value| recovery_change(state, value, 1.0, |c, n| c.keep_days = Some(n)),
+};
+
+/// A stored number as its field shows it, or the default when absent.
+fn number_text(value: Option<&serde_json::Number>, default: i64) -> String {
+    value
+        .map(|n| n.to_string())
+        .unwrap_or_else(|| default.to_string())
+}
+
+/// The File recovery options after `typed` lands in one field: both keys
+/// filled in (the untouched one at its default), as Obsidian's first write
+/// had them, or the options unchanged when the value is refused — which
+/// [`VaultState::apply_setting`] then writes nothing for.
+fn recovery_change(
+    state: &VaultState,
+    typed: &str,
+    min: f64,
+    set: fn(&mut FileRecoveryConfig, serde_json::Number),
+) -> SettingChange {
+    let current = state.file_recovery().clone();
+    let parsed = typed
+        .trim()
+        .parse::<f64>()
+        .ok()
+        .filter(|v| v.is_finite() && *v >= min)
+        .and_then(js_number);
+    let Some(number) = parsed else {
+        return SettingChange::FileRecovery(current);
+    };
+    let mut next = current;
+    next.interval_minutes = next
+        .interval_minutes
+        .or_else(|| js_number(FILE_RECOVERY_DEFAULT_INTERVAL as f64));
+    next.keep_days = next
+        .keep_days
+        .or_else(|| js_number(FILE_RECOVERY_DEFAULT_KEEP_DAYS as f64));
+    set(&mut next, number);
+    SettingChange::FileRecovery(next)
+}
+
 /// The sample a format row shows under itself — "Your current syntax looks
 /// like this: 2026-10-30" — rendered from today for the pattern in the file,
 /// or for the placeholder when the field is empty, as Obsidian does.
@@ -1400,6 +1481,8 @@ pub enum SettingChange {
     NoteComposer(NoteComposerConfig),
     /// `zk-prefixer.json`: the Unique note creator tab's three fields.
     ZkPrefixer(ZkPrefixerConfig),
+    /// `file-recovery.json`: the File recovery tab's two number fields.
+    FileRecovery(FileRecoveryConfig),
     /// `webviewer.json`: the Web viewer tab's two toggles, its search
     /// engine dropdown and the custom engine field.
     Webviewer(WebviewerConfig),
@@ -1426,6 +1509,7 @@ impl SettingChange {
             SettingChange::PagePreview(_) => "page-preview.json",
             SettingChange::NoteComposer(_) => "note-composer.json",
             SettingChange::ZkPrefixer(_) => "zk-prefixer.json",
+            SettingChange::FileRecovery(_) => "file-recovery.json",
             SettingChange::Webviewer(_) => "webviewer.json",
             SettingChange::Frame(_) => scoria_vault::registry::FILE_NAME,
         }
@@ -3568,20 +3652,23 @@ impl SettingsView {
                     ),
                 ]
             }
-            // Two `type=number` fields and two buttons, none of whose key
-            // the probe observed; the buttons are inert, as every button in
-            // this window is.
+            // Two number fields, which write `file-recovery.json` (observed
+            // 2026-11-09), and two buttons over the snapshots, which Scoria
+            // does not keep: inert, as every button in this window is. The
+            // fields are tagged too, Scoria taking no snapshots by them.
             "file-recovery" => vec![
-                text(
+                field(
                     "Snapshot interval",
                     "Minimal interval in minutes between two snapshots.",
-                    "5",
+                    state,
+                    RECOVERY_INTERVAL,
                 )
                 .not_yet(),
-                text(
+                field(
                     "History length",
                     "Number of days the snapshots are kept for.",
-                    "7",
+                    state,
+                    RECOVERY_KEEP_DAYS,
                 )
                 .not_yet(),
                 item(
@@ -6521,12 +6608,14 @@ mod tests {
         }
     }
 
-    /// The File recovery tab: Obsidian's rows, every one of them tagged and
-    /// inert, because the probe reached none of their keys. Nothing the tab
-    /// can be clicked on writes a file.
+    /// The File recovery tab: the two number fields write
+    /// `file-recovery.json` byte for byte as Obsidian 1.15.0 did while the
+    /// probe typed into them (`2026-11-09-file-recovery.json`,
+    /// `s05-settings-typed`), refused values writing nothing; the two
+    /// buttons stay inert, Scoria keeping no snapshots. Every row is tagged.
     #[test]
-    fn the_file_recovery_tab_writes_nothing() {
-        let (dir, state) = vault();
+    fn the_file_recovery_tab_writes_file_recovery_json_as_obsidian_did() {
+        let (dir, mut state) = vault();
         assert_eq!(
             plugin_rows(&state, "file-recovery"),
             [
@@ -6543,15 +6632,46 @@ mod tests {
         assert_eq!(recovery[3].control, Control::Button("Clear".into()));
         for row in recovery.iter() {
             assert_eq!(row.honored, Honored::No, "{}", row.name);
-            assert!(
-                row.flag.is_none()
-                    && row.typed.is_none()
-                    && row.field.is_none()
-                    && row.number.is_none(),
-                "{} writes a key nobody observed",
-                row.name
-            );
         }
+        assert_eq!(recovery[0].field.map(|f| f.key), Some("intervalMinutes"));
+        assert_eq!(recovery[1].field.map(|f| f.key), Some("keepDays"));
+        assert!(recovery[2].field.is_none() && recovery[3].field.is_none());
+        let path = dir.path().join(".obsidian/file-recovery.json");
+        assert!(!path.exists());
+        let both =
+            |i: &str, k: &str| format!("{{\n  \"intervalMinutes\": {i},\n  \"keepDays\": {k}\n}}");
+        // The probe's sequence, less the two emptied fields (see the tab's
+        // note): each value typed and the file after it, `None` where
+        // Obsidian wrote nothing.
+        let steps: [(TextField, &str, Option<String>); 9] = [
+            (RECOVERY_INTERVAL, "10", Some(both("10", "7"))),
+            (RECOVERY_KEEP_DAYS, "30", Some(both("10", "30"))),
+            (RECOVERY_INTERVAL, "0", Some(both("0", "30"))),
+            (RECOVERY_INTERVAL, "-1", None),
+            (RECOVERY_INTERVAL, "2.5", Some(both("2.5", "30"))),
+            (RECOVERY_KEEP_DAYS, "0", None),
+            (RECOVERY_KEEP_DAYS, "0.5", None),
+            (RECOVERY_INTERVAL, "5", Some(both("5", "30"))),
+            (RECOVERY_KEEP_DAYS, "7", Some(both("5", "7"))),
+        ];
+        let mut expected = None;
+        for (field, value, bytes) in steps {
+            state.apply_setting(&(field.write)(&state, value)).unwrap();
+            if bytes.is_some() {
+                expected = bytes;
+            }
+            let file = std::fs::read_to_string(&path).ok();
+            assert_eq!(file, expected, "after {} = {value:?}", field.key);
+            state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        }
+        assert_eq!((RECOVERY_INTERVAL.read)(&state), "5");
+        let recovery = SettingsView::plugin_items(&state, &[], "file-recovery", None);
+        assert_eq!(recovery[1].control, Control::Text("7".into()));
+        // A refused value before anything was written creates no file.
+        let (dir, state) = vault();
+        state
+            .apply_setting(&(RECOVERY_INTERVAL.write)(&state, "abc"))
+            .unwrap();
         assert!(!dir.path().join(".obsidian/file-recovery.json").exists());
     }
 

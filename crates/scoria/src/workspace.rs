@@ -62,9 +62,9 @@ use scoria_commands::{hotkey_label, keystroke, CommandRegistry};
 use scoria_formats::bookmarks::{Bookmark, Bookmarks};
 use scoria_formats::config::{
     self as config, AppConfig, AppearanceConfig, BacklinkConfig, CanvasConfig,
-    CommandPaletteConfig, CorePlugins, DailyNotesConfig, Hotkeys, NoteComposerConfig,
-    PagePreviewConfig, PluginManifest, PropertyTypes, SwitcherConfig, TemplatesConfig,
-    WebviewerConfig, ZkPrefixerConfig, CORE_PLUGINS,
+    CommandPaletteConfig, CorePlugins, DailyNotesConfig, FileRecoveryConfig, Hotkeys,
+    NoteComposerConfig, PagePreviewConfig, PluginManifest, PropertyTypes, SwitcherConfig,
+    TemplatesConfig, WebviewerConfig, ZkPrefixerConfig, CORE_PLUGINS,
 };
 use scoria_formats::properties::Change;
 use scoria_formats::properties::PropertiesInDocument;
@@ -499,6 +499,7 @@ pub struct VaultState {
     /// `zk-prefixer.json`, the Unique note creator's folder, template and
     /// format.
     zk_prefixer: RwLock<ZkPrefixerConfig>,
+    file_recovery: RwLock<FileRecoveryConfig>,
     webviewer: RwLock<WebviewerConfig>,
     pub plugin_manifests: Vec<PluginManifest>,
     pub palette: CommandPaletteConfig,
@@ -606,15 +607,9 @@ impl VaultState {
         let zk_prefixer = vault.zk_prefixer_config();
         note("zk-prefixer.json", zk_prefixer.as_ref().err());
         let zk_prefixer = zk_prefixer.unwrap_or_default();
-        // Read but not kept: no row of the File recovery tab has an
-        // observed key, so there is nothing to show from the file and
-        // nothing that writes it. A file that will not parse is still worth
-        // knowing about -- the window reports it and a write to it would be
-        // refused -- which is the whole of what reading it does.
-        note(
-            "file-recovery.json",
-            vault.file_recovery_config().as_ref().err(),
-        );
+        let file_recovery = vault.file_recovery_config();
+        note("file-recovery.json", file_recovery.as_ref().err());
+        let file_recovery = file_recovery.unwrap_or_default();
         let webviewer = vault.webviewer_config();
         note("webviewer.json", webviewer.as_ref().err());
         let webviewer = webviewer.unwrap_or_default();
@@ -659,6 +654,7 @@ impl VaultState {
             page_preview: RwLock::new(page_preview),
             note_composer: RwLock::new(note_composer),
             zk_prefixer: RwLock::new(zk_prefixer),
+            file_recovery: RwLock::new(file_recovery),
             webviewer: RwLock::new(webviewer),
             plugin_manifests,
             palette,
@@ -784,6 +780,13 @@ impl VaultState {
         self.zk_prefixer.read().unwrap_or_else(|e| e.into_inner())
     }
 
+    /// `file-recovery.json`: the File recovery tab's two numbers. Scoria
+    /// keeps no snapshots (Obsidian's are in its IndexedDB, which nothing
+    /// outside it reads), so these are only written, for Obsidian.
+    pub fn file_recovery(&self) -> RwLockReadGuard<'_, FileRecoveryConfig> {
+        self.file_recovery.read().unwrap_or_else(|e| e.into_inner())
+    }
+
     /// Where *Create new unique note* puts a note made at `at`, by
     /// `zk-prefixer.json`'s format and folder.
     pub fn unique_note_path(
@@ -861,6 +864,18 @@ impl VaultState {
             SettingChange::ZkPrefixer(config) => {
                 self.write_config("zk-prefixer.json", config)?;
                 *self.zk_prefixer.write().unwrap_or_else(|e| e.into_inner()) = config.clone();
+            }
+            // A value the tab refused comes back as the config unchanged,
+            // and nothing is written: Obsidian left the file alone then.
+            SettingChange::FileRecovery(config) => {
+                let same = *self.file_recovery() == *config;
+                if !same {
+                    self.write_config("file-recovery.json", config)?;
+                    *self
+                        .file_recovery
+                        .write()
+                        .unwrap_or_else(|e| e.into_inner()) = config.clone();
+                }
             }
             SettingChange::Webviewer(config) => {
                 self.write_config("webviewer.json", config)?;
