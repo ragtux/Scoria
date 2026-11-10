@@ -1,0 +1,16 @@
+[package]
+name = "scoria-composer"
+description = "The Note composer: the bytes a merge and an extraction write, their links and their template"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+scoria-cache.workspace = true
+scoria-formats.workspace = true
+scoria-suggest.workspace = true
+scoria-templates.workspace = true
+

@@ -25,5 +25,5 @@ mod insert;
 mod trigger;
 
 pub use candidates::{suggestions, BlockId, Item, Suggestion, Vault, LIMIT};
-pub use insert::{insert, Accept, Insertion, Options};
+pub use insert::{file_link, insert, Accept, Insertion, Options};
 pub use trigger::{trigger, Kind, Triggered};

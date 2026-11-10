@@ -28,6 +28,7 @@ crates/scoria-cli       the command line: flags and help, the file argument, the
 crates/scoria-search    search query grammar and matcher, fuzzy search
 crates/scoria-text      editor text model: buffer, selections, undo, edit plans (no gpui)
 crates/scoria-suggest   autocompletion: triggers, candidates, the link an accepted row writes (no gpui)
+crates/scoria-composer  the Note composer: a merge's joint and frontmatter, an extraction's section and link, the template (no gpui)
 crates/scoria-canvas    canvas model: viewport math, edge geometry, hit tests, selection, edits with undo (no gpui)
 crates/scoria-bases     the Bases expression language: statements parsed into Obsidian's own tree (no gpui)
 crates/scoria-pdf       PDF rendering on hayro: pages to RGBA, outline, title, page text, the #page= subpath (no gpui)

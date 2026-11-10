@@ -5292,6 +5292,7 @@ dependencies = [
  "scoria-canvas",
  "scoria-cli",
  "scoria-commands",
+ "scoria-composer",
  "scoria-control",
  "scoria-formats",
  "scoria-highlight",
@@ -5366,6 +5367,16 @@ version = "0.5.0"
 dependencies = [
  "scoria-formats",
  "serde_json",
+]
+
+[[package]]
+name = "scoria-composer"
+version = "0.5.0"
+dependencies = [
+ "scoria-cache",
+ "scoria-formats",
+ "scoria-suggest",
+ "scoria-templates",
 ]
 
 [[package]]

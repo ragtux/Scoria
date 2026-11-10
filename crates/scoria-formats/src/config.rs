@@ -635,10 +635,10 @@ pub struct PagePreviewConfig {
     pub extra: Map<String, Value>,
 }
 
-/// `note-composer.json`: the Note composer plugin's options.
-///
-/// The tab's "Template file location" row is a file suggester whose key the
-/// probe did not reach, so it has no field here.
+/// `note-composer.json`: the Note composer plugin's options. Obsidian 1.15.0
+/// writes the file only once something is set, its keys in first-write
+/// order, and the plugin's in-memory default is `{"askBeforeMerging": true}`
+/// -- which is why its first write carries that key too (2026-11-09 probe).
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct NoteComposerConfig {
     /// "Confirm file merge", on when absent.
@@ -655,8 +655,23 @@ pub struct NoteComposerConfig {
         skip_serializing_if = "Option::is_none"
     )]
     pub replacement_text: Option<String>,
+    /// "Template file location": the template's vault path, `.md` and all
+    /// (`"Templates/Composer.md"`); clearing the row writes `""` rather than
+    /// dropping the key.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub template: Option<String>,
     #[serde(flatten)]
     pub extra: Map<String, Value>,
+}
+
+impl NoteComposerConfig {
+    /// The config as the plugin saves it: its in-memory default,
+    /// `askBeforeMerging: true`, is written with the first change when the
+    /// file did not say.
+    pub fn with_defaults(mut self) -> NoteComposerConfig {
+        self.ask_before_merging.get_or_insert(true);
+        self
+    }
 }
 
 /// `zk-prefixer.json`: the Unique note creator plugin's options.
@@ -1041,10 +1056,11 @@ mod tests {
 
         let composer = round_trip!(
             NoteComposerConfig,
-            r#"{"askBeforeMerging":false,"replacementText":"embed","someFutureKey":{"nested":[1,2]}}"#
+            r#"{"askBeforeMerging":false,"replacementText":"embed","template":"Templates/Composer.md","someFutureKey":{"nested":[1,2]}}"#
         );
         assert_eq!(composer.ask_before_merging, Some(false));
         assert_eq!(composer.replacement_text.as_deref(), Some("embed"));
+        assert_eq!(composer.template.as_deref(), Some("Templates/Composer.md"));
 
         let zk = round_trip!(
             ZkPrefixerConfig,
