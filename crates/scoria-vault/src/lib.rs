@@ -1,6 +1,7 @@
 //! A vault is a plain folder. This crate opens one, enumerates its files, and
 //! reads `.obsidian` configuration without ever owning data outside the folder.
 
+pub mod attachments;
 pub mod ops;
 pub mod registry;
 pub mod unique;

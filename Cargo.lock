@@ -5494,6 +5494,7 @@ dependencies = [
  "libc",
  "scoria-cache",
  "scoria-formats",
+ "scoria-markdown",
  "scoria-templates",
  "serde",
  "serde_json",
