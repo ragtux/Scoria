@@ -83,8 +83,11 @@ use std::rc::Rc;
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 use std::time::{Duration, Instant};
 
+mod doc_backlinks;
 mod footnotes_pane;
 mod layouts;
+
+use doc_backlinks::{listen, DocBacklinks, SectionsOwner};
 
 actions!(
     workspace,
@@ -410,6 +413,7 @@ pub const RUNNABLE: &[&str] = &[
     "properties:open",
     "properties:open-local",
     "footnotes:open",
+    "backlink:toggle-backlinks-in-document",
     "bookmarks:open",
     "bookmarks:bookmark-current-view",
     "bookmarks:bookmark-current-search",
@@ -1793,6 +1797,10 @@ struct Tab {
     /// and written to the leaf's `pinned`, and kept by the tab whatever
     /// file it moves on to.
     pinned: bool,
+    /// The leaf's backlinks block: its `backlinks` and `backlinkOpts`
+    /// (`backlink:toggle-backlinks-in-document`), kept by the tab like the
+    /// pin, and the groups folded in it by hand.
+    doc_backlinks: DocBacklinks,
 }
 
 impl Tab {
@@ -1805,6 +1813,7 @@ impl Tab {
             leaf: None,
             view_state: None,
             pinned: false,
+            doc_backlinks: DocBacklinks::default(),
         }
     }
 
@@ -3452,6 +3461,9 @@ pub struct Workspace {
     file_properties_open: bool,
     /// The Footnotes pane: whether its leaf exists, and its rows.
     footnotes: footnotes_pane::FootnotesPane,
+    /// Each note's unlinked mentions as last found, for the backlinks
+    /// block of a group whose note is not the open one.
+    doc_mentions: HashMap<String, Section>,
     /// The File properties pane's folded blocks: its Properties heading.
     file_properties_folds: HashSet<usize>,
     /// Matcher over every note name and alias, rebuilt when files change.
@@ -3623,6 +3635,7 @@ impl Workspace {
         }
         reading.update(cx, |r, _| r.set_embed_views(embed_views.clone()));
         editor.update(cx, |e, _| e.set_embed_views(embed_views.clone()));
+        doc_backlinks::give_views_the_block(cx.weak_entity(), &editor, &reading, cx);
         let subscriptions = vec![
             // The filter is applied as the pane is drawn; a keystroke only
             // has to ask for a draw.
@@ -4074,6 +4087,7 @@ impl Workspace {
             property_filter,
             file_properties_open: false,
             footnotes: footnotes_pane::FootnotesPane::default(),
+            doc_mentions: HashMap::new(),
             file_properties_folds: HashSet::new(),
             name_finder: None,
             mention_generation: 0,
@@ -6141,6 +6155,7 @@ impl Workspace {
                 self.right_visible = true;
                 self.show_right_tab("footnotes", cx);
             }
+            "backlink:toggle-backlinks-in-document" => self.toggle_backlinks_in_document(cx),
             "app:open-help" => self.open_help(window, cx),
             // "Manage vaults" raises the vault manager; Obsidian's does
             // the same (its `app:open-vault` left no menu and no modal
@@ -6349,6 +6364,11 @@ impl Workspace {
             return self.mode.is_editing()
                 && self.note_has_keys(window, cx)
                 && self.editor.read(cx).heading_to_rename().is_some();
+        }
+        // A check callback: it flips the active markdown leaf's block, so
+        // it is offered only while one is active.
+        if id == "backlink:toggle-backlinks-in-document" {
+            return self.active_note_is_markdown();
         }
         if EDITOR_ONLY.contains(&id) {
             return self.mode.is_editing() && self.note_has_keys(window, cx);
@@ -7467,6 +7487,8 @@ impl Workspace {
                 {
                     return;
                 }
+                ws.doc_mentions
+                    .insert(rows.path.clone(), rows.incoming.clone());
                 if let Some(slot) = ws.backlink_sections.get_mut(1) {
                     *slot = rows.incoming;
                 }
@@ -10068,11 +10090,18 @@ impl Workspace {
             Some(b) => point(b.right(), b.bottom() + px(2.)),
             None => point(px(0.), px(0.)),
         };
+        // A markdown leaf's menu opens on "Backlinks in document".
+        let target = match self.active_backlinks_in_document() {
+            Some(backlinks) if self.current.as_deref() == Some(path.as_str()) => {
+                file_menu::Target::Note { path, backlinks }
+            }
+            _ => file_menu::Target::View(path),
+        };
         self.file_menu = Some(file_menu::Menu {
             position,
             submenu: false,
             anchor: Anchor::TopRight,
-            target: file_menu::Target::View(path),
+            target,
         });
         cx.notify();
     }
@@ -10092,6 +10121,12 @@ impl Workspace {
         let Some(gix) = self.group_ix(id) else {
             return;
         };
+        let active = gix == self.active_group && ix == self.groups[gix].active_tab;
+        let backlinks = if active {
+            self.active_backlinks_in_document()
+        } else {
+            None
+        };
         let group = &self.groups[gix];
         let Some(tab) = group.tabs.get(ix) else {
             return;
@@ -10106,7 +10141,8 @@ impl Workspace {
                 path: tab.path.clone().unwrap_or_default(),
                 tabs: group.tabs.len(),
                 pinned: tab.pinned,
-                active: gix == self.active_group && ix == group.active_tab,
+                active,
+                backlinks,
             },
         });
         cx.notify();
@@ -10561,6 +10597,9 @@ impl Workspace {
             .filter(|t| t.path == self.current)
             .and_then(|t| t.view_state.clone());
         let pinned = slot.is_some_and(|t| t.pinned);
+        // So is whether its note shows the backlinks block, which goes with
+        // the tab as the pin does.
+        let doc_backlinks = slot.map(|t| t.doc_backlinks.clone()).unwrap_or_default();
         let tab = Tab {
             path: self.current.clone(),
             mode: self.mode,
@@ -10569,6 +10608,7 @@ impl Workspace {
             leaf,
             view_state,
             pinned,
+            doc_backlinks,
         };
         match self.tabs.get_mut(self.active_tab) {
             Some(slot) => *slot = tab,
@@ -10911,6 +10951,7 @@ impl Workspace {
         let pdf = cx.new(PdfView::new);
         reading.update(cx, |r, _| r.set_embed_views(self.embed_views.clone()));
         editor.update(cx, |e, _| e.set_embed_views(self.embed_views.clone()));
+        doc_backlinks::give_views_the_block(cx.weak_entity(), &editor, &reading, cx);
         self._subscriptions.extend(view_subscriptions(
             &editor, &reading, &canvas, &bases, &pdf, cx,
         ));
@@ -11005,6 +11046,11 @@ impl Workspace {
                 .get(self.active_tab)
                 .and_then(|t| t.view_state.clone()),
             pinned: false,
+            doc_backlinks: self
+                .tabs
+                .get(self.active_tab)
+                .map(|t| t.doc_backlinks.clone())
+                .unwrap_or_default(),
         }
     }
 
@@ -11020,6 +11066,7 @@ impl Workspace {
             leaf: None,
             view_state: None,
             pinned: false,
+            doc_backlinks: DocBacklinks::default(),
         }
     }
 
@@ -13939,7 +13986,15 @@ impl Workspace {
                 } else {
                     (self.groups[ix].tabs.clone(), self.groups[ix].active_tab)
                 };
-                let leaves: Vec<Value> = tabs.iter().map(leaf_json).collect();
+                let in_document = self.backlinks_in_document_setting();
+                let leaves: Vec<Value> = tabs
+                    .iter()
+                    .map(|t| {
+                        let mut leaf = leaf_json(t);
+                        t.doc_backlinks.write(&mut leaf, in_document);
+                        leaf
+                    })
+                    .collect();
                 if active {
                     *active_id = leaves
                         .get(active_tab)
@@ -14162,6 +14217,10 @@ impl Workspace {
             rows,
         );
         file.insert("history_ix".into(), json!(self.history_ix));
+        file.insert(
+            "backlinks_in_document".into(),
+            self.backlinks_in_document_json(),
+        );
 
         let tab_json = |t: &Tab| json!({"path": t.path, "mode": t.mode.as_str(), "title": t.title(), "pinned": t.pinned});
         let tabs = json!({
@@ -15227,6 +15286,7 @@ impl Workspace {
                 }
             }
             Pick::AddFileProperty => self.run_command("markdown:add-metadata-property", window, cx),
+            Pick::ToggleBacklinksInDocument => self.toggle_backlinks_in_document(cx),
             Pick::Find => self.run_command("editor:open-search", window, cx),
             Pick::Replace => self.run_command("editor:open-search-replace", window, cx),
             Pick::OpenInNewTab => self.open_in_new_tab(path, None, cx),
@@ -15234,9 +15294,9 @@ impl Workspace {
             // The view header's "Open in new window" copies the leaf, as
             // `workspace:open-in-new-window` does; a row's opens its file.
             Pick::OpenInNewWindow => match target {
-                file_menu::Target::View(_) | file_menu::Target::Tab { .. } => {
-                    self.open_in_new_window(window, cx)
-                }
+                file_menu::Target::View(_)
+                | file_menu::Target::Note { .. }
+                | file_menu::Target::Tab { .. } => self.open_in_new_window(window, cx),
                 _ => self.open_path_in_new_window(path, window, cx),
             },
             // The view header's splits act on the group the header belongs
@@ -15592,9 +15652,10 @@ impl Workspace {
         };
         let prefix = if outgoing { "outgoing" } else { "backlinks" };
         let current = self.current.clone().unwrap_or_default();
+        let this = cx.entity().downgrade();
         // Obsidian's `.outgoing-link-pane` is padded 12px 12px 32px; the
         // backlink pane 4px 12px 32px, its nav header carrying the rest.
-        let mut list = div()
+        div()
             .id(prefix)
             .flex()
             .flex_col()
@@ -15602,7 +15663,43 @@ impl Workspace {
             .overflow_y_scroll()
             .px(px(12.))
             .pt(px(if outgoing { 12. } else { 4. }))
-            .pb(px(32.));
+            .pb(px(32.))
+            .child(self.render_section_list(
+                SectionsOwner::Pane(which),
+                &sections,
+                &current,
+                query,
+                theme,
+                &this,
+            ))
+            .into_any_element()
+    }
+
+    /// The sections themselves, for the pane above or for a note's
+    /// backlinks block (`owner`), which draws the Backlinks pane's rows
+    /// over the leaf's own folds. `current` is the note the sections are
+    /// about. Built without the workspace's context, so the editor and the
+    /// reading view can lay the block out while they draw.
+    fn render_section_list(
+        &self,
+        owner: SectionsOwner,
+        sections: &[Section],
+        current: &str,
+        query: &str,
+        theme: &Theme,
+        this: &gpui::WeakEntity<Self>,
+    ) -> gpui::Div {
+        let which = owner.kind();
+        let outgoing = which == RightTab::Outgoing;
+        // In a note the block's headings are the note's size: "Linked
+        // mentions" 16 px at 500 and a file's title 14 px (observed).
+        let in_note = matches!(owner, SectionsOwner::Doc(_));
+        let (section_size, title_size) = if in_note {
+            (16., 14.)
+        } else {
+            (FONT_UI_SMALL, FONT_UI_SMALL)
+        };
+        let mut list = div().w_full().flex_shrink_0().flex().flex_col();
         let mut ix = 0usize;
         let mut next = || {
             ix += 1;
@@ -15614,7 +15711,7 @@ impl Workspace {
             } else {
                 backlinks::filter(section, query)
             };
-            let folded = self.section_collapsed(which, s_ix);
+            let folded = self.owner_section_collapsed(owner, s_ix);
             let count: SharedString = if section.capped {
                 format!("{}+", shown.count).into()
             } else {
@@ -15638,9 +15735,9 @@ impl Workspace {
                     .rounded(px(8.))
                     .cursor_pointer()
                     .hover(|s| s.bg(theme.tokens.nav_item_background_hover))
-                    .on_click(
-                        cx.listener(move |this, _, _, cx| this.toggle_section(which, s_ix, cx)),
-                    )
+                    .on_click(listen(this, move |this, _, _, cx| {
+                        this.owner_toggle_section(owner, s_ix, cx)
+                    }))
                     // `.tree-item-self.is-clickable` at the pane's root:
                     // `--nav-heading-color` at `--nav-heading-weight`,
                     // `--nav-heading-color-collapsed` while folded.
@@ -15648,7 +15745,7 @@ impl Workspace {
                         div()
                             .flex_1()
                             .min_w_0()
-                            .text_size(px(FONT_UI_SMALL))
+                            .text_size(px(section_size))
                             .font_weight(FontWeight::MEDIUM)
                             .text_color(if folded {
                                 theme.tokens.nav_heading_color_collapsed
@@ -15704,11 +15801,11 @@ impl Workspace {
                         card = card.child(self.render_match(
                             which,
                             next(),
-                            &current,
+                            current,
                             group,
                             m,
                             theme,
-                            cx,
+                            this,
                         ));
                     }
                 }
@@ -15719,7 +15816,7 @@ impl Workspace {
             for group in &shown.groups {
                 let key = shown.group_key(group);
                 let flat = group.matches.is_empty();
-                let collapsed = !flat && self.group_collapsed(which, &key);
+                let collapsed = !flat && self.owner_group_collapsed(owner, &key);
                 let path = group.path.clone();
                 let link = group.link.clone();
                 let resolved = path.is_some();
@@ -15749,8 +15846,8 @@ impl Workspace {
                         .items_center()
                         .justify_center()
                         .opacity(0.85)
-                        .on_click(cx.listener(move |this, _, _, cx| {
-                            this.toggle_group(which, key.clone(), cx);
+                        .on_click(listen(this, move |this, _, _, cx| {
+                            this.owner_toggle_group(owner, key.clone(), cx);
                             cx.stop_propagation();
                         }))
                         .child(icon(
@@ -15768,7 +15865,7 @@ impl Workspace {
                     (!flat).then(|| group.matches.len().to_string().into());
                 let subtext: Option<SharedString> = group.subtext.clone().map(Into::into);
                 let unresolved = flat && !resolved;
-                list = list.child(
+                body = body.child(
                     div()
                         .id(("pane-group", next()))
                         .group("pane-group")
@@ -15787,7 +15884,7 @@ impl Workspace {
                         .cursor_pointer()
                         .hover(|s| s.bg(theme.tokens.nav_item_background_hover))
                         .when(unresolved, |d| d.tooltip(tooltip("Not created yet")))
-                        .on_click(cx.listener(move |this, _, _, cx| {
+                        .on_click(listen(this, move |this, _, _, cx| {
                             // A Links row follows the link the way the note
                             // would, subpath included, and creates the note
                             // nothing stands behind; a mentions row opens
@@ -15803,7 +15900,7 @@ impl Workspace {
                         .when_some(menu_path, |d, menu_path| {
                             d.on_mouse_down(
                                 MouseButton::Right,
-                                cx.listener(move |this, event: &MouseDownEvent, _, cx| {
+                                listen(this, move |this, event: &MouseDownEvent, _, cx| {
                                     cx.stop_propagation();
                                     this.open_file_menu(menu_path.clone(), event.position, cx);
                                 }),
@@ -15818,7 +15915,7 @@ impl Workspace {
                                 .flex_col()
                                 .child(
                                     div()
-                                        .text_size(px(FONT_UI_SMALL))
+                                        .text_size(px(title_size))
                                         .line_height(px(17.))
                                         // A file's title is
                                         // `--nav-item-color-active` (probe of
@@ -15864,14 +15961,21 @@ impl Workspace {
                 }
                 let mut card = Self::match_card(theme);
                 for m in &group.matches {
-                    card =
-                        card.child(self.render_match(which, next(), &current, group, m, theme, cx));
+                    card = card.child(self.render_match(
+                        which,
+                        next(),
+                        current,
+                        group,
+                        m,
+                        theme,
+                        this,
+                    ));
                 }
                 body = body.child(card);
             }
             list = list.child(body);
         }
-        list.into_any_element()
+        list
     }
 
     /// Obsidian's `.search-result-file-matches`: the note's background,
@@ -15903,7 +16007,7 @@ impl Workspace {
         group: &Group,
         m: &PaneMatch,
         theme: &Theme,
-        cx: &mut Context<Self>,
+        this: &gpui::WeakEntity<Self>,
     ) -> gpui::Stateful<gpui::Div> {
         let path = group.path.clone();
         let menu_path = path.clone();
@@ -15956,7 +16060,7 @@ impl Workspace {
                         .bg(theme.tokens.background_modifier_border)
                         .cursor_pointer()
                         .tooltip(tooltip("Link this file"))
-                        .on_click(cx.listener(move |this, _, window, cx| {
+                        .on_click(listen(this, move |this, _, window, cx| {
                             this.link_mention(
                                 source.clone(),
                                 target.clone(),
@@ -15990,7 +16094,7 @@ impl Workspace {
                 .cursor_pointer()
                 .invisible()
                 .group_hover("pane-match", |s| s.visible())
-                .on_click(cx.listener(move |this, _, window, cx| {
+                .on_click(listen(this, move |this, _, window, cx| {
                     this.link_mention(source.clone(), target.clone(), mention.clone(), window, cx);
                     cx.stop_propagation();
                 }))
@@ -16012,7 +16116,7 @@ impl Workspace {
             .flex_col()
             .cursor_pointer()
             .hover(move |s| s.bg(hover))
-            .on_click(cx.listener(move |this, _, _, cx| {
+            .on_click(listen(this, move |this, _, _, cx| {
                 if let Some(path) = path.clone() {
                     this.open_file(path, None, cx);
                     if let Some(offset) = offset {
@@ -16024,7 +16128,7 @@ impl Workspace {
             .when_some(menu_path, |d, menu_path| {
                 d.on_mouse_down(
                     MouseButton::Right,
-                    cx.listener(move |this, event: &MouseDownEvent, _, cx| {
+                    listen(this, move |this, event: &MouseDownEvent, _, cx| {
                         cx.stop_propagation();
                         this.open_file_menu(menu_path.clone(), event.position, cx);
                     }),
@@ -17817,6 +17921,7 @@ fn tab_from_leaf(
                 leaf: Some(leaf.clone()),
                 view_state: inner.and_then(|s| s.get("viewState")).cloned(),
                 pinned: false,
+                doc_backlinks: DocBacklinks::read(inner),
             }
         }
         (Some("empty"), None) => Tab {
@@ -19737,6 +19842,7 @@ mod tests {
             leaf: Some(read.clone()),
             view_state: None,
             pinned: true,
+            doc_backlinks: DocBacklinks::default(),
         };
         assert_eq!(leaf_json(&tab), read);
     }
@@ -19752,6 +19858,7 @@ mod tests {
             leaf: Some(read.clone()),
             view_state: None,
             pinned: true,
+            doc_backlinks: DocBacklinks::default(),
         };
         let written = leaf_json(&tab);
         assert_eq!(written["id"], read["id"]);
@@ -19780,6 +19887,7 @@ mod tests {
             leaf: None,
             view_state: Some(json!({"x": 100, "y": -20, "zoom": -1})),
             pinned: false,
+            doc_backlinks: DocBacklinks::default(),
         };
         let written = leaf_json(&tab);
         assert_eq!(written["state"]["type"], json!("canvas"));
@@ -19811,6 +19919,7 @@ mod tests {
             leaf: None,
             view_state: None,
             pinned: false,
+            doc_backlinks: DocBacklinks::default(),
         };
         let written = leaf_json(&tab);
         assert_eq!(written["state"]["type"], json!("bases"));
@@ -19854,6 +19963,7 @@ mod tests {
             leaf: None,
             view_state: None,
             pinned: false,
+            doc_backlinks: DocBacklinks::default(),
         };
         let written = leaf_json(&tab);
         assert_eq!(written["state"]["type"], json!("pdf"));
@@ -19930,6 +20040,7 @@ mod tests {
             leaf: Some(read),
             view_state: None,
             pinned: false,
+            doc_backlinks: DocBacklinks::default(),
         };
         let written = leaf_json(&tab);
         let id = written["id"].as_str().unwrap();

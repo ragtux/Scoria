@@ -391,6 +391,29 @@ pub fn unlinked_outgoing(text: &str, path: &str, names: Option<&Finder>, extra: 
     section
 }
 
+/// The section with each unlinked mention's context read again from its
+/// note, with or without the lines either side: a note's backlinks block
+/// keeps its own "Show more context" while the mentions were found once.
+/// A match with no mention range (a linked one) is left as it is.
+pub fn with_context(
+    section: &Section,
+    texts: &HashMap<String, Arc<String>>,
+    extra: bool,
+) -> Section {
+    let mut out = section.clone();
+    for group in &mut out.groups {
+        let Some(text) = group.path.as_ref().and_then(|p| texts.get(p)) else {
+            continue;
+        };
+        for m in &mut group.matches {
+            if let Some(range) = m.mention.clone() {
+                *m = mention_match(text, range, extra, m.target.clone());
+            }
+        }
+    }
+    out
+}
+
 fn mention_match(text: &str, range: Range<usize>, extra: bool, target: Option<String>) -> Match {
     let (snippet, mapped) = context(text, range.clone(), extra);
     Match {
@@ -514,6 +537,28 @@ mod tests {
         let (snippet, range) = context("short", 40..50, true);
         assert_eq!(snippet, "short");
         assert_eq!(range, 5..5);
+    }
+
+    /// A note's backlinks block keeps its own "Show more context": the
+    /// mentions found once are given the wider context again, exactly as a
+    /// search made with it would have.
+    #[test]
+    fn unlinked_mentions_take_more_context_again_without_a_search() {
+        let names = [Name {
+            text: "Plan",
+            path: "Plan.md",
+        }];
+        let finder = Finder::new(&names).unwrap();
+        let mut texts = HashMap::new();
+        texts.insert(
+            "A.md".to_string(),
+            Arc::new("before\nthe plan here\nafter".to_string()),
+        );
+        let narrow = unlinked_incoming(&texts, "Plan.md", Some(&finder), false);
+        let wide = unlinked_incoming(&texts, "Plan.md", Some(&finder), true);
+        assert_ne!(narrow, wide);
+        assert_eq!(with_context(&narrow, &texts, true), wide);
+        assert_eq!(with_context(&wide, &texts, false), narrow);
     }
 
     #[test]

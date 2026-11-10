@@ -195,6 +195,9 @@ pub enum Pick {
     TogglePin,
     /// "Move to new window": `workspace:move-to-new-window` on the tab.
     MoveToNewWindow,
+    /// "Backlinks in document": `backlink:toggle-backlinks-in-document` on
+    /// the active markdown leaf.
+    ToggleBacklinksInDocument,
     /// A markdown tab's "Add file property", "Find..." and "Replace...":
     /// `markdown:add-metadata-property`, `editor:open-search` and
     /// `editor:open-search-replace`.
@@ -313,6 +316,12 @@ pub enum Target {
     /// of the open-in rows, Rename beside Move and Bookmark, and "Delete
     /// file" alone in the danger pair. The path is the leaf's file.
     View(String),
+    /// **More options** over a markdown leaf: [`Target::View`]'s rows under
+    /// a first row, "Backlinks in document", checked while the leaf shows
+    /// the block (`tools/obsidian-probe/results/2026-11-09-panes-workspaces-headings.json`,
+    /// `bl` `moreMenu`). Its two view-mode rows are left out, as the tab
+    /// header's are.
+    Note { path: String, backlinks: bool },
     /// A right click on a Bases row's name, a card or a list line's link
     /// (`s24` `linkMenu`, 2026-11-01): the file menu with the two open-in
     /// rows, Rename beside Move and Bookmark, and "Delete file".
@@ -340,6 +349,8 @@ pub enum Target {
     /// with none; `tabs` is how many its group holds, since Close others
     /// and Close all are drawn only beside another tab, and Close tabs
     /// after only with one to its right; `pinned` names the Pin row.
+    /// `backlinks` is whether the active markdown tab shows its backlinks
+    /// block, `None` for any other tab, which has no such row.
     Tab {
         group: u64,
         ix: usize,
@@ -347,6 +358,7 @@ pub enum Target {
         tabs: usize,
         pinned: bool,
         active: bool,
+        backlinks: Option<bool>,
     },
 }
 
@@ -411,7 +423,9 @@ impl Target {
             | Target::Linked(p)
             | Target::View(p)
             | Target::Row(p) => p,
-            Target::Bookmark { path, .. } | Target::Tab { path, .. } => path,
+            Target::Bookmark { path, .. }
+            | Target::Tab { path, .. }
+            | Target::Note { path, .. } => path,
             Target::Blank | Target::Property { .. } => "",
             Target::Editor(click) => match &click.spot {
                 Spot::Link(path) => path,
@@ -732,8 +746,14 @@ pub fn items(target: &Target) -> Vec<Item> {
             tabs,
             pinned,
             active,
+            backlinks,
             ..
-        } => tab_items(path, *ix, *tabs, *pinned, *active),
+        } => tab_items(path, *ix, *tabs, *pinned, *active, *backlinks),
+        Target::Note { path, backlinks } => {
+            let mut out = vec![backlinks_row(*backlinks)];
+            out.extend(items(&Target::View(path.clone())));
+            out
+        }
         Target::View(_) => vec![
             item("Split right", "separator-vertical", S::Open, P::SplitRight),
             item("Split down", "separator-horizontal", S::Open, P::SplitDown),
@@ -772,13 +792,20 @@ pub fn items(target: &Target) -> Vec<Item> {
 
 /// The tab header's menu, as the 2026-11-09 probe drew it. Left out for
 /// want of anything behind them: **Link with tab...** (no linked panes,
-/// and the probe saw no trace of what it starts), a markdown tab's
-/// **Backlinks in document** and its two view-mode rows (their labels in
-/// the other modes were not captured), **Merge entire file with...**,
+/// and the probe saw no trace of what it starts), a markdown tab's two
+/// view-mode rows (their labels in the other modes were not captured),
+/// **Merge entire file with...**,
 /// **Export to PDF...**, a canvas's **Export as image**, **Open version
 /// history** and the **Open linked view** submenu; Copy path keeps the one
 /// flat row the other menus give it.
-fn tab_items(path: &str, ix: usize, tabs: usize, pinned: bool, active: bool) -> Vec<Item> {
+fn tab_items(
+    path: &str,
+    ix: usize,
+    tabs: usize,
+    pinned: bool,
+    active: bool,
+    backlinks: Option<bool>,
+) -> Vec<Item> {
     use Pick as P;
     use Section as S;
     let mut out = vec![item("Close", "x", S::Close, P::CloseTab)];
@@ -795,6 +822,11 @@ fn tab_items(path: &str, ix: usize, tabs: usize, pinned: bool, active: bool) -> 
         S::Pane,
         P::TogglePin,
     ));
+    // After Pin (and Obsidian's "Link with tab..."), on the active markdown
+    // tab only: the inactive tab's menu in the probe had no such row.
+    if let Some(on) = backlinks.filter(|_| active) {
+        out.push(backlinks_row(on));
+    }
     out.push(item(
         "Move to new window",
         "picture-in-picture",
@@ -841,6 +873,20 @@ fn tab_items(path: &str, ix: usize, tabs: usize, pinned: bool, active: bool) -> 
         }
     }
     out
+}
+
+/// "Backlinks in document", `links-coming-in`, in the `pane` section; its
+/// label never changes, and the check says whether the block shows.
+fn backlinks_row(on: bool) -> Item {
+    Item {
+        checked: on,
+        ..item(
+            "Backlinks in document",
+            "links-coming-in",
+            Section::Pane,
+            Pick::ToggleBacklinksInDocument,
+        )
+    }
 }
 
 /// One row, enabled.
@@ -1017,7 +1063,7 @@ pub fn describe(menu: &Menu) -> Value {
             Spot::Tag(_) => "editor-tag",
             Spot::Link(_) => "editor-link",
         },
-        Target::View(_) => "view",
+        Target::View(_) | Target::Note { .. } => "view",
         Target::Row(_) => "row",
         Target::Property { .. } => "property",
         Target::Bookmark { .. } => "bookmark",
@@ -1525,7 +1571,64 @@ mod tests {
             tabs,
             pinned,
             active,
+            backlinks: None,
         }
+    }
+
+    /// "Backlinks in document" on an active markdown tab sits after Pin in
+    /// the `pane` section, checked while the block shows (the
+    /// 2026-11-09 panes probe, `bl` `tabMenu`); an inactive tab has none.
+    #[test]
+    fn the_tab_menu_has_backlinks_in_document_after_pin() {
+        let on = |backlinks, active| Target::Tab {
+            group: 1,
+            ix: 0,
+            path: "Target.md".into(),
+            tabs: 1,
+            pinned: false,
+            active,
+            backlinks,
+        };
+        let rows = items(&on(Some(true), true));
+        let labels: Vec<&str> = rows.iter().take(4).map(|i| i.label.as_ref()).collect();
+        assert_eq!(
+            labels,
+            [
+                "Close",
+                "Pin",
+                "Backlinks in document",
+                "Move to new window"
+            ]
+        );
+        let row = &rows[2];
+        assert!(row.checked);
+        assert_eq!(row.icon, "links-coming-in");
+        assert_eq!(row.section, Section::Pane);
+        assert_eq!(row.pick, Pick::ToggleBacklinksInDocument);
+        assert!(!items(&on(Some(false), true))[2].checked);
+        assert!(!drawn(&on(Some(true), false)).contains(&"Backlinks in document".to_string()));
+    }
+
+    /// More options over a markdown leaf: "Backlinks in document" first,
+    /// then the view header's rows (`bl` `moreMenu`).
+    #[test]
+    fn more_options_on_a_note_starts_with_backlinks_in_document() {
+        let target = Target::Note {
+            path: "Target.md".into(),
+            backlinks: false,
+        };
+        let shown = drawn(&target);
+        assert_eq!(
+            &shown[..4],
+            ["Backlinks in document", "---", "Split right", "Split down"]
+        );
+        assert!(!items(&target)[0].checked);
+        assert_eq!(target.path(), "Target.md");
+        let checked = Target::Note {
+            path: "Target.md".into(),
+            backlinks: true,
+        };
+        assert!(items(&checked)[0].checked);
     }
 
     /// The tab header's menu over the middle of three markdown tabs, the

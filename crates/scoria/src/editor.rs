@@ -729,6 +729,19 @@ pub struct Editor {
     pub parse_samples: Sample,
     /// Edit-to-decoration latency, including waiting for the background thread.
     pub parse_latency: Sample,
+    /// What the host draws under the note's last line: the backlinks
+    /// block (`backlink:toggle-backlinks-in-document`), the last child of
+    /// Obsidian's `.cm-sizer`. Built at prepaint, so it reads the host's
+    /// state as it is that frame; `None` from the builder draws nothing.
+    footer: Option<crate::reading::view::FooterBuilder>,
+    /// The footer's height as last laid out. For the scroll maths it
+    /// belongs to the last line, the way the header belongs to line 0.
+    footer_height: Pixels,
+    /// Where the footer was last painted: a press there is the footer's.
+    footer_hit: Rc<Cell<Option<Bounds<Pixels>>>>,
+    /// The footer came out shorter than last frame: the scroll is clamped
+    /// to the new end once the frame is laid out.
+    footer_shrank: bool,
 }
 
 impl EventEmitter<EditorEvent> for Editor {}
@@ -808,6 +821,10 @@ impl Editor {
             title_edit: None,
             title_layout: Rc::new(RefCell::new(None)),
             title_hit: Rc::new(Cell::new(None)),
+            footer: None,
+            footer_height: px(0.),
+            footer_hit: Rc::new(Cell::new(None)),
+            footer_shrank: false,
             suggest: None,
             suggest_vault: None,
             link_options: suggest::Options::default(),
@@ -928,6 +945,25 @@ impl Editor {
 
     pub fn set_show_inline_title(&mut self, on: bool) {
         self.show_inline_title = on;
+    }
+
+    /// Hands the editor what to draw under the note's last line.
+    pub fn set_footer(&mut self, footer: Option<crate::reading::view::FooterBuilder>) {
+        if footer.is_none() {
+            self.footer_height = px(0.);
+            self.footer_hit.set(None);
+        }
+        self.footer = footer;
+    }
+
+    /// The room the footer takes under `line`: its height on the last
+    /// line, nothing on any other.
+    fn trail_of(&self, line: usize) -> Pixels {
+        if self.footer.is_some() && line + 1 >= self.line_count() {
+            self.footer_height
+        } else {
+            px(0.)
+        }
     }
 
     /// The inline title over the text, if the setting and the file give one.
@@ -1872,7 +1908,7 @@ impl Editor {
         } else {
             px(0.)
         };
-        lead + self.own_height_of(window, line)
+        lead + self.own_height_of(window, line) + self.trail_of(line)
     }
 
     /// `height_of` without the header: the line's own rows.
@@ -4906,6 +4942,13 @@ impl Editor {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
+        if self
+            .footer_hit
+            .get()
+            .is_some_and(|b| b.contains(&event.position))
+        {
+            return;
+        }
         window.focus(&self.focus_handle, cx);
         let Some(at) = self.offset_at_point(window, event.position) else {
             return;
@@ -4967,6 +5010,14 @@ impl Editor {
     }
 
     fn mouse_down(&mut self, event: &MouseDownEvent, window: &mut Window, cx: &mut Context<Self>) {
+        // A press on the footer is its own rows' and buttons'.
+        if self
+            .footer_hit
+            .get()
+            .is_some_and(|b| b.contains(&event.position))
+        {
+            return;
+        }
         window.focus(&self.focus_handle, cx);
         if self.scrollbar_mouse_down(event.position, window, cx) {
             return;
@@ -6172,6 +6223,8 @@ struct Prepaint {
     flairs: Vec<AnyElement>,
     /// The inline title, when the top of the note is in view.
     header: Option<AnyElement>,
+    /// What the host draws under the last line, when the end is reached.
+    footer: Option<AnyElement>,
     /// Quote bars, code block bands and rules, behind the text.
     decor: Vec<PaintQuad>,
     line_height: Pixels,
@@ -6575,7 +6628,12 @@ impl Element for EditorElement {
                         cx,
                     );
                     let height = measured.height.max(lh);
-                    if line == scroll_line && scroll_px - lead >= height {
+                    let trail = if wlines.end >= count {
+                        editor.trail_of(count - 1)
+                    } else {
+                        px(0.)
+                    };
+                    if line == scroll_line && scroll_px - lead >= height + trail {
                         scroll_px = lead;
                         y = bounds.origin.y;
                     }
@@ -6627,7 +6685,7 @@ impl Element for EditorElement {
                 let rows = shaped.rows();
                 let rh = shaped.row_height;
                 let height = shaped.height();
-                if line == scroll_line && scroll_px - lead >= height {
+                if line == scroll_line && scroll_px - lead >= height + editor.trail_of(line) {
                     scroll_px = lead + (height - rh).max(px(0.));
                     y = bounds.origin.y - scroll_px + lead;
                 }
@@ -6890,6 +6948,43 @@ impl Element for EditorElement {
             if !focused || editor.title_edit.is_some() {
                 cursor_quads.clear();
             }
+            // The footer under the last line: laid out whenever the end of
+            // the note was reached, on screen or just under it, so its
+            // height is known to the scroll maths before it is scrolled to.
+            let mut footer = None;
+            editor.footer_hit.set(None);
+            if line >= count {
+                if let Some(build) = editor.footer.clone() {
+                    match build(f32::from(content_width), window, cx) {
+                        Some(mut element) => {
+                            let measured = element.layout_as_root(
+                                size(
+                                    AvailableSpace::Definite(content_width),
+                                    AvailableSpace::MinContent,
+                                ),
+                                window,
+                                cx,
+                            );
+                            if measured.height < editor.footer_height {
+                                editor.footer_shrank = true;
+                            }
+                            editor.footer_height = measured.height;
+                            element.prepaint_at(point(content_x, y), window, cx);
+                            editor
+                                .footer_hit
+                                .set(Some(Bounds::new(point(content_x, y), measured)));
+                            y += measured.height;
+                            footer = Some(element);
+                        }
+                        None => {
+                            if editor.footer_height > px(0.) {
+                                editor.footer_shrank = true;
+                            }
+                            editor.footer_height = px(0.);
+                        }
+                    }
+                }
+            }
             let fits = scroll_line == 0
                 && scroll_px == px(0.)
                 && line >= count
@@ -6926,6 +7021,7 @@ impl Element for EditorElement {
                 widgets,
                 flairs: flair_elements,
                 header,
+                footer,
                 decor: decor_quads,
                 line_height: lh,
                 font_size,
@@ -7042,6 +7138,9 @@ impl Element for EditorElement {
                 }
                 w.element.paint(window, cx);
             }
+            if let Some(footer) = prepaint.footer.as_mut() {
+                footer.paint(window, cx);
+            }
             // Over the lines: a flair sits on its fence line's text.
             for flair in prepaint.flairs.iter_mut() {
                 flair.paint(window, cx);
@@ -7058,8 +7157,16 @@ impl Element for EditorElement {
 
         let editor = self.editor.clone();
         let hitbox = prepaint.hitbox.clone();
+        let footer_hit = self.editor.read(cx).footer_hit.clone();
         window.on_mouse_event(move |event: &MouseDownEvent, phase, window, cx| {
             if phase != DispatchPhase::Bubble || !hitbox.is_hovered(window) {
+                return;
+            }
+            // The footer's rows take their own presses, right clicks too.
+            if footer_hit
+                .get()
+                .is_some_and(|b| b.contains(&event.position))
+            {
                 return;
             }
             match event.button {
@@ -7172,6 +7279,13 @@ impl Element for EditorElement {
                 editor.pending_reveal = false;
                 editor.reveal_cursor(window);
                 // A notify during paint is dropped; ask for the next frame.
+                let id = cx.entity_id();
+                window.on_next_frame(move |_, cx| cx.notify(id));
+            }
+            // A footer that shrank or went away can leave the view scrolled
+            // past the note's new end: it is pulled back, as a scroll is.
+            if std::mem::take(&mut editor.footer_shrank) {
+                editor.clamp_scroll_end(window);
                 let id = cx.entity_id();
                 window.on_next_frame(move |_, cx| cx.notify(id));
             }

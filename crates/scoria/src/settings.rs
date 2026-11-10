@@ -3385,10 +3385,10 @@ impl SettingsView {
                 }
                 items
             }
-            // The one row of the Backlinks tab. The key is observed and the
-            // toggle writes it, but nothing in Scoria reads it: the
-            // backlinks pane is a pane, never a block at the foot of a
-            // note, so the row is tagged.
+            // The one row of the Backlinks tab: `backlinkInDocument`, which
+            // shows the backlinks block at the foot of every leaf that has
+            // not been turned off by `backlink:toggle-backlinks-in-document`
+            // (the 2026-11-09 panes probe, `blsetting`).
             "backlink" => {
                 let b = &state.backlink();
                 vec![toggle(
@@ -3396,8 +3396,7 @@ impl SettingsView {
                     "Make backlinks visible in new tabs by default.",
                     BACKLINK_IN_DOCUMENT.is_on(b),
                     Flag::Backlink(BACKLINK_IN_DOCUMENT),
-                )
-                .not_yet()]
+                )]
             }
             "canvas" => {
                 let c = &state.canvas_options();
@@ -6199,8 +6198,8 @@ mod tests {
     }
 
     /// The Backlinks tab: one toggle, off by default, writing
-    /// `backlinkInDocument` into `backlink.json`, and tagged because
-    /// nothing in Scoria reads that key.
+    /// `backlinkInDocument` into `backlink.json`, which the backlinks
+    /// block at the foot of a note follows.
     #[test]
     fn the_backlinks_tab_shows_one_toggle_that_writes_backlink_in_document() {
         let (dir, state) = vault();
@@ -6214,7 +6213,7 @@ mod tests {
             "Make backlinks visible in new tabs by default."
         );
         assert_eq!(items[0].control, Control::Toggle(false), "off by default");
-        assert_eq!(items[0].honored, Honored::No);
+        assert_eq!(items[0].honored, Honored::Live);
         assert!(!dir.path().join(".obsidian/backlink.json").exists());
         assert_eq!(
             flip_every_toggle(&dir, "backlink", "backlink.json"),
@@ -7668,6 +7667,8 @@ mod tests {
                 "Show existing only",
                 "Show attachments",
                 "Show all file types",
+                // The Backlinks tab's one, read by the backlinks block.
+                "Show backlinks at the bottom of notes",
             ],
             "a toggle claims Scoria reads it"
         );
@@ -7681,7 +7682,6 @@ mod tests {
             .map(|(name, _)| name)
             .collect();
         for name in [
-            "Show backlinks at the bottom of notes",
             "Snap to grid",
             "Snap to objects",
             "Search, Backlinks, and Outgoing links",
