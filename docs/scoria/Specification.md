@@ -7756,7 +7756,7 @@ folder path to create the new unique note in.", text, placeholder `Example: fold
 ("For more syntax, refer to format reference. Your current syntax looks like this: 202610301041",
 text, placeholder `YYYYMMDDHHmm`).
 
-**File recovery** → `file-recovery.json` (keys not probed, OBSERVE): "Snapshot interval" ("Minimal
+**File recovery** → `file-recovery.json` (keys `intervalMinutes` and `keepDays`, see [[#Observed File recovery, Obsidian 1.15.0 (installer build 1.13.7)]]): "Snapshot interval" ("Minimal
 interval in minutes between two snapshots.", number field, `5`), "History length" ("Number of days
 the snapshots are kept for.", number field, `7`), "Snapshots" ("View and restore saved snapshots.",
 a "View" button), "Clear history" ("Delete all snapshots.", a "Clear" button).
@@ -9652,3 +9652,112 @@ leaf's mode is unchanged. A click on the slide did not change slides.
 - What the window's resize does to the scale while the presentation is up.
 - The light theme's link and body colours, beyond the background and h1.
 - Whether the arrows' hover and the close button's hover change colour.
+
+## Observed graph timelapse, Obsidian 1.15.0 (installer build 1.13.7)
+
+`tools/obsidian-probe/graph-animate.mjs` over CDP in the private headless sway; results in
+`tools/obsidian-probe/results/2026-11-09-graph-animate.json` and screenshots beside it. The
+fixture made eight notes one a second apart in the order Mango, Apple, Zebra, Kiwi, Banana,
+Orphan, Cherry, Lemon — neither alphabetical nor their mtime order, which was set to run
+backwards — linking among themselves and to one unresolved `Missing` (from Kiwi).
+
+**The command.** `graph:animate`, "Graph view: Start graph timelapse animation", icon
+`lucide-wand`, a check callback, no hotkey. The palette offers it only while a **global graph
+view is the active leaf**: not with a note active (a graph view open beside it or not), and not
+with a local graph active. The graph controls' fourth button, `mod-animate` ("Start timelapse
+animation", `lucide-wand-2`), is shown only while the controls panel is closed
+(`.graph-controls.is-close`); with the panel open it is `display: none`.
+
+**What it does.** The graph empties and the nodes come back one at a time in the order of their
+files' **creation time** (`stat.ctime`: the fixture's creation order exactly; not name, not
+mtime). Each node joins the running layout where the simulation puts it; edges are drawn between
+nodes already shown. The unresolved `Missing` came in together with the node after its linker
+(with Banana, one step after Kiwi). Timings from the command (two runs of the eight notes gave
+the same schedule within 40 ms): 0, 248, 820, 1024, 1696 (Missing and Banana), 2058, 2216, 2834
+ms. Five more notes made with gaps of 0.5, 0.5, 6 and 0.5 s came in at 3040, 3452, 3861, 4221
+and 4631 ms: the six-second gap does not show, so the clock is the order, not the ctimes'
+spacing. Steps are irregular, between about 0.2 and 0.6 s, a mean of about 0.36 s a node (eight
+steps in 2.83 s, twelve in 4.63 s). Running it again mid-way starts over from one node. It
+writes nothing: `graph.json` and `workspace.json` unchanged. The animate button reads the same
+during the run (no stop state).
+
+### Not settled: graph timelapse
+- What decides each step's length (the steps are irregular but repeat run to run); whether the
+  duration scales with the vault or is capped.
+- Whether `ctime` here is the birth time or the inode change time (the fixture's were equal).
+- Tag and attachment nodes; unresolved nodes linked from several files; a filtered graph.
+- In one screenshot Cherry was shown without its edge to the already-shown Apple: whether an
+  edge waits for a later step.
+- The local graph (the command is not offered there; the probe's run of it there did nothing).
+
+## Observed File recovery, Obsidian 1.15.0 (installer build 1.13.7)
+
+`tools/obsidian-probe/file-recovery.mjs` over CDP in the private headless sway, a data directory
+of its own; results in `tools/obsidian-probe/results/2026-11-09-file-recovery.json` and
+screenshots beside it.
+
+**The plugin and the command.** "File recovery", described "Restore recent snapshots to recover
+from accidental data loss. Snapshots are only saved for Markdown files." Its options as loaded
+with no `file-recovery.json`: `{"intervalMinutes": 5, "keepDays": 7}`. One command,
+`file-recovery:open`, "File recovery: Open local history", icon `lucide-rotate-ccw`, a plain
+callback (offered always: on a note, a canvas and an empty tab), no hotkey.
+
+**Where snapshots live.** Not in the vault and not in any file: in the app's IndexedDB, database
+`<vault id>-backup` (version 1), object store `backups` (auto-increment key, indexes `path` and
+`ts`, neither unique), one record per snapshot `{path, ts, data}` — the vault path, the time in
+ms, and the file's whole text. Beside it, `<vault id>-cache` (stores `file`: path → `{mtime,
+size, hash}`, and `metadata`: hash → the cached metadata) and `<vault id>-sync`. A snapshot was
+taken when a file was **opened** (Note.md and Board.canvas each got one on opening, the canvas
+too despite the description) and when a file not yet snapshotted was **modified** (Other.md,
+holding the new text); further edits of Note.md within the 5-minute interval — two
+`vault.modify` calls and typing — added none. Scoria cannot share this store: it is Chromium's
+IndexedDB under Obsidian's own config directory, keyed by Obsidian's vault id. A Scoria-side
+store would need its own place outside the vault (Obsidian never reads it), the same record
+(path, time, whole text), a snapshot on open and on a save once the interval has passed since the
+file's last one, pruning after `keepDays`, and the modal above over it.
+
+**The modal.** `div.modal.mod-sync-history.mod-sidebar-layout` (the Sync history modal's frame):
+a close button, a title (the file's name, "Note"); a left sidebar with a search field
+(`input[type=search]`, placeholder "Choose a file...", prefilled with the active file's name)
+and the list of the chosen file's snapshots, each row a `modal-sidebar-list-item` with the date
+("Tue, Nov 10, 2026 12:22 AM") over the size in muted small text ("13 B"); on the right the
+selected snapshot's title bar — the file name, a "Show changes" toggle, **Copy** and **Restore**
+buttons — over its text (`textarea.file-recovery-text`, or `div.file-recovery-diff` with the
+toggle on). With no file chosen the right side reads "Please select a file on the left to view
+snapshots." **Restore** writes the snapshot's text over the file at once (Note.md went back to
+`Version one.\n`) and shows the notice "Successfully restored version from a few seconds ago".
+
+**The Settings tab** (in the Settings window, driven with real keys in that window's own CDP
+target): "Snapshot interval" ("Minimal interval in minutes between two snapshots.",
+`input[type=number]`, `min=0`, `step=any`, showing 5), "History length" ("Number of days the
+snapshots are kept for.", `type=number`, `min=1`, `step=any`, showing 7), "Snapshots" ("View and
+restore saved snapshots.", a **View** button, which opens the modal over the Settings window,
+title "File recovery"), "Clear history" ("Delete all snapshots.", a **Clear** button,
+`mod-destructive`, which asks first: a modal "Clear history" / "Are you sure you want to delete
+all snapshots? Files inside your vault will not be affected." with **Clear** (`mod-destructive
+mod-cta`) and **Cancel** (`mod-cancel`)). A field commits when it loses focus, not per keystroke,
+and the first write puts the plugin's whole options in `file-recovery.json`:
+
+| Typed, field | `file-recovery.json` after it |
+| --- | --- |
+| `10`, interval | `{\n  "intervalMinutes": 10,\n  "keepDays": 7\n}` |
+| `30`, history | `{\n  "intervalMinutes": 10,\n  "keepDays": 30\n}` |
+| `0`, interval | `{\n  "intervalMinutes": 0,\n  "keepDays": 30\n}` |
+| empty, interval | unchanged |
+| `-1`, interval | unchanged (the field keeps showing `-1`) |
+| `2.5`, interval | `{\n  "intervalMinutes": 2.5,\n  "keepDays": 30\n}` |
+| `0`, history | unchanged |
+| empty, history | `{\n  "intervalMinutes": 2.5,\n  "keepDays": 0\n}` |
+| `0.5`, history | unchanged |
+| `5`, interval | `{\n  "intervalMinutes": 5,\n  "keepDays": 0\n}` |
+| `7`, history | `{\n  "intervalMinutes": 5,\n  "keepDays": 7\n}` |
+
+Two spaces, no trailing newline, numbers as JavaScript writes them.
+
+### Not settled: File recovery
+- The validation rule behind the table: why an emptied "History length" wrote `0` while a typed
+  `0` and `0.5` were refused (an emptied interval, already 0, can be read either way).
+- Whether a snapshot is kept on every open or only when the last one is older than the interval;
+  what "History length" prunes and when; whether a canvas or a base is always snapshotted.
+- The diff view's markup with "Show changes" on; Copy's clipboard text; the modal's keyboard.
+- Whether Clear empties `backups` (the run that confirmed it had nothing to clear).
