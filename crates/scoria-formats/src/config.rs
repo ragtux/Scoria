@@ -705,12 +705,44 @@ pub const ZK_PREFIXER_DEFAULT_FORMAT: &str = "YYYYMMDDHHmm";
 
 /// `file-recovery.json`: the File recovery plugin's options.
 ///
-/// Both of its fields are `type=number` inputs and its other two rows are
-/// buttons; no key was observed, so nothing is modelled here either.
+/// Observed on Obsidian 1.15.0 on 2026-11-09 (`tools/obsidian-probe/results/
+/// 2026-11-09-file-recovery.json`, step `s05-settings-typed`): absent until
+/// a field writes; then the plugin's whole options object, both keys in this
+/// order whichever field changed, as JavaScript numbers (`10`, `2.5`), two
+/// spaces, no trailing newline. The snapshots themselves are not here: they
+/// live in Obsidian's IndexedDB, outside the vault.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct FileRecoveryConfig {
+    /// "Snapshot interval": the least minutes between two snapshots of a
+    /// file; [`FILE_RECOVERY_DEFAULT_INTERVAL`] when absent.
+    #[serde(
+        default,
+        rename = "intervalMinutes",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub interval_minutes: Option<serde_json::Number>,
+    /// "History length": the days a snapshot is kept;
+    /// [`FILE_RECOVERY_DEFAULT_KEEP_DAYS`] when absent.
+    #[serde(default, rename = "keepDays", skip_serializing_if = "Option::is_none")]
+    pub keep_days: Option<serde_json::Number>,
     #[serde(flatten)]
     pub extra: Map<String, Value>,
+}
+
+/// The plugin's "Snapshot interval" before anything is written.
+pub const FILE_RECOVERY_DEFAULT_INTERVAL: i64 = 5;
+/// The plugin's "History length" before anything is written.
+pub const FILE_RECOVERY_DEFAULT_KEEP_DAYS: i64 = 7;
+
+/// A number as JavaScript writes it into JSON: an integral value without a
+/// fraction (`10`, not `10.0`), anything else as the float it is. `None`
+/// for a value JSON cannot hold.
+pub fn js_number(value: f64) -> Option<serde_json::Number> {
+    if value.fract() == 0.0 && value.abs() < 9_007_199_254_740_992.0 {
+        Some(serde_json::Number::from(value as i64))
+    } else {
+        serde_json::Number::from_f64(value)
+    }
 }
 
 /// `webviewer.json`: the Web viewer plugin's options.
@@ -1001,6 +1033,35 @@ mod tests {
         assert_eq!(serde_json::to_string(&cfg).unwrap(), "{}");
     }
 
+    /// `file-recovery.json` as Obsidian 1.15.0 wrote it while its two fields
+    /// were typed into, byte for byte: both keys every time, numbers as
+    /// JavaScript writes them.
+    #[test]
+    fn file_recovery_json_round_trips_the_bytes_obsidian_wrote() {
+        for bytes in [
+            "{\n  \"intervalMinutes\": 10,\n  \"keepDays\": 7\n}",
+            "{\n  \"intervalMinutes\": 0,\n  \"keepDays\": 30\n}",
+            "{\n  \"intervalMinutes\": 2.5,\n  \"keepDays\": 30\n}",
+            "{\n  \"intervalMinutes\": 5,\n  \"keepDays\": 7\n}",
+        ] {
+            let cfg: FileRecoveryConfig = serde_json::from_str(bytes).unwrap();
+            assert!(cfg.extra.is_empty(), "every key is modelled");
+            assert_eq!(serde_json::to_string_pretty(&cfg).unwrap(), bytes);
+        }
+        let cfg = FileRecoveryConfig {
+            interval_minutes: js_number(10.0),
+            keep_days: js_number(FILE_RECOVERY_DEFAULT_KEEP_DAYS as f64),
+            ..Default::default()
+        };
+        assert_eq!(
+            serde_json::to_string_pretty(&cfg).unwrap(),
+            "{\n  \"intervalMinutes\": 10,\n  \"keepDays\": 7\n}"
+        );
+        assert_eq!(js_number(2.5).unwrap().to_string(), "2.5");
+        assert_eq!(js_number(0.0).unwrap().to_string(), "0");
+        assert_eq!(js_number(f64::NAN), None);
+    }
+
     /// Every core-plugin options file: the keys Obsidian 1.14.5 writes read
     /// into their own fields, an unknown key comes back where it was, and
     /// the bytes round trip exactly. The files the probe saw are the input,
@@ -1069,13 +1130,12 @@ mod tests {
         assert_eq!(zk.folder.as_deref(), Some("Zettels"));
         assert_eq!(zk.template.as_deref(), Some("T.md"));
         assert_eq!(zk.format.as_deref(), Some("YYYYMMDDHHmm"));
-        // File recovery models no key, so every key in its file is an
-        // unknown one -- which is exactly what has to survive.
         let recovery = round_trip!(
             FileRecoveryConfig,
-            r#"{"minutes":5,"days":7,"someFutureKey":{"nested":[1,2]}}"#
+            r#"{"intervalMinutes":2.5,"keepDays":30,"someFutureKey":{"nested":[1,2]}}"#
         );
-        assert_eq!(recovery.extra["minutes"], serde_json::json!(5));
+        assert_eq!(recovery.interval_minutes, js_number(2.5));
+        assert_eq!(recovery.keep_days, js_number(30.0));
 
         let web = round_trip!(
             WebviewerConfig,

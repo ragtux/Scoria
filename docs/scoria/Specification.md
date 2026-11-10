@@ -7756,7 +7756,7 @@ folder path to create the new unique note in.", text, placeholder `Example: fold
 ("For more syntax, refer to format reference. Your current syntax looks like this: 202610301041",
 text, placeholder `YYYYMMDDHHmm`).
 
-**File recovery** → `file-recovery.json` (keys not probed, OBSERVE): "Snapshot interval" ("Minimal
+**File recovery** → `file-recovery.json` (keys `intervalMinutes` and `keepDays`, see [[#Observed File recovery, Obsidian 1.15.0 (installer build 1.13.7)]]): "Snapshot interval" ("Minimal
 interval in minutes between two snapshots.", number field, `5`), "History length" ("Number of days
 the snapshots are kept for.", number field, `7`), "Snapshots" ("View and restore saved snapshots.",
 a "View" button), "Clear history" ("Delete all snapshots.", a "Clear" button).
@@ -9799,3 +9799,261 @@ path's folders, and `workspace.json` records the leaf as `{"type": "markdown", "
 - Retry's behaviour; release notes for a version with no changelog page.
 - Open file: an outside file renamed or deleted while open; what a relaunch does with a `file:`
   leaf; an inside path through a symlink; whether the extension filter can be bypassed.
+
+## Observed stacked tabs, Obsidian 1.15.0 (installer build 1.13.7)
+
+`tools/obsidian-probe/stacked-tabs.mjs` over CDP in a private headless sway (one 1600 × 1000
+output at scale 1, the window 1596 × 973, the left dock collapsed so the ribbon ends at x 44),
+results in `tools/obsidian-probe/results/2026-11-09-stacked-tabs.json` and screenshots beside it.
+
+**The command.** `workspace:toggle-stacked-tabs`, "Toggle stacked tabs", icon `lucide-layers`, a
+check callback, no hotkey. The palette offers it whenever the active leaf is in the main area or
+a popout — on a note and on an empty "New tab" alike — and not when the active leaf is a sidebar
+leaf (Outline in the right dock): run there anyway it changed nothing, in the dock or the root.
+It flips the active leaf's tab group; nothing else changes (the active tab stays the active tab).
+
+**`workspace.json`.** A stacked group's `tabs` node gains `"stacked": true` as its last key, after
+`currentTab` (or after `children` when `currentTab` is absent because the first tab is active);
+unstacking removes the key — no `"stacked": false` is written. The leaves are untouched. In a
+popout the same key sits on the window's `tabs` node. The tab list's **Stack tabs** row (which
+reads **Unstack tabs** on a stacked group, same `lucide-layers` icon) writes the same bytes as the
+command. The tab header's right-click menu has no stacking row, stacked or not. After a relaunch
+the group comes back stacked.
+
+**The strip.** The group keeps its 40 px header strip, but the tab headers leave it: the inner
+header container is `display: none`, and the strip holds only the new-tab button (now at the
+strip's left, `margin-left` 8 px), the spacer, the tab-list chevron and, in the top-right group,
+the sidebar toggle. `.workspace-tabs` gains `mod-stacked`.
+
+**The stack.** Below the strip, `.workspace-tab-container` becomes a horizontal scroller
+(`display: flex`, row, `overflow-x: auto`, `overflow-y: hidden`; no scroll snap) holding, for each
+tab in order, its header and then its leaf, so the headers sit between the panes:
+
+- **Header (spine):** 40 px wide (`--tab-stacked-header-width`), the leaf's full height,
+  background `--tab-background-active` (the pane's colour), a 1 px `--tab-outline-color` line
+  on its left edge (`box-shadow: -1px 0 0 …`) plus `--tab-stacked-shadow`
+  (`-8px 0 8px 0 rgba(0,0,0,.05)`). `position: sticky` with `left: i × 40px` and
+  `right: (n − 1 − i) × 40px` for tab *i* of *n*. Inside, padded `8px 8px 16px` and laid out
+  top to bottom: the close button (20 × 20, padded 2 px, `lucide-x`, at the top, 8 px down),
+  then the type icon (22 × 22, padded 4 px, so a 14 px glyph), then the title, starting 54 px
+  down. The title is written top to bottom (`writing-mode: vertical-lr`, `text-orientation:
+  mixed`: Latin glyphs turned a quarter clockwise), 13 px (`--tab-stacked-font-size`), weight
+  400, `--text-normal` (#dadada in the dark theme) on every header active or not, padded `4px 0`,
+  one line, ellipsized at the bottom. The close button shows on every header, not only on hover;
+  a click on it closes that tab and leaves the active tab alone. The active header has
+  `is-active mod-active` but draws no differently.
+- **Leaf (pane):** `--tab-stacked-pane-width`, 700 px, clamped between a minimum of
+  `(W − n × 40) / n` and a maximum of `W − n × 40` (W the container's width; observed 218.667 /
+  1312 at n = 6 and 181.714 / 1272 at n = 7 in a 1552 px container, 477.333 / 1432 at n = 3),
+  `position: sticky` with `left: (i + 1) × 40px` and no right offset. Each pane is a whole leaf
+  with its own view header and content, live — every tab of the group is drawn at once.
+- So the content is `n × (40 + pane)` wide (4440 for six tabs). A scrolled-past pane sticks
+  behind its header and the next header and pane slide over it; the headers of the tabs to the
+  right pile up at the right edge, each 40 px.
+
+**Which pane shows.** Activating tab *i* (a header click, a tab-list row, `workspace:next-tab`,
+`previous-tab`, `goto-tab-N`, `goto-last-tab`, a new tab) scrolls the stack the least that puts
+pane *i* wholly between the headers piled on the left (*i* + 1 of them, the pane's own included)
+and those on the right (*n* − 1 − *i*): with `L = i × (40 + P) + 40` the pane's left in the
+content, the scroll `s` is clamped into `[L + P − W + (n − 1 − i) × 40, i × P]`, then into
+`[0, n × (40 + P) − W]`. Measured, six tabs in 1552 px, P = 700: activating 0 … 5 in turn gave
+0, 88, 788, 1488, 2188, 2888; from 2188 a click on the first header gave 0. The scroll is
+animated (smooth, about 0.4 s: samples 9, 134, 444, 1210, 1548, 1752, 1925, 2015 at 60 ms
+steps). A relaunch restored the stack at scroll 0 with the fourth tab active and did not reveal
+it. A vertical wheel over a pane scrolls the note, not the stack; a horizontal wheel (or
+Shift + wheel) scrolls the stack by its delta and changes no active tab.
+
+**Tab commands while stacked.** `workspace:new-tab` appends "New tab" at the end and makes it
+active (revealed, scroll 1408 for four tabs); closing it with `workspace:close` made its left
+neighbour active (Gamma, though Alpha had been active before the new tab). Opening a
+note from the quick switcher replaces the active pane's file in place. `workspace:split-vertical`
+makes a new group to the right that is **not** stacked (no `stacked` key); the original stays
+stacked. `workspace:close-tab-group` on the new group leaves the stacked one as it was.
+
+### Not settled: stacked tabs
+- Dragging a stacked header (to reorder, to another group, out to a split) and a drop onto a
+  stacked group.
+- What the header's hover and the pinned state look like on a spine; the light theme.
+- Whether running the command itself reveals the active pane (in every case watched the active
+  pane was already in view when the group was stacked).
+- A group in a sidebar cannot be stacked from the command; whether any other route stacks one.
+- The leaves' `flex-grow` from a leaf's `dimension` (seen `50 0 auto` on a leaf the probe's own
+  `createLeafInParent` had given `"dimension": 50`) when the panes do not fill the width.
+
+## Observed Slides, Obsidian 1.15.0 (installer build 1.13.7)
+
+`tools/obsidian-probe/slides.mjs` over CDP in the same private headless sway (window 1596 × 973),
+the `slides` core plugin on; results in `tools/obsidian-probe/results/2026-11-09-slides.json`
+and screenshots beside it.
+
+**The plugin and the command.** The core plugin is "Slides", described "Create a presentation by
+using “---” to separate slides."; it has no options and no ribbon button. `slides:start`, "Slides:
+Start presentation", icon `lucide-monitor`, a check callback, no hotkey. The palette offers it on a
+Markdown note in Live Preview, Source mode and reading view, and not on a canvas or an empty tab.
+It writes nothing (`workspace.json` unchanged) and opens no leaf or modal.
+
+**What appears.** A `div.slides-container` appended to `<body>`, covering the whole window (the
+title bar and ribbon included), background `--r-background-color` `#191919` in the dark theme
+(the `.reveal` inside it is white, `rgb(255, 255, 255)`, in the light theme, with headings
+`#222`). It is not the browser's fullscreen (`document.fullscreenElement` stays null). Inside it a
+presentation in the reveal.js manner (classes `reveal reveal-viewport slide embedded center
+has-horizontal-slides`): `.slides` is a 960 × 700 stage (`--slide-width`, `--slide-height`)
+centred and scaled by `--slide-scale` = the smaller of `W × 0.96 / 960` and `H × 0.96 / 700`
+(1.3344 for 1596 × 973); one `section` per slide, the current one `present`, the others `past` or
+`future`, each centred vertically on the stage (`top: (700 − content height) / 2`, observed 239.5
+for the first slide). Focus stays where it was (the editor's `cm-content`) when the command runs
+by id; the slide keys act once the presentation has been clicked.
+
+**The cut.** The note is rendered as the reading view renders it and cut at every **top-level
+thematic break**: `---`, `***`, `___`, `- - -`, `-----` and an indented `  ---` all cut; a `---`
+inside a fenced code block or a blockquote does not, nor does a `---` that underlines a
+paragraph (that is a setext h2: `Text right under.\n---` made an `h2`, and `A heading\n---` too).
+The break itself is not drawn. A slide with nothing in it is dropped: `One\n\n---\n\nTwo\n\n---\n`
+gave two slides, an empty note none (the container still opens, empty). The frontmatter goes into
+the **first** slide as a hidden `pre.frontmatter.language-yaml` (`display: none`), and that
+section carries `mod-frontmatter mod-ui`; a section holding only the frontmatter is kept, so
+`---\nkey: value\n---\n---\n\nAfter…` opens on a blank first slide, and a note that is only
+frontmatter is one blank slide. The probe's deck (frontmatter; `# First slide` and a paragraph;
+`---`; `## Second slide` and a list; `---`; a paragraph and a `js` code block; `---`; `# Fourth…`,
+`Text right under.` + `---` (an h2) and a table) gave four slides.
+
+**What a slide looks like.** Text centred. Body `"Source Sans Pro", Helvetica, sans-serif` 42 px
+(`--r-main-font-size`), line height 1.3 (54.6 px), white (`--r-main-color` `#fff`); paragraphs
+margin `20px 0` (`--r-block-margin`); headings in the same family, weight 600, **uppercase**,
+line height 1.2, margin `0 0 20px`, sizes h1 2.5em (105 px), h2 1.6em, h3 1.3em, h4 1em
+(`--r-heading{1..4}-size`); links `#42affa` (`--r-link-color`); `strong` 700; code blocks
+`monospace` at 23.1 px (0.55em) in a `pre` 90 % wide with `box-shadow: 0 5px 15px rgba(0,0,0,.15)`.
+Sizes are on the 960 × 700 stage before the scale. Long content is not shrunk: it runs off the
+stage.
+
+**Controls.** A close button `div.slides-close-btn` at the top right (8 px from the top and right
+edges), a `lucide-x-square` icon drawn at 16 px in `#666`, no tooltip; a click closes. At the
+bottom right reveal's arrows (`button.navigate-left/right/up/down`, `aria-label` "previous slide",
+"next slide", "above slide", "below slide", `#42affa`): only the directions that lead somewhere
+are visible (`enabled`; left hidden on the first slide, right on the last; up and down never
+here), 36 × 30. A 3 px progress bar in `#42affa` along the bottom edge. No slide number.
+
+**Keys** (after a click on the slide): next — ArrowRight, Space, PageDown, ArrowDown, `n`, `l`;
+previous — ArrowLeft, PageUp, ArrowUp, `p`, `h`; Home the first slide, End the last; no wrap at
+either end; Enter and Backspace did nothing on the first slide. `f` made the window fullscreen,
+`b` and `.` blacked the screen (`paused`, a `pause-overlay`) until pressed again, `o` and `?`
+showed nothing. **Escape closes** the presentation, and focus goes back to the view it was
+started from (the editor in Live Preview and Source mode, the reading view in reading view); the
+leaf's mode is unchanged. A click on the slide did not change slides.
+
+### Not settled: Slides
+- An empty slide between two breaks (`---\n\n---`) in the middle of a note (only a trailing one
+  was seen dropped).
+- Images, embeds, callouts, math and wide tables on a slide; whether links can be followed.
+- What the window's resize does to the scale while the presentation is up.
+- The light theme's link and body colours, beyond the background and h1.
+- Whether the arrows' hover and the close button's hover change colour.
+
+## Observed graph timelapse, Obsidian 1.15.0 (installer build 1.13.7)
+
+`tools/obsidian-probe/graph-animate.mjs` over CDP in the private headless sway; results in
+`tools/obsidian-probe/results/2026-11-09-graph-animate.json` and screenshots beside it. The
+fixture made eight notes one a second apart in the order Mango, Apple, Zebra, Kiwi, Banana,
+Orphan, Cherry, Lemon — neither alphabetical nor their mtime order, which was set to run
+backwards — linking among themselves and to one unresolved `Missing` (from Kiwi).
+
+**The command.** `graph:animate`, "Graph view: Start graph timelapse animation", icon
+`lucide-wand`, a check callback, no hotkey. The palette offers it only while a **global graph
+view is the active leaf**: not with a note active (a graph view open beside it or not), and not
+with a local graph active. The graph controls' fourth button, `mod-animate` ("Start timelapse
+animation", `lucide-wand-2`), is shown only while the controls panel is closed
+(`.graph-controls.is-close`); with the panel open it is `display: none`.
+
+**What it does.** The graph empties and the nodes come back one at a time in the order of their
+files' **creation time** (`stat.ctime`: the fixture's creation order exactly; not name, not
+mtime). Each node joins the running layout where the simulation puts it; edges are drawn between
+nodes already shown. The unresolved `Missing` came in together with the node after its linker
+(with Banana, one step after Kiwi). Timings from the command (two runs of the eight notes gave
+the same schedule within 40 ms): 0, 248, 820, 1024, 1696 (Missing and Banana), 2058, 2216, 2834
+ms. Five more notes made with gaps of 0.5, 0.5, 6 and 0.5 s came in at 3040, 3452, 3861, 4221
+and 4631 ms: the six-second gap does not show, so the clock is the order, not the ctimes'
+spacing. Steps are irregular, between about 0.2 and 0.6 s, a mean of about 0.36 s a node (eight
+steps in 2.83 s, twelve in 4.63 s). Running it again mid-way starts over from one node. It
+writes nothing: `graph.json` and `workspace.json` unchanged. The animate button reads the same
+during the run (no stop state).
+
+### Not settled: graph timelapse
+- What decides each step's length (the steps are irregular but repeat run to run); whether the
+  duration scales with the vault or is capped.
+- Whether `ctime` here is the birth time or the inode change time (the fixture's were equal).
+- Tag and attachment nodes; unresolved nodes linked from several files; a filtered graph.
+- In one screenshot Cherry was shown without its edge to the already-shown Apple: whether an
+  edge waits for a later step.
+- The local graph (the command is not offered there; the probe's run of it there did nothing).
+
+## Observed File recovery, Obsidian 1.15.0 (installer build 1.13.7)
+
+`tools/obsidian-probe/file-recovery.mjs` over CDP in the private headless sway, a data directory
+of its own; results in `tools/obsidian-probe/results/2026-11-09-file-recovery.json` and
+screenshots beside it.
+
+**The plugin and the command.** "File recovery", described "Restore recent snapshots to recover
+from accidental data loss. Snapshots are only saved for Markdown files." Its options as loaded
+with no `file-recovery.json`: `{"intervalMinutes": 5, "keepDays": 7}`. One command,
+`file-recovery:open`, "File recovery: Open local history", icon `lucide-rotate-ccw`, a plain
+callback (offered always: on a note, a canvas and an empty tab), no hotkey.
+
+**Where snapshots live.** Not in the vault and not in any file: in the app's IndexedDB, database
+`<vault id>-backup` (version 1), object store `backups` (auto-increment key, indexes `path` and
+`ts`, neither unique), one record per snapshot `{path, ts, data}` — the vault path, the time in
+ms, and the file's whole text. Beside it, `<vault id>-cache` (stores `file`: path → `{mtime,
+size, hash}`, and `metadata`: hash → the cached metadata) and `<vault id>-sync`. A snapshot was
+taken when a file was **opened** (Note.md and Board.canvas each got one on opening, the canvas
+too despite the description) and when a file not yet snapshotted was **modified** (Other.md,
+holding the new text); further edits of Note.md within the 5-minute interval — two
+`vault.modify` calls and typing — added none. Scoria cannot share this store: it is Chromium's
+IndexedDB under Obsidian's own config directory, keyed by Obsidian's vault id. A Scoria-side
+store would need its own place outside the vault (Obsidian never reads it), the same record
+(path, time, whole text), a snapshot on open and on a save once the interval has passed since the
+file's last one, pruning after `keepDays`, and the modal above over it.
+
+**The modal.** `div.modal.mod-sync-history.mod-sidebar-layout` (the Sync history modal's frame):
+a close button, a title (the file's name, "Note"); a left sidebar with a search field
+(`input[type=search]`, placeholder "Choose a file...", prefilled with the active file's name)
+and the list of the chosen file's snapshots, each row a `modal-sidebar-list-item` with the date
+("Tue, Nov 10, 2026 12:22 AM") over the size in muted small text ("13 B"); on the right the
+selected snapshot's title bar — the file name, a "Show changes" toggle, **Copy** and **Restore**
+buttons — over its text (`textarea.file-recovery-text`, or `div.file-recovery-diff` with the
+toggle on). With no file chosen the right side reads "Please select a file on the left to view
+snapshots." **Restore** writes the snapshot's text over the file at once (Note.md went back to
+`Version one.\n`) and shows the notice "Successfully restored version from a few seconds ago".
+
+**The Settings tab** (in the Settings window, driven with real keys in that window's own CDP
+target): "Snapshot interval" ("Minimal interval in minutes between two snapshots.",
+`input[type=number]`, `min=0`, `step=any`, showing 5), "History length" ("Number of days the
+snapshots are kept for.", `type=number`, `min=1`, `step=any`, showing 7), "Snapshots" ("View and
+restore saved snapshots.", a **View** button, which opens the modal over the Settings window,
+title "File recovery"), "Clear history" ("Delete all snapshots.", a **Clear** button,
+`mod-destructive`, which asks first: a modal "Clear history" / "Are you sure you want to delete
+all snapshots? Files inside your vault will not be affected." with **Clear** (`mod-destructive
+mod-cta`) and **Cancel** (`mod-cancel`)). A field commits when it loses focus, not per keystroke,
+and the first write puts the plugin's whole options in `file-recovery.json`:
+
+| Typed, field | `file-recovery.json` after it |
+| --- | --- |
+| `10`, interval | `{\n  "intervalMinutes": 10,\n  "keepDays": 7\n}` |
+| `30`, history | `{\n  "intervalMinutes": 10,\n  "keepDays": 30\n}` |
+| `0`, interval | `{\n  "intervalMinutes": 0,\n  "keepDays": 30\n}` |
+| empty, interval | unchanged |
+| `-1`, interval | unchanged (the field keeps showing `-1`) |
+| `2.5`, interval | `{\n  "intervalMinutes": 2.5,\n  "keepDays": 30\n}` |
+| `0`, history | unchanged |
+| empty, history | `{\n  "intervalMinutes": 2.5,\n  "keepDays": 0\n}` |
+| `0.5`, history | unchanged |
+| `5`, interval | `{\n  "intervalMinutes": 5,\n  "keepDays": 0\n}` |
+| `7`, history | `{\n  "intervalMinutes": 5,\n  "keepDays": 7\n}` |
+
+Two spaces, no trailing newline, numbers as JavaScript writes them.
+
+### Not settled: File recovery
+- The validation rule behind the table: why an emptied "History length" wrote `0` while a typed
+  `0` and `0.5` were refused (an emptied interval, already 0, can be read either way).
+- Whether a snapshot is kept on every open or only when the last one is older than the interval;
+  what "History length" prunes and when; whether a canvas or a base is always snapshotted.
+- The diff view's markup with "Show changes" on; Copy's clipboard text; the modal's keyboard.
+- Whether Clear empties `backups` (the run that confirmed it had nothing to clear).

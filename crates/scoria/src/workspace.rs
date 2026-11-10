@@ -62,9 +62,9 @@ use scoria_commands::{hotkey_label, keystroke, CommandRegistry};
 use scoria_formats::bookmarks::{Bookmark, Bookmarks};
 use scoria_formats::config::{
     self as config, AppConfig, AppearanceConfig, BacklinkConfig, CanvasConfig,
-    CommandPaletteConfig, CorePlugins, DailyNotesConfig, Hotkeys, NoteComposerConfig,
-    PagePreviewConfig, PluginManifest, PropertyTypes, SwitcherConfig, TemplatesConfig,
-    WebviewerConfig, ZkPrefixerConfig, CORE_PLUGINS,
+    CommandPaletteConfig, CorePlugins, DailyNotesConfig, FileRecoveryConfig, Hotkeys,
+    NoteComposerConfig, PagePreviewConfig, PluginManifest, PropertyTypes, SwitcherConfig,
+    TemplatesConfig, WebviewerConfig, ZkPrefixerConfig, CORE_PLUGINS,
 };
 use scoria_formats::properties::Change;
 use scoria_formats::properties::PropertiesInDocument;
@@ -86,6 +86,7 @@ use std::time::{Duration, Instant};
 mod doc_backlinks;
 mod footnotes_pane;
 mod layouts;
+mod stacked;
 
 use doc_backlinks::{listen, DocBacklinks, SectionsOwner};
 
@@ -375,6 +376,7 @@ pub const RUNNABLE: &[&str] = &[
     "workspace:close",
     "workspace:close-others",
     "workspace:toggle-pin",
+    "workspace:toggle-stacked-tabs",
     "workspace:next-tab",
     "workspace:previous-tab",
     "workspace:goto-tab-1",
@@ -507,6 +509,7 @@ pub struct VaultState {
     /// `zk-prefixer.json`, the Unique note creator's folder, template and
     /// format.
     zk_prefixer: RwLock<ZkPrefixerConfig>,
+    file_recovery: RwLock<FileRecoveryConfig>,
     webviewer: RwLock<WebviewerConfig>,
     pub plugin_manifests: Vec<PluginManifest>,
     pub palette: CommandPaletteConfig,
@@ -614,15 +617,9 @@ impl VaultState {
         let zk_prefixer = vault.zk_prefixer_config();
         note("zk-prefixer.json", zk_prefixer.as_ref().err());
         let zk_prefixer = zk_prefixer.unwrap_or_default();
-        // Read but not kept: no row of the File recovery tab has an
-        // observed key, so there is nothing to show from the file and
-        // nothing that writes it. A file that will not parse is still worth
-        // knowing about -- the window reports it and a write to it would be
-        // refused -- which is the whole of what reading it does.
-        note(
-            "file-recovery.json",
-            vault.file_recovery_config().as_ref().err(),
-        );
+        let file_recovery = vault.file_recovery_config();
+        note("file-recovery.json", file_recovery.as_ref().err());
+        let file_recovery = file_recovery.unwrap_or_default();
         let webviewer = vault.webviewer_config();
         note("webviewer.json", webviewer.as_ref().err());
         let webviewer = webviewer.unwrap_or_default();
@@ -667,6 +664,7 @@ impl VaultState {
             page_preview: RwLock::new(page_preview),
             note_composer: RwLock::new(note_composer),
             zk_prefixer: RwLock::new(zk_prefixer),
+            file_recovery: RwLock::new(file_recovery),
             webviewer: RwLock::new(webviewer),
             plugin_manifests,
             palette,
@@ -792,6 +790,13 @@ impl VaultState {
         self.zk_prefixer.read().unwrap_or_else(|e| e.into_inner())
     }
 
+    /// `file-recovery.json`: the File recovery tab's two numbers. Scoria
+    /// keeps no snapshots (Obsidian's are in its IndexedDB, which nothing
+    /// outside it reads), so these are only written, for Obsidian.
+    pub fn file_recovery(&self) -> RwLockReadGuard<'_, FileRecoveryConfig> {
+        self.file_recovery.read().unwrap_or_else(|e| e.into_inner())
+    }
+
     /// Where *Create new unique note* puts a note made at `at`, by
     /// `zk-prefixer.json`'s format and folder.
     pub fn unique_note_path(
@@ -869,6 +874,18 @@ impl VaultState {
             SettingChange::ZkPrefixer(config) => {
                 self.write_config("zk-prefixer.json", config)?;
                 *self.zk_prefixer.write().unwrap_or_else(|e| e.into_inner()) = config.clone();
+            }
+            // A value the tab refused comes back as the config unchanged,
+            // and nothing is written: Obsidian left the file alone then.
+            SettingChange::FileRecovery(config) => {
+                let same = *self.file_recovery() == *config;
+                if !same {
+                    self.write_config("file-recovery.json", config)?;
+                    *self
+                        .file_recovery
+                        .write()
+                        .unwrap_or_else(|e| e.into_inner()) = config.clone();
+                }
             }
             SettingChange::Webviewer(config) => {
                 self.write_config("webviewer.json", config)?;
@@ -2279,6 +2296,8 @@ struct GroupView {
     history_len: usize,
     history_ix: usize,
     detached: Option<SharedString>,
+    /// The group is stacked (`"stacked": true` on its node).
+    stacked: bool,
     editor: Entity<Editor>,
     reading: Entity<ReadingView>,
     canvas: Entity<CanvasView>,
@@ -3488,6 +3507,8 @@ pub struct Workspace {
     file_properties_open: bool,
     /// The Footnotes pane: whether its leaf exists, and its rows.
     footnotes: footnotes_pane::FootnotesPane,
+    /// Stacked groups' scroll and the reading views of their other panes.
+    stacks: stacked::Stacks,
     /// Each note's unlinked mentions as last found, for the backlinks
     /// block of a group whose note is not the open one.
     doc_mentions: HashMap<String, Section>,
@@ -4117,6 +4138,7 @@ impl Workspace {
             property_filter,
             file_properties_open: false,
             footnotes: footnotes_pane::FootnotesPane::default(),
+            stacks: stacked::Stacks::default(),
             doc_mentions: HashMap::new(),
             file_properties_folds: HashSet::new(),
             name_finder: None,
@@ -5966,6 +5988,7 @@ impl Workspace {
             "workspace:close" => self.close_tab(self.active_tab, cx),
             "workspace:close-others" => self.close_other_tabs(cx),
             "workspace:toggle-pin" => self.toggle_pin(cx),
+            "workspace:toggle-stacked-tabs" => self.toggle_stacked_tabs(cx),
             "workspace:move-to-new-window" => self.move_to_new_window(window, cx),
             "workspace:open-in-new-window" => self.open_in_new_window(window, cx),
             "workspace:new-window" => {
@@ -9704,6 +9727,7 @@ impl Workspace {
                 history_len: self.history.len(),
                 history_ix: self.history_ix,
                 detached: self.detached.clone(),
+                stacked: stacked::is_stacked(&g.node),
                 editor: self.editor.clone(),
                 reading: self.reading.clone(),
                 canvas: self.canvas.clone(),
@@ -9722,6 +9746,7 @@ impl Workspace {
             history_len: tab.map(|t| t.history.len()).unwrap_or(0),
             history_ix: tab.map(|t| t.history_ix).unwrap_or(0),
             detached: g.detached.clone(),
+            stacked: stacked::is_stacked(&g.node),
             editor: g.editor.clone(),
             reading: g.reading.clone(),
             canvas: g.canvas.clone(),
@@ -9854,18 +9879,22 @@ impl Workspace {
                 )
             })
             .child(self.render_tab_strip(&view, first, last, theme, cx))
-            .child(self.render_header(&view, theme, cx))
-            .child(
-                div()
-                    .relative()
-                    .flex_1()
-                    .min_h_0()
-                    .overflow_hidden()
-                    .child(self.render_group_main(&view, theme, cx))
-                    .when(self.dragging_tab, |d| {
-                        d.child(self.render_drop_zones(id, theme, cx))
-                    }),
-            )
+            .map(|d| {
+                if view.stacked {
+                    return d.child(self.render_stack(&view, theme, cx));
+                }
+                d.child(self.render_header(&view, theme, cx)).child(
+                    div()
+                        .relative()
+                        .flex_1()
+                        .min_h_0()
+                        .overflow_hidden()
+                        .child(self.render_group_main(&view, theme, cx))
+                        .when(self.dragging_tab, |d| {
+                            d.child(self.render_drop_zones(id, theme, cx))
+                        }),
+                )
+            })
             .into_any_element()
     }
 
@@ -11263,6 +11292,7 @@ impl Workspace {
         cx: &mut Context<Self>,
     ) -> Option<gpui::AnyElement> {
         let wix = self.windows.iter().position(|w| w.id == id)?;
+        self.sync_stacks(cx);
         // The first frame is drawn while the window is still being opened,
         // before the opener could record its handle: the window itself is
         // the handle, and the keyboard below needs it to find this window.
@@ -13013,7 +13043,9 @@ impl Workspace {
         theme: &Theme,
         cx: &mut Context<Self>,
     ) -> gpui::Div {
-        let tabs = &view.tabs;
+        // A stacked group's tabs are its spines, below: the strip keeps
+        // only its buttons (observed).
+        let tabs: &[Tab] = if view.stacked { &[] } else { &view.tabs };
         let active_ix = view.active_tab;
         let group = view.id;
         let group_active = view.active;
@@ -13455,7 +13487,11 @@ impl Workspace {
                         this.tab_list_menu = None;
                         this.run_command("workspace:toggle-stacked-tabs", window, cx);
                     }))
-                    .child("Stack tabs"),
+                    .child(if view.stacked {
+                        "Unstack tabs"
+                    } else {
+                        "Stack tabs"
+                    }),
             );
         if !paths.is_empty() {
             let label = if paths.len() == 1 {
@@ -14312,6 +14348,8 @@ impl Workspace {
                         "id": g.id,
                         "active_tab": view.active_tab,
                         "dimension": g.dimension(),
+                        "stacked": view.stacked,
+                        "stack": self.stack_json(g.id),
                         "tabs": view.tabs.iter().map(tab_json).collect::<Vec<Value>>(),
                     })
                 })
@@ -18310,7 +18348,9 @@ fn leaf_id() -> String {
 
 /// A `tabs` node over its leaves: the keys it was read with (or a fresh
 /// `id`), `children` and `currentTab` rewritten at the end, the latter only
-/// when it is not the first (as Obsidian leaves it out then).
+/// when it is not the first (as Obsidian leaves it out then). A stacked
+/// group's `"stacked": true` goes last, after `currentTab`, where Obsidian
+/// writes it ([[Specification#Observed stacked tabs, Obsidian 1.15.0]]).
 fn tabs_node_json(mut map: Map<String, Value>, leaves: Vec<Value>, active_tab: usize) -> Value {
     if !map.contains_key("id") {
         map.shift_insert(0, "id".into(), json!(leaf_id()));
@@ -18318,9 +18358,13 @@ fn tabs_node_json(mut map: Map<String, Value>, leaves: Vec<Value>, active_tab: u
     map.insert("type".into(), json!("tabs"));
     map.shift_remove("children");
     map.shift_remove("currentTab");
+    let stacked = map.shift_remove("stacked");
     map.insert("children".into(), Value::Array(leaves));
     if active_tab > 0 {
         map.insert("currentTab".into(), json!(active_tab));
+    }
+    if let Some(stacked) = stacked {
+        map.insert("stacked".into(), stacked);
     }
     Value::Object(map)
 }
@@ -18762,6 +18806,7 @@ impl EntityInputHandler for Workspace {
 impl Render for Workspace {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         self.corners = WindowCorners::of(window);
+        self.sync_stacks(cx);
         if let Some(value) = self.pending_title_rename.take() {
             cx.defer_in(window, move |this, window, cx| {
                 this.rename_from_inline_title(&value, window, cx)

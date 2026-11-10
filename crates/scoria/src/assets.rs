@@ -220,7 +220,7 @@ impl AssetSource for Assets {
 pub fn fonts() -> Vec<Cow<'static, [u8]>> {
     vec![
         Cow::Borrowed(include_bytes!("../assets/fonts/Rubik-Black.ttf")),
-        Cow::Borrowed(include_bytes!("../assets/fonts/Inter-Regular.ttf")),
+        Cow::Borrowed(INTER_REGULAR),
         Cow::Borrowed(include_bytes!("../assets/fonts/Inter-Italic.ttf")),
         Cow::Borrowed(include_bytes!("../assets/fonts/Inter-Medium.ttf")),
         Cow::Borrowed(include_bytes!("../assets/fonts/Inter-SemiBold.ttf")),
@@ -228,6 +228,10 @@ pub fn fonts() -> Vec<Cow<'static, [u8]>> {
         Cow::Borrowed(include_bytes!("../assets/fonts/Inter-BoldItalic.ttf")),
     ]
 }
+
+/// Inter Regular's bytes: registered by [`fonts`], and outlined by hand for
+/// a stacked tab's title, which is drawn on its side.
+pub const INTER_REGULAR: &[u8] = include_bytes!("../assets/fonts/Inter-Regular.ttf");
 
 /// The interface family [`fonts`] registers.
 pub const FONT_FAMILY: &str = "Inter";

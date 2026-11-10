@@ -1,0 +1,2459 @@
+{
+ "fixtures": {
+  "startedAt": "2026-11-10T06:24:27.306Z",
+  "steps": {},
+  "order": [],
+  "elapsedMs": 1
+ },
+ "run": {
+  "startedAt": "2026-11-10T06:24:28.588Z",
+  "steps": {
+   "s00-context": {
+    "ok": true,
+    "ms": 1884,
+    "version": {
+     "title": "New tab - v-fr - Obsidian 1.15.0",
+     "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+     "win": [
+      1596,
+      973
+     ]
+    },
+    "cmds": {
+     "file-recovery:open": {
+      "name": "File recovery: Open local history",
+      "icon": "lucide-rotate-ccw",
+      "keys": null,
+      "hasCheck": false,
+      "hasCallback": true
+     }
+    },
+    "plugin": {
+     "enabled": true,
+     "name": "File recovery",
+     "desc": "Restore recent snapshots to recover from accidental data loss. Snapshots are only saved for Markdown files.",
+     "options": {
+      "intervalMinutes": 5,
+      "keepDays": 7
+     },
+     "instanceKeys": [
+      "app",
+      "db",
+      "defaultOn",
+      "description",
+      "id",
+      "name",
+      "options",
+      "pendingFiles",
+      "pluginInstance",
+      "tsCache"
+     ]
+    },
+    "offered": {
+     "note": true,
+     "canvas": true,
+     "empty": true
+    },
+    "configFile": null
+   },
+   "s01-store": {
+    "ok": true,
+    "ms": 5,
+    "dbs": [
+     {
+      "name": "19023d6fc7dabea0-backup",
+      "version": 1,
+      "stores": [
+       {
+        "name": "backups",
+        "keyPath": null,
+        "autoIncrement": true,
+        "indexes": [
+         {
+          "name": "path",
+          "keyPath": "path",
+          "unique": false,
+          "multiEntry": false
+         },
+         {
+          "name": "ts",
+          "keyPath": "ts",
+          "unique": false,
+          "multiEntry": false
+         }
+        ],
+        "count": 2,
+        "sample": [
+         {
+          "key": 1,
+          "value": {
+           "path": "Note.md",
+           "ts": 1794291740648,
+           "data": "Version one.\n"
+          }
+         },
+         {
+          "key": 2,
+          "value": {
+           "path": "Board.canvas",
+           "ts": 1794291741256,
+           "data": "{\"nodes\":[],\"edges\":[]}"
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "19023d6fc7dabea0-cache",
+      "version": 19,
+      "stores": [
+       {
+        "name": "file",
+        "keyPath": null,
+        "autoIncrement": false,
+        "indexes": [],
+        "count": 3,
+        "sample": [
+         {
+          "key": "Board.canvas",
+          "value": {
+           "mtime": 1794291741866,
+           "size": 28,
+           "hash": ""
+          }
+         },
+         {
+          "key": "Note.md",
+          "value": {
+           "mtime": 1794291739322,
+           "size": 13,
+           "hash": "3adbdcb4526315824899496187d3debe11320229d66822d3094fc7b769299789"
+          }
+         },
+         {
+          "key": "Other.md",
+          "value": {
+           "mtime": 1794291739322,
+           "size": 12,
+           "hash": "559fe291971410d0a4fa0a1b38469a5b91b1d9c4cb344fe4f86cc28e6399df29"
+          }
+         }
+        ]
+       },
+       {
+        "name": "metadata",
+        "keyPath": null,
+        "autoIncrement": false,
+        "indexes": [],
+        "count": 2,
+        "sample": [
+         {
+          "key": "3adbdcb4526315824899496187d3debe11320229d66822d3094fc7b769299789",
+          "value": {
+           "sections": [
+            {
+             "type": "paragraph",
+             "pos": [
+              0,
+              0,
+              0,
+              0,
+              12,
+              12
+             ]
+            }
+           ]
+          }
+         },
+         {
+          "key": "559fe291971410d0a4fa0a1b38469a5b91b1d9c4cb344fe4f86cc28e6399df29",
+          "value": {
+           "sections": [
+            {
+             "type": "paragraph",
+             "pos": [
+              0,
+              0,
+              0,
+              0,
+              11,
+              11
+             ]
+            }
+           ]
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "19023d6fc7dabea0-sync",
+      "version": 1,
+      "stores": [
+       {
+        "name": "data",
+        "keyPath": null,
+        "autoIncrement": false,
+        "indexes": [],
+        "count": 0,
+        "sample": []
+       }
+      ]
+     }
+    ]
+   },
+   "s02-snapshots": {
+    "ok": true,
+    "ms": 12375,
+    "before": [
+     {
+      "name": "19023d6fc7dabea0-backup",
+      "stores": [
+       {
+        "name": "backups",
+        "count": 2,
+        "keys": [
+         1,
+         2
+        ],
+        "values": [
+         {
+          "path": "Note.md",
+          "ts": 1794291740648,
+          "data": "Version one.\n"
+         },
+         {
+          "path": "Board.canvas",
+          "ts": 1794291741256,
+          "data": "{\"nodes\":[],\"edges\":[]}"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "19023d6fc7dabea0-cache",
+      "stores": [
+       {
+        "name": "file",
+        "count": 3,
+        "keys": [
+         "Board.canvas",
+         "Note.md",
+         "Other.md"
+        ],
+        "values": [
+         {
+          "mtime": 1794291741866,
+          "size": 28,
+          "hash": ""
+         },
+         {
+          "mtime": 1794291739322,
+          "size": 13,
+          "hash": "3adbdcb4526315824899496187d3debe11320229d66822d3094fc7b769299789"
+         },
+         {
+          "mtime": 1794291739322,
+          "size": 12,
+          "hash": "559fe291971410d0a4fa0a1b38469a5b91b1d9c4cb344fe4f86cc28e6399df29"
+         }
+        ]
+       },
+       {
+        "name": "metadata",
+        "count": 2,
+        "keys": [
+         "3adbdcb4526315824899496187d3debe11320229d66822d3094fc7b769299789",
+         "559fe291971410d0a4fa0a1b38469a5b91b1d9c4cb344fe4f86cc28e6399df29"
+        ],
+        "values": [
+         {
+          "sections": [
+           {
+            "type": "paragraph",
+            "pos": [
+             0,
+             0,
+             0,
+             0,
+             12,
+             12
+            ]
+           }
+          ]
+         },
+         {
+          "sections": [
+           {
+            "type": "paragraph",
+            "pos": [
+             0,
+             0,
+             0,
+             0,
+             11,
+             11
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "19023d6fc7dabea0-sync",
+      "stores": [
+       {
+        "name": "data",
+        "count": 0,
+        "keys": [],
+        "values": []
+       }
+      ]
+     }
+    ],
+    "afterModify1": [
+     {
+      "name": "19023d6fc7dabea0-backup",
+      "stores": [
+       {
+        "name": "backups",
+        "count": 2,
+        "keys": [
+         1,
+         2
+        ],
+        "values": [
+         {
+          "path": "Note.md",
+          "ts": 1794291740648,
+          "data": "Version one.\n"
+         },
+         {
+          "path": "Board.canvas",
+          "ts": 1794291741256,
+          "data": "{\"nodes\":[],\"edges\":[]}"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "19023d6fc7dabea0-cache",
+      "stores": [
+       {
+        "name": "file",
+        "count": 3,
+        "keys": [
+         "Board.canvas",
+         "Note.md",
+         "Other.md"
+        ],
+        "values": [
+         {
+          "mtime": 1794291741866,
+          "size": 28,
+          "hash": ""
+         },
+         {
+          "mtime": 1794291743097,
+          "size": 13,
+          "hash": "6e0d0dcb5111b4678f3dacec50c4a9cc1b05688f87608c1a1f25b39ffd995b70"
+         },
+         {
+          "mtime": 1794291739322,
+          "size": 12,
+          "hash": "559fe291971410d0a4fa0a1b38469a5b91b1d9c4cb344fe4f86cc28e6399df29"
+         }
+        ]
+       },
+       {
+        "name": "metadata",
+        "count": 3,
+        "keys": [
+         "3adbdcb4526315824899496187d3debe11320229d66822d3094fc7b769299789",
+         "559fe291971410d0a4fa0a1b38469a5b91b1d9c4cb344fe4f86cc28e6399df29",
+         "6e0d0dcb5111b4678f3dacec50c4a9cc1b05688f87608c1a1f25b39ffd995b70"
+        ],
+        "values": [
+         {
+          "sections": [
+           {
+            "type": "paragraph",
+            "pos": [
+             0,
+             0,
+             0,
+             0,
+             12,
+             12
+            ]
+           }
+          ]
+         },
+         {
+          "sections": [
+           {
+            "type": "paragraph",
+            "pos": [
+             0,
+             0,
+             0,
+             0,
+             11,
+             11
+            ]
+           }
+          ]
+         },
+         {
+          "sections": [
+           {
+            "type": "paragraph",
+            "pos": [
+             0,
+             0,
+             0,
+             0,
+             12,
+             12
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "19023d6fc7dabea0-sync",
+      "stores": [
+       {
+        "name": "data",
+        "count": 0,
+        "keys": [],
+        "values": []
+       }
+      ]
+     }
+    ],
+    "afterModify2": [
+     {
+      "name": "19023d6fc7dabea0-backup",
+      "stores": [
+       {
+        "name": "backups",
+        "count": 2,
+        "keys": [
+         1,
+         2
+        ],
+        "values": [
+         {
+          "path": "Note.md",
+          "ts": 1794291740648,
+          "data": "Version one.\n"
+         },
+         {
+          "path": "Board.canvas",
+          "ts": 1794291741256,
+          "data": "{\"nodes\":[],\"edges\":[]}"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "19023d6fc7dabea0-cache",
+      "stores": [
+       {
+        "name": "file",
+        "count": 3,
+        "keys": [
+         "Board.canvas",
+         "Note.md",
+         "Other.md"
+        ],
+        "values": [
+         {
+          "mtime": 1794291741866,
+          "size": 28,
+          "hash": ""
+         },
+         {
+          "mtime": 1794291745606,
+          "size": 15,
+          "hash": "624978772a019beeb35fe91047a3fac922b7a6f5ffa50b391addc8a5ace4f75c"
+         },
+         {
+          "mtime": 1794291739322,
+          "size": 12,
+          "hash": "559fe291971410d0a4fa0a1b38469a5b91b1d9c4cb344fe4f86cc28e6399df29"
+         }
+        ]
+       },
+       {
+        "name": "metadata",
+        "count": 4,
+        "keys": [
+         "3adbdcb4526315824899496187d3debe11320229d66822d3094fc7b769299789",
+         "559fe291971410d0a4fa0a1b38469a5b91b1d9c4cb344fe4f86cc28e6399df29",
+         "624978772a019beeb35fe91047a3fac922b7a6f5ffa50b391addc8a5ace4f75c",
+         "6e0d0dcb5111b4678f3dacec50c4a9cc1b05688f87608c1a1f25b39ffd995b70"
+        ],
+        "values": [
+         {
+          "sections": [
+           {
+            "type": "paragraph",
+            "pos": [
+             0,
+             0,
+             0,
+             0,
+             12,
+             12
+            ]
+           }
+          ]
+         },
+         {
+          "sections": [
+           {
+            "type": "paragraph",
+            "pos": [
+             0,
+             0,
+             0,
+             0,
+             11,
+             11
+            ]
+           }
+          ]
+         },
+         {
+          "sections": [
+           {
+            "type": "paragraph",
+            "pos": [
+             0,
+             0,
+             0,
+             0,
+             14,
+             14
+            ]
+           }
+          ]
+         },
+         {
+          "sections": [
+           {
+            "type": "paragraph",
+            "pos": [
+             0,
+             0,
+             0,
+             0,
+             12,
+             12
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "19023d6fc7dabea0-sync",
+      "stores": [
+       {
+        "name": "data",
+        "count": 0,
+        "keys": [],
+        "values": []
+       }
+      ]
+     }
+    ],
+    "afterTyping": [
+     {
+      "name": "19023d6fc7dabea0-backup",
+      "stores": [
+       {
+        "name": "backups",
+        "count": 2,
+        "keys": [
+         1,
+         2
+        ],
+        "values": [
+         {
+          "path": "Note.md",
+          "ts": 1794291740648,
+          "data": "Version one.\n"
+         },
+         {
+          "path": "Board.canvas",
+          "ts": 1794291741256,
+          "data": "{\"nodes\":[],\"edges\":[]}"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "19023d6fc7dabea0-cache",
+      "stores": [
+       {
+        "name": "file",
+        "count": 3,
+        "keys": [
+         "Board.canvas",
+         "Note.md",
+         "Other.md"
+        ],
+        "values": [
+         {
+          "mtime": 1794291741866,
+          "size": 28,
+          "hash": ""
+         },
+         {
+          "mtime": 1794291750138,
+          "size": 21,
+          "hash": "cde218cf1620259fffd524bd1956aa8f4793b67449dfae207ac1d73f80d4544c"
+         },
+         {
+          "mtime": 1794291739322,
+          "size": 12,
+          "hash": "559fe291971410d0a4fa0a1b38469a5b91b1d9c4cb344fe4f86cc28e6399df29"
+         }
+        ]
+       },
+       {
+        "name": "metadata",
+        "count": 5,
+        "keys": [
+         "3adbdcb4526315824899496187d3debe11320229d66822d3094fc7b769299789",
+         "559fe291971410d0a4fa0a1b38469a5b91b1d9c4cb344fe4f86cc28e6399df29",
+         "624978772a019beeb35fe91047a3fac922b7a6f5ffa50b391addc8a5ace4f75c",
+         "6e0d0dcb5111b4678f3dacec50c4a9cc1b05688f87608c1a1f25b39ffd995b70",
+         "cde218cf1620259fffd524bd1956aa8f4793b67449dfae207ac1d73f80d4544c"
+        ],
+        "values": [
+         {
+          "sections": [
+           {
+            "type": "paragraph",
+            "pos": [
+             0,
+             0,
+             0,
+             0,
+             12,
+             12
+            ]
+           }
+          ]
+         },
+         {
+          "sections": [
+           {
+            "type": "paragraph",
+            "pos": [
+             0,
+             0,
+             0,
+             0,
+             11,
+             11
+            ]
+           }
+          ]
+         },
+         {
+          "sections": [
+           {
+            "type": "paragraph",
+            "pos": [
+             0,
+             0,
+             0,
+             0,
+             14,
+             14
+            ]
+           }
+          ]
+         },
+         {
+          "sections": [
+           {
+            "type": "paragraph",
+            "pos": [
+             0,
+             0,
+             0,
+             0,
+             12,
+             12
+            ]
+           }
+          ]
+         },
+         {
+          "sections": [
+           {
+            "type": "paragraph",
+            "pos": [
+             0,
+             0,
+             0,
+             1,
+             6,
+             21
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "19023d6fc7dabea0-sync",
+      "stores": [
+       {
+        "name": "data",
+        "count": 0,
+        "keys": [],
+        "values": []
+       }
+      ]
+     }
+    ],
+    "noteBytes": "Version three.\n Typed",
+    "afterOther": [
+     {
+      "name": "19023d6fc7dabea0-backup",
+      "stores": [
+       {
+        "name": "backups",
+        "count": 3,
+        "keys": [
+         1,
+         2,
+         3
+        ],
+        "values": [
+         {
+          "path": "Note.md",
+          "ts": 1794291740648,
+          "data": "Version one.\n"
+         },
+         {
+          "path": "Board.canvas",
+          "ts": 1794291741256,
+          "data": "{\"nodes\":[],\"edges\":[]}"
+         },
+         {
+          "path": "Other.md",
+          "ts": 1794291752347,
+          "data": "Other changed.\n"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "19023d6fc7dabea0-cache",
+      "stores": [
+       {
+        "name": "file",
+        "count": 3,
+        "keys": [
+         "Board.canvas",
+         "Note.md",
+         "Other.md"
+        ],
+        "values": [
+         {
+          "mtime": 1794291741866,
+          "size": 28,
+          "hash": ""
+         },
+         {
+          "mtime": 1794291750138,
+          "size": 21,
+          "hash": "cde218cf1620259fffd524bd1956aa8f4793b67449dfae207ac1d73f80d4544c"
+         },
+         {
+          "mtime": 1794291752346,
+          "size": 15,
+          "hash": "ce28a3df429465cdbad93341b88bdf072ce5d9520e5c441e2668409da565c7ac"
+         }
+        ]
+       },
+       {
+        "name": "metadata",
+        "count": 6,
+        "keys": [
+         "3adbdcb4526315824899496187d3debe11320229d66822d3094fc7b769299789",
+         "559fe291971410d0a4fa0a1b38469a5b91b1d9c4cb344fe4f86cc28e6399df29",
+         "624978772a019beeb35fe91047a3fac922b7a6f5ffa50b391addc8a5ace4f75c",
+         "6e0d0dcb5111b4678f3dacec50c4a9cc1b05688f87608c1a1f25b39ffd995b70",
+         "cde218cf1620259fffd524bd1956aa8f4793b67449dfae207ac1d73f80d4544c",
+         "ce28a3df429465cdbad93341b88bdf072ce5d9520e5c441e2668409da565c7ac"
+        ],
+        "values": [
+         {
+          "sections": [
+           {
+            "type": "paragraph",
+            "pos": [
+             0,
+             0,
+             0,
+             0,
+             12,
+             12
+            ]
+           }
+          ]
+         },
+         {
+          "sections": [
+           {
+            "type": "paragraph",
+            "pos": [
+             0,
+             0,
+             0,
+             0,
+             11,
+             11
+            ]
+           }
+          ]
+         },
+         {
+          "sections": [
+           {
+            "type": "paragraph",
+            "pos": [
+             0,
+             0,
+             0,
+             0,
+             14,
+             14
+            ]
+           }
+          ]
+         },
+         {
+          "sections": [
+           {
+            "type": "paragraph",
+            "pos": [
+             0,
+             0,
+             0,
+             0,
+             12,
+             12
+            ]
+           }
+          ]
+         },
+         {
+          "sections": [
+           {
+            "type": "paragraph",
+            "pos": [
+             0,
+             0,
+             0,
+             1,
+             6,
+             21
+            ]
+           }
+          ]
+         },
+         {
+          "sections": [
+           {
+            "type": "paragraph",
+            "pos": [
+             0,
+             0,
+             0,
+             0,
+             14,
+             14
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name": "19023d6fc7dabea0-sync",
+      "stores": [
+       {
+        "name": "data",
+        "count": 0,
+        "keys": [],
+        "values": []
+       }
+      ]
+     }
+    ]
+   },
+   "s03-modal": {
+    "ok": true,
+    "ms": 9145,
+    "ran": true,
+    "dom": {
+     "tag": "div",
+     "cls": "modal-container mod-dim",
+     "children": [
+      {
+       "tag": "div",
+       "cls": "modal-bg"
+      },
+      {
+       "tag": "div",
+       "cls": "modal mod-sync-history mod-sidebar-layout",
+       "children": [
+        {
+         "tag": "div",
+         "cls": "modal-header-button mod-raised clickable-icon",
+         "children": [
+          {
+           "tag": "svg",
+           "cls": "svg-icon lucide-x",
+           "children": []
+          }
+         ]
+        },
+        {
+         "tag": "div",
+         "cls": "modal-header",
+         "children": [
+          {
+           "tag": "div",
+           "cls": "modal-title",
+           "text": "Note"
+          }
+         ]
+        },
+        {
+         "tag": "div",
+         "cls": "modal-content",
+         "children": [
+          {
+           "tag": "div",
+           "cls": "modal-sidebar mod-history",
+           "children": [
+            {
+             "tag": "div",
+             "cls": "modal-sidebar-inner",
+             "children": [
+              {
+               "tag": "div",
+               "cls": "search-input-container mod-raised",
+               "children": [
+                {
+                 "tag": "input",
+                 "type": "search",
+                 "placeholder": "Choose a file...",
+                 "prop": "Note"
+                },
+                {
+                 "tag": "div",
+                 "cls": "search-input-clear-button"
+                }
+               ]
+              },
+              {
+               "tag": "div",
+               "cls": "modal-sidebar-list",
+               "children": [
+                {
+                 "tag": "div",
+                 "cls": "modal-sidebar-list-item file-recovery-list-item-header tappable is-active",
+                 "children": [
+                  {
+                   "tag": "div",
+                   "cls": "modal-sidebar-list-item-details file-recovery-list-item-details",
+                   "children": [
+                    {
+                     "tag": "div",
+                     "cls": "u-small u-muted",
+                     "text": "13 B"
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "tag": "div",
+           "cls": "sync-history-content-container",
+           "children": [
+            {
+             "tag": "p",
+             "cls": "sync-history-content-empty",
+             "text": "Please select a file on the left to view snapshots."
+            },
+            {
+             "tag": "div",
+             "cls": "sync-history-content",
+             "children": [
+              {
+               "tag": "div",
+               "cls": "modal-setting-titlebar",
+               "children": [
+                {
+                 "tag": "div",
+                 "cls": "modal-setting-title",
+                 "text": "Note"
+                },
+                {
+                 "tag": "div",
+                 "cls": "modal-setting-titlebar-actions",
+                 "children": [
+                  {
+                   "tag": "span",
+                   "cls": "modal-setting-titlebar-toggle",
+                   "children": [
+                    {
+                     "tag": "label",
+                     "cls": "checkbox-container mod-small",
+                     "children": [
+                      {
+                       "tag": "input",
+                       "type": "checkbox",
+                       "prop": "on"
+                      }
+                     ]
+                    }
+                   ]
+                  },
+                  {
+                   "tag": "button",
+                   "text": "Copy"
+                  },
+                  {
+                   "tag": "button",
+                   "text": "Restore"
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "tag": "textarea",
+               "cls": "file-recovery-text"
+              },
+              {
+               "tag": "div",
+               "cls": "file-recovery-diff"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "shot": "01-modal.png",
+    "rows": [],
+    "afterSearch": {
+     "tag": "div",
+     "cls": "modal-container mod-dim",
+     "children": [
+      {
+       "tag": "div",
+       "cls": "modal-bg"
+      },
+      {
+       "tag": "div",
+       "cls": "modal mod-sync-history mod-sidebar-layout",
+       "children": [
+        {
+         "tag": "div",
+         "cls": "modal-header-button mod-raised clickable-icon",
+         "children": [
+          {
+           "tag": "svg",
+           "cls": "svg-icon lucide-x",
+           "children": []
+          }
+         ]
+        },
+        {
+         "tag": "div",
+         "cls": "modal-header",
+         "children": [
+          {
+           "tag": "div",
+           "cls": "modal-title",
+           "text": "Note"
+          }
+         ]
+        },
+        {
+         "tag": "div",
+         "cls": "modal-content",
+         "children": [
+          {
+           "tag": "div",
+           "cls": "modal-sidebar mod-history",
+           "children": [
+            {
+             "tag": "div",
+             "cls": "modal-sidebar-inner",
+             "children": [
+              {
+               "tag": "div",
+               "cls": "search-input-container mod-raised",
+               "children": [
+                {
+                 "tag": "input",
+                 "type": "search",
+                 "placeholder": "Choose a file...",
+                 "prop": "NoteNote"
+                },
+                {
+                 "tag": "div",
+                 "cls": "search-input-clear-button"
+                }
+               ]
+              },
+              {
+               "tag": "div",
+               "cls": "modal-sidebar-list",
+               "children": [
+                {
+                 "tag": "div",
+                 "cls": "modal-sidebar-list-item file-recovery-list-item-header tappable is-active",
+                 "children": [
+                  {
+                   "tag": "div",
+                   "cls": "modal-sidebar-list-item-details file-recovery-list-item-details",
+                   "children": [
+                    {
+                     "tag": "div",
+                     "cls": "u-small u-muted",
+                     "text": "13 B"
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "tag": "div",
+           "cls": "sync-history-content-container",
+           "children": [
+            {
+             "tag": "p",
+             "cls": "sync-history-content-empty",
+             "text": "Please select a file on the left to view snapshots."
+            },
+            {
+             "tag": "div",
+             "cls": "sync-history-content",
+             "children": [
+              {
+               "tag": "div",
+               "cls": "modal-setting-titlebar",
+               "children": [
+                {
+                 "tag": "div",
+                 "cls": "modal-setting-title",
+                 "text": "Note"
+                },
+                {
+                 "tag": "div",
+                 "cls": "modal-setting-titlebar-actions",
+                 "children": [
+                  {
+                   "tag": "span",
+                   "cls": "modal-setting-titlebar-toggle",
+                   "children": [
+                    {
+                     "tag": "label",
+                     "cls": "checkbox-container mod-small",
+                     "children": [
+                      {
+                       "tag": "input",
+                       "type": "checkbox",
+                       "prop": "on"
+                      }
+                     ]
+                    }
+                   ]
+                  },
+                  {
+                   "tag": "button",
+                   "text": "Copy"
+                  },
+                  {
+                   "tag": "button",
+                   "text": "Restore"
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "tag": "textarea",
+               "cls": "file-recovery-text"
+              },
+              {
+               "tag": "div",
+               "cls": "file-recovery-diff"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "searchShot": "02-modal-search.png",
+    "afterEnter": {
+     "tag": "div",
+     "cls": "modal-container mod-dim",
+     "children": [
+      {
+       "tag": "div",
+       "cls": "modal-bg"
+      },
+      {
+       "tag": "div",
+       "cls": "modal mod-sync-history mod-sidebar-layout",
+       "children": [
+        {
+         "tag": "div",
+         "cls": "modal-header-button mod-raised clickable-icon",
+         "children": [
+          {
+           "tag": "svg",
+           "cls": "svg-icon lucide-x",
+           "children": []
+          }
+         ]
+        },
+        {
+         "tag": "div",
+         "cls": "modal-header",
+         "children": [
+          {
+           "tag": "div",
+           "cls": "modal-title",
+           "text": "Note"
+          }
+         ]
+        },
+        {
+         "tag": "div",
+         "cls": "modal-content",
+         "children": [
+          {
+           "tag": "div",
+           "cls": "modal-sidebar mod-history",
+           "children": [
+            {
+             "tag": "div",
+             "cls": "modal-sidebar-inner",
+             "children": [
+              {
+               "tag": "div",
+               "cls": "search-input-container mod-raised",
+               "children": [
+                {
+                 "tag": "input",
+                 "type": "search",
+                 "placeholder": "Choose a file...",
+                 "prop": "NoteNote"
+                },
+                {
+                 "tag": "div",
+                 "cls": "search-input-clear-button"
+                }
+               ]
+              },
+              {
+               "tag": "div",
+               "cls": "modal-sidebar-list",
+               "children": [
+                {
+                 "tag": "div",
+                 "cls": "modal-sidebar-list-item file-recovery-list-item-header tappable is-active",
+                 "children": [
+                  {
+                   "tag": "div",
+                   "cls": "modal-sidebar-list-item-details file-recovery-list-item-details",
+                   "children": [
+                    {
+                     "tag": "div",
+                     "cls": "u-small u-muted",
+                     "text": "13 B"
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "tag": "div",
+           "cls": "sync-history-content-container",
+           "children": [
+            {
+             "tag": "p",
+             "cls": "sync-history-content-empty",
+             "text": "Please select a file on the left to view snapshots."
+            },
+            {
+             "tag": "div",
+             "cls": "sync-history-content",
+             "children": [
+              {
+               "tag": "div",
+               "cls": "modal-setting-titlebar",
+               "children": [
+                {
+                 "tag": "div",
+                 "cls": "modal-setting-title",
+                 "text": "Note"
+                },
+                {
+                 "tag": "div",
+                 "cls": "modal-setting-titlebar-actions",
+                 "children": [
+                  {
+                   "tag": "span",
+                   "cls": "modal-setting-titlebar-toggle",
+                   "children": [
+                    {
+                     "tag": "label",
+                     "cls": "checkbox-container mod-small",
+                     "children": [
+                      {
+                       "tag": "input",
+                       "type": "checkbox",
+                       "prop": "on"
+                      }
+                     ]
+                    }
+                   ]
+                  },
+                  {
+                   "tag": "button",
+                   "text": "Copy"
+                  },
+                  {
+                   "tag": "button",
+                   "text": "Restore"
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "tag": "textarea",
+               "cls": "file-recovery-text"
+              },
+              {
+               "tag": "div",
+               "cls": "file-recovery-diff"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "enterShot": "03-modal-file.png",
+    "buttons": [
+     {
+      "cls": "modal-header-button mod-raised clickable-icon",
+      "text": "",
+      "aria": null,
+      "rect": [
+       1311,
+       80,
+       24,
+       24
+      ]
+     },
+     {
+      "cls": "",
+      "text": "Copy",
+      "aria": null,
+      "rect": [
+       1178,
+       82,
+       54,
+       30
+      ]
+     },
+     {
+      "cls": "",
+      "text": "Restore",
+      "aria": null,
+      "rect": [
+       1236,
+       82,
+       71,
+       30
+      ]
+     }
+    ],
+    "versions": [
+     {
+      "cls": "modal-sidebar-list-item-details file-recovery-list-item-details",
+      "text": "Tue, Nov 10, 2026 12:22 AM13 B",
+      "rect": [
+       265,
+       128,
+       217,
+       30
+      ]
+     }
+    ],
+    "afterVersionClick": {
+     "tag": "div",
+     "cls": "modal-container mod-dim",
+     "children": [
+      {
+       "tag": "div",
+       "cls": "modal-bg"
+      },
+      {
+       "tag": "div",
+       "cls": "modal mod-sync-history mod-sidebar-layout",
+       "children": [
+        {
+         "tag": "div",
+         "cls": "modal-header-button mod-raised clickable-icon",
+         "children": [
+          {
+           "tag": "svg",
+           "cls": "svg-icon lucide-x",
+           "children": []
+          }
+         ]
+        },
+        {
+         "tag": "div",
+         "cls": "modal-header",
+         "children": [
+          {
+           "tag": "div",
+           "cls": "modal-title",
+           "text": "Note"
+          }
+         ]
+        },
+        {
+         "tag": "div",
+         "cls": "modal-content",
+         "children": [
+          {
+           "tag": "div",
+           "cls": "modal-sidebar mod-history",
+           "children": [
+            {
+             "tag": "div",
+             "cls": "modal-sidebar-inner",
+             "children": [
+              {
+               "tag": "div",
+               "cls": "search-input-container mod-raised",
+               "children": [
+                {
+                 "tag": "input",
+                 "type": "search",
+                 "placeholder": "Choose a file...",
+                 "prop": "NoteNote"
+                },
+                {
+                 "tag": "div",
+                 "cls": "search-input-clear-button"
+                }
+               ]
+              },
+              {
+               "tag": "div",
+               "cls": "modal-sidebar-list",
+               "children": [
+                {
+                 "tag": "div",
+                 "cls": "modal-sidebar-list-item file-recovery-list-item-header tappable is-active",
+                 "children": [
+                  {
+                   "tag": "div",
+                   "cls": "modal-sidebar-list-item-details file-recovery-list-item-details",
+                   "children": [
+                    {
+                     "tag": "div",
+                     "cls": "u-small u-muted",
+                     "text": "13 B"
+                    }
+                   ]
+                  }
+                 ]
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "tag": "div",
+           "cls": "sync-history-content-container",
+           "children": [
+            {
+             "tag": "p",
+             "cls": "sync-history-content-empty",
+             "text": "Please select a file on the left to view snapshots."
+            },
+            {
+             "tag": "div",
+             "cls": "sync-history-content",
+             "children": [
+              {
+               "tag": "div",
+               "cls": "modal-setting-titlebar",
+               "children": [
+                {
+                 "tag": "div",
+                 "cls": "modal-setting-title",
+                 "text": "Note"
+                },
+                {
+                 "tag": "div",
+                 "cls": "modal-setting-titlebar-actions",
+                 "children": [
+                  {
+                   "tag": "span",
+                   "cls": "modal-setting-titlebar-toggle",
+                   "children": [
+                    {
+                     "tag": "label",
+                     "cls": "checkbox-container mod-small",
+                     "children": [
+                      {
+                       "tag": "input",
+                       "type": "checkbox",
+                       "prop": "on"
+                      }
+                     ]
+                    }
+                   ]
+                  },
+                  {
+                   "tag": "button",
+                   "text": "Copy"
+                  },
+                  {
+                   "tag": "button",
+                   "text": "Restore"
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "tag": "textarea",
+               "cls": "file-recovery-text"
+              },
+              {
+               "tag": "div",
+               "cls": "file-recovery-diff"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "versionShot": "04-modal-version.png",
+    "restoreButton": {
+     "text": "Restore",
+     "cx": 1271.671875,
+     "cy": 96.96875
+    },
+    "afterRestoreUi": {
+     "modals": [
+      "NoteTue, Nov 10, 2026 12:22 AM13 BTue, Nov 10, 2026 12:22 AM13 BPlease select a file on the left to view snapshots.NoteShow changesCopyRestore"
+     ],
+     "notices": [
+      "Successfully restored version from a few seconds ago"
+     ]
+    },
+    "afterRestoreShot": "05-after-restore.png",
+    "confirmClicked": {
+     "text": "Restore",
+     "cx": 1271.671875,
+     "cy": 96.96875
+    },
+    "restored": {
+     "changed": true,
+     "ms": 299,
+     "bytes": "Version one.\n"
+    }
+   },
+   "s04-settings": {
+    "ok": true,
+    "ms": 50917,
+    "targets": 2,
+    "dom": {
+     "doc": "other",
+     "skeleton": {
+      "tag": "div",
+      "cls": "vertical-tab-content",
+      "children": [
+       {
+        "tag": "div",
+        "cls": "setting-group",
+        "children": [
+         {
+          "tag": "div",
+          "cls": "setting-group-search"
+         },
+         {
+          "tag": "div",
+          "cls": "setting-items",
+          "children": [
+           {
+            "tag": "div",
+            "cls": "setting-item",
+            "children": [
+             {
+              "tag": "div",
+              "cls": "setting-item-info",
+              "children": [
+               {
+                "tag": "div",
+                "cls": "setting-item-name",
+                "text": "Snapshot interval"
+               },
+               {
+                "tag": "div",
+                "cls": "setting-item-description",
+                "text": "Minimal interval in minutes between two snapshots."
+               }
+              ]
+             },
+             {
+              "tag": "div",
+              "cls": "setting-item-control",
+              "children": [
+               {
+                "tag": "input",
+                "type": "number",
+                "prop": "5"
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "tag": "div",
+            "cls": "setting-item",
+            "children": [
+             {
+              "tag": "div",
+              "cls": "setting-item-info",
+              "children": [
+               {
+                "tag": "div",
+                "cls": "setting-item-name",
+                "text": "History length"
+               },
+               {
+                "tag": "div",
+                "cls": "setting-item-description",
+                "text": "Number of days the snapshots are kept for."
+               }
+              ]
+             },
+             {
+              "tag": "div",
+              "cls": "setting-item-control",
+              "children": [
+               {
+                "tag": "input",
+                "type": "number",
+                "prop": "7"
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "tag": "div",
+            "cls": "setting-item",
+            "children": [
+             {
+              "tag": "div",
+              "cls": "setting-item-info",
+              "children": [
+               {
+                "tag": "div",
+                "cls": "setting-item-name",
+                "text": "Snapshots"
+               },
+               {
+                "tag": "div",
+                "cls": "setting-item-description",
+                "text": "View and restore saved snapshots."
+               }
+              ]
+             },
+             {
+              "tag": "div",
+              "cls": "setting-item-control",
+              "children": [
+               {
+                "tag": "button",
+                "text": "View"
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "tag": "div",
+            "cls": "setting-item",
+            "children": [
+             {
+              "tag": "div",
+              "cls": "setting-item-info",
+              "children": [
+               {
+                "tag": "div",
+                "cls": "setting-item-name",
+                "text": "Clear history"
+               },
+               {
+                "tag": "div",
+                "cls": "setting-item-description",
+                "text": "Delete all snapshots."
+               }
+              ]
+             },
+             {
+              "tag": "div",
+              "cls": "setting-item-control",
+              "children": [
+               {
+                "tag": "button",
+                "cls": "mod-destructive",
+                "text": "Clear"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    },
+    "rows": [
+     {
+      "name": "Snapshot interval",
+      "desc": "Minimal interval in minutes between two snapshots.",
+      "inputs": [
+       {
+        "type": "number",
+        "value": "5",
+        "placeholder": "",
+        "min": "0",
+        "max": "",
+        "step": "any"
+       }
+      ],
+      "buttons": []
+     },
+     {
+      "name": "History length",
+      "desc": "Number of days the snapshots are kept for.",
+      "inputs": [
+       {
+        "type": "number",
+        "value": "7",
+        "placeholder": "",
+        "min": "1",
+        "max": "",
+        "step": "any"
+       }
+      ],
+      "buttons": []
+     },
+     {
+      "name": "Snapshots",
+      "desc": "View and restore saved snapshots.",
+      "inputs": [],
+      "buttons": [
+       {
+        "text": "View",
+        "cls": ""
+       }
+      ]
+     },
+     {
+      "name": "Clear history",
+      "desc": "Delete all snapshots.",
+      "inputs": [],
+      "buttons": [
+       {
+        "text": "Clear",
+        "cls": "mod-destructive"
+       }
+      ]
+     }
+    ],
+    "seq": [
+     {
+      "field": 0,
+      "typed": "10",
+      "set": {
+       "placeholder": "",
+       "type": "number",
+       "value": "10"
+      },
+      "file": {
+       "changed": false,
+       "bytes": null
+      },
+      "options": {
+       "intervalMinutes": 5,
+       "keepDays": 7
+      },
+      "shown": [
+       "10",
+       "7"
+      ]
+     },
+     {
+      "field": 1,
+      "typed": "30",
+      "set": {
+       "placeholder": "",
+       "type": "number",
+       "value": "30"
+      },
+      "file": {
+       "changed": false,
+       "bytes": null
+      },
+      "options": {
+       "intervalMinutes": 5,
+       "keepDays": 7
+      },
+      "shown": [
+       "10",
+       "30"
+      ]
+     },
+     {
+      "field": 0,
+      "typed": "0",
+      "set": {
+       "placeholder": "",
+       "type": "number",
+       "value": "0"
+      },
+      "file": {
+       "changed": false,
+       "bytes": null
+      },
+      "options": {
+       "intervalMinutes": 5,
+       "keepDays": 7
+      },
+      "shown": [
+       "0",
+       "30"
+      ]
+     },
+     {
+      "field": 0,
+      "typed": "",
+      "set": {
+       "placeholder": "",
+       "type": "number",
+       "value": ""
+      },
+      "file": {
+       "changed": false,
+       "bytes": null
+      },
+      "options": {
+       "intervalMinutes": 5,
+       "keepDays": 7
+      },
+      "shown": [
+       "",
+       "30"
+      ]
+     },
+     {
+      "field": 0,
+      "typed": "-1",
+      "set": {
+       "placeholder": "",
+       "type": "number",
+       "value": "-1"
+      },
+      "file": {
+       "changed": false,
+       "bytes": null
+      },
+      "options": {
+       "intervalMinutes": 5,
+       "keepDays": 7
+      },
+      "shown": [
+       "-1",
+       "30"
+      ]
+     },
+     {
+      "field": 0,
+      "typed": "2.5",
+      "set": {
+       "placeholder": "",
+       "type": "number",
+       "value": "2.5"
+      },
+      "file": {
+       "changed": false,
+       "bytes": null
+      },
+      "options": {
+       "intervalMinutes": 5,
+       "keepDays": 7
+      },
+      "shown": [
+       "2.5",
+       "30"
+      ]
+     },
+     {
+      "field": 0,
+      "typed": "abc",
+      "set": {
+       "placeholder": "",
+       "type": "number",
+       "value": ""
+      },
+      "file": {
+       "changed": false,
+       "bytes": null
+      },
+      "options": {
+       "intervalMinutes": 5,
+       "keepDays": 7
+      },
+      "shown": [
+       "",
+       "30"
+      ]
+     },
+     {
+      "field": 1,
+      "typed": "0",
+      "set": {
+       "placeholder": "",
+       "type": "number",
+       "value": "0"
+      },
+      "file": {
+       "changed": false,
+       "bytes": null
+      },
+      "options": {
+       "intervalMinutes": 5,
+       "keepDays": 7
+      },
+      "shown": [
+       "",
+       "0"
+      ]
+     },
+     {
+      "field": 1,
+      "typed": "",
+      "set": {
+       "placeholder": "",
+       "type": "number",
+       "value": ""
+      },
+      "file": {
+       "changed": false,
+       "bytes": null
+      },
+      "options": {
+       "intervalMinutes": 5,
+       "keepDays": 7
+      },
+      "shown": [
+       "",
+       ""
+      ]
+     },
+     {
+      "field": 0,
+      "typed": "5",
+      "set": {
+       "placeholder": "",
+       "type": "number",
+       "value": "5"
+      },
+      "file": {
+       "changed": false,
+       "bytes": null
+      },
+      "options": {
+       "intervalMinutes": 5,
+       "keepDays": 7
+      },
+      "shown": [
+       "5",
+       ""
+      ]
+     },
+     {
+      "field": 1,
+      "typed": "7",
+      "set": {
+       "placeholder": "",
+       "type": "number",
+       "value": "7"
+      },
+      "file": {
+       "changed": false,
+       "bytes": null
+      },
+      "options": {
+       "intervalMinutes": 5,
+       "keepDays": 7
+      },
+      "shown": [
+       "5",
+       "7"
+      ]
+     }
+    ],
+    "view": true,
+    "afterView": {
+     "modals": [],
+     "settingOpen": false
+    },
+    "afterViewShot": "06-after-view.png",
+    "clear": true,
+    "afterClearUi": {
+     "modals": [],
+     "buttons": [],
+     "notices": []
+    },
+    "afterClearShot": "07-after-clear.png",
+    "confirmed": null,
+    "dbAfterClear": [
+     {
+      "name": "19023d6fc7dabea0-backup",
+      "counts": [
+       [
+        "backups",
+        5
+       ]
+      ]
+     },
+     {
+      "name": "19023d6fc7dabea0-cache",
+      "counts": [
+       [
+        "file",
+        3
+       ],
+       [
+        "metadata",
+        2
+       ]
+      ]
+     },
+     {
+      "name": "19023d6fc7dabea0-sync",
+      "counts": [
+       [
+        "data",
+        0
+       ]
+      ]
+     }
+    ],
+    "dbBeforeClear": [
+     {
+      "name": "19023d6fc7dabea0-backup",
+      "counts": [
+       [
+        "backups",
+        5
+       ]
+      ]
+     },
+     {
+      "name": "19023d6fc7dabea0-cache",
+      "counts": [
+       [
+        "file",
+        3
+       ],
+       [
+        "metadata",
+        2
+       ]
+      ]
+     },
+     {
+      "name": "19023d6fc7dabea0-sync",
+      "counts": [
+       [
+        "data",
+        0
+       ]
+      ]
+     }
+    ],
+    "notices": [],
+    "finalFile": null
+   },
+   "s05-settings-typed": {
+    "ok": true,
+    "ms": 77602,
+    "settingsTarget": true,
+    "title": "Settings - v-fr2 - Obsidian 1.15.0",
+    "seq": [
+     {
+      "field": 0,
+      "typed": "10",
+      "file": {
+       "changed": true,
+       "ms": 300,
+       "bytes": "{\n  \"intervalMinutes\": 10,\n  \"keepDays\": 7\n}"
+      },
+      "afterTab": true,
+      "options": {
+       "intervalMinutes": 10,
+       "keepDays": 7
+      },
+      "shown": [
+       "10",
+       "7"
+      ]
+     },
+     {
+      "field": 1,
+      "typed": "30",
+      "file": {
+       "changed": true,
+       "ms": 300,
+       "bytes": "{\n  \"intervalMinutes\": 10,\n  \"keepDays\": 30\n}"
+      },
+      "afterTab": true,
+      "options": {
+       "intervalMinutes": 10,
+       "keepDays": 30
+      },
+      "shown": [
+       "10",
+       "30"
+      ]
+     },
+     {
+      "field": 0,
+      "typed": "0",
+      "file": {
+       "changed": true,
+       "ms": 300,
+       "bytes": "{\n  \"intervalMinutes\": 0,\n  \"keepDays\": 30\n}"
+      },
+      "afterTab": true,
+      "options": {
+       "intervalMinutes": 0,
+       "keepDays": 30
+      },
+      "shown": [
+       "0",
+       "30"
+      ]
+     },
+     {
+      "field": 0,
+      "typed": "",
+      "file": {
+       "changed": false,
+       "bytes": "{\n  \"intervalMinutes\": 0,\n  \"keepDays\": 30\n}"
+      },
+      "afterTab": true,
+      "options": {
+       "intervalMinutes": 0,
+       "keepDays": 30
+      },
+      "shown": [
+       "0",
+       "30"
+      ]
+     },
+     {
+      "field": 0,
+      "typed": "-1",
+      "file": {
+       "changed": false,
+       "bytes": "{\n  \"intervalMinutes\": 0,\n  \"keepDays\": 30\n}"
+      },
+      "afterTab": true,
+      "options": {
+       "intervalMinutes": 0,
+       "keepDays": 30
+      },
+      "shown": [
+       "-1",
+       "30"
+      ]
+     },
+     {
+      "field": 0,
+      "typed": "2.5",
+      "file": {
+       "changed": true,
+       "ms": 300,
+       "bytes": "{\n  \"intervalMinutes\": 2.5,\n  \"keepDays\": 30\n}"
+      },
+      "afterTab": true,
+      "options": {
+       "intervalMinutes": 2.5,
+       "keepDays": 30
+      },
+      "shown": [
+       "2.5",
+       "30"
+      ]
+     },
+     {
+      "field": 1,
+      "typed": "0",
+      "file": {
+       "changed": false,
+       "bytes": "{\n  \"intervalMinutes\": 2.5,\n  \"keepDays\": 30\n}"
+      },
+      "afterTab": true,
+      "options": {
+       "intervalMinutes": 2.5,
+       "keepDays": 30
+      },
+      "shown": [
+       "2.5",
+       "0"
+      ]
+     },
+     {
+      "field": 1,
+      "typed": "",
+      "file": {
+       "changed": true,
+       "ms": 300,
+       "bytes": "{\n  \"intervalMinutes\": 2.5,\n  \"keepDays\": 0\n}"
+      },
+      "afterTab": true,
+      "options": {
+       "intervalMinutes": 2.5,
+       "keepDays": 0
+      },
+      "shown": [
+       "2.5",
+       "0"
+      ]
+     },
+     {
+      "field": 1,
+      "typed": "0.5",
+      "file": {
+       "changed": false,
+       "bytes": "{\n  \"intervalMinutes\": 2.5,\n  \"keepDays\": 0\n}"
+      },
+      "afterTab": true,
+      "options": {
+       "intervalMinutes": 2.5,
+       "keepDays": 0
+      },
+      "shown": [
+       "2.5",
+       "0.5"
+      ]
+     },
+     {
+      "field": 0,
+      "typed": "5",
+      "file": {
+       "changed": true,
+       "ms": 300,
+       "bytes": "{\n  \"intervalMinutes\": 5,\n  \"keepDays\": 0\n}"
+      },
+      "afterTab": true,
+      "options": {
+       "intervalMinutes": 5,
+       "keepDays": 0
+      },
+      "shown": [
+       "5",
+       "0.5"
+      ]
+     },
+     {
+      "field": 1,
+      "typed": "7",
+      "file": {
+       "changed": true,
+       "ms": 300,
+       "bytes": "{\n  \"intervalMinutes\": 5,\n  \"keepDays\": 7\n}"
+      },
+      "afterTab": true,
+      "options": {
+       "intervalMinutes": 5,
+       "keepDays": 7
+      },
+      "shown": [
+       "5",
+       "7"
+      ]
+     }
+    ],
+    "afterClear": {
+     "modals": [
+      "Clear historyAre you sure you want to delete all snapshots? Files inside your vault will not be affected.ClearCancel"
+     ],
+     "buttons": [
+      {
+       "text": "Clear",
+       "cls": "mod-destructive mod-cta"
+      },
+      {
+       "text": "Cancel",
+       "cls": "mod-cancel"
+      }
+     ]
+    },
+    "afterClearMain": {
+     "modals": [],
+     "notices": []
+    },
+    "afterClearShot": "01-settings-clear.png",
+    "cancelled": "Cancel",
+    "dbAfterCancel": [
+     [
+      [
+       "backups",
+       5
+      ]
+     ],
+     [
+      [
+       "backups",
+       0
+      ]
+     ]
+    ],
+    "confirm": {
+     "text": "Clear",
+     "cls": "mod-destructive mod-cta"
+    },
+    "dbAfterClear": [
+     [
+      [
+       "backups",
+       5
+      ]
+     ],
+     [
+      [
+       "backups",
+       0
+      ]
+     ]
+    ],
+    "noticesAfterClear": [],
+    "afterView": {
+     "settingsModals": [
+      "File recoveryPlease select a file on the left to view snapshots.Show changesCopyRestoreSnapshots found."
+     ],
+     "mainModals": [],
+     "targets": 2
+    },
+    "afterViewShot": "02-after-view-main.png",
+    "finalFile": "{\n  \"intervalMinutes\": 5,\n  \"keepDays\": 7\n}"
+   }
+  },
+  "order": [
+   "s00-context",
+   "s01-store",
+   "s02-snapshots",
+   "s03-modal",
+   "s04-settings",
+   "s05-settings-typed"
+  ],
+  "elapsedMs": 77651,
+  "vaultPath": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/v-fr2"
+ }
+}
