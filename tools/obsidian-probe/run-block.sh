@@ -14,6 +14,10 @@
 # on their vault throughout (seen 2026-11-02). The newest obsidian-*.asar of
 # ~/.config/obsidian is copied in once so the run is on the version the person
 # runs rather than the installer's. CDP_PORT picks the port (default 9222).
+#
+# OBSIDIAN_ARGS adds flags to the launch, split on spaces: `--inspect=9341`
+# opens Node's inspector on the main process, where a probe can stand in for a
+# native dialog (`dialog.showOpenDialog`) without a person at the keyboard.
 set -euo pipefail
 SCRIPT=$(readlink -f "$1"); RESULTS=$(readlink -f -m "$2")
 VAULT=${3:-$(mktemp -d "${TMPDIR:-/tmp}/scoria-probe-vault.XXXXXX")}
@@ -81,7 +85,8 @@ PY
 # Launch, wait for a booted vault window, and refuse to proceed unless it is OUR vault.
 launch_once() {
   LAUNCHED=1
-  nohup obsidian "${UDD_FLAG[@]}" --remote-debugging-port="$CDP_PORT" >>"$LOG" 2>&1 &
+  # shellcheck disable=SC2086
+  nohup obsidian "${UDD_FLAG[@]}" --remote-debugging-port="$CDP_PORT" ${OBSIDIAN_ARGS:-} >>"$LOG" 2>&1 &
   node -e "
     import('$(dirname "$SCRIPT")/cdp.mjs').then(async (m) => {
       await m.waitForObsidian(90000);

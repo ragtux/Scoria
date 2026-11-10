@@ -9503,3 +9503,299 @@ there; the bytes written are the same as in Live Preview.
 - Add alias: values with commas, quotes or `#`; a singular `alias:` key; a flow list with items
   (`aliases: [a, b]`); whether the File properties leaf is created or only revealed when one
   already exists (in the probe's fresh vault none existed before the command).
+
+## Observed attachment commands, Obsidian 1.15.0 (installer build 1.13.7)
+
+Recorded by `tools/obsidian-probe/attachments-app-info.mjs` on 2026-11-09 on Linux, against
+Obsidian 1.15.0 (window title, `ipcRenderer.sendSync('version')`; user agent `obsidian/1.13.7`,
+Electron 43.1.0), with a `--user-data-dir` of its own, on a scratch vault named `Probe Vault`, in
+a private headless sway (1600 × 1000, Wayland, `DISPLAY` unset). Raw runs:
+`tools/obsidian-probe/results/2026-11-09-attachments-app-info.json` (`run`, `run:second`,
+`run:third`). How each dialog was answered is part of the record:
+
+- **Insert attachment's file picker** is an `<input type="file">` (no `accept`, not `multiple`)
+  the command clicks. Run without a user activation it opens nothing at all; run under one
+  (`Runtime.evaluate` with `userGesture`) Chromium raised its chooser in `selectSingle` mode, which
+  CDP intercepted (`Page.setInterceptFileChooserDialog`) and answered with
+  `DOM.setFileInputFiles`. No GTK dialog was drawn; the files reached the page the way a pick does.
+- **Open file's dialog** is the main process's `dialog.showOpenDialog`. With Obsidian launched
+  under `--inspect`, the probe replaced that function in the main process with one that records
+  its options and answers `{canceled: false, filePaths: [<path>]}` (or `canceled: true`). That is
+  a stub **at the dialog**: what Obsidian does with the answer is observed, the dialog is not.
+- Remote images came from a local HTTP server whose request log is in the results.
+
+### Names and kinds
+
+| Id | Palette name | Icon | Kind | Default hotkey |
+| --- | --- | --- | --- | --- |
+| `editor:toggle-spellcheck` | Toggle spellcheck | — | callback | none |
+| `editor:attach-file` | Insert attachment | `lucide-paperclip` | editor callback behind a check | none |
+| `editor:download-attachments` | Download attachments for current file | — | check | none |
+| `app:migrate-frontmatter` | Format converter: Frontmatter migration | `lucide-binary` | callback | none |
+
+All four are registered on desktop in 1.15.0.
+
+### Toggle spellcheck
+
+Offered always, an empty tab included. Each run flips **`spellcheck`** in `app.json`, written
+about 1.6 s after the run, two-space indented, and **the key is written either way** — it is
+never dropped when it returns to the default:
+
+| `app.json` before | after run 1 | after run 2 |
+| --- | --- | --- |
+| `{}` (reads `true`) | `{"spellcheck": false}` | `{"spellcheck": true}` |
+| `{"spellcheck": false}` | `{"spellcheck": true}` | `{"spellcheck": false}` |
+
+The editor's `.cm-content` takes `spellcheck="false"` / `"true"` with it. No notice.
+
+### Insert attachment
+
+Offered with a note in Live Preview; **not offered** in the reading view or with an empty tab.
+The chosen file is **copied** (never moved) into the attachment folder `attachmentFolderPath`
+gives for the note, the folder chain created, and an embed of the copy **replaces the selection**
+(inserted at the caret when there is none), the caret after it. The note was `Sub/Note.md`,
+`line one\nline two\n`, the caret at line 0 col 4, the file `…/Outside/pic one.png`:
+
+| `attachmentFolderPath` | Copied to | Text after |
+| --- | --- | --- |
+| `/` | `pic one.png` | `line![[pic one.png]] one` (caret col 20) |
+| `./` | `Sub/pic one.png` | the same |
+| `./att` | `Sub/att/pic one.png` | the same |
+| `Attach` | `Attach/pic one.png` | the same |
+
+- The same file again (caret at the end of line 1): `pic one 1.png`, `line two![[pic one 1.png]]`.
+- `doc.txt` at line 1 col 0: `![[doc.txt]]line two…` — an embed for a text file too.
+- With `one` selected (cols 5–8): `line ![[pic one.png]]`, caret col 21, nothing selected.
+- `useMarkdownLinks: true`: `line![](pic%20one.png) one` (caret col 22); with `newLinkFormat:
+  relative` as well, `line![](../pic%20one.png) one` (col 25). The link is autocompletion's.
+- A file already in the vault (`Sub/inside.png`) is **copied again** to `inside.png` at the
+  root, and the embed is of the copy.
+- Picking nothing (the chooser answered with no file) changes nothing.
+- No notice in any case.
+
+### Download attachments for current file
+
+Offered with a Markdown note open, even one with nothing to download; **not offered** with an
+empty tab.
+
+**Nothing to download**: the notice **There are no external attachments in this note.**, no
+modal. A plain link `[x](https://…)` and an internal embed `![[local.png]]` do not count.
+
+**The modal**: `.modal.mod-scrollable-content` titled **Download attachments**, a close button,
+`.attachments-gallery` holding one `.download-attachment-item.is-selected` per distinct URL in
+document order — a checkbox (checked) and an `<img src>` of the URL, `aria-label` empty — and
+the buttons **Cancel** (`mod-cancel`) and **Download** (`mod-cta`). A click on an item
+deselects it (class `is-selected` and the checkbox go); Download fetches the selected ones.
+Cancel closes it with nothing written.
+
+**What is offered**: every Markdown image `![alt](url)` with an `http(s)` destination, in body
+text, list items, quotes and table cells; once per URL however often it appears. Not offered:
+`[link](url)`, `<img src>`, `![[https://…]]`, an image inside a code span. A frontmatter
+property whose whole value is a URL **is** offered and rewritten (`img: http://…/photo.png` →
+`img: "[[photo.png]]"`; `quoted: "http://…/pic.jpg"` → `quoted: "[[pic.jpg]]"`), while
+`source: http://…/page.html`, a URL in a list item and `text: see http://…` were not.
+
+**Names** (attachment folder `/`, note `Sub/Page.md`):
+
+| URL (server type) | Saved as |
+| --- | --- |
+| `/img/photo.png` | `photo.png` |
+| `/img/two%20words.png` | `two%20words.png` (escapes kept) |
+| `/img/a%23b.png`, `/img/Grand%C3%A9.gif` | `a%23b.png`, `Grand%C3%A9.gif` |
+| `/img/photo.png?size=2`, `/img/photo.png#frag` | `photo 1.png` (the query and fragment dropped, the name taken) |
+| `/img/again/photo.png` | `photo 2.png` |
+| `/img/UPPER.PNG` | `UPPER.png` (extension lowercased) |
+| `/img/dots.min.png`, `/img/name.jpeg`, `/doc.pdf` | `dots.min.png`, `name.jpeg`, `doc.pdf` |
+| `/img/mismatch.png` (image/jpeg), `/img/x.webp` (text/html) | `mismatch.png`, `x.webp`: the URL's extension wins |
+| `/png-noext` (image/png), `/img/dir/` (image/png) | `Image.png` |
+| `/jpeg-noext` (image/jpeg) | `Image.jpg` |
+| `/gif-noext`, `/webp-noext`, `/svg-noext` | `Image.gif`, `Image.webp`, `Image.svg` |
+| `/html-noext` (text/html), `/octet-noext` (application/octet-stream) | `Image.jpg`, `Image 1.jpg` |
+
+Names are numbered in document order (`photo.png`, `photo 1.png`, `photo 2.png`); with a
+`photo.png` already in the folder the three became `photo 1.png`, `photo 2.png`, `photo 3.png`
+and the existing file kept its bytes. Each `attachmentFolderPath` (`/`, `./`, `./att`, `Attach`)
+put every file where Insert attachment puts one.
+
+**The text written** replaces each embed of a fetched URL; the alt text up to any `|` is the
+display, a title is dropped:
+
+```
+a ![](M/img/photo.png) b                      a ![[photo.png]] b
+![alt](M/img/two%20words.png)                 ![[two%20words.png|alt]]
+[link](M/img/pic.jpg)                         [link](M/img/pic.jpg)
+![x](M/png-noext)                             ![[Image.png|x]]
+![sized|100](M/img/pic.jpg)                   ![[pic.jpg|sized]]
+![t](M/img/again/photo.png "a title")         ![[photo 2.png|t]]
+<img src="M/img/pic.jpg">                     <img src="M/img/pic.jpg">
+![[M/img/photo.png]]                          ![[M/img/photo.png]]
+```
+
+With `useMarkdownLinks: true`: `![](photo.png)`, `![alt](two%20words.png)`, `![q](photo%201.png)`,
+`![sized](pic.jpg)` (with `newLinkFormat: absolute` too, `![a](photo.png)` for a root file).
+`![a](<…/two%20words.png>)` is rewritten like the bare form.
+
+**The notice** after a download that finished: **Downloaded 1 attachment.** /
+**Downloaded 8 attachments.** (the count of files fetched). The modal closes.
+
+**A failure stops the run silently.** The files are fetched one after another in document order
+and each is written as it arrives; the first that fails (a 404, a refused connection) ends the
+run: **no notice, no rewrite of the note**, and the files already written stay. With `photo.png`
+then a 404, `photo.png` was written and the note left as it was; with the 404 first nothing was
+written.
+
+### Format converter: Frontmatter migration
+
+A modal titled **Frontmatter migration**, a close button, two paragraphs — "Migrate frontmatter
+tags, aliases, and cssclasses to the strict format required by Obsidian v1.9+" and
+(`mod-warning`) "Warning: the converter will convert all the files in your vault, not just the
+current file. Your files will be overwritten. Back up all your files before attempting
+conversion." — and **Cancel** (`mod-cancel`, closes, nothing written) and **Start conversion**
+(`mod-cta`). After the conversion the same modal reads **Finished!** with three counters
+(`.changelog-item` with the number in `data-label`): **Processed files** (every Markdown file:
+28; the canvas was not counted or touched), **Modified files** (18), **Failed** (0, hidden at
+0), and the buttons Stop (hidden), **Go back**, **Done**. Done closes it and shows the notice
+**Updated 18 files.** with an **Undo** button (`.notice-cta`); Undo put back every file's
+original bytes and showed **Reverted changes to 18 files.** A second conversion over converted
+files touched none (Modified files 0).
+
+The rules, `before` → `after` (each file `---\n…\n---\nbody\n` unless shown):
+
+| Before | After |
+| --- | --- |
+| `tags: a, b` / `tags: a,b,c` / `tags: 'a, b'` | `tags:\n  - a\n  - b` (… `- c`) |
+| `tags: n1 n2`, `tags: a b, c`, `tags: a/b c/d` | split on spaces and commas |
+| `tags: "#a #b"` / `tags: "#a"` | `tags:\n  - "#a"\n  - "#b"` |
+| `tags: solo`, `tags: a,` | `tags:\n  - solo`, `tags:\n  - a` |
+| `tags: a a` | `tags:\n  - a\n  - a` (duplicates kept) |
+| `Tags: a b` | `Tags:\n  - a\n  - b` (key matched ignoring case, kept as written) |
+| `tag: x` | `tags:\n  - x` (renamed) |
+| `tag:` | `tags:` |
+| `tag: x` with `tags: [y]` | unchanged (the file not written) |
+| `aliases: foo` / `aliases: New York` | `aliases:\n  - foo` / `- New York` (aliases split on commas only) |
+| `aliases: New York, LA`, `alias: foo, bar` | `aliases:\n  - New York\n  - LA`, `aliases:\n  - foo\n  - bar` |
+| `alias:\n  - x` | `aliases:\n  - x` |
+| `alias: x` with `aliases: y` | `alias: x\naliases:\n  - y` |
+| `aliases: ""` | `aliases: []` |
+| `cssclass: wide`, `cssclass:\n  - wide` | `cssclasses:\n  - wide` |
+| `cssclasses: wide narrow`, `cssclasses: wide, narrow` | `cssclasses:\n  - wide\n  - narrow` |
+| `cssclass: a` with `cssclasses: b` | `cssclass: a\ncssclasses:\n  - b` |
+
+Unchanged and not written: `tags: [a, b]`, a block list, `tags: ["#a", b]`, `tags:` (empty),
+`tags: 123`, `tags: true`, `aliases:` as a block list, a note with no frontmatter, one whose
+fence follows a BOM, one with no tags/aliases/cssclasses keys.
+
+**A converted file's whole block is re-serialised**, not only the keys converted: `k: v # keep`
+lost its comment, `list: [1, 2]` became a block list, `s: 'single'` became `s: single`, a blank
+line inside the block went, and in a CRLF note the block's inner lines came out with `\n` while
+the fences kept `\r\n` (`---\r\ntitle: T\ntags:\n  - a\nother: 1\n---\r\nbody\r\n`). Keys keep
+their order; `meta:\n  k: v` and `d: 2024-01-02` kept their bytes.
+
+### Not settled: attachments and the converter
+- Insert attachment with several files (the input is not `multiple`, so presumably impossible), a
+  picked folder, a file whose name the vault refuses; whether the embed is `!` for every type
+  under Markdown links (only a `.png` was tried there); Source mode (only Live Preview was run).
+- Download attachments in the reading view and in Source mode; a reference image
+  `![alt][label]`; an image inside a link `[![a](img)](url)`; alt text with formatting
+  (`![*em*](…)`: raw or plain); which frontmatter values are downloaded (`.png`, `.jpg` yes; a
+  `.html` and list items no) and what Markdown links write there; content types `image/bmp`,
+  `image/avif`; a redirect; what the gallery shows for a URL that does not load; the request's
+  headers.
+- The converter's Stop and Go back; Failed counts above 0; a vault large enough to watch the
+  progress; nested or flow values inside `tags` (`tags: [[a]]`).
+
+## Observed app info and open-file commands, Obsidian 1.15.0 (installer build 1.13.7)
+
+Recorded by the same probe and run as
+[[#Observed attachment commands, Obsidian 1.15.0 (installer build 1.13.7)]]; it answers the open
+questions of [[#Not settled: app and window commands]] for these three.
+
+### Show debug info, the values and the buttons
+
+The text with its values on the probe's machine, a fresh vault (no theme key, no plugins):
+
+```
+SYSTEM INFO:
+	Obsidian version: 1.15.0
+	Installer version: 1.13.7
+	Operating system: #1-NixOS SMP PREEMPT_DYNAMIC Fri Oct 30 12:06:41 UTC 2026 6.18.60
+	Login status: not logged in
+	Language: en
+	Insider build toggle: off
+	Live preview: on
+	Base theme: adapt to system
+	Community theme: none
+	Snippets enabled: 0
+	Restricted mode: on
+
+RECOMMENDATIONS:
+	none
+```
+
+With Live Preview off, `theme: moonstone`, a community theme `Probe Theme` and community plugins
+on with one plugin enabled, the lines read `Live preview: off`, `Base theme: light`,
+`Community theme: Probe Theme`, `Restricted mode: off`, and three lines follow `Restricted
+mode` — `Plugins installed: 1`, `Plugins enabled: 1`, and `\t\t1: Probe Noop v0.0.1` (two tabs)
+— and **RECOMMENDATIONS** lists, one tab in:
+
+```
+	Custom theme and snippets: for cosmetic issues, please first try updating your theme and disabling your snippets. If still not fixed, please try to make the issue happen in the Sandbox Vault or disable community theme and snippets.
+	Community plugins: for bugs, please first try updating all your plugins to latest. If still not fixed, please try to make the issue happen in the Sandbox Vault or disable community plugins.
+```
+
+The buttons: **Copy to clipboard** puts the textarea's text on the clipboard byte for byte,
+closes the modal and shows **Debug info copied to your clipboard**. **Sandbox vault** closes the
+modal and sends the main process `sandbox` (synchronously; the probe blocked it, so the sandbox
+vault, `<data dir>/Obsidian Sandbox`, was not opened). **Done** closes it, as Escape does.
+
+### Show release notes offline
+
+The view asks the main process for `https://obsidian.md/changelog/desktop/1.15.md`
+(`request-url`, `{"url": …, "throw": true}`) **every time it opens**: nothing was kept in local
+storage between runs. With the request failing (the probe pointed the main process's handler at
+a closed port: a real refused connection; Electron's network emulation did not reach it), the tab
+opens as usual — type `release-notes`, title `Release Notes 1.15.0` — and the view reads:
+
+```
+What's new in 1.15
+Could not load release notes for 1.15. Retry
+A complete list of previous changes can be found on our changelog.
+```
+
+the heading an `h1`, `Retry` an `<a>`, and the last line a `section.footnotes` after an `hr`
+whose link goes to `https://obsidian.md/changelog`. No notice. Online again, the next run drew
+the notes.
+
+### Open file from outside the vault, a path chosen
+
+The main process's dialog is `showOpenDialog` with `properties: ["openFile",
+"dontAddToRecent"]` and the one filter **Supported files** listing the 25 extensions
+[[#Open file from outside the vault]] gives. With an answer:
+
+| Picked | Active tab before | Result |
+| --- | --- | --- |
+| `<vault>/Note B.md` | `Note A` | `Note B` **in the same tab** (state `{"file": "Note B.md", "mode": "source", "source": false}`), no new tab |
+| `<vault>/Note B.md` | an empty tab | `Note B` in that tab |
+| `<vault>/Sub/Deep.md` | `Note A` | `Sub/Deep.md` in the same tab |
+| `<vault>/Note A.md` | `Note A` | nothing visible changes |
+| `<vault>/img.png` | `Note A` | the image view in the same tab |
+| `…/Outside/Outside Note.md` | `Note A` | a **new tab right after the active one**, active, a Markdown view of the outside file |
+| the same | an empty tab | **the empty tab** shows it (a second tab of the same file now exists: no reuse) |
+| `…/Outside/outside.png` | `Note A` | a new tab after the active one, the image view |
+| cancelled | `Note A` | nothing |
+
+No notice in any case; nothing is copied into the vault. An outside file's view has
+`file.path` **`file:` + the absolute path** (`file:/tmp/…/Outside/Outside Note.md`, one slash),
+its name and title from the file name (`Outside Note`), breadcrumbs that are the absolute
+path's folders, and `workspace.json` records the leaf as `{"type": "markdown", "state":
+{"file": "file:/tmp/…/Outside Note.md", "mode": "source", "source": false}, "icon":
+"lucide-file", "title": "Outside Note"}` (`"type": "image"`, `lucide-image` for the picture).
+**Edits are saved to the outside file**: `EDIT ` typed at its start was on disk 3.5 s later.
+
+### Not settled: debug info, release notes, open file
+- The `Base theme` value for `obsidian` (dark) and under a light system preference; `Snippets
+  enabled` above 0 (the probe's snippet did not take); `Login status` when signed in; other
+  recommendation lines.
+- Retry's behaviour; release notes for a version with no changelog page.
+- Open file: an outside file renamed or deleted while open; what a relaunch does with a `file:`
+  leaf; an inside path through a symlink; whether the extension filter can be bypassed.

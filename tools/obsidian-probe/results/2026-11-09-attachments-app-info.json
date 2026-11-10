@@ -1,0 +1,5845 @@
+{
+ "run": {
+  "startedAt": "2026-11-10T05:46:11.021Z",
+  "env": {
+   "ONLY": null,
+   "vault": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run1/Probe Vault",
+   "outside": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run1/Outside"
+  },
+  "steps": {
+   "s00-version": {
+    "ok": true,
+    "ms": 2,
+    "title": "New tab - Probe Vault - Obsidian 1.15.0",
+    "version": "1.15.0",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+    "commands": [
+     [
+      "editor:toggle-spellcheck",
+      {
+       "name": "Toggle spellcheck",
+       "icon": null,
+       "kinds": [
+        "callback"
+       ],
+       "hotkeys": null
+      }
+     ],
+     [
+      "editor:attach-file",
+      {
+       "name": "Insert attachment",
+       "icon": "lucide-paperclip",
+       "kinds": [
+        "checkCallback",
+        "editorCallback"
+       ],
+       "hotkeys": null
+      }
+     ],
+     [
+      "editor:download-attachments",
+      {
+       "name": "Download attachments for current file",
+       "icon": null,
+       "kinds": [
+        "checkCallback"
+       ],
+       "hotkeys": null
+      }
+     ],
+     [
+      "app:migrate-frontmatter",
+      {
+       "name": "Format converter: Frontmatter migration",
+       "icon": "lucide-binary",
+       "kinds": [
+        "callback"
+       ],
+       "hotkeys": null
+      }
+     ],
+     [
+      "app:show-debug-info",
+      {
+       "name": "Show debug info",
+       "icon": null,
+       "kinds": [
+        "callback"
+       ],
+       "hotkeys": null
+      }
+     ],
+     [
+      "app:show-release-notes",
+      {
+       "name": "Show release notes",
+       "icon": null,
+       "kinds": [
+        "callback"
+       ],
+       "hotkeys": null
+      }
+     ],
+     [
+      "app:open-file",
+      {
+       "name": "Open file from outside the vault...",
+       "icon": null,
+       "kinds": [
+        "callback"
+       ],
+       "hotkeys": null
+      }
+     ]
+    ]
+   },
+   "s01-spellcheck": {
+    "ok": true,
+    "ms": 9920,
+    "runs": [
+     {
+      "start": "{}",
+      "startConfig": true,
+      "runs": [
+       {
+        "avail": true,
+        "run": {
+         "ran": true,
+         "err": null
+        },
+        "writtenAfterMs": 1603,
+        "appJson": "{\n  \"spellcheck\": false\n}",
+        "config": false,
+        "cmAttr": "false",
+        "webContents": true,
+        "notices": [],
+        "calls": [
+         {
+          "kind": "ipc.sendSync version",
+          "args": []
+         }
+        ]
+       },
+       {
+        "avail": true,
+        "run": {
+         "ran": true,
+         "err": null
+        },
+        "writtenAfterMs": 1603,
+        "appJson": "{\n  \"spellcheck\": true\n}",
+        "config": true,
+        "cmAttr": "true",
+        "webContents": true,
+        "notices": [],
+        "calls": []
+       }
+      ]
+     },
+     {
+      "start": "{\n  \"spellcheck\": false\n}",
+      "startConfig": false,
+      "runs": [
+       {
+        "avail": true,
+        "run": {
+         "ran": true,
+         "err": null
+        },
+        "writtenAfterMs": 1603,
+        "appJson": "{\n  \"spellcheck\": true\n}",
+        "config": true,
+        "cmAttr": "true",
+        "webContents": true,
+        "notices": [],
+        "calls": []
+       },
+       {
+        "avail": true,
+        "run": {
+         "ran": true,
+         "err": null
+        },
+        "writtenAfterMs": 1603,
+        "appJson": "{\n  \"spellcheck\": false\n}",
+        "config": false,
+        "cmAttr": "false",
+        "webContents": true,
+        "notices": [],
+        "calls": []
+       }
+      ]
+     }
+    ],
+    "noFile": true
+   },
+   "s02-attach-file": {
+    "ok": true,
+    "ms": 99476,
+    "cases": {
+     "rootPng": {
+      "before": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "chooser": {
+       "mode": null,
+       "error": "Error: Page.fileChooserOpened event timeout"
+      },
+      "inputs": [
+       {
+        "type": "file",
+        "accept": "",
+        "multiple": false,
+        "inDoc": true
+       }
+      ],
+      "after": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Note.md": 18
+      },
+      "notices": [],
+      "calls": []
+     },
+     "rootPngAgain": {
+      "before": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 1,
+        "ch": 8
+       },
+       "anchor": {
+        "line": 1,
+        "ch": 8
+       },
+       "selection": ""
+      },
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "chooser": {
+       "mode": null,
+       "error": "Error: Page.fileChooserOpened event timeout"
+      },
+      "inputs": [
+       {
+        "type": "file",
+        "accept": "",
+        "multiple": false,
+        "inDoc": true
+       }
+      ],
+      "after": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 1,
+        "ch": 8
+       },
+       "anchor": {
+        "line": 1,
+        "ch": 8
+       },
+       "selection": ""
+      },
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Note.md": 18
+      },
+      "notices": [],
+      "calls": []
+     },
+     "rootTxt": {
+      "before": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 1,
+        "ch": 0
+       },
+       "anchor": {
+        "line": 1,
+        "ch": 0
+       },
+       "selection": ""
+      },
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "chooser": {
+       "mode": null,
+       "error": "Error: Page.fileChooserOpened event timeout"
+      },
+      "inputs": [
+       {
+        "type": "file",
+        "accept": "",
+        "multiple": false,
+        "inDoc": true
+       }
+      ],
+      "after": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 1,
+        "ch": 0
+       },
+       "anchor": {
+        "line": 1,
+        "ch": 0
+       },
+       "selection": ""
+      },
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Note.md": 18
+      },
+      "notices": [],
+      "calls": [
+       {
+        "kind": "ipc.send REMOTE_BROWSER_DEREFERENCE",
+        "args": [
+         "4-1",
+         8,
+         0
+        ]
+       }
+      ]
+     },
+     "cancel": {
+      "before": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "chooser": {
+       "mode": null,
+       "error": "Error: Page.fileChooserOpened event timeout"
+      },
+      "inputs": [
+       {
+        "type": "file",
+        "accept": "",
+        "multiple": false,
+        "inDoc": true
+       }
+      ],
+      "after": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Note.md": 18
+      },
+      "notices": [],
+      "calls": []
+     },
+     "sameFolderPng": {
+      "before": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "chooser": {
+       "mode": null,
+       "error": "Error: Page.fileChooserOpened event timeout"
+      },
+      "inputs": [
+       {
+        "type": "file",
+        "accept": "",
+        "multiple": false,
+        "inDoc": true
+       }
+      ],
+      "after": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Note.md": 18
+      },
+      "notices": [],
+      "calls": []
+     },
+     "subfolderPng": {
+      "before": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "chooser": {
+       "mode": null,
+       "error": "Error: Page.fileChooserOpened event timeout"
+      },
+      "inputs": [
+       {
+        "type": "file",
+        "accept": "",
+        "multiple": false,
+        "inDoc": true
+       }
+      ],
+      "after": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Note.md": 18
+      },
+      "notices": [],
+      "calls": []
+     },
+     "namedFolderPng": {
+      "before": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "chooser": {
+       "mode": null,
+       "error": "Error: Page.fileChooserOpened event timeout"
+      },
+      "inputs": [
+       {
+        "type": "file",
+        "accept": "",
+        "multiple": false,
+        "inDoc": true
+       }
+      ],
+      "after": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Note.md": 18
+      },
+      "notices": [],
+      "calls": []
+     },
+     "selection": {
+      "before": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 8
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 5
+       },
+       "selection": "one"
+      },
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "chooser": {
+       "mode": null,
+       "error": "Error: Page.fileChooserOpened event timeout"
+      },
+      "inputs": [
+       {
+        "type": "file",
+        "accept": "",
+        "multiple": false,
+        "inDoc": true
+       }
+      ],
+      "after": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 8
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 5
+       },
+       "selection": "one"
+      },
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Note.md": 18
+      },
+      "notices": [],
+      "calls": []
+     },
+     "markdownLinks": {
+      "before": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "chooser": {
+       "mode": null,
+       "error": "Error: Page.fileChooserOpened event timeout"
+      },
+      "inputs": [
+       {
+        "type": "file",
+        "accept": "",
+        "multiple": false,
+        "inDoc": true
+       }
+      ],
+      "after": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Note.md": 18
+      },
+      "notices": [],
+      "calls": []
+     },
+     "markdownRelative": {
+      "before": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "chooser": {
+       "mode": null,
+       "error": "Error: Page.fileChooserOpened event timeout"
+      },
+      "inputs": [
+       {
+        "type": "file",
+        "accept": "",
+        "multiple": false,
+        "inDoc": true
+       }
+      ],
+      "after": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Note.md": 18
+      },
+      "notices": [],
+      "calls": []
+     },
+     "alreadyInVault": {
+      "before": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "chooser": {
+       "mode": null,
+       "error": "Error: Page.fileChooserOpened event timeout"
+      },
+      "inputs": [
+       {
+        "type": "file",
+        "accept": "",
+        "multiple": false,
+        "inDoc": true
+       }
+      ],
+      "after": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Note.md": 18,
+       "Sub/inside.png": 70
+      },
+      "notices": [],
+      "calls": []
+     }
+    },
+    "availability": {
+     "note": true,
+     "reading": false,
+     "empty": false
+    }
+   },
+   "s03-download-attachments": {
+    "ok": true,
+    "ms": 68000,
+    "cases": {
+     "root": {
+      "mediaBefore": 14,
+      "textBefore": "a ![](http://127.0.0.1:9343/img/photo.png) b\n![alt](http://127.0.0.1:9343/img/two%20words.png)\n[link](http://127.0.0.1:9343/img/pic.jpg)\n![x](http://127.0.0.1:9343/png-noext)\n![j](http://127.0.0.1:9343/jpeg-noext)\n![q](http://127.0.0.1:9343/img/photo.png?size=2)\n![sized|100](http://127.0.0.1:9343/img/pic.jpg)\n![t](http://127.0.0.1:9343/img/again/photo.png \"a title\")\n<img src=\"http://127.0.0.1:9343/img/pic.jpg\">\n![[http://127.0.0.1:9343/img/photo.png]]\n![pdf](http://127.0.0.1:9343/doc.pdf)\n",
+      "avail": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "modal": {
+       "cls": "modal mod-scrollable-content",
+       "title": "Download attachments",
+       "html": "<div class=\"modal mod-scrollable-content\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Download attachments</div></div><div class=\"modal-content\"><div class=\"attachments-gallery\"><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/two%20words.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/png-noext\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/jpeg-noext\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png?size=2\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/pic.jpg\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/again/photo.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/doc.pdf\"></div></div></div><div class=\"modal-button-container\"><button class=\"mod-cancel\">Cancel</button><button class=\"mod-cta\">Download</button></div></div>",
+       "buttons": [
+        {
+         "text": "Cancel",
+         "cls": "mod-cancel"
+        },
+        {
+         "text": "Download",
+         "cls": "mod-cta"
+        }
+       ]
+      },
+      "items": [
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/photo.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/two%20words.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/two%20words.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/png-noext",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/png-noext\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/jpeg-noext",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/jpeg-noext\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/photo.png?size=2",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png?size=2\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/pic.jpg",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/pic.jpg\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/again/photo.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/again/photo.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/doc.pdf",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/doc.pdf\">"
+       }
+      ],
+      "noticesOnOpen": [],
+      "modalAfter": null,
+      "textAfter": "a ![[photo.png]] b\n![[two%20words.png|alt]]\n[link](http://127.0.0.1:9343/img/pic.jpg)\n![[Image.png|x]]\n![[Image.jpg|j]]\n![[photo 1.png|q]]\n![[pic.jpg|sized]]\n![[photo 2.png|t]]\n<img src=\"http://127.0.0.1:9343/img/pic.jpg\">\n![[http://127.0.0.1:9343/img/photo.png]]\n![[doc.pdf|pdf]]\n",
+      "editorText": "a ![[photo.png]] b\n![[two%20words.png|alt]]\n[link](http://127.0.0.1:9343/img/pic.jpg)\n![[Image.png|x]]\n![[Image.jpg|j]]\n![[photo 1.png|q]]\n![[pic.jpg|sized]]\n![[photo 2.png|t]]\n<img src=\"http://127.0.0.1:9343/img/pic.jpg\">\n![[http://127.0.0.1:9343/img/photo.png]]\n![[doc.pdf|pdf]]\n",
+      "vault": {
+       "Image.jpg": 64,
+       "Image.png": 70,
+       "Sub/": "dir",
+       "Sub/Page.md": 281,
+       "doc.pdf": 15,
+       "photo 1.png": 70,
+       "photo 2.png": 70,
+       "photo.png": 70,
+       "pic.jpg": 64,
+       "two%20words.png": 70
+      },
+      "notices": [
+       "Downloaded 8 attachments."
+      ],
+      "requests": [
+       "\"GET /jpeg-noext HTTP/1.1\" 200 -",
+       "\"GET /img/pic.jpg HTTP/1.1\" 200 -",
+       "\"GET /doc.pdf HTTP/1.1\" 200 -",
+       "\"GET /img/photo.png HTTP/1.1\" 200 -",
+       "\"GET /img/two%20words.png HTTP/1.1\" 200 -",
+       "\"GET /png-noext HTTP/1.1\" 200 -",
+       "\"GET /jpeg-noext HTTP/1.1\" 200 -",
+       "\"GET /img/photo.png?size=2 HTTP/1.1\" 200 -",
+       "\"GET /img/pic.jpg HTTP/1.1\" 200 -",
+       "\"GET /img/again/photo.png HTTP/1.1\" 200 -",
+       "\"GET /doc.pdf HTTP/1.1\" 200 -"
+      ],
+      "calls": [
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "c5ea09d5d88f1ff2",
+         {
+          "url": "http://127.0.0.1:9343/img/photo.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "c2bd9047228b2c58",
+         {
+          "url": "http://127.0.0.1:9343/img/two%20words.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "eb42b10519a57cea",
+         {
+          "url": "http://127.0.0.1:9343/png-noext"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "1577ea164b16d38e",
+         {
+          "url": "http://127.0.0.1:9343/jpeg-noext"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "c0d0ef5825b06908",
+         {
+          "url": "http://127.0.0.1:9343/img/photo.png?size=2"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "72411c734fd0da44",
+         {
+          "url": "http://127.0.0.1:9343/img/pic.jpg"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "0ede26bd91152425",
+         {
+          "url": "http://127.0.0.1:9343/img/again/photo.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "37f8ca5ebdc4f65b",
+         {
+          "url": "http://127.0.0.1:9343/doc.pdf"
+         }
+        ]
+       }
+      ]
+     },
+     "collision": {
+      "mediaBefore": 33,
+      "textBefore": "a ![](http://127.0.0.1:9343/img/photo.png) b\n![alt](http://127.0.0.1:9343/img/two%20words.png)\n[link](http://127.0.0.1:9343/img/pic.jpg)\n![x](http://127.0.0.1:9343/png-noext)\n![j](http://127.0.0.1:9343/jpeg-noext)\n![q](http://127.0.0.1:9343/img/photo.png?size=2)\n![sized|100](http://127.0.0.1:9343/img/pic.jpg)\n![t](http://127.0.0.1:9343/img/again/photo.png \"a title\")\n<img src=\"http://127.0.0.1:9343/img/pic.jpg\">\n![[http://127.0.0.1:9343/img/photo.png]]\n![pdf](http://127.0.0.1:9343/doc.pdf)\n",
+      "avail": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "modal": {
+       "cls": "modal mod-scrollable-content",
+       "title": "Download attachments",
+       "html": "<div class=\"modal mod-scrollable-content\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Download attachments</div></div><div class=\"modal-content\"><div class=\"attachments-gallery\"><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/two%20words.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/png-noext\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/jpeg-noext\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png?size=2\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/pic.jpg\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/again/photo.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/doc.pdf\"></div></div></div><div class=\"modal-button-container\"><button class=\"mod-cancel\">Cancel</button><button class=\"mod-cta\">Download</button></div></div>",
+       "buttons": [
+        {
+         "text": "Cancel",
+         "cls": "mod-cancel"
+        },
+        {
+         "text": "Download",
+         "cls": "mod-cta"
+        }
+       ]
+      },
+      "items": [
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/photo.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/two%20words.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/two%20words.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/png-noext",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/png-noext\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/jpeg-noext",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/jpeg-noext\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/photo.png?size=2",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png?size=2\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/pic.jpg",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/pic.jpg\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/again/photo.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/again/photo.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/doc.pdf",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/doc.pdf\">"
+       }
+      ],
+      "noticesOnOpen": [],
+      "modalAfter": null,
+      "textAfter": "a ![[photo 1.png]] b\n![[two%20words.png|alt]]\n[link](http://127.0.0.1:9343/img/pic.jpg)\n![[Image.png|x]]\n![[Image.jpg|j]]\n![[photo 2.png|q]]\n![[pic.jpg|sized]]\n![[photo 3.png|t]]\n<img src=\"http://127.0.0.1:9343/img/pic.jpg\">\n![[http://127.0.0.1:9343/img/photo.png]]\n![[doc.pdf|pdf]]\n",
+      "editorText": "a ![[photo 1.png]] b\n![[two%20words.png|alt]]\n[link](http://127.0.0.1:9343/img/pic.jpg)\n![[Image.png|x]]\n![[Image.jpg|j]]\n![[photo 2.png|q]]\n![[pic.jpg|sized]]\n![[photo 3.png|t]]\n<img src=\"http://127.0.0.1:9343/img/pic.jpg\">\n![[http://127.0.0.1:9343/img/photo.png]]\n![[doc.pdf|pdf]]\n",
+      "vault": {
+       "Image.jpg": 64,
+       "Image.png": 70,
+       "Sub/": "dir",
+       "Sub/Page.md": 283,
+       "doc.pdf": 15,
+       "photo 1.png": 70,
+       "photo 2.png": 70,
+       "photo 3.png": 70,
+       "photo.png": 8,
+       "pic.jpg": 64,
+       "two%20words.png": 70
+      },
+      "notices": [
+       "Downloaded 8 attachments."
+      ],
+      "requests": [
+       "\"GET /img/pic.jpg HTTP/1.1\" 200 -",
+       "\"GET /jpeg-noext HTTP/1.1\" 200 -",
+       "\"GET /doc.pdf HTTP/1.1\" 200 -",
+       "\"GET /img/photo.png HTTP/1.1\" 200 -",
+       "\"GET /img/two%20words.png HTTP/1.1\" 200 -",
+       "\"GET /png-noext HTTP/1.1\" 200 -",
+       "\"GET /jpeg-noext HTTP/1.1\" 200 -",
+       "\"GET /img/photo.png?size=2 HTTP/1.1\" 200 -",
+       "\"GET /img/pic.jpg HTTP/1.1\" 200 -",
+       "\"GET /img/again/photo.png HTTP/1.1\" 200 -",
+       "\"GET /doc.pdf HTTP/1.1\" 200 -"
+      ],
+      "calls": [
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "6852449ec9ebd321",
+         {
+          "url": "http://127.0.0.1:9343/img/photo.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "ce6e5e5f645c3737",
+         {
+          "url": "http://127.0.0.1:9343/img/two%20words.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "3e65d5846e6d6371",
+         {
+          "url": "http://127.0.0.1:9343/png-noext"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "b201c7822363ad89",
+         {
+          "url": "http://127.0.0.1:9343/jpeg-noext"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "b9189b89f29fd616",
+         {
+          "url": "http://127.0.0.1:9343/img/photo.png?size=2"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "cb41b183a8bd02e5",
+         {
+          "url": "http://127.0.0.1:9343/img/pic.jpg"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "af6b74a8b7f724b9",
+         {
+          "url": "http://127.0.0.1:9343/img/again/photo.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "dd7f4a9fe73761d9",
+         {
+          "url": "http://127.0.0.1:9343/doc.pdf"
+         }
+        ]
+       }
+      ]
+     },
+     "subfolder": {
+      "mediaBefore": 47,
+      "textBefore": "a ![](http://127.0.0.1:9343/img/photo.png) b\n![alt](http://127.0.0.1:9343/img/two%20words.png)\n[link](http://127.0.0.1:9343/img/pic.jpg)\n![x](http://127.0.0.1:9343/png-noext)\n![j](http://127.0.0.1:9343/jpeg-noext)\n![q](http://127.0.0.1:9343/img/photo.png?size=2)\n![sized|100](http://127.0.0.1:9343/img/pic.jpg)\n![t](http://127.0.0.1:9343/img/again/photo.png \"a title\")\n<img src=\"http://127.0.0.1:9343/img/pic.jpg\">\n![[http://127.0.0.1:9343/img/photo.png]]\n![pdf](http://127.0.0.1:9343/doc.pdf)\n",
+      "avail": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "modal": {
+       "cls": "modal mod-scrollable-content",
+       "title": "Download attachments",
+       "html": "<div class=\"modal mod-scrollable-content\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Download attachments</div></div><div class=\"modal-content\"><div class=\"attachments-gallery\"><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/two%20words.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/png-noext\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/jpeg-noext\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png?size=2\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/pic.jpg\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/again/photo.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/doc.pdf\"></div></div></div><div class=\"modal-button-container\"><button class=\"mod-cancel\">Cancel</button><button class=\"mod-cta\">Download</button></div></div>",
+       "buttons": [
+        {
+         "text": "Cancel",
+         "cls": "mod-cancel"
+        },
+        {
+         "text": "Download",
+         "cls": "mod-cta"
+        }
+       ]
+      },
+      "items": [
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/photo.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/two%20words.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/two%20words.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/png-noext",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/png-noext\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/jpeg-noext",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/jpeg-noext\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/photo.png?size=2",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png?size=2\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/pic.jpg",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/pic.jpg\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/again/photo.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/again/photo.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/doc.pdf",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/doc.pdf\">"
+       }
+      ],
+      "noticesOnOpen": [],
+      "modalAfter": null,
+      "textAfter": "a ![[photo.png]] b\n![[two%20words.png|alt]]\n[link](http://127.0.0.1:9343/img/pic.jpg)\n![[Image.png|x]]\n![[Image.jpg|j]]\n![[photo 1.png|q]]\n![[pic.jpg|sized]]\n![[photo 2.png|t]]\n<img src=\"http://127.0.0.1:9343/img/pic.jpg\">\n![[http://127.0.0.1:9343/img/photo.png]]\n![[doc.pdf|pdf]]\n",
+      "editorText": "a ![[photo.png]] b\n![[two%20words.png|alt]]\n[link](http://127.0.0.1:9343/img/pic.jpg)\n![[Image.png|x]]\n![[Image.jpg|j]]\n![[photo 1.png|q]]\n![[pic.jpg|sized]]\n![[photo 2.png|t]]\n<img src=\"http://127.0.0.1:9343/img/pic.jpg\">\n![[http://127.0.0.1:9343/img/photo.png]]\n![[doc.pdf|pdf]]\n",
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Page.md": 281,
+       "Sub/att/": "dir",
+       "Sub/att/Image.jpg": 64,
+       "Sub/att/Image.png": 70,
+       "Sub/att/doc.pdf": 15,
+       "Sub/att/photo 1.png": 70,
+       "Sub/att/photo 2.png": 70,
+       "Sub/att/photo.png": 70,
+       "Sub/att/pic.jpg": 64,
+       "Sub/att/two%20words.png": 70
+      },
+      "notices": [
+       "Downloaded 8 attachments."
+      ],
+      "requests": [
+       "\"GET /jpeg-noext HTTP/1.1\" 200 -",
+       "\"GET /doc.pdf HTTP/1.1\" 200 -",
+       "\"GET /img/pic.jpg HTTP/1.1\" 200 -",
+       "\"GET /img/photo.png HTTP/1.1\" 200 -",
+       "\"GET /img/two%20words.png HTTP/1.1\" 200 -",
+       "\"GET /png-noext HTTP/1.1\" 200 -",
+       "\"GET /jpeg-noext HTTP/1.1\" 200 -",
+       "\"GET /img/photo.png?size=2 HTTP/1.1\" 200 -",
+       "\"GET /img/pic.jpg HTTP/1.1\" 200 -",
+       "\"GET /img/again/photo.png HTTP/1.1\" 200 -",
+       "\"GET /doc.pdf HTTP/1.1\" 200 -"
+      ],
+      "calls": [
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "ce46f34cbdcebcf8",
+         {
+          "url": "http://127.0.0.1:9343/img/photo.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "92b43aaa88227dff",
+         {
+          "url": "http://127.0.0.1:9343/img/two%20words.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "804fb48cec035a64",
+         {
+          "url": "http://127.0.0.1:9343/png-noext"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "9f49e93b8570b290",
+         {
+          "url": "http://127.0.0.1:9343/jpeg-noext"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "bcaa9e165aa1bac9",
+         {
+          "url": "http://127.0.0.1:9343/img/photo.png?size=2"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "8dd04dc1cd8ccd9a",
+         {
+          "url": "http://127.0.0.1:9343/img/pic.jpg"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "f205667c0ac915b9",
+         {
+          "url": "http://127.0.0.1:9343/img/again/photo.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "f8a8f3f2c3031128",
+         {
+          "url": "http://127.0.0.1:9343/doc.pdf"
+         }
+        ]
+       }
+      ]
+     },
+     "sameFolder": {
+      "mediaBefore": 66,
+      "textBefore": "a ![](http://127.0.0.1:9343/img/photo.png) b\n![alt](http://127.0.0.1:9343/img/two%20words.png)\n[link](http://127.0.0.1:9343/img/pic.jpg)\n![x](http://127.0.0.1:9343/png-noext)\n![j](http://127.0.0.1:9343/jpeg-noext)\n![q](http://127.0.0.1:9343/img/photo.png?size=2)\n![sized|100](http://127.0.0.1:9343/img/pic.jpg)\n![t](http://127.0.0.1:9343/img/again/photo.png \"a title\")\n<img src=\"http://127.0.0.1:9343/img/pic.jpg\">\n![[http://127.0.0.1:9343/img/photo.png]]\n![pdf](http://127.0.0.1:9343/doc.pdf)\n",
+      "avail": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "modal": {
+       "cls": "modal mod-scrollable-content",
+       "title": "Download attachments",
+       "html": "<div class=\"modal mod-scrollable-content\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Download attachments</div></div><div class=\"modal-content\"><div class=\"attachments-gallery\"><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/two%20words.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/png-noext\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/jpeg-noext\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png?size=2\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/pic.jpg\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/again/photo.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/doc.pdf\"></div></div></div><div class=\"modal-button-container\"><button class=\"mod-cancel\">Cancel</button><button class=\"mod-cta\">Download</button></div></div>",
+       "buttons": [
+        {
+         "text": "Cancel",
+         "cls": "mod-cancel"
+        },
+        {
+         "text": "Download",
+         "cls": "mod-cta"
+        }
+       ]
+      },
+      "items": [
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/photo.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/two%20words.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/two%20words.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/png-noext",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/png-noext\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/jpeg-noext",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/jpeg-noext\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/photo.png?size=2",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png?size=2\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/pic.jpg",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/pic.jpg\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/again/photo.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/again/photo.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/doc.pdf",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/doc.pdf\">"
+       }
+      ],
+      "noticesOnOpen": [],
+      "modalAfter": null,
+      "textAfter": "a ![[photo.png]] b\n![[two%20words.png|alt]]\n[link](http://127.0.0.1:9343/img/pic.jpg)\n![[Image.png|x]]\n![[Image.jpg|j]]\n![[photo 1.png|q]]\n![[pic.jpg|sized]]\n![[photo 2.png|t]]\n<img src=\"http://127.0.0.1:9343/img/pic.jpg\">\n![[http://127.0.0.1:9343/img/photo.png]]\n![[doc.pdf|pdf]]\n",
+      "editorText": "a ![[photo.png]] b\n![[two%20words.png|alt]]\n[link](http://127.0.0.1:9343/img/pic.jpg)\n![[Image.png|x]]\n![[Image.jpg|j]]\n![[photo 1.png|q]]\n![[pic.jpg|sized]]\n![[photo 2.png|t]]\n<img src=\"http://127.0.0.1:9343/img/pic.jpg\">\n![[http://127.0.0.1:9343/img/photo.png]]\n![[doc.pdf|pdf]]\n",
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Image.jpg": 64,
+       "Sub/Image.png": 70,
+       "Sub/Page.md": 281,
+       "Sub/doc.pdf": 15,
+       "Sub/photo 1.png": 70,
+       "Sub/photo 2.png": 70,
+       "Sub/photo.png": 70,
+       "Sub/pic.jpg": 64,
+       "Sub/two%20words.png": 70
+      },
+      "notices": [
+       "Downloaded 8 attachments."
+      ],
+      "requests": [
+       "\"GET /jpeg-noext HTTP/1.1\" 200 -",
+       "\"GET /img/pic.jpg HTTP/1.1\" 200 -",
+       "\"GET /doc.pdf HTTP/1.1\" 200 -",
+       "\"GET /img/photo.png HTTP/1.1\" 200 -",
+       "\"GET /img/two%20words.png HTTP/1.1\" 200 -",
+       "\"GET /png-noext HTTP/1.1\" 200 -",
+       "\"GET /jpeg-noext HTTP/1.1\" 200 -",
+       "\"GET /img/photo.png?size=2 HTTP/1.1\" 200 -",
+       "\"GET /img/pic.jpg HTTP/1.1\" 200 -",
+       "\"GET /img/again/photo.png HTTP/1.1\" 200 -",
+       "\"GET /doc.pdf HTTP/1.1\" 200 -"
+      ],
+      "calls": [
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "176279b392113492",
+         {
+          "url": "http://127.0.0.1:9343/img/photo.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "5cfe792fa18aa2d7",
+         {
+          "url": "http://127.0.0.1:9343/img/two%20words.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "6116cc5521bdd96c",
+         {
+          "url": "http://127.0.0.1:9343/png-noext"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "a434ca89908b4099",
+         {
+          "url": "http://127.0.0.1:9343/jpeg-noext"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "8177fe5c958ed272",
+         {
+          "url": "http://127.0.0.1:9343/img/photo.png?size=2"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "cd9d437080e6cf10",
+         {
+          "url": "http://127.0.0.1:9343/img/pic.jpg"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "b3527ee762ee393d",
+         {
+          "url": "http://127.0.0.1:9343/img/again/photo.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "9bc5a338e22c9798",
+         {
+          "url": "http://127.0.0.1:9343/doc.pdf"
+         }
+        ]
+       }
+      ]
+     },
+     "namedFolder": {
+      "mediaBefore": 80,
+      "textBefore": "a ![](http://127.0.0.1:9343/img/photo.png) b\n![alt](http://127.0.0.1:9343/img/two%20words.png)\n[link](http://127.0.0.1:9343/img/pic.jpg)\n![x](http://127.0.0.1:9343/png-noext)\n![j](http://127.0.0.1:9343/jpeg-noext)\n![q](http://127.0.0.1:9343/img/photo.png?size=2)\n![sized|100](http://127.0.0.1:9343/img/pic.jpg)\n![t](http://127.0.0.1:9343/img/again/photo.png \"a title\")\n<img src=\"http://127.0.0.1:9343/img/pic.jpg\">\n![[http://127.0.0.1:9343/img/photo.png]]\n![pdf](http://127.0.0.1:9343/doc.pdf)\n",
+      "avail": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "modal": {
+       "cls": "modal mod-scrollable-content",
+       "title": "Download attachments",
+       "html": "<div class=\"modal mod-scrollable-content\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Download attachments</div></div><div class=\"modal-content\"><div class=\"attachments-gallery\"><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/two%20words.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/png-noext\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/jpeg-noext\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png?size=2\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/pic.jpg\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/again/photo.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/doc.pdf\"></div></div></div><div class=\"modal-button-container\"><button class=\"mod-cancel\">Cancel</button><button class=\"mod-cta\">Download</button></div></div>",
+       "buttons": [
+        {
+         "text": "Cancel",
+         "cls": "mod-cancel"
+        },
+        {
+         "text": "Download",
+         "cls": "mod-cta"
+        }
+       ]
+      },
+      "items": [
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/photo.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/two%20words.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/two%20words.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/png-noext",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/png-noext\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/jpeg-noext",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/jpeg-noext\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/photo.png?size=2",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png?size=2\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/pic.jpg",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/pic.jpg\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/again/photo.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/again/photo.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/doc.pdf",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/doc.pdf\">"
+       }
+      ],
+      "noticesOnOpen": [],
+      "modalAfter": null,
+      "textAfter": "a ![[photo.png]] b\n![[two%20words.png|alt]]\n[link](http://127.0.0.1:9343/img/pic.jpg)\n![[Image.png|x]]\n![[Image.jpg|j]]\n![[photo 1.png|q]]\n![[pic.jpg|sized]]\n![[photo 2.png|t]]\n<img src=\"http://127.0.0.1:9343/img/pic.jpg\">\n![[http://127.0.0.1:9343/img/photo.png]]\n![[doc.pdf|pdf]]\n",
+      "editorText": "a ![[photo.png]] b\n![[two%20words.png|alt]]\n[link](http://127.0.0.1:9343/img/pic.jpg)\n![[Image.png|x]]\n![[Image.jpg|j]]\n![[photo 1.png|q]]\n![[pic.jpg|sized]]\n![[photo 2.png|t]]\n<img src=\"http://127.0.0.1:9343/img/pic.jpg\">\n![[http://127.0.0.1:9343/img/photo.png]]\n![[doc.pdf|pdf]]\n",
+      "vault": {
+       "Attach/": "dir",
+       "Attach/Image.jpg": 64,
+       "Attach/Image.png": 70,
+       "Attach/doc.pdf": 15,
+       "Attach/photo 1.png": 70,
+       "Attach/photo 2.png": 70,
+       "Attach/photo.png": 70,
+       "Attach/pic.jpg": 64,
+       "Attach/two%20words.png": 70,
+       "Sub/": "dir",
+       "Sub/Page.md": 281
+      },
+      "notices": [
+       "Downloaded 8 attachments."
+      ],
+      "requests": [
+       "\"GET /jpeg-noext HTTP/1.1\" 200 -",
+       "\"GET /img/pic.jpg HTTP/1.1\" 200 -",
+       "\"GET /doc.pdf HTTP/1.1\" 200 -",
+       "\"GET /img/photo.png HTTP/1.1\" 200 -",
+       "\"GET /img/two%20words.png HTTP/1.1\" 200 -",
+       "\"GET /png-noext HTTP/1.1\" 200 -",
+       "\"GET /jpeg-noext HTTP/1.1\" 200 -",
+       "\"GET /img/photo.png?size=2 HTTP/1.1\" 200 -",
+       "\"GET /img/pic.jpg HTTP/1.1\" 200 -",
+       "\"GET /img/again/photo.png HTTP/1.1\" 200 -",
+       "\"GET /doc.pdf HTTP/1.1\" 200 -"
+      ],
+      "calls": [
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "6c9468a79696a3d8",
+         {
+          "url": "http://127.0.0.1:9343/img/photo.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "69f63abfb011fda4",
+         {
+          "url": "http://127.0.0.1:9343/img/two%20words.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "a5b33b33b003fdd2",
+         {
+          "url": "http://127.0.0.1:9343/png-noext"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "a6a5017bd9a42bca",
+         {
+          "url": "http://127.0.0.1:9343/jpeg-noext"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "304f937e1629cf21",
+         {
+          "url": "http://127.0.0.1:9343/img/photo.png?size=2"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "a287458f2e48978b",
+         {
+          "url": "http://127.0.0.1:9343/img/pic.jpg"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "39b26e2df094ee01",
+         {
+          "url": "http://127.0.0.1:9343/img/again/photo.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "7ac39beaa1a8e2e7",
+         {
+          "url": "http://127.0.0.1:9343/doc.pdf"
+         }
+        ]
+       }
+      ]
+     },
+     "markdownLinks": {
+      "mediaBefore": 99,
+      "textBefore": "a ![](http://127.0.0.1:9343/img/photo.png) b\n![alt](http://127.0.0.1:9343/img/two%20words.png)\n[link](http://127.0.0.1:9343/img/pic.jpg)\n![x](http://127.0.0.1:9343/png-noext)\n![j](http://127.0.0.1:9343/jpeg-noext)\n![q](http://127.0.0.1:9343/img/photo.png?size=2)\n![sized|100](http://127.0.0.1:9343/img/pic.jpg)\n![t](http://127.0.0.1:9343/img/again/photo.png \"a title\")\n<img src=\"http://127.0.0.1:9343/img/pic.jpg\">\n![[http://127.0.0.1:9343/img/photo.png]]\n![pdf](http://127.0.0.1:9343/doc.pdf)\n",
+      "avail": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "modal": {
+       "cls": "modal mod-scrollable-content",
+       "title": "Download attachments",
+       "html": "<div class=\"modal mod-scrollable-content\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Download attachments</div></div><div class=\"modal-content\"><div class=\"attachments-gallery\"><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/two%20words.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/png-noext\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/jpeg-noext\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png?size=2\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/pic.jpg\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/again/photo.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/doc.pdf\"></div></div></div><div class=\"modal-button-container\"><button class=\"mod-cancel\">Cancel</button><button class=\"mod-cta\">Download</button></div></div>",
+       "buttons": [
+        {
+         "text": "Cancel",
+         "cls": "mod-cancel"
+        },
+        {
+         "text": "Download",
+         "cls": "mod-cta"
+        }
+       ]
+      },
+      "items": [
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/photo.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/two%20words.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/two%20words.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/png-noext",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/png-noext\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/jpeg-noext",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/jpeg-noext\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/photo.png?size=2",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png?size=2\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/pic.jpg",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/pic.jpg\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/again/photo.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/again/photo.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/doc.pdf",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/doc.pdf\">"
+       }
+      ],
+      "noticesOnOpen": [],
+      "modalAfter": null,
+      "textAfter": "a ![](photo.png) b\n![alt](two%20words.png)\n[link](http://127.0.0.1:9343/img/pic.jpg)\n![x](Image.png)\n![j](Image.jpg)\n![q](photo%201.png)\n![sized](pic.jpg)\n![t](photo%202.png)\n<img src=\"http://127.0.0.1:9343/img/pic.jpg\">\n![[http://127.0.0.1:9343/img/photo.png]]\n![pdf](doc.pdf)\n",
+      "editorText": "a ![](photo.png) b\n![alt](two%20words.png)\n[link](http://127.0.0.1:9343/img/pic.jpg)\n![x](Image.png)\n![j](Image.jpg)\n![q](photo%201.png)\n![sized](pic.jpg)\n![t](photo%202.png)\n<img src=\"http://127.0.0.1:9343/img/pic.jpg\">\n![[http://127.0.0.1:9343/img/photo.png]]\n![pdf](doc.pdf)\n",
+      "vault": {
+       "Image.jpg": 64,
+       "Image.png": 70,
+       "Sub/": "dir",
+       "Sub/Page.md": 278,
+       "doc.pdf": 15,
+       "photo 1.png": 70,
+       "photo 2.png": 70,
+       "photo.png": 70,
+       "pic.jpg": 64,
+       "two%20words.png": 70
+      },
+      "notices": [
+       "Downloaded 8 attachments."
+      ],
+      "requests": [
+       "\"GET /jpeg-noext HTTP/1.1\" 200 -",
+       "\"GET /img/pic.jpg HTTP/1.1\" 200 -",
+       "\"GET /doc.pdf HTTP/1.1\" 200 -",
+       "\"GET /img/photo.png HTTP/1.1\" 200 -",
+       "\"GET /img/two%20words.png HTTP/1.1\" 200 -",
+       "\"GET /png-noext HTTP/1.1\" 200 -",
+       "\"GET /jpeg-noext HTTP/1.1\" 200 -",
+       "\"GET /img/photo.png?size=2 HTTP/1.1\" 200 -",
+       "\"GET /img/pic.jpg HTTP/1.1\" 200 -",
+       "\"GET /img/again/photo.png HTTP/1.1\" 200 -",
+       "\"GET /doc.pdf HTTP/1.1\" 200 -"
+      ],
+      "calls": [
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "c1f1499557a2894e",
+         {
+          "url": "http://127.0.0.1:9343/img/photo.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "1f878553bbe63d26",
+         {
+          "url": "http://127.0.0.1:9343/img/two%20words.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "2f01665db68ea40e",
+         {
+          "url": "http://127.0.0.1:9343/png-noext"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "7b6f78dd882f259a",
+         {
+          "url": "http://127.0.0.1:9343/jpeg-noext"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "ba9ddd5cc1015149",
+         {
+          "url": "http://127.0.0.1:9343/img/photo.png?size=2"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "be61ec3b80449ed2",
+         {
+          "url": "http://127.0.0.1:9343/img/pic.jpg"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "a1eb3c6e38d0cce9",
+         {
+          "url": "http://127.0.0.1:9343/img/again/photo.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "9a861c5f4b146df1",
+         {
+          "url": "http://127.0.0.1:9343/doc.pdf"
+         }
+        ]
+       }
+      ]
+     },
+     "deselectSecond": {
+      "mediaBefore": 110,
+      "textBefore": "![a](http://127.0.0.1:9343/img/photo.png)\n![b](http://127.0.0.1:9343/img/two%20words.png)\n",
+      "avail": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "modal": {
+       "cls": "modal mod-scrollable-content",
+       "title": "Download attachments",
+       "html": "<div class=\"modal mod-scrollable-content\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Download attachments</div></div><div class=\"modal-content\"><div class=\"attachments-gallery\"><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/two%20words.png\"></div></div></div><div class=\"modal-button-container\"><button class=\"mod-cancel\">Cancel</button><button class=\"mod-cta\">Download</button></div></div>",
+       "buttons": [
+        {
+         "text": "Cancel",
+         "cls": "mod-cancel"
+        },
+        {
+         "text": "Download",
+         "cls": "mod-cta"
+        }
+       ]
+      },
+      "items": [
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/photo.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/two%20words.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/two%20words.png\">"
+       }
+      ],
+      "noticesOnOpen": [],
+      "itemsAfterClick": [
+       {
+        "cls": "download-attachment-item is-selected",
+        "checked": true
+       },
+       {
+        "cls": "download-attachment-item",
+        "checked": false
+       }
+      ],
+      "modalAfter": null,
+      "textAfter": "![[photo.png|a]]\n![b](http://127.0.0.1:9343/img/two%20words.png)\n",
+      "editorText": "![[photo.png|a]]\n![b](http://127.0.0.1:9343/img/two%20words.png)\n",
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Page.md": 65,
+       "photo.png": 70
+      },
+      "notices": [
+       "Downloaded 1 attachment."
+      ],
+      "requests": [
+       "\"GET /img/photo.png HTTP/1.1\" 200 -"
+      ],
+      "calls": [
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "2fe645e841da67bb",
+         {
+          "url": "http://127.0.0.1:9343/img/photo.png"
+         }
+        ]
+       }
+      ]
+     },
+     "notFound": {
+      "mediaBefore": 112,
+      "textBefore": "![a](http://127.0.0.1:9343/img/photo.png)\n![gone](http://127.0.0.1:9343/missing.png)\n",
+      "avail": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "modal": {
+       "cls": "modal mod-scrollable-content",
+       "title": "Download attachments",
+       "html": "<div class=\"modal mod-scrollable-content\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Download attachments</div></div><div class=\"modal-content\"><div class=\"attachments-gallery\"><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/missing.png\"></div></div></div><div class=\"modal-button-container\"><button class=\"mod-cancel\">Cancel</button><button class=\"mod-cta\">Download</button></div></div>",
+       "buttons": [
+        {
+         "text": "Cancel",
+         "cls": "mod-cancel"
+        },
+        {
+         "text": "Download",
+         "cls": "mod-cta"
+        }
+       ]
+      },
+      "items": [
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/photo.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/missing.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/missing.png\">"
+       }
+      ],
+      "noticesOnOpen": [],
+      "modalAfter": null,
+      "textAfter": "![a](http://127.0.0.1:9343/img/photo.png)\n![gone](http://127.0.0.1:9343/missing.png)\n",
+      "editorText": "![a](http://127.0.0.1:9343/img/photo.png)\n![gone](http://127.0.0.1:9343/missing.png)\n",
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Page.md": 85,
+       "photo.png": 70
+      },
+      "notices": [],
+      "requests": [
+       "\"GET /missing.png HTTP/1.1\" 404 -",
+       "\"GET /img/photo.png HTTP/1.1\" 200 -",
+       "\"GET /missing.png HTTP/1.1\" 404 -"
+      ],
+      "calls": [
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "7f8440b9f836df26",
+         {
+          "url": "http://127.0.0.1:9343/img/photo.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "8609265ae80af83f",
+         {
+          "url": "http://127.0.0.1:9343/missing.png"
+         }
+        ]
+       }
+      ]
+     },
+     "cancel": {
+      "mediaBefore": 115,
+      "textBefore": "![a](http://127.0.0.1:9343/img/photo.png)\n",
+      "avail": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "modal": {
+       "cls": "modal mod-scrollable-content",
+       "title": "Download attachments",
+       "html": "<div class=\"modal mod-scrollable-content\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Download attachments</div></div><div class=\"modal-content\"><div class=\"attachments-gallery\"><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\"></div></div></div><div class=\"modal-button-container\"><button class=\"mod-cancel\">Cancel</button><button class=\"mod-cta\">Download</button></div></div>",
+       "buttons": [
+        {
+         "text": "Cancel",
+         "cls": "mod-cancel"
+        },
+        {
+         "text": "Download",
+         "cls": "mod-cta"
+        }
+       ]
+      },
+      "items": [
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/photo.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\">"
+       }
+      ],
+      "noticesOnOpen": [],
+      "modalAfter": null,
+      "textAfter": "![a](http://127.0.0.1:9343/img/photo.png)\n",
+      "editorText": "![a](http://127.0.0.1:9343/img/photo.png)\n",
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Page.md": 42
+      },
+      "notices": [],
+      "requests": [],
+      "calls": []
+     },
+     "nothing": {
+      "mediaBefore": 115,
+      "textBefore": "no images here [x](http://127.0.0.1:9343/img/pic.jpg) ![[local.png]]\n",
+      "avail": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "modal": null,
+      "items": [],
+      "noticesOnOpen": [
+       "There are no external attachments in this note."
+      ],
+      "modalAfter": null,
+      "textAfter": "no images here [x](http://127.0.0.1:9343/img/pic.jpg) ![[local.png]]\n",
+      "editorText": "no images here [x](http://127.0.0.1:9343/img/pic.jpg) ![[local.png]]\n",
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Page.md": 69
+      },
+      "notices": [
+       "There are no external attachments in this note."
+      ],
+      "requests": [],
+      "calls": []
+     },
+     "sameUrlTwice": {
+      "mediaBefore": 115,
+      "textBefore": "![a](http://127.0.0.1:9343/img/photo.png)\n![b](http://127.0.0.1:9343/img/photo.png)\n",
+      "avail": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "modal": {
+       "cls": "modal mod-scrollable-content",
+       "title": "Download attachments",
+       "html": "<div class=\"modal mod-scrollable-content\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Download attachments</div></div><div class=\"modal-content\"><div class=\"attachments-gallery\"><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\"></div></div></div><div class=\"modal-button-container\"><button class=\"mod-cancel\">Cancel</button><button class=\"mod-cta\">Download</button></div></div>",
+       "buttons": [
+        {
+         "text": "Cancel",
+         "cls": "mod-cancel"
+        },
+        {
+         "text": "Download",
+         "cls": "mod-cta"
+        }
+       ]
+      },
+      "items": [
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/photo.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\">"
+       }
+      ],
+      "noticesOnOpen": [],
+      "modalAfter": null,
+      "textAfter": "![[photo.png|a]]\n![[photo.png|b]]\n",
+      "editorText": "![[photo.png|a]]\n![[photo.png|b]]\n",
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Page.md": 34,
+       "photo.png": 70
+      },
+      "notices": [
+       "Downloaded 1 attachment."
+      ],
+      "requests": [
+       "\"GET /img/photo.png HTTP/1.1\" 200 -"
+      ],
+      "calls": [
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "bd187ccec51f4c7c",
+         {
+          "url": "http://127.0.0.1:9343/img/photo.png"
+         }
+        ]
+       }
+      ]
+     }
+    },
+    "emptyTabAvail": false
+   },
+   "s04-migrate-frontmatter": {
+    "ok": true,
+    "ms": 14478,
+    "avail": true,
+    "run": {
+     "ran": true,
+     "err": null
+    },
+    "modal": {
+     "cls": "modal",
+     "title": "Frontmatter migration",
+     "html": "<div class=\"modal\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Frontmatter migration</div></div><div class=\"modal-content\"><div><p class=\"setting-message\">Migrate frontmatter tags, aliases, and cssclasses to the strict format required by Obsidian v1.9+</p><p class=\"setting-message mod-warning\">Warning: the converter will convert all the files in your vault, not just the current file. Your files will be overwritten. Back up all your files before attempting conversion.</p><div class=\"modal-button-container\"><button class=\"mod-cancel\">Cancel</button><button class=\"mod-cta\">Start conversion</button></div></div></div></div>",
+     "buttons": [
+      {
+       "text": "Cancel",
+       "cls": "mod-cancel"
+      },
+      {
+       "text": "Start conversion",
+       "cls": "mod-cta"
+      }
+     ]
+    },
+    "cancel": {
+     "clicked": true,
+     "modalLeft": false
+    },
+    "afterCancelChanged": [],
+    "progress": [
+     {
+      "t": 0,
+      "modal": {
+       "title": "Frontmatter migration",
+       "text": " Frontmatter migration Finished! Processed files Modified files Failed Stop Go back Done ",
+       "buttons": [
+        {
+         "text": "Stop",
+         "cls": "mod-warning"
+        },
+        {
+         "text": "Go back",
+         "cls": ""
+        },
+        {
+         "text": "Done",
+         "cls": "mod-cta"
+        }
+       ]
+      },
+      "notices": [
+       "Updated 18 files.Undo"
+      ]
+     }
+    ],
+    "files": {
+     "m01 tags comma.md": {
+      "before": "---\ntags: a, b\n---\nbody\n",
+      "after": "---\ntags:\n  - a\n  - b\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m02 tags spaces.md": {
+      "before": "---\ntags: \"#a #b\"\n---\nbody\n",
+      "after": "---\ntags:\n  - \"#a\"\n  - \"#b\"\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m03 tag singular.md": {
+      "before": "---\ntag: x\n---\nbody\n",
+      "after": "---\ntags:\n  - x\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m04 tags flow.md": {
+      "before": "---\ntags: [a, b]\n---\nbody\n",
+      "after": "---\ntags: [a, b]\n---\nbody\n",
+      "changed": false,
+      "touched": false
+     },
+     "m05 tags block.md": {
+      "before": "---\ntags:\n  - a\n  - b\n---\nbody\n",
+      "after": "---\ntags:\n  - a\n  - b\n---\nbody\n",
+      "changed": false,
+      "touched": false
+     },
+     "m06 aliases scalar.md": {
+      "before": "---\naliases: foo\n---\nbody\n",
+      "after": "---\naliases:\n  - foo\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m07 alias singular.md": {
+      "before": "---\nalias: foo, bar\n---\nbody\n",
+      "after": "---\naliases:\n  - foo\n  - bar\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m08 cssclass.md": {
+      "before": "---\ncssclass: wide\n---\nbody\n",
+      "after": "---\ncssclasses:\n  - wide\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m09 cssclasses string.md": {
+      "before": "---\ncssclasses: wide narrow\n---\nbody\n",
+      "after": "---\ncssclasses:\n  - wide\n  - narrow\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m10 tags hash.md": {
+      "before": "---\ntags: \"#a\"\n---\nbody\n",
+      "after": "---\ntags:\n  - \"#a\"\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m11 no frontmatter.md": {
+      "before": "tags: a\nbody\n",
+      "after": "tags: a\nbody\n",
+      "changed": false,
+      "touched": false
+     },
+     "m12 crlf.md": {
+      "before": "---\r\ntitle: T\r\ntags: a\r\nother: 1\r\n---\r\nbody\r\n",
+      "after": "---\r\ntitle: T\ntags:\n  - a\nother: 1\n---\r\nbody\r\n",
+      "changed": true,
+      "touched": true
+     },
+     "m13 tags empty.md": {
+      "before": "---\ntags:\n---\nbody\n",
+      "after": "---\ntags:\n---\nbody\n",
+      "changed": false,
+      "touched": false
+     },
+     "m14 tags number.md": {
+      "before": "---\ntags: 123\n---\nbody\n",
+      "after": "---\ntags: 123\n---\nbody\n",
+      "changed": false,
+      "touched": false
+     },
+     "m15 both tag and tags.md": {
+      "before": "---\ntag: x\ntags: [y]\n---\nbody\n",
+      "after": "---\ntag: x\ntags: [y]\n---\nbody\n",
+      "changed": false,
+      "touched": false
+     },
+     "m16 order kept.md": {
+      "before": "---\nz: 1\ntags: a\ny: 2\naliases: b\nx: 3\n---\nbody\n",
+      "after": "---\nz: 1\ntags:\n  - a\ny: 2\naliases:\n  - b\nx: 3\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "Sub/m17 nested.md": {
+      "before": "---\ntags: n1 n2\n---\nbody\n",
+      "after": "---\ntags:\n  - n1\n  - n2\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m18 tags one word.md": {
+      "before": "---\ntags: solo\n---\nbody\n",
+      "after": "---\ntags:\n  - solo\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m19 aliases list.md": {
+      "before": "---\naliases:\n  - one\n  - two\n---\nbody\n",
+      "after": "---\naliases:\n  - one\n  - two\n---\nbody\n",
+      "changed": false,
+      "touched": false
+     },
+     "m20 tags quoted comma.md": {
+      "before": "---\ntags: 'a, b'\n---\nbody\n",
+      "after": "---\ntags:\n  - a\n  - b\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m21 alias and aliases.md": {
+      "before": "---\nalias: x\naliases: y\n---\nbody\n",
+      "after": "---\nalias: x\naliases:\n  - y\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m22 tags flow hash.md": {
+      "before": "---\ntags: [\"#a\", b]\n---\nbody\n",
+      "after": "---\ntags: [\"#a\", b]\n---\nbody\n",
+      "changed": false,
+      "touched": false
+     },
+     "m23 cssclass list.md": {
+      "before": "---\ncssclass:\n  - wide\n---\nbody\n",
+      "after": "---\ncssclasses:\n  - wide\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m24 tags comma no space.md": {
+      "before": "---\ntags: a,b,c\n---\nbody\n",
+      "after": "---\ntags:\n  - a\n  - b\n  - c\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m25 bom.md": {
+      "before": "\ufeff---\ntags: a\n---\nbody\n",
+      "after": "\ufeff---\ntags: a\n---\nbody\n",
+      "changed": false,
+      "touched": false
+     },
+     "m26 comment.md": {
+      "before": "---\ntags: a # note\nk: v # keep\n---\nbody\n",
+      "after": "---\ntags:\n  - a\nk: v\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m27 tags nested.md": {
+      "before": "---\ntags: a/b c/d\n---\nbody\n",
+      "after": "---\ntags:\n  - a/b\n  - c/d\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m28 other keys only.md": {
+      "before": "---\ntitle: plain\n---\nbody\n",
+      "after": "---\ntitle: plain\n---\nbody\n",
+      "changed": false,
+      "touched": false
+     }
+    },
+    "canvasTouched": false,
+    "calls": []
+   },
+   "s05-debug-info": {
+    "ok": false,
+    "ms": 2774,
+    "error": "TypeError: Cannot set properties of null (setting 'calls')\n    at file:///home/ragtux/bstore2/raga/repos/scoria/.claude/worktrees/agent-aafbd4c2a3a7cdf87/tools/obsidian-probe/attachments-app-info.mjs:462:19\n    at async step (file:///home/ragtux/bstore2/raga/repos/scoria/.claude/worktrees/agent-aafbd4c2a3a7cdf87/tools/obsidian-probe/attachments-app-info.mjs:74:9)\n    at async file:///home/ragtux/bstore2/raga/repos/scoria/.claude/worktrees/agent-aafbd4c2a3a7cdf87/tools/obsidian-probe/attachments-app-info.mjs:446:1",
+    "modal": {
+     "cls": "modal mod-lg",
+     "title": "Debug info",
+     "html": "<div class=\"modal mod-lg\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Debug info</div></div><div class=\"modal-content\"><textarea class=\"debug-textarea\" spellcheck=\"false\" readonly=\"\"></textarea></div><div class=\"modal-button-container\"><button class=\"mod-secondary\">Copy to clipboard</button><button>Sandbox vault</button><button class=\"mod-cancel\">Done</button></div></div>",
+     "buttons": [
+      {
+       "text": "Copy to clipboard",
+       "cls": "mod-secondary"
+      },
+      {
+       "text": "Sandbox vault",
+       "cls": ""
+      },
+      {
+       "text": "Done",
+       "cls": "mod-cancel"
+      }
+     ]
+    },
+    "text": "SYSTEM INFO:\n\tObsidian version: 1.15.0\n\tInstaller version: 1.13.7\n\tOperating system: #1-NixOS SMP PREEMPT_DYNAMIC Fri Oct 30 12:06:41 UTC 2026 6.18.60\n\tLogin status: not logged in\n\tLanguage: en\n\tInsider build toggle: off\n\tLive preview: on\n\tBase theme: adapt to system\n\tCommunity theme: none\n\tSnippets enabled: 0\n\tRestricted mode: on\n\nRECOMMENDATIONS:\n\tnone\n",
+    "calls": [
+     {
+      "kind": "ipc.sendSync insider-build",
+      "args": [
+       null
+      ]
+     }
+    ],
+    "copy": {
+     "clip": "SYSTEM INFO:\n\tObsidian version: 1.15.0\n\tInstaller version: 1.13.7\n\tOperating system: #1-NixOS SMP PREEMPT_DYNAMIC Fri Oct 30 12:06:41 UTC 2026 6.18.60\n\tLogin status: not logged in\n\tLanguage: en\n\tInsider build toggle: off\n\tLive preview: on\n\tBase theme: adapt to system\n\tCommunity theme: none\n\tSnippets enabled: 0\n\tRestricted mode: on\n\nRECOMMENDATIONS:\n\tnone\n",
+     "notices": [
+      "Debug info copied to your clipboard"
+     ],
+     "modalLeft": false,
+     "buttonText": "Copy to clipboard",
+     "equalsText": true,
+     "calls": []
+    },
+    "sandbox": null
+   },
+   "s06-release-notes-offline": {
+    "ok": true,
+    "ms": 8868,
+    "localStorageBefore": {},
+    "online": {
+     "viewType": "release-notes",
+     "state": {
+      "type": "release-notes",
+      "state": {
+       "currentVersion": "1.15.0"
+      },
+      "icon": "lucide-book-up",
+      "title": "Release Notes 1.15.0"
+     },
+     "title": "Release Notes 1.15.0",
+     "content": "What's new in 1.15\n\nReleased on November 2, 2026\n\nThis update brings faster Mermaid diagrams that match your theme, reorderable filters in Bases, and new URI and CLI commands for adding content under ",
+     "html": "<div class=\"cm-scroller is-readable-line-width\"><div class=\"markdown-preview-view markdown-rendered\"><h1>What's new in 1.15</h1><div><p class=\"u-small\">Released on November 2, 2026</p><p>This update b",
+     "tabs": 1,
+     "notices": [],
+     "calls": [
+      "ipc.send request-url [\"32b8ae3ac855ae17\",{\"url\":\"https://obsidian.md/changelog/desktop/1.15.md\",\"throw\":true}]"
+     ]
+    },
+    "localStorageAfterOnline": {},
+    "offlineSet": true,
+    "offline": {
+     "viewType": "release-notes",
+     "state": {
+      "type": "release-notes",
+      "state": {
+       "currentVersion": "1.15.0"
+      },
+      "icon": "lucide-book-up",
+      "title": "Release Notes 1.15.0"
+     },
+     "title": "Release Notes 1.15.0",
+     "content": "What's new in 1.15\n\nReleased on November 2, 2026\n\nThis update brings faster Mermaid diagrams that match your theme, reorderable filters in Bases, and new URI and CLI commands for adding content under a heading.\n\nDiagrams and charts\n\nMermaid diagrams and charts are now rendered using our new library Pele, compatible with the latest Mermaid 12.1.0 syntax.\n\nDiagrams now appear faster and use the colors and fonts of your theme.\nDiagrams are now responsive to the width of a note, and can be zoomed and panned when they are scaled down.\nDiagrams are now shown without asking first, since Pele can't ru",
+     "html": "<div class=\"cm-scroller is-readable-line-width\"><div class=\"markdown-preview-view markdown-rendered\"><h1>What's new in 1.15</h1><div><p class=\"u-small\">Released on November 2, 2026</p><p>This update brings faster Mermaid diagrams that match your theme, reorderable filters in Bases, and new URI and CLI commands for adding content under a heading.</p>\n<h2 data-heading=\"Diagrams and charts\">Diagrams and charts</h2>\n<p>Mermaid diagrams and charts are now rendered using our new library <a data-tooltip-position=\"top\" aria-label=\"https://pele.run/\" rel=\"noopener nofollow\" class=\"external-link\" href=\"https://pele.run/\" target=\"_blank\">Pele</a>, compatible with the latest Mermaid 12.1.0 syntax.</p>\n<ul>\n<li>Diagrams now appear faster and use the colors and fonts of your theme.</li>\n<li>Diagrams are now responsive to the width of a note, and can be zoomed and panned when they are scaled down.</li>\n<li>Diagrams are now shown without asking first, since Pele can't run code. The <strong>Show Mermaid diagrams in notes</strong> setting has been removed.</li>\n</ul>\n<h2 data-heading=\"Improvements\">Improvements</h2>\n<ul>\n<li>URI/CLI: Added commands to append or prepend to a heading, and control for line breaks around appended/prepended content.</li>\n<li>Suggestions now ignore diacritics (accent marks) so <code>cafe</code> matches <code>caf\u00e9</code> in link suggestions, <strong>Quick switcher</strong>, <strong>Command palette</strong>, and <strong>Bases</strong> search.</li>\n<li>Tooltips no long",
+     "tabs": 2,
+     "notices": [],
+     "calls": [
+      "ipc.send request-url [\"e7bb1583d6bafac7\",{\"url\":\"https://obsidian.md/changelog/desktop/1.15.md\",\"throw\":true}]"
+     ]
+    },
+    "offlineFetchCheck": "status 200",
+    "localStorageAfter": {}
+   },
+   "s07-open-file": {
+    "ok": true,
+    "ms": 32295,
+    "insideFromNote": {
+     "target": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run1/Probe Vault/Note B.md",
+     "before": {
+      "type": "markdown",
+      "file": "Note A.md",
+      "fileName": "Note A.md",
+      "title": "Note A",
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "Note A.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Note A"
+      },
+      "tabs": [
+       "Note A*",
+       "Release Notes 1.15.0"
+      ],
+      "mode": "source",
+      "inVault": true,
+      "headerTitle": "Note A",
+      "breadcrumbs": [],
+      "editorText": "alpha\n"
+     },
+     "vaultBefore": {
+      "Note A.md": 6,
+      "Note B.md": 6,
+      "Sub/": "dir",
+      "Sub/Deep.md": 5,
+      "img.png": 70
+     },
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "dialogs": [
+      {
+       "n": "showOpenDialog",
+       "opts": {
+        "properties": [
+         "openFile",
+         "dontAddToRecent"
+        ],
+        "filters": [
+         {
+          "name": "Supported files",
+          "extensions": [
+           "md",
+           "bmp",
+           "png",
+           "jpg",
+           "jpeg",
+           "gif",
+           "svg",
+           "webp",
+           "avif",
+           "mp3",
+           "wav",
+           "m4a",
+           "3gp",
+           "flac",
+           "ogg",
+           "oga",
+           "opus",
+           "mp4",
+           "webm",
+           "ogv",
+           "mov",
+           "mkv",
+           "pdf",
+           "canvas",
+           "base"
+          ]
+         }
+        ]
+       }
+      }
+     ],
+     "after": {
+      "type": "markdown",
+      "file": "Note B.md",
+      "fileName": "Note B.md",
+      "title": "Note B",
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "Note B.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Note B"
+      },
+      "tabs": [
+       "Note B*",
+       "Release Notes 1.15.0"
+      ],
+      "mode": "source",
+      "inVault": true,
+      "headerTitle": "Note B",
+      "breadcrumbs": [],
+      "editorText": "bravo\n"
+     },
+     "vaultAfter": {
+      "Note A.md": 6,
+      "Note B.md": 6,
+      "Sub/": "dir",
+      "Sub/Deep.md": 5,
+      "img.png": 70
+     },
+     "targets": 1,
+     "notices": [],
+     "calls": [
+      "ipc.send open-file [[\"md\",\"bmp\",\"png\",\"jpg\",\"jpeg\",\"gif\",\"svg\",\"webp\",\"avif\",\"mp3\",\"wav\",\"m4a\",\"3gp\",\"flac\",\"ogg\",\"oga\",\"opus\",\"mp4\",\"webm\",\"ogv\",\"mov\",\"mkv\",\"pdf\",\"canvas\",\"base\"]]"
+     ]
+    },
+    "insideFromEmpty": {
+     "target": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run1/Probe Vault/Note B.md",
+     "before": {
+      "type": "empty",
+      "file": null,
+      "fileName": null,
+      "title": "New tab",
+      "state": {
+       "type": "empty",
+       "state": {},
+       "icon": "lucide-file",
+       "title": "New tab"
+      },
+      "tabs": [
+       "New tab*",
+       "Release Notes 1.15.0"
+      ],
+      "mode": null,
+      "inVault": null,
+      "headerTitle": "New tab",
+      "breadcrumbs": [],
+      "editorText": null
+     },
+     "vaultBefore": {
+      "Note A.md": 6,
+      "Note B.md": 6,
+      "Sub/": "dir",
+      "Sub/Deep.md": 5,
+      "img.png": 70
+     },
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "dialogs": [
+      {
+       "n": "showOpenDialog",
+       "opts": {
+        "properties": [
+         "openFile",
+         "dontAddToRecent"
+        ],
+        "filters": [
+         {
+          "name": "Supported files",
+          "extensions": [
+           "md",
+           "bmp",
+           "png",
+           "jpg",
+           "jpeg",
+           "gif",
+           "svg",
+           "webp",
+           "avif",
+           "mp3",
+           "wav",
+           "m4a",
+           "3gp",
+           "flac",
+           "ogg",
+           "oga",
+           "opus",
+           "mp4",
+           "webm",
+           "ogv",
+           "mov",
+           "mkv",
+           "pdf",
+           "canvas",
+           "base"
+          ]
+         }
+        ]
+       }
+      }
+     ],
+     "after": {
+      "type": "markdown",
+      "file": "Note B.md",
+      "fileName": "Note B.md",
+      "title": "Note B",
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "Note B.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Note B"
+      },
+      "tabs": [
+       "Note B*",
+       "Release Notes 1.15.0"
+      ],
+      "mode": "source",
+      "inVault": true,
+      "headerTitle": "Note B",
+      "breadcrumbs": [],
+      "editorText": "bravo\n"
+     },
+     "vaultAfter": {
+      "Note A.md": 6,
+      "Note B.md": 6,
+      "Sub/": "dir",
+      "Sub/Deep.md": 5,
+      "img.png": 70
+     },
+     "targets": 1,
+     "notices": [],
+     "calls": [
+      "ipc.send open-file [[\"md\",\"bmp\",\"png\",\"jpg\",\"jpeg\",\"gif\",\"svg\",\"webp\",\"avif\",\"mp3\",\"wav\",\"m4a\",\"3gp\",\"flac\",\"ogg\",\"oga\",\"opus\",\"mp4\",\"webm\",\"ogv\",\"mov\",\"mkv\",\"pdf\",\"canvas\",\"base\"]]"
+     ]
+    },
+    "insideSubFromNote": {
+     "target": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run1/Probe Vault/Sub/Deep.md",
+     "before": {
+      "type": "markdown",
+      "file": "Note A.md",
+      "fileName": "Note A.md",
+      "title": "Note A",
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "Note A.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Note A"
+      },
+      "tabs": [
+       "Note A*",
+       "Release Notes 1.15.0"
+      ],
+      "mode": "source",
+      "inVault": true,
+      "headerTitle": "Note A",
+      "breadcrumbs": [],
+      "editorText": "alpha\n"
+     },
+     "vaultBefore": {
+      "Note A.md": 6,
+      "Note B.md": 6,
+      "Sub/": "dir",
+      "Sub/Deep.md": 5,
+      "img.png": 70
+     },
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "dialogs": [
+      {
+       "n": "showOpenDialog",
+       "opts": {
+        "properties": [
+         "openFile",
+         "dontAddToRecent"
+        ],
+        "filters": [
+         {
+          "name": "Supported files",
+          "extensions": [
+           "md",
+           "bmp",
+           "png",
+           "jpg",
+           "jpeg",
+           "gif",
+           "svg",
+           "webp",
+           "avif",
+           "mp3",
+           "wav",
+           "m4a",
+           "3gp",
+           "flac",
+           "ogg",
+           "oga",
+           "opus",
+           "mp4",
+           "webm",
+           "ogv",
+           "mov",
+           "mkv",
+           "pdf",
+           "canvas",
+           "base"
+          ]
+         }
+        ]
+       }
+      }
+     ],
+     "after": {
+      "type": "markdown",
+      "file": "Sub/Deep.md",
+      "fileName": "Deep.md",
+      "title": "Deep",
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "Sub/Deep.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Deep"
+      },
+      "tabs": [
+       "Deep*",
+       "Release Notes 1.15.0"
+      ],
+      "mode": "source",
+      "inVault": true,
+      "headerTitle": "Deep",
+      "breadcrumbs": [
+       "Sub"
+      ],
+      "editorText": "deep\n"
+     },
+     "vaultAfter": {
+      "Note A.md": 6,
+      "Note B.md": 6,
+      "Sub/": "dir",
+      "Sub/Deep.md": 5,
+      "img.png": 70
+     },
+     "targets": 1,
+     "notices": [],
+     "calls": [
+      "ipc.send open-file [[\"md\",\"bmp\",\"png\",\"jpg\",\"jpeg\",\"gif\",\"svg\",\"webp\",\"avif\",\"mp3\",\"wav\",\"m4a\",\"3gp\",\"flac\",\"ogg\",\"oga\",\"opus\",\"mp4\",\"webm\",\"ogv\",\"mov\",\"mkv\",\"pdf\",\"canvas\",\"base\"]]"
+     ]
+    },
+    "insideAlreadyOpen": {
+     "target": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run1/Probe Vault/Note A.md",
+     "before": {
+      "type": "markdown",
+      "file": "Note A.md",
+      "fileName": "Note A.md",
+      "title": "Note A",
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "Note A.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Note A"
+      },
+      "tabs": [
+       "Note A*",
+       "Release Notes 1.15.0"
+      ],
+      "mode": "source",
+      "inVault": true,
+      "headerTitle": "Note A",
+      "breadcrumbs": [],
+      "editorText": "alpha\n"
+     },
+     "vaultBefore": {
+      "Note A.md": 6,
+      "Note B.md": 6,
+      "Sub/": "dir",
+      "Sub/Deep.md": 5,
+      "img.png": 70
+     },
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "dialogs": [
+      {
+       "n": "showOpenDialog",
+       "opts": {
+        "properties": [
+         "openFile",
+         "dontAddToRecent"
+        ],
+        "filters": [
+         {
+          "name": "Supported files",
+          "extensions": [
+           "md",
+           "bmp",
+           "png",
+           "jpg",
+           "jpeg",
+           "gif",
+           "svg",
+           "webp",
+           "avif",
+           "mp3",
+           "wav",
+           "m4a",
+           "3gp",
+           "flac",
+           "ogg",
+           "oga",
+           "opus",
+           "mp4",
+           "webm",
+           "ogv",
+           "mov",
+           "mkv",
+           "pdf",
+           "canvas",
+           "base"
+          ]
+         }
+        ]
+       }
+      }
+     ],
+     "after": {
+      "type": "markdown",
+      "file": "Note A.md",
+      "fileName": "Note A.md",
+      "title": "Note A",
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "Note A.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Note A"
+      },
+      "tabs": [
+       "Note A*",
+       "Release Notes 1.15.0"
+      ],
+      "mode": "source",
+      "inVault": true,
+      "headerTitle": "Note A",
+      "breadcrumbs": [],
+      "editorText": "alpha\n"
+     },
+     "vaultAfter": {
+      "Note A.md": 6,
+      "Note B.md": 6,
+      "Sub/": "dir",
+      "Sub/Deep.md": 5,
+      "img.png": 70
+     },
+     "targets": 1,
+     "notices": [],
+     "calls": [
+      "ipc.send open-file [[\"md\",\"bmp\",\"png\",\"jpg\",\"jpeg\",\"gif\",\"svg\",\"webp\",\"avif\",\"mp3\",\"wav\",\"m4a\",\"3gp\",\"flac\",\"ogg\",\"oga\",\"opus\",\"mp4\",\"webm\",\"ogv\",\"mov\",\"mkv\",\"pdf\",\"canvas\",\"base\"]]"
+     ]
+    },
+    "outsideNoteFromNote": {
+     "target": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run1/Outside/Outside Note.md",
+     "before": {
+      "type": "markdown",
+      "file": "Note A.md",
+      "fileName": "Note A.md",
+      "title": "Note A",
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "Note A.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Note A"
+      },
+      "tabs": [
+       "Note A*",
+       "Release Notes 1.15.0"
+      ],
+      "mode": "source",
+      "inVault": true,
+      "headerTitle": "Note A",
+      "breadcrumbs": [],
+      "editorText": "alpha\n"
+     },
+     "vaultBefore": {
+      "Note A.md": 6,
+      "Note B.md": 6,
+      "Sub/": "dir",
+      "Sub/Deep.md": 5,
+      "img.png": 70
+     },
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "dialogs": [
+      {
+       "n": "showOpenDialog",
+       "opts": {
+        "properties": [
+         "openFile",
+         "dontAddToRecent"
+        ],
+        "filters": [
+         {
+          "name": "Supported files",
+          "extensions": [
+           "md",
+           "bmp",
+           "png",
+           "jpg",
+           "jpeg",
+           "gif",
+           "svg",
+           "webp",
+           "avif",
+           "mp3",
+           "wav",
+           "m4a",
+           "3gp",
+           "flac",
+           "ogg",
+           "oga",
+           "opus",
+           "mp4",
+           "webm",
+           "ogv",
+           "mov",
+           "mkv",
+           "pdf",
+           "canvas",
+           "base"
+          ]
+         }
+        ]
+       }
+      }
+     ],
+     "after": {
+      "type": "markdown",
+      "file": "file:/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run1/Outside/Outside Note.md",
+      "fileName": "Outside Note.md",
+      "title": "Outside Note",
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "file:/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run1/Outside/Outside Note.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Outside Note"
+      },
+      "tabs": [
+       "Note A",
+       "Outside Note*",
+       "Release Notes 1.15.0"
+      ],
+      "mode": "source",
+      "inVault": true,
+      "headerTitle": "Outside Note",
+      "breadcrumbs": [
+       "tmp",
+       "claude-1000",
+       "-home-ragtux-bstore2-raga-repos-scoria",
+       "369c9655-34a8-4f51-a852-9e4b0198d276",
+       "scratchpad",
+       "p7",
+       "run1",
+       "Outside"
+      ],
+      "editorText": "outside body\n"
+     },
+     "vaultAfter": {
+      "Note A.md": 6,
+      "Note B.md": 6,
+      "Sub/": "dir",
+      "Sub/Deep.md": 5,
+      "img.png": 70
+     },
+     "targets": 1,
+     "notices": [],
+     "calls": [
+      "ipc.send open-file [[\"md\",\"bmp\",\"png\",\"jpg\",\"jpeg\",\"gif\",\"svg\",\"webp\",\"avif\",\"mp3\",\"wav\",\"m4a\",\"3gp\",\"flac\",\"ogg\",\"oga\",\"opus\",\"mp4\",\"webm\",\"ogv\",\"mov\",\"mkv\",\"pdf\",\"canvas\",\"base\"]]"
+     ]
+    },
+    "outsideEdit": {
+     "editor": true,
+     "text": "EDIT outside body\n",
+     "path": "file:/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run1/Outside/Outside Note.md",
+     "disk": "EDIT outside body\n",
+     "vault": {
+      "Note A.md": 6,
+      "Note B.md": 6,
+      "Sub/": "dir",
+      "Sub/Deep.md": 5,
+      "img.png": 70
+     }
+    },
+    "outsideNoteFromEmpty": {
+     "target": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run1/Outside/Outside Note.md",
+     "before": {
+      "type": "empty",
+      "file": null,
+      "fileName": null,
+      "title": "New tab",
+      "state": {
+       "type": "empty",
+       "state": {},
+       "icon": "lucide-file",
+       "title": "New tab"
+      },
+      "tabs": [
+       "New tab*",
+       "Outside Note",
+       "Release Notes 1.15.0"
+      ],
+      "mode": null,
+      "inVault": null,
+      "headerTitle": "New tab",
+      "breadcrumbs": [],
+      "editorText": null
+     },
+     "vaultBefore": {
+      "Note A.md": 6,
+      "Note B.md": 6,
+      "Sub/": "dir",
+      "Sub/Deep.md": 5,
+      "img.png": 70
+     },
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "dialogs": [
+      {
+       "n": "showOpenDialog",
+       "opts": {
+        "properties": [
+         "openFile",
+         "dontAddToRecent"
+        ],
+        "filters": [
+         {
+          "name": "Supported files",
+          "extensions": [
+           "md",
+           "bmp",
+           "png",
+           "jpg",
+           "jpeg",
+           "gif",
+           "svg",
+           "webp",
+           "avif",
+           "mp3",
+           "wav",
+           "m4a",
+           "3gp",
+           "flac",
+           "ogg",
+           "oga",
+           "opus",
+           "mp4",
+           "webm",
+           "ogv",
+           "mov",
+           "mkv",
+           "pdf",
+           "canvas",
+           "base"
+          ]
+         }
+        ]
+       }
+      }
+     ],
+     "after": {
+      "type": "markdown",
+      "file": "file:/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run1/Outside/Outside Note.md",
+      "fileName": "Outside Note.md",
+      "title": "Outside Note",
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "file:/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run1/Outside/Outside Note.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Outside Note"
+      },
+      "tabs": [
+       "Outside Note*",
+       "Outside Note",
+       "Release Notes 1.15.0"
+      ],
+      "mode": "source",
+      "inVault": true,
+      "headerTitle": "Outside Note",
+      "breadcrumbs": [
+       "tmp",
+       "claude-1000",
+       "-home-ragtux-bstore2-raga-repos-scoria",
+       "369c9655-34a8-4f51-a852-9e4b0198d276",
+       "scratchpad",
+       "p7",
+       "run1",
+       "Outside"
+      ],
+      "editorText": "EDIT outside body\n"
+     },
+     "vaultAfter": {
+      "Note A.md": 6,
+      "Note B.md": 6,
+      "Sub/": "dir",
+      "Sub/Deep.md": 5,
+      "img.png": 70
+     },
+     "targets": 1,
+     "notices": [],
+     "calls": [
+      "ipc.send open-file [[\"md\",\"bmp\",\"png\",\"jpg\",\"jpeg\",\"gif\",\"svg\",\"webp\",\"avif\",\"mp3\",\"wav\",\"m4a\",\"3gp\",\"flac\",\"ogg\",\"oga\",\"opus\",\"mp4\",\"webm\",\"ogv\",\"mov\",\"mkv\",\"pdf\",\"canvas\",\"base\"]]"
+     ]
+    },
+    "outsideImage": {
+     "target": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run1/Outside/outside.png",
+     "before": {
+      "type": "markdown",
+      "file": "Note A.md",
+      "fileName": "Note A.md",
+      "title": "Note A",
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "Note A.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Note A"
+      },
+      "tabs": [
+       "Note A*",
+       "Outside Note",
+       "Release Notes 1.15.0"
+      ],
+      "mode": "source",
+      "inVault": true,
+      "headerTitle": "Note A",
+      "breadcrumbs": [],
+      "editorText": "alpha\n"
+     },
+     "vaultBefore": {
+      "Note A.md": 6,
+      "Note B.md": 6,
+      "Sub/": "dir",
+      "Sub/Deep.md": 5,
+      "img.png": 70
+     },
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "dialogs": [
+      {
+       "n": "showOpenDialog",
+       "opts": {
+        "properties": [
+         "openFile",
+         "dontAddToRecent"
+        ],
+        "filters": [
+         {
+          "name": "Supported files",
+          "extensions": [
+           "md",
+           "bmp",
+           "png",
+           "jpg",
+           "jpeg",
+           "gif",
+           "svg",
+           "webp",
+           "avif",
+           "mp3",
+           "wav",
+           "m4a",
+           "3gp",
+           "flac",
+           "ogg",
+           "oga",
+           "opus",
+           "mp4",
+           "webm",
+           "ogv",
+           "mov",
+           "mkv",
+           "pdf",
+           "canvas",
+           "base"
+          ]
+         }
+        ]
+       }
+      }
+     ],
+     "after": {
+      "type": "image",
+      "file": "file:/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run1/Outside/outside.png",
+      "fileName": "outside.png",
+      "title": "outside",
+      "state": {
+       "type": "image",
+       "state": {
+        "file": "file:/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run1/Outside/outside.png"
+       },
+       "icon": "lucide-image",
+       "title": "outside"
+      },
+      "tabs": [
+       "Note A",
+       "outside*",
+       "Outside Note",
+       "Release Notes 1.15.0"
+      ],
+      "mode": null,
+      "inVault": true,
+      "headerTitle": "outside",
+      "breadcrumbs": [
+       "tmp",
+       "claude-1000",
+       "-home-ragtux-bstore2-raga-repos-scoria",
+       "369c9655-34a8-4f51-a852-9e4b0198d276",
+       "scratchpad",
+       "p7",
+       "run1",
+       "Outside"
+      ],
+      "editorText": null
+     },
+     "vaultAfter": {
+      "Note A.md": 6,
+      "Note B.md": 6,
+      "Sub/": "dir",
+      "Sub/Deep.md": 5,
+      "img.png": 70
+     },
+     "targets": 1,
+     "notices": [],
+     "calls": [
+      "ipc.send open-file [[\"md\",\"bmp\",\"png\",\"jpg\",\"jpeg\",\"gif\",\"svg\",\"webp\",\"avif\",\"mp3\",\"wav\",\"m4a\",\"3gp\",\"flac\",\"ogg\",\"oga\",\"opus\",\"mp4\",\"webm\",\"ogv\",\"mov\",\"mkv\",\"pdf\",\"canvas\",\"base\"]]"
+     ]
+    },
+    "insideImage": {
+     "target": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run1/Probe Vault/img.png",
+     "before": {
+      "type": "markdown",
+      "file": "Note A.md",
+      "fileName": "Note A.md",
+      "title": "Note A",
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "Note A.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Note A"
+      },
+      "tabs": [
+       "Note A*",
+       "outside",
+       "Outside Note",
+       "Release Notes 1.15.0"
+      ],
+      "mode": "source",
+      "inVault": true,
+      "headerTitle": "Note A",
+      "breadcrumbs": [],
+      "editorText": "alpha\n"
+     },
+     "vaultBefore": {
+      "Note A.md": 6,
+      "Note B.md": 6,
+      "Sub/": "dir",
+      "Sub/Deep.md": 5,
+      "img.png": 70
+     },
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "dialogs": [
+      {
+       "n": "showOpenDialog",
+       "opts": {
+        "properties": [
+         "openFile",
+         "dontAddToRecent"
+        ],
+        "filters": [
+         {
+          "name": "Supported files",
+          "extensions": [
+           "md",
+           "bmp",
+           "png",
+           "jpg",
+           "jpeg",
+           "gif",
+           "svg",
+           "webp",
+           "avif",
+           "mp3",
+           "wav",
+           "m4a",
+           "3gp",
+           "flac",
+           "ogg",
+           "oga",
+           "opus",
+           "mp4",
+           "webm",
+           "ogv",
+           "mov",
+           "mkv",
+           "pdf",
+           "canvas",
+           "base"
+          ]
+         }
+        ]
+       }
+      }
+     ],
+     "after": {
+      "type": "image",
+      "file": "img.png",
+      "fileName": "img.png",
+      "title": "img",
+      "state": {
+       "type": "image",
+       "state": {
+        "file": "img.png"
+       },
+       "icon": "lucide-image",
+       "title": "img"
+      },
+      "tabs": [
+       "img*",
+       "outside",
+       "Outside Note",
+       "Release Notes 1.15.0"
+      ],
+      "mode": null,
+      "inVault": true,
+      "headerTitle": "img",
+      "breadcrumbs": [],
+      "editorText": null
+     },
+     "vaultAfter": {
+      "Note A.md": 6,
+      "Note B.md": 6,
+      "Sub/": "dir",
+      "Sub/Deep.md": 5,
+      "img.png": 70
+     },
+     "targets": 1,
+     "notices": [],
+     "calls": [
+      "ipc.send open-file [[\"md\",\"bmp\",\"png\",\"jpg\",\"jpeg\",\"gif\",\"svg\",\"webp\",\"avif\",\"mp3\",\"wav\",\"m4a\",\"3gp\",\"flac\",\"ogg\",\"oga\",\"opus\",\"mp4\",\"webm\",\"ogv\",\"mov\",\"mkv\",\"pdf\",\"canvas\",\"base\"]]"
+     ]
+    },
+    "cancel": {
+     "target": null,
+     "before": {
+      "type": "markdown",
+      "file": "Note A.md",
+      "fileName": "Note A.md",
+      "title": "Note A",
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "Note A.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Note A"
+      },
+      "tabs": [
+       "Note A*",
+       "outside",
+       "Outside Note",
+       "Release Notes 1.15.0"
+      ],
+      "mode": "source",
+      "inVault": true,
+      "headerTitle": "Note A",
+      "breadcrumbs": [],
+      "editorText": "alpha\n"
+     },
+     "vaultBefore": {
+      "Note A.md": 6,
+      "Note B.md": 6,
+      "Sub/": "dir",
+      "Sub/Deep.md": 5,
+      "img.png": 70
+     },
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "dialogs": [
+      {
+       "n": "showOpenDialog",
+       "opts": {
+        "properties": [
+         "openFile",
+         "dontAddToRecent"
+        ],
+        "filters": [
+         {
+          "name": "Supported files",
+          "extensions": [
+           "md",
+           "bmp",
+           "png",
+           "jpg",
+           "jpeg",
+           "gif",
+           "svg",
+           "webp",
+           "avif",
+           "mp3",
+           "wav",
+           "m4a",
+           "3gp",
+           "flac",
+           "ogg",
+           "oga",
+           "opus",
+           "mp4",
+           "webm",
+           "ogv",
+           "mov",
+           "mkv",
+           "pdf",
+           "canvas",
+           "base"
+          ]
+         }
+        ]
+       }
+      }
+     ],
+     "after": {
+      "type": "markdown",
+      "file": "Note A.md",
+      "fileName": "Note A.md",
+      "title": "Note A",
+      "state": {
+       "type": "markdown",
+       "state": {
+        "file": "Note A.md",
+        "mode": "source",
+        "source": false
+       },
+       "icon": "lucide-file",
+       "title": "Note A"
+      },
+      "tabs": [
+       "Note A*",
+       "outside",
+       "Outside Note",
+       "Release Notes 1.15.0"
+      ],
+      "mode": "source",
+      "inVault": true,
+      "headerTitle": "Note A",
+      "breadcrumbs": [],
+      "editorText": "alpha\n"
+     },
+     "vaultAfter": {
+      "Note A.md": 6,
+      "Note B.md": 6,
+      "Sub/": "dir",
+      "Sub/Deep.md": 5,
+      "img.png": 70
+     },
+     "targets": 1,
+     "notices": [],
+     "calls": [
+      "ipc.send open-file [[\"md\",\"bmp\",\"png\",\"jpg\",\"jpeg\",\"gif\",\"svg\",\"webp\",\"avif\",\"mp3\",\"wav\",\"m4a\",\"3gp\",\"flac\",\"ogg\",\"oga\",\"opus\",\"mp4\",\"webm\",\"ogv\",\"mov\",\"mkv\",\"pdf\",\"canvas\",\"base\"]]"
+     ]
+    },
+    "workspaceJson": "{\n  \"main\": {\n    \"id\": \"d5658b6abdbd0690\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"35f7e0151db64512\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"4be8b8f712b83542\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Note A.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Note A\"\n            }\n          },\n          {\n            \"id\": \"1ed6351f7fc05d09\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"image\",\n              \"state\": {\n                \"file\": \"file:/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run1/Outside/outside.png\"\n              },\n              \"icon\": \"lucide-image\",\n              \"title\": \"outside\"\n            }\n          },\n          {\n            \"id\": \"eb61708b1344d12a\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"file:/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run1/Outside/Outside Note.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Outside Note\"\n            }\n          },\n          {\n            \"id\": \"e0d1a072a485c6ce\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"release-notes\",\n              \"state\": {\n                \"currentVersion\": \"1.15.0\"\n              },\n              \"icon\": \"lucide-book-up\",\n              \"title\": \"Release Notes 1.15.0\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"vertical\"\n  },\n  \"left\": {\n    \"id\": \"697eb42fb95d6c64\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"1614da8986b79494\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"b94841206f33dd41\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"file-explorer\",\n              \"state\": {\n                \"sortOrder\": \"alphabetical\",\n                \"autoReveal\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-folder-closed\",\n              \"title\": \"Files\"\n            }\n          },\n          {\n            \"id\": \"86748158776d3286\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"search\",\n              \"state\": {\n                \"query\": \"\",\n                \"matchingCase\": false,\n                \"explainSearch\": false,\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\"\n              },\n              \"icon\": \"lucide-search\",\n              \"title\": \"Search\"\n            }\n          },\n          {\n            \"id\": \"c38dddd1a8a76e0f\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"bookmarks\",\n              \"state\": {\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-bookmark\",\n              \"title\": \"Bookmarks\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300\n  },\n  \"right\": {\n    \"id\": \"bec393e26e93d157\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"b1b6ff744fa7a2ee\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"f1f4040013cb85a9\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"backlink\",\n              \"state\": {\n                \"file\": \"Note A.md\",\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\",\n                \"backlinkCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-coming-in\",\n              \"title\": \"Backlinks\"\n            }\n          },\n          {\n            \"id\": \"72991f0d87f97911\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outgoing-link\",\n              \"state\": {\n                \"file\": \"Note A.md\",\n                \"linksCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-going-out\",\n              \"title\": \"Outgoing links\"\n            }\n          },\n          {\n            \"id\": \"b6684443610b15f4\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"tag\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"useHierarchy\": true,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-tags\",\n              \"title\": \"Tags\"\n            }\n          },\n          {\n            \"id\": \"4eb20794783da98f\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"all-properties\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-archive\",\n              \"title\": \"All properties\"\n            }\n          },\n          {\n            \"id\": \"afe1489d226bbcec\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outline\",\n              \"state\": {\n                \"file\": \"Note A.md\",\n                \"followCursor\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-list\",\n              \"title\": \"Outline\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300,\n    \"collapsed\": true\n  },\n  \"left-ribbon\": {\n    \"hiddenItems\": {\n      \"switcher:Open quick switcher\": false,\n      \"graph:Open graph view\": false,\n      \"canvas:Create new canvas\": false,\n      \"daily-notes:Open today's daily note\": false,\n      \"templates:Insert template\": false,\n      \"command-palette:Open command palette\": false,\n      \"bases:Create new base\": false\n    }\n  },\n  \"active\": \"4be8b8f712b83542\",\n  \"lastOpenFiles\": [\n    \"img.png\",\n    \"Note A.md\",\n    \"file:/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run1/Outside/outside.png\",\n    \"file:/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run1/Outside/Outside Note.md\",\n    \"Sub/Deep.md\",\n    \"Note B.md\",\n    \"Sub\",\n    \"Note.md\",\n    \"Board.canvas\",\n    \"m28 other keys only.md\",\n    \"m27 tags nested.md\",\n    \"m26 comment.md\",\n    \"m25 bom.md\",\n    \"m24 tags comma no space.md\",\n    \"m23 cssclass list.md\",\n    \"m22 tags flow hash.md\",\n    \"m21 alias and aliases.md\",\n    \"m20 tags quoted comma.md\",\n    \"m19 aliases list.md\",\n    \"m18 tags one word.md\",\n    \"Sub/m17 nested.md\",\n    \"m16 order kept.md\",\n    \"m15 both tag and tags.md\",\n    \"m14 tags number.md\",\n    \"m13 tags empty.md\",\n    \"m12 crlf.md\",\n    \"m11 no frontmatter.md\",\n    \"m10 tags hash.md\",\n    \"m09 cssclasses string.md\",\n    \"photo.png\",\n    \"doc.pdf\",\n    \"photo 2.png\",\n    \"pic.jpg\",\n    \"photo 1.png\",\n    \"Image.jpg\",\n    \"Image.png\",\n    \"two%20words.png\",\n    \"Attach/doc.pdf\",\n    \"Attach/photo 2.png\",\n    \"Attach\",\n    \"Sub/doc.pdf\",\n    \"Sub/att/doc.pdf\",\n    \"Sub/att\"\n  ]\n}"
+   }
+  },
+  "order": [
+   "s00-version",
+   "s01-spellcheck",
+   "s02-attach-file",
+   "s03-download-attachments",
+   "s04-migrate-frontmatter",
+   "s05-debug-info",
+   "s06-release-notes-offline",
+   "s07-open-file"
+  ],
+  "elapsedMs": 235874,
+  "vaultPath": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run1/Probe Vault"
+ },
+ "run:second": {
+  "startedAt": "2026-11-10T05:52:52.045Z",
+  "env": {
+   "ONLY": "s00|s02|s03b|s04|s05|s06",
+   "vault": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run2/Probe Vault",
+   "outside": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run2/Outside"
+  },
+  "steps": {
+   "s00-version": {
+    "ok": true,
+    "ms": 3,
+    "title": "New tab - Probe Vault - Obsidian 1.15.0",
+    "version": "1.15.0",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+    "commands": [
+     [
+      "editor:toggle-spellcheck",
+      {
+       "name": "Toggle spellcheck",
+       "icon": null,
+       "kinds": [
+        "callback"
+       ],
+       "hotkeys": null
+      }
+     ],
+     [
+      "editor:attach-file",
+      {
+       "name": "Insert attachment",
+       "icon": "lucide-paperclip",
+       "kinds": [
+        "checkCallback",
+        "editorCallback"
+       ],
+       "hotkeys": null
+      }
+     ],
+     [
+      "editor:download-attachments",
+      {
+       "name": "Download attachments for current file",
+       "icon": null,
+       "kinds": [
+        "checkCallback"
+       ],
+       "hotkeys": null
+      }
+     ],
+     [
+      "app:migrate-frontmatter",
+      {
+       "name": "Format converter: Frontmatter migration",
+       "icon": "lucide-binary",
+       "kinds": [
+        "callback"
+       ],
+       "hotkeys": null
+      }
+     ],
+     [
+      "app:show-debug-info",
+      {
+       "name": "Show debug info",
+       "icon": null,
+       "kinds": [
+        "callback"
+       ],
+       "hotkeys": null
+      }
+     ],
+     [
+      "app:show-release-notes",
+      {
+       "name": "Show release notes",
+       "icon": null,
+       "kinds": [
+        "callback"
+       ],
+       "hotkeys": null
+      }
+     ],
+     [
+      "app:open-file",
+      {
+       "name": "Open file from outside the vault...",
+       "icon": null,
+       "kinds": [
+        "callback"
+       ],
+       "hotkeys": null
+      }
+     ]
+    ]
+   },
+   "s02-attach-file": {
+    "ok": true,
+    "ms": 33546,
+    "cases": {
+     "rootPng": {
+      "before": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "chooser": {
+       "mode": "selectSingle",
+       "error": null
+      },
+      "inputs": [
+       {
+        "type": "file",
+        "accept": "",
+        "multiple": false,
+        "inDoc": true
+       }
+      ],
+      "after": {
+       "text": "line![[pic one.png]] one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 20
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 20
+       },
+       "selection": ""
+      },
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Note.md": 18,
+       "pic one.png": 70
+      },
+      "notices": [],
+      "calls": [
+       {
+        "kind": "ipc.sendSync version",
+        "args": []
+       }
+      ]
+     },
+     "rootPngAgain": {
+      "before": {
+       "text": "line![[pic one.png]] one\nline two\n",
+       "cursor": {
+        "line": 1,
+        "ch": 8
+       },
+       "anchor": {
+        "line": 1,
+        "ch": 8
+       },
+       "selection": ""
+      },
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "chooser": {
+       "mode": "selectSingle",
+       "error": null
+      },
+      "inputs": [
+       {
+        "type": "file",
+        "accept": "",
+        "multiple": false,
+        "inDoc": true
+       }
+      ],
+      "after": {
+       "text": "line![[pic one.png]] one\nline two![[pic one 1.png]]\n",
+       "cursor": {
+        "line": 1,
+        "ch": 26
+       },
+       "anchor": {
+        "line": 1,
+        "ch": 26
+       },
+       "selection": ""
+      },
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Note.md": 52,
+       "pic one 1.png": 70,
+       "pic one.png": 70
+      },
+      "notices": [],
+      "calls": []
+     },
+     "rootTxt": {
+      "before": {
+       "text": "line![[pic one.png]] one\nline two![[pic one 1.png]]\n",
+       "cursor": {
+        "line": 1,
+        "ch": 0
+       },
+       "anchor": {
+        "line": 1,
+        "ch": 0
+       },
+       "selection": ""
+      },
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "chooser": {
+       "mode": "selectSingle",
+       "error": null
+      },
+      "inputs": [
+       {
+        "type": "file",
+        "accept": "",
+        "multiple": false,
+        "inDoc": true
+       }
+      ],
+      "after": {
+       "text": "line![[pic one.png]] one\n![[doc.txt]]line two![[pic one 1.png]]\n",
+       "cursor": {
+        "line": 1,
+        "ch": 12
+       },
+       "anchor": {
+        "line": 1,
+        "ch": 12
+       },
+       "selection": ""
+      },
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Note.md": 52,
+       "doc.txt": 13,
+       "pic one 1.png": 70,
+       "pic one.png": 70
+      },
+      "notices": [],
+      "calls": []
+     },
+     "cancel": {
+      "before": {
+       "text": "line![[pic one.png]] one\n![[doc.txt]]line two![[pic one 1.png]]\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "chooser": {
+       "mode": "selectSingle",
+       "error": null
+      },
+      "inputs": [
+       {
+        "type": "file",
+        "accept": "",
+        "multiple": false,
+        "inDoc": true
+       }
+      ],
+      "after": {
+       "text": "line![[pic one.png]] one\n![[doc.txt]]line two![[pic one 1.png]]\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Note.md": 64,
+       "doc.txt": 13,
+       "pic one 1.png": 70,
+       "pic one.png": 70
+      },
+      "notices": [],
+      "calls": []
+     },
+     "sameFolderPng": {
+      "before": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "chooser": {
+       "mode": "selectSingle",
+       "error": null
+      },
+      "inputs": [
+       {
+        "type": "file",
+        "accept": "",
+        "multiple": false,
+        "inDoc": true
+       }
+      ],
+      "after": {
+       "text": "line![[pic one.png]] one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 20
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 20
+       },
+       "selection": ""
+      },
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Note.md": 18,
+       "Sub/pic one.png": 70
+      },
+      "notices": [],
+      "calls": []
+     },
+     "subfolderPng": {
+      "before": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "chooser": {
+       "mode": "selectSingle",
+       "error": null
+      },
+      "inputs": [
+       {
+        "type": "file",
+        "accept": "",
+        "multiple": false,
+        "inDoc": true
+       }
+      ],
+      "after": {
+       "text": "line![[pic one.png]] one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 20
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 20
+       },
+       "selection": ""
+      },
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Note.md": 18,
+       "Sub/att/": "dir",
+       "Sub/att/pic one.png": 70
+      },
+      "notices": [],
+      "calls": []
+     },
+     "namedFolderPng": {
+      "before": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "chooser": {
+       "mode": "selectSingle",
+       "error": null
+      },
+      "inputs": [
+       {
+        "type": "file",
+        "accept": "",
+        "multiple": false,
+        "inDoc": true
+       }
+      ],
+      "after": {
+       "text": "line![[pic one.png]] one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 20
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 20
+       },
+       "selection": ""
+      },
+      "vault": {
+       "Attach/": "dir",
+       "Attach/pic one.png": 70,
+       "Sub/": "dir",
+       "Sub/Note.md": 18
+      },
+      "notices": [],
+      "calls": []
+     },
+     "selection": {
+      "before": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 8
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 5
+       },
+       "selection": "one"
+      },
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "chooser": {
+       "mode": "selectSingle",
+       "error": null
+      },
+      "inputs": [
+       {
+        "type": "file",
+        "accept": "",
+        "multiple": false,
+        "inDoc": true
+       }
+      ],
+      "after": {
+       "text": "line ![[pic one.png]]\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 21
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 21
+       },
+       "selection": ""
+      },
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Note.md": 18,
+       "pic one.png": 70
+      },
+      "notices": [],
+      "calls": []
+     },
+     "markdownLinks": {
+      "before": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "chooser": {
+       "mode": "selectSingle",
+       "error": null
+      },
+      "inputs": [
+       {
+        "type": "file",
+        "accept": "",
+        "multiple": false,
+        "inDoc": true
+       }
+      ],
+      "after": {
+       "text": "line![](pic%20one.png) one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 22
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 22
+       },
+       "selection": ""
+      },
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Note.md": 18,
+       "pic one.png": 70
+      },
+      "notices": [],
+      "calls": []
+     },
+     "markdownRelative": {
+      "before": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "chooser": {
+       "mode": "selectSingle",
+       "error": null
+      },
+      "inputs": [
+       {
+        "type": "file",
+        "accept": "",
+        "multiple": false,
+        "inDoc": true
+       }
+      ],
+      "after": {
+       "text": "line![](../pic%20one.png) one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 25
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 25
+       },
+       "selection": ""
+      },
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Note.md": 18,
+       "pic one.png": 70
+      },
+      "notices": [],
+      "calls": []
+     },
+     "alreadyInVault": {
+      "before": {
+       "text": "line one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 4
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 4
+       },
+       "selection": ""
+      },
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "chooser": {
+       "mode": "selectSingle",
+       "error": null
+      },
+      "inputs": [
+       {
+        "type": "file",
+        "accept": "",
+        "multiple": false,
+        "inDoc": true
+       }
+      ],
+      "after": {
+       "text": "line![[inside.png]] one\nline two\n",
+       "cursor": {
+        "line": 0,
+        "ch": 19
+       },
+       "anchor": {
+        "line": 0,
+        "ch": 19
+       },
+       "selection": ""
+      },
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Note.md": 18,
+       "Sub/inside.png": 70,
+       "inside.png": 70
+      },
+      "notices": [],
+      "calls": []
+     }
+    },
+    "availability": {
+     "note": true,
+     "reading": false,
+     "empty": false
+    }
+   },
+   "s03b-download-edges": {
+    "ok": true,
+    "ms": 31780,
+    "cases": {
+     "notFoundFirst": {
+      "mediaBefore": 118,
+      "textBefore": "![gone](http://127.0.0.1:9343/missing.png)\n![a](http://127.0.0.1:9343/img/photo.png)\n",
+      "avail": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "modal": {
+       "cls": "modal mod-scrollable-content",
+       "title": "Download attachments",
+       "html": "<div class=\"modal mod-scrollable-content\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Download attachments</div></div><div class=\"modal-content\"><div class=\"attachments-gallery\"><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/missing.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\"></div></div></div><div class=\"modal-button-container\"><button class=\"mod-cancel\">Cancel</button><button class=\"mod-cta\">Download</button></div></div>",
+       "buttons": [
+        {
+         "text": "Cancel",
+         "cls": "mod-cancel"
+        },
+        {
+         "text": "Download",
+         "cls": "mod-cta"
+        }
+       ]
+      },
+      "items": [
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/missing.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/missing.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/photo.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\">"
+       }
+      ],
+      "noticesOnOpen": [],
+      "modalAfter": null,
+      "textAfter": "![gone](http://127.0.0.1:9343/missing.png)\n![a](http://127.0.0.1:9343/img/photo.png)\n",
+      "editorText": "![gone](http://127.0.0.1:9343/missing.png)\n![a](http://127.0.0.1:9343/img/photo.png)\n",
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Page.md": 85
+      },
+      "notices": [],
+      "requests": [
+       "\"GET /missing.png HTTP/1.1\" 404 -",
+       "\"GET /missing.png HTTP/1.1\" 404 -"
+      ],
+      "calls": [
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "2e21b5a795453f5f",
+         {
+          "url": "http://127.0.0.1:9343/missing.png"
+         }
+        ]
+       }
+      ]
+     },
+     "contentTypes": {
+      "mediaBefore": 125,
+      "textBefore": "![g](http://127.0.0.1:9343/gif-noext)\n![w](http://127.0.0.1:9343/webp-noext)\n![s](http://127.0.0.1:9343/svg-noext)\n![h](http://127.0.0.1:9343/html-noext)\n![o](http://127.0.0.1:9343/octet-noext)\n",
+      "avail": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "modal": {
+       "cls": "modal mod-scrollable-content",
+       "title": "Download attachments",
+       "html": "<div class=\"modal mod-scrollable-content\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Download attachments</div></div><div class=\"modal-content\"><div class=\"attachments-gallery\"><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/gif-noext\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/webp-noext\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/svg-noext\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/html-noext\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/octet-noext\"></div></div></div><div class=\"modal-button-container\"><button class=\"mod-cancel\">Cancel</button><button class=\"mod-cta\">Download</button></div></div>",
+       "buttons": [
+        {
+         "text": "Cancel",
+         "cls": "mod-cancel"
+        },
+        {
+         "text": "Download",
+         "cls": "mod-cta"
+        }
+       ]
+      },
+      "items": [
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/gif-noext",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/gif-noext\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/webp-noext",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/webp-noext\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/svg-noext",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/svg-noext\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/html-noext",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/html-noext\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/octet-noext",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/octet-noext\">"
+       }
+      ],
+      "noticesOnOpen": [],
+      "modalAfter": null,
+      "textAfter": "![[Image.gif|g]]\n![[Image.webp|w]]\n![[Image.svg|s]]\n![[Image.jpg|h]]\n![[Image 1.jpg|o]]\n",
+      "editorText": "![[Image.gif|g]]\n![[Image.webp|w]]\n![[Image.svg|s]]\n![[Image.jpg|h]]\n![[Image 1.jpg|o]]\n",
+      "vault": {
+       "Image 1.jpg": 2,
+       "Image.gif": 14,
+       "Image.jpg": 13,
+       "Image.svg": 41,
+       "Image.webp": 16,
+       "Sub/": "dir",
+       "Sub/Page.md": 88
+      },
+      "notices": [
+       "Downloaded 5 attachments."
+      ],
+      "requests": [
+       "\"GET /octet-noext HTTP/1.1\" 200 -",
+       "\"GET /html-noext HTTP/1.1\" 200 -",
+       "\"GET /webp-noext HTTP/1.1\" 200 -",
+       "\"GET /gif-noext HTTP/1.1\" 200 -",
+       "\"GET /webp-noext HTTP/1.1\" 200 -",
+       "\"GET /svg-noext HTTP/1.1\" 200 -",
+       "\"GET /html-noext HTTP/1.1\" 200 -",
+       "\"GET /octet-noext HTTP/1.1\" 200 -"
+      ],
+      "calls": [
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "d53ed676b1eab81e",
+         {
+          "url": "http://127.0.0.1:9343/gif-noext"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "18ffa8f98d03cac4",
+         {
+          "url": "http://127.0.0.1:9343/webp-noext"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "251b405ebab00f54",
+         {
+          "url": "http://127.0.0.1:9343/svg-noext"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "5d6ce458bbebd416",
+         {
+          "url": "http://127.0.0.1:9343/html-noext"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "4a699959e38e477e",
+         {
+          "url": "http://127.0.0.1:9343/octet-noext"
+         }
+        ]
+       }
+      ]
+     },
+     "oddNames": {
+      "mediaBefore": 136,
+      "textBefore": "![u](http://127.0.0.1:9343/img/UPPER.PNG)\n![d](http://127.0.0.1:9343/img/dir/)\n![e](http://127.0.0.1:9343/img/a%23b.png)\n![s](https://127.0.0.1:9/nope.png)\n",
+      "avail": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "modal": {
+       "cls": "modal mod-scrollable-content",
+       "title": "Download attachments",
+       "html": "<div class=\"modal mod-scrollable-content\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Download attachments</div></div><div class=\"modal-content\"><div class=\"attachments-gallery\"><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/UPPER.PNG\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/dir/\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/a%23b.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"https://127.0.0.1:9/nope.png\"></div></div></div><div class=\"modal-button-container\"><button class=\"mod-cancel\">Cancel</button><button class=\"mod-cta\">Download</button></div></div>",
+       "buttons": [
+        {
+         "text": "Cancel",
+         "cls": "mod-cancel"
+        },
+        {
+         "text": "Download",
+         "cls": "mod-cta"
+        }
+       ]
+      },
+      "items": [
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/UPPER.PNG",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/UPPER.PNG\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/dir/",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/dir/\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/a%23b.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/a%23b.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "https://127.0.0.1:9/nope.png",
+        "html": "<input type=\"checkbox\"><img src=\"https://127.0.0.1:9/nope.png\">"
+       }
+      ],
+      "noticesOnOpen": [],
+      "modalAfter": null,
+      "textAfter": "![u](http://127.0.0.1:9343/img/UPPER.PNG)\n![d](http://127.0.0.1:9343/img/dir/)\n![e](http://127.0.0.1:9343/img/a%23b.png)\n![s](https://127.0.0.1:9/nope.png)\n",
+      "editorText": "![u](http://127.0.0.1:9343/img/UPPER.PNG)\n![d](http://127.0.0.1:9343/img/dir/)\n![e](http://127.0.0.1:9343/img/a%23b.png)\n![s](https://127.0.0.1:9/nope.png)\n",
+      "vault": {
+       "Image.png": 70,
+       "Sub/": "dir",
+       "Sub/Page.md": 156,
+       "UPPER.png": 70,
+       "a%23b.png": 70
+      },
+      "notices": [],
+      "requests": [
+       "\"GET /img/UPPER.PNG HTTP/1.1\" 200 -",
+       "\"GET /img/dir/ HTTP/1.1\" 200 -",
+       "\"GET /img/a%23b.png HTTP/1.1\" 200 -"
+      ],
+      "calls": [
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "c88bafdb8a306fb9",
+         {
+          "url": "http://127.0.0.1:9343/img/UPPER.PNG"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "a60e6f7c35c84806",
+         {
+          "url": "http://127.0.0.1:9343/img/dir/"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "e23b1bb15fbcb8ca",
+         {
+          "url": "http://127.0.0.1:9343/img/a%23b.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "24e3fefce4a74145",
+         {
+          "url": "https://127.0.0.1:9/nope.png"
+         }
+        ]
+       }
+      ]
+     },
+     "contexts": {
+      "mediaBefore": 142,
+      "textBefore": "- ![a](http://127.0.0.1:9343/img/photo.png)\n> ![b](http://127.0.0.1:9343/img/pic.jpg)\n| ![c](http://127.0.0.1:9343/png-noext) |\n| --- |\n`![d](http://127.0.0.1:9343/img/photo.png)`\n",
+      "avail": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "modal": {
+       "cls": "modal mod-scrollable-content",
+       "title": "Download attachments",
+       "html": "<div class=\"modal mod-scrollable-content\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Download attachments</div></div><div class=\"modal-content\"><div class=\"attachments-gallery\"><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/pic.jpg\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/png-noext\"></div></div></div><div class=\"modal-button-container\"><button class=\"mod-cancel\">Cancel</button><button class=\"mod-cta\">Download</button></div></div>",
+       "buttons": [
+        {
+         "text": "Cancel",
+         "cls": "mod-cancel"
+        },
+        {
+         "text": "Download",
+         "cls": "mod-cta"
+        }
+       ]
+      },
+      "items": [
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/photo.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/pic.jpg",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/pic.jpg\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/png-noext",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/png-noext\">"
+       }
+      ],
+      "noticesOnOpen": [],
+      "modalAfter": null,
+      "textAfter": "- ![[photo.png|a]]\n> ![[pic.jpg|b]]\n| ![[Image.png|c]] |\n| --- |\n`![d](http://127.0.0.1:9343/img/photo.png)`\n",
+      "editorText": "- ![[photo.png|a]]\n> ![[pic.jpg|b]]\n| ![[Image.png|c]] |\n| --- |\n`![d](http://127.0.0.1:9343/img/photo.png)`\n",
+      "vault": {
+       "Image.png": 70,
+       "Sub/": "dir",
+       "Sub/Page.md": 109,
+       "photo.png": 70,
+       "pic.jpg": 64
+      },
+      "notices": [
+       "Downloaded 3 attachments."
+      ],
+      "requests": [
+       "\"GET /img/pic.jpg HTTP/1.1\" 200 -",
+       "\"GET /img/photo.png HTTP/1.1\" 200 -",
+       "\"GET /img/pic.jpg HTTP/1.1\" 200 -",
+       "\"GET /png-noext HTTP/1.1\" 200 -"
+      ],
+      "calls": [
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "75fcf45f287e9cc3",
+         {
+          "url": "http://127.0.0.1:9343/img/photo.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "877250c1dc14c9be",
+         {
+          "url": "http://127.0.0.1:9343/img/pic.jpg"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "5a1d86e81ddf65da",
+         {
+          "url": "http://127.0.0.1:9343/png-noext"
+         }
+        ]
+       }
+      ]
+     },
+     "misc": {
+      "mediaBefore": 147,
+      "textBefore": "---\nimg: http://127.0.0.1:9343/img/photo.png\n---\n![a](<http://127.0.0.1:9343/img/two%20words.png>)\n![b](http://127.0.0.1:9343/img/photo.png#frag)\n",
+      "avail": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "modal": {
+       "cls": "modal mod-scrollable-content",
+       "title": "Download attachments",
+       "html": "<div class=\"modal mod-scrollable-content\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Download attachments</div></div><div class=\"modal-content\"><div class=\"attachments-gallery\"><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/two%20words.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png#frag\"></div></div></div><div class=\"modal-button-container\"><button class=\"mod-cancel\">Cancel</button><button class=\"mod-cta\">Download</button></div></div>",
+       "buttons": [
+        {
+         "text": "Cancel",
+         "cls": "mod-cancel"
+        },
+        {
+         "text": "Download",
+         "cls": "mod-cta"
+        }
+       ]
+      },
+      "items": [
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/photo.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/two%20words.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/two%20words.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/photo.png#frag",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png#frag\">"
+       }
+      ],
+      "noticesOnOpen": [],
+      "modalAfter": null,
+      "textAfter": "---\nimg: \"[[photo.png]]\"\n---\n![[two%20words.png|a]]\n![[photo 1.png|b]]\n",
+      "editorText": "---\nimg: \"[[photo.png]]\"\n---\n![[two%20words.png|a]]\n![[photo 1.png|b]]\n",
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Page.md": 71,
+       "photo 1.png": 70,
+       "photo.png": 70,
+       "two%20words.png": 70
+      },
+      "notices": [
+       "Downloaded 3 attachments."
+      ],
+      "requests": [
+       "\"GET /img/photo.png HTTP/1.1\" 200 -",
+       "\"GET /img/two%20words.png HTTP/1.1\" 200 -",
+       "\"GET /img/photo.png HTTP/1.1\" 200 -"
+      ],
+      "calls": [
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "f5a3b77c65daaec3",
+         {
+          "url": "http://127.0.0.1:9343/img/photo.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "9a2dd68f1c328e2a",
+         {
+          "url": "http://127.0.0.1:9343/img/two%20words.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "d7ccd9d75d61d3a3",
+         {
+          "url": "http://127.0.0.1:9343/img/photo.png#frag"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   },
+   "s04-migrate-frontmatter": {
+    "ok": true,
+    "ms": 24304,
+    "avail": true,
+    "run": {
+     "ran": true,
+     "err": null
+    },
+    "modal": {
+     "cls": "modal",
+     "title": "Frontmatter migration",
+     "html": "<div class=\"modal\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Frontmatter migration</div></div><div class=\"modal-content\"><div><p class=\"setting-message\">Migrate frontmatter tags, aliases, and cssclasses to the strict format required by Obsidian v1.9+</p><p class=\"setting-message mod-warning\">Warning: the converter will convert all the files in your vault, not just the current file. Your files will be overwritten. Back up all your files before attempting conversion.</p><div class=\"modal-button-container\"><button class=\"mod-cancel\">Cancel</button><button class=\"mod-cta\">Start conversion</button></div></div></div></div>",
+     "buttons": [
+      {
+       "text": "Cancel",
+       "cls": "mod-cancel"
+      },
+      {
+       "text": "Start conversion",
+       "cls": "mod-cta"
+      }
+     ]
+    },
+    "cancel": {
+     "clicked": true,
+     "modalLeft": false
+    },
+    "afterCancelChanged": [],
+    "progress": [
+     {
+      "t": 0,
+      "modal": {
+       "title": "Frontmatter migration",
+       "text": " Frontmatter migration Finished! Processed files Modified files Failed Stop Go back Done ",
+       "buttons": [
+        {
+         "text": "Stop",
+         "cls": "mod-warning"
+        },
+        {
+         "text": "Go back",
+         "cls": ""
+        },
+        {
+         "text": "Done",
+         "cls": "mod-cta"
+        }
+       ]
+      },
+      "notices": [
+       "Updated 18 files.Undo"
+      ]
+     }
+    ],
+    "files": {
+     "m01 tags comma.md": {
+      "before": "---\ntags: a, b\n---\nbody\n",
+      "after": "---\ntags:\n  - a\n  - b\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m02 tags spaces.md": {
+      "before": "---\ntags: \"#a #b\"\n---\nbody\n",
+      "after": "---\ntags:\n  - \"#a\"\n  - \"#b\"\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m03 tag singular.md": {
+      "before": "---\ntag: x\n---\nbody\n",
+      "after": "---\ntags:\n  - x\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m04 tags flow.md": {
+      "before": "---\ntags: [a, b]\n---\nbody\n",
+      "after": "---\ntags: [a, b]\n---\nbody\n",
+      "changed": false,
+      "touched": false
+     },
+     "m05 tags block.md": {
+      "before": "---\ntags:\n  - a\n  - b\n---\nbody\n",
+      "after": "---\ntags:\n  - a\n  - b\n---\nbody\n",
+      "changed": false,
+      "touched": false
+     },
+     "m06 aliases scalar.md": {
+      "before": "---\naliases: foo\n---\nbody\n",
+      "after": "---\naliases:\n  - foo\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m07 alias singular.md": {
+      "before": "---\nalias: foo, bar\n---\nbody\n",
+      "after": "---\naliases:\n  - foo\n  - bar\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m08 cssclass.md": {
+      "before": "---\ncssclass: wide\n---\nbody\n",
+      "after": "---\ncssclasses:\n  - wide\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m09 cssclasses string.md": {
+      "before": "---\ncssclasses: wide narrow\n---\nbody\n",
+      "after": "---\ncssclasses:\n  - wide\n  - narrow\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m10 tags hash.md": {
+      "before": "---\ntags: \"#a\"\n---\nbody\n",
+      "after": "---\ntags:\n  - \"#a\"\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m11 no frontmatter.md": {
+      "before": "tags: a\nbody\n",
+      "after": "tags: a\nbody\n",
+      "changed": false,
+      "touched": false
+     },
+     "m12 crlf.md": {
+      "before": "---\r\ntitle: T\r\ntags: a\r\nother: 1\r\n---\r\nbody\r\n",
+      "after": "---\r\ntitle: T\ntags:\n  - a\nother: 1\n---\r\nbody\r\n",
+      "changed": true,
+      "touched": true
+     },
+     "m13 tags empty.md": {
+      "before": "---\ntags:\n---\nbody\n",
+      "after": "---\ntags:\n---\nbody\n",
+      "changed": false,
+      "touched": false
+     },
+     "m14 tags number.md": {
+      "before": "---\ntags: 123\n---\nbody\n",
+      "after": "---\ntags: 123\n---\nbody\n",
+      "changed": false,
+      "touched": false
+     },
+     "m15 both tag and tags.md": {
+      "before": "---\ntag: x\ntags: [y]\n---\nbody\n",
+      "after": "---\ntag: x\ntags: [y]\n---\nbody\n",
+      "changed": false,
+      "touched": false
+     },
+     "m16 order kept.md": {
+      "before": "---\nz: 1\ntags: a\ny: 2\naliases: b\nx: 3\n---\nbody\n",
+      "after": "---\nz: 1\ntags:\n  - a\ny: 2\naliases:\n  - b\nx: 3\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "Sub/m17 nested.md": {
+      "before": "---\ntags: n1 n2\n---\nbody\n",
+      "after": "---\ntags:\n  - n1\n  - n2\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m18 tags one word.md": {
+      "before": "---\ntags: solo\n---\nbody\n",
+      "after": "---\ntags:\n  - solo\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m19 aliases list.md": {
+      "before": "---\naliases:\n  - one\n  - two\n---\nbody\n",
+      "after": "---\naliases:\n  - one\n  - two\n---\nbody\n",
+      "changed": false,
+      "touched": false
+     },
+     "m20 tags quoted comma.md": {
+      "before": "---\ntags: 'a, b'\n---\nbody\n",
+      "after": "---\ntags:\n  - a\n  - b\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m21 alias and aliases.md": {
+      "before": "---\nalias: x\naliases: y\n---\nbody\n",
+      "after": "---\nalias: x\naliases:\n  - y\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m22 tags flow hash.md": {
+      "before": "---\ntags: [\"#a\", b]\n---\nbody\n",
+      "after": "---\ntags: [\"#a\", b]\n---\nbody\n",
+      "changed": false,
+      "touched": false
+     },
+     "m23 cssclass list.md": {
+      "before": "---\ncssclass:\n  - wide\n---\nbody\n",
+      "after": "---\ncssclasses:\n  - wide\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m24 tags comma no space.md": {
+      "before": "---\ntags: a,b,c\n---\nbody\n",
+      "after": "---\ntags:\n  - a\n  - b\n  - c\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m25 bom.md": {
+      "before": "\ufeff---\ntags: a\n---\nbody\n",
+      "after": "\ufeff---\ntags: a\n---\nbody\n",
+      "changed": false,
+      "touched": false
+     },
+     "m26 comment.md": {
+      "before": "---\ntags: a # note\nk: v # keep\n---\nbody\n",
+      "after": "---\ntags:\n  - a\nk: v\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m27 tags nested.md": {
+      "before": "---\ntags: a/b c/d\n---\nbody\n",
+      "after": "---\ntags:\n  - a/b\n  - c/d\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "m28 other keys only.md": {
+      "before": "---\ntitle: plain\n---\nbody\n",
+      "after": "---\ntitle: plain\n---\nbody\n",
+      "changed": false,
+      "touched": false
+     }
+    },
+    "canvasTouched": false,
+    "finishedModal": {
+     "cls": "modal",
+     "title": "Frontmatter migration",
+     "html": "<div class=\"modal\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Frontmatter migration</div></div><div class=\"modal-content\"><div><p class=\"u-center-text\">Finished!</p><div class=\"changelog-item mod-success\" data-label=\"28\">Processed files</div><div class=\"changelog-item mod-highlighted\" data-label=\"18\">Modified files</div><div class=\"changelog-item mod-failed\" data-label=\"0\" style=\"display: none;\">Failed</div><div class=\"modal-button-container\"><button class=\"mod-warning\" style=\"display: none;\">Stop</button><button style=\"\">Go back</button><button class=\"mod-cta\" style=\"\">Done</button></div></div></div></div>",
+     "buttons": [
+      {
+       "text": "Stop",
+       "cls": "mod-warning"
+      },
+      {
+       "text": "Go back",
+       "cls": ""
+      },
+      {
+       "text": "Done",
+       "cls": "mod-cta"
+      }
+     ]
+    },
+    "calls": [],
+    "done": {
+     "clicked": true,
+     "modalLeft": false,
+     "notices": [
+      "Updated 18 files.Undo"
+     ],
+     "noticeHtml": [
+      "<div class=\"notice\"><div class=\"notice-message\">Updated 18 files.</div><div class=\"notice-button-container\"><div class=\"notice-cta\">Undo</div></div></div>"
+     ]
+    },
+    "undo": {
+     "clicked": "DIV.notice-cta",
+     "notices": [
+      "Reverted changes to 18 files."
+     ],
+     "modal": null
+    },
+    "afterUndo": {
+     "m01 tags comma.md": "original",
+     "m02 tags spaces.md": "original",
+     "m03 tag singular.md": "original",
+     "m04 tags flow.md": "original",
+     "m05 tags block.md": "original",
+     "m06 aliases scalar.md": "original",
+     "m07 alias singular.md": "original",
+     "m08 cssclass.md": "original",
+     "m09 cssclasses string.md": "original",
+     "m10 tags hash.md": "original",
+     "m11 no frontmatter.md": "original",
+     "m12 crlf.md": "original",
+     "m13 tags empty.md": "original",
+     "m14 tags number.md": "original",
+     "m15 both tag and tags.md": "original",
+     "m16 order kept.md": "original",
+     "Sub/m17 nested.md": "original",
+     "m18 tags one word.md": "original",
+     "m19 aliases list.md": "original",
+     "m20 tags quoted comma.md": "original",
+     "m21 alias and aliases.md": "original",
+     "m22 tags flow hash.md": "original",
+     "m23 cssclass list.md": "original",
+     "m24 tags comma no space.md": "original",
+     "m25 bom.md": "original",
+     "m26 comment.md": "original",
+     "m27 tags nested.md": "original",
+     "m28 other keys only.md": "original"
+    },
+    "second": {
+     "modal": {
+      "cls": "modal",
+      "title": "Frontmatter migration",
+      "html": "<div class=\"modal\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Frontmatter migration</div></div><div class=\"modal-content\"><div><p class=\"u-center-text\">Finished!</p><div class=\"changelog-item mod-success\" data-label=\"28\">Processed files</div><div class=\"changelog-item mod-highlighted\" data-label=\"0\">Modified files</div><div class=\"changelog-item mod-failed\" data-label=\"0\" style=\"display: none;\">Failed</div><div class=\"modal-button-container\"><button class=\"mod-warning\" style=\"display: none;\">Stop</button><button style=\"\">Go back</button><button class=\"mod-cta\" style=\"\">Done</button></div></div></div></div>",
+      "buttons": [
+       {
+        "text": "Stop",
+        "cls": "mod-warning"
+       },
+       {
+        "text": "Go back",
+        "cls": ""
+       },
+       {
+        "text": "Done",
+        "cls": "mod-cta"
+       }
+      ]
+     },
+     "notices": [],
+     "touched": []
+    }
+   },
+   "s05-debug-info": {
+    "ok": true,
+    "ms": 9004,
+    "modal": {
+     "cls": "modal mod-lg",
+     "title": "Debug info",
+     "html": "<div class=\"modal mod-lg\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Debug info</div></div><div class=\"modal-content\"><textarea class=\"debug-textarea\" spellcheck=\"false\" readonly=\"\"></textarea></div><div class=\"modal-button-container\"><button class=\"mod-secondary\">Copy to clipboard</button><button>Sandbox vault</button><button class=\"mod-cancel\">Done</button></div></div>",
+     "buttons": [
+      {
+       "text": "Copy to clipboard",
+       "cls": "mod-secondary"
+      },
+      {
+       "text": "Sandbox vault",
+       "cls": ""
+      },
+      {
+       "text": "Done",
+       "cls": "mod-cancel"
+      }
+     ]
+    },
+    "text": "SYSTEM INFO:\n\tObsidian version: 1.15.0\n\tInstaller version: 1.13.7\n\tOperating system: #1-NixOS SMP PREEMPT_DYNAMIC Fri Oct 30 12:06:41 UTC 2026 6.18.60\n\tLogin status: not logged in\n\tLanguage: en\n\tInsider build toggle: off\n\tLive preview: on\n\tBase theme: adapt to system\n\tCommunity theme: none\n\tSnippets enabled: 0\n\tRestricted mode: on\n\nRECOMMENDATIONS:\n\tnone\n",
+    "calls": [
+     {
+      "kind": "ipc.sendSync insider-build",
+      "args": [
+       null
+      ]
+     }
+    ],
+    "copy": {
+     "clip": "SYSTEM INFO:\n\tObsidian version: 1.15.0\n\tInstaller version: 1.13.7\n\tOperating system: #1-NixOS SMP PREEMPT_DYNAMIC Fri Oct 30 12:06:41 UTC 2026 6.18.60\n\tLogin status: not logged in\n\tLanguage: en\n\tInsider build toggle: off\n\tLive preview: on\n\tBase theme: adapt to system\n\tCommunity theme: none\n\tSnippets enabled: 0\n\tRestricted mode: on\n\nRECOMMENDATIONS:\n\tnone\n",
+     "notices": [
+      "Debug info copied to your clipboard"
+     ],
+     "modalLeft": false,
+     "buttonText": "Copy to clipboard",
+     "equalsText": true,
+     "calls": []
+    },
+    "sandbox": {
+     "notices": [],
+     "modalLeft": false,
+     "modal": null,
+     "calls": [
+      {
+       "kind": "ipc.sendSync sandbox",
+       "args": []
+      }
+     ],
+     "sandboxPath": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/udd1/Obsidian Sandbox"
+    },
+    "done": {
+     "modalLeft": false,
+     "notices": []
+    },
+    "escape": {
+     "modalLeft": false
+    },
+    "config2": {
+     "plug": [
+      "probe-noop"
+     ],
+     "theme": "moonstone",
+     "css": "Probe Theme",
+     "restricted": false,
+     "undo": true
+    },
+    "text2": "SYSTEM INFO:\n\tObsidian version: 1.15.0\n\tInstaller version: 1.13.7\n\tOperating system: #1-NixOS SMP PREEMPT_DYNAMIC Fri Oct 30 12:06:41 UTC 2026 6.18.60\n\tLogin status: not logged in\n\tLanguage: en\n\tInsider build toggle: off\n\tLive preview: off\n\tBase theme: light\n\tCommunity theme: Probe Theme\n\tSnippets enabled: 0\n\tRestricted mode: off\n\tPlugins installed: 1\n\tPlugins enabled: 1\n\t\t1: Probe Noop v0.0.1\n\nRECOMMENDATIONS:\n\tCustom theme and snippets: for cosmetic issues, please first try updating your theme and disabling your snippets. If still not fixed, please try to make the issue happen in the Sandbox Vault or disable community theme and snippets.\n\tCommunity plugins: for bugs, please first try updating all your plugins to latest. If still not fixed, please try to make the issue happen in the Sandbox Vault or disable community plugins.\n"
+   },
+   "s06-release-notes-offline": {
+    "ok": true,
+    "ms": 12862,
+    "localStorageBefore": {},
+    "online": {
+     "viewType": "release-notes",
+     "state": {
+      "type": "release-notes",
+      "state": {
+       "currentVersion": "1.15.0"
+      },
+      "icon": "lucide-book-up",
+      "title": "Release Notes 1.15.0"
+     },
+     "title": "Release Notes 1.15.0",
+     "content": "What's new in 1.15\n\nReleased on November 2, 2026\n\nThis update brings faster Mermaid diagrams that match your theme, reorderable filters in Bases, and new URI and CLI commands for adding content under ",
+     "html": "<div class=\"cm-scroller is-readable-line-width\"><div class=\"markdown-preview-view markdown-rendered\"><h1>What's new in 1.15</h1><div><p class=\"u-small\">Released on November 2, 2026</p><p>This update b",
+     "tabs": 1,
+     "notices": [],
+     "calls": [
+      "ipc.send request-url [\"76831a27b2209350\",{\"url\":\"https://obsidian.md/changelog/desktop/1.15.md\",\"throw\":true}]"
+     ]
+    },
+    "localStorageAfterOnline": {},
+    "offlineSet": 1,
+    "offline": {
+     "viewType": "release-notes",
+     "state": {
+      "type": "release-notes",
+      "state": {
+       "currentVersion": "1.15.0"
+      },
+      "icon": "lucide-book-up",
+      "title": "Release Notes 1.15.0"
+     },
+     "title": "Release Notes 1.15.0",
+     "content": "What's new in 1.15\n\nCould not load release notes for 1.15. Retry\n\nA complete list of previous changes can be found on our changelog.",
+     "html": "<div class=\"cm-scroller is-readable-line-width\"><div class=\"markdown-preview-view markdown-rendered\"><h1>What's new in 1.15</h1><div><p>Could not load release notes for 1.15. <a>Retry</a></p></div><section class=\"footnotes\"><hr><p class=\"footnote\">A complete list of previous changes can be found on <a class=\"external-link\" href=\"https://obsidian.md/changelog\">our changelog</a>.</p></section></div></div>",
+     "tabs": 2,
+     "notices": [],
+     "calls": [
+      "ipc.send request-url [\"d1a6ab2a935d2e85\",{\"url\":\"https://obsidian.md/changelog/desktop/1.15.md\",\"throw\":true}]"
+     ]
+    },
+    "backOnline": {
+     "viewType": "release-notes",
+     "state": {
+      "type": "release-notes",
+      "state": {
+       "currentVersion": "1.15.0"
+      },
+      "icon": "lucide-book-up",
+      "title": "Release Notes 1.15.0"
+     },
+     "title": "Release Notes 1.15.0",
+     "content": "What's new in 1.15\n\nReleased on November 2, 2026\n\nThis update brings faster Mermaid diagrams that match your theme, reorderable filters in Bases, and new URI and CLI commands for adding content under ",
+     "html": "<div class=\"cm-scroller is-readable-line-width\"><div class=\"markdown-preview-view markdown-rendered\"><h1>What's new in 1.15</h1><div><p class=\"u-small\">Released on November 2, 2026</p><p>This update b",
+     "tabs": 3,
+     "notices": [],
+     "calls": [
+      "ipc.send request-url [\"db2762e8043a1d79\",{\"url\":\"https://obsidian.md/changelog/desktop/1.15.md\",\"throw\":true}]"
+     ]
+    },
+    "localStorageAfter": {}
+   }
+  },
+  "order": [
+   "s00-version",
+   "s02-attach-file",
+   "s03b-download-edges",
+   "s04-migrate-frontmatter",
+   "s05-debug-info",
+   "s06-release-notes-offline"
+  ],
+  "elapsedMs": 111567,
+  "vaultPath": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run2/Probe Vault"
+ },
+ "run:third": {
+  "startedAt": "2026-11-10T05:57:02.215Z",
+  "env": {
+   "ONLY": "s00|s03c|s04",
+   "vault": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run3/Probe Vault",
+   "outside": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run3/Outside"
+  },
+  "steps": {
+   "s00-version": {
+    "ok": true,
+    "ms": 4,
+    "title": "New tab - Probe Vault - Obsidian 1.15.0",
+    "version": "1.15.0",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+    "commands": [
+     [
+      "editor:toggle-spellcheck",
+      {
+       "name": "Toggle spellcheck",
+       "icon": null,
+       "kinds": [
+        "callback"
+       ],
+       "hotkeys": null
+      }
+     ],
+     [
+      "editor:attach-file",
+      {
+       "name": "Insert attachment",
+       "icon": "lucide-paperclip",
+       "kinds": [
+        "checkCallback",
+        "editorCallback"
+       ],
+       "hotkeys": null
+      }
+     ],
+     [
+      "editor:download-attachments",
+      {
+       "name": "Download attachments for current file",
+       "icon": null,
+       "kinds": [
+        "checkCallback"
+       ],
+       "hotkeys": null
+      }
+     ],
+     [
+      "app:migrate-frontmatter",
+      {
+       "name": "Format converter: Frontmatter migration",
+       "icon": "lucide-binary",
+       "kinds": [
+        "callback"
+       ],
+       "hotkeys": null
+      }
+     ],
+     [
+      "app:show-debug-info",
+      {
+       "name": "Show debug info",
+       "icon": null,
+       "kinds": [
+        "callback"
+       ],
+       "hotkeys": null
+      }
+     ],
+     [
+      "app:show-release-notes",
+      {
+       "name": "Show release notes",
+       "icon": null,
+       "kinds": [
+        "callback"
+       ],
+       "hotkeys": null
+      }
+     ],
+     [
+      "app:open-file",
+      {
+       "name": "Open file from outside the vault...",
+       "icon": null,
+       "kinds": [
+        "callback"
+       ],
+       "hotkeys": null
+      }
+     ]
+    ]
+   },
+   "s03c-download-names": {
+    "ok": true,
+    "ms": 19116,
+    "cases": {
+     "extensions": {
+      "mediaBefore": 155,
+      "textBefore": "![m](http://127.0.0.1:9343/img/mismatch.png)\n![h](http://127.0.0.1:9343/img/x.webp)\n![j](http://127.0.0.1:9343/img/name.jpeg)\n![d](http://127.0.0.1:9343/img/dots.min.png)\n![g](http://127.0.0.1:9343/img/Grand%C3%A9.gif)\n",
+      "avail": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "modal": {
+       "cls": "modal mod-scrollable-content",
+       "title": "Download attachments",
+       "html": "<div class=\"modal mod-scrollable-content\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Download attachments</div></div><div class=\"modal-content\"><div class=\"attachments-gallery\"><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/mismatch.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/x.webp\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/name.jpeg\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/dots.min.png\"></div><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/Grand%C3%A9.gif\"></div></div></div><div class=\"modal-button-container\"><button class=\"mod-cancel\">Cancel</button><button class=\"mod-cta\">Download</button></div></div>",
+       "buttons": [
+        {
+         "text": "Cancel",
+         "cls": "mod-cancel"
+        },
+        {
+         "text": "Download",
+         "cls": "mod-cta"
+        }
+       ]
+      },
+      "items": [
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/mismatch.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/mismatch.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/x.webp",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/x.webp\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/name.jpeg",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/name.jpeg\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/dots.min.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/dots.min.png\">"
+       },
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/Grand%C3%A9.gif",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/Grand%C3%A9.gif\">"
+       }
+      ],
+      "noticesOnOpen": [],
+      "modalAfter": null,
+      "textAfter": "![[mismatch.png|m]]\n![[x.webp|h]]\n![[name.jpeg|j]]\n![[dots.min.png|d]]\n![[Grand%C3%A9.gif|g]]\n",
+      "editorText": "![[mismatch.png|m]]\n![[x.webp|h]]\n![[name.jpeg|j]]\n![[dots.min.png|d]]\n![[Grand%C3%A9.gif|g]]\n",
+      "vault": {
+       "Grand%C3%A9.gif": 6,
+       "Sub/": "dir",
+       "Sub/Page.md": 94,
+       "dots.min.png": 70,
+       "mismatch.png": 64,
+       "name.jpeg": 64,
+       "x.webp": 13
+      },
+      "notices": [
+       "Downloaded 5 attachments."
+      ],
+      "requests": [
+       "\"GET /img/mismatch.png HTTP/1.1\" 200 -",
+       "\"GET /img/name.jpeg HTTP/1.1\" 200 -",
+       "\"GET /img/x.webp HTTP/1.1\" 200 -",
+       "\"GET /img/Grand%C3%A9.gif HTTP/1.1\" 200 -",
+       "\"GET /img/mismatch.png HTTP/1.1\" 200 -",
+       "\"GET /img/x.webp HTTP/1.1\" 200 -",
+       "\"GET /img/name.jpeg HTTP/1.1\" 200 -",
+       "\"GET /img/dots.min.png HTTP/1.1\" 200 -",
+       "\"GET /img/Grand%C3%A9.gif HTTP/1.1\" 200 -"
+      ],
+      "calls": [
+       {
+        "kind": "ipc.sendSync version",
+        "args": []
+       },
+       {
+        "kind": "ipc.send REMOTE_BROWSER_DEREFERENCE",
+        "args": [
+         "4-1",
+         2,
+         0
+        ]
+       },
+       {
+        "kind": "ipc.send REMOTE_BROWSER_DEREFERENCE",
+        "args": [
+         "4-1",
+         6,
+         0
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "50af685c476be702",
+         {
+          "url": "http://127.0.0.1:9343/img/mismatch.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "b7c9f51a69455535",
+         {
+          "url": "http://127.0.0.1:9343/img/x.webp"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "8bec464c48d6bc9c",
+         {
+          "url": "http://127.0.0.1:9343/img/name.jpeg"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "be15dc413bc71e4f",
+         {
+          "url": "http://127.0.0.1:9343/img/dots.min.png"
+         }
+        ]
+       },
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "29983b528a7cb95b",
+         {
+          "url": "http://127.0.0.1:9343/img/Grand%C3%A9.gif"
+         }
+        ]
+       }
+      ]
+     },
+     "frontmatter": {
+      "mediaBefore": 164,
+      "textBefore": "---\nsource: http://127.0.0.1:9343/page.html\nlist:\n  - http://127.0.0.1:9343/img/photo.png\nquoted: \"http://127.0.0.1:9343/img/pic.jpg\"\ntext: see http://127.0.0.1:9343/img/photo.png\n---\nbody\n",
+      "avail": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "modal": {
+       "cls": "modal mod-scrollable-content",
+       "title": "Download attachments",
+       "html": "<div class=\"modal mod-scrollable-content\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Download attachments</div></div><div class=\"modal-content\"><div class=\"attachments-gallery\"><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/pic.jpg\"></div></div></div><div class=\"modal-button-container\"><button class=\"mod-cancel\">Cancel</button><button class=\"mod-cta\">Download</button></div></div>",
+       "buttons": [
+        {
+         "text": "Cancel",
+         "cls": "mod-cancel"
+        },
+        {
+         "text": "Download",
+         "cls": "mod-cta"
+        }
+       ]
+      },
+      "items": [
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/pic.jpg",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/pic.jpg\">"
+       }
+      ],
+      "noticesOnOpen": [],
+      "modalAfter": null,
+      "textAfter": "---\nsource: http://127.0.0.1:9343/page.html\nlist:\n  - http://127.0.0.1:9343/img/photo.png\nquoted: \"[[pic.jpg]]\"\ntext: see http://127.0.0.1:9343/img/photo.png\n---\nbody\n",
+      "editorText": "---\nsource: http://127.0.0.1:9343/page.html\nlist:\n  - http://127.0.0.1:9343/img/photo.png\nquoted: \"[[pic.jpg]]\"\ntext: see http://127.0.0.1:9343/img/photo.png\n---\nbody\n",
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Page.md": 167,
+       "pic.jpg": 64
+      },
+      "notices": [
+       "Downloaded 1 attachment."
+      ],
+      "requests": [
+       "\"GET /img/pic.jpg HTTP/1.1\" 200 -",
+       "\"GET /img/pic.jpg HTTP/1.1\" 200 -"
+      ],
+      "calls": [
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "e4a166083878c046",
+         {
+          "url": "http://127.0.0.1:9343/img/pic.jpg"
+         }
+        ]
+       }
+      ]
+     },
+     "absoluteMarkdown": {
+      "mediaBefore": 167,
+      "textBefore": "![a](http://127.0.0.1:9343/img/photo.png)\n",
+      "avail": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "modal": {
+       "cls": "modal mod-scrollable-content",
+       "title": "Download attachments",
+       "html": "<div class=\"modal mod-scrollable-content\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Download attachments</div></div><div class=\"modal-content\"><div class=\"attachments-gallery\"><div class=\"download-attachment-item is-selected\" aria-label=\"\"><input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\"></div></div></div><div class=\"modal-button-container\"><button class=\"mod-cancel\">Cancel</button><button class=\"mod-cta\">Download</button></div></div>",
+       "buttons": [
+        {
+         "text": "Cancel",
+         "cls": "mod-cancel"
+        },
+        {
+         "text": "Download",
+         "cls": "mod-cta"
+        }
+       ]
+      },
+      "items": [
+       {
+        "cls": "download-attachment-item is-selected",
+        "label": "",
+        "checked": true,
+        "img": "http://127.0.0.1:9343/img/photo.png",
+        "html": "<input type=\"checkbox\"><img src=\"http://127.0.0.1:9343/img/photo.png\">"
+       }
+      ],
+      "noticesOnOpen": [],
+      "modalAfter": null,
+      "textAfter": "![a](photo.png)\n",
+      "editorText": "![a](photo.png)\n",
+      "vault": {
+       "Sub/": "dir",
+       "Sub/Page.md": 16,
+       "photo.png": 70
+      },
+      "notices": [
+       "Downloaded 1 attachment."
+      ],
+      "requests": [
+       "\"GET /img/photo.png HTTP/1.1\" 200 -"
+      ],
+      "calls": [
+       {
+        "kind": "ipc.send request-url",
+        "args": [
+         "10bf9bfb84bca1c0",
+         {
+          "url": "http://127.0.0.1:9343/img/photo.png"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   },
+   "s04-migrate-frontmatter": {
+    "ok": true,
+    "ms": 24508,
+    "avail": true,
+    "run": {
+     "ran": true,
+     "err": null
+    },
+    "modal": {
+     "cls": "modal",
+     "title": "Frontmatter migration",
+     "html": "<div class=\"modal\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Frontmatter migration</div></div><div class=\"modal-content\"><div><p class=\"setting-message\">Migrate frontmatter tags, aliases, and cssclasses to the strict format required by Obsidian v1.9+</p><p class=\"setting-message mod-warning\">Warning: the converter will convert all the files in your vault, not just the current file. Your files will be overwritten. Back up all your files before attempting conversion.</p><div class=\"modal-button-container\"><button class=\"mod-cancel\">Cancel</button><button class=\"mod-cta\">Start conversion</button></div></div></div></div>",
+     "buttons": [
+      {
+       "text": "Cancel",
+       "cls": "mod-cancel"
+      },
+      {
+       "text": "Start conversion",
+       "cls": "mod-cta"
+      }
+     ]
+    },
+    "cancel": {
+     "clicked": true,
+     "modalLeft": false
+    },
+    "afterCancelChanged": [],
+    "progress": [
+     {
+      "t": 0,
+      "modal": {
+       "title": "Frontmatter migration",
+       "text": " Frontmatter migration Finished! Processed files Modified files Failed Stop Go back Done ",
+       "buttons": [
+        {
+         "text": "Stop",
+         "cls": "mod-warning"
+        },
+        {
+         "text": "Go back",
+         "cls": ""
+        },
+        {
+         "text": "Done",
+         "cls": "mod-cta"
+        }
+       ]
+      },
+      "notices": [
+       "Updated 15 files.Undo"
+      ]
+     }
+    ],
+    "files": {
+     "n01 aliases spaces.md": {
+      "before": "---\naliases: New York\n---\nbody\n",
+      "after": "---\naliases:\n  - New York\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "n02 aliases comma spaces.md": {
+      "before": "---\naliases: New York, LA\n---\nbody\n",
+      "after": "---\naliases:\n  - New York\n  - LA\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "n03 tags comma and spaces.md": {
+      "before": "---\ntags: a b, c\n---\nbody\n",
+      "after": "---\ntags:\n  - a\n  - b\n  - c\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "n04 cssclasses comma.md": {
+      "before": "---\ncssclasses: wide, narrow\n---\nbody\n",
+      "after": "---\ncssclasses:\n  - wide\n  - narrow\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "n05 tags duplicate.md": {
+      "before": "---\ntags: a a\n---\nbody\n",
+      "after": "---\ntags:\n  - a\n  - a\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "n06 tags trailing comma.md": {
+      "before": "---\ntags: a,\n---\nbody\n",
+      "after": "---\ntags:\n  - a\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "n07 tags with hash unquoted list.md": {
+      "before": "---\ntags:\n  - \"#a\"\n---\nbody\n",
+      "after": "---\ntags:\n  - \"#a\"\n---\nbody\n",
+      "changed": false,
+      "touched": false
+     },
+     "n08 Tags capital.md": {
+      "before": "---\nTags: a b\n---\nbody\n",
+      "after": "---\nTags:\n  - a\n  - b\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "n09 tags bool.md": {
+      "before": "---\ntags: true\n---\nbody\n",
+      "after": "---\ntags: true\n---\nbody\n",
+      "changed": false,
+      "touched": false
+     },
+     "n10 alias list.md": {
+      "before": "---\nalias:\n  - x\n---\nbody\n",
+      "after": "---\naliases:\n  - x\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "n11 cssclass and cssclasses.md": {
+      "before": "---\ncssclass: a\ncssclasses: b\n---\nbody\n",
+      "after": "---\ncssclass: a\ncssclasses:\n  - b\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "n12 nested other.md": {
+      "before": "---\nmeta:\n  k: v\ntags: a\n---\nbody\n",
+      "after": "---\nmeta:\n  k: v\ntags:\n  - a\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "n13 flow other.md": {
+      "before": "---\nlist: [1, 2]\ntags: a\n---\nbody\n",
+      "after": "---\nlist:\n  - 1\n  - 2\ntags:\n  - a\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "n14 date and quotes.md": {
+      "before": "---\nd: 2024-01-02\ns: 'single'\ntags: a\n---\nbody\n",
+      "after": "---\nd: 2024-01-02\ns: single\ntags:\n  - a\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "n15 blank line.md": {
+      "before": "---\na: 1\n\ntags: a\n---\nbody\n",
+      "after": "---\na: 1\ntags:\n  - a\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "n16 tag empty.md": {
+      "before": "---\ntag:\n---\nbody\n",
+      "after": "---\ntags:\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     },
+     "n17 aliases empty string.md": {
+      "before": "---\naliases: \"\"\n---\nbody\n",
+      "after": "---\naliases: []\n---\nbody\n",
+      "changed": true,
+      "touched": true
+     }
+    },
+    "canvasTouched": false,
+    "finishedModal": {
+     "cls": "modal",
+     "title": "Frontmatter migration",
+     "html": "<div class=\"modal\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Frontmatter migration</div></div><div class=\"modal-content\"><div><p class=\"u-center-text\">Finished!</p><div class=\"changelog-item mod-success\" data-label=\"17\">Processed files</div><div class=\"changelog-item mod-highlighted\" data-label=\"15\">Modified files</div><div class=\"changelog-item mod-failed\" data-label=\"0\" style=\"display: none;\">Failed</div><div class=\"modal-button-container\"><button class=\"mod-warning\" style=\"display: none;\">Stop</button><button style=\"\">Go back</button><button class=\"mod-cta\" style=\"\">Done</button></div></div></div></div>",
+     "buttons": [
+      {
+       "text": "Stop",
+       "cls": "mod-warning"
+      },
+      {
+       "text": "Go back",
+       "cls": ""
+      },
+      {
+       "text": "Done",
+       "cls": "mod-cta"
+      }
+     ]
+    },
+    "calls": [],
+    "done": {
+     "clicked": true,
+     "modalLeft": false,
+     "notices": [
+      "Updated 15 files.Undo"
+     ],
+     "noticeHtml": [
+      "<div class=\"notice\"><div class=\"notice-message\">Updated 15 files.</div><div class=\"notice-button-container\"><div class=\"notice-cta\">Undo</div></div></div>"
+     ]
+    },
+    "undo": {
+     "clicked": "DIV.notice-cta",
+     "notices": [
+      "Reverted changes to 15 files."
+     ],
+     "modal": null
+    },
+    "afterUndo": {
+     "n01 aliases spaces.md": "original",
+     "n02 aliases comma spaces.md": "original",
+     "n03 tags comma and spaces.md": "original",
+     "n04 cssclasses comma.md": "original",
+     "n05 tags duplicate.md": "original",
+     "n06 tags trailing comma.md": "original",
+     "n07 tags with hash unquoted list.md": "original",
+     "n08 Tags capital.md": "original",
+     "n09 tags bool.md": "original",
+     "n10 alias list.md": "original",
+     "n11 cssclass and cssclasses.md": "original",
+     "n12 nested other.md": "original",
+     "n13 flow other.md": "original",
+     "n14 date and quotes.md": "original",
+     "n15 blank line.md": "original",
+     "n16 tag empty.md": "original",
+     "n17 aliases empty string.md": "original"
+    },
+    "second": {
+     "modal": {
+      "cls": "modal",
+      "title": "Frontmatter migration",
+      "html": "<div class=\"modal\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg/></div><div class=\"modal-header\"><div class=\"modal-title\">Frontmatter migration</div></div><div class=\"modal-content\"><div><p class=\"u-center-text\">Finished!</p><div class=\"changelog-item mod-success\" data-label=\"17\">Processed files</div><div class=\"changelog-item mod-highlighted\" data-label=\"0\">Modified files</div><div class=\"changelog-item mod-failed\" data-label=\"0\" style=\"display: none;\">Failed</div><div class=\"modal-button-container\"><button class=\"mod-warning\" style=\"display: none;\">Stop</button><button style=\"\">Go back</button><button class=\"mod-cta\" style=\"\">Done</button></div></div></div></div>",
+      "buttons": [
+       {
+        "text": "Stop",
+        "cls": "mod-warning"
+       },
+       {
+        "text": "Go back",
+        "cls": ""
+       },
+       {
+        "text": "Done",
+        "cls": "mod-cta"
+       }
+      ]
+     },
+     "notices": [],
+     "touched": []
+    }
+   }
+  },
+  "order": [
+   "s00-version",
+   "s03c-download-names",
+   "s04-migrate-frontmatter"
+  ],
+  "elapsedMs": 43694,
+  "vaultPath": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/p7/run3/Probe Vault"
+ }
+}
