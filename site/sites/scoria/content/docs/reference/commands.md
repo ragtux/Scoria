@@ -1,13 +1,14 @@
 ---
 title: Commands and hotkeys
-description: The commands Scoria registers — the 244 Obsidian command ids, the 41 with a default hotkey, and the 133 Scoria can actually run today, with every id and default key listed.
+description: The commands Scoria registers — the 244 Obsidian command ids, the 41 with a default hotkey, and the 190 Scoria can actually run today, with every id and default key listed.
 ---
 
 # Commands and hotkeys
 
 Scoria registers **244 command ids** — the exact strings Obsidian registers, so your
 `hotkeys.json` matches them — of which **227 have an observed desktop name**. **41** carry a
-default hotkey. **133** do something in Scoria today.
+default hotkey. **190** do something in Scoria today; the 54 that do not are listed
+[below](#the-ones-that-do-not-run).
 
 Those four numbers are different things and the difference is the point:
 
@@ -19,12 +20,18 @@ Those four numbers are different things and the difference is the point:
   palette](/docs/app/switcher/) offers only these; the [Hotkeys tab](/docs/hotkeys/) lists
   all 244, so you can see your bindings for everything else.
 
-Some of the 133 are runnable only in the right place, which is also how Obsidian treats
-them: **37** need an editor on screen with the keyboard in it, so they leave the palette in
+Some of the 190 are runnable only in the right place, which is also how Obsidian treats
+them: **63** need an editor on screen with the keyboard in it, so they leave the palette in
 a reading leaf, and the **fifteen table commands** that act on an existing table are offered
-only while the cursor is in one. `graph:open-local` is not offered with no file open. The palette, the hotkey and the
-control socket all ask the same question, so a command that is listed is a command that
-runs.
+only while the cursor is in one. `graph:open-local` and the five commands on the active file
+(the two copy-path commands, `workspace:copy-url` and the two `open-with-default-app`
+commands) are not offered with no file open; four `bases:*` commands need a base on screen;
+`editor:rename-heading` needs the cursor on a heading line; `editor:focus` needs a note open
+in some tab; `backlink:toggle-backlinks-in-document` needs a note active; and
+`workspace:show-trash` is offered only when deleted files go to the vault's own `.trash`
+folder. A command whose core plugin is off is gone, as in Obsidian. The palette, the hotkey
+and the control socket all ask the same question, so a command that is listed is a command
+that runs.
 
 Ids come from Obsidian 1.12.7; names and default hotkeys were captured from Obsidian 1.14.4
 with a throwaway plugin that dumped `app.commands` and the settings tabs.
@@ -82,12 +89,21 @@ in `hotkeys.json`. Several are worth binding on day one: `editor:toggle-source`,
 
 | Command | Id |
 |---|---|
+| Add alias | `markdown:add-alias` |
 | Add cursor above | `editor:add-cursor-above` |
 | Add cursor below | `editor:add-cursor-below` |
 | Add embed | `editor:insert-embed` |
 | Add internal link | `editor:insert-wikilink` |
+| Add tag | `editor:insert-tag` |
 | Backlinks: Open backlinks for the current note | `backlink:open-backlinks` |
 | Backlinks: Show backlinks | `backlink:open` |
+| Backlinks: Toggle backlinks in document | `backlink:toggle-backlinks-in-document` |
+| Bases: Add item | `bases:add-item` |
+| Bases: Add view | `bases:add-view` |
+| Bases: Copy table to clipboard | `bases:copy-table` |
+| Bases: Create new base | `bases:new-file` |
+| Bases: Insert new base | `bases:insert` |
+| Bases: Switch view... | `bases:change-view` |
 | Bookmarks: Bookmark all tabs... | `bookmarks:bookmark-all-tabs` |
 | Bookmarks: Bookmark block under cursor... | `bookmarks:bookmark-current-section` |
 | Bookmarks: Bookmark current search... | `bookmarks:bookmark-current-search` |
@@ -98,25 +114,43 @@ in `hotkeys.json`. Several are worth binding on day one: `editor:toggle-source`,
 | Canvas: Convert to file... | `canvas:convert-to-file` |
 | Canvas: Create new canvas | `canvas:new-file` |
 | Canvas: Jump to group | `canvas:jump-to-group` |
+| Change theme... | `theme:switch` |
 | Change vault... | `app:switch-vault` |
 | Clear file properties | `markdown:clear-metadata-properties` |
+| Clear formatting | `editor:clear-formatting` |
 | Close all other tabs | `workspace:close-others` |
 | Close others in tab group | `workspace:close-others-tab-group` |
 | Close this tab group | `workspace:close-tab-group` |
+| Copy current file path from system root | `workspace:copy-full-path` |
+| Copy current file path from vault folder | `workspace:copy-path` |
+| Copy Obsidian URL for current file | `workspace:copy-url` |
 | Create new note in current tab | `file-explorer:new-file-in-current-tab` |
+| Cycle bullet/checkbox | `editor:cycle-list-checklist` |
 | Daily notes: Open next daily note | `daily-notes:goto-next` |
 | Daily notes: Open previous daily note | `daily-notes:goto-prev` |
 | Daily notes: Open today's daily note | `daily-notes` |
+| Decrease font size | `app:decrease-font-size` |
 | Delete current file | `app:delete-file` |
 | Files: Create new folder | `file-explorer:new-folder` |
 | Files: Reveal current file in navigation | `file-explorer:reveal-active-file` |
 | Files: Show file explorer | `file-explorer:open` |
+| Focus on last note | `editor:focus` |
 | Focus on tab group above | `editor:focus-top` |
 | Focus on tab group below | `editor:focus-bottom` |
 | Focus on tab group to the left | `editor:focus-left` |
 | Focus on tab group to the right | `editor:focus-right` |
+| Fold all headings and lists | `editor:fold-all` |
+| Fold less | `editor:fold-less` |
+| Fold more | `editor:fold-more` |
+| Footnotes view: Show footnotes | `footnotes:open` |
 | Graph view: Open local graph | `graph:open-local` |
+| Increase font size | `app:increase-font-size` |
 | Indent list item | `editor:indent-list` |
+| Insert callout | `editor:insert-callout` |
+| Insert code block | `editor:insert-codeblock` |
+| Insert footnote | `editor:insert-footnote` |
+| Insert horizontal rule | `editor:insert-horizontal-rule` |
+| Insert math block | `editor:insert-mathblock` |
 | Insert table | `editor:insert-table` |
 | Make a copy of the current file | `file-explorer:duplicate-file` |
 | Manage vaults | `app:open-vault` |
@@ -125,7 +159,11 @@ in `hotkeys.json`. Several are worth binding on day one: `editor:toggle-source`,
 | Move line down | `editor:swap-line-down` |
 | Move line up | `editor:swap-line-up` |
 | New window | `workspace:new-window` |
+| Note composer: Extract current selection... | `note-composer:split-file` |
+| Note composer: Extract this heading... | `note-composer:extract-heading` |
+| Note composer: Merge current file with another file... | `note-composer:merge-file` |
 | Open current tab in new window | `workspace:open-in-new-window` |
+| Open in default app | `open-with-default-app:open` |
 | Open sandbox vault | `app:open-sandbox-vault` |
 | Open vault... | `app:open-another-vault` |
 | Outgoing links: Open outgoing links for the current file | `outgoing-links:open-for-current` |
@@ -133,13 +171,19 @@ in `hotkeys.json`. Several are worth binding on day one: `editor:toggle-source`,
 | Outline: Open outline of the current file | `outline:open-for-current` |
 | Outline: Show outline | `outline:open` |
 | Properties view: Show all properties | `properties:open` |
+| Properties view: Show file properties | `properties:open-local` |
+| Random note: Open random note | `random-note` |
 | Remove heading | `editor:set-heading-0` |
+| Rename this heading... | `editor:rename-heading` |
 | Set as heading 1 | `editor:set-heading-1` |
 | Set as heading 2 | `editor:set-heading-2` |
 | Set as heading 3 | `editor:set-heading-3` |
 | Set as heading 4 | `editor:set-heading-4` |
 | Set as heading 5 | `editor:set-heading-5` |
 | Set as heading 6 | `editor:set-heading-6` |
+| Show context menu under cursor | `editor:context-menu` |
+| Show in system explorer | `open-with-default-app:show` |
+| Show trash | `workspace:show-trash` |
 | Split down | `workspace:split-horizontal` |
 | Split right | `workspace:split-vertical` |
 | Table: Add column to the left | `editor:table-col-before` |
@@ -162,18 +206,38 @@ in `hotkeys.json`. Several are worth binding on day one: `editor:toggle-source`,
 | Templates: Insert current time | `insert-current-time` |
 | Templates: Insert template | `insert-template` |
 | Toggle blockquote | `editor:toggle-blockquote` |
+| Toggle blue highlight | `editor:toggle-highlight-blue` |
 | Toggle bullet list | `editor:toggle-bullet-list` |
 | Toggle code | `editor:toggle-code` |
+| Toggle default mode for new tabs | `app:toggle-default-new-pane-mode` |
+| Toggle fold on the current line | `editor:toggle-fold` |
 | Toggle fold properties in current file | `editor:toggle-fold-properties` |
+| Toggle green highlight | `editor:toggle-highlight-green` |
+| Toggle heading | `editor:set-heading` |
 | Toggle highlight | `editor:toggle-highlight` |
 | Toggle inline math | `editor:toggle-inline-math` |
 | Toggle left sidebar | `app:toggle-left-sidebar` |
+| Toggle light/dark mode | `theme:toggle-light-dark` |
+| Toggle line numbers | `editor:toggle-line-numbers` |
 | Toggle Live Preview/Source mode | `editor:toggle-source` |
 | Toggle numbered list | `editor:toggle-numbered-list` |
+| Toggle orange highlight | `editor:toggle-highlight-orange` |
 | Toggle pin | `workspace:toggle-pin` |
+| Toggle purple highlight | `editor:toggle-highlight-purple` |
+| Toggle readable line length | `editor:toggle-readable-line-length` |
+| Toggle red highlight | `editor:toggle-highlight-red` |
+| Toggle ribbon | `app:toggle-ribbon` |
 | Toggle right sidebar | `app:toggle-right-sidebar` |
 | Toggle strikethrough | `editor:toggle-strikethrough` |
+| Toggle yellow highlight | `editor:toggle-highlight-yellow` |
+| Unfold all headings and lists | `editor:unfold-all` |
 | Unindent list item | `editor:unindent-list` |
+| Unique note creator: Add unique internal link | `insert-unique-link` |
+| Unique note creator: Create new unique note | `zk-prefixer` |
+| Workspaces: Load workspace layout | `workspaces:load` |
+| Workspaces: Manage workspace layouts | `workspaces:open-modal` |
+| Workspaces: Save and load another layout | `workspaces:save-and-load` |
+| Workspaces: Save layout | `workspaces:save` |
 
 ## Keys that are not commands
 
@@ -189,6 +253,25 @@ A few keys belong to a widget rather than to the command registry, and are not r
 | `Alt + click` | The editor | Add or remove a cursor |
 | `Ctrl + click` | Source mode | Follow a link |
 | `Ctrl + 0` | The graph | Refit the view |
+
+## The ones that do not run
+
+54 of the 244 ids do nothing in Scoria yet, and the palette does not offer them:
+
+- **Not registered on desktop** — 17 ids with no desktop name, which Obsidian itself does not
+  offer there: the caret, clipboard and undo ids (`editor:go-start`, `editor:copy`,
+  `editor:undo` and their kin), the mobile toolbar's, `app:show-tab-switcher`,
+  `markdown-importer:open`, and the 1.12.7 `editor:table-row-duplicate` and
+  `editor:table-col-duplicate`, which became the `-copy` commands that do run.
+- **Services Scoria does not have** — Sync, Publish, the Web viewer, the Audio recorder,
+  Slides, File recovery, the Format converter's frontmatter migration and the mobile Quick
+  Action, and `app:reload`, which has no renderer to reload.
+- **Waiting on the toolkit** — `window:zoom-in`, `window:zoom-out`, `window:reset-zoom` and
+  `window:toggle-always-on-top`.
+- **Not built yet** — `workspace:export-pdf`, `canvas:export-as-image`, `graph:animate`,
+  `workspace:toggle-stacked-tabs`, `editor:attach-file`, `editor:download-attachments`,
+  `editor:toggle-spellcheck`, `app:open-file`, `app:show-debug-info` and
+  `app:show-release-notes`.
 
 ## The full id list
 

@@ -27,7 +27,9 @@ query](/docs/reference/search-syntax/) restricting which notes appear — and yo
 
 The display and force settings in `graph.json` are read too: node size, link thickness, text
 fade threshold, centre force, repel force, link force and link distance, along with the saved
-`scale`.
+`scale`, and `showArrow` draws an arrowhead on each edge. Changes made in the graph's own panel
+are written back to `graph.json` a moment after the last one, so Obsidian opens the graph as
+you left it here too.
 
 ## Moving around
 
@@ -50,8 +52,13 @@ number of nodes, so a 5,000-note graph does not try to paint 5,000 labels at onc
 `graph:open-local` shows the open note and the notes one link away from it, in either
 direction. Opening another note re-centres it on that note.
 
-> **Note** Depth is fixed at one. Obsidian's depth slider, and its local graph as a side pane
-> beside the note, are both still ahead.
+Its panel adds Obsidian's **Depth** slider (one to five links out) and the three direction
+toggles at the top of Filters — Incoming links, Outgoing links and Neighbor links — opening at
+Obsidian's defaults: depth one, both directions, no neighbor links. These live in the local
+graph's own state, never in `graph.json`, and Scoria keeps them for the session.
+
+> **Note** The local graph is a view of the main area, like the global one; Obsidian's local
+> graph as a side pane beside the note is still ahead.
 
 ## How the layout works
 
@@ -69,12 +76,10 @@ a large graph stays smooth.
 
 ## Not yet
 
-- Local-graph depth beyond one, and the local graph as a side pane.
-- Arrows on the edges.
-- The timelapse animation.
+- The local graph as a side pane.
+- `graph:animate` as a command (the panel's timelapse button replays the layout from its first
+  positions).
 - Screenshot export.
-- Writing display changes back to `graph.json` — adjust the forces in Obsidian and Scoria
-  will read them.
 
 ## Next
 

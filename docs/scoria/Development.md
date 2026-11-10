@@ -514,7 +514,14 @@ of 1,009, the one note `edge/Probe Inlines.md`; the bundled font is Inter. Still
 touched: the README and [[Specification]]'s header say 35, the site's index says 1007, `graph.md`
 says depth is fixed at one, `commands.md` counts 133 runnable. And one fault of the app's:
 `settings.rs` tags Inline title, Fold heading, Fold indent and Use [[Wikilinks]] "not in Scoria
-yet", though all four are acted on.
+yet", though all four are acted on. Brought up to date 2026-11-10, each number counted again
+rather than copied: the README's phase 4 row and both "35"s (29 is the tab's, and the header now
+says the spec's 35 is 1.12.7's strings), 1,008 on the index, the glossary, the architecture page
+and [[Specification]]'s invariant, the local graph's Depth slider and the written `graph.json`
+in `graph.md`, 190 runnable and the 54 that are not in `commands.md`, `switcher.md` and
+`window.md`, and the four tags off, with the honesty ratchet's list growing by four. On the way
+the index's known gaps, the reading view's and the Files pages' "not yet" rows and the Settings
+page's list of rows not acted on were found as stale and corrected too.
 
 **A harness trap.** Worktrees sharing one target directory overwrite each other's `scoria`
 artifacts: a test run "Finished" and listed none of its new tests. `--config

@@ -85,11 +85,10 @@ The gaps, honestly — none of these are in reading view today:
 
 | Not drawn | What you see instead |
 |---|---|
-| Math (`$x$`, `$$x$$`) | The source text, unrendered |
-| HTML in a note | The tags as literal text |
-| Remote images (`https://…`) | Nothing; local images work |
-| Bases (`.base`) | The format round-trips on disk, but there is no base view. A `.canvas` does open, in a canvas view of its own |
-| Heading folding | Headings do not collapse |
+| MathJax-only syntax | The source, in red; the common TeX that KaTeX also takes is typeset |
+| Mermaid diagrams | The code block |
+| An inline `style` attribute | The element, unstyled |
+| `<iframe>`, `<form>` and other tags Scoria has no drawing for | Their source |
 | Editing a property | The properties table is read-only here; edit it in [Live Preview](/docs/app/editing/) |
 | PDF export | — |
 

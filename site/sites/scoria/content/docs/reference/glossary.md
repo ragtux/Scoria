@@ -81,7 +81,7 @@ from the one parse of each note, held in memory, never written to disk.
 everything else is yours, and searchable with `[key:value]`.
 
 **Ratchet** — a test suite that is not allowed to score lower than it currently does. Scoria
-has two: the CommonMark suite at 652/652, and the Obsidian corpus at 1,007/1,009.
+has two: the CommonMark suite at 652/652, and the Obsidian corpus at 1,008/1,009.
 
 **Reading view** — the mode that shows a note as a finished document, with no markers and no
 cursor.

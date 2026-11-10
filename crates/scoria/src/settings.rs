@@ -2977,7 +2977,7 @@ impl SettingsView {
                 "Display the filename as an editable title inline with the file contents.",
                 app,
                 SHOW_INLINE_TITLE,
-            ).not_yet(),
+            ),
             app_toggle(
                 "Readable line length",
                 "Limit maximum line length. Less content fits onscreen, but long blocks of text are more readable.",
@@ -3001,13 +3001,13 @@ impl SettingsView {
                 "Lets you fold all content under a heading.",
                 app,
                 FOLD_HEADING,
-            ).not_yet(),
+            ),
             app_toggle(
                 "Fold indent",
                 "Lets you fold part of an indentation, such as lists.",
                 app,
                 FOLD_INDENT,
-            ).not_yet(),
+            ),
             app_toggle(
                 "Line numbers",
                 "Show line numbers in the gutter.",
@@ -3181,7 +3181,7 @@ impl SettingsView {
                 "Auto-generate Wikilinks for [[links]] and ![[images]] instead of Markdown links and images.",
                 app,
                 USE_WIKILINKS,
-            ).not_yet(),
+            ),
             app_toggle(
                 "Show all file types",
                 "Show files with any extension even if Obsidian can't open them natively, so you can link to them and see them in the file explorer.",
@@ -7698,13 +7698,17 @@ mod tests {
             [
                 "Quick font size adjustment",
                 "Show ribbon",
+                "Inline title",
                 "Readable line length",
                 "Strict line breaks",
+                "Fold heading",
+                "Fold indent",
                 "Auto-pair brackets",
                 "Auto-pair Markdown syntax",
                 "Smart lists",
                 "Indent using tabs",
                 "Automatically update internal links",
+                "Use [[Wikilinks]]",
                 "Show all file types",
                 "Confirm before deleting files",
                 // The Quick switcher tab's three, read by `QuickSwitcher::set_state`.
