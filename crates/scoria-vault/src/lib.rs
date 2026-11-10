@@ -14,6 +14,7 @@ use scoria_formats::config::{
     NoteComposerConfig, PagePreviewConfig, PluginManifest, PropertyTypes, SwitcherConfig,
     TemplatesConfig, ThemeManifest, WebviewerConfig, ZkPrefixerConfig, DEFAULT_CONFIG_DIR,
 };
+use scoria_formats::workspaces::Workspaces;
 use scoria_formats::FileKind;
 use serde::de::DeserializeOwned;
 use std::path::{Path, PathBuf};
@@ -531,6 +532,18 @@ impl Vault {
         self.replace_config("bookmarks.json", bookmarks)
     }
 
+    /// The Workspaces plugin's `workspaces.json`: `None` until the first
+    /// layout is saved, which is when Obsidian creates it.
+    pub fn workspaces(&self) -> Result<Option<Workspaces>, VaultError> {
+        self.read_config("workspaces.json")
+    }
+
+    /// Writes `workspaces.json` whole: a deleted layout has to leave the
+    /// file, which a merge would keep.
+    pub fn write_workspaces(&self, workspaces: &Workspaces) -> Result<(), VaultError> {
+        self.replace_config("workspaces.json", workspaces)
+    }
+
     pub fn appearance_config(&self) -> Result<AppearanceConfig, VaultError> {
         Ok(self.read_config("appearance.json")?.unwrap_or_default())
     }
@@ -854,6 +867,36 @@ mod tests {
         assert_eq!(manifests[0].version, "1.2.3");
         let r = vault.link_resolver();
         assert_eq!(r.resolve("plan", "Note.md"), Some("Projects/Plan.md"));
+    }
+
+    /// `workspaces.json` is absent until a save makes it; a delete takes
+    /// the layout out of the file, and the bytes are Obsidian's shape.
+    #[test]
+    fn workspaces_json_is_made_by_the_first_save_and_written_whole() {
+        use scoria_formats::workspaces::WorkspaceLayout;
+        let dir = tempfile::tempdir().unwrap();
+        fs::create_dir_all(dir.path().join(".obsidian")).unwrap();
+        let vault = Vault::open(dir.path()).unwrap();
+        assert!(vault.workspaces().unwrap().is_none());
+        let mut file = Workspaces::default();
+        let layout = serde_json::json!({"main": {}, "active": "a", "lastOpenFiles": []});
+        file.save(
+            "One",
+            WorkspaceLayout::from_workspace(&layout, "2026-11-09T20:05:44-06:00"),
+        );
+        file.save(
+            "Two",
+            WorkspaceLayout::from_workspace(&layout, "2026-11-09T20:05:55-06:00"),
+        );
+        vault.write_workspaces(&file).unwrap();
+        file.delete("Two");
+        vault.write_workspaces(&file).unwrap();
+        let path = dir.path().join(".obsidian/workspaces.json");
+        assert_eq!(
+            fs::read_to_string(&path).unwrap(),
+            "{\n  \"workspaces\": {\n    \"One\": {\n      \"main\": {},\n      \"active\": \"a\",\n      \"mtime\": \"2026-11-09T20:05:44-06:00\"\n    }\n  },\n  \"active\": \"Two\"\n}"
+        );
+        assert_eq!(vault.workspaces().unwrap(), Some(file));
     }
 
     #[test]
