@@ -331,6 +331,92 @@ uses behave as Obsidian's do.
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
 
+### The unrunnable commands, 2026-11-09
+
+With every row of the table above done, what phase 4 still lacks was counted the plain way:
+`commands.txt`'s 244 ids against `EDITOR_ONLY` and `RUNNABLE` left 84 that could not be run. Four
+clusters of them went out to four worktrees under one rule — build what the spec or a probe result
+settles, and for the rest bring back the observation it needs rather than a guess. Ten ids run
+now; the larger result is the list of what has never been watched.
+
+**What runs.** `random-note` opens one of the vault's Markdown files (`Vault::random_note`, a roll
+modulo the notes, so a canvas or a PDF never comes up) in the tab in hand; its ribbon button is
+not drawn, the ribbon's captures never having shown it. `workspace:copy-path`,
+`workspace:copy-full-path`, `open-with-default-app:open` and `open-with-default-app:show` are the
+file menu's rows for the active file, and their names say which string each copies: "from vault
+folder" is what `copy_path` wrote, "from system root" is `full_path_text`, the vault root joined
+with the path and made absolute, because a vault opened by a relative path keeps that as its
+root. `properties:open-local` opens File properties, the right dock's sixth tab: the first run
+appends a `file-properties` leaf after the Outline — `{"file": <note>}`, icon `lucide-info`,
+title "File properties", the shape Obsidian 1.13.7 wrote in the 2026-10-19 properties probe
+(`file_properties_leaf_is_appended_in_obsidians_shape`) — and the pane draws the note's block
+through the reading view's `Renderer::properties`, from the editor's buffer, so it follows
+typing; no editing in the pane yet, and the leaf cannot be closed. `editor:toggle-line-numbers`
+and `editor:toggle-readable-line-length` are the Editor tab's rows run from the palette:
+`settings::toggle_command` maps each id to the `AppFlag` its row writes, so the two cannot
+disagree about the key (line numbers are still only written, for Obsidian to read).
+`editor:context-menu` raises the right-click menu of 2026-10-30 under the caret's row, and
+`editor:focus` puts the keyboard back on the note the main area shows. Those last two rest on
+their names; where Obsidian anchors the menu, and what Focus on last note does over a canvas,
+are unprobed.
+
+**A deadlock on the way.** `VaultState::app()` returns a read guard. Taken inside an `if let`
+condition, or as an argument to `apply_setting`, it lives until the write lock is asked for: the
+toggle commands' first cut hung their own test for forty-five minutes and would have frozen the
+app. A change is built in a statement of its own, then written.
+
+**Left out on purpose.** The caret, clipboard and undo ids (`editor:go-start`, `editor:copy`,
+`editor:undo` and nine more) and the 1.12.7 `editor:table-row-duplicate` /
+`editor:table-col-duplicate` are not in `names.txt`: Obsidian registers none of them on desktop,
+the last two having become `-copy`, which run. `app:reload` has no renderer to reload.
+
+**Blocked on gpui.** The window zoom's step is on record — a zoom level of ±0.5, factors 1.0954
+and 0.9129, from the PDF probe's `webFrame` reads — but gpui keeps the scale factor to itself
+and Scoria paints in pixel literals, some 1,900 of them, so there is nothing to apply it to;
+the same reason a popout's recorded `zoom` is kept and not applied.
+`window:toggle-always-on-top` is fixed at window creation in the pinned gpui, and Wayland has
+no protocol for it.
+
+**Waiting on a probe.** Each of these would write bytes or a string nobody has observed, so none
+was built:
+
+| Commands | The observation wanted |
+| --- | --- |
+| `note-composer:merge-file` | the merged bytes for Enter and Shift+Enter (the separator, with and without a trailing newline, and two frontmatters); what links to the source become (`[[A]]`, `[[A#H]]`, `[[A\|x]]`, `![[A]]`, `[x](A.md)`); where the source goes; the confirmation's text; Ctrl+Enter's new note |
+| `note-composer:split-file`, `note-composer:extract-heading` | the prompt; the new note's and the source's bytes under each `replacementText` and link format; whether the heading line moves; the default name; the template key in `note-composer.json` and how `{{content}}`'s absence is handled |
+| `zk-prefixer`, `insert-unique-link` | the three keys of `zk-prefixer.json`; the created path and bytes with the file empty; the second name within one minute; the template's expansion; the text the link command inserts |
+| `random-note` (done, to confirm) | current tab or new; whether the open note is drawn again; the empty vault's notice; the ribbon button's icon and place |
+| `app:increase-font-size`, `app:decrease-font-size` | the step from 16 px, the clamps, whether `baseFontSize` is written, whether it needs `baseFontSizeAction` |
+| `window:zoom-*` | the limits, a popout's `zoom` after one press, whether the main window's survives a relaunch |
+| `theme:toggle-light-dark` | `appearance.json` after a run from `obsidian`, `moonstone` and `system` |
+| `app:toggle-ribbon`, `app:toggle-default-new-pane-mode` | the file and key each flips over two runs, and any notice |
+| `workspace:copy-url` | the clipboard for `Sub/My Note.md` in a vault with a space in its name |
+| `workspace:show-trash`, `app:show-tab-switcher` | what opens, under each `trashOption`; the switcher's DOM and keys |
+| `app:show-debug-info`, `app:show-release-notes`, `app:open-file` | what each shows |
+| `backlink:toggle-backlinks-in-document` | the key on the markdown leaf's state, on and off; the block's DOM in both views |
+| `footnotes:open` | the leaf's view type, state, icon, title and dock; the rows, the empty states, what a click does |
+| `workspaces:*` | `workspaces.json` after two saves, a delete, a rename and a load; the modal's DOM; whether a load rewrites `workspace.json` at once |
+| `editor:rename-heading` | whether it hides off a heading line; the modal; the bytes in the heading and in every link form to it; odd names; `alwaysUpdateLinks` off |
+| `markdown:add-alias` | what is written before and after a value, over no frontmatter, `aliases: []`, a list and a scalar; where focus lands |
+| `editor:context-menu`, `editor:focus` (done, to confirm) | the menu's anchor and rows; Focus on last note over a canvas, a base, a PDF and an empty tab |
+
+**The site, made true.** `compatibility.md` and `differences.md` had fallen three weeks behind;
+every row of both was checked against the code. Eleven "not yet" rows came out (HTML in notes,
+remote images, heading folding, the base view, `cssTheme`, the graph's depth and its
+`graph.json`, drags in Files among them), about twenty real gaps went in, and three numbers
+moved: the Core plugins tab has 29 plugins, not 35 (`CORE_PLUGINS`); the corpus ratchet is 1,008
+of 1,009, the one note `edge/Probe Inlines.md`; the bundled font is Inter. Still stale and not
+touched: the README and [[Specification]]'s header say 35, the site's index says 1007, `graph.md`
+says depth is fixed at one, `commands.md` counts 133 runnable. And one fault of the app's:
+`settings.rs` tags Inline title, Fold heading, Fold indent and Use [[Wikilinks]] "not in Scoria
+yet", though all four are acted on.
+
+**A harness trap.** Worktrees sharing one target directory overwrite each other's `scoria`
+artifacts: a test run "Finished" and listed none of its new tests. `--config
+'profile.dev.package.scoria.codegen-units=17'` gives a worktree's crate artifacts of its own
+without rebuilding gpui. The gate was run again on the five branches together: 555 in the app's
+bin, every new test by name.
+
 ### Multi-window, the design, 2026-11-09
 
 Phase 4's one recurring blocker: *Open in new window* in every file menu, the `-window`

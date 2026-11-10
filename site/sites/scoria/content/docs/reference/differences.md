@@ -46,14 +46,14 @@ Things Obsidian does that Scoria intends to do and does not.
 | | |
 |---|---|
 | **Note composer** | Merge a file into another, extract a selection or a heading to a new note (`note-composer:*`): not implemented |
-| **Random note, Unique note creator** | `random-note`, `zk-prefixer` and `insert-unique-link` are not implemented |
+| **Unique note creator** | `zk-prefixer` and `insert-unique-link` are not implemented. Random note opens a note; its ribbon button is not drawn |
 | **Slash commands** | Typing `/` in the editor offers no commands |
 | **Renaming a heading** | `editor:rename-heading`, which renames a heading and the links to it, is not implemented |
 | **File recovery** | Obsidian keeps its snapshots in IndexedDB outside the vault, so it is out of the round-trip work rather than next in it |
 | **Editing properties in reading view** | A property's value pill can be removed there; keys, values, the type menu and **Add property** are edited in Live Preview or Source mode only |
 | **Editing the title in reading view** | The inline title is an editable field in Live Preview and Source mode; in reading view it is plain text. `F2` works everywhere |
 | **Vim mode** | `vimMode` is read, not implemented |
-| **Line numbers, indentation guides, right-to-left** | Read and shown in Settings, not acted on. `editor:toggle-line-numbers` and `editor:toggle-readable-line-length` are not commands yet, though readable line length itself is honored |
+| **Line numbers, indentation guides, right-to-left** | Read and shown in Settings, not acted on. `editor:toggle-line-numbers` writes the setting for Obsidian to read; no gutter is drawn |
 | **Spellcheck** | No spellcheck, and `editor:toggle-spellcheck` is not a command yet |
 | **Page previews** | Hovering a link (`Ctrl` + hover in the editor) shows no preview |
 | **Pasting and attachments** | A paste is text: copied HTML is not converted to Markdown, and a pasted or dropped image or file is not saved as an attachment. `editor:attach-file` and `editor:download-attachments` are not implemented. Put the file in the folder yourself |
@@ -64,7 +64,7 @@ Things Obsidian does that Scoria intends to do and does not.
 |---|---|
 | **Footnotes view** | `footnotes:open`: not implemented |
 | **Backlinks at the bottom of a note** | `backlink:toggle-backlinks-in-document` and the Backlinks setting that turns it on are not implemented; the Backlinks pane is |
-| **File properties pane** | `properties:open-local`, the current note's properties in a side pane: not implemented. The vault-wide **All properties** pane is |
+| **Editing in the File properties pane** | `properties:open-local` shows the current note's properties in a side pane; they cannot be edited there, and the pane cannot be closed |
 | **Slides, Audio recorder, Web viewer, Format converter** | `slides:start`, `audio-recorder:*`, `webviewer:*` and `markdown-importer:open` are not implemented |
 
 ### Files and settings
@@ -87,8 +87,8 @@ Obsidian commands are not implemented yet:
 |---|---|
 | **Window** | `window:zoom-in`, `window:zoom-out`, `window:reset-zoom`, `window:toggle-always-on-top` |
 | **App** | `app:increase-font-size`, `app:decrease-font-size`, `app:toggle-ribbon`, `theme:toggle-light-dark`, `app:open-file`, `app:reload`, `app:show-debug-info`, `app:show-release-notes`, `app:toggle-default-new-pane-mode`, `app:migrate-frontmatter` |
-| **Files** | `workspace:copy-path`, `workspace:copy-full-path`, `workspace:copy-url`, `workspace:show-trash`, `open-with-default-app:open`, `open-with-default-app:show` (Copy path, Open in default app and Show in system explorer are on the file menus) |
-| **Editor** | `markdown:add-alias`, `editor:context-menu` |
+| **Files** | `workspace:copy-url`, `workspace:show-trash` |
+| **Editor** | `markdown:add-alias` |
 
 ### Markdown edge cases
 
