@@ -1308,6 +1308,25 @@ impl Editor {
         }
     }
 
+    /// Replaces `range` of the text with `text` as one undo step, the caret
+    /// left after it: what an extraction leaves where the text was, an
+    /// empty `text` included (`replacementText: none` simply cuts).
+    pub fn replace_range(
+        &mut self,
+        range: Range<usize>,
+        text: &str,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let cursor = range.start + text.len();
+        self.buf.apply_edits(
+            vec![(range, text.to_string())],
+            Cursors::at(cursor),
+            EditKind::Other,
+        );
+        self.after_edit(Some(window), cx);
+    }
+
     /// Presses keys by name, for `--press`: the popup's accept keys, and
     /// the keys that move between table cells, so a screenshot can show
     /// what a keystroke leaves behind.

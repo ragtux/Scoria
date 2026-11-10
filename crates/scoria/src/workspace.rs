@@ -89,6 +89,11 @@ mod layouts;
 
 use doc_backlinks::{listen, DocBacklinks, SectionsOwner};
 
+// The Note composer's modal and its three commands live beside the
+// workspace, as children so they can reach its state.
+mod composer_prompt;
+mod note_composer;
+
 actions!(
     workspace,
     [ToggleMode, GoBack, GoForward, OpenSearch, OpenGraph]
@@ -425,6 +430,9 @@ pub const RUNNABLE: &[&str] = &[
     "workspaces:save",
     "workspaces:load",
     "workspaces:save-and-load",
+    "note-composer:merge-file",
+    "note-composer:split-file",
+    "note-composer:extract-heading",
 ];
 
 /// Binds every runnable command's hotkeys in the Workspace context, and the
@@ -456,6 +464,7 @@ pub fn bind_keys(cx: &mut App, registry: &CommandRegistry) {
         KeyBinding::new("space", TreeActivate, tree),
     ]);
     crate::reading::view::bind_keys(cx);
+    composer_prompt::bind_keys(cx);
 }
 
 /// Everything derived from the vault folder: built once off the UI thread,
@@ -1712,6 +1721,8 @@ enum Modal {
     CopyResults,
     /// "Manage workspace layouts" (`layouts`).
     Layouts,
+    /// The Note composer's prompt and confirmation.
+    Composer,
 }
 
 /// The file operation the open prompt will finish.
@@ -3281,6 +3292,8 @@ pub struct Workspace {
     chooser: Entity<Chooser>,
     /// What the chooser's pick means while it is open.
     chooser_purpose: ChooserPurpose,
+    /// The Note composer's modal while it is up, and what it is doing.
+    composer: Option<note_composer::ComposerModal>,
     /// A canvas asked for the note or media picker; the next render opens
     /// it, with the window the chooser needs to take focus.
     pending_canvas_pick: Option<crate::canvas::FilePick>,
@@ -3727,6 +3740,7 @@ impl Workspace {
                     ExplorerEvent::Duplicate(path) => this.duplicate(path, cx),
                     ExplorerEvent::Delete(path) => this.start_delete(path, window, cx),
                     ExplorerEvent::Bookmark(path) => this.start_bookmark_path(path, window, cx),
+                    ExplorerEvent::MergeWith(path) => this.start_merge_of(path.clone(), window, cx),
                     ExplorerEvent::NewCanvas { folder } => this.new_canvas(folder, cx),
                     ExplorerEvent::NewBase { folder } => this.new_base(folder, cx),
                     ExplorerEvent::OpenToRight(path) => {
@@ -4006,6 +4020,7 @@ impl Workspace {
             switcher,
             chooser,
             chooser_purpose: ChooserPurpose::default(),
+            composer: None,
             pending_canvas_pick: None,
             palette,
             settings,
@@ -5832,6 +5847,11 @@ impl Workspace {
             "workspaces:save" => self.save_active_layout(window, cx),
             "workspaces:load" => self.open_layout_chooser(false, window, cx),
             "workspaces:save-and-load" => self.open_layout_chooser(true, window, cx),
+            "note-composer:merge-file"
+            | "note-composer:split-file"
+            | "note-composer:extract-heading" => {
+                self.run_composer_command(id, window, cx);
+            }
             _ if TableCommand::from_id(id).is_some() => {
                 let cmd = TableCommand::from_id(id).expect("checked above");
                 if self.editing_or_report(id, window, cx) {
@@ -6369,6 +6389,9 @@ impl Workspace {
         // it is offered only while one is active.
         if id == "backlink:toggle-backlinks-in-document" {
             return self.active_note_is_markdown();
+        }
+        if let Some(can) = self.composer_can_run(id, cx) {
+            return can;
         }
         if EDITOR_ONLY.contains(&id) {
             return self.mode.is_editing() && self.note_has_keys(window, cx);
@@ -14534,6 +14557,7 @@ impl Workspace {
                 Modal::CopyResults => "copy-results",
                 Modal::Layouts => "workspaces",
                 Modal::Chooser => "chooser",
+                Modal::Composer => "note-composer",
             }),
         );
         // The popout it draws in, by id, or null for the vault window (and
@@ -14556,6 +14580,7 @@ impl Workspace {
             Modal::CopyResults => Some(self.copy_results.read(cx).describe()),
             Modal::Layouts => self.describe_layouts_modal(cx),
             Modal::Chooser => Some(self.chooser.read(cx).describe(rows, cx)),
+            Modal::Composer => self.describe_composer(rows, cx),
             Modal::None => None,
         };
         if let Some(Value::Object(view)) = view {
@@ -15314,6 +15339,8 @@ impl Workspace {
             Pick::Rename => self.start_rename(&path, window, cx),
             Pick::Move => self.start_move(&path, window, cx),
             Pick::Bookmark => self.start_bookmark_path(&path, window, cx),
+            Pick::MergeWith => self.start_merge_of(path, window, cx),
+            Pick::ExtractSelection => self.run_command("note-composer:split-file", window, cx),
             Pick::CopyPath => self.copy_path(&path, cx),
             Pick::OpenInDefaultApp => self.open_in_default_app(&path, cx),
             Pick::ShowInSystemExplorer => self.show_in_system_explorer(&path, cx),
@@ -15523,12 +15550,14 @@ impl Workspace {
             | Modal::Palette
             | Modal::Prompt
             | Modal::Chooser
+            | Modal::Composer
             | Modal::CopyResults
             | Modal::Layouts => {
                 let child: gpui::AnyElement = match self.modal {
                     Modal::Switcher => self.switcher.clone().into_any_element(),
                     Modal::Palette => self.palette.clone().into_any_element(),
                     Modal::Chooser => self.chooser.clone().into_any_element(),
+                    Modal::Composer => self.composer_element()?,
                     Modal::CopyResults => self.copy_results.clone().into_any_element(),
                     Modal::Layouts => self.layouts_modal.clone()?.into_any_element(),
                     _ => self.prompt.clone().into_any_element(),

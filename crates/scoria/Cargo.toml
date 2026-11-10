@@ -28,6 +28,7 @@ scoria-formats.workspace = true
 scoria-search.workspace = true
 scoria-suggest.workspace = true
 scoria-templates.workspace = true
+scoria-composer.workspace = true
 scoria-text.workspace = true
 scoria-bases.workspace = true
 scoria-canvas.workspace = true

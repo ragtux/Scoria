@@ -219,6 +219,12 @@ pub enum Pick {
     Duplicate,
     Move,
     Bookmark,
+    /// "Merge entire file with...": `note-composer:merge-file` on the
+    /// menu's file.
+    MergeWith,
+    /// The editor menu's "Extract current selection...":
+    /// `note-composer:split-file`.
+    ExtractSelection,
     CopyPath,
     OpenInDefaultApp,
     ShowInSystemExplorer,
@@ -454,9 +460,10 @@ pub fn right_click_caret(selection: &Range<usize>, at: usize) -> Option<usize> {
 
 /// The menu for a target, in Obsidian's order.
 ///
-/// Two of the captured items are left out rather than drawn dead, because
-/// Scoria has no command behind them: **Merge entire file with...** (no
-/// merge) and **Open version history** (no file history). Listing a row
+/// One of the captured items is left out rather than drawn dead, because
+/// Scoria has no command behind it: **Open version history** (no file
+/// history). **Merge entire file with...** was a second until the Note
+/// composer landed (2026-11-09), and is drawn on notes only. Listing a row
 /// that cannot run is what the command palette refuses to do, and the menu
 /// refuses it too; the gaps are entries in `docs/scoria/UI parity
 /// backlog.md`. Dropping the only item of a section drops its separator
@@ -489,6 +496,10 @@ pub fn items(target: &Target) -> Vec<Item> {
             item("Make a copy", "files", S::Action, P::Duplicate),
             item("Move file to...", "folder-tree", S::Action, P::Move),
             item("Bookmark...", "bookmark", S::Action, P::Bookmark),
+        ]
+        .into_iter()
+        .chain(merge_row(target.path()))
+        .chain([
             item("Copy path", "clipboard", S::Unsectioned, P::CopyPath),
             item(
                 "Open in default app",
@@ -504,7 +515,8 @@ pub fn items(target: &Target) -> Vec<Item> {
             ),
             item("Rename...", "pen-line", S::Danger, P::Rename),
             item("Delete", "trash-2", S::Danger, P::Delete),
-        ],
+        ])
+        .collect(),
         Target::Folder(_) => vec![
             // Obsidian draws `lucide-edit` here, which is the current
             // `square-pen`; `lucide-edit-3` on Rename is `pen-line`. Both
@@ -766,6 +778,10 @@ pub fn items(target: &Target) -> Vec<Item> {
             item("Rename...", "pen-line", S::Action, P::Rename),
             item("Move file to...", "folder-tree", S::Action, P::Move),
             item("Bookmark...", "bookmark", S::Action, P::Bookmark),
+        ]
+        .into_iter()
+        .chain(merge_row(target.path()))
+        .chain([
             item("Copy path", "clipboard", S::Unsectioned, P::CopyPath),
             item(
                 "Open in default app",
@@ -786,15 +802,29 @@ pub fn items(target: &Target) -> Vec<Item> {
                 P::RevealInNavigation,
             ),
             item("Delete file", "trash-2", S::Danger, P::Delete),
-        ],
+        ])
+        .collect(),
     }
+}
+
+/// "Merge entire file with..." (`lucide-git-merge`, `action`, after
+/// Bookmark...), on a note only: an image card's menu has none, and the
+/// command it runs wants a Markdown note.
+fn merge_row(path: &str) -> Option<Item> {
+    path.to_ascii_lowercase().ends_with(".md").then(|| {
+        item(
+            "Merge entire file with...",
+            "git-merge",
+            Section::Action,
+            Pick::MergeWith,
+        )
+    })
 }
 
 /// The tab header's menu, as the 2026-11-09 probe drew it. Left out for
 /// want of anything behind them: **Link with tab...** (no linked panes,
 /// and the probe saw no trace of what it starts), a markdown tab's two
 /// view-mode rows (their labels in the other modes were not captured),
-/// **Merge entire file with...**,
 /// **Export to PDF...**, a canvas's **Export as image**, **Open version
 /// history** and the **Open linked view** submenu; Copy path keeps the one
 /// flat row the other menus give it.
@@ -856,7 +886,9 @@ fn tab_items(
         if row.pick == P::SplitRight || row.pick == P::SplitDown {
             continue;
         }
-        let after_bookmark = row.pick == P::Bookmark;
+        // Add file property follows Merge entire file with..., which a
+        // markdown tab always has.
+        let after_bookmark = row.pick == P::MergeWith;
         let before_copy = row.pick == P::CopyPath;
         if markdown && before_copy {
             out.push(item("Find...", "file-search", S::Find, P::Find));
@@ -908,9 +940,9 @@ fn item(label: &'static str, icon: &'static str, section: Section, pick: Pick) -
 /// Four of the captured rows open submenus nobody has read — **Format**,
 /// **Paragraph**, **Insert** and, on a wikilink, **Copy path** — so the
 /// three text ones are left out whole and Copy path keeps the one flat row
-/// the rest of Scoria's menus give it. Four more are left out for want of a
-/// command: **Extract current selection...** (no note composer), **Edit
-/// link** and **Edit tag** (no inline rename of a link or a tag) and
+/// the rest of Scoria's menus give it. Three more are left out for want of
+/// a command: **Edit link** and **Edit tag** (no inline rename of a link or
+/// a tag) and
 /// **Start presentation** (no presentation mode). Dropping the only row of a section drops its
 /// separator with it, which is why the pair the capture has between Start
 /// presentation and the system rows is one separator here.
@@ -958,6 +990,12 @@ fn editor_items(click: &EditorClick) -> Vec<Item> {
             checked: false,
             submenu: Vec::new(),
         });
+        out.push(item(
+            "Extract current selection...",
+            "git-branch-plus",
+            S::Selection,
+            P::ExtractSelection,
+        ));
     }
     // `lucide-box-select` is Lucide's deprecated alias of `square-dashed`,
     // from its own alias data, the way `lucide-edit-3` is `pen-line`.
@@ -1431,9 +1469,8 @@ mod tests {
     use gpui::AssetSource;
 
     /// [[Specification#The file explorer's context menus]], the file-row
-    /// table, minus the two items Scoria has no command for -- Merge entire
-    /// file with... and Open version history. Dropping
-    /// Open version history empties the `view` section, so the separator the
+    /// table, minus the one item Scoria has no command for -- Open version
+    /// history. Dropping it empties the `view` section, so the separator the
     /// capture has around it is gone too; every other separator is where
     /// Obsidian put it, including the pair above Rename.
     #[test]
@@ -1448,6 +1485,7 @@ mod tests {
                 "Make a copy",
                 "Move file to...",
                 "Bookmark...",
+                "Merge entire file with...",
                 "---",
                 "Copy path",
                 "---",
@@ -1656,6 +1694,7 @@ mod tests {
                 "Rename...",
                 "Move file to...",
                 "Bookmark...",
+                "Merge entire file with...",
                 "Add file property",
                 "---",
                 "Find...",
@@ -1884,8 +1923,7 @@ mod tests {
     }
 
     /// With a selection the `selection` section opens with Obsidian's
-    /// quoted Search row; Extract current selection... is left out for want
-    /// of a note composer.
+    /// quoted Search row and Extract current selection....
     #[test]
     fn a_selection_adds_the_quoted_search_row() {
         let target = Target::Editor(EditorClick {
@@ -1900,6 +1938,7 @@ mod tests {
                 "Add external link",
                 "---",
                 "Search for \u{201c}paragraph with\u{201d}",
+                "Extract current selection...",
                 "---",
                 "Cut",
                 "Copy",
