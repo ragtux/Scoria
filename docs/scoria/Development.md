@@ -331,6 +331,66 @@ uses behave as Obsidian's do.
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
 
+### Eleven more ids probed, five of them run, 2026-11-10
+
+Of the 54 ids left by [[#The probes ran, and what they unblocked, 2026-11-09]], 35 are not
+Obsidian's on a desktop or belong to a service (the caret, clipboard and undo ids, the two table
+duplicates, the tab switcher, the mobile ids, `app:reload`, Sync, Publish, the web viewer) and
+four wait on gpui. Eleven of the other fifteen went to two worktrees under the same rule, each
+with a probe of Obsidian 1.15.0 in a private headless sway (`attachments-app-info.mjs`,
+`stacked-tabs.mjs`, `slides.mjs`, `graph-animate.mjs`, `file-recovery.mjs`, results under
+`2026-11-09-`); the observations are the last six sections of [[Specification]]. Five ids run,
+49 of the 244 are left, and all eleven are now on record.
+
+**Attachments and spellcheck.** `editor:toggle-spellcheck` is `settings::toggle_command` again:
+`{}`, then `"spellcheck": false`, then `true`, no notice. `editor:attach-file` copies the picked
+file where `attachmentFolderPath` says, numbers a taken name (`pic one 1.png`) and writes
+autocompletion's embed over the selection. `editor:download-attachments` offers each remote
+`![alt](url)` once in a gallery modal, fetches one after another, names each from the URL's last
+segment (`Image.<ext>` from the content type without one) and rewrites the embeds only when every
+fetch succeeded; the first failure stops silently, the files already saved staying, as Obsidian's
+did. The pure half is `scoria_vault::attachments`, the embeds found by the one parser. Left out:
+Obsidian also downloads frontmatter values that are a bare URL, and which values qualify is not
+settled.
+
+**Open file.** `app:open-file` opens a pick inside the vault in the tab in hand. A pick outside
+is refused in Scoria's own words: Obsidian opens it in a new tab on a `file:/abs` leaf and saves
+back to it, and Scoria has no such leaf. The dialog was stubbed at Obsidian's main process, so
+what follows it is observed and the dialog is not.
+
+**Stacked tabs.** `workspace:toggle-stacked-tabs` writes `"stacked": true` last in the `tabs`
+node and removes the key when off, popouts too. Each tab is a 40 px spine and a pane clamped to
+`[(W−40n)/n, W−40n]`; `workspace/stacked.rs` holds the geometry, tested on the measured rects and
+the six scroll offsets. Scoria's own: only the active pane is live (the other notes draw through
+a reading view, anything else is a header over nothing), the scroll jumps where Obsidian eases
+for 0.4 s, the turned titles are Inter rasterized with ab_glyph whatever the interface font, and
+spines do not drag.
+
+**File recovery.** The snapshots are in IndexedDB (`<vault id>-backup`), which Scoria cannot
+share, so `file-recovery:open` stays out. `file-recovery.json` (`intervalMinutes`, `keepDays`) is
+a type and the tab's two fields write it; the rows keep their "not in Scoria yet".
+
+**Probed and not built.** Each has its section and its "Not settled" list:
+
+| Commands | What stands in the way |
+| --- | --- |
+| `app:show-debug-info`, `app:show-release-notes` | every byte is observed, and the bytes are Obsidian's version, its installer's and its changelog; what Scoria says there is a decision, not an observation |
+| `app:migrate-frontmatter` | 45 shapes observed; Obsidian re-serialises the whole block (comments gone, flow lists made blocks, quotes normalised) and Scoria's properties writer is surgical; also the progress modal and Undo |
+| `slides:start` | the cut is settled (top-level thematic breaks, empty slides dropped); drawing needs a second style table for the reading renderer |
+| `graph:animate` | nodes return in ctime order, but the step lengths (0.2–0.6 s, the same each run) are unexplained. The graph's ▶ button only restarts the layout and is not this |
+| `file-recovery:open` | a store of Scoria's own |
+
+Not probed: `workspace:export-pdf`, `canvas:export-as-image`, `markdown-importer:open` and the
+two `audio-recorder` ids.
+
+**Traps.** gpui's file dialog reaches the desktop's portal through `$XDG_RUNTIME_DIR/bus` even
+with `DBUS_SESSION_BUS_ADDRESS` unset: a headless drive points both somewhere private, or the
+dialog opens on the desk. A commit from a worktree raises the GPG pinentry there too. Obsidian's
+file input opens nothing without a user activation (`userGesture`), `run-block.sh` needs a short
+`TMPDIR`, and the Settings window is a CDP target of its own. Possibly a fault of the settings
+fields: a click from one number field straight into another lost the typed value, Enter did not.
+The gate on the two branches together: 64 test binaries, 1,548 passed, 632 in the app's bin.
+
 ### The probes ran, and what they unblocked, 2026-11-09
 
 The table of [[#The unrunnable commands, 2026-11-09]] was answered the same evening. Three CDP
