@@ -94,6 +94,11 @@ use doc_backlinks::{listen, DocBacklinks, SectionsOwner};
 mod composer_prompt;
 mod note_composer;
 
+// Insert attachment, Download attachments and Open file: files that come in
+// from outside the vault.
+mod attachments;
+mod download_modal;
+
 actions!(
     workspace,
     [ToggleMode, GoBack, GoForward, OpenSearch, OpenGraph]
@@ -433,6 +438,10 @@ pub const RUNNABLE: &[&str] = &[
     "note-composer:merge-file",
     "note-composer:split-file",
     "note-composer:extract-heading",
+    "editor:toggle-spellcheck",
+    "editor:attach-file",
+    "editor:download-attachments",
+    "app:open-file",
 ];
 
 /// Binds every runnable command's hotkeys in the Workspace context, and the
@@ -465,6 +474,7 @@ pub fn bind_keys(cx: &mut App, registry: &CommandRegistry) {
     ]);
     crate::reading::view::bind_keys(cx);
     composer_prompt::bind_keys(cx);
+    download_modal::bind_keys(cx);
 }
 
 /// Everything derived from the vault folder: built once off the UI thread,
@@ -1723,6 +1733,8 @@ enum Modal {
     Layouts,
     /// The Note composer's prompt and confirmation.
     Composer,
+    /// "Download attachments" (`editor:download-attachments`).
+    Downloads,
 }
 
 /// The file operation the open prompt will finish.
@@ -3294,6 +3306,8 @@ pub struct Workspace {
     chooser_purpose: ChooserPurpose,
     /// The Note composer's modal while it is up, and what it is doing.
     composer: Option<note_composer::ComposerModal>,
+    /// The "Download attachments" modal while it is up.
+    downloads: Option<attachments::DownloadsModal>,
     /// A canvas asked for the note or media picker; the next render opens
     /// it, with the window the chooser needs to take focus.
     pending_canvas_pick: Option<crate::canvas::FilePick>,
@@ -4021,6 +4035,7 @@ impl Workspace {
             chooser,
             chooser_purpose: ChooserPurpose::default(),
             composer: None,
+            downloads: None,
             pending_canvas_pick: None,
             palette,
             settings,
@@ -5576,6 +5591,7 @@ impl Workspace {
             // layout file untouched (Obsidian 1.15.0).
             "editor:toggle-readable-line-length"
             | "editor:toggle-line-numbers"
+            | "editor:toggle-spellcheck"
             | "app:toggle-ribbon" => {
                 // Built in a statement of its own: the config is read under
                 // a guard, and `change_setting` takes the write lock.
@@ -5847,6 +5863,9 @@ impl Workspace {
             "workspaces:save" => self.save_active_layout(window, cx),
             "workspaces:load" => self.open_layout_chooser(false, window, cx),
             "workspaces:save-and-load" => self.open_layout_chooser(true, window, cx),
+            "editor:attach-file" => self.attach_file(window, cx),
+            "editor:download-attachments" => self.start_download_attachments(window, cx),
+            "app:open-file" => self.open_file_dialog(window, cx),
             "note-composer:merge-file"
             | "note-composer:split-file"
             | "note-composer:extract-heading" => {
@@ -6391,6 +6410,9 @@ impl Workspace {
             return self.active_note_is_markdown();
         }
         if let Some(can) = self.composer_can_run(id, cx) {
+            return can;
+        }
+        if let Some(can) = self.attachments_can_run(id) {
             return can;
         }
         if EDITOR_ONLY.contains(&id) {
@@ -14558,6 +14580,7 @@ impl Workspace {
                 Modal::Layouts => "workspaces",
                 Modal::Chooser => "chooser",
                 Modal::Composer => "note-composer",
+                Modal::Downloads => "download-attachments",
             }),
         );
         // The popout it draws in, by id, or null for the vault window (and
@@ -14581,6 +14604,7 @@ impl Workspace {
             Modal::Layouts => self.describe_layouts_modal(cx),
             Modal::Chooser => Some(self.chooser.read(cx).describe(rows, cx)),
             Modal::Composer => self.describe_composer(rows, cx),
+            Modal::Downloads => self.describe_downloads(cx),
             Modal::None => None,
         };
         if let Some(Value::Object(view)) = view {
@@ -15551,6 +15575,7 @@ impl Workspace {
             | Modal::Prompt
             | Modal::Chooser
             | Modal::Composer
+            | Modal::Downloads
             | Modal::CopyResults
             | Modal::Layouts => {
                 let child: gpui::AnyElement = match self.modal {
@@ -15558,6 +15583,7 @@ impl Workspace {
                     Modal::Palette => self.palette.clone().into_any_element(),
                     Modal::Chooser => self.chooser.clone().into_any_element(),
                     Modal::Composer => self.composer_element()?,
+                    Modal::Downloads => self.downloads_element()?,
                     Modal::CopyResults => self.copy_results.clone().into_any_element(),
                     Modal::Layouts => self.layouts_modal.clone()?.into_any_element(),
                     _ => self.prompt.clone().into_any_element(),
@@ -19297,8 +19323,9 @@ mod tests {
 
     /// The window cluster's commands the 2026-11-09 probe settled are
     /// runnable and are Obsidian's ids; the ones gpui blocks, the tab
-    /// switcher Obsidian does not register on desktop, and the three whose
-    /// screens are not Scoria's to show are not.
+    /// switcher Obsidian does not register on desktop, and the two whose
+    /// screens report on Obsidian itself (its version, its changelog) are
+    /// not.
     #[test]
     fn the_observed_app_and_window_commands_are_runnable() {
         let known = scoria_commands::known_ids();
@@ -19326,7 +19353,6 @@ mod tests {
             "app:show-tab-switcher",
             "app:show-debug-info",
             "app:show-release-notes",
-            "app:open-file",
         ] {
             assert!(!RUNNABLE.contains(&id), "{id} is left unrunnable");
         }

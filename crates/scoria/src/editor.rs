@@ -1327,6 +1327,38 @@ impl Editor {
         self.after_edit(Some(window), cx);
     }
 
+    /// Replaces several ranges in one undo step, `edits` in ascending order
+    /// and not overlapping. The caret keeps its place in the text around it:
+    /// it moves by what the edits before it added or took away, and one
+    /// inside a replaced range goes to that range's end.
+    pub fn replace_ranges(
+        &mut self,
+        edits: Vec<(Range<usize>, String)>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if edits.is_empty() {
+            return;
+        }
+        let head = self.buf.selection().end;
+        let mut delta: isize = 0;
+        let mut inside = None;
+        for (range, text) in &edits {
+            if range.end <= head {
+                delta += text.len() as isize - range.len() as isize;
+            } else {
+                if range.start < head {
+                    inside = Some((range.start as isize + delta) as usize + text.len());
+                }
+                break;
+            }
+        }
+        let cursor = inside.unwrap_or((head as isize + delta).max(0) as usize);
+        self.buf
+            .apply_edits(edits, Cursors::at(cursor), EditKind::Other);
+        self.after_edit(Some(window), cx);
+    }
+
     /// Presses keys by name, for `--press`: the popup's accept keys, and
     /// the keys that move between table cells, so a screenshot can show
     /// what a keystroke leaves behind.

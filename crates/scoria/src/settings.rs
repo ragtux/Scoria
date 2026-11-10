@@ -1444,6 +1444,7 @@ fn command_flag(id: &str) -> Option<Flag> {
     match id {
         "editor:toggle-readable-line-length" => Some(Flag::App(READABLE_LINE_LENGTH)),
         "editor:toggle-line-numbers" => Some(Flag::App(SHOW_LINE_NUMBER)),
+        "editor:toggle-spellcheck" => Some(Flag::App(SPELLCHECK)),
         "app:toggle-ribbon" => Some(Flag::Appearance(SHOW_RIBBON)),
         _ => None,
     }
@@ -3113,17 +3114,9 @@ impl SettingsView {
         // keyed off the selected option rather than off the stored string,
         // so the row appears the moment the option is picked.
         //
-        // The attachment rows keep their `not_yet()` tag even though the
-        // probe settled their labels and stored values and the dropdown now
-        // writes the four shapes Obsidian writes. `Honored::No` is "not read
-        // at all yet: the value is written for Obsidian", and that is still
-        // exactly the case: `scoria_vault::ops::attachment_path` knows where
-        // each shape sends a file, but nothing calls it, because Scoria
-        // creates no attachments. A function with no caller honours nothing,
-        // and the tag the row shows reads "not in Scoria yet", which would be
-        // a lie to take off here. It comes off with the first caller.
-        // Contrast "Default location for new notes" above, which carries no
-        // tag because `Vault::new_note_folder` really does read it.
+        // The attachment rows are read: `scoria_vault::ops::attachment_folder`
+        // sends Insert attachment's copy and Download attachments' files where
+        // each of the four shapes says, as Obsidian 1.15.0 did with them.
         if NEW_FILE_LOCATION.value(state) == "folder" {
             items.push(field(
                 "Folder to create new notes in",
@@ -3132,15 +3125,12 @@ impl SettingsView {
                 NEW_FILE_FOLDER,
             ));
         }
-        items.push(
-            choice(
-                "Default location for new attachments",
-                "Where newly added attachments are placed.",
-                state,
-                ATTACHMENT_LOCATION,
-            )
-            .not_yet(),
-        );
+        items.push(choice(
+            "Default location for new attachments",
+            "Where newly added attachments are placed.",
+            state,
+            ATTACHMENT_LOCATION,
+        ));
         match ATTACHMENT_LOCATION.value(state) {
             "Attachments" => items.push(
                 field(
@@ -3148,8 +3138,7 @@ impl SettingsView {
                     "Place newly created attachment files, such as images created via drag-and-drop or audio recordings, in this folder.",
                     state,
                     ATTACHMENT_FOLDER,
-                )
-                .not_yet(),
+                ),
             ),
             "./Attachments" => items.push(
                 field(
@@ -3157,8 +3146,7 @@ impl SettingsView {
                     "If your file is in “vault/folder”, and you set subfolder name to “attachments”, attachments will be saved to “vault/folder/attachments”.",
                     state,
                     SUBFOLDER_NAME,
-                )
-                .not_yet(),
+                ),
             ),
             _ => {}
         }
@@ -7005,6 +6993,45 @@ mod tests {
         }
         let (_dir, state) = vault();
         assert_eq!(toggle_command("editor:toggle-bold", &state), None);
+    }
+
+    /// `editor:toggle-spellcheck` over two runs, from no key and from
+    /// `false`: `app.json`'s bytes after each are Obsidian 1.15.0's (the
+    /// 2026-11-09 `attachments-app-info` probe, `s01`), the key written
+    /// even when it goes back to the default.
+    #[test]
+    fn toggle_spellcheck_writes_obsidians_bytes_over_two_runs() {
+        for (start, first, second) in [
+            (
+                "{}",
+                "{\n  \"spellcheck\": false\n}",
+                "{\n  \"spellcheck\": true\n}",
+            ),
+            (
+                "{\n  \"spellcheck\": false\n}",
+                "{\n  \"spellcheck\": true\n}",
+                "{\n  \"spellcheck\": false\n}",
+            ),
+        ] {
+            let (dir, _) = vault();
+            let path = dir.path().join(".obsidian/app.json");
+            std::fs::write(&path, start).unwrap();
+            let state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+            let change = toggle_command("editor:toggle-spellcheck", &state).unwrap();
+            state.apply_setting(&change).unwrap();
+            assert_eq!(
+                std::fs::read_to_string(&path).unwrap(),
+                first,
+                "from {start}"
+            );
+            let change = toggle_command("editor:toggle-spellcheck", &state).unwrap();
+            state.apply_setting(&change).unwrap();
+            assert_eq!(
+                std::fs::read_to_string(&path).unwrap(),
+                second,
+                "from {start}"
+            );
+        }
     }
 
     /// `app:toggle-ribbon` is the Interface tab's "Show ribbon" row: over
