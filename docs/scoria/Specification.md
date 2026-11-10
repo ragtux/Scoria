@@ -9503,3 +9503,83 @@ there; the bytes written are the same as in Live Preview.
 - Add alias: values with commas, quotes or `#`; a singular `alias:` key; a flow list with items
   (`aliases: [a, b]`); whether the File properties leaf is created or only revealed when one
   already exists (in the probe's fresh vault none existed before the command).
+
+## Observed stacked tabs, Obsidian 1.15.0 (installer build 1.13.7)
+
+`tools/obsidian-probe/stacked-tabs.mjs` over CDP in a private headless sway (one 1600 × 1000
+output at scale 1, the window 1596 × 973, the left dock collapsed so the ribbon ends at x 44),
+results in `tools/obsidian-probe/results/2026-11-09-stacked-tabs.json` and screenshots beside it.
+
+**The command.** `workspace:toggle-stacked-tabs`, "Toggle stacked tabs", icon `lucide-layers`, a
+check callback, no hotkey. The palette offers it whenever the active leaf is in the main area or
+a popout — on a note and on an empty "New tab" alike — and not when the active leaf is a sidebar
+leaf (Outline in the right dock): run there anyway it changed nothing, in the dock or the root.
+It flips the active leaf's tab group; nothing else changes (the active tab stays the active tab).
+
+**`workspace.json`.** A stacked group's `tabs` node gains `"stacked": true` as its last key, after
+`currentTab` (or after `children` when `currentTab` is absent because the first tab is active);
+unstacking removes the key — no `"stacked": false` is written. The leaves are untouched. In a
+popout the same key sits on the window's `tabs` node. The tab list's **Stack tabs** row (which
+reads **Unstack tabs** on a stacked group, same `lucide-layers` icon) writes the same bytes as the
+command. The tab header's right-click menu has no stacking row, stacked or not. After a relaunch
+the group comes back stacked.
+
+**The strip.** The group keeps its 40 px header strip, but the tab headers leave it: the inner
+header container is `display: none`, and the strip holds only the new-tab button (now at the
+strip's left, `margin-left` 8 px), the spacer, the tab-list chevron and, in the top-right group,
+the sidebar toggle. `.workspace-tabs` gains `mod-stacked`.
+
+**The stack.** Below the strip, `.workspace-tab-container` becomes a horizontal scroller
+(`display: flex`, row, `overflow-x: auto`, `overflow-y: hidden`; no scroll snap) holding, for each
+tab in order, its header and then its leaf, so the headers sit between the panes:
+
+- **Header (spine):** 40 px wide (`--tab-stacked-header-width`), the leaf's full height,
+  background `--tab-background-active` (the pane's colour), a 1 px `--tab-outline-color` line
+  on its left edge (`box-shadow: -1px 0 0 …`) plus `--tab-stacked-shadow`
+  (`-8px 0 8px 0 rgba(0,0,0,.05)`). `position: sticky` with `left: i × 40px` and
+  `right: (n − 1 − i) × 40px` for tab *i* of *n*. Inside, padded `8px 8px 16px` and laid out
+  top to bottom: the close button (20 × 20, padded 2 px, `lucide-x`, at the top, 8 px down),
+  then the type icon (22 × 22, padded 4 px, so a 14 px glyph), then the title, starting 54 px
+  down. The title is written top to bottom (`writing-mode: vertical-lr`, `text-orientation:
+  mixed`: Latin glyphs turned a quarter clockwise), 13 px (`--tab-stacked-font-size`), weight
+  400, `--text-normal` (#dadada in the dark theme) on every header active or not, padded `4px 0`,
+  one line, ellipsized at the bottom. The close button shows on every header, not only on hover;
+  a click on it closes that tab and leaves the active tab alone. The active header has
+  `is-active mod-active` but draws no differently.
+- **Leaf (pane):** `--tab-stacked-pane-width`, 700 px, clamped between a minimum of
+  `(W − n × 40) / n` and a maximum of `W − n × 40` (W the container's width; observed 218.667 /
+  1312 at n = 6 and 181.714 / 1272 at n = 7 in a 1552 px container, 477.333 / 1432 at n = 3),
+  `position: sticky` with `left: (i + 1) × 40px` and no right offset. Each pane is a whole leaf
+  with its own view header and content, live — every tab of the group is drawn at once.
+- So the content is `n × (40 + pane)` wide (4440 for six tabs). A scrolled-past pane sticks
+  behind its header and the next header and pane slide over it; the headers of the tabs to the
+  right pile up at the right edge, each 40 px.
+
+**Which pane shows.** Activating tab *i* (a header click, a tab-list row, `workspace:next-tab`,
+`previous-tab`, `goto-tab-N`, `goto-last-tab`, a new tab) scrolls the stack the least that puts
+pane *i* wholly between the headers piled on the left (*i* + 1 of them, the pane's own included)
+and those on the right (*n* − 1 − *i*): with `L = i × (40 + P) + 40` the pane's left in the
+content, the scroll `s` is clamped into `[L + P − W + (n − 1 − i) × 40, i × P]`, then into
+`[0, n × (40 + P) − W]`. Measured, six tabs in 1552 px, P = 700: activating 0 … 5 in turn gave
+0, 88, 788, 1488, 2188, 2888; from 2188 a click on the first header gave 0. The scroll is
+animated (smooth, about 0.4 s: samples 9, 134, 444, 1210, 1548, 1752, 1925, 2015 at 60 ms
+steps). A relaunch restored the stack at scroll 0 with the fourth tab active and did not reveal
+it. A vertical wheel over a pane scrolls the note, not the stack; a horizontal wheel (or
+Shift + wheel) scrolls the stack by its delta and changes no active tab.
+
+**Tab commands while stacked.** `workspace:new-tab` appends "New tab" at the end and makes it
+active (revealed, scroll 1408 for four tabs); closing it with `workspace:close` made its left
+neighbour active (Gamma, though Alpha had been active before the new tab). Opening a
+note from the quick switcher replaces the active pane's file in place. `workspace:split-vertical`
+makes a new group to the right that is **not** stacked (no `stacked` key); the original stays
+stacked. `workspace:close-tab-group` on the new group leaves the stacked one as it was.
+
+### Not settled: stacked tabs
+- Dragging a stacked header (to reorder, to another group, out to a split) and a drop onto a
+  stacked group.
+- What the header's hover and the pinned state look like on a spine; the light theme.
+- Whether running the command itself reveals the active pane (in every case watched the active
+  pane was already in view when the group was stacked).
+- A group in a sidebar cannot be stacked from the command; whether any other route stacks one.
+- The leaves' `flex-grow` from a leaf's `dimension` (seen `50 0 auto` on a leaf the probe's own
+  `createLeafInParent` had given `"dimension": 50`) when the panes do not fill the width.
