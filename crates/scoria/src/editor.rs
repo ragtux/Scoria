@@ -1789,6 +1789,12 @@ impl Editor {
         self.widget_is_folded(entry).then_some(entry)
     }
 
+    /// Whether the note's properties are drawn as the editable table: Live
+    /// Preview with `propertiesInDocument` at its default.
+    pub fn draws_properties_table(&self) -> bool {
+        self.live_preview && self.properties_in_document == PropertiesInDocument::Visible
+    }
+
     /// A widget that takes no room and draws nothing: the properties block
     /// under `propertiesInDocument: hidden`, where Obsidian shows neither
     /// the table nor the YAML behind it. Folding it to one line's height,
@@ -4003,6 +4009,42 @@ impl Editor {
     /// (confirmed with a probe: running the command left the note untouched).
     pub fn add_property_row(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         self.property_action(PropertyAction::AddRow, window, cx);
+    }
+
+    /// `markdown:add-alias`, as Obsidian 1.15.0 runs it (the 2026-11-09
+    /// probe, `SCEN=al`): a note with no `aliases` key gets one at once —
+    /// the whole block `---\naliases:\n---\n` over a note with none, or
+    /// `aliases:` after the last key — and a note that has the key, as `[]`,
+    /// a list or a scalar, is left as it is. With `open_field` the caret
+    /// then goes into the empty input after the row's pills, where Enter
+    /// appends what was typed through [`Editor::enter_property_field`] and
+    /// stays there for the next one; that is the same field and the same
+    /// writer a click past the last pill uses, and its bytes are the probe's
+    /// (`aliases:\n  - foo\n  - NewAlias` from `aliases: foo`). Without
+    /// `open_field` only the key is written, which is what Obsidian leaves
+    /// behind when the field is left with Escape.
+    ///
+    /// Returns whether the note changed.
+    pub fn add_alias(
+        &mut self,
+        open_field: bool,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> bool {
+        self.commit_property_field(Some(window), cx);
+        self.property_menu = None;
+        let change = properties::alias_key(&self.property_rows());
+        let wrote = change.is_some();
+        if let Some(change) = change {
+            self.apply_property_changes(&[change], Some(window), cx);
+        }
+        if open_field {
+            // The field has to be on screen to be typed into.
+            self.properties_folded = false;
+            self.property_field = properties::alias_field(&self.property_rows());
+        }
+        cx.notify();
+        wrote
     }
 
     /// `markdown:clear-metadata-properties`: removes every property, and with

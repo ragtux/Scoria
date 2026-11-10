@@ -638,6 +638,28 @@ pub fn retype(row: &Row, ty: PropertyType) -> Change {
     }
 }
 
+/// The key `markdown:add-alias` writes and edits.
+pub const ALIASES: &str = "aliases";
+
+/// What `markdown:add-alias` writes before anything is typed: the `aliases`
+/// key with no value, when the note has none. A note that has the key --
+/// `[]`, a list, a scalar, between other keys -- is left as it is
+/// (Obsidian 1.15.0, the 2026-11-09 probe).
+pub fn alias_key(rows: &[Row]) -> Option<Change> {
+    (!rows.iter().any(|row| row.key == ALIASES)).then(|| Change::Set {
+        key: ALIASES.to_string(),
+        value: Value::Empty,
+    })
+}
+
+/// The field `markdown:add-alias` puts the caret in: the empty input after
+/// the `aliases` row's pills, where what is typed is appended.
+pub fn alias_field(rows: &[Row]) -> Option<Field> {
+    rows.iter()
+        .find(|row| row.key == ALIASES)
+        .map(Row::append_field)
+}
+
 /// Every property of the block removed, for `markdown:clear-metadata-properties`.
 /// [`plan`](scoria_formats::properties::plan) turns a full set of removals into
 /// one edit that takes the fences with it.
@@ -1477,5 +1499,151 @@ mod tests {
         ] {
             assert!(!type_glyph(ty).is_empty());
         }
+    }
+
+    // ------------------------------------------------- markdown:add-alias
+    //
+    // The bytes are the 2026-11-09 probe's (`panes-workspaces-headings.json`,
+    // key `al`): the seed, the file right after the command, and the file
+    // after `NewAlias` and Enter. The steps are the editor's own: the key
+    // change through `alias_key`, the field from `alias_field`, the commit
+    // through `commit`, each written the way `apply_property_changes` writes
+    // it (a new block above a note with none, `plan` otherwise).
+
+    fn note_rows(text: &str) -> Vec<Row> {
+        let Some(block) = scoria_cache::note_properties(text) else {
+            return Vec::new();
+        };
+        let mut id = 0;
+        rows(
+            &block.entries,
+            |k| type_of(k, &block.entries, &PropertyTypes::default()),
+            &mut id,
+        )
+    }
+
+    fn write(text: &str, change: &Change) -> String {
+        match scoria_cache::note_properties(text) {
+            None => match change {
+                Change::Set { key, value } => format!(
+                    "{}{text}",
+                    scoria_formats::properties::new_block(key, value, "\n")
+                ),
+                _ => text.to_string(),
+            },
+            Some(block) => {
+                match scoria_formats::properties::plan(text, &block, std::slice::from_ref(change)) {
+                    Some(edits) => scoria_formats::properties::apply(text, &edits),
+                    None => text.to_string(),
+                }
+            }
+        }
+    }
+
+    /// The note after the command, and after `typed` and Enter.
+    fn add_alias(seed: &str, typed: &str) -> (String, String) {
+        let after_run = match alias_key(&note_rows(seed)) {
+            Some(change) => write(seed, &change),
+            None => seed.to_string(),
+        };
+        let mut field = alias_field(&note_rows(&after_run)).expect("the aliases row");
+        assert_eq!(field.text, "", "the caret is in the empty input");
+        field.insert(typed);
+        let after_enter = match commit(&field, PropertyType::Aliases) {
+            Some(change) => write(&after_run, &change),
+            None => after_run.clone(),
+        };
+        (after_run, after_enter)
+    }
+
+    #[test]
+    fn add_alias_writes_the_whole_block_over_a_note_with_none() {
+        let (run, enter) = add_alias("Body only.\n", "NewAlias");
+        assert_eq!(run, "---\naliases:\n---\nBody only.\n");
+        assert_eq!(enter, "---\naliases:\n  - NewAlias\n---\nBody only.\n");
+    }
+
+    #[test]
+    fn add_alias_appends_the_key_after_the_last_existing_key() {
+        let (run, enter) = add_alias("---\ntitle: T\ntags: x\n---\nBody.\n", "NewAlias");
+        assert_eq!(run, "---\ntitle: T\ntags: x\naliases:\n---\nBody.\n");
+        assert_eq!(
+            enter,
+            "---\ntitle: T\ntags: x\naliases:\n  - NewAlias\n---\nBody.\n"
+        );
+    }
+
+    #[test]
+    fn add_alias_writes_nothing_before_a_value_where_the_key_exists() {
+        for seed in [
+            "---\naliases: []\n---\nBody.\n",
+            "---\naliases:\n  - one\n  - two\n---\nBody.\n",
+            "---\naliases: foo\n---\nBody.\n",
+            "---\ntitle: T\naliases:\n  - one\ntags: x\n---\nBody.\n",
+        ] {
+            assert_eq!(alias_key(&note_rows(seed)), None, "{seed:?}");
+            assert_eq!(add_alias(seed, "NewAlias").0, seed);
+        }
+    }
+
+    #[test]
+    fn add_alias_turns_an_empty_flow_list_into_a_block_list() {
+        let (_, enter) = add_alias("---\naliases: []\n---\nBody.\n", "NewAlias");
+        assert_eq!(enter, "---\naliases:\n  - NewAlias\n---\nBody.\n");
+    }
+
+    #[test]
+    fn add_alias_appends_to_a_block_list() {
+        let (_, enter) = add_alias("---\naliases:\n  - one\n  - two\n---\nBody.\n", "NewAlias");
+        assert_eq!(
+            enter,
+            "---\naliases:\n  - one\n  - two\n  - NewAlias\n---\nBody.\n"
+        );
+    }
+
+    #[test]
+    fn add_alias_turns_a_scalar_into_a_block_list() {
+        let (_, enter) = add_alias("---\naliases: foo\n---\nBody.\n", "NewAlias");
+        assert_eq!(enter, "---\naliases:\n  - foo\n  - NewAlias\n---\nBody.\n");
+    }
+
+    #[test]
+    fn add_alias_keeps_a_list_between_other_keys_in_its_place() {
+        let (_, enter) = add_alias(
+            "---\ntitle: T\naliases:\n  - one\ntags: x\n---\nBody.\n",
+            "NewAlias",
+        );
+        assert_eq!(
+            enter,
+            "---\ntitle: T\naliases:\n  - one\n  - NewAlias\ntags: x\n---\nBody.\n"
+        );
+    }
+
+    /// After Enter the caret stays in the input, now empty, after the new
+    /// pill: the field `enter_property_field` reopens is this one.
+    #[test]
+    fn add_alias_leaves_the_caret_in_an_empty_input_after_enter() {
+        let (_, enter) = add_alias("Body only.\n", "NewAlias");
+        let field = alias_field(&note_rows(&enter)).unwrap();
+        assert_eq!(field.text, "");
+        assert_eq!(field.item_index(), Some(1));
+        let (_, twice) = {
+            let mut f = field;
+            f.insert("Second");
+            let change = commit(&f, PropertyType::Aliases).unwrap();
+            (enter.clone(), write(&enter, &change))
+        };
+        assert_eq!(
+            twice,
+            "---\naliases:\n  - NewAlias\n  - Second\n---\nBody only.\n"
+        );
+    }
+
+    /// Escape with nothing typed leaves the empty key on disk.
+    #[test]
+    fn add_alias_left_with_nothing_typed_keeps_the_empty_key() {
+        let (run, enter) = add_alias("Body only.\n", "");
+        assert_eq!(run, "---\naliases:\n---\nBody only.\n");
+        assert_eq!(enter, run);
     }
 }

@@ -201,6 +201,7 @@ pub const EDITOR_ONLY: &[&str] = &[
     "insert-current-date",
     "insert-current-time",
     "insert-template",
+    "markdown:add-alias",
 ];
 
 /// The ids that need a base on screen, which is Obsidian's `checkCallback`
@@ -301,6 +302,7 @@ pub const RUNNABLE: &[&str] = &[
     "bases:add-item",
     "markdown:toggle-preview",
     "markdown:add-metadata-property",
+    "markdown:add-alias",
     "markdown:clear-metadata-properties",
     "editor:toggle-fold-properties",
     "editor:toggle-readable-line-length",
@@ -5382,6 +5384,7 @@ impl Workspace {
                         .update(cx, |e, cx| e.add_property_row(window, cx));
                 }
             }
+            "markdown:add-alias" => self.add_alias(window, cx),
             "editor:rename-heading" => {
                 if self.editing_or_report(id, window, cx) {
                     self.start_rename_heading(window, cx);
@@ -6183,9 +6186,11 @@ impl Workspace {
         if id == "editor:focus" {
             return self.has_markdown_leaf();
         }
-        // A check callback in Obsidian 1.15.0 (2026-11-09): "Rename this
-        // heading..." is offered only with the caret on an ATX heading line,
-        // in Live Preview or Source mode.
+        // Both are check callbacks in Obsidian 1.15.0 (2026-11-09):
+        // "Rename this heading..." is offered only with the caret on an ATX
+        // heading line, in Live Preview or Source mode. "Add alias" is
+        // offered in reading view too, but there Obsidian edits the reading
+        // view's own block, which is read-only in Scoria, so it is left out.
         if id == "editor:rename-heading" {
             return self.mode.is_editing()
                 && self.note_has_keys(window, cx)
@@ -9351,6 +9356,35 @@ impl Workspace {
             }
             Err(err) => self.report(err, cx),
         }
+    }
+
+    /// `markdown:add-alias`. In Live Preview it is Obsidian's command: the
+    /// `aliases` key written at once where the note has none, and the caret
+    /// in the empty input after the row's pills (see [`Editor::add_alias`]).
+    /// In Source mode Obsidian edits the field in the File properties pane,
+    /// which is read-only in Scoria, so the command does the part that pane
+    /// does not need: the same key written, and the pane opened, as Obsidian
+    /// opens it -- which leaves exactly what Obsidian leaves when the field
+    /// is left with Escape. Reading view is not offered (see `can_run`).
+    fn add_alias(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if !self.mode.is_editing() || !self.note_has_keys(window, cx) {
+            return;
+        }
+        let in_table =
+            self.mode == ViewMode::LivePreview && self.editor.read(cx).draws_properties_table();
+        let changed = self
+            .editor
+            .update(cx, |e, cx| e.add_alias(in_table, window, cx));
+        // The key reached the disk within 0.3 s in Obsidian, not on the
+        // autosave's debounce.
+        if changed {
+            self.flush_save(cx);
+        }
+        if !in_table {
+            self.right_visible = true;
+            self.show_right_tab("file-properties", cx);
+        }
+        cx.notify();
     }
 
     /// Renames the open note to `new_name` (same folder, same extension)
@@ -20584,12 +20618,12 @@ mod tests {
         );
     }
 
-    /// The command runs the way its siblings do: offered only with an
-    /// editor holding the keys.
+    /// Both commands run, the way their siblings do: rename-heading and
+    /// add-alias are offered only with an editor holding the keys.
     #[test]
-    fn rename_heading_is_a_runnable_editor_command() {
+    fn rename_heading_and_add_alias_are_runnable_editor_commands() {
         let known = scoria_commands::known_ids();
-        for id in ["editor:rename-heading"] {
+        for id in ["editor:rename-heading", "markdown:add-alias"] {
             assert!(RUNNABLE.contains(&id), "{id} runnable");
             assert!(EDITOR_ONLY.contains(&id), "{id} needs the note");
             assert!(known.contains(&id), "{id} is Obsidian's");
