@@ -6791,9 +6791,10 @@ mod tests {
             assert_eq!(keys, ["tabSize", key], "{id} wrote {written}");
             assert_eq!(json[key], serde_json::Value::Bool(!before));
             // Run again, it puts the value back and keeps the key.
-            state
-                .apply_setting(&toggle_command(id, &state.app()).unwrap())
-                .unwrap();
+            // Its own statement: `app()` is a read guard and the write
+            // takes the lock.
+            let again = toggle_command(id, &state.app()).unwrap();
+            state.apply_setting(&again).unwrap();
             assert_eq!(flag.is_on(&state), before);
         }
         assert_eq!(

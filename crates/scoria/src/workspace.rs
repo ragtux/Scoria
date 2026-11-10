@@ -5243,10 +5243,14 @@ impl Workspace {
             // are written for Obsidian to read; Scoria draws no gutter yet,
             // which the row says ("not in Scoria yet").
             "editor:toggle-readable-line-length" | "editor:toggle-line-numbers" => {
-                if let Some(state) = self.state.clone() {
-                    if let Some(change) = settings::toggle_command(id, &state.app()) {
-                        self.change_setting(change, cx);
-                    }
+                // Built in a statement of its own: `app()` is a read guard,
+                // and `change_setting` takes the write lock.
+                let change = self
+                    .state
+                    .as_ref()
+                    .and_then(|state| settings::toggle_command(id, &state.app()));
+                if let Some(change) = change {
+                    self.change_setting(change, cx);
                 }
             }
             // "Show context menu under cursor": a right click's menu, at the
