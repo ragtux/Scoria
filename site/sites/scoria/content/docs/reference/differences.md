@@ -86,7 +86,7 @@ Obsidian commands are not implemented yet:
 | | |
 |---|---|
 | **Window** | `window:zoom-in`, `window:zoom-out`, `window:reset-zoom`, `window:toggle-always-on-top` |
-| **App** | `app:open-file`, `app:reload`, `app:show-debug-info`, `app:show-release-notes`, `app:migrate-frontmatter`. The font size the two font-size commands set lasts the session; Obsidian keeps it across launches |
+| **App** | `app:reload`, `app:migrate-frontmatter`. The font size the two font-size commands set lasts the session; Obsidian keeps it across launches. Open file from outside the vault opens a file inside the vault in the current tab, as Obsidian does, but refuses one outside it, which Obsidian opens in a tab of its own and saves back to. Show debug info reports Scoria's version and settings in Obsidian's layout, leaving out the lines Scoria has nothing for. Show release notes shows Scoria's notes for the running version, taken from this site's releases page when the app was built, where Obsidian downloads its changelog |
 | **Add alias** | `markdown:add-alias` works in Live Preview; in Source mode it writes the key and opens File properties, which cannot be typed into; it is not offered in reading view |
 
 ### Markdown edge cases

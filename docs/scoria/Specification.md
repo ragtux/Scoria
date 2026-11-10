@@ -8851,9 +8851,9 @@ A check command, offered whenever **any** Markdown leaf exists, in any mode:
 So the command does not switch tabs: it brings back the keyboard to a note that is on screen.
 
 ### Not settled: app and window commands
-- **`app:open-file` with a path chosen**: the GTK dialog took Ctrl+L and the typed path from
-  `wtype` but never acted on Return in three tries, so what an accepted path does (inside the vault:
-  open it there? outside: a new window, a copy, a notice?) is unobserved.
+- **`app:open-file` with a path chosen**, settled 2026-11-09 by a stub at the main process's
+  dialog: see [[#Open file from outside the vault, a path chosen]]. The GTK dialog itself took
+  Ctrl+L and the typed path from `wtype` but never acted on Return in three tries.
 - The zoom's **hotkeys**: Ctrl+= / Ctrl+- / Ctrl+0 sent over CDP changed nothing in either window,
   and no default hotkey is registered; whether the keys are bound outside the renderer (a menu
   accelerator) cannot be seen this way.
@@ -8864,9 +8864,14 @@ So the command does not switch tabs: it brings back the keyboard to a note that 
 - Whether a `baseFontSize` already in `appearance.json` seeds the font size (not tried).
 - Whether the session-only light/dark flip under `"system"` survives a relaunch, and the toggle
   under a light system preference.
-- Show debug info's values and its two buttons; Show release notes offline.
+- Show debug info's values and its two buttons, and Show release notes offline, settled
+  2026-11-09: see [[#Show debug info, the values and the buttons]] and
+  [[#Show release notes offline]].
 - Focus on last note from a Files pane holding DOM focus: the tree never held it (the active leaf
   was the explorer, `document.activeElement` was `body`).
+- Release notes: what a relaunch shows for a `release-notes` leaf whose `currentVersion` is not
+  the running version (the leaf's version's notes, or the running one's), and whether an update
+  opens the tab by itself.
 
 ## Observed Note composer, Obsidian 1.15.0 (installer build 1.13.7)
 

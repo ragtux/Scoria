@@ -1,13 +1,13 @@
 ---
 title: Commands and hotkeys
-description: The commands Scoria registers — the 244 Obsidian command ids, the 41 with a default hotkey, and the 190 Scoria can actually run today, with every id and default key listed.
+description: The commands Scoria registers — the 244 Obsidian command ids, the 41 with a default hotkey, and the 197 Scoria can actually run today, with every id and default key listed.
 ---
 
 # Commands and hotkeys
 
 Scoria registers **244 command ids** — the exact strings Obsidian registers, so your
 `hotkeys.json` matches them — of which **227 have an observed desktop name**. **41** carry a
-default hotkey. **190** do something in Scoria today; the 54 that do not are listed
+default hotkey. **197** do something in Scoria today; the 47 that do not are listed
 [below](#the-ones-that-do-not-run).
 
 Those four numbers are different things and the difference is the point:
@@ -20,7 +20,7 @@ Those four numbers are different things and the difference is the point:
   palette](/docs/app/switcher/) offers only these; the [Hotkeys tab](/docs/hotkeys/) lists
   all 244, so you can see your bindings for everything else.
 
-Some of the 190 are runnable only in the right place, which is also how Obsidian treats
+Some of the 197 are runnable only in the right place, which is also how Obsidian treats
 them: **63** need an editor on screen with the keyboard in it, so they leave the palette in
 a reading leaf, and the **fifteen table commands** that act on an existing table are offered
 only while the cursor is in one. `graph:open-local` and the five commands on the active file
@@ -131,6 +131,7 @@ in `hotkeys.json`. Several are worth binding on day one: `editor:toggle-source`,
 | Daily notes: Open today's daily note | `daily-notes` |
 | Decrease font size | `app:decrease-font-size` |
 | Delete current file | `app:delete-file` |
+| Download attachments for current file | `editor:download-attachments` |
 | Files: Create new folder | `file-explorer:new-folder` |
 | Files: Reveal current file in navigation | `file-explorer:reveal-active-file` |
 | Files: Show file explorer | `file-explorer:open` |
@@ -146,6 +147,7 @@ in `hotkeys.json`. Several are worth binding on day one: `editor:toggle-source`,
 | Graph view: Open local graph | `graph:open-local` |
 | Increase font size | `app:increase-font-size` |
 | Indent list item | `editor:indent-list` |
+| Insert attachment | `editor:attach-file` |
 | Insert callout | `editor:insert-callout` |
 | Insert code block | `editor:insert-codeblock` |
 | Insert footnote | `editor:insert-footnote` |
@@ -163,6 +165,7 @@ in `hotkeys.json`. Several are worth binding on day one: `editor:toggle-source`,
 | Note composer: Extract this heading... | `note-composer:extract-heading` |
 | Note composer: Merge current file with another file... | `note-composer:merge-file` |
 | Open current tab in new window | `workspace:open-in-new-window` |
+| Open file from outside the vault... | `app:open-file` |
 | Open in default app | `open-with-default-app:open` |
 | Open sandbox vault | `app:open-sandbox-vault` |
 | Open vault... | `app:open-another-vault` |
@@ -182,7 +185,9 @@ in `hotkeys.json`. Several are worth binding on day one: `editor:toggle-source`,
 | Set as heading 5 | `editor:set-heading-5` |
 | Set as heading 6 | `editor:set-heading-6` |
 | Show context menu under cursor | `editor:context-menu` |
+| Show debug info | `app:show-debug-info` |
 | Show in system explorer | `open-with-default-app:show` |
+| Show release notes | `app:show-release-notes` |
 | Show trash | `workspace:show-trash` |
 | Split down | `workspace:split-horizontal` |
 | Split right | `workspace:split-vertical` |
@@ -228,6 +233,8 @@ in `hotkeys.json`. Several are worth binding on day one: `editor:toggle-source`,
 | Toggle red highlight | `editor:toggle-highlight-red` |
 | Toggle ribbon | `app:toggle-ribbon` |
 | Toggle right sidebar | `app:toggle-right-sidebar` |
+| Toggle spellcheck | `editor:toggle-spellcheck` |
+| Toggle stacked tabs | `workspace:toggle-stacked-tabs` |
 | Toggle strikethrough | `editor:toggle-strikethrough` |
 | Toggle yellow highlight | `editor:toggle-highlight-yellow` |
 | Unfold all headings and lists | `editor:unfold-all` |
@@ -256,7 +263,7 @@ A few keys belong to a widget rather than to the command registry, and are not r
 
 ## The ones that do not run
 
-54 of the 244 ids do nothing in Scoria yet, and the palette does not offer them:
+47 of the 244 ids do nothing in Scoria yet, and the palette does not offer them:
 
 - **Not registered on desktop** — 17 ids with no desktop name, which Obsidian itself does not
   offer there: the caret, clipboard and undo ids (`editor:go-start`, `editor:copy`,
@@ -268,10 +275,7 @@ A few keys belong to a widget rather than to the command registry, and are not r
   Action, and `app:reload`, which has no renderer to reload.
 - **Waiting on the toolkit** — `window:zoom-in`, `window:zoom-out`, `window:reset-zoom` and
   `window:toggle-always-on-top`.
-- **Not built yet** — `workspace:export-pdf`, `canvas:export-as-image`, `graph:animate`,
-  `workspace:toggle-stacked-tabs`, `editor:attach-file`, `editor:download-attachments`,
-  `editor:toggle-spellcheck`, `app:open-file`, `app:show-debug-info` and
-  `app:show-release-notes`.
+- **Not built yet** — `workspace:export-pdf`, `canvas:export-as-image` and `graph:animate`.
 
 ## The full id list
 

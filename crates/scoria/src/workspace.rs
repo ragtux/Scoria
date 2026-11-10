@@ -16,6 +16,7 @@ use crate::canvas::menu::tooltip;
 use crate::canvas::{CanvasEvent, CanvasView};
 use crate::chooser::{Chooser, ChooserEvent, Row as ChooserRow};
 use crate::copy_results::{CopyResults, CopyResultsEvent};
+use crate::debug_info::{DebugInfo, DebugInfoEvent};
 use crate::editor::{Editor, EditorEvent};
 use crate::explorer::{
     self, display_name, kind_name, ExplorerEvent, FileExplorer, FileTree, SortOrder,
@@ -99,6 +100,10 @@ mod note_composer;
 // from outside the vault.
 mod attachments;
 mod download_modal;
+
+// Show debug info and Show release notes: the app's commands about itself.
+mod app_info;
+mod release_notes;
 
 actions!(
     workspace,
@@ -444,6 +449,8 @@ pub const RUNNABLE: &[&str] = &[
     "editor:attach-file",
     "editor:download-attachments",
     "app:open-file",
+    "app:show-debug-info",
+    "app:show-release-notes",
 ];
 
 /// Binds every runnable command's hotkeys in the Workspace context, and the
@@ -1430,6 +1437,9 @@ enum MainView {
     Canvas,
     Bases,
     Pdf,
+    /// A `release-notes` leaf: this build's notes, in a reading view of
+    /// their own.
+    ReleaseNotes,
     Empty,
 }
 
@@ -1443,6 +1453,7 @@ impl MainView {
             MainView::Canvas => "canvas",
             MainView::Bases => "bases",
             MainView::Pdf => "pdf",
+            MainView::ReleaseNotes => "release-notes",
             MainView::Empty => "nothing",
         }
     }
@@ -1752,6 +1763,8 @@ enum Modal {
     Composer,
     /// "Download attachments" (`editor:download-attachments`).
     Downloads,
+    /// "Debug info" (`app:show-debug-info`).
+    DebugInfo,
 }
 
 /// The file operation the open prompt will finish.
@@ -1860,7 +1873,10 @@ impl Tab {
     /// The tab's title as the strip shows it: the note's name, or Obsidian's
     /// "New tab" for one with nothing in it.
     fn title(&self) -> SharedString {
-        leaf_title(self.path.as_deref(), self.mode)
+        match release_notes::version_of(self) {
+            Some(version) => release_notes::title(&version).into(),
+            None => leaf_title(self.path.as_deref(), self.mode),
+        }
     }
 }
 
@@ -3334,6 +3350,12 @@ pub struct Workspace {
     settings: Entity<SettingsView>,
     prompt: Entity<Prompt>,
     copy_results: Entity<CopyResults>,
+    /// "Debug info", filled each time it opens.
+    debug_info: Entity<DebugInfo>,
+    /// The reading view release-notes tabs draw, and the version whose
+    /// notes it holds.
+    release_notes: Entity<ReadingView>,
+    release_notes_built: RefCell<Option<String>>,
     /// "Manage workspace layouts", made the first time it opens.
     layouts_modal: Option<Entity<layouts::LayoutsModal>>,
     pending: Option<PendingOp>,
@@ -3659,6 +3681,8 @@ impl Workspace {
         let settings = cx.new(SettingsView::new);
         let prompt = cx.new(Prompt::new);
         let copy_results = cx.new(CopyResults::new);
+        let debug_info = cx.new(DebugInfo::new);
+        let release_notes = cx.new(ReadingView::new);
         let reading = cx.new(ReadingView::new);
         let editor = cx.new(|cx| Editor::new(window, cx));
         let canvas = cx.new(CanvasView::new);
@@ -3893,6 +3917,33 @@ impl Workspace {
                 },
             ),
             cx.subscribe_in(
+                &debug_info,
+                window,
+                |this, _, event: &DebugInfoEvent, window, cx| match event {
+                    DebugInfoEvent::Copy(text) => {
+                        cx.write_to_clipboard(ClipboardItem::new_string(text.clone()));
+                        this.close_modal(window, cx);
+                        this.report("Debug info copied to your clipboard", cx);
+                    }
+                    DebugInfoEvent::Sandbox => {
+                        this.close_modal(window, cx);
+                        this.open_sandbox_vault(window, cx);
+                    }
+                    DebugInfoEvent::Close => this.close_modal(window, cx),
+                },
+            ),
+            // The release notes' links: only ones to the web, which open
+            // in the browser as a note's do.
+            cx.subscribe(
+                &release_notes,
+                |this, _, event: &ReadingEvent, cx| match event {
+                    ReadingEvent::OpenLink(target) | ReadingEvent::OpenLinkInNewTab(target) => {
+                        this.follow_link(target.clone(), cx)
+                    }
+                    ReadingEvent::ContextMenu { .. } => {}
+                },
+            ),
+            cx.subscribe_in(
                 &search,
                 window,
                 |this, _, event: &SearchEvent, window, cx| match event {
@@ -4062,6 +4113,9 @@ impl Workspace {
             settings,
             prompt,
             copy_results,
+            debug_info,
+            release_notes,
+            release_notes_built: RefCell::new(None),
             layouts_modal: None,
             pending: None,
             modal: Modal::None,
@@ -6227,6 +6281,8 @@ impl Workspace {
             "app:switch-vault" => self.toggle_vault_menu(cx),
             "app:open-another-vault" => self.open_another_vault(window, cx),
             "app:open-sandbox-vault" => self.open_sandbox_vault(window, cx),
+            "app:show-debug-info" => self.show_debug_info(window, cx),
+            "app:show-release-notes" => self.show_release_notes(cx),
             _ => {
                 let name = self.command_name(id, cx);
                 self.report(format!("{name}: not available in Scoria yet"), cx);
@@ -6694,6 +6750,7 @@ impl Workspace {
             || unpainted(MainView::Canvas, &self.canvas.focus_handle(cx))
             || unpainted(MainView::Bases, &self.bases.focus_handle(cx))
             || unpainted(MainView::Pdf, &self.pdf.focus_handle(cx))
+            || unpainted(MainView::ReleaseNotes, &self.release_notes.focus_handle(cx))
         {
             return true;
         }
@@ -6723,6 +6780,7 @@ impl Workspace {
             MainView::Canvas => self.canvas.focus_handle(cx),
             MainView::Bases => self.bases.focus_handle(cx),
             MainView::Pdf => self.pdf.focus_handle(cx),
+            MainView::ReleaseNotes => self.release_notes.focus_handle(cx),
             MainView::Empty => self.focus_handle.clone(),
         };
         // gpui's focus is per window, and the active group's views are
@@ -9680,6 +9738,9 @@ impl Workspace {
     /// nothing to open — takes edits nobody saves, and a reading view left
     /// behind keeps a deleted note's links on screen and clickable.
     fn main_view(&self, cx: &App) -> MainView {
+        if self.active_release_notes().is_some() {
+            return MainView::ReleaseNotes;
+        }
         let has_note = self.reading.read(cx).path.is_some();
         let image = self
             .current
@@ -9964,7 +10025,11 @@ impl Workspace {
         let id = view.id;
         // The leaf's name, the same string its tab carries: "New tab" with
         // nothing open, not "No file is open".
-        let title = leaf_title(view.current.as_deref(), view.mode);
+        let title = view
+            .tabs
+            .get(view.active_tab)
+            .map(Tab::title)
+            .unwrap_or_else(|| leaf_title(view.current.as_deref(), view.mode));
         let crumbs: SharedString = view
             .current
             .as_deref()
@@ -9979,6 +10044,11 @@ impl Workspace {
         };
         let can_back = view.history_ix > 1;
         let can_forward = view.history_ix < view.history_len;
+        let release_notes_leaf = view
+            .tabs
+            .get(view.active_tab)
+            .and_then(release_notes::version_of)
+            .is_some();
         // A base leaf draws Obsidian's own actions for one, not a note's.
         let base_leaf = view
             .current
@@ -10057,6 +10127,10 @@ impl Workspace {
                     .children(self.render_bookmarked_action(view, theme, cx))
                     .child(if let Some(path) = base_leaf.clone() {
                         self.render_base_header_actions(id, path, theme, cx)
+                    } else if release_notes_leaf {
+                        // The release notes are not a note: no graph of them
+                        // and no mode to switch.
+                        div()
                     } else {
                         div()
                             .flex()
@@ -10523,6 +10597,13 @@ impl Workspace {
             view.current.is_some() && view.canvas.read(cx).path() == view.current.as_deref();
         let bases = view.current.is_some() && view.bases.read(cx).path() == view.current.as_deref();
         let pdf = view.current.is_some() && view.pdf.read(cx).path() == view.current.as_deref();
+        if let Some(version) = view
+            .tabs
+            .get(view.active_tab)
+            .and_then(release_notes::version_of)
+        {
+            return self.release_notes_view(&version, cx).into_any_element();
+        }
         match Self::main_view_for(view.mode, has_note, image, has_buffer, canvas, bases, pdf) {
             MainView::Canvas => view.canvas.clone().into_any_element(),
             MainView::Bases => view.bases.clone().into_any_element(),
@@ -10538,7 +10619,7 @@ impl Workspace {
                 .text_color(theme.tokens.text_muted)
                 .child("The graph is open in another pane")
                 .into_any_element(),
-            MainView::Reading => view.reading.clone().into_any_element(),
+            MainView::Reading | MainView::ReleaseNotes => view.reading.clone().into_any_element(),
             MainView::Editor => Self::render_editor(&view.editor, view.detached.clone(), theme),
             MainView::Empty => match view.current.as_deref() {
                 Some(path) => Self::render_unsupported_file(path, theme),
@@ -10848,7 +10929,10 @@ impl Workspace {
 
     fn remember_closed(&mut self, ix: usize, tab: Tab) {
         // An empty tab is not worth bringing back.
-        if tab.path.is_some() || tab.mode == ViewMode::Graph {
+        if tab.path.is_some()
+            || tab.mode == ViewMode::Graph
+            || release_notes::version_of(&tab).is_some()
+        {
             self.closed_tabs.push((ix, tab));
             if self.closed_tabs.len() > CLOSED_TABS_KEPT {
                 self.closed_tabs.remove(0);
@@ -11479,14 +11563,13 @@ impl Workspace {
             .copied()
             .find(|g| order.contains(g))
             .or_else(|| order.first().copied());
-        let (path, mode) = group
+        group
             .and_then(|g| self.group_ix(g))
-            .map(|ix| {
+            .and_then(|ix| {
                 let view = self.group_view(ix);
-                (view.current, view.mode)
+                view.tabs.get(view.active_tab).map(Tab::title)
             })
-            .unwrap_or((None, ViewMode::Reading));
-        leaf_title(path.as_deref(), mode)
+            .unwrap_or_else(|| leaf_title(None, ViewMode::Reading))
     }
 
     /// `workspace:move-to-new-window`: the active tab leaves for a popout
@@ -14630,6 +14713,7 @@ impl Workspace {
                 Modal::Chooser => "chooser",
                 Modal::Composer => "note-composer",
                 Modal::Downloads => "download-attachments",
+                Modal::DebugInfo => "debug-info",
             }),
         );
         // The popout it draws in, by id, or null for the vault window (and
@@ -14654,6 +14738,7 @@ impl Workspace {
             Modal::Chooser => Some(self.chooser.read(cx).describe(rows, cx)),
             Modal::Composer => self.describe_composer(rows, cx),
             Modal::Downloads => self.describe_downloads(cx),
+            Modal::DebugInfo => Some(self.debug_info.read(cx).describe()),
             Modal::None => None,
         };
         if let Some(Value::Object(view)) = view {
@@ -14905,6 +14990,7 @@ impl Workspace {
             "canvas" => MainView::Canvas,
             "bases" => MainView::Bases,
             "pdf" => MainView::Pdf,
+            "release-notes" => MainView::ReleaseNotes,
             other => return Err(format!("unknown view: {other}")),
         };
         if wanted != painted {
@@ -15626,6 +15712,7 @@ impl Workspace {
             | Modal::Composer
             | Modal::Downloads
             | Modal::CopyResults
+            | Modal::DebugInfo
             | Modal::Layouts => {
                 let child: gpui::AnyElement = match self.modal {
                     Modal::Switcher => self.switcher.clone().into_any_element(),
@@ -15634,6 +15721,7 @@ impl Workspace {
                     Modal::Composer => self.composer_element()?,
                     Modal::Downloads => self.downloads_element()?,
                     Modal::CopyResults => self.copy_results.clone().into_any_element(),
+                    Modal::DebugInfo => self.debug_info.clone().into_any_element(),
                     Modal::Layouts => self.layouts_modal.clone()?.into_any_element(),
                     _ => self.prompt.clone().into_any_element(),
                 };
@@ -18036,6 +18124,10 @@ fn tab_from_leaf(
             leaf: Some(leaf.clone()),
             ..Tab::empty(ViewMode::Graph)
         },
+        (Some(release_notes::VIEW_TYPE), None) => Tab {
+            leaf: Some(leaf.clone()),
+            ..Tab::empty(default_mode)
+        },
         _ => return None,
     };
     tab.pinned = pinned;
@@ -18460,6 +18552,9 @@ fn leaf_json(tab: &Tab) -> Value {
             match (&tab.path, tab.mode) {
                 (Some(p), _) => file == Some(p.as_str()),
                 (None, ViewMode::Graph) => view == Some("graph"),
+                (None, _) if release_notes::version_of(tab).is_some() => {
+                    view == Some(release_notes::VIEW_TYPE)
+                }
                 (None, _) => view == Some("empty"),
             }
         })
@@ -19407,8 +19502,6 @@ mod tests {
             "window:reset-zoom",
             "window:toggle-always-on-top",
             "app:show-tab-switcher",
-            "app:show-debug-info",
-            "app:show-release-notes",
         ] {
             assert!(!RUNNABLE.contains(&id), "{id} is left unrunnable");
         }

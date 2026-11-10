@@ -374,7 +374,6 @@ a type and the tab's two fields write it; the rows keep their "not in Scoria yet
 
 | Commands | What stands in the way |
 | --- | --- |
-| `app:show-debug-info`, `app:show-release-notes` | every byte is observed, and the bytes are Obsidian's version, its installer's and its changelog; what Scoria says there is a decision, not an observation |
 | `app:migrate-frontmatter` | 45 shapes observed; Obsidian re-serialises the whole block (comments gone, flow lists made blocks, quotes normalised) and Scoria's properties writer is surgical; also the progress modal and Undo |
 | `slides:start` | the cut is settled (top-level thematic breaks, empty slides dropped); drawing needs a second style table for the reading renderer |
 | `graph:animate` | nodes return in ctime order, but the step lengths (0.2–0.6 s, the same each run) are unexplained. The graph's ▶ button only restarts the layout and is not this |
@@ -390,6 +389,57 @@ file input opens nothing without a user activation (`userGesture`), `run-block.s
 `TMPDIR`, and the Settings window is a CDP target of its own. Possibly a fault of the settings
 fields: a click from one number field straight into another lost the typed value, Enter did not.
 The gate on the two branches together: 64 test binaries, 1,548 passed, 632 in the app's bin.
+
+### Debug info and release notes, 2026-11-10
+
+Two of the ids [[#Eleven more ids probed, five of them run, 2026-11-10]] left as a decision,
+decided: Obsidian's chrome around Scoria's own values. No probe was run for them, the 2026-11-09
+`attachments-app-info.mjs` run having recorded every byte and, stubbed at Obsidian's main process,
+what the debug modal's buttons do. Built on `phase4-commands` and taken onto this branch, where
+`app:open-file` had already been built on the same observation; the branch's own copy of it was
+dropped at the cherry-pick, the two having been the same function. 197 of the 244 ids run, 47 do
+not; the gate on the merged branch: 64 test binaries, 1,562 passed, 646 in the app's bin.
+
+**Show debug info.** `crate::debug_info` is the modal: the title "Debug info", one read-only
+text box, no close button, and Copy to clipboard, Sandbox vault and Done, none accented. The
+text keeps Obsidian's shape — `SYSTEM INFO:`, a tab before each value, a blank line before
+`RECOMMENDATIONS:`, a final newline — with Scoria's values: `Scoria version`, the kernel's
+version and release as `Operating system` (the platform's name off Linux), `Language: en`, Live
+preview, Base theme, Community theme and Snippets enabled from the vault's config, and
+`Restricted mode: on`, Scoria running no community plugin whatever the vault enables. Installer
+version, Login status and Insider build are left out, Scoria having none of them, and the plugin
+lines never appear. A theme or a snippet brings Obsidian's one recommendation for them, word for
+word; Scoria has a sandbox vault for it to point at. Copy to clipboard copies the text, closes
+the modal and says "Debug info copied to your clipboard"; Sandbox vault closes it and runs
+`app:open-sandbox-vault`, Obsidian's sending its main process `sandbox`; Done and Escape close.
+`moonstone` reads "light" as observed; `obsidian` reading "dark" is Scoria's.
+
+**Show release notes.** A new tab at the end of the strip, active, its leaf
+`{"type": "release-notes", "state": {"currentVersion": "0.5.0"}, "icon": "lucide-book-up",
+"title": "Release Notes 0.5.0"}`, the tab and the view header named the same. The notes are
+Scoria's: the repository's only written release notes are the site's `releases.html` (the tags
+say no more than `Scoria 0.5.0`), so the page is compiled in and the `<section>` whose heading
+names the running version is cut into Markdown — headings, paragraphs, code spans, links and
+emphasis, everything else escaped — and drawn by a reading view of its own through the one
+parser, followed by a rule and a link to the published page. Nothing is fetched; Obsidian fetches
+its changelog every time. A version the page has only in its table shows that row, one it does
+not have says so. A test holds that the page has a section for the manifest's version, so a
+release that bumps the version without its notes fails the gate. The tab is a release-notes tab
+while its leaf is that and it holds no file and no history; a note opened in it takes it over, as
+in Obsidian, and the leaf written is then the note's. `workspace.json` round-trips the leaf as
+read, an Obsidian leaf naming 1.15.0 included, whose tab says "Release Notes 1.15.0" over
+"The releases page has no notes for 1.15.0." The header draws no graph or mode button there.
+
+**Driven.** A headless sway, a one-note scratch vault, the socket: the modal's text and buttons
+as above and Escape closing it; the notes tab drawn with the section's six cards as headings and
+its code spans; `workspace.json` after the quit holding the leaf in Obsidian's shape with
+`currentTab` on it. The open dialog was not driven: it goes through the desktop portal.
+
+**Left.** Whether a relaunch shows a stale
+`currentVersion`'s notes or the running one's, and whether an update opens the tab by itself, are
+unobserved and on the spec's "Not settled" list; Scoria shows the leaf's version and never opens
+the tab by itself. The 13 new tests, by name: 5 in `debug_info`, 8 in
+`workspace::release_notes`, and the runnable test in `workspace::app_info`.
 
 ### The Note composer, driven, 2026-11-10
 
