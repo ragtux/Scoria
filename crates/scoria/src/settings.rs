@@ -46,7 +46,8 @@ use scoria_commands::{hotkey_label, keystroke, Command};
 use scoria_formats::config::{
     AppConfig, AppearanceConfig, BacklinkConfig, CanvasConfig, CorePlugins, DailyNotesConfig,
     Hotkey, Hotkeys, NoteComposerConfig, PagePreviewConfig, SwitcherConfig, TemplatesConfig,
-    WebviewerConfig, CORE_PLUGINS, DAILY_NOTE_DEFAULT_FORMAT, WEBVIEWER_DEFAULT_SEARCH_URL,
+    WebviewerConfig, ZkPrefixerConfig, CORE_PLUGINS, DAILY_NOTE_DEFAULT_FORMAT,
+    WEBVIEWER_DEFAULT_SEARCH_URL, ZK_PREFIXER_DEFAULT_FORMAT,
 };
 use scoria_search::fuzzy_match;
 use scoria_templates as templates;
@@ -951,6 +952,9 @@ const TEXTS: &[TextField] = &[
     TEMPLATES_DATE,
     TEMPLATES_TIME,
     WEB_CUSTOM_SEARCH_ENGINE,
+    ZK_FOLDER,
+    ZK_TEMPLATE,
+    ZK_FORMAT,
 ];
 
 // ----- the Daily notes and Templates tabs ------------------------------------
@@ -1085,6 +1089,56 @@ const TEMPLATES_TIME: TextField = TextField {
     },
 };
 
+// ----- the Unique note creator tab -------------------------------------------
+//
+// Observed on 1.15.0 on 2026-11-09 (`tools/obsidian-probe/results/
+// 2026-11-09-note-composer-unique.json`, run `settings:s01-tab-zk`): each row
+// writes its own key into `zk-prefixer.json` as a verbatim string, keys in the
+// order first written, and a cleared field writes `""` rather than dropping
+// the key -- the Daily notes tab's shape again.
+
+/// "New file location" on the Unique note creator tab.
+const ZK_FOLDER: TextField = TextField {
+    key: "folder",
+    placeholder: "Example: folder 1/folder 2",
+    prefix: "",
+    read: |state| state.zk_prefixer().folder.clone().unwrap_or_default(),
+    write: |state, value| {
+        let mut next = state.zk_prefixer().clone();
+        next.folder = Some(value.to_string());
+        SettingChange::ZkPrefixer(next)
+    },
+};
+
+/// "Template file location". Obsidian's control is a file picker that
+/// stores the picked note's path with its `.md` (`Templates/Unique.md`) and
+/// shows `Example: folder1/note` while empty; here it is a field, and the
+/// path typed is what is stored.
+const ZK_TEMPLATE: TextField = TextField {
+    key: "template",
+    placeholder: "Example: folder1/note",
+    prefix: "",
+    read: |state| state.zk_prefixer().template.clone().unwrap_or_default(),
+    write: |state, value| {
+        let mut next = state.zk_prefixer().clone();
+        next.template = Some(value.to_string());
+        SettingChange::ZkPrefixer(next)
+    },
+};
+
+/// "Unique prefix format": the moment format a unique note is named by.
+const ZK_FORMAT: TextField = TextField {
+    key: "format",
+    placeholder: ZK_PREFIXER_DEFAULT_FORMAT,
+    prefix: "",
+    read: |state| state.zk_prefixer().format.clone().unwrap_or_default(),
+    write: |state, value| {
+        let mut next = state.zk_prefixer().clone();
+        next.format = Some(value.to_string());
+        SettingChange::ZkPrefixer(next)
+    },
+};
+
 /// The sample a format row shows under itself — "Your current syntax looks
 /// like this: 2026-10-30" — rendered from today for the pattern in the file,
 /// or for the placeholder when the field is empty, as Obsidian does.
@@ -1112,7 +1166,8 @@ fn format_sample(pattern: &str, placeholder: &str) -> String {
 // Some rows wrote nothing the probe could see, because the control is a file
 // suggester, a textarea, a `type=number` field or a button and none of them
 // was driven: the Canvas tab's folder name and zoom threshold, every row of
-// the Unique note creator and File recovery tabs, and the Web viewer tab's
+// the File recovery tab (the Unique note creator's were typed into on
+// 2026-11-09, and write), and the Web viewer tab's
 // homepage, saved-page folder, ad-blocking rules and update frequency. Those
 // rows are drawn and tagged, and they write nothing at all — a key guessed
 // from the row's name would be a key Obsidian never wrote.
@@ -1326,6 +1381,8 @@ pub enum SettingChange {
     PagePreview(PagePreviewConfig),
     /// `note-composer.json`: the Note composer tab's dropdown and toggle.
     NoteComposer(NoteComposerConfig),
+    /// `zk-prefixer.json`: the Unique note creator tab's three fields.
+    ZkPrefixer(ZkPrefixerConfig),
     /// `webviewer.json`: the Web viewer tab's two toggles, its search
     /// engine dropdown and the custom engine field.
     Webviewer(WebviewerConfig),
@@ -1351,6 +1408,7 @@ impl SettingChange {
             SettingChange::Canvas(_) => "canvas.json",
             SettingChange::PagePreview(_) => "page-preview.json",
             SettingChange::NoteComposer(_) => "note-composer.json",
+            SettingChange::ZkPrefixer(_) => "zk-prefixer.json",
             SettingChange::Webviewer(_) => "webviewer.json",
             SettingChange::Frame(_) => scoria_vault::registry::FILE_NAME,
         }
@@ -3466,34 +3524,36 @@ impl SettingsView {
                     .not_yet(),
                 ]
             }
-            // Three rows, no key for any of them: two are text fields the
-            // probe did not type into and one is a file suggester. They are
-            // drawn and tagged, and none of them writes. The format row's
-            // description ends in the sample Obsidian renders from the
-            // pattern in the field, which is its placeholder here.
-            "zk-prefixer" => vec![
-                text(
-                    "New file location",
-                    "The folder path to create the new unique note in.",
-                    "",
-                )
-                .not_yet(),
-                text(
-                    "Template file location",
-                    "The file path to use as template.",
-                    "",
-                )
-                .not_yet(),
-                text(
-                    "Unique prefix format",
-                    &format!(
-                        "For more syntax, refer to format reference\nYour current syntax looks like this: {}",
-                        format_sample("", "YYYYMMDDHHmm")
+            // Three fields, each writing its own key (2026-11-09). The
+            // format row's description ends in the sample Obsidian renders
+            // from the pattern in the field, or from the default when it is
+            // empty.
+            "zk-prefixer" => {
+                let format = (ZK_FORMAT.read)(state);
+                vec![
+                    field(
+                        "New file location",
+                        "The folder path to create the new unique note in.",
+                        state,
+                        ZK_FOLDER,
                     ),
-                    "",
-                )
-                .not_yet(),
-            ],
+                    field(
+                        "Template file location",
+                        "The file path to use as template.",
+                        state,
+                        ZK_TEMPLATE,
+                    ),
+                    field(
+                        "Unique prefix format",
+                        &format!(
+                            "For more syntax, refer to format reference\nYour current syntax looks like this: {}",
+                            format_sample(&format, ZK_FORMAT.placeholder)
+                        ),
+                        state,
+                        ZK_FORMAT,
+                    ),
+                ]
+            }
             // Two `type=number` fields and two buttons, none of whose key
             // the probe observed; the buttons are inert, as every button in
             // this window is.
@@ -5965,6 +6025,7 @@ mod tests {
                 SettingChange::Templates(c) => serde_json::to_value(c).unwrap(),
                 SettingChange::Canvas(c) => serde_json::to_value(c).unwrap(),
                 SettingChange::NoteComposer(c) => serde_json::to_value(c).unwrap(),
+                SettingChange::ZkPrefixer(c) => serde_json::to_value(c).unwrap(),
                 SettingChange::Webviewer(c) => serde_json::to_value(c).unwrap(),
                 other => panic!("{what} wrote {other:?}"),
             };
@@ -6335,12 +6396,13 @@ mod tests {
         assert_eq!(json.as_object().map(|o| o.len()), Some(2));
     }
 
-    /// The Unique note creator and File recovery tabs: Obsidian's rows,
-    /// every one of them tagged and inert, because the probe reached none of
-    /// their keys. Nothing either tab can be clicked on writes a file.
+    /// The Unique note creator tab as 1.15.0 showed it, and the probe's own
+    /// sequence of edits -- folder, template, template cleared, format,
+    /// format cleared, folder cleared -- leaving `zk-prefixer.json` byte for
+    /// byte as Obsidian left it after each (`settings:s01-tab-zk`).
     #[test]
-    fn the_unique_note_creator_and_file_recovery_tabs_write_nothing() {
-        let (dir, state) = vault();
+    fn the_unique_note_creator_tab_writes_zk_prefixer_json_as_obsidian_did() {
+        let (dir, mut state) = vault();
         assert_eq!(
             plugin_rows(&state, "zk-prefixer"),
             [
@@ -6349,6 +6411,79 @@ mod tests {
                 "Unique prefix format",
             ]
         );
+        let sample = |pattern: &str| {
+            format!(
+                "For more syntax, refer to format reference\nYour current syntax looks like this: {}",
+                templates::format(pattern, &crate::workspace::now())
+            )
+        };
+        let zk = SettingsView::plugin_items(&state, &[], "zk-prefixer", None);
+        assert_eq!(zk[2].desc.as_ref(), sample("YYYYMMDDHHmm"));
+        let fields: Vec<TextField> = zk.iter().map(|row| row.field.expect("a field")).collect();
+        assert_eq!(
+            fields.iter().map(|f| f.placeholder).collect::<Vec<_>>(),
+            [
+                "Example: folder 1/folder 2",
+                "Example: folder1/note",
+                "YYYYMMDDHHmm"
+            ]
+        );
+        assert!(!dir.path().join(".obsidian/zk-prefixer.json").exists());
+        let steps: [(TextField, &str, &str); 6] = [
+            (ZK_FOLDER, "Zettel", "{\n  \"folder\": \"Zettel\"\n}"),
+            (
+                ZK_TEMPLATE,
+                "Templates/Unique.md",
+                "{\n  \"folder\": \"Zettel\",\n  \"template\": \"Templates/Unique.md\"\n}",
+            ),
+            (
+                ZK_TEMPLATE,
+                "",
+                "{\n  \"folder\": \"Zettel\",\n  \"template\": \"\"\n}",
+            ),
+            (
+                ZK_FORMAT,
+                "YYYY-MM-DD-HHmmss",
+                "{\n  \"folder\": \"Zettel\",\n  \"template\": \"\",\n  \"format\": \"YYYY-MM-DD-HHmmss\"\n}",
+            ),
+            (
+                ZK_FORMAT,
+                "",
+                "{\n  \"folder\": \"Zettel\",\n  \"template\": \"\",\n  \"format\": \"\"\n}",
+            ),
+            (
+                ZK_FOLDER,
+                "",
+                "{\n  \"folder\": \"\",\n  \"template\": \"\",\n  \"format\": \"\"\n}",
+            ),
+        ];
+        for (field, value, bytes) in steps {
+            state.apply_setting(&(field.write)(&state, value)).unwrap();
+            let file =
+                std::fs::read_to_string(dir.path().join(".obsidian/zk-prefixer.json")).unwrap();
+            assert_eq!(file, bytes, "after {} = {value:?}", field.key);
+            state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+            assert_eq!((field.read)(&state), value);
+            if field.same(&ZK_FORMAT) {
+                // The sample follows the field, and goes back to the
+                // default's when it is cleared.
+                let zk = SettingsView::plugin_items(&state, &[], "zk-prefixer", None);
+                let pattern = if value.is_empty() {
+                    "YYYYMMDDHHmm"
+                } else {
+                    value
+                };
+                assert_eq!(zk[2].desc.as_ref(), sample(pattern));
+            }
+        }
+    }
+
+    /// The File recovery tab: Obsidian's rows, every one of them tagged and
+    /// inert, because the probe reached none of their keys. Nothing the tab
+    /// can be clicked on writes a file.
+    #[test]
+    fn the_file_recovery_tab_writes_nothing() {
+        let (dir, state) = vault();
         assert_eq!(
             plugin_rows(&state, "file-recovery"),
             [
@@ -6358,20 +6493,12 @@ mod tests {
                 "Clear history",
             ]
         );
-        let zk = SettingsView::plugin_items(&state, &[], "zk-prefixer", None);
-        assert_eq!(
-            zk[2].desc.as_ref(),
-            format!(
-                "For more syntax, refer to format reference\nYour current syntax looks like this: {}",
-                templates::format("YYYYMMDDHHmm", &crate::workspace::now())
-            )
-        );
         let recovery = SettingsView::plugin_items(&state, &[], "file-recovery", None);
         assert_eq!(recovery[0].control, Control::Text("5".into()));
         assert_eq!(recovery[1].control, Control::Text("7".into()));
         assert_eq!(recovery[2].control, Control::Button("View".into()));
         assert_eq!(recovery[3].control, Control::Button("Clear".into()));
-        for row in zk.iter().chain(recovery.iter()) {
+        for row in recovery.iter() {
             assert_eq!(row.honored, Honored::No, "{}", row.name);
             assert!(
                 row.flag.is_none()
@@ -6382,7 +6509,6 @@ mod tests {
                 row.name
             );
         }
-        assert!(!dir.path().join(".obsidian/zk-prefixer.json").exists());
         assert!(!dir.path().join(".obsidian/file-recovery.json").exists());
     }
 

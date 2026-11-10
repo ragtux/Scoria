@@ -1196,6 +1196,19 @@ impl Editor {
         }
     }
 
+    /// The primary selection's text, which *Add unique internal link*
+    /// checks its name with.
+    pub fn selected_text(&self) -> &str {
+        self.buf.selected_text()
+    }
+
+    /// `insert-unique-link`: `[[inner]]` over the primary selection.
+    pub fn insert_unique_link(&mut self, inner: &str, window: &mut Window, cx: &mut Context<Self>) {
+        if self.buf.insert_unique_link(inner) {
+            self.after_edit(Some(window), cx);
+        }
+    }
+
     /// `editor:indent-list` and `-unindent-list`: the same step Tab and
     /// Shift+Tab take.
     pub fn indent_list(&mut self, indent: bool, window: &mut Window, cx: &mut Context<Self>) {

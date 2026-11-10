@@ -64,7 +64,7 @@ use scoria_formats::config::{
     self as config, AppConfig, AppearanceConfig, BacklinkConfig, CanvasConfig,
     CommandPaletteConfig, CorePlugins, DailyNotesConfig, Hotkeys, NoteComposerConfig,
     PagePreviewConfig, PluginManifest, PropertyTypes, SwitcherConfig, TemplatesConfig,
-    WebviewerConfig, CORE_PLUGINS,
+    WebviewerConfig, ZkPrefixerConfig, CORE_PLUGINS,
 };
 use scoria_formats::properties::Change;
 use scoria_formats::properties::PropertiesInDocument;
@@ -203,6 +203,7 @@ pub const EDITOR_ONLY: &[&str] = &[
     "insert-current-date",
     "insert-current-time",
     "insert-template",
+    "insert-unique-link",
     "markdown:add-alias",
 ];
 
@@ -320,6 +321,8 @@ pub const RUNNABLE: &[&str] = &[
     "daily-notes:goto-prev",
     "daily-notes:goto-next",
     "random-note",
+    "zk-prefixer",
+    "insert-unique-link",
     "editor:table-row-before",
     "editor:table-row-after",
     "editor:table-row-up",
@@ -476,6 +479,9 @@ pub struct VaultState {
     canvas: RwLock<CanvasConfig>,
     page_preview: RwLock<PagePreviewConfig>,
     note_composer: RwLock<NoteComposerConfig>,
+    /// `zk-prefixer.json`, the Unique note creator's folder, template and
+    /// format.
+    zk_prefixer: RwLock<ZkPrefixerConfig>,
     webviewer: RwLock<WebviewerConfig>,
     pub plugin_manifests: Vec<PluginManifest>,
     pub palette: CommandPaletteConfig,
@@ -580,16 +586,14 @@ impl VaultState {
         let note_composer = vault.note_composer_config();
         note("note-composer.json", note_composer.as_ref().err());
         let note_composer = note_composer.unwrap_or_default();
-        // These two are read but not kept: no row of the Unique note
-        // creator or File recovery tab has an observed key, so there is
-        // nothing to show from the file and nothing that writes it. A file
-        // that will not parse is still worth knowing about -- the window
-        // reports it and a write to it would be refused -- which is the
-        // whole of what reading them does.
-        note(
-            "zk-prefixer.json",
-            vault.zk_prefixer_config().as_ref().err(),
-        );
+        let zk_prefixer = vault.zk_prefixer_config();
+        note("zk-prefixer.json", zk_prefixer.as_ref().err());
+        let zk_prefixer = zk_prefixer.unwrap_or_default();
+        // Read but not kept: no row of the File recovery tab has an
+        // observed key, so there is nothing to show from the file and
+        // nothing that writes it. A file that will not parse is still worth
+        // knowing about -- the window reports it and a write to it would be
+        // refused -- which is the whole of what reading it does.
         note(
             "file-recovery.json",
             vault.file_recovery_config().as_ref().err(),
@@ -637,6 +641,7 @@ impl VaultState {
             canvas: RwLock::new(canvas),
             page_preview: RwLock::new(page_preview),
             note_composer: RwLock::new(note_composer),
+            zk_prefixer: RwLock::new(zk_prefixer),
             webviewer: RwLock::new(webviewer),
             plugin_manifests,
             palette,
@@ -758,6 +763,40 @@ impl VaultState {
         self.webviewer.read().unwrap_or_else(|e| e.into_inner())
     }
 
+    pub fn zk_prefixer(&self) -> RwLockReadGuard<'_, ZkPrefixerConfig> {
+        self.zk_prefixer.read().unwrap_or_else(|e| e.into_inner())
+    }
+
+    /// Where *Create new unique note* puts a note made at `at`, by
+    /// `zk-prefixer.json`'s format and folder.
+    pub fn unique_note_path(
+        &self,
+        at: &templates::Stamp,
+    ) -> Result<String, scoria_vault::unique::UniqueError> {
+        let (format, folder) = {
+            let zk = self.zk_prefixer();
+            (
+                scoria_vault::unique::effective_format(zk.format.as_deref()).to_string(),
+                zk.folder.clone().unwrap_or_default(),
+            )
+        };
+        self.vault().unique_note_path(&format, &folder, at)
+    }
+
+    /// What *Add unique internal link* writes inside `[[...]]` at `at` over
+    /// `selection`.
+    pub fn unique_link_name(
+        &self,
+        at: &templates::Stamp,
+        selection: &str,
+    ) -> Result<String, scoria_vault::unique::UniqueError> {
+        let format = {
+            let zk = self.zk_prefixer();
+            scoria_vault::unique::effective_format(zk.format.as_deref()).to_string()
+        };
+        self.vault().unique_link_name(&format, at, selection)
+    }
+
     /// Writes a setting the Settings window changed and keeps the config in
     /// hand in step. The file is written first: the vault is the source of
     /// truth, so a change that cannot reach disk does not count.
@@ -801,6 +840,10 @@ impl VaultState {
                     .note_composer
                     .write()
                     .unwrap_or_else(|e| e.into_inner()) = config.clone();
+            }
+            SettingChange::ZkPrefixer(config) => {
+                self.write_config("zk-prefixer.json", config)?;
+                *self.zk_prefixer.write().unwrap_or_else(|e| e.into_inner()) = config.clone();
             }
             SettingChange::Webviewer(config) => {
                 self.write_config("webviewer.json", config)?;
@@ -4403,6 +4446,63 @@ impl Workspace {
         self.set_mode(mode, window, cx);
     }
 
+    /// Unique note creator's *Create new unique note* (`zk-prefixer`): an
+    /// empty note named by `zk-prefixer.json`'s format, in its folder, or
+    /// the template's bytes expanded, opened in the tab in hand -- a new tab
+    /// when that one is pinned, which `open_file` sees to. A taken name moves
+    /// the time on a minute ([`scoria_vault::unique`]); a folder that is not
+    /// there makes nothing and says so in Obsidian's words. No notice when
+    /// it works. Observed on 1.15.0 on 2026-11-09.
+    fn create_unique_note(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let template = state.zk_prefixer().template.clone().unwrap_or_default();
+        let picked = state.unique_note_path(&now());
+        let path = match picked {
+            Ok(path) => path,
+            Err(err) => return self.report(err.to_string(), cx),
+        };
+        // `{{title}}` is the new name, `{{date}}` and `{{time}}` the
+        // Templates expansion's (observed: `YYYY-MM-DD` and `HH:mm` with no
+        // templates.json), at the clock rather than at the minute the name
+        // moved to -- the probe's template run had no taken name to tell
+        // the two apart.
+        let text = self.daily_template_text(&state, &template, &path, cx);
+        let created = state.create_note(&path, &text);
+        match created {
+            Ok(changes) => {
+                self.after_changes(changes, cx);
+                self.open_file(path, None, cx);
+                let mode = self.editing_mode();
+                self.set_mode(mode, window, cx);
+            }
+            Err(err) => self.report(err, cx),
+        }
+    }
+
+    /// Unique note creator's *Add unique internal link*: `[[name]]` at the
+    /// caret, the name picked as a new note's would be, but no note made
+    /// and the folder and template not read. A selection joins the name
+    /// after a space and stays selected; the link is a wikilink whatever
+    /// "Use [[Wikilinks]]" says. Observed on 1.15.0 on 2026-11-09.
+    fn insert_unique_link(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if !self.mode.is_editing() {
+            return;
+        }
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let selection = self.editor.read(cx).selected_text().to_string();
+        let picked = state.unique_link_name(&now(), &selection);
+        match picked {
+            Ok(inner) => self
+                .editor
+                .update(cx, |e, cx| e.insert_unique_link(&inner, window, cx)),
+            Err(err) => self.report(err.to_string(), cx),
+        }
+    }
+
     /// A date cell's *Open daily note* (`lucide-link`, observed on every
     /// date cell of a base, `s08` `addControl` and `s24` `dateHover`): the
     /// daily note named after that day, opened, or created from the
@@ -5688,6 +5788,12 @@ impl Workspace {
             "daily-notes:goto-prev" => self.open_daily(Some(false), window, cx),
             "daily-notes:goto-next" => self.open_daily(Some(true), window, cx),
             "random-note" => self.open_random_note(window, cx),
+            "zk-prefixer" => self.create_unique_note(window, cx),
+            "insert-unique-link" => {
+                if self.editing_or_report(id, window, cx) {
+                    self.insert_unique_link(window, cx);
+                }
+            }
             "workspaces:open-modal" => self.open_layouts_modal(window, cx),
             "workspaces:save" => self.save_active_layout(window, cx),
             "workspaces:load" => self.open_layout_chooser(false, window, cx),
@@ -12330,7 +12436,8 @@ impl Workspace {
     }
 
     /// The ribbon down the left edge: the quick switcher, the graph, a new
-    /// canvas, today's daily note, a template and the palette. `workspace.json`'s
+    /// canvas, today's daily note, a template, the palette, a unique note
+    /// and a new base, each while its plugin is on. `workspace.json`'s
     /// `left-ribbon.hiddenItems` hides an entry by the plugin id its key starts
     /// with. Settings is not here: Obsidian 1.14 leaves `.side-dock-settings`
     /// empty and puts the gear in the sidebar's footer, the vault profile.
@@ -12397,7 +12504,11 @@ impl Workspace {
         // which is the order the DOM was read in. The labels are each
         // button's `aria-label`, its tooltip, read off the same ribbon
         // (`tools/obsidian-probe/results/2026-11-01-bases-ui.json`, `s01`
-        // `ribbon`). The Workspaces plugin's "Manage workspace layouts"
+        // `ribbon`). Unique note creator's button sits after the palette
+        // when its plugin is on (`2026-11-09-note-composer-unique.json`,
+        // `s00-context` `ribbon`); its icon is Obsidian's own drawing,
+        // `sheets-in-box`, so Scoria draws its own under that name.
+        // The Workspaces plugin's "Manage workspace layouts"
         // goes between the palette and a new base
         // (`2026-11-09-panes-workspaces-headings.json`, `ws` `s00-context`);
         // its `lucide-layout` is Lucide's old name for `panels-top-left`.
@@ -12449,6 +12560,13 @@ impl Workspace {
                 "command-palette:open",
                 "command-palette",
                 "Open command palette",
+            ),
+            (
+                "ribbon-unique-note",
+                "sheets-in-box",
+                "zk-prefixer",
+                "zk-prefixer",
+                "Create new unique note",
             ),
             (
                 "ribbon-workspaces",
@@ -19045,6 +19163,92 @@ mod tests {
             [(Some("Board.canvas"), false), (Some("Note A.md"), false)].into_iter()
         ));
         assert!(!any_markdown_leaf(std::iter::empty()));
+    }
+
+    /// Unique note creator's two commands run, under its plugin; the link
+    /// command is the editor's alone (`editorCallback`, listed only in the
+    /// editing view), the note command everywhere (`callback`).
+    #[test]
+    fn unique_note_creator_commands_run_and_the_link_needs_the_editor() {
+        let known = scoria_commands::known_ids();
+        for id in ["zk-prefixer", "insert-unique-link"] {
+            assert!(RUNNABLE.contains(&id), "{id} runnable");
+            assert!(known.contains(&id), "{id} is Obsidian's");
+            assert_eq!(scoria_commands::plugin_of(id), Some("zk-prefixer"));
+        }
+        assert!(EDITOR_ONLY.contains(&"insert-unique-link"));
+        assert!(!EDITOR_ONLY.contains(&"zk-prefixer"));
+    }
+
+    fn unique_stamp(minute: u32) -> templates::Stamp {
+        templates::Stamp {
+            year: 2026,
+            month: 11,
+            day: 9,
+            hour: 20,
+            minute,
+            second: 7,
+        }
+    }
+
+    /// `zk-prefixer.json` decides where a unique note goes: the vault root
+    /// with no folder, the folder when it is there, and Obsidian's notice
+    /// when it is not; an emptied format is the default.
+    #[test]
+    fn a_unique_note_goes_where_zk_prefixer_json_says() {
+        let (dir, state) = vault();
+        assert_eq!(
+            state.unique_note_path(&unique_stamp(21)),
+            Ok("202611092021.md".to_string())
+        );
+        fs::create_dir_all(dir.path().join("Zettel")).unwrap();
+        fs::write(
+            dir.path().join(".obsidian/zk-prefixer.json"),
+            "{\n  \"folder\": \"Zettel\",\n  \"template\": \"\",\n  \"format\": \"\"\n}",
+        )
+        .unwrap();
+        let state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        assert_eq!(
+            state.unique_note_path(&unique_stamp(21)),
+            Ok("Zettel/202611092021.md".to_string())
+        );
+        fs::write(
+            dir.path().join(".obsidian/zk-prefixer.json"),
+            "{\n  \"folder\": \"NoSuchFolder\",\n  \"format\": \"YYYY-MM-DD [note] HHmmss\"\n}",
+        )
+        .unwrap();
+        let state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        assert_eq!(
+            state
+                .unique_note_path(&unique_stamp(21))
+                .unwrap_err()
+                .to_string(),
+            "Failed to create unique note. Folder \u{201c}NoSuchFolder\u{201d} not found."
+        );
+        // The link command reads the format but not the folder.
+        assert_eq!(
+            state.unique_link_name(&unique_stamp(21), ""),
+            Ok("2026-11-09 note 202107".to_string())
+        );
+    }
+
+    /// The probe's template, expanded for the note it made at 20:21 with
+    /// no `templates.json`: the bytes Obsidian wrote.
+    #[test]
+    fn a_unique_note_template_expands_title_date_and_time_as_obsidian_did() {
+        let context = templates::Context {
+            at: unique_stamp(21),
+            date_format: templates::DEFAULT_DATE_FORMAT,
+            time_format: templates::DEFAULT_TIME_FORMAT,
+            title: "202611092021",
+        };
+        assert_eq!(
+            templates::expand(
+                "title={{title}} date={{date}} time={{time}} d2={{date:YYYY}}\n",
+                &context
+            ),
+            "title=202611092021 date=2026-11-09 time=20:21 d2=2026\n"
+        );
     }
 
     /// A link written in a property is an outgoing link like any other,
