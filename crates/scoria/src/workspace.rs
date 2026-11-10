@@ -4419,11 +4419,13 @@ impl Workspace {
     }
 
     /// Random note's *Open random note*: one of the vault's Markdown files,
-    /// drawn uniformly and opened in the tab in hand, the way the daily
-    /// note opens. Nothing is written. **Unprobed**: whether Obsidian opens
-    /// it in the active tab or a new one, and whether it can draw the note
-    /// already open; this does the first and allows the second.
-    fn open_random_note(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+    /// drawn uniformly and opened in the tab in hand, the note already open
+    /// among the candidates; `new_tab` is the ribbon button's Ctrl+click,
+    /// which opens it in a new tab. A vault with no note is left as it is,
+    /// with no notice, and so is a one-note vault with that note open.
+    /// Nothing is written. All of it observed on Obsidian 1.15.0 on
+    /// 2026-11-09 (runs `random0`, `random1`, `random2`).
+    fn open_random_note(&mut self, new_tab: bool, window: &mut Window, cx: &mut Context<Self>) {
         let Some(state) = self.state.clone() else {
             return;
         };
@@ -4438,10 +4440,15 @@ impl Workspace {
             );
             h.finish()
         };
-        let Some(path) = state.vault().random_note(roll).map(|f| f.path.clone()) else {
-            return self.report("No notes in this vault", cx);
+        let picked = state.vault().random_note(roll).map(|f| f.path.clone());
+        let Some(path) = picked else {
+            return;
         };
-        self.open_file(path, None, cx);
+        if new_tab {
+            self.open_in_new_tab(path, None, cx);
+        } else {
+            self.open_file(path, None, cx);
+        }
         let mode = self.editing_mode();
         self.set_mode(mode, window, cx);
     }
@@ -5787,7 +5794,7 @@ impl Workspace {
             "daily-notes" => self.open_daily(None, window, cx),
             "daily-notes:goto-prev" => self.open_daily(Some(false), window, cx),
             "daily-notes:goto-next" => self.open_daily(Some(true), window, cx),
-            "random-note" => self.open_random_note(window, cx),
+            "random-note" => self.open_random_note(false, window, cx),
             "zk-prefixer" => self.create_unique_note(window, cx),
             "insert-unique-link" => {
                 if self.editing_or_report(id, window, cx) {
@@ -12436,8 +12443,8 @@ impl Workspace {
     }
 
     /// The ribbon down the left edge: the quick switcher, the graph, a new
-    /// canvas, today's daily note, a template, the palette, a unique note
-    /// and a new base, each while its plugin is on. `workspace.json`'s
+    /// canvas, today's daily note, a template, the palette, a unique note, a
+    /// random note and a new base, each while its plugin is on. `workspace.json`'s
     /// `left-ribbon.hiddenItems` hides an entry by the plugin id its key starts
     /// with. Settings is not here: Obsidian 1.14 leaves `.side-dock-settings`
     /// empty and puts the gear in the sidebar's footer, the vault profile.
@@ -12497,6 +12504,18 @@ impl Workspace {
                     cx.listener(move |this, _, window, cx| this.run_command(command, window, cx)),
                 )
         };
+        // Open random note's Ctrl+click opens a new tab and makes it active
+        // (2026-11-09, `random2` `s03-ribbon-click`).
+        let random_button = |id: &'static str, name: &'static str, label: &'static str| {
+            icon_button(id, name, theme)
+                .tooltip(tooltip(label))
+                .on_click(
+                    cx.listener(move |this, event: &gpui::ClickEvent, window, cx| {
+                        let m = event.modifiers();
+                        this.open_random_note(m.control || m.platform, window, cx);
+                    }),
+                )
+        };
         // The icons are the ones Obsidian's ribbon names: `lucide-file-search`
         // for the switcher, `git-fork` for the graph, `layout-dashboard` for
         // a new canvas, `calendar`, `files` for a template, `terminal` for
@@ -12504,21 +12523,24 @@ impl Workspace {
         // which is the order the DOM was read in. The labels are each
         // button's `aria-label`, its tooltip, read off the same ribbon
         // (`tools/obsidian-probe/results/2026-11-01-bases-ui.json`, `s01`
-        // `ribbon`). Unique note creator's button sits after the palette
-        // when its plugin is on (`2026-11-09-note-composer-unique.json`,
-        // `s00-context` `ribbon`); its icon is Obsidian's own drawing,
-        // `sheets-in-box`, so Scoria draws its own under that name.
-        // The Workspaces plugin's "Manage workspace layouts"
-        // goes between the palette and a new base
-        // (`2026-11-09-panes-workspaces-headings.json`, `ws` `s00-context`);
-        // its `lucide-layout` is Lucide's old name for `panels-top-left`.
+        // `ribbon`). Unique note creator's and Random note's buttons sit
+        // between the palette and the base when their plugins are on
+        // (`2026-11-09-note-composer-unique.json`, `s00-context` `ribbon`);
+        // both icons are Obsidian's own drawings, `sheets-in-box` and
+        // `dice`, so Scoria draws its own under those names. The Workspaces
+        // plugin's "Manage workspace layouts" was seen between the palette
+        // and a new base too (`2026-11-09-panes-workspaces-headings.json`,
+        // `ws` `s00-context`), in a vault without the other two; with all
+        // three on it goes after them, the order Obsidian lists the plugins
+        // in `core-plugins.json`, which both observations fit. Its
+        // `lucide-layout` is Lucide's old name for `panels-top-left`.
         let items: [(
             &'static str,
             &'static str,
             &'static str,
             &'static str,
             &'static str,
-        ); 8] = [
+        ); 10] = [
             (
                 "ribbon-switcher",
                 "file-search",
@@ -12569,6 +12591,13 @@ impl Workspace {
                 "Create new unique note",
             ),
             (
+                "ribbon-random-note",
+                "dice",
+                "random-note",
+                "random-note",
+                "Open random note",
+            ),
+            (
                 "ribbon-workspaces",
                 "panels-top-left",
                 "workspaces:open-modal",
@@ -12586,7 +12615,10 @@ impl Workspace {
         let buttons: Vec<_> = items
             .into_iter()
             .filter(|(_, _, _, plugin, _)| enabled(plugin) && !hidden(plugin))
-            .map(|(id, name, command, _, label)| button(id, name, command, label))
+            .map(|(id, name, command, _, label)| match command {
+                "random-note" => random_button(id, name, label),
+                _ => button(id, name, command, label),
+            })
             .collect();
         div()
             .flex()

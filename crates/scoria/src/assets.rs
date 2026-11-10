@@ -9,7 +9,8 @@
 //! `links-going-out` on the right dock's Backlinks and Outgoing links tabs —
 //! so Scoria draws its own under the same names: Lucide's chain at the top
 //! left with a horizontal arrow beneath it, pointing in or out. The ribbon's
-//! Unique note button is one more (2026-11-09): `sheets-in-box` is Scoria's
+//! Random note and Unique note buttons are two more (2026-11-09): `dice` is
+//! Lucide's `dice-3` under Obsidian's name, and `sheets-in-box` is Scoria's
 //! own, two sheets over a tray with Lucide's plus at its corner.
 //! `bookmark-filled` is Lucide's `bookmark` with `fill="currentColor"`: the
 //! view header's "Bookmarked" action is that icon filled and stroked in the
@@ -73,6 +74,7 @@ icons!(
     "code",
     "code-xml",
     "copy",
+    "dice",
     "ellipsis",
     "ellipsis-vertical",
     "external-link",
