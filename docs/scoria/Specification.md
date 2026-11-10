@@ -7,7 +7,8 @@ The full specification is maintained as a living document:
   https://claude.ai/code/artifact/6bc126ce-788f-484a-8213-c6eec1f99245
 
 Sections: purpose and evidence basis; architecture; vault and filesystem model; Obsidian Flavored
-Markdown; metadata cache and link resolution; editor; workspace shell; the 35 core plugins; Canvas
+Markdown; metadata cache and link resolution; editor; workspace shell; the core plugins (the
+document counts 35 from 1.12.7's strings; the Core plugins tab lists 29, `CORE_PLUGINS`); Canvas
 and Bases formats; search query language; settings, hotkeys and theming; main-process services, IPC
 and URI protocol; community plugin API; out-of-scope services; feasibility and phased plan; appendices
 with the command inventory and bundle evidence.
@@ -20,7 +21,7 @@ with the command inventory and bundle evidence.
 | Forbidden file-name characters `* " \ / < > : \| ?` and no leading dot | `scoria-formats::validate_file_name` |
 | One parser for editor, reading view, cache, and link rewriting; every node carries its byte span | `scoria-markdown::parse` |
 | CommonMark 0.31.2: all 652 spec examples render byte-identical HTML | `scoria-markdown/tests/commonmark.rs` (ratchet) |
-| Obsidian 1.13.7 reading view: 1007 of 1009 corpus notes render the same canonical HTML | `scoria-markdown/tests/corpus.rs` (ratchet; vault and expected HTML under `tests/corpus`) |
+| Obsidian 1.13.7 reading view: 1008 of 1009 corpus notes render the same canonical HTML | `scoria-markdown/tests/corpus.rs` (ratchet; vault and expected HTML under `tests/corpus`) |
 | GFM tables (`\|` does not split a cell, even in code), strikethrough, task items with any single character, footnotes, bare URLs | `scoria-markdown::Options` |
 | Frontmatter only on line 1, closed by `---` alone (YAML's `...` does not close it), CRLF tolerated; a BOM before the fence is tolerated, which Obsidian 1.14.4 does not do | `scoria-markdown::extract_frontmatter` |
 | Wikilink body grammar `path#heading#heading\|alias`, `#^block` | `scoria-markdown::parse_linktext` |

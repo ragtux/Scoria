@@ -122,8 +122,6 @@ link is a reminder, a silently removed one is lost information.
 
 ## Not yet
 
-- Drag and drop in the Files tree.
-- Inline title editing (rename through `F2` or the menu).
 - Pasting or dropping an attachment into the vault.
 - The real system trash on Windows and macOS.
 

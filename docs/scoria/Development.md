@@ -391,6 +391,28 @@ file input opens nothing without a user activation (`userGesture`), `run-block.s
 fields: a click from one number field straight into another lost the typed value, Enter did not.
 The gate on the two branches together: 64 test binaries, 1,548 passed, 632 in the app's bin.
 
+### The Note composer, driven, 2026-11-10
+
+The one thing the 2026-11-09 work had not been seen doing. A headless sway, a five-note scratch
+vault, the three commands over the socket and `grim` on every stage: the prompt sits where the
+quick switcher does, with its two instructions and "Enter to create" at the row's right; the
+confirmation is `Merge file`, the sentence, the checkbox, Merge before Cancel, and Space then
+Enter wrote `"askBeforeMerging": false`; the Update links question follows it. A merge of a note
+with two frontmatters and five link forms to it left the union, the target's keys first, and
+`Updated 5 links in 1 file.`; an extraction left `[[First part]]` and a note of the section;
+Shift+Enter put a selection at the top of `Sub/Target.md`; Ctrl+Enter does nothing with no row
+listed. A heading named as its own note makes `Long 1.md`, unless a fuzzy match outranks the
+create row, which it does as in any prompt.
+
+**The save's echo.** The drive raised `Long.md changed on disk; unsaved edits kept` on a file
+nobody else had touched, once in three runs. `is_own_write` and `show_file` both asked whether the
+file is the buffer; a save whose watcher event arrives after the next edit is not, though it is
+still the bytes the buffer last wrote. Both now also take a dirty buffer whose `disk_unchanged`
+holds. Typing through an autosave could raise the same notice and re-centre the Files list. Five
+replays of the sequence at the timings around the one that failed, and twelve saves each followed
+by a keystroke 0 to 220 ms later, raised nothing; there is no unit test, the rule living where a
+window is needed.
+
 ### The probes ran, and what they unblocked, 2026-11-09
 
 The table of [[#The unrunnable commands, 2026-11-09]] was answered the same evening. Three CDP
@@ -552,7 +574,14 @@ of 1,009, the one note `edge/Probe Inlines.md`; the bundled font is Inter. Still
 touched: the README and [[Specification]]'s header say 35, the site's index says 1007, `graph.md`
 says depth is fixed at one, `commands.md` counts 133 runnable. And one fault of the app's:
 `settings.rs` tags Inline title, Fold heading, Fold indent and Use [[Wikilinks]] "not in Scoria
-yet", though all four are acted on.
+yet", though all four are acted on. Brought up to date 2026-11-10, each number counted again
+rather than copied: the README's phase 4 row and both "35"s (29 is the tab's, and the header now
+says the spec's 35 is 1.12.7's strings), 1,008 on the index, the glossary, the architecture page
+and [[Specification]]'s invariant, the local graph's Depth slider and the written `graph.json`
+in `graph.md`, 190 runnable and the 54 that are not in `commands.md`, `switcher.md` and
+`window.md`, and the four tags off, with the honesty ratchet's list growing by four. On the way
+the index's known gaps, the reading view's and the Files pages' "not yet" rows and the Settings
+page's list of rows not acted on were found as stale and corrected too.
 
 **A harness trap.** Worktrees sharing one target directory overwrite each other's `scoria`
 artifacts: a test run "Finished" and listed none of its new tests. `--config

@@ -132,13 +132,13 @@ description: Scoria is a native knowledge base written in Rust that opens Obsidi
   </figure>
   <div class="stats">
     <div class="stat"><b>652/652</b><span>CommonMark 0.31.2 spec examples, byte-identical HTML</span></div>
-    <div class="stat"><b>1007/1009</b><span>corpus notes rendering as Obsidian 1.13.7 renders them</span></div>
+    <div class="stat"><b>1008/1009</b><span>corpus notes rendering as Obsidian 1.13.7 renders them</span></div>
     <div class="stat"><b>244</b><span>Obsidian command ids, with their default hotkeys</span></div>
     <div class="stat"><b>&lt; 2 s</b><span>to index a 20,000-file vault, cold</span></div>
   </div>
   <p class="dim small" style="margin-top:18px">
-    Both conformance suites are ratchets in CI: they are not allowed to go down. The two corpus
-    notes that differ are nested-delimiter edge cases, listed in the manual.
+    Both conformance suites are ratchets in CI: they are not allowed to go down. The one corpus
+    note that differs is a probe of nested-delimiter edge cases, listed in the manual.
     <a href="/docs/reference/compatibility/">What matches and what does not →</a>
   </p>
 </section>
@@ -180,8 +180,10 @@ description: Scoria is a native knowledge base written in Rust that opens Obsidi
       <p>A <code>.canvas</code> opens in the main area and pans, zooms, selects, moves, resizes,
       draws edges and autosaves in Obsidian's bytes; a <code>.base</code> opens in all four of
       its layouts; a PDF opens in a viewer; TeX is typeset; the vault's CSS theme and snippets
-      load; tabs move out into popout windows. Still ahead: MathJax-only syntax, Mermaid, PDF
-      export, and the rest of Prism's grammars.</p>
+      load; tabs move out into popout windows; the Note composer, Workspaces, the Unique note
+      creator, Random note and the Footnotes view run. 190 of Obsidian's 244 commands do
+      something. Still ahead: MathJax-only syntax, Mermaid, PDF export, the window zoom, and the
+      rest of Prism's grammars.</p>
       <p style="margin-top:.8em"><a href="/docs/reference/differences/">What differs →</a></p>
     </div>
     <div class="card">
@@ -189,7 +191,7 @@ description: Scoria is a native knowledge base written in Rust that opens Obsidi
       <h3>A native API, not a JS runtime</h3>
       <p>Obsidian's community plugins are JavaScript against an Electron app, and Scoria is not
       one, so they cannot run here and are out of scope. A native plugin interface of Scoria's
-      own is the last phase; the 35 core plugins are being implemented as part of the app.</p>
+      own is the last phase; the 29 core plugins are being implemented as part of the app.</p>
       <p style="margin-top:.8em"><a href="/docs/reference/compatibility/">The four tiers →</a></p>
     </div>
   </div>
@@ -257,9 +259,9 @@ description: Scoria is a native knowledge base written in Rust that opens Obsidi
     <div class="card">
       <span class="k">Not yet</span>
       <h3>Known gaps</h3>
-      <p>Math renders as its source, HTML in a note shows as text, remote images and Mermaid
-      diagrams do not load, text in a PDF cannot be selected, and there is no PDF
-      export.</p>
+      <p>MathJax-only syntax shows as its source, Mermaid diagrams are not drawn, a note's
+      inline <code>style</code> attributes and <code>&lt;iframe&gt;</code>s are not rendered,
+      text in a PDF cannot be selected, and there is no PDF export.</p>
     </div>
   </div>
   <div class="btn-row" style="margin-top:26px">

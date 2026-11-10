@@ -17,3 +17,13 @@ Untitled.base
 Untitled [0-9]*.md
 Untitled [0-9]*.canvas
 Untitled [0-9]*.base
+
+# Claude Code's local state: agent worktrees and per-machine settings.
+/.claude/
+
+# The Bases UI probe's screenshots (30 MB); the JSON beside them is the record.
+/tools/obsidian-probe/results/2026-11-01-bases-ui-shots/
+
+# Working images kept beside the drawings they were studies for.
+/docs/anya_scoria_gen/Gemini_Generated_Image_*
+/docs/img/anya_v0_baseH2.svg

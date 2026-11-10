@@ -197,7 +197,7 @@ will not throw away your typing to take the disk's version.
 - **Vim mode** (`vimMode` is read, not implemented).
 - **File recovery.** Obsidian keeps its snapshots outside the vault, so this is deliberately
   out of the round-trip work rather than next in it.
-- **`Ctrl + click` page previews**, heading folding, indent guides, line numbers.
+- **`Ctrl + click` page previews**, indent guides, line numbers.
 
 ## Next
 

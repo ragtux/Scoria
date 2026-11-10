@@ -5162,10 +5162,11 @@ impl Workspace {
         if editor.name.as_ref() != path {
             return false;
         }
-        state
-            .texts()
-            .get(path)
-            .is_some_and(|text| editor.text() == text.as_str())
+        // Typing can resume before the echo arrives: the buffer has moved
+        // on, and the file is still the bytes it last wrote.
+        state.texts().get(path).is_some_and(|text| {
+            editor.text() == text.as_str() || (editor.is_dirty() && editor.disk_unchanged(text))
+        })
     }
 
     fn after_changes(&mut self, changes: Changes, cx: &mut Context<Self>) {
@@ -7036,7 +7037,17 @@ impl Workspace {
                     // keeps its place when the note changed underneath it.
                     let (same, matches, dirty) = {
                         let e = self.editor.read(cx);
-                        (e.name.as_ref() == path, e.matches_file(&text), e.is_dirty())
+                        // A save's echo can arrive after the next edit: the
+                        // buffer is dirty and differs from the file, but the
+                        // file is what the buffer last wrote, so nothing
+                        // changed underneath it (seen 2026-11-10, a save
+                        // between two Note composer extractions).
+                        let echo = e.is_dirty() && e.disk_unchanged(&text);
+                        (
+                            e.name.as_ref() == path,
+                            e.matches_file(&text) || echo,
+                            e.is_dirty(),
+                        )
                     };
                     if same && matches {
                         // Own write or an unrelated event.
