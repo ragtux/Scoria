@@ -9583,3 +9583,72 @@ stacked. `workspace:close-tab-group` on the new group leaves the stacked one as 
 - A group in a sidebar cannot be stacked from the command; whether any other route stacks one.
 - The leaves' `flex-grow` from a leaf's `dimension` (seen `50 0 auto` on a leaf the probe's own
   `createLeafInParent` had given `"dimension": 50`) when the panes do not fill the width.
+
+## Observed Slides, Obsidian 1.15.0 (installer build 1.13.7)
+
+`tools/obsidian-probe/slides.mjs` over CDP in the same private headless sway (window 1596 × 973),
+the `slides` core plugin on; results in `tools/obsidian-probe/results/2026-11-09-slides.json`
+and screenshots beside it.
+
+**The plugin and the command.** The core plugin is "Slides", described "Create a presentation by
+using “---” to separate slides."; it has no options and no ribbon button. `slides:start`, "Slides:
+Start presentation", icon `lucide-monitor`, a check callback, no hotkey. The palette offers it on a
+Markdown note in Live Preview, Source mode and reading view, and not on a canvas or an empty tab.
+It writes nothing (`workspace.json` unchanged) and opens no leaf or modal.
+
+**What appears.** A `div.slides-container` appended to `<body>`, covering the whole window (the
+title bar and ribbon included), background `--r-background-color` `#191919` in the dark theme
+(the `.reveal` inside it is white, `rgb(255, 255, 255)`, in the light theme, with headings
+`#222`). It is not the browser's fullscreen (`document.fullscreenElement` stays null). Inside it a
+presentation in the reveal.js manner (classes `reveal reveal-viewport slide embedded center
+has-horizontal-slides`): `.slides` is a 960 × 700 stage (`--slide-width`, `--slide-height`)
+centred and scaled by `--slide-scale` = the smaller of `W × 0.96 / 960` and `H × 0.96 / 700`
+(1.3344 for 1596 × 973); one `section` per slide, the current one `present`, the others `past` or
+`future`, each centred vertically on the stage (`top: (700 − content height) / 2`, observed 239.5
+for the first slide). Focus stays where it was (the editor's `cm-content`) when the command runs
+by id; the slide keys act once the presentation has been clicked.
+
+**The cut.** The note is rendered as the reading view renders it and cut at every **top-level
+thematic break**: `---`, `***`, `___`, `- - -`, `-----` and an indented `  ---` all cut; a `---`
+inside a fenced code block or a blockquote does not, nor does a `---` that underlines a
+paragraph (that is a setext h2: `Text right under.\n---` made an `h2`, and `A heading\n---` too).
+The break itself is not drawn. A slide with nothing in it is dropped: `One\n\n---\n\nTwo\n\n---\n`
+gave two slides, an empty note none (the container still opens, empty). The frontmatter goes into
+the **first** slide as a hidden `pre.frontmatter.language-yaml` (`display: none`), and that
+section carries `mod-frontmatter mod-ui`; a section holding only the frontmatter is kept, so
+`---\nkey: value\n---\n---\n\nAfter…` opens on a blank first slide, and a note that is only
+frontmatter is one blank slide. The probe's deck (frontmatter; `# First slide` and a paragraph;
+`---`; `## Second slide` and a list; `---`; a paragraph and a `js` code block; `---`; `# Fourth…`,
+`Text right under.` + `---` (an h2) and a table) gave four slides.
+
+**What a slide looks like.** Text centred. Body `"Source Sans Pro", Helvetica, sans-serif` 42 px
+(`--r-main-font-size`), line height 1.3 (54.6 px), white (`--r-main-color` `#fff`); paragraphs
+margin `20px 0` (`--r-block-margin`); headings in the same family, weight 600, **uppercase**,
+line height 1.2, margin `0 0 20px`, sizes h1 2.5em (105 px), h2 1.6em, h3 1.3em, h4 1em
+(`--r-heading{1..4}-size`); links `#42affa` (`--r-link-color`); `strong` 700; code blocks
+`monospace` at 23.1 px (0.55em) in a `pre` 90 % wide with `box-shadow: 0 5px 15px rgba(0,0,0,.15)`.
+Sizes are on the 960 × 700 stage before the scale. Long content is not shrunk: it runs off the
+stage.
+
+**Controls.** A close button `div.slides-close-btn` at the top right (8 px from the top and right
+edges), a `lucide-x-square` icon drawn at 16 px in `#666`, no tooltip; a click closes. At the
+bottom right reveal's arrows (`button.navigate-left/right/up/down`, `aria-label` "previous slide",
+"next slide", "above slide", "below slide", `#42affa`): only the directions that lead somewhere
+are visible (`enabled`; left hidden on the first slide, right on the last; up and down never
+here), 36 × 30. A 3 px progress bar in `#42affa` along the bottom edge. No slide number.
+
+**Keys** (after a click on the slide): next — ArrowRight, Space, PageDown, ArrowDown, `n`, `l`;
+previous — ArrowLeft, PageUp, ArrowUp, `p`, `h`; Home the first slide, End the last; no wrap at
+either end; Enter and Backspace did nothing on the first slide. `f` made the window fullscreen,
+`b` and `.` blacked the screen (`paused`, a `pause-overlay`) until pressed again, `o` and `?`
+showed nothing. **Escape closes** the presentation, and focus goes back to the view it was
+started from (the editor in Live Preview and Source mode, the reading view in reading view); the
+leaf's mode is unchanged. A click on the slide did not change slides.
+
+### Not settled: Slides
+- An empty slide between two breaks (`---\n\n---`) in the middle of a note (only a trailing one
+  was seen dropped).
+- Images, embeds, callouts, math and wide tables on a slide; whether links can be followed.
+- What the window's resize does to the scale while the presentation is up.
+- The light theme's link and body colours, beyond the background and h1.
+- Whether the arrows' hover and the close button's hover change colour.
