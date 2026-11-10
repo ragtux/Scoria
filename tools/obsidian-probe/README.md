@@ -102,6 +102,9 @@ Scripts, each one checklist block of `docs/scoria/Interaction probes.md`:
 | `theme-registry.mjs` | the theme registry: every custom property declared under `:root`/`body`/`.theme-dark`/`.theme-light` with its raw declaration chain and computed value, and for every surface element the cascade-winning declaration of each painted property (`var()` intact, found by walking the CSSOM) in both themes, hover states under a real pointer, the Settings rows through the popout window's document; `theme-defaults.py` writes `crates/scoria/src/theme/defaults.rs` from the run | fixtures, run |
 | `theme-plugins.mjs` | the theme registry's second pass: the Bases, canvas, graph and PDF chrome. Each state (the view at rest, a hover, a selection, every Bases panel, the four layouts, the embeds, the graph's panel open and closed, the PDF's sidebar, find bar and menu) walks the whole view and reads one element per tag-and-class signature with the cascade-winning declaration of each painted property; `s01-rules` dumps every rule naming the four surfaces, for the states a walk cannot reach. Shares the CSSOM walk with `theme-registry.mjs` through `theme-lib.mjs` (`SHOTS` names the folder) | fixtures, run |
 | `bases-leftovers.mjs` | the five Bases behaviours the 2026-11-01 run left unobserved: a card with no cover (an empty `.bases-cards-cover` is still drawn), the list layout's *Indent properties* (`indentProperties`) and its nested layout, the Summarize page's *Add summary* and the `summaries:` it writes, table cell selection with Ctrl+C / Ctrl+V / Ctrl+Z and the clipboard's formats, and where a dropped kanban card lands and what its drag carries (`Input.setInterceptDrags` + `Input.dispatchDragEvent`; real mouse moves never start an HTML5 drag). First run on Windows through `run-block.ps1` | fixtures, run |
+| `app-window-commands.mjs` | the app and window commands Scoria waited on: Increase/Decrease font size (step, clamps, where the size is kept, `baseFontSizeAction`), Toggle light/dark mode from each `theme`, Toggle ribbon, Toggle default mode for new tabs, the three copy commands' clipboard strings, Open in default app / Show in system explorer / Show trash under each `trashOption`, Ctrl+Tab with three tabs, Show debug info, Show release notes, Open file from outside the vault, Show context menu under cursor, Focus on last note, always-on-top and zoom in the vault window and a popout, and what survives a relaunch. Every shell, dialog and `_external` call is replaced by a recorder in the renderer first (`remote.*` member calls are caught in `ipcRenderer.sendSync`). `ONLY=<regex>` picks steps, `THEME_START` the fixture's theme; `OPEN_FILE_REAL=1` with `WTYPE` lets the real GTK dialog open in a private headless compositor (its Return never landed). First run 2026-11-09 in a private headless sway on Linux | fixtures, run, after-restart |
+| `panes-workspaces-headings.mjs` | what five waiting commands need: `backlink:toggle-backlinks-in-document` (the leaf's `backlinks`/`backlinkOpts` in `workspace.json` off, on and off, the block's markup in all three modes, the menu row, `backlinkInDocument` on a new tab), `footnotes:open` (the leaf, the rows' order and numbering, the empty state, clicks, Open link, editing in the pane), the Workspaces plugin (each command's modal or suggester, `workspaces.json` whole after saves, a re-save, a load, an overwrite, save-and-load and deletes, the `workspace.json` rewrite on load), `editor:rename-heading` (availability, the modal, the bytes in the note and in ten link forms, odd names, `alwaysUpdateLinks: false`) and `markdown:add-alias` over six frontmatter shapes in all three modes. One scenario per run, `SCEN=bl\|blsetting\|fn\|ws\|rh\|al`, each on its own fresh vault and under its own key of one results file; `ONLY_STEPS=<regex>`. First run 2026-11-09 in a private headless sway session (`WAYLAND_DISPLAY` at its socket, `NIXOS_OZONE_WL=1`, `DISPLAY` unset) | fixtures, run |
+| `note-composer-unique.mjs` | the commands phase 4 left waiting on a probe: `note-composer:merge-file` (Enter, Shift+Enter and Ctrl+Enter, the separator over a trailing-newline matrix, two frontmatters, the links to the source and the "Update links" prompt, each `trashOption`, the confirmation and its "Don't ask again"), `note-composer:split-file` and `note-composer:extract-heading` (the prompt, both notes' bytes per `replacementText` and link format, `newFileLocation`, the section a heading takes, the default name, templates), the Unique note creator (`zk-prefixer`, `insert-unique-link`: the three keys, names within one minute, folder, template, the inserted text), `random-note` (tab, redraws, the ribbon), both settings tabs diffed row by row, and each command's palette availability. `SCEN=settings\|merge\|split\|zk\|random2\|random1\|random0` picks the fixtures and steps (one vault per scenario), `ONLY=<regex>` a subset | fixtures, run |
 | `autopair.mjs` | auto-pairing (predates the runner: start Obsidian yourself with `--remote-debugging-port=9222` on a scratch vault and run it directly) | — |
 
 `results/` keeps the raw JSON of the runs the specification cites, named by
@@ -227,8 +230,45 @@ and returns:
   or a `.view-config-menu` form. A probe that reads `.menu-item` titles sees an
   empty menu and reports "no such row". A combobox's options open in a
   `.suggestion-container` that is *not* inside the `.menu`.
+- **`pressKey('Enter')` is a `rawKeyDown`, which raises no `keypress`.** A control that
+  commits on `keypress` ignores it: the Workspaces modal's name input and the Rename heading
+  textarea both stayed open with nothing written, and a probe that stops there records "Enter
+  does nothing". `panes-workspaces-headings.mjs`'s `enterWithKeypress` sends a `keyDown` with
+  `text: '\r'`; try the raw one first and record which took. (Suggesters, the property pills
+  and CodeMirror take the raw one.)
 - A command that writes the clipboard itself (`bases:copy-table`) fails with
   Obsidian's own "Unable to copy to your clipboard" notice unless the view has
   real focus: click a row first, then run the command.
+- **`executeCommandById` returns `true` for a command whose check refuses**
+  (`workspace:show-trash` under `trashOption: system`, the copy commands with no
+  file): read availability from `app.commands.listCommands()`, which is what the
+  palette lists, never from the return value.
+- **A private headless sway runs the whole harness.** `WLR_BACKENDS=headless`,
+  then `run-block.sh` with `WAYLAND_DISPLAY` on that compositor's socket,
+  `NIXOS_OZONE_WL=1` (the nix wrapper only adds the Wayland flags with it) and
+  `DISPLAY` unset, so nothing can fall back to the desktop's X server. Popouts open
+  there too, and its clipboard is the compositor's, not the person's. Find the
+  socket your sway took with `ss -xlp` — other agents' sways take `wayland-N` too.
+  Window-manager state (always-on-top, maximize) is Electron's flag only there.
+- Ctrl+= / Ctrl+- / Ctrl+0 sent with `Input.dispatchKeyEvent` left the zoom alone, in
+  the vault window and in a popout, and the zoom commands have no entry in
+  `hotkeyManager.defaultKeys`. Whether the keys are bound outside the renderer (an
+  Electron menu accelerator) cannot be seen from CDP: run the zoom by command id.
+
+- **An "Update links" prompt closed with its × hangs the Note composer.** A merge whose
+  source has backlinks waits on that prompt (its Merge button stays `mod-loading`); a step
+  that tidies up by clicking every `.modal-close-button` leaves the merge pending, and every
+  later merge in the session confirms and then writes nothing. Answer the prompt with one of
+  its buttons (`note-composer-unique.mjs`'s `answerUpdateLinks`).
+- In a headless sway session a real click at a Settings `combobox-button`'s rect hits the
+  empty tab behind the modal (`elementFromPoint` gives `.empty-state`); the button's own
+  `click()` opens its `.suggestion-container.combobox`. A second file picker in the same
+  session, after the first was picked, did not open at all: probe each tab in a run of its own.
+- `iterateRootLeaves` right after a command missed the tab the command had just opened (the
+  active leaf was not among them). Count with `getLeavesOfType` and the root's
+  `.workspace-tab-header`s.
+- Electron's `shell.trashItem` fails in the probe's session ("Failed to move item to trash"),
+  so `trashOption: "system"` falls back to `.trash/` there: what the system trash does is not
+  observable from this harness.
 
 See [[Development#Driving Obsidian over CDP, 2026-10-18]].

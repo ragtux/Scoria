@@ -8554,3 +8554,952 @@ rendering.
 
 Which Prism version Obsidian bundles; whether a theme can add a language; the `.cm-` rules'
 full list, of which only the ones a sample produced were followed back to their variable.
+
+## Observed app and window commands, Obsidian 1.15.0 (installer build 1.13.7)
+
+Recorded by `tools/obsidian-probe/app-window-commands.mjs` on 2026-11-09 on Linux, against
+Obsidian 1.15.0 (window title "Obsidian 1.15.0", `ipcRenderer.sendSync('version')` 1.15.0; the
+user agent says `obsidian/1.13.7`, Electron 43.1.0) with a `--user-data-dir` of its own, on a
+scratch vault in a folder named `Probe Vault`. It ran in a **private headless sway session**
+(1600 × 1000 at scale 1, Obsidian on Wayland through `NIXOS_OZONE_WL=1`, `DISPLAY` unset), so
+nothing reached the desktop; the always-on-top and maximize readings are Electron's own flags
+there, not a compositor's. Before any step every opening call was replaced in the renderer by a
+recorder: `electron.shell`'s, `remote.shell`/`remote.dialog`'s member calls (caught in
+`ipcRenderer.sendSync`), `window.open(_, "_external")`, and the ipc messages `open-file`,
+`open-url` and `trash`. Config files were read from disk, polled every 100 ms for up to 4 s. The
+raw run is `tools/obsidian-probe/results/2026-11-09-app-window-commands.json`: `run:main` and
+`after-restart:main` for everything, `run:theme-obsidian`, `run:theme-moonstone` and
+`run:theme-system` for the toggle's other starting points.
+
+Availability below is whether the command palette offers the command
+(`app.commands.listCommands()`), not `executeCommandById`'s return value, which was `true` for
+commands whose check refused.
+
+### Names and kinds
+
+| Id | Palette name | Icon | Kind |
+| --- | --- | --- | --- |
+| `app:increase-font-size` | Increase font size | — | callback |
+| `app:decrease-font-size` | Decrease font size | — | callback |
+| `window:zoom-in` | Zoom in | — | callback |
+| `window:zoom-out` | Zoom out | — | callback |
+| `window:reset-zoom` | Reset zoom | — | callback |
+| `window:toggle-always-on-top` | Toggle window always on top | — | check |
+| `theme:toggle-light-dark` | Toggle light/dark mode | — | callback |
+| `app:toggle-ribbon` | Toggle ribbon | — | check |
+| `app:toggle-default-new-pane-mode` | Toggle default mode for new tabs | — | callback |
+| `workspace:copy-path` | Copy current file path from vault folder | `lucide-copy` | check |
+| `workspace:copy-full-path` | Copy current file path from system root | `lucide-hard-drive` | check |
+| `workspace:copy-url` | Copy Obsidian URL for current file | `lucide-vault` | check |
+| `workspace:show-trash` | Show trash | — | check |
+| `open-with-default-app:open` | Open in default app | `lucide-arrow-up-right` | check |
+| `open-with-default-app:show` | Show in system explorer | `lucide-files` | check |
+| `app:show-debug-info` | Show debug info | — | callback |
+| `app:show-release-notes` | Show release notes | — | callback |
+| `app:open-file` | Open file from outside the vault... | — | callback |
+| `editor:context-menu` | Show context menu under cursor | `lucide-menu` | editor callback behind a check |
+| `editor:focus` | Focus on last note | — | check |
+
+`editor:context-menu` carries an `editorCallback` and the wrapping `checkCallback` every editor
+command gets. **`app:show-tab-switcher` is not registered on desktop**: it is absent from
+`app.commands.commands` in 1.15.0 (the only id matching `switcher` is `switcher:open`). **None
+of these has a default hotkey** in `hotkeyManager.defaultKeys`; that includes the three zoom
+commands.
+
+### Font size
+
+Each run moves `--font-text-size` by **1 px**, set inline on `body` (`style="--font-text-size:
+17px"`) and read back the same from the computed style. From the default 16 px: the first
+Increase gave 17 px; it stops at **30 px** (reached on the 14th run from 16, the next eleven
+runs left it there); Decrease from 30 stops at **10 px** (reached on the 20th run). The commands
+were offered and worked the same with `baseFontSizeAction` `false` and `true` — they do not
+depend on the Quick font size adjustment setting.
+
+**The size is not written to the vault.** `appearance.json` gained no `baseFontSize` (and no other
+change) in the 4 s after the first run, after 56 runs, or after a clean quit. It is kept in
+**local storage** under `<vault id>-base-font-size` (the vault's 16-hex id from `obsidian.json`),
+a bare number string: `"17"`. With no key there the size was 16. It **survives a relaunch**:
+left at 18 px, the relaunched window drew 18 px and read 18 from the key. Local storage belongs
+to the data directory, so each vault id keeps its own size.
+
+### Window zoom
+
+Each run moves the window's Chromium zoom level by **0.5** (`webFrame.getZoomLevel()`), the factor
+being 1.2^level:
+
+| Level | Factor |
+| --- | --- |
+| 3 | 1.728 |
+| 2.5 | 1.5774 |
+| 2 | 1.44 |
+| 1.5 | 1.3145 |
+| 1 | 1.2 |
+| 0.5 | 1.0954 |
+| 0 | 1 |
+| -0.5 | 0.9129 |
+| -1 | 0.8333 |
+| -1.5 | 0.7607 |
+| -2 | 0.6944 |
+| -2.5 | 0.6339 |
+
+**The limits are +3 and −2.5**: twenty Zoom ins from 0 stopped at 3 on the sixth, forty Zoom outs
+from 3 stopped at −2.5 on the eleventh, and the rest of each run changed nothing. Reset zoom goes
+to 0 from anywhere.
+
+**Nothing under `.obsidian` is written**, and neither the data directory's `obsidian.json` nor
+Chromium's `Preferences` (no `partition` zoom map, no `default_zoom_level`). The vault window's
+level is kept in the data directory's **`<vault id>.json`**, the window file, as `zoom` beside the
+bounds. In this run the file did not exist during the session and appeared at quit as
+
+```
+{"x":10,"y":10,"width":1600,"height":1000,"isMaximized":false,"devTools":false,"zoom":1}
+```
+
+and the **relaunched window came back at level 1** (factor 1.2) with the file unchanged.
+
+**In a popout.** With a popout the active window (`activeWindow` its window, after a real click
+in it), Zoom in zoomed the **vault window** (level 0.5, `devicePixelRatio` 1.0954) and left the
+popout at 1; `workspace.json`'s `floating` → `window` node still read `"zoom": 0`. The command
+acts on the vault window whichever window is active. The popout's own frame zoomed directly
+(`electronWindow.setFrameZoomLevel(0.5)` on the popout — not a command) made its node read
+`"zoom": 0.5`: the key is that window's zoom level.
+
+### Toggle window always on top
+
+A check command that is **not offered in the vault window** (active window the vault window) and
+is offered in a popout that is not maximized. Run in a popout it set that window's
+`isAlwaysOnTop()` to `true`, and a second run back to `false`; the vault window stayed `false`.
+No notice; nothing written under `.obsidian` or in the data directory within 3 s of either run.
+
+### Toggle light/dark mode
+
+| `theme` before | `appearance.json` after run 1 | body after run 1 | after run 2 |
+| --- | --- | --- | --- |
+| `"obsidian"` | `"theme": "moonstone"` | `theme-light` | `"theme": "obsidian"`, `theme-dark` |
+| `"moonstone"` | `"theme": "obsidian"` | `theme-dark` | `"theme": "moonstone"`, `theme-light` |
+| `"system"` | unchanged | `theme-light` (from `theme-dark`) | unchanged, `theme-dark` |
+| no key | unchanged (no key written) | `theme-light` (from `theme-dark`) | unchanged, `theme-dark` |
+
+With a light or dark theme set, the command **swaps `obsidian` and `moonstone`** in
+`appearance.json` (written about 0.8 s after the run, the file's other keys kept) and the body's
+class follows. With `"system"` — which is also what a missing key reads as
+(`getConfig('theme')` returned `"system"`) — it **writes nothing** and only flips the body between
+`theme-dark` and `theme-light` for the session. (The headless session's system preference was
+dark.)
+
+### Toggle ribbon
+
+A check command, offered in the vault window. Two runs:
+
+- `appearance.json`: `{"baseFontSizeAction": true}` → `… "showRibbon": false` → `… "showRibbon":
+  true` (each written about 0.8 s after the run; the key appended and then kept, never dropped).
+  `workspace.json` and `app.json` did not change.
+- The body loses and regains the class **`show-ribbon`**; the left ribbon
+  (`.workspace-ribbon.side-dock-ribbon.mod-primary`, 44 px wide) goes `display: none` and back to
+  `display: flex`. It stays in the DOM.
+- No notice.
+
+### Toggle default mode for new tabs
+
+Flips **`defaultViewMode`** in `app.json` between `"source"` and `"preview"`, with a notice each
+time:
+
+| Before | After | Notice |
+| --- | --- | --- |
+| no key (reads `"source"`) | `{"defaultViewMode": "preview"}` | Switched default view mode to reading view. |
+| `"source"` | `"preview"` | Switched default view mode to reading view. |
+| `"preview"` | `"source"` | Switched default view mode to editing view. |
+
+Written about 0.8 s after the run, two-space indented like the rest of `app.json`.
+
+### Copy path, full path, Obsidian URL
+
+Offered only with an active file (a note or an image view alike); with an empty tab active
+none of the three is offered. For `Sub/My Note.md` in the vault folder `Probe Vault`:
+
+| Command | Clipboard | Notice |
+| --- | --- | --- |
+| Copy current file path from vault folder | `Sub/My Note.md` | Copied to your clipboard |
+| Copy current file path from system root | `/tmp/claude-1000/appwin/main/Probe Vault/Sub/My Note.md` | Copied to your clipboard |
+| Copy Obsidian URL for current file | `obsidian://open?vault=Probe%20Vault&file=Sub%2FMy%20Note` | URL copied to your clipboard |
+
+The URL is `obsidian://open?vault=` + the vault's **name** (its folder name) percent-encoded as
+a URI component + `&file=` + the vault path, also encoded as a component (`/` → `%2F`, space →
+`%20`), **with `.md` dropped and any other extension kept**:
+
+- `Sub/Café & Bar #2.md` → `obsidian://open?vault=Probe%20Vault&file=Sub%2FCaf%C3%A9%20%26%20Bar%20%232`
+  (UTF-8 bytes for `é`, `%26` for `&`, `%23` for `#`); its two paths were copied raw:
+  `Sub/Café & Bar #2.md` and `/…/Probe Vault/Sub/Café & Bar #2.md`.
+- `Note A.md` → `…&file=Note%20A`; `img/pic.png` → `…&file=img%2Fpic.png`.
+
+### Open in default app, Show in system explorer, Show trash
+
+Both open-with-default-app commands are offered with an active note or image and not with an
+empty tab; neither shows a notice.
+
+- **Open in default app** calls `window.open` with the file's **`file://` URL** and the target
+  `"_external"`: `file:///tmp/claude-1000/appwin/main/Probe%20Vault/Sub/My%20Note.md` (spaces
+  encoded), the same for `img/pic.png`.
+- **Show in system explorer** calls `shell.showItemInFolder` (through `remote`) with the **plain
+  absolute path**: `/tmp/claude-1000/appwin/main/Probe Vault/Sub/My Note.md`.
+
+**Show trash** is offered **only when `trashOption` is `"local"`**. A fresh vault reads
+`"system"` with no key in `app.json`; under `"system"` and `"none"` the palette does not list it.
+Under `"local"`:
+
+- with no `.trash` folder it calls nothing and shows the notice
+  `The file or folder “/tmp/claude-1000/appwin/main/Probe Vault/.trash” does not exist.` (the
+  absolute path in curly quotes);
+- with `.trash` present it calls `shell.showItemInFolder("/…/Probe Vault/.trash")` — the folder
+  shown in its parent, not opened — and no notice.
+
+### The tab switcher and Ctrl+Tab
+
+There is no tab switcher on desktop (above). **Ctrl+Tab is `workspace:next-tab`** (defaults
+Ctrl+Tab and Ctrl+PageDown) and **Ctrl+Shift+Tab `workspace:previous-tab`** (Ctrl+Shift+Tab and
+Ctrl+PageUp). With the strip `Note A · Note B · Note C`, B active and C, then A, the most recently
+used before it: Ctrl+Tab went to **C** — the next tab in the strip, not the most recent one — a
+second Ctrl+Tab with Ctrl still held wrapped to **A**, releasing Ctrl did nothing, and Ctrl+Shift+Tab
+from A wrapped to **C**. No modal, menu or overlay appeared at any point.
+
+### Show debug info
+
+A modal (`.modal.mod-lg`, no close button) titled **Debug info** whose body is one read-only
+`textarea.debug-textarea`. The text, values left out:
+
+```
+SYSTEM INFO:
+	Obsidian version: 1.15.0
+	Installer version: 1.13.7
+	Operating system: …
+	Login status: …
+	Language: …
+	Insider build toggle: …
+	Live preview: …
+	Base theme: …
+	Community theme: …
+	Snippets enabled: …
+	Restricted mode: …
+
+RECOMMENDATIONS:
+	none
+```
+
+with a tab before every value line, a blank line before `RECOMMENDATIONS:`, and a final newline
+(16 lines split on `\n`). Buttons, in order: **Copy to clipboard** (`mod-secondary`), **Sandbox
+vault** (no class), **Done** (`mod-cancel`). Opening it asks the main process for `insider-build`.
+None of the buttons was pressed.
+
+### Show release notes
+
+Opens a **new tab** at the end of the root strip, active, of view type **`release-notes`** with
+state `{"currentVersion": "1.15.0"}`, icon `lucide-book-up`, tab title and display text
+**`Release Notes 1.15.0`**. The view (`.view-content.release-notes-view`) fetched
+`https://obsidian.md/changelog/desktop/1.15.md` through the main process (`request-url`) and drew
+it, starting "What's new in 1.15 / Released on November 2, 2026". No notice.
+
+### Open file from outside the vault
+
+The command sends the main process **`open-file`** with the extensions every registered view
+opens, in this order: `md bmp png jpg jpeg gif svg webp avif mp3 wav m4a 3gp flac ogg oga opus
+mp4 webm ogv mov mkv pdf canvas base`. The main process then shows the native open dialog; in the
+probe's private session (no session bus, so GTK's own dialog) it was titled **Open File**, with
+Cancel and Open and the filter **Supported files**. What an accepted path does — inside the vault
+or outside it — was not observed (below).
+
+### Show context menu under cursor
+
+Offered in Live Preview and Source mode; **not offered in the reading view** (nothing opens).
+It raises **the same menu a right click at the caret raises** — the run went through the same
+`context-menu` path as a real right click, and the rows are the right-click menu's
+([[#Observed editor context menu and view header actions, Obsidian 1.14.5 (installer build 1.13.7)]])
+row for row: 12 entries with no selection (Add link, Add external link, ---, Format ▸,
+Paragraph ▸, Insert ▸, ---, Cut and Copy disabled, Paste, Paste as plain text, Select all); with
+`plain text` selected the `selection` rows **Search for “plain text”** and **Extract current
+selection...** join and Cut and Copy are enabled; with the caret inside `[[Note B]]` the link's
+menu (Open in new tab, Open to the right, Open in new window, ---, Add link, Add external link,
+---, Edit link, Paragraph ▸, Insert ▸, ---, the clipboard rows, ---, Copy path ▸, ---, Rename...,
+Move file to..., Bookmark..., ---, Open in default app, Show in system explorer, Reveal file in
+navigation). Source mode gave the same 12 rows as Live Preview. The caret and selection were the
+same after the menu as before.
+
+**The menu's top-left corner sits at the caret**, 1 to 2 px right of and below the point
+(caret's left, middle of the caret's line box), at zoom level 0:
+
+| Caret (`coordsAtPos`: left, top–bottom) | Menu top-left |
+| --- | --- |
+| 638.94, 229.5–251.5 | 640, 242 |
+| 685.83, 229.5–251.5 (end of a selection) | 687, 242 |
+| 806.75, 229.5–251.5 (in a link) | 808, 242 |
+| 752.84, 277.5–299.5 | 754, 290 |
+| 638.94, 213.5–235.5 (Source mode) | 640, 226 |
+
+### Focus on last note
+
+A check command, offered whenever **any** Markdown leaf exists, in any mode:
+
+| Active before | Result |
+| --- | --- |
+| The Files pane (active leaf `file-explorer` after Reveal active file) | `Note A` (the only note) becomes the active leaf and its editor (`.cm-content`) takes DOM focus |
+| A canvas tab, `Note A` in another tab of the same group | nothing visible: the canvas stays active and keeps focus, the hidden note's editor does not report focus |
+| An empty tab, `Note A` behind it | nothing visible, the same |
+| An empty tab and a canvas, no Markdown leaf at all | **not offered** |
+| `Note B` in the reading view | nothing: the view stays in reading mode, focus stays on `body` |
+| A canvas, with `Note B` and `Note C` in other tabs | nothing visible |
+
+So the command does not switch tabs: it brings back the keyboard to a note that is on screen.
+
+### Not settled: app and window commands
+- **`app:open-file` with a path chosen**: the GTK dialog took Ctrl+L and the typed path from
+  `wtype` but never acted on Return in three tries, so what an accepted path does (inside the vault:
+  open it there? outside: a new window, a copy, a notice?) is unobserved.
+- The zoom's **hotkeys**: Ctrl+= / Ctrl+- / Ctrl+0 sent over CDP changed nothing in either window,
+  and no default hotkey is registered; whether the keys are bound outside the renderer (a menu
+  accelerator) cannot be seen this way.
+- Whether `<vault id>.json` is rewritten on each zoom press once it exists; here it only appeared
+  at quit.
+- Always on top in a **maximized** popout (the headless compositor never maximized the window:
+  `isMaximized()` stayed `false`), and whether the window really stacks above others.
+- Whether a `baseFontSize` already in `appearance.json` seeds the font size (not tried).
+- Whether the session-only light/dark flip under `"system"` survives a relaunch, and the toggle
+  under a light system preference.
+- Show debug info's values and its two buttons; Show release notes offline.
+- Focus on last note from a Files pane holding DOM focus: the tree never held it (the active leaf
+  was the explorer, `document.activeElement` was `body`).
+
+## Observed Note composer, Obsidian 1.15.0 (installer build 1.13.7)
+
+`tools/obsidian-probe/note-composer-unique.mjs`, results in
+`tools/obsidian-probe/results/2026-11-09-note-composer-unique.json` (its `_readme` key says
+which run keys are authoritative and which were superseded). Run 2026-11-09 in a private
+headless sway session (XWayland), `--user-data-dir` of its own, every scenario on a fresh
+scratch vault with `app.json` `{}`. Modals were driven with CDP keys; every byte below was read
+from disk after a 2.6 s wait, never from the editor. Strings are JSON-escaped.
+
+**Commands.** No default hotkeys on any of the three.
+
+| Id | Palette name | Icon | Registered as | Listed in the palette when |
+| --- | --- | --- | --- | --- |
+| `note-composer:merge-file` | Note composer: Merge current file with another file... | `lucide-git-merge` | `checkCallback` | the active leaf is a Markdown note, in source **or reading** view; not on a canvas, not on an empty tab |
+| `note-composer:split-file` | Note composer: Extract current selection... | `lucide-scissors` | `editorCheckCallback` | the editor holds a non-empty selection (a selection that starts on a heading line counts here, not for the next row); never in reading view |
+| `note-composer:extract-heading` | Note composer: Extract this heading... | `lucide-scissors` | `editorCheckCallback` | the caret (no selection) is on a heading line; a caret in the body under a heading does not list it |
+
+With the check failing, `executeCommandById` still returned `true` and nothing happened: no
+prompt, no notice.
+
+**Settings tab → `note-composer.json`.** The file does not exist until something is written;
+the plugin's in-memory default is `{"askBeforeMerging": true}`. Keys are written in
+first-write order with two-space indentation, no trailing newline:
+
+| Row | Description | Control | Key and values |
+| --- | --- | --- | --- |
+| Text after extraction | What to show in place of the selected text after extracting it. | dropdown | `replacementText`: `link` "Link to new file" (default), `embed` "Embed new file", `none` "None" |
+| Template file location | Template file to use when merging or extracting. Available variables: {{content}}, {{fromTitle}}, {{newTitle}}, {{date:FORMAT}}, e.g. {{date:YYYY-MM-DD}}. | `combobox-button mod-file`, label placeholder `Example: folder/note` | `template`: the vault path **with** `.md` (`"Templates/Composer.md"`); the clear button writes `"template": ""`, it does not remove the key |
+| Confirm file merge | Prompt before merge two files. | toggle, on | `askBeforeMerging` |
+
+The description now names `{{date:FORMAT}}` (1.14.5's said only content, fromTitle, newTitle).
+The first dropdown pick on a fresh vault wrote
+`"{\n  \"askBeforeMerging\": true,\n  \"replacementText\": \"embed\"\n}"`. The file picker
+opens a `.suggestion-container.combobox` with a `Search...` field listing the vault's notes by
+path without extension (`Templates/Unique`, `Templates/Composer`, `Note`); typing filters,
+Enter picks; the button then shows `Templates` / `Composer` in `file-combobox-dir` /
+`file-combobox-name` spans and gains `mod-clearable`.
+
+### The merge prompt
+
+A `.prompt` modal (`modal-container mod-dim`), the input focused, placeholder
+`Select file to merge into...`. Empty, it lists recent files (on a vault with none,
+`suggestion-empty` "No recent files found. Type to search..."); the current file was never
+among the rows. Typing fuzzy-matches note names (`suggestion-title` with
+`suggestion-highlight` spans, an empty `suggestion-flair` in `suggestion-aux`); a name matching
+nothing gives "No files found." and no create row. Two instructions, in this order:
+`ctrl ↵` "to create new", `shift ↵` "to merge at top".
+
+**Enter appends the current note (the source) to the picked note (the target); Shift+Enter
+puts it at the top.** Either way the source is deleted afterwards (see trash below).
+
+**The confirmation** (with `askBeforeMerging` on, after Enter, Shift+Enter or Ctrl+Enter):
+title `Merge file`, text `Are you sure you want to merge “<source>” into “<target>”? “<source>”
+will be deleted.` (basenames, curly quotes), a checkbox `Don't ask again`, buttons `Merge`
+(`mod-destructive mod-cta`, focused) then `Cancel` (`mod-cancel`). Cancel and Escape both
+leave both files byte-identical. Ticking `Don't ask again` and pressing Merge merged and wrote
+`askBeforeMerging: false` to `note-composer.json`; the next merge asked nothing.
+
+**The joint.** Let `first` and `second` be the part that comes first and the one that follows
+(target then source for Enter, source then target for Shift+Enter). Every case fits one rule:
+`first` is left as it is and padded so it ends in a blank line — nothing if it already ends in
+`\n\n`, one `\n` if it ends in one `\n`, `\n\n` if it ends in neither — then `second` follows
+untouched (its leading blank lines and its trailing newline, or lack of one, are kept). The
+padding is a bare `\n` even in a CRLF note.
+
+| Case | Source | Target | Target after |
+| --- | --- | --- | --- |
+| Enter, both end in `\n` | `"src line 1\nsrc line 2\n"` | `"dst line 1\ndst line 2\n"` | `"dst line 1\ndst line 2\n\nsrc line 1\nsrc line 2\n"` |
+| Enter, source only | `"…src line 2\n"` | `"…dst line 2"` | `"dst line 1\ndst line 2\n\nsrc line 1\nsrc line 2\n"` |
+| Enter, target only | `"…src line 2"` | `"…dst line 2\n"` | `"dst line 1\ndst line 2\n\nsrc line 1\nsrc line 2"` |
+| Enter, neither | `"…src line 2"` | `"…dst line 2"` | `"dst line 1\ndst line 2\n\nsrc line 1\nsrc line 2"` |
+| Shift+Enter, both | `"…src line 2\n"` | `"…dst line 2\n"` | `"src line 1\nsrc line 2\n\ndst line 1\ndst line 2\n"` |
+| Shift+Enter, source only | `"…src line 2\n"` | `"…dst line 2"` | `"src line 1\nsrc line 2\n\ndst line 1\ndst line 2"` |
+| Shift+Enter, target only | `"…src line 2"` | `"…dst line 2\n"` | `"src line 1\nsrc line 2\n\ndst line 1\ndst line 2\n"` |
+| Shift+Enter, neither | `"…src line 2"` | `"…dst line 2"` | `"src line 1\nsrc line 2\n\ndst line 1\ndst line 2"` |
+| Enter, blank lines both sides | `"\n\nsrc after two blank lines\n\n"` | `"dst with trailing blank lines\n\n\n"` | `"dst with trailing blank lines\n\n\n\n\nsrc after two blank lines\n\n"` |
+| Shift+Enter, blank lines both sides | `"\n\nsrc after two blank lines\n\n"` | `"\n\ndst after two blank lines\n"` | `"\n\nsrc after two blank lines\n\n\n\ndst after two blank lines\n"` |
+| Enter, both CRLF | `"crlf src 1\r\ncrlf src 2\r\n"` | `"crlf dst 1\r\ncrlf dst 2\r\n"` | `"crlf dst 1\r\ncrlf dst 2\r\n\ncrlf src 1\r\ncrlf src 2\r\n"` |
+
+**Two frontmatters** become one, at the top of the target, whichever key was pressed; only the
+bodies are joined by the rule above. The target's keys keep their order, the source's new keys
+follow; on a clash a **scalar takes the source's value** and a **list becomes the union**
+(target's items, then the source's items not already there), written as a block list even when
+either side used flow style. A source frontmatter merged into a target with none gives the
+target one.
+
+| Case | Source | Target | Target after |
+| --- | --- | --- | --- |
+| distinct keys, Enter | `"---\nsrckey: s\n---\nsrc body\n"` | `"---\ndstkey: d\n---\ndst body\n"` | `"---\ndstkey: d\nsrckey: s\n---\ndst body\n\nsrc body\n"` |
+| distinct keys, Shift+Enter | same | same | `"---\ndstkey: d\nsrckey: s\n---\nsrc body\n\ndst body\n"` |
+| clashing, Enter | `"---\ntitle: from src\ntags:\n  - s1\n  - shared\naliases: [sa]\nonly: s\n---\nsrc body\n"` | `"---\ntitle: from dst\ntags:\n  - d1\n  - shared\naliases: [da]\n---\ndst body\n"` | `"---\ntitle: from src\ntags:\n  - d1\n  - shared\n  - s1\naliases:\n  - da\n  - sa\nonly: s\n---\ndst body\n\nsrc body\n"` |
+| clashing, Shift+Enter | same | same | the same frontmatter, then `"src body\n\ndst body\n"` |
+| source only, Enter | `"---\nsrckey: s\n---\nsrc body\n"` | `"dst body\n"` | `"---\nsrckey: s\n---\ndst body\n\nsrc body\n"` |
+| source only, Shift+Enter | same | same | `"---\nsrckey: s\n---\nsrc body\n\ndst body\n"` |
+
+**Links to the source.** Deleting the source goes through the rename prompt: with
+`alwaysUpdateLinks` unset a modal `Update links` asks "Do you want to update internal links
+that link to this file?" / "This will affect 11 links in 3 files." with `Always update`
+(focused), `Just once`, `Do not update` (no `mod-cta` on any), and the confirmation's Merge
+button stays `mod-loading` until it is answered. `Just once` rewrote every link to the target
+and raised the notice `Updated 11 links in 3 files.`; `Do not update` left them dangling;
+`alwaysUpdateLinks: true` asked nothing and rewrote (`Updated 1 link in 1 file.`). The rewrite,
+from a third note, with the default `newLinkFormat` (Source `l-src`, target `l-dst`):
+
+| Before | After |
+| --- | --- |
+| `[[l-src]]` | `[[l-dst]]` |
+| `[[l-src#H]]` | `[[l-dst#H]]` |
+| `[[l-src\|x]]` | `[[l-dst\|x]]` |
+| `[[l-src#^blk]]` | `[[l-dst#^blk]]` |
+| `![[l-src]]` | `![[l-dst]]` |
+| `[x](l-src.md)` | `[x](l-dst.md)` |
+| `[x](l-src.md#H)` | `[x](l-dst.md#H)` |
+| `![x](l-src.md)` | `![x](l-dst.md)` |
+| `[[l-src.md]]` | `[[l-dst]]` (the extension dropped) |
+| `[[Sub/sub-src]]` and `[[sub-src]]`, target `Other/sub-dst` | `[[sub-dst]]` both |
+
+The target's own `[[l-src]]` became `[[l-dst]]`. The source's self-link `[[l-src#H]]`, now
+inside the merged text, was **not** rewritten (it was counted in the 11). The heading `# H` and
+the block id `^blk` arrive with the source text, so the rewritten heading and block links
+resolve.
+
+**Where the source goes.** `trashOption` `"local"`: `.trash/<name>.md` with its bytes;
+`"none"`: gone; `app.json` `{}` (unset): `.trash/`. `"system"` also landed in `.trash/`, but
+Electron's `shell.trashItem` failed in the probe's session ("Failed to move item to trash", a
+plain `trashFile` did the same), so that is Obsidian's fallback, not the system-trash path.
+A source in `Sub/` went to `.trash/sub-src.md` (flat, not `.trash/Sub/`).
+
+**Ctrl+Enter** creates a new note named from **the typed query** and merges into it, but only
+when the query lists at least one suggestion: with "No files found." it does nothing (the key
+is consumed, `defaultPrevented`, and the prompt stays open). The name is the query deduplicated
+with ` 1` (`k3-existing` typed with `k3-existing.md` present → `k3-existing 1.md`; `k3-exi`
+→ `k3-exi.md`, then `k3-exi 1.md`). The new note is at the vault root (`newFileLocation`
+unset) even when the source is in `Sub/`, and its bytes are the source's exactly
+(`"k3b src\n"`). The confirmation is asked as usual, naming the new note. Ctrl+Shift+Enter did
+nothing.
+
+**The leaf afterwards.** The source's leaf ends up on the target when the merge updated links
+(the prompt answered, or `alwaysUpdateLinks` on) and when the leaf had no history; when no link
+needed updating and the leaf had history, it went **back** to the previous note (the deleted
+source left in its forward history). No notice is shown for a merge itself.
+
+**A template** (`template` set) wraps the source's text: `Templates/Composer.md` =
+`"T:{{fromTitle}}|{{newTitle}}|{{date:YYYY}}|{{content}}|END\n"` merged `tpl-src` (`"tpl src\n"`)
+into `tpl-dst` (`"tpl dst\n"`) as `"tpl dst\n\nT:tpl-src|tpl-dst|2026|tpl src\n|END\n"`:
+`{{fromTitle}}` is the source's basename, `{{newTitle}}` the target's, `{{content}}` the
+source's bytes as they are. A template without `{{content}}` (`"T:{{fromTitle}}|{{newTitle}}|END\n"`)
+gets the content appended after `\n\n`: `"tpl2 dst\n\nT:tpl2-src|tpl2-dst|END\n\n\ntpl2 src\n"`.
+
+### Extract current selection, extract this heading
+
+Both open the same prompt as merging, placeholder `Select file to merge into...`, but the
+second instruction reads `shift ↵` "to move to top" (`ctrl ↵` "to create new" first). Typing a
+name no note has adds a row `<name>` with a `suggestion-action` "Enter to create" in
+`suggestion-aux`; that row is selected and Enter creates the note. No confirmation is asked,
+even when extracting into an existing note.
+
+**Split-file** starts with an empty input; Enter on an empty input took the first recent file
+and appended the selection to it. The new note holds the selection's exact text (`"PICK ME"`,
+no newline added); the selection is replaced in the source, the caret left after the
+replacement:
+
+| `replacementText`, link format | Source `"before\nPICK ME\nafter\n"` becomes | New note |
+| --- | --- | --- |
+| `link`, wikilinks | `"before\n[[new-link-wiki]]\nafter\n"` | `"PICK ME"` |
+| `embed`, wikilinks | `"before\n![[new-embed-wiki]]\nafter\n"` | `"PICK ME"` |
+| `none` | `"before\n\nafter\n"` | `"PICK ME"` |
+| `link`, `useMarkdownLinks` | `"before\n[new-link-md](new-link-md.md)\nafter\n"` | `"PICK ME"` |
+| `embed`, `useMarkdownLinks` | `"before\n![new-embed-md](new-embed-md.md)\nafter\n"` | `"PICK ME"` |
+| `link`, Markdown links, source in `Sub/`, new note at the root | `"before\n[md-from-sub](md-from-sub.md)\nafter\n"` | `"PICK ME"` |
+
+A multi-line selection moves as it is (`"line one\nline two"`). Picking an **existing** note
+with Enter appends by the joint rule (`"existing target\n"` → `"existing target\n\nPICK ME"`),
+Shift+Enter prepends (`"PICK ME\n\nexisting target\n\nPICK ME"`), and the source gets the same
+link.
+
+**Where the new note lands** follows `newFileLocation` (`app.json`): `root` → vault root;
+`current` → the source's folder (`Sub/folder-current.md`); `folder` with `newFileFolderPath`
+`Inbox` → `Inbox/` when that folder exists, the vault root when it does not.
+
+**Extract-heading** offers the heading's text, raw, as the default name (`Zulu`, `Yankee`;
+`## Sierra/Romeo: Quebec? *em* [[Link]]` offers `Sierra/Romeo: Quebec? *em* [[Link]]`, and
+Enter on it raised `Error: File name cannot contain any of these characters: \ / :` and changed
+nothing). **The heading line moves** into the new note. The section runs from the heading line
+to the next heading of the same or a higher level, or to the end of the note, so deeper
+headings come along; one trailing newline of the section stays in the source after the link,
+which replaces the whole section on its own line:
+
+| Note, caret on | Source after | New note |
+| --- | --- | --- |
+| `"# Zulu\ntop body\n## Yankee\nmid body\n### Xray\ndeep body\n## Whiskey\nnext body\n"`, `# Zulu` | `"[[Zulu]]\n"` | `"# Zulu\ntop body\n## Yankee\nmid body\n### Xray\ndeep body\n## Whiskey\nnext body"` |
+| the same, `## Yankee` | `"# Zulu\ntop body\n[[Yankee]]\n## Whiskey\nnext body\n"` | `"## Yankee\nmid body\n### Xray\ndeep body"` |
+| `"intro\n## Uniform\nsec body\n\n## Tango\nafter body\n"`, `## Uniform` | `"intro\n[[Uniform]]\n## Tango\nafter body\n"` | `"## Uniform\nsec body\n"` |
+| `"# Zulu\ntop body\n## Victor\nlast body\n\n\n"`, `## Victor` | `"# Zulu\ntop body\n[[Victor]]\n"` | `"## Victor\nlast body\n\n"` |
+| `"pre\n## Oscar\noscar body"` (no final newline), `## Oscar` | `"pre\n[[Oscar]]"` | `"## Oscar\noscar body"` |
+| `"# Zulu\ntop body\n## Papa\npapa body\n"`, `## Papa`, name typed `typed-heading-name` | `"# Zulu\ntop body\n[[typed-heading-name]]\n"` | `typed-heading-name.md` = `"## Papa\npapa body"` |
+
+If the default name fuzzy-matches existing notes, those rows come first and Enter picks the
+first of them, not a new note (seen with `Top` matching `h-top` and `Templates/Composer`).
+
+**Templates** apply to both: `Composer.md` above made the split's new note
+`"T:tpl-split|tpl-new|2026|PICK ME|END\n"` and the heading's `"T:h-tpl|Mike|2026|## Mike\nmike body|END\n"`
+(`{{fromTitle}}` = the source note, `{{newTitle}}` = the new note); without `{{content}}`,
+`"T:tpl-split2|tpl-new2|END\n\n\nPICK ME"` — the template, `\n\n`, the content.
+
+## Observed Unique note creator, Obsidian 1.15.0 (installer build 1.13.7)
+
+Same run. Commands, no default hotkeys:
+
+| Id | Palette name | Icon | Registered as | Listed |
+| --- | --- | --- | --- | --- |
+| `zk-prefixer` | Unique note creator: Create new unique note | `box-glyph` | `callback` | always: source, reading, canvas, empty tab |
+| `insert-unique-link` | Unique note creator: Add unique internal link | `lucide-link` | `editorCallback` | only in the editing view |
+
+The ribbon button is "Create new unique note", icon class `sheets-in-box`.
+
+**Settings tab → `zk-prefixer.json`**, absent until written, plugin default `{}`. Keys in
+first-write order, two-space indent; clearing a field writes `""`, never removes the key:
+
+| Row | Description | Control | Key |
+| --- | --- | --- | --- |
+| New file location | The folder path to create the new unique note in. | text, placeholder `Example: folder 1/folder 2` | `folder` (`"Zettel"`) |
+| Template file location | The file path to use as template. | file picker, label placeholder `Example: folder1/note` | `template`, the path with `.md` (`"Templates/Unique.md"`) |
+| Unique prefix format | For more syntax, refer to `<a href="https://momentjs.com/docs/#/displaying/format/" target="_blank">format reference</a><br>Your current syntax looks like this: <b class="u-pop">202611091957</b>` | text, placeholder `YYYYMMDDHHmm` | `format`; the sample follows the field as typed (`2026-11-09-195303` for `YYYY-MM-DD-HHmmss`, back to the default when cleared) |
+
+After folder, template, format: `"{\n  \"folder\": \"Zettel\",\n  \"template\": \"Templates/Unique.md\",\n  \"format\": \"YYYY-MM-DD-HHmmss\"\n}"`.
+
+**Create new unique note** makes `<moment(format)>.md` (format empty → `YYYYMMDDHHmm`), at the
+vault root with no folder, **empty** (`""`) with no template, and opens it in the current tab
+(the one leaf now shows it); with the current tab pinned it opened a new tab instead. Run again
+in the same minute it **moves the time forward a minute** until the name is free: three runs
+at 20:19:35, :39 and :43 made `202611092019.md`, `202611092020.md`, `202611092021.md`. A name
+counts as taken when a note of that basename exists anywhere (with `Zettel/202611092021.md`
+present, a root note made at 20:21 was `202611092022.md`). A format with seconds
+(`YYYY-MM-DD [note] HHmmss`) gave `2026-11-09 note 202116.md`, then `… 202120.md`. With
+`folder` set the note goes there (`Zettel/202611092021.md`); a folder that does not exist
+makes nothing and raises `Failed to create unique note. Folder “NoSuchFolder” not found.`. A
+template is copied with `{{title}}` (the new name), `{{date}}` (`YYYY-MM-DD`), `{{time}}`
+(`HH:mm`) and `{{date:FORMAT}}` expanded:
+`"title={{title}} date={{date}} time={{time}} d2={{date:YYYY}}\n"` →
+`"title=202611092021 date=2026-11-09 time=20:21 d2=2026\n"`.
+
+**Add unique internal link** inserts `[[<name>]]` at the caret and **creates no file**; the
+caret is left before the closing `]]`, so a second run nests inside the first
+(`[[202611092023[[202611092023]]]]`). The name is picked as above (taken names skipped by a
+minute, so `202611092023` at 20:21 with 2021 and 2022 taken) but is not reserved: runs in the
+same minute insert the same name. It is always a wikilink: `useMarkdownLinks: true` still
+inserted `[[202611092023]]`. With text selected the selection joins the name after a space and
+stays selected: `insert` → `[[202611092021 insert]]`, selection `202611092021 insert`.
+`folder` and `template` play no part (nothing is created).
+
+## Observed Random note, Obsidian 1.15.0 (installer build 1.13.7)
+
+Same run. `random-note`, "Random note: Open random note", icon `dice-glyph`, a plain
+`callback`, no hotkey, listed everywhere (a note, an empty tab). It opens the pick in the
+**current tab**. In a vault of `One.md` and `Two.md` with one open, 20 runs kept the open note
+13 times, and a second 20 runs 13 times again: the open note is not excluded. In a one-note
+vault it reopens that note, no notice; with no Markdown note at all (one canvas) it does
+nothing, no notice. The ribbon button: `aria-label` "Open random note", icon class `dice`
+(`svg-icon dice`), `clickable-icon side-dock-ribbon-action`, eighth of nine in
+`.side-dock-actions` with this vault's plugins — Open quick switcher, Open graph view, Create
+new canvas, Open today's daily note, Insert template, Open command palette, Create new unique
+note, **Open random note**, Create new base. A click opens in the current tab; Ctrl+click
+opened a new tab and made it active.
+
+### Not settled: Note composer, Unique note creator and Random note
+- `trashOption: "system"`: the system trash refused the move in the probe's session and Obsidian
+  fell back to `.trash/`; what it does when the system trash works is unobserved (and the default,
+  unset, may be the same fallback).
+- Ctrl+Enter in the split/extract prompt ("to create new") was not pressed; nor was `Always update`
+  in the merge's Update links prompt (it presumably writes `alwaysUpdateLinks`, unobserved).
+- Why the merge's leaf goes back in history in one case and to the target in another is not
+  explained; the observed table above is the whole of what is known.
+- Extract-heading with `replacementText` `embed`/`none` and under Markdown links, and
+  `newFileLocation` for extract-heading and for merge's Ctrl+Enter note, were not run (split-file
+  covered them).
+- Whether the merge prompt ever lists the current note (it never did) and how many recent rows
+  it shows.
+
+## Observed backlinks in document, Obsidian 1.15.0 (installer build 1.13.7)
+
+`tools/obsidian-probe/panes-workspaces-headings.mjs` (`SCEN=bl` and `SCEN=blsetting`), run
+2026-11-09 in a scratch vault under its own `--user-data-dir`, in a private headless sway session;
+the record is `tools/obsidian-probe/results/2026-11-09-panes-workspaces-headings.json`, keys `bl` and
+`blsetting`. Window title "… - Obsidian 1.15.0", user agent `obsidian/1.13.7`, `app.apiVersion`
+undefined. `Target.md` was linked from `LinkerA.md` (`See [[Target]] here.`) and `LinkerB.md`
+(`[[Target|alias]]` and `[[Target]]` in two paragraphs), and named without a link in `Mention.md`.
+
+**The command.** `backlink:toggle-backlinks-in-document`, "Backlinks: Toggle backlinks in
+document", icon `lucide-link`, a check callback (no hotkey). It flips the *active markdown leaf's*
+view state; nothing is written to `.obsidian/backlink.json` (absent before and after in the `bl`
+run).
+
+**The leaf's state in `workspace.json`.** A freshly opened leaf with the setting off carries no
+key at all: `{"file": "Target.md", "mode": "source", "source": false}`. Turned on, the state gains
+two keys after `source`:
+
+```json
+"backlinks": true,
+"backlinkOpts": {"collapseAll": false, "extraContext": false, "sortOrder": "alphabetical",
+  "showSearch": false, "searchQuery": "", "backlinkCollapsed": false, "unlinkedCollapsed": true}
+```
+
+— `backlinkOpts` is exactly the Backlinks dock pane's own state object, key for key and in that
+order. Turned off, the state is `{"file", "mode", "source", "backlinks": false}`: `backlinks`
+stays, as `false`, and `backlinkOpts` is dropped. `workspace.json` was rewritten about a second
+after each toggle (the poll, started 0.8 s after the command, saw the new bytes 0.2 s in): the
+ordinary layout-save debounce. Folding a section of the block
+is written back through `backlinkOpts`: expanding "Unlinked mentions" turned `unlinkedCollapsed`
+to `false` in the leaf's entry.
+
+**The setting.** With `.obsidian/backlink.json` = `{"backlinkInDocument": true}` before launch
+(`SCEN=blsetting`; the plugin's `options` read `{"backlinkInDocument": true}`), the restored leaf
+and a tab opened with `getLeaf('tab')` both carried `"backlinks": true` plus the full
+`backlinkOpts` in `workspace.json` from the start — the key is written whenever the block shows,
+not only after a toggle. The command then turned that leaf off (`"backlinks": false`, no
+`backlinkOpts`) while a new tab still came up on. With the setting off, the new tab carried no
+`backlinks` key, and the first tab kept its `"backlinks": false`.
+
+**The menus.** Both the tab header's right-click menu and the view header's "More options" menu
+have a row "Backlinks in document", icon `links-coming-in`, `data-section="pane"`; its label never
+changes. It is `menu-item tappable mod-checked` while the block shows, `menu-item tappable`
+otherwise. In the tab header menu it sits after "Link with tab..." and before "Reading view"; in
+More options it is the first row.
+
+**The block's DOM.** One `div.embedded-backlinks` is always in the view; with the block off it is
+`display: none` and holds nothing. In Live Preview and Source mode it is the last child of
+`.cm-sizer` (under the text, 700 px wide like the readable line); in reading view it sits inside
+`.mod-footer.mod-ui` of the preview sizer. Its content when on:
+
+- `div.nav-header` (`padding: 12px 0 0`) → `div.nav-buttons-container`, four
+  `div.clickable-icon.nav-action-button` (28×24, `padding: 4px 6px`, colour `--icon-color`):
+  "Collapse results" (`lucide-list`), "Show more context" (`lucide-move-vertical`), "Change sort
+  order" (`lucide-sort-asc`), "Show search filter" (`lucide-search`), in that order, right-aligned
+  (the container started 118 px before the block's right edge). After them a hidden
+  `div.search-input-container` with `<input type="search" placeholder="Search..."
+  enterkeyhint="search" spellcheck="false">` and a "Clear search" button.
+- `div.backlink-pane` (`position: relative`), holding in order:
+  - `div.tree-item-self.is-clickable` with `aria-label="Click to collapse"`: a hidden
+    `span.tree-item-icon.collapse-icon` (`right-triangle`, `display: none`), `div.tree-item-inner`
+    "Linked mentions" (16 px, weight 500), `div.tree-item-flair-outer > span.tree-item-flair` "3"
+    (13 px, `--text-faint`) — the count of matches, not of files.
+  - `div.search-result-container` (`padding: 4px 1px 16px`) → `div.search-results-children` → one
+    `div.tree-item.search-result` per file, alphabetical: `div.tree-item-self.search-result-file-title.is-clickable`
+    (`draggable="true"`, 14 px, `padding: 4px 8px 4px 24px`) with a collapse triangle, the
+    basename (`LinkerA`) and a flair count ("1"; `LinkerB` "2"), then
+    `div.search-result-file-matches` (12 px, `--text-muted`, `margin: 4px 0 8px`) with one
+    `div.search-result-file-match.tappable` per match (`padding: 8px 20px 8px 12px`): the line's
+    text with the link in `span.search-result-file-matched-text` (the link source as written,
+    `[[Target|alias]]`, in `--text-normal`), and two hidden `search-result-hover-button`s
+    "Show more context" (`mod-top` `lucide-chevron-up`, `mod-bottom` `lucide-chevron-down`).
+  - `div.tree-item-self.is-clickable.is-collapsed` with `aria-label="Click to expand"`: "Unlinked
+    mentions" in `--text-faint`, its flair hidden (`display: none`) and its result container
+    `display: none` — **unlinked mentions start collapsed**, linked mentions expanded. Expanded, the
+    flair reads "1", the row is `Mention` with the matched word `Target` in
+    `search-result-file-matched-text` and a `button.search-result-file-match-replace-button`
+    "Link" in the match.
+- The same tree in all three modes; only its parent differs.
+
+## Observed Footnotes view, Obsidian 1.15.0 (installer build 1.13.7)
+
+Same script, `SCEN=fn`. `Footnotes.md` held, after `# Footnotes`, the line `First claim.[^1]
+Second claim.[^named] Inline one.^[An inline note.] Uses one again.[^1] Missing one.[^missing]`,
+80 lines of filler, then the definitions in the order `[^named]` (two lines, the second indented
+four spaces), `[^1]`, `[^orphan]`; `NoFootnotes.md` had none.
+
+**The plugin.** Core plugin id `footnotes`, name "Footnotes view"; enabled by `"footnotes": true`
+in `core-plugins.json`. `footnotes:open` is "Footnotes view: Show footnotes", icon
+`lucide-file-signature`, a plain callback (no check, no hotkey).
+
+**The leaf.** With no note open (every markdown leaf detached), the command appended a leaf to the
+right dock's tab group, after the five panes already there (backlink, outgoing-link, tag,
+all-properties, outline: index 5), made it the active tab (`currentTab: 5`) and the active leaf;
+the right dock was expanded afterwards. `workspace.json`:
+
+```json
+{"id": "…", "type": "leaf", "state": {"type": "footnotes", "state": {}, "icon": "lucide-file-signature", "title": "Footnotes"}}
+```
+
+The view's state is the empty object, also with a note open (no `file` key).
+
+**Empty states.** With no note and with a note that has no footnotes the pane shows the same text,
+"No footnotes found.", in a `div.pane-empty` (13 px, `--text-faint`) inside `div.footnotes-view`.
+
+**The pane.** The leaf's `view-header` is hidden like every dock pane's, and there is no nav header
+of its own: no buttons, no tooltips. `div.view-content` (`padding: 12px 12px 32px`) →
+`div.footnotes-view` → `div.footnotes-list` → one `div.footnote-list-item` per footnote, each
+`div.footnote` (`display: flex`, `padding: 6px`) of `div.footnote-id` (13.125 px, `--text-muted`)
+and `div.footnote-content`, which is a rendered embed: `div.markdown-embed[data-type="footnote"]`
+→ `.markdown-embed-content` → `.markdown-preview-view.markdown-rendered` (13.125 px) holding the
+definition's text as paragraphs, plus a `div.markdown-embed-link` "Open link" (24×24, opacity .85)
+at the right.
+
+**Rows, order and numbering.** Rows follow the order of first reference in the text, not the
+order of the definitions: `1` "The first definition.", `2` "The named definition, / continued on
+a second line.", `3` "An inline note.", `4` "A definition nothing references.". The id column is
+always the running number — the named footnote shows `2`, not `named` — and an inline footnote is
+a row like the others. A definition nothing references comes last, its id wearing
+`mod-no-occurrences` (`--text-faint` instead of `--text-muted`). A reference with no definition
+(`[^missing]`) has no row. A row shows the definition, never the label.
+
+**Clicks.** A click on a row's number or text does not move the note: in Source mode, Live
+Preview and reading view the caret, selection and scroll stayed where they were, and focus moved
+into the footnotes leaf. A click on the text **opens the definition for editing in the pane**: a
+CodeMirror editor (`.cm-content`) takes focus inside the row, and what is typed there goes to the
+note — `[^1]: The first definition.` became `[^1]: The first definition. EDITED` on disk about
+1.8 s after the last keystroke (the editor's save debounce). That save also **rewrote the named footnote's four-space continuation indent as a tab**
+(`[^named]: The named definition,\n\tcontinued on a second line.`), a definition the edit had not
+touched. The "Open link" button (shown on hover) jumps the note to the definition: in Source mode
+and Live Preview the caret goes to column 0 of the definition's first line (`{line: 87, ch: 0}`
+for `[^1]`, `84` for `[^named]`, `89` for `[^orphan]`), the editor scrolls it into view, and the
+definition's text flashes (`span.is-flashing` over each of its lines; in Live Preview the span
+covers the rendered marker too, "1 The first definition."); focus stays in the pane. In reading
+view the button scrolled the note to its end, where the footnotes section is, and a `div` of the
+preview flashed; which footnote it marked was not read. A double click selects nothing special
+(the same editor opens). A right click on a row opens no menu. Hovering a row raises no page
+preview and no tooltip.
+
+## Observed Workspaces plugin, Obsidian 1.15.0 (installer build 1.13.7)
+
+Same script, `SCEN=ws`, on `A.md`, `B.md`, `C.md`.
+
+**Commands**, all plain callbacks without hotkeys: `workspaces:save` "Workspaces: Save layout"
+(`lucide-save`), `workspaces:load` "Workspaces: Load workspace layout" (`lucide-layout`),
+`workspaces:save-and-load` "Workspaces: Save and load another layout" (`lucide-layout`),
+`workspaces:open-modal` "Workspaces: Manage workspace layouts" (`lucide-layout`). The ribbon
+button is "Manage workspace layouts" (`lucide-layout`), sixth of seven in the default ribbon,
+between "Open command palette" and "Create new base"; `left-ribbon.hiddenItems` names it
+`"workspaces:Manage workspace layouts"`.
+
+**`workspaces:open-modal`** opens `div.modal` (560 px wide, `padding: 16px`, radius 12) with the
+corner close button (`modal-header-button mod-raised clickable-icon`, `lucide-x`), the title
+"Manage workspace layouts" (15 px, weight 600), then `.modal-content`:
+
+- `div.list-item` with `<input class="list-item-part mod-extended" type="text"
+  placeholder="Save current workspace layout as...">` (13 px, radius 5, focused, empty) and
+  `<button class="list-item-part">Save</button>` (no `mod-cta`);
+- `div.list-container.mod-manage-workspaces`, empty with no layouts saved, otherwise one
+  `div.list-item` per layout in insertion order: `div.list-item-part.mod-extended` with
+  `<span>Name</span>`, on the active one a `span.flair.mod-pop` "Active" (10 px, uppercase, white
+  on the accent, radius 4), and `div.list-item-desc > div.list-item-part` "Modified a few seconds
+  ago" (12 px, `--text-faint`); then `div.list-item-actions` with
+  `<button class="list-item-part">Load</button>` and
+  `div.list-item-part.clickable-icon[aria-label="Delete layout"]` (`lucide-x`).
+
+There is **no rename control** and the name is not editable: a double click on it did nothing.
+Enter in the input saves (it is a `keypress` handler: CDP's `rawKeyDown` Enter did nothing, a
+`keyDown` with text did); the modal stays open with the input cleared and the new row listed. Load
+closes the modal and loads. Delete removes the row at once, with no confirmation.
+
+**`workspaces:save`** with no active layout opens that same modal. With a layout active it saves
+over the active layout silently and posts the notice "Successfully saved layout “One”" (curly
+quotes). **`workspaces:load`** and **`workspaces:save-and-load`** open a suggester (`div.prompt`,
+no title, no instructions footer): input `placeholder="Type layout name..."`, rows
+`div.suggestion-item` with the name, the active one followed by `span.flair.mod-pop` "Active";
+with nothing saved, `div.suggestion-empty` "No saved layout found.". Picking a row in
+`save-and-load` first saves over the active layout (its `mtime` moved), then loads the picked one.
+
+**`.obsidian/workspaces.json`.** Absent until the first save. Written with two-space indentation
+and no trailing newline, as
+
+```json
+{
+  "workspaces": {
+    "One": { "main": …, "left": …, "right": …, "left-ribbon": …, "active": "b771f23cbf7f4db8", "mtime": "2026-11-09T20:05:44-06:00" }
+  },
+  "active": "One"
+}
+```
+
+Each saved layout is `workspace.json` at that moment with `lastOpenFiles` dropped and `mtime`
+appended: `main`, `left`, `right` and `left-ribbon` compared equal to the live file's, and
+`active` is the active leaf's id. `mtime` is local time with its offset, to the second. Layouts
+keep insertion order; saving under an existing name replaces the entry in place (and only its
+`mtime` changes when the layout did not: the silent re-save diffed in that one line). Saving the
+active layout under a new name ("Three") added a new entry — same leaf ids, its own `mtime` —
+and made it active; "One" was untouched. The top-level `active` is the active layout's *name*, and
+it is written on load too: loading "One" changed `workspaces.json` (`"active": "One"`) without
+touching the entries. **Deleting the active layout leaves `"active": "One"` naming a layout that no
+longer exists** (deleting "Two", then the active "One", left `{"workspaces": {"Three": …},
+"active": "One"}`), and the plugin's `activeWorkspace` stayed "One".
+
+**Loading** replaces the layout (leaves, splits, dock collapse) in place. `workspace.json` was
+rewritten 1,029 ms after Enter in the load suggester — on the ordinary layout-save debounce, not
+at once — with the loaded `main`/`left`/`right`, the loaded `active` id, and `lastOpenFiles`
+carried on from the session (`["B.md", "A.md"]`, not the saved layout's), the files the load
+closed moved to its front.
+
+## Observed heading rename, Obsidian 1.15.0 (installer build 1.13.7)
+
+Same script, `SCEN=rh`. Every case re-seeded, through `app.vault.modify`, `Note.md` as
+
+```
+# Parent\n\n## Old\n\nUnder old. Self [[#Old]] and [[#Old|self alias]] and [[Note#Old]].\n\nSetext Old\n----------\n\nUnder setext.\n
+```
+
+and `Linker.md` as eleven lines: `A [[Note#Old]]`, `B [[Note#Old|alias]]`, `C ![[Note#Old]]`,
+`D [x](Note.md#Old)`, `E [[Note#Parent#Old]]`, `F [[Note#Old|Old]]`, `G [[Note#old]]`,
+`H [[Note#Old|Note > Old]]`, `I [y](<Note.md#Old>)`, `J [[Note#Setext Old]] and
+[z](Note.md#Setext%20Old)`, `K [[Note]]`, then a final newline; the caret on `## Old` (line 2,
+ch 4) unless stated. `alwaysUpdateLinks` was set `true` through `app.vault.setConfig` except where
+noted.
+
+**The command.** `editor:rename-heading`, "Rename this heading...", icon `lucide-edit-3`, an
+editor check callback, no hotkey. The palette offers it only with the caret on an ATX heading
+line, in Live Preview and in Source mode alike. It is not offered off a heading line, on a
+**setext heading** (neither its text line nor its underline, though the cache lists `Setext Old`
+as a heading), or in reading view. Run anyway on the setext line, it opened nothing and wrote
+nothing.
+
+**The modal** is the file-rename modal's shape: `div.modal-container.mod-confirmation.mod-dim` >
+`div.modal.mod-file-rename` with the corner close button (`lucide-x`), the title "Rename heading",
+`.modal-content > textarea.rename-textarea` (`rows="1"`, inline `height: 29px`), then
+`.modal-button-container` with `button.mod-cta` "Save" and `button.mod-cancel` "Cancel". The
+textarea holds the heading's text without its `## ` (`Old`), is focused, and the whole text is
+selected (`selectionStart` 0, `selectionEnd` 3). Enter commits (a `keypress` handler, see the
+harness note), the Save button does the same; Escape closes the modal and writes nothing.
+
+**What a rename to `New` writes.** Both files were already rewritten when read 0.7 s after Enter —
+a direct write, not the editor's 2 s save. `Note.md`:
+
+```
+# Parent\n\n## New\n\nUnder old. Self [[#New]] and [[#New|self alias]] and [[Note#New]].\n\nSetext Old\n----------\n\nUnder setext.\n
+```
+
+— the heading line keeps its marker and level, and every same-note link (`[[#Old]]`,
+`[[#Old|self alias]]`, `[[Note#Old]]`) follows. `Linker.md`:
+
+```
+A [[Note#New]]
+B [[Note#New|alias]]
+C ![[Note#New]]
+D [x](Note.md#New)
+E [[Note#Parent#Old]]
+F [[Note#New|Old]]
+G [[Note#New]]
+H [[Note#New|Note > Old]]
+I [y](<Note.md#New>)
+J [[Note#Setext Old]] and [z](Note.md#Setext%20Old)
+K [[Note]]
+```
+
+So: the subpath is replaced in wikilinks, embeds and Markdown links; **a display text is never
+touched**, even one equal to the old heading (`F`) or naming it (`H`); a link whose heading
+differs only in case (`G`, `#old`) is rewritten to the new text; a **nested heading path
+(`E`, `#Parent#Old`) is left alone**, still pointing at the old name; links to other headings
+(`J`) and to the note (`K`) are untouched. The caret ends at the start of the heading line
+(`{line: 2, ch: 0}`) and focus returns to the editor. Source mode gave the same bytes.
+
+**Names.** The heading line always receives the name as typed. In links the name is rewritten:
+
+| Typed | Heading line | Wikilinks | `[x](Note.md#…)` | `[y](<Note.md#…>)` |
+| --- | --- | --- | --- | --- |
+| `Src New` | `## Src New` | `[[Note#Src New]]` | `Note.md#Src%20New` | `<Note.md#Src New>` |
+| `Ha#sh` | `## Ha#sh` | `[[Note#Ha sh]]` | `Note.md#Ha%20sh` | `<Note.md#Ha sh>` |
+| `Pi\|pe` | `## Pi\|pe` | `[[Note#Pi pe]]` | `Note.md#Pi%20pe` | `<Note.md#Pi pe>` |
+| `Ca^ret` | `## Ca^ret` | `[[Note#Ca ret]]` | `Note.md#Ca%20ret` | `<Note.md#Ca ret>` |
+| `Br[ack` | `## Br[ack` | `[[Note#Br[ack]]` | `Note.md#Br[ack` | `<Note.md#Br[ack>` |
+| `Br]ack` | `## Br]ack` | `[[Note#Br]ack]]` | `Note.md#Br]ack` | `<Note.md#Br]ack>` |
+
+`#`, `|` and `^` become a space in every link; `[` and `]` are written raw, which leaves
+`[[Note#Br]ack]]` a link that no longer parses as intended. A space is `%20` in a bare Markdown
+link and raw inside `<…>`. The same table holds for the same-note links.
+
+**Unchanged and empty.** Saving `Old` unchanged left `Note.md` byte-identical but still rewrote
+`Linker.md`: `G [[Note#old]]` became `G [[Note#Old]]`, every other line as it was. An emptied
+textarea and Enter kept the modal open (Save not focused) and wrote nothing to either file.
+
+**`alwaysUpdateLinks: false`.** No prompt: the modal closed on Enter and both files received
+exactly the bytes of the `true` run. The heading rename does not consult the setting.
+
+## Observed Add alias, Obsidian 1.15.0 (installer build 1.13.7)
+
+Same script, `SCEN=al`, on `Alias.md` re-seeded through `app.vault.modify` per case, the caret on
+the last line; `.obsidian/types.json` absent (so `aliases` is the built-in Aliases type).
+
+**The command.** `markdown:add-alias`, "Add alias", icon `lucide-forward`, a check callback, no
+hotkey. The palette offers it in Live Preview, Source mode and reading view.
+
+**Before anything is typed.** The command focuses the `aliases` property's value field, a
+`div.multi-select-input[contenteditable="true"][placeholder="Empty"]` inside
+`div.metadata-property[data-property-key="aliases"]` (`metadata-property-value
+data-property-type="aliases"`, key icon `lucide-forward`). When the note has no `aliases` key it
+writes one at once — on disk within 0.3 s, not on the editor's debounce:
+
+| Seed | On disk right after the command |
+| --- | --- |
+| `Body only.\n` | `---\naliases:\n---\nBody only.\n` |
+| `---\ntitle: T\ntags: x\n---\nBody.\n` | `---\ntitle: T\ntags: x\naliases:\n---\nBody.\n` (appended after the last key) |
+| `aliases: []`, a block list, a scalar, or a list between other keys | unchanged |
+
+**After typing `NewAlias` and Enter** (the raw keydown commits; on disk within 0.3 s):
+
+| Seed | Bytes |
+| --- | --- |
+| `Body only.\n` | `---\naliases:\n  - NewAlias\n---\nBody only.\n` |
+| `---\naliases: []\n---\nBody.\n` | `---\naliases:\n  - NewAlias\n---\nBody.\n` |
+| `---\naliases:\n  - one\n  - two\n---\nBody.\n` | `---\naliases:\n  - one\n  - two\n  - NewAlias\n---\nBody.\n` |
+| `---\naliases: foo\n---\nBody.\n` | `---\naliases:\n  - foo\n  - NewAlias\n---\nBody.\n` |
+| `---\ntitle: T\naliases:\n  - one\ntags: x\n---\nBody.\n` | `---\ntitle: T\naliases:\n  - one\n  - NewAlias\ntags: x\n---\nBody.\n` |
+| `---\ntitle: T\ntags: x\n---\nBody.\n` | `---\ntitle: T\ntags: x\naliases:\n  - NewAlias\n---\nBody.\n` |
+
+The value is appended last; the list is always written as a block list indented two spaces, a flow
+`[]` and a scalar included; keys keep their place. After Enter focus stays in the (now empty)
+multi-select input, ready for another alias; Escape then moves focus to the
+`div.metadata-property` row and writes nothing more. Escape with nothing typed leaves the empty
+`aliases:` key on disk (`---\naliases:\n---\nBody only.\n`).
+
+**By mode.** In Live Preview the field is the note's own properties block (inside
+`.markdown-source-view.is-live-preview`). In reading view it is the reading view's block, and the
+bytes are the same. In **Source mode**, where the note shows its YAML, the command opens or reveals
+the right dock's **File properties** pane (`file-properties` leaf, state `{"file": "Alias.md"}`,
+icon `lucide-info`, title "File properties"; the dock expanded) and focuses the aliases field
+there; the bytes written are the same as in Live Preview.
+
+### Not settled: backlinks in document, Footnotes view, Workspaces, heading rename and Add alias
+- Footnotes view: which footnote the reading view's "Open link" flashes (the scroll went to the
+  footnotes section and a `div` flashed; its identity was not read); Open link on the inline
+  footnote's row; whether editing in the pane always rewrites a four-space continuation indent as
+  a tab or only when the edited definition is re-serialised next to it (one observation); the
+  pane's light theme and hover styles.
+- Backlinks in document: the in-note block's own controls (sort menu, search filter, Show more
+  context) were not driven; the Settings toggle for `backlinkInDocument` was not driven (the file
+  was written before launch), so the key and file the toggle writes are inferred only from what
+  was loaded.
+- Workspaces: no rename exists in the UI (no control, the name not editable), so "rename" is
+  settled only as absent; the "Modified …" text was only seen as "a few seconds ago"; what a
+  relaunch does with `"active"` naming a deleted layout, and layouts holding popout windows, were
+  not run.
+- Rename heading: a newline in the name (the probe's Shift+Enter is a `rawKeyDown` and inserted
+  nothing, so the textarea's behaviour with a real one is unknown); CRLF notes; a heading
+  duplicated in the note; the brief's "`[[Note#Old]]` whose display …" case was read as `F`
+  (`|Old`) and `H` (`|Note > Old`).
+- Add alias: values with commas, quotes or `#`; a singular `alias:` key; a flow list with items
+  (`aliases: [a, b]`); whether the File properties leaf is created or only revealed when one
+  already exists (in the probe's fresh vault none existed before the command).
