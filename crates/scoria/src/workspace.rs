@@ -83,6 +83,7 @@ use std::rc::Rc;
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 use std::time::{Duration, Instant};
 
+mod footnotes_pane;
 mod layouts;
 
 actions!(
@@ -408,6 +409,7 @@ pub const RUNNABLE: &[&str] = &[
     "tag-pane:open",
     "properties:open",
     "properties:open-local",
+    "footnotes:open",
     "bookmarks:open",
     "bookmarks:bookmark-current-view",
     "bookmarks:bookmark-current-search",
@@ -1456,6 +1458,10 @@ enum RightTab {
     /// block. Not one of a fresh vault's default leaves, so it has a tab
     /// only once `properties:open-local` made its leaf or the file has one.
     FileProperties,
+    /// Footnotes (`footnotes`): the open note's footnotes, the Footnotes
+    /// view core plugin's pane. Like File properties it has a tab only
+    /// once `footnotes:open` made its leaf or the file has one.
+    Footnotes,
 }
 
 /// The Outline pane's headings for one note's metadata, whether that
@@ -3444,6 +3450,8 @@ pub struct Workspace {
     /// Whether the right dock has a File properties leaf: `workspace.json`
     /// had one, or `properties:open-local` added it this session.
     file_properties_open: bool,
+    /// The Footnotes pane: whether its leaf exists, and its rows.
+    footnotes: footnotes_pane::FootnotesPane,
     /// The File properties pane's folded blocks: its Properties heading.
     file_properties_folds: HashSet<usize>,
     /// Matcher over every note name and alias, rebuilt when files change.
@@ -4065,6 +4073,7 @@ impl Workspace {
             property_state: PropertyPaneState::default(),
             property_filter,
             file_properties_open: false,
+            footnotes: footnotes_pane::FootnotesPane::default(),
             file_properties_folds: HashSet::new(),
             name_finder: None,
             mention_generation: 0,
@@ -5260,6 +5269,10 @@ impl Workspace {
                 self.file_properties_open = true;
                 RightTab::FileProperties
             }
+            "footnotes" => {
+                self.footnotes.open = true;
+                RightTab::Footnotes
+            }
             _ => RightTab::Backlinks,
         };
         self.select_right_tab(which, cx);
@@ -6123,6 +6136,10 @@ impl Workspace {
             "properties:open-local" => {
                 self.right_visible = true;
                 self.show_right_tab("file-properties", cx);
+            }
+            "footnotes:open" => {
+                self.right_visible = true;
+                self.show_right_tab("footnotes", cx);
             }
             "app:open-help" => self.open_help(window, cx),
             // "Manage vaults" raises the vault manager; Obsidian's does
@@ -13582,11 +13599,15 @@ impl Workspace {
             Some("tag") => self.right_tab = RightTab::Tags,
             Some("all-properties") => self.right_tab = RightTab::Properties,
             Some("file-properties") => self.right_tab = RightTab::FileProperties,
+            Some("footnotes") => self.right_tab = RightTab::Footnotes,
             _ => {}
         }
         self.file_properties_open = layout
             .get("right")
             .is_some_and(|right| leaf_of_kind(right, "file-properties").is_some());
+        self.footnotes.open = layout
+            .get("right")
+            .is_some_and(|right| leaf_of_kind(right, "footnotes").is_some());
         self.layout = Some(layout);
     }
 
@@ -13744,6 +13765,11 @@ impl Workspace {
         if self.file_properties_open {
             if let Some(right) = object.get_mut("right") {
                 push_file_properties_leaf(right, self.current.as_deref());
+            }
+        }
+        if self.footnotes.open {
+            if let Some(right) = object.get_mut("right") {
+                footnotes_pane::push_footnotes_leaf(right, self.right_tab == RightTab::Footnotes);
             }
         }
         // The Files leaf's own state, where the file has that leaf.
@@ -14219,6 +14245,7 @@ impl Workspace {
                 RightTab::Tags => "tags",
                 RightTab::Properties => "properties",
                 RightTab::FileProperties => "file-properties",
+                RightTab::Footnotes => "footnotes",
             }),
         );
         right.insert(
@@ -14314,6 +14341,7 @@ impl Workspace {
                     .collect::<Vec<Value>>(),
             }),
         );
+        right.insert("footnotes".into(), self.footnotes_json(cx));
         right.insert(
             "properties_options".into(),
             json!({
@@ -16124,7 +16152,10 @@ impl Workspace {
             && match self.right_tab {
                 RightTab::Tags | RightTab::Properties => true,
                 RightTab::Outline => !self.outline.is_empty(),
-                RightTab::Backlinks | RightTab::Outgoing | RightTab::FileProperties => false,
+                RightTab::Backlinks
+                | RightTab::Outgoing
+                | RightTab::FileProperties
+                | RightTab::Footnotes => false,
             }
     }
 
@@ -16243,7 +16274,10 @@ impl Workspace {
                     None => {}
                 }
             }
-            RightTab::Backlinks | RightTab::Outgoing | RightTab::FileProperties => return,
+            RightTab::Backlinks
+            | RightTab::Outgoing
+            | RightTab::FileProperties
+            | RightTab::Footnotes => return,
         }
         cx.notify();
     }
@@ -16277,7 +16311,10 @@ impl Workspace {
                     self.reveal_heading(row.offset, window, cx);
                 }
             }
-            RightTab::Backlinks | RightTab::Outgoing | RightTab::FileProperties => {}
+            RightTab::Backlinks
+            | RightTab::Outgoing
+            | RightTab::FileProperties
+            | RightTab::Footnotes => {}
         }
     }
 
@@ -17204,10 +17241,14 @@ impl Workspace {
             RightTab::Outgoing => "outgoing-link",
             RightTab::Tags => "tag-pane",
             RightTab::Properties | RightTab::FileProperties => "properties",
+            RightTab::Footnotes => "footnotes",
             RightTab::Outline => "outline",
         };
         // File properties has a tab only while it has a leaf.
         if tab == RightTab::FileProperties && !self.file_properties_open {
+            return false;
+        }
+        if tab == RightTab::Footnotes && !self.footnotes.open {
             return false;
         }
         self.state
@@ -17232,6 +17273,7 @@ impl Workspace {
                 RightTab::Properties,
                 RightTab::Outline,
                 RightTab::FileProperties,
+                RightTab::Footnotes,
             ]
             .into_iter()
             .find(|t| self.pane_enabled(*t))
@@ -17247,6 +17289,7 @@ impl Workspace {
             RightTab::Tags => self.render_tags_pane(theme, cx),
             RightTab::Properties => self.render_properties_pane(theme, cx),
             RightTab::FileProperties => self.render_file_properties_pane(theme, window, cx),
+            RightTab::Footnotes => self.render_footnotes_pane(theme, window, cx),
         };
         // A pane whose core plugin is off is not offered: Obsidian takes
         // the view away with the plugin.
@@ -17329,6 +17372,15 @@ impl Workspace {
                         "File properties",
                         "info",
                         RightTab::FileProperties,
+                        cx,
+                    ))
+                    // `lucide-file-signature` is Lucide's older name for
+                    // `file-pen-line`, the drawing bundled.
+                    .children(tab_button(
+                        self,
+                        "Footnotes",
+                        "file-pen-line",
+                        RightTab::Footnotes,
                         cx,
                     ))
                     .child(window_handle(
