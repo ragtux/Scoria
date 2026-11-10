@@ -331,6 +331,28 @@ uses behave as Obsidian's do.
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
 
+### The Note composer, driven, 2026-11-10
+
+The one thing the 2026-11-09 work had not been seen doing. A headless sway, a five-note scratch
+vault, the three commands over the socket and `grim` on every stage: the prompt sits where the
+quick switcher does, with its two instructions and "Enter to create" at the row's right; the
+confirmation is `Merge file`, the sentence, the checkbox, Merge before Cancel, and Space then
+Enter wrote `"askBeforeMerging": false`; the Update links question follows it. A merge of a note
+with two frontmatters and five link forms to it left the union, the target's keys first, and
+`Updated 5 links in 1 file.`; an extraction left `[[First part]]` and a note of the section;
+Shift+Enter put a selection at the top of `Sub/Target.md`; Ctrl+Enter does nothing with no row
+listed. A heading named as its own note makes `Long 1.md`, unless a fuzzy match outranks the
+create row, which it does as in any prompt.
+
+**The save's echo.** The drive raised `Long.md changed on disk; unsaved edits kept` on a file
+nobody else had touched, once in three runs. `is_own_write` and `show_file` both asked whether the
+file is the buffer; a save whose watcher event arrives after the next edit is not, though it is
+still the bytes the buffer last wrote. Both now also take a dirty buffer whose `disk_unchanged`
+holds. Typing through an autosave could raise the same notice and re-centre the Files list. Five
+replays of the sequence at the timings around the one that failed, and twelve saves each followed
+by a keystroke 0 to 220 ms later, raised nothing; there is no unit test, the rule living where a
+window is needed.
+
 ### The probes ran, and what they unblocked, 2026-11-09
 
 The table of [[#The unrunnable commands, 2026-11-09]] was answered the same evening. Three CDP
