@@ -661,14 +661,32 @@ pub struct NoteComposerConfig {
 
 /// `zk-prefixer.json`: the Unique note creator plugin's options.
 ///
-/// Every one of its three rows is a text field or a file suggester and none
-/// of their keys was observed, so nothing is modelled: the type exists so
-/// the file survives a read and a write byte for byte.
+/// Observed on Obsidian 1.15.0 on 2026-11-09 (`tools/obsidian-probe/results/
+/// 2026-11-09-note-composer-unique.json`, run `settings:s01-tab-zk`): absent
+/// until a row writes, the plugin's default `{}`, the three keys in the order
+/// they were first written, and a cleared field writes `""` rather than
+/// dropping its key. An empty `format` names notes by
+/// [`ZK_PREFIXER_DEFAULT_FORMAT`].
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct ZkPrefixerConfig {
+    /// "New file location": the folder new unique notes go in, which has to
+    /// exist; empty or absent is the vault root.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub folder: Option<String>,
+    /// "Template file location": the template's vault path, with `.md`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub template: Option<String>,
+    /// "Unique prefix format": a moment format naming the note.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub format: Option<String>,
     #[serde(flatten)]
     pub extra: Map<String, Value>,
 }
+
+/// What a unique note is named by when `format` is empty or absent: the
+/// format field's placeholder, and what an emptied field renders its sample
+/// from.
+pub const ZK_PREFIXER_DEFAULT_FORMAT: &str = "YYYYMMDDHHmm";
 
 /// `file-recovery.json`: the File recovery plugin's options.
 ///
@@ -950,6 +968,24 @@ mod tests {
         assert!(!CorePlugins::is_enabled_or_default(Some(&off), plugin));
     }
 
+    /// `zk-prefixer.json` as Obsidian 1.15.0 wrote it after its tab's three
+    /// rows were filled in, byte for byte, and after all three were
+    /// cleared: the keys stay, empty.
+    #[test]
+    fn zk_prefixer_json_round_trips_the_bytes_obsidian_wrote() {
+        for bytes in [
+            "{\n  \"folder\": \"Zettel\",\n  \"template\": \"Templates/Unique.md\",\n  \"format\": \"YYYY-MM-DD-HHmmss\"\n}",
+            "{\n  \"folder\": \"\",\n  \"template\": \"\",\n  \"format\": \"\"\n}",
+        ] {
+            let cfg: ZkPrefixerConfig = serde_json::from_str(bytes).unwrap();
+            assert!(cfg.extra.is_empty(), "every key is modelled");
+            assert_eq!(serde_json::to_string_pretty(&cfg).unwrap(), bytes);
+        }
+        let cfg: ZkPrefixerConfig = serde_json::from_str("{}").unwrap();
+        assert_eq!(cfg, ZkPrefixerConfig::default());
+        assert_eq!(serde_json::to_string(&cfg).unwrap(), "{}");
+    }
+
     /// Every core-plugin options file: the keys Obsidian 1.14.5 writes read
     /// into their own fields, an unknown key comes back where it was, and
     /// the bytes round trip exactly. The files the probe saw are the input,
@@ -1010,13 +1046,15 @@ mod tests {
         assert_eq!(composer.ask_before_merging, Some(false));
         assert_eq!(composer.replacement_text.as_deref(), Some("embed"));
 
-        // Neither of these models a key, so every key in the file is an
-        // unknown one -- which is exactly what has to survive.
         let zk = round_trip!(
             ZkPrefixerConfig,
-            r#"{"folder":"Zettels","format":"YYYYMMDDHHmm","someFutureKey":{"nested":[1,2]}}"#
+            r#"{"folder":"Zettels","template":"T.md","format":"YYYYMMDDHHmm","someFutureKey":{"nested":[1,2]}}"#
         );
-        assert_eq!(zk.extra["folder"], serde_json::json!("Zettels"));
+        assert_eq!(zk.folder.as_deref(), Some("Zettels"));
+        assert_eq!(zk.template.as_deref(), Some("T.md"));
+        assert_eq!(zk.format.as_deref(), Some("YYYYMMDDHHmm"));
+        // File recovery models no key, so every key in its file is an
+        // unknown one -- which is exactly what has to survive.
         let recovery = round_trip!(
             FileRecoveryConfig,
             r#"{"minutes":5,"days":7,"someFutureKey":{"nested":[1,2]}}"#
