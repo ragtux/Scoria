@@ -71,7 +71,7 @@ tier currently being built, phase by phase:
 | 1. Spike | 50k-line editor, parser conformance corpus, 2 s vault index | **Done** |
 | 2. Reader | A daily user browses their real vault with no missing content | **Done** |
 | 3. Writer | The vault round-trips byte-identical after a week of mixed use in both apps | **Done**, 9 November 2026, in 0.5.0 |
-| 4. Parity | Core plugin parity | **In progress**: the canvas view and writer, Bases, the PDF viewer, math (KaTeX-compatible, not MathJax), the themes subset, `obsidian://` URIs, the command line and popout windows are done; Note composer, Page preview, Slash commands, Footnotes view, Workspaces, Slides, Web viewer, Audio recorder, File recovery and Unique note creator are not |
+| 4. Parity | Core plugin parity | **In progress**: the canvas view and writer, Bases, the PDF viewer, math (KaTeX-compatible, not MathJax), the themes subset, `obsidian://` URIs, the command line, popout windows, Note composer, Unique note creator, Random note, Workspaces, the Footnotes view and backlinks in document are done; Page preview, Slash commands, Slides, Web viewer, Audio recorder and File recovery are not |
 | 5. Ecosystem | Native plugin SDK | Not started |
 
 Note the shape of those gates: each is a claim about a person using the program, not a

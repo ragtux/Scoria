@@ -35,7 +35,7 @@ Things Obsidian does that Scoria intends to do and does not.
 |---|---|
 | **Popout windows, the remaining corners** | In: the five window commands, **Open in new window** on the menus, tab drags between windows, and popouts reopened on launch. On Wayland a dragged tab stays in its own window, and a popout's recorded zoom is not applied. On X11, after the window manager un-maximizes a popout, Scoria has the window's position wrong until it is moved, so drags to and from it do nothing (a gpui bug). The tab menu has no **Link with tab** and no **Open linked view**, since Scoria has no linked panes. Popouts have not been tried on Windows. See [the window](/docs/app/window/#popout-windows) |
 | **Stacked tabs** | Tabs and split groups are in; stacking them (`workspace:toggle-stacked-tabs`) is not |
-| **Workspaces** | The Workspaces plugin's saved layouts (`workspaces:*`) are not implemented |
+| **Workspaces** | Saved layouts work (`workspaces:*`, the manage window, the ribbon button). After a layout is loaded `workspace.json` is rewritten when Scoria quits, not a second later |
 | **A second vault beside the first** | Opening or switching to another vault from inside Scoria replaces the one in the window, where Obsidian opens it in a window of its own. Run Scoria again to have both open |
 | **The local graph as a side pane** | The graph, global or local, is a view of the main area, and `Ctrl + G` returns to the note. `graph:animate` is not a command yet (the timelapse button is there), and the graph has no screenshot export. See [the graph](/docs/app/graph/) |
 | **Bases: cell selection** | Shift-click selection of table cells, with copy and paste over it, is not built |
@@ -45,10 +45,10 @@ Things Obsidian does that Scoria intends to do and does not.
 
 | | |
 |---|---|
-| **Note composer** | Merge a file into another, extract a selection or a heading to a new note (`note-composer:*`): not implemented |
-| **Unique note creator** | `zk-prefixer` and `insert-unique-link` are not implemented. Random note opens a note; its ribbon button is not drawn |
+| **Note composer** | Merge, extract selection and extract heading work. `Ctrl + Enter` in an extraction prompt does nothing yet, and the template setting is a path field, not a file picker |
+| **Unique note creator** | Both commands work. **Add unique internal link** with several cursors edits only the first; the template setting is a path field |
 | **Slash commands** | Typing `/` in the editor offers no commands |
-| **Renaming a heading** | `editor:rename-heading`, which renames a heading and the links to it, is not implemented |
+| **Renaming a heading** | `editor:rename-heading` works as Obsidian's does, oddities included. Links to the heading in frontmatter are not rewritten |
 | **File recovery** | Obsidian keeps its snapshots in IndexedDB outside the vault, so it is out of the round-trip work rather than next in it |
 | **Editing properties in reading view** | A property's value pill can be removed there; keys, values, the type menu and **Add property** are edited in Live Preview or Source mode only |
 | **Editing the title in reading view** | The inline title is an editable field in Live Preview and Source mode; in reading view it is plain text. `F2` works everywhere |
@@ -62,8 +62,8 @@ Things Obsidian does that Scoria intends to do and does not.
 
 | | |
 |---|---|
-| **Footnotes view** | `footnotes:open`: not implemented |
-| **Backlinks at the bottom of a note** | `backlink:toggle-backlinks-in-document` and the Backlinks setting that turns it on are not implemented; the Backlinks pane is |
+| **Footnotes view** | The pane lists the note's footnotes and jumps to a definition; a footnote cannot be edited in the pane |
+| **Backlinks at the bottom of a note** | Shown, per tab and by the Backlinks setting. The block's own sort menu and search filter are not drawn |
 | **Editing in the File properties pane** | `properties:open-local` shows the current note's properties in a side pane; they cannot be edited there, and the pane cannot be closed |
 | **Slides, Audio recorder, Web viewer, Format converter** | `slides:start`, `audio-recorder:*`, `webviewer:*` and `markdown-importer:open` are not implemented |
 
@@ -86,9 +86,8 @@ Obsidian commands are not implemented yet:
 | | |
 |---|---|
 | **Window** | `window:zoom-in`, `window:zoom-out`, `window:reset-zoom`, `window:toggle-always-on-top` |
-| **App** | `app:increase-font-size`, `app:decrease-font-size`, `app:toggle-ribbon`, `theme:toggle-light-dark`, `app:open-file`, `app:reload`, `app:show-debug-info`, `app:show-release-notes`, `app:toggle-default-new-pane-mode`, `app:migrate-frontmatter` |
-| **Files** | `workspace:copy-url`, `workspace:show-trash` |
-| **Editor** | `markdown:add-alias` |
+| **App** | `app:open-file`, `app:reload`, `app:show-debug-info`, `app:show-release-notes`, `app:migrate-frontmatter`. The font size the two font-size commands set lasts the session; Obsidian keeps it across launches |
+| **Add alias** | `markdown:add-alias` works in Live Preview; in Source mode it writes the key and opens File properties, which cannot be typed into; it is not offered in reading view |
 
 ### Markdown edge cases
 

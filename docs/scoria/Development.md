@@ -331,6 +331,89 @@ uses behave as Obsidian's do.
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
 
+### The probes ran, and what they unblocked, 2026-11-09
+
+The table of [[#The unrunnable commands, 2026-11-09]] was answered the same evening. Three CDP
+probes of Obsidian 1.15.0 (`app-window-commands.mjs`, `note-composer-unique.mjs`,
+`panes-workspaces-headings.mjs`, results beside them under `2026-11-09-`) each ran in a private
+headless sway with a data directory and a port of its own, three Obsidians at once beside the
+desktop's and nothing on its screen; the observations are the last sections of [[Specification]].
+Six worktrees then built to them. Twenty more ids run, and 54 of the 244 are left.
+
+**The app's commands.** `theme:toggle-light-dark` swaps `obsidian` and `moonstone` in
+`appearance.json`; under `system`, or with no key, it writes nothing and turns the session's
+scheme over (`scheme_flipped`). `app:toggle-ribbon` is the Interface tab's Show ribbon as a
+command, `app:toggle-default-new-pane-mode` flips `defaultViewMode` with Obsidian's two notices,
+and `settings::toggle_command` now takes the `VaultState` and reads the config inside, so no
+caller can hold the guard across the write. `workspace:copy-url` is `uri::open_url`, the vault's
+folder name and the path each encoded as `encodeURIComponent` encodes them, `.md` dropped; the
+two path commands say "Copied to your clipboard" as Obsidian's do. `workspace:show-trash` is
+offered only under `trashOption: "local"`. The two font-size commands step the Ctrl+wheel's
+session size, a pixel between 10 and 30: Obsidian keeps theirs in local storage under the vault's
+id, Scoria has no place Obsidian would read, and `baseFontSize` would be a byte Obsidian never
+wrote, so it lasts the session. The caret's context menu opens where Obsidian's does, a pixel
+past the caret at the middle of its line; the active-file commands need a file; Focus on last
+note needs a Markdown leaf. Left: the zoom (limits +3 and −2.5 on record, still nothing in gpui
+to apply it to) and always on top (a popout's command only); `app:show-tab-switcher`, which
+Obsidian does not register on desktop; Show debug info, Show release notes and Open file.
+
+**Rename heading and Add alias.** `MetadataCache::plan_heading_rename` sits beside the
+file-rename planner and keeps Obsidian's oddities: only a link whose whole subpath is the heading
+follows, ignoring case, so `[[Note#Parent#Old]]` stays; display text never changes; `#`, `|`
+and `^` in the new name become spaces in links while `[` and `]` go in raw; a space is `%20`
+bare and raw in `<…>`; an unchanged name still normalises `[[Note#old]]`. Offered on an ATX
+heading line only; `alwaysUpdateLinks` is not asked, Obsidian with it off having written the
+same bytes. Unwatched and unbuilt: frontmatter links, a duplicated heading. `markdown:add-alias`
+needed no new writer — the properties writer already gave every byte the probe read, `[]` and a
+scalar turning into block lists included. In Source mode it writes the key and opens File
+properties, which is read-only here; in reading view it is not offered.
+
+**Workspaces.** `workspaces.json` is a type in `scoria-formats`: the layouts by name, then
+`active`, each layout `workspace.json` without `lastOpenFiles` and with `mtime` last. The probe's
+ten file states replay through it to Obsidian's bytes, the delete of the active layout that
+leaves `"active"` naming it included. A load closes every group and popout and hands the layout
+to `apply_layout`, the half of `restore_layout` the launch uses; `workspace.json` waits for the
+quit, where Obsidian wrote it a second later. Driven over the socket: a layout saved from the
+probe's own `workspace.json` equals Obsidian's bar `mtime`. The drive found the keyboard left on
+a closed group after a load, fixed.
+
+**Unique note creator and Random note.** `zk-prefixer.json` holds `folder`, `template`, `format`,
+and the Settings tab's rows write it. A taken name gets no counter: the time moves on a minute
+until no note in the vault has that basename (`scoria_vault::unique::pick_name`, the clock passed
+in). *Add unique internal link* creates nothing, is always a wikilink, and with a selection
+checks the whole link text for the name. Random note lost the notice Scoria had made up. The
+ribbon gained three buttons in the order `core-plugins.json` lists their plugins — unique note,
+random note, workspaces — which fits both probes, each of which saw only its own; `dice` is
+Lucide's `dice-3`, `sheets-in-box` Scoria's own drawing, both being Obsidian's art.
+
+**Footnotes view and backlinks in document.** `footnotes:open` appends the `footnotes` leaf as
+Obsidian wrote it, File properties' leaf being the model; the rows are
+`scoria_cache::footnote_rows` over the one parser, first-reference order numbered 1..n, an
+unreferenced definition last. Rows are read-only: the probe's one edit from the pane also rewrote
+another definition's four-space indent as a tab. The backlinks block is a leaf's: no key on a
+fresh one, `"backlinks": true` and `backlinkOpts` when on, `"backlinks": false` when off, and
+the `backlinkInDocument` setting showing it on every leaf without a key. It draws the pane's own
+rows (`render_section_list`) as a footer under the editor's last line and as the reading view's
+last item. Both were driven headless; turning the block off while scrolled into it left blank
+space, fixed. The block's sort menu and search filter are not drawn, the probe never having
+driven them. The Backlinks pane got back one row per file with its matches under it.
+
+**Note composer.** The bytes are `scoria-composer`'s, tested on the probe's before-and-after
+files: the part that comes first is padded to end in a blank line with a bare `\n`, the second
+untouched; two frontmatters become one, the target's keys first, a scalar clash taking the
+source's value and a list clash the union. Links to a merged note are the rename planner's, the
+link an extraction leaves is `scoria_suggest::file_link`, autocompletion's own. The source goes
+through the delete path, so `trashOption` decides — the probe could not watch the system trash.
+Inferred, not watched: an empty first part takes no padding; extract-heading under `embed`,
+`none` and Markdown links; where the merged tab lands. Not driven: no agent could start a
+compositor for this one, so the prompt and the confirmation have not been seen on screen.
+
+**The merge.** Eight branches met in `workspace.rs`'s lists and `can_run`; every conflict was two
+additions at one spot, bar the ribbon's array, whose declared length both sides had raised by
+one. The target-directory trap is wider than first written: a worktree must isolate every crate
+it changes, not `scoria` alone. The gate on the whole: 64 test binaries, 1,525 passed, 617 in
+the app's bin.
+
 ### The unrunnable commands, 2026-11-09
 
 With every row of the table above done, what phase 4 still lacks was counted the plain way:
