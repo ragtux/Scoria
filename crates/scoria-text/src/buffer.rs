@@ -1424,6 +1424,24 @@ impl TextBuffer {
         true
     }
 
+    /// The primary selection's text, empty when nothing is selected.
+    pub fn selected_text(&self) -> &str {
+        &self.text[self.selection()]
+    }
+
+    /// *Add unique internal link*: `[[inner]]` over the primary selection,
+    /// one undo step, through [`format::unique_link_insertion`]. `inner` is
+    /// the unique name with the selection already joined to it, which is
+    /// what the name was checked as. The edit is the primary selection's
+    /// alone and the other cursors go: Obsidian's command reads one
+    /// selection, and **unprobed** is what it does with several.
+    pub fn insert_unique_link(&mut self, inner: &str) -> bool {
+        let range = self.selection();
+        let (new, sel) = format::unique_link_insertion(inner, range.len());
+        let start = range.start;
+        self.edit_many(vec![(range, new)], start + sel.end, Some(start + sel.start))
+    }
+
     /// What each cursor copies: its selection, or its whole line when
     /// nothing is selected (what CodeMirror copies).
     pub fn copy_ranges(&self) -> Vec<Range<usize>> {
@@ -2068,6 +2086,40 @@ mod tests {
         assert!(buf.insert_link(format::LinkSyntax::Wikilink));
         assert_eq!(buf.text(), "see[[ ]]x\n");
         assert_eq!(buf.head, 6);
+    }
+
+    /// The probe's runs over `Link.md`, in order: at the caret, then
+    /// around a selection, then twice at one caret, which nests the second
+    /// link inside the first because the caret stays before the `]]`.
+    #[test]
+    fn a_unique_link_goes_in_at_the_caret_or_around_the_selection_in_one_undo_step() {
+        let mut buf = TextBuffer::from_file("insert here: \n");
+        buf.set_cursor(13, None);
+        assert!(buf.insert_unique_link("202611092023"));
+        assert_eq!(buf.text(), "insert here: [[202611092023]]\n");
+        assert_eq!((buf.anchor, buf.head), (27, 27));
+        assert!(buf.undo());
+        assert_eq!(buf.text(), "insert here: \n");
+        assert!(buf.redo());
+
+        buf.set_cursor(6, Some(0));
+        assert_eq!(buf.selected_text(), "insert");
+        assert!(buf.insert_unique_link("202611092021 insert"));
+        assert_eq!(
+            buf.text(),
+            "[[202611092021 insert]] here: [[202611092023]]\n"
+        );
+        assert_eq!(buf.selected_text(), "202611092021 insert");
+        assert_eq!(buf.head, 21);
+
+        let mut buf = TextBuffer::from_file("x[[202611092023]]\n");
+        buf.set_cursor(17, None);
+        assert!(buf.insert_unique_link("202611092023"));
+        assert!(buf.insert_unique_link("202611092023"));
+        assert_eq!(
+            buf.text(),
+            "x[[202611092023]][[202611092023[[202611092023]]]]\n"
+        );
     }
 
     /// A combining accent, a regional-indicator flag pair and a
