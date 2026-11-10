@@ -112,6 +112,7 @@ icons!(
     "palette",
     "panel-left",
     "panel-right",
+    "panels-top-left",
     "pen-line",
     "pencil",
     "picture-in-picture",

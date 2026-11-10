@@ -83,6 +83,8 @@ use std::rc::Rc;
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 use std::time::{Duration, Instant};
 
+mod layouts;
+
 actions!(
     workspace,
     [ToggleMode, GoBack, GoForward, OpenSearch, OpenGraph]
@@ -410,6 +412,10 @@ pub const RUNNABLE: &[&str] = &[
     "bookmarks:bookmark-current-section",
     "bookmarks:bookmark-current-heading",
     "bookmarks:bookmark-all-tabs",
+    "workspaces:open-modal",
+    "workspaces:save",
+    "workspaces:load",
+    "workspaces:save-and-load",
 ];
 
 /// Binds every runnable command's hotkeys in the Workspace context, and the
@@ -1651,6 +1657,8 @@ enum Modal {
     Chooser,
     /// The Search pane's "Copy search results".
     CopyResults,
+    /// "Manage workspace layouts" (`layouts`).
+    Layouts,
 }
 
 /// The file operation the open prompt will finish.
@@ -1771,6 +1779,11 @@ enum ChooserPurpose {
     /// `theme:switch`: "Default" and the vault's installed themes; the
     /// pick is written as `cssTheme`.
     Theme,
+    /// `workspaces:load`, or `workspaces:save-and-load` when `save_first`:
+    /// a saved layout, by name (`layouts`).
+    Layout {
+        save_first: bool,
+    },
 }
 
 /// How Obsidian names a split's axis: a `vertical` split lays its children
@@ -3217,6 +3230,8 @@ pub struct Workspace {
     settings: Entity<SettingsView>,
     prompt: Entity<Prompt>,
     copy_results: Entity<CopyResults>,
+    /// "Manage workspace layouts", made the first time it opens.
+    layouts_modal: Option<Entity<layouts::LayoutsModal>>,
     pending: Option<PendingOp>,
     modal: Modal,
     /// Command ids run this session, most recent first.
@@ -3859,6 +3874,10 @@ impl Workspace {
                             this.focus_main(window, cx);
                             cx.notify();
                         }
+                        ChooserPurpose::Layout { save_first } => {
+                            this.close_modal(window, cx);
+                            this.layout_chosen(value.clone(), save_first, cx);
+                        }
                     },
                     ChooserEvent::Close => {
                         this.modal = Modal::None;
@@ -3928,6 +3947,7 @@ impl Workspace {
             settings,
             prompt,
             copy_results,
+            layouts_modal: None,
             pending: None,
             modal: Modal::None,
             recent_commands: Vec::new(),
@@ -5668,6 +5688,10 @@ impl Workspace {
             "daily-notes:goto-prev" => self.open_daily(Some(false), window, cx),
             "daily-notes:goto-next" => self.open_daily(Some(true), window, cx),
             "random-note" => self.open_random_note(window, cx),
+            "workspaces:open-modal" => self.open_layouts_modal(window, cx),
+            "workspaces:save" => self.save_active_layout(window, cx),
+            "workspaces:load" => self.open_layout_chooser(false, window, cx),
+            "workspaces:save-and-load" => self.open_layout_chooser(true, window, cx),
             _ if TableCommand::from_id(id).is_some() => {
                 let cmd = TableCommand::from_id(id).expect("checked above");
                 if self.editing_or_report(id, window, cx) {
@@ -12373,14 +12397,17 @@ impl Workspace {
         // which is the order the DOM was read in. The labels are each
         // button's `aria-label`, its tooltip, read off the same ribbon
         // (`tools/obsidian-probe/results/2026-11-01-bases-ui.json`, `s01`
-        // `ribbon`).
+        // `ribbon`). The Workspaces plugin's "Manage workspace layouts"
+        // goes between the palette and a new base
+        // (`2026-11-09-panes-workspaces-headings.json`, `ws` `s00-context`);
+        // its `lucide-layout` is Lucide's old name for `panels-top-left`.
         let items: [(
             &'static str,
             &'static str,
             &'static str,
             &'static str,
             &'static str,
-        ); 7] = [
+        ); 8] = [
             (
                 "ribbon-switcher",
                 "file-search",
@@ -12422,6 +12449,13 @@ impl Workspace {
                 "command-palette:open",
                 "command-palette",
                 "Open command palette",
+            ),
+            (
+                "ribbon-workspaces",
+                "panels-top-left",
+                "workspaces:open-modal",
+                "workspaces",
+                "Manage workspace layouts",
             ),
             (
                 "ribbon-base",
@@ -13251,6 +13285,18 @@ impl Workspace {
                 return;
             }
         };
+        self.apply_layout(layout, state, window, cx);
+    }
+
+    /// Restores `layout`, a `workspace.json`, over a main area of one empty
+    /// group: the launch's restore, and a saved workspace layout's load.
+    fn apply_layout(
+        &mut self,
+        layout: Value,
+        state: &Arc<VaultState>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         self.layout_restored = true;
         if let Some((sort, auto_reveal)) = explorer_leaf_state(&layout) {
             self.explorer
@@ -14249,6 +14295,7 @@ impl Workspace {
                 Modal::Palette => "palette",
                 Modal::Prompt => "prompt",
                 Modal::CopyResults => "copy-results",
+                Modal::Layouts => "workspaces",
                 Modal::Chooser => "chooser",
             }),
         );
@@ -14270,6 +14317,7 @@ impl Workspace {
             Modal::Palette => Some(self.palette.read(cx).describe(rows, cx)),
             Modal::Prompt => Some(self.prompt.read(cx).describe(rows, cx)),
             Modal::CopyResults => Some(self.copy_results.read(cx).describe()),
+            Modal::Layouts => self.describe_layouts_modal(cx),
             Modal::Chooser => Some(self.chooser.read(cx).describe(rows, cx)),
             Modal::None => None,
         };
@@ -14445,6 +14493,11 @@ impl Workspace {
         }
         if self.chooser.focus_handle(cx).is_focused(window) {
             return "chooser-input";
+        }
+        if let Some(modal) = &self.layouts_modal {
+            if modal.focus_handle(cx).is_focused(window) {
+                return "workspaces-input";
+            }
         }
         if self.search.focus_handle(cx).is_focused(window) {
             return "search-input";
@@ -15232,12 +15285,14 @@ impl Workspace {
             | Modal::Palette
             | Modal::Prompt
             | Modal::Chooser
-            | Modal::CopyResults => {
+            | Modal::CopyResults
+            | Modal::Layouts => {
                 let child: gpui::AnyElement = match self.modal {
                     Modal::Switcher => self.switcher.clone().into_any_element(),
                     Modal::Palette => self.palette.clone().into_any_element(),
                     Modal::Chooser => self.chooser.clone().into_any_element(),
                     Modal::CopyResults => self.copy_results.clone().into_any_element(),
+                    Modal::Layouts => self.layouts_modal.clone()?.into_any_element(),
                     _ => self.prompt.clone().into_any_element(),
                 };
                 Some(
