@@ -2726,6 +2726,25 @@ pub(crate) fn frameless(window: &Window) -> bool {
     }
 }
 
+/// The strip at the head of a column that runs up into the window's
+/// top-left corner itself, beside a [`window_title_row`] over the rest of
+/// the window (the vault list, the Settings nav): the title row's height on
+/// macOS with the hidden frame, where the traffic lights sit in that
+/// corner, and `None` elsewhere or in fullscreen, where the lights are
+/// gone. The strip drags the window, as the title row beside it does.
+pub(crate) fn traffic_light_strip(window: &Window) -> Option<gpui::Stateful<gpui::Div>> {
+    (cfg!(target_os = "macos") && frameless(window) && !window.is_fullscreen()).then(|| {
+        window_handle(
+            div()
+                .id("traffic-light-strip")
+                .flex_shrink_0()
+                .w_full()
+                .h(px(HEADER_HEIGHT)),
+            true,
+        )
+    })
+}
+
 /// Scoria's own window frame, for a window the desktop was asked to leave
 /// bare: a margin of [`FRAME_SHADOW`] around the content holds a soft
 /// shadow and the resize handles, and the content gets a one pixel border.
@@ -11756,10 +11775,21 @@ impl Workspace {
     /// traffic lights on macOS and nothing elsewhere or in fullscreen,
     /// where the lights are gone.
     fn frame_left_space(&self) -> f32 {
+        let space = self.frame_left_space_without_ribbon();
+        if space > 0. && self.show_ribbon() {
+            space - RIBBON_WIDTH
+        } else {
+            space
+        }
+    }
+
+    /// [`Self::frame_left_space`] for a window with no ribbon, a popout's:
+    /// the whole room the traffic lights take.
+    fn frame_left_space_without_ribbon(&self) -> f32 {
         if !self.mac_frame() || self.fullscreen {
             return 0.;
         }
-        MAC_FRAME_LEFT_SPACE - if self.show_ribbon() { RIBBON_WIDTH } else { 0. }
+        MAC_FRAME_LEFT_SPACE
     }
 
     /// A sidebar's resize handle: the 3 px strip on its inner edge, which
@@ -12263,9 +12293,15 @@ impl Workspace {
         // sidebar is collapsed and this is the last group. macOS has none.
         let under_controls = frameless && !mac && last && !right_open;
         // The strip in the window's top-left corner, with the left sidebar
-        // collapsed, keeps clear of the traffic lights on macOS.
+        // collapsed, keeps clear of the traffic lights on macOS. A popout
+        // has no ribbon to take its width off the clearance, whatever the
+        // main window shows.
         let left_space = if first && !left_open {
-            self.frame_left_space()
+            if popout {
+                self.frame_left_space_without_ribbon()
+            } else {
+                self.frame_left_space()
+            }
         } else {
             0.
         };

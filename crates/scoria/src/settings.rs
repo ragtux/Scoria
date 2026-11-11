@@ -32,8 +32,8 @@ use crate::palette::hotkey_chip;
 use crate::text_input::{InputEvent, TextInput};
 use crate::theme::{fonts, Theme};
 use crate::workspace::{
-    client_frame, frame_window_options, window_title_row, Commands, VaultState, WindowCorners,
-    Workspace,
+    client_frame, frame_window_options, traffic_light_strip, window_title_row, Commands,
+    VaultState, WindowCorners, Workspace,
 };
 use gpui::{
     actions, canvas, deferred, div, hsla, linear_color_stop, linear_gradient, point, prelude::*,
@@ -5492,7 +5492,23 @@ impl Render for SettingsView {
             .bg(theme.tokens.modal_background)
             .map(|d| self.corners.apply(d))
             .overflow_hidden()
-            .child(self.render_nav(&theme, cx))
+            // The nav runs up into the top-left corner; on macOS the
+            // traffic lights sit there, over a strip of the nav's own
+            // ground rather than over the mark.
+            .child(
+                div()
+                    .flex()
+                    .flex_col()
+                    .flex_shrink_0()
+                    .h_full()
+                    .children(traffic_light_strip(window).map(|strip| {
+                        strip
+                            .bg(theme.tokens.modal_sidebar_background)
+                            .border_r_1()
+                            .border_color(theme.tokens.background_modifier_border)
+                    }))
+                    .child(self.render_nav(&theme, cx).flex_1().min_h_0()),
+            )
             .child(
                 div()
                     .flex()
