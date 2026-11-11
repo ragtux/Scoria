@@ -33,10 +33,10 @@ way [[Development#Four small entries and a URI, 2026-11-02]] recorded.
 
 ## Two vaults, and which one decides
 
-| Vault | Writers | Evidence | Weight |
-| --- | --- | --- | --- |
-| `$SCORIA_GATE_VAULT` | Scoria and Obsidian only | snapshot and `diff -r` | **the verdict rests here** |
-| `docs/scoria` | Scoria, Obsidian *and* the repo's tooling | git | watched, never decisive |
+| Vault                | Writers                                   | Evidence               | Weight                     |
+| -------------------- | ----------------------------------------- | ---------------------- | -------------------------- |
+| `$SCORIA_GATE_VAULT` | Scoria and Obsidian only                  | snapshot and `diff -r` | **the verdict rests here** |
+| `docs/scoria`        | Scoria, Obsidian *and* the repo's tooling | git                    | watched, never decisive    |
 
 The deciding vault is the thin one because attribution is what the gate needs: a moved byte
 there has exactly two suspects. `docs/scoria` is the folder actually lived in daily — it was
