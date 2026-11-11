@@ -186,7 +186,7 @@ pub fn call(ev: &mut Evaluator<'_>, subject: &Value, name: &str, args: &[Expr]) 
             }
             nums.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
             let n = nums.len();
-            Ok(Value::Number(if n % 2 == 0 {
+            Ok(Value::Number(if n.is_multiple_of(2) {
                 (nums[n / 2 - 1] + nums[n / 2]) / 2.0
             } else {
                 nums[n / 2]

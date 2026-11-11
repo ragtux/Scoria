@@ -673,7 +673,7 @@ impl<'a, 'o, 'c> Parser<'a, 'o, 'c> {
                 let od = &self.delims[o];
                 let odd_match = (c_open || od.can_close)
                     && c_orig % 3 != 0
-                    && (od.orig_count + c_orig) % 3 == 0;
+                    && (od.orig_count + c_orig).is_multiple_of(3);
                 if od.ch == ch && od.can_open && !odd_match {
                     found = Some(o);
                     break;

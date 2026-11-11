@@ -169,7 +169,7 @@ pub fn estimate_text(size: (u32, u32)) -> String {
         let digits = n.to_string();
         let mut out = String::new();
         for (i, c) in digits.chars().enumerate() {
-            if i > 0 && (digits.len() - i) % 3 == 0 {
+            if i > 0 && (digits.len() - i).is_multiple_of(3) {
                 out.push(',');
             }
             out.push(c);
