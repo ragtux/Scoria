@@ -1,13 +1,13 @@
 ---
 title: Commands and hotkeys
-description: The commands Scoria registers — the 244 Obsidian command ids, the 41 with a default hotkey, and the 197 Scoria can actually run today, with every id and default key listed.
+description: The commands Scoria registers — the 244 Obsidian command ids, the 41 with a default hotkey, and the 199 Scoria can actually run today, with every id and default key listed.
 ---
 
 # Commands and hotkeys
 
 Scoria registers **244 command ids** — the exact strings Obsidian registers, so your
 `hotkeys.json` matches them — of which **227 have an observed desktop name**. **41** carry a
-default hotkey. **197** do something in Scoria today; the 47 that do not are listed
+default hotkey. **199** do something in Scoria today; the 45 that do not are listed
 [below](#the-ones-that-do-not-run).
 
 Those four numbers are different things and the difference is the point:
@@ -20,7 +20,7 @@ Those four numbers are different things and the difference is the point:
   palette](/docs/app/switcher/) offers only these; the [Hotkeys tab](/docs/hotkeys/) lists
   all 244, so you can see your bindings for everything else.
 
-Some of the 197 are runnable only in the right place, which is also how Obsidian treats
+Some of the 199 are runnable only in the right place, which is also how Obsidian treats
 them: **63** need an editor on screen with the keyboard in it, so they leave the palette in
 a reading leaf, and the **fifteen table commands** that act on an existing table are offered
 only while the cursor is in one. `graph:open-local` and the five commands on the active file
@@ -29,7 +29,8 @@ commands) are not offered with no file open; four `bases:*` commands need a base
 `editor:rename-heading` needs the cursor on a heading line; `editor:focus` needs a note open
 in some tab; `backlink:toggle-backlinks-in-document` needs a note active; and
 `workspace:show-trash` is offered only when deleted files go to the vault's own `.trash`
-folder. A command whose core plugin is off is gone, as in Obsidian. The palette, the hotkey
+folder. `graph:animate` is offered only while the global graph is the active view, and
+`slides:start` only with a Markdown note active. A command whose core plugin is off is gone, as in Obsidian. The palette, the hotkey
 and the control socket all ask the same question, so a command that is listed is a command
 that runs.
 
@@ -145,6 +146,7 @@ in `hotkeys.json`. Several are worth binding on day one: `editor:toggle-source`,
 | Fold more | `editor:fold-more` |
 | Footnotes view: Show footnotes | `footnotes:open` |
 | Graph view: Open local graph | `graph:open-local` |
+| Graph view: Start graph timelapse animation | `graph:animate` |
 | Increase font size | `app:increase-font-size` |
 | Indent list item | `editor:indent-list` |
 | Insert attachment | `editor:attach-file` |
@@ -189,6 +191,7 @@ in `hotkeys.json`. Several are worth binding on day one: `editor:toggle-source`,
 | Show in system explorer | `open-with-default-app:show` |
 | Show release notes | `app:show-release-notes` |
 | Show trash | `workspace:show-trash` |
+| Slides: Start presentation | `slides:start` |
 | Split down | `workspace:split-horizontal` |
 | Split right | `workspace:split-vertical` |
 | Table: Add column to the left | `editor:table-col-before` |
@@ -263,7 +266,7 @@ A few keys belong to a widget rather than to the command registry, and are not r
 
 ## The ones that do not run
 
-47 of the 244 ids do nothing in Scoria yet, and the palette does not offer them:
+45 of the 244 ids do nothing in Scoria yet, and the palette does not offer them:
 
 - **Not registered on desktop** — 17 ids with no desktop name, which Obsidian itself does not
   offer there: the caret, clipboard and undo ids (`editor:go-start`, `editor:copy`,
@@ -271,11 +274,11 @@ A few keys belong to a widget rather than to the command registry, and are not r
   `markdown-importer:open`, and the 1.12.7 `editor:table-row-duplicate` and
   `editor:table-col-duplicate`, which became the `-copy` commands that do run.
 - **Services Scoria does not have** — Sync, Publish, the Web viewer, the Audio recorder,
-  Slides, File recovery, the Format converter's frontmatter migration and the mobile Quick
+  File recovery, the Format converter's frontmatter migration and the mobile Quick
   Action, and `app:reload`, which has no renderer to reload.
 - **Waiting on the toolkit** — `window:zoom-in`, `window:zoom-out`, `window:reset-zoom` and
   `window:toggle-always-on-top`.
-- **Not built yet** — `workspace:export-pdf`, `canvas:export-as-image` and `graph:animate`.
+- **Not built yet** — `workspace:export-pdf` and `canvas:export-as-image`.
 
 ## The full id list
 

@@ -37,7 +37,7 @@ Things Obsidian does that Scoria intends to do and does not.
 | **Stacked tabs** | Tabs and split groups are in; stacking them (`workspace:toggle-stacked-tabs`) is not |
 | **Workspaces** | Saved layouts work (`workspaces:*`, the manage window, the ribbon button). After a layout is loaded `workspace.json` is rewritten when Scoria quits, not a second later |
 | **A second vault beside the first** | Opening or switching to another vault from inside Scoria replaces the one in the window, where Obsidian opens it in a window of its own. Run Scoria again to have both open |
-| **The local graph as a side pane** | The graph, global or local, is a view of the main area, and `Ctrl + G` returns to the note. `graph:animate` is not a command yet (the timelapse button is there), and the graph has no screenshot export. See [the graph](/docs/app/graph/) |
+| **The local graph as a side pane** | The graph, global or local, is a view of the main area, and `Ctrl + G` returns to the note. `graph:animate` brings the nodes back in creation order at a fixed 0.39 s a step, where Obsidian's steps vary, and the graph has no screenshot export. See [the graph](/docs/app/graph/) |
 | **Bases: cell selection** | Shift-click selection of table cells, with copy and paste over it, is not built |
 | **Canvas export and options** | `canvas:export-as-image` is not implemented, and the Canvas plugin's settings (default location, wheel and drag behavior, snapping, card names, the zoom threshold) are written for Obsidian but not acted on |
 
@@ -65,7 +65,7 @@ Things Obsidian does that Scoria intends to do and does not.
 | **Footnotes view** | The pane lists the note's footnotes and jumps to a definition; a footnote cannot be edited in the pane |
 | **Backlinks at the bottom of a note** | Shown, per tab and by the Backlinks setting. The block's own sort menu and search filter are not drawn |
 | **Editing in the File properties pane** | `properties:open-local` shows the current note's properties in a side pane; they cannot be edited there, and the pane cannot be closed |
-| **Slides, Audio recorder, Web viewer** | `slides:start`, `audio-recorder:*` and `webviewer:*` are not implemented (`markdown-importer:open`, the old Format converter, is not in Obsidian 1.15.0 either) |
+| **Slides, Audio recorder, Web viewer** | `slides:start` runs, set in the interface font, with its keys live at once (Obsidian's wait for a click on the slide) and links on a slide inert; `audio-recorder:*` and `webviewer:*` are not implemented (`markdown-importer:open`, the old Format converter, is not in Obsidian 1.15.0 either) |
 
 ### Files and settings
 

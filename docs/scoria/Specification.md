@@ -9954,6 +9954,8 @@ leaf's mode is unchanged. A click on the slide did not change slides.
 - What the window's resize does to the scale while the presentation is up.
 - The light theme's link and body colours, beyond the background and h1.
 - Whether the arrows' hover and the close button's hover change colour.
+- Scoria drops a middle empty slide as it does a trailing one, follows no link on a slide, uses
+  `#222` for the light theme's body text, and rescales on every frame, so a resize refits.
 
 ## Observed graph timelapse, Obsidian 1.15.0 (installer build 1.13.7)
 
@@ -9991,6 +9993,10 @@ during the run (no stop state).
 - In one screenshot Cherry was shown without its edge to the already-shown Apple: whether an
   edge waits for a later step.
 - The local graph (the command is not offered there; the probe's run of it there did nothing).
+- **Scoria's approximation**: every step is a fixed 0.39 s, the mean of the observed intervals.
+  Tags, attachments and unresolved nodes linked from several files follow Scoria's own rule (a
+  file by its `ctime`, anything else one step after its first shown linker), and an edge comes
+  with the step of its later end.
 
 ## Observed File recovery, Obsidian 1.15.0 (installer build 1.13.7)
 

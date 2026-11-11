@@ -47,6 +47,11 @@ framing alone.
 Labels appear once you are zoomed in past a threshold — and that threshold rises with the
 number of nodes, so a 5,000-note graph does not try to paint 5,000 labels at once.
 
+**Timelapse.** "Start graph timelapse animation" (`graph:animate`, or the wand under the cog
+while the panel is closed) empties the global graph and brings the notes back one at a
+step in the order they were created, an unresolved link arriving with the note after the one
+that made it. Scoria's steps are a fixed 0.39 s; Obsidian's vary between about 0.2 and 0.6 s.
+
 ## The local graph
 
 `graph:open-local` shows the open note and the notes one link away from it, in either
@@ -77,8 +82,6 @@ a large graph stays smooth.
 ## Not yet
 
 - The local graph as a side pane.
-- `graph:animate` as a command (the panel's timelapse button replays the layout from its first
-  positions).
 - Screenshot export.
 
 ## Next

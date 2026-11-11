@@ -467,6 +467,60 @@ unobserved and on the spec's "Not settled" list; Scoria shows the leaf's version
 the tab by itself. The 13 new tests, by name: 5 in `debug_info`, 8 in
 `workspace::release_notes`, and the runnable test in `workspace::app_info`.
 
+### Slides and the graph timelapse, 2026-11-11
+
+Two of the rows [[#Eleven more ids probed, five of them run, 2026-11-10]] left as probed and not
+built, built to [[Specification#Observed Slides, Obsidian 1.15.0 (installer build 1.13.7)]] and
+[[Specification#Observed graph timelapse, Obsidian 1.15.0 (installer build 1.13.7)]]. No new
+probe. 199 of the 244 ids run, 45 do not.
+
+**Slides.** `slides:start` is offered on a Markdown note in any mode. `crate::slides` cuts the
+reading view's model (the one parser) at its top-level `ThematicBreak`s and drops empty slides;
+the properties block counts as something, so a frontmatter-only first slide stays and shows
+blank. The second style table is `reading::view::BlockStyle`: the renderer took its heading,
+paragraph-gap and code metrics from it, `READING` being the old numbers and `SLIDE` reveal's
+(h1 2.5em … h4 1em at 600, line height 1.2, capitals, 20 px gaps, code 0.55em on a 42 px body).
+A slide is that renderer on a 960 × 700 stage scaled by `min(W·0.96/960, H·0.96/700)` (the
+canvas cards' `Scaled` sets the rem), centred, over the whole window (ribbon and title bar
+included), `#191919` with white text dark, `#222` on white light; the close button
+(`x-square`, 16 px, `#666`), the two arrows that lead somewhere and the 3 px progress bar in
+`#42affa`. Keys as observed: next, previous, Home, End, `f` fullscreen, `b`/`.` black,
+Escape closes and puts the keyboard back on the view it came from. Scoria's own: the keys are
+live at once (Obsidian's wait for a click on the slide), the text is Inter (no Source Sans
+Pro), a code block is its own width rather than 90 %, the arrows are Lucide chevrons in a row,
+and a link on a slide does nothing. The editor menu's Start presentation row is still left out.
+
+**Timelapse.** `graph:animate` is offered only while a global graph is the active view; the
+closed panel draws the wand (`wand-2`) under the cog, which runs the same. `graph::timelapse`
+schedules: files one a step in `ctime` order (path breaks a tie), a node that is not a file
+one step after its first linker, which puts the probe's `Missing` with Banana. The view keeps
+the whole graph aside and applies the shown subgraph each step, so a node joins the running
+layout, started beside a placed neighbour; edges come with their second end. Running it again
+starts over; a vault change ends it and shows the whole graph. **The step is Scoria's
+approximation**: a fixed 0.39 s, the mean of the observed intervals, where Obsidian's run
+from about 0.2 to 0.6 s for reasons not found.
+
+**Driven.** A headless sway, a nine-note scratch vault made a second apart, the socket.
+Slides: four slides from the probe's deck, Right through to the last and no further, Home, `b`
+paused and back, Escape closing to the editor; screenshots of the first, the code and the
+table slides. Timelapse: Deck, Mango, Apple, Zebra, Kiwi, then Banana with Missing, Orphan,
+Cherry, Lemon, about 0.4 s apart; the closed panel's wand drawn and clicked. Not driven: the
+light theme, a popout, `f`.
+
+**Tests.** 16 new, by name: in `slides`, `every_spelling_of_a_top_level_break_cuts`,
+`a_break_in_a_fence_or_a_quote_does_not_cut`, `a_setext_underline_is_a_heading_not_a_cut`,
+`a_trailing_break_leaves_no_empty_slide_and_an_empty_note_none`,
+`the_frontmatter_rides_in_the_first_slide_and_alone_is_a_blank_one`,
+`the_probes_deck_is_four_slides`, `the_stage_scales_to_the_tighter_side`,
+`the_deck_stops_at_either_end_and_jumps_home_and_end`, `a_slides_metrics_are_reveals_on_the_stage`,
+`capitals_keep_every_byte_range`; in `graph::timelapse`,
+`files_come_back_in_creation_order_and_missing_with_the_note_after_its_linker`,
+`the_gaps_between_creation_times_do_not_show`, `equal_times_fall_back_to_the_path`,
+`a_node_linked_from_the_last_file_takes_a_step_of_its_own`,
+`a_node_linked_from_two_files_follows_the_first_shown`,
+`the_first_step_is_there_at_once_and_one_more_comes_each_step`. The gate: 64 test binaries,
+1,578 passed, 662 in the app's bin.
+
 ### The Note composer, driven, 2026-11-10
 
 The one thing the 2026-11-09 work had not been seen doing. A headless sway, a five-note scratch
