@@ -28,7 +28,7 @@ members = [
 [workspace.package]
 version = "0.5.0"
 edition = "2021"
-rust-version = "1.85"
+rust-version = "1.92"
 repository = "https://github.com/ragtux/scoria"
 license = "MIT"
 publish = false
