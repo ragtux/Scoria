@@ -152,9 +152,88 @@ pub fn names_vault(vault: Option<&str>, vault_name: &str) -> bool {
     }
 }
 
+/// What `workspace:copy-url` ("Copy Obsidian URL for current file") puts
+/// on the clipboard for the vault-relative `path` in the vault folder
+/// `vault_name`: `obsidian://open?vault=<name>&file=<path>`, both values
+/// encoded the way JavaScript's `encodeURIComponent` encodes them, and the
+/// path's `.md` dropped while any other extension stays (Obsidian 1.15.0,
+/// `tools/obsidian-probe/results/2026-11-09-app-window-commands.json`).
+/// The scheme is Obsidian's own: the URL is for pasting where Obsidian, or
+/// a Scoria registered for the scheme, will open it.
+pub fn open_url(vault_name: &str, path: &str) -> String {
+    let file = path.strip_suffix(".md").unwrap_or(path);
+    format!(
+        "obsidian://open?vault={}&file={}",
+        encode_component(vault_name),
+        encode_component(file)
+    )
+}
+
+/// `encodeURIComponent`: every byte of the UTF-8 text escaped as `%XX` in
+/// upper-case hex, bar the letters, the digits and `-_.!~*'()`.
+pub fn encode_component(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for b in s.bytes() {
+        match b {
+            b'A'..=b'Z'
+            | b'a'..=b'z'
+            | b'0'..=b'9'
+            | b'-'
+            | b'_'
+            | b'.'
+            | b'!'
+            | b'~'
+            | b'*'
+            | b'\''
+            | b'('
+            | b')' => out.push(b as char),
+            _ => out.push_str(&format!("%{b:02X}")),
+        }
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The probe's three files in the vault folder `Probe Vault`.
+    #[test]
+    fn the_copied_url_encodes_both_parts_and_drops_only_md() {
+        assert_eq!(
+            open_url("Probe Vault", "Sub/My Note.md"),
+            "obsidian://open?vault=Probe%20Vault&file=Sub%2FMy%20Note"
+        );
+        assert_eq!(
+            open_url("Probe Vault", "Sub/Caf\u{e9} & Bar #2.md"),
+            "obsidian://open?vault=Probe%20Vault&file=Sub%2FCaf%C3%A9%20%26%20Bar%20%232"
+        );
+        assert_eq!(
+            open_url("Probe Vault", "Note A.md"),
+            "obsidian://open?vault=Probe%20Vault&file=Note%20A"
+        );
+        assert_eq!(
+            open_url("Probe Vault", "img/pic.png"),
+            "obsidian://open?vault=Probe%20Vault&file=img%2Fpic.png"
+        );
+    }
+
+    #[test]
+    fn encoding_a_component_leaves_what_encode_uri_component_leaves() {
+        assert_eq!(encode_component("aZ09-_.!~*'()"), "aZ09-_.!~*'()");
+        assert_eq!(encode_component("a+b=c?d/e%f"), "a%2Bb%3Dc%3Fd%2Fe%25f");
+        assert_eq!(encode_component("\u{1f525}"), "%F0%9F%94%A5");
+        // What the URL is built from reads back through the parser.
+        let url = open_url("my vault", "Daily/2026-11-09 #3.md");
+        assert_eq!(
+            parse(&url).unwrap(),
+            Uri::Open {
+                vault: Some("my vault".into()),
+                file: Some("Daily/2026-11-09 #3".into()),
+                path: None,
+            }
+        );
+    }
 
     #[test]
     fn open_takes_a_file_or_a_path_and_decodes_percent_escapes() {

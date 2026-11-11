@@ -751,6 +751,19 @@ pub struct Editor {
     pub parse_samples: Sample,
     /// Edit-to-decoration latency, including waiting for the background thread.
     pub parse_latency: Sample,
+    /// What the host draws under the note's last line: the backlinks
+    /// block (`backlink:toggle-backlinks-in-document`), the last child of
+    /// Obsidian's `.cm-sizer`. Built at prepaint, so it reads the host's
+    /// state as it is that frame; `None` from the builder draws nothing.
+    footer: Option<crate::reading::view::FooterBuilder>,
+    /// The footer's height as last laid out. For the scroll maths it
+    /// belongs to the last line, the way the header belongs to line 0.
+    footer_height: Pixels,
+    /// Where the footer was last painted: a press there is the footer's.
+    footer_hit: Rc<Cell<Option<Bounds<Pixels>>>>,
+    /// The footer came out shorter than last frame: the scroll is clamped
+    /// to the new end once the frame is laid out.
+    footer_shrank: bool,
 }
 
 impl EventEmitter<EditorEvent> for Editor {}
@@ -832,6 +845,10 @@ impl Editor {
             title_edit: None,
             title_layout: Rc::new(RefCell::new(None)),
             title_hit: Rc::new(Cell::new(None)),
+            footer: None,
+            footer_height: px(0.),
+            footer_hit: Rc::new(Cell::new(None)),
+            footer_shrank: false,
             suggest: None,
             suggest_vault: None,
             link_options: suggest::Options::default(),
@@ -956,6 +973,25 @@ impl Editor {
 
     pub fn set_show_inline_title(&mut self, on: bool) {
         self.show_inline_title = on;
+    }
+
+    /// Hands the editor what to draw under the note's last line.
+    pub fn set_footer(&mut self, footer: Option<crate::reading::view::FooterBuilder>) {
+        if footer.is_none() {
+            self.footer_height = px(0.);
+            self.footer_hit.set(None);
+        }
+        self.footer = footer;
+    }
+
+    /// The room the footer takes under `line`: its height on the last
+    /// line, nothing on any other.
+    fn trail_of(&self, line: usize) -> Pixels {
+        if self.footer.is_some() && line + 1 >= self.line_count() {
+            self.footer_height
+        } else {
+            px(0.)
+        }
     }
 
     /// The inline title over the text, if the setting and the file give one.
@@ -1378,6 +1414,19 @@ impl Editor {
         }
     }
 
+    /// The primary selection's text, which *Add unique internal link*
+    /// checks its name with.
+    pub fn selected_text(&self) -> &str {
+        self.buf.selected_text()
+    }
+
+    /// `insert-unique-link`: `[[inner]]` over the primary selection.
+    pub fn insert_unique_link(&mut self, inner: &str, window: &mut Window, cx: &mut Context<Self>) {
+        if self.buf.insert_unique_link(inner) {
+            self.after_edit(Some(window), cx);
+        }
+    }
+
     /// `editor:indent-list` and `-unindent-list`: the same step Tab and
     /// Shift+Tab take.
     pub fn indent_list(&mut self, indent: bool, window: &mut Window, cx: &mut Context<Self>) {
@@ -1444,6 +1493,57 @@ impl Editor {
         if self.buf.insert_at_cursors(text) {
             self.after_edit(Some(window), cx);
         }
+    }
+
+    /// Replaces `range` of the text with `text` as one undo step, the caret
+    /// left after it: what an extraction leaves where the text was, an
+    /// empty `text` included (`replacementText: none` simply cuts).
+    pub fn replace_range(
+        &mut self,
+        range: Range<usize>,
+        text: &str,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let cursor = range.start + text.len();
+        self.buf.apply_edits(
+            vec![(range, text.to_string())],
+            Cursors::at(cursor),
+            EditKind::Other,
+        );
+        self.after_edit(Some(window), cx);
+    }
+
+    /// Replaces several ranges in one undo step, `edits` in ascending order
+    /// and not overlapping. The caret keeps its place in the text around it:
+    /// it moves by what the edits before it added or took away, and one
+    /// inside a replaced range goes to that range's end.
+    pub fn replace_ranges(
+        &mut self,
+        edits: Vec<(Range<usize>, String)>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if edits.is_empty() {
+            return;
+        }
+        let head = self.buf.selection().end;
+        let mut delta: isize = 0;
+        let mut inside = None;
+        for (range, text) in &edits {
+            if range.end <= head {
+                delta += text.len() as isize - range.len() as isize;
+            } else {
+                if range.start < head {
+                    inside = Some((range.start as isize + delta) as usize + text.len());
+                }
+                break;
+            }
+        }
+        let cursor = inside.unwrap_or((head as isize + delta).max(0) as usize);
+        self.buf
+            .apply_edits(edits, Cursors::at(cursor), EditKind::Other);
+        self.after_edit(Some(window), cx);
     }
 
     /// Presses keys by name, for `--press`: the popup's accept keys, and
@@ -2041,6 +2141,12 @@ impl Editor {
         self.widget_is_folded(entry).then_some(entry)
     }
 
+    /// Whether the note's properties are drawn as the editable table: Live
+    /// Preview with `propertiesInDocument` at its default.
+    pub fn draws_properties_table(&self) -> bool {
+        self.live_preview && self.properties_in_document == PropertiesInDocument::Visible
+    }
+
     /// A widget that takes no room and draws nothing: the properties block
     /// under `propertiesInDocument: hidden`, where Obsidian shows neither
     /// the table nor the YAML behind it. Folding it to one line's height,
@@ -2105,7 +2211,7 @@ impl Editor {
         } else {
             px(0.)
         };
-        lead + self.own_height_of(window, line)
+        lead + self.own_height_of(window, line) + self.trail_of(line)
     }
 
     /// `height_of` without the header: the line's own rows.
@@ -3901,6 +4007,39 @@ impl Editor {
             .map(|h| format!("#{}", h.heading.trim()))
     }
 
+    /// The ATX heading the caret's line is, which is when
+    /// `editor:rename-heading` is offered: not off a heading, and not on
+    /// either line of a setext heading (Obsidian 1.15.0, 2026-11-09).
+    pub fn heading_to_rename(&self) -> Option<scoria_cache::AtxHeading> {
+        scoria_cache::atx_heading_at(self.buf.text(), self.cursor().line as u32)
+    }
+
+    /// Applies a heading rename's edits to the note itself as one undo step.
+    /// When the heading line changed the caret ends at the start of that
+    /// line, where Obsidian leaves it; otherwise it stays where it was.
+    pub fn apply_heading_rename(
+        &mut self,
+        edits: Vec<(Range<usize>, String)>,
+        heading: &scoria_cache::AtxHeading,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let renamed = edits.iter().any(|(r, _)| *r == heading.span);
+        let at = if renamed {
+            heading.line_start
+        } else {
+            self.buf.head
+        };
+        // The caret in post-edit coordinates: shifted by every edit before it.
+        let shift: isize = edits
+            .iter()
+            .filter(|(r, _)| r.end <= at)
+            .map(|(r, t)| t.len() as isize - r.len() as isize)
+            .sum();
+        let cursor = (at as isize + shift).max(0) as usize;
+        self.edit_many(edits, cursor, None, window, cx);
+    }
+
     /// The id of the block under the cursor, written into the note first
     /// when it has none — what "Bookmark block under cursor..." does. The
     /// buffer, not the disk, is what the cursor is in, so the block is
@@ -4265,6 +4404,42 @@ impl Editor {
     /// (confirmed with a probe: running the command left the note untouched).
     pub fn add_property_row(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         self.property_action(PropertyAction::AddRow, window, cx);
+    }
+
+    /// `markdown:add-alias`, as Obsidian 1.15.0 runs it (the 2026-11-09
+    /// probe, `SCEN=al`): a note with no `aliases` key gets one at once —
+    /// the whole block `---\naliases:\n---\n` over a note with none, or
+    /// `aliases:` after the last key — and a note that has the key, as `[]`,
+    /// a list or a scalar, is left as it is. With `open_field` the caret
+    /// then goes into the empty input after the row's pills, where Enter
+    /// appends what was typed through [`Editor::enter_property_field`] and
+    /// stays there for the next one; that is the same field and the same
+    /// writer a click past the last pill uses, and its bytes are the probe's
+    /// (`aliases:\n  - foo\n  - NewAlias` from `aliases: foo`). Without
+    /// `open_field` only the key is written, which is what Obsidian leaves
+    /// behind when the field is left with Escape.
+    ///
+    /// Returns whether the note changed.
+    pub fn add_alias(
+        &mut self,
+        open_field: bool,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> bool {
+        self.commit_property_field(Some(window), cx);
+        self.property_menu = None;
+        let change = properties::alias_key(&self.property_rows());
+        let wrote = change.is_some();
+        if let Some(change) = change {
+            self.apply_property_changes(&[change], Some(window), cx);
+        }
+        if open_field {
+            // The field has to be on screen to be typed into.
+            self.properties_folded = false;
+            self.property_field = properties::alias_field(&self.property_rows());
+        }
+        cx.notify();
+        wrote
     }
 
     /// `markdown:clear-metadata-properties`: removes every property, and with
@@ -5113,6 +5288,13 @@ impl Editor {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
+        if self
+            .footer_hit
+            .get()
+            .is_some_and(|b| b.contains(&event.position))
+        {
+            return;
+        }
         window.focus(&self.focus_handle, cx);
         let Some(at) = self.offset_at_point(window, event.position) else {
             return;
@@ -5140,7 +5322,48 @@ impl Editor {
         cx.notify();
     }
 
+    /// `editor:context-menu` ("Show context menu under cursor"): the menu a
+    /// right click raises, raised at the caret instead of the pointer. The
+    /// caret is inside its own selection, so a selection is kept and is
+    /// both the Search row's text and what Cut and Copy act on; the link
+    /// under the caret decides the rows as a click's does. Drawn at the
+    /// caret, by [`caret_menu_point`], from the last frame's layout; with no
+    /// frame laid out yet there is nowhere to draw it and nothing opens.
+    pub fn context_menu_at_caret(&mut self, cx: &mut Context<Self>) -> bool {
+        let Some(shaped) = self.layout.cursor_line.clone() else {
+            return false;
+        };
+        let cursor = self.cursor();
+        let (row, x) = shaped.row_and_x(cursor.col);
+        let rh = shaped.row_height;
+        let top = self.layout.cursor_top + rh * row as f32;
+        let (left, top) = caret_menu_point(
+            f32::from(self.layout.content_x + x),
+            f32::from(top),
+            f32::from(top + rh),
+        );
+        let position = point(px(left), px(top));
+        let selection = self.buf.clipboard_text(&[self.buf.selection()]);
+        let link = self.link_at(cursor.line, cursor.col, false);
+        let selected = !selection.is_empty();
+        cx.emit(EditorEvent::ContextMenu {
+            position,
+            selection,
+            selected,
+            link,
+        });
+        true
+    }
+
     fn mouse_down(&mut self, event: &MouseDownEvent, window: &mut Window, cx: &mut Context<Self>) {
+        // A press on the footer is its own rows' and buttons'.
+        if self
+            .footer_hit
+            .get()
+            .is_some_and(|b| b.contains(&event.position))
+        {
+            return;
+        }
         window.focus(&self.focus_handle, cx);
         if self.scrollbar_mouse_down(event.position, window, cx) {
             return;
@@ -6378,6 +6601,8 @@ struct Prepaint {
     flairs: Vec<AnyElement>,
     /// The inline title, when the top of the note is in view.
     header: Option<AnyElement>,
+    /// What the host draws under the last line, when the end is reached.
+    footer: Option<AnyElement>,
     /// Quote bars, code block bands and rules, behind the text.
     decor: Vec<PaintQuad>,
     line_height: Pixels,
@@ -6791,7 +7016,12 @@ impl Element for EditorElement {
                         cx,
                     );
                     let height = measured.height.max(lh);
-                    if line == scroll_line && scroll_px - lead >= height {
+                    let trail = if wlines.end >= count {
+                        editor.trail_of(count - 1)
+                    } else {
+                        px(0.)
+                    };
+                    if line == scroll_line && scroll_px - lead >= height + trail {
                         scroll_px = lead;
                         y = bounds.origin.y;
                     }
@@ -6843,7 +7073,7 @@ impl Element for EditorElement {
                 let rows = shaped.rows();
                 let rh = shaped.row_height;
                 let height = shaped.height();
-                if line == scroll_line && scroll_px - lead >= height {
+                if line == scroll_line && scroll_px - lead >= height + editor.trail_of(line) {
                     scroll_px = lead + (height - rh).max(px(0.));
                     y = bounds.origin.y - scroll_px + lead;
                 }
@@ -7120,6 +7350,43 @@ impl Element for EditorElement {
             if !focused || editor.title_edit.is_some() {
                 cursor_quads.clear();
             }
+            // The footer under the last line: laid out whenever the end of
+            // the note was reached, on screen or just under it, so its
+            // height is known to the scroll maths before it is scrolled to.
+            let mut footer = None;
+            editor.footer_hit.set(None);
+            if line >= count {
+                if let Some(build) = editor.footer.clone() {
+                    match build(f32::from(content_width), window, cx) {
+                        Some(mut element) => {
+                            let measured = element.layout_as_root(
+                                size(
+                                    AvailableSpace::Definite(content_width),
+                                    AvailableSpace::MinContent,
+                                ),
+                                window,
+                                cx,
+                            );
+                            if measured.height < editor.footer_height {
+                                editor.footer_shrank = true;
+                            }
+                            editor.footer_height = measured.height;
+                            element.prepaint_at(point(content_x, y), window, cx);
+                            editor
+                                .footer_hit
+                                .set(Some(Bounds::new(point(content_x, y), measured)));
+                            y += measured.height;
+                            footer = Some(element);
+                        }
+                        None => {
+                            if editor.footer_height > px(0.) {
+                                editor.footer_shrank = true;
+                            }
+                            editor.footer_height = px(0.);
+                        }
+                    }
+                }
+            }
             let fits = scroll_line == 0
                 && scroll_px == px(0.)
                 && line >= count
@@ -7156,6 +7423,7 @@ impl Element for EditorElement {
                 widgets,
                 flairs: flair_elements,
                 header,
+                footer,
                 decor: decor_quads,
                 line_height: lh,
                 font_size,
@@ -7272,6 +7540,9 @@ impl Element for EditorElement {
                 }
                 w.element.paint(window, cx);
             }
+            if let Some(footer) = prepaint.footer.as_mut() {
+                footer.paint(window, cx);
+            }
             // Over the lines: a flair sits on its fence line's text.
             for flair in prepaint.flairs.iter_mut() {
                 flair.paint(window, cx);
@@ -7288,8 +7559,16 @@ impl Element for EditorElement {
 
         let editor = self.editor.clone();
         let hitbox = prepaint.hitbox.clone();
+        let footer_hit = self.editor.read(cx).footer_hit.clone();
         window.on_mouse_event(move |event: &MouseDownEvent, phase, window, cx| {
             if phase != DispatchPhase::Bubble || !hitbox.is_hovered(window) {
+                return;
+            }
+            // The footer's rows take their own presses, right clicks too.
+            if footer_hit
+                .get()
+                .is_some_and(|b| b.contains(&event.position))
+            {
                 return;
             }
             match event.button {
@@ -7409,13 +7688,46 @@ impl Element for EditorElement {
                 let id = cx.entity_id();
                 window.on_next_frame(move |_, cx| cx.notify(id));
             }
+            // A footer that shrank or went away can leave the view scrolled
+            // past the note's new end: it is pulled back, as a scroll is.
+            if std::mem::take(&mut editor.footer_shrank) {
+                editor.clamp_scroll_end(window);
+                let id = cx.entity_id();
+                window.on_next_frame(move |_, cx| cx.notify(id));
+            }
         });
     }
+}
+
+/// Where `editor:context-menu` puts the menu's top-left corner for a caret
+/// at `left` on a line box from `top` to `bottom`. Obsidian 1.15.0 opened
+/// it 1 to 2 px right of and below the caret's left and its line's middle
+/// (not under the line), which over the five readings of
+/// `tools/obsidian-probe/results/2026-11-09-app-window-commands.json` is
+/// that point a pixel on, rounded up.
+fn caret_menu_point(left: f32, top: f32, bottom: f32) -> (f32, f32) {
+    let middle = (top + bottom) / 2.;
+    ((left + 1.).ceil(), (middle + 1.).ceil())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The probe's five carets (`coordsAtPos` left, top and bottom) and the
+    /// menu corner each gave, Live Preview and Source mode alike.
+    #[test]
+    fn the_caret_menu_opens_a_pixel_past_the_caret_at_its_lines_middle() {
+        for (left, top, bottom, corner) in [
+            (638.94, 229.5, 251.5, (640., 242.)),
+            (685.83, 229.5, 251.5, (687., 242.)),
+            (806.75, 229.5, 251.5, (808., 242.)),
+            (752.84, 277.5, 299.5, (754., 290.)),
+            (638.94, 213.5, 235.5, (640., 226.)),
+        ] {
+            assert_eq!(caret_menu_point(left, top, bottom), corner, "{left}");
+        }
+    }
 
     #[test]
     fn a_done_task_leaves_the_gap_after_its_box_unstruck() {

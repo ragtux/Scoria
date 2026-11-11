@@ -663,6 +663,13 @@ pub(crate) struct HoverHost {
     pub on_hover: HoverHandler,
     pub current: Rc<std::cell::Cell<Option<(usize, usize)>>>,
 }
+/// What a host draws under a note, at the content width it is given (the
+/// readable line, or the view less its padding): the backlinks block of
+/// `backlink:toggle-backlinks-in-document`, which Obsidian puts in the
+/// editor's `.cm-sizer` and the reading view's `.mod-footer`. `None` draws
+/// nothing. Built while the view is laid out, so it reads the host as it is
+/// that frame.
+pub type FooterBuilder = Rc<dyn Fn(f32, &mut Window, &mut App) -> Option<AnyElement>>;
 /// What a foldable callout's title does when clicked, by title id.
 pub type ToggleHandler = Rc<dyn Fn(usize, &mut App)>;
 /// What a task checkbox does when clicked.
@@ -741,6 +748,9 @@ pub struct ReadingView {
     pub path: Option<String>,
     model: Arc<Model>,
     list: ListState,
+    /// What the host draws under the last block, as the list's one item
+    /// past the blocks (see [`FooterBuilder`]).
+    footer: Option<FooterBuilder>,
     /// Callouts whose fold state the reader flipped, by title id.
     toggled: HashSet<usize>,
     /// The note's heading and list folds, by key — the same keys the
@@ -861,6 +871,7 @@ impl ReadingView {
             path: None,
             model: Arc::new(Model::default()),
             list: ListState::new(0, ListAlignment::Top, px(1200.)),
+            footer: None,
             toggled: HashSet::new(),
             folds: Vec::new(),
             fold_headings: true,
@@ -938,6 +949,18 @@ impl ReadingView {
         self.show_inline_title = on;
     }
 
+    /// Hands the view what to draw under the note's last block: one more
+    /// item at the end of the list.
+    pub fn set_footer(&mut self, footer: Option<FooterBuilder>) {
+        let n = self.model.blocks.len();
+        match (self.footer.is_some(), footer.is_some()) {
+            (false, true) if self.list.item_count() == n => self.list.splice(n..n, 1),
+            (true, false) if self.list.item_count() == n + 1 => self.list.splice(n..n + 1, 0),
+            _ => {}
+        }
+        self.footer = footer;
+    }
+
     pub fn set_properties_in_document(&mut self, mode: PropertiesInDocument) {
         self.properties_in_document = mode;
     }
@@ -958,7 +981,8 @@ impl ReadingView {
         self.pending = None;
         self.built_path = path.clone();
         self.path = path;
-        self.list.reset(model.blocks.len());
+        self.list
+            .reset(model.blocks.len() + usize::from(self.footer.is_some()));
         if same {
             // A reload after a change on disk keeps the reader's place.
             self.list.scroll_to(top);
@@ -1348,16 +1372,47 @@ impl ReadingView {
         cx.notify();
     }
 
+    /// The footer item: the host's block in the blocks' column, 48 px
+    /// under the last block (Obsidian's `.mod-footer` margin) with the
+    /// view's bottom padding under it.
+    fn render_footer(&mut self, window: &mut Window, cx: &mut Context<Self>) -> AnyElement {
+        let Some(build) = self.footer.clone() else {
+            return div().into_any_element();
+        };
+        let mut available = f32::from(self.width) - 64.;
+        if self.readable_line_length {
+            available = available.min(700.);
+        }
+        let Some(element) = build(available.max(100.), window, cx) else {
+            return div().pb(px(120.)).into_any_element();
+        };
+        div()
+            .w_full()
+            .flex()
+            .flex_row()
+            .justify_center()
+            .px(px(32.))
+            .pt(px(48.))
+            .pb(px(120.))
+            .child(
+                div()
+                    .w_full()
+                    .when(self.readable_line_length, |d| d.max_w(px(700.)))
+                    .child(element),
+            )
+            .into_any_element()
+    }
+
     fn render_block(
         &mut self,
         ix: usize,
-        _window: &mut Window,
+        window: &mut Window,
         cx: &mut Context<Self>,
     ) -> AnyElement {
         let theme = cx.global::<Theme>().clone();
         let model = self.model.clone();
         let Some(block) = model.blocks.get(ix) else {
-            return div().into_any_element();
+            return self.render_footer(window, cx);
         };
         if self.hidden.get(ix).copied().unwrap_or(false) {
             // Collapsed content takes no room at all.
@@ -1472,7 +1527,7 @@ impl ReadingView {
         };
         let r = Renderer::new(
             &theme,
-            _window.text_system().clone(),
+            window.text_system().clone(),
             available,
             &self.toggled,
             &self.property_types,
@@ -1560,7 +1615,8 @@ impl ReadingView {
                 }
             }
         }
-        let last = ix + 1 == model.blocks.len();
+        // The view's bottom padding goes under the footer when there is one.
+        let last = ix + 1 == model.blocks.len() && self.footer.is_none();
         div()
             .w_full()
             .flex()
@@ -1653,13 +1709,23 @@ impl Render for ReadingView {
             .flex_col()
             .child(header)
             .child(
-                list(self.list.clone(), move |ix, window, cx| {
-                    view.update(cx, |this, cx| this.render_block(ix, window, cx))
-                        .unwrap_or_else(|_| div().into_any_element())
-                })
-                .w_full()
-                .flex_1()
-                .min_h(px(0.)),
+                // The footer's height follows the host's state, which the
+                // list cannot see change: it is measured again each frame.
+                {
+                    if self.footer.is_some() {
+                        let n = self.model.blocks.len();
+                        if self.list.item_count() == n + 1 {
+                            self.list.remeasure_items(n..n + 1);
+                        }
+                    }
+                    list(self.list.clone(), move |ix, window, cx| {
+                        view.update(cx, |this, cx| this.render_block(ix, window, cx))
+                            .unwrap_or_else(|_| div().into_any_element())
+                    })
+                    .w_full()
+                    .flex_1()
+                    .min_h(px(0.))
+                },
             )
             .child(
                 // Records the painted width; a change lays the blocks out again.
@@ -2896,7 +2962,7 @@ impl<'a> Renderer<'a> {
     /// reading view takes through [`ReadingHost::on_remove_item`]; the fields,
     /// type menu and add-row control are the way the reading view still
     /// differs from Obsidian's (it edits properties in reading view too).
-    fn properties(&self, entries: &[Property]) -> AnyElement {
+    pub(crate) fn properties(&self, entries: &[Property]) -> AnyElement {
         let t = self.theme;
         let base = t.base_font_size;
         let host = self.properties_host;

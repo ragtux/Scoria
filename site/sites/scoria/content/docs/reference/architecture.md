@@ -107,7 +107,7 @@ Two test suites are not allowed to go down:
 - `tests/corpus.rs` — a vault of 1,000 generated notes plus nine hand-written edge cases,
   against the HTML Obsidian 1.13.7 produced for each. Both sides are reduced to a canonical
   token stream — no copy buttons, icons, MathJax output or `dir` attributes — before
-  comparison. 1,007 of 1,009 match.
+  comparison. 1,008 of 1,009 match.
 
 A third, `rename_corpus.rs`, renames every note in the corpus under every link format, moves
 its folders, and renames its attachments, asserting each time that every resolved link still

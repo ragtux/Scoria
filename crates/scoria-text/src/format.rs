@@ -805,9 +805,34 @@ pub fn link_insertion(inner: &str, kind: LinkSyntax) -> (String, usize) {
     }
 }
 
+/// What *Add unique internal link* writes over a selection of `selected`
+/// bytes: `[[inner]]`, where `inner` is the unique name with the selected
+/// text already joined to it after a space, and the selection it leaves,
+/// relative to the start of the insertion. With nothing selected the caret
+/// sits before the closing `]]`; with text selected the whole of `inner`
+/// stays selected, the caret at its end (Obsidian 1.15.0, 2026-11-09,
+/// `s05-insert-link` and `s07-insert-link-selection`).
+pub fn unique_link_insertion(inner: &str, selected: usize) -> (String, Range<usize>) {
+    let end = 2 + inner.len();
+    let start = if selected == 0 { end } else { 2 };
+    (format!("[[{inner}]]"), start..end)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_unique_link_leaves_the_caret_before_its_closing_brackets() {
+        assert_eq!(
+            unique_link_insertion("202611092023", 0),
+            ("[[202611092023]]".to_string(), 14..14)
+        );
+        assert_eq!(
+            unique_link_insertion("202611092021 insert", 6),
+            ("[[202611092021 insert]]".to_string(), 2..21)
+        );
+    }
 
     fn starts(text: &str) -> Vec<usize> {
         let mut v = vec![0];

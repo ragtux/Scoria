@@ -20,6 +20,10 @@
 # Support/obsidian is never written, and Obsidian is launched from
 # /Applications/Obsidian.app (OBSIDIAN_APP overrides) rather than a PATH
 # `obsidian`, which on a Mac may be the command-line client.
+#
+# OBSIDIAN_ARGS adds flags to the launch, split on spaces: `--inspect=9341`
+# opens Node's inspector on the main process, where a probe can stand in for a
+# native dialog (`dialog.showOpenDialog`) without a person at the keyboard.
 set -euo pipefail
 # realpath without GNU readlink's -m: macOS has neither -m nor, before 13, -f.
 abspath() { python3 -c 'import os,sys;print(os.path.realpath(sys.argv[1]))' "$1"; }
@@ -105,7 +109,8 @@ PY
 # Launch, wait for a booted vault window, and refuse to proceed unless it is OUR vault.
 launch_once() {
   LAUNCHED=1
-  nohup "$OBSIDIAN_BIN" "${UDD_FLAG[@]}" --remote-debugging-port="$CDP_PORT" >>"$LOG" 2>&1 &
+  # shellcheck disable=SC2086
+  nohup "$OBSIDIAN_BIN" "${UDD_FLAG[@]}" --remote-debugging-port="$CDP_PORT" ${OBSIDIAN_ARGS:-} >>"$LOG" 2>&1 &
   node -e "
     import('$(dirname "$SCRIPT")/cdp.mjs').then(async (m) => {
       await m.waitForObsidian(90000);

@@ -317,6 +317,40 @@ impl Vault {
         Ok((target, changes))
     }
 
+    /// Writes `bytes` as a new attachment `stem.ext` in `folder`, creating
+    /// the folder chain, under the first free name [`Vault::available_path`]
+    /// gives (`pic one.png`, then `pic one 1.png`): what Obsidian 1.15.0's
+    /// Insert attachment and Download attachments both did with a name
+    /// already taken. Returns the path written and the index's changes.
+    pub fn add_attachment(
+        &mut self,
+        folder: &str,
+        stem: &str,
+        ext: &str,
+        bytes: &[u8],
+    ) -> Result<(String, Vec<FileChange>), OpError> {
+        let folder = folder.trim_matches('/');
+        let target = self.available_path(folder, stem, ext);
+        validate_path(&target)?;
+        let abs = self.write_path(&target)?;
+        if let Some(parent) = abs.parent() {
+            std::fs::create_dir_all(parent).map_err(io("create folder", parent))?;
+        }
+        crate::write_no_follow(&abs, bytes).map_err(io("write", &abs))?;
+        let mut changes = Vec::new();
+        // A folder the attachment brought with it is indexed too.
+        let mut at = String::new();
+        for part in folder.split('/').filter(|p| !p.is_empty()) {
+            at = join(&at, part);
+            if !self.folders().iter().any(|f| f == &at) {
+                let folder_abs = self.absolute(&at);
+                changes.extend(self.refresh_path(&folder_abs));
+            }
+        }
+        changes.extend(self.refresh_path(&abs));
+        Ok((target, changes))
+    }
+
     /// Files under `path` when it is a folder, or `path` itself when it is a
     /// file in the list.
     fn files_under(&self, path: &str) -> Vec<String> {
@@ -632,6 +666,35 @@ mod tests {
 
     fn paths(v: &Vault) -> Vec<&str> {
         v.files().iter().map(|f| f.path.as_str()).collect()
+    }
+
+    /// Insert attachment and Download attachments in Obsidian 1.15.0: the
+    /// folder chain is made, a taken name gets the next number before the
+    /// extension, and the bytes are the source's.
+    #[test]
+    fn an_attachment_takes_the_next_free_name_in_a_new_folder() {
+        let (dir, mut v) = vault();
+        let (first, _) = v
+            .add_attachment("Sub/att", "pic one", "png", b"one")
+            .unwrap();
+        assert_eq!(first, "Sub/att/pic one.png");
+        let (second, changes) = v
+            .add_attachment("Sub/att", "pic one", "png", b"two")
+            .unwrap();
+        assert_eq!(second, "Sub/att/pic one 1.png");
+        assert_eq!(
+            changes,
+            vec![FileChange::Added("Sub/att/pic one 1.png".into())]
+        );
+        assert_eq!(
+            fs::read(dir.path().join("Sub/att/pic one 1.png")).unwrap(),
+            b"two"
+        );
+        assert!(v.folders().iter().any(|f| f == "Sub/att"));
+        assert!(paths(&v).contains(&"Sub/att/pic one.png"));
+        let (root, _) = v.add_attachment("", "pic", "png", b"p").unwrap();
+        assert_eq!(root, "pic.png");
+        assert!(v.add_attachment("", "bad:name", "png", b"p").is_err());
     }
 
     #[test]

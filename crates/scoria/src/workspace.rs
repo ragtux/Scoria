@@ -16,6 +16,7 @@ use crate::canvas::menu::tooltip;
 use crate::canvas::{CanvasEvent, CanvasView};
 use crate::chooser::{Chooser, ChooserEvent, Row as ChooserRow};
 use crate::copy_results::{CopyResults, CopyResultsEvent};
+use crate::debug_info::{DebugInfo, DebugInfoEvent};
 use crate::editor::{Editor, EditorEvent};
 use crate::explorer::{
     self, display_name, kind_name, ExplorerEvent, FileExplorer, FileTree, SortOrder,
@@ -62,9 +63,9 @@ use scoria_commands::{hotkey_label, keystroke, CommandRegistry};
 use scoria_formats::bookmarks::{Bookmark, Bookmarks};
 use scoria_formats::config::{
     self as config, AppConfig, AppearanceConfig, BacklinkConfig, CanvasConfig,
-    CommandPaletteConfig, CorePlugins, DailyNotesConfig, Hotkeys, NoteComposerConfig,
-    PagePreviewConfig, PluginManifest, PropertyTypes, SwitcherConfig, TemplatesConfig,
-    WebviewerConfig, CORE_PLUGINS,
+    CommandPaletteConfig, CorePlugins, DailyNotesConfig, FileRecoveryConfig, Hotkeys,
+    NoteComposerConfig, PagePreviewConfig, PluginManifest, PropertyTypes, SwitcherConfig,
+    TemplatesConfig, WebviewerConfig, ZkPrefixerConfig, CORE_PLUGINS,
 };
 use scoria_formats::properties::Change;
 use scoria_formats::properties::PropertiesInDocument;
@@ -82,6 +83,27 @@ use std::path::{Component, Path, PathBuf};
 use std::rc::Rc;
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 use std::time::{Duration, Instant};
+
+mod doc_backlinks;
+mod footnotes_pane;
+mod layouts;
+mod stacked;
+
+use doc_backlinks::{listen, DocBacklinks, SectionsOwner};
+
+// The Note composer's modal and its three commands live beside the
+// workspace, as children so they can reach its state.
+mod composer_prompt;
+mod note_composer;
+
+// Insert attachment, Download attachments and Open file: files that come in
+// from outside the vault.
+mod attachments;
+mod download_modal;
+
+// Show debug info and Show release notes: the app's commands about itself.
+mod app_info;
+mod release_notes;
 
 actions!(
     workspace,
@@ -146,6 +168,7 @@ pub const EDITOR_ONLY: &[&str] = &[
     "editor:add-cursor-above",
     "editor:add-cursor-below",
     "editor:clear-formatting",
+    "editor:context-menu",
     "editor:cycle-list-checklist",
     "editor:delete-paragraph",
     "editor:fold-all",
@@ -166,6 +189,7 @@ pub const EDITOR_ONLY: &[&str] = &[
     "editor:open-link-in-new-leaf",
     "editor:open-link-in-new-split",
     "editor:open-link-in-new-window",
+    "editor:rename-heading",
     "editor:set-heading",
     "editor:set-heading-0",
     "editor:set-heading-1",
@@ -199,6 +223,8 @@ pub const EDITOR_ONLY: &[&str] = &[
     "insert-current-date",
     "insert-current-time",
     "insert-template",
+    "insert-unique-link",
+    "markdown:add-alias",
 ];
 
 /// The ids that need a base on screen, which is Obsidian's `checkCallback`
@@ -212,6 +238,17 @@ pub const BASE_ONLY: &[&str] = &[
     "bases:add-view",
     "bases:change-view",
     "bases:copy-table",
+];
+
+/// The ids that act on the active file and are offered only while there is
+/// one: Obsidian 1.15.0's palette listed none of them with an empty tab
+/// active, and every one with a note or an image.
+pub const ACTIVE_FILE_ONLY: &[&str] = &[
+    "workspace:copy-path",
+    "workspace:copy-full-path",
+    "workspace:copy-url",
+    "open-with-default-app:open",
+    "open-with-default-app:show",
 ];
 
 /// Command ids the workspace can run today; the palette lists only these,
@@ -288,15 +325,24 @@ pub const RUNNABLE: &[&str] = &[
     "bases:add-item",
     "markdown:toggle-preview",
     "markdown:add-metadata-property",
+    "markdown:add-alias",
     "markdown:clear-metadata-properties",
     "editor:toggle-fold-properties",
+    "editor:toggle-readable-line-length",
+    "editor:toggle-line-numbers",
+    "editor:context-menu",
+    "editor:focus",
     "editor:insert-table",
+    "editor:rename-heading",
     "insert-template",
     "insert-current-date",
     "insert-current-time",
     "daily-notes",
     "daily-notes:goto-prev",
     "daily-notes:goto-next",
+    "random-note",
+    "zk-prefixer",
+    "insert-unique-link",
     "editor:table-row-before",
     "editor:table-row-after",
     "editor:table-row-up",
@@ -335,6 +381,7 @@ pub const RUNNABLE: &[&str] = &[
     "workspace:close",
     "workspace:close-others",
     "workspace:toggle-pin",
+    "workspace:toggle-stacked-tabs",
     "workspace:next-tab",
     "workspace:previous-tab",
     "workspace:goto-tab-1",
@@ -362,6 +409,17 @@ pub const RUNNABLE: &[&str] = &[
     "editor:open-link-in-new-split",
     "editor:open-link-in-new-window",
     "app:delete-file",
+    "workspace:copy-path",
+    "workspace:copy-full-path",
+    "workspace:copy-url",
+    "workspace:show-trash",
+    "open-with-default-app:open",
+    "open-with-default-app:show",
+    "app:toggle-ribbon",
+    "app:toggle-default-new-pane-mode",
+    "theme:toggle-light-dark",
+    "app:increase-font-size",
+    "app:decrease-font-size",
     "backlink:open",
     "backlink:open-backlinks",
     "outgoing-links:open",
@@ -370,6 +428,9 @@ pub const RUNNABLE: &[&str] = &[
     "outline:open-for-current",
     "tag-pane:open",
     "properties:open",
+    "properties:open-local",
+    "footnotes:open",
+    "backlink:toggle-backlinks-in-document",
     "bookmarks:open",
     "bookmarks:bookmark-current-view",
     "bookmarks:bookmark-current-search",
@@ -377,6 +438,19 @@ pub const RUNNABLE: &[&str] = &[
     "bookmarks:bookmark-current-section",
     "bookmarks:bookmark-current-heading",
     "bookmarks:bookmark-all-tabs",
+    "workspaces:open-modal",
+    "workspaces:save",
+    "workspaces:load",
+    "workspaces:save-and-load",
+    "note-composer:merge-file",
+    "note-composer:split-file",
+    "note-composer:extract-heading",
+    "editor:toggle-spellcheck",
+    "editor:attach-file",
+    "editor:download-attachments",
+    "app:open-file",
+    "app:show-debug-info",
+    "app:show-release-notes",
 ];
 
 /// Binds every runnable command's hotkeys in the Workspace context, and the
@@ -408,6 +482,8 @@ pub fn bind_keys(cx: &mut App, registry: &CommandRegistry) {
         KeyBinding::new("space", TreeActivate, tree),
     ]);
     crate::reading::view::bind_keys(cx);
+    composer_prompt::bind_keys(cx);
+    download_modal::bind_keys(cx);
 }
 
 /// Everything derived from the vault folder: built once off the UI thread,
@@ -437,6 +513,10 @@ pub struct VaultState {
     canvas: RwLock<CanvasConfig>,
     page_preview: RwLock<PagePreviewConfig>,
     note_composer: RwLock<NoteComposerConfig>,
+    /// `zk-prefixer.json`, the Unique note creator's folder, template and
+    /// format.
+    zk_prefixer: RwLock<ZkPrefixerConfig>,
+    file_recovery: RwLock<FileRecoveryConfig>,
     webviewer: RwLock<WebviewerConfig>,
     pub plugin_manifests: Vec<PluginManifest>,
     pub palette: CommandPaletteConfig,
@@ -541,20 +621,12 @@ impl VaultState {
         let note_composer = vault.note_composer_config();
         note("note-composer.json", note_composer.as_ref().err());
         let note_composer = note_composer.unwrap_or_default();
-        // These two are read but not kept: no row of the Unique note
-        // creator or File recovery tab has an observed key, so there is
-        // nothing to show from the file and nothing that writes it. A file
-        // that will not parse is still worth knowing about -- the window
-        // reports it and a write to it would be refused -- which is the
-        // whole of what reading them does.
-        note(
-            "zk-prefixer.json",
-            vault.zk_prefixer_config().as_ref().err(),
-        );
-        note(
-            "file-recovery.json",
-            vault.file_recovery_config().as_ref().err(),
-        );
+        let zk_prefixer = vault.zk_prefixer_config();
+        note("zk-prefixer.json", zk_prefixer.as_ref().err());
+        let zk_prefixer = zk_prefixer.unwrap_or_default();
+        let file_recovery = vault.file_recovery_config();
+        note("file-recovery.json", file_recovery.as_ref().err());
+        let file_recovery = file_recovery.unwrap_or_default();
         let webviewer = vault.webviewer_config();
         note("webviewer.json", webviewer.as_ref().err());
         let webviewer = webviewer.unwrap_or_default();
@@ -598,6 +670,8 @@ impl VaultState {
             canvas: RwLock::new(canvas),
             page_preview: RwLock::new(page_preview),
             note_composer: RwLock::new(note_composer),
+            zk_prefixer: RwLock::new(zk_prefixer),
+            file_recovery: RwLock::new(file_recovery),
             webviewer: RwLock::new(webviewer),
             plugin_manifests,
             palette,
@@ -719,6 +793,47 @@ impl VaultState {
         self.webviewer.read().unwrap_or_else(|e| e.into_inner())
     }
 
+    pub fn zk_prefixer(&self) -> RwLockReadGuard<'_, ZkPrefixerConfig> {
+        self.zk_prefixer.read().unwrap_or_else(|e| e.into_inner())
+    }
+
+    /// `file-recovery.json`: the File recovery tab's two numbers. Scoria
+    /// keeps no snapshots (Obsidian's are in its IndexedDB, which nothing
+    /// outside it reads), so these are only written, for Obsidian.
+    pub fn file_recovery(&self) -> RwLockReadGuard<'_, FileRecoveryConfig> {
+        self.file_recovery.read().unwrap_or_else(|e| e.into_inner())
+    }
+
+    /// Where *Create new unique note* puts a note made at `at`, by
+    /// `zk-prefixer.json`'s format and folder.
+    pub fn unique_note_path(
+        &self,
+        at: &templates::Stamp,
+    ) -> Result<String, scoria_vault::unique::UniqueError> {
+        let (format, folder) = {
+            let zk = self.zk_prefixer();
+            (
+                scoria_vault::unique::effective_format(zk.format.as_deref()).to_string(),
+                zk.folder.clone().unwrap_or_default(),
+            )
+        };
+        self.vault().unique_note_path(&format, &folder, at)
+    }
+
+    /// What *Add unique internal link* writes inside `[[...]]` at `at` over
+    /// `selection`.
+    pub fn unique_link_name(
+        &self,
+        at: &templates::Stamp,
+        selection: &str,
+    ) -> Result<String, scoria_vault::unique::UniqueError> {
+        let format = {
+            let zk = self.zk_prefixer();
+            scoria_vault::unique::effective_format(zk.format.as_deref()).to_string()
+        };
+        self.vault().unique_link_name(&format, at, selection)
+    }
+
     /// Writes a setting the Settings window changed and keeps the config in
     /// hand in step. The file is written first: the vault is the source of
     /// truth, so a change that cannot reach disk does not count.
@@ -762,6 +877,22 @@ impl VaultState {
                     .note_composer
                     .write()
                     .unwrap_or_else(|e| e.into_inner()) = config.clone();
+            }
+            SettingChange::ZkPrefixer(config) => {
+                self.write_config("zk-prefixer.json", config)?;
+                *self.zk_prefixer.write().unwrap_or_else(|e| e.into_inner()) = config.clone();
+            }
+            // A value the tab refused comes back as the config unchanged,
+            // and nothing is written: Obsidian left the file alone then.
+            SettingChange::FileRecovery(config) => {
+                let same = *self.file_recovery() == *config;
+                if !same {
+                    self.write_config("file-recovery.json", config)?;
+                    *self
+                        .file_recovery
+                        .write()
+                        .unwrap_or_else(|e| e.into_inner()) = config.clone();
+                }
             }
             SettingChange::Webviewer(config) => {
                 self.write_config("webviewer.json", config)?;
@@ -1148,6 +1279,50 @@ impl VaultState {
         })
     }
 
+    /// Writes the notes a heading rename rewrites (none of them moves) and
+    /// indexes them, with [`VaultState::rename`]'s rule for a note that
+    /// changed underneath: each was planned from the index's text, so a
+    /// file that is no longer that text keeps its own bytes and is returned
+    /// as stale. Returns the changes and the stale paths.
+    pub fn write_link_rewrites(
+        &self,
+        plan: &[scoria_cache::Rewrite],
+    ) -> Result<(Changes, Vec<String>), String> {
+        let mut stale: Vec<String> = Vec::new();
+        let mut written: Vec<&scoria_cache::Rewrite> = Vec::new();
+        for rw in plan {
+            let absolute = self
+                .vault()
+                .write_path(&rw.new_path)
+                .map_err(|e| e.to_string())?;
+            let planned_from = self.texts().get(&rw.old_path).map(|t| t.to_string());
+            match (std::fs::read_to_string(&absolute), planned_from) {
+                (Ok(on_disk), Some(was)) if on_disk == was => {}
+                _ => {
+                    stale.push(rw.new_path.clone());
+                    continue;
+                }
+            }
+            scoria_vault::write_no_follow(&absolute, rw.text.as_bytes())
+                .map_err(|e| format!("Could not update links in {}: {e}", rw.new_path))?;
+            written.push(rw);
+        }
+        let mut changes = Changes::default();
+        let mut cache = self.cache.write().unwrap_or_else(|e| e.into_inner());
+        let mut texts = self.texts.write().unwrap_or_else(|e| e.into_inner());
+        for rw in written {
+            let text = Arc::new(rw.text.clone());
+            cache.insert_file(rw.new_path.clone(), index_markdown(&text));
+            texts.insert(rw.new_path.clone(), text);
+            changes
+                .files
+                .push(FileChange::Modified(rw.new_path.clone()));
+            changes.notes.push(rw.new_path.clone());
+        }
+        cache.reresolve();
+        Ok((changes, stale))
+    }
+
     /// Deletes a file or folder per `trashOption` and drops it from the index.
     pub fn trash(&self, path: &str) -> Result<Changes, String> {
         let removed = self
@@ -1262,6 +1437,9 @@ enum MainView {
     Canvas,
     Bases,
     Pdf,
+    /// A `release-notes` leaf: this build's notes, in a reading view of
+    /// their own.
+    ReleaseNotes,
     Empty,
 }
 
@@ -1275,6 +1453,7 @@ impl MainView {
             MainView::Canvas => "canvas",
             MainView::Bases => "bases",
             MainView::Pdf => "pdf",
+            MainView::ReleaseNotes => "release-notes",
             MainView::Empty => "nothing",
         }
     }
@@ -1326,6 +1505,14 @@ enum RightTab {
     /// All properties: every key in the vault with its type and count.
     Properties,
     Outline,
+    /// File properties (`file-properties`): the open note's properties
+    /// block. Not one of a fresh vault's default leaves, so it has a tab
+    /// only once `properties:open-local` made its leaf or the file has one.
+    FileProperties,
+    /// Footnotes (`footnotes`): the open note's footnotes, the Footnotes
+    /// view core plugin's pane. Like File properties it has a tab only
+    /// once `footnotes:open` made its leaf or the file has one.
+    Footnotes,
 }
 
 /// The Outline pane's headings for one note's metadata, whether that
@@ -1570,6 +1757,14 @@ enum Modal {
     Chooser,
     /// The Search pane's "Copy search results".
     CopyResults,
+    /// "Manage workspace layouts" (`layouts`).
+    Layouts,
+    /// The Note composer's prompt and confirmation.
+    Composer,
+    /// "Download attachments" (`editor:download-attachments`).
+    Downloads,
+    /// "Debug info" (`app:show-debug-info`).
+    DebugInfo,
 }
 
 /// The file operation the open prompt will finish.
@@ -1594,6 +1789,12 @@ enum PendingOp {
     /// "Edit bookmark" on the item at this index path: Save writes the
     /// title and the group, Remove takes it out. The groups as above.
     EditBookmark(Vec<usize>, Vec<Vec<usize>>),
+    /// `editor:rename-heading`: the note and the zero-based line of the
+    /// ATX heading being renamed.
+    RenameHeading {
+        path: String,
+        line: u32,
+    },
 }
 
 /// One tab of the main area: what it shows and where it has been. The
@@ -1649,6 +1850,10 @@ struct Tab {
     /// and written to the leaf's `pinned`, and kept by the tab whatever
     /// file it moves on to.
     pinned: bool,
+    /// The leaf's backlinks block: its `backlinks` and `backlinkOpts`
+    /// (`backlink:toggle-backlinks-in-document`), kept by the tab like the
+    /// pin, and the groups folded in it by hand.
+    doc_backlinks: DocBacklinks,
 }
 
 impl Tab {
@@ -1661,13 +1866,17 @@ impl Tab {
             leaf: None,
             view_state: None,
             pinned: false,
+            doc_backlinks: DocBacklinks::default(),
         }
     }
 
     /// The tab's title as the strip shows it: the note's name, or Obsidian's
     /// "New tab" for one with nothing in it.
     fn title(&self) -> SharedString {
-        leaf_title(self.path.as_deref(), self.mode)
+        match release_notes::version_of(self) {
+            Some(version) => release_notes::title(&version).into(),
+            None => leaf_title(self.path.as_deref(), self.mode),
+        }
     }
 }
 
@@ -1684,6 +1893,11 @@ enum ChooserPurpose {
     /// `theme:switch`: "Default" and the vault's installed themes; the
     /// pick is written as `cssTheme`.
     Theme,
+    /// `workspaces:load`, or `workspaces:save-and-load` when `save_first`:
+    /// a saved layout, by name (`layouts`).
+    Layout {
+        save_first: bool,
+    },
 }
 
 /// How Obsidian names a split's axis: a `vertical` split lays its children
@@ -2098,6 +2312,8 @@ struct GroupView {
     history_len: usize,
     history_ix: usize,
     detached: Option<SharedString>,
+    /// The group is stacked (`"stacked": true` on its node).
+    stacked: bool,
     editor: Entity<Editor>,
     reading: Entity<ReadingView>,
     canvas: Entity<CanvasView>,
@@ -3099,6 +3315,11 @@ pub struct Workspace {
     /// The desktop's colour scheme as the window last reported it, which
     /// is what `theme: "system"` follows.
     system_dark: bool,
+    /// `theme:toggle-light-dark` run under `theme: "system"` (or no key):
+    /// Obsidian writes nothing then and only flips the body's scheme for
+    /// the session, so this turns the desktop's answer over until the
+    /// command runs again or writes a base theme.
+    scheme_flipped: bool,
     /// Set when something changed what the main area shows and the keyboard
     /// has to follow it; [`Workspace::render`] is where it is honoured.
     refocus_main: bool,
@@ -3137,6 +3358,10 @@ pub struct Workspace {
     chooser: Entity<Chooser>,
     /// What the chooser's pick means while it is open.
     chooser_purpose: ChooserPurpose,
+    /// The Note composer's modal while it is up, and what it is doing.
+    composer: Option<note_composer::ComposerModal>,
+    /// The "Download attachments" modal while it is up.
+    downloads: Option<attachments::DownloadsModal>,
     /// A canvas asked for the note or media picker; the next render opens
     /// it, with the window the chooser needs to take focus.
     pending_canvas_pick: Option<crate::canvas::FilePick>,
@@ -3144,6 +3369,14 @@ pub struct Workspace {
     settings: Entity<SettingsView>,
     prompt: Entity<Prompt>,
     copy_results: Entity<CopyResults>,
+    /// "Debug info", filled each time it opens.
+    debug_info: Entity<DebugInfo>,
+    /// The reading view release-notes tabs draw, and the version whose
+    /// notes it holds.
+    release_notes: Entity<ReadingView>,
+    release_notes_built: RefCell<Option<String>>,
+    /// "Manage workspace layouts", made the first time it opens.
+    layouts_modal: Option<Entity<layouts::LayoutsModal>>,
     pending: Option<PendingOp>,
     modal: Modal,
     /// Command ids run this session, most recent first.
@@ -3314,6 +3547,18 @@ pub struct Workspace {
     property_entries: Vec<PropertyEntry>,
     property_state: PropertyPaneState,
     property_filter: Entity<TextInput>,
+    /// Whether the right dock has a File properties leaf: `workspace.json`
+    /// had one, or `properties:open-local` added it this session.
+    file_properties_open: bool,
+    /// The Footnotes pane: whether its leaf exists, and its rows.
+    footnotes: footnotes_pane::FootnotesPane,
+    /// Stacked groups' scroll and the reading views of their other panes.
+    stacks: stacked::Stacks,
+    /// Each note's unlinked mentions as last found, for the backlinks
+    /// block of a group whose note is not the open one.
+    doc_mentions: HashMap<String, Section>,
+    /// The File properties pane's folded blocks: its Properties heading.
+    file_properties_folds: HashSet<usize>,
     /// Matcher over every note name and alias, rebuilt when files change.
     name_finder: Option<Arc<Finder>>,
     mention_generation: u64,
@@ -3505,6 +3750,8 @@ impl Workspace {
         let settings = cx.new(SettingsView::new);
         let prompt = cx.new(Prompt::new);
         let copy_results = cx.new(CopyResults::new);
+        let debug_info = cx.new(DebugInfo::new);
+        let release_notes = cx.new(ReadingView::new);
         let reading = cx.new(ReadingView::new);
         let editor = cx.new(|cx| Editor::new(window, cx));
         let canvas = cx.new(CanvasView::new);
@@ -3529,6 +3776,7 @@ impl Workspace {
         }
         reading.update(cx, |r, _| r.set_embed_views(embed_views.clone()));
         editor.update(cx, |e, _| e.set_embed_views(embed_views.clone()));
+        doc_backlinks::give_views_the_block(cx.weak_entity(), &editor, &reading, cx);
         let subscriptions = vec![
             // The filter is applied as the pane is drawn; a keystroke only
             // has to ask for a draw.
@@ -3638,6 +3886,7 @@ impl Workspace {
                     ExplorerEvent::Duplicate(path) => this.duplicate(path, cx),
                     ExplorerEvent::Delete(path) => this.start_delete(path, window, cx),
                     ExplorerEvent::Bookmark(path) => this.start_bookmark_path(path, window, cx),
+                    ExplorerEvent::MergeWith(path) => this.start_merge_of(path.clone(), window, cx),
                     ExplorerEvent::NewCanvas { folder } => this.new_canvas(folder, cx),
                     ExplorerEvent::NewBase { folder } => this.new_base(folder, cx),
                     ExplorerEvent::OpenToRight(path) => {
@@ -3785,6 +4034,34 @@ impl Workspace {
                 },
             ),
             cx.subscribe_in(
+                &debug_info,
+                window,
+                |this, _, event: &DebugInfoEvent, window, cx| match event {
+                    DebugInfoEvent::Copy(text) => {
+                        cx.write_to_clipboard(ClipboardItem::new_string(text.clone()));
+                        this.close_modal(window, cx);
+                        this.report("Debug info copied to your clipboard", cx);
+                    }
+                    DebugInfoEvent::Sandbox => {
+                        this.close_modal(window, cx);
+                        this.open_sandbox_vault(window, cx);
+                    }
+                    DebugInfoEvent::Close => this.close_modal(window, cx),
+                },
+            ),
+            // The release notes' links: only ones to the web, which open
+            // in the browser as a note's do.
+            cx.subscribe(
+                &release_notes,
+                |this, _, event: &ReadingEvent, cx| match event {
+                    ReadingEvent::OpenLink(target) | ReadingEvent::OpenLinkInNewTab(target) => {
+                        this.follow_link(target.clone(), cx)
+                    }
+                    // Nothing there links to a note, so nothing previews.
+                    ReadingEvent::ContextMenu { .. } | ReadingEvent::Hover(_) => {}
+                },
+            ),
+            cx.subscribe_in(
                 &search,
                 window,
                 |this, _, event: &SearchEvent, window, cx| match event {
@@ -3879,6 +4156,10 @@ impl Workspace {
                             this.focus_main(window, cx);
                             cx.notify();
                         }
+                        ChooserPurpose::Layout { save_first } => {
+                            this.close_modal(window, cx);
+                            this.layout_chosen(value.clone(), save_first, cx);
+                        }
                     },
                     ChooserEvent::Close => {
                         this.modal = Modal::None;
@@ -3924,6 +4205,7 @@ impl Workspace {
             dock_tree_focus: cx.focus_handle(),
             dock_tree_keyboard: false,
             system_dark: true,
+            scheme_flipped: false,
             refocus_main: false,
             state: None,
             vault_name: "No vault".into(),
@@ -3942,11 +4224,17 @@ impl Workspace {
             switcher,
             chooser,
             chooser_purpose: ChooserPurpose::default(),
+            composer: None,
+            downloads: None,
             pending_canvas_pick: None,
             palette,
             settings,
             prompt,
             copy_results,
+            debug_info,
+            release_notes,
+            release_notes_built: RefCell::new(None),
+            layouts_modal: None,
             pending: None,
             modal: Modal::None,
             recent_commands: Vec::new(),
@@ -4022,6 +4310,11 @@ impl Workspace {
             property_entries: Vec::new(),
             property_state: PropertyPaneState::default(),
             property_filter,
+            file_properties_open: false,
+            footnotes: footnotes_pane::FootnotesPane::default(),
+            stacks: stacked::Stacks::default(),
+            doc_mentions: HashMap::new(),
+            file_properties_folds: HashSet::new(),
             name_finder: None,
             mention_generation: 0,
             status: "Pass a vault folder as the first argument".into(),
@@ -4397,6 +4690,98 @@ impl Workspace {
                 self.report(format!("Created {path}"), cx);
             }
             Err(err) => self.report(err, cx),
+        }
+    }
+
+    /// Random note's *Open random note*: one of the vault's Markdown files,
+    /// drawn uniformly and opened in the tab in hand, the note already open
+    /// among the candidates; `new_tab` is the ribbon button's Ctrl+click,
+    /// which opens it in a new tab. A vault with no note is left as it is,
+    /// with no notice, and so is a one-note vault with that note open.
+    /// Nothing is written. All of it observed on Obsidian 1.15.0 on
+    /// 2026-11-09 (runs `random0`, `random1`, `random2`).
+    fn open_random_note(&mut self, new_tab: bool, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let roll = {
+            use std::hash::{BuildHasher, Hasher};
+            let mut h = std::collections::hash_map::RandomState::new().build_hasher();
+            h.write_u128(
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_nanos())
+                    .unwrap_or(0),
+            );
+            h.finish()
+        };
+        let picked = state.vault().random_note(roll).map(|f| f.path.clone());
+        let Some(path) = picked else {
+            return;
+        };
+        if new_tab {
+            self.open_in_new_tab(path, None, cx);
+        } else {
+            self.open_file(path, None, cx);
+        }
+        let mode = self.editing_mode();
+        self.set_mode(mode, window, cx);
+    }
+
+    /// Unique note creator's *Create new unique note* (`zk-prefixer`): an
+    /// empty note named by `zk-prefixer.json`'s format, in its folder, or
+    /// the template's bytes expanded, opened in the tab in hand -- a new tab
+    /// when that one is pinned, which `open_file` sees to. A taken name moves
+    /// the time on a minute ([`scoria_vault::unique`]); a folder that is not
+    /// there makes nothing and says so in Obsidian's words. No notice when
+    /// it works. Observed on 1.15.0 on 2026-11-09.
+    fn create_unique_note(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let template = state.zk_prefixer().template.clone().unwrap_or_default();
+        let picked = state.unique_note_path(&now());
+        let path = match picked {
+            Ok(path) => path,
+            Err(err) => return self.report(err.to_string(), cx),
+        };
+        // `{{title}}` is the new name, `{{date}}` and `{{time}}` the
+        // Templates expansion's (observed: `YYYY-MM-DD` and `HH:mm` with no
+        // templates.json), at the clock rather than at the minute the name
+        // moved to -- the probe's template run had no taken name to tell
+        // the two apart.
+        let text = self.daily_template_text(&state, &template, &path, cx);
+        let created = state.create_note(&path, &text);
+        match created {
+            Ok(changes) => {
+                self.after_changes(changes, cx);
+                self.open_file(path, None, cx);
+                let mode = self.editing_mode();
+                self.set_mode(mode, window, cx);
+            }
+            Err(err) => self.report(err, cx),
+        }
+    }
+
+    /// Unique note creator's *Add unique internal link*: `[[name]]` at the
+    /// caret, the name picked as a new note's would be, but no note made
+    /// and the folder and template not read. A selection joins the name
+    /// after a space and stays selected; the link is a wikilink whatever
+    /// "Use [[Wikilinks]]" says. Observed on 1.15.0 on 2026-11-09.
+    fn insert_unique_link(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if !self.mode.is_editing() {
+            return;
+        }
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let selection = self.editor.read(cx).selected_text().to_string();
+        let picked = state.unique_link_name(&now(), &selection);
+        match picked {
+            Ok(inner) => self
+                .editor
+                .update(cx, |e, cx| e.insert_unique_link(&inner, window, cx)),
+            Err(err) => self.report(err.to_string(), cx),
         }
     }
 
@@ -4920,6 +5305,29 @@ impl Workspace {
         self.reload_theme(cx);
     }
 
+    /// `theme:toggle-light-dark`: with `obsidian` or `moonstone` in
+    /// `appearance.json` the other is written through the same change the
+    /// Appearance tab's dropdown makes; under `system` or no key nothing is
+    /// written and the session's scheme is turned over instead.
+    fn toggle_light_dark(&mut self, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        // Its own statement: `appearance()` is a read guard, and
+        // `change_setting` takes the write lock.
+        let swapped = settings::toggle_light_dark(&state.appearance());
+        match swapped {
+            Some(next) => {
+                self.scheme_flipped = false;
+                self.change_setting(SettingChange::Appearance(next), cx);
+            }
+            None => {
+                self.scheme_flipped = !self.scheme_flipped;
+                self.reload_theme(cx);
+            }
+        }
+    }
+
     /// Rebuilds the theme global from `appearance.json` as it is on disk
     /// and the sheets it names, and repaints.
     pub fn reload_theme(&mut self, cx: &mut Context<Self>) {
@@ -4927,7 +5335,8 @@ impl Workspace {
             return;
         };
         let config = state.reload_appearance();
-        let mut theme = Theme::load(&state.root, &state.config_dir(), &config, self.system_dark);
+        let system_dark = self.system_dark != self.scheme_flipped;
+        let mut theme = Theme::load(&state.root, &state.config_dir(), &config, system_dark);
         crate::theme::fonts::keep_quick_size(&mut theme, cx);
         cx.set_global(theme);
         cx.notify();
@@ -4953,10 +5362,11 @@ impl Workspace {
         if editor.name.as_ref() != path {
             return false;
         }
-        state
-            .texts()
-            .get(path)
-            .is_some_and(|text| editor.text() == text.as_str())
+        // Typing can resume before the echo arrives: the buffer has moved
+        // on, and the file is still the bytes it last wrote.
+        state.texts().get(path).is_some_and(|text| {
+            editor.text() == text.as_str() || (editor.is_dirty() && editor.disk_unchanged(text))
+        })
     }
 
     fn after_changes(&mut self, changes: Changes, cx: &mut Context<Self>) {
@@ -5120,6 +5530,16 @@ impl Workspace {
             "outline" => RightTab::Outline,
             "tags" => RightTab::Tags,
             "properties" => RightTab::Properties,
+            "file-properties" => {
+                // Its leaf is made the first time it is asked for, as
+                // `properties:open-local` makes it in Obsidian.
+                self.file_properties_open = true;
+                RightTab::FileProperties
+            }
+            "footnotes" => {
+                self.footnotes.open = true;
+                RightTab::Footnotes
+            }
             _ => RightTab::Backlinks,
         };
         self.select_right_tab(which, cx);
@@ -5371,10 +5791,81 @@ impl Workspace {
                         .update(cx, |e, cx| e.add_property_row(window, cx));
                 }
             }
+            "markdown:add-alias" => self.add_alias(window, cx),
+            "editor:rename-heading" => {
+                if self.editing_or_report(id, window, cx) {
+                    self.start_rename_heading(window, cx);
+                }
+            }
             "markdown:clear-metadata-properties" => {
                 if self.note_has_keys(window, cx) {
                     self.editor
                         .update(cx, |e, cx| e.clear_properties(window, cx));
+                }
+            }
+            // The Editor tab's two rows as commands: the same `app.json`
+            // write a click on the row makes, applied the same way, so the
+            // open Settings window and the views follow it. Line numbers
+            // are written for Obsidian to read; Scoria draws no gutter yet,
+            // which the row says ("not in Scoria yet").
+            //
+            // "Toggle ribbon" is the Interface tab's "Show ribbon" the same
+            // way: `showRibbon` in `appearance.json`, no notice, and the
+            // layout file untouched (Obsidian 1.15.0).
+            "editor:toggle-readable-line-length"
+            | "editor:toggle-line-numbers"
+            | "editor:toggle-spellcheck"
+            | "app:toggle-ribbon" => {
+                // Built in a statement of its own: the config is read under
+                // a guard, and `change_setting` takes the write lock.
+                let change = self
+                    .state
+                    .as_ref()
+                    .and_then(|state| settings::toggle_command(id, state));
+                if let Some(change) = change {
+                    self.change_setting(change, cx);
+                }
+            }
+            // "Toggle default mode for new tabs": `defaultViewMode` flipped,
+            // and the notice Obsidian shows for the way it went.
+            "app:toggle-default-new-pane-mode" => {
+                let toggled = self
+                    .state
+                    .as_ref()
+                    .map(|state| settings::toggle_default_view_mode(&state.app()));
+                if let Some((change, notice)) = toggled {
+                    self.change_setting(change, cx);
+                    self.report(notice, cx);
+                }
+            }
+            "theme:toggle-light-dark" => self.toggle_light_dark(cx),
+            // One pixel up or down, 10 to 30, for the session; see
+            // `fonts::step_font_size` for why nothing is written.
+            "app:increase-font-size" | "app:decrease-font-size" => {
+                let steps = if id == "app:increase-font-size" {
+                    1
+                } else {
+                    -1
+                };
+                crate::theme::fonts::step_font_size(steps, cx);
+                cx.refresh_windows();
+            }
+            // "Show context menu under cursor": a right click's menu, at the
+            // caret. In the reading view Obsidian 1.15.0 neither offered it
+            // nor opened anything, so a hotkey there is silent too.
+            "editor:context-menu" => {
+                if self.mode.is_editing() && self.note_has_keys(window, cx) {
+                    self.editor.update(cx, |e, cx| e.context_menu_at_caret(cx));
+                }
+            }
+            // "Focus on last note": the keyboard back on the note's editor
+            // the main area shows, wherever it was -- a dock tree, the
+            // search field. It never switches tabs: over a canvas, an empty
+            // tab or a note in the reading view Obsidian 1.15.0 did nothing
+            // visible, so only an editor on screen takes it.
+            "editor:focus" => {
+                if self.main_view(cx) == MainView::Editor {
+                    self.focus_main(window, cx);
                 }
             }
             "editor:toggle-fold-properties" => {
@@ -5584,6 +6075,25 @@ impl Workspace {
             "daily-notes" => self.open_daily(None, window, cx),
             "daily-notes:goto-prev" => self.open_daily(Some(false), window, cx),
             "daily-notes:goto-next" => self.open_daily(Some(true), window, cx),
+            "random-note" => self.open_random_note(false, window, cx),
+            "zk-prefixer" => self.create_unique_note(window, cx),
+            "insert-unique-link" => {
+                if self.editing_or_report(id, window, cx) {
+                    self.insert_unique_link(window, cx);
+                }
+            }
+            "workspaces:open-modal" => self.open_layouts_modal(window, cx),
+            "workspaces:save" => self.save_active_layout(window, cx),
+            "workspaces:load" => self.open_layout_chooser(false, window, cx),
+            "workspaces:save-and-load" => self.open_layout_chooser(true, window, cx),
+            "editor:attach-file" => self.attach_file(window, cx),
+            "editor:download-attachments" => self.start_download_attachments(window, cx),
+            "app:open-file" => self.open_file_dialog(window, cx),
+            "note-composer:merge-file"
+            | "note-composer:split-file"
+            | "note-composer:extract-heading" => {
+                self.run_composer_command(id, window, cx);
+            }
             _ if TableCommand::from_id(id).is_some() => {
                 let cmd = TableCommand::from_id(id).expect("checked above");
                 if self.editing_or_report(id, window, cx) {
@@ -5679,6 +6189,7 @@ impl Workspace {
             "workspace:close" => self.close_tab(self.active_tab, cx),
             "workspace:close-others" => self.close_other_tabs(cx),
             "workspace:toggle-pin" => self.toggle_pin(cx),
+            "workspace:toggle-stacked-tabs" => self.toggle_stacked_tabs(cx),
             "workspace:move-to-new-window" => self.move_to_new_window(window, cx),
             "workspace:open-in-new-window" => self.open_in_new_window(window, cx),
             "workspace:new-window" => {
@@ -5732,6 +6243,62 @@ impl Workspace {
             "app:delete-file" => {
                 if let Some(current) = self.current.clone() {
                     self.start_delete(&current, window, cx);
+                }
+            }
+            // The file menu's rows for the active file, by their command
+            // names: "Copy current file path from vault folder" is the path
+            // the menu's "Copy path" writes, "...from system root" the same
+            // file's absolute path, and "Open in default app" / "Show in
+            // system explorer" the menu's two rows of the same names.
+            //
+            // The menu row is silent, but the commands are not: each says
+            // "Copied to your clipboard", and the URL "URL copied to your
+            // clipboard" (Obsidian 1.15.0).
+            "workspace:copy-path" => {
+                if let Some(current) = self.current.clone() {
+                    self.copy_path(&current, cx);
+                    self.report("Copied to your clipboard", cx);
+                }
+            }
+            "workspace:copy-full-path" => {
+                if let (Some(state), Some(current)) = (self.state.clone(), self.current.clone()) {
+                    let text = full_path_text(state.vault().absolute(&current));
+                    cx.write_to_clipboard(ClipboardItem::new_string(text));
+                    self.report("Copied to your clipboard", cx);
+                }
+            }
+            "workspace:copy-url" => {
+                if let (Some(state), Some(current)) = (self.state.clone(), self.current.clone()) {
+                    let name = vault_folder_name(&state.root);
+                    let url = crate::uri::open_url(&name, &current);
+                    cx.write_to_clipboard(ClipboardItem::new_string(url));
+                    self.report("URL copied to your clipboard", cx);
+                }
+            }
+            // "Show trash", offered only under `trashOption: "local"`: the
+            // vault's `.trash` shown in its parent the way "Show in system
+            // explorer" shows a file, or, with no such folder, Obsidian's
+            // notice naming the absolute path.
+            "workspace:show-trash" => {
+                if let Some(state) = self.state.clone() {
+                    if state.trash_option() == TrashOption::Local {
+                        let trash = state.vault().absolute(TRASH_FOLDER);
+                        if trash.exists() {
+                            self.show_in_system_explorer(TRASH_FOLDER, cx);
+                        } else {
+                            self.report(missing_file_notice(&full_path_text(trash)), cx);
+                        }
+                    }
+                }
+            }
+            "open-with-default-app:open" => {
+                if let Some(current) = self.current.clone() {
+                    self.open_in_default_app(&current, cx);
+                }
+            }
+            "open-with-default-app:show" => {
+                if let Some(current) = self.current.clone() {
+                    self.show_in_system_explorer(&current, cx);
                 }
             }
             "backlink:open" | "backlink:open-backlinks" => {
@@ -5843,6 +6410,15 @@ impl Workspace {
                 self.right_visible = true;
                 self.show_right_tab("properties", cx);
             }
+            "properties:open-local" => {
+                self.right_visible = true;
+                self.show_right_tab("file-properties", cx);
+            }
+            "footnotes:open" => {
+                self.right_visible = true;
+                self.show_right_tab("footnotes", cx);
+            }
+            "backlink:toggle-backlinks-in-document" => self.toggle_backlinks_in_document(cx),
             "app:open-help" => self.open_help(window, cx),
             // "Manage vaults" raises the vault manager; Obsidian's does
             // the same (its `app:open-vault` left no menu and no modal
@@ -5851,6 +6427,8 @@ impl Workspace {
             "app:switch-vault" => self.toggle_vault_menu(cx),
             "app:open-another-vault" => self.open_another_vault(window, cx),
             "app:open-sandbox-vault" => self.open_sandbox_vault(window, cx),
+            "app:show-debug-info" => self.show_debug_info(window, cx),
+            "app:show-release-notes" => self.show_release_notes(cx),
             _ => {
                 let name = self.command_name(id, cx);
                 self.report(format!("{name}: not available in Scoria yet"), cx);
@@ -6024,6 +6602,45 @@ impl Workspace {
         if id == "graph:open-local" {
             return self.current.is_some();
         }
+        // The active file's commands are check callbacks too: with an
+        // empty tab active Obsidian 1.15.0 offered none of them, and with a
+        // note or an image it offered all five.
+        if ACTIVE_FILE_ONLY.contains(&id) {
+            return self.current.is_some();
+        }
+        // "Show trash" only where there is a trash of the vault's own.
+        if id == "workspace:show-trash" {
+            return self
+                .state
+                .as_ref()
+                .is_some_and(|state| state.trash_option() == TrashOption::Local);
+        }
+        // "Focus on last note" whenever a Markdown leaf exists, in any
+        // mode and any tab.
+        if id == "editor:focus" {
+            return self.has_markdown_leaf();
+        }
+        // Both are check callbacks in Obsidian 1.15.0 (2026-11-09):
+        // "Rename this heading..." is offered only with the caret on an ATX
+        // heading line, in Live Preview or Source mode. "Add alias" is
+        // offered in reading view too, but there Obsidian edits the reading
+        // view's own block, which is read-only in Scoria, so it is left out.
+        if id == "editor:rename-heading" {
+            return self.mode.is_editing()
+                && self.note_has_keys(window, cx)
+                && self.editor.read(cx).heading_to_rename().is_some();
+        }
+        // A check callback: it flips the active markdown leaf's block, so
+        // it is offered only while one is active.
+        if id == "backlink:toggle-backlinks-in-document" {
+            return self.active_note_is_markdown();
+        }
+        if let Some(can) = self.composer_can_run(id, cx) {
+            return can;
+        }
+        if let Some(can) = self.attachments_can_run(id) {
+            return can;
+        }
         if EDITOR_ONLY.contains(&id) {
             return self.mode.is_editing() && self.note_has_keys(window, cx);
         }
@@ -6036,6 +6653,27 @@ impl Workspace {
             return self.main_view(cx) == MainView::Bases;
         }
         true
+    }
+
+    /// Whether any tab of any group, popouts' included, is a Markdown leaf.
+    /// The active group's live fields stand for its active tab, whose slot
+    /// may not have been stashed yet.
+    fn has_markdown_leaf(&self) -> bool {
+        let live = std::iter::once((self.current.as_deref(), self.mode == ViewMode::Graph));
+        let mine = self
+            .tabs
+            .iter()
+            .enumerate()
+            .filter(|(ix, _)| *ix != self.active_tab)
+            .map(|(_, t)| (t.path.as_deref(), t.mode == ViewMode::Graph));
+        let others = self
+            .groups
+            .iter()
+            .enumerate()
+            .filter(|(ix, _)| *ix != self.active_group)
+            .flat_map(|(_, g)| g.tabs.iter())
+            .map(|t| (t.path.as_deref(), t.mode == ViewMode::Graph));
+        any_markdown_leaf(live.chain(mine).chain(others))
     }
 
     fn note_has_keys(&self, window: &Window, cx: &App) -> bool {
@@ -6259,6 +6897,7 @@ impl Workspace {
             || unpainted(MainView::Canvas, &self.canvas.focus_handle(cx))
             || unpainted(MainView::Bases, &self.bases.focus_handle(cx))
             || unpainted(MainView::Pdf, &self.pdf.focus_handle(cx))
+            || unpainted(MainView::ReleaseNotes, &self.release_notes.focus_handle(cx))
         {
             return true;
         }
@@ -6288,6 +6927,7 @@ impl Workspace {
             MainView::Canvas => self.canvas.focus_handle(cx),
             MainView::Bases => self.bases.focus_handle(cx),
             MainView::Pdf => self.pdf.focus_handle(cx),
+            MainView::ReleaseNotes => self.release_notes.focus_handle(cx),
             MainView::Empty => self.focus_handle.clone(),
         };
         // gpui's focus is per window, and the active group's views are
@@ -6603,7 +7243,17 @@ impl Workspace {
                     // keeps its place when the note changed underneath it.
                     let (same, matches, dirty) = {
                         let e = self.editor.read(cx);
-                        (e.name.as_ref() == path, e.matches_file(&text), e.is_dirty())
+                        // A save's echo can arrive after the next edit: the
+                        // buffer is dirty and differs from the file, but the
+                        // file is what the buffer last wrote, so nothing
+                        // changed underneath it (seen 2026-11-10, a save
+                        // between two Note composer extractions).
+                        let echo = e.is_dirty() && e.disk_unchanged(&text);
+                        (
+                            e.name.as_ref() == path,
+                            e.matches_file(&text) || echo,
+                            e.is_dirty(),
+                        )
                     };
                     if same && matches {
                         // Own write or an unrelated event.
@@ -7122,6 +7772,8 @@ impl Workspace {
                 {
                     return;
                 }
+                ws.doc_mentions
+                    .insert(rows.path.clone(), rows.incoming.clone());
                 if let Some(slot) = ws.backlink_sections.get_mut(1) {
                     *slot = rows.incoming;
                 }
@@ -7351,7 +8003,18 @@ impl Workspace {
         from: String,
         cx: &mut Context<Self>,
     ) -> impl Fn(bool, Bounds<Pixels>, gpui::Modifiers, &mut Window, &mut App) + 'static {
-        let this = cx.weak_entity();
+        Self::row_hover_handler(cx.weak_entity(), source, target, from)
+    }
+
+    /// The same handler from a weak handle, for rows built without the
+    /// workspace's context (the section list, which the editor and the
+    /// reading view also lay out under a note).
+    fn row_hover_handler(
+        this: gpui::WeakEntity<Self>,
+        source: crate::hover_preview::Source,
+        target: String,
+        from: String,
+    ) -> impl Fn(bool, Bounds<Pixels>, gpui::Modifiers, &mut Window, &mut App) + 'static {
         move |over, anchor, modifiers, _, cx| {
             let (target, from) = (target.clone(), from.clone());
             this.update(cx, |this, cx| {
@@ -9082,6 +9745,9 @@ impl Workspace {
                 self.rename_property_everywhere(&from, value, cx);
                 self.close_modal(window, cx);
             }
+            PendingOp::RenameHeading { path, line } => {
+                self.finish_rename_heading(&path, line, value, window, cx);
+            }
             PendingOp::Rename(from) => {
                 // The box holds the stem, which is what `renamed_path`
                 // takes -- the same path and the same validator the view
@@ -9692,6 +10358,140 @@ impl Workspace {
         }
     }
 
+    /// `editor:rename-heading` ("Rename this heading..."): the file-rename
+    /// modal's shape, titled "Rename heading", its field holding the
+    /// heading's text without the marker, all of it selected, then Save
+    /// (accented) and Cancel -- Obsidian 1.15.0, the 2026-11-09 probe. Off
+    /// an ATX heading line it opens nothing, which is what Obsidian's run on
+    /// a setext heading did.
+    fn start_rename_heading(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(path) = self.current.clone() else {
+            return;
+        };
+        let (heading, line) = {
+            let e = self.editor.read(cx);
+            (e.heading_to_rename(), e.cursor().line as u32)
+        };
+        let Some(heading) = heading else {
+            return;
+        };
+        self.open_prompt(
+            PendingOp::RenameHeading { path, line },
+            PromptSpec {
+                title: "Rename heading".into(),
+                input: Some(heading.text),
+                buttons: vec![
+                    PromptButton::new("Save", PromptAction::Submit).cta(),
+                    PromptButton::new("Cancel", PromptAction::Cancel),
+                ],
+                ..PromptSpec::default()
+            },
+            window,
+            cx,
+        );
+    }
+
+    /// Save in the "Rename heading" modal. An empty name keeps the modal
+    /// open and writes nothing. Otherwise the heading's note takes the new
+    /// heading line and its own links as one undo step, planned over the
+    /// buffer, and is written at once -- Obsidian's files were already
+    /// rewritten 0.7 s after Enter, a direct write and not the autosave --
+    /// and every other note linking to the heading is rewritten on disk
+    /// through [`VaultState::write_link_rewrites`], which leaves a note
+    /// that changed underneath alone. `alwaysUpdateLinks` is not asked:
+    /// with it off Obsidian wrote the same bytes and showed no prompt.
+    fn finish_rename_heading(
+        &mut self,
+        path: &str,
+        line: u32,
+        name: &str,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if name.is_empty() {
+            return;
+        }
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        self.pending = None;
+        self.close_modal(window, cx);
+        let own_text = {
+            let e = self.editor.read(cx);
+            (e.name.as_ref() == path && self.current.as_deref() == Some(path))
+                .then(|| e.text().to_string())
+        };
+        let Some(own_text) = own_text else {
+            return;
+        };
+        // Both guards are dropped before anything takes a write lock.
+        let plan = {
+            let texts = state.texts();
+            state
+                .cache()
+                .plan_heading_rename(path, &own_text, line, name, &|p| {
+                    texts.get(p).map(|t| t.to_string())
+                })
+        };
+        let Some(plan) = plan else {
+            return;
+        };
+        if !plan.own.is_empty() {
+            let heading = plan.heading.clone();
+            let edits = plan.own.clone();
+            self.editor.update(cx, |e, cx| {
+                e.apply_heading_rename(edits, &heading, window, cx)
+            });
+            self.flush_save(cx);
+        }
+        match state.write_link_rewrites(&plan.rewrites) {
+            Ok((changes, stale)) => {
+                self.after_changes(changes, cx);
+                if !stale.is_empty() {
+                    let n = stale.len();
+                    self.report(
+                        format!(
+                            "{n} file{} changed on disk and {} left alone",
+                            plural(n),
+                            if n == 1 { "was" } else { "were" }
+                        ),
+                        cx,
+                    );
+                }
+            }
+            Err(err) => self.report(err, cx),
+        }
+    }
+
+    /// `markdown:add-alias`. In Live Preview it is Obsidian's command: the
+    /// `aliases` key written at once where the note has none, and the caret
+    /// in the empty input after the row's pills (see [`Editor::add_alias`]).
+    /// In Source mode Obsidian edits the field in the File properties pane,
+    /// which is read-only in Scoria, so the command does the part that pane
+    /// does not need: the same key written, and the pane opened, as Obsidian
+    /// opens it -- which leaves exactly what Obsidian leaves when the field
+    /// is left with Escape. Reading view is not offered (see `can_run`).
+    fn add_alias(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if !self.mode.is_editing() || !self.note_has_keys(window, cx) {
+            return;
+        }
+        let in_table =
+            self.mode == ViewMode::LivePreview && self.editor.read(cx).draws_properties_table();
+        let changed = self
+            .editor
+            .update(cx, |e, cx| e.add_alias(in_table, window, cx));
+        // The key reached the disk within 0.3 s in Obsidian, not on the
+        // autosave's debounce.
+        if changed {
+            self.flush_save(cx);
+        }
+        if !in_table {
+            self.right_visible = true;
+            self.show_right_tab("file-properties", cx);
+        }
+        cx.notify();
+    }
+
     /// Renames the open note to `new_name` (same folder, same extension)
     /// right away; `--rename` on the command line, for smoke tests.
     pub fn rename_current(&mut self, new_name: &str, window: &mut Window, cx: &mut Context<Self>) {
@@ -9730,6 +10530,9 @@ impl Workspace {
     /// nothing to open — takes edits nobody saves, and a reading view left
     /// behind keeps a deleted note's links on screen and clickable.
     fn main_view(&self, cx: &App) -> MainView {
+        if self.active_release_notes().is_some() {
+            return MainView::ReleaseNotes;
+        }
         let has_note = self.reading.read(cx).path.is_some();
         let image = self
             .current
@@ -9788,6 +10591,7 @@ impl Workspace {
                 history_len: self.history.len(),
                 history_ix: self.history_ix,
                 detached: self.detached.clone(),
+                stacked: stacked::is_stacked(&g.node),
                 editor: self.editor.clone(),
                 reading: self.reading.clone(),
                 canvas: self.canvas.clone(),
@@ -9806,6 +10610,7 @@ impl Workspace {
             history_len: tab.map(|t| t.history.len()).unwrap_or(0),
             history_ix: tab.map(|t| t.history_ix).unwrap_or(0),
             detached: g.detached.clone(),
+            stacked: stacked::is_stacked(&g.node),
             editor: g.editor.clone(),
             reading: g.reading.clone(),
             canvas: g.canvas.clone(),
@@ -9938,18 +10743,22 @@ impl Workspace {
                 )
             })
             .child(self.render_tab_strip(&view, first, last, theme, cx))
-            .child(self.render_header(&view, theme, cx))
-            .child(
-                div()
-                    .relative()
-                    .flex_1()
-                    .min_h_0()
-                    .overflow_hidden()
-                    .child(self.render_group_main(&view, theme, cx))
-                    .when(self.dragging_tab, |d| {
-                        d.child(self.render_drop_zones(id, theme, cx))
-                    }),
-            )
+            .map(|d| {
+                if view.stacked {
+                    return d.child(self.render_stack(&view, theme, cx));
+                }
+                d.child(self.render_header(&view, theme, cx)).child(
+                    div()
+                        .relative()
+                        .flex_1()
+                        .min_h_0()
+                        .overflow_hidden()
+                        .child(self.render_group_main(&view, theme, cx))
+                        .when(self.dragging_tab, |d| {
+                            d.child(self.render_drop_zones(id, theme, cx))
+                        }),
+                )
+            })
             .into_any_element()
     }
 
@@ -10008,7 +10817,11 @@ impl Workspace {
         let id = view.id;
         // The leaf's name, the same string its tab carries: "New tab" with
         // nothing open, not "No file is open".
-        let title = leaf_title(view.current.as_deref(), view.mode);
+        let title = view
+            .tabs
+            .get(view.active_tab)
+            .map(Tab::title)
+            .unwrap_or_else(|| leaf_title(view.current.as_deref(), view.mode));
         let crumbs: SharedString = view
             .current
             .as_deref()
@@ -10023,6 +10836,11 @@ impl Workspace {
         };
         let can_back = view.history_ix > 1;
         let can_forward = view.history_ix < view.history_len;
+        let release_notes_leaf = view
+            .tabs
+            .get(view.active_tab)
+            .and_then(release_notes::version_of)
+            .is_some();
         // A base leaf draws Obsidian's own actions for one, not a note's.
         let base_leaf = view
             .current
@@ -10101,6 +10919,10 @@ impl Workspace {
                     .children(self.render_bookmarked_action(view, theme, cx))
                     .child(if let Some(path) = base_leaf.clone() {
                         self.render_base_header_actions(id, path, theme, cx)
+                    } else if release_notes_leaf {
+                        // The release notes are not a note: no graph of them
+                        // and no mode to switch.
+                        div()
                     } else {
                         div()
                             .flex()
@@ -10219,11 +11041,18 @@ impl Workspace {
             Some(b) => point(b.right(), b.bottom() + px(2.)),
             None => point(px(0.), px(0.)),
         };
+        // A markdown leaf's menu opens on "Backlinks in document".
+        let target = match self.active_backlinks_in_document() {
+            Some(backlinks) if self.current.as_deref() == Some(path.as_str()) => {
+                file_menu::Target::Note { path, backlinks }
+            }
+            _ => file_menu::Target::View(path),
+        };
         self.file_menu = Some(file_menu::Menu {
             position,
             submenu: false,
             anchor: Anchor::TopRight,
-            target: file_menu::Target::View(path),
+            target,
         });
         cx.notify();
     }
@@ -10243,6 +11072,12 @@ impl Workspace {
         let Some(gix) = self.group_ix(id) else {
             return;
         };
+        let active = gix == self.active_group && ix == self.groups[gix].active_tab;
+        let backlinks = if active {
+            self.active_backlinks_in_document()
+        } else {
+            None
+        };
         let group = &self.groups[gix];
         let Some(tab) = group.tabs.get(ix) else {
             return;
@@ -10257,7 +11092,8 @@ impl Workspace {
                 path: tab.path.clone().unwrap_or_default(),
                 tabs: group.tabs.len(),
                 pinned: tab.pinned,
-                active: gix == self.active_group && ix == group.active_tab,
+                active,
+                backlinks,
             },
         });
         cx.notify();
@@ -10553,6 +11389,13 @@ impl Workspace {
             view.current.is_some() && view.canvas.read(cx).path() == view.current.as_deref();
         let bases = view.current.is_some() && view.bases.read(cx).path() == view.current.as_deref();
         let pdf = view.current.is_some() && view.pdf.read(cx).path() == view.current.as_deref();
+        if let Some(version) = view
+            .tabs
+            .get(view.active_tab)
+            .and_then(release_notes::version_of)
+        {
+            return self.release_notes_view(&version, cx).into_any_element();
+        }
         match Self::main_view_for(view.mode, has_note, image, has_buffer, canvas, bases, pdf) {
             MainView::Canvas => view.canvas.clone().into_any_element(),
             MainView::Bases => view.bases.clone().into_any_element(),
@@ -10568,7 +11411,7 @@ impl Workspace {
                 .text_color(theme.tokens.text_muted)
                 .child("The graph is open in another pane")
                 .into_any_element(),
-            MainView::Reading => view.reading.clone().into_any_element(),
+            MainView::Reading | MainView::ReleaseNotes => view.reading.clone().into_any_element(),
             MainView::Editor => Self::render_editor(&view.editor, view.detached.clone(), theme),
             MainView::Empty => match view.current.as_deref() {
                 Some(path) => Self::render_unsupported_file(path, theme),
@@ -10712,6 +11555,9 @@ impl Workspace {
             .filter(|t| t.path == self.current)
             .and_then(|t| t.view_state.clone());
         let pinned = slot.is_some_and(|t| t.pinned);
+        // So is whether its note shows the backlinks block, which goes with
+        // the tab as the pin does.
+        let doc_backlinks = slot.map(|t| t.doc_backlinks.clone()).unwrap_or_default();
         let tab = Tab {
             path: self.current.clone(),
             mode: self.mode,
@@ -10720,6 +11566,7 @@ impl Workspace {
             leaf,
             view_state,
             pinned,
+            doc_backlinks,
         };
         match self.tabs.get_mut(self.active_tab) {
             Some(slot) => *slot = tab,
@@ -10875,7 +11722,10 @@ impl Workspace {
 
     fn remember_closed(&mut self, ix: usize, tab: Tab) {
         // An empty tab is not worth bringing back.
-        if tab.path.is_some() || tab.mode == ViewMode::Graph {
+        if tab.path.is_some()
+            || tab.mode == ViewMode::Graph
+            || release_notes::version_of(&tab).is_some()
+        {
             self.closed_tabs.push((ix, tab));
             if self.closed_tabs.len() > CLOSED_TABS_KEPT {
                 self.closed_tabs.remove(0);
@@ -11064,6 +11914,7 @@ impl Workspace {
         let pdf = cx.new(PdfView::new);
         reading.update(cx, |r, _| r.set_embed_views(self.embed_views.clone()));
         editor.update(cx, |e, _| e.set_embed_views(self.embed_views.clone()));
+        doc_backlinks::give_views_the_block(cx.weak_entity(), &editor, &reading, cx);
         self._subscriptions.extend(view_subscriptions(
             &editor, &reading, &canvas, &bases, &pdf, cx,
         ));
@@ -11158,6 +12009,11 @@ impl Workspace {
                 .get(self.active_tab)
                 .and_then(|t| t.view_state.clone()),
             pinned: false,
+            doc_backlinks: self
+                .tabs
+                .get(self.active_tab)
+                .map(|t| t.doc_backlinks.clone())
+                .unwrap_or_default(),
         }
     }
 
@@ -11173,6 +12029,7 @@ impl Workspace {
             leaf: None,
             view_state: None,
             pinned: false,
+            doc_backlinks: DocBacklinks::default(),
         }
     }
 
@@ -11324,6 +12181,7 @@ impl Workspace {
         cx: &mut Context<Self>,
     ) -> Option<gpui::AnyElement> {
         let wix = self.windows.iter().position(|w| w.id == id)?;
+        self.sync_stacks(cx);
         // The first frame is drawn while the window is still being opened,
         // before the opener could record its handle: the window itself is
         // the handle, and the keyboard below needs it to find this window.
@@ -11506,14 +12364,13 @@ impl Workspace {
             .copied()
             .find(|g| order.contains(g))
             .or_else(|| order.first().copied());
-        let (path, mode) = group
+        group
             .and_then(|g| self.group_ix(g))
-            .map(|ix| {
+            .and_then(|ix| {
                 let view = self.group_view(ix);
-                (view.current, view.mode)
+                view.tabs.get(view.active_tab).map(Tab::title)
             })
-            .unwrap_or((None, ViewMode::Reading));
-        leaf_title(path.as_deref(), mode)
+            .unwrap_or_else(|| leaf_title(None, ViewMode::Reading))
     }
 
     /// `workspace:move-to-new-window`: the active tab leaves for a popout
@@ -12631,7 +13488,8 @@ impl Workspace {
     }
 
     /// The ribbon down the left edge: the quick switcher, the graph, a new
-    /// canvas, today's daily note, a template and the palette. `workspace.json`'s
+    /// canvas, today's daily note, a template, the palette, a unique note, a
+    /// random note and a new base, each while its plugin is on. `workspace.json`'s
     /// `left-ribbon.hiddenItems` hides an entry by the plugin id its key starts
     /// with. Settings is not here: Obsidian 1.14 leaves `.side-dock-settings`
     /// empty and puts the gear in the sidebar's footer, the vault profile.
@@ -12691,6 +13549,18 @@ impl Workspace {
                     cx.listener(move |this, _, window, cx| this.run_command(command, window, cx)),
                 )
         };
+        // Open random note's Ctrl+click opens a new tab and makes it active
+        // (2026-11-09, `random2` `s03-ribbon-click`).
+        let random_button = |id: &'static str, name: &'static str, label: &'static str| {
+            icon_button(id, name, theme)
+                .tooltip(tooltip(label))
+                .on_click(
+                    cx.listener(move |this, event: &gpui::ClickEvent, window, cx| {
+                        let m = event.modifiers();
+                        this.open_random_note(m.control || m.platform, window, cx);
+                    }),
+                )
+        };
         // The icons are the ones Obsidian's ribbon names: `lucide-file-search`
         // for the switcher, `git-fork` for the graph, `layout-dashboard` for
         // a new canvas, `calendar`, `files` for a template, `terminal` for
@@ -12698,14 +13568,24 @@ impl Workspace {
         // which is the order the DOM was read in. The labels are each
         // button's `aria-label`, its tooltip, read off the same ribbon
         // (`tools/obsidian-probe/results/2026-11-01-bases-ui.json`, `s01`
-        // `ribbon`).
+        // `ribbon`). Unique note creator's and Random note's buttons sit
+        // between the palette and the base when their plugins are on
+        // (`2026-11-09-note-composer-unique.json`, `s00-context` `ribbon`);
+        // both icons are Obsidian's own drawings, `sheets-in-box` and
+        // `dice`, so Scoria draws its own under those names. The Workspaces
+        // plugin's "Manage workspace layouts" was seen between the palette
+        // and a new base too (`2026-11-09-panes-workspaces-headings.json`,
+        // `ws` `s00-context`), in a vault without the other two; with all
+        // three on it goes after them, the order Obsidian lists the plugins
+        // in `core-plugins.json`, which both observations fit. Its
+        // `lucide-layout` is Lucide's old name for `panels-top-left`.
         let items: [(
             &'static str,
             &'static str,
             &'static str,
             &'static str,
             &'static str,
-        ); 7] = [
+        ); 10] = [
             (
                 "ribbon-switcher",
                 "file-search",
@@ -12749,6 +13629,27 @@ impl Workspace {
                 "Open command palette",
             ),
             (
+                "ribbon-unique-note",
+                "sheets-in-box",
+                "zk-prefixer",
+                "zk-prefixer",
+                "Create new unique note",
+            ),
+            (
+                "ribbon-random-note",
+                "dice",
+                "random-note",
+                "random-note",
+                "Open random note",
+            ),
+            (
+                "ribbon-workspaces",
+                "panels-top-left",
+                "workspaces:open-modal",
+                "workspaces",
+                "Manage workspace layouts",
+            ),
+            (
                 "ribbon-base",
                 "layout-list",
                 "bases:new-file",
@@ -12759,7 +13660,10 @@ impl Workspace {
         let buttons: Vec<_> = items
             .into_iter()
             .filter(|(_, _, _, plugin, _)| enabled(plugin) && !hidden(plugin))
-            .map(|(id, name, command, _, label)| button(id, name, command, label))
+            .map(|(id, name, command, _, label)| match command {
+                "random-note" => random_button(id, name, label),
+                _ => button(id, name, command, label),
+            })
             .collect();
         div()
             .flex()
@@ -13045,7 +13949,9 @@ impl Workspace {
         theme: &Theme,
         cx: &mut Context<Self>,
     ) -> gpui::Div {
-        let tabs = &view.tabs;
+        // A stacked group's tabs are its spines, below: the strip keeps
+        // only its buttons (observed).
+        let tabs: &[Tab] = if view.stacked { &[] } else { &view.tabs };
         let active_ix = view.active_tab;
         let group = view.id;
         let group_active = view.active;
@@ -13517,7 +14423,11 @@ impl Workspace {
                         this.tab_list_menu = None;
                         this.run_command("workspace:toggle-stacked-tabs", window, cx);
                     }))
-                    .child("Stack tabs"),
+                    .child(if view.stacked {
+                        "Unstack tabs"
+                    } else {
+                        "Stack tabs"
+                    }),
             );
         if !paths.is_empty() {
             let label = if paths.len() == 1 {
@@ -13606,6 +14516,18 @@ impl Workspace {
                 return;
             }
         };
+        self.apply_layout(layout, state, window, cx);
+    }
+
+    /// Restores `layout`, a `workspace.json`, over a main area of one empty
+    /// group: the launch's restore, and a saved workspace layout's load.
+    fn apply_layout(
+        &mut self,
+        layout: Value,
+        state: &Arc<VaultState>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         self.layout_restored = true;
         if let Some((sort, auto_reveal)) = explorer_leaf_state(&layout) {
             self.explorer
@@ -13740,8 +14662,16 @@ impl Workspace {
             Some("outline") => self.right_tab = RightTab::Outline,
             Some("tag") => self.right_tab = RightTab::Tags,
             Some("all-properties") => self.right_tab = RightTab::Properties,
+            Some("file-properties") => self.right_tab = RightTab::FileProperties,
+            Some("footnotes") => self.right_tab = RightTab::Footnotes,
             _ => {}
         }
+        self.file_properties_open = layout
+            .get("right")
+            .is_some_and(|right| leaf_of_kind(right, "file-properties").is_some());
+        self.footnotes.open = layout
+            .get("right")
+            .is_some_and(|right| leaf_of_kind(right, "footnotes").is_some());
         self.layout = Some(layout);
     }
 
@@ -13884,10 +14814,26 @@ impl Workspace {
         let (left_tab, right_tab) = (self.left_tab as usize, self.right_tab as usize);
         for (dock, tab) in [("left", left_tab), ("right", right_tab)] {
             if !object.get(dock).is_some_and(Value::is_object) {
-                object.insert(
-                    dock.into(),
-                    default_dock_json(dock, self.current.as_deref(), tab),
-                );
+                let mut json = default_dock_json(dock, self.current.as_deref(), tab);
+                // A File properties leaf opened in a vault that had no
+                // docks goes after the defaults, and may be the open tab.
+                if dock == "right"
+                    && self.file_properties_open
+                    && push_file_properties_leaf(&mut json, self.current.as_deref())
+                {
+                    set_dock_current_tab(&mut json, tab);
+                }
+                object.insert(dock.into(), json);
+            }
+        }
+        if self.file_properties_open {
+            if let Some(right) = object.get_mut("right") {
+                push_file_properties_leaf(right, self.current.as_deref());
+            }
+        }
+        if self.footnotes.open {
+            if let Some(right) = object.get_mut("right") {
+                footnotes_pane::push_footnotes_leaf(right, self.right_tab == RightTab::Footnotes);
             }
         }
         // The Files leaf's own state, where the file has that leaf.
@@ -13960,6 +14906,8 @@ impl Workspace {
                     ("searchQuery", json!(self.outline_filter.read(cx).text())),
                 ],
             );
+            // File properties keeps only the note it shows.
+            set_leaf_state(right, "file-properties", &[("file", json!(self.current))]);
         }
         let mut active_id = Value::Null;
         let main = self.layout_node_json(&self.layout_tree, &mut active_id);
@@ -14055,7 +15003,15 @@ impl Workspace {
                 } else {
                     (self.groups[ix].tabs.clone(), self.groups[ix].active_tab)
                 };
-                let leaves: Vec<Value> = tabs.iter().map(leaf_json).collect();
+                let in_document = self.backlinks_in_document_setting();
+                let leaves: Vec<Value> = tabs
+                    .iter()
+                    .map(|t| {
+                        let mut leaf = leaf_json(t);
+                        t.doc_backlinks.write(&mut leaf, in_document);
+                        leaf
+                    })
+                    .collect();
                 if active {
                     *active_id = leaves
                         .get(active_tab)
@@ -14278,6 +15234,10 @@ impl Workspace {
             rows,
         );
         file.insert("history_ix".into(), json!(self.history_ix));
+        file.insert(
+            "backlinks_in_document".into(),
+            self.backlinks_in_document_json(),
+        );
 
         let tab_json = |t: &Tab| json!({"path": t.path, "mode": t.mode.as_str(), "title": t.title(), "pinned": t.pinned});
         let tabs = json!({
@@ -14324,6 +15284,8 @@ impl Workspace {
                         "id": g.id,
                         "active_tab": view.active_tab,
                         "dimension": g.dimension(),
+                        "stacked": view.stacked,
+                        "stack": self.stack_json(g.id),
                         "tabs": view.tabs.iter().map(tab_json).collect::<Vec<Value>>(),
                     })
                 })
@@ -14360,6 +15322,8 @@ impl Workspace {
                 RightTab::Outline => "outline",
                 RightTab::Tags => "tags",
                 RightTab::Properties => "properties",
+                RightTab::FileProperties => "file-properties",
+                RightTab::Footnotes => "footnotes",
             }),
         );
         right.insert(
@@ -14440,6 +15404,22 @@ impl Workspace {
                 .collect(),
             rows,
         );
+        right.insert(
+            "file_properties".into(),
+            json!({
+                "open": self.file_properties_open,
+                "file": self.file_properties_note(cx).map(|(path, _)| path),
+                "folded": self
+                    .file_properties_folds
+                    .contains(&crate::properties::PROPERTIES_FOLD_ID),
+                "rows": self
+                    .file_property_rows(cx)
+                    .iter()
+                    .map(|r| json!({"key": r.key, "type": r.ty.as_str(), "value": r.edit_text}))
+                    .collect::<Vec<Value>>(),
+            }),
+        );
+        right.insert("footnotes".into(), self.footnotes_json(cx));
         right.insert(
             "properties_options".into(),
             json!({
@@ -14616,7 +15596,11 @@ impl Workspace {
                 Modal::Palette => "palette",
                 Modal::Prompt => "prompt",
                 Modal::CopyResults => "copy-results",
+                Modal::Layouts => "workspaces",
                 Modal::Chooser => "chooser",
+                Modal::Composer => "note-composer",
+                Modal::Downloads => "download-attachments",
+                Modal::DebugInfo => "debug-info",
             }),
         );
         // The popout it draws in, by id, or null for the vault window (and
@@ -14637,7 +15621,11 @@ impl Workspace {
             Modal::Palette => Some(self.palette.read(cx).describe(rows, cx)),
             Modal::Prompt => Some(self.prompt.read(cx).describe(rows, cx)),
             Modal::CopyResults => Some(self.copy_results.read(cx).describe()),
+            Modal::Layouts => self.describe_layouts_modal(cx),
             Modal::Chooser => Some(self.chooser.read(cx).describe(rows, cx)),
+            Modal::Composer => self.describe_composer(rows, cx),
+            Modal::Downloads => self.describe_downloads(cx),
+            Modal::DebugInfo => Some(self.debug_info.read(cx).describe()),
             Modal::None => None,
         };
         if let Some(Value::Object(view)) = view {
@@ -14672,6 +15660,9 @@ impl Workspace {
                 }
                 Some(PendingOp::EditBookmark(at, groups)) => {
                     json!({"op": "edit-bookmark", "at": at, "groups": groups})
+                }
+                Some(PendingOp::RenameHeading { path, line }) => {
+                    json!({"op": "rename-heading", "path": path, "line": line})
                 }
             },
         );
@@ -14810,6 +15801,11 @@ impl Workspace {
         if self.chooser.focus_handle(cx).is_focused(window) {
             return "chooser-input";
         }
+        if let Some(modal) = &self.layouts_modal {
+            if modal.focus_handle(cx).is_focused(window) {
+                return "workspaces-input";
+            }
+        }
         if self.search.focus_handle(cx).is_focused(window) {
             return "search-input";
         }
@@ -14881,6 +15877,7 @@ impl Workspace {
             "canvas" => MainView::Canvas,
             "bases" => MainView::Bases,
             "pdf" => MainView::Pdf,
+            "release-notes" => MainView::ReleaseNotes,
             other => return Err(format!("unknown view: {other}")),
         };
         if wanted != painted {
@@ -15360,6 +16357,7 @@ impl Workspace {
                 }
             }
             Pick::AddFileProperty => self.run_command("markdown:add-metadata-property", window, cx),
+            Pick::ToggleBacklinksInDocument => self.toggle_backlinks_in_document(cx),
             Pick::Find => self.run_command("editor:open-search", window, cx),
             Pick::Replace => self.run_command("editor:open-search-replace", window, cx),
             Pick::OpenInNewTab => self.open_in_new_tab(path, None, cx),
@@ -15367,9 +16365,9 @@ impl Workspace {
             // The view header's "Open in new window" copies the leaf, as
             // `workspace:open-in-new-window` does; a row's opens its file.
             Pick::OpenInNewWindow => match target {
-                file_menu::Target::View(_) | file_menu::Target::Tab { .. } => {
-                    self.open_in_new_window(window, cx)
-                }
+                file_menu::Target::View(_)
+                | file_menu::Target::Note { .. }
+                | file_menu::Target::Tab { .. } => self.open_in_new_window(window, cx),
                 _ => self.open_path_in_new_window(path, window, cx),
             },
             // The view header's splits act on the group the header belongs
@@ -15387,6 +16385,8 @@ impl Workspace {
             Pick::Rename => self.start_rename(&path, window, cx),
             Pick::Move => self.start_move(&path, window, cx),
             Pick::Bookmark => self.start_bookmark_path(&path, window, cx),
+            Pick::MergeWith => self.start_merge_of(path, window, cx),
+            Pick::ExtractSelection => self.run_command("note-composer:split-file", window, cx),
             Pick::CopyPath => self.copy_path(&path, cx),
             Pick::OpenInDefaultApp => self.open_in_default_app(&path, cx),
             Pick::ShowInSystemExplorer => self.show_in_system_explorer(&path, cx),
@@ -15596,12 +16596,20 @@ impl Workspace {
             | Modal::Palette
             | Modal::Prompt
             | Modal::Chooser
-            | Modal::CopyResults => {
+            | Modal::Composer
+            | Modal::Downloads
+            | Modal::CopyResults
+            | Modal::DebugInfo
+            | Modal::Layouts => {
                 let child: gpui::AnyElement = match self.modal {
                     Modal::Switcher => self.switcher.clone().into_any_element(),
                     Modal::Palette => self.palette.clone().into_any_element(),
                     Modal::Chooser => self.chooser.clone().into_any_element(),
+                    Modal::Composer => self.composer_element()?,
+                    Modal::Downloads => self.downloads_element()?,
                     Modal::CopyResults => self.copy_results.clone().into_any_element(),
+                    Modal::DebugInfo => self.debug_info.clone().into_any_element(),
+                    Modal::Layouts => self.layouts_modal.clone()?.into_any_element(),
                     _ => self.prompt.clone().into_any_element(),
                 };
                 Some(
@@ -15723,9 +16731,10 @@ impl Workspace {
         };
         let prefix = if outgoing { "outgoing" } else { "backlinks" };
         let current = self.current.clone().unwrap_or_default();
+        let this = cx.entity().downgrade();
         // Obsidian's `.outgoing-link-pane` is padded 12px 12px 32px; the
         // backlink pane 4px 12px 32px, its nav header carrying the rest.
-        let mut list = div()
+        div()
             .id(prefix)
             .flex()
             .flex_col()
@@ -15733,7 +16742,43 @@ impl Workspace {
             .overflow_y_scroll()
             .px(px(12.))
             .pt(px(if outgoing { 12. } else { 4. }))
-            .pb(px(32.));
+            .pb(px(32.))
+            .child(self.render_section_list(
+                SectionsOwner::Pane(which),
+                &sections,
+                &current,
+                query,
+                theme,
+                &this,
+            ))
+            .into_any_element()
+    }
+
+    /// The sections themselves, for the pane above or for a note's
+    /// backlinks block (`owner`), which draws the Backlinks pane's rows
+    /// over the leaf's own folds. `current` is the note the sections are
+    /// about. Built without the workspace's context, so the editor and the
+    /// reading view can lay the block out while they draw.
+    fn render_section_list(
+        &self,
+        owner: SectionsOwner,
+        sections: &[Section],
+        current: &str,
+        query: &str,
+        theme: &Theme,
+        this: &gpui::WeakEntity<Self>,
+    ) -> gpui::Div {
+        let which = owner.kind();
+        let outgoing = which == RightTab::Outgoing;
+        // In a note the block's headings are the note's size: "Linked
+        // mentions" 16 px at 500 and a file's title 14 px (observed).
+        let in_note = matches!(owner, SectionsOwner::Doc(_));
+        let (section_size, title_size) = if in_note {
+            (16., 14.)
+        } else {
+            (FONT_UI_SMALL, FONT_UI_SMALL)
+        };
+        let mut list = div().w_full().flex_shrink_0().flex().flex_col();
         let mut ix = 0usize;
         let mut next = || {
             ix += 1;
@@ -15745,7 +16790,7 @@ impl Workspace {
             } else {
                 backlinks::filter(section, query)
             };
-            let folded = self.section_collapsed(which, s_ix);
+            let folded = self.owner_section_collapsed(owner, s_ix);
             let count: SharedString = if section.capped {
                 format!("{}+", shown.count).into()
             } else {
@@ -15769,9 +16814,9 @@ impl Workspace {
                     .rounded(px(8.))
                     .cursor_pointer()
                     .hover(|s| s.bg(theme.tokens.nav_item_background_hover))
-                    .on_click(
-                        cx.listener(move |this, _, _, cx| this.toggle_section(which, s_ix, cx)),
-                    )
+                    .on_click(listen(this, move |this, _, _, cx| {
+                        this.owner_toggle_section(owner, s_ix, cx)
+                    }))
                     // `.tree-item-self.is-clickable` at the pane's root:
                     // `--nav-heading-color` at `--nav-heading-weight`,
                     // `--nav-heading-color-collapsed` while folded.
@@ -15779,7 +16824,7 @@ impl Workspace {
                         div()
                             .flex_1()
                             .min_w_0()
-                            .text_size(px(FONT_UI_SMALL))
+                            .text_size(px(section_size))
                             .font_weight(FontWeight::MEDIUM)
                             .text_color(if folded {
                                 theme.tokens.nav_heading_color_collapsed
@@ -15835,11 +16880,11 @@ impl Workspace {
                         card = card.child(self.render_match(
                             which,
                             next(),
-                            &current,
+                            current,
                             group,
                             m,
                             theme,
-                            cx,
+                            this,
                         ));
                     }
                 }
@@ -15850,7 +16895,7 @@ impl Workspace {
             for group in &shown.groups {
                 let key = shown.group_key(group);
                 let flat = group.matches.is_empty();
-                let collapsed = !flat && self.group_collapsed(which, &key);
+                let collapsed = !flat && self.owner_group_collapsed(owner, &key);
                 let path = group.path.clone();
                 let link = group.link.clone();
                 let resolved = path.is_some();
@@ -15880,8 +16925,8 @@ impl Workspace {
                         .items_center()
                         .justify_center()
                         .opacity(0.85)
-                        .on_click(cx.listener(move |this, _, _, cx| {
-                            this.toggle_group(which, key.clone(), cx);
+                        .on_click(listen(this, move |this, _, _, cx| {
+                            this.owner_toggle_group(owner, key.clone(), cx);
                             cx.stop_propagation();
                         }))
                         .child(icon(
@@ -15902,7 +16947,7 @@ impl Workspace {
                 // A Links row previews its link as the note would, subpath
                 // and all; a Backlinks file row previews the file.
                 let preview = match (&group.link, &group.path) {
-                    (Some(link), _) => Some((link.clone(), current.clone())),
+                    (Some(link), _) => Some((link.clone(), current.to_string())),
                     (None, Some(path)) => Some((crate::hover_preview::exact(path), path.clone())),
                     (None, None) => None,
                 };
@@ -15910,11 +16955,16 @@ impl Workspace {
                 let row = match preview {
                     Some((target, from)) => crate::hover_preview::hover_row(
                         row,
-                        self.dock_row_hover(crate::hover_preview::Source::Search, target, from, cx),
+                        Self::row_hover_handler(
+                            this.clone(),
+                            crate::hover_preview::Source::Search,
+                            target,
+                            from,
+                        ),
                     ),
                     None => row,
                 };
-                list = list.child(
+                body = body.child(
                     row.group("pane-group")
                         .w_full()
                         .flex_shrink_0()
@@ -15931,7 +16981,7 @@ impl Workspace {
                         .cursor_pointer()
                         .hover(|s| s.bg(theme.tokens.nav_item_background_hover))
                         .when(unresolved, |d| d.tooltip(tooltip("Not created yet")))
-                        .on_click(cx.listener(move |this, _, _, cx| {
+                        .on_click(listen(this, move |this, _, _, cx| {
                             // A Links row follows the link the way the note
                             // would, subpath included, and creates the note
                             // nothing stands behind; a mentions row opens
@@ -15947,7 +16997,7 @@ impl Workspace {
                         .when_some(menu_path, |d, menu_path| {
                             d.on_mouse_down(
                                 MouseButton::Right,
-                                cx.listener(move |this, event: &MouseDownEvent, _, cx| {
+                                listen(this, move |this, event: &MouseDownEvent, _, cx| {
                                     cx.stop_propagation();
                                     this.open_file_menu(menu_path.clone(), event.position, cx);
                                 }),
@@ -15962,7 +17012,7 @@ impl Workspace {
                                 .flex_col()
                                 .child(
                                     div()
-                                        .text_size(px(FONT_UI_SMALL))
+                                        .text_size(px(title_size))
                                         .line_height(px(17.))
                                         // A file's title is
                                         // `--nav-item-color-active` (probe of
@@ -16008,14 +17058,21 @@ impl Workspace {
                 }
                 let mut card = Self::match_card(theme);
                 for m in &group.matches {
-                    card =
-                        card.child(self.render_match(which, next(), &current, group, m, theme, cx));
+                    card = card.child(self.render_match(
+                        which,
+                        next(),
+                        current,
+                        group,
+                        m,
+                        theme,
+                        this,
+                    ));
                 }
                 body = body.child(card);
             }
             list = list.child(body);
         }
-        list.into_any_element()
+        list
     }
 
     /// Obsidian's `.search-result-file-matches`: the note's background,
@@ -16047,7 +17104,7 @@ impl Workspace {
         group: &Group,
         m: &PaneMatch,
         theme: &Theme,
-        cx: &mut Context<Self>,
+        this: &gpui::WeakEntity<Self>,
     ) -> gpui::Stateful<gpui::Div> {
         let path = group.path.clone();
         let menu_path = path.clone();
@@ -16100,7 +17157,7 @@ impl Workspace {
                         .bg(theme.tokens.background_modifier_border)
                         .cursor_pointer()
                         .tooltip(tooltip("Link this file"))
-                        .on_click(cx.listener(move |this, _, window, cx| {
+                        .on_click(listen(this, move |this, _, window, cx| {
                             this.link_mention(
                                 source.clone(),
                                 target.clone(),
@@ -16134,7 +17191,7 @@ impl Workspace {
                 .cursor_pointer()
                 .invisible()
                 .group_hover("pane-match", |s| s.visible())
-                .on_click(cx.listener(move |this, _, window, cx| {
+                .on_click(listen(this, move |this, _, window, cx| {
                     this.link_mention(source.clone(), target.clone(), mention.clone(), window, cx);
                     cx.stop_propagation();
                 }))
@@ -16156,7 +17213,7 @@ impl Workspace {
             .flex_col()
             .cursor_pointer()
             .hover(move |s| s.bg(hover))
-            .on_click(cx.listener(move |this, _, _, cx| {
+            .on_click(listen(this, move |this, _, _, cx| {
                 if let Some(path) = path.clone() {
                     this.open_file(path, None, cx);
                     if let Some(offset) = offset {
@@ -16168,7 +17225,7 @@ impl Workspace {
             .when_some(menu_path, |d, menu_path| {
                 d.on_mouse_down(
                     MouseButton::Right,
-                    cx.listener(move |this, event: &MouseDownEvent, _, cx| {
+                    listen(this, move |this, event: &MouseDownEvent, _, cx| {
                         cx.stop_propagation();
                         this.open_file_menu(menu_path.clone(), event.position, cx);
                     }),
@@ -16296,7 +17353,10 @@ impl Workspace {
             && match self.right_tab {
                 RightTab::Tags | RightTab::Properties => true,
                 RightTab::Outline => !self.outline.is_empty(),
-                RightTab::Backlinks | RightTab::Outgoing => false,
+                RightTab::Backlinks
+                | RightTab::Outgoing
+                | RightTab::FileProperties
+                | RightTab::Footnotes => false,
             }
     }
 
@@ -16415,7 +17475,10 @@ impl Workspace {
                     None => {}
                 }
             }
-            RightTab::Backlinks | RightTab::Outgoing => return,
+            RightTab::Backlinks
+            | RightTab::Outgoing
+            | RightTab::FileProperties
+            | RightTab::Footnotes => return,
         }
         cx.notify();
     }
@@ -16449,7 +17512,10 @@ impl Workspace {
                     self.reveal_heading(row.offset, window, cx);
                 }
             }
-            RightTab::Backlinks | RightTab::Outgoing => {}
+            RightTab::Backlinks
+            | RightTab::Outgoing
+            | RightTab::FileProperties
+            | RightTab::Footnotes => {}
         }
     }
 
@@ -17254,6 +18320,123 @@ impl Workspace {
             .into_any_element()
     }
 
+    /// The note File properties shows and its text: the open note when it
+    /// is Markdown, read from the buffer while the editor holds it (so the
+    /// rows follow typing) and from the index otherwise.
+    fn file_properties_note(&self, cx: &App) -> Option<(String, Arc<String>)> {
+        let path = self.current.clone()?;
+        if FileKind::from_path(&path) != FileKind::Markdown {
+            return None;
+        }
+        let editor = self.editor.read(cx);
+        if editor.name.as_ref() == path.as_str() {
+            return Some((path, Arc::new(editor.text().to_string())));
+        }
+        let text = self.state.as_ref()?.texts().get(&path).cloned()?;
+        Some((path, text))
+    }
+
+    /// File properties' rows: the open note's properties block, each key at
+    /// the type `types.json` assigns it, in the block's own order.
+    fn file_property_rows(&self, cx: &App) -> Vec<crate::properties::Row> {
+        let Some((_, text)) = self.file_properties_note(cx) else {
+            return Vec::new();
+        };
+        let Some(block) = scoria_cache::note_properties(&text) else {
+            return Vec::new();
+        };
+        let types = self
+            .state
+            .as_ref()
+            .map(|s| s.property_types().clone())
+            .unwrap_or_default();
+        let mut next_id = crate::properties::PROPERTY_ID_BASE;
+        crate::properties::rows(
+            &block.entries,
+            |key| scoria_formats::properties::type_of(key, &block.entries, &types),
+            &mut next_id,
+        )
+    }
+
+    /// File properties (`properties:open-local`): the open note's
+    /// properties drawn as its reading view draws them, under the same
+    /// foldable "Properties" heading Obsidian's pane carries (probe of
+    /// 2026-10-19), links and tags in a value clickable. With no Markdown
+    /// note open it says Obsidian's "No properties found.".
+    fn render_file_properties_pane(
+        &mut self,
+        theme: &Theme,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> gpui::AnyElement {
+        let block = self.file_properties_note(cx).map(|(_, text)| {
+            scoria_cache::note_properties(&text)
+                .map(|b| b.entries)
+                .unwrap_or_default()
+        });
+        let Some(block) = block else {
+            // Obsidian's `.pane-empty`, as the Outline draws it.
+            return div()
+                .flex_1()
+                .px(px(12.))
+                .child(
+                    div()
+                        .my(px(8.))
+                        .px(px(16.))
+                        .py(px(24.))
+                        .text_size(px(FONT_UI_SMALL))
+                        .text_color(theme.tokens.text_faint)
+                        .text_center()
+                        .child("No properties found."),
+                )
+                .into_any_element();
+        };
+        let types = self
+            .state
+            .as_ref()
+            .map(|s| s.property_types().clone())
+            .unwrap_or_default();
+        let this = cx.entity().downgrade();
+        let on_link: reading::view::LinkHandler = Rc::new(move |target, _, cx| {
+            let _ = this.update(cx, |this, cx| this.follow_link(target, cx));
+        });
+        let this = cx.entity().downgrade();
+        let on_toggle: reading::view::ToggleHandler = Rc::new(move |id, cx| {
+            let _ = this.update(cx, |this, cx| {
+                if !this.file_properties_folds.remove(&id) {
+                    this.file_properties_folds.insert(id);
+                }
+                cx.notify();
+            });
+        });
+        let available = (self.right_width as f32 - 24.).max(100.);
+        let renderer = reading::view::Renderer::new(
+            theme,
+            window.text_system().clone(),
+            available,
+            &self.file_properties_folds,
+            &types,
+            // Read-only for now: the pane's fields are not wired to an
+            // editor of their own.
+            None,
+            None,
+            on_link,
+            on_toggle,
+        );
+        let content = renderer.properties(&block);
+        div()
+            .id("file-properties")
+            .flex()
+            .flex_col()
+            .size_full()
+            .overflow_y_scroll()
+            .px(px(12.))
+            .pt(px(8.))
+            .text_color(theme.tokens.text_normal)
+            .child(content)
+            .into_any_element()
+    }
+
     /// Whether a left-dock pane's core plugin is on, by its id.
     fn left_pane_enabled(&self, id: &str) -> bool {
         self.state
@@ -17269,15 +18452,28 @@ impl Workspace {
             RightTab::Backlinks => "backlink",
             RightTab::Outgoing => "outgoing-link",
             RightTab::Tags => "tag-pane",
-            RightTab::Properties => "properties",
+            RightTab::Properties | RightTab::FileProperties => "properties",
+            RightTab::Footnotes => "footnotes",
             RightTab::Outline => "outline",
         };
+        // File properties has a tab only while it has a leaf.
+        if tab == RightTab::FileProperties && !self.file_properties_open {
+            return false;
+        }
+        if tab == RightTab::Footnotes && !self.footnotes.open {
+            return false;
+        }
         self.state
             .as_ref()
             .is_none_or(|state| state.core_plugin_enabled(id))
     }
 
-    fn render_right_dock(&mut self, theme: &Theme, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render_right_dock(
+        &mut self,
+        theme: &Theme,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> impl IntoElement {
         // The pane whose plugin was just turned off has no tab any more,
         // so it cannot be the one on screen either: the first that is
         // still on takes over, as Obsidian moves to a neighbouring leaf.
@@ -17288,6 +18484,8 @@ impl Workspace {
                 RightTab::Tags,
                 RightTab::Properties,
                 RightTab::Outline,
+                RightTab::FileProperties,
+                RightTab::Footnotes,
             ]
             .into_iter()
             .find(|t| self.pane_enabled(*t))
@@ -17302,6 +18500,8 @@ impl Workspace {
             RightTab::Outline => self.render_outline_pane(theme, cx),
             RightTab::Tags => self.render_tags_pane(theme, cx),
             RightTab::Properties => self.render_properties_pane(theme, cx),
+            RightTab::FileProperties => self.render_file_properties_pane(theme, window, cx),
+            RightTab::Footnotes => self.render_footnotes_pane(theme, window, cx),
         };
         // A pane whose core plugin is off is not offered: Obsidian takes
         // the view away with the plugin.
@@ -17379,6 +18579,22 @@ impl Workspace {
                         cx,
                     ))
                     .children(tab_button(self, "Outline", "list", RightTab::Outline, cx))
+                    .children(tab_button(
+                        self,
+                        "File properties",
+                        "info",
+                        RightTab::FileProperties,
+                        cx,
+                    ))
+                    // `lucide-file-signature` is Lucide's older name for
+                    // `file-pen-line`, the drawing bundled.
+                    .children(tab_button(
+                        self,
+                        "Footnotes",
+                        "file-pen-line",
+                        RightTab::Footnotes,
+                        cx,
+                    ))
                     .child(window_handle(
                         div().id("right-dock-space").flex_1().h_full(),
                         frameless,
@@ -17813,6 +19029,7 @@ fn tab_from_leaf(
                 leaf: Some(leaf.clone()),
                 view_state: inner.and_then(|s| s.get("viewState")).cloned(),
                 pinned: false,
+                doc_backlinks: DocBacklinks::read(inner),
             }
         }
         (Some("empty"), None) => Tab {
@@ -17822,6 +19039,10 @@ fn tab_from_leaf(
         (Some("graph"), None) => Tab {
             leaf: Some(leaf.clone()),
             ..Tab::empty(ViewMode::Graph)
+        },
+        (Some(release_notes::VIEW_TYPE), None) => Tab {
+            leaf: Some(leaf.clone()),
+            ..Tab::empty(default_mode)
         },
         _ => return None,
     };
@@ -17966,6 +19187,65 @@ fn default_dock_json(dock: &str, current: Option<&str>, tab: usize) -> Value {
     })
 }
 
+/// Adds a File properties leaf to a dock that has none, as Obsidian's
+/// `properties:open-local` does: last in the dock's first tab group, with
+/// the state, icon and title its `workspace.json` gives the view (probe of
+/// 2026-10-19), `file` left out when no note is open. `false` when the dock
+/// already had one, or has no tab group to put it in.
+fn push_file_properties_leaf(dock: &mut Value, current: Option<&str>) -> bool {
+    if leaf_of_kind(dock, "file-properties").is_some() {
+        return false;
+    }
+    fn first_tabs(node: &mut Value) -> Option<&mut Value> {
+        if node.get("type").and_then(Value::as_str) == Some("tabs") {
+            return Some(node);
+        }
+        node.get_mut("children")?
+            .as_array_mut()?
+            .iter_mut()
+            .find_map(first_tabs)
+    }
+    let Some(children) = first_tabs(dock)
+        .and_then(|group| group.get_mut("children"))
+        .and_then(Value::as_array_mut)
+    else {
+        return false;
+    };
+    let mut state = Map::new();
+    if let Some(file) = current {
+        state.insert("file".into(), json!(file));
+    }
+    children.push(json!({
+        "id": leaf_id(),
+        "type": "leaf",
+        "state": {
+            "type": "file-properties",
+            "state": state,
+            "icon": "lucide-info",
+            "title": "File properties",
+        },
+    }));
+    true
+}
+
+/// Points a dock's first tab group at its `tab`th leaf, clamped to the
+/// leaves it has.
+fn set_dock_current_tab(dock: &mut Value, tab: usize) {
+    let Some(group) = dock
+        .get_mut("children")
+        .and_then(Value::as_array_mut)
+        .and_then(|c| c.first_mut())
+        .and_then(Value::as_object_mut)
+    else {
+        return;
+    };
+    let len = group
+        .get("children")
+        .and_then(Value::as_array)
+        .map_or(0, Vec::len);
+    group.insert("currentTab".into(), json!(tab.min(len.saturating_sub(1))));
+}
+
 /// The first leaf of view type `kind` anywhere under a dock's tree, as
 /// the leaf node.
 fn leaf_of_kind_mut<'a>(node: &'a mut Value, kind: &str) -> Option<&'a mut Map<String, Value>> {
@@ -18087,7 +19367,9 @@ fn leaf_id() -> String {
 
 /// A `tabs` node over its leaves: the keys it was read with (or a fresh
 /// `id`), `children` and `currentTab` rewritten at the end, the latter only
-/// when it is not the first (as Obsidian leaves it out then).
+/// when it is not the first (as Obsidian leaves it out then). A stacked
+/// group's `"stacked": true` goes last, after `currentTab`, where Obsidian
+/// writes it ([[Specification#Observed stacked tabs, Obsidian 1.15.0]]).
 fn tabs_node_json(mut map: Map<String, Value>, leaves: Vec<Value>, active_tab: usize) -> Value {
     if !map.contains_key("id") {
         map.shift_insert(0, "id".into(), json!(leaf_id()));
@@ -18095,9 +19377,13 @@ fn tabs_node_json(mut map: Map<String, Value>, leaves: Vec<Value>, active_tab: u
     map.insert("type".into(), json!("tabs"));
     map.shift_remove("children");
     map.shift_remove("currentTab");
+    let stacked = map.shift_remove("stacked");
     map.insert("children".into(), Value::Array(leaves));
     if active_tab > 0 {
         map.insert("currentTab".into(), json!(active_tab));
+    }
+    if let Some(stacked) = stacked {
+        map.insert("stacked".into(), stacked);
     }
     Value::Object(map)
 }
@@ -18182,6 +19468,9 @@ fn leaf_json(tab: &Tab) -> Value {
             match (&tab.path, tab.mode) {
                 (Some(p), _) => file == Some(p.as_str()),
                 (None, ViewMode::Graph) => view == Some("graph"),
+                (None, _) if release_notes::version_of(tab).is_some() => {
+                    view == Some(release_notes::VIEW_TYPE)
+                }
                 (None, _) => view == Some("empty"),
             }
         })
@@ -18539,6 +19828,7 @@ impl EntityInputHandler for Workspace {
 impl Render for Workspace {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         self.corners = WindowCorners::of(window);
+        self.sync_stacks(cx);
         if let Some(value) = self.pending_title_rename.take() {
             cx.defer_in(window, move |this, window, cx| {
                 this.rename_from_inline_title(&value, window, cx)
@@ -18855,7 +20145,7 @@ impl Render for Workspace {
                     .when(left_visible, |d| d.child(left))
                     .child(main)
                     .when(right_visible, |d| {
-                        d.child(self.render_right_dock(&theme, cx))
+                        d.child(self.render_right_dock(&theme, window, cx))
                     }),
             )
             .child(status_bar)
@@ -18943,6 +20233,60 @@ fn bookmark_rows(
     rows
 }
 
+/// What `workspace:copy-full-path` ("Copy current file path from system
+/// root") puts on the clipboard: the file's path from the root of the file
+/// system, in the platform's own form. The vault root is kept as it was
+/// opened, so a relative one is made absolute against the working folder
+/// here; symbolic links are not resolved, since the path the vault was
+/// opened by is the one its owner knows it by.
+fn full_path_text(absolute: PathBuf) -> String {
+    std::path::absolute(&absolute)
+        .unwrap_or(absolute)
+        .to_string_lossy()
+        .into_owned()
+}
+
+/// The vault's own trash folder, at the vault root, where
+/// `trashOption: "local"` moves a deleted file.
+const TRASH_FOLDER: &str = ".trash";
+
+/// The vault's name as `workspace:copy-url` writes it: its folder's name,
+/// read from the absolute root so a vault opened as `.` (or as the empty
+/// path, which is the working folder too) is still named. The last plain
+/// component is the name: `absolute` keeps a trailing `.`.
+fn vault_folder_name(root: &Path) -> String {
+    let absolute = match root.as_os_str().is_empty() {
+        true => std::env::current_dir(),
+        false => std::path::absolute(root),
+    }
+    .unwrap_or_else(|_| root.to_path_buf());
+    absolute
+        .components()
+        .rev()
+        .find_map(|c| match c {
+            Component::Normal(name) => Some(name.to_string_lossy().into_owned()),
+            _ => None,
+        })
+        .unwrap_or_default()
+}
+
+/// Obsidian's notice for a path that is not there, as "Show trash" showed
+/// it with no `.trash` folder: the absolute path in curly quotes.
+fn missing_file_notice(absolute: &str) -> String {
+    format!("The file or folder \u{201c}{absolute}\u{201d} does not exist.")
+}
+
+/// Whether any of `leaves` is a Markdown leaf, which is what
+/// `editor:focus` ("Focus on last note") is offered on: each is a tab's file
+/// and whether the tab shows the graph instead. A canvas, a base, a PDF,
+/// an image or an empty tab is not one (Obsidian 1.15.0: with an empty tab
+/// and a canvas only, the palette did not list it).
+fn any_markdown_leaf<'a>(mut leaves: impl Iterator<Item = (Option<&'a str>, bool)>) -> bool {
+    leaves.any(|(path, graph)| {
+        !graph && path.is_some_and(|p| FileKind::from_path(p) == FileKind::Markdown)
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -19022,6 +20366,203 @@ mod tests {
         fs::write(r.join("Sub/S.md"), "[A](../A.md) [[B]]\n").unwrap();
         let state = VaultState::load(&r.to_path_buf()).unwrap();
         (dir, state)
+    }
+
+    /// `workspace:copy-full-path` copies the file from the file system's
+    /// root, its folders joined with the platform's separator, while
+    /// `workspace:copy-path` copies the vault-relative `Sub/S.md` as is.
+    #[test]
+    fn copy_full_path_is_the_vault_root_joined_with_the_vault_path() {
+        let (dir, state) = vault();
+        let text = full_path_text(state.vault().absolute("Sub/S.md"));
+        let expected = dir.path().join("Sub").join("S.md");
+        assert_eq!(text, expected.to_string_lossy());
+        assert!(Path::new(&text).is_absolute());
+        assert!(Path::new(&text).is_file());
+    }
+
+    /// A vault opened by a relative path still copies an absolute one, made
+    /// against the working folder, as the command's name promises.
+    #[test]
+    fn copy_full_path_of_a_relatively_opened_vault_is_absolute() {
+        let text = full_path_text(PathBuf::from("vault").join("Note.md"));
+        let expected = std::env::current_dir()
+            .unwrap()
+            .join("vault")
+            .join("Note.md");
+        assert_eq!(text, expected.to_string_lossy());
+    }
+
+    /// The window cluster's commands the 2026-11-09 probe settled are
+    /// runnable and are Obsidian's ids; the ones gpui blocks, the tab
+    /// switcher Obsidian does not register on desktop, and the two whose
+    /// screens report on Obsidian itself (its version, its changelog) are
+    /// not.
+    #[test]
+    fn the_observed_app_and_window_commands_are_runnable() {
+        let known = scoria_commands::known_ids();
+        for id in [
+            "workspace:copy-path",
+            "workspace:copy-full-path",
+            "workspace:copy-url",
+            "workspace:show-trash",
+            "open-with-default-app:open",
+            "open-with-default-app:show",
+            "app:toggle-ribbon",
+            "app:toggle-default-new-pane-mode",
+            "theme:toggle-light-dark",
+            "app:increase-font-size",
+            "app:decrease-font-size",
+        ] {
+            assert!(RUNNABLE.contains(&id), "{id} runnable");
+            assert!(known.contains(&id), "{id} is Obsidian's");
+        }
+        for id in [
+            "window:zoom-in",
+            "window:zoom-out",
+            "window:reset-zoom",
+            "window:toggle-always-on-top",
+            "app:show-tab-switcher",
+        ] {
+            assert!(!RUNNABLE.contains(&id), "{id} is left unrunnable");
+        }
+        for id in ACTIVE_FILE_ONLY {
+            assert!(RUNNABLE.contains(id), "{id} runnable");
+        }
+    }
+
+    /// The URL's vault is the folder's name, a relatively opened vault's
+    /// too.
+    #[test]
+    fn the_copied_urls_vault_is_the_folders_name() {
+        assert_eq!(
+            vault_folder_name(Path::new("/tmp/x/Probe Vault")),
+            "Probe Vault"
+        );
+        let here = std::env::current_dir().unwrap();
+        let name = here.file_name().unwrap().to_string_lossy().into_owned();
+        assert_eq!(vault_folder_name(Path::new(".")), name);
+        assert_eq!(vault_folder_name(Path::new("")), name);
+    }
+
+    /// Show trash's notice with no `.trash` folder, the path in curly
+    /// quotes, as Obsidian 1.15.0 wrote it.
+    #[test]
+    fn show_trash_names_the_missing_folder_in_curly_quotes() {
+        assert_eq!(
+            missing_file_notice("/tmp/claude-1000/appwin/main/Probe Vault/.trash"),
+            "The file or folder \u{201c}/tmp/claude-1000/appwin/main/Probe Vault/.trash\u{201d} does not exist."
+        );
+        assert_eq!(TRASH_FOLDER, ".trash");
+    }
+
+    /// Focus on last note is offered while any tab is a note: an empty tab
+    /// and a canvas alone do not count, nor do an image, a PDF, a base or a
+    /// tab showing the graph.
+    #[test]
+    fn focus_on_last_note_is_offered_only_with_a_markdown_leaf() {
+        assert!(!any_markdown_leaf(
+            [(None, false), (Some("Board.canvas"), false)].into_iter()
+        ));
+        assert!(!any_markdown_leaf(
+            [
+                (Some("img/pic.png"), false),
+                (Some("Paper.pdf"), false),
+                (Some("Rocks.base"), false),
+                (Some("Note.md"), true),
+            ]
+            .into_iter()
+        ));
+        assert!(any_markdown_leaf(
+            [(Some("Board.canvas"), false), (Some("Note A.md"), false)].into_iter()
+        ));
+        assert!(!any_markdown_leaf(std::iter::empty()));
+    }
+
+    /// Unique note creator's two commands run, under its plugin; the link
+    /// command is the editor's alone (`editorCallback`, listed only in the
+    /// editing view), the note command everywhere (`callback`).
+    #[test]
+    fn unique_note_creator_commands_run_and_the_link_needs_the_editor() {
+        let known = scoria_commands::known_ids();
+        for id in ["zk-prefixer", "insert-unique-link"] {
+            assert!(RUNNABLE.contains(&id), "{id} runnable");
+            assert!(known.contains(&id), "{id} is Obsidian's");
+            assert_eq!(scoria_commands::plugin_of(id), Some("zk-prefixer"));
+        }
+        assert!(EDITOR_ONLY.contains(&"insert-unique-link"));
+        assert!(!EDITOR_ONLY.contains(&"zk-prefixer"));
+    }
+
+    fn unique_stamp(minute: u32) -> templates::Stamp {
+        templates::Stamp {
+            year: 2026,
+            month: 11,
+            day: 9,
+            hour: 20,
+            minute,
+            second: 7,
+        }
+    }
+
+    /// `zk-prefixer.json` decides where a unique note goes: the vault root
+    /// with no folder, the folder when it is there, and Obsidian's notice
+    /// when it is not; an emptied format is the default.
+    #[test]
+    fn a_unique_note_goes_where_zk_prefixer_json_says() {
+        let (dir, state) = vault();
+        assert_eq!(
+            state.unique_note_path(&unique_stamp(21)),
+            Ok("202611092021.md".to_string())
+        );
+        fs::create_dir_all(dir.path().join("Zettel")).unwrap();
+        fs::write(
+            dir.path().join(".obsidian/zk-prefixer.json"),
+            "{\n  \"folder\": \"Zettel\",\n  \"template\": \"\",\n  \"format\": \"\"\n}",
+        )
+        .unwrap();
+        let state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        assert_eq!(
+            state.unique_note_path(&unique_stamp(21)),
+            Ok("Zettel/202611092021.md".to_string())
+        );
+        fs::write(
+            dir.path().join(".obsidian/zk-prefixer.json"),
+            "{\n  \"folder\": \"NoSuchFolder\",\n  \"format\": \"YYYY-MM-DD [note] HHmmss\"\n}",
+        )
+        .unwrap();
+        let state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        assert_eq!(
+            state
+                .unique_note_path(&unique_stamp(21))
+                .unwrap_err()
+                .to_string(),
+            "Failed to create unique note. Folder \u{201c}NoSuchFolder\u{201d} not found."
+        );
+        // The link command reads the format but not the folder.
+        assert_eq!(
+            state.unique_link_name(&unique_stamp(21), ""),
+            Ok("2026-11-09 note 202107".to_string())
+        );
+    }
+
+    /// The probe's template, expanded for the note it made at 20:21 with
+    /// no `templates.json`: the bytes Obsidian wrote.
+    #[test]
+    fn a_unique_note_template_expands_title_date_and_time_as_obsidian_did() {
+        let context = templates::Context {
+            at: unique_stamp(21),
+            date_format: templates::DEFAULT_DATE_FORMAT,
+            time_format: templates::DEFAULT_TIME_FORMAT,
+            title: "202611092021",
+        };
+        assert_eq!(
+            templates::expand(
+                "title={{title}} date={{date}} time={{time}} d2={{date:YYYY}}\n",
+                &context
+            ),
+            "title=202611092021 date=2026-11-09 time=20:21 d2=2026\n"
+        );
     }
 
     /// A link written in a property is an outgoing link like any other,
@@ -19151,6 +20692,93 @@ mod tests {
             .map(|l| l["state"]["type"].as_str().unwrap())
             .collect();
         assert_eq!(kinds, ["file-explorer", "search", "bookmarks"]);
+    }
+
+    /// `properties:open-local` in a dock without the view appends the leaf
+    /// Obsidian 1.13.7 wrote on 2026-10-19: last in the right dock's tab
+    /// group, after the Outline, with that state, icon and title in that
+    /// key order. A second run adds nothing, and with no note open the
+    /// `file` key is left out.
+    #[test]
+    fn file_properties_leaf_is_appended_in_obsidians_shape() {
+        let mut right = default_dock_json("right", Some("Note A.md"), 4);
+        assert!(push_file_properties_leaf(&mut right, Some("Note A.md")));
+        assert!(!push_file_properties_leaf(&mut right, Some("Note A.md")));
+        let leaves = right["children"][0]["children"].as_array().unwrap();
+        assert_eq!(leaves.len(), 6);
+        let leaf = &leaves[5];
+        assert_eq!(leaf["id"].as_str().unwrap().len(), 16);
+        let observed = json!({
+            "type": "leaf",
+            "state": {
+                "type": "file-properties",
+                "state": {"file": "Note A.md"},
+                "icon": "lucide-info",
+                "title": "File properties"
+            }
+        });
+        let mut without_id = leaf.clone();
+        without_id.as_object_mut().unwrap().shift_remove("id");
+        assert_eq!(without_id, observed);
+        let outer: Vec<&String> = leaf.as_object().unwrap().keys().collect();
+        assert_eq!(outer, ["id", "type", "state"]);
+        let inner: Vec<&String> = leaf["state"].as_object().unwrap().keys().collect();
+        assert_eq!(inner, ["type", "state", "icon", "title"]);
+
+        let mut bare = default_dock_json("right", None, 0);
+        assert!(push_file_properties_leaf(&mut bare, None));
+        assert_eq!(
+            bare["children"][0]["children"][5]["state"]["state"],
+            json!({})
+        );
+
+        // A dock with no tab group has nowhere to put it.
+        let mut empty = json!({"type": "split", "children": []});
+        assert!(!push_file_properties_leaf(&mut empty, Some("A.md")));
+    }
+
+    /// The leaf's `file` follows the open note through the state writer,
+    /// and a `currentTab` pointing at it reads back as the File properties
+    /// view, so a restart lands on the pane it left.
+    #[test]
+    fn file_properties_leaf_state_follows_the_note_and_is_the_current_tab() {
+        let mut layout = json!({"right": default_dock_json("right", Some("A.md"), 0)});
+        push_file_properties_leaf(&mut layout["right"], Some("A.md"));
+        set_dock_current_tab(&mut layout["right"], 5);
+        set_leaf_state(
+            &mut layout["right"],
+            "file-properties",
+            &[("file", json!("B.md"))],
+        );
+        assert_eq!(
+            leaf_state(&layout, "right", "file-properties"),
+            Some(&json!({"file": "B.md"}))
+        );
+        assert_eq!(
+            dock_current_view(&layout, "right").as_deref(),
+            Some("file-properties")
+        );
+        set_dock_current_tab(&mut layout["right"], 99);
+        assert_eq!(
+            layout["right"]["children"][0]["currentTab"], 5,
+            "clamped to the leaves the group has"
+        );
+        set_leaf_state(
+            &mut layout["right"],
+            "file-properties",
+            &[("file", Value::Null)],
+        );
+        assert_eq!(
+            leaf_state(&layout, "right", "file-properties"),
+            Some(&json!({}))
+        );
+    }
+
+    /// `properties:open-local` is runnable, so the palette offers it and
+    /// its hotkey (none by default) binds.
+    #[test]
+    fn file_properties_command_is_runnable() {
+        assert!(RUNNABLE.contains(&"properties:open-local"));
     }
 
     /// The Backlinks and Outgoing links leaves' state round trips: read
@@ -19339,6 +20967,7 @@ mod tests {
             leaf: Some(read.clone()),
             view_state: None,
             pinned: true,
+            doc_backlinks: DocBacklinks::default(),
         };
         assert_eq!(leaf_json(&tab), read);
     }
@@ -19354,6 +20983,7 @@ mod tests {
             leaf: Some(read.clone()),
             view_state: None,
             pinned: true,
+            doc_backlinks: DocBacklinks::default(),
         };
         let written = leaf_json(&tab);
         assert_eq!(written["id"], read["id"]);
@@ -19382,6 +21012,7 @@ mod tests {
             leaf: None,
             view_state: Some(json!({"x": 100, "y": -20, "zoom": -1})),
             pinned: false,
+            doc_backlinks: DocBacklinks::default(),
         };
         let written = leaf_json(&tab);
         assert_eq!(written["state"]["type"], json!("canvas"));
@@ -19413,6 +21044,7 @@ mod tests {
             leaf: None,
             view_state: None,
             pinned: false,
+            doc_backlinks: DocBacklinks::default(),
         };
         let written = leaf_json(&tab);
         assert_eq!(written["state"]["type"], json!("bases"));
@@ -19456,6 +21088,7 @@ mod tests {
             leaf: None,
             view_state: None,
             pinned: false,
+            doc_backlinks: DocBacklinks::default(),
         };
         let written = leaf_json(&tab);
         assert_eq!(written["state"]["type"], json!("pdf"));
@@ -19532,6 +21165,7 @@ mod tests {
             leaf: Some(read),
             view_state: None,
             pinned: false,
+            doc_backlinks: DocBacklinks::default(),
         };
         let written = leaf_json(&tab);
         let id = written["id"].as_str().unwrap();
@@ -20484,6 +22118,95 @@ mod tests {
             .unwrap_err();
         assert!(err.to_string().contains("not found"), "{err}");
         assert!(!dir.path().join("NoSuchFolder").exists());
+    }
+
+    /// The probe's heading-rename vault: `Note.md` and its `Linker.md`.
+    fn heading_vault(app_json: &str) -> (tempfile::TempDir, VaultState) {
+        let dir = tempfile::tempdir().unwrap();
+        let r = dir.path();
+        fs::create_dir_all(r.join(".obsidian")).unwrap();
+        fs::write(r.join(".obsidian/app.json"), app_json).unwrap();
+        fs::write(r.join("Note.md"), "# Parent\n\n## Old\n\nUnder old. Self [[#Old]] and [[#Old|self alias]] and [[Note#Old]].\n\nSetext Old\n----------\n\nUnder setext.\n").unwrap();
+        fs::write(r.join("Linker.md"), "A [[Note#Old]]\nB [[Note#Old|alias]]\nC ![[Note#Old]]\nD [x](Note.md#Old)\nE [[Note#Parent#Old]]\nF [[Note#Old|Old]]\nG [[Note#old]]\nH [[Note#Old|Note > Old]]\nI [y](<Note.md#Old>)\nJ [[Note#Setext Old]] and [z](Note.md#Setext%20Old)\nK [[Note]]\n").unwrap();
+        let state = VaultState::load(&r.to_path_buf()).unwrap();
+        (dir, state)
+    }
+
+    fn plan_heading(state: &VaultState, own: &str, name: &str) -> scoria_cache::HeadingRename {
+        let texts = state.texts();
+        state
+            .cache()
+            .plan_heading_rename("Note.md", own, 2, name, &|p| {
+                texts.get(p).map(|t| t.to_string())
+            })
+            .unwrap()
+    }
+
+    /// `editor:rename-heading` writes every linking note on disk and in the
+    /// index, with the probe's bytes -- and the same bytes with
+    /// `alwaysUpdateLinks` off, which Obsidian does not consult here.
+    #[test]
+    fn heading_rename_rewrites_linking_notes_on_disk_whatever_always_update_links_says() {
+        let expected = "A [[Note#New]]\nB [[Note#New|alias]]\nC ![[Note#New]]\nD [x](Note.md#New)\nE [[Note#Parent#Old]]\nF [[Note#New|Old]]\nG [[Note#New]]\nH [[Note#New|Note > Old]]\nI [y](<Note.md#New>)\nJ [[Note#Setext Old]] and [z](Note.md#Setext%20Old)\nK [[Note]]\n";
+        for app in [
+            r#"{"alwaysUpdateLinks":true}"#,
+            r#"{"alwaysUpdateLinks":false}"#,
+        ] {
+            let (dir, state) = heading_vault(app);
+            let own = fs::read_to_string(dir.path().join("Note.md")).unwrap();
+            let plan = plan_heading(&state, &own, "New");
+            assert_eq!(
+                scoria_cache::apply_edits(&own, &plan.own),
+                "# Parent\n\n## New\n\nUnder old. Self [[#New]] and [[#New|self alias]] and [[Note#New]].\n\nSetext Old\n----------\n\nUnder setext.\n"
+            );
+            let (changes, stale) = state.write_link_rewrites(&plan.rewrites).unwrap();
+            assert!(stale.is_empty());
+            assert_eq!(changes.notes, vec!["Linker.md".to_string()]);
+            assert_eq!(
+                fs::read_to_string(dir.path().join("Linker.md")).unwrap(),
+                expected,
+                "{app}"
+            );
+            assert_eq!(state.texts()["Linker.md"].as_str(), expected);
+            // The index follows: the rewritten links point at the new heading.
+            assert!(state
+                .cache()
+                .file("Linker.md")
+                .unwrap()
+                .links
+                .iter()
+                .any(|l| l.link == "Note#New"));
+        }
+    }
+
+    /// A linking note another app saved since it was indexed keeps its own
+    /// bytes, as a file rename leaves it.
+    #[test]
+    fn heading_rename_leaves_a_linking_note_that_changed_underneath_alone() {
+        let (dir, state) = heading_vault("{}");
+        let own = fs::read_to_string(dir.path().join("Note.md")).unwrap();
+        let plan = plan_heading(&state, &own, "New");
+        let theirs = "A [[Note#Old]] and the other app's edit\n";
+        fs::write(dir.path().join("Linker.md"), theirs).unwrap();
+        let (changes, stale) = state.write_link_rewrites(&plan.rewrites).unwrap();
+        assert_eq!(stale, vec!["Linker.md".to_string()]);
+        assert!(changes.files.is_empty());
+        assert_eq!(
+            fs::read_to_string(dir.path().join("Linker.md")).unwrap(),
+            theirs
+        );
+    }
+
+    /// Both commands run, the way their siblings do: rename-heading and
+    /// add-alias are offered only with an editor holding the keys.
+    #[test]
+    fn rename_heading_and_add_alias_are_runnable_editor_commands() {
+        let known = scoria_commands::known_ids();
+        for id in ["editor:rename-heading", "markdown:add-alias"] {
+            assert!(RUNNABLE.contains(&id), "{id} runnable");
+            assert!(EDITOR_ONLY.contains(&id), "{id} needs the note");
+            assert!(known.contains(&id), "{id} is Obsidian's");
+        }
     }
 
     #[test]

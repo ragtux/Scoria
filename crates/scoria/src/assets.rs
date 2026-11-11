@@ -8,7 +8,10 @@
 //! own drawings rather than Lucide's — `links-coming-in` and
 //! `links-going-out` on the right dock's Backlinks and Outgoing links tabs —
 //! so Scoria draws its own under the same names: Lucide's chain at the top
-//! left with a horizontal arrow beneath it, pointing in or out.
+//! left with a horizontal arrow beneath it, pointing in or out. The ribbon's
+//! Random note and Unique note buttons are two more (2026-11-09): `dice` is
+//! Lucide's `dice-3` under Obsidian's name, and `sheets-in-box` is Scoria's
+//! own, two sheets over a tray with Lucide's plus at its corner.
 //! `bookmark-filled` is Lucide's `bookmark` with `fill="currentColor"`: the
 //! view header's "Bookmarked" action is that icon filled and stroked in the
 //! accent (2026-11-07), and gpui paints an SVG's fill only where it has one. The font is Inter (SIL OFL,
@@ -71,9 +74,11 @@ icons!(
     "code",
     "code-xml",
     "copy",
+    "dice",
     "ellipsis",
     "ellipsis-vertical",
     "external-link",
+    "file-pen-line",
     "file-plus",
     "file-question",
     "file-search",
@@ -89,7 +94,9 @@ icons!(
     "folder-plus",
     "forward",
     "gallery-vertical",
+    "git-branch-plus",
     "git-fork",
+    "git-merge",
     "heading",
     "image",
     "info",
@@ -105,6 +112,7 @@ icons!(
     "list",
     "list-start",
     "maximize",
+    "maximize-2",
     "menu",
     "minus",
     "move-horizontal",
@@ -112,6 +120,7 @@ icons!(
     "palette",
     "panel-left",
     "panel-right",
+    "panels-top-left",
     "pen-line",
     "pencil",
     "picture-in-picture",
@@ -127,6 +136,7 @@ icons!(
     "search",
     "separator-vertical",
     "settings",
+    "sheets-in-box",
     "sliders-horizontal",
     "sticky-note",
     "square",
@@ -210,7 +220,7 @@ impl AssetSource for Assets {
 pub fn fonts() -> Vec<Cow<'static, [u8]>> {
     vec![
         Cow::Borrowed(include_bytes!("../assets/fonts/Rubik-Black.ttf")),
-        Cow::Borrowed(include_bytes!("../assets/fonts/Inter-Regular.ttf")),
+        Cow::Borrowed(INTER_REGULAR),
         Cow::Borrowed(include_bytes!("../assets/fonts/Inter-Italic.ttf")),
         Cow::Borrowed(include_bytes!("../assets/fonts/Inter-Medium.ttf")),
         Cow::Borrowed(include_bytes!("../assets/fonts/Inter-SemiBold.ttf")),
@@ -218,6 +228,10 @@ pub fn fonts() -> Vec<Cow<'static, [u8]>> {
         Cow::Borrowed(include_bytes!("../assets/fonts/Inter-BoldItalic.ttf")),
     ]
 }
+
+/// Inter Regular's bytes: registered by [`fonts`], and outlined by hand for
+/// a stacked tab's title, which is drawn on its side.
+pub const INTER_REGULAR: &[u8] = include_bytes!("../assets/fonts/Inter-Regular.ttf");
 
 /// The interface family [`fonts`] registers.
 pub const FONT_FAMILY: &str = "Inter";

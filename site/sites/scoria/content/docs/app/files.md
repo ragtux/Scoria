@@ -126,9 +126,6 @@ takes everything under it out of the index.
 
 ## Not yet
 
-- **Drag and drop.** Run `file-explorer:move-file` instead, which offers a fuzzy folder
-  picker.
-- **Inline title editing.** Rename through the menu or `F2`.
 - **Pasting or dropping attachments into the vault.** Put the file in the folder yourself;
   the tree will notice.
 - **Inline naming of a new folder.** The header's New folder opens a prompt and creates the

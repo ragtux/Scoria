@@ -195,6 +195,9 @@ pub enum Pick {
     TogglePin,
     /// "Move to new window": `workspace:move-to-new-window` on the tab.
     MoveToNewWindow,
+    /// "Backlinks in document": `backlink:toggle-backlinks-in-document` on
+    /// the active markdown leaf.
+    ToggleBacklinksInDocument,
     /// A markdown tab's "Add file property", "Find..." and "Replace...":
     /// `markdown:add-metadata-property`, `editor:open-search` and
     /// `editor:open-search-replace`.
@@ -216,6 +219,12 @@ pub enum Pick {
     Duplicate,
     Move,
     Bookmark,
+    /// "Merge entire file with...": `note-composer:merge-file` on the
+    /// menu's file.
+    MergeWith,
+    /// The editor menu's "Extract current selection...":
+    /// `note-composer:split-file`.
+    ExtractSelection,
     CopyPath,
     OpenInDefaultApp,
     ShowInSystemExplorer,
@@ -313,6 +322,12 @@ pub enum Target {
     /// of the open-in rows, Rename beside Move and Bookmark, and "Delete
     /// file" alone in the danger pair. The path is the leaf's file.
     View(String),
+    /// **More options** over a markdown leaf: [`Target::View`]'s rows under
+    /// a first row, "Backlinks in document", checked while the leaf shows
+    /// the block (`tools/obsidian-probe/results/2026-11-09-panes-workspaces-headings.json`,
+    /// `bl` `moreMenu`). Its two view-mode rows are left out, as the tab
+    /// header's are.
+    Note { path: String, backlinks: bool },
     /// A right click on a Bases row's name, a card or a list line's link
     /// (`s24` `linkMenu`, 2026-11-01): the file menu with the two open-in
     /// rows, Rename beside Move and Bookmark, and "Delete file".
@@ -340,6 +355,8 @@ pub enum Target {
     /// with none; `tabs` is how many its group holds, since Close others
     /// and Close all are drawn only beside another tab, and Close tabs
     /// after only with one to its right; `pinned` names the Pin row.
+    /// `backlinks` is whether the active markdown tab shows its backlinks
+    /// block, `None` for any other tab, which has no such row.
     Tab {
         group: u64,
         ix: usize,
@@ -347,6 +364,7 @@ pub enum Target {
         tabs: usize,
         pinned: bool,
         active: bool,
+        backlinks: Option<bool>,
     },
 }
 
@@ -411,7 +429,9 @@ impl Target {
             | Target::Linked(p)
             | Target::View(p)
             | Target::Row(p) => p,
-            Target::Bookmark { path, .. } | Target::Tab { path, .. } => path,
+            Target::Bookmark { path, .. }
+            | Target::Tab { path, .. }
+            | Target::Note { path, .. } => path,
             Target::Blank | Target::Property { .. } => "",
             Target::Editor(click) => match &click.spot {
                 Spot::Link(path) => path,
@@ -440,9 +460,10 @@ pub fn right_click_caret(selection: &Range<usize>, at: usize) -> Option<usize> {
 
 /// The menu for a target, in Obsidian's order.
 ///
-/// Two of the captured items are left out rather than drawn dead, because
-/// Scoria has no command behind them: **Merge entire file with...** (no
-/// merge) and **Open version history** (no file history). Listing a row
+/// One of the captured items is left out rather than drawn dead, because
+/// Scoria has no command behind it: **Open version history** (no file
+/// history). **Merge entire file with...** was a second until the Note
+/// composer landed (2026-11-09), and is drawn on notes only. Listing a row
 /// that cannot run is what the command palette refuses to do, and the menu
 /// refuses it too; the gaps are entries in `docs/scoria/UI parity
 /// backlog.md`. Dropping the only item of a section drops its separator
@@ -475,6 +496,10 @@ pub fn items(target: &Target) -> Vec<Item> {
             item("Make a copy", "files", S::Action, P::Duplicate),
             item("Move file to...", "folder-tree", S::Action, P::Move),
             item("Bookmark...", "bookmark", S::Action, P::Bookmark),
+        ]
+        .into_iter()
+        .chain(merge_row(target.path()))
+        .chain([
             item("Copy path", "clipboard", S::Unsectioned, P::CopyPath),
             item(
                 "Open in default app",
@@ -490,7 +515,8 @@ pub fn items(target: &Target) -> Vec<Item> {
             ),
             item("Rename...", "pen-line", S::Danger, P::Rename),
             item("Delete", "trash-2", S::Danger, P::Delete),
-        ],
+        ])
+        .collect(),
         Target::Folder(_) => vec![
             // Obsidian draws `lucide-edit` here, which is the current
             // `square-pen`; `lucide-edit-3` on Rename is `pen-line`. Both
@@ -732,8 +758,14 @@ pub fn items(target: &Target) -> Vec<Item> {
             tabs,
             pinned,
             active,
+            backlinks,
             ..
-        } => tab_items(path, *ix, *tabs, *pinned, *active),
+        } => tab_items(path, *ix, *tabs, *pinned, *active, *backlinks),
+        Target::Note { path, backlinks } => {
+            let mut out = vec![backlinks_row(*backlinks)];
+            out.extend(items(&Target::View(path.clone())));
+            out
+        }
         Target::View(_) => vec![
             item("Split right", "separator-vertical", S::Open, P::SplitRight),
             item("Split down", "separator-horizontal", S::Open, P::SplitDown),
@@ -746,6 +778,10 @@ pub fn items(target: &Target) -> Vec<Item> {
             item("Rename...", "pen-line", S::Action, P::Rename),
             item("Move file to...", "folder-tree", S::Action, P::Move),
             item("Bookmark...", "bookmark", S::Action, P::Bookmark),
+        ]
+        .into_iter()
+        .chain(merge_row(target.path()))
+        .chain([
             item("Copy path", "clipboard", S::Unsectioned, P::CopyPath),
             item(
                 "Open in default app",
@@ -766,19 +802,40 @@ pub fn items(target: &Target) -> Vec<Item> {
                 P::RevealInNavigation,
             ),
             item("Delete file", "trash-2", S::Danger, P::Delete),
-        ],
+        ])
+        .collect(),
     }
+}
+
+/// "Merge entire file with..." (`lucide-git-merge`, `action`, after
+/// Bookmark...), on a note only: an image card's menu has none, and the
+/// command it runs wants a Markdown note.
+fn merge_row(path: &str) -> Option<Item> {
+    path.to_ascii_lowercase().ends_with(".md").then(|| {
+        item(
+            "Merge entire file with...",
+            "git-merge",
+            Section::Action,
+            Pick::MergeWith,
+        )
+    })
 }
 
 /// The tab header's menu, as the 2026-11-09 probe drew it. Left out for
 /// want of anything behind them: **Link with tab...** (no linked panes,
-/// and the probe saw no trace of what it starts), a markdown tab's
-/// **Backlinks in document** and its two view-mode rows (their labels in
-/// the other modes were not captured), **Merge entire file with...**,
+/// and the probe saw no trace of what it starts), a markdown tab's two
+/// view-mode rows (their labels in the other modes were not captured),
 /// **Export to PDF...**, a canvas's **Export as image**, **Open version
 /// history** and the **Open linked view** submenu; Copy path keeps the one
 /// flat row the other menus give it.
-fn tab_items(path: &str, ix: usize, tabs: usize, pinned: bool, active: bool) -> Vec<Item> {
+fn tab_items(
+    path: &str,
+    ix: usize,
+    tabs: usize,
+    pinned: bool,
+    active: bool,
+    backlinks: Option<bool>,
+) -> Vec<Item> {
     use Pick as P;
     use Section as S;
     let mut out = vec![item("Close", "x", S::Close, P::CloseTab)];
@@ -795,6 +852,11 @@ fn tab_items(path: &str, ix: usize, tabs: usize, pinned: bool, active: bool) -> 
         S::Pane,
         P::TogglePin,
     ));
+    // After Pin (and Obsidian's "Link with tab..."), on the active markdown
+    // tab only: the inactive tab's menu in the probe had no such row.
+    if let Some(on) = backlinks.filter(|_| active) {
+        out.push(backlinks_row(on));
+    }
     out.push(item(
         "Move to new window",
         "picture-in-picture",
@@ -824,7 +886,9 @@ fn tab_items(path: &str, ix: usize, tabs: usize, pinned: bool, active: bool) -> 
         if row.pick == P::SplitRight || row.pick == P::SplitDown {
             continue;
         }
-        let after_bookmark = row.pick == P::Bookmark;
+        // Add file property follows Merge entire file with..., which a
+        // markdown tab always has.
+        let after_bookmark = row.pick == P::MergeWith;
         let before_copy = row.pick == P::CopyPath;
         if markdown && before_copy {
             out.push(item("Find...", "file-search", S::Find, P::Find));
@@ -841,6 +905,20 @@ fn tab_items(path: &str, ix: usize, tabs: usize, pinned: bool, active: bool) -> 
         }
     }
     out
+}
+
+/// "Backlinks in document", `links-coming-in`, in the `pane` section; its
+/// label never changes, and the check says whether the block shows.
+fn backlinks_row(on: bool) -> Item {
+    Item {
+        checked: on,
+        ..item(
+            "Backlinks in document",
+            "links-coming-in",
+            Section::Pane,
+            Pick::ToggleBacklinksInDocument,
+        )
+    }
 }
 
 /// One row, enabled.
@@ -862,9 +940,9 @@ fn item(label: &'static str, icon: &'static str, section: Section, pick: Pick) -
 /// Four of the captured rows open submenus nobody has read — **Format**,
 /// **Paragraph**, **Insert** and, on a wikilink, **Copy path** — so the
 /// three text ones are left out whole and Copy path keeps the one flat row
-/// the rest of Scoria's menus give it. Four more are left out for want of a
-/// command: **Extract current selection...** (no note composer), **Edit
-/// link** and **Edit tag** (no inline rename of a link or a tag) and
+/// the rest of Scoria's menus give it. Three more are left out for want of
+/// a command: **Edit link** and **Edit tag** (no inline rename of a link or
+/// a tag) and
 /// **Start presentation** (no presentation mode). Dropping the only row of a section drops its
 /// separator with it, which is why the pair the capture has between Start
 /// presentation and the system rows is one separator here.
@@ -912,6 +990,12 @@ fn editor_items(click: &EditorClick) -> Vec<Item> {
             checked: false,
             submenu: Vec::new(),
         });
+        out.push(item(
+            "Extract current selection...",
+            "git-branch-plus",
+            S::Selection,
+            P::ExtractSelection,
+        ));
     }
     // `lucide-box-select` is Lucide's deprecated alias of `square-dashed`,
     // from its own alias data, the way `lucide-edit-3` is `pen-line`.
@@ -1017,7 +1101,7 @@ pub fn describe(menu: &Menu) -> Value {
             Spot::Tag(_) => "editor-tag",
             Spot::Link(_) => "editor-link",
         },
-        Target::View(_) => "view",
+        Target::View(_) | Target::Note { .. } => "view",
         Target::Row(_) => "row",
         Target::Property { .. } => "property",
         Target::Bookmark { .. } => "bookmark",
@@ -1385,9 +1469,8 @@ mod tests {
     use gpui::AssetSource;
 
     /// [[Specification#The file explorer's context menus]], the file-row
-    /// table, minus the two items Scoria has no command for -- Merge entire
-    /// file with... and Open version history. Dropping
-    /// Open version history empties the `view` section, so the separator the
+    /// table, minus the one item Scoria has no command for -- Open version
+    /// history. Dropping it empties the `view` section, so the separator the
     /// capture has around it is gone too; every other separator is where
     /// Obsidian put it, including the pair above Rename.
     #[test]
@@ -1402,6 +1485,7 @@ mod tests {
                 "Make a copy",
                 "Move file to...",
                 "Bookmark...",
+                "Merge entire file with...",
                 "---",
                 "Copy path",
                 "---",
@@ -1525,7 +1609,64 @@ mod tests {
             tabs,
             pinned,
             active,
+            backlinks: None,
         }
+    }
+
+    /// "Backlinks in document" on an active markdown tab sits after Pin in
+    /// the `pane` section, checked while the block shows (the
+    /// 2026-11-09 panes probe, `bl` `tabMenu`); an inactive tab has none.
+    #[test]
+    fn the_tab_menu_has_backlinks_in_document_after_pin() {
+        let on = |backlinks, active| Target::Tab {
+            group: 1,
+            ix: 0,
+            path: "Target.md".into(),
+            tabs: 1,
+            pinned: false,
+            active,
+            backlinks,
+        };
+        let rows = items(&on(Some(true), true));
+        let labels: Vec<&str> = rows.iter().take(4).map(|i| i.label.as_ref()).collect();
+        assert_eq!(
+            labels,
+            [
+                "Close",
+                "Pin",
+                "Backlinks in document",
+                "Move to new window"
+            ]
+        );
+        let row = &rows[2];
+        assert!(row.checked);
+        assert_eq!(row.icon, "links-coming-in");
+        assert_eq!(row.section, Section::Pane);
+        assert_eq!(row.pick, Pick::ToggleBacklinksInDocument);
+        assert!(!items(&on(Some(false), true))[2].checked);
+        assert!(!drawn(&on(Some(true), false)).contains(&"Backlinks in document".to_string()));
+    }
+
+    /// More options over a markdown leaf: "Backlinks in document" first,
+    /// then the view header's rows (`bl` `moreMenu`).
+    #[test]
+    fn more_options_on_a_note_starts_with_backlinks_in_document() {
+        let target = Target::Note {
+            path: "Target.md".into(),
+            backlinks: false,
+        };
+        let shown = drawn(&target);
+        assert_eq!(
+            &shown[..4],
+            ["Backlinks in document", "---", "Split right", "Split down"]
+        );
+        assert!(!items(&target)[0].checked);
+        assert_eq!(target.path(), "Target.md");
+        let checked = Target::Note {
+            path: "Target.md".into(),
+            backlinks: true,
+        };
+        assert!(items(&checked)[0].checked);
     }
 
     /// The tab header's menu over the middle of three markdown tabs, the
@@ -1553,6 +1694,7 @@ mod tests {
                 "Rename...",
                 "Move file to...",
                 "Bookmark...",
+                "Merge entire file with...",
                 "Add file property",
                 "---",
                 "Find...",
@@ -1781,8 +1923,7 @@ mod tests {
     }
 
     /// With a selection the `selection` section opens with Obsidian's
-    /// quoted Search row; Extract current selection... is left out for want
-    /// of a note composer.
+    /// quoted Search row and Extract current selection....
     #[test]
     fn a_selection_adds_the_quoted_search_row() {
         let target = Target::Editor(EditorClick {
@@ -1797,6 +1938,7 @@ mod tests {
                 "Add external link",
                 "---",
                 "Search for \u{201c}paragraph with\u{201d}",
+                "Extract current selection...",
                 "---",
                 "Cut",
                 "Copy",

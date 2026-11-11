@@ -1,0 +1,1052 @@
+{
+ "fixtures": {
+  "startedAt": "2026-11-10T06:19:30.465Z",
+  "steps": {},
+  "order": [],
+  "created": [
+   {
+    "name": "Mango",
+    "birthtimeMs": 1794291570465.0652,
+    "ctimeMs": 1794291570465.0652,
+    "mtimeMs": 1794391570466
+   },
+   {
+    "name": "Apple",
+    "birthtimeMs": 1794291571565.0896,
+    "ctimeMs": 1794291571565.0896,
+    "mtimeMs": 1794387970466
+   },
+   {
+    "name": "Zebra",
+    "birthtimeMs": 1794291572665.1138,
+    "ctimeMs": 1794291572665.1138,
+    "mtimeMs": 1794384370466
+   },
+   {
+    "name": "Kiwi",
+    "birthtimeMs": 1794291573765.1382,
+    "ctimeMs": 1794291573765.1382,
+    "mtimeMs": 1794380770466
+   },
+   {
+    "name": "Banana",
+    "birthtimeMs": 1794291574865.1626,
+    "ctimeMs": 1794291574865.1626,
+    "mtimeMs": 1794377170466
+   },
+   {
+    "name": "Orphan",
+    "birthtimeMs": 1794291575965.187,
+    "ctimeMs": 1794291575965.187,
+    "mtimeMs": 1794373570466
+   },
+   {
+    "name": "Cherry",
+    "birthtimeMs": 1794291577065.2112,
+    "ctimeMs": 1794291577065.2112,
+    "mtimeMs": 1794369970466
+   },
+   {
+    "name": "Lemon",
+    "birthtimeMs": 1794291578165.2356,
+    "ctimeMs": 1794291578165.2356,
+    "mtimeMs": 1794366370466
+   }
+  ],
+  "elapsedMs": 8801
+ },
+ "run": {
+  "startedAt": "2026-11-10T06:19:40.447Z",
+  "steps": {
+   "s00-context": {
+    "ok": true,
+    "ms": 3668,
+    "version": {
+     "title": "New tab - v-graph - Obsidian 1.15.0",
+     "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+     "win": [
+      1596,
+      973
+     ]
+    },
+    "cmds": {
+     "graph:animate": {
+      "name": "Graph view: Start graph timelapse animation",
+      "icon": "lucide-wand",
+      "keys": null,
+      "hasCheck": true,
+      "hasCallback": false
+     },
+     "graph:open": {
+      "name": "Graph view: Open graph view",
+      "icon": "lucide-git-fork",
+      "keys": [
+       {
+        "modifiers": [
+         "Mod"
+        ],
+        "key": "G"
+       }
+      ],
+      "hasCheck": false,
+      "hasCallback": true
+     },
+     "graph:open-local": {
+      "name": "Graph view: Open local graph",
+      "icon": "lucide-git-fork",
+      "keys": null,
+      "hasCheck": true,
+      "hasCallback": false
+     }
+    },
+    "offered": {
+     "noteActive": false,
+     "graphActive": {
+      "active": "graph",
+      "offered": true
+     },
+     "graphNotActive": {
+      "active": "graph",
+      "offered": true
+     }
+    },
+    "files": [
+     {
+      "path": "Apple.md",
+      "ctime": 1794291398707,
+      "mtime": 1794387797608
+     },
+     {
+      "path": "Banana.md",
+      "ctime": 1794291402007,
+      "mtime": 1794376997608
+     },
+     {
+      "path": "Cherry.md",
+      "ctime": 1794291404207,
+      "mtime": 1794369797608
+     },
+     {
+      "path": "Kiwi.md",
+      "ctime": 1794291400907,
+      "mtime": 1794380597608
+     },
+     {
+      "path": "Lemon.md",
+      "ctime": 1794291405307,
+      "mtime": 1794366197608
+     },
+     {
+      "path": "Mango.md",
+      "ctime": 1794291397607,
+      "mtime": 1794391397608
+     },
+     {
+      "path": "Orphan.md",
+      "ctime": 1794291403107,
+      "mtime": 1794373397608
+     },
+     {
+      "path": "Zebra.md",
+      "ctime": 1794291399807,
+      "mtime": 1794384197608
+     }
+    ]
+   },
+   "s01-settled": {
+    "ok": true,
+    "ms": 3056,
+    "nodes": [
+     {
+      "id": "Apple.md",
+      "type": "",
+      "x": -24,
+      "y": -194,
+      "shown": true,
+      "alpha": 1
+     },
+     {
+      "id": "Banana.md",
+      "type": "",
+      "x": -59,
+      "y": -79,
+      "shown": true,
+      "alpha": 1
+     },
+     {
+      "id": "Cherry.md",
+      "type": "",
+      "x": -9,
+      "y": 67,
+      "shown": true,
+      "alpha": 1
+     },
+     {
+      "id": "Kiwi.md",
+      "type": "",
+      "x": 139,
+      "y": 61,
+      "shown": true,
+      "alpha": 1
+     },
+     {
+      "id": "Missing",
+      "type": "unresolved",
+      "x": -15,
+      "y": 254,
+      "shown": true,
+      "alpha": 0.5
+     },
+     {
+      "id": "Lemon.md",
+      "type": "",
+      "x": -229,
+      "y": -52,
+      "shown": true,
+      "alpha": 1
+     },
+     {
+      "id": "Mango.md",
+      "type": "",
+      "x": 199,
+      "y": -171,
+      "shown": true,
+      "alpha": 1
+     },
+     {
+      "id": "Orphan.md",
+      "type": "",
+      "x": -176,
+      "y": 125,
+      "shown": true,
+      "alpha": 1
+     },
+     {
+      "id": "Zebra.md",
+      "type": "",
+      "x": 184,
+      "y": -50,
+      "shown": true,
+      "alpha": 1
+     }
+    ],
+    "rendererKeys": [
+     "colors",
+     "containerEl",
+     "destroyed",
+     "dragNode",
+     "fLineSizeMult",
+     "fNodeSizeMult",
+     "fShowArrow",
+     "fTextShowMult",
+     "hanger",
+     "height",
+     "hidePowerTag",
+     "highlightNode",
+     "idleFrames",
+     "iframeEl",
+     "interactiveEl",
+     "keyboardActions",
+     "links",
+     "mouseX",
+     "mouseY",
+     "nodeLookup",
+     "nodeScale",
+     "nodes",
+     "onNodeClick",
+     "onNodeHover",
+     "onNodeRightClick",
+     "onNodeUnhover",
+     "onPointerDown",
+     "onPointerOut",
+     "onPointerOver",
+     "panX",
+     "panY",
+     "panning",
+     "panvX",
+     "panvY",
+     "powerTag",
+     "px",
+     "renderCallback",
+     "renderTimer",
+     "scale",
+     "targetScale",
+     "textAlpha",
+     "viewport",
+     "width",
+     "worker",
+     "workerResults",
+     "zoomCenterX",
+     "zoomCenterY"
+    ],
+    "viewKeys": [
+     "_children",
+     "_events",
+     "_loaded",
+     "actionsEl",
+     "app",
+     "backButtonEl",
+     "canDropAnywhere",
+     "containerEl",
+     "contentEl",
+     "dataEngine",
+     "forwardButtonEl",
+     "headerEl",
+     "icon",
+     "leaf",
+     "leftSidebarToggleEl",
+     "moreOptionsButtonEl",
+     "navigation",
+     "renderer",
+     "titleContainerEl",
+     "titleEl",
+     "titleParentEl"
+    ],
+    "controls": [
+     {
+      "cls": "clickable-icon graph-controls-button mod-close",
+      "aria": "Close",
+      "svg": "svg-icon lucide-x"
+     },
+     {
+      "cls": "clickable-icon graph-controls-button mod-open",
+      "aria": "Open graph settings",
+      "svg": "svg-icon lucide-settings"
+     },
+     {
+      "cls": "clickable-icon graph-controls-button mod-animate",
+      "aria": "Start timelapse animation",
+      "svg": "svg-icon lucide-wand-2"
+     },
+     {
+      "cls": "clickable-icon graph-controls-button mod-reset",
+      "aria": "Restore default settings",
+      "svg": "svg-icon lucide-rotate-ccw"
+     }
+    ],
+    "shot": "01-settled.png"
+   },
+   "s02-command": {
+    "ok": true,
+    "ms": 9947,
+    "ran": true,
+    "order": [
+     [
+      "Mango.md",
+      0
+     ],
+     [
+      "Apple.md",
+      248
+     ],
+     [
+      "Zebra.md",
+      820
+     ],
+     [
+      "Kiwi.md",
+      1024
+     ],
+     [
+      "Missing",
+      1696
+     ],
+     [
+      "Banana.md",
+      1696
+     ],
+     [
+      "Orphan.md",
+      2058
+     ],
+     [
+      "Cherry.md",
+      2216
+     ],
+     [
+      "Lemon.md",
+      2834
+     ]
+    ],
+    "changes": [
+     [
+      0,
+      1,
+      1
+     ],
+     [
+      248,
+      2,
+      2
+     ],
+     [
+      820,
+      3,
+      2
+     ],
+     [
+      871,
+      3,
+      3
+     ],
+     [
+      1024,
+      4,
+      3
+     ],
+     [
+      1076,
+      4,
+      4
+     ],
+     [
+      1696,
+      6,
+      6
+     ],
+     [
+      2058,
+      7,
+      7
+     ],
+     [
+      2216,
+      8,
+      7
+     ],
+     [
+      2267,
+      8,
+      8
+     ],
+     [
+      2834,
+      9,
+      9
+     ]
+    ],
+    "shots": [
+     [
+      107,
+      "02-graph-t107.png"
+     ],
+     [
+      610,
+      "03-graph-t610.png"
+     ],
+     [
+      1539,
+      "04-graph-t1539.png"
+     ],
+     [
+      3039,
+      "05-graph-t3039.png"
+     ],
+     [
+      6033,
+      "06-graph-t6033.png"
+     ]
+    ],
+    "samples": 124,
+    "ui": {
+     "animateBtn": [
+      {
+       "cls": "clickable-icon graph-controls-button mod-animate",
+       "aria": "Start timelapse animation",
+       "svg": "svg-icon lucide-wand-2"
+      }
+     ],
+     "notices": []
+    },
+    "graphChanged": false,
+    "graphAfter": "{\n  \"collapse-filter\": true,\n  \"search\": \"\",\n  \"showTags\": false,\n  \"showAttachments\": false,\n  \"hideUnresolved\": false,\n  \"showOrphans\": true,\n  \"collapse-color-groups\": true,\n  \"colorGroups\": [],\n  \"collapse-display\": true,\n  \"showArrow\": false,\n  \"textFadeMultiplier\": 0,\n  \"nodeSizeMultiplier\": 1,\n  \"lineSizeMultiplier\": 1,\n  \"collapse-forces\": true,\n  \"centerStrength\": 0.518713248970312,\n  \"repelStrength\": 10,\n  \"linkStrength\": 1,\n  \"linkDistance\": 250,\n  \"scale\": 1,\n  \"close\": false\n}",
+    "wsChanged": false,
+    "end": "07-after-command.png"
+   },
+   "s03-button": {
+    "ok": true,
+    "ms": 5484,
+    "rect": {
+     "x": 0,
+     "y": 0,
+     "w": 0,
+     "h": 0,
+     "cx": 0,
+     "cy": 0
+    },
+    "tooltip": [],
+    "order": [
+     [
+      "Mango.md",
+      0
+     ],
+     [
+      "Apple.md",
+      0
+     ],
+     [
+      "Zebra.md",
+      0
+     ],
+     [
+      "Kiwi.md",
+      0
+     ],
+     [
+      "Missing",
+      0
+     ],
+     [
+      "Banana.md",
+      0
+     ],
+     [
+      "Orphan.md",
+      0
+     ],
+     [
+      "Cherry.md",
+      0
+     ],
+     [
+      "Lemon.md",
+      0
+     ]
+    ],
+    "changes": [
+     [
+      0,
+      9,
+      9
+     ]
+    ],
+    "shots": [
+     [
+      319,
+      "08-graph-t319.png"
+     ],
+     [
+      2008,
+      "09-graph-t2008.png"
+     ]
+    ],
+    "samples": 77
+   },
+   "s04-twice": {
+    "ok": true,
+    "ms": 7567,
+    "midCount": 2,
+    "midBtn": [
+     {
+      "cls": "clickable-icon graph-controls-button mod-animate",
+      "aria": "Start timelapse animation",
+      "svg": "svg-icon lucide-wand-2"
+     }
+    ],
+    "order": [
+     [
+      "Mango.md",
+      1
+     ],
+     [
+      "Apple.md",
+      255
+     ],
+     [
+      "Zebra.md",
+      828
+     ],
+     [
+      "Kiwi.md",
+      1034
+     ],
+     [
+      "Missing",
+      1661
+     ],
+     [
+      "Banana.md",
+      1661
+     ],
+     [
+      "Orphan.md",
+      2025
+     ],
+     [
+      "Cherry.md",
+      2233
+     ],
+     [
+      "Lemon.md",
+      2853
+     ]
+    ],
+    "changes": [
+     [
+      1,
+      1,
+      1
+     ],
+     [
+      255,
+      2,
+      2
+     ],
+     [
+      828,
+      3,
+      2
+     ],
+     [
+      879,
+      3,
+      3
+     ],
+     [
+      1034,
+      4,
+      4
+     ],
+     [
+      1661,
+      6,
+      6
+     ],
+     [
+      2025,
+      7,
+      7
+     ],
+     [
+      2233,
+      8,
+      8
+     ],
+     [
+      2853,
+      9,
+      9
+     ]
+    ],
+    "shots": [],
+    "samples": 134
+   },
+   "s05-local": {
+    "ok": true,
+    "ms": 10747,
+    "beside": {
+     "active": "markdown",
+     "graphs": 1,
+     "offered": false
+    },
+    "local": {
+     "active": "localgraph",
+     "offered": false,
+     "nodes": [
+      {
+       "id": "Apple.md",
+       "type": "",
+       "x": -85,
+       "y": 125,
+       "shown": true,
+       "alpha": 1
+      },
+      {
+       "id": "Zebra.md",
+       "type": "",
+       "x": 101,
+       "y": -45,
+       "shown": true,
+       "alpha": 1
+      },
+      {
+       "id": "Kiwi.md",
+       "type": "",
+       "x": -147,
+       "y": -112,
+       "shown": true,
+       "alpha": 1
+      },
+      {
+       "id": "Cherry.md",
+       "type": "",
+       "x": 158,
+       "y": 96,
+       "shown": true,
+       "alpha": 1
+      },
+      {
+       "id": "Mango.md",
+       "type": "",
+       "x": -4,
+       "y": -112,
+       "shown": true,
+       "alpha": 1
+      }
+     ]
+    },
+    "order": [
+     [
+      "Apple.md",
+      0
+     ],
+     [
+      "Zebra.md",
+      0
+     ],
+     [
+      "Kiwi.md",
+      0
+     ],
+     [
+      "Cherry.md",
+      0
+     ],
+     [
+      "Mango.md",
+      0
+     ]
+    ],
+    "changes": [
+     [
+      0,
+      5,
+      5
+     ]
+    ],
+    "shots": [
+     [
+      307,
+      "01-localgraph-t307.png"
+     ]
+    ],
+    "samples": 78
+   },
+   "s06-uneven": {
+    "ok": true,
+    "ms": 20562,
+    "made": [
+     {
+      "name": "New1",
+      "birthtimeMs": 1794291591655.5342
+     },
+     {
+      "name": "New2",
+      "birthtimeMs": 1794291592156.5454
+     },
+     {
+      "name": "New3",
+      "birthtimeMs": 1794291592656.5564
+     },
+     {
+      "name": "New4",
+      "birthtimeMs": 1794291598657.6892
+     },
+     {
+      "name": "New5",
+      "birthtimeMs": 1794291599158.7002
+     }
+    ],
+    "files": [
+     {
+      "path": "Apple.md",
+      "ctime": 1794291571565,
+      "mtime": 1794387970466
+     },
+     {
+      "path": "Banana.md",
+      "ctime": 1794291574865,
+      "mtime": 1794377170466
+     },
+     {
+      "path": "Cherry.md",
+      "ctime": 1794291577065,
+      "mtime": 1794369970466
+     },
+     {
+      "path": "Kiwi.md",
+      "ctime": 1794291573765,
+      "mtime": 1794380770466
+     },
+     {
+      "path": "Lemon.md",
+      "ctime": 1794291578165,
+      "mtime": 1794366370466
+     },
+     {
+      "path": "Mango.md",
+      "ctime": 1794291570465,
+      "mtime": 1794391570466
+     },
+     {
+      "path": "New1.md",
+      "ctime": 1794291591656,
+      "mtime": 1794291591656
+     },
+     {
+      "path": "New2.md",
+      "ctime": 1794291592157,
+      "mtime": 1794291592157
+     },
+     {
+      "path": "New3.md",
+      "ctime": 1794291592657,
+      "mtime": 1794291592658
+     },
+     {
+      "path": "New4.md",
+      "ctime": 1794291598658,
+      "mtime": 1794291598658
+     },
+     {
+      "path": "New5.md",
+      "ctime": 1794291599159,
+      "mtime": 1794291599159
+     },
+     {
+      "path": "Orphan.md",
+      "ctime": 1794291575965,
+      "mtime": 1794373570466
+     },
+     {
+      "path": "Zebra.md",
+      "ctime": 1794291572665,
+      "mtime": 1794384370466
+     }
+    ],
+    "order": [
+     [
+      "Mango.md",
+      0
+     ],
+     [
+      "Apple.md",
+      254
+     ],
+     [
+      "Zebra.md",
+      818
+     ],
+     [
+      "Kiwi.md",
+      1022
+     ],
+     [
+      "Missing",
+      1637
+     ],
+     [
+      "Banana.md",
+      1637
+     ],
+     [
+      "Orphan.md",
+      2050
+     ],
+     [
+      "Cherry.md",
+      2254
+     ],
+     [
+      "Lemon.md",
+      2833
+     ],
+     [
+      "New1.md",
+      3040
+     ],
+     [
+      "New2.md",
+      3452
+     ],
+     [
+      "New3.md",
+      3861
+     ],
+     [
+      "New4.md",
+      4221
+     ],
+     [
+      "New5.md",
+      4631
+     ]
+    ],
+    "changes": [
+     [
+      0,
+      1,
+      1
+     ],
+     [
+      254,
+      2,
+      2
+     ],
+     [
+      818,
+      3,
+      2
+     ],
+     [
+      869,
+      3,
+      3
+     ],
+     [
+      1022,
+      4,
+      3
+     ],
+     [
+      1074,
+      4,
+      4
+     ],
+     [
+      1637,
+      6,
+      6
+     ],
+     [
+      2050,
+      7,
+      7
+     ],
+     [
+      2254,
+      8,
+      8
+     ],
+     [
+      2833,
+      9,
+      9
+     ],
+     [
+      3040,
+      10,
+      10
+     ],
+     [
+      3452,
+      11,
+      11
+     ],
+     [
+      3861,
+      12,
+      12
+     ],
+     [
+      4221,
+      13,
+      12
+     ],
+     [
+      4272,
+      13,
+      13
+     ],
+     [
+      4631,
+      14,
+      14
+     ]
+    ],
+    "shots": [
+     [
+      514,
+      "02-graph-t514.png"
+     ],
+     [
+      2512,
+      "03-graph-t2512.png"
+     ]
+    ],
+    "samples": 165
+   },
+   "s07-button": {
+    "ok": true,
+    "ms": 938,
+    "panel": {
+     "cls": "graph-controls",
+     "rect": [
+      1344,
+      90.390625,
+      240,
+      160.5625
+     ]
+    },
+    "btns": [
+     {
+      "cls": "clickable-icon graph-controls-button mod-close",
+      "aria": "Close",
+      "rect": [
+       1551,
+       97.390625,
+       24,
+       24
+      ],
+      "display": "flex",
+      "opacity": "1"
+     },
+     {
+      "cls": "clickable-icon graph-controls-button mod-open",
+      "aria": "Open graph settings",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "display": "none",
+      "opacity": "1"
+     },
+     {
+      "cls": "clickable-icon graph-controls-button mod-animate",
+      "aria": "Start timelapse animation",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "display": "none",
+      "opacity": "1"
+     },
+     {
+      "cls": "clickable-icon graph-controls-button mod-reset",
+      "aria": "Restore default settings",
+      "rect": [
+       1523,
+       97.390625,
+       24,
+       24
+      ],
+      "display": "flex",
+      "opacity": "1"
+     }
+    ],
+    "shot": "04-controls-hover.png"
+   }
+  },
+  "order": [
+   "s00-context",
+   "s01-settled",
+   "s02-command",
+   "s03-button",
+   "s04-twice",
+   "s05-local",
+   "s06-uneven",
+   "s07-button"
+  ],
+  "elapsedMs": 32295,
+  "vaultPath": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/369c9655-34a8-4f51-a852-9e4b0198d276/scratchpad/v-graph3",
+  "besideGraph": {
+   "active": "markdown",
+   "graphs": 1,
+   "offered": false
+  }
+ }
+}

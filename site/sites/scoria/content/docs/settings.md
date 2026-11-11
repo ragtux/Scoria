@@ -66,12 +66,13 @@ are the ones that change how Scoria behaves:
 So are auto-pairing of brackets and of Markdown (`autoPairBrackets`, `autoPairMarkdown`),
 which take effect on the next keystroke without reopening the note.
 
-Settings that are **shown but not yet acted on** include spellcheck, inline title,
-fold heading and fold indent, line numbers, indent guides, right-to-left, window frame style,
-and `cssTheme`. They are read from your configuration and displayed truthfully, and changing
-one still writes the key for Obsidian to honor; the behavior behind them is not implemented
-here. Each such row says so on its own line — "not in Scoria yet", or "on restart" for the
-theme and the fonts — so you can tell which is which without leaving the window.
+Settings that are **shown but not yet acted on** include spellcheck, line numbers,
+indent guides and right-to-left. They are read from your configuration and displayed
+truthfully, and changing one still writes the key for Obsidian to honor; the behavior behind
+them is not implemented here. Each such row says so on its own line — "not in Scoria yet", or
+"on restart" for the window frame style and, on Linux, the custom app icon — so you can tell
+which is which without leaving the window. Inline title, fold heading, fold indent, Use
+Wikilinks (`useMarkdownLinks`) and the community theme (`cssTheme`) are acted on.
 
 ## Core and community plugins
 
@@ -94,9 +95,7 @@ The **Community plugins** tab lists your installed plugins, read from
 Some settings are absent rather than disabled, because the specification does not yet record
 the `app.json` key behind them — and inventing a key would be worse than omitting the row.
 These include: the default file to open, deleting attachments with their note, Mermaid
-support, quick font-size adjustment, zoom level, and URI callbacks. Obsidian's Keychain tab,
-and the options tabs of core plugins other than the quick switcher and the command palette,
-are also not shown.
+support, zoom level, and URI callbacks. Obsidian's Keychain tab is also not shown.
 
 ## Unknown keys are safe
 

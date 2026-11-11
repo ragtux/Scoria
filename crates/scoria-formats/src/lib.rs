@@ -8,6 +8,7 @@ pub mod bookmarks;
 pub mod canvas;
 pub mod config;
 pub mod properties;
+pub mod workspaces;
 
 /// How Obsidian treats a file, decided purely by extension (case-insensitive).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

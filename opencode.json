@@ -1,0 +1,21 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": ["CLAUDE.md"],
+  "mcp": {
+    "servers": {
+      "scoria": {
+        "type": "local",
+        "command": ["target/release/scoria-mcp"],
+        "cwd": ".",
+        "environment": {
+          "SCORIA_MCP_BIN": "nix-shell --run \"target/release/scoria {args}\"",
+          "SCORIA_MCP_REPO": "."
+        },
+        "timeout": {
+          "startup": 30000,
+          "execution": 180000
+        }
+      }
+    }
+  }
+}

@@ -612,6 +612,8 @@ pub enum ExplorerEvent {
     Delete(String),
     /// "Bookmark...": a file or folder for the Bookmarks pane.
     Bookmark(String),
+    /// "Merge entire file with...": the Note composer's merge of this note.
+    MergeWith(String),
     /// "Open to the right": a new tab group beside the active one showing
     /// this file.
     OpenToRight(String),
@@ -643,6 +645,7 @@ fn event_for(pick: Pick, target: &Target) -> Option<ExplorerEvent> {
         Pick::Duplicate => E::Duplicate(path()),
         Pick::Move => E::Move(path()),
         Pick::Bookmark => E::Bookmark(path()),
+        Pick::MergeWith => E::MergeWith(path()),
         Pick::CopyPath => E::CopyPath(path()),
         Pick::OpenInDefaultApp => E::OpenInDefaultApp(path()),
         Pick::ShowInSystemExplorer => E::ShowInSystemExplorer(path()),
@@ -666,6 +669,7 @@ fn event_for(pick: Pick, target: &Target) -> Option<ExplorerEvent> {
         | Pick::Replace
         | Pick::TogglePin
         | Pick::MoveToNewWindow
+        | Pick::ToggleBacklinksInDocument
         | Pick::SplitRight
         | Pick::SplitDown
         | Pick::RenameProperty
@@ -682,7 +686,8 @@ fn event_for(pick: Pick, target: &Target) -> Option<ExplorerEvent> {
         | Pick::Copy
         | Pick::Paste
         | Pick::PastePlain
-        | Pick::SelectAll => return None,
+        | Pick::SelectAll
+        | Pick::ExtractSelection => return None,
     })
 }
 
@@ -2300,6 +2305,7 @@ mod menu_tests {
             | ExplorerEvent::Duplicate(p)
             | ExplorerEvent::Delete(p)
             | ExplorerEvent::Bookmark(p)
+            | ExplorerEvent::MergeWith(p)
             | ExplorerEvent::OpenToRight(p)
             | ExplorerEvent::OpenInNewWindow(p)
             | ExplorerEvent::CopyPath(p)

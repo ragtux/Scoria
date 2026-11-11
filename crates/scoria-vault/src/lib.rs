@@ -1,8 +1,10 @@
 //! A vault is a plain folder. This crate opens one, enumerates its files, and
 //! reads `.obsidian` configuration without ever owning data outside the folder.
 
+pub mod attachments;
 pub mod ops;
 pub mod registry;
+pub mod unique;
 
 pub use ops::{OpError, TrashOption};
 pub use registry::{VaultEntry, VaultRegistry};
@@ -14,6 +16,7 @@ use scoria_formats::config::{
     NoteComposerConfig, PagePreviewConfig, PluginManifest, PropertyTypes, SwitcherConfig,
     TemplatesConfig, ThemeManifest, WebviewerConfig, ZkPrefixerConfig, DEFAULT_CONFIG_DIR,
 };
+use scoria_formats::workspaces::Workspaces;
 use scoria_formats::FileKind;
 use serde::de::DeserializeOwned;
 use std::path::{Path, PathBuf};
@@ -189,6 +192,22 @@ impl Vault {
 
     pub fn markdown_files(&self) -> impl Iterator<Item = &VaultFile> {
         self.files.iter().filter(|f| f.kind == FileKind::Markdown)
+    }
+
+    /// The note Random note's *Open random note* lands on for a given
+    /// `roll`: one of the vault's Markdown files, `roll` reduced modulo
+    /// their count, so a uniform roll is a uniform pick. `None` in a vault
+    /// with no note. The candidates are the Markdown files and nothing else
+    /// -- "Opens a random markdown file", Obsidian's own plugin list --
+    /// which keeps canvases, bases, PDFs and images out. The active note is
+    /// in the draw: in a vault of two notes, 20 runs from one of them kept
+    /// it open 13 times (Obsidian 1.15.0, 2026-11-09, run `random2`).
+    pub fn random_note(&self, roll: u64) -> Option<&VaultFile> {
+        let count = self.markdown_files().count() as u64;
+        if count == 0 {
+            return None;
+        }
+        self.markdown_files().nth((roll % count) as usize)
     }
 
     /// Absolute path for a vault-relative path.
@@ -515,6 +534,18 @@ impl Vault {
         self.replace_config("bookmarks.json", bookmarks)
     }
 
+    /// The Workspaces plugin's `workspaces.json`: `None` until the first
+    /// layout is saved, which is when Obsidian creates it.
+    pub fn workspaces(&self) -> Result<Option<Workspaces>, VaultError> {
+        self.read_config("workspaces.json")
+    }
+
+    /// Writes `workspaces.json` whole: a deleted layout has to leave the
+    /// file, which a merge would keep.
+    pub fn write_workspaces(&self, workspaces: &Workspaces) -> Result<(), VaultError> {
+        self.replace_config("workspaces.json", workspaces)
+    }
+
     pub fn appearance_config(&self) -> Result<AppearanceConfig, VaultError> {
         Ok(self.read_config("appearance.json")?.unwrap_or_default())
     }
@@ -795,6 +826,30 @@ mod tests {
     }
 
     #[test]
+    fn a_random_note_is_a_markdown_file_and_every_one_can_come_up() {
+        let dir = sample_vault();
+        let vault = Vault::open(dir.path()).unwrap();
+        // Board.canvas and pic.PNG sit before and after the notes in the
+        // file list; no roll lands on either, and both notes come up.
+        let picks: std::collections::BTreeSet<&str> = (0..8)
+            .map(|roll| vault.random_note(roll).unwrap().path.as_str())
+            .collect();
+        assert_eq!(
+            picks.into_iter().collect::<Vec<_>>(),
+            ["Note.md", "Projects/Plan.md"]
+        );
+        assert_eq!(
+            vault.random_note(u64::MAX).unwrap().kind,
+            FileKind::Markdown
+        );
+
+        let empty = tempfile::tempdir().unwrap();
+        fs::write(empty.path().join("Board.canvas"), "{}").unwrap();
+        let vault = Vault::open(empty.path()).unwrap();
+        assert!(vault.random_note(3).is_none(), "a canvas is not a note");
+    }
+
+    #[test]
     fn reads_config_and_resolves_links() {
         let dir = sample_vault();
         let vault = Vault::open(dir.path()).unwrap();
@@ -814,6 +869,36 @@ mod tests {
         assert_eq!(manifests[0].version, "1.2.3");
         let r = vault.link_resolver();
         assert_eq!(r.resolve("plan", "Note.md"), Some("Projects/Plan.md"));
+    }
+
+    /// `workspaces.json` is absent until a save makes it; a delete takes
+    /// the layout out of the file, and the bytes are Obsidian's shape.
+    #[test]
+    fn workspaces_json_is_made_by_the_first_save_and_written_whole() {
+        use scoria_formats::workspaces::WorkspaceLayout;
+        let dir = tempfile::tempdir().unwrap();
+        fs::create_dir_all(dir.path().join(".obsidian")).unwrap();
+        let vault = Vault::open(dir.path()).unwrap();
+        assert!(vault.workspaces().unwrap().is_none());
+        let mut file = Workspaces::default();
+        let layout = serde_json::json!({"main": {}, "active": "a", "lastOpenFiles": []});
+        file.save(
+            "One",
+            WorkspaceLayout::from_workspace(&layout, "2026-11-09T20:05:44-06:00"),
+        );
+        file.save(
+            "Two",
+            WorkspaceLayout::from_workspace(&layout, "2026-11-09T20:05:55-06:00"),
+        );
+        vault.write_workspaces(&file).unwrap();
+        file.delete("Two");
+        vault.write_workspaces(&file).unwrap();
+        let path = dir.path().join(".obsidian/workspaces.json");
+        assert_eq!(
+            fs::read_to_string(&path).unwrap(),
+            "{\n  \"workspaces\": {\n    \"One\": {\n      \"main\": {},\n      \"active\": \"a\",\n      \"mtime\": \"2026-11-09T20:05:44-06:00\"\n    }\n  },\n  \"active\": \"Two\"\n}"
+        );
+        assert_eq!(vault.workspaces().unwrap(), Some(file));
     }
 
     #[test]

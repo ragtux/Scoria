@@ -54,6 +54,15 @@ impl Stamp {
         let y = self.year;
         (y % 4 == 0 && y % 100 != 0) || y % 400 == 0
     }
+
+    /// The civil time `minutes` later on the same wall clock, carrying into
+    /// the hour, the day, the month and the year (moment's
+    /// `add(1, "minute")` away from a daylight-saving change).
+    pub fn plus_minutes(&self, minutes: i64) -> Stamp {
+        let secs = self.days_from_epoch() * 86_400
+            + (self.hour * 3600 + self.minute * 60 + self.second) as i64;
+        Stamp::from_unix(secs + minutes * 60, 0)
+    }
 }
 
 /// Howard Hinnant's days-from-civil, which is exact for every proleptic
@@ -145,6 +154,34 @@ mod tests {
             }
         );
         assert_eq!(Stamp::from_unix(-1, 0).year, 1969);
+    }
+
+    #[test]
+    fn a_minute_later_carries_into_the_hour_the_day_and_the_year() {
+        let s = |year, month, day, hour, minute, second| Stamp {
+            year,
+            month,
+            day,
+            hour,
+            minute,
+            second,
+        };
+        assert_eq!(
+            s(2026, 11, 9, 20, 19, 39).plus_minutes(1),
+            s(2026, 11, 9, 20, 20, 39)
+        );
+        assert_eq!(
+            s(2026, 11, 9, 20, 59, 0).plus_minutes(1),
+            s(2026, 11, 9, 21, 0, 0)
+        );
+        assert_eq!(
+            s(2024, 2, 28, 23, 59, 5).plus_minutes(1),
+            s(2024, 2, 29, 0, 0, 5)
+        );
+        assert_eq!(
+            s(2026, 12, 31, 23, 59, 59).plus_minutes(1),
+            s(2027, 1, 1, 0, 0, 59)
+        );
     }
 
     #[test]

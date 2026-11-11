@@ -102,6 +102,48 @@ fn fetch(
         .body(AsyncBody::from(body))?)
 }
 
+/// What a download brought back: the response's `Content-Type`, if any, and
+/// the body.
+pub struct Download {
+    pub content_type: Option<String>,
+    pub bytes: Vec<u8>,
+}
+
+/// One blocking `GET` for `editor:download-attachments`: the same agent
+/// settings as an image load, and a status other than 2xx is a failure, as
+/// a 404 was for Obsidian 1.15.0 (the run stopped there). Run it off the UI
+/// thread.
+pub fn download(url: &str) -> anyhow::Result<Download> {
+    if !is_remote(url) {
+        anyhow::bail!("not an http(s) URL: {url}");
+    }
+    let agent: ureq::Agent = ureq::Agent::config_builder()
+        .http_status_as_error(false)
+        .timeout_global(Some(Duration::from_secs(60)))
+        .user_agent(format!("Scoria/{}", env!("CARGO_PKG_VERSION")).as_str())
+        .build()
+        .into();
+    let response = agent.get(url).header("Accept", ACCEPT).call()?;
+    let status = response.status().as_u16();
+    if !(200..300).contains(&status) {
+        anyhow::bail!("{url} answered {status}");
+    }
+    let content_type = response
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .map(str::to_string);
+    let bytes = response
+        .into_body()
+        .with_config()
+        .limit(MAX_BODY)
+        .read_to_vec()?;
+    Ok(Download {
+        content_type,
+        bytes,
+    })
+}
+
 /// Whether a destination is one Obsidian fetches: `http:` or `https:`,
 /// scheme case ignored. A protocol-relative `//host/x.png` is not -- it
 /// resolves against `app://` there and loads nothing.

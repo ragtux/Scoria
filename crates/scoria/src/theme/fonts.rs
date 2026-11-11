@@ -169,15 +169,44 @@ pub fn quick_wheel(event: &gpui::ScrollWheelEvent, cx: &mut gpui::App) -> bool {
         .unwrap_or_default();
     let steps = quick.steps(event.delta);
     if steps != 0 {
-        let next = (current + steps as f32).clamp(QUICK_MIN, QUICK_MAX);
-        if quick.size.is_none() {
-            quick.from = current;
-        }
-        quick.size = Some(next);
+        let next = quick.step(current, steps);
         cx.global_mut::<super::Theme>().base_font_size = next;
     }
     cx.set_global(quick);
     true
+}
+
+impl QuickFontSize {
+    /// `steps` pixels on from `current`, held between the clamps, and
+    /// remembered as the session's size over the file's.
+    fn step(&mut self, current: f32, steps: i32) -> f32 {
+        let next = (current + steps as f32).clamp(QUICK_MIN, QUICK_MAX);
+        if self.size.is_none() {
+            self.from = current;
+        }
+        self.size = Some(next);
+        next
+    }
+}
+
+/// `app:increase-font-size` (`steps` 1) and `app:decrease-font-size` (-1):
+/// the text size one pixel up or down between 10 and 30, the clamps and
+/// the step Obsidian 1.15.0 showed, with or without "Quick font size
+/// adjustment" on. The size is the same session size Ctrl+wheel moves.
+/// Obsidian keeps the commands' size in the browser's local storage under
+/// the vault's id, which outlives a relaunch; Scoria has nothing outside
+/// the vault to put it in that Obsidian would read, and writing
+/// `baseFontSize` would be a byte Obsidian never wrote, so it lasts the
+/// session.
+pub fn step_font_size(steps: i32, cx: &mut gpui::App) {
+    let current = cx.global::<super::Theme>().base_font_size;
+    let mut quick = cx
+        .try_global::<QuickFontSize>()
+        .copied()
+        .unwrap_or_default();
+    let next = quick.step(current, steps);
+    cx.global_mut::<super::Theme>().base_font_size = next;
+    cx.set_global(quick);
 }
 
 /// A layer over a note's view that takes Ctrl+wheel for the font size when
@@ -233,6 +262,35 @@ mod tests {
         assert_eq!(q.steps(pixels(30.)), 0);
         assert_eq!(q.steps(pixels(15.)), 1);
         assert_eq!(q.steps(pixels(-120.)), -2);
+    }
+
+    /// The probe's runs: 16 to 17 on the first Increase, 30 reached on the
+    /// fourteenth and held there, 10 reached from 30 on the twentieth.
+    #[test]
+    fn the_font_size_commands_step_one_pixel_between_10_and_30() {
+        let mut q = QuickFontSize::default();
+        let mut size = 16.;
+        size = q.step(size, 1);
+        assert_eq!(size, 17.);
+        for _ in 0..13 {
+            size = q.step(size, 1);
+        }
+        assert_eq!(size, 30.);
+        for _ in 0..11 {
+            size = q.step(size, 1);
+        }
+        assert_eq!(size, 30., "held at the top");
+        for run in 1..=25 {
+            size = q.step(size, -1);
+            if run == 20 {
+                assert_eq!(size, 10.);
+            }
+        }
+        assert_eq!(size, 10., "held at the bottom");
+        // The session's size is over the file's 16, which is what
+        // `keep_quick_size` carries across a reload of the theme.
+        assert_eq!(q.size, Some(10.));
+        assert_eq!(q.from, 16.);
     }
 
     #[test]

@@ -44,9 +44,13 @@ use gpui::{
 };
 use scoria_commands::{hotkey_label, keystroke, Command};
 use scoria_formats::config::{
+    js_number, FileRecoveryConfig, FILE_RECOVERY_DEFAULT_INTERVAL, FILE_RECOVERY_DEFAULT_KEEP_DAYS,
+};
+use scoria_formats::config::{
     AppConfig, AppearanceConfig, BacklinkConfig, CanvasConfig, CorePlugins, DailyNotesConfig,
     Hotkey, Hotkeys, NoteComposerConfig, PagePreviewConfig, SwitcherConfig, TemplatesConfig,
-    WebviewerConfig, CORE_PLUGINS, DAILY_NOTE_DEFAULT_FORMAT, WEBVIEWER_DEFAULT_SEARCH_URL,
+    WebviewerConfig, ZkPrefixerConfig, CORE_PLUGINS, DAILY_NOTE_DEFAULT_FORMAT,
+    WEBVIEWER_DEFAULT_SEARCH_URL, ZK_PREFIXER_DEFAULT_FORMAT,
 };
 use scoria_search::fuzzy_match;
 use scoria_templates as templates;
@@ -951,6 +955,9 @@ const TEXTS: &[TextField] = &[
     TEMPLATES_DATE,
     TEMPLATES_TIME,
     WEB_CUSTOM_SEARCH_ENGINE,
+    ZK_FOLDER,
+    ZK_TEMPLATE,
+    ZK_FORMAT,
 ];
 
 // ----- the Daily notes and Templates tabs ------------------------------------
@@ -1085,6 +1092,134 @@ const TEMPLATES_TIME: TextField = TextField {
     },
 };
 
+// ----- the Unique note creator tab -------------------------------------------
+//
+// Observed on 1.15.0 on 2026-11-09 (`tools/obsidian-probe/results/
+// 2026-11-09-note-composer-unique.json`, run `settings:s01-tab-zk`): each row
+// writes its own key into `zk-prefixer.json` as a verbatim string, keys in the
+// order first written, and a cleared field writes `""` rather than dropping
+// the key -- the Daily notes tab's shape again.
+
+/// "New file location" on the Unique note creator tab.
+const ZK_FOLDER: TextField = TextField {
+    key: "folder",
+    placeholder: "Example: folder 1/folder 2",
+    prefix: "",
+    read: |state| state.zk_prefixer().folder.clone().unwrap_or_default(),
+    write: |state, value| {
+        let mut next = state.zk_prefixer().clone();
+        next.folder = Some(value.to_string());
+        SettingChange::ZkPrefixer(next)
+    },
+};
+
+/// "Template file location". Obsidian's control is a file picker that
+/// stores the picked note's path with its `.md` (`Templates/Unique.md`) and
+/// shows `Example: folder1/note` while empty; here it is a field, and the
+/// path typed is what is stored.
+const ZK_TEMPLATE: TextField = TextField {
+    key: "template",
+    placeholder: "Example: folder1/note",
+    prefix: "",
+    read: |state| state.zk_prefixer().template.clone().unwrap_or_default(),
+    write: |state, value| {
+        let mut next = state.zk_prefixer().clone();
+        next.template = Some(value.to_string());
+        SettingChange::ZkPrefixer(next)
+    },
+};
+
+/// "Unique prefix format": the moment format a unique note is named by.
+const ZK_FORMAT: TextField = TextField {
+    key: "format",
+    placeholder: ZK_PREFIXER_DEFAULT_FORMAT,
+    prefix: "",
+    read: |state| state.zk_prefixer().format.clone().unwrap_or_default(),
+    write: |state, value| {
+        let mut next = state.zk_prefixer().clone();
+        next.format = Some(value.to_string());
+        SettingChange::ZkPrefixer(next)
+    },
+};
+
+// ----- the File recovery tab -------------------------------------------------
+//
+// Observed on 1.15.0 on 2026-11-09 (`tools/obsidian-probe/results/
+// 2026-11-09-file-recovery.json`, step `s05-settings-typed`, real keys in the
+// Settings window): a field commits when it loses focus, and the first write
+// puts the plugin's whole options in the file, `intervalMinutes` then
+// `keepDays`, the untouched one at its default. "Snapshot interval" took 10,
+// 0 and 2.5 and refused -1; "History length" took 30 and 7 and refused 0 and
+// 0.5 — read here as "at least 1". A field emptied is left alone (inferred:
+// Obsidian wrote nothing for an emptied interval already at 0, and wrote 0
+// for an emptied history length, which this does not copy).
+
+/// "Snapshot interval": minutes, any number from 0.
+const RECOVERY_INTERVAL: TextField = TextField {
+    key: "intervalMinutes",
+    placeholder: "",
+    prefix: "",
+    read: |state| {
+        number_text(
+            state.file_recovery().interval_minutes.as_ref(),
+            FILE_RECOVERY_DEFAULT_INTERVAL,
+        )
+    },
+    write: |state, value| recovery_change(state, value, 0.0, |c, n| c.interval_minutes = Some(n)),
+};
+
+/// "History length": days, any number from 1.
+const RECOVERY_KEEP_DAYS: TextField = TextField {
+    key: "keepDays",
+    placeholder: "",
+    prefix: "",
+    read: |state| {
+        number_text(
+            state.file_recovery().keep_days.as_ref(),
+            FILE_RECOVERY_DEFAULT_KEEP_DAYS,
+        )
+    },
+    write: |state, value| recovery_change(state, value, 1.0, |c, n| c.keep_days = Some(n)),
+};
+
+/// A stored number as its field shows it, or the default when absent.
+fn number_text(value: Option<&serde_json::Number>, default: i64) -> String {
+    value
+        .map(|n| n.to_string())
+        .unwrap_or_else(|| default.to_string())
+}
+
+/// The File recovery options after `typed` lands in one field: both keys
+/// filled in (the untouched one at its default), as Obsidian's first write
+/// had them, or the options unchanged when the value is refused — which
+/// [`VaultState::apply_setting`] then writes nothing for.
+fn recovery_change(
+    state: &VaultState,
+    typed: &str,
+    min: f64,
+    set: fn(&mut FileRecoveryConfig, serde_json::Number),
+) -> SettingChange {
+    let current = state.file_recovery().clone();
+    let parsed = typed
+        .trim()
+        .parse::<f64>()
+        .ok()
+        .filter(|v| v.is_finite() && *v >= min)
+        .and_then(js_number);
+    let Some(number) = parsed else {
+        return SettingChange::FileRecovery(current);
+    };
+    let mut next = current;
+    next.interval_minutes = next
+        .interval_minutes
+        .or_else(|| js_number(FILE_RECOVERY_DEFAULT_INTERVAL as f64));
+    next.keep_days = next
+        .keep_days
+        .or_else(|| js_number(FILE_RECOVERY_DEFAULT_KEEP_DAYS as f64));
+    set(&mut next, number);
+    SettingChange::FileRecovery(next)
+}
+
 /// The sample a format row shows under itself — "Your current syntax looks
 /// like this: 2026-10-30" — rendered from today for the pattern in the file,
 /// or for the placeholder when the field is empty, as Obsidian does.
@@ -1112,7 +1247,8 @@ fn format_sample(pattern: &str, placeholder: &str) -> String {
 // Some rows wrote nothing the probe could see, because the control is a file
 // suggester, a textarea, a `type=number` field or a button and none of them
 // was driven: the Canvas tab's folder name and zoom threshold, every row of
-// the Unique note creator and File recovery tabs, and the Web viewer tab's
+// the File recovery tab (the Unique note creator's were typed into on
+// 2026-11-09, and write), and the Web viewer tab's
 // homepage, saved-page folder, ad-blocking rules and update frequency. Those
 // rows are drawn and tagged, and they write nothing at all — a key guessed
 // from the row's name would be a key Obsidian never wrote.
@@ -1240,13 +1376,30 @@ const COMPOSER_REPLACEMENT_TEXT: Typed = Typed {
             .unwrap_or_else(|| "link".to_string())
     },
     write: |state, value| {
-        let mut next = state.note_composer().clone();
+        // The plugin saves its whole options object, so the first pick on
+        // a vault with no file writes `askBeforeMerging: true` before the
+        // key it set (2026-11-09).
+        let mut next = state.note_composer().clone().with_defaults();
         next.replacement_text = Some(value.to_string());
         SettingChange::NoteComposer(next)
     },
     shape: None,
     label_of: None,
     local: None,
+};
+
+/// The Note composer tab's "Template file location": the template's path
+/// with `.md`, `""` once cleared (2026-11-09).
+const COMPOSER_TEMPLATE: TextField = TextField {
+    key: "template",
+    placeholder: "Example: folder/note",
+    prefix: "",
+    read: |state| state.note_composer().template.clone().unwrap_or_default(),
+    write: |state, value| {
+        let mut next = state.note_composer().clone().with_defaults();
+        next.template = Some(value.to_string());
+        SettingChange::NoteComposer(next)
+    },
 };
 
 /// The Web viewer tab's "Search engine". Picking `custom` also wrote
@@ -1326,6 +1479,10 @@ pub enum SettingChange {
     PagePreview(PagePreviewConfig),
     /// `note-composer.json`: the Note composer tab's dropdown and toggle.
     NoteComposer(NoteComposerConfig),
+    /// `zk-prefixer.json`: the Unique note creator tab's three fields.
+    ZkPrefixer(ZkPrefixerConfig),
+    /// `file-recovery.json`: the File recovery tab's two number fields.
+    FileRecovery(FileRecoveryConfig),
     /// `webviewer.json`: the Web viewer tab's two toggles, its search
     /// engine dropdown and the custom engine field.
     Webviewer(WebviewerConfig),
@@ -1351,10 +1508,69 @@ impl SettingChange {
             SettingChange::Canvas(_) => "canvas.json",
             SettingChange::PagePreview(_) => "page-preview.json",
             SettingChange::NoteComposer(_) => "note-composer.json",
+            SettingChange::ZkPrefixer(_) => "zk-prefixer.json",
+            SettingChange::FileRecovery(_) => "file-recovery.json",
             SettingChange::Webviewer(_) => "webviewer.json",
             SettingChange::Frame(_) => scoria_vault::registry::FILE_NAME,
         }
     }
+}
+
+/// The flag a toggle command flips: `editor:toggle-readable-line-length`
+/// and `editor:toggle-line-numbers` are the Editor tab's "Readable line
+/// length" and "Line numbers" rows run from the palette, and
+/// `app:toggle-ribbon` is the Interface tab's "Show ribbon" (`showRibbon`
+/// in `appearance.json`, appended and then kept over two runs, Obsidian
+/// 1.15.0), so each writes through the very flag the row does, and the row
+/// and the command cannot disagree about the key or about what its absence
+/// means.
+fn command_flag(id: &str) -> Option<Flag> {
+    match id {
+        "editor:toggle-readable-line-length" => Some(Flag::App(READABLE_LINE_LENGTH)),
+        "editor:toggle-line-numbers" => Some(Flag::App(SHOW_LINE_NUMBER)),
+        "editor:toggle-spellcheck" => Some(Flag::App(SPELLCHECK)),
+        "app:toggle-ribbon" => Some(Flag::Appearance(SHOW_RIBBON)),
+        _ => None,
+    }
+}
+
+/// What a toggle command writes: its row's file with the flag flipped, or
+/// `None` for an id that is not one of them. The config is read and let go
+/// in here, so the caller holds no read guard when it writes the change.
+pub fn toggle_command(id: &str, state: &VaultState) -> Option<SettingChange> {
+    command_flag(id).map(|flag| flag.toggled(state))
+}
+
+/// `app:toggle-default-new-pane-mode` ("Toggle default mode for new
+/// tabs"): `defaultViewMode` in `app.json` flipped between `source` and
+/// `preview`, an absent key reading as `source` the way the dropdown reads
+/// it, and the notice Obsidian 1.15.0 showed for each direction.
+pub fn toggle_default_view_mode(app: &AppConfig) -> (SettingChange, &'static str) {
+    let mut next = app.clone();
+    let reading = app.default_view_mode.as_deref() == Some("preview");
+    let (value, notice) = if reading {
+        ("source", "Switched default view mode to editing view.")
+    } else {
+        ("preview", "Switched default view mode to reading view.")
+    };
+    next.default_view_mode = Some(value.to_string());
+    (SettingChange::App(next), notice)
+}
+
+/// `theme:toggle-light-dark` over a base theme the file names: `obsidian`
+/// (dark) and `moonstone` (light) swapped, the other keys kept. Under
+/// `system`, a missing key (which Obsidian reads as `system`) or anything
+/// else it writes nothing and answers `None`; the caller flips the
+/// session's scheme instead (Obsidian 1.15.0, all four starting points).
+pub fn toggle_light_dark(appearance: &AppearanceConfig) -> Option<AppearanceConfig> {
+    let swapped = match appearance.theme.as_deref() {
+        Some("obsidian") => "moonstone",
+        Some("moonstone") => "obsidian",
+        _ => return None,
+    };
+    let mut next = appearance.clone();
+    next.theme = Some(swapped.to_string());
+    Some(next)
 }
 
 impl Flag {
@@ -2846,7 +3062,7 @@ impl SettingsView {
                 "Display the filename as an editable title inline with the file contents.",
                 app,
                 SHOW_INLINE_TITLE,
-            ).not_yet(),
+            ),
             app_toggle(
                 "Readable line length",
                 "Limit maximum line length. Less content fits onscreen, but long blocks of text are more readable.",
@@ -2870,13 +3086,13 @@ impl SettingsView {
                 "Lets you fold all content under a heading.",
                 app,
                 FOLD_HEADING,
-            ).not_yet(),
+            ),
             app_toggle(
                 "Fold indent",
                 "Lets you fold part of an indentation, such as lists.",
                 app,
                 FOLD_INDENT,
-            ).not_yet(),
+            ),
             app_toggle(
                 "Line numbers",
                 "Show line numbers in the gutter.",
@@ -2949,7 +3165,7 @@ impl SettingsView {
                 "Use Vim key bindings when editing.",
                 app,
                 VIM_MODE,
-            ).not_yet(),
+            ),
         ]
     }
 
@@ -2982,17 +3198,9 @@ impl SettingsView {
         // keyed off the selected option rather than off the stored string,
         // so the row appears the moment the option is picked.
         //
-        // The attachment rows keep their `not_yet()` tag even though the
-        // probe settled their labels and stored values and the dropdown now
-        // writes the four shapes Obsidian writes. `Honored::No` is "not read
-        // at all yet: the value is written for Obsidian", and that is still
-        // exactly the case: `scoria_vault::ops::attachment_path` knows where
-        // each shape sends a file, but nothing calls it, because Scoria
-        // creates no attachments. A function with no caller honours nothing,
-        // and the tag the row shows reads "not in Scoria yet", which would be
-        // a lie to take off here. It comes off with the first caller.
-        // Contrast "Default location for new notes" above, which carries no
-        // tag because `Vault::new_note_folder` really does read it.
+        // The attachment rows are read: `scoria_vault::ops::attachment_folder`
+        // sends Insert attachment's copy and Download attachments' files where
+        // each of the four shapes says, as Obsidian 1.15.0 did with them.
         if NEW_FILE_LOCATION.value(state) == "folder" {
             items.push(field(
                 "Folder to create new notes in",
@@ -3001,15 +3209,12 @@ impl SettingsView {
                 NEW_FILE_FOLDER,
             ));
         }
-        items.push(
-            choice(
-                "Default location for new attachments",
-                "Where newly added attachments are placed.",
-                state,
-                ATTACHMENT_LOCATION,
-            )
-            .not_yet(),
-        );
+        items.push(choice(
+            "Default location for new attachments",
+            "Where newly added attachments are placed.",
+            state,
+            ATTACHMENT_LOCATION,
+        ));
         match ATTACHMENT_LOCATION.value(state) {
             "Attachments" => items.push(
                 field(
@@ -3017,8 +3222,7 @@ impl SettingsView {
                     "Place newly created attachment files, such as images created via drag-and-drop or audio recordings, in this folder.",
                     state,
                     ATTACHMENT_FOLDER,
-                )
-                .not_yet(),
+                ),
             ),
             "./Attachments" => items.push(
                 field(
@@ -3026,8 +3230,7 @@ impl SettingsView {
                     "If your file is in “vault/folder”, and you set subfolder name to “attachments”, attachments will be saved to “vault/folder/attachments”.",
                     state,
                     SUBFOLDER_NAME,
-                )
-                .not_yet(),
+                ),
             ),
             _ => {}
         }
@@ -3050,7 +3253,7 @@ impl SettingsView {
                 "Auto-generate Wikilinks for [[links]] and ![[images]] instead of Markdown links and images.",
                 app,
                 USE_WIKILINKS,
-            ).not_yet(),
+            ),
             app_toggle(
                 "Show all file types",
                 "Show files with any extension even if Obsidian can't open them natively, so you can link to them and see them in the file explorer.",
@@ -3271,10 +3474,10 @@ impl SettingsView {
                 }
                 items
             }
-            // The one row of the Backlinks tab. The key is observed and the
-            // toggle writes it, but nothing in Scoria reads it: the
-            // backlinks pane is a pane, never a block at the foot of a
-            // note, so the row is tagged.
+            // The one row of the Backlinks tab: `backlinkInDocument`, which
+            // shows the backlinks block at the foot of every leaf that has
+            // not been turned off by `backlink:toggle-backlinks-in-document`
+            // (the 2026-11-09 panes probe, `blsetting`).
             "backlink" => {
                 let b = &state.backlink();
                 vec![toggle(
@@ -3282,8 +3485,7 @@ impl SettingsView {
                     "Make backlinks visible in new tabs by default.",
                     BACKLINK_IN_DOCUMENT.is_on(b),
                     Flag::Backlink(BACKLINK_IN_DOCUMENT),
-                )
-                .not_yet()]
+                )]
             }
             "canvas" => {
                 let c = &state.canvas_options();
@@ -3393,70 +3595,73 @@ impl SettingsView {
                         "What to show in place of the selected text after extracting it.",
                         state,
                         COMPOSER_REPLACEMENT_TEXT,
-                    )
-                    .not_yet(),
-                    // A file suggester, drawn as a plain text field the way
-                    // the Daily notes tab draws its own template path. That
-                    // one writes `template`, a key `DailyNotesConfig`
-                    // already carried; this tab's went unobserved, so the
-                    // row is empty and writes nothing.
-                    text(
+                    ),
+                    // A file suggester in Obsidian (`combobox-button
+                    // mod-file`), drawn as a plain text field the way the
+                    // Daily notes tab draws its own template path; what is
+                    // typed is what the suggester stores, the path with
+                    // `.md` (2026-11-09).
+                    field(
                         "Template file location",
                         "Template file to use when merging or extracting. Available variables: {{content}}, {{fromTitle}}, {{newTitle}}, {{date:FORMAT}}, e.g. {{date:YYYY-MM-DD}}.",
-                        "",
-                    )
-                    .not_yet(),
+                        state,
+                        COMPOSER_TEMPLATE,
+                    ),
                     toggle(
                         "Confirm file merge",
                         "Prompt before merge two files.",
                         ASK_BEFORE_MERGING.is_on(c),
                         Flag::NoteComposer(ASK_BEFORE_MERGING),
-                    )
-                    .not_yet(),
+                    ),
                 ]
             }
-            // Three rows, no key for any of them: two are text fields the
-            // probe did not type into and one is a file suggester. They are
-            // drawn and tagged, and none of them writes. The format row's
-            // description ends in the sample Obsidian renders from the
-            // pattern in the field, which is its placeholder here.
-            "zk-prefixer" => vec![
-                text(
-                    "New file location",
-                    "The folder path to create the new unique note in.",
-                    "",
-                )
-                .not_yet(),
-                text(
-                    "Template file location",
-                    "The file path to use as template.",
-                    "",
-                )
-                .not_yet(),
-                text(
-                    "Unique prefix format",
-                    &format!(
-                        "For more syntax, refer to format reference\nYour current syntax looks like this: {}",
-                        format_sample("", "YYYYMMDDHHmm")
+            // Three fields, each writing its own key (2026-11-09). The
+            // format row's description ends in the sample Obsidian renders
+            // from the pattern in the field, or from the default when it is
+            // empty.
+            "zk-prefixer" => {
+                let format = (ZK_FORMAT.read)(state);
+                vec![
+                    field(
+                        "New file location",
+                        "The folder path to create the new unique note in.",
+                        state,
+                        ZK_FOLDER,
                     ),
-                    "",
-                )
-                .not_yet(),
-            ],
-            // Two `type=number` fields and two buttons, none of whose key
-            // the probe observed; the buttons are inert, as every button in
-            // this window is.
+                    field(
+                        "Template file location",
+                        "The file path to use as template.",
+                        state,
+                        ZK_TEMPLATE,
+                    ),
+                    field(
+                        "Unique prefix format",
+                        &format!(
+                            "For more syntax, refer to format reference\nYour current syntax looks like this: {}",
+                            format_sample(&format, ZK_FORMAT.placeholder)
+                        ),
+                        state,
+                        ZK_FORMAT,
+                    ),
+                ]
+            }
+            // Two number fields, which write `file-recovery.json` (observed
+            // 2026-11-09), and two buttons over the snapshots, which Scoria
+            // does not keep: inert, as every button in this window is. The
+            // fields are tagged too, Scoria taking no snapshots by them.
             "file-recovery" => vec![
-                text(
+                field(
                     "Snapshot interval",
                     "Minimal interval in minutes between two snapshots.",
-                    "5",
+                    state,
+                    RECOVERY_INTERVAL,
                 )
                 .not_yet(),
-                text(
+                field(
                     "History length",
                     "Number of days the snapshots are kept for.",
-                    "7",
+                    state,
+                    RECOVERY_KEEP_DAYS,
                 )
                 .not_yet(),
                 item(
@@ -5872,7 +6077,13 @@ mod tests {
                     SettingChange::Webviewer(c) => serde_json::to_value(c).unwrap(),
                     other => panic!("{} wrote {other:?}", typed.key),
                 };
-                let object = json.as_object().expect("an object");
+                let mut object = json.as_object().expect("an object").clone();
+                // The Note composer saves its whole options object, so its
+                // first write carries `askBeforeMerging: true` too
+                // (2026-11-09) -- observed, not a stray key.
+                if typed.key == "replacementText" {
+                    assert_eq!(object.remove("askBeforeMerging"), Some(json!(true)));
+                }
                 assert_eq!(
                     object.len(),
                     1,
@@ -5930,6 +6141,7 @@ mod tests {
                 SettingChange::Templates(c) => serde_json::to_value(c).unwrap(),
                 SettingChange::Canvas(c) => serde_json::to_value(c).unwrap(),
                 SettingChange::NoteComposer(c) => serde_json::to_value(c).unwrap(),
+                SettingChange::ZkPrefixer(c) => serde_json::to_value(c).unwrap(),
                 SettingChange::Webviewer(c) => serde_json::to_value(c).unwrap(),
                 other => panic!("{what} wrote {other:?}"),
             };
@@ -6103,8 +6315,8 @@ mod tests {
     }
 
     /// The Backlinks tab: one toggle, off by default, writing
-    /// `backlinkInDocument` into `backlink.json`, and tagged because
-    /// nothing in Scoria reads that key.
+    /// `backlinkInDocument` into `backlink.json`, which the backlinks
+    /// block at the foot of a note follows.
     #[test]
     fn the_backlinks_tab_shows_one_toggle_that_writes_backlink_in_document() {
         let (dir, state) = vault();
@@ -6118,7 +6330,7 @@ mod tests {
             "Make backlinks visible in new tabs by default."
         );
         assert_eq!(items[0].control, Control::Toggle(false), "off by default");
-        assert_eq!(items[0].honored, Honored::No);
+        assert_eq!(items[0].honored, Honored::Live);
         assert!(!dir.path().join(".obsidian/backlink.json").exists());
         assert_eq!(
             flip_every_toggle(&dir, "backlink", "backlink.json"),
@@ -6261,10 +6473,38 @@ mod tests {
     }
 
     /// The Note composer tab: the dropdown writes `replacementText`, the
-    /// toggle `askBeforeMerging`, and the template row -- a file suggester
-    /// whose key went unobserved -- writes nothing at all.
+    /// field `template` and the toggle `askBeforeMerging`, and the first
+    /// write on a vault with no file carries `askBeforeMerging: true`
+    /// before its own key, as Obsidian's did (2026-11-09).
     #[test]
-    fn the_note_composer_tab_writes_the_two_keys_the_probe_saw() {
+    fn the_note_composer_tab_writes_its_three_keys_the_way_obsidian_does() {
+        let (dir, state) = vault();
+        let file = dir.path().join(".obsidian/note-composer.json");
+        state
+            .apply_setting(&(COMPOSER_REPLACEMENT_TEXT.write)(&state, "embed"))
+            .unwrap();
+        assert_eq!(
+            std::fs::read_to_string(&file).unwrap(),
+            "{\n  \"askBeforeMerging\": true,\n  \"replacementText\": \"embed\"\n}"
+        );
+        let state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        state
+            .apply_setting(&(COMPOSER_TEMPLATE.write)(&state, "Templates/Composer.md"))
+            .unwrap();
+        let state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        assert_eq!((COMPOSER_TEMPLATE.read)(&state), "Templates/Composer.md");
+        state
+            .apply_setting(&(COMPOSER_TEMPLATE.write)(&state, ""))
+            .unwrap();
+        let json: Value = serde_json::from_str(&std::fs::read_to_string(&file).unwrap()).unwrap();
+        assert_eq!(json["template"], json!(""), "cleared, not removed");
+        let items = SettingsView::plugin_items(&state, &[], "note-composer", None);
+        assert!(items.iter().all(|i| i.honored == Honored::Live));
+        assert!(items[1].field.is_some());
+    }
+
+    #[test]
+    fn the_note_composer_tabs_dropdown_and_toggle_round_trip() {
         let (dir, mut state) = vault();
         assert_eq!(
             plugin_rows(&state, "note-composer"),
@@ -6283,12 +6523,7 @@ mod tests {
             items[1].desc.as_ref(),
             "Template file to use when merging or extracting. Available variables: {{content}}, {{fromTitle}}, {{newTitle}}, {{date:FORMAT}}, e.g. {{date:YYYY-MM-DD}}."
         );
-        assert!(
-            items[1].field.is_none() && items[1].typed.is_none(),
-            "the template row would write a key nobody observed"
-        );
         assert_eq!(items[2].control, Control::Toggle(true), "on by default");
-        assert!(items.iter().all(|i| i.honored == Honored::No));
 
         for (label, value) in COMPOSER_REPLACEMENT_TEXT.options {
             state
@@ -6304,12 +6539,13 @@ mod tests {
         assert_eq!(json.as_object().map(|o| o.len()), Some(2));
     }
 
-    /// The Unique note creator and File recovery tabs: Obsidian's rows,
-    /// every one of them tagged and inert, because the probe reached none of
-    /// their keys. Nothing either tab can be clicked on writes a file.
+    /// The Unique note creator tab as 1.15.0 showed it, and the probe's own
+    /// sequence of edits -- folder, template, template cleared, format,
+    /// format cleared, folder cleared -- leaving `zk-prefixer.json` byte for
+    /// byte as Obsidian left it after each (`settings:s01-tab-zk`).
     #[test]
-    fn the_unique_note_creator_and_file_recovery_tabs_write_nothing() {
-        let (dir, state) = vault();
+    fn the_unique_note_creator_tab_writes_zk_prefixer_json_as_obsidian_did() {
+        let (dir, mut state) = vault();
         assert_eq!(
             plugin_rows(&state, "zk-prefixer"),
             [
@@ -6318,6 +6554,81 @@ mod tests {
                 "Unique prefix format",
             ]
         );
+        let sample = |pattern: &str| {
+            format!(
+                "For more syntax, refer to format reference\nYour current syntax looks like this: {}",
+                templates::format(pattern, &crate::workspace::now())
+            )
+        };
+        let zk = SettingsView::plugin_items(&state, &[], "zk-prefixer", None);
+        assert_eq!(zk[2].desc.as_ref(), sample("YYYYMMDDHHmm"));
+        let fields: Vec<TextField> = zk.iter().map(|row| row.field.expect("a field")).collect();
+        assert_eq!(
+            fields.iter().map(|f| f.placeholder).collect::<Vec<_>>(),
+            [
+                "Example: folder 1/folder 2",
+                "Example: folder1/note",
+                "YYYYMMDDHHmm"
+            ]
+        );
+        assert!(!dir.path().join(".obsidian/zk-prefixer.json").exists());
+        let steps: [(TextField, &str, &str); 6] = [
+            (ZK_FOLDER, "Zettel", "{\n  \"folder\": \"Zettel\"\n}"),
+            (
+                ZK_TEMPLATE,
+                "Templates/Unique.md",
+                "{\n  \"folder\": \"Zettel\",\n  \"template\": \"Templates/Unique.md\"\n}",
+            ),
+            (
+                ZK_TEMPLATE,
+                "",
+                "{\n  \"folder\": \"Zettel\",\n  \"template\": \"\"\n}",
+            ),
+            (
+                ZK_FORMAT,
+                "YYYY-MM-DD-HHmmss",
+                "{\n  \"folder\": \"Zettel\",\n  \"template\": \"\",\n  \"format\": \"YYYY-MM-DD-HHmmss\"\n}",
+            ),
+            (
+                ZK_FORMAT,
+                "",
+                "{\n  \"folder\": \"Zettel\",\n  \"template\": \"\",\n  \"format\": \"\"\n}",
+            ),
+            (
+                ZK_FOLDER,
+                "",
+                "{\n  \"folder\": \"\",\n  \"template\": \"\",\n  \"format\": \"\"\n}",
+            ),
+        ];
+        for (field, value, bytes) in steps {
+            state.apply_setting(&(field.write)(&state, value)).unwrap();
+            let file =
+                std::fs::read_to_string(dir.path().join(".obsidian/zk-prefixer.json")).unwrap();
+            assert_eq!(file, bytes, "after {} = {value:?}", field.key);
+            state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+            assert_eq!((field.read)(&state), value);
+            if field.same(&ZK_FORMAT) {
+                // The sample follows the field, and goes back to the
+                // default's when it is cleared.
+                let zk = SettingsView::plugin_items(&state, &[], "zk-prefixer", None);
+                let pattern = if value.is_empty() {
+                    "YYYYMMDDHHmm"
+                } else {
+                    value
+                };
+                assert_eq!(zk[2].desc.as_ref(), sample(pattern));
+            }
+        }
+    }
+
+    /// The File recovery tab: the two number fields write
+    /// `file-recovery.json` byte for byte as Obsidian 1.15.0 did while the
+    /// probe typed into them (`2026-11-09-file-recovery.json`,
+    /// `s05-settings-typed`), refused values writing nothing; the two
+    /// buttons stay inert, Scoria keeping no snapshots. Every row is tagged.
+    #[test]
+    fn the_file_recovery_tab_writes_file_recovery_json_as_obsidian_did() {
+        let (dir, mut state) = vault();
         assert_eq!(
             plugin_rows(&state, "file-recovery"),
             [
@@ -6327,31 +6638,53 @@ mod tests {
                 "Clear history",
             ]
         );
-        let zk = SettingsView::plugin_items(&state, &[], "zk-prefixer", None);
-        assert_eq!(
-            zk[2].desc.as_ref(),
-            format!(
-                "For more syntax, refer to format reference\nYour current syntax looks like this: {}",
-                templates::format("YYYYMMDDHHmm", &crate::workspace::now())
-            )
-        );
         let recovery = SettingsView::plugin_items(&state, &[], "file-recovery", None);
         assert_eq!(recovery[0].control, Control::Text("5".into()));
         assert_eq!(recovery[1].control, Control::Text("7".into()));
         assert_eq!(recovery[2].control, Control::Button("View".into()));
         assert_eq!(recovery[3].control, Control::Button("Clear".into()));
-        for row in zk.iter().chain(recovery.iter()) {
+        for row in recovery.iter() {
             assert_eq!(row.honored, Honored::No, "{}", row.name);
-            assert!(
-                row.flag.is_none()
-                    && row.typed.is_none()
-                    && row.field.is_none()
-                    && row.number.is_none(),
-                "{} writes a key nobody observed",
-                row.name
-            );
         }
-        assert!(!dir.path().join(".obsidian/zk-prefixer.json").exists());
+        assert_eq!(recovery[0].field.map(|f| f.key), Some("intervalMinutes"));
+        assert_eq!(recovery[1].field.map(|f| f.key), Some("keepDays"));
+        assert!(recovery[2].field.is_none() && recovery[3].field.is_none());
+        let path = dir.path().join(".obsidian/file-recovery.json");
+        assert!(!path.exists());
+        let both =
+            |i: &str, k: &str| format!("{{\n  \"intervalMinutes\": {i},\n  \"keepDays\": {k}\n}}");
+        // The probe's sequence, less the two emptied fields (see the tab's
+        // note): each value typed and the file after it, `None` where
+        // Obsidian wrote nothing.
+        let steps: [(TextField, &str, Option<String>); 9] = [
+            (RECOVERY_INTERVAL, "10", Some(both("10", "7"))),
+            (RECOVERY_KEEP_DAYS, "30", Some(both("10", "30"))),
+            (RECOVERY_INTERVAL, "0", Some(both("0", "30"))),
+            (RECOVERY_INTERVAL, "-1", None),
+            (RECOVERY_INTERVAL, "2.5", Some(both("2.5", "30"))),
+            (RECOVERY_KEEP_DAYS, "0", None),
+            (RECOVERY_KEEP_DAYS, "0.5", None),
+            (RECOVERY_INTERVAL, "5", Some(both("5", "30"))),
+            (RECOVERY_KEEP_DAYS, "7", Some(both("5", "7"))),
+        ];
+        let mut expected = None;
+        for (field, value, bytes) in steps {
+            state.apply_setting(&(field.write)(&state, value)).unwrap();
+            if bytes.is_some() {
+                expected = bytes;
+            }
+            let file = std::fs::read_to_string(&path).ok();
+            assert_eq!(file, expected, "after {} = {value:?}", field.key);
+            state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        }
+        assert_eq!((RECOVERY_INTERVAL.read)(&state), "5");
+        let recovery = SettingsView::plugin_items(&state, &[], "file-recovery", None);
+        assert_eq!(recovery[1].control, Control::Text("7".into()));
+        // A refused value before anything was written creates no file.
+        let (dir, state) = vault();
+        state
+            .apply_setting(&(RECOVERY_INTERVAL.write)(&state, "abc"))
+            .unwrap();
         assert!(!dir.path().join(".obsidian/file-recovery.json").exists());
     }
 
@@ -6753,6 +7086,211 @@ mod tests {
             Some(false),
             "the toggle's own value was dropped"
         );
+    }
+
+    /// `editor:toggle-readable-line-length` and `editor:toggle-line-numbers`
+    /// are the Editor tab's two rows run as commands: each builds exactly
+    /// the change a click on its row builds, and writes only its own key.
+    #[test]
+    fn the_toggle_commands_write_what_their_editor_rows_write() {
+        for (id, row, key) in [
+            (
+                "editor:toggle-readable-line-length",
+                "Readable line length",
+                "readableLineLength",
+            ),
+            (
+                "editor:toggle-line-numbers",
+                "Line numbers",
+                "showLineNumber",
+            ),
+        ] {
+            let (dir, _) = vault();
+            let path = dir.path().join(".obsidian/app.json");
+            std::fs::write(&path, "{\n  \"tabSize\": 2\n}").unwrap();
+            let state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+            let flag = SettingsView::editor_items(&state)
+                .into_iter()
+                .find(|i| i.name.as_ref() == row)
+                .and_then(|i| i.flag)
+                .unwrap_or_else(|| panic!("no {row} row"));
+            let before = flag.is_on(&state);
+            let change = toggle_command(id, &state).expect(id);
+            assert_eq!(change, flag.toggled(&state), "{id} and its row differ");
+            state.apply_setting(&change).unwrap();
+            assert_eq!(flag.is_on(&state), !before, "{id} did not flip {key}");
+            let written = std::fs::read_to_string(&path).unwrap();
+            let json: serde_json::Value = serde_json::from_str(&written).unwrap();
+            let keys: Vec<&str> = json
+                .as_object()
+                .unwrap()
+                .keys()
+                .map(|k| k.as_str())
+                .collect();
+            assert_eq!(keys, ["tabSize", key], "{id} wrote {written}");
+            assert_eq!(json[key], serde_json::Value::Bool(!before));
+            // Run again, it puts the value back and keeps the key.
+            // `toggle_command` lets its read guard go before returning, so
+            // the write can take the lock.
+            let again = toggle_command(id, &state).unwrap();
+            state.apply_setting(&again).unwrap();
+            assert_eq!(flag.is_on(&state), before);
+        }
+        let (_dir, state) = vault();
+        assert_eq!(toggle_command("editor:toggle-bold", &state), None);
+    }
+
+    /// `editor:toggle-spellcheck` over two runs, from no key and from
+    /// `false`: `app.json`'s bytes after each are Obsidian 1.15.0's (the
+    /// 2026-11-09 `attachments-app-info` probe, `s01`), the key written
+    /// even when it goes back to the default.
+    #[test]
+    fn toggle_spellcheck_writes_obsidians_bytes_over_two_runs() {
+        for (start, first, second) in [
+            (
+                "{}",
+                "{\n  \"spellcheck\": false\n}",
+                "{\n  \"spellcheck\": true\n}",
+            ),
+            (
+                "{\n  \"spellcheck\": false\n}",
+                "{\n  \"spellcheck\": true\n}",
+                "{\n  \"spellcheck\": false\n}",
+            ),
+        ] {
+            let (dir, _) = vault();
+            let path = dir.path().join(".obsidian/app.json");
+            std::fs::write(&path, start).unwrap();
+            let state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+            let change = toggle_command("editor:toggle-spellcheck", &state).unwrap();
+            state.apply_setting(&change).unwrap();
+            assert_eq!(
+                std::fs::read_to_string(&path).unwrap(),
+                first,
+                "from {start}"
+            );
+            let change = toggle_command("editor:toggle-spellcheck", &state).unwrap();
+            state.apply_setting(&change).unwrap();
+            assert_eq!(
+                std::fs::read_to_string(&path).unwrap(),
+                second,
+                "from {start}"
+            );
+        }
+    }
+
+    /// `app:toggle-ribbon` is the Interface tab's "Show ribbon" row: over
+    /// two runs it appends `showRibbon: false` after the keys already there
+    /// and then writes `true`, keeping the key, which are Obsidian 1.15.0's
+    /// bytes; `workspace.json` and `app.json` are not touched.
+    #[test]
+    fn toggle_ribbon_writes_show_ribbon_after_the_keys_already_there() {
+        let (dir, _) = vault();
+        let config = dir.path().join(".obsidian");
+        let path = config.join("appearance.json");
+        std::fs::write(&path, "{\n  \"baseFontSizeAction\": true\n}").unwrap();
+        let app_before = std::fs::read(config.join("app.json")).ok();
+        let layout_before = std::fs::read(config.join("workspace.json")).ok();
+        let state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        let flag = SettingsView::interface_items(&state)
+            .into_iter()
+            .find(|i| i.name.as_ref() == "Show ribbon")
+            .and_then(|i| i.flag)
+            .expect("a Show ribbon row");
+        let change = toggle_command("app:toggle-ribbon", &state).unwrap();
+        assert_eq!(
+            change,
+            flag.toggled(&state),
+            "the command and its row differ"
+        );
+        state.apply_setting(&change).unwrap();
+        assert_eq!(
+            std::fs::read_to_string(&path).unwrap(),
+            "{\n  \"baseFontSizeAction\": true,\n  \"showRibbon\": false\n}"
+        );
+        let again = toggle_command("app:toggle-ribbon", &state).unwrap();
+        state.apply_setting(&again).unwrap();
+        assert_eq!(
+            std::fs::read_to_string(&path).unwrap(),
+            "{\n  \"baseFontSizeAction\": true,\n  \"showRibbon\": true\n}"
+        );
+        assert_eq!(std::fs::read(config.join("app.json")).ok(), app_before);
+        assert_eq!(
+            std::fs::read(config.join("workspace.json")).ok(),
+            layout_before
+        );
+    }
+
+    /// The three rows of the probe: from no key, from `source` and from
+    /// `preview`, with the notice each showed; an unknown key rides along.
+    #[test]
+    fn toggle_default_view_mode_flips_source_and_preview_with_its_notices() {
+        let (dir, _) = vault();
+        let path = dir.path().join(".obsidian/app.json");
+        std::fs::write(&path, "{}").unwrap();
+        let state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        let (change, notice) = toggle_default_view_mode(&state.app());
+        assert_eq!(notice, "Switched default view mode to reading view.");
+        state.apply_setting(&change).unwrap();
+        assert_eq!(
+            std::fs::read_to_string(&path).unwrap(),
+            "{\n  \"defaultViewMode\": \"preview\"\n}"
+        );
+        let (change, notice) = toggle_default_view_mode(&state.app());
+        assert_eq!(notice, "Switched default view mode to editing view.");
+        state.apply_setting(&change).unwrap();
+        assert_eq!(
+            std::fs::read_to_string(&path).unwrap(),
+            "{\n  \"defaultViewMode\": \"source\"\n}"
+        );
+        let (change, notice) = toggle_default_view_mode(&state.app());
+        assert_eq!(notice, "Switched default view mode to reading view.");
+        state.apply_setting(&change).unwrap();
+
+        std::fs::write(
+            &path,
+            "{\n  \"probeUnknown\": [1, 2],\n  \"defaultViewMode\": \"preview\"\n}",
+        )
+        .unwrap();
+        let state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        let (change, _) = toggle_default_view_mode(&state.app());
+        state.apply_setting(&change).unwrap();
+        let json: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+        assert_eq!(json["defaultViewMode"], "source");
+        assert_eq!(json["probeUnknown"], serde_json::json!([1, 2]));
+    }
+
+    /// `obsidian` and `moonstone` swap, the file's other keys kept; under
+    /// `system`, no key, or a value Obsidian does not know, nothing is
+    /// written.
+    #[test]
+    fn toggle_light_dark_swaps_the_two_base_themes_and_leaves_system_alone() {
+        let (dir, _) = vault();
+        let path = dir.path().join(".obsidian/appearance.json");
+        std::fs::write(
+            &path,
+            "{\n  \"accentColor\": \"#ff5721\",\n  \"theme\": \"obsidian\",\n  \"probeUnknown\": true\n}",
+        )
+        .unwrap();
+        let state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        let next = toggle_light_dark(&state.appearance()).expect("a swap");
+        state
+            .apply_setting(&SettingChange::Appearance(next))
+            .unwrap();
+        assert_eq!(
+            std::fs::read_to_string(&path).unwrap(),
+            "{\n  \"accentColor\": \"#ff5721\",\n  \"theme\": \"moonstone\",\n  \"probeUnknown\": true\n}"
+        );
+        let back = toggle_light_dark(&state.appearance()).expect("a swap");
+        assert_eq!(back.theme.as_deref(), Some("obsidian"));
+        for theme in [Some("system"), None, Some("probe")] {
+            let config = AppearanceConfig {
+                theme: theme.map(str::to_string),
+                ..AppearanceConfig::default()
+            };
+            assert_eq!(toggle_light_dark(&config), None, "{theme:?}");
+        }
     }
 
     /// Obsidian words this one the other way round: the control is "Use
@@ -7332,19 +7870,26 @@ mod tests {
             [
                 "Quick font size adjustment",
                 "Show ribbon",
+                "Inline title",
                 "Readable line length",
                 "Strict line breaks",
+                "Fold heading",
+                "Fold indent",
                 "Auto-pair brackets",
                 "Auto-pair Markdown syntax",
                 "Smart lists",
                 "Indent using tabs",
+                "Vim key bindings",
                 "Automatically update internal links",
+                "Use [[Wikilinks]]",
                 "Show all file types",
                 "Confirm before deleting files",
                 // The Quick switcher tab's three, read by `QuickSwitcher::set_state`.
                 "Show existing only",
                 "Show attachments",
                 "Show all file types",
+                // The Backlinks tab's one, read by the backlinks block.
+                "Show backlinks at the bottom of notes",
                 // Page preview's live sources, read on every hover by
                 // `Workspace::arm_preview_show`.
                 "Search, Backlinks, and Outgoing links",
@@ -7356,6 +7901,8 @@ mod tests {
                 "Outline",
                 "Bases",
                 "Graph view",
+                // The Note composer's, read by `note-composer:merge-file`.
+                "Confirm file merge",
             ],
             "a toggle claims Scoria reads it"
         );
@@ -7369,11 +7916,9 @@ mod tests {
             .map(|(name, _)| name)
             .collect();
         for name in [
-            "Show backlinks at the bottom of notes",
             "Snap to grid",
             "Snap to objects",
             "Properties view",
-            "Confirm file merge",
             "Open external links",
             "Enable ad blocker",
         ] {

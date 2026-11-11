@@ -495,6 +495,314 @@ by default; a click on the text turns the popover into a Live Preview editor tha
 and stays until Escape or a click outside. A search result raised nothing in the run, and a
 second link hovered while a popover is up was not settled.
 
+### Eleven more ids probed, five of them run, 2026-11-10
+
+Of the 54 ids left by [[#The probes ran, and what they unblocked, 2026-11-09]], 35 are not
+Obsidian's on a desktop or belong to a service (the caret, clipboard and undo ids, the two table
+duplicates, the tab switcher, the mobile ids, `app:reload`, Sync, Publish, the web viewer) and
+four wait on gpui. Eleven of the other fifteen went to two worktrees under the same rule, each
+with a probe of Obsidian 1.15.0 in a private headless sway (`attachments-app-info.mjs`,
+`stacked-tabs.mjs`, `slides.mjs`, `graph-animate.mjs`, `file-recovery.mjs`, results under
+`2026-11-09-`); the observations are the last six sections of [[Specification]]. Five ids run,
+49 of the 244 are left, and all eleven are now on record.
+
+**Attachments and spellcheck.** `editor:toggle-spellcheck` is `settings::toggle_command` again:
+`{}`, then `"spellcheck": false`, then `true`, no notice. `editor:attach-file` copies the picked
+file where `attachmentFolderPath` says, numbers a taken name (`pic one 1.png`) and writes
+autocompletion's embed over the selection. `editor:download-attachments` offers each remote
+`![alt](url)` once in a gallery modal, fetches one after another, names each from the URL's last
+segment (`Image.<ext>` from the content type without one) and rewrites the embeds only when every
+fetch succeeded; the first failure stops silently, the files already saved staying, as Obsidian's
+did. The pure half is `scoria_vault::attachments`, the embeds found by the one parser. Left out:
+Obsidian also downloads frontmatter values that are a bare URL, and which values qualify is not
+settled.
+
+**Open file.** `app:open-file` opens a pick inside the vault in the tab in hand. A pick outside
+is refused in Scoria's own words: Obsidian opens it in a new tab on a `file:/abs` leaf and saves
+back to it, and Scoria has no such leaf. The dialog was stubbed at Obsidian's main process, so
+what follows it is observed and the dialog is not.
+
+**Stacked tabs.** `workspace:toggle-stacked-tabs` writes `"stacked": true` last in the `tabs`
+node and removes the key when off, popouts too. Each tab is a 40 px spine and a pane clamped to
+`[(W−40n)/n, W−40n]`; `workspace/stacked.rs` holds the geometry, tested on the measured rects and
+the six scroll offsets. Scoria's own: only the active pane is live (the other notes draw through
+a reading view, anything else is a header over nothing), the scroll jumps where Obsidian eases
+for 0.4 s, the turned titles are Inter rasterized with ab_glyph whatever the interface font, and
+spines do not drag.
+
+**File recovery.** The snapshots are in IndexedDB (`<vault id>-backup`), which Scoria cannot
+share, so `file-recovery:open` stays out. `file-recovery.json` (`intervalMinutes`, `keepDays`) is
+a type and the tab's two fields write it; the rows keep their "not in Scoria yet".
+
+**Probed and not built.** Each has its section and its "Not settled" list:
+
+| Commands | What stands in the way |
+| --- | --- |
+| `app:migrate-frontmatter` | 45 shapes observed; Obsidian re-serialises the whole block (comments gone, flow lists made blocks, quotes normalised) and Scoria's properties writer is surgical; also the progress modal and Undo |
+| `slides:start` | the cut is settled (top-level thematic breaks, empty slides dropped); drawing needs a second style table for the reading renderer |
+| `graph:animate` | nodes return in ctime order, but the step lengths (0.2–0.6 s, the same each run) are unexplained. The graph's ▶ button only restarts the layout and is not this |
+| `file-recovery:open` | a store of Scoria's own |
+
+Not probed: `workspace:export-pdf`, `canvas:export-as-image`, `markdown-importer:open` and the
+two `audio-recorder` ids.
+
+**Traps.** gpui's file dialog reaches the desktop's portal through `$XDG_RUNTIME_DIR/bus` even
+with `DBUS_SESSION_BUS_ADDRESS` unset: a headless drive points both somewhere private, or the
+dialog opens on the desk. A commit from a worktree raises the GPG pinentry there too. Obsidian's
+file input opens nothing without a user activation (`userGesture`), `run-block.sh` needs a short
+`TMPDIR`, and the Settings window is a CDP target of its own. Possibly a fault of the settings
+fields: a click from one number field straight into another lost the typed value, Enter did not.
+The gate on the two branches together: 64 test binaries, 1,548 passed, 632 in the app's bin.
+
+### Debug info and release notes, 2026-11-10
+
+Two of the ids [[#Eleven more ids probed, five of them run, 2026-11-10]] left as a decision,
+decided: Obsidian's chrome around Scoria's own values. No probe was run for them, the 2026-11-09
+`attachments-app-info.mjs` run having recorded every byte and, stubbed at Obsidian's main process,
+what the debug modal's buttons do. Built on `phase4-commands` and taken onto this branch, where
+`app:open-file` had already been built on the same observation; the branch's own copy of it was
+dropped at the cherry-pick, the two having been the same function. 197 of the 244 ids run, 47 do
+not; the gate on the merged branch: 64 test binaries, 1,562 passed, 646 in the app's bin.
+
+**Show debug info.** `crate::debug_info` is the modal: the title "Debug info", one read-only
+text box, no close button, and Copy to clipboard, Sandbox vault and Done, none accented. The
+text keeps Obsidian's shape — `SYSTEM INFO:`, a tab before each value, a blank line before
+`RECOMMENDATIONS:`, a final newline — with Scoria's values: `Scoria version`, the kernel's
+version and release as `Operating system` (the platform's name off Linux), `Language: en`, Live
+preview, Base theme, Community theme and Snippets enabled from the vault's config, and
+`Restricted mode: on`, Scoria running no community plugin whatever the vault enables. Installer
+version, Login status and Insider build are left out, Scoria having none of them, and the plugin
+lines never appear. A theme or a snippet brings Obsidian's one recommendation for them, word for
+word; Scoria has a sandbox vault for it to point at. Copy to clipboard copies the text, closes
+the modal and says "Debug info copied to your clipboard"; Sandbox vault closes it and runs
+`app:open-sandbox-vault`, Obsidian's sending its main process `sandbox`; Done and Escape close.
+`moonstone` reads "light" as observed; `obsidian` reading "dark" is Scoria's.
+
+**Show release notes.** A new tab at the end of the strip, active, its leaf
+`{"type": "release-notes", "state": {"currentVersion": "0.5.0"}, "icon": "lucide-book-up",
+"title": "Release Notes 0.5.0"}`, the tab and the view header named the same. The notes are
+Scoria's: the repository's only written release notes are the site's `releases.html` (the tags
+say no more than `Scoria 0.5.0`), so the page is compiled in and the `<section>` whose heading
+names the running version is cut into Markdown — headings, paragraphs, code spans, links and
+emphasis, everything else escaped — and drawn by a reading view of its own through the one
+parser, followed by a rule and a link to the published page. Nothing is fetched; Obsidian fetches
+its changelog every time. A version the page has only in its table shows that row, one it does
+not have says so. A test holds that the page has a section for the manifest's version, so a
+release that bumps the version without its notes fails the gate. The tab is a release-notes tab
+while its leaf is that and it holds no file and no history; a note opened in it takes it over, as
+in Obsidian, and the leaf written is then the note's. `workspace.json` round-trips the leaf as
+read, an Obsidian leaf naming 1.15.0 included, whose tab says "Release Notes 1.15.0" over
+"The releases page has no notes for 1.15.0." The header draws no graph or mode button there.
+
+**Driven.** A headless sway, a one-note scratch vault, the socket: the modal's text and buttons
+as above and Escape closing it; the notes tab drawn with the section's six cards as headings and
+its code spans; `workspace.json` after the quit holding the leaf in Obsidian's shape with
+`currentTab` on it. The open dialog was not driven: it goes through the desktop portal.
+
+**Left.** Whether a relaunch shows a stale
+`currentVersion`'s notes or the running one's, and whether an update opens the tab by itself, are
+unobserved and on the spec's "Not settled" list; Scoria shows the leaf's version and never opens
+the tab by itself. The 13 new tests, by name: 5 in `debug_info`, 8 in
+`workspace::release_notes`, and the runnable test in `workspace::app_info`.
+
+### The Note composer, driven, 2026-11-10
+
+The one thing the 2026-11-09 work had not been seen doing. A headless sway, a five-note scratch
+vault, the three commands over the socket and `grim` on every stage: the prompt sits where the
+quick switcher does, with its two instructions and "Enter to create" at the row's right; the
+confirmation is `Merge file`, the sentence, the checkbox, Merge before Cancel, and Space then
+Enter wrote `"askBeforeMerging": false`; the Update links question follows it. A merge of a note
+with two frontmatters and five link forms to it left the union, the target's keys first, and
+`Updated 5 links in 1 file.`; an extraction left `[[First part]]` and a note of the section;
+Shift+Enter put a selection at the top of `Sub/Target.md`; Ctrl+Enter does nothing with no row
+listed. A heading named as its own note makes `Long 1.md`, unless a fuzzy match outranks the
+create row, which it does as in any prompt.
+
+**The save's echo.** The drive raised `Long.md changed on disk; unsaved edits kept` on a file
+nobody else had touched, once in three runs. `is_own_write` and `show_file` both asked whether the
+file is the buffer; a save whose watcher event arrives after the next edit is not, though it is
+still the bytes the buffer last wrote. Both now also take a dirty buffer whose `disk_unchanged`
+holds. Typing through an autosave could raise the same notice and re-centre the Files list. Five
+replays of the sequence at the timings around the one that failed, and twelve saves each followed
+by a keystroke 0 to 220 ms later, raised nothing; there is no unit test, the rule living where a
+window is needed.
+
+### The probes ran, and what they unblocked, 2026-11-09
+
+The table of [[#The unrunnable commands, 2026-11-09]] was answered the same evening. Three CDP
+probes of Obsidian 1.15.0 (`app-window-commands.mjs`, `note-composer-unique.mjs`,
+`panes-workspaces-headings.mjs`, results beside them under `2026-11-09-`) each ran in a private
+headless sway with a data directory and a port of its own, three Obsidians at once beside the
+desktop's and nothing on its screen; the observations are the last sections of [[Specification]].
+Six worktrees then built to them. Twenty more ids run, and 54 of the 244 are left.
+
+**The app's commands.** `theme:toggle-light-dark` swaps `obsidian` and `moonstone` in
+`appearance.json`; under `system`, or with no key, it writes nothing and turns the session's
+scheme over (`scheme_flipped`). `app:toggle-ribbon` is the Interface tab's Show ribbon as a
+command, `app:toggle-default-new-pane-mode` flips `defaultViewMode` with Obsidian's two notices,
+and `settings::toggle_command` now takes the `VaultState` and reads the config inside, so no
+caller can hold the guard across the write. `workspace:copy-url` is `uri::open_url`, the vault's
+folder name and the path each encoded as `encodeURIComponent` encodes them, `.md` dropped; the
+two path commands say "Copied to your clipboard" as Obsidian's do. `workspace:show-trash` is
+offered only under `trashOption: "local"`. The two font-size commands step the Ctrl+wheel's
+session size, a pixel between 10 and 30: Obsidian keeps theirs in local storage under the vault's
+id, Scoria has no place Obsidian would read, and `baseFontSize` would be a byte Obsidian never
+wrote, so it lasts the session. The caret's context menu opens where Obsidian's does, a pixel
+past the caret at the middle of its line; the active-file commands need a file; Focus on last
+note needs a Markdown leaf. Left: the zoom (limits +3 and −2.5 on record, still nothing in gpui
+to apply it to) and always on top (a popout's command only); `app:show-tab-switcher`, which
+Obsidian does not register on desktop; Show debug info, Show release notes and Open file.
+
+**Rename heading and Add alias.** `MetadataCache::plan_heading_rename` sits beside the
+file-rename planner and keeps Obsidian's oddities: only a link whose whole subpath is the heading
+follows, ignoring case, so `[[Note#Parent#Old]]` stays; display text never changes; `#`, `|`
+and `^` in the new name become spaces in links while `[` and `]` go in raw; a space is `%20`
+bare and raw in `<…>`; an unchanged name still normalises `[[Note#old]]`. Offered on an ATX
+heading line only; `alwaysUpdateLinks` is not asked, Obsidian with it off having written the
+same bytes. Unwatched and unbuilt: frontmatter links, a duplicated heading. `markdown:add-alias`
+needed no new writer — the properties writer already gave every byte the probe read, `[]` and a
+scalar turning into block lists included. In Source mode it writes the key and opens File
+properties, which is read-only here; in reading view it is not offered.
+
+**Workspaces.** `workspaces.json` is a type in `scoria-formats`: the layouts by name, then
+`active`, each layout `workspace.json` without `lastOpenFiles` and with `mtime` last. The probe's
+ten file states replay through it to Obsidian's bytes, the delete of the active layout that
+leaves `"active"` naming it included. A load closes every group and popout and hands the layout
+to `apply_layout`, the half of `restore_layout` the launch uses; `workspace.json` waits for the
+quit, where Obsidian wrote it a second later. Driven over the socket: a layout saved from the
+probe's own `workspace.json` equals Obsidian's bar `mtime`. The drive found the keyboard left on
+a closed group after a load, fixed.
+
+**Unique note creator and Random note.** `zk-prefixer.json` holds `folder`, `template`, `format`,
+and the Settings tab's rows write it. A taken name gets no counter: the time moves on a minute
+until no note in the vault has that basename (`scoria_vault::unique::pick_name`, the clock passed
+in). *Add unique internal link* creates nothing, is always a wikilink, and with a selection
+checks the whole link text for the name. Random note lost the notice Scoria had made up. The
+ribbon gained three buttons in the order `core-plugins.json` lists their plugins — unique note,
+random note, workspaces — which fits both probes, each of which saw only its own; `dice` is
+Lucide's `dice-3`, `sheets-in-box` Scoria's own drawing, both being Obsidian's art.
+
+**Footnotes view and backlinks in document.** `footnotes:open` appends the `footnotes` leaf as
+Obsidian wrote it, File properties' leaf being the model; the rows are
+`scoria_cache::footnote_rows` over the one parser, first-reference order numbered 1..n, an
+unreferenced definition last. Rows are read-only: the probe's one edit from the pane also rewrote
+another definition's four-space indent as a tab. The backlinks block is a leaf's: no key on a
+fresh one, `"backlinks": true` and `backlinkOpts` when on, `"backlinks": false` when off, and
+the `backlinkInDocument` setting showing it on every leaf without a key. It draws the pane's own
+rows (`render_section_list`) as a footer under the editor's last line and as the reading view's
+last item. Both were driven headless; turning the block off while scrolled into it left blank
+space, fixed. The block's sort menu and search filter are not drawn, the probe never having
+driven them. The Backlinks pane got back one row per file with its matches under it.
+
+**Note composer.** The bytes are `scoria-composer`'s, tested on the probe's before-and-after
+files: the part that comes first is padded to end in a blank line with a bare `\n`, the second
+untouched; two frontmatters become one, the target's keys first, a scalar clash taking the
+source's value and a list clash the union. Links to a merged note are the rename planner's, the
+link an extraction leaves is `scoria_suggest::file_link`, autocompletion's own. The source goes
+through the delete path, so `trashOption` decides — the probe could not watch the system trash.
+Inferred, not watched: an empty first part takes no padding; extract-heading under `embed`,
+`none` and Markdown links; where the merged tab lands. Not driven: no agent could start a
+compositor for this one, so the prompt and the confirmation have not been seen on screen.
+
+**The merge.** Eight branches met in `workspace.rs`'s lists and `can_run`; every conflict was two
+additions at one spot, bar the ribbon's array, whose declared length both sides had raised by
+one. The target-directory trap is wider than first written: a worktree must isolate every crate
+it changes, not `scoria` alone. The gate on the whole: 64 test binaries, 1,525 passed, 617 in
+the app's bin.
+
+### The unrunnable commands, 2026-11-09
+
+With every row of the table above done, what phase 4 still lacks was counted the plain way:
+`commands.txt`'s 244 ids against `EDITOR_ONLY` and `RUNNABLE` left 84 that could not be run. Four
+clusters of them went out to four worktrees under one rule — build what the spec or a probe result
+settles, and for the rest bring back the observation it needs rather than a guess. Ten ids run
+now; the larger result is the list of what has never been watched.
+
+**What runs.** `random-note` opens one of the vault's Markdown files (`Vault::random_note`, a roll
+modulo the notes, so a canvas or a PDF never comes up) in the tab in hand; its ribbon button is
+not drawn, the ribbon's captures never having shown it. `workspace:copy-path`,
+`workspace:copy-full-path`, `open-with-default-app:open` and `open-with-default-app:show` are the
+file menu's rows for the active file, and their names say which string each copies: "from vault
+folder" is what `copy_path` wrote, "from system root" is `full_path_text`, the vault root joined
+with the path and made absolute, because a vault opened by a relative path keeps that as its
+root. `properties:open-local` opens File properties, the right dock's sixth tab: the first run
+appends a `file-properties` leaf after the Outline — `{"file": <note>}`, icon `lucide-info`,
+title "File properties", the shape Obsidian 1.13.7 wrote in the 2026-10-19 properties probe
+(`file_properties_leaf_is_appended_in_obsidians_shape`) — and the pane draws the note's block
+through the reading view's `Renderer::properties`, from the editor's buffer, so it follows
+typing; no editing in the pane yet, and the leaf cannot be closed. `editor:toggle-line-numbers`
+and `editor:toggle-readable-line-length` are the Editor tab's rows run from the palette:
+`settings::toggle_command` maps each id to the `AppFlag` its row writes, so the two cannot
+disagree about the key (line numbers are still only written, for Obsidian to read).
+`editor:context-menu` raises the right-click menu of 2026-10-30 under the caret's row, and
+`editor:focus` puts the keyboard back on the note the main area shows. Those last two rest on
+their names; where Obsidian anchors the menu, and what Focus on last note does over a canvas,
+are unprobed.
+
+**A deadlock on the way.** `VaultState::app()` returns a read guard. Taken inside an `if let`
+condition, or as an argument to `apply_setting`, it lives until the write lock is asked for: the
+toggle commands' first cut hung their own test for forty-five minutes and would have frozen the
+app. A change is built in a statement of its own, then written.
+
+**Left out on purpose.** The caret, clipboard and undo ids (`editor:go-start`, `editor:copy`,
+`editor:undo` and nine more) and the 1.12.7 `editor:table-row-duplicate` /
+`editor:table-col-duplicate` are not in `names.txt`: Obsidian registers none of them on desktop,
+the last two having become `-copy`, which run. `app:reload` has no renderer to reload.
+
+**Blocked on gpui.** The window zoom's step is on record — a zoom level of ±0.5, factors 1.0954
+and 0.9129, from the PDF probe's `webFrame` reads — but gpui keeps the scale factor to itself
+and Scoria paints in pixel literals, some 1,900 of them, so there is nothing to apply it to;
+the same reason a popout's recorded `zoom` is kept and not applied.
+`window:toggle-always-on-top` is fixed at window creation in the pinned gpui, and Wayland has
+no protocol for it.
+
+**Waiting on a probe.** Each of these would write bytes or a string nobody has observed, so none
+was built:
+
+| Commands | The observation wanted |
+| --- | --- |
+| `note-composer:merge-file` | the merged bytes for Enter and Shift+Enter (the separator, with and without a trailing newline, and two frontmatters); what links to the source become (`[[A]]`, `[[A#H]]`, `[[A\|x]]`, `![[A]]`, `[x](A.md)`); where the source goes; the confirmation's text; Ctrl+Enter's new note |
+| `note-composer:split-file`, `note-composer:extract-heading` | the prompt; the new note's and the source's bytes under each `replacementText` and link format; whether the heading line moves; the default name; the template key in `note-composer.json` and how `{{content}}`'s absence is handled |
+| `zk-prefixer`, `insert-unique-link` | the three keys of `zk-prefixer.json`; the created path and bytes with the file empty; the second name within one minute; the template's expansion; the text the link command inserts |
+| `random-note` (done, to confirm) | current tab or new; whether the open note is drawn again; the empty vault's notice; the ribbon button's icon and place |
+| `app:increase-font-size`, `app:decrease-font-size` | the step from 16 px, the clamps, whether `baseFontSize` is written, whether it needs `baseFontSizeAction` |
+| `window:zoom-*` | the limits, a popout's `zoom` after one press, whether the main window's survives a relaunch |
+| `theme:toggle-light-dark` | `appearance.json` after a run from `obsidian`, `moonstone` and `system` |
+| `app:toggle-ribbon`, `app:toggle-default-new-pane-mode` | the file and key each flips over two runs, and any notice |
+| `workspace:copy-url` | the clipboard for `Sub/My Note.md` in a vault with a space in its name |
+| `workspace:show-trash`, `app:show-tab-switcher` | what opens, under each `trashOption`; the switcher's DOM and keys |
+| `app:show-debug-info`, `app:show-release-notes`, `app:open-file` | what each shows |
+| `backlink:toggle-backlinks-in-document` | the key on the markdown leaf's state, on and off; the block's DOM in both views |
+| `footnotes:open` | the leaf's view type, state, icon, title and dock; the rows, the empty states, what a click does |
+| `workspaces:*` | `workspaces.json` after two saves, a delete, a rename and a load; the modal's DOM; whether a load rewrites `workspace.json` at once |
+| `editor:rename-heading` | whether it hides off a heading line; the modal; the bytes in the heading and in every link form to it; odd names; `alwaysUpdateLinks` off |
+| `markdown:add-alias` | what is written before and after a value, over no frontmatter, `aliases: []`, a list and a scalar; where focus lands |
+| `editor:context-menu`, `editor:focus` (done, to confirm) | the menu's anchor and rows; Focus on last note over a canvas, a base, a PDF and an empty tab |
+
+**The site, made true.** `compatibility.md` and `differences.md` had fallen three weeks behind;
+every row of both was checked against the code. Eleven "not yet" rows came out (HTML in notes,
+remote images, heading folding, the base view, `cssTheme`, the graph's depth and its
+`graph.json`, drags in Files among them), about twenty real gaps went in, and three numbers
+moved: the Core plugins tab has 29 plugins, not 35 (`CORE_PLUGINS`); the corpus ratchet is 1,008
+of 1,009, the one note `edge/Probe Inlines.md`; the bundled font is Inter. Still stale and not
+touched: the README and [[Specification]]'s header say 35, the site's index says 1007, `graph.md`
+says depth is fixed at one, `commands.md` counts 133 runnable. And one fault of the app's:
+`settings.rs` tags Inline title, Fold heading, Fold indent and Use [[Wikilinks]] "not in Scoria
+yet", though all four are acted on. Brought up to date 2026-11-10, each number counted again
+rather than copied: the README's phase 4 row and both "35"s (29 is the tab's, and the header now
+says the spec's 35 is 1.12.7's strings), 1,008 on the index, the glossary, the architecture page
+and [[Specification]]'s invariant, the local graph's Depth slider and the written `graph.json`
+in `graph.md`, 190 runnable and the 54 that are not in `commands.md`, `switcher.md` and
+`window.md`, and the four tags off, with the honesty ratchet's list growing by four. On the way
+the index's known gaps, the reading view's and the Files pages' "not yet" rows and the Settings
+page's list of rows not acted on were found as stale and corrected too.
+
+**A harness trap.** Worktrees sharing one target directory overwrite each other's `scoria`
+artifacts: a test run "Finished" and listed none of its new tests. `--config
+'profile.dev.package.scoria.codegen-units=17'` gives a worktree's crate artifacts of its own
+without rebuilding gpui. The gate was run again on the five branches together: 555 in the app's
+bin, every new test by name.
+
 ### Multi-window, the design, 2026-11-09
 
 Phase 4's one recurring blocker: *Open in new window* in every file menu, the `-window`

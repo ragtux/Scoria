@@ -11,6 +11,7 @@
 use crate::candidates::{Item, Vault};
 use crate::trigger::{Kind, Triggered};
 use scoria_cache::links::{basename, link_path, LinkFormat};
+use scoria_cache::LinkResolver;
 use scoria_formats::FileKind;
 use scoria_markdown::parse_linktext;
 
@@ -46,6 +47,33 @@ pub struct Insertion {
 /// Obsidian encodes only spaces in a markdown link destination.
 fn encode(path: &str) -> String {
     path.replace(' ', "%20")
+}
+
+/// The whole link to the file `target` written in the note `source`, as
+/// accepting that file's row in the `[[` popup (or, with `embed`, the `![[`
+/// one) writes it: the path part in `newLinkFormat`, the display text a
+/// folder in it brings, `useMarkdownLinks` choosing the shape. The note
+/// composer writes this in place of the text it extracts, so its links and
+/// autocompletion's cannot drift apart.
+pub fn file_link(
+    resolver: &LinkResolver,
+    target: &str,
+    source: &str,
+    embed: bool,
+    opts: &Options,
+) -> String {
+    let t = Triggered {
+        kind: if embed { Kind::Embed } else { Kind::Link },
+        range: 0..0,
+        query_range: 0..0,
+        query: "",
+        after: "",
+    };
+    let item = Item::File {
+        path: target.to_string(),
+    };
+    let p = file_parts(resolver, target, source, opts);
+    render(&t, &item, Accept::Whole, p, opts).text
 }
 
 /// The text `item` writes for `t`, and where the cursor lands.
@@ -93,25 +121,28 @@ struct Parts {
     markdown: bool,
 }
 
+/// The parts of a link to the file `path` written in the note `source`.
+fn file_parts(resolver: &LinkResolver, path: &str, source: &str, opts: &Options) -> Parts {
+    let written = link_path(resolver, path, source, opts.format);
+    let markdown = FileKind::from_path(path).is_markdown();
+    // The display text is added exactly when the path part carries a
+    // folder, and only for notes: `[[Sub/Alpha|Alpha]]`, but
+    // `[[../pic.png]]` with none.
+    let display = (markdown && written.contains('/')).then(|| basename(path).to_string());
+    Parts {
+        path: written,
+        subpath: String::new(),
+        display,
+        resolved: true,
+        markdown,
+    }
+}
+
 fn parts(t: &Triggered<'_>, item: &Item, v: &Vault<'_>, opts: &Options) -> Parts {
     let resolver = v.cache.resolver();
     let of_file = |path: &str| link_path(resolver, path, v.source, opts.format);
     match item {
-        Item::File { path } => {
-            let written = of_file(path);
-            let markdown = FileKind::from_path(path).is_markdown();
-            // The display text is added exactly when the path part carries a
-            // folder, and only for notes: `[[Sub/Alpha|Alpha]]`, but
-            // `[[../pic.png]]` with none.
-            let display = (markdown && written.contains('/')).then(|| basename(path).to_string());
-            Parts {
-                path: written,
-                subpath: String::new(),
-                display,
-                resolved: true,
-                markdown,
-            }
-        }
+        Item::File { path } => file_parts(resolver, path, v.source, opts),
         Item::Alias { path, alias } => Parts {
             path: of_file(path),
             subpath: String::new(),
@@ -167,10 +198,8 @@ fn link(
     v: &Vault<'_>,
     opts: &Options,
 ) -> Insertion {
-    let bang = if t.kind.is_embed() { "!" } else { "" };
     // Shift+Enter links the text as typed, whatever is selected.
-    let typed = accept == Accept::Typed;
-    let p = if typed {
+    let p = if accept == Accept::Typed {
         Parts {
             path: t.query.to_string(),
             subpath: String::new(),
@@ -181,6 +210,13 @@ fn link(
     } else {
         parts(t, item, v, opts)
     };
+    render(t, item, accept, p, opts)
+}
+
+/// The text the link `p` is written as, in the shape `opts` asks for.
+fn render(t: &Triggered<'_>, item: &Item, accept: Accept, p: Parts, opts: &Options) -> Insertion {
+    let bang = if t.kind.is_embed() { "!" } else { "" };
+    let typed = accept == Accept::Typed;
     let (text, cursor) = if opts.markdown_links {
         // `[Beta Note](Beta%20Note.md)`: the text is the basename, the alias
         // or the heading, and a pick with no file behind it writes none.

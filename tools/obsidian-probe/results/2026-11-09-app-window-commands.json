@@ -1,0 +1,6414 @@
+{
+ "appWindow": {
+  "fixtures:main": {
+   "startedAt": "2026-11-10T02:04:14.297Z",
+   "env": {
+    "ONLY": null,
+    "THEME_START": "none",
+    "vault": "/tmp/claude-1000/appwin/main/Probe Vault",
+    "udd": "/tmp/claude-1000/scoria-probe-udd-appwin"
+   },
+   "steps": {},
+   "order": [],
+   "elapsedMs": 1
+  },
+  "run:main": {
+   "startedAt": "2026-11-10T02:04:15.471Z",
+   "env": {
+    "ONLY": null,
+    "THEME_START": "none",
+    "vault": "/tmp/claude-1000/appwin/main/Probe Vault",
+    "udd": "/tmp/claude-1000/scoria-probe-udd-appwin"
+   },
+   "steps": {
+    "s00-meta": {
+     "ok": true,
+     "ms": 9,
+     "version": {
+      "app": "1.15.0",
+      "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+      "title": "New tab - Probe Vault - Obsidian 1.15.0",
+      "platform": "linux"
+     },
+     "commands": {
+      "app:increase-font-size": {
+       "name": "Increase font size",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "app:decrease-font-size": {
+       "name": "Decrease font size",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "window:zoom-in": {
+       "name": "Zoom in",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "window:zoom-out": {
+       "name": "Zoom out",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "window:reset-zoom": {
+       "name": "Reset zoom",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "window:toggle-always-on-top": {
+       "name": "Toggle window always on top",
+       "icon": null,
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "theme:toggle-light-dark": {
+       "name": "Toggle light/dark mode",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "app:toggle-ribbon": {
+       "name": "Toggle ribbon",
+       "icon": null,
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "app:toggle-default-new-pane-mode": {
+       "name": "Toggle default mode for new tabs",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "workspace:copy-path": {
+       "name": "Copy current file path from vault folder",
+       "icon": "lucide-copy",
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "workspace:copy-full-path": {
+       "name": "Copy current file path from system root",
+       "icon": "lucide-hard-drive",
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "workspace:copy-url": {
+       "name": "Copy Obsidian URL for current file",
+       "icon": "lucide-vault",
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "workspace:show-trash": {
+       "name": "Show trash",
+       "icon": null,
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "open-with-default-app:open": {
+       "name": "Open in default app",
+       "icon": "lucide-arrow-up-right",
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "open-with-default-app:show": {
+       "name": "Show in system explorer",
+       "icon": "lucide-files",
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "app:show-tab-switcher": null,
+      "app:show-debug-info": {
+       "name": "Show debug info",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "app:show-release-notes": {
+       "name": "Show release notes",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "app:open-file": {
+       "name": "Open file from outside the vault...",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "editor:context-menu": {
+       "name": "Show context menu under cursor",
+       "icon": "lucide-menu",
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": true,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "editor:focus": {
+       "name": "Focus on last note",
+       "icon": null,
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      }
+     },
+     "ctrlTabOwner": [
+      {
+       "id": "workspace:next-tab",
+       "ks": [
+        {
+         "modifiers": [
+          "Ctrl"
+         ],
+         "key": "Tab"
+        },
+        {
+         "modifiers": [
+          "Ctrl"
+         ],
+         "key": "PageDown"
+        }
+       ]
+      },
+      {
+       "id": "workspace:previous-tab",
+       "ks": [
+        {
+         "modifiers": [
+          "Ctrl",
+          "Shift"
+         ],
+         "key": "Tab"
+        },
+        {
+         "modifiers": [
+          "Ctrl"
+         ],
+         "key": "PageUp"
+        }
+       ]
+      }
+     ],
+     "stubCheck": {
+      "shellOpenPathStubbed": true,
+      "sendSyncWrapped": true
+     },
+     "disk": {
+      ".obsidian/app.json": "{}",
+      ".obsidian/appearance.json": "{}",
+      ".obsidian/core-plugins.json": "{\n  \"file-explorer\": true,\n  \"global-search\": true,\n  \"switcher\": true,\n  \"graph\": true,\n  \"backlink\": true,\n  \"canvas\": true,\n  \"outgoing-link\": true,\n  \"tag-pane\": true,\n  \"footnotes\": false,\n  \"properties\": true,\n  \"page-preview\": true,\n  \"daily-notes\": true,\n  \"templates\": true,\n  \"note-composer\": true,\n  \"command-palette\": true,\n  \"slash-command\": false,\n  \"editor-status\": true,\n  \"bookmarks\": true,\n  \"zk-prefixer\": false,\n  \"random-note\": false,\n  \"outline\": true,\n  \"word-count\": true,\n  \"slides\": false,\n  \"audio-recorder\": false,\n  \"workspaces\": false,\n  \"file-recovery\": true,\n  \"publish\": false,\n  \"sync\": true,\n  \"bases\": true,\n  \"webviewer\": false\n}",
+      "UDD/obsidian.json": "{\"vaults\":{\"19f526b50148594d\":{\"path\":\"/tmp/claude-1000/appwin/main/Probe Vault\",\"ts\":1792373000000,\"open\":true}},\"updateDisabled\":true}",
+      "UDD/<vault id>.json": null,
+      "UDD/Preferences#zoom": "{\"partition\":null,\"default_zoom_level\":null}"
+     }
+    },
+    "s01-font-size": {
+     "ok": true,
+     "ms": 16531,
+     "start": {
+      "fontVar": "16px",
+      "fontInline": "16px",
+      "base": 16,
+      "ls": null
+     },
+     "appearanceStart": "{}",
+     "lsKeys": [
+      "5d0477b320188fb4-base-font-size",
+      "74ef8c342b26360c-base-font-size"
+     ],
+     "firstIncrease": {
+      "available": true,
+      "ran": true,
+      "err": null,
+      "notices": [],
+      "calls": [
+       {
+        "kind": "ipc.send update-menu-items",
+        "args": [
+         [
+          {
+           "itemId": "editor:set-heading-0",
+           "eState": {
+            "checked": true
+           }
+          },
+          {
+           "itemId": "editor:toggle-italics",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-bold",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-code",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-highlight",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-comments",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-strikethrough",
+           "eState": {
+            "checked": false
+           }
+          }
+         ],
+         false
+        ],
+        "t": 1794276256513
+       }
+      ],
+      "write": {
+       "firstChangeMs": null,
+       "waitedMs": 4016,
+       "diff": {}
+      }
+     },
+     "afterFirst": {
+      "fontVar": "17px",
+      "fontInline": "17px",
+      "base": 17,
+      "ls": 17
+     },
+     "lsKeysAfter": [
+      [
+       "5d0477b320188fb4-base-font-size",
+       "16"
+      ],
+      [
+       "19f526b50148594d-base-font-size",
+       "17"
+      ],
+      [
+       "74ef8c342b26360c-base-font-size",
+       "18"
+      ]
+     ],
+     "up": [
+      "18px",
+      "19px",
+      "20px",
+      "21px",
+      "22px",
+      "23px",
+      "24px",
+      "25px",
+      "26px",
+      "27px",
+      "28px",
+      "29px",
+      "30px",
+      "30px",
+      "30px",
+      "30px",
+      "30px",
+      "30px",
+      "30px",
+      "30px",
+      "30px",
+      "30px",
+      "30px",
+      "30px",
+      "30px"
+     ],
+     "down": [
+      "29px",
+      "28px",
+      "27px",
+      "26px",
+      "25px",
+      "24px",
+      "23px",
+      "22px",
+      "21px",
+      "20px",
+      "19px",
+      "18px",
+      "17px",
+      "16px",
+      "15px",
+      "14px",
+      "13px",
+      "12px",
+      "11px",
+      "10px",
+      "10px",
+      "10px",
+      "10px",
+      "10px",
+      "10px"
+     ],
+     "backTo": {
+      "fontVar": "16px",
+      "fontInline": "16px",
+      "base": 16,
+      "ls": 16
+     },
+     "writeAfterRuns": {
+      "firstChangeMs": null,
+      "waitedMs": 4014,
+      "diff": {}
+     },
+     "action_false": {
+      "appearance": "{\n  \"baseFontSizeAction\": false\n}",
+      "before": {
+       "fontVar": "16px",
+       "fontInline": "16px",
+       "base": 16,
+       "ls": 16
+      },
+      "inc": {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [],
+       "write": null
+      },
+      "afterInc": {
+       "fontVar": "17px",
+       "fontInline": "17px",
+       "base": 17,
+       "ls": 17
+      },
+      "dec": {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [],
+       "write": null
+      },
+      "afterDec": {
+       "fontVar": "16px",
+       "fontInline": "16px",
+       "base": 16,
+       "ls": 16
+      }
+     },
+     "action_true": {
+      "appearance": "{\n  \"baseFontSizeAction\": true\n}",
+      "before": {
+       "fontVar": "16px",
+       "fontInline": "16px",
+       "base": 16,
+       "ls": 16
+      },
+      "inc": {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [],
+       "write": null
+      },
+      "afterInc": {
+       "fontVar": "17px",
+       "fontInline": "17px",
+       "base": 17,
+       "ls": 17
+      },
+      "dec": {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [],
+       "write": null
+      },
+      "afterDec": {
+       "fontVar": "16px",
+       "fontInline": "16px",
+       "base": 16,
+       "ls": 16
+      }
+     },
+     "appearanceEnd": "{\n  \"baseFontSizeAction\": true\n}"
+    },
+    "s02-theme-toggle": {
+     "ok": true,
+     "ms": 8544,
+     "start": "none",
+     "appearanceStart": "{\n  \"baseFontSizeAction\": true\n}",
+     "stateStart": {
+      "theme": "system",
+      "bodyDark": true,
+      "bodyLight": false,
+      "isDark": true
+     },
+     "runs": [
+      {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [
+        {
+         "kind": "ipc.send update-menu-items",
+         "args": [
+          [
+           {
+            "itemId": "editor:set-heading-0",
+            "eState": {
+             "checked": true
+            }
+           },
+           {
+            "itemId": "editor:toggle-italics",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-bold",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-code",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-highlight",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-comments",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-strikethrough",
+            "eState": {
+             "checked": false
+            }
+           }
+          ],
+          false
+         ],
+         "t": 1794276272565
+        }
+       ],
+       "write": {
+        "firstChangeMs": null,
+        "waitedMs": 4016,
+        "diff": {}
+       },
+       "appearance": "{\n  \"baseFontSizeAction\": true\n}",
+       "state": {
+        "theme": "system",
+        "bodyDark": false,
+        "bodyLight": true,
+        "isDark": false
+       }
+      },
+      {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [
+        {
+         "kind": "ipc.send update-menu-items",
+         "args": [
+          [
+           {
+            "itemId": "editor:set-heading-0",
+            "eState": {
+             "checked": true
+            }
+           },
+           {
+            "itemId": "editor:toggle-italics",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-bold",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-code",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-highlight",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-comments",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-strikethrough",
+            "eState": {
+             "checked": false
+            }
+           }
+          ],
+          false
+         ],
+         "t": 1794276276838
+        }
+       ],
+       "write": {
+        "firstChangeMs": null,
+        "waitedMs": 4015,
+        "diff": {}
+       },
+       "appearance": "{\n  \"baseFontSizeAction\": true\n}",
+       "state": {
+        "theme": "system",
+        "bodyDark": true,
+        "bodyLight": false,
+        "isDark": true
+       }
+      }
+     ]
+    },
+    "s03-ribbon": {
+     "ok": true,
+     "ms": 6232,
+     "start": {
+      "showRibbonCfg": true,
+      "bodyShowRibbon": true,
+      "bodyCls": "mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header theme-dark",
+      "ribbons": [
+       {
+        "cls": "workspace-ribbon side-dock-ribbon mod-primary",
+        "display": "flex",
+        "visibility": "visible",
+        "x": 0,
+        "w": 44,
+        "h": 960,
+        "children": 3
+       },
+       {
+        "cls": "workspace-ribbon side-dock-ribbon mod-secondary is-collapsed",
+        "display": "none",
+        "visibility": "visible",
+        "x": 0,
+        "w": 0,
+        "h": 0,
+        "children": 0
+       }
+      ]
+     },
+     "runs": [
+      {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [
+        {
+         "kind": "ipc.send update-menu-items",
+         "args": [
+          [
+           {
+            "itemId": "app:toggle-left-sidebar",
+            "eState": {
+             "checked": true,
+             "enabled": true
+            }
+           },
+           {
+            "itemId": "app:toggle-right-sidebar",
+            "eState": {
+             "checked": false,
+             "enabled": true
+            }
+           },
+           {
+            "itemId": "app:toggle-ribbon",
+            "eState": {
+             "checked": false,
+             "enabled": true
+            }
+           },
+           {
+            "itemId": "workspace:move-to-new-window",
+            "eState": {
+             "enabled": true
+            }
+           }
+          ],
+          false
+         ],
+         "t": 1794276283317
+        },
+        {
+         "kind": "ipc.send update-menu-items",
+         "args": [
+          [
+           {
+            "itemId": "editor:set-heading-0",
+            "eState": {
+             "checked": true
+            }
+           },
+           {
+            "itemId": "editor:toggle-italics",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-bold",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-code",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-highlight",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-comments",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-strikethrough",
+            "eState": {
+             "checked": false
+            }
+           }
+          ],
+          false
+         ],
+         "t": 1794276283649
+        }
+       ],
+       "write": {
+        "firstChangeMs": 803,
+        "waitedMs": 1604,
+        "diff": {
+         ".obsidian/appearance.json": {
+          "before": "{\n  \"baseFontSizeAction\": true\n}",
+          "after": "{\n  \"baseFontSizeAction\": true,\n  \"showRibbon\": false\n}"
+         }
+        }
+       },
+       "dom": {
+        "showRibbonCfg": false,
+        "bodyShowRibbon": false,
+        "bodyCls": "mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-view-header theme-dark",
+        "ribbons": [
+         {
+          "cls": "workspace-ribbon side-dock-ribbon mod-primary",
+          "display": "none",
+          "visibility": "visible",
+          "x": 0,
+          "w": 0,
+          "h": 0,
+          "children": 2
+         },
+         {
+          "cls": "workspace-ribbon side-dock-ribbon mod-secondary is-collapsed",
+          "display": "none",
+          "visibility": "visible",
+          "x": 0,
+          "w": 0,
+          "h": 0,
+          "children": 0
+         }
+        ]
+       }
+      },
+      {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [
+        {
+         "kind": "ipc.send update-menu-items",
+         "args": [
+          [
+           {
+            "itemId": "app:toggle-left-sidebar",
+            "eState": {
+             "checked": true,
+             "enabled": true
+            }
+           },
+           {
+            "itemId": "app:toggle-right-sidebar",
+            "eState": {
+             "checked": false,
+             "enabled": true
+            }
+           },
+           {
+            "itemId": "app:toggle-ribbon",
+            "eState": {
+             "checked": true,
+             "enabled": true
+            }
+           },
+           {
+            "itemId": "workspace:move-to-new-window",
+            "eState": {
+             "enabled": true
+            }
+           }
+          ],
+          false
+         ],
+         "t": 1794276285183
+        },
+        {
+         "kind": "ipc.send update-menu-items",
+         "args": [
+          [
+           {
+            "itemId": "editor:set-heading-0",
+            "eState": {
+             "checked": true
+            }
+           },
+           {
+            "itemId": "editor:toggle-italics",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-bold",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-code",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-highlight",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-comments",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-strikethrough",
+            "eState": {
+             "checked": false
+            }
+           }
+          ],
+          false
+         ],
+         "t": 1794276285516
+        }
+       ],
+       "write": {
+        "firstChangeMs": 803,
+        "waitedMs": 1603,
+        "diff": {
+         ".obsidian/appearance.json": {
+          "before": "{\n  \"baseFontSizeAction\": true,\n  \"showRibbon\": false\n}",
+          "after": "{\n  \"baseFontSizeAction\": true,\n  \"showRibbon\": true\n}"
+         }
+        }
+       },
+       "dom": {
+        "showRibbonCfg": true,
+        "bodyShowRibbon": true,
+        "bodyCls": "mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-view-header theme-dark show-ribbon",
+        "ribbons": [
+         {
+          "cls": "workspace-ribbon side-dock-ribbon mod-primary",
+          "display": "flex",
+          "visibility": "visible",
+          "x": 0,
+          "w": 44,
+          "h": 960,
+          "children": 3
+         },
+         {
+          "cls": "workspace-ribbon side-dock-ribbon mod-secondary is-collapsed",
+          "display": "none",
+          "visibility": "visible",
+          "x": 0,
+          "w": 0,
+          "h": 0,
+          "children": 0
+         }
+        ]
+       }
+      }
+     ]
+    },
+    "s04-default-new-pane-mode": {
+     "ok": true,
+     "ms": 7383,
+     "start": {
+      "cfg": "source",
+      "appJson": "{}"
+     },
+     "fromAbsent": {
+      "available": true,
+      "ran": true,
+      "err": null,
+      "notices": [
+       "Switched default view mode to reading view."
+      ],
+      "calls": [],
+      "write": {
+       "firstChangeMs": 803,
+       "waitedMs": 1604,
+       "diff": {
+        ".obsidian/app.json": {
+         "before": "{}",
+         "after": "{\n  \"defaultViewMode\": \"preview\"\n}"
+        }
+       }
+      },
+      "cfg": "preview"
+     },
+     "seedSource": {
+      "firstChangeMs": 1003,
+      "waitedMs": 1804,
+      "diff": {
+       ".obsidian/app.json": {
+        "before": "{\n  \"defaultViewMode\": \"preview\"\n}",
+        "after": "{\n  \"defaultViewMode\": \"source\"\n}"
+       }
+      }
+     },
+     "runs": [
+      {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [
+        "Switched default view mode to reading view."
+       ],
+       "calls": [],
+       "write": {
+        "firstChangeMs": 803,
+        "waitedMs": 1604,
+        "diff": {
+         ".obsidian/app.json": {
+          "before": "{\n  \"defaultViewMode\": \"source\"\n}",
+          "after": "{\n  \"defaultViewMode\": \"preview\"\n}"
+         }
+        }
+       },
+       "cfg": "preview",
+       "appJson": "{\n  \"defaultViewMode\": \"preview\"\n}"
+      },
+      {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [
+        "Switched default view mode to editing view."
+       ],
+       "calls": [],
+       "write": {
+        "firstChangeMs": 803,
+        "waitedMs": 1604,
+        "diff": {
+         ".obsidian/app.json": {
+          "before": "{\n  \"defaultViewMode\": \"preview\"\n}",
+          "after": "{\n  \"defaultViewMode\": \"source\"\n}"
+         }
+        }
+       },
+       "cfg": "source",
+       "appJson": "{\n  \"defaultViewMode\": \"source\"\n}"
+      }
+     ]
+    },
+    "s05-copy-paths": {
+     "ok": true,
+     "ms": 1186,
+     "active": {
+      "leafType": "markdown",
+      "file": "Sub/My Note.md",
+      "mode": "source",
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "inCm": true,
+       "inExplorer": false,
+       "leafType": "markdown"
+      }
+     },
+     "vaultName": "Probe Vault",
+     "workspace:copy-path": {
+      "available": true,
+      "ran": true,
+      "err": null,
+      "notices": [
+       "Copied to your clipboard"
+      ],
+      "calls": [
+       {
+        "kind": "ipc.send update-menu-items",
+        "args": [
+         [
+          {
+           "itemId": "editor:set-heading-1",
+           "eState": {
+            "checked": true
+           }
+          },
+          {
+           "itemId": "editor:toggle-italics",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-bold",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-code",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-highlight",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-comments",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-strikethrough",
+           "eState": {
+            "checked": false
+           }
+          }
+         ],
+         false
+        ],
+        "t": 1794276294738
+       }
+      ],
+      "write": null,
+      "clipboard": "Sub/My Note.md"
+     },
+     "workspace:copy-full-path": {
+      "available": true,
+      "ran": true,
+      "err": null,
+      "notices": [
+       "Copied to your clipboard"
+      ],
+      "calls": [],
+      "write": null,
+      "clipboard": "/tmp/claude-1000/appwin/main/Probe Vault/Sub/My Note.md"
+     },
+     "workspace:copy-url": {
+      "available": true,
+      "ran": true,
+      "err": null,
+      "notices": [
+       "URL copied to your clipboard"
+      ],
+      "calls": [],
+      "write": null,
+      "clipboard": "obsidian://open?vault=Probe%20Vault&file=Sub%2FMy%20Note"
+     }
+    },
+    "s06-copy-url-odd-name": {
+     "ok": true,
+     "ms": 2764,
+     "active": {
+      "leafType": "markdown",
+      "file": "Sub/Café & Bar #2.md",
+      "mode": "source",
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "inCm": true,
+       "inExplorer": false,
+       "leafType": "markdown"
+      }
+     },
+     "workspace:copy-url": {
+      "available": true,
+      "ran": true,
+      "err": null,
+      "notices": [
+       "URL copied to your clipboard"
+      ],
+      "calls": [
+       {
+        "kind": "ipc.send update-menu-items",
+        "args": [
+         [
+          {
+           "itemId": "editor:set-heading-0",
+           "eState": {
+            "checked": true
+           }
+          },
+          {
+           "itemId": "editor:toggle-italics",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-bold",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-code",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-highlight",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-comments",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-strikethrough",
+           "eState": {
+            "checked": false
+           }
+          }
+         ],
+         false
+        ],
+        "t": 1794276295917
+       }
+      ],
+      "write": null,
+      "clipboard": "obsidian://open?vault=Probe%20Vault&file=Sub%2FCaf%C3%A9%20%26%20Bar%20%232"
+     },
+     "workspace:copy-path": {
+      "available": true,
+      "ran": true,
+      "err": null,
+      "notices": [
+       "Copied to your clipboard"
+      ],
+      "calls": [],
+      "write": null,
+      "clipboard": "Sub/Café & Bar #2.md"
+     },
+     "workspace:copy-full-path": {
+      "available": true,
+      "ran": true,
+      "err": null,
+      "notices": [
+       "Copied to your clipboard"
+      ],
+      "calls": [],
+      "write": null,
+      "clipboard": "/tmp/claude-1000/appwin/main/Probe Vault/Sub/Café & Bar #2.md"
+     },
+     "rootNote": {
+      "active": {
+       "leafType": "markdown",
+       "file": "Note A.md",
+       "mode": "source",
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "inCm": true,
+        "inExplorer": false,
+        "leafType": "markdown"
+       }
+      },
+      "url": {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [
+        "URL copied to your clipboard"
+       ],
+       "calls": [
+        {
+         "kind": "ipc.send update-menu-items",
+         "args": [
+          [
+           {
+            "itemId": "editor:set-heading-0",
+            "eState": {
+             "checked": true
+            }
+           },
+           {
+            "itemId": "editor:toggle-italics",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-bold",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-code",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-highlight",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-comments",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-strikethrough",
+            "eState": {
+             "checked": false
+            }
+           }
+          ],
+          false
+         ],
+         "t": 1794276297092
+        }
+       ],
+       "write": null,
+       "clipboard": "obsidian://open?vault=Probe%20Vault&file=Note%20A"
+      }
+     },
+     "image": {
+      "active": {
+       "leafType": "image",
+       "file": "img/pic.png",
+       "mode": null,
+       "activeElement": {
+        "tag": "BODY",
+        "cls": "mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-sc",
+        "inCm": false,
+        "inExplorer": false,
+        "leafType": null
+       }
+      },
+      "url": {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [
+        "URL copied to your clipboard"
+       ],
+       "calls": [],
+       "write": null,
+       "clipboard": "obsidian://open?vault=Probe%20Vault&file=img%2Fpic.png"
+      },
+      "path": {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [
+        "Copied to your clipboard"
+       ],
+       "calls": [],
+       "write": null,
+       "clipboard": "img/pic.png"
+      }
+     }
+    },
+    "s07-open-with-default-app": {
+     "ok": true,
+     "ms": 3523,
+     "note": {
+      "active": {
+       "leafType": "markdown",
+       "file": "Sub/My Note.md",
+       "mode": "source",
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "inCm": true,
+        "inExplorer": false,
+        "leafType": "markdown"
+       }
+      },
+      "open-with-default-app:open": {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [
+        {
+         "kind": "window.open",
+         "args": [
+          "file:///tmp/claude-1000/appwin/main/Probe%20Vault/Sub/My%20Note.md",
+          "_external",
+          null
+         ],
+         "t": 1794276298596
+        },
+        {
+         "kind": "ipc.send update-menu-items",
+         "args": [
+          [
+           {
+            "itemId": "editor:set-heading-1",
+            "eState": {
+             "checked": true
+            }
+           },
+           {
+            "itemId": "editor:toggle-italics",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-bold",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-code",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-highlight",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-comments",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-strikethrough",
+            "eState": {
+             "checked": false
+            }
+           }
+          ],
+          false
+         ],
+         "t": 1794276298694
+        }
+       ],
+       "write": null
+      },
+      "open-with-default-app:show": {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [
+        {
+         "kind": "remote.showItemInFolder",
+         "args": [
+          "/tmp/claude-1000/appwin/main/Probe Vault/Sub/My Note.md"
+         ],
+         "t": 1794276298850
+        }
+       ],
+       "write": null
+      }
+     },
+     "image": {
+      "active": {
+       "leafType": "image",
+       "file": "img/pic.png",
+       "mode": null,
+       "activeElement": {
+        "tag": "BODY",
+        "cls": "mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-sc",
+        "inCm": false,
+        "inExplorer": false,
+        "leafType": null
+       }
+      },
+      "open-with-default-app:open": {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [
+        {
+         "kind": "window.open",
+         "args": [
+          "file:///tmp/claude-1000/appwin/main/Probe%20Vault/img/pic.png",
+          "_external",
+          null
+         ],
+         "t": 1794276299512
+        }
+       ],
+       "write": null
+      },
+      "open-with-default-app:show": {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [
+        {
+         "kind": "remote.showItemInFolder",
+         "args": [
+          "/tmp/claude-1000/appwin/main/Probe Vault/img/pic.png"
+         ],
+         "t": 1794276299766
+        }
+       ],
+       "write": null
+      }
+     },
+     "none": {
+      "active": {
+       "leafType": "empty",
+       "file": null,
+       "mode": null,
+       "activeElement": {
+        "tag": "BODY",
+        "cls": "mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-sc",
+        "inCm": false,
+        "inExplorer": false,
+        "leafType": null
+       }
+      },
+      "open-with-default-app:open": {
+       "available": false,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [],
+       "write": null
+      },
+      "open-with-default-app:show": {
+       "available": false,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [],
+       "write": null
+      },
+      "workspace:copy-path": {
+       "available": false,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [],
+       "write": null
+      },
+      "workspace:copy-full-path": {
+       "available": false,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [],
+       "write": null
+      },
+      "workspace:copy-url": {
+       "available": false,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [],
+       "write": null
+      }
+     }
+    },
+    "s08-show-trash": {
+     "ok": true,
+     "ms": 7805,
+     "defaultTrashOption": "system",
+     "trashExistsAtStart": false,
+     "atDefault": {
+      "available": false,
+      "ran": true,
+      "err": null,
+      "notices": [],
+      "calls": [
+       {
+        "kind": "ipc.send update-menu-items",
+        "args": [
+         [
+          {
+           "itemId": "editor:set-heading-0",
+           "eState": {
+            "checked": true
+           }
+          },
+          {
+           "itemId": "editor:toggle-italics",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-bold",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-code",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-highlight",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-comments",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-strikethrough",
+           "eState": {
+            "checked": false
+           }
+          }
+         ],
+         false
+        ],
+        "t": 1794276302211
+       }
+      ],
+      "write": null
+     },
+     "system": {
+      "appJson": "{\n  \"defaultViewMode\": \"source\",\n  \"trashOption\": \"system\"\n}",
+      "noTrashFolder": {
+       "available": false,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [],
+       "write": null
+      }
+     },
+     "local": {
+      "appJson": "{\n  \"defaultViewMode\": \"source\",\n  \"trashOption\": \"local\"\n}",
+      "noTrashFolder": {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [
+        "The file or folder “/tmp/claude-1000/appwin/main/Probe Vault/.trash” does not exist."
+       ],
+       "calls": [],
+       "write": null
+      },
+      "withTrashFolder": {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [
+        {
+         "kind": "remote.showItemInFolder",
+         "args": [
+          "/tmp/claude-1000/appwin/main/Probe Vault/.trash"
+         ],
+         "t": 1794276306888
+        }
+       ],
+       "write": null
+      }
+     },
+     "none": {
+      "appJson": "{\n  \"defaultViewMode\": \"source\",\n  \"trashOption\": \"none\"\n}",
+      "noTrashFolder": {
+       "available": false,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [],
+       "write": null
+      }
+     },
+     "restore": true
+    },
+    "s09-tab-switcher": {
+     "ok": true,
+     "ms": 2483,
+     "registered": false,
+     "anyIdLike": [
+      "switcher:open"
+     ],
+     "ran": {
+      "ran": false,
+      "err": null
+     },
+     "start": {
+      "active": "Note B.md",
+      "strip": [
+       "Note A",
+       "Note B*",
+       "Note C"
+      ],
+      "overlays": [
+       "workspace-drawer-vault-switcher",
+       "workspace-drawer-vault-switcher-icon"
+      ]
+     },
+     "afterCtrlTab1": {
+      "active": "Note C.md",
+      "strip": [
+       "Note A",
+       "Note B",
+       "Note C*"
+      ],
+      "overlays": [
+       "workspace-drawer-vault-switcher",
+       "workspace-drawer-vault-switcher-icon"
+      ]
+     },
+     "afterCtrlTab2": {
+      "active": "Note A.md",
+      "strip": [
+       "Note A*",
+       "Note B",
+       "Note C"
+      ],
+      "overlays": [
+       "workspace-drawer-vault-switcher",
+       "workspace-drawer-vault-switcher-icon"
+      ]
+     },
+     "afterRelease": {
+      "active": "Note A.md",
+      "strip": [
+       "Note A*",
+       "Note B",
+       "Note C"
+      ],
+      "overlays": [
+       "workspace-drawer-vault-switcher",
+       "workspace-drawer-vault-switcher-icon"
+      ]
+     },
+     "afterCtrlShiftTab": {
+      "active": "Note C.md",
+      "strip": [
+       "Note A",
+       "Note B",
+       "Note C*"
+      ],
+      "overlays": [
+       "workspace-drawer-vault-switcher",
+       "workspace-drawer-vault-switcher-icon"
+      ]
+     }
+    },
+    "s10-debug-info": {
+     "ok": true,
+     "ms": 873,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "modal": {
+      "cls": "modal mod-lg",
+      "title": "Debug info",
+      "labels": [
+       "SYSTEM INFO:",
+       "Obsidian version:",
+       "Installer version:",
+       "Operating system:",
+       "Login status:",
+       "Language:",
+       "Insider build toggle:",
+       "Live preview:",
+       "Base theme:",
+       "Community theme:",
+       "Snippets enabled:",
+       "Restricted mode:",
+       "RECOMMENDATIONS:",
+       "none"
+      ],
+      "lineCount": 16,
+      "structure": [
+       "TEXTAREA.debug-textarea"
+      ],
+      "buttons": [
+       {
+        "text": "Copy to clipboard",
+        "cls": "mod-secondary"
+       },
+       {
+        "text": "Sandbox vault",
+        "cls": ""
+       },
+       {
+        "text": "Done",
+        "cls": "mod-cancel"
+       }
+      ],
+      "closeButton": false
+     },
+     "textareaShape": {
+      "lines": 16,
+      "endsWithNewline": true,
+      "readOnly": true,
+      "rows": 2,
+      "indentedLines": [
+       "\tObsidian version:",
+       "\tInstaller version:",
+       "\tOperating system:",
+       "\tLogin status:",
+       "\tLanguage:",
+       "\tInsider build toggle:",
+       "\tLive preview:",
+       "\tBase theme:",
+       "\tCommunity theme:",
+       "\tSnippets enabled:",
+       "\tRestricted mode:",
+       "\tnone"
+      ],
+      "versionLines": [
+       "\tObsidian version: 1.15.0",
+       "\tInstaller version: 1.13.7"
+      ]
+     },
+     "calls": [
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "app:toggle-left-sidebar",
+          "eState": {
+           "checked": true,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "app:toggle-right-sidebar",
+          "eState": {
+           "checked": false,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "app:toggle-ribbon",
+          "eState": {
+           "checked": true,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "workspace:move-to-new-window",
+          "eState": {
+           "enabled": true
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276309716
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "markdown:toggle-preview",
+          "eState": {
+           "checked": false,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "editor:toggle-source",
+          "eState": {
+           "checked": false,
+           "enabled": true
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276309768
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "app:toggle-left-sidebar",
+          "eState": {
+           "checked": true,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "app:toggle-right-sidebar",
+          "eState": {
+           "checked": false,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "app:toggle-ribbon",
+          "eState": {
+           "checked": true,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "workspace:move-to-new-window",
+          "eState": {
+           "enabled": true
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276309768
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "editor:set-heading-0",
+          "eState": {
+           "checked": true
+          }
+         },
+         {
+          "itemId": "editor:toggle-italics",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-bold",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-code",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-highlight",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-comments",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-strikethrough",
+          "eState": {
+           "checked": false
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276310025
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "editor:set-heading-0",
+          "eState": {
+           "checked": true
+          }
+         },
+         {
+          "itemId": "editor:toggle-italics",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-bold",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-code",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-highlight",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-comments",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-strikethrough",
+          "eState": {
+           "checked": false
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276310054
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "markdown:toggle-preview",
+          "eState": {
+           "checked": false,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "editor:toggle-source",
+          "eState": {
+           "checked": false,
+           "enabled": true
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276310105
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "app:toggle-left-sidebar",
+          "eState": {
+           "checked": true,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "app:toggle-right-sidebar",
+          "eState": {
+           "checked": false,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "app:toggle-ribbon",
+          "eState": {
+           "checked": true,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "workspace:move-to-new-window",
+          "eState": {
+           "enabled": true
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276310105
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "editor:set-heading-0",
+          "eState": {
+           "checked": true
+          }
+         },
+         {
+          "itemId": "editor:toggle-italics",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-bold",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-code",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-highlight",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-comments",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-strikethrough",
+          "eState": {
+           "checked": false
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276310356
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "markdown:toggle-preview",
+          "eState": {
+           "checked": false,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "editor:toggle-source",
+          "eState": {
+           "checked": false,
+           "enabled": true
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276310408
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "app:toggle-left-sidebar",
+          "eState": {
+           "checked": true,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "app:toggle-right-sidebar",
+          "eState": {
+           "checked": false,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "app:toggle-ribbon",
+          "eState": {
+           "checked": true,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "workspace:move-to-new-window",
+          "eState": {
+           "enabled": true
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276310408
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "markdown:toggle-preview",
+          "eState": {
+           "checked": false,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "editor:toggle-source",
+          "eState": {
+           "checked": false,
+           "enabled": true
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276310728
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "app:toggle-left-sidebar",
+          "eState": {
+           "checked": true,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "app:toggle-right-sidebar",
+          "eState": {
+           "checked": false,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "app:toggle-ribbon",
+          "eState": {
+           "checked": true,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "workspace:move-to-new-window",
+          "eState": {
+           "enabled": true
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276310728
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "editor:set-heading-0",
+          "eState": {
+           "checked": true
+          }
+         },
+         {
+          "itemId": "editor:toggle-italics",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-bold",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-code",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-highlight",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-comments",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-strikethrough",
+          "eState": {
+           "checked": false
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276310980
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "markdown:toggle-preview",
+          "eState": {
+           "checked": false,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "editor:toggle-source",
+          "eState": {
+           "checked": false,
+           "enabled": true
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276311032
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "app:toggle-left-sidebar",
+          "eState": {
+           "checked": true,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "app:toggle-right-sidebar",
+          "eState": {
+           "checked": false,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "app:toggle-ribbon",
+          "eState": {
+           "checked": true,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "workspace:move-to-new-window",
+          "eState": {
+           "enabled": true
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276311032
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "editor:set-heading-0",
+          "eState": {
+           "checked": true
+          }
+         },
+         {
+          "itemId": "editor:toggle-italics",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-bold",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-code",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-highlight",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-comments",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-strikethrough",
+          "eState": {
+           "checked": false
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276311284
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "editor:set-heading-0",
+          "eState": {
+           "checked": true
+          }
+         },
+         {
+          "itemId": "editor:toggle-italics",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-bold",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-code",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-highlight",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-comments",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-strikethrough",
+          "eState": {
+           "checked": false
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276311284
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "markdown:toggle-preview",
+          "eState": {
+           "checked": false,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "editor:toggle-source",
+          "eState": {
+           "checked": false,
+           "enabled": true
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276311637
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "app:toggle-left-sidebar",
+          "eState": {
+           "checked": true,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "app:toggle-right-sidebar",
+          "eState": {
+           "checked": false,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "app:toggle-ribbon",
+          "eState": {
+           "checked": true,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "workspace:move-to-new-window",
+          "eState": {
+           "enabled": true
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276311637
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "editor:set-heading-0",
+          "eState": {
+           "checked": true
+          }
+         },
+         {
+          "itemId": "editor:toggle-italics",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-bold",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-code",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-highlight",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-comments",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-strikethrough",
+          "eState": {
+           "checked": false
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276311889
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "editor:set-heading-0",
+          "eState": {
+           "checked": true
+          }
+         },
+         {
+          "itemId": "editor:toggle-italics",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-bold",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-code",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-highlight",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-comments",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-strikethrough",
+          "eState": {
+           "checked": false
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276311889
+      },
+      {
+       "kind": "ipc.sendSync insider-build",
+       "args": [
+        null
+       ],
+       "t": 1794276311985
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "editor:set-heading-0",
+          "eState": {
+           "checked": true
+          }
+         },
+         {
+          "itemId": "editor:toggle-italics",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-bold",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-code",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-highlight",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-comments",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-strikethrough",
+          "eState": {
+           "checked": false
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276312497
+      }
+     ],
+     "modalsLeft": 0
+    },
+    "s11-release-notes": {
+     "ok": true,
+     "ms": 2519,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "leaf": {
+      "viewType": "release-notes",
+      "state": {
+       "type": "release-notes",
+       "state": {
+        "currentVersion": "1.15.0"
+       },
+       "icon": "lucide-book-up",
+       "title": "Release Notes 1.15.0"
+      },
+      "displayText": "Release Notes 1.15.0",
+      "icon": "lucide-book-up",
+      "tabTitle": "Release Notes 1.15.0",
+      "headerTitle": "Release Notes ",
+      "contentHead": "What's new in 1.15\n\nReleased on November 2, 2026\n\nThis update brings faster Mermaid diagrams that match your theme, reorderable filters in Bases, and new URI and CLI commands for adding content under a heading.\n\nDiagrams and charts\n\nMermaid diagrams and charts are now rendered using our new library ",
+      "contentCls": "view-content release-notes-view"
+     },
+     "leavesBefore": [
+      "markdown:Note A",
+      "markdown:Note B",
+      "markdown:Note C*"
+     ],
+     "leavesAfter": [
+      "markdown:Note A",
+      "markdown:Note B",
+      "markdown:Note C",
+      "release-notes:Release Notes 1.15.0*"
+     ],
+     "calls": [
+      {
+       "kind": "ipc.send request-url",
+       "args": [
+        "2ae0546f8a9be719",
+        {
+         "url": "https://obsidian.md/changelog/desktop/1.15.md",
+         "throw": true
+        }
+       ],
+       "t": 1794276312864
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "app:toggle-left-sidebar",
+          "eState": {
+           "checked": true,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "app:toggle-right-sidebar",
+          "eState": {
+           "checked": false,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "app:toggle-ribbon",
+          "eState": {
+           "checked": true,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "workspace:move-to-new-window",
+          "eState": {
+           "enabled": true
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276313064
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "markdown:toggle-preview",
+          "eState": {
+           "checked": false,
+           "enabled": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-source",
+          "eState": {
+           "checked": false,
+           "enabled": false
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276313116
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "app:toggle-left-sidebar",
+          "eState": {
+           "checked": true,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "app:toggle-right-sidebar",
+          "eState": {
+           "checked": false,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "app:toggle-ribbon",
+          "eState": {
+           "checked": true,
+           "enabled": true
+          }
+         },
+         {
+          "itemId": "workspace:move-to-new-window",
+          "eState": {
+           "enabled": true
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276313116
+      },
+      {
+       "kind": "ipc.send update-menu-items",
+       "args": [
+        [
+         {
+          "itemId": "editor:set-heading-0",
+          "eState": {
+           "checked": true
+          }
+         },
+         {
+          "itemId": "editor:toggle-italics",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-bold",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-code",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-highlight",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-comments",
+          "eState": {
+           "checked": false
+          }
+         },
+         {
+          "itemId": "editor:toggle-strikethrough",
+          "eState": {
+           "checked": false
+          }
+         }
+        ],
+        false
+       ],
+       "t": 1794276313375
+      },
+      {
+       "kind": "ipc.send REMOTE_BROWSER_DEREFERENCE",
+       "args": [
+        "4-1",
+        8,
+        0
+       ],
+       "t": 1794276313482
+      }
+     ],
+     "notices": []
+    },
+    "s12-open-file": {
+     "ok": true,
+     "ms": 665,
+     "once": {
+      "available": true,
+      "ran": true,
+      "err": null,
+      "notices": [],
+      "calls": [
+       {
+        "kind": "BLOCKED ipc.send open-file",
+        "args": [
+         [
+          "md",
+          "bmp",
+          "png",
+          "jpg",
+          "jpeg",
+          "gif",
+          "svg",
+          "webp",
+          "avif",
+          "mp3",
+          "wav",
+          "m4a",
+          "3gp",
+          "flac",
+          "ogg",
+          "oga",
+          "opus",
+          "mp4",
+          "webm",
+          "ogv",
+          "mov",
+          "mkv",
+          "pdf",
+          "canvas",
+          "base"
+         ]
+        ],
+        "t": 1794276315787
+       },
+       {
+        "kind": "ipc.send update-menu-items",
+        "args": [
+         [
+          {
+           "itemId": "editor:set-heading-0",
+           "eState": {
+            "checked": true
+           }
+          },
+          {
+           "itemId": "editor:toggle-italics",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-bold",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-code",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-highlight",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-comments",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-strikethrough",
+           "eState": {
+            "checked": false
+           }
+          }
+         ],
+         false
+        ],
+        "t": 1794276315886
+       }
+      ],
+      "write": null
+     },
+     "modalsAfter": 0
+    },
+    "s13-context-menu": {
+     "ok": true,
+     "ms": 7093,
+     "modeLP": "source",
+     "lpNoSelection": {
+      "setup": {
+       "cursor": {
+        "line": 2,
+        "ch": 3
+       },
+       "from": {
+        "line": 2,
+        "ch": 3
+       },
+       "to": {
+        "line": 2,
+        "ch": 3
+       },
+       "sel": "",
+       "coords": {
+        "left": 638.9375,
+        "right": 638.9375,
+        "top": 229.5,
+        "bottom": 251.5
+       },
+       "zoom": 0
+      },
+      "available": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "menu": {
+       "rect": {
+        "x": 640,
+        "y": 242,
+        "w": 164.4375,
+        "h": 288.90625
+       },
+       "cls": "menu",
+       "rows": [
+        {
+         "title": "Add link",
+         "icon": "svg-icon lucide-link",
+         "section": "selection-link",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Add external link",
+         "icon": "svg-icon lucide-external-link",
+         "section": "selection-link",
+         "disabled": false,
+         "sub": false
+        },
+        "---",
+        {
+         "title": "Format",
+         "icon": "svg-icon lucide-paintbrush",
+         "section": "selection.format",
+         "disabled": false,
+         "sub": true
+        },
+        {
+         "title": "Paragraph",
+         "icon": "svg-icon lucide-pilcrow",
+         "section": null,
+         "disabled": false,
+         "sub": true
+        },
+        {
+         "title": "Insert",
+         "icon": "svg-icon lucide-list-plus",
+         "section": null,
+         "disabled": false,
+         "sub": true
+        },
+        "---",
+        {
+         "title": "Cut",
+         "icon": "svg-icon lucide-scissors",
+         "section": "clipboard",
+         "disabled": true,
+         "sub": false
+        },
+        {
+         "title": "Copy",
+         "icon": "svg-icon lucide-copy",
+         "section": "clipboard",
+         "disabled": true,
+         "sub": false
+        },
+        {
+         "title": "Paste",
+         "icon": "svg-icon lucide-clipboard-check",
+         "section": "clipboard",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Paste as plain text",
+         "icon": "svg-icon lucide-clipboard-type",
+         "section": "clipboard",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Select all",
+         "icon": "svg-icon lucide-box-select",
+         "section": "clipboard",
+         "disabled": false,
+         "sub": false
+        }
+       ]
+      },
+      "after": {
+       "cursor": {
+        "line": 2,
+        "ch": 3
+       },
+       "sel": ""
+      },
+      "calls": [
+       {
+        "kind": "ipc.send update-menu-items",
+        "args": [
+         [
+          {
+           "itemId": "app:toggle-left-sidebar",
+           "eState": {
+            "checked": true,
+            "enabled": true
+           }
+          },
+          {
+           "itemId": "app:toggle-right-sidebar",
+           "eState": {
+            "checked": false,
+            "enabled": true
+           }
+          },
+          {
+           "itemId": "app:toggle-ribbon",
+           "eState": {
+            "checked": true,
+            "enabled": true
+           }
+          },
+          {
+           "itemId": "workspace:move-to-new-window",
+           "eState": {
+            "enabled": true
+           }
+          }
+         ],
+         false
+        ],
+        "t": 1794276316251
+       },
+       {
+        "kind": "ipc.send update-menu-items",
+        "args": [
+         [
+          {
+           "itemId": "markdown:toggle-preview",
+           "eState": {
+            "checked": false,
+            "enabled": true
+           }
+          },
+          {
+           "itemId": "editor:toggle-source",
+           "eState": {
+            "checked": false,
+            "enabled": true
+           }
+          }
+         ],
+         false
+        ],
+        "t": 1794276316301
+       },
+       {
+        "kind": "ipc.send update-menu-items",
+        "args": [
+         [
+          {
+           "itemId": "app:toggle-left-sidebar",
+           "eState": {
+            "checked": true,
+            "enabled": true
+           }
+          },
+          {
+           "itemId": "app:toggle-right-sidebar",
+           "eState": {
+            "checked": false,
+            "enabled": true
+           }
+          },
+          {
+           "itemId": "app:toggle-ribbon",
+           "eState": {
+            "checked": true,
+            "enabled": true
+           }
+          },
+          {
+           "itemId": "workspace:move-to-new-window",
+           "eState": {
+            "enabled": true
+           }
+          }
+         ],
+         false
+        ],
+        "t": 1794276316301
+       },
+       {
+        "kind": "ipc.send update-menu-items",
+        "args": [
+         [
+          {
+           "itemId": "editor:set-heading-1",
+           "eState": {
+            "checked": true
+           }
+          },
+          {
+           "itemId": "editor:toggle-italics",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-bold",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-code",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-highlight",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-comments",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-strikethrough",
+           "eState": {
+            "checked": false
+           }
+          }
+         ],
+         false
+        ],
+        "t": 1794276316555
+       },
+       {
+        "kind": "ipc.send context-menu",
+        "args": [],
+        "t": 1794276317064
+       },
+       {
+        "kind": "ipc.send update-menu-items",
+        "args": [
+         [
+          {
+           "itemId": "editor:set-heading-0",
+           "eState": {
+            "checked": true
+           }
+          },
+          {
+           "itemId": "editor:toggle-italics",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-bold",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-code",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-highlight",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-comments",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-strikethrough",
+           "eState": {
+            "checked": false
+           }
+          }
+         ],
+         false
+        ],
+        "t": 1794276317356
+       }
+      ]
+     },
+     "lpSelection": {
+      "setup": {
+       "cursor": {
+        "line": 2,
+        "ch": 10
+       },
+       "from": {
+        "line": 2,
+        "ch": 0
+       },
+       "to": {
+        "line": 2,
+        "ch": 10
+       },
+       "sel": "plain text",
+       "coords": {
+        "left": 685.828125,
+        "right": 685.828125,
+        "top": 229.5,
+        "bottom": 251.5
+       },
+       "zoom": 0
+      },
+      "available": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "menu": {
+       "rect": {
+        "x": 687,
+        "y": 242,
+        "w": 212.59375,
+        "h": 338.6875
+       },
+       "cls": "menu",
+       "rows": [
+        {
+         "title": "Add link",
+         "icon": "svg-icon lucide-link",
+         "section": "selection-link",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Add external link",
+         "icon": "svg-icon lucide-external-link",
+         "section": "selection-link",
+         "disabled": false,
+         "sub": false
+        },
+        "---",
+        {
+         "title": "Search for “plain text”",
+         "icon": "svg-icon lucide-search",
+         "section": "selection",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Extract current selection...",
+         "icon": "svg-icon lucide-git-branch-plus",
+         "section": "selection",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Format",
+         "icon": "svg-icon lucide-paintbrush",
+         "section": "selection.format",
+         "disabled": false,
+         "sub": true
+        },
+        {
+         "title": "Paragraph",
+         "icon": "svg-icon lucide-pilcrow",
+         "section": null,
+         "disabled": false,
+         "sub": true
+        },
+        {
+         "title": "Insert",
+         "icon": "svg-icon lucide-list-plus",
+         "section": null,
+         "disabled": false,
+         "sub": true
+        },
+        "---",
+        {
+         "title": "Cut",
+         "icon": "svg-icon lucide-scissors",
+         "section": "clipboard",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Copy",
+         "icon": "svg-icon lucide-copy",
+         "section": "clipboard",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Paste",
+         "icon": "svg-icon lucide-clipboard-check",
+         "section": "clipboard",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Paste as plain text",
+         "icon": "svg-icon lucide-clipboard-type",
+         "section": "clipboard",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Select all",
+         "icon": "svg-icon lucide-box-select",
+         "section": "clipboard",
+         "disabled": false,
+         "sub": false
+        }
+       ]
+      },
+      "after": {
+       "cursor": {
+        "line": 2,
+        "ch": 10
+       },
+       "sel": "plain text"
+      },
+      "calls": [
+       {
+        "kind": "ipc.send context-menu",
+        "args": [],
+        "t": 1794276317975
+       },
+       {
+        "kind": "ipc.send update-menu-items",
+        "args": [
+         [
+          {
+           "itemId": "editor:set-heading-0",
+           "eState": {
+            "checked": true
+           }
+          },
+          {
+           "itemId": "editor:toggle-italics",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-bold",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-code",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-highlight",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-comments",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-strikethrough",
+           "eState": {
+            "checked": false
+           }
+          }
+         ],
+         false
+        ],
+        "t": 1794276318269
+       }
+      ]
+     },
+     "lpInLink": {
+      "setup": {
+       "cursor": {
+        "line": 2,
+        "ch": 26
+       },
+       "from": {
+        "line": 2,
+        "ch": 26
+       },
+       "to": {
+        "line": 2,
+        "ch": 26
+       },
+       "sel": "",
+       "coords": {
+        "left": 806.75,
+        "right": 806.75,
+        "top": 229.5,
+        "bottom": 251.5
+       },
+       "zoom": 0
+      },
+      "available": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "menu": {
+       "rect": {
+        "x": 808,
+        "y": 242,
+        "w": 202.765625,
+        "h": 589.8125
+       },
+       "cls": "menu",
+       "rows": [
+        {
+         "title": "Open in new tab",
+         "icon": "svg-icon lucide-file-plus",
+         "section": "open",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Open to the right",
+         "icon": "svg-icon lucide-separator-vertical",
+         "section": "open",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Open in new window",
+         "icon": "svg-icon lucide-picture-in-picture-2",
+         "section": "open",
+         "disabled": false,
+         "sub": false
+        },
+        "---",
+        {
+         "title": "Add link",
+         "icon": "svg-icon lucide-link",
+         "section": "selection-link",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Add external link",
+         "icon": "svg-icon lucide-external-link",
+         "section": "selection-link",
+         "disabled": false,
+         "sub": false
+        },
+        "---",
+        {
+         "title": "Edit link",
+         "icon": "svg-icon lucide-text-cursor-input",
+         "section": "selection",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Paragraph",
+         "icon": "svg-icon lucide-pilcrow",
+         "section": null,
+         "disabled": false,
+         "sub": true
+        },
+        {
+         "title": "Insert",
+         "icon": "svg-icon lucide-list-plus",
+         "section": null,
+         "disabled": false,
+         "sub": true
+        },
+        "---",
+        {
+         "title": "Cut",
+         "icon": "svg-icon lucide-scissors",
+         "section": "clipboard",
+         "disabled": true,
+         "sub": false
+        },
+        {
+         "title": "Copy",
+         "icon": "svg-icon lucide-copy",
+         "section": "clipboard",
+         "disabled": true,
+         "sub": false
+        },
+        {
+         "title": "Paste",
+         "icon": "svg-icon lucide-clipboard-check",
+         "section": "clipboard",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Paste as plain text",
+         "icon": "svg-icon lucide-clipboard-type",
+         "section": "clipboard",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Select all",
+         "icon": "svg-icon lucide-box-select",
+         "section": "clipboard",
+         "disabled": false,
+         "sub": false
+        },
+        "---",
+        {
+         "title": "Copy path",
+         "icon": "svg-icon lucide-clipboard",
+         "section": null,
+         "disabled": false,
+         "sub": true
+        },
+        "---",
+        {
+         "title": "Rename...",
+         "icon": "svg-icon lucide-edit-3",
+         "section": "action",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Move file to...",
+         "icon": "svg-icon lucide-folder-tree",
+         "section": "action",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Bookmark...",
+         "icon": "svg-icon lucide-bookmark",
+         "section": "action",
+         "disabled": false,
+         "sub": false
+        },
+        "---",
+        "(hidden ---)",
+        {
+         "title": "Open in default app",
+         "icon": "svg-icon lucide-arrow-up-right",
+         "section": "system",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Show in system explorer",
+         "icon": "svg-icon lucide-arrow-up-right",
+         "section": "system",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Reveal file in navigation",
+         "icon": "svg-icon lucide-folder-open",
+         "section": "system",
+         "disabled": false,
+         "sub": false
+        }
+       ]
+      },
+      "after": {
+       "cursor": {
+        "line": 2,
+        "ch": 26
+       },
+       "sel": ""
+      },
+      "calls": [
+       {
+        "kind": "ipc.send context-menu",
+        "args": [],
+        "t": 1794276318887
+       },
+       {
+        "kind": "ipc.send update-menu-items",
+        "args": [
+         [
+          {
+           "itemId": "editor:set-heading-0",
+           "eState": {
+            "checked": true
+           }
+          },
+          {
+           "itemId": "editor:toggle-italics",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-bold",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-code",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-highlight",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-comments",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-strikethrough",
+           "eState": {
+            "checked": false
+           }
+          }
+         ],
+         false
+        ],
+        "t": 1794276319181
+       }
+      ]
+     },
+     "lpEndOfDoc": {
+      "setup": {
+       "cursor": {
+        "line": 4,
+        "ch": 16
+       },
+       "from": {
+        "line": 4,
+        "ch": 16
+       },
+       "to": {
+        "line": 4,
+        "ch": 16
+       },
+       "sel": "",
+       "coords": {
+        "left": 752.84375,
+        "right": 752.84375,
+        "top": 277.5,
+        "bottom": 299.5
+       },
+       "zoom": 0
+      },
+      "available": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "menu": {
+       "rect": {
+        "x": 754,
+        "y": 290,
+        "w": 164.4375,
+        "h": 288.90625
+       },
+       "cls": "menu",
+       "rows": [
+        {
+         "title": "Add link",
+         "icon": "svg-icon lucide-link",
+         "section": "selection-link",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Add external link",
+         "icon": "svg-icon lucide-external-link",
+         "section": "selection-link",
+         "disabled": false,
+         "sub": false
+        },
+        "---",
+        {
+         "title": "Format",
+         "icon": "svg-icon lucide-paintbrush",
+         "section": "selection.format",
+         "disabled": false,
+         "sub": true
+        },
+        {
+         "title": "Paragraph",
+         "icon": "svg-icon lucide-pilcrow",
+         "section": null,
+         "disabled": false,
+         "sub": true
+        },
+        {
+         "title": "Insert",
+         "icon": "svg-icon lucide-list-plus",
+         "section": null,
+         "disabled": false,
+         "sub": true
+        },
+        "---",
+        {
+         "title": "Cut",
+         "icon": "svg-icon lucide-scissors",
+         "section": "clipboard",
+         "disabled": true,
+         "sub": false
+        },
+        {
+         "title": "Copy",
+         "icon": "svg-icon lucide-copy",
+         "section": "clipboard",
+         "disabled": true,
+         "sub": false
+        },
+        {
+         "title": "Paste",
+         "icon": "svg-icon lucide-clipboard-check",
+         "section": "clipboard",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Paste as plain text",
+         "icon": "svg-icon lucide-clipboard-type",
+         "section": "clipboard",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Select all",
+         "icon": "svg-icon lucide-box-select",
+         "section": "clipboard",
+         "disabled": false,
+         "sub": false
+        }
+       ]
+      },
+      "after": {
+       "cursor": {
+        "line": 4,
+        "ch": 16
+       },
+       "sel": ""
+      },
+      "calls": [
+       {
+        "kind": "ipc.send context-menu",
+        "args": [],
+        "t": 1794276319799
+       },
+       {
+        "kind": "ipc.send update-menu-items",
+        "args": [
+         [
+          {
+           "itemId": "editor:set-heading-0",
+           "eState": {
+            "checked": true
+           }
+          },
+          {
+           "itemId": "editor:toggle-italics",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-bold",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-code",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-highlight",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-comments",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-strikethrough",
+           "eState": {
+            "checked": false
+           }
+          }
+         ],
+         false
+        ],
+        "t": 1794276320093
+       }
+      ]
+     },
+     "modeSource": "source",
+     "sourceNoSelection": {
+      "setup": {
+       "cursor": {
+        "line": 2,
+        "ch": 3
+       },
+       "from": {
+        "line": 2,
+        "ch": 3
+       },
+       "to": {
+        "line": 2,
+        "ch": 3
+       },
+       "sel": "",
+       "coords": {
+        "left": 638.9375,
+        "right": 638.9375,
+        "top": 213.5,
+        "bottom": 235.5
+       },
+       "zoom": 0
+      },
+      "available": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "menu": {
+       "rect": {
+        "x": 640,
+        "y": 226,
+        "w": 164.4375,
+        "h": 288.90625
+       },
+       "cls": "menu",
+       "rows": [
+        {
+         "title": "Add link",
+         "icon": "svg-icon lucide-link",
+         "section": "selection-link",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Add external link",
+         "icon": "svg-icon lucide-external-link",
+         "section": "selection-link",
+         "disabled": false,
+         "sub": false
+        },
+        "---",
+        {
+         "title": "Format",
+         "icon": "svg-icon lucide-paintbrush",
+         "section": "selection.format",
+         "disabled": false,
+         "sub": true
+        },
+        {
+         "title": "Paragraph",
+         "icon": "svg-icon lucide-pilcrow",
+         "section": null,
+         "disabled": false,
+         "sub": true
+        },
+        {
+         "title": "Insert",
+         "icon": "svg-icon lucide-list-plus",
+         "section": null,
+         "disabled": false,
+         "sub": true
+        },
+        "---",
+        {
+         "title": "Cut",
+         "icon": "svg-icon lucide-scissors",
+         "section": "clipboard",
+         "disabled": true,
+         "sub": false
+        },
+        {
+         "title": "Copy",
+         "icon": "svg-icon lucide-copy",
+         "section": "clipboard",
+         "disabled": true,
+         "sub": false
+        },
+        {
+         "title": "Paste",
+         "icon": "svg-icon lucide-clipboard-check",
+         "section": "clipboard",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Paste as plain text",
+         "icon": "svg-icon lucide-clipboard-type",
+         "section": "clipboard",
+         "disabled": false,
+         "sub": false
+        },
+        {
+         "title": "Select all",
+         "icon": "svg-icon lucide-box-select",
+         "section": "clipboard",
+         "disabled": false,
+         "sub": false
+        }
+       ]
+      },
+      "after": {
+       "cursor": {
+        "line": 2,
+        "ch": 3
+       },
+       "sel": ""
+      },
+      "calls": [
+       {
+        "kind": "ipc.send update-menu-items",
+        "args": [
+         [
+          {
+           "itemId": "app:toggle-left-sidebar",
+           "eState": {
+            "checked": true,
+            "enabled": true
+           }
+          },
+          {
+           "itemId": "app:toggle-right-sidebar",
+           "eState": {
+            "checked": false,
+            "enabled": true
+           }
+          },
+          {
+           "itemId": "app:toggle-ribbon",
+           "eState": {
+            "checked": true,
+            "enabled": true
+           }
+          },
+          {
+           "itemId": "workspace:move-to-new-window",
+           "eState": {
+            "enabled": true
+           }
+          }
+         ],
+         false
+        ],
+        "t": 1794276320707
+       },
+       {
+        "kind": "ipc.send context-menu",
+        "args": [],
+        "t": 1794276321116
+       },
+       {
+        "kind": "ipc.send update-menu-items",
+        "args": [
+         [
+          {
+           "itemId": "editor:set-heading-0",
+           "eState": {
+            "checked": true
+           }
+          },
+          {
+           "itemId": "editor:toggle-italics",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-bold",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-code",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-highlight",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-comments",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-strikethrough",
+           "eState": {
+            "checked": false
+           }
+          }
+         ],
+         false
+        ],
+        "t": 1794276321410
+       }
+      ]
+     },
+     "modePreview": "preview",
+     "preview": {
+      "available": false,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "menu": null
+     }
+    },
+    "s14-editor-focus": {
+     "ok": true,
+     "ms": 5417,
+     "explorerFocused": {
+      "leafType": "file-explorer",
+      "file": null,
+      "mode": null,
+      "activeElement": {
+       "tag": "BODY",
+       "cls": "mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-sc",
+       "inCm": false,
+       "inExplorer": false,
+       "leafType": null
+      }
+     },
+     "fromFiles": {
+      "before": {
+       "leafType": "file-explorer",
+       "file": null,
+       "mode": null,
+       "activeElement": {
+        "tag": "BODY",
+        "cls": "mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-sc",
+        "inCm": false,
+        "inExplorer": false,
+        "leafType": null
+       }
+      },
+      "available": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "leafType": "markdown",
+       "file": "Note A.md",
+       "mode": "source",
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "inCm": true,
+        "inExplorer": false,
+        "leafType": "markdown"
+       }
+      },
+      "mdFocus": [
+       {
+        "file": "Note A.md",
+        "hasFocus": false,
+        "visible": false
+       },
+       {
+        "file": "Note B.md",
+        "hasFocus": false,
+        "visible": false
+       },
+       {
+        "file": "Note A.md",
+        "hasFocus": true,
+        "visible": true
+       }
+      ]
+     },
+     "fromCanvas": {
+      "before": {
+       "leafType": "canvas",
+       "file": "Board.canvas",
+       "mode": null,
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "canvas-wrapper node-insert-event",
+        "inCm": false,
+        "inExplorer": false,
+        "leafType": "canvas"
+       }
+      },
+      "available": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "leafType": "canvas",
+       "file": "Board.canvas",
+       "mode": null,
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "canvas-wrapper node-insert-event",
+        "inCm": false,
+        "inExplorer": false,
+        "leafType": "canvas"
+       }
+      },
+      "mdFocus": [
+       {
+        "file": "Note A.md",
+        "hasFocus": false,
+        "visible": false
+       },
+       {
+        "file": "Note B.md",
+        "hasFocus": false,
+        "visible": false
+       },
+       {
+        "file": "Note A.md",
+        "hasFocus": false,
+        "visible": false
+       }
+      ]
+     },
+     "fromEmptyTab": {
+      "before": {
+       "leafType": "empty",
+       "file": null,
+       "mode": null,
+       "activeElement": {
+        "tag": "BODY",
+        "cls": "mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-sc",
+        "inCm": false,
+        "inExplorer": false,
+        "leafType": null
+       }
+      },
+      "available": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "leafType": "empty",
+       "file": null,
+       "mode": null,
+       "activeElement": {
+        "tag": "BODY",
+        "cls": "mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-sc",
+        "inCm": false,
+        "inExplorer": false,
+        "leafType": null
+       }
+      },
+      "mdFocus": [
+       {
+        "file": "Note A.md",
+        "hasFocus": false,
+        "visible": false
+       },
+       {
+        "file": "Note B.md",
+        "hasFocus": false,
+        "visible": false
+       },
+       {
+        "file": "Note A.md",
+        "hasFocus": false,
+        "visible": false
+       }
+      ]
+     },
+     "markdownLeavesLeft": 0,
+     "noMarkdownLeaf": {
+      "before": {
+       "leafType": "empty",
+       "file": null,
+       "mode": null,
+       "activeElement": {
+        "tag": "BODY",
+        "cls": "mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-sc",
+        "inCm": false,
+        "inExplorer": false,
+        "leafType": null
+       }
+      },
+      "available": false,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "leafType": "empty",
+       "file": null,
+       "mode": null,
+       "activeElement": {
+        "tag": "BODY",
+        "cls": "mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-sc",
+        "inCm": false,
+        "inExplorer": false,
+        "leafType": null
+       }
+      },
+      "mdFocus": []
+     },
+     "fromReadingView": {
+      "before": {
+       "leafType": "markdown",
+       "file": "Note B.md",
+       "mode": "preview",
+       "activeElement": {
+        "tag": "BODY",
+        "cls": "mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-sc",
+        "inCm": false,
+        "inExplorer": false,
+        "leafType": null
+       }
+      },
+      "available": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "leafType": "markdown",
+       "file": "Note B.md",
+       "mode": "preview",
+       "activeElement": {
+        "tag": "BODY",
+        "cls": "mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-sc",
+        "inCm": false,
+        "inExplorer": false,
+        "leafType": null
+       }
+      },
+      "mdFocus": [
+       {
+        "file": "Note B.md",
+        "hasFocus": false,
+        "visible": true
+       }
+      ]
+     },
+     "canvasWithTwoMarkdownBehind": {
+      "before": {
+       "leafType": "canvas",
+       "file": "Board.canvas",
+       "mode": null,
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "canvas-wrapper node-insert-event",
+        "inCm": false,
+        "inExplorer": false,
+        "leafType": "canvas"
+       }
+      },
+      "available": true,
+      "run": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "leafType": "canvas",
+       "file": "Board.canvas",
+       "mode": null,
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "canvas-wrapper node-insert-event",
+        "inCm": false,
+        "inExplorer": false,
+        "leafType": "canvas"
+       }
+      },
+      "mdFocus": [
+       {
+        "file": "Note B.md",
+        "hasFocus": false,
+        "visible": false
+       },
+       {
+        "file": "Note C.md",
+        "hasFocus": false,
+        "visible": false
+       }
+      ]
+     }
+    },
+    "s15-always-on-top": {
+     "ok": true,
+     "ms": 11910,
+     "mainWindow": {
+      "available": false,
+      "ran": true,
+      "err": null,
+      "notices": [],
+      "calls": [
+       {
+        "kind": "ipc.send update-menu-items",
+        "args": [
+         [
+          {
+           "itemId": "editor:set-heading-0",
+           "eState": {
+            "checked": true
+           }
+          },
+          {
+           "itemId": "editor:toggle-italics",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-bold",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-code",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-highlight",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-comments",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-strikethrough",
+           "eState": {
+            "checked": false
+           }
+          }
+         ],
+         false
+        ],
+        "t": 1794276329060
+       }
+      ],
+      "write": null
+     },
+     "mainState": {
+      "isAlwaysOnTop": false,
+      "isMaximized": false,
+      "activeIsMain": true
+     },
+     "move": {
+      "ran": true,
+      "err": null
+     },
+     "floating": 1,
+     "popoutTarget": true,
+     "activeAfterClick": {
+      "activeIsPopout": true,
+      "activeIsMain": false,
+      "hasFocus": true
+     },
+     "popoutBefore": {
+      "isAlwaysOnTop": false,
+      "isMaximized": false,
+      "sameAsMain": false
+     },
+     "popoutRuns": [
+      {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [
+        {
+         "kind": "ipc.send update-menu-items",
+         "args": [
+          [
+           {
+            "itemId": "editor:set-heading-0",
+            "eState": {
+             "checked": true
+            }
+           },
+           {
+            "itemId": "editor:toggle-italics",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-bold",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-code",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-highlight",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-comments",
+            "eState": {
+             "checked": false
+            }
+           },
+           {
+            "itemId": "editor:toggle-strikethrough",
+            "eState": {
+             "checked": false
+            }
+           }
+          ],
+          false
+         ],
+         "t": 1794276332670
+        }
+       ],
+       "write": {
+        "firstChangeMs": null,
+        "waitedMs": 3009,
+        "diff": {}
+       },
+       "state": {
+        "popout": true,
+        "main": false
+       },
+       "popoutNotices": []
+      },
+      {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [],
+       "write": {
+        "firstChangeMs": null,
+        "waitedMs": 3013,
+        "diff": {}
+       },
+       "state": {
+        "popout": false,
+        "main": false
+       },
+       "popoutNotices": []
+      }
+     ],
+     "maximize": {
+      "isMaximized": false,
+      "available": true,
+      "activeIsPopout": true
+     }
+    },
+    "s16-popout-zoom": {
+     "ok": true,
+     "ms": 14940,
+     "start": {
+      "main": 0,
+      "mainFactor": 1,
+      "popout": 0,
+      "popoutDpr": 1,
+      "mainDpr": 1,
+      "activeIsPopout": true
+     },
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "afterCommand": {
+      "main": 0.5,
+      "mainFactor": 1.0954451150103321,
+      "popout": 0,
+      "popoutDpr": 1,
+      "mainDpr": 1.095445156097412,
+      "activeIsPopout": true
+     },
+     "calls": [],
+     "write": {
+      "firstChangeMs": null,
+      "waitedMs": 4009,
+      "diff": {}
+     },
+     "workspaceFloating": {
+      "id": "015e820a60d44285",
+      "type": "floating",
+      "children": [
+       {
+        "id": "e4642f0060127bf5",
+        "type": "window",
+        "children": [
+         {
+          "id": "9016d8d236afc966",
+          "type": "tabs",
+          "children": [
+           {
+            "id": "bd32c0a128acfd96",
+            "type": "leaf",
+            "state": {
+             "type": "markdown",
+             "state": {
+              "file": "Note C.md",
+              "mode": "source",
+              "source": false
+             },
+             "icon": "lucide-file",
+             "title": "Note C"
+            }
+           }
+          ]
+         }
+        ],
+        "direction": "vertical",
+        "x": 10,
+        "y": 10,
+        "width": 800,
+        "height": 1000,
+        "maximize": false,
+        "zoom": 0
+       }
+      ]
+     },
+     "afterCtrlEqualInPopout": {
+      "main": 0.5,
+      "mainFactor": 1.0954451150103321,
+      "popout": 0,
+      "popoutDpr": 1,
+      "mainDpr": 1.095445156097412,
+      "activeIsPopout": true
+     },
+     "afterCtrl0InPopout": {
+      "main": 0.5,
+      "mainFactor": 1.0954451150103321,
+      "popout": 0,
+      "popoutDpr": 1,
+      "mainDpr": 1.095445156097412,
+      "activeIsPopout": true
+     },
+     "workspaceFloatingAfterKeys": {
+      "id": "015e820a60d44285",
+      "type": "floating",
+      "children": [
+       {
+        "id": "e4642f0060127bf5",
+        "type": "window",
+        "children": [
+         {
+          "id": "9016d8d236afc966",
+          "type": "tabs",
+          "children": [
+           {
+            "id": "bd32c0a128acfd96",
+            "type": "leaf",
+            "state": {
+             "type": "markdown",
+             "state": {
+              "file": "Note C.md",
+              "mode": "source",
+              "source": false
+             },
+             "icon": "lucide-file",
+             "title": "Note C"
+            }
+           }
+          ]
+         }
+        ],
+        "direction": "vertical",
+        "x": 10,
+        "y": 10,
+        "width": 800,
+        "height": 1000,
+        "maximize": false,
+        "zoom": 0
+       }
+      ]
+     },
+     "direct": {
+      "popoutDpr": 1.095445156097412,
+      "mainDpr": 1.095445156097412
+     },
+     "workspaceFloatingAfterDirect": [
+      {
+       "zoom": 0.5,
+       "x": 10,
+       "y": 10,
+       "width": 800,
+       "height": 1000,
+       "maximize": false
+      }
+     ],
+     "reset": {
+      "ran": true,
+      "err": null
+     },
+     "afterReset": {
+      "main": 0,
+      "mainFactor": 1,
+      "popout": 0,
+      "popoutDpr": 1,
+      "mainDpr": 1,
+      "activeIsPopout": true
+     },
+     "floatingLeft": 0
+    },
+    "s17-zoom-main": {
+     "ok": true,
+     "ms": 19255,
+     "start": [
+      0,
+      1
+     ],
+     "windowFileAtStart": null,
+     "firstIn": {
+      "available": true,
+      "ran": true,
+      "err": null,
+      "notices": [],
+      "calls": [
+       {
+        "kind": "ipc.send update-menu-items",
+        "args": [
+         [
+          {
+           "itemId": "editor:set-heading-0",
+           "eState": {
+            "checked": true
+           }
+          },
+          {
+           "itemId": "editor:toggle-italics",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-bold",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-code",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-highlight",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-comments",
+           "eState": {
+            "checked": false
+           }
+          },
+          {
+           "itemId": "editor:toggle-strikethrough",
+           "eState": {
+            "checked": false
+           }
+          }
+         ],
+         false
+        ],
+        "t": 1794276358854
+       }
+      ],
+      "write": {
+       "firstChangeMs": null,
+       "waitedMs": 4015,
+       "diff": {}
+      }
+     },
+     "afterFirstIn": [
+      0.5,
+      1.0954
+     ],
+     "in": [
+      [
+       1,
+       1.2
+      ],
+      [
+       1.5,
+       1.3145
+      ],
+      [
+       2,
+       1.44
+      ],
+      [
+       2.5,
+       1.5774
+      ],
+      [
+       3,
+       1.728
+      ],
+      [
+       3,
+       1.728
+      ],
+      [
+       3,
+       1.728
+      ],
+      [
+       3,
+       1.728
+      ],
+      [
+       3,
+       1.728
+      ],
+      [
+       3,
+       1.728
+      ],
+      [
+       3,
+       1.728
+      ],
+      [
+       3,
+       1.728
+      ],
+      [
+       3,
+       1.728
+      ],
+      [
+       3,
+       1.728
+      ],
+      [
+       3,
+       1.728
+      ],
+      [
+       3,
+       1.728
+      ],
+      [
+       3,
+       1.728
+      ],
+      [
+       3,
+       1.728
+      ],
+      [
+       3,
+       1.728
+      ],
+      [
+       3,
+       1.728
+      ]
+     ],
+     "out": [
+      [
+       2.5,
+       1.5774
+      ],
+      [
+       2,
+       1.44
+      ],
+      [
+       1.5,
+       1.3145
+      ],
+      [
+       1,
+       1.2
+      ],
+      [
+       0.5,
+       1.0954
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       -0.5,
+       0.9129
+      ],
+      [
+       -1,
+       0.8333
+      ],
+      [
+       -1.5,
+       0.7607
+      ],
+      [
+       -2,
+       0.6944
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ],
+      [
+       -2.5,
+       0.6339
+      ]
+     ],
+     "reset": {
+      "available": true,
+      "ran": true,
+      "err": null,
+      "notices": [],
+      "calls": [],
+      "write": null
+     },
+     "afterReset": [
+      0,
+      1
+     ],
+     "keys": [
+      [
+       "=",
+       [
+        0,
+        1
+       ]
+      ],
+      [
+       "=",
+       [
+        0,
+        1
+       ]
+      ],
+      [
+       "-",
+       [
+        0,
+        1
+       ]
+      ],
+      [
+       "0",
+       [
+        0,
+        1
+       ]
+      ]
+     ],
+     "writeAll": {},
+     "beforeQuit": {
+      "zoom": [
+       1,
+       1.2
+      ],
+      "font": {
+       "fontVar": "18px",
+       "fontInline": "18px",
+       "base": 18,
+       "ls": 18
+      }
+     },
+     "writeBeforeQuit": {},
+     "diskBeforeQuit": {
+      ".obsidian/app.json": "{\n  \"defaultViewMode\": \"source\",\n  \"trashOption\": \"system\"\n}",
+      ".obsidian/appearance.json": "{\n  \"baseFontSizeAction\": true,\n  \"showRibbon\": true\n}",
+      ".obsidian/core-plugins.json": "{\n  \"file-explorer\": true,\n  \"global-search\": true,\n  \"switcher\": true,\n  \"graph\": true,\n  \"backlink\": true,\n  \"canvas\": true,\n  \"outgoing-link\": true,\n  \"tag-pane\": true,\n  \"footnotes\": false,\n  \"properties\": true,\n  \"page-preview\": true,\n  \"daily-notes\": true,\n  \"templates\": true,\n  \"note-composer\": true,\n  \"command-palette\": true,\n  \"slash-command\": false,\n  \"editor-status\": true,\n  \"bookmarks\": true,\n  \"zk-prefixer\": false,\n  \"random-note\": false,\n  \"outline\": true,\n  \"word-count\": true,\n  \"slides\": false,\n  \"audio-recorder\": false,\n  \"workspaces\": false,\n  \"file-recovery\": true,\n  \"publish\": false,\n  \"sync\": true,\n  \"bases\": true,\n  \"webviewer\": false\n}",
+      ".obsidian/workspace.json": "{\n  \"main\": {\n    \"id\": \"387f4feb76b08309\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"6e67b98fc8561c38\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"40132a5f8d46071f\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Note A.md\",\n                \"mode\": \"preview\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Note A\"\n            }\n          },\n          {\n            \"id\": \"938eed3bc361f941\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Note A.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Note A\"\n            }\n          }\n        ],\n        \"currentTab\": 1\n      }\n    ],\n    \"direction\": \"vertical\"\n  },\n  \"left\": {\n    \"id\": \"4ea2e17f33ba22cb\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"c28561e1fd842b51\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"6772aee7c5e946d4\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"file-explorer\",\n              \"state\": {\n                \"sortOrder\": \"alphabetical\",\n                \"autoReveal\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-folder-closed\",\n              \"title\": \"Files\"\n            }\n          },\n          {\n            \"id\": \"34655e29a805b652\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"search\",\n              \"state\": {\n                \"query\": \"\",\n                \"matchingCase\": false,\n                \"explainSearch\": false,\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\"\n              },\n              \"icon\": \"lucide-search\",\n              \"title\": \"Search\"\n            }\n          },\n          {\n            \"id\": \"072afcc9819b994a\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"bookmarks\",\n              \"state\": {\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-bookmark\",\n              \"title\": \"Bookmarks\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300\n  },\n  \"right\": {\n    \"id\": \"7b1933c57c7f07e0\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"be2d8b2ec9e1407f\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"c708041afbe47bd6\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"backlink\",\n              \"state\": {\n                \"file\": \"Note A.md\",\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\",\n                \"backlinkCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-coming-in\",\n              \"title\": \"Backlinks\"\n            }\n          },\n          {\n            \"id\": \"fbcb8adc2af82ab3\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outgoing-link\",\n              \"state\": {\n                \"file\": \"Note A.md\",\n                \"linksCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-going-out\",\n              \"title\": \"Outgoing links\"\n            }\n          },\n          {\n            \"id\": \"fb91d74db91577a0\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"tag\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"useHierarchy\": true,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-tags\",\n              \"title\": \"Tags\"\n            }\n          },\n          {\n            \"id\": \"5386bd227c433a7a\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"all-properties\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-archive\",\n              \"title\": \"All properties\"\n            }\n          },\n          {\n            \"id\": \"81534dcb9b91330a\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outline\",\n              \"state\": {\n                \"file\": \"Note A.md\",\n                \"followCursor\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-list\",\n              \"title\": \"Outline\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300,\n    \"collapsed\": true\n  },\n  \"left-ribbon\": {\n    \"hiddenItems\": {\n      \"switcher:Open quick switcher\": false,\n      \"graph:Open graph view\": false,\n      \"canvas:Create new canvas\": false,\n      \"daily-notes:Open today's daily note\": false,\n      \"templates:Insert template\": false,\n      \"command-palette:Open command palette\": false,\n      \"bases:Create new base\": false\n    }\n  },\n  \"active\": \"938eed3bc361f941\",\n  \"lastOpenFiles\": [\n    \"Note C.md\",\n    \"Note A.md\",\n    \"Note B.md\",\n    \"Board.canvas\",\n    \"Sub/My Note.md\",\n    \"img/pic.png\",\n    \"Sub/Café & Bar #2.md\"\n  ]\n}",
+      "UDD/obsidian.json": "{\"vaults\":{\"19f526b50148594d\":{\"path\":\"/tmp/claude-1000/appwin/main/Probe Vault\",\"ts\":1792373000000,\"open\":true}},\"updateDisabled\":true}",
+      "UDD/<vault id>.json": null,
+      "UDD/Preferences#zoom": "{\"partition\":null,\"default_zoom_level\":null}"
+     },
+     "windowFileBeforeQuit": null
+    }
+   },
+   "order": [
+    "s00-meta",
+    "s01-font-size",
+    "s02-theme-toggle",
+    "s03-ribbon",
+    "s04-default-new-pane-mode",
+    "s05-copy-paths",
+    "s06-copy-url-odd-name",
+    "s07-open-with-default-app",
+    "s08-show-trash",
+    "s09-tab-switcher",
+    "s10-debug-info",
+    "s11-release-notes",
+    "s12-open-file",
+    "s13-context-menu",
+    "s14-editor-focus",
+    "s15-always-on-top",
+    "s16-popout-zoom",
+    "s17-zoom-main"
+   ],
+   "elapsedMs": 121098,
+   "vaultPath": "/tmp/claude-1000/appwin/main/Probe Vault",
+   "quitting": true,
+   "quit": true,
+   "diskAfterQuit": {
+    ".obsidian/app.json": "{\n  \"defaultViewMode\": \"source\",\n  \"trashOption\": \"system\"\n}",
+    ".obsidian/appearance.json": "{\n  \"baseFontSizeAction\": true,\n  \"showRibbon\": true\n}",
+    ".obsidian/core-plugins.json": "{\n  \"file-explorer\": true,\n  \"global-search\": true,\n  \"switcher\": true,\n  \"graph\": true,\n  \"backlink\": true,\n  \"canvas\": true,\n  \"outgoing-link\": true,\n  \"tag-pane\": true,\n  \"footnotes\": false,\n  \"properties\": true,\n  \"page-preview\": true,\n  \"daily-notes\": true,\n  \"templates\": true,\n  \"note-composer\": true,\n  \"command-palette\": true,\n  \"slash-command\": false,\n  \"editor-status\": true,\n  \"bookmarks\": true,\n  \"zk-prefixer\": false,\n  \"random-note\": false,\n  \"outline\": true,\n  \"word-count\": true,\n  \"slides\": false,\n  \"audio-recorder\": false,\n  \"workspaces\": false,\n  \"file-recovery\": true,\n  \"publish\": false,\n  \"sync\": true,\n  \"bases\": true,\n  \"webviewer\": false\n}",
+    ".obsidian/workspace.json": "{\n  \"main\": {\n    \"id\": \"387f4feb76b08309\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"6e67b98fc8561c38\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"40132a5f8d46071f\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Note A.md\",\n                \"mode\": \"preview\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Note A\"\n            }\n          },\n          {\n            \"id\": \"938eed3bc361f941\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Note A.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Note A\"\n            }\n          }\n        ],\n        \"currentTab\": 1\n      }\n    ],\n    \"direction\": \"vertical\"\n  },\n  \"left\": {\n    \"id\": \"4ea2e17f33ba22cb\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"c28561e1fd842b51\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"6772aee7c5e946d4\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"file-explorer\",\n              \"state\": {\n                \"sortOrder\": \"alphabetical\",\n                \"autoReveal\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-folder-closed\",\n              \"title\": \"Files\"\n            }\n          },\n          {\n            \"id\": \"34655e29a805b652\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"search\",\n              \"state\": {\n                \"query\": \"\",\n                \"matchingCase\": false,\n                \"explainSearch\": false,\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\"\n              },\n              \"icon\": \"lucide-search\",\n              \"title\": \"Search\"\n            }\n          },\n          {\n            \"id\": \"072afcc9819b994a\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"bookmarks\",\n              \"state\": {\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-bookmark\",\n              \"title\": \"Bookmarks\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300\n  },\n  \"right\": {\n    \"id\": \"7b1933c57c7f07e0\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"be2d8b2ec9e1407f\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"c708041afbe47bd6\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"backlink\",\n              \"state\": {\n                \"file\": \"Note A.md\",\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\",\n                \"backlinkCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-coming-in\",\n              \"title\": \"Backlinks\"\n            }\n          },\n          {\n            \"id\": \"fbcb8adc2af82ab3\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outgoing-link\",\n              \"state\": {\n                \"file\": \"Note A.md\",\n                \"linksCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-going-out\",\n              \"title\": \"Outgoing links\"\n            }\n          },\n          {\n            \"id\": \"fb91d74db91577a0\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"tag\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"useHierarchy\": true,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-tags\",\n              \"title\": \"Tags\"\n            }\n          },\n          {\n            \"id\": \"5386bd227c433a7a\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"all-properties\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-archive\",\n              \"title\": \"All properties\"\n            }\n          },\n          {\n            \"id\": \"81534dcb9b91330a\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outline\",\n              \"state\": {\n                \"file\": \"Note A.md\",\n                \"followCursor\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-list\",\n              \"title\": \"Outline\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300,\n    \"collapsed\": true\n  },\n  \"left-ribbon\": {\n    \"hiddenItems\": {\n      \"switcher:Open quick switcher\": false,\n      \"graph:Open graph view\": false,\n      \"canvas:Create new canvas\": false,\n      \"daily-notes:Open today's daily note\": false,\n      \"templates:Insert template\": false,\n      \"command-palette:Open command palette\": false,\n      \"bases:Create new base\": false\n    }\n  },\n  \"active\": \"938eed3bc361f941\",\n  \"lastOpenFiles\": [\n    \"Note C.md\",\n    \"Note A.md\",\n    \"Note B.md\",\n    \"Board.canvas\",\n    \"Sub/My Note.md\",\n    \"img/pic.png\",\n    \"Sub/Café & Bar #2.md\"\n  ]\n}",
+    "UDD/obsidian.json": "{\"vaults\":{\"19f526b50148594d\":{\"path\":\"/tmp/claude-1000/appwin/main/Probe Vault\",\"ts\":1792373000000,\"open\":true}},\"updateDisabled\":true}",
+    "UDD/<vault id>.json": "{\"x\":10,\"y\":10,\"width\":1600,\"height\":1000,\"isMaximized\":false,\"devTools\":false,\"zoom\":1}",
+    "UDD/Preferences#zoom": "{\"partition\":null,\"default_zoom_level\":null}"
+   }
+  },
+  "after-restart:main": {
+   "startedAt": "2026-11-10T02:06:19.762Z",
+   "env": {
+    "ONLY": null,
+    "THEME_START": "none",
+    "vault": "/tmp/claude-1000/appwin/main/Probe Vault",
+    "udd": "/tmp/claude-1000/scoria-probe-udd-appwin"
+   },
+   "steps": {
+    "r01-after-restart": {
+     "ok": true,
+     "ms": 1504,
+     "state": {
+      "zoomLevel": 1,
+      "zoomFactor": 1.2,
+      "fontVar": "18px",
+      "fontInline": "18px",
+      "baseFontSize": 18,
+      "localStorageBase": 18,
+      "bodyCls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header",
+      "theme": "system"
+     },
+     "disk": {
+      ".obsidian/app.json": "{\n  \"defaultViewMode\": \"source\",\n  \"trashOption\": \"system\"\n}",
+      ".obsidian/appearance.json": "{\n  \"baseFontSizeAction\": true,\n  \"showRibbon\": true\n}",
+      ".obsidian/core-plugins.json": "{\n  \"file-explorer\": true,\n  \"global-search\": true,\n  \"switcher\": true,\n  \"graph\": true,\n  \"backlink\": true,\n  \"canvas\": true,\n  \"outgoing-link\": true,\n  \"tag-pane\": true,\n  \"footnotes\": false,\n  \"properties\": true,\n  \"page-preview\": true,\n  \"daily-notes\": true,\n  \"templates\": true,\n  \"note-composer\": true,\n  \"command-palette\": true,\n  \"slash-command\": false,\n  \"editor-status\": true,\n  \"bookmarks\": true,\n  \"zk-prefixer\": false,\n  \"random-note\": false,\n  \"outline\": true,\n  \"word-count\": true,\n  \"slides\": false,\n  \"audio-recorder\": false,\n  \"workspaces\": false,\n  \"file-recovery\": true,\n  \"publish\": false,\n  \"sync\": true,\n  \"bases\": true,\n  \"webviewer\": false\n}",
+      ".obsidian/workspace.json": "{\n  \"main\": {\n    \"id\": \"387f4feb76b08309\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"6e67b98fc8561c38\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"40132a5f8d46071f\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Note A.md\",\n                \"mode\": \"preview\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Note A\"\n            }\n          },\n          {\n            \"id\": \"938eed3bc361f941\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Note A.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Note A\"\n            }\n          }\n        ],\n        \"currentTab\": 1\n      }\n    ],\n    \"direction\": \"vertical\"\n  },\n  \"left\": {\n    \"id\": \"4ea2e17f33ba22cb\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"c28561e1fd842b51\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"6772aee7c5e946d4\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"file-explorer\",\n              \"state\": {\n                \"sortOrder\": \"alphabetical\",\n                \"autoReveal\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-folder-closed\",\n              \"title\": \"Files\"\n            }\n          },\n          {\n            \"id\": \"34655e29a805b652\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"search\",\n              \"state\": {\n                \"query\": \"\",\n                \"matchingCase\": false,\n                \"explainSearch\": false,\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\"\n              },\n              \"icon\": \"lucide-search\",\n              \"title\": \"Search\"\n            }\n          },\n          {\n            \"id\": \"072afcc9819b994a\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"bookmarks\",\n              \"state\": {\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-bookmark\",\n              \"title\": \"Bookmarks\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300\n  },\n  \"right\": {\n    \"id\": \"7b1933c57c7f07e0\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"be2d8b2ec9e1407f\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"c708041afbe47bd6\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"backlink\",\n              \"state\": {\n                \"file\": \"Note A.md\",\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\",\n                \"backlinkCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-coming-in\",\n              \"title\": \"Backlinks\"\n            }\n          },\n          {\n            \"id\": \"fbcb8adc2af82ab3\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outgoing-link\",\n              \"state\": {\n                \"file\": \"Note A.md\",\n                \"linksCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-going-out\",\n              \"title\": \"Outgoing links\"\n            }\n          },\n          {\n            \"id\": \"fb91d74db91577a0\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"tag\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"useHierarchy\": true,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-tags\",\n              \"title\": \"Tags\"\n            }\n          },\n          {\n            \"id\": \"5386bd227c433a7a\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"all-properties\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-archive\",\n              \"title\": \"All properties\"\n            }\n          },\n          {\n            \"id\": \"81534dcb9b91330a\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outline\",\n              \"state\": {\n                \"file\": \"Note A.md\",\n                \"followCursor\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-list\",\n              \"title\": \"Outline\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300,\n    \"collapsed\": true\n  },\n  \"left-ribbon\": {\n    \"hiddenItems\": {\n      \"switcher:Open quick switcher\": false,\n      \"graph:Open graph view\": false,\n      \"canvas:Create new canvas\": false,\n      \"daily-notes:Open today's daily note\": false,\n      \"templates:Insert template\": false,\n      \"command-palette:Open command palette\": false,\n      \"bases:Create new base\": false\n    }\n  },\n  \"active\": \"938eed3bc361f941\",\n  \"lastOpenFiles\": [\n    \"Note C.md\",\n    \"Note A.md\",\n    \"Note B.md\",\n    \"Board.canvas\",\n    \"Sub/My Note.md\",\n    \"img/pic.png\",\n    \"Sub/Café & Bar #2.md\"\n  ]\n}",
+      "UDD/obsidian.json": "{\"vaults\":{\"19f526b50148594d\":{\"path\":\"/tmp/claude-1000/appwin/main/Probe Vault\",\"ts\":1792373000000,\"open\":true}},\"updateDisabled\":true}",
+      "UDD/<vault id>.json": "{\"x\":10,\"y\":10,\"width\":1600,\"height\":1000,\"isMaximized\":false,\"devTools\":false,\"zoom\":1}",
+      "UDD/Preferences#zoom": "{\"partition\":null,\"default_zoom_level\":null}"
+     }
+    }
+   },
+   "order": [
+    "r01-after-restart"
+   ],
+   "elapsedMs": 1556,
+   "vaultPath": "/tmp/claude-1000/appwin/main/Probe Vault"
+  },
+  "fixtures:theme-obsidian": {
+   "startedAt": "2026-11-10T02:06:35.818Z",
+   "env": {
+    "ONLY": "^s0[02]",
+    "THEME_START": "obsidian",
+    "vault": "/tmp/claude-1000/appwin/theme-obsidian/Probe Vault",
+    "udd": "/tmp/claude-1000/scoria-probe-udd-appwin"
+   },
+   "steps": {},
+   "order": [],
+   "elapsedMs": 3
+  },
+  "run:theme-obsidian": {
+   "startedAt": "2026-11-10T02:06:36.988Z",
+   "env": {
+    "ONLY": "^s0[02]",
+    "THEME_START": "obsidian",
+    "vault": "/tmp/claude-1000/appwin/theme-obsidian/Probe Vault",
+    "udd": "/tmp/claude-1000/scoria-probe-udd-appwin"
+   },
+   "steps": {
+    "s00-meta": {
+     "ok": true,
+     "ms": 8,
+     "version": {
+      "app": "1.15.0",
+      "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+      "title": "New tab - Probe Vault - Obsidian 1.15.0",
+      "platform": "linux"
+     },
+     "commands": {
+      "app:increase-font-size": {
+       "name": "Increase font size",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "app:decrease-font-size": {
+       "name": "Decrease font size",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "window:zoom-in": {
+       "name": "Zoom in",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "window:zoom-out": {
+       "name": "Zoom out",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "window:reset-zoom": {
+       "name": "Reset zoom",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "window:toggle-always-on-top": {
+       "name": "Toggle window always on top",
+       "icon": null,
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "theme:toggle-light-dark": {
+       "name": "Toggle light/dark mode",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "app:toggle-ribbon": {
+       "name": "Toggle ribbon",
+       "icon": null,
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "app:toggle-default-new-pane-mode": {
+       "name": "Toggle default mode for new tabs",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "workspace:copy-path": {
+       "name": "Copy current file path from vault folder",
+       "icon": "lucide-copy",
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "workspace:copy-full-path": {
+       "name": "Copy current file path from system root",
+       "icon": "lucide-hard-drive",
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "workspace:copy-url": {
+       "name": "Copy Obsidian URL for current file",
+       "icon": "lucide-vault",
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "workspace:show-trash": {
+       "name": "Show trash",
+       "icon": null,
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "open-with-default-app:open": {
+       "name": "Open in default app",
+       "icon": "lucide-arrow-up-right",
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "open-with-default-app:show": {
+       "name": "Show in system explorer",
+       "icon": "lucide-files",
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "app:show-tab-switcher": null,
+      "app:show-debug-info": {
+       "name": "Show debug info",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "app:show-release-notes": {
+       "name": "Show release notes",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "app:open-file": {
+       "name": "Open file from outside the vault...",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "editor:context-menu": {
+       "name": "Show context menu under cursor",
+       "icon": "lucide-menu",
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": true,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "editor:focus": {
+       "name": "Focus on last note",
+       "icon": null,
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      }
+     },
+     "ctrlTabOwner": [
+      {
+       "id": "workspace:next-tab",
+       "ks": [
+        {
+         "modifiers": [
+          "Ctrl"
+         ],
+         "key": "Tab"
+        },
+        {
+         "modifiers": [
+          "Ctrl"
+         ],
+         "key": "PageDown"
+        }
+       ]
+      },
+      {
+       "id": "workspace:previous-tab",
+       "ks": [
+        {
+         "modifiers": [
+          "Ctrl",
+          "Shift"
+         ],
+         "key": "Tab"
+        },
+        {
+         "modifiers": [
+          "Ctrl"
+         ],
+         "key": "PageUp"
+        }
+       ]
+      }
+     ],
+     "stubCheck": {
+      "shellOpenPathStubbed": true,
+      "sendSyncWrapped": true
+     },
+     "disk": {
+      ".obsidian/app.json": "{}",
+      ".obsidian/appearance.json": "{\n  \"theme\": \"obsidian\"\n}",
+      ".obsidian/core-plugins.json": "{\n  \"file-explorer\": true,\n  \"global-search\": true,\n  \"switcher\": true,\n  \"graph\": true,\n  \"backlink\": true,\n  \"canvas\": true,\n  \"outgoing-link\": true,\n  \"tag-pane\": true,\n  \"footnotes\": false,\n  \"properties\": true,\n  \"page-preview\": true,\n  \"daily-notes\": true,\n  \"templates\": true,\n  \"note-composer\": true,\n  \"command-palette\": true,\n  \"slash-command\": false,\n  \"editor-status\": true,\n  \"bookmarks\": true,\n  \"zk-prefixer\": false,\n  \"random-note\": false,\n  \"outline\": true,\n  \"word-count\": true,\n  \"slides\": false,\n  \"audio-recorder\": false,\n  \"workspaces\": false,\n  \"file-recovery\": true,\n  \"publish\": false,\n  \"sync\": true,\n  \"bases\": true,\n  \"webviewer\": false\n}",
+      "UDD/obsidian.json": "{\"vaults\":{\"3d5201a942e650eb\":{\"path\":\"/tmp/claude-1000/appwin/theme-obsidian/Probe Vault\",\"ts\":1792373000000,\"open\":true}},\"updateDisabled\":true}",
+      "UDD/<vault id>.json": null,
+      "UDD/Preferences#zoom": "{\"partition\":null,\"default_zoom_level\":null}"
+     }
+    },
+    "s02-theme-toggle": {
+     "ok": true,
+     "ms": 3721,
+     "start": "obsidian",
+     "appearanceStart": "{\n  \"theme\": \"obsidian\"\n}",
+     "stateStart": {
+      "theme": "obsidian",
+      "bodyDark": true,
+      "bodyLight": false,
+      "isDark": true
+     },
+     "runs": [
+      {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [
+        {
+         "kind": "ipc.send REMOTE_BROWSER_DEREFERENCE",
+         "args": [
+          "4-1",
+          2,
+          0
+         ],
+         "t": 1794276397099
+        },
+        {
+         "kind": "ipc.send REMOTE_BROWSER_DEREFERENCE",
+         "args": [
+          "4-1",
+          6,
+          0
+         ],
+         "t": 1794276397099
+        }
+       ],
+       "write": {
+        "firstChangeMs": 804,
+        "waitedMs": 1605,
+        "diff": {
+         ".obsidian/appearance.json": {
+          "before": "{\n  \"theme\": \"obsidian\"\n}",
+          "after": "{\n  \"theme\": \"moonstone\"\n}"
+         },
+         ".obsidian/workspace.json": {
+          "before": null,
+          "after": "{\n  \"main\": {\n    \"id\": \"1ee07704ad9dfc63\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"6c3e0e7a2cea26dd\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"a54054145865b474\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"empty\",\n              \"state\": {},\n              \"icon\": \"lucide-file\",\n              \"title\": \"New tab\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"vertical\"\n  },\n  \"left\": {\n    \"id\": \"810bc0bf5fa08deb\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"ccee627fd474a035\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"4334ee813b1f12d6\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"file-explorer\",\n              \"state\": {\n                \"sortOrder\": \"alphabetical\",\n                \"autoReveal\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-folder-closed\",\n              \"title\": \"Files\"\n            }\n          },\n          {\n            \"id\": \"51a94a94b976d11f\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"search\",\n              \"state\": {\n                \"query\": \"\",\n                \"matchingCase\": false,\n                \"explainSearch\": false,\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\"\n              },\n              \"icon\": \"lucide-search\",\n              \"title\": \"Search\"\n            }\n          },\n          {\n            \"id\": \"733121b65dc11cf8\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"bookmarks\",\n              \"state\": {\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-bookmark\",\n              \"title\": \"Bookmarks\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300\n  },\n  \"right\": {\n    \"id\": \"265e9f30939a4471\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"d2de2d349953fcae\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"d6699cf27ef25c7a\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"backlink\",\n              \"state\": {\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\",\n                \"backlinkCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-coming-in\",\n              \"title\": \"Backlinks\"\n            }\n          },\n          {\n            \"id\": \"ecda0200a39a9393\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outgoing-link\",\n              \"state\": {\n                \"linksCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-going-out\",\n              \"title\": \"Outgoing links\"\n            }\n          },\n          {\n            \"id\": \"b58e047484408255\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"tag\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"useHierarchy\": true,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-tags\",\n              \"title\": \"Tags\"\n            }\n          },\n          {\n            \"id\": \"2d6949d452d7d05e\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"all-properties\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-archive\",\n              \"title\": \"All properties\"\n            }\n          },\n          {\n            \"id\": \"e8b5eab5a909b044\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outline\",\n              \"state\": {\n                \"followCursor\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-list\",\n              \"title\": \"Outline\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300,\n    \"collapsed\": true\n  },\n  \"left-ribbon\": {\n    \"hiddenItems\": {\n      \"switcher:Open quick switcher\": false,\n      \"graph:Open graph view\": false,\n      \"canvas:Create new canvas\": false,\n      \"daily-notes:Open today's daily note\": false,\n      \"templates:Insert template\": false,\n      \"command-palette:Open command palette\": false,\n      \"bases:Create new base\": false\n    }\n  },\n  \"active\": \"a54054145865b474\",\n  \"lastOpenFiles\": []\n}"
+         }
+        }
+       },
+       "appearance": "{\n  \"theme\": \"moonstone\"\n}",
+       "state": {
+        "theme": "moonstone",
+        "bodyDark": false,
+        "bodyLight": true,
+        "isDark": false
+       }
+      },
+      {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [],
+       "write": {
+        "firstChangeMs": 803,
+        "waitedMs": 1604,
+        "diff": {
+         ".obsidian/appearance.json": {
+          "before": "{\n  \"theme\": \"moonstone\"\n}",
+          "after": "{\n  \"theme\": \"obsidian\"\n}"
+         }
+        }
+       },
+       "appearance": "{\n  \"theme\": \"obsidian\"\n}",
+       "state": {
+        "theme": "obsidian",
+        "bodyDark": true,
+        "bodyLight": false,
+        "isDark": true
+       }
+      }
+     ]
+    }
+   },
+   "order": [
+    "s00-meta",
+    "s02-theme-toggle"
+   ],
+   "elapsedMs": 3786,
+   "vaultPath": "/tmp/claude-1000/appwin/theme-obsidian/Probe Vault"
+  },
+  "fixtures:theme-moonstone": {
+   "startedAt": "2026-11-10T02:06:47.443Z",
+   "env": {
+    "ONLY": "^s0[02]",
+    "THEME_START": "moonstone",
+    "vault": "/tmp/claude-1000/appwin/theme-moonstone/Probe Vault",
+    "udd": "/tmp/claude-1000/scoria-probe-udd-appwin"
+   },
+   "steps": {},
+   "order": [],
+   "elapsedMs": 4
+  },
+  "run:theme-moonstone": {
+   "startedAt": "2026-11-10T02:06:48.626Z",
+   "env": {
+    "ONLY": "^s0[02]",
+    "THEME_START": "moonstone",
+    "vault": "/tmp/claude-1000/appwin/theme-moonstone/Probe Vault",
+    "udd": "/tmp/claude-1000/scoria-probe-udd-appwin"
+   },
+   "steps": {
+    "s00-meta": {
+     "ok": true,
+     "ms": 9,
+     "version": {
+      "app": "1.15.0",
+      "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+      "title": "New tab - Probe Vault - Obsidian 1.15.0",
+      "platform": "linux"
+     },
+     "commands": {
+      "app:increase-font-size": {
+       "name": "Increase font size",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "app:decrease-font-size": {
+       "name": "Decrease font size",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "window:zoom-in": {
+       "name": "Zoom in",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "window:zoom-out": {
+       "name": "Zoom out",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "window:reset-zoom": {
+       "name": "Reset zoom",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "window:toggle-always-on-top": {
+       "name": "Toggle window always on top",
+       "icon": null,
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "theme:toggle-light-dark": {
+       "name": "Toggle light/dark mode",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "app:toggle-ribbon": {
+       "name": "Toggle ribbon",
+       "icon": null,
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "app:toggle-default-new-pane-mode": {
+       "name": "Toggle default mode for new tabs",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "workspace:copy-path": {
+       "name": "Copy current file path from vault folder",
+       "icon": "lucide-copy",
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "workspace:copy-full-path": {
+       "name": "Copy current file path from system root",
+       "icon": "lucide-hard-drive",
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "workspace:copy-url": {
+       "name": "Copy Obsidian URL for current file",
+       "icon": "lucide-vault",
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "workspace:show-trash": {
+       "name": "Show trash",
+       "icon": null,
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "open-with-default-app:open": {
+       "name": "Open in default app",
+       "icon": "lucide-arrow-up-right",
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "open-with-default-app:show": {
+       "name": "Show in system explorer",
+       "icon": "lucide-files",
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "app:show-tab-switcher": null,
+      "app:show-debug-info": {
+       "name": "Show debug info",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "app:show-release-notes": {
+       "name": "Show release notes",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "app:open-file": {
+       "name": "Open file from outside the vault...",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "editor:context-menu": {
+       "name": "Show context menu under cursor",
+       "icon": "lucide-menu",
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": true,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "editor:focus": {
+       "name": "Focus on last note",
+       "icon": null,
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      }
+     },
+     "ctrlTabOwner": [
+      {
+       "id": "workspace:next-tab",
+       "ks": [
+        {
+         "modifiers": [
+          "Ctrl"
+         ],
+         "key": "Tab"
+        },
+        {
+         "modifiers": [
+          "Ctrl"
+         ],
+         "key": "PageDown"
+        }
+       ]
+      },
+      {
+       "id": "workspace:previous-tab",
+       "ks": [
+        {
+         "modifiers": [
+          "Ctrl",
+          "Shift"
+         ],
+         "key": "Tab"
+        },
+        {
+         "modifiers": [
+          "Ctrl"
+         ],
+         "key": "PageUp"
+        }
+       ]
+      }
+     ],
+     "stubCheck": {
+      "shellOpenPathStubbed": true,
+      "sendSyncWrapped": true
+     },
+     "disk": {
+      ".obsidian/app.json": "{}",
+      ".obsidian/appearance.json": "{\n  \"theme\": \"moonstone\"\n}",
+      ".obsidian/core-plugins.json": "{\n  \"file-explorer\": true,\n  \"global-search\": true,\n  \"switcher\": true,\n  \"graph\": true,\n  \"backlink\": true,\n  \"canvas\": true,\n  \"outgoing-link\": true,\n  \"tag-pane\": true,\n  \"footnotes\": false,\n  \"properties\": true,\n  \"page-preview\": true,\n  \"daily-notes\": true,\n  \"templates\": true,\n  \"note-composer\": true,\n  \"command-palette\": true,\n  \"slash-command\": false,\n  \"editor-status\": true,\n  \"bookmarks\": true,\n  \"zk-prefixer\": false,\n  \"random-note\": false,\n  \"outline\": true,\n  \"word-count\": true,\n  \"slides\": false,\n  \"audio-recorder\": false,\n  \"workspaces\": false,\n  \"file-recovery\": true,\n  \"publish\": false,\n  \"sync\": true,\n  \"bases\": true,\n  \"webviewer\": false\n}",
+      "UDD/obsidian.json": "{\"vaults\":{\"277e52c0f191f944\":{\"path\":\"/tmp/claude-1000/appwin/theme-moonstone/Probe Vault\",\"ts\":1792373000000,\"open\":true}},\"updateDisabled\":true}",
+      "UDD/<vault id>.json": null,
+      "UDD/Preferences#zoom": "{\"partition\":null,\"default_zoom_level\":null}"
+     }
+    },
+    "s02-theme-toggle": {
+     "ok": true,
+     "ms": 3723,
+     "start": "moonstone",
+     "appearanceStart": "{\n  \"theme\": \"moonstone\"\n}",
+     "stateStart": {
+      "theme": "moonstone",
+      "bodyDark": false,
+      "bodyLight": true,
+      "isDark": false
+     },
+     "runs": [
+      {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [],
+       "write": {
+        "firstChangeMs": 804,
+        "waitedMs": 1605,
+        "diff": {
+         ".obsidian/appearance.json": {
+          "before": "{\n  \"theme\": \"moonstone\"\n}",
+          "after": "{\n  \"theme\": \"obsidian\"\n}"
+         },
+         ".obsidian/workspace.json": {
+          "before": null,
+          "after": "{\n  \"main\": {\n    \"id\": \"62fe4e2034899459\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"761a66d1f5ddc919\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"507ad0fac9f1c1e9\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"empty\",\n              \"state\": {},\n              \"icon\": \"lucide-file\",\n              \"title\": \"New tab\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"vertical\"\n  },\n  \"left\": {\n    \"id\": \"90ee78b8d50ed7ab\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"321796259ddb0407\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"8ceb211eaaa7d08a\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"file-explorer\",\n              \"state\": {\n                \"sortOrder\": \"alphabetical\",\n                \"autoReveal\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-folder-closed\",\n              \"title\": \"Files\"\n            }\n          },\n          {\n            \"id\": \"29745501cc45962f\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"search\",\n              \"state\": {\n                \"query\": \"\",\n                \"matchingCase\": false,\n                \"explainSearch\": false,\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\"\n              },\n              \"icon\": \"lucide-search\",\n              \"title\": \"Search\"\n            }\n          },\n          {\n            \"id\": \"7f34aa7970db1037\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"bookmarks\",\n              \"state\": {\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-bookmark\",\n              \"title\": \"Bookmarks\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300\n  },\n  \"right\": {\n    \"id\": \"b9eca87ae82cc9c8\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"80ded3b8c0750705\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"b340cb16fbe93a12\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"backlink\",\n              \"state\": {\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\",\n                \"backlinkCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-coming-in\",\n              \"title\": \"Backlinks\"\n            }\n          },\n          {\n            \"id\": \"531ac8295cdd37a4\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outgoing-link\",\n              \"state\": {\n                \"linksCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-going-out\",\n              \"title\": \"Outgoing links\"\n            }\n          },\n          {\n            \"id\": \"16b370d844928e14\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"tag\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"useHierarchy\": true,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-tags\",\n              \"title\": \"Tags\"\n            }\n          },\n          {\n            \"id\": \"46c9b99ee0b3c542\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"all-properties\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-archive\",\n              \"title\": \"All properties\"\n            }\n          },\n          {\n            \"id\": \"68d61964a223019c\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outline\",\n              \"state\": {\n                \"followCursor\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-list\",\n              \"title\": \"Outline\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300,\n    \"collapsed\": true\n  },\n  \"left-ribbon\": {\n    \"hiddenItems\": {\n      \"switcher:Open quick switcher\": false,\n      \"graph:Open graph view\": false,\n      \"canvas:Create new canvas\": false,\n      \"daily-notes:Open today's daily note\": false,\n      \"templates:Insert template\": false,\n      \"command-palette:Open command palette\": false,\n      \"bases:Create new base\": false\n    }\n  },\n  \"active\": \"507ad0fac9f1c1e9\",\n  \"lastOpenFiles\": []\n}"
+         }
+        }
+       },
+       "appearance": "{\n  \"theme\": \"obsidian\"\n}",
+       "state": {
+        "theme": "obsidian",
+        "bodyDark": true,
+        "bodyLight": false,
+        "isDark": true
+       }
+      },
+      {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [],
+       "write": {
+        "firstChangeMs": 803,
+        "waitedMs": 1604,
+        "diff": {
+         ".obsidian/appearance.json": {
+          "before": "{\n  \"theme\": \"obsidian\"\n}",
+          "after": "{\n  \"theme\": \"moonstone\"\n}"
+         }
+        }
+       },
+       "appearance": "{\n  \"theme\": \"moonstone\"\n}",
+       "state": {
+        "theme": "moonstone",
+        "bodyDark": false,
+        "bodyLight": true,
+        "isDark": false
+       }
+      }
+     ]
+    }
+   },
+   "order": [
+    "s00-meta",
+    "s02-theme-toggle"
+   ],
+   "elapsedMs": 3788,
+   "vaultPath": "/tmp/claude-1000/appwin/theme-moonstone/Probe Vault"
+  },
+  "fixtures:theme-system": {
+   "startedAt": "2026-11-10T02:06:59.090Z",
+   "env": {
+    "ONLY": "^s0[02]",
+    "THEME_START": "system",
+    "vault": "/tmp/claude-1000/appwin/theme-system/Probe Vault",
+    "udd": "/tmp/claude-1000/scoria-probe-udd-appwin"
+   },
+   "steps": {},
+   "order": [],
+   "elapsedMs": 3
+  },
+  "run:theme-system": {
+   "startedAt": "2026-11-10T02:07:00.279Z",
+   "env": {
+    "ONLY": "^s0[02]",
+    "THEME_START": "system",
+    "vault": "/tmp/claude-1000/appwin/theme-system/Probe Vault",
+    "udd": "/tmp/claude-1000/scoria-probe-udd-appwin"
+   },
+   "steps": {
+    "s00-meta": {
+     "ok": true,
+     "ms": 10,
+     "version": {
+      "app": "1.15.0",
+      "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+      "title": "New tab - Probe Vault - Obsidian 1.15.0",
+      "platform": "linux"
+     },
+     "commands": {
+      "app:increase-font-size": {
+       "name": "Increase font size",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "app:decrease-font-size": {
+       "name": "Decrease font size",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "window:zoom-in": {
+       "name": "Zoom in",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "window:zoom-out": {
+       "name": "Zoom out",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "window:reset-zoom": {
+       "name": "Reset zoom",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "window:toggle-always-on-top": {
+       "name": "Toggle window always on top",
+       "icon": null,
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "theme:toggle-light-dark": {
+       "name": "Toggle light/dark mode",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "app:toggle-ribbon": {
+       "name": "Toggle ribbon",
+       "icon": null,
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "app:toggle-default-new-pane-mode": {
+       "name": "Toggle default mode for new tabs",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "workspace:copy-path": {
+       "name": "Copy current file path from vault folder",
+       "icon": "lucide-copy",
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "workspace:copy-full-path": {
+       "name": "Copy current file path from system root",
+       "icon": "lucide-hard-drive",
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "workspace:copy-url": {
+       "name": "Copy Obsidian URL for current file",
+       "icon": "lucide-vault",
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "workspace:show-trash": {
+       "name": "Show trash",
+       "icon": null,
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "open-with-default-app:open": {
+       "name": "Open in default app",
+       "icon": "lucide-arrow-up-right",
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "open-with-default-app:show": {
+       "name": "Show in system explorer",
+       "icon": "lucide-files",
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "app:show-tab-switcher": null,
+      "app:show-debug-info": {
+       "name": "Show debug info",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "app:show-release-notes": {
+       "name": "Show release notes",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "app:open-file": {
+       "name": "Open file from outside the vault...",
+       "icon": null,
+       "callback": true,
+       "checkCallback": false,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": true
+      },
+      "editor:context-menu": {
+       "name": "Show context menu under cursor",
+       "icon": "lucide-menu",
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": true,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      },
+      "editor:focus": {
+       "name": "Focus on last note",
+       "icon": null,
+       "callback": false,
+       "checkCallback": true,
+       "editorCallback": false,
+       "editorCheckCallback": false,
+       "defaultHotkeys": null,
+       "customHotkeys": null,
+       "inPaletteNow": false
+      }
+     },
+     "ctrlTabOwner": [
+      {
+       "id": "workspace:next-tab",
+       "ks": [
+        {
+         "modifiers": [
+          "Ctrl"
+         ],
+         "key": "Tab"
+        },
+        {
+         "modifiers": [
+          "Ctrl"
+         ],
+         "key": "PageDown"
+        }
+       ]
+      },
+      {
+       "id": "workspace:previous-tab",
+       "ks": [
+        {
+         "modifiers": [
+          "Ctrl",
+          "Shift"
+         ],
+         "key": "Tab"
+        },
+        {
+         "modifiers": [
+          "Ctrl"
+         ],
+         "key": "PageUp"
+        }
+       ]
+      }
+     ],
+     "stubCheck": {
+      "shellOpenPathStubbed": true,
+      "sendSyncWrapped": true
+     },
+     "disk": {
+      ".obsidian/app.json": "{}",
+      ".obsidian/appearance.json": "{\n  \"theme\": \"system\"\n}",
+      ".obsidian/core-plugins.json": "{\n  \"file-explorer\": true,\n  \"global-search\": true,\n  \"switcher\": true,\n  \"graph\": true,\n  \"backlink\": true,\n  \"canvas\": true,\n  \"outgoing-link\": true,\n  \"tag-pane\": true,\n  \"footnotes\": false,\n  \"properties\": true,\n  \"page-preview\": true,\n  \"daily-notes\": true,\n  \"templates\": true,\n  \"note-composer\": true,\n  \"command-palette\": true,\n  \"slash-command\": false,\n  \"editor-status\": true,\n  \"bookmarks\": true,\n  \"zk-prefixer\": false,\n  \"random-note\": false,\n  \"outline\": true,\n  \"word-count\": true,\n  \"slides\": false,\n  \"audio-recorder\": false,\n  \"workspaces\": false,\n  \"file-recovery\": true,\n  \"publish\": false,\n  \"sync\": true,\n  \"bases\": true,\n  \"webviewer\": false\n}",
+      "UDD/obsidian.json": "{\"vaults\":{\"1f5edf8bbebe38cc\":{\"path\":\"/tmp/claude-1000/appwin/theme-system/Probe Vault\",\"ts\":1792373000000,\"open\":true}},\"updateDisabled\":true}",
+      "UDD/<vault id>.json": null,
+      "UDD/Preferences#zoom": "{\"partition\":null,\"default_zoom_level\":null}"
+     }
+    },
+    "s02-theme-toggle": {
+     "ok": true,
+     "ms": 8549,
+     "start": "system",
+     "appearanceStart": "{\n  \"theme\": \"system\"\n}",
+     "stateStart": {
+      "theme": "system",
+      "bodyDark": true,
+      "bodyLight": false,
+      "isDark": true
+     },
+     "runs": [
+      {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [
+        {
+         "kind": "ipc.send REMOTE_BROWSER_DEREFERENCE",
+         "args": [
+          "4-1",
+          2,
+          0
+         ],
+         "t": 1794276420562
+        },
+        {
+         "kind": "ipc.send REMOTE_BROWSER_DEREFERENCE",
+         "args": [
+          "4-1",
+          6,
+          0
+         ],
+         "t": 1794276420562
+        }
+       ],
+       "write": {
+        "firstChangeMs": null,
+        "waitedMs": 4018,
+        "diff": {
+         ".obsidian/workspace.json": {
+          "before": null,
+          "after": "{\n  \"main\": {\n    \"id\": \"0b0ec92f395141a4\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"1f1df3582e4c90b0\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"74ae6cf9e86911e8\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"empty\",\n              \"state\": {},\n              \"icon\": \"lucide-file\",\n              \"title\": \"New tab\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"vertical\"\n  },\n  \"left\": {\n    \"id\": \"2da2c579a5ee5cc6\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"41959d0cdd5dc384\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"053fd8da9a074c26\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"file-explorer\",\n              \"state\": {\n                \"sortOrder\": \"alphabetical\",\n                \"autoReveal\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-folder-closed\",\n              \"title\": \"Files\"\n            }\n          },\n          {\n            \"id\": \"35d31edd08fc0ee4\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"search\",\n              \"state\": {\n                \"query\": \"\",\n                \"matchingCase\": false,\n                \"explainSearch\": false,\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\"\n              },\n              \"icon\": \"lucide-search\",\n              \"title\": \"Search\"\n            }\n          },\n          {\n            \"id\": \"e355634fa4b70f7c\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"bookmarks\",\n              \"state\": {\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-bookmark\",\n              \"title\": \"Bookmarks\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300\n  },\n  \"right\": {\n    \"id\": \"78167f5955f12fb2\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"b9940967e153863f\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"9c64476253abb511\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"backlink\",\n              \"state\": {\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\",\n                \"backlinkCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-coming-in\",\n              \"title\": \"Backlinks\"\n            }\n          },\n          {\n            \"id\": \"8d990f329d4f3c02\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outgoing-link\",\n              \"state\": {\n                \"linksCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-going-out\",\n              \"title\": \"Outgoing links\"\n            }\n          },\n          {\n            \"id\": \"436127ec0f7b6e03\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"tag\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"useHierarchy\": true,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-tags\",\n              \"title\": \"Tags\"\n            }\n          },\n          {\n            \"id\": \"a204a293ca5f7332\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"all-properties\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-archive\",\n              \"title\": \"All properties\"\n            }\n          },\n          {\n            \"id\": \"acc3f9aa040e8a4a\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outline\",\n              \"state\": {\n                \"followCursor\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-list\",\n              \"title\": \"Outline\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300,\n    \"collapsed\": true\n  },\n  \"left-ribbon\": {\n    \"hiddenItems\": {\n      \"switcher:Open quick switcher\": false,\n      \"graph:Open graph view\": false,\n      \"canvas:Create new canvas\": false,\n      \"daily-notes:Open today's daily note\": false,\n      \"templates:Insert template\": false,\n      \"command-palette:Open command palette\": false,\n      \"bases:Create new base\": false\n    }\n  },\n  \"active\": \"74ae6cf9e86911e8\",\n  \"lastOpenFiles\": []\n}"
+         }
+        }
+       },
+       "appearance": "{\n  \"theme\": \"system\"\n}",
+       "state": {
+        "theme": "system",
+        "bodyDark": false,
+        "bodyLight": true,
+        "isDark": false
+       }
+      },
+      {
+       "available": true,
+       "ran": true,
+       "err": null,
+       "notices": [],
+       "calls": [],
+       "write": {
+        "firstChangeMs": null,
+        "waitedMs": 4016,
+        "diff": {}
+       },
+       "appearance": "{\n  \"theme\": \"system\"\n}",
+       "state": {
+        "theme": "system",
+        "bodyDark": true,
+        "bodyLight": false,
+        "isDark": true
+       }
+      }
+     ]
+    }
+   },
+   "order": [
+    "s00-meta",
+    "s02-theme-toggle"
+   ],
+   "elapsedMs": 8618,
+   "vaultPath": "/tmp/claude-1000/appwin/theme-system/Probe Vault"
+  }
+ }
+}

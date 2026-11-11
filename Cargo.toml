@@ -17,6 +17,7 @@ members = [
     "crates/scoria-bases",
     "crates/scoria-suggest",
     "crates/scoria-templates",
+    "crates/scoria-composer",
     "crates/scoria-pdf",
     "crates/scoria-math",
     "crates/scoria-highlight",
@@ -45,6 +46,7 @@ scoria-canvas = { path = "crates/scoria-canvas" }
 scoria-bases = { path = "crates/scoria-bases" }
 scoria-suggest = { path = "crates/scoria-suggest" }
 scoria-templates = { path = "crates/scoria-templates" }
+scoria-composer = { path = "crates/scoria-composer" }
 scoria-pdf = { path = "crates/scoria-pdf" }
 scoria-math = { path = "crates/scoria-math" }
 scoria-highlight = { path = "crates/scoria-highlight" }

@@ -229,7 +229,7 @@ replace mode (`R`), and a `.obsidian.vimrc`. `j` and `k` move by line, not by wr
 
 - **File recovery.** Obsidian keeps its snapshots outside the vault, so this is deliberately
   out of the round-trip work rather than next in it.
-- Heading folding, indent guides, line numbers.
+- Indent guides, line numbers.
 
 ## Next
 
