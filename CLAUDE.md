@@ -34,6 +34,8 @@ crates/scoria-bases     the Bases expression language: statements parsed into Ob
 crates/scoria-pdf       PDF rendering on hayro: pages to RGBA, outline, title, page text, the #page= subpath (no gpui)
 crates/scoria-math      TeX math typeset on RaTeX (KaTeX-compatible): a drawing list in em units plus the KaTeX fonts (no gpui)
 crates/scoria-highlight code highlighting: Prism's tokenizer and grammars ported, and the --code-* each token paints from (no gpui)
+crates/scoria-export    Export to PDF and Export as image: block layout and pagination, the PDF (krilla), the canvas PNG (tiny-skia) (no gpui)
+crates/scoria-audio     the Audio recorder: cpal capture, AAC encoding (oxideav-aac) on a worker, the .m4a writer, the file name and embed (no gpui)
 crates/scoria-bench     spike benchmarks: synthetic vault generator, index timer (bin)
 docs/anya_scoria_gen    procedural scoria-logo generator (bin, zero deps, OUTSIDE the cargo workspace)
 docs/scoria             Obsidian vault: spec and design notes (dogfooded by Scoria)
