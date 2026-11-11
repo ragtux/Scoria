@@ -172,7 +172,8 @@ it changed, and so is an edit made at twenty cursors at once.
 
 ## Saving
 
-Scoria saves the note you are editing, and only that note.
+Scoria saves the note you are editing, and only that note — and a note you are editing in a
+[page preview](/docs/format/links/#page-preview) popover, on the same rules.
 
 | Saves on | |
 |---|---|
@@ -197,7 +198,7 @@ will not throw away your typing to take the disk's version.
 - **Vim mode** (`vimMode` is read, not implemented).
 - **File recovery.** Obsidian keeps its snapshots outside the vault, so this is deliberately
   out of the round-trip work rather than next in it.
-- **`Ctrl + click` page previews**, heading folding, indent guides, line numbers.
+- Heading folding, indent guides, line numbers.
 
 ## Next
 

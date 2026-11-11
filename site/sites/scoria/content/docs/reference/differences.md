@@ -49,7 +49,7 @@ Things Obsidian does that Scoria intends to do and does not.
 | **Vim mode** | `vimMode` is read, not implemented |
 | **Line numbers, indent guides, inline title, right-to-left** | Read and shown in Settings, not acted on |
 | **Spellcheck** | — |
-| **`Ctrl + hover` page previews** | — |
+| **Page preview from File properties** | Page preview works from links, panes, tabs, bases and the graph (see [links](/docs/format/links/#page-preview)); Scoria has no File properties view to preview from |
 
 ### Files and settings
 
