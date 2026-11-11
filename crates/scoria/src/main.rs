@@ -34,6 +34,7 @@ mod help;
 mod inline_field;
 mod math;
 mod mentions;
+mod migrate_modal;
 mod palette;
 mod panes;
 mod pdf;
@@ -42,6 +43,7 @@ mod preview;
 mod prompt;
 mod properties;
 mod reading;
+mod recovery_modal;
 mod remote;
 mod search;
 mod settings;
@@ -354,6 +356,7 @@ pub fn bind_all_keys(cx: &mut App, registry: &CommandRegistry) {
     copy_results::bind_keys(cx);
     debug_info::bind_keys(cx);
     slides::bind_keys(cx);
+    migrate_modal::bind_keys(cx);
     cx.bind_keys([KeyBinding::new("ctrl-q", Quit, None)]);
 }
 

@@ -49,7 +49,7 @@ Things Obsidian does that Scoria intends to do and does not.
 | **Unique note creator** | Both commands work. **Add unique internal link** with several cursors edits only the first; the template setting is a path field |
 | **Slash commands** | Typing `/` in the editor offers no commands |
 | **Renaming a heading** | `editor:rename-heading` works as Obsidian's does, oddities included. Links to the heading in frontmatter are not rewritten |
-| **File recovery** | Obsidian keeps its snapshots in IndexedDB outside the vault, so it is out of the round-trip work rather than next in it |
+| **File recovery** | Scoria keeps its own snapshots, outside the vault under its configuration folder (`file-recovery/`); Obsidian keeps its in its own database, so neither app sees the other's. Snapshots are taken of notes and canvases on opening and on a change, once per **Snapshot interval**, and pruned by **History length** when the vault opens. The tab's **View** and **Clear** buttons do nothing yet; `file-recovery:open` opens the snapshots. **Show changes** compares a snapshot with the file now, line by line |
 | **Editing properties in reading view** | A property's value pill can be removed there; keys, values, the type menu and **Add property** are edited in Live Preview or Source mode only |
 | **Editing the title in reading view** | The inline title is an editable field in Live Preview and Source mode; in reading view it is plain text. `F2` works everywhere |
 | **Vim mode** | `vimMode` is read, not implemented |
@@ -86,7 +86,7 @@ Obsidian commands are not implemented yet:
 | | |
 |---|---|
 | **Window** | `window:zoom-in`, `window:zoom-out`, `window:reset-zoom`, `window:toggle-always-on-top` |
-| **App** | `app:reload`, `app:migrate-frontmatter`. The font size the two font-size commands set lasts the session; Obsidian keeps it across launches. Open file from outside the vault opens a file inside the vault in the current tab, as Obsidian does, but refuses one outside it, which Obsidian opens in a tab of its own and saves back to. Show debug info reports Scoria's version and settings in Obsidian's layout, leaving out the lines Scoria has nothing for. Show release notes shows Scoria's notes for the running version, taken from this site's releases page when the app was built, where Obsidian downloads its changelog |
+| **App** | `app:reload`. Frontmatter migration converts and re-serialises a note's block byte for byte as Obsidian did, and its Undo lasts as long as its notice. The font size the two font-size commands set lasts the session; Obsidian keeps it across launches. Open file from outside the vault opens a file inside the vault in the current tab, as Obsidian does, but refuses one outside it, which Obsidian opens in a tab of its own and saves back to. Show debug info reports Scoria's version and settings in Obsidian's layout, leaving out the lines Scoria has nothing for. Show release notes shows Scoria's notes for the running version, taken from this site's releases page when the app was built, where Obsidian downloads its changelog |
 | **Add alias** | `markdown:add-alias` works in Live Preview; in Source mode it writes the key and opens File properties, which cannot be typed into; it is not offered in reading view |
 
 ### Markdown edge cases

@@ -549,7 +549,6 @@ mod tests {
             assert!(RUNNABLE.contains(&id), "{id} runnable");
             assert!(known.contains(&id), "{id} is Obsidian's");
         }
-        assert!(!RUNNABLE.contains(&"app:migrate-frontmatter"));
     }
 
     #[test]

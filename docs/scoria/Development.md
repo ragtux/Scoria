@@ -521,6 +521,108 @@ light theme, a popout, `f`.
 `the_first_step_is_there_at_once_and_one_more_comes_each_step`. The gate: 64 test binaries,
 1,578 passed, 662 in the app's bin.
 
+### Frontmatter migration, 2026-11-11
+
+`app:migrate-frontmatter` runs, to the 45 notes of the 2026-11-09 probe
+([[Specification#Format converter: Frontmatter migration]]). 200 of the 244 ids run, 44 do not.
+The gate: 64 test binaries, 1,572 passed, 650 in the app's bin.
+
+**The conversion.** `scoria_formats::migrate` decides each note from its bytes on disk: the plural
+key (matched ignoring case) converted when its value is a string; a lone singular renamed in place
+and converted; a singular beside its plural left; a string split on spaces and commas (aliases on
+commas only), `#` kept, nothing left becoming `[]`. A note it changes has its **whole block
+re-serialised**, as Obsidian's is: comments and blank lines go, flow lists become block lists,
+quotes are only where YAML needs them (the properties writer's `render_scalar`), and the inner lines
+take `\n` while the fences keep their `\r\n`. That serialiser is reached by nothing else: the
+properties writer stays surgical for every other edit. A note it does not change is not written; a
+BOM before the fence, no block, or a block that is not a mapping is left; a block that will not
+parse counts under Failed. `matches_every_observed_note_byte_for_byte` holds all 45 before/after
+pairs, copied from the probe's JSON, and `a_second_run_changes_nothing` the probe's second run.
+
+**The modal and Undo.** `crate::migrate_modal`: the title, the close button, the two paragraphs,
+Cancel and Start conversion; then "Finished!", Processed files, Modified files and Failed (hidden
+at 0), Go back and Done. The run goes off the UI thread after the open note is saved; a Stop
+button stands in for the two while it runs (unobserved: the probe's run was over before its first
+look). Done closes the modal and puts up **Updated N files.** with an **Undo** button — notices
+can now carry one — and Undo writes each file's bytes back, unless the file changed again since,
+then says **Reverted changes to N files.**
+
+**Driven.** A headless sway, a six-note scratch vault, the socket: the modal drawn, Start
+conversion clicked, the four files that should change rewritten byte for byte as Obsidian wrote
+them (the CRLF note's fences kept), the flow-list note and the plain note untouched, the counters
+6 and 4, Done's notice and its Undo drawn, Undo putting every byte back; a run with a converted
+note open in Source mode reloaded the editor with the new block.
+
+**Left, unobserved:** where a renamed key goes in a block with other keys (Scoria keeps it in
+place; a JavaScript rename would put it last); a singular in another case (`Tag:`, renamed to
+`tags` here); what a block that will not parse does; the notice after a run that modified
+nothing (Scoria shows none); whether closing the Finished page without Done offers Undo (Scoria
+treats it as Done). The new tests: 6 in `scoria_formats::migrate`, 4 in
+`workspace::migrate_frontmatter`.
+
+### The audio recorder's dependencies, weighed, 2026-11-11
+
+Nothing built: `audio-recorder:start` and `:stop` need microphone capture and an AAC-in-MP4
+encoder, and no encoder was found that can be shipped without a decision.
+
+- **Capture**: `cpal` 0.18 (Apache-2.0) covers Linux, macOS and Windows; on Linux its default
+  host is ALSA (`alsa-sys`, so `shell.nix` would need `alsa-lib`, with PipeWire reached through
+  its ALSA plugin), with `pulseaudio` and `pipewire` features as alternatives.
+- **The MP4 box**: an `.m4a` (`ftyp`, `moov` with one `mp4a`/`esds` track, `mdat`) is small enough
+  to write in-crate; the `mp4` crate (MIT) also writes one.
+- **AAC**: `fdk-aac` / `fdk-aac-sys` (MIT bindings) vendor Fraunhofer's FDK AAC, whose own
+  licence is not free by Debian's or Fedora's reading and grants no patent rights;
+  `shiguredo_fdk_aac` (Apache-2.0) dlopens a system libfdk-aac instead, which most Linux
+  installs lack. The pure-Rust `oxideav-aac` 0.1.7 (MIT, one dependency) and `rff-codec-aac`
+  1.1.11 (Apache-2.0) both claim an AAC-LC encoder, but are months old and validated against
+  their own decoders; neither has been run against an independent decoder here. The platform
+  encoders (AudioToolbox on macOS, Media Foundation on Windows) are free and built in, but Linux
+  has none, so one code path per platform still leaves Linux without one.
+
+Writing anything but `Recording YYYYMMDDHHmmss.m4a` with AAC inside would be a silent divergence,
+so the choice — a pure-Rust encoder after an independent check, FDK with its licence, or a
+platform encoder and no Linux recorder — is left to be made.
+
+### File recovery, 2026-11-11
+
+`file-recovery:open` runs, over a snapshot store of Scoria's own
+([[Specification#Observed File recovery, Obsidian 1.15.0 (installer build 1.13.7)]]). 201 of the
+244 ids run, 43 do not. The gate: 64 test binaries, 1,585 passed, 657 in the app's bin.
+
+**The store.** `scoria_vault::recovery`: Obsidian's record, `{path, ts, data}`, one JSON object
+per line in `file-recovery/<vault id>.jsonl` under Scoria's configuration folder, the folder the
+fold records and `scoria.json` live in — **never in the vault**, which gains no file (a test
+lists the vault folder after snapshots and a restore). Obsidian's own snapshots stay in its
+IndexedDB, so neither app sees the other's. A snapshot of a note or a canvas is taken when it is
+opened, when Scoria saves it and when it changes on disk, each only once `intervalMinutes` has
+passed since the file's last snapshot (none within it, as Obsidian took none for two modifies and
+typing inside five minutes), and never twice of the same text. `keepDays` prunes when the vault
+opens. The File recovery tab's two fields lose their "not in Scoria yet"; History length reads
+as taking effect on restart. With the plugin off in `core-plugins.json` nothing is taken. Tests
+keep their stores in memory, so no run writes under the developer's configuration folder.
+
+**The modal.** `crate::recovery_modal`: the search field ("Choose a file...", the active file's
+name in it), the chosen file's snapshots newest first, each its date in moment's `llll` shape
+over its size ("13 B"), the newest selected; the file's name, **Show changes**, **Copy**,
+**Restore** and the close button over the snapshot's text; "Please select a file on the left to
+view snapshots." with none. A query that names no file lists the files with snapshots whose path
+holds it, and a click or Enter chooses one. Show changes draws the snapshot's lines against the
+file now, removed and added lines tinted (Obsidian's diff markup is unobserved). Restore writes the
+snapshot over the file at once, the editor reloading it, and says "Successfully restored version
+from a few seconds ago", the time in moment's `fromNow` words; the modal stays up, as Obsidian's
+did. Copy puts the text on the clipboard.
+
+**Driven.** A headless sway, a two-note scratch vault with `intervalMinutes: 0`, the socket: the
+open and a typed save made two records in the store under the scratch configuration folder and
+nothing in the vault; the modal drawn with both, the older picked, Show changes marking the typed
+line added, Restore writing `Version one.\nSecond line.\n` back with the notice, the editor clean.
+
+**Left.** The tab's **View** and **Clear** buttons stay inert, like every button in the Settings
+window; deleting `file-recovery/` clears the history meanwhile. A rename does not carry a file's
+snapshots to its new path. Sizes past 1 KB, the diff's look, Copy's exact text and the modal's
+keyboard are Scoria's, unobserved. The new tests: 6 in `scoria_vault::recovery`, 2 in
+`recovery_modal`, 5 in `workspace::file_recovery`.
+
 ### The Note composer, driven, 2026-11-10
 
 The one thing the 2026-11-09 work had not been seen doing. A headless sway, a five-note scratch

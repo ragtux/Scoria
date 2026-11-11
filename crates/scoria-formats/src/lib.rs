@@ -7,6 +7,7 @@ pub mod base;
 pub mod bookmarks;
 pub mod canvas;
 pub mod config;
+pub mod migrate;
 pub mod properties;
 pub mod workspaces;
 

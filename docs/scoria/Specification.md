@@ -9709,6 +9709,9 @@ their order; `meta:\n  k: v` and `d: 2024-01-02` kept their bytes.
   headers.
 - The converter's Stop and Go back; Failed counts above 0; a vault large enough to watch the
   progress; nested or flow values inside `tags` (`tags: [[a]]`).
+- Where a renamed key goes in a block with other keys (every rename observed was the block's only
+  key); a singular in another case (`Tag: x`); a block that does not parse; the notice after Done
+  when nothing was modified; whether the close button on the Finished page still offers Undo.
 
 ## Observed app info and open-file commands, Obsidian 1.15.0 (installer build 1.13.7)
 
@@ -10069,6 +10072,8 @@ Two spaces, no trailing newline, numbers as JavaScript writes them.
   what "History length" prunes and when; whether a canvas or a base is always snapshotted.
 - The diff view's markup with "Show changes" on; Copy's clipboard text; the modal's keyboard.
 - Whether Clear empties `backups` (the run that confirmed it had nothing to clear).
+- Scoria's own store (not Obsidian's): `file-recovery/<vault id>.jsonl` under Scoria's
+  configuration folder, the same `{path, ts, data}` records; see [[Development#File recovery, 2026-11-11]].
 
 ## Observed exports and the audio recorder, Obsidian 1.15.0 (installer build 1.13.7)
 

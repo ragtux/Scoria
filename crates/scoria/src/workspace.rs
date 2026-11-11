@@ -108,6 +108,12 @@ mod release_notes;
 // Start presentation: the note as slides over the whole window.
 mod presentation;
 
+// Format converter: Frontmatter migration.
+mod migrate_frontmatter;
+
+// File recovery: snapshots outside the vault, and Open local history.
+mod file_recovery;
+
 actions!(
     workspace,
     [ToggleMode, GoBack, GoForward, OpenSearch, OpenGraph]
@@ -456,6 +462,8 @@ pub const RUNNABLE: &[&str] = &[
     "app:open-file",
     "app:show-debug-info",
     "app:show-release-notes",
+    "app:migrate-frontmatter",
+    "file-recovery:open",
 ];
 
 /// Binds every runnable command's hotkeys in the Workspace context, and the
@@ -522,6 +530,8 @@ pub struct VaultState {
     /// format.
     zk_prefixer: RwLock<ZkPrefixerConfig>,
     file_recovery: RwLock<FileRecoveryConfig>,
+    /// File recovery's snapshots, kept outside the vault.
+    recovery: std::sync::Mutex<scoria_vault::recovery::SnapshotStore>,
     webviewer: RwLock<WebviewerConfig>,
     pub plugin_manifests: Vec<PluginManifest>,
     pub palette: CommandPaletteConfig,
@@ -659,6 +669,7 @@ impl VaultState {
             })
             .collect();
         let cache = MetadataCache::new(vault.link_resolver(), metas);
+        let recovery = file_recovery::open_store(vault.root(), &file_recovery);
         Ok(VaultState {
             root: vault.root().to_path_buf(),
             vault: RwLock::new(vault),
@@ -677,6 +688,7 @@ impl VaultState {
             note_composer: RwLock::new(note_composer),
             zk_prefixer: RwLock::new(zk_prefixer),
             file_recovery: RwLock::new(file_recovery),
+            recovery: std::sync::Mutex::new(recovery),
             webviewer: RwLock::new(webviewer),
             plugin_manifests,
             palette,
@@ -1683,6 +1695,25 @@ struct Notice {
     /// The popout it shows in, by id, or `None` for the vault window:
     /// the window that was active when it went up, as in Obsidian.
     window: Option<u64>,
+    /// A button after the message (Obsidian's `.notice-cta`), as the
+    /// Frontmatter migration's "Undo".
+    action: Option<NoticeAction>,
+}
+
+/// What a notice's button does.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum NoticeAction {
+    /// "Undo" after a Frontmatter migration: every file it wrote back to
+    /// its bytes before.
+    UndoMigration,
+}
+
+impl NoticeAction {
+    fn label(self) -> &'static str {
+        match self {
+            NoticeAction::UndoMigration => "Undo",
+        }
+    }
 }
 
 impl Notice {
@@ -1707,13 +1738,25 @@ impl Notices {
     /// the id to expire it by. A message already on screen is renewed
     /// rather than stacked, in the window of the renewal: the autosave
     /// retries on a timer, so the same refusal arrives over and over.
+    #[cfg(test)]
     fn push(&mut self, text: SharedString, window: Option<u64>) -> u64 {
+        self.push_with(text, window, None)
+    }
+
+    /// [`Notices::push`] with a button after the message.
+    fn push_with(
+        &mut self,
+        text: SharedString,
+        window: Option<u64>,
+        action: Option<NoticeAction>,
+    ) -> u64 {
         self.live.retain(|n| n.text != text);
         self.last_id += 1;
         self.live.push(Notice {
             id: self.last_id,
             text,
             window,
+            action,
         });
         self.last_id
     }
@@ -1770,6 +1813,10 @@ enum Modal {
     Downloads,
     /// "Debug info" (`app:show-debug-info`).
     DebugInfo,
+    /// "Frontmatter migration" (`app:migrate-frontmatter`).
+    MigrateFrontmatter,
+    /// "File recovery" (`file-recovery:open`).
+    FileRecovery,
 }
 
 /// The file operation the open prompt will finish.
@@ -3348,6 +3395,12 @@ pub struct Workspace {
     composer: Option<note_composer::ComposerModal>,
     /// The "Download attachments" modal while it is up.
     downloads: Option<attachments::DownloadsModal>,
+    /// "Frontmatter migration" while it is up.
+    migrate: Option<migrate_frontmatter::MigrateState>,
+    /// "File recovery" while it is up.
+    recovery: Option<file_recovery::RecoveryState>,
+    /// What the last migration wrote, for its notice's Undo.
+    migration_undo: Vec<migrate_frontmatter::Migrated>,
     /// A canvas asked for the note or media picker; the next render opens
     /// it, with the window the chooser needs to take focus.
     pending_canvas_pick: Option<crate::canvas::FilePick>,
@@ -4115,6 +4168,9 @@ impl Workspace {
             chooser_purpose: ChooserPurpose::default(),
             composer: None,
             downloads: None,
+            migrate: None,
+            recovery: None,
+            migration_undo: Vec::new(),
             pending_canvas_pick: None,
             palette,
             settings,
@@ -5235,6 +5291,7 @@ impl Workspace {
         if changes.files.is_empty() {
             return;
         }
+        self.snapshot_changes(&changes);
         let Some(state) = self.state.clone() else {
             return;
         };
@@ -6296,6 +6353,8 @@ impl Workspace {
             "app:open-another-vault" => self.open_another_vault(window, cx),
             "app:open-sandbox-vault" => self.open_sandbox_vault(window, cx),
             "app:show-debug-info" => self.show_debug_info(window, cx),
+            "app:migrate-frontmatter" => self.open_migrate_frontmatter(window, cx),
+            "file-recovery:open" => self.open_file_recovery(window, cx),
             "app:show-release-notes" => self.show_release_notes(cx),
             _ => {
                 let name = self.command_name(id, cx);
@@ -6967,6 +7026,7 @@ impl Workspace {
             self.forget_history(&path);
             return;
         }
+        self.snapshot_on_open(&path);
         if let Some(sub) = subpath {
             self.scroll_to_subpath(&path, &sub, &state, cx);
         }
@@ -7997,6 +8057,7 @@ impl Workspace {
         match scoria_vault::write_no_follow(&absolute, contents.as_bytes()) {
             Ok(()) => {
                 self.editor.update(cx, |e, _| e.mark_saved(&contents));
+                state.take_snapshot(&name, &contents);
                 self.report(format!("{name} saved"), cx);
             }
             Err(err) => {
@@ -8138,8 +8199,30 @@ impl Workspace {
     /// Puts up a notice in the window that is active now, the active
     /// group's, where it stays even after another window takes the focus.
     fn report(&mut self, message: impl Into<SharedString>, cx: &mut Context<Self>) {
+        self.report_with(message, None, cx);
+    }
+
+    /// A notice's button pressed.
+    fn run_notice_action(
+        &mut self,
+        action: NoticeAction,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        match action {
+            NoticeAction::UndoMigration => self.undo_migration(cx),
+        }
+    }
+
+    /// [`Workspace::report`] with a button after the message.
+    fn report_with(
+        &mut self,
+        message: impl Into<SharedString>,
+        action: Option<NoticeAction>,
+        cx: &mut Context<Self>,
+    ) {
         let home = self.window_of_group(self.active_group_id());
-        let id = self.notices.push(message.into(), home);
+        let id = self.notices.push_with(message.into(), home, action);
         cx.spawn(async move |this, cx| {
             cx.background_executor().timer(NOTICE_LIFETIME).await;
             this.update(cx, |ws, cx| {
@@ -11499,7 +11582,7 @@ impl Workspace {
         let file_menu = self.render_file_menu(Some(id), theme, window, cx);
         // So are the notices that went up while it was the active window;
         // it has no status bar to clear.
-        let notices = self.render_notices(Some(id), px(16.), theme);
+        let notices = self.render_notices(Some(id), px(16.), theme, cx);
         let tree = self.windows[wix].tree.clone();
         self.rendering_window = Some(id);
         let body = self.render_layout(&tree, &mut Vec::new(), theme, cx);
@@ -14740,6 +14823,8 @@ impl Workspace {
                 Modal::Composer => "note-composer",
                 Modal::Downloads => "download-attachments",
                 Modal::DebugInfo => "debug-info",
+                Modal::MigrateFrontmatter => "migrate-frontmatter",
+                Modal::FileRecovery => "file-recovery",
             }),
         );
         // The popout it draws in, by id, or null for the vault window (and
@@ -14765,6 +14850,8 @@ impl Workspace {
             Modal::Composer => self.describe_composer(rows, cx),
             Modal::Downloads => self.describe_downloads(cx),
             Modal::DebugInfo => Some(self.debug_info.read(cx).describe()),
+            Modal::MigrateFrontmatter => self.describe_migrate(cx),
+            Modal::FileRecovery => self.describe_recovery(cx),
             Modal::None => None,
         };
         if let Some(Value::Object(view)) = view {
@@ -15664,6 +15751,7 @@ impl Workspace {
         here: Option<u64>,
         bottom: Pixels,
         theme: &Theme,
+        cx: &mut Context<Self>,
     ) -> Option<gpui::AnyElement> {
         let open = |id| self.popout_open(id);
         let mut shown = self.notices.in_window(here, &open).peekable();
@@ -15689,6 +15777,22 @@ impl Workspace {
                         .text_size(px(12.))
                         .text_color(theme.tokens.text_normal)
                         .child(notice.text.clone())
+                        .children(notice.action.map(|action| {
+                            let id = notice.id;
+                            div()
+                                .id(("notice-action", id))
+                                .mt_1()
+                                .flex()
+                                .justify_end()
+                                .cursor_pointer()
+                                .text_color(theme.tokens.text_accent)
+                                .hover(|s| s.text_color(theme.tokens.text_accent_hover))
+                                .on_click(cx.listener(move |this, _, window, cx| {
+                                    this.notices.expire(id);
+                                    this.run_notice_action(action, window, cx);
+                                }))
+                                .child(action.label())
+                        }))
                 }))
                 .into_any_element(),
         )
@@ -15739,6 +15843,8 @@ impl Workspace {
             | Modal::Downloads
             | Modal::CopyResults
             | Modal::DebugInfo
+            | Modal::MigrateFrontmatter
+            | Modal::FileRecovery
             | Modal::Layouts => {
                 let child: gpui::AnyElement = match self.modal {
                     Modal::Switcher => self.switcher.clone().into_any_element(),
@@ -15748,6 +15854,8 @@ impl Workspace {
                     Modal::Downloads => self.downloads_element()?,
                     Modal::CopyResults => self.copy_results.clone().into_any_element(),
                     Modal::DebugInfo => self.debug_info.clone().into_any_element(),
+                    Modal::MigrateFrontmatter => self.migrate_element()?,
+                    Modal::FileRecovery => self.recovery_element()?,
                     Modal::Layouts => self.layouts_modal.clone()?.into_any_element(),
                     _ => self.prompt.clone().into_any_element(),
                 };
@@ -19190,7 +19298,7 @@ impl Render for Workspace {
         // this one, unless that was a popout.
         let overlay = self.render_modal_overlay(None);
         // The notices that went up while this window was the active one.
-        let notices = self.render_notices(None, px(30.), &theme);
+        let notices = self.render_notices(None, px(30.), &theme, cx);
 
         let left_visible = self.left_visible;
         let right_visible = self.right_visible;
