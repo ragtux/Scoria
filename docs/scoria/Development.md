@@ -390,6 +390,32 @@ file input opens nothing without a user activation (`userGesture`), `run-block.s
 fields: a click from one number field straight into another lost the typed value, Enter did not.
 The gate on the two branches together: 64 test binaries, 1,548 passed, 632 in the app's bin.
 
+### The last five ids probed, 2026-11-10
+
+The ids [[#Eleven more ids probed, five of them run, 2026-11-10]] listed as never probed, run in
+one script, `exports-importer-audio.mjs`, in a private headless sway with the main process's save
+dialog stubbed over Node's inspector and Chromium's fake microphone; the record is
+[[Specification#Observed exports and the audio recorder, Obsidian 1.15.0 (installer build 1.13.7)]].
+Nothing was built: each of the four that remain needs something Scoria does not have.
+
+**Not Obsidian's.** `markdown-importer:open` is not registered in 1.15.0: there is no such
+internal plugin, enabled or not. It was already counted with the ids that have no desktop name
+(`names.txt` has none for it); the probe confirms why, and 47 of the 244 are still left.
+
+**What each needs.**
+
+| Commands | What stands in the way |
+| --- | --- |
+| `workspace:export-pdf` | settled: the modal, `pdfExportSettings` in `app.json` (`margin` a string), the dialog's `<basename>.pdf`, the notice, the page sizes in points. Obsidian prints the reading view through Chromium; Scoria has no PDF writer and gpui no print path, so this needs a renderer of its own from the reading view's blocks to PDF pages |
+| `canvas:export-as-image` | settled: the bounds plus 100 px, the 80 px logo strip, Viewport only, privacy bars, nothing remembered. Needs the canvas painted off screen to pixels, which the pinned gpui does not offer; and the logo is Obsidian's, so Scoria's would be its own mark |
+| `audio-recorder:start`, `audio-recorder:stop` | settled: `Recording YYYYMMDDHHmmss.m4a` in the attachment folder, `\n![[…]]\n` over the selection in a note, an `audio` leaf elsewhere, nothing in reading view. Needs microphone capture and an AAC-in-MP4 encoder, two dependencies Scoria has none of |
+
+**Traps.** sway's socket path must fit `sun_path`: an `XDG_RUNTIME_DIR` in the scratchpad
+aborted it at start, `/run/user/<uid>` works. A probe's modal left open is under every later
+step's: the 1.15.0 close button is `.modal-header-button`, not `.modal-close-button`, so the
+script's tidy-up closed nothing, and the converter's step read the PDF modal's rows (moot, the
+plugin being gone). `require('obsidian')` does not resolve in the renderer over CDP.
+
 ### Debug info and release notes, 2026-11-10
 
 Two of the ids [[#Eleven more ids probed, five of them run, 2026-11-10]] left as a decision,

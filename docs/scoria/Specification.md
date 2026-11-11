@@ -10063,3 +10063,122 @@ Two spaces, no trailing newline, numbers as JavaScript writes them.
   what "History length" prunes and when; whether a canvas or a base is always snapshotted.
 - The diff view's markup with "Show changes" on; Copy's clipboard text; the modal's keyboard.
 - Whether Clear empties `backups` (the run that confirmed it had nothing to clear).
+
+## Observed exports and the audio recorder, Obsidian 1.15.0 (installer build 1.13.7)
+
+`tools/obsidian-probe/exports-importer-audio.mjs` over CDP in a private headless sway, a data
+directory of its own, launched with `--inspect` (the main process's save dialog and `shell`
+replaced by recorders) and Chromium's fake microphone (`--use-fake-device-for-media-stream
+--use-fake-ui-for-media-stream`); results in
+`tools/obsidian-probe/results/2026-11-10-exports-importer-audio.json`, screenshots beside it.
+The save dialog was stubbed, so what Obsidian does with the answer is observed and the dialog is
+not.
+
+### Names and kinds
+
+| Id | Palette name | Icon | Kind | Offered |
+| --- | --- | --- | --- | --- |
+| `workspace:export-pdf` | Export to PDF... | — | check | a note, in all three modes; not a canvas, an image or an empty tab |
+| `canvas:export-as-image` | Canvas: Export as image | `lucide-image` | check | a canvas only |
+| `audio-recorder:start` | Audio recorder: Start recording audio | `lucide-play-circle` | check | everywhere, an empty tab included, while not recording |
+| `audio-recorder:stop` | Audio recorder: Stop recording audio | `lucide-stop-circle` | check | only while recording |
+
+None has a default hotkey. **`markdown-importer:open` is not registered in 1.15.0**: there is no
+`markdown-importer` internal plugin (`getPluginById` gives `null` with the id enabled in
+`core-plugins.json`), and no command id contains it. The Format converter survives only as
+`app:migrate-frontmatter`'s name.
+
+### Export to PDF
+
+A modal, `div.modal`, title **Export to PDF**, the line `Export “Note” to PDF with the settings
+below.` (curly quotes, the file's basename), five rows, then **Export to PDF** (`mod-cta`) and
+**Cancel** (`mod-cancel`):
+
+| Row | Control | Values | Default |
+| --- | --- | --- | --- |
+| Include file name as title | toggle | | off |
+| Page size | dropdown | A3, A4, A5, Legal, Letter, Tabloid | Letter |
+| Landscape | toggle | | off |
+| Margin | dropdown, value → label | `0` Default, `2` Minimal, `1` None | `0` |
+| Downscale percent | slider, `min=10 max=100 step=1` | | 100 |
+
+No row has a description. The modal opens with the last export's values. **Export to PDF** asks
+the main process for a save dialog `{defaultPath: "<basename>.pdf", filters: [{name: "PDF
+Files", extensions: ["pdf"]}, {name: "All Files", extensions: ["*"]}], properties:
+["showOverwriteConfirmation"]}` — a bare file name, no folder — writes the file, closes the
+modal, shows the notice `PDF Saved to <absolute path>`, and opens the PDF with
+`shell.openExternal("file://<absolute path>")`. Cancelled at the dialog: nothing written, no
+notice, and **the modal stays open**.
+
+Each export writes **`pdfExportSettings`** into `app.json` (two-space indent, the key added after
+the existing ones). The first, from `{}`, wrote `{"pageSize": "Letter", "landscape": false,
+"margin": "0", "downscalePercent": 100}`; `includeName` joins (first) once the toggle has been
+touched, and the object's key order is `includeName, pageSize, landscape, margin,
+downscalePercent`. `margin` is a **string**; the rest are what they look like.
+
+The file: Chromium's own PDF (`%PDF-1.4`, Producer `Skia/PDF m150`, Creator `Chromium`, Title
+the note's basename), drawn from the reading view in the light theme on white, the frontmatter
+not shown, links live (one `/Link` annotation for the external link), no outline. Page sizes in
+points: Letter 612 × 792, A3 842.88 × 1191.12, A4 595.92 × 842.88, A5 420 × 595.92, Legal
+612 × 1008, Tabloid 792 × 1224; Landscape swaps them. The text's left edge sat at 51.75 pt with
+Margin Default and at 24 pt with Minimal and with None alike. The title, when included, is the
+basename above the note's first line. The 60-paragraph fixture took 5 Letter pages, 2 at
+Tabloid landscape and 50 %. The reading view of a one-line note exports the same way as a note in
+Live Preview.
+
+### Export as image
+
+A modal, `div.modal.mod-narrow`, title **Export as image**, `Export “Board” as a PNG file with
+the settings below.` (`p.u-muted`), four rows and one button, **Save** (`mod-cta`):
+
+| Row | Description | Control | Default |
+| --- | --- | --- | --- |
+| Viewport | Choose to render the entire canvas or just the current visible viewport. | dropdown `full` "Full canvas", `viewport` "Viewport only" | `full` |
+| Zoom | Estimated image dimensions: 1,050px x 700px | slider `min=-1 max=1 step=any`, its value shown as `1.00` | 0 |
+| Show logo | This will add an Obsidian logo to the bottom left. | toggle | on |
+| Privacy mode | This will obscure any text on your canvas. | toggle | off |
+
+The options are **not remembered**: each opening starts from the defaults, and nothing is written
+to `app.json`, `canvas.json` or the canvas. **Save** asks for a save dialog `{defaultPath:
+"<basename>.png", filters: [{name: "PNG Files", extensions: ["png"]}, {name: "All Files",
+extensions: ["*"]}], properties: ["showOverwriteConfirmation"]}` and writes the PNG; no notice,
+nothing opened, the clipboard untouched.
+
+The image (fixture nodes spanning x −50…800, y 0…500 in canvas units): **Full canvas** is the
+nodes' bounds plus **100 px on every side** at zoom 1 — 1050 × 700, as the description estimates
+— RGBA, in the canvas's own background with its dot grid, edges, labels and the group's colour;
+**Show logo** adds an **80 px strip** below for Obsidian's wordmark at the bottom left (1050 ×
+780). **Viewport only** is the pane's visible area, 870 × 520 here, RGB without alpha.
+**Privacy mode** draws each run of text as a rounded bar of its colour, the node labels and the
+edge label too. A selection does not narrow the export.
+
+### Audio recorder
+
+The ribbon button **Start/stop recording** (`lucide-mic`) takes `is-active` while a recording
+runs; there is no status bar item and no notice, starting or stopping. Stop with nothing
+recording does nothing. Two real clicks on the button 3.5 s apart left it active and saved no
+file, so what a click does is not settled.
+
+The recording is **`Recording YYYYMMDDHHmmss.m4a`** (local time at the stop; an MP4 container,
+Chromium's `MediaRecorder` here supporting `audio/webm`, `audio/mp4` and
+`audio/webm;codecs=opus`), saved where `attachmentFolderPath` says: the vault root under `/`,
+`Attachments/` under `Attachments`, the note's own folder under `./`. Then:
+
+- **A note in Source mode** (Live Preview not run): `\n![[Recording ….m4a]]\n` replaces the selection
+  (or goes in at the caret), the caret after it at the start of the next line. `One line.` with
+  the caret after `One` became `One\n![[Recording 20261110175445.m4a]]\n line.`; a caret on an
+  empty last line gave `…\n\n![[…]]\n`. The link is a wikilink embed by name, also with the file
+  in `Attachments/`.
+- **A note in reading view**: the file is saved and nothing is written or opened.
+- **An empty tab or a canvas**: the file is saved and opened in an `audio` view, active; nothing
+  is linked.
+
+### Not settled: exports and the audio recorder
+- The save dialogs' real behavior (the folder they start in, given a bare `defaultPath`).
+- Export to PDF over a note with embeds and wide tables; how Downscale and the margins map to
+  Electron's `printToPDF` options beyond the measured edge; whether a theme's light variant is
+  used for the community theme too.
+- Export as image: the Zoom slider's mapping (presumably 2^value) and the estimate text as it
+  moves; the dimensions limit, if any; Privacy mode over images and embedded notes.
+- Audio: the ribbon button's click; Live Preview; the format on macOS and Windows, a recording across midnight or within the same second,
+  what a missing or refused microphone shows.

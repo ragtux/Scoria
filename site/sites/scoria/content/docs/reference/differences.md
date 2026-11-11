@@ -65,7 +65,7 @@ Things Obsidian does that Scoria intends to do and does not.
 | **Footnotes view** | The pane lists the note's footnotes and jumps to a definition; a footnote cannot be edited in the pane |
 | **Backlinks at the bottom of a note** | Shown, per tab and by the Backlinks setting. The block's own sort menu and search filter are not drawn |
 | **Editing in the File properties pane** | `properties:open-local` shows the current note's properties in a side pane; they cannot be edited there, and the pane cannot be closed |
-| **Slides, Audio recorder, Web viewer, Format converter** | `slides:start`, `audio-recorder:*`, `webviewer:*` and `markdown-importer:open` are not implemented |
+| **Slides, Audio recorder, Web viewer** | `slides:start`, `audio-recorder:*` and `webviewer:*` are not implemented (`markdown-importer:open`, the old Format converter, is not in Obsidian 1.15.0 either) |
 
 ### Files and settings
 
