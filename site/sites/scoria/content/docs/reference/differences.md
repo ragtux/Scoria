@@ -52,10 +52,10 @@ Things Obsidian does that Scoria intends to do and does not.
 | **File recovery** | Scoria keeps its own snapshots, outside the vault under its configuration folder (`file-recovery/`); Obsidian keeps its in its own database, so neither app sees the other's. Snapshots are taken of notes and canvases on opening and on a change, once per **Snapshot interval**, and pruned by **History length** when the vault opens. The tab's **View** and **Clear** buttons do nothing yet; `file-recovery:open` opens the snapshots. **Show changes** compares a snapshot with the file now, line by line |
 | **Editing properties in reading view** | A property's value pill can be removed there; keys, values, the type menu and **Add property** are edited in Live Preview or Source mode only |
 | **Editing the title in reading view** | The inline title is an editable field in Live Preview and Source mode; in reading view it is plain text. `F2` works everywhere |
-| **Vim mode** | `vimMode` is read, not implemented |
+| **Vim mode** | The common core is there (modes, motions, operators, text objects, registers, search, `.`); visual block, macros, marks, `:` commands and `.obsidian.vimrc` are not |
 | **Line numbers, indentation guides, right-to-left** | Read and shown in Settings, not acted on. `editor:toggle-line-numbers` writes the setting for Obsidian to read; no gutter is drawn |
 | **Spellcheck** | No spellcheck, and `editor:toggle-spellcheck` is not a command yet |
-| **Page previews** | Hovering a link (`Ctrl` + hover in the editor) shows no preview |
+| **Page preview from File properties** | Page preview works from links, panes, tabs, bases and the graph (see [links](/docs/format/links/#page-preview)); Scoria has no File properties view to preview from |
 | **Pasting and attachments** | A paste is text: copied HTML is not converted to Markdown, and a pasted or dropped image or file is not saved as an attachment. `editor:attach-file` and `editor:download-attachments` are not implemented. Put the file in the folder yourself |
 
 ### Panes and plugins

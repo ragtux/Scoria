@@ -32,8 +32,8 @@ use crate::palette::hotkey_chip;
 use crate::text_input::{InputEvent, TextInput};
 use crate::theme::{fonts, Theme};
 use crate::workspace::{
-    client_frame, frame_window_options, window_title_row, Commands, VaultState, WindowCorners,
-    Workspace,
+    client_frame, frame_window_options, traffic_light_strip, window_title_row, Commands,
+    VaultState, WindowCorners, Workspace,
 };
 use gpui::{
     actions, canvas, deferred, div, hsla, linear_color_stop, linear_gradient, point, prelude::*,
@@ -3165,7 +3165,7 @@ impl SettingsView {
                 "Use Vim key bindings when editing.",
                 app,
                 VIM_MODE,
-            ).not_yet(),
+            ),
         ]
     }
 
@@ -3561,13 +3561,18 @@ impl SettingsView {
                 items
             }
             // One toggle per surface the hover preview pops up over, under a
-            // heading with no control of its own. Scoria has no hover
-            // preview yet, so every row is tagged.
+            // heading with no control of its own. The reading view, the
+            // editor, the tab header, the Files, Bookmarks, Backlinks,
+            // Outgoing links and Outline rows, a base's table and the graph
+            // preview (`hover_preview`) and read their key on every hover.
+            // "Properties view" is Obsidian's File properties view, which
+            // Scoria does not have, so its row is tagged.
             "page-preview" => {
                 let p = &state.page_preview();
                 let row = |name: &str, flag: PagePreviewFlag| {
-                    toggle(name, "", flag.is_on(p), Flag::PagePreview(flag)).not_yet()
+                    toggle(name, "", flag.is_on(p), Flag::PagePreview(flag))
                 };
+                let later = |name: &str, flag: PagePreviewFlag| row(name, flag).not_yet();
                 vec![
                     heading("Require Ctrl to trigger page preview on hover"),
                     row("Search, Backlinks, and Outgoing links", PREVIEW_SEARCH),
@@ -3575,7 +3580,7 @@ impl SettingsView {
                     row("Editing view", PREVIEW_EDITING),
                     row("Tab header", PREVIEW_TAB_HEADER),
                     row("Files", PREVIEW_FILES),
-                    row("Properties view", PREVIEW_PROPERTIES),
+                    later("Properties view", PREVIEW_PROPERTIES),
                     row("Bookmarks", PREVIEW_BOOKMARKS),
                     row("Outline", PREVIEW_OUTLINE),
                     row("Bases", PREVIEW_BASES),
@@ -5697,7 +5702,23 @@ impl Render for SettingsView {
             .bg(theme.tokens.modal_background)
             .map(|d| self.corners.apply(d))
             .overflow_hidden()
-            .child(self.render_nav(&theme, cx))
+            // The nav runs up into the top-left corner; on macOS the
+            // traffic lights sit there, over a strip of the nav's own
+            // ground rather than over the mark.
+            .child(
+                div()
+                    .flex()
+                    .flex_col()
+                    .flex_shrink_0()
+                    .h_full()
+                    .children(traffic_light_strip(window).map(|strip| {
+                        strip
+                            .bg(theme.tokens.modal_sidebar_background)
+                            .border_r_1()
+                            .border_color(theme.tokens.background_modifier_border)
+                    }))
+                    .child(self.render_nav(&theme, cx).flex_1().min_h_0()),
+            )
             .child(
                 div()
                     .flex()
@@ -6423,8 +6444,12 @@ mod tests {
         assert_eq!(items[0].control, Control::None);
         // Reading view is the one surface that is off when its key is absent.
         assert_eq!(items[2].control, Control::Toggle(false));
+        // Every surface previews but the File properties view, which Scoria
+        // does not have.
         for row in &items[1..] {
-            assert_eq!(row.honored, Honored::No, "{}", row.name);
+            let live = row.name.as_ref() != "Properties view";
+            let want = if live { Honored::Live } else { Honored::No };
+            assert_eq!(row.honored, want, "{}", row.name);
             assert!(row.desc.is_empty(), "{} has a description", row.name);
         }
 
@@ -7858,6 +7883,7 @@ mod tests {
                 "Auto-pair Markdown syntax",
                 "Smart lists",
                 "Indent using tabs",
+                "Vim key bindings",
                 "Automatically update internal links",
                 "Use [[Wikilinks]]",
                 "Show all file types",
@@ -7868,6 +7894,17 @@ mod tests {
                 "Show all file types",
                 // The Backlinks tab's one, read by the backlinks block.
                 "Show backlinks at the bottom of notes",
+                // Page preview's live sources, read on every hover by
+                // `Workspace::arm_preview_show`.
+                "Search, Backlinks, and Outgoing links",
+                "Reading view",
+                "Editing view",
+                "Tab header",
+                "Files",
+                "Bookmarks",
+                "Outline",
+                "Bases",
+                "Graph view",
                 // The Note composer's, read by `note-composer:merge-file`.
                 "Confirm file merge",
             ],
@@ -7885,16 +7922,7 @@ mod tests {
         for name in [
             "Snap to grid",
             "Snap to objects",
-            "Search, Backlinks, and Outgoing links",
-            "Reading view",
-            "Editing view",
-            "Tab header",
-            "Files",
             "Properties view",
-            "Bookmarks",
-            "Outline",
-            "Bases",
-            "Graph view",
             "Open external links",
             "Enable ad blocker",
         ] {

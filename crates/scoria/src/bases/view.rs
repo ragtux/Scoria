@@ -45,6 +45,14 @@ use std::sync::Arc;
 pub enum BasesEvent {
     /// A row was activated: open this file.
     Open(String),
+    /// The pointer came onto a row's file name (`over`) or left it: the
+    /// name's bounds anchor the page preview.
+    Hover {
+        path: String,
+        over: bool,
+        anchor: gpui::Bounds<gpui::Pixels>,
+        modifiers: gpui::Modifiers,
+    },
     /// The base changed and is dirty: the autosave timer starts, as the
     /// canvas's own edits do.
     Edited,

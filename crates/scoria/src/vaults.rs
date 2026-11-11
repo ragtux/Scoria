@@ -22,7 +22,8 @@
 use crate::assets::{icon, logo, DISPLAY_FONT_FAMILY};
 use crate::theme::{Theme, FONT_UI_MEDIUM, FONT_UI_SMALL, FONT_UI_SMALLER};
 use crate::workspace::{
-    client_frame, frame_window_options, window_title_row, WindowCorners, Workspace,
+    client_frame, frame_window_options, traffic_light_strip, window_title_row, WindowCorners,
+    Workspace,
 };
 use gpui::{
     actions, anchored, deferred, div, point, prelude::*, px, size, AnyWindowHandle, App, Bounds,
@@ -666,6 +667,9 @@ impl Render for VaultManager {
                     .flex_col()
                     .bg(theme.tokens.background_secondary)
                     .map(|d| corners.left().apply(d))
+                    // Clear of the traffic lights, which sit over this
+                    // column's top on macOS.
+                    .children(traffic_light_strip(window))
                     .child(div().flex_1().min_h_0().child(list))
                     .children(self.error.clone().map(|message| {
                         div()

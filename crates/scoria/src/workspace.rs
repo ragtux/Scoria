@@ -3014,6 +3014,25 @@ pub(crate) fn frameless(window: &Window) -> bool {
     }
 }
 
+/// The strip at the head of a column that runs up into the window's
+/// top-left corner itself, beside a [`window_title_row`] over the rest of
+/// the window (the vault list, the Settings nav): the title row's height on
+/// macOS with the hidden frame, where the traffic lights sit in that
+/// corner, and `None` elsewhere or in fullscreen, where the lights are
+/// gone. The strip drags the window, as the title row beside it does.
+pub(crate) fn traffic_light_strip(window: &Window) -> Option<gpui::Stateful<gpui::Div>> {
+    (cfg!(target_os = "macos") && frameless(window) && !window.is_fullscreen()).then(|| {
+        window_handle(
+            div()
+                .id("traffic-light-strip")
+                .flex_shrink_0()
+                .w_full()
+                .h(px(HEADER_HEIGHT)),
+            true,
+        )
+    })
+}
+
 /// Scoria's own window frame, for a window the desktop was asked to leave
 /// bare: a margin of [`FRAME_SHADOW`] around the content holds a soft
 /// shadow and the resize handles, and the content gets a one pixel border.
@@ -3188,6 +3207,12 @@ pub(crate) fn frame_window_options(title: &'static str) -> gpui::WindowOptions {
             traffic_light_position: (cfg!(target_os = "macos") && hidden)
                 .then(|| point(px(19.), px(12.))),
         }),
+        // On macOS the hidden frame keeps the system's title bar, see-through,
+        // over the top 28 px of the content, and a movable window is dragged
+        // by any press there: the tab under it never saw its own drag start.
+        // Scoria moves the window itself from its drag areas
+        // (`window_handle`), which a window that is not movable still obeys.
+        is_movable: !(cfg!(target_os = "macos") && hidden),
         // KWin ties the activation token to the application by this id.
         app_id: Some("scoria".into()),
         icon: crate::custom_window_icon(),
@@ -3567,6 +3592,10 @@ pub struct Workspace {
     /// The next link followed opens in a new tab: a Ctrl+click, or
     /// `editor:open-link-in-new-leaf`. Taken by [`Workspace::follow_link`].
     link_in_new_tab: bool,
+    /// Page preview: the link under the pointer and the popover up for it.
+    hover_preview: crate::hover_preview::HoverPreview,
+    /// An editing popover's autosave, pending.
+    preview_save_task: Option<gpui::Task<()>>,
     right_tab: RightTab,
     /// The open note's headings, which the Outline pane draws as a tree.
     outline: Vec<panes::Heading>,
@@ -3663,6 +3692,32 @@ impl Focusable for Workspace {
 fn bases_subscription(bases: &Entity<BasesView>, cx: &mut Context<Workspace>) -> Subscription {
     cx.subscribe(bases, |this, bases, event: &BasesEvent, cx| match event {
         BasesEvent::Open(path) => this.open_file(path.clone(), None, cx),
+        // A row's file name previews its file, on the `bases` key (Mod by
+        // default, observed). An embedded base is in the active group's
+        // window, as the note it is embedded in is.
+        BasesEvent::Hover {
+            path,
+            over,
+            anchor,
+            modifiers,
+        } => {
+            let group = this
+                .groups
+                .iter()
+                .find(|g| g.bases.entity_id() == bases.entity_id())
+                .map_or(this.groups[this.active_group].id, |g| g.id);
+            let window = this.window_of_group(group);
+            this.row_hover(
+                crate::hover_preview::Source::Bases,
+                window,
+                crate::hover_preview::exact(path),
+                path.clone(),
+                *over,
+                *anchor,
+                *modifiers,
+                cx,
+            )
+        }
         BasesEvent::Edited => this.schedule_save(cx),
         BasesEvent::Report(message) => this.report(message.clone(), cx),
         BasesEvent::SetProperty { path, key, value } => {
@@ -3713,47 +3768,67 @@ fn view_subscriptions(
                 }
             },
         ),
-        cx.subscribe(reading, |this, _, event: &ReadingEvent, cx| match event {
-            ReadingEvent::OpenLink(target) => this.follow_link(target.clone(), cx),
-            ReadingEvent::OpenLinkInNewTab(target) => {
-                this.link_in_new_tab = true;
-                this.follow_link(target.clone(), cx);
-            }
-            ReadingEvent::ContextMenu { target, position } => {
-                this.open_reading_menu(target.clone(), *position, cx)
-            }
-        }),
+        cx.subscribe(
+            reading,
+            |this, reading, event: &ReadingEvent, cx| match event {
+                ReadingEvent::Hover(hover) => this.link_hover(
+                    crate::hover_preview::Source::Reading,
+                    reading.entity_id(),
+                    hover.clone(),
+                    cx,
+                ),
+                ReadingEvent::OpenLink(target) => this.follow_link(target.clone(), cx),
+                ReadingEvent::OpenLinkInNewTab(target) => {
+                    this.link_in_new_tab = true;
+                    this.follow_link(target.clone(), cx);
+                }
+                ReadingEvent::ContextMenu { target, position } => {
+                    this.open_reading_menu(target.clone(), *position, cx)
+                }
+            },
+        ),
         cx.subscribe(reading, |this, _, event: &TaskToggled, cx| {
             this.toggle_task(&event.path, event.marker, cx)
         }),
         cx.subscribe(reading, |this, _, event: &PropertyItemRemoved, cx| {
             this.remove_property_item(&event.path, &event.key, event.index, cx)
         }),
-        cx.subscribe(editor, |this, _, event: &EditorEvent, cx| match event {
-            EditorEvent::Edited => {
-                this.schedule_save(cx);
-                this.refresh_outline_from_buffer(cx);
-            }
-            EditorEvent::OpenLink(target) => this.follow_link(target.clone(), cx),
-            EditorEvent::OpenLinkInNewTab(target) => {
-                this.link_in_new_tab = true;
-                this.follow_link(target.clone(), cx);
-            }
-            EditorEvent::PropertyTypeAssigned { key, ty } => {
-                this.assign_property_type(key.clone(), *ty, cx)
-            }
-            EditorEvent::ContextMenu {
-                position,
-                selection,
-                selected,
-                link,
-            } => this.open_editor_menu(*position, selection.clone(), *selected, link.clone(), cx),
-            EditorEvent::RenameTo(value) => {
-                this.pending_title_rename = Some(value.clone());
-                cx.notify();
-            }
-            EditorEvent::Reported(message) => this.report(message.clone(), cx),
-        }),
+        cx.subscribe(
+            editor,
+            |this, editor, event: &EditorEvent, cx| match event {
+                EditorEvent::Hover(hover) => this.link_hover(
+                    crate::hover_preview::Source::Editor,
+                    editor.entity_id(),
+                    hover.clone(),
+                    cx,
+                ),
+                EditorEvent::Edited => {
+                    this.schedule_save(cx);
+                    this.refresh_outline_from_buffer(cx);
+                }
+                EditorEvent::OpenLink(target) => this.follow_link(target.clone(), cx),
+                EditorEvent::OpenLinkInNewTab(target) => {
+                    this.link_in_new_tab = true;
+                    this.follow_link(target.clone(), cx);
+                }
+                EditorEvent::PropertyTypeAssigned { key, ty } => {
+                    this.assign_property_type(key.clone(), *ty, cx)
+                }
+                EditorEvent::ContextMenu {
+                    position,
+                    selection,
+                    selected,
+                    link,
+                } => {
+                    this.open_editor_menu(*position, selection.clone(), *selected, link.clone(), cx)
+                }
+                EditorEvent::RenameTo(value) => {
+                    this.pending_title_rename = Some(value.clone());
+                    cx.notify();
+                }
+                EditorEvent::Reported(message) => this.report(message.clone(), cx),
+            },
+        ),
     ]
 }
 
@@ -3852,6 +3927,24 @@ impl Workspace {
                         this.set_mode(back, window, cx);
                         this.open_file(path.clone(), None, cx);
                     }
+                    // A node previews its file, on the `graph` key (Mod by
+                    // default, observed).
+                    GraphEvent::Hover(Some(hover)) => {
+                        let where_ = this.window_of_group(this.groups[this.active_group].id);
+                        this.row_hover(
+                            crate::hover_preview::Source::Graph,
+                            where_,
+                            crate::hover_preview::exact(&hover.path),
+                            hover.path.clone(),
+                            true,
+                            hover.anchor,
+                            hover.modifiers,
+                            cx,
+                        )
+                    }
+                    GraphEvent::Hover(None) => {
+                        this.source_left(crate::hover_preview::Source::Graph, cx)
+                    }
                 },
             ),
             cx.subscribe_in(
@@ -3910,6 +4003,21 @@ impl Workspace {
                         this.search_in_folder(folder, window, cx)
                     }
                     ExplorerEvent::LeaveFocus => this.focus_main(window, cx),
+                    ExplorerEvent::Hover {
+                        path,
+                        over,
+                        anchor,
+                        modifiers,
+                    } => this.row_hover(
+                        crate::hover_preview::Source::Files,
+                        None,
+                        crate::hover_preview::exact(path),
+                        path.clone(),
+                        *over,
+                        *anchor,
+                        *modifiers,
+                        cx,
+                    ),
                 },
             ),
             cx.subscribe_in(
@@ -3986,6 +4094,21 @@ impl Workspace {
                     // `workspace.json` goes out with the pane's filter in it
                     // when the layout is saved, on the way out.
                     BookmarkEvent::LeafState => {}
+                    BookmarkEvent::Hover {
+                        target,
+                        over,
+                        anchor,
+                        modifiers,
+                    } => this.row_hover(
+                        crate::hover_preview::Source::Bookmarks,
+                        None,
+                        crate::hover_preview::exact(target),
+                        target.split('#').next().unwrap_or(target).to_string(),
+                        *over,
+                        *anchor,
+                        *modifiers,
+                        cx,
+                    ),
                 },
             ),
             cx.subscribe_in(
@@ -4047,7 +4170,8 @@ impl Workspace {
                     ReadingEvent::OpenLink(target) | ReadingEvent::OpenLinkInNewTab(target) => {
                         this.follow_link(target.clone(), cx)
                     }
-                    ReadingEvent::ContextMenu { .. } => {}
+                    // Nothing there links to a note, so nothing previews.
+                    ReadingEvent::ContextMenu { .. } | ReadingEvent::Hover(_) => {}
                 },
             ),
             cx.subscribe_in(
@@ -4283,6 +4407,8 @@ impl Workspace {
             last_open_files: Vec::new(),
             window_title: SharedString::default(),
             link_in_new_tab: false,
+            hover_preview: Default::default(),
+            preview_save_task: None,
             right_tab: RightTab::Backlinks,
             outline: Vec::new(),
             outline_state: OutlinePaneState::default(),
@@ -4461,11 +4587,37 @@ impl Workspace {
                 e.set_readable_line_length(readable);
                 e.set_show_inline_title(inline_title);
                 e.set_indent_options(smart, use_tab, tab_size);
+                e.set_vim_mode(state.app().vim_mode.unwrap_or(false), cx);
                 e.set_property_types(state.property_types().clone());
                 e.set_properties_in_document(properties);
                 e.set_build_options(build_options, cx);
             });
         }
+    }
+
+    /// What `app.json` says an editor does, for an editor that is no
+    /// group's: an editing popover's.
+    fn configure_editor(editor: &Entity<Editor>, state: &VaultState, cx: &mut App) {
+        let properties =
+            PropertiesInDocument::from_config(state.app().properties_in_document.as_deref());
+        let link_options = scoria_suggest::Options {
+            format: state.link_format(),
+            markdown_links: state.app().use_markdown_links.unwrap_or(false),
+        };
+        let (smart, use_tab, tab_size) = (
+            state.app().smart_indent_list.unwrap_or(true),
+            state.app().use_tab.unwrap_or(true),
+            state.app().tab_size.unwrap_or(4),
+        );
+        let build_options = state.build_options();
+        editor.update(cx, |e, cx| {
+            e.set_link_options(link_options);
+            e.set_indent_options(smart, use_tab, tab_size);
+            e.set_vim_mode(state.app().vim_mode.unwrap_or(false), cx);
+            e.set_property_types(state.property_types().clone());
+            e.set_properties_in_document(properties);
+            e.set_build_options(build_options, cx);
+        });
     }
 
     /// Writes a setting the Settings window changed, then applies it. The
@@ -6731,6 +6883,7 @@ impl Workspace {
     }
 
     pub fn set_mode(&mut self, mode: ViewMode, window: &mut Window, cx: &mut Context<Self>) {
+        self.reset_preview(cx);
         if mode == ViewMode::Graph && self.mode != ViewMode::Graph {
             self.mode_before_graph = self.mode;
         }
@@ -7055,6 +7208,7 @@ impl Workspace {
         subpath: Option<Subpath<'_>>,
         cx: &mut Context<Self>,
     ) {
+        self.reset_preview(cx);
         let Some(state) = self.state.clone() else {
             self.current = Some(path);
             return;
@@ -7830,13 +7984,19 @@ impl Workspace {
             }
             return;
         }
+        let offset = Self::subpath_offset(state, path, subpath);
+        if let Some(offset) = offset {
+            self.reveal_offset(offset, cx);
+        }
+    }
+
+    /// Where a `#Heading` or `#^block` subpath starts in a note, by the cache.
+    fn subpath_offset(state: &VaultState, path: &str, subpath: &Subpath<'_>) -> Option<usize> {
         let cache = state.cache();
-        let Some(meta) = cache.file(path) else {
-            return;
-        };
-        let offset = match subpath {
+        let meta = cache.file(path)?;
+        match subpath {
             Subpath::Headings(names) => {
-                let Some(last) = names.last() else { return };
+                let last = names.last()?;
                 meta.headings
                     .iter()
                     .find(|h| Self::heading_text(&h.heading).eq_ignore_ascii_case(last.trim()))
@@ -7847,11 +8007,638 @@ impl Workspace {
                 .get(&id.to_lowercase())
                 .or_else(|| meta.blocks.get(*id))
                 .map(|b| b.position.start.offset),
-        };
-        drop(cache);
-        if let Some(offset) = offset {
-            self.reveal_offset(offset, cx);
         }
+    }
+
+    // ----- page preview ------------------------------------------------------------
+
+    /// The window and the note of the group whose reading view or editor is
+    /// `view`: where a hovered link is, and what it resolves against.
+    fn view_origin(&self, view: gpui::EntityId) -> Option<(Option<u64>, String)> {
+        let ix = self
+            .groups
+            .iter()
+            .position(|g| g.reading.entity_id() == view || g.editor.entity_id() == view)?;
+        let group = &self.groups[ix];
+        let path = if ix == self.active_group {
+            self.tabs.get(self.active_tab)?.path.clone()
+        } else {
+            group.tabs.get(group.active_tab)?.path.clone()
+        }?;
+        Some((self.window_of_group(group.id), path))
+    }
+
+    /// The pointer came onto a link in a reading view or an editor, or left
+    /// the one it was on. A link that may preview (Mod held where it is
+    /// needed) arms the show timer; leaving arms the hide timer, which the
+    /// pointer reaching the popover first defuses.
+    fn link_hover(
+        &mut self,
+        source: crate::hover_preview::Source,
+        view: gpui::EntityId,
+        hover: Option<crate::reading::LinkHover>,
+        cx: &mut Context<Self>,
+    ) {
+        let Some((window, from)) = self.view_origin(view) else {
+            return;
+        };
+        self.nested_link_hover(source, window, from, 0, hover, cx);
+    }
+
+    /// [`Self::link_hover`] for a link `depth` popovers deep (0 for a view):
+    /// leaving clears the link under the pointer only if it is still one at
+    /// this depth, since the pointer crossing from a link into the popover
+    /// it raised can report the arrival before the departure.
+    fn nested_link_hover(
+        &mut self,
+        source: crate::hover_preview::Source,
+        window: Option<u64>,
+        from: String,
+        depth: usize,
+        hover: Option<crate::reading::LinkHover>,
+        cx: &mut Context<Self>,
+    ) {
+        if hover.is_none()
+            && self
+                .hover_preview
+                .pending
+                .as_ref()
+                .is_some_and(|p| p.depth != depth)
+        {
+            return;
+        }
+        self.hover_preview.generation += 1;
+        let pending = hover.and_then(|h| {
+            self.hover_preview.modifiers = h.modifiers;
+            let LinkTarget::Internal(target) = h.target else {
+                return None;
+            };
+            Some(crate::hover_preview::Pending {
+                window,
+                source,
+                target,
+                from,
+                anchor: h.anchor,
+                depth,
+            })
+        });
+        self.set_preview_pending(pending, cx);
+    }
+
+    fn set_preview_pending(
+        &mut self,
+        pending: Option<crate::hover_preview::Pending>,
+        cx: &mut Context<Self>,
+    ) {
+        self.hover_preview.pending = pending;
+        if self.hover_preview.pending.is_some() {
+            self.arm_preview_show(cx);
+        }
+        // Either way something may have been left: a link for nothing, or
+        // for another link whose popover goes ahead of this one's.
+        self.arm_preview_hide(cx);
+    }
+
+    /// The pointer came onto a row that previews (a pane's row, a tab) or
+    /// left it. `target` is a link body resolved against `from`: a row
+    /// that stands for a file passes its path for both. Leaving clears the
+    /// link only if it is still this row's, since the next row's arrival
+    /// can be reported before this one's departure.
+    #[allow(clippy::too_many_arguments)]
+    fn row_hover(
+        &mut self,
+        source: crate::hover_preview::Source,
+        window: Option<u64>,
+        target: String,
+        from: String,
+        over: bool,
+        anchor: Bounds<Pixels>,
+        modifiers: gpui::Modifiers,
+        cx: &mut Context<Self>,
+    ) {
+        if !over {
+            let ours =
+                self.hover_preview.pending.as_ref().is_some_and(|p| {
+                    p.source == source && p.anchor == anchor && p.target == target
+                });
+            if !ours {
+                return;
+            }
+        }
+        self.hover_preview.generation += 1;
+        self.hover_preview.modifiers = modifiers;
+        let pending = over.then_some(crate::hover_preview::Pending {
+            window,
+            source,
+            target,
+            from,
+            anchor,
+            depth: 0,
+        });
+        self.set_preview_pending(pending, cx);
+    }
+
+    /// The pointer left whatever `source` last reported, when that source
+    /// does not say which (the graph's nodes).
+    fn source_left(&mut self, source: crate::hover_preview::Source, cx: &mut Context<Self>) {
+        if self
+            .hover_preview
+            .pending
+            .as_ref()
+            .is_some_and(|p| p.source == source && p.depth == 0)
+        {
+            self.hover_preview.generation += 1;
+            self.set_preview_pending(None, cx);
+        }
+    }
+
+    /// [`Self::row_hover`] as a row's handler, for a row in the vault
+    /// window's docks (the only window that has them).
+    fn dock_row_hover(
+        &self,
+        source: crate::hover_preview::Source,
+        target: String,
+        from: String,
+        cx: &mut Context<Self>,
+    ) -> impl Fn(bool, Bounds<Pixels>, gpui::Modifiers, &mut Window, &mut App) + 'static {
+        Self::row_hover_handler(cx.weak_entity(), source, target, from)
+    }
+
+    /// The same handler from a weak handle, for rows built without the
+    /// workspace's context (the section list, which the editor and the
+    /// reading view also lay out under a note).
+    fn row_hover_handler(
+        this: gpui::WeakEntity<Self>,
+        source: crate::hover_preview::Source,
+        target: String,
+        from: String,
+    ) -> impl Fn(bool, Bounds<Pixels>, gpui::Modifiers, &mut Window, &mut App) + 'static {
+        move |over, anchor, modifiers, _, cx| {
+            let (target, from) = (target.clone(), from.clone());
+            this.update(cx, |this, cx| {
+                this.row_hover(source, None, target, from, over, anchor, modifiers, cx)
+            })
+            .ok();
+        }
+    }
+
+    /// Mod going down with the pointer resting on a link raises its
+    /// popover, ~300 ms after the key; Mod going up leaves one up.
+    fn preview_modifiers(&mut self, modifiers: gpui::Modifiers, cx: &mut Context<Self>) {
+        let was = crate::hover_preview::mod_held(&self.hover_preview.modifiers);
+        self.hover_preview.modifiers = modifiers;
+        if !was
+            && crate::hover_preview::mod_held(&modifiers)
+            && self.hover_preview.pending.is_some()
+        {
+            self.hover_preview.generation += 1;
+            self.arm_preview_show(cx);
+        }
+    }
+
+    /// Starts the show timer for the link under the pointer, if it may
+    /// preview: the plugin on, and Mod held where its source needs it.
+    fn arm_preview_show(&mut self, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let Some(pending) = &self.hover_preview.pending else {
+            return;
+        };
+        if !state.core_plugin_enabled("page-preview") {
+            return;
+        }
+        if pending.source.requires_mod(&state.page_preview())
+            && !crate::hover_preview::mod_held(&self.hover_preview.modifiers)
+        {
+            return;
+        }
+        let generation = self.hover_preview.generation;
+        cx.spawn(async move |this, cx| {
+            cx.background_executor()
+                .timer(crate::hover_preview::SHOW_DELAY)
+                .await;
+            this.update(cx, |this, cx| {
+                if this.hover_preview.generation == generation {
+                    this.show_preview(cx);
+                }
+            })
+            .ok();
+        })
+        .detach();
+    }
+
+    /// Starts a hide timer, if a popover is up: when it fires, the
+    /// popovers the pointer has left by then go ([`HoverPreview::kept`]
+    /// reads where it is at that moment, so a timer needs no generation:
+    /// one that fires after the pointer came back finds the popover kept).
+    fn arm_preview_hide(&mut self, cx: &mut Context<Self>) {
+        if self.hover_preview.shown.is_empty() {
+            return;
+        }
+        cx.spawn(async move |this, cx| {
+            cx.background_executor()
+                .timer(crate::hover_preview::HIDE_DELAY)
+                .await;
+            this.update(cx, |this, cx| {
+                let kept = this.hover_preview.kept();
+                this.truncate_previews(kept, cx);
+            })
+            .ok();
+        })
+        .detach();
+    }
+
+    fn show_preview(&mut self, cx: &mut Context<Self>) {
+        let (Some(state), Some(pending)) = (self.state.clone(), self.hover_preview.pending.clone())
+        else {
+            return;
+        };
+        let (content, from) = crate::hover_preview::content(
+            state.as_ref(),
+            state.build_options(),
+            &pending.target,
+            &pending.from,
+        );
+        // An editing popover goes only on Escape or a press outside it
+        // (observed), so a link under it raises nothing that would replace
+        // it.
+        if self
+            .hover_preview
+            .shown
+            .iter()
+            .skip(pending.depth)
+            .any(|s| s.editing.is_some())
+        {
+            return;
+        }
+        let note =
+            crate::hover_preview::editable_note(state.as_ref(), &pending.target, &pending.from);
+        // The new popover replaces whatever was up above the link's own.
+        self.truncate_previews(pending.depth, cx);
+        // The properties block starts folded, as Obsidian's popover had it.
+        self.hover_preview
+            .shown
+            .push(crate::hover_preview::Shown::new(
+                pending.window,
+                pending.anchor,
+                pending.target.clone(),
+                from,
+                content,
+                note,
+                [crate::properties::PROPERTIES_FOLD_ID]
+                    .into_iter()
+                    .collect(),
+            ));
+        cx.notify();
+    }
+
+    /// Keeps the first `keep` popovers and takes down the rest, writing an
+    /// editing one's edits first.
+    fn truncate_previews(&mut self, keep: usize, cx: &mut Context<Self>) {
+        if self.hover_preview.shown.len() <= keep {
+            return;
+        }
+        self.flush_preview_save(cx);
+        self.hover_preview.shown.truncate(keep);
+        // A view that is gone never reports the pointer leaving its link.
+        if self
+            .hover_preview
+            .pending
+            .as_ref()
+            .is_some_and(|p| p.depth > keep)
+        {
+            self.hover_preview.pending = None;
+        }
+        cx.notify();
+    }
+
+    fn hide_preview(&mut self, cx: &mut Context<Self>) {
+        self.truncate_previews(0, cx);
+    }
+
+    /// Drops the link under the pointer and the popovers that are not
+    /// editors, and makes every view forget the link it last reported:
+    /// called when what is on screen changes under the pointer (a note
+    /// opened, a mode switched, a tab or group loaded), since a view that
+    /// stops painting never reports the pointer leaving its link.
+    fn reset_preview(&mut self, cx: &mut Context<Self>) {
+        let hp = &mut self.hover_preview;
+        if hp.pending.is_none() && hp.shown.is_empty() {
+            return;
+        }
+        hp.generation += 1;
+        hp.pending = None;
+        let kept = hp
+            .shown
+            .iter()
+            .rposition(|s| s.editing.is_some())
+            .map_or(0, |ix| ix + 1);
+        self.truncate_previews(kept, cx);
+        for group in &self.groups {
+            group.reading.update(cx, |r, _| r.clear_hover());
+            group.editor.update(cx, |e, _| e.clear_hover());
+        }
+    }
+
+    /// The pointer came onto the `ix`th popover or left it.
+    fn popover_hover(&mut self, ix: usize, over: bool, cx: &mut Context<Self>) {
+        let Some(shown) = self.hover_preview.shown.get_mut(ix) else {
+            return;
+        };
+        shown.over = over;
+        if !over {
+            self.hover_preview.generation += 1;
+            self.arm_preview_hide(cx);
+        }
+    }
+
+    /// A link clicked inside the `ix`th popover: it resolves against the
+    /// note the popover shows, and opens in the main area as a reading-view
+    /// click would; the popovers go.
+    fn preview_link(&mut self, ix: usize, target: LinkTarget, cx: &mut Context<Self>) {
+        let from = self.hover_preview.shown.get(ix).map(|s| s.from.clone());
+        self.hide_preview(cx);
+        let target = match (target, from, self.state.clone()) {
+            (LinkTarget::Internal(body), Some(from), Some(state)) => {
+                match state.cache().resolve(&body, &from) {
+                    Some(path) => {
+                        let sub = body.find('#').map(|i| &body[i..]).unwrap_or("");
+                        LinkTarget::Internal(format!("{path}{sub}"))
+                    }
+                    None => LinkTarget::Internal(body),
+                }
+            }
+            (target, _, _) => target,
+        };
+        self.follow_link(target, cx);
+    }
+
+    /// A click on the `ix`th popover's text: it becomes a Live Preview
+    /// editor of its note in the same box (`is-editing`), with the caret
+    /// where the click was, and stays until Escape or a press outside it.
+    /// A popover showing a section opens the whole note with the caret at
+    /// the section's start (not probed: the probe clicked a whole note).
+    fn edit_preview(
+        &mut self,
+        ix: usize,
+        position: gpui::Point<Pixels>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        // "Click to create": the note is made, empty, and opens in the
+        // active tab in its editing mode with the keyboard in it; the
+        // popover goes (observed, `s11` `missingClick`).
+        if let Some(shown) = self.hover_preview.shown.get(ix) {
+            if matches!(shown.content, crate::hover_preview::Content::Missing(_)) {
+                let name = scoria_markdown::parse_linktext(&shown.target)
+                    .path
+                    .to_string();
+                self.hide_preview(cx);
+                self.create_from_link(&name, window, cx);
+                self.request_focus_main(cx);
+                return;
+            }
+        }
+        let Some((path, subpath)) = self
+            .hover_preview
+            .shown
+            .get(ix)
+            .filter(|s| s.editing.is_none())
+            .and_then(|s| s.note.clone())
+        else {
+            return;
+        };
+        // The popovers over this one go; the open note's own edits are
+        // written first, so the popover starts from what is on disk.
+        self.truncate_previews(ix + 1, cx);
+        self.flush_save(cx);
+        let Ok(text) = std::fs::read_to_string(state.vault().absolute(&path)) else {
+            return;
+        };
+        let editor = cx.new(|cx| Editor::new(window, cx));
+        Self::give_editor_the_vault(&editor, &state, cx);
+        Self::configure_editor(&editor, &state, cx);
+        editor.update(cx, |e, cx| {
+            e.set_readable_line_length(false);
+            e.set_show_inline_title(false);
+            e.set_live_preview(true, cx);
+            e.set_text(path.clone(), text, cx);
+        });
+        let subscription = cx.subscribe(&editor, |this, editor, event: &EditorEvent, cx| {
+            this.preview_editor_event(&editor, event, cx)
+        });
+        if let Some(shown) = self.hover_preview.shown.get_mut(ix) {
+            shown.editing = Some(editor.clone());
+            shown.editing_subscription = Some(subscription);
+            shown.hover_current.set(None);
+        }
+        window.focus(&editor.focus_handle(cx), cx);
+        // The caret: at the click, once the editor has laid out a frame to
+        // map the point through; for a section, at the section's start.
+        let section = (!subpath.is_empty())
+            .then(|| scoria_markdown::parse_linktext(&subpath).subpath)
+            .flatten()
+            .and_then(|sub| Self::subpath_offset(&state, &path, &sub));
+        match section {
+            Some(offset) => editor.update(cx, |e, cx| {
+                e.set_selection_range(offset, offset, window, cx);
+                e.reveal_offset(offset, cx);
+            }),
+            None => {
+                let editor = editor.downgrade();
+                Self::caret_when_laid_out(editor, position, 4, window);
+            }
+        }
+        cx.notify();
+    }
+
+    /// Puts an editor's caret at a window point once it has a layout to
+    /// read the point through, trying for `tries` more frames.
+    fn caret_when_laid_out(
+        editor: gpui::WeakEntity<Editor>,
+        position: gpui::Point<Pixels>,
+        tries: usize,
+        window: &mut Window,
+    ) {
+        window.on_next_frame(move |window, cx| {
+            let placed = editor
+                .update(cx, |e, cx| e.caret_at_point(position, window, cx))
+                .unwrap_or(true);
+            if !placed && tries > 0 {
+                Self::caret_when_laid_out(editor, position, tries - 1, window);
+            }
+        });
+    }
+
+    /// What an editing popover's editor reports.
+    fn preview_editor_event(
+        &mut self,
+        editor: &Entity<Editor>,
+        event: &EditorEvent,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(ix) = self.hover_preview.shown.iter().position(|s| {
+            s.editing
+                .as_ref()
+                .is_some_and(|e| e.entity_id() == editor.entity_id())
+        }) else {
+            return;
+        };
+        match event {
+            EditorEvent::Edited => self.schedule_preview_save(cx),
+            EditorEvent::OpenLink(target) => {
+                let target = target.clone();
+                self.preview_link(ix, target, cx)
+            }
+            EditorEvent::OpenLinkInNewTab(target) => {
+                let target = target.clone();
+                self.link_in_new_tab = true;
+                self.preview_link(ix, target, cx)
+            }
+            // Its links raise popovers on the editor's rules (Mod).
+            EditorEvent::Hover(hover) => {
+                let shown = &self.hover_preview.shown[ix];
+                let (window, from) = (shown.window, shown.from.clone());
+                self.nested_link_hover(
+                    crate::hover_preview::Source::Editor,
+                    window,
+                    from,
+                    ix + 1,
+                    hover.clone(),
+                    cx,
+                )
+            }
+            EditorEvent::Reported(message) => self.report(message.clone(), cx),
+            _ => {}
+        }
+    }
+
+    /// An editing popover's edits are written as the open note's are: two
+    /// seconds after the last one.
+    fn schedule_preview_save(&mut self, cx: &mut Context<Self>) {
+        self.preview_save_task = Some(cx.spawn(async move |this, cx| {
+            cx.background_executor().timer(Duration::from_secs(2)).await;
+            this.update(cx, |ws, cx| ws.flush_preview_save(cx)).ok();
+        }));
+    }
+
+    /// Writes every editing popover's unsaved edits now.
+    fn flush_preview_save(&mut self, cx: &mut Context<Self>) {
+        self.preview_save_task = None;
+        let editors: Vec<Entity<Editor>> = self
+            .hover_preview
+            .shown
+            .iter()
+            .filter_map(|s| s.editing.clone())
+            .collect();
+        for editor in editors {
+            if editor.read(cx).is_dirty() {
+                self.write_buffer(&editor, cx);
+            }
+        }
+    }
+
+    /// Escape or a press outside the `ix`th popover, while it edits: it
+    /// goes, with those over it. Escape hands the keyboard back to the main
+    /// view; a press keeps whatever it landed on.
+    fn close_preview(
+        &mut self,
+        ix: usize,
+        escape: bool,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if self
+            .hover_preview
+            .shown
+            .get(ix)
+            .is_some_and(|s| s.editing.is_some())
+        {
+            self.hover_preview.generation += 1;
+            self.truncate_previews(ix, cx);
+            // The ones under it go too, unless the pointer is over them.
+            self.arm_preview_hide(cx);
+            if escape {
+                self.focus_main(window, cx);
+            }
+        }
+    }
+
+    /// The popovers up in the window being drawn.
+    fn render_hover_preview(
+        &mut self,
+        here: Option<u64>,
+        theme: &Theme,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> Vec<gpui::AnyElement> {
+        let Some(state) = self.state.clone() else {
+            return Vec::new();
+        };
+        let properties =
+            PropertiesInDocument::from_config(state.app().properties_in_document.as_deref());
+        let types = state.property_types().clone();
+        let mut out = Vec::new();
+        for (ix, shown) in self.hover_preview.shown.iter().enumerate() {
+            if shown.window != here {
+                continue;
+            }
+            let this = cx.entity().downgrade();
+            let (window_id, from) = (shown.window, shown.from.clone());
+            let handlers = crate::hover_preview::Handlers {
+                on_link: Rc::new({
+                    let this = this.clone();
+                    move |target, _window, cx| {
+                        this.update(cx, |this, cx| this.preview_link(ix, target, cx))
+                            .ok();
+                    }
+                }),
+                // A link in a popover previews on the reading view's rules.
+                on_hover_link: Rc::new({
+                    let this = this.clone();
+                    move |hover, _window, cx| {
+                        let from = from.clone();
+                        this.update(cx, |this, cx| {
+                            this.nested_link_hover(
+                                crate::hover_preview::Source::Reading,
+                                window_id,
+                                from,
+                                ix + 1,
+                                hover,
+                                cx,
+                            )
+                        })
+                        .ok();
+                    }
+                }),
+                on_hover: Rc::new({
+                    let this = this.clone();
+                    move |over, _window, cx| {
+                        this.update(cx, |this, cx| this.popover_hover(ix, over, cx))
+                            .ok();
+                    }
+                }),
+                on_edit: Rc::new({
+                    let this = this.clone();
+                    move |position, window, cx| {
+                        this.update(cx, |this, cx| this.edit_preview(ix, position, window, cx))
+                            .ok();
+                    }
+                }),
+                on_close: Rc::new(move |escape, window, cx| {
+                    this.update(cx, |this, cx| this.close_preview(ix, escape, window, cx))
+                        .ok();
+                }),
+            };
+            out.push(crate::hover_preview::render(
+                shown, ix, theme, &types, properties, handlers, window,
+            ));
+        }
+        out
     }
 
     fn follow_link(&mut self, target: LinkTarget, cx: &mut Context<Self>) {
@@ -8080,7 +8867,18 @@ impl Workspace {
         if !dirty || self.current.as_deref() != Some(name.as_str()) {
             return;
         }
-        let contents = self.editor.read(cx).file_contents();
+        let editor = self.editor.clone();
+        self.write_buffer(&editor, cx);
+    }
+
+    /// Writes an editor's buffer to its file, unless the file changed or
+    /// went away underneath it.
+    fn write_buffer(&mut self, editor: &Entity<Editor>, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let name = editor.read(cx).name.to_string();
+        let contents = editor.read(cx).file_contents();
         // The one place a note's bytes are written: the path is checked
         // for links and the open does not follow one, so a save can never
         // land outside the vault.
@@ -8099,7 +8897,7 @@ impl Workspace {
         // the app must not be recreated here from the buffer it left behind.
         // The buffer keeps its edits and says so instead.
         match std::fs::read_to_string(&absolute) {
-            Ok(on_disk) if self.editor.read(cx).disk_unchanged(&on_disk) => {}
+            Ok(on_disk) if editor.read(cx).disk_unchanged(&on_disk) => {}
             Ok(_) => {
                 self.report(
                     format!("{name} changed on disk; not overwritten, your edits are still here"),
@@ -8124,7 +8922,7 @@ impl Workspace {
         }
         match scoria_vault::write_no_follow(&absolute, contents.as_bytes()) {
             Ok(()) => {
-                self.editor.update(cx, |e, _| e.mark_saved(&contents));
+                editor.update(cx, |e, _| e.mark_saved(&contents));
                 state.take_snapshot(&name, &contents);
                 self.report(format!("{name} saved"), cx);
             }
@@ -10975,6 +11773,7 @@ impl Workspace {
     /// Puts `tabs[active_tab]` on screen: its note in its mode, or the
     /// empty state.
     fn load_tab(&mut self, cx: &mut Context<Self>) {
+        self.reset_preview(cx);
         let Some(tab) = self.tabs.get(self.active_tab).cloned() else {
             return;
         };
@@ -11226,6 +12025,7 @@ impl Workspace {
     /// bar) is pointed at it, and a note that went away while the group was
     /// off screen is let go of the way the watcher would have.
     fn load_group(&mut self, ix: usize, cx: &mut Context<Self>) {
+        self.reset_preview(cx);
         self.active_group = ix;
         let group = &self.groups[ix];
         let id = group.id;
@@ -11651,6 +12451,7 @@ impl Workspace {
         // So are the notices that went up while it was the active window;
         // it has no status bar to clear.
         let notices = self.render_notices(Some(id), px(16.), theme, cx);
+        let preview = self.render_hover_preview(Some(id), theme, window, cx);
         let tree = self.windows[wix].tree.clone();
         self.rendering_window = Some(id);
         let body = self.render_layout(&tree, &mut Vec::new(), theme, cx);
@@ -11674,6 +12475,11 @@ impl Workspace {
             div()
                 .key_context("Workspace")
                 .track_focus(&self.focus_handle)
+                .on_modifiers_changed(cx.listener(
+                    |this, e: &gpui::ModifiersChangedEvent, _, cx| {
+                        this.preview_modifiers(e.modifiers, cx)
+                    },
+                ))
                 // A tab dragged out of this window: the moves and the
                 // release reach this window only, so this is where the
                 // other windows' zones are found and dropped on.
@@ -11715,6 +12521,7 @@ impl Workspace {
                 .children(overlay)
                 .children(file_menu)
                 .children(notices)
+                .children(preview)
                 .children(self.presentation_in(Some(id)))
                 .into_any_element(),
         )
@@ -12777,10 +13584,21 @@ impl Workspace {
     /// traffic lights on macOS and nothing elsewhere or in fullscreen,
     /// where the lights are gone.
     fn frame_left_space(&self) -> f32 {
+        let space = self.frame_left_space_without_ribbon();
+        if space > 0. && self.show_ribbon() {
+            space - RIBBON_WIDTH
+        } else {
+            space
+        }
+    }
+
+    /// [`Self::frame_left_space`] for a window with no ribbon, a popout's:
+    /// the whole room the traffic lights take.
+    fn frame_left_space_without_ribbon(&self) -> f32 {
         if !self.mac_frame() || self.fullscreen {
             return 0.;
         }
-        MAC_FRAME_LEFT_SPACE - if self.show_ribbon() { RIBBON_WIDTH } else { 0. }
+        MAC_FRAME_LEFT_SPACE
     }
 
     /// A sidebar's resize handle: the 3 px strip on its inner edge, which
@@ -13374,9 +14192,15 @@ impl Workspace {
         // sidebar is collapsed and this is the last group. macOS has none.
         let under_controls = frameless && !mac && last && !right_open;
         // The strip in the window's top-left corner, with the left sidebar
-        // collapsed, keeps clear of the traffic lights on macOS.
+        // collapsed, keeps clear of the traffic lights on macOS. A popout
+        // has no ribbon to take its width off the clearance, whatever the
+        // main window shows.
         let left_space = if first && !left_open {
-            self.frame_left_space()
+            if popout {
+                self.frame_left_space_without_ribbon()
+            } else {
+                self.frame_left_space()
+            }
         } else {
             0.
         };
@@ -13443,14 +14267,38 @@ impl Workspace {
                     title: title.clone(),
                 };
                 let this = cx.weak_entity();
+                // A tab showing a file previews it, anchored on the whole
+                // tab (the probe's 34 px header put it at 6 + 34 + 10 = 50).
+                let preview = {
+                    let this = this.clone();
+                    let path = tab.path.clone();
+                    let window = self.window_of_group(group);
+                    move |over, anchor, modifiers, _: &mut Window, cx: &mut App| {
+                        let Some(path) = path.clone() else {
+                            return;
+                        };
+                        this.update(cx, |this, cx| {
+                            this.row_hover(
+                                crate::hover_preview::Source::TabHeader,
+                                window,
+                                crate::hover_preview::exact(&path),
+                                path,
+                                over,
+                                anchor,
+                                modifiers,
+                                cx,
+                            )
+                        })
+                        .ok();
+                    }
+                };
                 // Obsidian's tab: 34 px tall, 200 px wide, the active one
                 // in the content's colour, its top corners as round as its
                 // feet, its title in the small UI size and its close button a
                 // 20 px disc. It is padded `1px 4px 4px` around an inner box
                 // with a 4 px radius, and that inner box, not the tab, is
                 // what the hover wash paints.
-                div()
-                    .id(("tab", ix))
+                crate::hover_preview::hover_row(div().id(("tab", ix)), preview)
                     .group("tab")
                     .flex()
                     .flex_row()
@@ -14812,6 +15660,37 @@ impl Workspace {
         if let Some(object) = graph.as_object_mut() {
             object.insert("open".into(), json!(matches!(self.mode, ViewMode::Graph)));
         }
+        // Page preview's popovers, first to last: each one's window, the
+        // note its links resolve against, the anchor's line box, the left
+        // edge the box is drawn at, what it shows, and whether it edits.
+        let viewport_width = window.viewport_size().width.as_f32();
+        let popovers: Vec<Value> = self
+            .hover_preview
+            .shown
+            .iter()
+            .map(|s| {
+                json!({
+                    "window": s.window,
+                    "from": s.from,
+                    "anchor": [s.anchor.left().as_f32(), s.anchor.top().as_f32(), s.anchor.size.height.as_f32()],
+                    "left": crate::hover_preview::left_edge(s.anchor.left().as_f32(), viewport_width),
+                    "height": s.height.get(),
+                    "content": match &s.content {
+                        crate::hover_preview::Content::Missing(line) => json!({"missing": line}),
+                        crate::hover_preview::Content::Blocks { blocks } => json!({"blocks": blocks.len()}),
+                    },
+                    "over": s.over,
+                    "editing": s.editing.as_ref().map(|e| {
+                        let e = e.read(cx);
+                        json!({
+                            "path": e.name.to_string(),
+                            "dirty": e.is_dirty(),
+                            "selection": [e.selection().start, e.selection().end],
+                        })
+                    }),
+                })
+            })
+            .collect();
 
         json!({
             "vault": Value::Object(vault),
@@ -14855,6 +15734,20 @@ impl Workspace {
             // The window each of those draws in, the popout's id or null
             // for the vault window.
             "notices_window": self.notices.windows(&|id| self.popout_open(id)),
+            // Page preview: the link under the pointer, and the popover up
+            // (its window, the note its links resolve against, the anchor's
+            // line box and the left edge the box is drawn at).
+            "hover_preview": {
+                "pending": self.hover_preview.pending.as_ref().map(|p| json!({
+                    "target": p.target,
+                    "from": p.from,
+                    "window": p.window,
+                    "depth": p.depth,
+                })),
+                "shown": popovers.first().cloned(),
+                "popovers": popovers,
+                "over_popover": self.hover_preview.shown.iter().any(|s| s.over),
+            },
             "focus": {
                 "name": self.focus_name(window, cx),
                 "context_stack": context_names(window),
@@ -16309,10 +17202,28 @@ impl Workspace {
                     (!flat).then(|| group.matches.len().to_string().into());
                 let subtext: Option<SharedString> = group.subtext.clone().map(Into::into);
                 let unresolved = flat && !resolved;
+                // A Links row previews its link as the note would, subpath
+                // and all; a Backlinks file row previews the file.
+                let preview = match (&group.link, &group.path) {
+                    (Some(link), _) => Some((link.clone(), current.to_string())),
+                    (None, Some(path)) => Some((crate::hover_preview::exact(path), path.clone())),
+                    (None, None) => None,
+                };
+                let row = div().id(("pane-group", next()));
+                let row = match preview {
+                    Some((target, from)) => crate::hover_preview::hover_row(
+                        row,
+                        Self::row_hover_handler(
+                            this.clone(),
+                            crate::hover_preview::Source::Search,
+                            target,
+                            from,
+                        ),
+                    ),
+                    None => row,
+                };
                 body = body.child(
-                    div()
-                        .id(("pane-group", next()))
-                        .group("pane-group")
+                    row.group("pane-group")
                         .w_full()
                         .flex_shrink_0()
                         .min_h(px(25.))
@@ -17503,6 +18414,7 @@ impl Workspace {
     fn render_outline_pane(&mut self, theme: &Theme, cx: &mut Context<Self>) -> gpui::AnyElement {
         // The mark follows the cursor and the reading view; a mode or note
         // switch lands here before anything else can notice it.
+        let current = self.current.clone().unwrap_or_default();
         let active = self.current_heading(cx);
         if active != self.outline_state.active {
             self.outline_state.active = active;
@@ -17626,6 +18538,15 @@ impl Workspace {
                 let label = StyledText::new(SharedString::from(row.text.clone()))
                     .with_highlights(highlights)
                     .into_any_element();
+                // A heading's row previews its own section (the probe's
+                // `Lower` row showed `Lower` and the lines under it).
+                let section = crate::hover_preview::exact(&format!("{}#{}", current, row.text));
+                let preview = self.dock_row_hover(
+                    crate::hover_preview::Source::Outline,
+                    section,
+                    current.clone(),
+                    cx,
+                );
                 list = list.child(
                     Self::tree_row(
                         ("outline-row", row.ix),
@@ -17641,7 +18562,8 @@ impl Workspace {
                     )
                     .on_click(cx.listener(move |this, _, window, cx| {
                         this.reveal_heading(offset, window, cx)
-                    })),
+                    }))
+                    .map(|row| crate::hover_preview::hover_row(row, preview)),
                 );
             }
             list.into_any_element()
@@ -19417,6 +20339,7 @@ impl Render for Workspace {
         let overlay = self.render_modal_overlay(None);
         // The notices that went up while this window was the active one.
         let notices = self.render_notices(None, px(30.), &theme, cx);
+        let preview = self.render_hover_preview(None, &theme, window, cx);
 
         let left_visible = self.left_visible;
         let right_visible = self.right_visible;
@@ -19432,6 +20355,9 @@ impl Render for Workspace {
 
         let content = div()
             .key_context("Workspace")
+            .on_modifiers_changed(cx.listener(|this, e: &gpui::ModifiersChangedEvent, _, cx| {
+                this.preview_modifiers(e.modifiers, cx)
+            }))
             .track_focus(&self.focus_handle)
             // A tab dragged out of this window: the moves and the
             // release reach this window only, so this is where the
@@ -19489,6 +20415,7 @@ impl Render for Workspace {
             // everything else, so no dock's clipping can cut it off.
             .children(self.render_file_menu(None, &theme, window, cx))
             .children(notices)
+            .children(preview)
             // The presentation covers the window whole, the title bar and
             // the ribbon with it.
             .children(self.presentation_in(None));

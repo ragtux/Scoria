@@ -66,7 +66,7 @@ are the ones that change how Scoria behaves:
 So are auto-pairing of brackets and of Markdown (`autoPairBrackets`, `autoPairMarkdown`),
 which take effect on the next keystroke without reopening the note.
 
-Settings that are **shown but not yet acted on** include spellcheck, Vim mode, line numbers,
+Settings that are **shown but not yet acted on** include spellcheck, line numbers,
 indent guides and right-to-left. They are read from your configuration and displayed
 truthfully, and changing one still writes the key for Obsidian to honor; the behavior behind
 them is not implemented here. Each such row says so on its own line — "not in Scoria yet", or

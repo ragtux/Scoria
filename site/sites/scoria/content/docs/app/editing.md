@@ -172,7 +172,8 @@ it changed, and so is an edit made at twenty cursors at once.
 
 ## Saving
 
-Scoria saves the note you are editing, and only that note.
+Scoria saves the note you are editing, and only that note — and a note you are editing in a
+[page preview](/docs/format/links/#page-preview) popover, on the same rules.
 
 | Saves on | |
 |---|---|
@@ -192,10 +193,41 @@ wrote, the watcher's reload is skipped. If the note changed underneath an unedit
 it reloads and keeps your cursor. If you have unsaved edits, they are left alone — Scoria
 will not throw away your typing to take the disk's version.
 
+## Vim mode
+
+**Settings → Editor → Vim key bindings** (`vimMode` in `app.json`) turns on Vim's keys in
+the editor. A note opens in normal mode with a block cursor; `i`, `a`, `I`, `A`, `o`, `O`
+and the change commands enter insert mode, where typing is exactly the editor's own
+(auto-pairing, the suggestion popup, table cells), and Escape or `Ctrl-[` leaves it.
+
+What is there:
+
+- **Motions:** `h j k l` and the arrows, `w W b B e E ge gE`, `0 ^ $ _`, `gg G` and
+  `{count}G`, `f F t T ; ,`, `%`, `{ }`, `+ -`, `|`, `Ctrl-D Ctrl-U Ctrl-F Ctrl-B`, with
+  counts.
+- **Operators:** `d c y > < gu gU g~`, over a motion, a text object or doubled (`dd`,
+  `3cc`, `>>`), and `x X D C s S Y r J ~ p P`.
+- **Text objects:** `iw aw iW aW`, `i" a"` (and `'`, `` ` ``), `i( a(` (and `[`, `{`, `<`,
+  `b`, `B`), `ip ap`.
+- **Visual modes:** `v` and `V`, with every motion, object and operator, `o`, and `p` to
+  replace. A selection made with the mouse is a visual one.
+- **Search:** `/` and `?` (regular expressions, case-insensitive until the pattern has a
+  capital), `n N`, `* #`. `:` takes a line number.
+- **Registers:** the unnamed one, `"a`–`"z`, `"0`, `"_`, and `"+`/`"*` for the system
+  clipboard. As in Obsidian, a plain yank does not touch the clipboard.
+- **Undo and repeat:** `u`, `Ctrl-R`, and `.`; a command and the text typed after it are
+  one undo step.
+- **Folds and scrolling:** `za`, `zM`, `zR`, `zz`.
+
+The clipboard and undo chords (Ctrl+C, X, V, Z, A) and every workspace hotkey keep working
+in normal mode.
+
+Not there: visual block mode, macros, marks, `:` commands other than a line number,
+replace mode (`R`), and a `.obsidian.vimrc`. `j` and `k` move by line, not by wrapped row.
+
 ## Not yet
 
-- **Vim mode** (`vimMode` is read, not implemented).
-- **`Ctrl + click` page previews**, indent guides, line numbers.
+- Indent guides, line numbers.
 
 ## Next
 

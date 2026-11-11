@@ -26,7 +26,7 @@ crates/scoria-formats   FileKind, config types, canvas, base
 crates/scoria-commands  command registry, default hotkeys
 crates/scoria-cli       the command line: flags and help, the file argument, the one-window-per-vault handover (no gpui)
 crates/scoria-search    search query grammar and matcher, fuzzy search
-crates/scoria-text      editor text model: buffer, selections, undo, edit plans (no gpui)
+crates/scoria-text      editor text model: buffer, selections, undo, edit plans, the Vim key bindings (no gpui)
 crates/scoria-suggest   autocompletion: triggers, candidates, the link an accepted row writes (no gpui)
 crates/scoria-composer  the Note composer: a merge's joint and frontmatter, an extraction's section and link, the template (no gpui)
 crates/scoria-canvas    canvas model: viewport math, edge geometry, hit tests, selection, edits with undo (no gpui)

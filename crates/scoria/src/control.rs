@@ -618,6 +618,20 @@ fn handle(
             })
             .map(Some)
         }
+        "modifiers" => {
+            let modifiers = modifiers(request)?;
+            ctl.input(request.opt_str("window"), |window, cx| {
+                window.dispatch_event(
+                    PlatformInput::ModifiersChanged(gpui::ModifiersChangedEvent {
+                        modifiers,
+                        capslock: Default::default(),
+                    }),
+                    cx,
+                );
+                Ok(json!({"ok": true}))
+            })
+            .map(Some)
+        }
         "set_selection" => {
             let start = request.usize_param("start")?;
             let end = request.opt_usize("end").unwrap_or(start);

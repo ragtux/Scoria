@@ -584,6 +584,93 @@ after `type` and in its `state` after the inner `state`:
 and unpinning removes both keys rather than writing `false`. `workspace:toggle-pin`,
 `workspace:close-others` and `workspace:close-others-tab-group` have no default hotkey.
 
+## Observed page preview, Obsidian 1.15.0
+
+Probed 2026-11-11 over CDP with real pointer and key events (`tools/obsidian-probe/page-preview.mjs`,
+results `tools/obsidian-probe/results/2026-11-11-page-preview.json`), Obsidian 1.15.0 on macOS under
+its own data directory, window 1024 × 800. Times come from a `MutationObserver` and capture-phase
+listeners in the renderer, so they are the app's own, not the socket's.
+
+**Sources and Mod.** The plugin registers ten hover sources (`app.workspace.hoverLinkSources`),
+each with `defaultMod`: `preview` (Reading view) is the only one that is `false`; `search` (which
+covers Backlinks and Outgoing links too), `editor`, `tab-header`, `file-explorer`, `properties`,
+`bookmarks`, `outline`, `bases` and `graph` are `true`. `page-preview.json` holds the overrides
+(the instance's `options`, `{}` when nothing is set), and a key set to `true` means **Mod is
+required**: with `preview: true` a plain hover in the reading view raised nothing and a Mod hover
+raised the popover; with `editor: false` a plain hover in Live Preview raised it. Mod is Cmd on
+macOS: Ctrl held there raised nothing. With the plugin disabled nothing raises it, Mod or not.
+
+**Timing.** The popover is added about **300 ms** after the pointer enters the link (269–335 ms
+over 20 hovers). A pass that leaves after 155 ms raises nothing. With the pointer resting on an
+editor link, pressing Mod raises it about 300 ms after the keydown (302–305 ms); releasing Mod
+with it up leaves it up. It is removed about **300 ms** after the pointer leaves both the link and
+the popover (302 ms, 304 ms). The pointer crossing the 10 px gap from the link into the popover
+keeps it, and it stays while the pointer is over it.
+
+**The box.** `div.popover.hover-popover` on `body`, `position: absolute`, `z-index: 30`
+(`--layer-popover`), background `--background-primary`, `1px solid` `--background-modifier-border`,
+radius 8 px (`--radius-m`), `box-shadow` `--shadow-s`, `overflow: hidden`. A note fills
+`--popover-width` × `--popover-height` = 450 × 400 inside the border (452 × 402 outside); a shorter
+note shrinks the height to its content (Gamma's two lines: 137.2; a block: 90.1); `max-width`
+computes to 80 vw. Inside: `.markdown-embed.is-loaded` > `.markdown-embed-content` >
+`.markdown-preview-view` (padding 32 px, font 16 px = `--popover-font-size`, scrolling inside),
+plus `.markdown-embed-link` (`lucide-maximize-2`) in the top-right corner. The note shows
+**as the reading view does**: its properties block (collapsed when the vault has them collapsed),
+the inline title, then the body. There is no title bar.
+
+**Placement.** The popover's left edge is the hovered element's left edge and its top is
+**10 px below the element's bottom**: a link at (415, 203.7, 33 × 19) put it at (415, 232.7); a
+Files row ending at 162.8 put it at 172.9; the tab header ending at 40 put it at 50. Where it
+would cross the window's bottom it goes **above**, its bottom 10 px over the element's top (an
+editor link at y 752.2 put a 402-high popover at 340.2). Where it would cross the right edge it
+is pushed left until its right edge is **10 px inside the window** (a link at x 946 and the right
+dock's rows at x 737 all gave x 562 = 1024 − 10 − 452). The dock rows anchor exactly as links do.
+
+**Targets.** `[[Beta]]`, `[[Beta|alias]]` and `[md](Beta.md)` show the whole note from the top.
+`[[Beta#Second]]` shows **only that section**, the heading first, scrolled to 0; `[[Beta#^blk]]`
+shows only the block (90.1 high). `[[Missing]]` shows a 62.8-high box,
+`.file-embed.mod-empty`: “Missing” is not created yet. Click to create. An image shows the image
+at its natural size (a 40 × 30 PNG: 42 × 32 outside). A canvas shows `.canvas-embed` (150.6 high
+for one card); a base shows `.bases-embed` with its toolbar and rows (282 high). An external link
+and a tag raise nothing. An outline row previews its own section (the `Lower` row showed
+`Lower` and the lines under it). A search result raised nothing in this run, Mod or not (its
+file title and its match both).
+
+**Editors.** Live Preview and source mode behave alike: no popover without Mod, the same delay
+with it, the same box (a reading-view render, not an editor). A link on the cursor's line in Live
+Preview (where its source shows) still raises it with Mod. A heading link from the editor shows
+the section only, as in the reading view.
+
+**Inside the popover.** The wheel scrolls the popover and not the note under it. A link in it
+raises a **nested popover** on the same rules (the reading view's: no Mod), placed against that
+link; leaving both removes both, ~300 ms. A plain click on a link in it opens the target in the
+main area's active leaf, as a reading-view click would. **A click on its text turns it into an
+editor**: the class gains `is-editing`, a Live Preview `.markdown-source-view` replaces the
+reading render in the same box, the caret lands where the click was (line 10, ch 26), and typing
+**edits the note on disk** (`Beta line 2, some words toZ fill…` after the 2 s save). An editing
+popover **stays when the pointer leaves**; Escape closes it, and so does a click outside it.
+
+**More sources** (`s11`, the same day). A link-valued property in the File properties view
+(`file-properties`, `related: "[[Beta]]"`): no popover without Mod, ~307 ms with it, anchored on
+the `.metadata-link-inner` (top 57.5 + 16.9 + 10 = 84.5). The file name in a base's table
+(`span.internal-link` in `.bases-table-cell`, 17.1 high): Mod needed, ~306 ms, anchored on the
+span (184.5 + 17.1 + 10 = 211.5, x 352 kept). A graph node (found through the renderer's pan and
+scale and hovered at its centre): Mod needed, ~331–335 ms; the popover went **20.4 px under** the
+centre, and for a node near the window's foot its bottom **19.8 px over** it, so the anchor is a
+box of about ±10 px around the node with the usual 10 px gap; 3 px right and 5 px down of the
+centre was off the node and raised nothing. All three show the note as a link does.
+
+**A second link** above the first while the first's popover is up: the first popover is removed
+336 ms after the pointer set off and the second added at 401 ms — the first goes on its own hide
+delay from the pointer leaving its link, not when the second replaces it.
+
+**Click to create.** A click on a missing note's popover creates the note, empty (0 bytes), at
+the new-note location, opens it in the active leaf in its editing mode with the caret in it, and
+the popover goes.
+
+**What it writes.** Nothing: no leaf of the popover is ever in `workspace.json`, and
+`page-preview.json` is only written by the Settings tab.
+
 ## Observed table editing behavior, Obsidian 1.14.4
 
 Observed with a throwaway plugin in a scratch vault (see

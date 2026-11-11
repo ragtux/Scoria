@@ -330,6 +330,170 @@ uses behave as Obsidian's do.
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
+| Page preview | probed 2026-11-11 on macOS, see [[Specification#Observed page preview, Obsidian 1.15.0]] and [[#Page preview, the probe, 2026-11-11]]; step 1 landed the same day — the popover over links in the reading view and both editing modes, see [[#Page preview, step 1, 2026-11-11]]; step 2 the same day — the tab header and the Files, Bookmarks, Backlinks, Outgoing links and Outline rows, see [[#Page preview, step 2, 2026-11-11]]; step 3 the same day — nested popovers and the click that makes one an editor, see [[#Page preview, step 3, 2026-11-11]]; step 4 the same day — the Bases and Graph sources, the second-link timing and "Click to create", from a second probe pass, see [[#Page preview, step 4, 2026-11-11]] — done, bar the "Properties view" source, whose File properties view Scoria does not have |
+
+### Page preview, step 4, 2026-11-11
+
+The probe's `s11` went back for what the first pass skipped, with Obsidian on the Mac again
+(`ONLY_STEPS=s11`, merged into the same results file): the File properties view, a base's table, a
+graph node, a second link while a popover is up, and a click on a missing note's popover — see
+[[Specification#Observed page preview, Obsidian 1.15.0]], "More sources" on.
+
+**Bases.** The table's file name cell wraps its text in `hover_row`, and `BasesView` emits
+`BasesEvent::Hover`; the workspace finds the group the view is in (an embedded base's is the
+active group's) for the window. The text takes a 17 px line box, the height of Obsidian's inline
+span, so the popover hangs where Obsidian's does; the cell centres it, so nothing moves. Checked:
+plain nothing, Cmd anchored at (352, 186, 17), its bottom at 203 against Obsidian's 201.6 (it was
+(352, 184, 21) before the line box, 3.4 px low). Cards, list and kanban
+titles and embedded bases' tables do not report: only the table was probed.
+
+**Graph.** `GraphView` reports the hovered node when it changes (`GraphEvent::Hover`), a note or
+an attachment only, anchored on a 20 px box around the node's screen centre, which is what the two
+observed placements (20.4 px under, 19.8 px over) give. The view already clears its node when the
+pointer leaves it, and that clearing now reports too (`source_left`). Checked: plain nothing, Cmd
+on Beta's node raised Beta.
+
+**Hide timing.** A popover now goes on its own hide delay from the pointer leaving the link that
+raised it, rather than staying until another link's popover replaces it (Obsidian removed the
+first at 336 ms and added the second at 401 ms). `HoverPreview::kept` keeps a popover while the
+pointer is on its own link (the pending link's anchor and depth are the popover's), over it or
+over one above it, or while it edits, and the popover a pending link sits in; the hide timer has
+no generation any more, since `kept` reads where the pointer is when it fires; and a new pending
+link arms a hide timer as well as the show timer.
+
+**Click to create.** A click on a missing note's popover creates the note through
+`create_from_link` (empty, at the new-note location), which opens it in the active tab in its
+editing mode with the keyboard in it, as observed.
+
+**Properties view** stays tagged: it is Obsidian's File properties view (`file-properties`), a
+pane Scoria does not have.
+
+Over the socket, a pointer has to let a frame go by between moves (`wait_idle`) for a view's link
+to report: a scan that sends moves back to back can find nothing while the same point found with
+an idle reports at once.
+
+### Page preview, step 3, 2026-11-11
+
+Nested popovers and the editing popover. `HoverPreview.shown` is a stack now: the first popover
+went up from a view or a pane, each later one from a link in the one before. A `Pending` carries
+the `depth` its link is at (0 in a view or a pane, `n` in the `n`th popover), a new popover
+replaces everything above its link's own, and a leaving is honoured only from the depth that
+reported the link. Each `Shown` keeps whether the pointer is over it; the hide timer keeps every
+popover up to the last one the pointer is over or that is editing, and all of them while the
+pointer rests on a link (`HoverPreview::kept`), which is how leaving a nested popover for its
+parent keeps the parent and leaving both removes both, as observed. A popover's render reports
+its links through a `HoverHost` of its own on the reading view's rules (no Mod).
+
+A click on a popover's text that is not on one of its links (the popover's hover tracker says
+which) makes it an editor: a new `Editor` entity, given the vault and `app.json` as a group's
+editor is (`configure_editor`), in Live Preview, with no inline title and no readable line length,
+in the box the render had (its height inside the border, measured each frame until it edits and
+frozen then). The caret goes where the click was, read through the editor's own first layout
+(`Editor::caret_at_point`, retried over a few frames until there is one), which is what
+CodeMirror's `posAtCoords` on the new editor does in Obsidian. A popover showing a section opens
+the whole note with the caret at the section's start: not probed, the probe clicked a whole note.
+The open note's edits are flushed first, so the popover starts from the disk. Its edits save two
+seconds after the last one through the same checked write as the open note's (`write_buffer`,
+split out of `flush_save`), and are flushed when it goes; the open note, if it is the same file,
+picks the write up from the watcher as it does any other. It stays when the pointer leaves;
+Escape closes it and puts the keyboard back on the main view, a press outside closes it and
+leaves the keyboard where the press put it, and the popovers under it then go unless the pointer
+is over them. A link under an editing popover raises nothing that would replace it (inferred from
+"stays until Escape or a click outside"). Links in the editor preview with Mod, as an editor's do,
+and a click on one opens it in the main area. `state.hover_preview.popovers` lists the stack
+(`shown` is still the first), each with its height, `over` and `editing` (path, dirty, selection).
+
+Checked over the socket on macOS: a link in the Beta popover raised Gamma's over it; back on Beta
+left one, off both left none; a click on Beta's first paragraph put the caret at offset 18 ("Beta
+first|"), typing `ZZ` wrote `Beta firstZZ paragraph…` to disk after the 2 s save, the popover
+stayed after the pointer left and kept its 291 px; Escape and a click outside each closed it; a
+click on the `Beta#Second` popover put the caret at the heading (56); editing Alpha from a popover
+nested in Gamma's while Alpha was open in the reading view saved, and the reading view's counts
+followed.
+
+### Page preview, step 2, 2026-11-11
+
+The sources away from the note. `hover_preview::Source` grew `Files`, `TabHeader`, `Bookmarks`,
+`Search` and `Outline`, each reading its own `page-preview.json` key and needing Mod when the key
+is absent, as every one of them did in the probe (`plain: 0`, `mod: 1`). A row reports through
+`hover_row`, which hangs an absolute `canvas` on the row to learn its bounds and passes them, with
+`window.modifiers()`, from the row's `on_hover`: the row's whole box is the anchor, which is what
+put Obsidian's popover 10 px under a 25 px row and under the 34 px tab (6 + 34 + 10 = 50). The
+Files row draws a 2 px ring border of its own and an absolute child sits inside the border, so it
+uses `hover_row_bordered` to reach back out over it. The Files view and Bookmarks are entities of
+their own and emit `Hover` events; the tab, Backlinks, Outgoing links and Outline rows are drawn
+by the workspace and call `row_hover` directly. What each previews: a file's row, a tab and a
+Backlinks file row their file; a folder's row nothing; a file bookmark its file at its
+`#Heading` or `#^block`; an Outgoing links row its link as written, subpath and all, resolved from
+the note; an Outline row its own heading's section (`path#Heading`). A path is handed over rooted
+(`hover_preview::exact`, `/Beta.md`) so a root-level note is never looked up by basename against
+a same-named note in a folder. Leaving a row clears the pending link only when it is still that
+row's, since the next row's arrival can be reported first. The five settings rows lost their tag.
+The Search pane's rows do not report: they raised nothing in the probe.
+
+Checked over the socket on macOS (a mouse move carries `mods`, so a Cmd hover is
+`mouse move … mods: ["cmd"]`): a plain hover on a Files row raised nothing and a Cmd hover raised
+the note anchored at (48, 130, 25), the row's full box; the folder row reported nothing; the tab
+anchored at (352, 6, 34); a Backlinks row at x 736 put the popover at 562, pushed in from the
+right as the probe's was; the Outline's `Lower` row showed `Lower` and its line (2 blocks); the
+Outgoing links rows reported `Beta`, `Gamma` and `Beta#Second`; the `Alpha#Lower` bookmark showed
+the section, anchored at x 56 as Obsidian's was; with `"file-explorer": false` a plain hover on
+a Files row raised it. A `page-preview.json` edited outside the app is read at the next launch,
+as before.
+
+### Page preview, step 1, 2026-11-11
+
+`crates/scoria/src/hover_preview.rs` holds what needs no workspace: the two sources built so far
+(`preview` for the reading view, `editor` for Live Preview and source mode) and their
+`requires_mod` from `page-preview.json`, Mod as `Modifiers::secondary` (Cmd on macOS, where the
+probe saw Ctrl raise nothing), the 300 ms delays, the 450 × 400 box, the left-edge clamp, what a
+link shows (`content`) and the element (`render`). **What it shows**: a whole note is built as the
+reading view builds it; a link with a subpath, or to anything not a note, is built as the embed
+`![[path#subpath]]` would be and the embed's blocks are taken, which is what gives a heading link
+its section and a block link its block, and draws an image, base or PDF as the embed draws them; a
+missing target says so in Obsidian's words. There is no inline title (Obsidian's popover holds one
+and hides it) and the properties block starts folded, as the probe's popover had it. **Where**:
+`anchored()` at the anchor's top less 10 px with an offset of its height plus 20, so the normal
+place is 10 px under the line and gpui's anchor switch, when the box would leave the window, puts
+its bottom 10 px over the line; the x is clamped before, so the switch never flips it sideways.
+**Reporting the pointer**: the reading view's `LinkMenu` element now also listens to moves, and
+reports a link only when the pointer comes onto it and the leaving only from the text that
+reported it (`HoverHost.current`, shared by the view's texts); the editor reports from its own
+move listener through `link_under`, which anchors at the link's first source byte as
+`row_and_x` places it. The workspace keeps a `HoverPreview` — the link under the pointer, the
+popover up, whether the pointer is over it, a generation every change bumps so a timer acts only
+if nothing moved — and both window roots listen for modifier changes, which is how Mod pressed
+over a resting link raises the popover. A view that stops painting never reports leaving, so
+opening a note, switching modes and loading a tab or group reset the state and every view's
+remembered link (`reset_preview`). A link clicked in the popover resolves against the note the
+popover shows and opens in the main area. The socket's `state.hover_preview` names the pending
+link and the popover's window, note, anchor, left edge and content, and a new `modifiers` method
+holds or releases modifiers with nothing else moving.
+
+Checked over the socket on macOS against a copy of the probe's vault: in the reading view the
+popover was up between 150 and 500 ms after the pointer settled and gone between 150 and 500 ms
+after it left; a pointer crossing the gap into it kept it up (`over_popover`), the wheel scrolled
+it and not the note; `[[Missing]]`, an image and a section link showed what the probe saw; a link
+near the window's bottom put it above; in Live Preview and source mode a plain hover raised
+nothing, Cmd pressed over the link raised it between 150 and 500 ms after the key, releasing Cmd
+left it up, Ctrl raised nothing and a Cmd move raised it. Screenshots matched Obsidian's
+placement to the pixel the probe recorded. Not built: the Files, tab header, Bookmarks,
+Backlinks, Outgoing links, Outline, Properties, Bases and Graph sources (their settings rows stay
+tagged), nested popovers, the `is-editing` popover a click makes, and Escape.
+
+### Page preview, the probe, 2026-11-11
+
+Multi-window closed with the tab header's menu, so phase 4 went back to the core plugins a vault
+uses, starting with the ones that are on by default and missing: Page preview first, then Note
+composer. `tools/obsidian-probe/page-preview.mjs` was the first probe run on the Mac:
+`run-block.sh` grew a Darwin branch that always runs under its own data directory and starts the
+bundle's binary. What it found that the build hangs on: about 300 ms to show and to hide, timed in
+the renderer; a reading-view render in a 450 × 400 box, 10 px under the hovered element, flipped
+above or pushed in to 10 px from the window's edge; a heading or block link shows only its
+section; `page-preview.json`'s keys mean *require Mod*, and only the reading view does without it
+by default; a click on the text turns the popover into a Live Preview editor that writes the note
+and stays until Escape or a click outside. A search result raised nothing in the run, and a
+second link hovered while a popover is up was not settled.
 
 ### Export as image, and both exports driven, 2026-11-11
 

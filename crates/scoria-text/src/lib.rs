@@ -20,6 +20,7 @@ pub mod format;
 pub mod lists;
 mod plan;
 pub mod table;
+pub mod vim;
 pub mod wrap;
 
 pub use buffer::{

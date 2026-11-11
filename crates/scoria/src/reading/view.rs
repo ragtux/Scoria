@@ -19,9 +19,9 @@ use gpui::{
     Context, CursorStyle, DispatchPhase, DragMoveEvent, Element, ElementId, Entity, EventEmitter,
     FocusHandle, Focusable, Font, FontStyle, FontWeight, GlobalElementId, HighlightStyle, Hitbox,
     HitboxBehavior, Hsla, InspectorElementId, InteractiveText, KeyBinding, LayoutId, ListAlignment,
-    ListOffset, ListState, MouseButton, MouseDownEvent, ObjectFit, Pixels, Point, SharedString,
-    SharedUri, StrikethroughStyle, StyledText, Task, TextLayout, TextRun, UnderlineStyle, Window,
-    WindowTextSystem,
+    ListOffset, ListState, MouseButton, MouseDownEvent, MouseMoveEvent, ObjectFit, Pixels, Point,
+    SharedString, SharedUri, StrikethroughStyle, StyledText, Task, TextLayout, TextRun,
+    UnderlineStyle, Window, WindowTextSystem,
 };
 use scoria_formats::config::PropertyTypes;
 use scoria_formats::properties::{PropertiesInDocument, Property, PropertyType};
@@ -76,7 +76,7 @@ pub fn bind_keys(cx: &mut App) {
 
 /// What `render` multiplies the base font size by for the line height, and so
 /// how tall the line an arrow key scrolls is.
-const LINE_HEIGHT: f32 = 1.6;
+pub(crate) const LINE_HEIGHT: f32 = 1.6;
 
 /// Pixels a page key scrolls a viewport this tall: the viewport less an eighth
 /// of it capped at 40 px, which is what a browser's page keys do, so a strip of
@@ -642,6 +642,27 @@ pub(crate) struct TableHost {
 pub type LinkHandler = Rc<dyn Fn(LinkTarget, &mut Window, &mut App)>;
 /// What a rendered link does when right-clicked, at the click's position.
 pub type MenuHandler = Rc<dyn Fn(LinkTarget, Point<Pixels>, &mut Window, &mut App)>;
+/// The pointer resting on a rendered link, for page preview: the link, the
+/// first glyph's line box in window coordinates (Obsidian anchors the
+/// popover to the hovered element's left edge and its bottom), and the
+/// modifiers held when the pointer arrived.
+#[derive(Clone, Debug)]
+pub struct LinkHover {
+    pub target: LinkTarget,
+    pub anchor: Bounds<Pixels>,
+    pub modifiers: gpui::Modifiers,
+}
+/// Told when the pointer comes onto a rendered link (`Some`) or leaves the
+/// one it was on (`None`).
+pub type HoverHandler = Rc<dyn Fn(Option<LinkHover>, &mut Window, &mut App)>;
+/// A host's hover reporting: the handler, and which link of which text the
+/// pointer is on now — `(RichText::id, link index)` — so each text reports
+/// only a change, and only the text that reported a link reports leaving it.
+#[derive(Clone)]
+pub(crate) struct HoverHost {
+    pub on_hover: HoverHandler,
+    pub current: Rc<std::cell::Cell<Option<(usize, usize)>>>,
+}
 /// What a host draws under a note, at the content width it is given (the
 /// readable line, or the view less its padding): the backlinks block of
 /// `backlink:toggle-backlinks-in-document`, which Obsidian puts in the
@@ -677,6 +698,9 @@ pub(crate) struct ReadingHost {
     /// and a right click on its text does nothing, which is what Obsidian's
     /// reading view does everywhere but on a link.
     pub on_menu: Option<MenuHandler>,
+    /// Page preview's hover. `None` reports nothing, for a host whose
+    /// links preview nothing (a canvas card, the popover itself).
+    pub hover: Option<HoverHost>,
 }
 
 pub enum ReadingEvent {
@@ -691,6 +715,8 @@ pub enum ReadingEvent {
         target: LinkTarget,
         position: Point<Pixels>,
     },
+    /// The pointer came onto a rendered link, or left it (`None`).
+    Hover(Option<LinkHover>),
 }
 
 /// A reader clicked a task checkbox. The reading view does not write the
@@ -755,6 +781,9 @@ pub struct ReadingView {
     /// Whether a press landed on text and the button has not come up yet,
     /// so a move extends the selection.
     dragging: bool,
+    /// The link page preview last heard the pointer come onto, shared
+    /// with every text of the view (see [`HoverHost`]).
+    hover_current: Rc<std::cell::Cell<Option<(usize, usize)>>>,
     /// The selected byte range of each run, by [`RichText::id`]: derived
     /// from `selection` whenever it changes, because the painted blocks ask
     /// for it on every frame.
@@ -856,6 +885,7 @@ impl ReadingView {
             width: px(900.),
             selection: None,
             dragging: false,
+            hover_current: Rc::default(),
             selected: Rc::new(HashMap::new()),
             embed_views: None,
             id: cx.entity_id(),
@@ -902,6 +932,11 @@ impl ReadingView {
 
     /// The registry an embedded base's view comes from. The workspace hands
     /// it over once; the view syncs it on every note it shows.
+    /// Forgets the link the pointer was last reported on (page preview).
+    pub fn clear_hover(&mut self) {
+        self.hover_current.set(None);
+    }
+
     pub fn set_embed_views(&mut self, views: crate::bases::embed::EmbedViews) {
         self.embed_views = Some(views);
     }
@@ -1456,6 +1491,15 @@ impl ReadingView {
             on_task,
             on_remove_item: Some(on_remove_item),
             on_menu: Some(on_menu),
+            hover: Some(HoverHost {
+                on_hover: Rc::new({
+                    let view = view.clone();
+                    move |hover, _window, cx| {
+                        view.update(cx, |_, cx| cx.emit(ReadingEvent::Hover(hover)));
+                    }
+                }),
+                current: self.hover_current.clone(),
+            }),
         };
         // Selection: the runs of this block take the mouse themselves, so
         // the press lands on the text it hit rather than being fitted to a
@@ -3593,7 +3637,7 @@ impl<'a> Renderer<'a> {
             let (interactive, layout) =
                 self.interactive_with_layout(text, &text.text, &text.runs, &text.links);
             let element = self.selectable(interactive.into_any_element(), text, &layout);
-            return self.with_link_menu(element, layout, text.links.clone());
+            return self.with_link_menu(element, layout, text.id, text.links.clone());
         }
         let t = self.theme;
         let em = px(size);
@@ -3660,7 +3704,7 @@ impl<'a> Renderer<'a> {
         )
         .into_any_element();
         let element = self.selectable(overlay, text, &layout);
-        self.with_link_menu(element, layout, links)
+        self.with_link_menu(element, layout, text.id, links)
     }
 
     /// The text element with a right click on a link raising the host's
@@ -3668,20 +3712,28 @@ impl<'a> Renderer<'a> {
     /// click in Live Preview belongs to the editor, which places the caret
     /// and raises the editor's own menu, and a canvas card has no menu at
     /// all.
+    ///
+    /// The same element reports the pointer coming onto a link and leaving
+    /// it, where the host previews links (page preview).
     fn with_link_menu(
         &self,
         child: AnyElement,
         layout: TextLayout,
+        text_id: usize,
         links: Vec<(Range<usize>, LinkTarget)>,
     ) -> AnyElement {
-        let Some(on_menu) = self.reading_host.and_then(|h| h.on_menu.clone()) else {
+        let on_menu = self.reading_host.and_then(|h| h.on_menu.clone());
+        let hover = self.reading_host.and_then(|h| h.hover.clone());
+        if (on_menu.is_none() && hover.is_none()) || links.is_empty() {
             return child;
-        };
+        }
         LinkMenu {
             child,
             layout,
+            text_id,
             links,
             on_menu,
+            hover,
         }
         .into_any_element()
     }
@@ -3883,8 +3935,10 @@ pub(crate) fn uppercased(text: &RichText) -> RichText {
 struct LinkMenu {
     child: AnyElement,
     layout: TextLayout,
+    text_id: usize,
     links: Vec<(Range<usize>, LinkTarget)>,
-    on_menu: MenuHandler,
+    on_menu: Option<MenuHandler>,
+    hover: Option<HoverHost>,
 }
 
 impl IntoElement for LinkMenu {
@@ -3946,8 +4000,48 @@ impl Element for LinkMenu {
         self.child.paint(window, cx);
         let hitbox = hitbox.clone();
         let layout = self.layout.clone();
-        let links = std::mem::take(&mut self.links);
-        let on_menu = self.on_menu.clone();
+        let links = Rc::new(std::mem::take(&mut self.links));
+        if let Some(host) = self.hover.clone() {
+            let (hitbox, layout, links, id) =
+                (hitbox.clone(), layout.clone(), links.clone(), self.text_id);
+            window.on_mouse_event(move |event: &MouseMoveEvent, phase, window, cx| {
+                if phase != DispatchPhase::Bubble {
+                    return;
+                }
+                let over = (event.pressed_button.is_none() && hitbox.is_hovered(window))
+                    .then(|| layout.index_for_position(event.position).ok())
+                    .flatten()
+                    .and_then(|at| links.iter().position(|(range, _)| range.contains(&at)));
+                let now = host.current.get();
+                match over {
+                    Some(ix) if now != Some((id, ix)) => {
+                        host.current.set(Some((id, ix)));
+                        let (range, target) = &links[ix];
+                        let Some(origin) = layout.position_for_index(range.start) else {
+                            return;
+                        };
+                        let anchor = Bounds::new(origin, gpui::size(px(1.), layout.line_height()));
+                        (host.on_hover)(
+                            Some(LinkHover {
+                                target: target.clone(),
+                                anchor,
+                                modifiers: event.modifiers,
+                            }),
+                            window,
+                            cx,
+                        );
+                    }
+                    None if now.is_some_and(|(t, _)| t == id) => {
+                        host.current.set(None);
+                        (host.on_hover)(None, window, cx);
+                    }
+                    _ => {}
+                }
+            });
+        }
+        let Some(on_menu) = self.on_menu.clone() else {
+            return;
+        };
         window.on_mouse_event(move |event: &MouseDownEvent, phase, window, cx| {
             if phase != DispatchPhase::Bubble
                 || event.button != MouseButton::Right

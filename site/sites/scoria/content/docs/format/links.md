@@ -142,9 +142,38 @@ the insertion was planned against.
 Ranking inside a query is Scoria's own fuzzy matcher, so the order can differ from
 Obsidian's; what each row *writes* is what matches.
 
+## Page preview
+
+Rest the pointer on an internal link and, after about 300 ms, a popover shows what it points
+at, drawn as the reading view draws it: a whole note from the top, only the section of a
+`#Heading` link, only the block of a `#^block-id` link, an image, a canvas or a base as its
+embed would be. A link to a note that does not exist yet says so, and a click on that popover
+creates the note, empty, and opens it. An external link and a tag show nothing.
+
+The popover sits 10 px under the link, or above it when there is no room below, and is pushed in
+from the window's right edge. It stays while the pointer is on the link or on the popover, and
+goes about 300 ms after it leaves both. A link inside a popover raises a popover of its own over
+it.
+
+**Where it needs `Ctrl`.** In reading view a plain hover is enough. Everywhere else you hold
+`Ctrl` (`Cmd` on macOS) while hovering, or press it with the pointer already resting there:
+Live Preview and Source mode, the tab header, the Files view, Bookmarks, Backlinks, Outgoing
+links, Outline (a heading previews its own section), a base's table (a row's file name) and the
+graph (a note's node). Each of these is a toggle under *Settings → Page preview*, written to
+`.obsidian/page-preview.json` with Obsidian's keys, and switching one on means that place needs
+`Ctrl`. Turning the Page preview core plugin off turns all of it off.
+
+**Editing in the popover.** A click on the popover's text, not on a link, turns it into a Live
+Preview editor of that note in the same box, with the caret where you clicked (on a section's
+popover, at the section's start). It saves as the open note does, two seconds after your last
+keystroke, and stays up when the pointer leaves; `Escape` or a click outside closes it. A click
+on a link in a popover opens it in the main area.
+
 ## Not yet
 
-- `Ctrl + hover` page previews.
+- The *Properties view* toggle is written but has no surface: it is for Obsidian's File
+  properties view, which Scoria does not have. Search results do not preview, as they did not
+  in Obsidian when it was observed.
 
 ## Next
 

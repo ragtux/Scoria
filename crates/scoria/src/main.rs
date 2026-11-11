@@ -32,6 +32,7 @@ mod file_menu;
 mod fold;
 mod graph;
 mod help;
+mod hover_preview;
 mod inline_field;
 mod math;
 mod mentions;
@@ -462,6 +463,10 @@ fn main() {
                                 && frame != "native")
                                 .then(|| point(px(19.), px(12.))),
                         }),
+                        // The see-through title bar would otherwise drag
+                        // the window from a press on a tab; see
+                        // `frame_window_options`.
+                        is_movable: !(cfg!(target_os = "macos") && frame != "native"),
                         // KWin only honours the xdg-activation token that
                         // `activate_window` asks for when it can tie it to an
                         // application, which is what this id is for.

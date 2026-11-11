@@ -392,6 +392,24 @@ pub const METHODS: &[MethodSpec] = &[
         ],
     ),
     m(
+        "modifiers",
+        "Change which modifier keys are held, with no key and no pointer move: what pressing or releasing Cmd or Ctrl alone sends.",
+        &[
+            p(
+                "mods",
+                ParamType::StrList,
+                false,
+                "The modifiers held from now on: any of `ctrl`, `alt`, `shift`, `cmd`. Absent or empty releases them all.",
+            ),
+            p(
+                "window",
+                ParamType::Str,
+                false,
+                "Which window takes the input: `main`, or a popout's id as `state.groups.windows` lists it. Default: the Settings window while it is up, else the window the active group is in.",
+            ),
+        ],
+    ),
+    m(
         "set_selection",
         "Move the editor cursor, or select a range, by byte offset.",
         &[
