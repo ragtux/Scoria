@@ -1,13 +1,13 @@
 ---
 title: Commands and hotkeys
-description: The commands Scoria registers — the 244 Obsidian command ids, the 41 with a default hotkey, and the 197 Scoria can actually run today, with every id and default key listed.
+description: The commands Scoria registers — the 244 Obsidian command ids, the 41 with a default hotkey, and the 198 Scoria can actually run today, with every id and default key listed.
 ---
 
 # Commands and hotkeys
 
 Scoria registers **244 command ids** — the exact strings Obsidian registers, so your
 `hotkeys.json` matches them — of which **227 have an observed desktop name**. **41** carry a
-default hotkey. **197** do something in Scoria today; the 47 that do not are listed
+default hotkey. **198** do something in Scoria today; the 46 that do not are listed
 [below](#the-ones-that-do-not-run).
 
 Those four numbers are different things and the difference is the point:
@@ -20,14 +20,14 @@ Those four numbers are different things and the difference is the point:
   palette](/docs/app/switcher/) offers only these; the [Hotkeys tab](/docs/hotkeys/) lists
   all 244, so you can see your bindings for everything else.
 
-Some of the 197 are runnable only in the right place, which is also how Obsidian treats
+Some of the 198 are runnable only in the right place, which is also how Obsidian treats
 them: **63** need an editor on screen with the keyboard in it, so they leave the palette in
 a reading leaf, and the **fifteen table commands** that act on an existing table are offered
 only while the cursor is in one. `graph:open-local` and the five commands on the active file
 (the two copy-path commands, `workspace:copy-url` and the two `open-with-default-app`
 commands) are not offered with no file open; four `bases:*` commands need a base on screen;
 `editor:rename-heading` needs the cursor on a heading line; `editor:focus` needs a note open
-in some tab; `backlink:toggle-backlinks-in-document` needs a note active; and
+in some tab; `backlink:toggle-backlinks-in-document` and `workspace:export-pdf` need a note active; and
 `workspace:show-trash` is offered only when deleted files go to the vault's own `.trash`
 folder. A command whose core plugin is off is gone, as in Obsidian. The palette, the hotkey
 and the control socket all ask the same question, so a command that is listed is a command
@@ -132,6 +132,7 @@ in `hotkeys.json`. Several are worth binding on day one: `editor:toggle-source`,
 | Decrease font size | `app:decrease-font-size` |
 | Delete current file | `app:delete-file` |
 | Download attachments for current file | `editor:download-attachments` |
+| Export to PDF... | `workspace:export-pdf` |
 | Files: Create new folder | `file-explorer:new-folder` |
 | Files: Reveal current file in navigation | `file-explorer:reveal-active-file` |
 | Files: Show file explorer | `file-explorer:open` |
@@ -263,7 +264,7 @@ A few keys belong to a widget rather than to the command registry, and are not r
 
 ## The ones that do not run
 
-47 of the 244 ids do nothing in Scoria yet, and the palette does not offer them:
+46 of the 244 ids do nothing in Scoria yet, and the palette does not offer them:
 
 - **Not registered on desktop** — 17 ids with no desktop name, which Obsidian itself does not
   offer there: the caret, clipboard and undo ids (`editor:go-start`, `editor:copy`,
@@ -275,7 +276,7 @@ A few keys belong to a widget rather than to the command registry, and are not r
   Action, and `app:reload`, which has no renderer to reload.
 - **Waiting on the toolkit** — `window:zoom-in`, `window:zoom-out`, `window:reset-zoom` and
   `window:toggle-always-on-top`.
-- **Not built yet** — `workspace:export-pdf`, `canvas:export-as-image` and `graph:animate`.
+- **Not built yet** — `canvas:export-as-image` and `graph:animate`.
 
 ## The full id list
 

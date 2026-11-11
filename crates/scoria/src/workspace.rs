@@ -21,6 +21,7 @@ use crate::editor::{Editor, EditorEvent};
 use crate::explorer::{
     self, display_name, kind_name, ExplorerEvent, FileExplorer, FileTree, SortOrder,
 };
+use crate::export_modals::{PdfExport, PdfExportEvent};
 use crate::file_menu::{self, Pick};
 use crate::fold;
 use crate::graph::{GraphEvent, GraphView};
@@ -104,6 +105,9 @@ mod download_modal;
 // Show debug info and Show release notes: the app's commands about itself.
 mod app_info;
 mod release_notes;
+
+// Export to PDF and Export as image: pages and pixels without gpui.
+mod exports;
 
 actions!(
     workspace,
@@ -451,6 +455,7 @@ pub const RUNNABLE: &[&str] = &[
     "app:open-file",
     "app:show-debug-info",
     "app:show-release-notes",
+    "workspace:export-pdf",
 ];
 
 /// Binds every runnable command's hotkeys in the Workspace context, and the
@@ -1765,6 +1770,8 @@ enum Modal {
     Downloads,
     /// "Debug info" (`app:show-debug-info`).
     DebugInfo,
+    /// "Export to PDF" (`workspace:export-pdf`).
+    PdfExport,
 }
 
 /// The file operation the open prompt will finish.
@@ -3352,6 +3359,8 @@ pub struct Workspace {
     copy_results: Entity<CopyResults>,
     /// "Debug info", filled each time it opens.
     debug_info: Entity<DebugInfo>,
+    /// "Export to PDF", filled each time it opens.
+    pdf_export: Entity<PdfExport>,
     /// The reading view release-notes tabs draw, and the version whose
     /// notes it holds.
     release_notes: Entity<ReadingView>,
@@ -3682,6 +3691,7 @@ impl Workspace {
         let prompt = cx.new(Prompt::new);
         let copy_results = cx.new(CopyResults::new);
         let debug_info = cx.new(DebugInfo::new);
+        let pdf_export = cx.new(PdfExport::new);
         let release_notes = cx.new(ReadingView::new);
         let reading = cx.new(ReadingView::new);
         let editor = cx.new(|cx| Editor::new(window, cx));
@@ -3932,6 +3942,13 @@ impl Workspace {
                     DebugInfoEvent::Close => this.close_modal(window, cx),
                 },
             ),
+            cx.subscribe_in(
+                &pdf_export,
+                window,
+                |this, _, event: &PdfExportEvent, window, cx| {
+                    this.on_pdf_export_event(event, window, cx)
+                },
+            ),
             // The release notes' links: only ones to the web, which open
             // in the browser as a note's do.
             cx.subscribe(
@@ -4114,6 +4131,7 @@ impl Workspace {
             prompt,
             copy_results,
             debug_info,
+            pdf_export,
             release_notes,
             release_notes_built: RefCell::new(None),
             layouts_modal: None,
@@ -6282,6 +6300,9 @@ impl Workspace {
             "app:open-another-vault" => self.open_another_vault(window, cx),
             "app:open-sandbox-vault" => self.open_sandbox_vault(window, cx),
             "app:show-debug-info" => self.show_debug_info(window, cx),
+            "workspace:export-pdf" => {
+                self.run_export_command(id, window, cx);
+            }
             "app:show-release-notes" => self.show_release_notes(cx),
             _ => {
                 let name = self.command_name(id, cx);
@@ -6493,6 +6514,9 @@ impl Workspace {
             return can;
         }
         if let Some(can) = self.attachments_can_run(id) {
+            return can;
+        }
+        if let Some(can) = self.exports_can_run(id) {
             return can;
         }
         if EDITOR_ONLY.contains(&id) {
@@ -14714,6 +14738,7 @@ impl Workspace {
                 Modal::Composer => "note-composer",
                 Modal::Downloads => "download-attachments",
                 Modal::DebugInfo => "debug-info",
+                Modal::PdfExport => "export-pdf",
             }),
         );
         // The popout it draws in, by id, or null for the vault window (and
@@ -14739,6 +14764,7 @@ impl Workspace {
             Modal::Composer => self.describe_composer(rows, cx),
             Modal::Downloads => self.describe_downloads(cx),
             Modal::DebugInfo => Some(self.debug_info.read(cx).describe()),
+            Modal::PdfExport => Some(self.pdf_export.read(cx).describe()),
             Modal::None => None,
         };
         if let Some(Value::Object(view)) = view {
@@ -15713,6 +15739,7 @@ impl Workspace {
             | Modal::Downloads
             | Modal::CopyResults
             | Modal::DebugInfo
+            | Modal::PdfExport
             | Modal::Layouts => {
                 let child: gpui::AnyElement = match self.modal {
                     Modal::Switcher => self.switcher.clone().into_any_element(),
@@ -15722,6 +15749,7 @@ impl Workspace {
                     Modal::Downloads => self.downloads_element()?,
                     Modal::CopyResults => self.copy_results.clone().into_any_element(),
                     Modal::DebugInfo => self.debug_info.clone().into_any_element(),
+                    Modal::PdfExport => self.pdf_export.clone().into_any_element(),
                     Modal::Layouts => self.layouts_modal.clone()?.into_any_element(),
                     _ => self.prompt.clone().into_any_element(),
                 };

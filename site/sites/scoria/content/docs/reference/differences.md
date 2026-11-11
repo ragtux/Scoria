@@ -25,7 +25,7 @@ Things Obsidian does that Scoria intends to do and does not.
 | **An image in a line of text** | An image embed that shares its paragraph with text breaks the paragraph in reading view; a remote image in a heading or a table cell stays a link |
 | **Mermaid diagrams** | Not rendered |
 | **Code highlighting in rarer languages** | Fenced code is highlighted by a port of Prism: 85 languages under 122 names, against the 171 names Obsidian's Prism highlights. A block in any other language renders plain |
-| **PDF text, spreads and export** | A PDF opens in a viewer with Obsidian's toolbar, sidebar and find bar, and `![[x.pdf]]` embeds it. The text cannot be selected or copied, there are no two-page spreads and no Adapt to theme, a password-protected PDF does not open, and a note cannot be exported to PDF (`workspace:export-pdf`) |
+| **PDF text, spreads and export** | A PDF opens in a viewer with Obsidian's toolbar, sidebar and find bar, and `![[x.pdf]]` embeds it. The text cannot be selected or copied, there are no two-page spreads and no Adapt to theme, and a password-protected PDF does not open. Export to PDF (`workspace:export-pdf`) lays the reading view out on pages of its own rather than printing it through a browser: the page breaks differ from Obsidian's, a table row or an image taller than a page is not split, callouts have no icon, and an embedded base, PDF or canvas prints as its link |
 | **Audio and video players** | Recognized as file kinds; no player, in a tab or embedded |
 | **A canvas embedded in a note** | `![[Board.canvas]]` is not drawn; the file opens in a view of its own |
 

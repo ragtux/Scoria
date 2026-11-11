@@ -317,9 +317,10 @@ impl Theme {
         Theme::from_tokens(true, base_tokens(true).clone())
     }
 
-    /// The app reaches the light theme through `from_appearance`; the
-    /// tests reach it here.
-    #[cfg(test)]
+    /// Obsidian's light theme with Scoria's accent. The app's windows reach
+    /// the light theme through `from_appearance`; Export to PDF prints in
+    /// this one, as Obsidian prints in its light theme whatever is on
+    /// screen, and the tests reach it here.
     pub fn light() -> Theme {
         Theme::from_tokens(false, base_tokens(false).clone())
     }

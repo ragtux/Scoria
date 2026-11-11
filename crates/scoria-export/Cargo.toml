@@ -1,0 +1,19 @@
+[package]
+name = "scoria-export"
+description = "Exports without gpui: a note's reading view laid out on PDF pages"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+scoria-math.workspace = true
+scoria-highlight.workspace = true
+krilla.workspace = true
+ab_glyph.workspace = true
+image.workspace = true
+
+[dev-dependencies]
+scoria-pdf.workspace = true

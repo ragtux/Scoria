@@ -219,14 +219,33 @@ impl AssetSource for Assets {
 /// installed.
 pub fn fonts() -> Vec<Cow<'static, [u8]>> {
     vec![
-        Cow::Borrowed(include_bytes!("../assets/fonts/Rubik-Black.ttf")),
+        Cow::Borrowed(RUBIK_BLACK),
         Cow::Borrowed(INTER_REGULAR),
-        Cow::Borrowed(include_bytes!("../assets/fonts/Inter-Italic.ttf")),
+        Cow::Borrowed(INTER_ITALIC),
         Cow::Borrowed(include_bytes!("../assets/fonts/Inter-Medium.ttf")),
-        Cow::Borrowed(include_bytes!("../assets/fonts/Inter-SemiBold.ttf")),
-        Cow::Borrowed(include_bytes!("../assets/fonts/Inter-Bold.ttf")),
-        Cow::Borrowed(include_bytes!("../assets/fonts/Inter-BoldItalic.ttf")),
+        Cow::Borrowed(INTER_SEMIBOLD),
+        Cow::Borrowed(INTER_BOLD),
+        Cow::Borrowed(INTER_BOLD_ITALIC),
     ]
+}
+
+const RUBIK_BLACK: &[u8] = include_bytes!("../assets/fonts/Rubik-Black.ttf");
+const INTER_ITALIC: &[u8] = include_bytes!("../assets/fonts/Inter-Italic.ttf");
+const INTER_SEMIBOLD: &[u8] = include_bytes!("../assets/fonts/Inter-SemiBold.ttf");
+const INTER_BOLD: &[u8] = include_bytes!("../assets/fonts/Inter-Bold.ttf");
+const INTER_BOLD_ITALIC: &[u8] = include_bytes!("../assets/fonts/Inter-BoldItalic.ttf");
+
+/// The faces the exports set their text in: the same files the text
+/// system has, handed to `scoria-export` as bytes.
+pub fn export_fonts() -> scoria_export::FontFiles {
+    scoria_export::FontFiles {
+        regular: INTER_REGULAR,
+        italic: INTER_ITALIC,
+        bold: INTER_BOLD,
+        bold_italic: INTER_BOLD_ITALIC,
+        semibold: INTER_SEMIBOLD,
+        display: RUBIK_BLACK,
+    }
 }
 
 /// Inter Regular's bytes: registered by [`fonts`], and outlined by hand for

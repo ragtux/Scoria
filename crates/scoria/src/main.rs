@@ -27,6 +27,7 @@ mod copy_results;
 mod debug_info;
 mod editor;
 mod explorer;
+mod export_modals;
 mod file_menu;
 mod fold;
 mod graph;
@@ -352,6 +353,7 @@ pub fn bind_all_keys(cx: &mut App, registry: &CommandRegistry) {
     prompt::bind_keys(cx);
     copy_results::bind_keys(cx);
     debug_info::bind_keys(cx);
+    export_modals::bind_keys(cx);
     cx.bind_keys([KeyBinding::new("ctrl-q", Quit, None)]);
 }
 

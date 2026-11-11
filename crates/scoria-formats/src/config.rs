@@ -191,6 +191,42 @@ pub struct AppConfig {
         skip_serializing_if = "Option::is_none"
     )]
     pub user_ignore_filters: Option<Vec<String>>,
+    /// Export to PDF's last values, written by every export (observed
+    /// 2026-11-10, Obsidian 1.15.0).
+    #[serde(
+        default,
+        rename = "pdfExportSettings",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub pdf_export_settings: Option<PdfExportSettings>,
+    #[serde(flatten)]
+    pub extra: Map<String, Value>,
+}
+
+/// `app.json`'s `pdfExportSettings`, in the key order Obsidian writes:
+/// `includeName` (only once the toggle has been touched), `pageSize`,
+/// `landscape`, `margin` (a **string**: `"0"` Default, `"1"` None, `"2"`
+/// Minimal) and `downscalePercent`.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct PdfExportSettings {
+    #[serde(
+        default,
+        rename = "includeName",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub include_name: Option<bool>,
+    #[serde(default, rename = "pageSize", skip_serializing_if = "Option::is_none")]
+    pub page_size: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub landscape: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub margin: Option<String>,
+    #[serde(
+        default,
+        rename = "downscalePercent",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub downscale_percent: Option<u32>,
     #[serde(flatten)]
     pub extra: Map<String, Value>,
 }
@@ -960,6 +996,30 @@ pub const PROPERTY_TYPES: &[&str] = &[
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn pdf_export_settings_keep_obsidians_order_a_string_margin_and_unknown_keys() {
+        let text = r#"{"vimMode":true,"pdfExportSettings":{"includeName":true,"pageSize":"A4","landscape":false,"margin":"2","downscalePercent":80,"future":1}}"#;
+        let app: AppConfig = serde_json::from_str(text).unwrap();
+        let pdf = app.pdf_export_settings.clone().unwrap();
+        assert_eq!(pdf.page_size.as_deref(), Some("A4"));
+        assert_eq!(pdf.margin.as_deref(), Some("2"));
+        assert_eq!(pdf.downscale_percent, Some(80));
+        assert_eq!(serde_json::to_string(&app).unwrap(), text);
+        // The first export from `{}` writes four keys, `includeName` not
+        // among them.
+        let first = PdfExportSettings {
+            page_size: Some("Letter".into()),
+            landscape: Some(false),
+            margin: Some("0".into()),
+            downscale_percent: Some(100),
+            ..PdfExportSettings::default()
+        };
+        assert_eq!(
+            serde_json::to_string(&first).unwrap(),
+            r#"{"pageSize":"Letter","landscape":false,"margin":"0","downscalePercent":100}"#
+        );
+    }
 
     #[test]
     fn graph_json_round_trips_groups_and_collapse_keys() {

@@ -331,6 +331,76 @@ uses behave as Obsidian's do.
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
 
+### Export to PDF, 2026-11-11
+
+`workspace:export-pdf` runs, built on what [[#The last five ids probed, 2026-11-10]] settled
+([[Specification#Export to PDF]]). Obsidian prints its reading view through Chromium; Scoria
+has neither a print path nor a PDF writer in gpui, so the pages are laid out and written by
+a new crate, `scoria-export` (no gpui), from the reading view's own model of the note — the
+one parser's tree, embeds resolved, footnotes gathered — converted to plain blocks by
+`workspace::exports`. 198 of the 244 ids run, 46 do not.
+
+**The modal.** `crate::export_modals::PdfExport`: "Export to PDF", the line `Export “Note” to
+PDF with the settings below.`, the five rows with no descriptions (Include file name as
+title, Page size A3…Tabloid, Landscape, Margin Default/Minimal/None, Downscale percent
+10–100 as a cell slider showing its value), Export to PDF (accented) and Cancel. It opens with
+`app.json`'s `pdfExportSettings`, Obsidian's defaults for whatever is missing. Offered for a
+note in all three modes; not for a canvas, an image or an empty tab.
+
+**The run.** Export to PDF writes `pdfExportSettings` (`margin` a string; `includeName` only
+once the toggle has been touched or the file already had it; unknown keys kept), asks the
+desktop's save dialog for `<basename>.pdf` starting in the vault folder, lays the pages out
+and writes them on a background thread, closes the modal, says `PDF Saved to <absolute
+path>` and opens the file with the system's viewer. Cancelled at the dialog, nothing is
+written and the modal stays open. The text is the editor's buffer when the note is being
+edited, the file otherwise.
+
+**The pages.** krilla 0.8 (MIT OR Apache-2.0) writes them, embedding subsets of the faces it
+is handed: the app's Inter for text, KaTeX's Typewriter for code (the one monospaced face
+the workspace already carries, through `scoria-math`; Inter stands in for a glyph it lacks)
+and the KaTeX faces for math. Advances come from `ab_glyph` and krilla draws the glyph ids
+the layout placed, with their text, so the PDF's text extracts. Page sizes are Chromium's,
+in points; the content box starts 51.75 pt in with the Default margin and 24 pt with
+Minimal and None, as measured; Downscale scales the content inside it. The look is the
+reading view's in the light theme over white (`Theme::light`, now outside the tests): 16 px
+text on a 1.5 line, Obsidian's heading scale, the 0.9 em block gap, inline code on its
+ground, highlights, struck and underlined runs, links underlined with a `/Link` annotation
+for a web link (a link into the vault is drawn as one and goes nowhere), bullets, numbers
+and task boxes (a done one struck and muted), code blocks highlighted through
+`scoria-highlight` and wrapped, display and inline math typeset by `scoria-math` (glyphs,
+rules and paths), quotes and embeds with their bar, callouts on their tint in their colour,
+tables with their rules and alignments, rules, and images (PNG, JPEG, GIF and WebP as they
+are, anything else `image` reads as RGBA) scaled to the column and the page. A container
+broken across pages paints its bar or ground on each, slice by slice. The frontmatter is
+left out, as Obsidian leaves it. Metadata: Title the basename, Creator `Scoria`.
+
+**Left out of the first cut.** Chromium's exact pagination (the 60-paragraph fixture is 5
+Letter pages in Obsidian, the same neighbourhood here, not the same breaks); a table row or
+an image taller than a page is not split; no header row repeated on a new page; callout
+icons and fold chevrons; a font fallback beyond Inter (CJK and emoji draw the missing-glyph
+box); embedded bases, PDFs, canvases and remote images (their link text stands in); `<sup>`
+raised but `<sub>` not lowered; no outline, no tagged PDF; a community theme's light colours
+are not used, the default light theme is. `includeName`, when it joins a file that already
+has `pdfExportSettings`, lands after the other keys rather than first: the config merge
+keeps the object's order. Whether the settings are written when the dialog is cancelled is
+unobserved; Scoria writes them at the button.
+
+**Tests.** `scoria-export`: 16 — the settings and geometry (`page_sizes_are_chromiums_points_and_landscape_swaps_them`,
+`margin_values_are_obsidians_strings_and_the_text_edge_is_where_it_was_measured`,
+`downscale_widens_the_content_box_in_layout_pixels`), the layout and pagination
+(`sixty_paragraphs_take_several_letter_pages_and_fewer_at_tabloid_landscape_and_half_scale`,
+`nothing_is_drawn_below_the_content_box`, `the_title_comes_first_only_when_asked_for`,
+`a_long_word_is_broken_rather_than_overflowing`, `a_heading_is_bold_and_larger_than_body_text`,
+`code_is_set_in_the_typewriter_face_and_highlighted`, `math_is_typeset_in_the_katex_faces`,
+`a_container_broken_across_pages_paints_its_bar_on_both`, `lists_draw_markers_and_tables_their_rules`)
+and the written file read back by `scoria-pdf` (`the_pdf_reads_back_with_its_pages_size_title_and_text`,
+`a_landscape_a5_pdf_has_the_swapped_size`, `an_empty_note_is_still_one_page`,
+`an_image_is_drawn_into_the_pdf`). The app: 5 in `workspace::exports` (the runnable test, the
+settings read and written, a rich text's runs cut into inlines, and a note with an embed, an
+image, a task list, code and frontmatter through the whole path to pages hayro reads, the
+frontmatter absent). `scoria-formats`:
+`pdf_export_settings_keep_obsidians_order_a_string_margin_and_unknown_keys`.
+
 ### Eleven more ids probed, five of them run, 2026-11-10
 
 Of the 54 ids left by [[#The probes ran, and what they unblocked, 2026-11-09]], 35 are not
