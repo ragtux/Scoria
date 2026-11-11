@@ -10066,6 +10066,8 @@ Two spaces, no trailing newline, numbers as JavaScript writes them.
   what "History length" prunes and when; whether a canvas or a base is always snapshotted.
 - The diff view's markup with "Show changes" on; Copy's clipboard text; the modal's keyboard.
 - Whether Clear empties `backups` (the run that confirmed it had nothing to clear).
+- Scoria's own store (not Obsidian's): `file-recovery/<vault id>.jsonl` under Scoria's
+  configuration folder, the same `{path, ts, data}` records; see [[Development#File recovery, 2026-11-11]].
 
 ## Observed exports and the audio recorder, Obsidian 1.15.0 (installer build 1.13.7)
 

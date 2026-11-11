@@ -3,6 +3,7 @@
 
 pub mod attachments;
 pub mod ops;
+pub mod recovery;
 pub mod registry;
 pub mod unique;
 

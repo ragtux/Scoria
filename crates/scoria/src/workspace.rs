@@ -108,6 +108,9 @@ mod release_notes;
 // Format converter: Frontmatter migration.
 mod migrate_frontmatter;
 
+// File recovery: snapshots outside the vault, and Open local history.
+mod file_recovery;
+
 actions!(
     workspace,
     [ToggleMode, GoBack, GoForward, OpenSearch, OpenGraph]
@@ -455,6 +458,7 @@ pub const RUNNABLE: &[&str] = &[
     "app:show-debug-info",
     "app:show-release-notes",
     "app:migrate-frontmatter",
+    "file-recovery:open",
 ];
 
 /// Binds every runnable command's hotkeys in the Workspace context, and the
@@ -521,6 +525,8 @@ pub struct VaultState {
     /// format.
     zk_prefixer: RwLock<ZkPrefixerConfig>,
     file_recovery: RwLock<FileRecoveryConfig>,
+    /// File recovery's snapshots, kept outside the vault.
+    recovery: std::sync::Mutex<scoria_vault::recovery::SnapshotStore>,
     webviewer: RwLock<WebviewerConfig>,
     pub plugin_manifests: Vec<PluginManifest>,
     pub palette: CommandPaletteConfig,
@@ -658,6 +664,7 @@ impl VaultState {
             })
             .collect();
         let cache = MetadataCache::new(vault.link_resolver(), metas);
+        let recovery = file_recovery::open_store(vault.root(), &file_recovery);
         Ok(VaultState {
             root: vault.root().to_path_buf(),
             vault: RwLock::new(vault),
@@ -676,6 +683,7 @@ impl VaultState {
             note_composer: RwLock::new(note_composer),
             zk_prefixer: RwLock::new(zk_prefixer),
             file_recovery: RwLock::new(file_recovery),
+            recovery: std::sync::Mutex::new(recovery),
             webviewer: RwLock::new(webviewer),
             plugin_manifests,
             palette,
@@ -1802,6 +1810,8 @@ enum Modal {
     DebugInfo,
     /// "Frontmatter migration" (`app:migrate-frontmatter`).
     MigrateFrontmatter,
+    /// "File recovery" (`file-recovery:open`).
+    FileRecovery,
 }
 
 /// The file operation the open prompt will finish.
@@ -3382,6 +3392,8 @@ pub struct Workspace {
     downloads: Option<attachments::DownloadsModal>,
     /// "Frontmatter migration" while it is up.
     migrate: Option<migrate_frontmatter::MigrateState>,
+    /// "File recovery" while it is up.
+    recovery: Option<file_recovery::RecoveryState>,
     /// What the last migration wrote, for its notice's Undo.
     migration_undo: Vec<migrate_frontmatter::Migrated>,
     /// A canvas asked for the note or media picker; the next render opens
@@ -4150,6 +4162,7 @@ impl Workspace {
             composer: None,
             downloads: None,
             migrate: None,
+            recovery: None,
             migration_undo: Vec::new(),
             pending_canvas_pick: None,
             palette,
@@ -5270,6 +5283,7 @@ impl Workspace {
         if changes.files.is_empty() {
             return;
         }
+        self.snapshot_changes(&changes);
         let Some(state) = self.state.clone() else {
             return;
         };
@@ -6326,6 +6340,7 @@ impl Workspace {
             "app:open-sandbox-vault" => self.open_sandbox_vault(window, cx),
             "app:show-debug-info" => self.show_debug_info(window, cx),
             "app:migrate-frontmatter" => self.open_migrate_frontmatter(window, cx),
+            "file-recovery:open" => self.open_file_recovery(window, cx),
             "app:show-release-notes" => self.show_release_notes(cx),
             _ => {
                 let name = self.command_name(id, cx);
@@ -6987,6 +7002,7 @@ impl Workspace {
             self.forget_history(&path);
             return;
         }
+        self.snapshot_on_open(&path);
         if let Some(sub) = subpath {
             self.scroll_to_subpath(&path, &sub, &state, cx);
         }
@@ -8017,6 +8033,7 @@ impl Workspace {
         match scoria_vault::write_no_follow(&absolute, contents.as_bytes()) {
             Ok(()) => {
                 self.editor.update(cx, |e, _| e.mark_saved(&contents));
+                state.take_snapshot(&name, &contents);
                 self.report(format!("{name} saved"), cx);
             }
             Err(err) => {
@@ -14781,6 +14798,7 @@ impl Workspace {
                 Modal::Downloads => "download-attachments",
                 Modal::DebugInfo => "debug-info",
                 Modal::MigrateFrontmatter => "migrate-frontmatter",
+                Modal::FileRecovery => "file-recovery",
             }),
         );
         // The popout it draws in, by id, or null for the vault window (and
@@ -14807,6 +14825,7 @@ impl Workspace {
             Modal::Downloads => self.describe_downloads(cx),
             Modal::DebugInfo => Some(self.debug_info.read(cx).describe()),
             Modal::MigrateFrontmatter => self.describe_migrate(cx),
+            Modal::FileRecovery => self.describe_recovery(cx),
             Modal::None => None,
         };
         if let Some(Value::Object(view)) = view {
@@ -15799,6 +15818,7 @@ impl Workspace {
             | Modal::CopyResults
             | Modal::DebugInfo
             | Modal::MigrateFrontmatter
+            | Modal::FileRecovery
             | Modal::Layouts => {
                 let child: gpui::AnyElement = match self.modal {
                     Modal::Switcher => self.switcher.clone().into_any_element(),
@@ -15809,6 +15829,7 @@ impl Workspace {
                     Modal::CopyResults => self.copy_results.clone().into_any_element(),
                     Modal::DebugInfo => self.debug_info.clone().into_any_element(),
                     Modal::MigrateFrontmatter => self.migrate_element()?,
+                    Modal::FileRecovery => self.recovery_element()?,
                     Modal::Layouts => self.layouts_modal.clone()?.into_any_element(),
                     _ => self.prompt.clone().into_any_element(),
                 };

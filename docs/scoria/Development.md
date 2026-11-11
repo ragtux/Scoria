@@ -506,6 +506,46 @@ nothing (Scoria shows none); whether closing the Finished page without Done offe
 treats it as Done). The new tests: 6 in `scoria_formats::migrate`, 4 in
 `workspace::migrate_frontmatter`.
 
+### File recovery, 2026-11-11
+
+`file-recovery:open` runs, over a snapshot store of Scoria's own
+([[Specification#Observed File recovery, Obsidian 1.15.0 (installer build 1.13.7)]]). 199 of the
+244 ids run, 45 do not. The gate: 64 test binaries, 1,585 passed, 657 in the app's bin.
+
+**The store.** `scoria_vault::recovery`: Obsidian's record, `{path, ts, data}`, one JSON object
+per line in `file-recovery/<vault id>.jsonl` under Scoria's configuration folder, the folder the
+fold records and `scoria.json` live in — **never in the vault**, which gains no file (a test
+lists the vault folder after snapshots and a restore). Obsidian's own snapshots stay in its
+IndexedDB, so neither app sees the other's. A snapshot of a note or a canvas is taken when it is
+opened, when Scoria saves it and when it changes on disk, each only once `intervalMinutes` has
+passed since the file's last snapshot (none within it, as Obsidian took none for two modifies and
+typing inside five minutes), and never twice of the same text. `keepDays` prunes when the vault
+opens. The File recovery tab's two fields lose their "not in Scoria yet"; History length reads
+as taking effect on restart. With the plugin off in `core-plugins.json` nothing is taken. Tests
+keep their stores in memory, so no run writes under the developer's configuration folder.
+
+**The modal.** `crate::recovery_modal`: the search field ("Choose a file...", the active file's
+name in it), the chosen file's snapshots newest first, each its date in moment's `llll` shape
+over its size ("13 B"), the newest selected; the file's name, **Show changes**, **Copy**,
+**Restore** and the close button over the snapshot's text; "Please select a file on the left to
+view snapshots." with none. A query that names no file lists the files with snapshots whose path
+holds it, and a click or Enter chooses one. Show changes draws the snapshot's lines against the
+file now, removed and added lines tinted (Obsidian's diff markup is unobserved). Restore writes the
+snapshot over the file at once, the editor reloading it, and says "Successfully restored version
+from a few seconds ago", the time in moment's `fromNow` words; the modal stays up, as Obsidian's
+did. Copy puts the text on the clipboard.
+
+**Driven.** A headless sway, a two-note scratch vault with `intervalMinutes: 0`, the socket: the
+open and a typed save made two records in the store under the scratch configuration folder and
+nothing in the vault; the modal drawn with both, the older picked, Show changes marking the typed
+line added, Restore writing `Version one.\nSecond line.\n` back with the notice, the editor clean.
+
+**Left.** The tab's **View** and **Clear** buttons stay inert, like every button in the Settings
+window; deleting `file-recovery/` clears the history meanwhile. A rename does not carry a file's
+snapshots to its new path. Sizes past 1 KB, the diff's look, Copy's exact text and the modal's
+keyboard are Scoria's, unobserved. The new tests: 6 in `scoria_vault::recovery`, 2 in
+`recovery_modal`, 5 in `workspace::file_recovery`.
+
 ### The Note composer, driven, 2026-11-10
 
 The one thing the 2026-11-09 work had not been seen doing. A headless sway, a five-note scratch

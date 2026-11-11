@@ -3641,24 +3641,24 @@ impl SettingsView {
                 ]
             }
             // Two number fields, which write `file-recovery.json` (observed
-            // 2026-11-09), and two buttons over the snapshots, which Scoria
-            // does not keep: inert, as every button in this window is. The
-            // fields are tagged too, Scoria taking no snapshots by them.
+            // 2026-11-09) and set Scoria's own snapshots' clock, and two
+            // buttons over the snapshots: inert, as every button in this
+            // window is, so tagged. The command opens the snapshots.
             "file-recovery" => vec![
                 field(
                     "Snapshot interval",
                     "Minimal interval in minutes between two snapshots.",
                     state,
                     RECOVERY_INTERVAL,
-                )
-                .not_yet(),
+                ),
                 field(
                     "History length",
                     "Number of days the snapshots are kept for.",
                     state,
                     RECOVERY_KEEP_DAYS,
                 )
-                .not_yet(),
+                // Snapshots are pruned when the vault opens.
+                .on_restart(),
                 item(
                     "Snapshots",
                     "View and restore saved snapshots.",
@@ -6600,7 +6600,8 @@ mod tests {
     /// `file-recovery.json` byte for byte as Obsidian 1.15.0 did while the
     /// probe typed into them (`2026-11-09-file-recovery.json`,
     /// `s05-settings-typed`), refused values writing nothing; the two
-    /// buttons stay inert, Scoria keeping no snapshots. Every row is tagged.
+    /// fields set the snapshots' clock, the two buttons stay inert and
+    /// tagged.
     #[test]
     fn the_file_recovery_tab_writes_file_recovery_json_as_obsidian_did() {
         let (dir, mut state) = vault();
@@ -6618,7 +6619,10 @@ mod tests {
         assert_eq!(recovery[1].control, Control::Text("7".into()));
         assert_eq!(recovery[2].control, Control::Button("View".into()));
         assert_eq!(recovery[3].control, Control::Button("Clear".into()));
-        for row in recovery.iter() {
+        for row in &recovery[..2] {
+            assert_ne!(row.honored, Honored::No, "{}", row.name);
+        }
+        for row in &recovery[2..] {
             assert_eq!(row.honored, Honored::No, "{}", row.name);
         }
         assert_eq!(recovery[0].field.map(|f| f.key), Some("intervalMinutes"));

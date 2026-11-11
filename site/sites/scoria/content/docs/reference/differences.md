@@ -49,7 +49,7 @@ Things Obsidian does that Scoria intends to do and does not.
 | **Unique note creator** | Both commands work. **Add unique internal link** with several cursors edits only the first; the template setting is a path field |
 | **Slash commands** | Typing `/` in the editor offers no commands |
 | **Renaming a heading** | `editor:rename-heading` works as Obsidian's does, oddities included. Links to the heading in frontmatter are not rewritten |
-| **File recovery** | Obsidian keeps its snapshots in IndexedDB outside the vault, so it is out of the round-trip work rather than next in it |
+| **File recovery** | Scoria keeps its own snapshots, outside the vault under its configuration folder (`file-recovery/`); Obsidian keeps its in its own database, so neither app sees the other's. Snapshots are taken of notes and canvases on opening and on a change, once per **Snapshot interval**, and pruned by **History length** when the vault opens. The tab's **View** and **Clear** buttons do nothing yet; `file-recovery:open` opens the snapshots. **Show changes** compares a snapshot with the file now, line by line |
 | **Editing properties in reading view** | A property's value pill can be removed there; keys, values, the type menu and **Add property** are edited in Live Preview or Source mode only |
 | **Editing the title in reading view** | The inline title is an editable field in Live Preview and Source mode; in reading view it is plain text. `F2` works everywhere |
 | **Vim mode** | `vimMode` is read, not implemented |

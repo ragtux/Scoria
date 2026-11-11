@@ -43,6 +43,7 @@ mod preview;
 mod prompt;
 mod properties;
 mod reading;
+mod recovery_modal;
 mod remote;
 mod search;
 mod settings;
