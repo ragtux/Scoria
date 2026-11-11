@@ -1469,6 +1469,21 @@ impl Editor {
         self.pending_center = true;
     }
 
+    /// Puts the caret at the buffer offset under a window point, read
+    /// through the last frame's layout; `false` while nothing is laid out.
+    pub fn caret_at_point(
+        &mut self,
+        position: Point<Pixels>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> bool {
+        let Some(at) = self.offset_at_point(window, position) else {
+            return false;
+        };
+        self.set_selection_range(at, at, window, cx);
+        true
+    }
+
     pub fn set_selection_range(
         &mut self,
         start: usize,

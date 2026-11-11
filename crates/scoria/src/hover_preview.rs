@@ -8,12 +8,14 @@
 //! entity to act.
 
 use crate::reading::model::{each_embed, EmbedKind, RBlock};
-use crate::reading::view::{LinkHandler, ReadingHost, Renderer, ToggleHandler, LINE_HEIGHT};
+use crate::reading::view::{
+    HoverHandler, HoverHost, LinkHandler, ReadingHost, Renderer, ToggleHandler, LINE_HEIGHT,
+};
 use crate::reading::{build_with, BuildOptions, EmbedSource};
 use crate::theme::Theme;
 use gpui::{
     anchored, canvas, deferred, div, point, prelude::*, px, AnyElement, App, Bounds, Div,
-    Modifiers, Pixels, ScrollHandle, SharedString, Stateful, Window,
+    Modifiers, Pixels, Point, ScrollHandle, SharedString, Stateful, Window,
 };
 use scoria_formats::config::{PagePreviewConfig, PropertyTypes};
 use scoria_formats::properties::PropertiesInDocument;
@@ -146,6 +148,10 @@ pub struct Pending {
     pub from: String,
     /// The hovered element's first line box, in window coordinates.
     pub anchor: Bounds<Pixels>,
+    /// How many popovers the link is inside: 0 for a view or a pane, `n`
+    /// for a link in the `n`th popover of the stack, whose own popover
+    /// goes up over it as the `n + 1`th.
+    pub depth: usize,
 }
 
 /// What a popover shows.
@@ -166,22 +172,117 @@ pub struct Shown {
     /// The path its own links resolve against.
     pub from: String,
     pub content: Content,
+    /// The note a click turns it into an editor of, and the subpath it
+    /// shows: `None` for anything that is not a note (an image, a base, a
+    /// missing note), which a click leaves alone.
+    pub note: Option<(String, String)>,
     /// Callouts folded open or shut inside it, by title id.
     pub toggled: Rc<RefCell<HashSet<usize>>>,
     pub scroll: ScrollHandle,
+    /// Which of its rendered links the pointer is on, as a view's
+    /// [`crate::reading::view::HoverHost`] keeps it.
+    pub hover_current: Rc<Cell<Option<(usize, usize)>>>,
+    /// The pointer is over it, which keeps it (and those under it) up.
+    pub over: bool,
+    /// Its height inside the border as last painted: the editor a click
+    /// makes takes the same box.
+    pub height: Rc<Cell<f32>>,
+    /// The Live Preview editor a click on its text made (`is-editing`):
+    /// it stays when the pointer leaves, until Escape or a click outside.
+    pub editing: Option<gpui::Entity<crate::editor::Editor>>,
+    /// The workspace's subscription to that editor's events.
+    pub editing_subscription: Option<gpui::Subscription>,
+}
+
+impl Shown {
+    pub fn new(
+        window: Option<u64>,
+        anchor: Bounds<Pixels>,
+        from: String,
+        content: Content,
+        note: Option<(String, String)>,
+        toggled: HashSet<usize>,
+    ) -> Shown {
+        Shown {
+            window,
+            anchor,
+            from,
+            content,
+            note,
+            toggled: Rc::new(RefCell::new(toggled)),
+            scroll: ScrollHandle::default(),
+            hover_current: Rc::default(),
+            over: false,
+            height: Rc::new(Cell::new(0.)),
+            editing: None,
+            editing_subscription: None,
+        }
+    }
 }
 
 /// The workspace's page-preview state.
 #[derive(Default)]
 pub struct HoverPreview {
     pub pending: Option<Pending>,
-    pub shown: Option<Shown>,
-    /// The pointer is over the popover, which keeps it up.
-    pub over_popover: bool,
+    /// The popovers up, the first raised from a view or a pane and each
+    /// later one from a link in the one before it.
+    pub shown: Vec<Shown>,
     /// Bumped by every change; a timer acts only if it is unchanged.
     pub generation: u64,
     /// The modifiers last seen, from a move or a modifiers-changed event.
     pub modifiers: Modifiers,
+}
+
+impl HoverPreview {
+    /// How many popovers stay when the hide timer fires: every one up to
+    /// the last that the pointer is over or that is editing, and all of
+    /// them while the pointer is on a link (its own popover replaces them
+    /// from where it sits when it goes up). Leaving a nested popover and
+    /// its parent removes both (observed); one left for its parent keeps
+    /// the parent.
+    pub fn kept(&self) -> usize {
+        if self.pending.is_some() {
+            return self.shown.len();
+        }
+        self.shown
+            .iter()
+            .rposition(|s| s.over || s.editing.is_some())
+            .map_or(0, |ix| ix + 1)
+    }
+}
+
+/// The note (and the subpath) a popover for `target` would edit, if it
+/// shows a note.
+pub fn editable_note(
+    vault: &dyn EmbedSource,
+    target: &str,
+    from: &str,
+) -> Option<(String, String)> {
+    let path = vault.resolve(target, from)?;
+    if !FileKind::from_path(&path).is_markdown() {
+        return None;
+    }
+    let subpath = target.find('#').map(|i| &target[i..]).unwrap_or("");
+    Some((path, subpath.to_string()))
+}
+
+/// One of a popover's handlers, told `T`.
+pub type PopoverHandler<T> = Rc<dyn Fn(T, &mut Window, &mut App)>;
+
+/// What a popover's element does, handed in by the workspace.
+pub struct Handlers {
+    /// A link clicked inside it.
+    pub on_link: LinkHandler,
+    /// The pointer coming onto a link inside it or leaving one: a nested
+    /// popover's source.
+    pub on_hover_link: HoverHandler,
+    /// The pointer coming onto the popover or leaving it.
+    pub on_hover: PopoverHandler<bool>,
+    /// A click on its text (not on a link), at this window point.
+    pub on_edit: PopoverHandler<Point<Pixels>>,
+    /// Escape (`true`), or a press outside it (`false`), while it is an
+    /// editor.
+    pub on_close: PopoverHandler<bool>,
 }
 
 /// What hovering `target`, written in `from`, shows.
@@ -247,15 +348,15 @@ pub fn content(
     (content, path.clone())
 }
 
-/// The popover's element, drawn over the window it is in.
-#[allow(clippy::too_many_arguments)]
+/// The popover's element, drawn over the window it is in. `depth` is its
+/// place in the stack: a nested popover is drawn over its parent.
 pub fn render(
     shown: &Shown,
+    depth: usize,
     theme: &Theme,
     property_types: &PropertyTypes,
     properties: PropertiesInDocument,
-    on_link: LinkHandler,
-    on_hover: impl Fn(&bool, &mut Window, &mut App) + 'static,
+    handlers: Handlers,
     window: &mut Window,
 ) -> AnyElement {
     let t = &theme.tokens;
@@ -279,8 +380,9 @@ pub fn render(
                     cx.refresh_windows();
                 }
             });
-            // Read-only: no task toggles, no pill removal, no menu, and no
-            // hover of its own until nested popovers land.
+            // Read-only: no task toggles, no pill removal and no menu. Its
+            // links raise popovers of their own, on the reading view's
+            // rules (observed: no Mod).
             let host = ReadingHost {
                 properties,
                 copied: None,
@@ -288,7 +390,10 @@ pub fn render(
                 on_task: Rc::new(|_, _| {}),
                 on_remove_item: None,
                 on_menu: None,
-                hover: None,
+                hover: Some(HoverHost {
+                    on_hover: handlers.on_hover_link.clone(),
+                    current: shown.hover_current.clone(),
+                }),
             };
             let renderer = Renderer::new(
                 theme,
@@ -298,7 +403,7 @@ pub fn render(
                 property_types,
                 None,
                 None,
-                on_link,
+                handlers.on_link.clone(),
                 on_toggle,
             )
             .with_reading_host(&host);
@@ -314,11 +419,62 @@ pub fn render(
     let position = point(px(x), shown.anchor.top() - px(GAP));
     let offset = point(px(0.), shown.anchor.size.height + px(2. * GAP));
     let frame = crate::theme::box_shadows(&t.shadow_s);
+    // The render's height inside the border, measured while it is a render
+    // and frozen once it is an editor, which takes that box.
+    let height = shown.height.clone();
+    let measure = shown.editing.is_none().then(|| {
+        canvas(
+            move |b, _, _| height.set(f32::from(b.size.height)),
+            |_, _, _, _| {},
+        )
+        .absolute()
+        .size_full()
+    });
+    let inner: AnyElement = match &shown.editing {
+        // The editor takes the box the render had, inside the border.
+        Some(editor) => div()
+            .w_full()
+            .h(px(shown.height.get().clamp(60., HEIGHT)))
+            .child(editor.clone())
+            .into_any_element(),
+        None => {
+            let on_edit = handlers.on_edit.clone();
+            let over_link = shown.hover_current.clone();
+            let editable = shown.note.is_some();
+            div()
+                .id("hover-popover-scroll")
+                .max_h(px(HEIGHT))
+                .overflow_y_scroll()
+                .track_scroll(&shown.scroll)
+                // A click on the text, not on one of its links, makes the
+                // popover an editor with the caret where the click was.
+                .when(editable, |d| {
+                    d.on_click(move |event, window, cx| {
+                        if over_link.get().is_none() {
+                            on_edit(event.position(), window, cx)
+                        }
+                    })
+                })
+                .child(
+                    div()
+                        .w_full()
+                        .p(px(PADDING))
+                        .flex()
+                        .flex_col()
+                        .children(body),
+                )
+                .into_any_element()
+        }
+    };
+    let editing = shown.editing.is_some();
+    let on_hover = handlers.on_hover.clone();
+    let (close_key, close_out) = (handlers.on_close.clone(), handlers.on_close);
     deferred(
         anchored().position(position).offset(offset).child(
             div()
-                .id("hover-popover")
+                .id(("hover-popover", depth))
                 .occlude()
+                .relative()
                 .w(px(WIDTH + 2.))
                 .max_h(px(HEIGHT + 2.))
                 .flex()
@@ -333,25 +489,23 @@ pub fn render(
                 .text_size(px(base))
                 .line_height(px(base * LINE_HEIGHT))
                 .text_color(t.text_normal)
-                .on_hover(on_hover)
-                .child(
-                    div()
-                        .id("hover-popover-scroll")
-                        .max_h(px(HEIGHT))
-                        .overflow_y_scroll()
-                        .track_scroll(&shown.scroll)
-                        .child(
-                            div()
-                                .w_full()
-                                .p(px(PADDING))
-                                .flex()
-                                .flex_col()
-                                .children(body),
-                        ),
-                ),
+                .on_hover(move |over, window, cx| on_hover(*over, window, cx))
+                // An editing popover goes on Escape and on a press outside
+                // it, and on nothing else.
+                .when(editing, |d| {
+                    d.capture_key_down(move |event, window, cx| {
+                        if event.keystroke.key == "escape" {
+                            cx.stop_propagation();
+                            close_key(true, window, cx);
+                        }
+                    })
+                    .on_mouse_down_out(move |_, window, cx| close_out(false, window, cx))
+                })
+                .children(measure)
+                .child(inner),
         ),
     )
-    .with_priority(2)
+    .with_priority(2 + depth)
     .into_any_element()
 }
 
@@ -412,6 +566,60 @@ mod tests {
         assert_eq!(left_edge(946., 1024.), 562.);
         assert_eq!(left_edge(737., 1024.), 562.);
         assert_eq!(left_edge(5., 300.), 0.);
+    }
+
+    #[test]
+    fn leaving_a_nested_popover_for_its_parent_keeps_the_parent() {
+        let popover = |over: bool| {
+            let mut s = Shown::new(
+                None,
+                Bounds::default(),
+                "Beta.md".into(),
+                Content::Missing(String::new()),
+                None,
+                HashSet::new(),
+            );
+            s.over = over;
+            s
+        };
+        let mut hp = HoverPreview {
+            shown: vec![popover(true), popover(false)],
+            ..HoverPreview::default()
+        };
+        // The pointer went back to the parent: the nested one goes.
+        assert_eq!(hp.kept(), 1);
+        // It left both: both go (observed, ~300 ms).
+        hp.shown[0].over = false;
+        assert_eq!(hp.kept(), 0);
+        // Over the nested one, the parent stays under it.
+        hp.shown[1].over = true;
+        assert_eq!(hp.kept(), 2);
+        // On a link anywhere: nothing goes until that link's popover is up.
+        hp.shown[1].over = false;
+        hp.pending = Some(Pending {
+            window: None,
+            source: Source::Reading,
+            target: "Gamma".into(),
+            from: "Beta.md".into(),
+            anchor: Bounds::default(),
+            depth: 1,
+        });
+        assert_eq!(hp.kept(), 2);
+    }
+
+    #[test]
+    fn only_a_note_is_editable_and_it_keeps_its_subpath() {
+        assert_eq!(
+            editable_note(&Vault, "Beta#Second", "Alpha.md"),
+            Some(("Beta.md".into(), "#Second".into()))
+        );
+        assert_eq!(
+            editable_note(&Vault, "/Beta.md", "Beta.md"),
+            None,
+            "the test vault does not root paths"
+        );
+        assert_eq!(editable_note(&Vault, "Pic.png", "Alpha.md"), None);
+        assert_eq!(editable_note(&Vault, "Missing", "Alpha.md"), None);
     }
 
     struct Vault;

@@ -330,7 +330,46 @@ uses behave as Obsidian's do.
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
-| Page preview | probed 2026-11-11 on macOS, see [[Specification#Observed page preview, Obsidian 1.15.0]] and [[#Page preview, the probe, 2026-11-11]]; step 1 landed the same day — the popover over links in the reading view and both editing modes, see [[#Page preview, step 1, 2026-11-11]]; step 2 the same day — the tab header and the Files, Bookmarks, Backlinks, Outgoing links and Outline rows, see [[#Page preview, step 2, 2026-11-11]]; left: the Properties, Bases and Graph sources, nested popovers, and the click that makes it an editor |
+| Page preview | probed 2026-11-11 on macOS, see [[Specification#Observed page preview, Obsidian 1.15.0]] and [[#Page preview, the probe, 2026-11-11]]; step 1 landed the same day — the popover over links in the reading view and both editing modes, see [[#Page preview, step 1, 2026-11-11]]; step 2 the same day — the tab header and the Files, Bookmarks, Backlinks, Outgoing links and Outline rows, see [[#Page preview, step 2, 2026-11-11]]; step 3 the same day — nested popovers and the click that makes one an editor, see [[#Page preview, step 3, 2026-11-11]]; left: the Properties, Bases and Graph sources |
+
+### Page preview, step 3, 2026-11-11
+
+Nested popovers and the editing popover. `HoverPreview.shown` is a stack now: the first popover
+went up from a view or a pane, each later one from a link in the one before. A `Pending` carries
+the `depth` its link is at (0 in a view or a pane, `n` in the `n`th popover), a new popover
+replaces everything above its link's own, and a leaving is honoured only from the depth that
+reported the link. Each `Shown` keeps whether the pointer is over it; the hide timer keeps every
+popover up to the last one the pointer is over or that is editing, and all of them while the
+pointer rests on a link (`HoverPreview::kept`), which is how leaving a nested popover for its
+parent keeps the parent and leaving both removes both, as observed. A popover's render reports
+its links through a `HoverHost` of its own on the reading view's rules (no Mod).
+
+A click on a popover's text that is not on one of its links (the popover's hover tracker says
+which) makes it an editor: a new `Editor` entity, given the vault and `app.json` as a group's
+editor is (`configure_editor`), in Live Preview, with no inline title and no readable line length,
+in the box the render had (its height inside the border, measured each frame until it edits and
+frozen then). The caret goes where the click was, read through the editor's own first layout
+(`Editor::caret_at_point`, retried over a few frames until there is one), which is what
+CodeMirror's `posAtCoords` on the new editor does in Obsidian. A popover showing a section opens
+the whole note with the caret at the section's start: not probed, the probe clicked a whole note.
+The open note's edits are flushed first, so the popover starts from the disk. Its edits save two
+seconds after the last one through the same checked write as the open note's (`write_buffer`,
+split out of `flush_save`), and are flushed when it goes; the open note, if it is the same file,
+picks the write up from the watcher as it does any other. It stays when the pointer leaves;
+Escape closes it and puts the keyboard back on the main view, a press outside closes it and
+leaves the keyboard where the press put it, and the popovers under it then go unless the pointer
+is over them. A link under an editing popover raises nothing that would replace it (inferred from
+"stays until Escape or a click outside"). Links in the editor preview with Mod, as an editor's do,
+and a click on one opens it in the main area. `state.hover_preview.popovers` lists the stack
+(`shown` is still the first), each with its height, `over` and `editing` (path, dirty, selection).
+
+Checked over the socket on macOS: a link in the Beta popover raised Gamma's over it; back on Beta
+left one, off both left none; a click on Beta's first paragraph put the caret at offset 18 ("Beta
+first|"), typing `ZZ` wrote `Beta firstZZ paragraph…` to disk after the 2 s save, the popover
+stayed after the pointer left and kept its 291 px; Escape and a click outside each closed it; a
+click on the `Beta#Second` popover put the caret at the heading (56); editing Alpha from a popover
+nested in Gamma's while Alpha was open in the reading view saved, and the reading view's counts
+followed.
 
 ### Page preview, step 2, 2026-11-11
 
