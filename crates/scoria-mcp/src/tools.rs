@@ -211,6 +211,15 @@ scoria_state to see where you landed.",
         "scroll",
     ),
     act(
+        "scoria_modifiers",
+        "\
+Hold or release modifier keys alone (`mods`: any of `ctrl`, `alt`, `shift`, \
+`cmd`; empty releases all), as pressing Cmd or Ctrl with the pointer resting \
+somewhere does. Page preview raises its popover over a link in the editor \
+when Mod goes down this way.",
+        "modifiers",
+    ),
+    act(
         "scoria_select",
         "\
 Select a byte range in the open editor. `start` and `end` are zero-based byte \

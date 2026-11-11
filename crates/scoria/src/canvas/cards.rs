@@ -599,6 +599,8 @@ impl Cards {
             // The canvas has its own right-click menu over a card; a link
             // inside one raises no second menu.
             on_menu: None,
+            // Page preview has no Canvas source of its own here yet.
+            hover: None,
         };
         let renderer = Renderer::new(
             &scaled,

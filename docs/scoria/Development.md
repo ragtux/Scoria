@@ -330,6 +330,61 @@ uses behave as Obsidian's do.
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
+| Page preview | probed 2026-11-11 on macOS, see [[Specification#Observed page preview, Obsidian 1.15.0]] and [[#Page preview, the probe, 2026-11-11]]; step 1 landed the same day — the popover over links in the reading view and both editing modes, see [[#Page preview, step 1, 2026-11-11]]; left: the dock and header sources, nested popovers, and the click that makes it an editor |
+
+### Page preview, step 1, 2026-11-11
+
+`crates/scoria/src/hover_preview.rs` holds what needs no workspace: the two sources built so far
+(`preview` for the reading view, `editor` for Live Preview and source mode) and their
+`requires_mod` from `page-preview.json`, Mod as `Modifiers::secondary` (Cmd on macOS, where the
+probe saw Ctrl raise nothing), the 300 ms delays, the 450 × 400 box, the left-edge clamp, what a
+link shows (`content`) and the element (`render`). **What it shows**: a whole note is built as the
+reading view builds it; a link with a subpath, or to anything not a note, is built as the embed
+`![[path#subpath]]` would be and the embed's blocks are taken, which is what gives a heading link
+its section and a block link its block, and draws an image, base or PDF as the embed draws them; a
+missing target says so in Obsidian's words. There is no inline title (Obsidian's popover holds one
+and hides it) and the properties block starts folded, as the probe's popover had it. **Where**:
+`anchored()` at the anchor's top less 10 px with an offset of its height plus 20, so the normal
+place is 10 px under the line and gpui's anchor switch, when the box would leave the window, puts
+its bottom 10 px over the line; the x is clamped before, so the switch never flips it sideways.
+**Reporting the pointer**: the reading view's `LinkMenu` element now also listens to moves, and
+reports a link only when the pointer comes onto it and the leaving only from the text that
+reported it (`HoverHost.current`, shared by the view's texts); the editor reports from its own
+move listener through `link_under`, which anchors at the link's first source byte as
+`row_and_x` places it. The workspace keeps a `HoverPreview` — the link under the pointer, the
+popover up, whether the pointer is over it, a generation every change bumps so a timer acts only
+if nothing moved — and both window roots listen for modifier changes, which is how Mod pressed
+over a resting link raises the popover. A view that stops painting never reports leaving, so
+opening a note, switching modes and loading a tab or group reset the state and every view's
+remembered link (`reset_preview`). A link clicked in the popover resolves against the note the
+popover shows and opens in the main area. The socket's `state.hover_preview` names the pending
+link and the popover's window, note, anchor, left edge and content, and a new `modifiers` method
+holds or releases modifiers with nothing else moving.
+
+Checked over the socket on macOS against a copy of the probe's vault: in the reading view the
+popover was up between 150 and 500 ms after the pointer settled and gone between 150 and 500 ms
+after it left; a pointer crossing the gap into it kept it up (`over_popover`), the wheel scrolled
+it and not the note; `[[Missing]]`, an image and a section link showed what the probe saw; a link
+near the window's bottom put it above; in Live Preview and source mode a plain hover raised
+nothing, Cmd pressed over the link raised it between 150 and 500 ms after the key, releasing Cmd
+left it up, Ctrl raised nothing and a Cmd move raised it. Screenshots matched Obsidian's
+placement to the pixel the probe recorded. Not built: the Files, tab header, Bookmarks,
+Backlinks, Outgoing links, Outline, Properties, Bases and Graph sources (their settings rows stay
+tagged), nested popovers, the `is-editing` popover a click makes, and Escape.
+
+### Page preview, the probe, 2026-11-11
+
+Multi-window closed with the tab header's menu, so phase 4 went back to the core plugins a vault
+uses, starting with the ones that are on by default and missing: Page preview first, then Note
+composer. `tools/obsidian-probe/page-preview.mjs` was the first probe run on the Mac:
+`run-block.sh` grew a Darwin branch that always runs under its own data directory and starts the
+bundle's binary. What it found that the build hangs on: about 300 ms to show and to hide, timed in
+the renderer; a reading-view render in a 450 × 400 box, 10 px under the hovered element, flipped
+above or pushed in to 10 px from the window's edge; a heading or block link shows only its
+section; `page-preview.json`'s keys mean *require Mod*, and only the reading view does without it
+by default; a click on the text turns the popover into a Live Preview editor that writes the note
+and stays until Escape or a click outside. A search result raised nothing in the run, and a
+second link hovered while a popover is up was not settled.
 
 ### Multi-window, the design, 2026-11-09
 

@@ -30,6 +30,7 @@ mod file_menu;
 mod fold;
 mod graph;
 mod help;
+mod hover_preview;
 mod inline_field;
 mod math;
 mod mentions;

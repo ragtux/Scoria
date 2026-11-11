@@ -3359,25 +3359,27 @@ impl SettingsView {
                 items
             }
             // One toggle per surface the hover preview pops up over, under a
-            // heading with no control of its own. Scoria has no hover
-            // preview yet, so every row is tagged.
+            // heading with no control of its own. The reading view and the
+            // editor preview (`hover_preview`), and read their key on every
+            // hover; the other surfaces have no preview yet and are tagged.
             "page-preview" => {
                 let p = &state.page_preview();
                 let row = |name: &str, flag: PagePreviewFlag| {
-                    toggle(name, "", flag.is_on(p), Flag::PagePreview(flag)).not_yet()
+                    toggle(name, "", flag.is_on(p), Flag::PagePreview(flag))
                 };
+                let later = |name: &str, flag: PagePreviewFlag| row(name, flag).not_yet();
                 vec![
                     heading("Require Ctrl to trigger page preview on hover"),
-                    row("Search, Backlinks, and Outgoing links", PREVIEW_SEARCH),
+                    later("Search, Backlinks, and Outgoing links", PREVIEW_SEARCH),
                     row("Reading view", PREVIEW_READING),
                     row("Editing view", PREVIEW_EDITING),
-                    row("Tab header", PREVIEW_TAB_HEADER),
-                    row("Files", PREVIEW_FILES),
-                    row("Properties view", PREVIEW_PROPERTIES),
-                    row("Bookmarks", PREVIEW_BOOKMARKS),
-                    row("Outline", PREVIEW_OUTLINE),
-                    row("Bases", PREVIEW_BASES),
-                    row("Graph view", PREVIEW_GRAPH),
+                    later("Tab header", PREVIEW_TAB_HEADER),
+                    later("Files", PREVIEW_FILES),
+                    later("Properties view", PREVIEW_PROPERTIES),
+                    later("Bookmarks", PREVIEW_BOOKMARKS),
+                    later("Outline", PREVIEW_OUTLINE),
+                    later("Bases", PREVIEW_BASES),
+                    later("Graph view", PREVIEW_GRAPH),
                 ]
             }
             "note-composer" => {
@@ -6227,8 +6229,11 @@ mod tests {
         assert_eq!(items[0].control, Control::None);
         // Reading view is the one surface that is off when its key is absent.
         assert_eq!(items[2].control, Control::Toggle(false));
+        // The reading view and the editor preview; the other surfaces wait.
         for row in &items[1..] {
-            assert_eq!(row.honored, Honored::No, "{}", row.name);
+            let live = matches!(row.name.as_ref(), "Reading view" | "Editing view");
+            let want = if live { Honored::Live } else { Honored::No };
+            assert_eq!(row.honored, want, "{}", row.name);
             assert!(row.desc.is_empty(), "{} has a description", row.name);
         }
 
@@ -7336,6 +7341,10 @@ mod tests {
                 "Show existing only",
                 "Show attachments",
                 "Show all file types",
+                // Page preview's two live sources, read on every hover by
+                // `Workspace::arm_preview_show`.
+                "Reading view",
+                "Editing view",
             ],
             "a toggle claims Scoria reads it"
         );
@@ -7353,8 +7362,6 @@ mod tests {
             "Snap to grid",
             "Snap to objects",
             "Search, Backlinks, and Outgoing links",
-            "Reading view",
-            "Editing view",
             "Tab header",
             "Files",
             "Properties view",

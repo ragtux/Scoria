@@ -216,6 +216,9 @@ pub enum EditorEvent {
     RenameTo(String),
     /// Something the editor could not do, for the status bar.
     Reported(SharedString),
+    /// The pointer came onto a link in the text, or left it (`None`):
+    /// page preview's editor source.
+    Hover(Option<crate::reading::LinkHover>),
     /// A property's type was chosen from its menu; the workspace records it
     /// in the vault's `types.json`.
     PropertyTypeAssigned {
@@ -680,6 +683,9 @@ pub struct Editor {
     pending_folds: Option<Vec<usize>>,
     /// The line under the pointer, for the fold indicator it reveals.
     hover_line: Option<usize>,
+    /// The link page preview was last told the pointer is on: its line and
+    /// source range, so a move along the same link reports nothing.
+    hovered_link: Option<(usize, Range<usize>)>,
     /// The property whose type menu is open.
     property_menu: Option<String>,
     /// The table cell being typed into. Like a properties field, the keys
@@ -801,6 +807,7 @@ impl Editor {
             hidden: Vec::new(),
             pending_folds: None,
             hover_line: None,
+            hovered_link: None,
             property_menu: None,
             table_field: None,
             table_select: None,
@@ -1761,9 +1768,46 @@ impl Editor {
             .map(|v| v.line)
     }
 
-    /// Remembers the hovered line, which is where the fold indicator shows.
-    fn hover_at(&mut self, position: Point<Pixels>, cx: &mut Context<Self>) {
-        let line = self.line_at_point(position);
+    /// Forgets the link the pointer was last reported on (page preview).
+    pub fn clear_hover(&mut self) {
+        self.hovered_link = None;
+    }
+
+    /// Remembers the hovered line, which is where the fold indicator shows,
+    /// and tells page preview when the pointer comes onto a link or leaves
+    /// it. `over` is whether the editor's hitbox has the pointer at all: a
+    /// popover or a menu drawn over the text takes it.
+    fn hover_at(
+        &mut self,
+        position: Point<Pixels>,
+        over: bool,
+        modifiers: gpui::Modifiers,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let link = if over {
+            self.link_under(position, window)
+        } else {
+            None
+        };
+        let key = link
+            .as_ref()
+            .map(|(line, range, _, _)| (*line, range.clone()));
+        if key != self.hovered_link {
+            self.hovered_link = key;
+            cx.emit(EditorEvent::Hover(link.map(|(_, _, target, anchor)| {
+                crate::reading::LinkHover {
+                    target,
+                    anchor,
+                    modifiers,
+                }
+            })));
+        }
+        let line = if over {
+            self.line_at_point(position)
+        } else {
+            None
+        };
         if line != self.hover_line {
             // Only a change that moves an indicator is worth a frame.
             let affects = |l: Option<usize>| l.is_some_and(|l| self.foldable_at(l).is_some());
@@ -3769,10 +3813,47 @@ impl Editor {
         Some(self.buf.line_starts()[hit.line] + col)
     }
 
+    /// The link whose glyphs are under a window point: its line, source
+    /// range and target, and the line box of its first glyph in window
+    /// coordinates, which is what page preview anchors to. Internal links
+    /// only: an external link and a tag preview nothing.
+    fn link_under(
+        &self,
+        position: Point<Pixels>,
+        window: &mut Window,
+    ) -> Option<(usize, Range<usize>, LinkTarget, Bounds<Pixels>)> {
+        let hit = self.display_hit(window, position)?;
+        let d = hit.glyph?;
+        let col = hit.shaped.to_source(d);
+        let (range, target) = self.link_span_at(hit.line, col, false)?;
+        if !matches!(target, LinkTarget::Internal(_)) {
+            return None;
+        }
+        let vl = self.layout.visible.iter().find(|v| v.line == hit.line)?;
+        let (row, x) = hit.shaped.row_and_x(range.start);
+        let top = self.layout.bounds.origin.y + vl.top + vl.row_height * row as f32;
+        let anchor = Bounds::new(
+            point(self.layout.content_x + x, top),
+            size(px(1.), vl.row_height),
+        );
+        Some((hit.line, range, target, anchor))
+    }
+
     /// The link under source byte `col` of `line`. With `rendered_only`,
     /// only a link Live Preview shows rendered counts (a revealed one is
     /// being edited).
     fn link_at(&self, line: usize, col: usize, rendered_only: bool) -> Option<LinkTarget> {
+        self.link_span_at(line, col, rendered_only)
+            .map(|(_, target)| target)
+    }
+
+    /// [`Editor::link_at`] with the source range of the link's span.
+    fn link_span_at(
+        &self,
+        line: usize,
+        col: usize,
+        rendered_only: bool,
+    ) -> Option<(Range<usize>, LinkTarget)> {
         let spans = self.highlights.get(line)?;
         let touch = self.touches_on_line(line);
         let text = self.buf.line_text(line);
@@ -3816,7 +3897,7 @@ impl Editor {
                 HighlightKind::Tag => LinkTarget::Tag(t.trim_start_matches('#').to_string()),
                 _ => continue,
             };
-            return Some(target);
+            return Some((s.range.clone(), target));
         }
         None
     }
@@ -6957,6 +7038,7 @@ impl Element for EditorElement {
             }
         });
         let editor = self.editor.clone();
+        let hover_box = prepaint.hitbox.clone();
         window.on_mouse_event(move |event: &MouseMoveEvent, phase, window, cx| {
             if phase != DispatchPhase::Bubble {
                 return;
@@ -6966,7 +7048,10 @@ impl Element for EditorElement {
                     editor.mouse_drag(event.position, window, cx)
                 });
             } else if event.pressed_button.is_none() {
-                editor.update(cx, |editor, cx| editor.hover_at(event.position, cx));
+                let over = hover_box.is_hovered(window);
+                editor.update(cx, |editor, cx| {
+                    editor.hover_at(event.position, over, event.modifiers, window, cx)
+                });
             }
         });
         let editor = self.editor.clone();
