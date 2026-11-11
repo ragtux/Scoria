@@ -467,6 +467,45 @@ unobserved and on the spec's "Not settled" list; Scoria shows the leaf's version
 the tab by itself. The 13 new tests, by name: 5 in `debug_info`, 8 in
 `workspace::release_notes`, and the runnable test in `workspace::app_info`.
 
+### Frontmatter migration, 2026-11-11
+
+`app:migrate-frontmatter` runs, to the 45 notes of the 2026-11-09 probe
+([[Specification#Format converter: Frontmatter migration]]). 198 of the 244 ids run, 46 do not.
+The gate: 64 test binaries, 1,572 passed, 650 in the app's bin.
+
+**The conversion.** `scoria_formats::migrate` decides each note from its bytes on disk: the plural
+key (matched ignoring case) converted when its value is a string; a lone singular renamed in place
+and converted; a singular beside its plural left; a string split on spaces and commas (aliases on
+commas only), `#` kept, nothing left becoming `[]`. A note it changes has its **whole block
+re-serialised**, as Obsidian's is: comments and blank lines go, flow lists become block lists,
+quotes are only where YAML needs them (the properties writer's `render_scalar`), and the inner lines
+take `\n` while the fences keep their `\r\n`. That serialiser is reached by nothing else: the
+properties writer stays surgical for every other edit. A note it does not change is not written; a
+BOM before the fence, no block, or a block that is not a mapping is left; a block that will not
+parse counts under Failed. `matches_every_observed_note_byte_for_byte` holds all 45 before/after
+pairs, copied from the probe's JSON, and `a_second_run_changes_nothing` the probe's second run.
+
+**The modal and Undo.** `crate::migrate_modal`: the title, the close button, the two paragraphs,
+Cancel and Start conversion; then "Finished!", Processed files, Modified files and Failed (hidden
+at 0), Go back and Done. The run goes off the UI thread after the open note is saved; a Stop
+button stands in for the two while it runs (unobserved: the probe's run was over before its first
+look). Done closes the modal and puts up **Updated N files.** with an **Undo** button — notices
+can now carry one — and Undo writes each file's bytes back, unless the file changed again since,
+then says **Reverted changes to N files.**
+
+**Driven.** A headless sway, a six-note scratch vault, the socket: the modal drawn, Start
+conversion clicked, the four files that should change rewritten byte for byte as Obsidian wrote
+them (the CRLF note's fences kept), the flow-list note and the plain note untouched, the counters
+6 and 4, Done's notice and its Undo drawn, Undo putting every byte back; a run with a converted
+note open in Source mode reloaded the editor with the new block.
+
+**Left, unobserved:** where a renamed key goes in a block with other keys (Scoria keeps it in
+place; a JavaScript rename would put it last); a singular in another case (`Tag:`, renamed to
+`tags` here); what a block that will not parse does; the notice after a run that modified
+nothing (Scoria shows none); whether closing the Finished page without Done offers Undo (Scoria
+treats it as Done). The new tests: 6 in `scoria_formats::migrate`, 4 in
+`workspace::migrate_frontmatter`.
+
 ### The Note composer, driven, 2026-11-10
 
 The one thing the 2026-11-09 work had not been seen doing. A headless sway, a five-note scratch

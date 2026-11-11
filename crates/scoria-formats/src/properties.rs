@@ -240,7 +240,7 @@ fn is_date(s: &str) -> bool {
 }
 
 /// `42` not `42.0`, and no exponent for the magnitudes a note carries.
-fn format_number(n: f64) -> String {
+pub(crate) fn format_number(n: f64) -> String {
     if n.fract() == 0.0 && n.abs() < 1e15 {
         format!("{}", n as i64)
     } else {
@@ -524,7 +524,7 @@ pub fn render_entry(key: &str, value: &Value, newline: &str) -> String {
 }
 
 /// A key, quoted only where YAML needs it.
-fn render_key(key: &str) -> String {
+pub(crate) fn render_key(key: &str) -> String {
     if key.is_empty()
         || key.trim() != key
         || key.contains(": ")
