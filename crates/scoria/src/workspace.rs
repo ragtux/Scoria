@@ -3350,6 +3350,32 @@ impl Focusable for Workspace {
 fn bases_subscription(bases: &Entity<BasesView>, cx: &mut Context<Workspace>) -> Subscription {
     cx.subscribe(bases, |this, bases, event: &BasesEvent, cx| match event {
         BasesEvent::Open(path) => this.open_file(path.clone(), None, cx),
+        // A row's file name previews its file, on the `bases` key (Mod by
+        // default, observed). An embedded base is in the active group's
+        // window, as the note it is embedded in is.
+        BasesEvent::Hover {
+            path,
+            over,
+            anchor,
+            modifiers,
+        } => {
+            let group = this
+                .groups
+                .iter()
+                .find(|g| g.bases.entity_id() == bases.entity_id())
+                .map_or(this.groups[this.active_group].id, |g| g.id);
+            let window = this.window_of_group(group);
+            this.row_hover(
+                crate::hover_preview::Source::Bases,
+                window,
+                crate::hover_preview::exact(path),
+                path.clone(),
+                *over,
+                *anchor,
+                *modifiers,
+                cx,
+            )
+        }
         BasesEvent::Edited => this.schedule_save(cx),
         BasesEvent::Report(message) => this.report(message.clone(), cx),
         BasesEvent::SetProperty { path, key, value } => {
@@ -3553,6 +3579,24 @@ impl Workspace {
                         let back = this.mode_before_graph;
                         this.set_mode(back, window, cx);
                         this.open_file(path.clone(), None, cx);
+                    }
+                    // A node previews its file, on the `graph` key (Mod by
+                    // default, observed).
+                    GraphEvent::Hover(Some(hover)) => {
+                        let where_ = this.window_of_group(this.groups[this.active_group].id);
+                        this.row_hover(
+                            crate::hover_preview::Source::Graph,
+                            where_,
+                            crate::hover_preview::exact(&hover.path),
+                            hover.path.clone(),
+                            true,
+                            hover.anchor,
+                            hover.modifiers,
+                            cx,
+                        )
+                    }
+                    GraphEvent::Hover(None) => {
+                        this.source_left(crate::hover_preview::Source::Graph, cx)
                     }
                 },
             ),
@@ -7237,9 +7281,10 @@ impl Workspace {
         self.hover_preview.pending = pending;
         if self.hover_preview.pending.is_some() {
             self.arm_preview_show(cx);
-        } else {
-            self.arm_preview_hide(cx);
         }
+        // Either way something may have been left: a link for nothing, or
+        // for another link whose popover goes ahead of this one's.
+        self.arm_preview_hide(cx);
     }
 
     /// The pointer came onto a row that previews (a pane's row, a tab) or
@@ -7279,6 +7324,20 @@ impl Workspace {
             depth: 0,
         });
         self.set_preview_pending(pending, cx);
+    }
+
+    /// The pointer left whatever `source` last reported, when that source
+    /// does not say which (the graph's nodes).
+    fn source_left(&mut self, source: crate::hover_preview::Source, cx: &mut Context<Self>) {
+        if self
+            .hover_preview
+            .pending
+            .as_ref()
+            .is_some_and(|p| p.source == source && p.depth == 0)
+        {
+            self.hover_preview.generation += 1;
+            self.set_preview_pending(None, cx);
+        }
     }
 
     /// [`Self::row_hover`] as a row's handler, for a row in the vault
@@ -7346,22 +7405,21 @@ impl Workspace {
         .detach();
     }
 
-    /// Starts the hide timer, if a popover is up: when it fires, the
-    /// popovers the pointer has left go ([`HoverPreview::kept`]).
+    /// Starts a hide timer, if a popover is up: when it fires, the
+    /// popovers the pointer has left by then go ([`HoverPreview::kept`]
+    /// reads where it is at that moment, so a timer needs no generation:
+    /// one that fires after the pointer came back finds the popover kept).
     fn arm_preview_hide(&mut self, cx: &mut Context<Self>) {
         if self.hover_preview.shown.is_empty() {
             return;
         }
-        let generation = self.hover_preview.generation;
         cx.spawn(async move |this, cx| {
             cx.background_executor()
                 .timer(crate::hover_preview::HIDE_DELAY)
                 .await;
             this.update(cx, |this, cx| {
-                if this.hover_preview.generation == generation {
-                    let kept = this.hover_preview.kept();
-                    this.truncate_previews(kept, cx);
-                }
+                let kept = this.hover_preview.kept();
+                this.truncate_previews(kept, cx);
             })
             .ok();
         })
@@ -7401,6 +7459,7 @@ impl Workspace {
             .push(crate::hover_preview::Shown::new(
                 pending.window,
                 pending.anchor,
+                pending.target.clone(),
                 from,
                 content,
                 note,
@@ -7507,6 +7566,20 @@ impl Workspace {
         let Some(state) = self.state.clone() else {
             return;
         };
+        // "Click to create": the note is made, empty, and opens in the
+        // active tab in its editing mode with the keyboard in it; the
+        // popover goes (observed, `s11` `missingClick`).
+        if let Some(shown) = self.hover_preview.shown.get(ix) {
+            if matches!(shown.content, crate::hover_preview::Content::Missing(_)) {
+                let name = scoria_markdown::parse_linktext(&shown.target)
+                    .path
+                    .to_string();
+                self.hide_preview(cx);
+                self.create_from_link(&name, window, cx);
+                self.request_focus_main(cx);
+                return;
+            }
+        }
         let Some((path, subpath)) = self
             .hover_preview
             .shown

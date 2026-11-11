@@ -330,7 +330,46 @@ uses behave as Obsidian's do.
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
-| Page preview | probed 2026-11-11 on macOS, see [[Specification#Observed page preview, Obsidian 1.15.0]] and [[#Page preview, the probe, 2026-11-11]]; step 1 landed the same day — the popover over links in the reading view and both editing modes, see [[#Page preview, step 1, 2026-11-11]]; step 2 the same day — the tab header and the Files, Bookmarks, Backlinks, Outgoing links and Outline rows, see [[#Page preview, step 2, 2026-11-11]]; step 3 the same day — nested popovers and the click that makes one an editor, see [[#Page preview, step 3, 2026-11-11]]; left: the Properties, Bases and Graph sources |
+| Page preview | probed 2026-11-11 on macOS, see [[Specification#Observed page preview, Obsidian 1.15.0]] and [[#Page preview, the probe, 2026-11-11]]; step 1 landed the same day — the popover over links in the reading view and both editing modes, see [[#Page preview, step 1, 2026-11-11]]; step 2 the same day — the tab header and the Files, Bookmarks, Backlinks, Outgoing links and Outline rows, see [[#Page preview, step 2, 2026-11-11]]; step 3 the same day — nested popovers and the click that makes one an editor, see [[#Page preview, step 3, 2026-11-11]]; step 4 the same day — the Bases and Graph sources, the second-link timing and "Click to create", from a second probe pass, see [[#Page preview, step 4, 2026-11-11]] — done, bar the "Properties view" source, whose File properties view Scoria does not have |
+
+### Page preview, step 4, 2026-11-11
+
+The probe's `s11` went back for what the first pass skipped, with Obsidian on the Mac again
+(`ONLY_STEPS=s11`, merged into the same results file): the File properties view, a base's table, a
+graph node, a second link while a popover is up, and a click on a missing note's popover — see
+[[Specification#Observed page preview, Obsidian 1.15.0]], "More sources" on.
+
+**Bases.** The table's file name cell wraps its text in `hover_row`, and `BasesView` emits
+`BasesEvent::Hover`; the workspace finds the group the view is in (an embedded base's is the
+active group's) for the window. The text takes a 17 px line box, the height of Obsidian's inline
+span, so the popover hangs where Obsidian's does; the cell centres it, so nothing moves. Checked:
+plain nothing, Cmd at (352, 184, 17) against Obsidian's (352, 184.5, 17.1). Cards, list and kanban
+titles and embedded bases' tables do not report: only the table was probed.
+
+**Graph.** `GraphView` reports the hovered node when it changes (`GraphEvent::Hover`), a note or
+an attachment only, anchored on a 20 px box around the node's screen centre, which is what the two
+observed placements (20.4 px under, 19.8 px over) give. The view already clears its node when the
+pointer leaves it, and that clearing now reports too (`source_left`). Checked: plain nothing, Cmd
+on Beta's node raised Beta.
+
+**Hide timing.** A popover now goes on its own hide delay from the pointer leaving the link that
+raised it, rather than staying until another link's popover replaces it (Obsidian removed the
+first at 336 ms and added the second at 401 ms). `HoverPreview::kept` keeps a popover while the
+pointer is on its own link (the pending link's anchor and depth are the popover's), over it or
+over one above it, or while it edits, and the popover a pending link sits in; the hide timer has
+no generation any more, since `kept` reads where the pointer is when it fires; and a new pending
+link arms a hide timer as well as the show timer.
+
+**Click to create.** A click on a missing note's popover creates the note through
+`create_from_link` (empty, at the new-note location), which opens it in the active tab in its
+editing mode with the keyboard in it, as observed.
+
+**Properties view** stays tagged: it is Obsidian's File properties view (`file-properties`), a
+pane Scoria does not have.
+
+Over the socket, a pointer has to let a frame go by between moves (`wait_idle`) for a view's link
+to report: a scan that sends moves back to back can find nothing while the same point found with
+an idle reports at once.
 
 ### Page preview, step 3, 2026-11-11
 

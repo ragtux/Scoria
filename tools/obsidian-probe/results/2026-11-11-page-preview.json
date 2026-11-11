@@ -1,13 +1,13 @@
 {
  "pagePreview": {
   "fixtures": {
-   "startedAt": "2026-11-11T07:31:36.493Z",
+   "startedAt": "2026-11-11T14:56:33.351Z",
    "steps": {},
    "order": [],
    "elapsedMs": 1
   },
   "run": {
-   "startedAt": "2026-11-11T07:31:37.116Z",
+   "startedAt": "2026-11-11T14:56:33.974Z",
    "steps": {
     "s00-context": {
      "ok": true,
@@ -3233,6 +3233,221 @@
       "core-plugins.json",
       "workspace.json"
      ]
+    },
+    "s11-more-surfaces": {
+     "ok": true,
+     "ms": 33891,
+     "propertiesView": {
+      "type": "file-properties",
+      "html": "<div class=\"view-header\"><div class=\"view-header-left\"><div class=\"view-header-nav-buttons\"><button class=\"clickable-icon\" aria-disabled=\"true\" aria-label=\"Navigate back\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-arrow-left\"><path d=\"m12 19-7-7 7-7\"></path><path d=\"M19 12H5\"></path></svg></button><button class=\"clickable-icon\" aria-disabled=\"true\" aria-label=\"Navigate forward\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-arrow-right\"><path d=\"M5 12h14\"></path><path d=\"m12 5 7 7-7 7\"></path></svg></button></div></div><div class=\"view-header-title-container mod-at-start mod-fade mod-at-end\"><div class=\"view-header-title-parent\"></div><div class=\"view-header-title\">File properties</div></div><div class=\"view-actions mod-raised\"><button class=\"clickable-icon view-action mod-bookmark\" aria-label=\"Bookmark\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-bookmark\"><path d=\"M17 3a2 2 0 0 1 2 2v15a1 1 0 0 1-1.496.868l-4.512-2.578a2 2 0 0 0-1.984 0l-4.512 2.578A1 1 0 0 1 5 20V5a2 2 0 0 1 2-2z\"></path></svg></button><"
+     },
+     "properties": {
+      "target": {
+       "x": 879,
+       "y": 57.546875,
+       "w": 27.5625,
+       "h": 16.8984375,
+       "cx": 892.78125,
+       "cy": 65.99609375,
+       "cls": "metadata-link-inner internal-link",
+       "tag": "div",
+       "parents": [
+        "div.metadata-link",
+        "div.metadata-property-value"
+       ]
+      },
+      "plain": 0,
+      "mod": 1,
+      "plainDelayMs": null,
+      "modDelayMs": 308,
+      "popover": {
+       "rect": {
+        "x": 562,
+        "y": 84.5,
+        "w": 452,
+        "h": 402
+       },
+       "cls": "popover hover-popover",
+       "text": "Properties\nBeta\n\nBeta first paragraph with a link to Gamma.\n\nBeta line 1, some words to fill the width of the pane a lit",
+       "firstVisible": {
+        "text": "",
+        "cls": "markdown-preview-pusher",
+        "dy": 32,
+        "highlighted": false
+       }
+      }
+     },
+     "propertiesInNote": {
+      "noTarget": true
+     },
+     "baseView": {
+      "type": "bases",
+      "sample": "Table\nTable\n8 results\nfile name\nAlpha\nBeta\nBoard.canvas\nGamma\nLong\nPic.png\nProps\nTable.base"
+     },
+     "bases": {
+      "target": {
+       "x": 352,
+       "y": 184.515625,
+       "w": 27.796875,
+       "h": 17.0625,
+       "cx": 365.8984375,
+       "cy": 193.046875,
+       "cls": "internal-link",
+       "tag": "span",
+       "parents": [
+        "div.bases-table-cell bases-rendered-value markdown-rendered",
+        "div.bases-td"
+       ]
+      },
+      "plain": 0,
+      "mod": 1,
+      "plainDelayMs": null,
+      "modDelayMs": 306,
+      "popover": {
+       "rect": {
+        "x": 352,
+        "y": 211.5,
+        "w": 452,
+        "h": 402
+       },
+       "cls": "popover hover-popover",
+       "text": "Properties\nBeta\n\nBeta first paragraph with a link to Gamma.\n\nBeta line 1, some words to fill the width of the pane a lit",
+       "firstVisible": {
+        "text": "",
+        "cls": "markdown-preview-pusher",
+        "dy": 32,
+        "highlighted": false
+       }
+      }
+     },
+     "graph": {
+      "target": {
+       "cx": 590.5221748352051,
+       "cy": 480.83467864990234,
+       "w": 1,
+       "h": 1
+      },
+      "plain": 0,
+      "mod": 1,
+      "plainDelayMs": null,
+      "modDelayMs": 331,
+      "popover": {
+       "rect": {
+        "x": 562,
+        "y": 59,
+        "w": 452,
+        "h": 402
+       },
+       "cls": "popover hover-popover",
+       "text": "Properties\nBeta\n\nBeta first paragraph with a link to Gamma.\n\nBeta line 1, some words to fill the width of the pane a lit",
+       "firstVisible": {
+        "text": "",
+        "cls": "markdown-preview-pusher",
+        "dy": 32,
+        "highlighted": false
+       }
+      }
+     },
+     "graphCand0": [
+      "highlightNode"
+     ],
+     "graphOff": {
+      "target": {
+       "cx": 593.5221748352051,
+       "cy": 485.83467864990234,
+       "w": 1,
+       "h": 1
+      },
+      "plain": 0,
+      "mod": 0,
+      "plainDelayMs": null,
+      "modDelayMs": null,
+      "popover": null
+     },
+     "graphNode": {
+      "weight": 3,
+      "size": 8,
+      "keys": [
+       "x",
+       "y",
+       "fx",
+       "fy",
+       "forward",
+       "reverse",
+       "weight",
+       "color",
+       "rendered",
+       "fadeAlpha",
+       "moveText",
+       "fontDirty",
+       "onClick",
+       "renderer",
+       "id",
+       "type",
+       "circle",
+       "text",
+       "highlight"
+      ],
+      "nodeScale": 1,
+      "fNodeSizeMult": 1
+     },
+     "secondLink": {
+      "first": [
+       {
+        "rect": {
+         "x": 440.7,
+         "y": 272.7,
+         "w": 452,
+         "h": 402
+        },
+        "text": "Second\n\nText under the second heading.\n\n"
+       }
+      ],
+      "after": {
+       "events": [
+        {
+         "t": 336,
+         "ev": "remove",
+         "cls": "popover hover-popover"
+        },
+        {
+         "t": 401,
+         "ev": "add",
+         "cls": "popover hover-popover"
+        }
+       ],
+       "popovers": [
+        {
+         "rect": {
+          "x": 415,
+          "y": 232.7,
+          "w": 452,
+          "h": 402
+         },
+         "text": "Properties\nBeta\n\nBeta first paragraph wi"
+        }
+       ]
+      }
+     },
+     "missingClick": {
+      "created": true,
+      "createdBytes": 0,
+      "ui": {
+       "leaves": [
+        {
+         "type": "markdown",
+         "file": "Missing.md",
+         "active": true
+        }
+       ],
+       "focus": "div.cm-content cm-lineWrapping",
+       "win": {
+        "w": 1024,
+        "h": 800
+       }
+      },
+      "popovers": []
+     }
     }
    },
    "order": [
@@ -3246,10 +3461,11 @@
     "s07-settings",
     "s08-inside",
     "s09-surfaces",
-    "s10-writes"
+    "s10-writes",
+    "s11-more-surfaces"
    ],
-   "elapsedMs": 25181,
-   "vaultPath": "/private/tmp/claude-501/-Users-ragtux-work-scoria/4d1da6e4-e543-451b-ab81-172005435a1e/scratchpad/pp/vault"
+   "elapsedMs": 33915,
+   "vaultPath": "/private/var/folders/mk/xslmjxx967v6717fv1xy14540000gn/T/scoria-probe-vault.xKoznl"
   }
  }
 }

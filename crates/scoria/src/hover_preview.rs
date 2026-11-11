@@ -60,6 +60,10 @@ pub enum Source {
     Search,
     /// `outline`, "Outline": a heading's row, which previews its section.
     Outline,
+    /// `bases`, "Bases": the file name in a base's table.
+    Bases,
+    /// `graph`, "Graph view": a note's or an attachment's node.
+    Graph,
 }
 
 impl Source {
@@ -74,6 +78,8 @@ impl Source {
             Source::Bookmarks => config.bookmarks.unwrap_or(true),
             Source::Search => config.search.unwrap_or(true),
             Source::Outline => config.outline.unwrap_or(true),
+            Source::Bases => config.bases.unwrap_or(true),
+            Source::Graph => config.graph.unwrap_or(true),
         }
     }
 }
@@ -169,6 +175,9 @@ pub enum Content {
 pub struct Shown {
     pub window: Option<u64>,
     pub anchor: Bounds<Pixels>,
+    /// The link body it went up for: what a click on a missing note's
+    /// popover creates.
+    pub target: String,
     /// The path its own links resolve against.
     pub from: String,
     pub content: Content,
@@ -198,6 +207,7 @@ impl Shown {
     pub fn new(
         window: Option<u64>,
         anchor: Bounds<Pixels>,
+        target: String,
         from: String,
         content: Content,
         note: Option<(String, String)>,
@@ -206,6 +216,7 @@ impl Shown {
         Shown {
             window,
             anchor,
+            target,
             from,
             content,
             note,
@@ -234,20 +245,24 @@ pub struct HoverPreview {
 }
 
 impl HoverPreview {
-    /// How many popovers stay when the hide timer fires: every one up to
-    /// the last that the pointer is over or that is editing, and all of
-    /// them while the pointer is on a link (its own popover replaces them
-    /// from where it sits when it goes up). Leaving a nested popover and
-    /// its parent removes both (observed); one left for its parent keeps
-    /// the parent.
+    /// How many popovers stay when a hide timer fires. A popover stays
+    /// while the pointer is on the link that raised it, over it, or over a
+    /// popover above it, and while it edits; the popover a link sits in
+    /// stays while the pointer is on that link. Leaving a nested popover
+    /// and its parent removes both (observed); one left for its parent
+    /// keeps the parent; a popover whose link the pointer left for another
+    /// link goes ~300 ms after the leaving, before the other's goes up
+    /// (observed: removed at 336 ms, added at 401 ms).
     pub fn kept(&self) -> usize {
-        if self.pending.is_some() {
-            return self.shown.len();
-        }
-        self.shown
-            .iter()
-            .rposition(|s| s.over || s.editing.is_some())
-            .map_or(0, |ix| ix + 1)
+        let pending = self.pending.as_ref();
+        let in_popover = pending.map_or(0, |p| p.depth);
+        let alive = self.shown.iter().enumerate().rposition(|(ix, s)| {
+            s.over
+                || s.editing.is_some()
+                || pending
+                    .is_some_and(|p| p.depth == ix && p.anchor == s.anchor && p.window == s.window)
+        });
+        alive.map_or(0, |ix| ix + 1).max(in_popover)
     }
 }
 
@@ -278,7 +293,8 @@ pub struct Handlers {
     pub on_hover_link: HoverHandler,
     /// The pointer coming onto the popover or leaving it.
     pub on_hover: PopoverHandler<bool>,
-    /// A click on its text (not on a link), at this window point.
+    /// A click on its text (not on a link), at this window point; on a
+    /// missing note's popover, the click that creates the note.
     pub on_edit: PopoverHandler<Point<Pixels>>,
     /// Escape (`true`), or a press outside it (`false`), while it is an
     /// editor.
@@ -440,7 +456,8 @@ pub fn render(
         None => {
             let on_edit = handlers.on_edit.clone();
             let over_link = shown.hover_current.clone();
-            let editable = shown.note.is_some();
+            // A missing note's "Click to create" is a click too.
+            let editable = shown.note.is_some() || matches!(shown.content, Content::Missing(_));
             div()
                 .id("hover-popover-scroll")
                 .max_h(px(HEIGHT))
@@ -536,6 +553,8 @@ mod tests {
             Source::Bookmarks,
             Source::Search,
             Source::Outline,
+            Source::Bases,
+            Source::Graph,
         ] {
             assert!(source.requires_mod(&config), "{source:?}");
         }
@@ -545,6 +564,8 @@ mod tests {
             bookmarks: Some(false),
             search: Some(false),
             outline: Some(false),
+            bases: Some(false),
+            graph: Some(false),
             ..PagePreviewConfig::default()
         };
         for source in [
@@ -553,6 +574,8 @@ mod tests {
             Source::Bookmarks,
             Source::Search,
             Source::Outline,
+            Source::Bases,
+            Source::Graph,
         ] {
             assert!(!source.requires_mod(&off), "{source:?}");
         }
@@ -574,6 +597,7 @@ mod tests {
             let mut s = Shown::new(
                 None,
                 Bounds::default(),
+                "Beta".into(),
                 "Beta.md".into(),
                 Content::Missing(String::new()),
                 None,
@@ -594,17 +618,25 @@ mod tests {
         // Over the nested one, the parent stays under it.
         hp.shown[1].over = true;
         assert_eq!(hp.kept(), 2);
-        // On a link anywhere: nothing goes until that link's popover is up.
+        // On a link in the parent: the parent stays, the nested one goes.
         hp.shown[1].over = false;
-        hp.pending = Some(Pending {
+        let link = |depth: usize, y: f32| Pending {
             window: None,
             source: Source::Reading,
             target: "Gamma".into(),
             from: "Beta.md".into(),
-            anchor: Bounds::default(),
-            depth: 1,
-        });
-        assert_eq!(hp.kept(), 2);
+            anchor: Bounds::new(point(px(0.), px(y)), gpui::size(px(1.), px(20.))),
+            depth,
+        };
+        hp.pending = Some(link(1, 300.));
+        assert_eq!(hp.kept(), 1);
+        // Back on the link that raised the first: it stays.
+        hp.shown[0].anchor = Bounds::new(point(px(0.), px(100.)), gpui::size(px(1.), px(20.)));
+        hp.pending = Some(link(0, 100.));
+        assert_eq!(hp.kept(), 1);
+        // On another link in the note: the first goes, ahead of the new one.
+        hp.pending = Some(link(0, 140.));
+        assert_eq!(hp.kept(), 0);
     }
 
     #[test]

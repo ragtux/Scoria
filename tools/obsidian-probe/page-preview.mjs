@@ -21,6 +21,10 @@
 //        Backlinks, Outgoing links, Search, Outline, Bookmarks, Properties,
 //        Graph is skipped (canvas pixels)
 //   s10  workspace.json and the vault: what a hover writes
+//   s11  the sources s09 left: a link-valued property in File properties,
+//        a file cell in a base's table, a graph node (found through the
+//        renderer); a second link above the first while its popover is up;
+//        a click on a missing note's popover
 //
 // `SHOTS` names a folder for PNGs. `ONLY_STEPS=s03` re-runs a step.
 // Phases: fixtures | run   (node page-preview.mjs <phase>)
@@ -113,6 +117,7 @@ if (phase === 'fixtures') {
     'A block paragraph. ^blk', '',
     filler(12, 'After'), '',
   ].join('\n'));
+  fs.writeFileSync(vp('Props.md'), '---\nrelated: "[[Beta]]"\n---\n# Props\n\nA note with a link-valued property.\n');
   fs.writeFileSync(vp('Long.md'), '# Long\n\n' + filler(200, 'Long') + '\n');
   fs.writeFileSync(vp('Folder/Gamma.md'), '# Gamma\n\nShort. See [[Alpha]].\n');
   fs.writeFileSync(vp('Pic.png'), png(40, 30));
@@ -628,6 +633,109 @@ await step('s10-writes', async () => {
   const leaves = await ev(`const o = []; app.workspace.iterateAllLeaves((l) => o.push({ type: l.view.getViewType(), inPopover: !!(l.containerEl && l.containerEl.closest('.popover')) })); return o;`);
   return { workspaceChangedByHover: before !== during, popoverLeavesInLayout: during ? /hover|popover/.test(during) : null, leaves,
     obsidianFiles: fs.readdirSync(vp('.obsidian')) };
+});
+
+await step('s11-more-surfaces', async (partial) => {
+  const o = {};
+  const both = async (name, r) => {
+    if (!r) { o[name] = { noTarget: true }; partial[name] = o[name]; return; }
+    const plain = await hoverAt(r, { waitMs: 1800 });
+    await modDown();
+    const mod = await hoverAt(r, { mods: MODS, waitMs: 1800 });
+    await modUp();
+    o[name] = { target: r, plain: plain.popovers.length, mod: mod.popovers.length, plainDelayMs: addAt(plain), modDelayMs: addAt(mod),
+      popover: (mod.popovers[0] || plain.popovers[0]) ? (({ rect, text, firstVisible, cls }) => ({ rect, cls, text: text.slice(0, 120), firstVisible }))(mod.popovers[0] || plain.popovers[0]) : null };
+    if (mod.popovers.length || plain.popovers.length) await shot('s11-' + name);
+    partial[name] = o[name];
+  };
+  // The deepest element under root whose own text is exactly t.
+  const leaf = (root, t) => ev(`
+    const root = document.querySelector(${JSON.stringify(root)}); if (!root) return null;
+    const els = Array.from(root.querySelectorAll('*')).filter((e) => (e.textContent || '').trim() === ${JSON.stringify(t)} && !Array.from(e.children).some((k) => (k.textContent || '').trim() === ${JSON.stringify(t)}));
+    const e = els[0]; if (!e) return null; e.scrollIntoView({ block: 'nearest' });
+    const b = e.getBoundingClientRect(); if (!b.width) return null;
+    return { x: b.x, y: b.y, w: b.width, h: b.height, cx: b.x + Math.min(b.width / 2, 20), cy: b.y + b.height / 2, cls: window.__p.cls(e), tag: e.tagName.toLowerCase(),
+      parents: [e.parentElement, e.parentElement && e.parentElement.parentElement].map((x) => x ? x.tagName.toLowerCase() + '.' + window.__p.cls(x) : null) };`);
+
+  // File properties of Props: its `related` value links Beta.
+  await ev(`return window.__p.open('Props.md', 'preview');`);
+  await ev(`app.workspace.rightSplit.expand(); app.commands.executeCommandById('properties:open-local'); return true;`);
+  await sleep(1200);
+  o.propertiesView = await ev(`const l = app.workspace.getLeavesOfType('file-properties')[0]; return l ? { type: l.view.getViewType(), html: l.view.containerEl.innerHTML.slice(0, 1500) } : null;`);
+  await both('properties', await leaf('.workspace-leaf-content[data-type=file-properties]', 'Beta'));
+  // The same link in the note's own properties block, for comparison: the
+  // reading view's source, or the properties one?
+  await both('propertiesInNote', await leaf('.workspace-leaf.mod-active .markdown-reading-view .metadata-container', 'Beta'));
+
+  // A base's table: every file is a row, its name a link.
+  await ev(`return window.__p.open('Table.base');`);
+  await sleep(1500);
+  o.baseView = await ev(`const v = app.workspace.activeLeaf.view; return { type: v.getViewType(), sample: v.containerEl.innerText.slice(0, 300) };`);
+  await both('bases', await leaf('.workspace-leaf.mod-active', 'Beta'));
+
+  // The graph: Beta's node, put on screen through the renderer's own pan and scale.
+  await ev(`app.commands.executeCommandById('graph:open'); return true;`);
+  await sleep(4000);
+  const g = await ev(`
+    const l = app.workspace.getLeavesOfType('graph')[0]; if (!l) return null;
+    app.workspace.setActiveLeaf(l, { focus: true });
+    const r = l.view.renderer; const n = r.nodes.find((x) => x.id === 'Beta.md'); if (!n) return { keys: Object.keys(r) };
+    const el = r.interactiveEl || r.canvas || l.view.containerEl.querySelector('canvas');
+    const b = el.getBoundingClientRect();
+    const dpr = window.devicePixelRatio;
+    return { keys: Object.keys(r).filter((k) => !/^_/.test(k)).slice(0, 80), scale: r.scale, panX: r.panX, panY: r.panY, nx: n.x, ny: n.y, dpr, rect: { x: b.x, y: b.y, w: b.width, h: b.height },
+      cands: [
+        { cx: b.x + (n.x * r.scale + r.panX) / dpr, cy: b.y + (n.y * r.scale + r.panY) / dpr },
+        { cx: b.x + n.x * r.scale + r.panX, cy: b.y + n.y * r.scale + r.panY },
+      ] };`);
+  o.graph = g;
+  if (g && g.cands) {
+    for (let i = 0; i < g.cands.length; i++) {
+      const r = { ...g.cands[i], w: 1, h: 1 };
+      await move(r.cx - 1, r.cy); await move(r.cx, r.cy); await sleep(300);
+      const hovered = await ev(`const r = app.workspace.getLeavesOfType('graph')[0].view.renderer;
+        return Object.entries(r).filter(([k, v]) => v && typeof v === 'object' && v.id === 'Beta.md').map(([k]) => k);`);
+      o['graphCand' + i] = hovered;
+      if (hovered.length) {
+        await both('graph', r);
+        // Off the centre, still on the node: does the popover follow the
+        // pointer or stay on the node?
+        await both('graphOff', { ...r, cx: r.cx + 3, cy: r.cy + 5 });
+        o.graphNode = await ev(`const r = app.workspace.getLeavesOfType('graph')[0].view.renderer; const n = r.nodes.find((x) => x.id === 'Beta.md');
+          return { weight: n.weight, size: n.getSize ? n.getSize() : null, keys: Object.keys(n).filter((k) => !/^_/.test(k)).slice(0, 40), nodeScale: r.nodeScale, fNodeSizeMult: r.fNodeSizeMult };`);
+        break;
+      }
+    }
+  }
+  // The graph and anything it left up go before the next case.
+  await ev(`for (const l of app.workspace.getLeavesOfType('graph')) l.detach(); return window.__p.closePopovers();`);
+  await clear();
+
+  // A second link above the first while the first's popover is up.
+  await ev(`return window.__p.open('Alpha.md', 'preview');`);
+  const lower = await linkIn(READ, 'Beta > Second');
+  const upper = await linkIn(READ, 'Beta');
+  const first = await hoverAt(lower, { waitMs: 1500 });
+  await ev(`return window.__p.mark();`);
+  for (let i = 1; i <= 5; i++) { await move(lower.cx + ((upper.cx - lower.cx) * i) / 5, lower.cy + ((upper.cy - lower.cy) * i) / 5); await sleep(30); }
+  await sleep(2000);
+  o.secondLink = { first: first.popovers.map((p) => ({ rect: p.rect, text: p.text.slice(0, 40) })),
+    after: await ev(`return { events: window.__p.events().filter((e) => e.ev === 'add' || e.ev === 'remove'), popovers: window.__p.popovers().map((p) => ({ rect: p.rect, text: p.text.slice(0, 40) })) };`) };
+  partial.secondLink = o.secondLink;
+
+  // A click on a missing note's popover: "Click to create".
+  const miss = await linkIn(READ, 'Missing');
+  const mp = await hoverAt(miss, { waitMs: 1500 });
+  if (mp.popovers[0]) {
+    const pr = mp.popovers[0].rect;
+    for (let i = 1; i <= 5; i++) { await move(miss.cx + ((pr.x + pr.w / 2 - miss.cx) * i) / 5, miss.cy + ((pr.y + pr.h / 2 - miss.cy) * i) / 5); await sleep(30); }
+    await c.clickAt(pr.x + pr.w / 2, pr.y + pr.h / 2); await sleep(1500);
+    o.missingClick = { created: fs.existsSync(vp('Missing.md')), createdBytes: fs.existsSync(vp('Missing.md')) ? fs.readFileSync(vp('Missing.md'), 'utf8').length : null,
+      ui: await ev(`return window.__p.ui();`), popovers: await ev(`return window.__p.popovers().map((p) => ({ cls: p.cls, rect: p.rect, editable: p.editable, text: p.text.slice(0, 60) }));`) };
+    await shot('s11-missing-click');
+  }
+  await clear();
+  return o;
 });
 
 save();

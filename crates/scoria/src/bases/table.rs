@@ -702,16 +702,42 @@ impl BasesView {
                             .overflow_hidden()
                             .child(SharedString::from(cell_text(cell))),
                     ),
-                    (_, CellKind::Text) => box_
-                        .text_color(if link { theme.tokens.link_color } else { theme.tokens.text_normal })
-                        .child(
-                            div()
-                                .min_w_0()
-                                .whitespace_nowrap()
-                                .overflow_hidden()
-                                .text_ellipsis()
-                                .child(SharedString::from(cell_text(cell))),
-                        ),
+                    (_, CellKind::Text) => {
+                        let text = div()
+                            .id(SharedString::from(format!("bases-cell-text-{ix}-{c}")))
+                            .min_w_0()
+                            .whitespace_nowrap()
+                            .overflow_hidden()
+                            .text_ellipsis()
+                            .child(SharedString::from(cell_text(cell)));
+                        // The name's link previews its file, anchored on the
+                        // link's own text as Obsidian's `span.internal-link`
+                        // is (`s11` `bases`).
+                        let text = if is_name {
+                            // Obsidian's link is an inline span, 17 px tall
+                            // at this size: the box the popover hangs under.
+                            // The cell centres it, so the text does not move.
+                            let text = text.line_height(px(17.));
+                            let path = row.file.path.clone();
+                            let this = cx.weak_entity();
+                            crate::hover_preview::hover_row(text, move |over, anchor, modifiers, _, cx| {
+                                let path = path.clone();
+                                this.update(cx, |_, cx| {
+                                    cx.emit(super::view::BasesEvent::Hover {
+                                        path,
+                                        over,
+                                        anchor,
+                                        modifiers,
+                                    })
+                                })
+                                .ok();
+                            })
+                        } else {
+                            text
+                        };
+                        box_.text_color(if link { theme.tokens.link_color } else { theme.tokens.text_normal })
+                            .child(text)
+                    }
                 }
             }))
             .into_any_element()

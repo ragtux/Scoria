@@ -3360,10 +3360,11 @@ impl SettingsView {
             }
             // One toggle per surface the hover preview pops up over, under a
             // heading with no control of its own. The reading view, the
-            // editor, the tab header and the Files, Bookmarks, Backlinks,
-            // Outgoing links and Outline rows preview (`hover_preview`) and
-            // read their key on every hover; Properties, Bases and Graph have
-            // no preview yet and are tagged.
+            // editor, the tab header, the Files, Bookmarks, Backlinks,
+            // Outgoing links and Outline rows, a base's table and the graph
+            // preview (`hover_preview`) and read their key on every hover.
+            // "Properties view" is Obsidian's File properties view, which
+            // Scoria does not have, so its row is tagged.
             "page-preview" => {
                 let p = &state.page_preview();
                 let row = |name: &str, flag: PagePreviewFlag| {
@@ -3380,8 +3381,8 @@ impl SettingsView {
                     later("Properties view", PREVIEW_PROPERTIES),
                     row("Bookmarks", PREVIEW_BOOKMARKS),
                     row("Outline", PREVIEW_OUTLINE),
-                    later("Bases", PREVIEW_BASES),
-                    later("Graph view", PREVIEW_GRAPH),
+                    row("Bases", PREVIEW_BASES),
+                    row("Graph view", PREVIEW_GRAPH),
                 ]
             }
             "note-composer" => {
@@ -6231,12 +6232,10 @@ mod tests {
         assert_eq!(items[0].control, Control::None);
         // Reading view is the one surface that is off when its key is absent.
         assert_eq!(items[2].control, Control::Toggle(false));
-        // Every surface previews but Properties, Bases and Graph, which wait.
+        // Every surface previews but the File properties view, which Scoria
+        // does not have.
         for row in &items[1..] {
-            let live = !matches!(
-                row.name.as_ref(),
-                "Properties view" | "Bases" | "Graph view"
-            );
+            let live = row.name.as_ref() != "Properties view";
             let want = if live { Honored::Live } else { Honored::No };
             assert_eq!(row.honored, want, "{}", row.name);
             assert!(row.desc.is_empty(), "{} has a description", row.name);
@@ -7355,6 +7354,8 @@ mod tests {
                 "Files",
                 "Bookmarks",
                 "Outline",
+                "Bases",
+                "Graph view",
             ],
             "a toggle claims Scoria reads it"
         );
@@ -7372,8 +7373,6 @@ mod tests {
             "Snap to grid",
             "Snap to objects",
             "Properties view",
-            "Bases",
-            "Graph view",
             "Confirm file merge",
             "Open external links",
             "Enable ad blocker",

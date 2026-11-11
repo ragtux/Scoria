@@ -632,7 +632,8 @@ shows only the block (90.1 high). `[[Missing]]` shows a 62.8-high box,
 at its natural size (a 40 × 30 PNG: 42 × 32 outside). A canvas shows `.canvas-embed` (150.6 high
 for one card); a base shows `.bases-embed` with its toolbar and rows (282 high). An external link
 and a tag raise nothing. An outline row previews its own section (the `Lower` row showed
-`Lower` and the lines under it). A search result raised nothing in this run (unsettled).
+`Lower` and the lines under it). A search result raised nothing in this run, Mod or not (its
+file title and its match both).
 
 **Editors.** Live Preview and source mode behave alike: no popover without Mod, the same delay
 with it, the same box (a reading-view render, not an editor). A link on the cursor's line in Live
@@ -647,6 +648,24 @@ editor**: the class gains `is-editing`, a Live Preview `.markdown-source-view` r
 reading render in the same box, the caret lands where the click was (line 10, ch 26), and typing
 **edits the note on disk** (`Beta line 2, some words toZ fill…` after the 2 s save). An editing
 popover **stays when the pointer leaves**; Escape closes it, and so does a click outside it.
+
+**More sources** (`s11`, the same day). A link-valued property in the File properties view
+(`file-properties`, `related: "[[Beta]]"`): no popover without Mod, ~307 ms with it, anchored on
+the `.metadata-link-inner` (top 57.5 + 16.9 + 10 = 84.5). The file name in a base's table
+(`span.internal-link` in `.bases-table-cell`, 17.1 high): Mod needed, ~306 ms, anchored on the
+span (184.5 + 17.1 + 10 = 211.5, x 352 kept). A graph node (found through the renderer's pan and
+scale and hovered at its centre): Mod needed, ~331–335 ms; the popover went **20.4 px under** the
+centre, and for a node near the window's foot its bottom **19.8 px over** it, so the anchor is a
+box of about ±10 px around the node with the usual 10 px gap; 3 px right and 5 px down of the
+centre was off the node and raised nothing. All three show the note as a link does.
+
+**A second link** above the first while the first's popover is up: the first popover is removed
+336 ms after the pointer set off and the second added at 401 ms — the first goes on its own hide
+delay from the pointer leaving its link, not when the second replaces it.
+
+**Click to create.** A click on a missing note's popover creates the note, empty (0 bytes), at
+the new-note location, opens it in the active leaf in its editing mode with the caret in it, and
+the popover goes.
 
 **What it writes.** Nothing: no leaf of the popover is ever in `workspace.json`, and
 `page-preview.json` is only written by the Settings tab.

@@ -376,6 +376,21 @@ struct Built {
 
 pub enum GraphEvent {
     Open(String),
+    /// The pointer came onto a note's or an attachment's node (`Some`) or
+    /// off the one it was on, for page preview: the node's path, the box it
+    /// anchors to, and the modifiers held.
+    Hover(Option<GraphHover>),
+}
+
+#[derive(Clone, Debug)]
+pub struct GraphHover {
+    pub path: String,
+    /// A box 20 px tall around the node's centre: Obsidian's popover for a
+    /// node hovered at its centre went 20.4 px under it, or with its bottom
+    /// 19.8 px over it near the window's foot (`s11`), which is a box of
+    /// ±10 px with the usual 10 px gap.
+    pub anchor: Bounds<Pixels>,
+    pub modifiers: gpui::Modifiers,
 }
 
 struct Drag {
@@ -896,9 +911,32 @@ impl GraphView {
             let hit = self.hit_test(event.position);
             if hit != self.hovered {
                 self.hovered = hit;
+                self.report_hover(event.modifiers, cx);
                 cx.notify();
             }
         }
+    }
+
+    /// Tells the workspace which node page preview would show, if any.
+    fn report_hover(&self, modifiers: gpui::Modifiers, cx: &mut Context<Self>) {
+        let hover = self.hovered.and_then(|ix| {
+            let node = self.nodes.get(ix)?;
+            if !matches!(node.kind, NodeKind::Note | NodeKind::Attachment) {
+                return None;
+            }
+            let (x, y) = {
+                let layout = self.layout.lock().unwrap_or_else(|e| e.into_inner());
+                let body = layout.bodies.get(ix)?;
+                (body.x, body.y)
+            };
+            let centre = self.to_screen(x, y);
+            Some(GraphHover {
+                path: node.id.clone(),
+                anchor: Bounds::new(centre - point(px(0.), px(10.)), size(px(1.), px(20.))),
+                modifiers,
+            })
+        });
+        cx.emit(GraphEvent::Hover(hover));
     }
 
     fn mouse_up(&mut self, event: &MouseUpEvent, cx: &mut Context<Self>) {
@@ -2327,6 +2365,7 @@ impl Render for GraphView {
                                     if over || v.drag.is_some() {
                                         v.mouse_move(event, cx);
                                     } else if v.hovered.take().is_some() {
+                                        v.report_hover(event.modifiers, cx);
                                         cx.notify();
                                     }
                                 });
