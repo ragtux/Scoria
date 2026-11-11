@@ -78,6 +78,7 @@ icons!(
     "code-xml",
     "copy",
     "dice",
+    "mic",
     "ellipsis",
     "ellipsis-vertical",
     "external-link",

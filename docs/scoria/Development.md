@@ -696,28 +696,85 @@ nothing (Scoria shows none); whether closing the Finished page without Done offe
 treats it as Done). The new tests: 6 in `scoria_formats::migrate`, 4 in
 `workspace::migrate_frontmatter`.
 
-### The audio recorder's dependencies, weighed, 2026-11-11
+### The Audio recorder, 2026-11-11
 
-Nothing built: `audio-recorder:start` and `:stop` need microphone capture and an AAC-in-MP4
-encoder, and no encoder was found that can be shipped without a decision.
+`audio-recorder:start` and `audio-recorder:stop` run, to the 2026-11-10 probe
+([[Specification#Audio recorder]]). 205 of the 244 ids run, 39 do not. The gate: 69 test
+binaries, 1,642 passed, 682 in the app's bin; clippy clean after four `is_multiple_of` lints
+the rust-version raise brought (a commit of their own).
 
-- **Capture**: `cpal` 0.18 (Apache-2.0) covers Linux, macOS and Windows; on Linux its default
-  host is ALSA (`alsa-sys`, so `shell.nix` would need `alsa-lib`, with PipeWire reached through
-  its ALSA plugin), with `pulseaudio` and `pipewire` features as alternatives.
-- **The MP4 box**: an `.m4a` (`ftyp`, `moov` with one `mp4a`/`esds` track, `mdat`) is small enough
-  to write in-crate; the `mp4` crate (MIT) also writes one.
-- **AAC**: `fdk-aac` / `fdk-aac-sys` (MIT bindings) vendor Fraunhofer's FDK AAC, whose own
-  licence is not free by Debian's or Fedora's reading and grants no patent rights;
-  `shiguredo_fdk_aac` (Apache-2.0) dlopens a system libfdk-aac instead, which most Linux
-  installs lack. The pure-Rust `oxideav-aac` 0.1.7 (MIT, one dependency) and `rff-codec-aac`
-  1.1.11 (Apache-2.0) both claim an AAC-LC encoder, but are months old and validated against
-  their own decoders; neither has been run against an independent decoder here. The platform
-  encoders (AudioToolbox on macOS, Media Foundation on Windows) are free and built in, but Linux
-  has none, so one code path per platform still leaves Linux without one.
+**The encoder, chosen by measurement.** Two pure-Rust AAC-LC encoders were built in a scratch
+crate (`target/aaceval`, outside the workspace) and fed a 1 kHz sine and a 50 Hz–15 kHz log
+sweep, 5 s, mono, amplitude 0.5, at 44.1 and 48 kHz, asking 96 kbps; each stream was put in
+Scoria's own `.m4a` and decoded by ffmpeg 8.1.3 and by symphonia 0.5, which agreed to 0.1 dB.
+ffprobe read all eight as `aac`, `profile=LC`, in `mov,mp4,m4a,3gp,3g2,mj2`, with no decode
+error; the SNR is after the best alignment, the edges left out:
 
-Writing anything but `Recording YYYYMMDDHHmmss.m4a` with AAC inside would be a silent divergence,
-so the choice — a pure-Rust encoder after an independent check, FDK with its licence, or a
-platform encoder and no Linux recorder — is left to be made.
+| Encoder | Size, 5 s | Encode time, 5 s | SNR sine 44.1 / 48 | SNR sweep 44.1 / 48 |
+| --- | --- | --- | --- | --- |
+| oxideav-aac 0.1.7 (MIT) | 25.8–30.3 KB (≈ 46–48 kbps) | 6.23–6.82 s | 61.9 / 62.3 dB | 64.8 / 64.5 dB |
+| rusty_aac 2.0.1 (Apache-2.0, `rff-codec-aac`'s) | 56–58 KB (≈ 90 kbps) | 0.01 s | 24.4 / 24.5 dB | 28.0 / 26.9 dB |
+| ffmpeg's own `aac`, the yardstick | ≈ 62 KB | — | 40.3 / 44.3 dB | 38.7 / 48.3 dB |
+
+Every sine decoded at 1000.0 Hz. oxideav-aac was chosen, encoding while recording; it runs at
+about 0.75× real time, and turning TNS and PNS off changed neither speed nor output. It treats
+the bitrate as a ceiling: 96 kbps asked, 46–48 written.
+
+**What was built.** A crate, `scoria-audio`, with no gpui:
+
+- `capture`: the default input device through cpal 0.18 (Apache-2.0; ALSA on Linux, so
+  `shell.nix` gains `alsa-lib`), any of f32, i16, i32 and u16 taken as f32; the callback only
+  queues each block and returns.
+- `session`: a worker thread per recording, fed over an unbounded channel (a bounded one would
+  make the audio callback wait or drop samples, and the worker falls behind by about a third of
+  the recording, so that backlog has to queue). It encodes each 1024-sample hop as it arrives
+  and keeps only the encoded frames (≈ 6 KB a second); the queued blocks are the microphone's
+  own and go once encoded, so no recording-long PCM is held. At the stop it drains, writes
+  `.<name>.m4a.part` beside the destination, syncs it and renames it into place, numbering a
+  taken name. `wait_pending` holds a quitting app until every worker is done.
+- `encode`: the mono downmix and hop cutting (`Framer`) and oxideav's `StreamEncoder`;
+  `m4a`: the file, `ftyp`, `moov` with one `mp4a`/`esds` track and one chunk, `mdat` last;
+  `file_stem` and `embed_insertion`: `Recording YYYYMMDDHHmmss` and `\n![[…]]\n`.
+
+In the app, `workspace::audio_recorder`: start is offered while nothing records, stop while
+something does; the ribbon's "Start/stop recording" (`lucide-mic`, fetched from Lucide) sits
+after Random note and shows active with a dot while recording, and a click toggles. At the stop
+the name takes the local time and the folder `attachmentFolderPath`, the active file standing in
+for the note; once the file is in place a note being edited gets the embed over its selection
+(the selection then, the drain having taken a while), a note in reading view nothing, and
+anything else opens the recording, in the same tab when it was empty. Until then "Saving
+recording…" is renewed every four seconds: Scoria's own, Obsidian has none. Quitting stops a
+recording still capturing and keeps it, and waits for every drain.
+
+**Tests.** `scoria-audio`: `the_name_is_the_local_time_at_the_stop`,
+`the_embed_goes_on_a_line_of_its_own`, `the_framer_cuts_any_blocks_into_mono_hops`,
+`samples_are_clamped_and_nan_is_silence`, `an_odd_rate_is_refused`,
+`the_boxes_and_the_chunk_offset`, `the_audio_specific_config`,
+`a_taken_name_is_numbered_and_the_part_file_goes`, `the_mp4_epoch_is_1904`, and the round trip
+`a_tone_fed_in_blocks_comes_back_from_an_independent_decoder` (a stereo 1 kHz tone in 10 ms
+blocks through the worker to a `.m4a`, decoded by symphonia: mono, 48 kHz, 1000 Hz, SNR over
+40 dB, the part file gone). The app: `the_recorder_commands_are_runnable_and_obsidians`,
+`a_vault_path_is_slash_separated`.
+
+**Driven.** A headless sway, the socket, and ALSA pointed (`ALSA_CONFIG_PATH`) at a `file`
+plugin over `null` reading a 1 kHz tone, so no real microphone was ever opened. cpal opened it as
+48 kHz stereo f32. With the caret after `One` in Source mode, `One line.\n` became
+`One\n![[Recording 20261111151337.m4a]]\n line.\n` in `Attachments/`, as Obsidian wrote it;
+ffprobe read the file as AAC-LC at 48 kHz mono and it decoded at 1000.0 Hz, peak 0.402 for
+0.4 in. Seen: the ribbon's mic active with its dot, "Saving recording…" after the stop. Reading
+view saved the file and left the note; an empty tab opened the recording in that tab, on the
+"Audio files are not supported yet" placeholder. A quit straight after a stop waited for the
+drain (3.7 s) and left the finished file and no `.part`. **The drain was not measured on a real
+microphone**: the null device is not paced, so it delivered audio far faster than real time
+(2.7 s of audio in 0.3 s, saved 3.6 s after the stop) and a 10 s run queued minutes of audio
+and close to 1 GB before it was stopped. On a paced device the drain should be about a third of
+the recording, from the encoder's measured speed.
+
+**Left.** Live Preview (unprobed in Obsidian, the same path here); the format on macOS and
+Windows, which were not built or run (cpal's CoreAudio and WASAPI hosts are untried); what a
+missing or refused microphone shows (Scoria says "No microphone was found" or the host's
+error); a recording across midnight; a note left during the drain gets no embed; no audio player
+yet; whether Obsidian opens the recording in a new tab over a canvas (Scoria does).
 
 ### File recovery, 2026-11-11
 

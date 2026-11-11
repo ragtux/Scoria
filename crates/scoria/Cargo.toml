@@ -35,6 +35,7 @@ scoria-canvas.workspace = true
 scoria-pdf.workspace = true
 scoria-math.workspace = true
 scoria-export.workspace = true
+scoria-audio.workspace = true
 # A stacked tab's title is drawn on its side, which gpui's text cannot do:
 # its glyphs are outlined here and the bitmap turned.
 ab_glyph.workspace = true

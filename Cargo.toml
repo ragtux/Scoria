@@ -22,6 +22,7 @@ members = [
     "crates/scoria-math",
     "crates/scoria-highlight",
     "crates/scoria-export",
+    "crates/scoria-audio",
     "crates/scoria-bench",
 ]
 
@@ -52,6 +53,7 @@ scoria-pdf = { path = "crates/scoria-pdf" }
 scoria-math = { path = "crates/scoria-math" }
 scoria-highlight = { path = "crates/scoria-highlight" }
 scoria-export = { path = "crates/scoria-export" }
+scoria-audio = { path = "crates/scoria-audio" }
 
 anyhow = "1"
 thiserror = "2"
@@ -126,6 +128,16 @@ krilla = { version = "0.8", default-features = false, features = ["raster-images
 tiny-skia = "0.11"
 resvg = { version = "0.45", default-features = false }
 png = "0.17"
+# The Audio recorder. Capture is cpal (Apache-2.0): ALSA on Linux (alsa-lib at
+# build and run time, PipeWire and PulseAudio reached through their ALSA
+# plugins), CoreAudio on macOS, WASAPI on Windows. The encoder is oxideav-aac
+# (MIT), pure Rust AAC-LC, chosen on 2026-11-11 over rusty_aac by an encode of
+# a sine and a sweep decoded by ffmpeg and symphonia (62-65 dB against 24-28 dB);
+# it encodes at about 0.75x real time, so a recording finishes encoding after
+# Stop. symphonia (MPL-2.0) is a test-only decoder for the round trip.
+cpal = "0.18"
+oxideav-aac = "=0.1.7"
+symphonia = { version = "0.5", default-features = false, features = ["aac", "isomp4"] }
 
 [profile.dev]
 opt-level = 0

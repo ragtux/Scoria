@@ -517,6 +517,8 @@ fn main() {
             // run look like one that is already listening.
             cx.on_app_quit(|_| {
                 control::cleanup();
+                // A recording still being encoded is finished first.
+                scoria_audio::session::wait_pending();
                 async {}
             })
             .detach();

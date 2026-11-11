@@ -115,6 +115,9 @@ mod migrate_frontmatter;
 // File recovery: snapshots outside the vault, and Open local history.
 mod file_recovery;
 
+// The Audio recorder's commands and ribbon button.
+mod audio_recorder;
+
 // Export to PDF and Export as image: pages and pixels without gpui.
 mod exports;
 
@@ -468,6 +471,8 @@ pub const RUNNABLE: &[&str] = &[
     "app:show-release-notes",
     "app:migrate-frontmatter",
     "file-recovery:open",
+    "audio-recorder:start",
+    "audio-recorder:stop",
     "workspace:export-pdf",
     "canvas:export-as-image",
 ];
@@ -1784,6 +1789,11 @@ impl Notices {
     /// Drops the message with this id, if it is still the one on screen.
     fn expire(&mut self, id: u64) {
         self.live.retain(|n| n.id != id);
+    }
+
+    /// Drops every message reading `text`.
+    fn expire_text(&mut self, text: &str) {
+        self.live.retain(|n| n.text.as_ref() != text);
     }
 
     fn clear(&mut self) {
@@ -3409,6 +3419,13 @@ pub struct Workspace {
     migrate: Option<migrate_frontmatter::MigrateState>,
     /// "File recovery" while it is up.
     recovery: Option<file_recovery::RecoveryState>,
+    /// The Audio recorder's microphone while it records.
+    recording: Option<scoria_audio::capture::Capture>,
+    /// Recordings stopped and still being encoded.
+    recordings_saving: usize,
+    /// The last recording's length and how long after its stop it was in
+    /// place, in seconds, for the control socket.
+    last_recording_drain: Option<(f64, f64)>,
     /// What the last migration wrote, for its notice's Undo.
     migration_undo: Vec<migrate_frontmatter::Migrated>,
     /// A canvas asked for the note or media picker; the next render opens
@@ -4200,6 +4217,9 @@ impl Workspace {
             downloads: None,
             migrate: None,
             recovery: None,
+            recording: None,
+            recordings_saving: 0,
+            last_recording_drain: None,
             migration_undo: Vec::new(),
             pending_canvas_pick: None,
             palette,
@@ -6387,6 +6407,8 @@ impl Workspace {
             "app:show-debug-info" => self.show_debug_info(window, cx),
             "app:migrate-frontmatter" => self.open_migrate_frontmatter(window, cx),
             "file-recovery:open" => self.open_file_recovery(window, cx),
+            "audio-recorder:start" => self.start_recording(cx),
+            "audio-recorder:stop" => self.stop_recording(window, cx),
             "workspace:export-pdf" | "canvas:export-as-image" => {
                 self.run_export_command(id, window, cx);
             }
@@ -6571,6 +6593,14 @@ impl Workspace {
         }
         // On a Markdown note in any of its three modes; not on a canvas or
         // an empty tab.
+        // Both check callbacks: start offered everywhere while nothing
+        // records, stop only while something does (1.15.0, 2026-11-10).
+        if id == "audio-recorder:start" {
+            return !self.is_recording();
+        }
+        if id == "audio-recorder:stop" {
+            return self.is_recording();
+        }
         if id == "slides:start" {
             return self.active_note_is_markdown();
         }
@@ -12895,6 +12925,36 @@ impl Workspace {
                     }),
                 )
         };
+        // "Start/stop recording": `is-active` while a recording runs, and a
+        // click starts or stops one. Obsidian's click went unsettled in the
+        // probe (two clicks 3.5 s apart left it active and saved nothing);
+        // Scoria's toggles.
+        let recording = self.is_recording();
+        let record_button = |id: &'static str, name: &'static str, label: &'static str| {
+            let t = &theme.tokens;
+            icon_button(id, name, theme)
+                .when(recording, |d| {
+                    d.bg(t.background_modifier_hover).child(
+                        div()
+                            .absolute()
+                            .top(px(3.))
+                            .right(px(4.))
+                            .size(px(5.))
+                            .rounded(px(3.))
+                            .bg(t.text_error),
+                    )
+                })
+                .relative()
+                .tooltip(tooltip(label))
+                .on_click(cx.listener(move |this, _, window, cx| {
+                    let id = if this.is_recording() {
+                        "audio-recorder:stop"
+                    } else {
+                        "audio-recorder:start"
+                    };
+                    this.run_command(id, window, cx);
+                }))
+        };
         // The icons are the ones Obsidian's ribbon names: `lucide-file-search`
         // for the switcher, `git-fork` for the graph, `layout-dashboard` for
         // a new canvas, `calendar`, `files` for a template, `terminal` for
@@ -12919,7 +12979,7 @@ impl Workspace {
             &'static str,
             &'static str,
             &'static str,
-        ); 10] = [
+        ); 11] = [
             (
                 "ribbon-switcher",
                 "file-search",
@@ -12976,6 +13036,16 @@ impl Workspace {
                 "random-note",
                 "Open random note",
             ),
+            // The Audio recorder's, between the palette and a new base in
+            // the 2026-11-10 probe's vault; after Random note by the order
+            // of the plugins, as the Workspaces button is placed.
+            (
+                "ribbon-audio-recorder",
+                "mic",
+                "audio-recorder:start",
+                "audio-recorder",
+                "Start/stop recording",
+            ),
             (
                 "ribbon-workspaces",
                 "panels-top-left",
@@ -12996,6 +13066,7 @@ impl Workspace {
             .filter(|(_, _, _, plugin, _)| enabled(plugin) && !hidden(plugin))
             .map(|(id, name, command, _, label)| match command {
                 "random-note" => random_button(id, name, label),
+                "audio-recorder:start" => record_button(id, name, label),
                 _ => button(id, name, command, label),
             })
             .collect();
@@ -14387,6 +14458,7 @@ impl Workspace {
     /// note's unsaved edits and the layout.
     pub fn on_quit(&mut self, cx: &mut Context<Self>) {
         self.flush_save(cx);
+        self.finish_recordings_for_quit();
         if let Some(path) = self.current.clone() {
             self.save_folds(&path, cx);
         }

@@ -1,0 +1,18 @@
+[package]
+name = "scoria-audio"
+description = "The Audio recorder: microphone capture, AAC-LC encoding as it arrives, the .m4a file, its name and the embed a note gets (no gpui)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+oxideav-aac = { workspace = true }
+cpal = { workspace = true }
+chrono = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+symphonia = { workspace = true }

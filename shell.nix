@@ -15,6 +15,9 @@ let
     libGL
     fontconfig
     freetype
+    # The Audio recorder's microphone: cpal's ALSA host links alsa-lib, and
+    # PipeWire or PulseAudio answer through their ALSA plugins.
+    alsa-lib
   ];
 in
 pkgs.mkShell {

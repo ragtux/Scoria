@@ -65,7 +65,7 @@ Things Obsidian does that Scoria intends to do and does not.
 | **Footnotes view** | The pane lists the note's footnotes and jumps to a definition; a footnote cannot be edited in the pane |
 | **Backlinks at the bottom of a note** | Shown, per tab and by the Backlinks setting. The block's own sort menu and search filter are not drawn |
 | **Editing in the File properties pane** | `properties:open-local` shows the current note's properties in a side pane; they cannot be edited there, and the pane cannot be closed |
-| **Slides, Audio recorder, Web viewer** | `slides:start` runs, set in the interface font, with its keys live at once (Obsidian's wait for a click on the slide) and links on a slide inert; `audio-recorder:*` and `webviewer:*` are not implemented (`markdown-importer:open`, the old Format converter, is not in Obsidian 1.15.0 either) |
+| **Slides, Audio recorder, Web viewer** | `slides:start` runs, set in the interface font, with its keys live at once (Obsidian's wait for a click on the slide) and links on a slide inert; `audio-recorder:start` and `:stop` record the default microphone to `Recording YYYYMMDDHHmmss.m4a` (AAC-LC, mono) where Obsidian puts it, but the encoder runs slower than real time, so the file lands a while after Stop (about a third of the recording's length) under a **Saving recording…** notice that Obsidian does not have; it asks for 96 kbps and writes about 46–48. The ribbon button toggles. An audio file opens on a placeholder, Scoria having no audio player yet. `webviewer:*` is not implemented (`markdown-importer:open`, the old Format converter, is not in Obsidian 1.15.0 either) |
 
 ### Files and settings
 
