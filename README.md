@@ -33,12 +33,13 @@ same Markdown dialect, same `.canvas` and `.base` files. There is no import step
 and no second copy of anything. It is an independent implementation and is not affiliated with
 Obsidian.
 
-<img src="docs/img/app/workspace.png" alt="The Scoria window on the scoria-demo vault: the Files pane on the left, a note in Live Preview in the middle with a typed properties table and a photograph of a scoria sample, the Backlinks pane on the right, all inside a frameless window on a desktop wallpaper.">
+<img src="docs/img/app/workspace.png" alt="The Scoria window on the scoria-demo vault, on macOS: the Files pane on the left, two notes split side by side in the middle — one with a callout and a typeset equation, the other with an embedded glossary block and a table — and the Backlinks pane on the right, all inside a frameless window on a desktop wallpaper.">
 
-*The three-pane shell on `docs/scoria-demo`, a small field guide to scoria and the volcanic rocks
-around it that ships with the repository for exactly this purpose: a typed properties table, a
-photograph embedded with a width, and the note's backlinks. Obsidian's hidden window frame, its
-palette, its type scale and its Lucide icons, all read off a running copy rather than guessed at.*
+*The shell on `docs/scoria-demo`, a small field guide to scoria and the volcanic rocks around it
+that ships with the repository for exactly this purpose: two notes split side by side, a callout,
+an equation typeset from TeX, a block embedded from another note, a table, and the note's
+backlinks. Obsidian's hidden window frame, its palette, its type scale and its Lucide icons, all
+read off a running copy rather than guessed at.*
 
 ## Status
 
