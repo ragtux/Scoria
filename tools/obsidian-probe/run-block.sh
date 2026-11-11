@@ -14,24 +14,46 @@
 # on their vault throughout (seen 2026-11-02). The newest obsidian-*.asar of
 # ~/.config/obsidian is copied in once so the run is on the version the person
 # runs rather than the installer's. CDP_PORT picks the port (default 9222).
+#
+# On macOS the run is always under a data directory of its own (USER_DATA_DIR,
+# default a fresh folder under $TMPDIR): the person's ~/Library/Application
+# Support/obsidian is never written, and Obsidian is launched from
+# /Applications/Obsidian.app (OBSIDIAN_APP overrides) rather than a PATH
+# `obsidian`, which on a Mac may be the command-line client.
 set -euo pipefail
-SCRIPT=$(readlink -f "$1"); RESULTS=$(readlink -f -m "$2")
-VAULT=${3:-$(mktemp -d "${TMPDIR:-/tmp}/scoria-probe-vault.XXXXXX")}
+# realpath without GNU readlink's -m: macOS has neither -m nor, before 13, -f.
+abspath() { python3 -c 'import os,sys;print(os.path.realpath(sys.argv[1]))' "$1"; }
+DARWIN=0; [ "$(uname -s)" = Darwin ] && DARWIN=1
+SCRIPT=$(abspath "$1"); RESULTS=$(abspath "$2")
+VAULT=$(abspath "${3:-$(mktemp -d "${TMPDIR:-/tmp}/scoria-probe-vault.XXXXXX")}")
 CDP_PORT=${CDP_PORT:-9222}
 export CDP_BASE="http://127.0.0.1:$CDP_PORT"
 UDD=${USER_DATA_DIR:-}
+if [ "$DARWIN" = 1 ]; then
+  [ -n "$UDD" ] || UDD=$(mktemp -d "${TMPDIR:-/tmp}/scoria-probe-udd.XXXXXX")
+  UDD=$(abspath "$UDD")
+  OBSIDIAN_APP=${OBSIDIAN_APP:-/Applications/Obsidian.app}
+  OBSIDIAN_BIN="$OBSIDIAN_APP/Contents/MacOS/Obsidian"
+  CONFIG_HOME="$HOME/Library/Application Support/obsidian"
+else
+  OBSIDIAN_BIN=obsidian
+  CONFIG_HOME="$HOME/.config/obsidian"
+fi
 UDD_FLAG=()
 if [ -n "$UDD" ]; then
   mkdir -p "$UDD"
-  [ -f "$UDD/obsidian.json" ] || printf '{"vaults":{}}' > "$UDD/obsidian.json"
+  # updateDisabled: a fresh data directory otherwise fetches and installs an
+  # update on first launch, and the run would no longer be on the person's version.
+  if [ "$DARWIN" = 1 ]; then INIT='{"vaults":{},"updateDisabled":true}'; else INIT='{"vaults":{}}'; fi
+  [ -f "$UDD/obsidian.json" ] || printf '%s' "$INIT" > "$UDD/obsidian.json"
   if ! ls "$UDD"/obsidian-*.asar >/dev/null 2>&1; then
-    NEWEST=$(ls -v ~/.config/obsidian/obsidian-*.asar 2>/dev/null | tail -n 1 || true)
+    NEWEST=$(ls "$CONFIG_HOME"/obsidian-*.asar 2>/dev/null | sort -V | tail -n 1 || true)
     [ -n "$NEWEST" ] && command cp -f "$NEWEST" "$UDD/"
   fi
   CFG=$UDD/obsidian.json
   UDD_FLAG=("--user-data-dir=$UDD")
 else
-  CFG=~/.config/obsidian/obsidian.json
+  CFG="$CONFIG_HOME/obsidian.json"
 fi
 BACKUP=$(mktemp); command cp -f "$CFG" "$BACKUP"
 LOG=$(mktemp)
@@ -40,7 +62,9 @@ LOG=$(mktemp)
 # it nothing launched with CDP matches, the kill is a no-op, and the next launch
 # is swallowed by the single-instance lock of the survivor. With a data dir of
 # our own, only an instance on that dir counts, running or to be killed.
-if [ -n "$UDD" ]; then
+if [ "$DARWIN" = 1 ]; then
+  PGREP="^$OBSIDIAN_BIN( --[^ ]*)* --user-data-dir=$UDD( |\$)"
+elif [ -n "$UDD" ]; then
   PGREP="^/nix/store/[^ ]*electron( --[^ ]*)* --user-data-dir=$UDD( --[^ ]*)* /nix/store/[^ ]*obsidian"
 else
   PGREP='^/nix/store/[^ ]*electron( --[^ ]*)* /nix/store/[^ ]*obsidian'
@@ -81,7 +105,7 @@ PY
 # Launch, wait for a booted vault window, and refuse to proceed unless it is OUR vault.
 launch_once() {
   LAUNCHED=1
-  nohup obsidian "${UDD_FLAG[@]}" --remote-debugging-port="$CDP_PORT" >>"$LOG" 2>&1 &
+  nohup "$OBSIDIAN_BIN" "${UDD_FLAG[@]}" --remote-debugging-port="$CDP_PORT" >>"$LOG" 2>&1 &
   node -e "
     import('$(dirname "$SCRIPT")/cdp.mjs').then(async (m) => {
       await m.waitForObsidian(90000);
