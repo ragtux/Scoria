@@ -1,7 +1,10 @@
-//! `workspace:export-pdf` ("Export to PDF..."), as Obsidian 1.15.0 did it
-//! for the 2026-11-10 probe ([[Specification#Export to PDF]]). The modal is
-//! [`crate::export_modals`]; the pages are `scoria-export`'s, laid out from
-//! the reading view's own model of the note, which the one parser built.
+//! `workspace:export-pdf` ("Export to PDF...") and `canvas:export-as-image`
+//! ("Canvas: Export as image"), as Obsidian 1.15.0 did them for the
+//! 2026-11-10 probe ([[Specification#Export to PDF]],
+//! [[Specification#Export as image]]). The modals are
+//! [`crate::export_modals`]; the pages and the pixels are `scoria-export`'s,
+//! laid out from the reading view's own model of each note and card, which
+//! the one parser built.
 //!
 //! The run: the modal opens with `app.json`'s `pdfExportSettings` (the
 //! defaults when there are none); "Export to PDF" writes them back, asks
@@ -11,7 +14,7 @@
 //! modal stays open.
 
 use super::*;
-use crate::export_modals::PdfExportEvent;
+use crate::export_modals::{ImageExportEvent, PdfExportEvent};
 use crate::reading::model::{EmbedKind, InlineStyle, LinkTarget, RBlock, RichText, Segment};
 use crate::reading::EmbedSource;
 use scoria_export as ex;
@@ -19,11 +22,15 @@ use scoria_formats::config::PdfExportSettings;
 
 impl Workspace {
     /// The exports' check callbacks; `None` for any other id.
-    pub(super) fn exports_can_run(&self, id: &str) -> Option<bool> {
+    pub(super) fn exports_can_run(&self, id: &str, cx: &App) -> Option<bool> {
         match id {
             // A note, in any of the three modes; not a canvas, an image or
             // an empty tab (observed).
             "workspace:export-pdf" => Some(self.active_note_is_markdown()),
+            // A canvas only.
+            "canvas:export-as-image" => Some(
+                self.main_view(cx) == MainView::Canvas && self.canvas.read(cx).path().is_some(),
+            ),
             _ => None,
         }
     }
@@ -37,8 +44,14 @@ impl Workspace {
     ) -> bool {
         match id {
             "workspace:export-pdf" => {
-                if self.exports_can_run(id) == Some(true) {
+                if self.exports_can_run(id, cx) == Some(true) {
                     self.show_export_pdf(window, cx);
+                }
+                true
+            }
+            "canvas:export-as-image" => {
+                if self.exports_can_run(id, cx) == Some(true) {
+                    self.show_export_image(window, cx);
                 }
                 true
             }
@@ -155,6 +168,169 @@ impl Workspace {
         })
         .detach();
     }
+
+    /// `canvas:export-as-image`: the modal over the canvas on screen, every
+    /// row at its default.
+    fn show_export_image(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let view = self.canvas.read(cx);
+        let Some(path) = view.path().map(str::to_string) else {
+            return;
+        };
+        let canvas = view.scene.canvas.clone();
+        let area = view.view_area();
+        self.image_export
+            .update(cx, |m, cx| m.open(basename(&path), canvas, area, cx));
+        self.modal = Modal::ImageExport;
+        window.focus(&self.image_export.focus_handle(cx), cx);
+        cx.notify();
+    }
+
+    pub(super) fn on_image_export_event(
+        &mut self,
+        event: &ImageExportEvent,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        match event {
+            ImageExportEvent::Close => self.close_modal(window, cx),
+            ImageExportEvent::Save(options) => self.export_image(*options, window, cx),
+        }
+    }
+
+    /// "Save": the save dialog for `<basename>.png`, then the pixels. No
+    /// notice and nothing opened (observed); the modal closes once the file
+    /// is written and stays when the dialog is cancelled.
+    fn export_image(
+        &mut self,
+        options: ex::ImageOptions,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let view = self.canvas.read(cx);
+        let Some(path) = view.path().map(str::to_string) else {
+            return;
+        };
+        let canvas = view.scene.canvas.clone();
+        let theme = cx.global::<Theme>().clone();
+        let text = export_palette(&theme);
+        let contents = card_contents(&canvas, &path, &state, &theme, &text);
+        let palette = canvas_palette(&theme);
+        let picked = cx.prompt_for_new_path(&state.root, Some(&format!("{}.png", basename(&path))));
+        cx.spawn_in(window, async move |this, cx| {
+            let target = match picked.await {
+                Ok(Ok(Some(target))) => target,
+                Ok(Ok(None)) | Err(_) => return,
+                Ok(Err(err)) => {
+                    this.update(cx, |this, cx| {
+                        this.report(format!("Could not open the dialog: {err}"), cx)
+                    })
+                    .ok();
+                    return;
+                }
+            };
+            let out = target.clone();
+            let written = cx
+                .background_executor()
+                .spawn(async move {
+                    let fonts = ex::Fonts::new(crate::assets::export_fonts());
+                    let image = ex::CanvasImage {
+                        canvas: &canvas,
+                        contents: &contents,
+                        palette: &palette,
+                        text: &text,
+                        fonts: &fonts,
+                        logo: crate::assets::logo_svg(),
+                    };
+                    let bytes = ex::export_image(&image, &options)?;
+                    std::fs::write(&out, bytes).map_err(|e| e.to_string())
+                })
+                .await;
+            this.update_in(cx, |this, window, cx| match written {
+                Ok(()) => this.close_modal(window, cx),
+                Err(err) => this.report(format!("Could not write {}: {err}", target.display()), cx),
+            })
+            .ok();
+        })
+        .detach();
+    }
+}
+
+/// The canvas view's colours in the theme on screen.
+pub(crate) fn canvas_palette(theme: &Theme) -> ex::CanvasPalette {
+    let c = &theme.canvas;
+    let t = &theme.tokens;
+    ex::CanvasPalette {
+        background: color(c.background),
+        dot: color(c.dot),
+        card: color(t.background_primary),
+        card_border: color(c.card_border),
+        label: color(c.label),
+        text: color(t.text_normal),
+        muted: color(t.text_muted),
+        on_color: color(c.on_color),
+        presets: c.presets.map(color),
+        border_alpha: c.border_alpha,
+        tint_alpha: c.tint_alpha,
+        wash_alpha: c.wash_alpha,
+    }
+}
+
+/// What each card shows, worked out the way the canvas view's cards are:
+/// a text card's Markdown and a note's (or its section's) through the
+/// reading view's model, an image file's bytes, a line for the rest.
+pub(crate) fn card_contents(
+    canvas: &scoria_formats::canvas::Canvas,
+    canvas_path: &str,
+    state: &VaultState,
+    theme: &Theme,
+    palette: &ex::Palette,
+) -> HashMap<String, ex::CardContent> {
+    use crate::canvas::cards::{locate, subpath_linktext};
+    use scoria_formats::canvas::NodeType;
+    let opts = state.build_options();
+    let mut out = HashMap::new();
+    for node in &canvas.nodes {
+        let content = match node.kind {
+            NodeType::Group => continue,
+            NodeType::Text => {
+                let text = node.text.clone().unwrap_or_default();
+                let model = reading::build_with(canvas_path, &text, state, opts);
+                ex::CardContent::Blocks(export_blocks(&model.blocks, theme, palette))
+            }
+            NodeType::Link => ex::CardContent::Text(node.url.clone().unwrap_or_default()),
+            NodeType::File => {
+                let file = node.file.clone().unwrap_or_default();
+                match locate(state, &file) {
+                    Some((path, FileKind::Markdown)) => {
+                        let Some(text) = EmbedSource::read(state, &path) else {
+                            continue;
+                        };
+                        let section = node.subpath.as_deref().map(subpath_linktext).and_then(|l| {
+                            scoria_markdown::parse_linktext(&l).subpath.and_then(|sub| {
+                                reading::model::build_section(&path, &text, &sub, state, opts)
+                            })
+                        });
+                        let model = section
+                            .unwrap_or_else(|| reading::build_with(&path, &text, state, opts));
+                        ex::CardContent::Blocks(export_blocks(&model.blocks, theme, palette))
+                    }
+                    Some((path, FileKind::Image)) => {
+                        match std::fs::read(EmbedSource::absolute(state, &path)) {
+                            Ok(bytes) => ex::CardContent::Image(std::sync::Arc::new(bytes)),
+                            Err(_) => ex::CardContent::Text(path),
+                        }
+                    }
+                    Some((path, _)) => ex::CardContent::Text(basename(&path)),
+                    None => ex::CardContent::Text(file),
+                }
+            }
+        };
+        out.insert(node.id.clone(), content);
+    }
+    out
 }
 
 /// A path's file name without its extension.
@@ -495,6 +671,78 @@ mod tests {
     #[test]
     fn export_pdf_is_runnable() {
         assert!(RUNNABLE.contains(&"workspace:export-pdf"));
+    }
+
+    #[test]
+    fn export_as_image_is_runnable() {
+        assert!(RUNNABLE.contains(&"canvas:export-as-image"));
+    }
+
+    /// A canvas with a text card, a note card, an image card, a link card
+    /// and a group, through the cards' contents to a PNG: the bounds plus
+    /// the margin, the strip, and Scoria's mark in it.
+    #[test]
+    fn a_canvas_exports_its_cards_and_scorias_mark() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path().join("Vault");
+        std::fs::create_dir_all(root.join(".obsidian")).unwrap();
+        let mut png = Vec::new();
+        image::RgbaImage::from_pixel(8, 8, image::Rgba([0, 0, 255, 255]))
+            .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
+            .unwrap();
+        std::fs::write(root.join("pic.png"), &png).unwrap();
+        std::fs::write(root.join("Note.md"), "# Top\n\nBody\n\n## Two\n\nSecond\n").unwrap();
+        let json = r##"{"nodes":[
+            {"id":"t","type":"text","text":"**Hello** canvas","x":0,"y":0,"width":250,"height":60},
+            {"id":"n","type":"file","file":"Note.md","subpath":"#Two","x":300,"y":0,"width":250,"height":120},
+            {"id":"i","type":"file","file":"pic.png","x":0,"y":200,"width":100,"height":100},
+            {"id":"l","type":"link","url":"https://scoria.cc","x":300,"y":200,"width":250,"height":100},
+            {"id":"g","type":"group","label":"G","x":-20,"y":180,"width":140,"height":140}
+        ],"edges":[]}"##;
+        std::fs::write(root.join("Board.canvas"), json).unwrap();
+        let state = VaultState::load(&root).unwrap();
+        let canvas = scoria_formats::canvas::Canvas::from_json(json).unwrap();
+        let theme = Theme::dark();
+        let text = export_palette(&theme);
+        let contents = card_contents(&canvas, "Board.canvas", &state, &theme, &text);
+        assert!(!contents.contains_key("g"));
+        match &contents["n"] {
+            // The section under `## Two`, not the whole note.
+            ex::CardContent::Blocks(blocks) => {
+                assert!(matches!(&blocks[0], ex::Block::Heading { level: 2, .. }));
+                assert_eq!(blocks.len(), 2);
+            }
+            other => panic!("{other:?}"),
+        }
+        assert!(matches!(contents["i"], ex::CardContent::Image(_)));
+        assert_eq!(
+            contents["l"],
+            ex::CardContent::Text("https://scoria.cc".into())
+        );
+        let fonts = ex::Fonts::new(crate::assets::export_fonts());
+        let palette = canvas_palette(&theme);
+        let image = ex::CanvasImage {
+            canvas: &canvas,
+            contents: &contents,
+            palette: &palette,
+            text: &text,
+            fonts: &fonts,
+            logo: crate::assets::logo_svg(),
+        };
+        let pixmap = ex::render_image(&image, &ex::ImageOptions::default()).unwrap();
+        // x -20..550 and y 0..320, plus 100 around, plus the 80 px strip.
+        assert_eq!((pixmap.width(), pixmap.height()), (770, 520 + 80));
+        // The image card's blue is drawn.
+        let px = pixmap.pixel(100 + 50, 100 + 250).unwrap().demultiply();
+        assert!(px.blue() > 200 && px.red() < 60, "{px:?}");
+        // The strip carries the mark's orange.
+        let orange = (520..600).any(|y| {
+            (0..200).any(|x| {
+                let c = pixmap.pixel(x, y).unwrap().demultiply();
+                c.red() > 200 && c.green() < 120 && c.blue() < 60
+            })
+        });
+        assert!(orange);
     }
 
     #[test]

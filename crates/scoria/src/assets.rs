@@ -248,6 +248,11 @@ pub fn export_fonts() -> scoria_export::FontFiles {
     }
 }
 
+/// The mark's SVG, which Export as image draws in its logo strip.
+pub fn logo_svg() -> &'static [u8] {
+    LOGO.1
+}
+
 /// Inter Regular's bytes: registered by [`fonts`], and outlined by hand for
 /// a stacked tab's title, which is drawn on its side.
 pub const INTER_REGULAR: &[u8] = include_bytes!("../assets/fonts/Inter-Regular.ttf");

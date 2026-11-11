@@ -39,7 +39,7 @@ Things Obsidian does that Scoria intends to do and does not.
 | **A second vault beside the first** | Opening or switching to another vault from inside Scoria replaces the one in the window, where Obsidian opens it in a window of its own. Run Scoria again to have both open |
 | **The local graph as a side pane** | The graph, global or local, is a view of the main area, and `Ctrl + G` returns to the note. `graph:animate` is not a command yet (the timelapse button is there), and the graph has no screenshot export. See [the graph](/docs/app/graph/) |
 | **Bases: cell selection** | Shift-click selection of table cells, with copy and paste over it, is not built |
-| **Canvas export and options** | `canvas:export-as-image` is not implemented, and the Canvas plugin's settings (default location, wheel and drag behavior, snapping, card names, the zoom threshold) are written for Obsidian but not acted on |
+| **Canvas export and options** | Export as image (`canvas:export-as-image`) draws the canvas itself rather than capturing the view: Scoria's mark is in the logo strip, a card's text is clipped at its edge and is drawn in full at any zoom, and an embedded canvas or base in a card shows only its name. The Canvas plugin's settings (default location, wheel and drag behavior, snapping, card names, the zoom threshold) are written for Obsidian but not acted on |
 
 ### Editing
 

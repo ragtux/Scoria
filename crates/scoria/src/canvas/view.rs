@@ -373,6 +373,12 @@ impl CanvasView {
         self.path.as_deref()
     }
 
+    /// Where the view looks and how big it is: what Export as image's
+    /// "Viewport only" draws.
+    pub fn view_area(&self) -> (Viewport, (f64, f64)) {
+        (self.viewport, self.size())
+    }
+
     /// The element's size in logical pixels, as the viewport math wants it.
     fn size(&self) -> (f64, f64) {
         (

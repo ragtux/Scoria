@@ -5455,9 +5455,14 @@ dependencies = [
  "ab_glyph",
  "image",
  "krilla",
+ "png 0.17.16",
+ "resvg",
+ "scoria-canvas",
+ "scoria-formats",
  "scoria-highlight",
  "scoria-math",
  "scoria-pdf",
+ "tiny-skia",
 ]
 
 [[package]]

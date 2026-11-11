@@ -719,7 +719,7 @@ impl Cards {
 
 /// Finds `path` in the vault, case-insensitively, giving back the path as
 /// the vault spells it and the file's kind.
-fn locate(state: &VaultState, path: &str) -> Option<(String, FileKind)> {
+pub(crate) fn locate(state: &VaultState, path: &str) -> Option<(String, FileKind)> {
     let vault = state.vault();
     if let Some(file) = vault
         .files()
@@ -740,7 +740,7 @@ fn locate(state: &VaultState, path: &str) -> Option<(String, FileKind)> {
 /// A node's `subpath` as the subpath part of a link body, so the link
 /// parser reads it. Obsidian writes it with its `#`; one written without is
 /// taken as a heading all the same.
-fn subpath_linktext(subpath: &str) -> String {
+pub(crate) fn subpath_linktext(subpath: &str) -> String {
     if subpath.starts_with('#') {
         subpath.to_string()
     } else {
