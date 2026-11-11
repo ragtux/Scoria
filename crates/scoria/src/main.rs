@@ -45,6 +45,7 @@ mod reading;
 mod remote;
 mod search;
 mod settings;
+mod slides;
 mod suggest;
 mod switcher;
 mod text_input;
@@ -352,6 +353,7 @@ pub fn bind_all_keys(cx: &mut App, registry: &CommandRegistry) {
     prompt::bind_keys(cx);
     copy_results::bind_keys(cx);
     debug_info::bind_keys(cx);
+    slides::bind_keys(cx);
     cx.bind_keys([KeyBinding::new("ctrl-q", Quit, None)]);
 }
 

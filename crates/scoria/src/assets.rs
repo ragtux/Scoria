@@ -14,7 +14,10 @@
 //! own, two sheets over a tray with Lucide's plus at its corner.
 //! `bookmark-filled` is Lucide's `bookmark` with `fill="currentColor"`: the
 //! view header's "Bookmarked" action is that icon filled and stroked in the
-//! accent (2026-11-07), and gpui paints an SVG's fill only where it has one. The font is Inter (SIL OFL,
+//! accent (2026-11-07), and gpui paints an SVG's fill only where it has one.
+//! `wand-2` and `x-square` are Lucide's `wand-sparkles` and `square-x` under the
+//! older names Obsidian's DOM gives them (the graph's timelapse button, the
+//! presentation's close button, 2026-11-11). The font is Inter (SIL OFL,
 //! `assets/fonts/LICENSE-Inter.txt`), the family at the head of Obsidian's
 //! own interface and text font stacks, in the static faces the pinned gpui
 //! can pick weights from (a variable font renders every weight as regular).
@@ -180,6 +183,8 @@ icons!(
     "wrench",
     "bookmark-filled",
     "grip-horizontal",
+    "wand-2",
+    "x-square",
 );
 
 /// The logo, the one bundled asset that is not a monochrome icon. It is

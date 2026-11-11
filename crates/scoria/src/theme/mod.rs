@@ -70,14 +70,20 @@ pub const DEFAULT_MONO_FONT: &str = if cfg!(target_os = "macos") {
 /// `--h1-line-height`; the fourth level down share the third's line height).
 pub fn heading_style(level: u8) -> (f32, f32, f32) {
     match level {
-        1 => (1.618, 700., 1.2),
-        2 => (1.462, 680., 1.2),
-        3 => (1.318, 660., 1.3),
-        4 => (1.188, 640., 1.3),
-        5 => (1.076, 620., 1.3),
-        _ => (1.0, 600., 1.3),
+        1..=6 => HEADINGS[level as usize - 1],
+        _ => HEADINGS[5],
     }
 }
+
+/// [`heading_style`]'s table, h1 to h6.
+pub const HEADINGS: [(f32, f32, f32); 6] = [
+    (1.618, 700., 1.2),
+    (1.462, 680., 1.2),
+    (1.318, 660., 1.3),
+    (1.188, 640., 1.3),
+    (1.076, 620., 1.3),
+    (1.0, 600., 1.3),
+];
 
 #[derive(Debug, Clone)]
 pub struct Theme {

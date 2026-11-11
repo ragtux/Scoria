@@ -902,13 +902,13 @@ pub(crate) fn host_of(url: &str) -> String {
 /// `ui::WithRemSize` does; gpui has no element transform, and the rem
 /// size is read while a style is turned into a layout, so every phase runs
 /// under the override.
-struct Scaled {
+pub(crate) struct Scaled {
     div: Div,
     rem_size: Pixels,
 }
 
 impl Scaled {
-    fn new(rem_size: Pixels, child: Div) -> Scaled {
+    pub(crate) fn new(rem_size: Pixels, child: Div) -> Scaled {
         Scaled {
             div: div().child(child),
             rem_size,

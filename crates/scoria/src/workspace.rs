@@ -105,6 +105,9 @@ mod download_modal;
 mod app_info;
 mod release_notes;
 
+// Start presentation: the note as slides over the whole window.
+mod presentation;
+
 actions!(
     workspace,
     [ToggleMode, GoBack, GoForward, OpenSearch, OpenGraph]
@@ -314,6 +317,8 @@ pub const RUNNABLE: &[&str] = &[
     "global-search:open",
     "graph:open",
     "graph:open-local",
+    "graph:animate",
+    "slides:start",
     "canvas:new-file",
     "canvas:jump-to-group",
     "canvas:convert-to-file",
@@ -3352,6 +3357,8 @@ pub struct Workspace {
     copy_results: Entity<CopyResults>,
     /// "Debug info", filled each time it opens.
     debug_info: Entity<DebugInfo>,
+    /// The presentation `slides:start` put up, while it is up.
+    slides: Option<presentation::Presentation>,
     /// The reading view release-notes tabs draw, and the version whose
     /// notes it holds.
     release_notes: Entity<ReadingView>,
@@ -4114,6 +4121,7 @@ impl Workspace {
             prompt,
             copy_results,
             debug_info,
+            slides: None,
             release_notes,
             release_notes_built: RefCell::new(None),
             layouts_modal: None,
@@ -5622,6 +5630,12 @@ impl Workspace {
             // global graph.
             "graph:open-local" if self.current.is_none() => {}
             "graph:open-local" => self.show_graph(true, window, cx),
+            // Both check callbacks: asked for by id where the palette would
+            // not offer them, they do nothing.
+            "graph:animate" if !self.global_graph_active(cx) => {}
+            "graph:animate" => self.graph.update(cx, |g, cx| g.animate(cx)),
+            "slides:start" if !self.active_note_is_markdown() => {}
+            "slides:start" => self.start_presentation(window, cx),
             "canvas:new-file" => self.new_canvas("", cx),
             "bases:new-file" => self.new_base("", cx),
             "bases:add-view" => self.add_base_view(cx),
@@ -6455,6 +6469,16 @@ impl Workspace {
         // was observed, so that is all this refuses.
         if id == "graph:open-local" {
             return self.current.is_some();
+        }
+        // Offered only while a global graph is the active leaf: not with a
+        // note active, a graph beside it or not, and not in a local graph.
+        if id == "graph:animate" {
+            return self.global_graph_active(cx);
+        }
+        // On a Markdown note in any of its three modes; not on a canvas or
+        // an empty tab.
+        if id == "slides:start" {
+            return self.active_note_is_markdown();
         }
         // The active file's commands are check callbacks too: with an
         // empty tab active Obsidian 1.15.0 offered none of them, and with a
@@ -11494,7 +11518,7 @@ impl Workspace {
         });
         // The hotkeys stand down behind a modal, in every window: a modal
         // holds the workspace's keyboard wherever it is drawn.
-        let hotkeys_live = self.modal == Modal::None;
+        let hotkeys_live = self.modal == Modal::None && self.slides.is_none();
         Some(
             div()
                 .key_context("Workspace")
@@ -11540,6 +11564,7 @@ impl Workspace {
                 .children(overlay)
                 .children(file_menu)
                 .children(notices)
+                .children(self.presentation_in(Some(id)))
                 .into_any_element(),
         )
     }
@@ -14610,6 +14635,7 @@ impl Workspace {
             "editor": self.editor.read(cx).describe(text, cx),
             "reading": self.reading.read(cx).describe(cx),
             "graph": graph,
+            "slides": self.slides.as_ref().map(|p| p.view.read(cx).describe()),
             "canvas": self.canvas.read(cx).describe(cx),
             "bases": self.bases.read(cx).state_json(),
             "pdf": self.pdf.read(cx).state_json(cx),
@@ -19174,7 +19200,7 @@ impl Render for Workspace {
         // child of this div — so the workspace stands its handlers down
         // instead: without them a hotkey can no longer focus a pane behind
         // the modal, or swap the modal out from under its own Escape.
-        let hotkeys_live = self.modal == Modal::None;
+        let hotkeys_live = self.modal == Modal::None && self.slides.is_none();
         // macOS has the desktop's traffic lights instead.
         let controls = (frameless && !mac).then(|| self.render_window_controls(&theme, window));
 
@@ -19236,7 +19262,10 @@ impl Render for Workspace {
             // reading view -- positioned at the click and drawn over
             // everything else, so no dock's clipping can cut it off.
             .children(self.render_file_menu(None, &theme, window, cx))
-            .children(notices);
+            .children(notices)
+            // The presentation covers the window whole, the title bar and
+            // the ribbon with it.
+            .children(self.presentation_in(None));
         client_frame(content.into_any_element(), &theme, window)
     }
 }

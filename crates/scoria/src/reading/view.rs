@@ -1706,9 +1706,71 @@ impl Render for ReadingView {
     }
 }
 
+/// The block metrics the renderer sets text in: the reading view's
+/// ([`BlockStyle::READING`]), or a presentation slide's
+/// ([`BlockStyle::SLIDE`]). Sizes are in multiples of the theme's base font
+/// size; everything not named here (lists, quotes, tables, callouts) scales
+/// with that base in either.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct BlockStyle {
+    /// `(size, weight, line height)` of h1 to h6.
+    pub headings: [(f32, f32, f32); 6],
+    /// The margin above h1 to h6.
+    pub heading_top: [f32; 6],
+    /// The margin below every heading.
+    pub heading_bottom: f32,
+    /// Headings are set in capitals.
+    pub uppercase_headings: bool,
+    /// The margin below a paragraph or a code block.
+    pub gap: f32,
+    /// A code block's text size.
+    pub code_size: f32,
+}
+
+impl BlockStyle {
+    /// Obsidian's reading view: h1 1.618em at 700 down to h6 1em at 600,
+    /// 1.2 line heights at the top; a 40 px gap above an h2 and 16 px below
+    /// every heading, the body margin.
+    pub(crate) const READING: BlockStyle = BlockStyle {
+        headings: crate::theme::HEADINGS,
+        heading_top: [1.0, 2.5, 1.5, 1.5, 1.5, 1.5],
+        heading_bottom: 1.0,
+        uppercase_headings: false,
+        gap: 0.9,
+        code_size: 0.875,
+    };
+
+    /// A slide of `slides:start`, as observed on Obsidian 1.15.0's
+    /// presentation (the body at 42 px on a 960 × 700 stage): headings
+    /// 2.5em, 1.6em, 1.3em and 1em at weight 600, line height 1.2, in
+    /// capitals, no margin above and 20 px below; paragraphs 20 px apart;
+    /// code at 0.55em. h5 and h6 were not observed and take h4's size.
+    pub(crate) const SLIDE: BlockStyle = BlockStyle {
+        headings: [
+            (2.5, 600., 1.2),
+            (1.6, 600., 1.2),
+            (1.3, 600., 1.2),
+            (1.0, 600., 1.2),
+            (1.0, 600., 1.2),
+            (1.0, 600., 1.2),
+        ],
+        heading_top: [0.; 6],
+        heading_bottom: 20. / 42.,
+        uppercase_headings: true,
+        gap: 20. / 42.,
+        code_size: 0.55,
+    };
+
+    fn heading(&self, level: u8) -> (f32, f32, f32) {
+        self.headings[(level.clamp(1, 6) - 1) as usize]
+    }
+}
+
 /// Builds GPUI elements for model blocks; the reading view and Live
 /// Preview's widgets share it, each with its own click handlers.
 pub(crate) struct Renderer<'a> {
+    /// The metrics blocks are set in.
+    style: BlockStyle,
     theme: &'a Theme,
     toggled: &'a HashSet<usize>,
     /// The vault's `types.json`, so a property row can draw the type its key
@@ -1747,6 +1809,7 @@ impl<'a> Renderer<'a> {
         on_toggle: ToggleHandler,
     ) -> Renderer<'a> {
         Renderer {
+            style: BlockStyle::READING,
             theme,
             toggled,
             property_types,
@@ -1760,6 +1823,12 @@ impl<'a> Renderer<'a> {
             text_system,
             available: available.max(100.),
         }
+    }
+
+    /// Sets the blocks in `style` instead of the reading view's metrics.
+    pub(crate) fn with_style(mut self, style: BlockStyle) -> Renderer<'a> {
+        self.style = style;
+        self
     }
 
     /// Makes the text selectable: each run takes the mouse and paints the
@@ -1900,7 +1969,8 @@ impl<'a> Renderer<'a> {
     pub(crate) fn block(&self, block: &RBlock, tight: bool) -> AnyElement {
         let t = self.theme;
         let base = t.base_font_size;
-        let gap = if tight { px(0.) } else { px(base * 0.9) };
+        let style = self.style;
+        let gap = if tight { px(0.) } else { px(base * style.gap) };
         match block {
             RBlock::Properties(entries) => self.properties(entries),
             RBlock::Paragraph(segments) => div()
@@ -1910,18 +1980,18 @@ impl<'a> Renderer<'a> {
                 .children(segments.iter().map(|s| self.segment(s)))
                 .into_any_element(),
             RBlock::Heading { level, text, .. } => {
-                // Obsidian's scale: h1 1.618em at 700, down to h6 1em at
-                // 600, with 1.2 line heights at the top; a 40 px gap above
-                // an h2 and 16 px below every heading, the body margin.
-                let (size, weight, line_height) = crate::theme::heading_style(*level);
-                let top = match level {
-                    1 => 1.0,
-                    2 => 2.5,
-                    _ => 1.5,
+                let (size, weight, line_height) = style.heading(*level);
+                let top = style.heading_top[(level.clamp(&1, &6) - 1) as usize];
+                let upper;
+                let text = if style.uppercase_headings {
+                    upper = uppercased(text);
+                    &upper
+                } else {
+                    text
                 };
                 div()
                     .mt(px(base * top))
-                    .mb(px(base))
+                    .mb(px(base * style.heading_bottom))
                     .text_size(px(base * size))
                     .line_height(px(base * size * line_height))
                     .font_weight(FontWeight(weight))
@@ -1956,8 +2026,8 @@ impl<'a> Renderer<'a> {
                     .rounded_md()
                     .py_2()
                     .font_family(t.mono_font.clone())
-                    .text_size(px(base * 0.875))
-                    .line_height(px(base * 0.875 * 1.5))
+                    .text_size(px(base * style.code_size))
+                    .line_height(px(base * style.code_size * 1.5))
                     .child(
                         // Code keeps its columns: long lines scroll sideways
                         // -- except a raw `<pre>`, which wraps (observed).
@@ -3779,6 +3849,25 @@ impl<'a> Renderer<'a> {
         }
         h
     }
+}
+
+/// `text` in capitals, for a slide's headings. A character whose capital is
+/// not one character of the same length in UTF-8 (`ß`, `ŉ`) is left as it
+/// is, so the styled runs and the links keep their byte ranges.
+pub(crate) fn uppercased(text: &RichText) -> RichText {
+    let mut out = text.clone();
+    out.text = text
+        .text
+        .chars()
+        .map(|c| {
+            let mut up = c.to_uppercase();
+            match (up.next(), up.next()) {
+                (Some(u), None) if u.len_utf8() == c.len_utf8() => u,
+                _ => c,
+            }
+        })
+        .collect();
+    out
 }
 
 /// Shaped text whose links answer a right click: it wraps the text element,

@@ -7,6 +7,7 @@
 //! note, the local graph the current note and its neighbors.
 
 use super::layout::{Forces, Layout};
+use super::timelapse;
 use crate::search::inputs;
 use crate::text_input::{InputEvent, TextInput};
 use crate::theme::Theme;
@@ -433,6 +434,21 @@ pub struct GraphView {
     /// keeps the two in separate leaves, each with its own zoom, so switching
     /// back has to find the global one where it was left.
     global_camera: Option<(f32, Option<f32>, bool)>,
+    /// The timelapse that is running, if one is.
+    timelapse: Option<Timelapse>,
+    /// Counts timelapse runs, so a run started over stops the old one's
+    /// clock.
+    timelapse_run: u64,
+}
+
+/// A timelapse in progress: the whole graph it is bringing back, the step
+/// each node comes in at, and how many steps are on screen.
+struct Timelapse {
+    nodes: Arc<Vec<Node>>,
+    edges: Arc<Vec<(u32, u32)>>,
+    steps: Vec<usize>,
+    total: usize,
+    shown: usize,
 }
 
 impl EventEmitter<GraphEvent> for GraphView {}
@@ -501,6 +517,8 @@ impl GraphView {
             pinned_scale: None,
             adopted_scale: None,
             global_camera: None,
+            timelapse: None,
+            timelapse_run: 0,
         }
     }
 
@@ -586,6 +604,11 @@ impl GraphView {
             "local": self.is_local(),
             "local_options": self.local_options.describe(),
             "nodes": self.nodes.len(),
+            "timelapse": self.timelapse.as_ref().map(|t| json!({
+                "step": t.shown,
+                "steps": t.total,
+                "shown": self.nodes.iter().map(|n| n.label.clone()).collect::<Vec<_>>(),
+            })),
             "scale": self.scale,
             "offset": [self.offset.x, self.offset.y],
             "hovered": self
@@ -639,6 +662,9 @@ impl GraphView {
                     return;
                 }
                 view.building = false;
+                // The vault changed under a timelapse: the new graph is
+                // shown whole.
+                view.timelapse = None;
                 view.apply(built, cx);
             })
             .ok();
@@ -663,6 +689,17 @@ impl GraphView {
             if let Some((x, y)) = old.get(&node.id) {
                 layout.bodies[i].x = *x;
                 layout.bodies[i].y = *y;
+            } else if let Some((x, y)) = built.neighbors[i]
+                .iter()
+                .find_map(|&n| old.get(&built.nodes[n].id))
+            {
+                // A node new to the graph starts beside a neighbour that
+                // was already placed, rather than at the spiral's centre:
+                // a timelapse's next node joins the layout where its
+                // links are.
+                let angle = i as f32 * 2.399_963;
+                layout.bodies[i].x = x + 30.0 * angle.cos();
+                layout.bodies[i].y = y + 30.0 * angle.sin();
             }
         }
         self.index = built
@@ -1041,8 +1078,96 @@ impl GraphView {
         self.schedule_save(cx);
     }
 
-    /// "Start timelapse animation": the layout again from its first
-    /// positions, so the graph can be watched settling.
+    /// `graph:animate`, "Start graph timelapse animation": the graph
+    /// empties and its nodes come back a step at a time, files in the order
+    /// of their creation time ([`timelapse::schedule`]). Asked again
+    /// mid-way, it starts over from one node. A local graph has none.
+    pub fn animate(&mut self, cx: &mut Context<Self>) {
+        if self.is_local() {
+            return;
+        }
+        let (nodes, edges) = match &self.timelapse {
+            Some(t) => (t.nodes.clone(), t.edges.clone()),
+            None => (self.nodes.clone(), self.edges.clone()),
+        };
+        let ctimes: HashMap<String, u64> = self
+            .state
+            .as_ref()
+            .map(|state| {
+                state
+                    .vault()
+                    .files()
+                    .iter()
+                    .map(|f| (f.path.clone(), f.ctime))
+                    .collect()
+            })
+            .unwrap_or_default();
+        let times: Vec<Option<u64>> = nodes
+            .iter()
+            .map(|n| match n.kind {
+                NodeKind::Note | NodeKind::Attachment => {
+                    Some(ctimes.get(n.id.as_str()).copied().unwrap_or(0))
+                }
+                NodeKind::Unresolved | NodeKind::Tag => None,
+            })
+            .collect();
+        let ids: Vec<&str> = nodes.iter().map(|n| n.id.as_str()).collect();
+        let (steps, total) = timelapse::schedule(&times, &ids, &edges);
+        self.timelapse_run += 1;
+        let run = self.timelapse_run;
+        self.timelapse = Some(Timelapse {
+            nodes,
+            edges,
+            steps,
+            total,
+            shown: 0,
+        });
+        // From nothing: the first node starts at the centre.
+        self.nodes = Arc::new(Vec::new());
+        self.user_adjusted = false;
+        self.show_steps(1, cx);
+        let started = std::time::Instant::now();
+        cx.spawn(async move |this, cx| loop {
+            cx.background_executor().timer(timelapse::STEP).await;
+            let going = this
+                .update(cx, |view, cx| {
+                    if view.timelapse_run != run || view.timelapse.is_none() {
+                        return false;
+                    }
+                    view.show_steps(timelapse::shown_at(started.elapsed()), cx);
+                    view.timelapse.is_some()
+                })
+                .unwrap_or(false);
+            if !going {
+                break;
+            }
+        })
+        .detach();
+    }
+
+    /// Puts the timelapse's first `shown` steps on screen; with every step
+    /// shown the run is over and the graph is whole again.
+    fn show_steps(&mut self, shown: usize, cx: &mut Context<Self>) {
+        let Some(t) = &mut self.timelapse else {
+            return;
+        };
+        let shown = shown.min(t.total);
+        if shown == t.shown {
+            return;
+        }
+        t.shown = shown;
+        let keep: HashSet<usize> = (0..t.nodes.len()).filter(|&i| t.steps[i] < shown).collect();
+        let built = finish((*t.nodes).clone(), (*t.edges).clone(), Some(keep), true);
+        if shown >= t.total {
+            self.timelapse = None;
+        }
+        self.apply(built, cx);
+    }
+
+    /// The open panel's ▶, Scoria's own: the layout again from its first
+    /// positions, so the graph can be watched settling. Obsidian's open
+    /// panel has no such button; its timelapse button shows only while the
+    /// panel is closed, and is [`Self::animate`].
     fn restart_layout(&mut self, cx: &mut Context<Self>) {
         let mut layout = Layout::new(self.nodes.len(), (*self.edges).clone(), self.forces());
         for (i, node) in self.nodes.iter().enumerate() {
@@ -1382,17 +1507,39 @@ impl GraphView {
 
     fn render_controls(&self, theme: &Theme, cx: &mut Context<Self>) -> gpui::AnyElement {
         if self.config.close.unwrap_or(false) {
-            // `.graph-controls.is-close`: the cog alone on the view's own
-            // ground, its border transparent.
-            return Self::icon_button("graph-controls-open", "⚙", theme)
+            // `.graph-controls.is-close`: the cog on the view's own ground,
+            // its border transparent, and under it in the global graph
+            // `mod-animate`, "Start timelapse animation" (`lucide-wand-2`),
+            // which Obsidian shows only while the panel is closed.
+            let animate = (!self.is_local()).then(|| {
+                div()
+                    .id("graph-controls-animate-timelapse")
+                    .size(px(22.))
+                    .flex()
+                    .items_center()
+                    .justify_center()
+                    .rounded_sm()
+                    .cursor_pointer()
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                    .child(crate::assets::icon("wand-2", 16., theme.tokens.icon_color))
+                    .on_click(cx.listener(|this, _, _, cx| this.animate(cx)))
+            });
+            return div()
                 .absolute()
                 .top_2()
                 .left_2()
-                .bg(theme.tokens.background_primary)
-                .border_1()
-                .border_color(gpui::transparent_black())
+                .flex()
+                .flex_col()
+                .gap_1()
                 .occlude()
-                .on_click(cx.listener(|this, _, _, cx| this.set_closed(false, cx)))
+                .child(
+                    Self::icon_button("graph-controls-open", "⚙", theme)
+                        .bg(theme.tokens.background_primary)
+                        .border_1()
+                        .border_color(gpui::transparent_black())
+                        .on_click(cx.listener(|this, _, _, cx| this.set_closed(false, cx))),
+                )
+                .children(animate)
                 .into_any_element();
         }
         let c = &self.config;
