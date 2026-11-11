@@ -66,7 +66,7 @@ are the ones that change how Scoria behaves:
 So are auto-pairing of brackets and of Markdown (`autoPairBrackets`, `autoPairMarkdown`),
 which take effect on the next keystroke without reopening the note.
 
-Settings that are **shown but not yet acted on** include spellcheck, Vim mode, inline title,
+Settings that are **shown but not yet acted on** include spellcheck, inline title,
 fold heading and fold indent, line numbers, indent guides, right-to-left, window frame style,
 and `cssTheme`. They are read from your configuration and displayed truthfully, and changing
 one still writes the key for Obsidian to honor; the behavior behind them is not implemented

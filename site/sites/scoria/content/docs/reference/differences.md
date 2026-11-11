@@ -46,7 +46,7 @@ Things Obsidian does that Scoria intends to do and does not.
 |---|---|
 | **File recovery** | Obsidian keeps its snapshots in IndexedDB outside the vault, so it is out of the round-trip work rather than next in it |
 | **Editing properties in reading view** | The reading view's properties table is read-only; Live Preview's is not |
-| **Vim mode** | `vimMode` is read, not implemented |
+| **Vim mode** | The common core is there (modes, motions, operators, text objects, registers, search, `.`); visual block, macros, marks, `:` commands and `.obsidian.vimrc` are not |
 | **Line numbers, indent guides, inline title, right-to-left** | Read and shown in Settings, not acted on |
 | **Spellcheck** | — |
 | **Page preview from File properties** | Page preview works from links, panes, tabs, bases and the graph (see [links](/docs/format/links/#page-preview)); Scoria has no File properties view to preview from |

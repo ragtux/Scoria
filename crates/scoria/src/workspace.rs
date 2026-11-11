@@ -4172,6 +4172,7 @@ impl Workspace {
                 e.set_readable_line_length(readable);
                 e.set_show_inline_title(inline_title);
                 e.set_indent_options(smart, use_tab, tab_size);
+                e.set_vim_mode(state.app().vim_mode.unwrap_or(false), cx);
                 e.set_property_types(state.property_types().clone());
                 e.set_properties_in_document(properties);
                 e.set_build_options(build_options, cx);
@@ -4197,6 +4198,7 @@ impl Workspace {
         editor.update(cx, |e, cx| {
             e.set_link_options(link_options);
             e.set_indent_options(smart, use_tab, tab_size);
+            e.set_vim_mode(state.app().vim_mode.unwrap_or(false), cx);
             e.set_property_types(state.property_types().clone());
             e.set_properties_in_document(properties);
             e.set_build_options(build_options, cx);

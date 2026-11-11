@@ -965,6 +965,31 @@ impl TextBuffer {
         true
     }
 
+    /// How many steps are on the undo stack. With
+    /// [`TextBuffer::merge_undo_from`] it lets a caller make one step of
+    /// whatever it does next.
+    pub fn undo_depth(&self) -> usize {
+        self.history.undo.len()
+    }
+
+    /// Joins every undo step above `depth` into one, so a command made of
+    /// several edits (Vim's `cw` and the text typed after it) is undone
+    /// whole. The joined step no longer groups with later typing.
+    pub fn merge_undo_from(&mut self, depth: usize) {
+        if self.history.undo.len() < depth + 1 {
+            return;
+        }
+        let mut rest = self.history.undo.split_off(depth).into_iter();
+        let mut first = rest.next().expect("at least one step");
+        for group in rest {
+            first.edits.extend(group.edits);
+            first.after = group.after;
+            first.at = group.at;
+        }
+        first.kind = EditKind::Other;
+        self.history.undo.push(first);
+    }
+
     /// Whether anything is on the undo stack, for a test that wants to
     /// wind a buffer all the way back.
     pub fn can_undo(&self) -> bool {

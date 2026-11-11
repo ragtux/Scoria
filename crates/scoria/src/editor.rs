@@ -41,9 +41,10 @@ use gpui::{
     Bounds, ClipboardItem, Context, CursorStyle, DispatchPhase, Element, ElementId,
     ElementInputHandler, Entity, EntityInputHandler, EventEmitter, FocusHandle, Focusable, Font,
     FontStyle, FontWeight, GlobalElementId, Hitbox, HitboxBehavior, Hsla, InspectorElementId,
-    KeyBinding, LayoutId, MouseButton, MouseDownEvent, MouseMoveEvent, MouseUpEvent, PaintQuad,
-    Pixels, Point, ScrollWheelEvent, SharedString, StrikethroughStyle, Style, Subscription, Task,
-    TextAlign, TextRun, TextStyle, UTF16Selection, UnderlineStyle, Window, WrappedLine,
+    KeyBinding, KeyDownEvent, LayoutId, MouseButton, MouseDownEvent, MouseMoveEvent, MouseUpEvent,
+    PaintQuad, Pixels, Point, ScrollWheelEvent, SharedString, StrikethroughStyle, Style,
+    Subscription, Task, TextAlign, TextRun, TextStyle, UTF16Selection, UnderlineStyle, Window,
+    WrappedLine,
 };
 use scoria_formats::config::PropertyTypes;
 use scoria_formats::properties::{self as props, PropertiesInDocument};
@@ -52,6 +53,7 @@ use scoria_markdown::{Block, BlockKind, Document};
 use scoria_suggest::blocks::{self, IdInsertion, Placement};
 use scoria_suggest::{self as suggest, Accept, BlockId, Suggestion};
 use scoria_text::table::{self, TableCommand};
+use scoria_text::vim::{self, Vim};
 use scoria_text::{
     autopair, find, shifted, wrap, BlockInsert, Cursor, Cursors, EditKind, LinePrefix, LinkSyntax,
     Sel, TextBuffer,
@@ -162,6 +164,17 @@ pub fn bind_keys(cx: &mut App) {
         KeyBinding::new("shift-enter", FindPrevious, Some("FindPanel")),
         KeyBinding::new("alt-enter", FindAll, Some("FindPanel")),
         KeyBinding::new("escape", CloseFind, Some("FindPanel")),
+        // Vim's normal and visual modes: the context the editor carries
+        // then has none of the keys above, so they reach Vim as keystrokes.
+        // Escape still goes through `close_find`, which hands it to Vim,
+        // and the clipboard and undo chords stay what they are everywhere.
+        KeyBinding::new("escape", CloseFind, Some("VimEditor")),
+        KeyBinding::new("ctrl-c", Copy, Some("VimEditor")),
+        KeyBinding::new("ctrl-x", Cut, Some("VimEditor")),
+        KeyBinding::new("ctrl-v", Paste, Some("VimEditor")),
+        KeyBinding::new("ctrl-z", Undo, Some("VimEditor")),
+        KeyBinding::new("ctrl-shift-z", Redo, Some("VimEditor")),
+        KeyBinding::new("ctrl-a", SelectAll, Some("VimEditor")),
         KeyBinding::new("tab", FocusOtherField, Some("FindPanel")),
         KeyBinding::new("shift-tab", FocusOtherField, Some("FindPanel")),
         // The popup's own keys, in the context the editor only carries
@@ -611,6 +624,9 @@ pub struct Editor {
     /// The text, its line index, the selections and the undo history; the
     /// bytes this view writes back are all decided there.
     buf: TextBuffer,
+    /// Vim's state while `vimMode` is on. Its normal and visual modes take
+    /// every key; insert mode is this editor's own typing.
+    vim: Option<Vim>,
     scroll_line: usize,
     /// Pixels of `scroll_line` scrolled above the top of the view.
     scroll_px: Pixels,
@@ -785,6 +801,7 @@ impl Editor {
             scroll_px: px(0.),
             pending_reveal: false,
             pending_center: false,
+            vim: None,
             dragging: false,
             thumb_drag: None,
             highlights: Arc::new(vec![Vec::new()]),
@@ -841,6 +858,10 @@ impl Editor {
     pub fn set_text(&mut self, name: impl Into<SharedString>, raw: String, cx: &mut Context<Self>) {
         self.name = name.into();
         self.buf.load(&raw);
+        // A note opens in normal mode.
+        if let Some(vim) = self.vim.as_mut() {
+            vim.reset();
+        }
         self.suggest = None;
         self.table_field = None;
         self.title_edit = None;
@@ -1061,6 +1082,160 @@ impl Editor {
         self.smart_indent_list = smart_indent_list;
         self.use_tab = use_tab;
         self.tab_size = tab_size;
+        if let Some(vim) = self.vim.as_mut() {
+            vim.use_tab = use_tab;
+            vim.tab_size = tab_size;
+        }
+    }
+
+    /// `vimMode`: Vim key bindings. Turning them on starts in normal mode.
+    pub fn set_vim_mode(&mut self, on: bool, cx: &mut Context<Self>) {
+        if on == self.vim.is_some() {
+            return;
+        }
+        self.vim = on.then(|| {
+            let mut vim = Vim::new();
+            vim.use_tab = self.use_tab;
+            vim.tab_size = self.tab_size;
+            vim
+        });
+        if on {
+            self.close_suggest(cx);
+        }
+        cx.notify();
+    }
+
+    /// The inline title, a property or a table cell is being typed into,
+    /// and has the keys whatever Vim's mode.
+    fn field_open(&self) -> bool {
+        self.title_edit.is_some() || self.property_field.is_some() || self.table_field.is_some()
+    }
+
+    /// Vim is on and in a mode where keys are commands, not text.
+    fn vim_commands(&self) -> bool {
+        !self.field_open()
+            && self
+                .vim
+                .as_ref()
+                .is_some_and(|v| v.mode() != vim::Mode::Insert)
+    }
+
+    /// Vim's mode by name, for the control socket.
+    pub fn vim_mode_name(&self) -> Option<&'static str> {
+        self.vim.as_ref().map(|v| match v.mode() {
+            vim::Mode::Normal => "normal",
+            vim::Mode::Insert => "insert",
+            vim::Mode::Visual => "visual",
+            vim::Mode::VisualLine => "visual-line",
+        })
+    }
+
+    /// Gives Vim one key and brings the view up to date with what it did.
+    /// False when the key was not Vim's to take.
+    fn vim_key(&mut self, key: vim::Key, window: &mut Window, cx: &mut Context<Self>) -> bool {
+        struct Clip<'a>(&'a mut App);
+        impl vim::Host for Clip<'_> {
+            fn clipboard(&mut self) -> Option<String> {
+                self.0.read_from_clipboard().and_then(|item| item.text())
+            }
+            fn set_clipboard(&mut self, text: &str) {
+                self.0
+                    .write_to_clipboard(ClipboardItem::new_string(text.to_string()));
+            }
+        }
+        if self.field_open() || self.buf.marked.is_some() {
+            return false;
+        }
+        let Some(mut vim) = self.vim.take() else {
+            return false;
+        };
+        let (first, last) = self.visible_line_range();
+        vim.page_lines = last.saturating_sub(first).max(2);
+        let out = vim.key(&mut self.buf, key, &mut Clip(cx));
+        let insert = vim.mode() == vim::Mode::Insert;
+        self.vim = Some(vim);
+        if !out.handled {
+            return false;
+        }
+        if out.edited {
+            self.after_edit(Some(window), cx);
+        } else {
+            self.buf.forget_planted();
+            self.unfold_at_cursor();
+            self.reveal_cursor(window);
+            cx.notify();
+        }
+        if !insert {
+            // The popup is for text being typed.
+            self.close_suggest(cx);
+        }
+        match out.view {
+            Some(vim::View::Center) => {
+                self.pending_center = true;
+                self.reveal_cursor(window);
+            }
+            Some(vim::View::ToggleFold) => self.toggle_fold(cx),
+            Some(vim::View::FoldAll) => self.fold_all(cx),
+            Some(vim::View::UnfoldAll) => self.unfold_all(cx),
+            None => {}
+        }
+        true
+    }
+
+    /// A key no binding took. In Vim's normal and visual modes that is
+    /// nearly every key, since the editor's own bindings are in a context
+    /// it does not carry then; in insert mode only `Ctrl-[` is Vim's
+    /// (Escape arrives through `close_find`).
+    fn vim_key_down(&mut self, ev: &KeyDownEvent, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(mode) = self.vim.as_ref().map(|v| v.mode()) else {
+            return;
+        };
+        let stroke = &ev.keystroke;
+        let mods = stroke.modifiers;
+        if mods.platform || mods.alt || mods.function {
+            return;
+        }
+        let one = |s: &str| {
+            let mut chars = s.chars();
+            match (chars.next(), chars.next()) {
+                (Some(c), None) => Some(c),
+                _ => None,
+            }
+        };
+        let key = if mods.control {
+            match one(&stroke.key) {
+                Some(c) => vim::Key::Ctrl(c.to_ascii_lowercase()),
+                None => return,
+            }
+        } else {
+            match stroke.key.as_str() {
+                "escape" => vim::Key::Esc,
+                "enter" => vim::Key::Enter,
+                "backspace" => vim::Key::Backspace,
+                "delete" => vim::Key::Delete,
+                "left" => vim::Key::Left,
+                "right" => vim::Key::Right,
+                "up" => vim::Key::Up,
+                "down" => vim::Key::Down,
+                "home" => vim::Key::Home,
+                "end" => vim::Key::End,
+                "space" => vim::Key::Char(' '),
+                name => match stroke.key_char.as_deref().and_then(one) {
+                    Some(c) => vim::Key::Char(c),
+                    None => match one(name) {
+                        Some(c) if mods.shift => vim::Key::Char(c.to_ascii_uppercase()),
+                        Some(c) => vim::Key::Char(c),
+                        None => return,
+                    },
+                },
+            }
+        };
+        if mode == vim::Mode::Insert && key != vim::Key::Ctrl('[') {
+            return;
+        }
+        if self.vim_key(key, window, cx) {
+            cx.stop_propagation();
+        }
     }
 
     /// `autoPairBrackets` and `autoPairMarkdown`, read from the vault's
@@ -1254,6 +1429,11 @@ impl Editor {
         }
         let mut utf8 = [0u8; 4];
         for ch in text.chars() {
+            // Vim's mode can change between two characters of one string.
+            if self.vim_commands() {
+                self.vim_key(vim::Key::Char(ch), window, cx);
+                continue;
+            }
             self.type_char(ch.encode_utf8(&mut utf8), EditKind::Typing, window, cx);
         }
     }
@@ -1271,6 +1451,17 @@ impl Editor {
     /// what a keystroke leaves behind.
     pub fn press_keys(&mut self, keys: &str, window: &mut Window, cx: &mut Context<Self>) {
         for key in keys.split(',') {
+            if self.vim_commands() {
+                let key = match key.trim() {
+                    "down" => vim::Key::Down,
+                    "up" => vim::Key::Up,
+                    "escape" => vim::Key::Esc,
+                    "enter" => vim::Key::Enter,
+                    _ => continue,
+                };
+                self.vim_key(key, window, cx);
+                continue;
+            }
             match key.trim() {
                 "down" => {
                     self.move_down(&MoveDown, window, cx);
@@ -1401,6 +1592,8 @@ impl Editor {
                 "regex": self.find.opts.regex,
             },
             "suggest": self.describe_suggest(),
+            "vim": self.vim_mode_name(),
+            "vim_prompt": self.vim.as_ref().and_then(|v| v.prompt()),
         });
         if text {
             out["text"] = serde_json::Value::String(self.buf.text().to_string());
@@ -3259,6 +3452,10 @@ impl Editor {
     /// Escape: closes the autocompletion popup first, then writes an open
     /// table cell or abandons an open property field, then drops extra cursors, then closes the panel.
     fn close_find(&mut self, _: &CloseFind, window: &mut Window, cx: &mut Context<Self>) {
+        // Vim's normal and visual modes: Escape cancels what is pending.
+        if self.vim_commands() && self.vim_key(vim::Key::Esc, window, cx) {
+            return;
+        }
         if self.title_edit.is_some() {
             // Escape puts the title back and the caret in the document.
             self.leave_title(window, cx);
@@ -3273,6 +3470,8 @@ impl Editor {
             self.commit_table_field(Some(window), cx, None);
             self.ensure_cell_at_caret(false, cx);
         } else if self.cancel_property_field(cx) {
+        } else if self.vim.is_some() && self.vim_key(vim::Key::Esc, window, cx) {
+            // Insert mode, with no popup or field left to close first.
         } else if !self.buf.extra.is_empty() && self.focus_handle.is_focused(window) {
             self.buf.collapse_cursors();
             cx.notify();
@@ -5420,6 +5619,14 @@ impl EntityInputHandler for Editor {
             cx.notify();
             return;
         }
+        // Text that got here in Vim's normal mode (an input method, a
+        // layout's Alt characters) is keys, not text.
+        if self.vim_commands() {
+            for c in new_text.chars() {
+                self.vim_key(vim::Key::Char(c), window, cx);
+            }
+            return;
+        }
         let kind = if new_text.contains('\n') {
             EditKind::Other
         } else {
@@ -5445,6 +5652,10 @@ impl EntityInputHandler for Editor {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
+        // Nothing is composed into the text in Vim's normal mode.
+        if self.vim_commands() {
+            return;
+        }
         let range = range_utf16
             .map(|r| self.line_relative(r))
             .or_else(|| self.buf.marked.clone())
@@ -5497,6 +5708,21 @@ impl Render for Editor {
         self.palette = Palette::from_theme(&theme);
         let base = theme.base_font_size;
         let panel = self.find.open.then(|| self.render_find_panel(&theme, cx));
+        // Vim's `/`, `?` and `:` line, along the bottom while it is typed.
+        let prompt = self.vim.as_ref().and_then(|v| v.prompt()).map(|text| {
+            div()
+                .absolute()
+                .bottom_0()
+                .left_0()
+                .right_0()
+                .px_3()
+                .py_1()
+                .bg(theme.tokens.background_secondary)
+                .text_color(theme.tokens.text_normal)
+                .font_family(theme.mono_font.clone())
+                .text_size(px(base * 0.875))
+                .child(text)
+        });
         // The popup is drawn over the text, anchored under the query it is
         // offering rows for.
         let popup = self.suggest.take().map(|state| {
@@ -5511,9 +5737,13 @@ impl Render for Editor {
             // match deeper than the workspace's and so shadow them.
             .key_context(if self.suggest.is_some() {
                 "Editor SuggestPopup"
+            } else if self.vim_commands() {
+                // None of the editor's bindings: the keys are Vim's.
+                "VimEditor"
             } else {
                 "Editor"
             })
+            .on_key_down(cx.listener(Self::vim_key_down))
             .track_focus(&self.focus_handle)
             .size_full()
             .font_family(theme.text_font.clone())
@@ -5571,6 +5801,7 @@ impl Render for Editor {
             .child(crate::theme::fonts::quick_size_layer())
             .children(panel)
             .children(popup.flatten())
+            .children(prompt)
     }
 }
 
@@ -6243,6 +6474,16 @@ impl Element for EditorElement {
             let cursors = editor.buf.cursors();
             let head = editor.buf.head;
             let focused = editor.focus_handle.is_focused(window);
+            // Vim's normal and visual modes draw a block on the character
+            // the cursor is on, which is not always where the head is.
+            let block = if editor.field_open() {
+                None
+            } else {
+                editor
+                    .vim
+                    .as_ref()
+                    .and_then(|v| v.block_cursor(&editor.buf))
+            };
             let thumb_dragging = editor.thumb_drag.is_some();
 
             let available = (bounds.size.width - px(GUTTER * 2.)).max(px(50.));
@@ -6793,14 +7034,28 @@ impl Element for EditorElement {
                             }
                         }
                     }
-                    if sel.head >= range.start && sel.head <= range.end {
-                        let (row, x) = shaped.row_and_x(sel.head - range.start);
+                    let caret = match block {
+                        Some(at) if sel.head == head => at,
+                        _ => sel.head,
+                    };
+                    if caret >= range.start && caret <= range.end {
+                        let (row, x) = shaped.row_and_x(caret - range.start);
+                        let (width, color) = match block {
+                            Some(_) => {
+                                let next = editor.buf.next_grapheme_boundary(caret).min(range.end);
+                                let (next_row, next_x) = shaped.row_and_x(next - range.start);
+                                let width = if next_row == row && next_x > x {
+                                    next_x - x
+                                } else {
+                                    font_size * 0.5
+                                };
+                                (width, palette.text.opacity(0.45))
+                            }
+                            None => (px(2.), palette.text),
+                        };
                         cursor_quads.push(fill(
-                            Bounds::new(
-                                point(content_x + x, y + rh * row as f32),
-                                size(px(2.), rh),
-                            ),
-                            palette.text,
+                            Bounds::new(point(content_x + x, y + rh * row as f32), size(width, rh)),
+                            color,
                         ));
                         if sel.head == head {
                             cursor_top = y;
