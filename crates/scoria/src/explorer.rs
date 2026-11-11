@@ -560,6 +560,14 @@ pub fn display_name(file_name: &str) -> &str {
 
 pub enum ExplorerEvent {
     Open(String),
+    /// The pointer came onto a file's row (`over`) or left it: the row's
+    /// bounds anchor the page preview.
+    Hover {
+        path: String,
+        over: bool,
+        anchor: Bounds<Pixels>,
+        modifiers: gpui::Modifiers,
+    },
     /// A row dropped in a folder (`""` for the vault root).
     MoveInto {
         path: String,
@@ -1602,9 +1610,33 @@ impl FileExplorer {
                 // (`--nav-item-color-active` on `--nav-item-background-active`)
                 // or under the pointer (`-hover`).
                 let t = &theme.tokens;
+                let row_el = div().id(("row", ix));
+                // A file's row previews it; a folder's previews nothing.
+                let row_el = if row.is_folder {
+                    row_el
+                } else {
+                    let path = row.path.clone();
+                    let this = cx.weak_entity();
+                    // The row's 2 px ring border is part of its box.
+                    crate::hover_preview::hover_row_bordered(
+                        row_el,
+                        2.,
+                        move |over, anchor, modifiers, _, cx| {
+                            let path = path.clone();
+                            this.update(cx, |_, cx| {
+                                cx.emit(ExplorerEvent::Hover {
+                                    path,
+                                    over,
+                                    anchor,
+                                    modifiers,
+                                })
+                            })
+                            .ok();
+                        },
+                    )
+                };
                 Some(
-                    div()
-                        .id(("row", ix))
+                    row_el
                         .w_full()
                         .h(px(25.))
                         .mb(px(2.))
@@ -2281,7 +2313,9 @@ mod menu_tests {
             ExplorerEvent::RenameTo { path, .. } | ExplorerEvent::MoveInto { path, .. } => {
                 Some(path)
             }
-            ExplorerEvent::NewNoteFromHeader | ExplorerEvent::LeaveFocus => None,
+            ExplorerEvent::NewNoteFromHeader
+            | ExplorerEvent::LeaveFocus
+            | ExplorerEvent::Hover { .. } => None,
         }
     }
 

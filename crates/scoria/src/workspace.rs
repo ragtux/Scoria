@@ -3609,6 +3609,21 @@ impl Workspace {
                         this.search_in_folder(folder, window, cx)
                     }
                     ExplorerEvent::LeaveFocus => this.focus_main(window, cx),
+                    ExplorerEvent::Hover {
+                        path,
+                        over,
+                        anchor,
+                        modifiers,
+                    } => this.row_hover(
+                        crate::hover_preview::Source::Files,
+                        None,
+                        crate::hover_preview::exact(path),
+                        path.clone(),
+                        *over,
+                        *anchor,
+                        *modifiers,
+                        cx,
+                    ),
                 },
             ),
             cx.subscribe_in(
@@ -3685,6 +3700,21 @@ impl Workspace {
                     // `workspace.json` goes out with the pane's filter in it
                     // when the layout is saved, on the way out.
                     BookmarkEvent::LeafState => {}
+                    BookmarkEvent::Hover {
+                        target,
+                        over,
+                        anchor,
+                        modifiers,
+                    } => this.row_hover(
+                        crate::hover_preview::Source::Bookmarks,
+                        None,
+                        crate::hover_preview::exact(target),
+                        target.split('#').next().unwrap_or(target).to_string(),
+                        *over,
+                        *anchor,
+                        *modifiers,
+                        cx,
+                    ),
                 },
             ),
             cx.subscribe_in(
@@ -7139,11 +7169,76 @@ impl Workspace {
                 anchor: h.anchor,
             })
         });
+        self.set_preview_pending(pending, cx);
+    }
+
+    fn set_preview_pending(
+        &mut self,
+        pending: Option<crate::hover_preview::Pending>,
+        cx: &mut Context<Self>,
+    ) {
         self.hover_preview.pending = pending;
         if self.hover_preview.pending.is_some() {
             self.arm_preview_show(cx);
         } else {
             self.arm_preview_hide(cx);
+        }
+    }
+
+    /// The pointer came onto a row that previews (a pane's row, a tab) or
+    /// left it. `target` is a link body resolved against `from`: a row
+    /// that stands for a file passes its path for both. Leaving clears the
+    /// link only if it is still this row's, since the next row's arrival
+    /// can be reported before this one's departure.
+    #[allow(clippy::too_many_arguments)]
+    fn row_hover(
+        &mut self,
+        source: crate::hover_preview::Source,
+        window: Option<u64>,
+        target: String,
+        from: String,
+        over: bool,
+        anchor: Bounds<Pixels>,
+        modifiers: gpui::Modifiers,
+        cx: &mut Context<Self>,
+    ) {
+        if !over {
+            let ours =
+                self.hover_preview.pending.as_ref().is_some_and(|p| {
+                    p.source == source && p.anchor == anchor && p.target == target
+                });
+            if !ours {
+                return;
+            }
+        }
+        self.hover_preview.generation += 1;
+        self.hover_preview.modifiers = modifiers;
+        let pending = over.then_some(crate::hover_preview::Pending {
+            window,
+            source,
+            target,
+            from,
+            anchor,
+        });
+        self.set_preview_pending(pending, cx);
+    }
+
+    /// [`Self::row_hover`] as a row's handler, for a row in the vault
+    /// window's docks (the only window that has them).
+    fn dock_row_hover(
+        &self,
+        source: crate::hover_preview::Source,
+        target: String,
+        from: String,
+        cx: &mut Context<Self>,
+    ) -> impl Fn(bool, Bounds<Pixels>, gpui::Modifiers, &mut Window, &mut App) + 'static {
+        let this = cx.weak_entity();
+        move |over, anchor, modifiers, _, cx| {
+            let (target, from) = (target.clone(), from.clone());
+            this.update(cx, |this, cx| {
+                this.row_hover(source, None, target, from, over, anchor, modifiers, cx)
+            })
+            .ok();
         }
     }
 
@@ -12638,14 +12733,38 @@ impl Workspace {
                     title: title.clone(),
                 };
                 let this = cx.weak_entity();
+                // A tab showing a file previews it, anchored on the whole
+                // tab (the probe's 34 px header put it at 6 + 34 + 10 = 50).
+                let preview = {
+                    let this = this.clone();
+                    let path = tab.path.clone();
+                    let window = self.window_of_group(group);
+                    move |over, anchor, modifiers, _: &mut Window, cx: &mut App| {
+                        let Some(path) = path.clone() else {
+                            return;
+                        };
+                        this.update(cx, |this, cx| {
+                            this.row_hover(
+                                crate::hover_preview::Source::TabHeader,
+                                window,
+                                crate::hover_preview::exact(&path),
+                                path,
+                                over,
+                                anchor,
+                                modifiers,
+                                cx,
+                            )
+                        })
+                        .ok();
+                    }
+                };
                 // Obsidian's tab: 34 px tall, 200 px wide, the active one
                 // in the content's colour, its top corners as round as its
                 // feet, its title in the small UI size and its close button a
                 // 20 px disc. It is padded `1px 4px 4px` around an inner box
                 // with a 4 px radius, and that inner box, not the tab, is
                 // what the hover wash paints.
-                div()
-                    .id(("tab", ix))
+                crate::hover_preview::hover_row(div().id(("tab", ix)), preview)
                     .group("tab")
                     .flex()
                     .flex_row()
@@ -15351,10 +15470,23 @@ impl Workspace {
                     (!flat).then(|| group.matches.len().to_string().into());
                 let subtext: Option<SharedString> = group.subtext.clone().map(Into::into);
                 let unresolved = flat && !resolved;
+                // A Links row previews its link as the note would, subpath
+                // and all; a Backlinks file row previews the file.
+                let preview = match (&group.link, &group.path) {
+                    (Some(link), _) => Some((link.clone(), current.clone())),
+                    (None, Some(path)) => Some((crate::hover_preview::exact(path), path.clone())),
+                    (None, None) => None,
+                };
+                let row = div().id(("pane-group", next()));
+                let row = match preview {
+                    Some((target, from)) => crate::hover_preview::hover_row(
+                        row,
+                        self.dock_row_hover(crate::hover_preview::Source::Search, target, from, cx),
+                    ),
+                    None => row,
+                };
                 list = list.child(
-                    div()
-                        .id(("pane-group", next()))
-                        .group("pane-group")
+                    row.group("pane-group")
                         .w_full()
                         .flex_shrink_0()
                         .min_h(px(25.))
@@ -16529,6 +16661,7 @@ impl Workspace {
     fn render_outline_pane(&mut self, theme: &Theme, cx: &mut Context<Self>) -> gpui::AnyElement {
         // The mark follows the cursor and the reading view; a mode or note
         // switch lands here before anything else can notice it.
+        let current = self.current.clone().unwrap_or_default();
         let active = self.current_heading(cx);
         if active != self.outline_state.active {
             self.outline_state.active = active;
@@ -16652,6 +16785,15 @@ impl Workspace {
                 let label = StyledText::new(SharedString::from(row.text.clone()))
                     .with_highlights(highlights)
                     .into_any_element();
+                // A heading's row previews its own section (the probe's
+                // `Lower` row showed `Lower` and the lines under it).
+                let section = crate::hover_preview::exact(&format!("{}#{}", current, row.text));
+                let preview = self.dock_row_hover(
+                    crate::hover_preview::Source::Outline,
+                    section,
+                    current.clone(),
+                    cx,
+                );
                 list = list.child(
                     Self::tree_row(
                         ("outline-row", row.ix),
@@ -16667,7 +16809,8 @@ impl Workspace {
                     )
                     .on_click(cx.listener(move |this, _, window, cx| {
                         this.reveal_heading(offset, window, cx)
-                    })),
+                    }))
+                    .map(|row| crate::hover_preview::hover_row(row, preview)),
                 );
             }
             list.into_any_element()

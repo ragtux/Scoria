@@ -330,7 +330,37 @@ uses behave as Obsidian's do.
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
-| Page preview | probed 2026-11-11 on macOS, see [[Specification#Observed page preview, Obsidian 1.15.0]] and [[#Page preview, the probe, 2026-11-11]]; step 1 landed the same day — the popover over links in the reading view and both editing modes, see [[#Page preview, step 1, 2026-11-11]]; left: the dock and header sources, nested popovers, and the click that makes it an editor |
+| Page preview | probed 2026-11-11 on macOS, see [[Specification#Observed page preview, Obsidian 1.15.0]] and [[#Page preview, the probe, 2026-11-11]]; step 1 landed the same day — the popover over links in the reading view and both editing modes, see [[#Page preview, step 1, 2026-11-11]]; step 2 the same day — the tab header and the Files, Bookmarks, Backlinks, Outgoing links and Outline rows, see [[#Page preview, step 2, 2026-11-11]]; left: the Properties, Bases and Graph sources, nested popovers, and the click that makes it an editor |
+
+### Page preview, step 2, 2026-11-11
+
+The sources away from the note. `hover_preview::Source` grew `Files`, `TabHeader`, `Bookmarks`,
+`Search` and `Outline`, each reading its own `page-preview.json` key and needing Mod when the key
+is absent, as every one of them did in the probe (`plain: 0`, `mod: 1`). A row reports through
+`hover_row`, which hangs an absolute `canvas` on the row to learn its bounds and passes them, with
+`window.modifiers()`, from the row's `on_hover`: the row's whole box is the anchor, which is what
+put Obsidian's popover 10 px under a 25 px row and under the 34 px tab (6 + 34 + 10 = 50). The
+Files row draws a 2 px ring border of its own and an absolute child sits inside the border, so it
+uses `hover_row_bordered` to reach back out over it. The Files view and Bookmarks are entities of
+their own and emit `Hover` events; the tab, Backlinks, Outgoing links and Outline rows are drawn
+by the workspace and call `row_hover` directly. What each previews: a file's row, a tab and a
+Backlinks file row their file; a folder's row nothing; a file bookmark its file at its
+`#Heading` or `#^block`; an Outgoing links row its link as written, subpath and all, resolved from
+the note; an Outline row its own heading's section (`path#Heading`). A path is handed over rooted
+(`hover_preview::exact`, `/Beta.md`) so a root-level note is never looked up by basename against
+a same-named note in a folder. Leaving a row clears the pending link only when it is still that
+row's, since the next row's arrival can be reported first. The five settings rows lost their tag.
+The Search pane's rows do not report: they raised nothing in the probe.
+
+Checked over the socket on macOS (a mouse move carries `mods`, so a Cmd hover is
+`mouse move … mods: ["cmd"]`): a plain hover on a Files row raised nothing and a Cmd hover raised
+the note anchored at (48, 130, 25), the row's full box; the folder row reported nothing; the tab
+anchored at (352, 6, 34); a Backlinks row at x 736 put the popover at 562, pushed in from the
+right as the probe's was; the Outline's `Lower` row showed `Lower` and its line (2 blocks); the
+Outgoing links rows reported `Beta`, `Gamma` and `Beta#Second`; the `Alpha#Lower` bookmark showed
+the section, anchored at x 56 as Obsidian's was; with `"file-explorer": false` a plain hover on
+a Files row raised it. A `page-preview.json` edited outside the app is read at the next launch,
+as before.
 
 ### Page preview, step 1, 2026-11-11
 

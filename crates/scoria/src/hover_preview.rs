@@ -12,13 +12,13 @@ use crate::reading::view::{LinkHandler, ReadingHost, Renderer, ToggleHandler, LI
 use crate::reading::{build_with, BuildOptions, EmbedSource};
 use crate::theme::Theme;
 use gpui::{
-    anchored, deferred, div, point, prelude::*, px, AnyElement, App, Bounds, Modifiers, Pixels,
-    ScrollHandle, SharedString, Window,
+    anchored, canvas, deferred, div, point, prelude::*, px, AnyElement, App, Bounds, Div,
+    Modifiers, Pixels, ScrollHandle, SharedString, Stateful, Window,
 };
 use scoria_formats::config::{PagePreviewConfig, PropertyTypes};
 use scoria_formats::properties::PropertiesInDocument;
 use scoria_formats::FileKind;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::HashSet;
 use std::rc::Rc;
 use std::time::Duration;
@@ -46,6 +46,18 @@ pub enum Source {
     Reading,
     /// `editor`, "Editing view": Live Preview and source mode alike.
     Editor,
+    /// `file-explorer`, "Files": a file's row.
+    Files,
+    /// `tab-header`, "Tab header": a tab showing a file.
+    TabHeader,
+    /// `bookmarks`, "Bookmarks": a file, heading or block bookmark.
+    Bookmarks,
+    /// `search`, "Search, Backlinks, and Outgoing links": a Backlinks file
+    /// row or an Outgoing links row. The Search pane's own rows raised
+    /// nothing in the probe, Mod or not, so they do not report.
+    Search,
+    /// `outline`, "Outline": a heading's row, which previews its section.
+    Outline,
 }
 
 impl Source {
@@ -55,6 +67,11 @@ impl Source {
         match self {
             Source::Reading => config.preview.unwrap_or(false),
             Source::Editor => config.editor.unwrap_or(true),
+            Source::Files => config.file_explorer.unwrap_or(true),
+            Source::TabHeader => config.tab_header.unwrap_or(true),
+            Source::Bookmarks => config.bookmarks.unwrap_or(true),
+            Source::Search => config.search.unwrap_or(true),
+            Source::Outline => config.outline.unwrap_or(true),
         }
     }
 }
@@ -71,6 +88,50 @@ pub fn left_edge(anchor_left: f32, viewport_width: f32) -> f32 {
     anchor_left
         .min(viewport_width - EDGE - (WIDTH + 2.))
         .max(0.)
+}
+
+/// A vault path (with any `#subpath`) as a link body that resolves to
+/// exactly that file: rooted, so a root-level note is not looked up by its
+/// basename, which another folder's note of the same name could win.
+pub fn exact(path: &str) -> String {
+    format!("/{path}")
+}
+
+/// A row (a pane's row, a tab) that previews: reports the pointer coming
+/// onto it (`true`) and leaving it, with the row's bounds in window
+/// coordinates — the anchor, since a row anchors exactly as a link does
+/// (the probe's Files, Bookmarks, Backlinks and Outline rows and its tab
+/// header all put the popover 10 px under their bottom edge) — and the
+/// modifiers held then.
+pub fn hover_row(
+    el: Stateful<Div>,
+    report: impl Fn(bool, Bounds<Pixels>, Modifiers, &mut Window, &mut App) + 'static,
+) -> Stateful<Div> {
+    hover_row_bordered(el, 0., report)
+}
+
+/// [`hover_row`] for a row with a border of its own (`border` px wide): an
+/// absolute child is placed against the padding box, so the measuring
+/// child reaches back out over the border to take the row's full box.
+pub fn hover_row_bordered(
+    el: Stateful<Div>,
+    border: f32,
+    report: impl Fn(bool, Bounds<Pixels>, Modifiers, &mut Window, &mut App) + 'static,
+) -> Stateful<Div> {
+    let bounds = Rc::new(Cell::new(Bounds::default()));
+    let set = bounds.clone();
+    el.relative()
+        .child(
+            canvas(move |b, _, _| set.set(b), |_, _, _, _| {})
+                .absolute()
+                .top(px(-border))
+                .left(px(-border))
+                .right(px(-border))
+                .bottom(px(-border)),
+        )
+        .on_hover(move |over, window, cx| {
+            report(*over, bounds.get(), window.modifiers(), window, cx)
+        })
 }
 
 /// The link under the pointer, whether or not a popover is up for it.
@@ -313,6 +374,34 @@ mod tests {
         };
         assert!(Source::Reading.requires_mod(&flipped));
         assert!(!Source::Editor.requires_mod(&flipped));
+        // Every pane and the tab header needed Mod in the probe (`plain: 0`,
+        // `mod: 1` for each), each under its own key.
+        for source in [
+            Source::Files,
+            Source::TabHeader,
+            Source::Bookmarks,
+            Source::Search,
+            Source::Outline,
+        ] {
+            assert!(source.requires_mod(&config), "{source:?}");
+        }
+        let off = PagePreviewConfig {
+            file_explorer: Some(false),
+            tab_header: Some(false),
+            bookmarks: Some(false),
+            search: Some(false),
+            outline: Some(false),
+            ..PagePreviewConfig::default()
+        };
+        for source in [
+            Source::Files,
+            Source::TabHeader,
+            Source::Bookmarks,
+            Source::Search,
+            Source::Outline,
+        ] {
+            assert!(!source.requires_mod(&off), "{source:?}");
+        }
     }
 
     #[test]

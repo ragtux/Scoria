@@ -35,6 +35,15 @@ use std::collections::HashSet;
 use std::ops::Range;
 
 pub enum BookmarkEvent {
+    /// The pointer came onto a file bookmark's row (`over`) or left it:
+    /// `target` is the path with the bookmark's `#Heading` or `#^block`,
+    /// and the row's bounds anchor the page preview.
+    Hover {
+        target: String,
+        over: bool,
+        anchor: Bounds<Pixels>,
+        modifiers: gpui::Modifiers,
+    },
     /// A file bookmark: the note, scrolled to its `#Heading` or `#^block`;
     /// in a new tab for Ctrl, the middle button and "Open in new tab".
     Open {
@@ -980,6 +989,27 @@ impl BookmarksPane {
                 bar.top(px(-3.))
             } else {
                 bar.bottom(px(-5.))
+            });
+        }
+        // A file bookmark previews its file, at its heading or block.
+        if row.item.kind() == "file" {
+            let target = format!(
+                "{}{}",
+                row.item.path().unwrap_or(""),
+                row.item.subpath().unwrap_or("")
+            );
+            let this = cx.weak_entity();
+            el = crate::hover_preview::hover_row(el, move |over, anchor, modifiers, _, cx| {
+                let target = target.clone();
+                this.update(cx, |_, cx| {
+                    cx.emit(BookmarkEvent::Hover {
+                        target,
+                        over,
+                        anchor,
+                        modifiers,
+                    })
+                })
+                .ok();
             });
         }
         if !renaming {
