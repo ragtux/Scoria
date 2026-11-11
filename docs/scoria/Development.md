@@ -343,7 +343,8 @@ graph node, a second link while a popover is up, and a click on a missing note's
 `BasesEvent::Hover`; the workspace finds the group the view is in (an embedded base's is the
 active group's) for the window. The text takes a 17 px line box, the height of Obsidian's inline
 span, so the popover hangs where Obsidian's does; the cell centres it, so nothing moves. Checked:
-plain nothing, Cmd at (352, 184, 17) against Obsidian's (352, 184.5, 17.1). Cards, list and kanban
+plain nothing, Cmd anchored at (352, 186, 17), its bottom at 203 against Obsidian's 201.6 (it was
+(352, 184, 21) before the line box, 3.4 px low). Cards, list and kanban
 titles and embedded bases' tables do not report: only the table was probed.
 
 **Graph.** `GraphView` reports the hovered node when it changes (`GraphEvent::Hover`), a note or
