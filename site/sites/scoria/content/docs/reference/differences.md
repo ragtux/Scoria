@@ -47,7 +47,7 @@ Things Obsidian does that Scoria intends to do and does not.
 |---|---|
 | **Note composer** | Merge, extract selection and extract heading work. `Ctrl + Enter` in an extraction prompt does nothing yet, and the template setting is a path field, not a file picker |
 | **Unique note creator** | Both commands work. **Add unique internal link** with several cursors edits only the first; the template setting is a path field |
-| **Slash commands** | Typing `/` in the editor offers no commands |
+| **Slash commands** | Built. Within a query, rows that Obsidian's matcher scores equally can come in a different order (`/toggle` puts *Toggle left sidebar* first where Obsidian puts *Toggle pin*), the popup's width is estimated from its longest row, and an editing page preview has no slash popup. The list is the palette's, so it differs from Obsidian's where the palette does |
 | **Renaming a heading** | `editor:rename-heading` works as Obsidian's does, oddities included. Links to the heading in frontmatter are not rewritten |
 | **File recovery** | Scoria keeps its own snapshots, outside the vault under its configuration folder (`file-recovery/`); Obsidian keeps its in its own database, so neither app sees the other's. Snapshots are taken of notes and canvases on opening and on a change, once per **Snapshot interval**, and pruned by **History length** when the vault opens. The tab's **View** and **Clear** buttons do nothing yet; `file-recovery:open` opens the snapshots. **Show changes** compares a snapshot with the file now, line by line |
 | **Editing properties in reading view** | A property's value pill can be removed there; keys, values, the type menu and **Add property** are edited in Live Preview or Source mode only |

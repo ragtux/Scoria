@@ -14,3 +14,7 @@ scoria-markdown.workspace = true
 scoria-vault.workspace = true
 scoria-formats.workspace = true
 scoria-search.workspace = true
+
+[dev-dependencies]
+scoria-text.workspace = true
+serde_json.workspace = true

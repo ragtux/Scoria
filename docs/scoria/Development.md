@@ -331,6 +331,71 @@ uses behave as Obsidian's do.
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
 | Page preview | probed 2026-11-11 on macOS, see [[Specification#Observed page preview, Obsidian 1.15.0]] and [[#Page preview, the probe, 2026-11-11]]; step 1 landed the same day — the popover over links in the reading view and both editing modes, see [[#Page preview, step 1, 2026-11-11]]; step 2 the same day — the tab header and the Files, Bookmarks, Backlinks, Outgoing links and Outline rows, see [[#Page preview, step 2, 2026-11-11]]; step 3 the same day — nested popovers and the click that makes one an editor, see [[#Page preview, step 3, 2026-11-11]]; step 4 the same day — the Bases and Graph sources, the second-link timing and "Click to create", from a second probe pass, see [[#Page preview, step 4, 2026-11-11]] — done, bar the "Properties view" source, whose File properties view Scoria does not have |
+| Slash commands | done 2026-11-11: probed in a headless sway and built on the autocompletion popup, see [[#Slash commands, 2026-11-11]] and [[Specification#Observed Slash commands, Obsidian 1.15.0]] |
+
+### Slash commands, 2026-11-11
+
+The one core plugin Scoria had not built, and the one with no command id: probed first, then
+built on the autocompletion popup. See [[Specification#Observed Slash commands, Obsidian 1.15.0]].
+
+**The probe.** `tools/obsidian-probe/slash-commands.mjs`, Obsidian 1.15.0 in a private headless
+sway (`WLR_BACKENDS=headless`, its own `XDG_RUNTIME_DIR` under `/run/user/1000`, its own session
+bus, `DISPLAY` unset) with `USER_DATA_DIR` and `CDP_PORT=9347`, so the desktop's Obsidian and its
+`obsidian.json` were never touched. Eleven steps; `s09` and `s10` were re-runs with
+`ONLY_STEPS=s00|s01|s09` (the plugin is off in the fixture and `s01` turns it on by its toggle).
+What surprised: the plugin has nothing of its own — no options, no tab, no command, no file —
+and is the palette's list in an editor popup; the rows close rather than say "No match found"; a
+space ends the query; Up and Down **wrap**, where the link popup's clamp; Tab does nothing; one
+undo takes back the command and the removal of the `/query` together; and a command run from it
+is not one of the palette's recent ones. The palette's own empty query, read on the way, is by
+name, not by registration order as Scoria's had it. And the run turned up a toggle difference
+that has nothing to do with slashes: a bare caret that takes the word (`/bold` before `Hello`)
+stays a caret in Obsidian, where Scoria left the word selected.
+
+**What was built.**
+- `scoria-suggest::slash`, no gpui: `slash_trigger` (the last `/` before the caret, at a line start
+  or after whitespace, no whitespace after it), `slash_accept_edit` (the `/` through the caret
+  out, the caret at the `/`), `rank_commands` (pinned in the file's order, then recent, then
+  `name_order`, which reproduces Obsidian's hundred-row list exactly; a query fuzzy matched, score
+  then length then name) and `slash_rows` (at most 100, as `Item::Command` suggestions carrying
+  the id and hotkeys). The command palette now ranks with `rank_commands` too, so the two lists
+  cannot drift, and its pins keep `command-palette.json`'s order.
+- The editor: `update_suggest` falls through to `update_slash` when no link or tag query is open
+  and the plugin is on. The first `/` emits `EditorEvent::SlashCommands`; the workspace answers
+  on the next frame (`pending_slash`, since the check callbacks need the window) with what
+  `can_run` lets the palette list, and the editor filters that on every keystroke. Enter or a
+  click takes the `/query` out and emits `EditorEvent::RunCommand`; the workspace runs it without
+  recording it as recent, then `finish_slash_command` merges the removal and the command's edits
+  into one undo step (`merge_undo_from`). Tab is swallowed, Shift+Enter closes and is a newline.
+- `scoria::suggest` draws the slash box to the probe's measurements: 31.5 px rows and a 1 px gap,
+  15 px text, hotkey pills, 6 px padding, radius 8, at most 500 × 300, 5 px under the line, left
+  at the `/`; the width is estimated from the longest row. `SuggestState::slash` wraps the arrows
+  and pages by 8.
+- Settings: the Core plugins row was already there (Obsidian's name, description and place);
+  it is now the one core plugin row Scoria honours, read by `apply_app_config`.
+- `scoria-text`: a bare caret that takes the word stays a caret, moved with the text, both ways
+  (`a_toggle_with_no_selection_takes_the_word_under_the_caret`).
+
+**Tests.** `crates/scoria-suggest/tests/slash_commands.rs` holds the probe's own rows in
+`data/slash-rows-1.15.0.json` (the palette's 150 names, the first 100 rows of `/`, ten queries):
+the empty query's order exactly, the rows kept by nine queries, the order of four of them, the
+trigger matrix, pinned and recent ordering, 21 accepted rows' bytes and carets through
+`TextBuffer`, the one-step undo, and `/bo|ld`. Plus seven unit tests in `slash.rs` and two in
+`scoria::suggest` (the wrap and the page).
+
+**Driven.** The private headless sway, the release build on a scratch vault with
+`slash-command: true`, over the control socket with `keys` (grim for the pictures): in Source mode
+and Live Preview, `/` opened the box under the `/` with the hundred rows by name and the
+session's recent command on top; `/ta` bolded the matched letters and drew the hotkeys as pills;
+Up wrapped to the last row and Down back to 0; Tab left `/ta`; Escape closed it with `Hello /ta`
+kept, and `b` reopened it on `tab`; `/bold` Enter wrote `Hello ****` with the caret at 8, and two
+Ctrl+Z gave `Hello /bold` then `Hello `; `/table` on the line after `Intro` wrote the table;
+`hello/` and `/ ` opened nothing; `/palette` Enter opened the palette with `Text ` left; `/bold`
+before `Hello` wrote `**Hello**` with the caret at 2. With `slash-command: false`, `/` opened
+nothing.
+
+**Left.** The order inside a query where Obsidian's scores tie differently (`/bold`, `/toggle`,
+`/ta`); the box's exact width; the popup in an editing page preview; and the "Not settled" list.
 
 ### Page preview, step 4, 2026-11-11
 

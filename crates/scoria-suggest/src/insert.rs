@@ -178,7 +178,7 @@ fn parts(t: &Triggered<'_>, item: &Item, v: &Vault<'_>, opts: &Options) -> Parts
         // Nothing resolved: the query is linked as it was typed. A `|` in it
         // still splits, so `[[Alpha|disp` keeps `disp` as the display text
         // and links `Alpha` even though no file was picked.
-        Item::Tag { .. } | Item::Literal => {
+        Item::Tag { .. } | Item::Literal | Item::Command { .. } => {
             let parsed = parse_linktext(t.query);
             Parts {
                 path: parsed.path.to_string(),

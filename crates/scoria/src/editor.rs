@@ -229,6 +229,13 @@ pub enum EditorEvent {
     RenameTo(String),
     /// Something the editor could not do, for the status bar.
     Reported(SharedString),
+    /// A `/` opened the slash popup: the workspace answers with the
+    /// commands it can run here ([`Editor::open_slash`]).
+    SlashCommands,
+    /// A slash popup row was accepted and its `/query` taken out: the
+    /// workspace runs the command, then calls
+    /// [`Editor::finish_slash_command`].
+    RunCommand(String),
     /// The pointer came onto a link in the text, or left it (`None`):
     /// page preview's editor source.
     Hover(Option<crate::reading::LinkHover>),
@@ -238,6 +245,16 @@ pub enum EditorEvent {
         key: String,
         ty: props::PropertyType,
     },
+}
+
+/// The commands a slash popup offers: the palette's list as it stands when
+/// the `/` was typed, with `command-palette.json`'s pins and the session's
+/// recent commands that order it.
+#[derive(Debug, Clone, Default)]
+pub struct SlashCommands {
+    pub entries: Vec<suggest::CommandEntry>,
+    pub pinned: Vec<String>,
+    pub recent: Vec<String>,
 }
 
 /// A table cell being typed into.
@@ -726,6 +743,15 @@ pub struct Editor {
     suggest_vault: Option<Arc<VaultState>>,
     /// `newLinkFormat` and `useMarkdownLinks`, for the links it writes.
     link_options: suggest::Options,
+    /// The Slash commands core plugin is on: `/` offers commands.
+    slash_enabled: bool,
+    /// The commands a slash popup lists, asked of the workspace when a `/`
+    /// opens one ([`EditorEvent::SlashCommands`]) and kept while it is open.
+    slash_commands: Option<SlashCommands>,
+    /// The undo depth before an accepted row took its `/query` out, until
+    /// the workspace has run the command: then the removal and whatever
+    /// the command wrote are one undo step, as in Obsidian.
+    slash_undo_from: Option<usize>,
     generation: u64,
     pub stats: ParseStats,
     layout: Layout,
@@ -852,6 +878,9 @@ impl Editor {
             suggest: None,
             suggest_vault: None,
             link_options: suggest::Options::default(),
+            slash_enabled: false,
+            slash_commands: None,
+            slash_undo_from: None,
             generation: 0,
             stats: ParseStats::default(),
             layout: Layout::default(),
@@ -1111,6 +1140,32 @@ impl Editor {
     /// accepted suggestion writes.
     pub fn set_link_options(&mut self, opts: suggest::Options) {
         self.link_options = opts;
+    }
+
+    /// Whether the Slash commands core plugin is on.
+    pub fn set_slash_enabled(&mut self, on: bool, cx: &mut Context<Self>) {
+        if self.slash_enabled != on {
+            self.slash_enabled = on;
+            if !on && self.slash_commands.is_some() {
+                self.close_suggest(cx);
+            }
+        }
+    }
+
+    /// The workspace's answer to [`EditorEvent::SlashCommands`]: what the
+    /// palette would list right now, in its order. The popup opens on it if
+    /// the `/` is still there.
+    pub fn open_slash(&mut self, commands: SlashCommands, cx: &mut Context<Self>) {
+        self.slash_commands = Some(commands);
+        self.update_suggest(true, cx);
+    }
+
+    /// The workspace ran the command an accepted row named: the removal of
+    /// the `/query` and the command's own edits become one undo step.
+    pub fn finish_slash_command(&mut self) {
+        if let Some(depth) = self.slash_undo_from.take() {
+            self.buf.merge_undo_from(depth);
+        }
     }
 
     /// Editor settings from `app.json`: smart lists, and tabs or spaces.
@@ -1717,6 +1772,17 @@ impl Editor {
             ""
         };
         let replaced = line.get(s.range.clone()).unwrap_or_default();
+        if s.slash {
+            let query = suggest::slash_trigger(line, s.range.end.min(line.len()))
+                .map(|t| t.query)
+                .unwrap_or_default();
+            return Some(serde_json::json!({
+                "kind": "slash",
+                "query": query,
+                "selected": s.selected,
+                "rows": s.items.iter().map(|i| i.label.as_str()).collect::<Vec<_>>(),
+            }));
+        }
         let t = suggest::trigger(line, s.range.end.min(line.len()));
         let kind = match t.as_ref().map(|t| t.kind) {
             Some(suggest::Kind::Link) => "link",
@@ -3103,14 +3169,16 @@ impl Editor {
     }
 
     fn page_up(&mut self, _: &PageUp, window: &mut Window, cx: &mut Context<Self>) {
-        if self.suggest_step(-(crate::suggest::VISIBLE as isize), cx) {
+        let page = self.suggest.as_ref().map_or(0, SuggestState::page) as isize;
+        if self.suggest_step(-page, cx) {
             return;
         }
         self.page(false, false, window, cx);
     }
 
     fn page_down(&mut self, _: &PageDown, window: &mut Window, cx: &mut Context<Self>) {
-        if self.suggest_step(crate::suggest::VISIBLE as isize, cx) {
+        let page = self.suggest.as_ref().map_or(0, SuggestState::page) as isize;
+        if self.suggest_step(page, cx) {
             return;
         }
         self.page(true, false, window, cx);
@@ -3780,9 +3848,10 @@ impl Editor {
         let cursor = self.cursor();
         let line = self.buf.line_text(cursor.line).to_string();
         let Some(t) = suggest::trigger(&line, cursor.col) else {
-            self.close_suggest(cx);
+            self.update_slash(&line, cursor, cx);
             return;
         };
+        self.slash_commands = None;
         let items = self.offer(&state, &t);
         if items.is_empty() {
             self.close_suggest(cx);
@@ -3793,6 +3862,49 @@ impl Editor {
             range: t.range.clone(),
             items,
             selected: 0,
+            slash: false,
+        });
+        cx.notify();
+    }
+
+    /// The slash popup, when no link or tag query is open: a `/` at a line
+    /// start or after whitespace, with the Slash commands plugin on. The
+    /// first keystroke asks the workspace for its commands; the rows are
+    /// then filtered here on every keystroke, and the popup closes when
+    /// none match, as Obsidian's does.
+    fn update_slash(&mut self, line: &str, cursor: Cursor, cx: &mut Context<Self>) {
+        let t = if self.slash_enabled {
+            suggest::slash_trigger(line, cursor.col)
+        } else {
+            None
+        };
+        let Some(t) = t else {
+            self.close_suggest(cx);
+            return;
+        };
+        let Some(commands) = self.slash_commands.as_ref() else {
+            if self.suggest.take().is_some() {
+                cx.notify();
+            }
+            cx.emit(EditorEvent::SlashCommands);
+            return;
+        };
+        let items = suggest::slash_rows(
+            &commands.entries,
+            &commands.pinned,
+            &commands.recent,
+            t.query,
+        );
+        if items.is_empty() {
+            self.close_suggest(cx);
+            return;
+        }
+        self.suggest = Some(SuggestState {
+            line: cursor.line,
+            range: t.range.clone(),
+            items,
+            selected: 0,
+            slash: true,
         });
         cx.notify();
     }
@@ -3818,6 +3930,9 @@ impl Editor {
     }
 
     pub(crate) fn close_suggest(&mut self, cx: &mut Context<Self>) {
+        // The next `/` asks again, for the pins and recent commands as
+        // they are then.
+        self.slash_commands = None;
         if self.suggest.take().is_some() {
             cx.notify();
         }
@@ -3846,10 +3961,49 @@ impl Editor {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> bool {
-        let Some(ix) = self.suggest.as_ref().map(|s| s.selected) else {
+        let Some((ix, slash)) = self.suggest.as_ref().map(|s| (s.selected, s.slash)) else {
             return false;
         };
+        if slash {
+            return match accept {
+                Accept::Whole => self.accept_suggestion_at(ix, accept, window, cx),
+                // Tab does nothing while the slash popup is up, and
+                // Shift+Enter is a plain newline that closes it.
+                Accept::Inside => true,
+                Accept::Typed => {
+                    self.close_suggest(cx);
+                    false
+                }
+            };
+        }
         self.accept_suggestion_at(ix, accept, window, cx)
+    }
+
+    /// Accepting a slash popup row: the `/query` before the caret comes
+    /// out, the caret goes where the `/` was, and the workspace is asked to
+    /// run the command, after which the two are one undo step.
+    fn accept_slash(&mut self, ix: usize, window: &mut Window, cx: &mut Context<Self>) -> bool {
+        let Some((id, at, end)) =
+            self.suggest
+                .as_ref()
+                .and_then(|s| match &s.items.get(ix)?.item {
+                    suggest::Item::Command { id, .. } => Some((id.clone(), s.line, s.range.end)),
+                    _ => None,
+                })
+        else {
+            return false;
+        };
+        let line = self.buf.line_text(at).to_string();
+        let Some(t) = suggest::slash_trigger(&line, end) else {
+            self.close_suggest(cx);
+            return false;
+        };
+        let (range, caret) = suggest::slash_accept_edit(self.buf.line_range(at).start, &t);
+        self.close_suggest(cx);
+        self.slash_undo_from = Some(self.buf.undo_depth());
+        self.edit_many(vec![(range, String::new())], caret, None, window, cx);
+        cx.emit(EditorEvent::RunCommand(id));
+        true
     }
 
     /// Writes the row at `ix` into the document and puts the cursor where
@@ -3862,6 +4016,9 @@ impl Editor {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> bool {
+        if self.suggest.as_ref().is_some_and(|s| s.slash) {
+            return self.accept_slash(ix, window, cx);
+        }
         let Some(state) = self.suggest_vault.clone() else {
             return false;
         };

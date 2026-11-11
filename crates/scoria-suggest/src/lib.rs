@@ -22,8 +22,12 @@
 pub mod blocks;
 mod candidates;
 mod insert;
+pub mod slash;
 mod trigger;
 
 pub use candidates::{suggestions, BlockId, Item, Suggestion, Vault, LIMIT};
 pub use insert::{file_link, insert, Accept, Insertion, Options};
+pub use slash::{
+    rank_commands, slash_accept_edit, slash_rows, slash_trigger, CommandEntry, SlashTriggered,
+};
 pub use trigger::{trigger, Kind, Triggered};

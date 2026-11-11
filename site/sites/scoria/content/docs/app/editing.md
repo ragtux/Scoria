@@ -150,6 +150,21 @@ Three keys accept a row, and the difference between them is the point:
 The link itself is written in your vault's own style: `newLinkFormat` decides how much of the
 path appears, and `useMarkdownLinks` decides whether you get `[[wiki]]` or `[markdown](…)`.
 
+## Slash commands
+
+With the **Slash commands** core plugin on (Settings → Core plugins; it is off in a new
+vault, and it has no settings of its own), typing `/` at the start of a line or after a space
+opens a list of commands under it: the same commands the command palette offers there, pinned
+ones first, then the ones you ran recently, then the rest by name. Typing after the `/`
+narrows the list the way the palette's query does; a space, or a query nothing matches, closes
+it. It opens in code blocks, tables and frontmatter too, but not after a letter, so `and/or`
+and `https://` are left alone.
+
+`Enter` or a click takes the `/` and what you typed after it out of the note and runs the
+command there — `/table` then `Enter` inserts a table where the `/` was — and one `Ctrl + Z`
+puts the `/table` back. `↑` and `↓` wrap round the list, `Escape` closes it and leaves the
+text, `Tab` does nothing, and `Shift + Enter` is an ordinary new line.
+
 ## Multiple cursors
 
 | To add a cursor | |

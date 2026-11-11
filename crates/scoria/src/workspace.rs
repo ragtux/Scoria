@@ -3576,6 +3576,13 @@ pub struct Workspace {
     /// frame: the subscription that hears it has no window, and a rename may
     /// raise the "Update links?" prompt.
     pending_title_rename: Option<String>,
+    /// What an editor's slash popup asked for, waiting for a frame for the
+    /// same reason: the palette's check callbacks and the commands need the
+    /// window.
+    pending_slash: Vec<(Entity<Editor>, Option<String>)>,
+    /// A slash popup's command is running: it is not recorded as one of
+    /// the palette's recent commands.
+    running_from_slash: bool,
     /// Where each group's header title was painted and how it was shaped,
     /// left by the last frame: what a click on a title is measured against.
     title_layout: HashMap<u64, inline_field::Layout>,
@@ -3827,6 +3834,14 @@ fn view_subscriptions(
                     cx.notify();
                 }
                 EditorEvent::Reported(message) => this.report(message.clone(), cx),
+                EditorEvent::SlashCommands => {
+                    this.pending_slash.push((editor.clone(), None));
+                    cx.notify();
+                }
+                EditorEvent::RunCommand(id) => {
+                    this.pending_slash.push((editor.clone(), Some(id.clone())));
+                    cx.notify();
+                }
             },
         ),
     ]
@@ -4401,6 +4416,8 @@ impl Workspace {
             title_focus: cx.focus_handle(),
             title_edit: None,
             pending_title_rename: None,
+            pending_slash: Vec::new(),
+            running_from_slash: false,
             title_layout: HashMap::new(),
             layout: None,
             layout_restored: false,
@@ -4572,6 +4589,7 @@ impl Workspace {
             format: state.link_format(),
             markdown_links: state.app().use_markdown_links.unwrap_or(false),
         };
+        let slash = state.core_plugin_enabled("slash-command");
         // Every group's views, the active one's among them.
         for group in &self.groups {
             group.reading.update(cx, |r, cx| {
@@ -4583,6 +4601,7 @@ impl Workspace {
                 cx.notify();
             });
             group.editor.update(cx, |e, cx| {
+                e.set_slash_enabled(slash, cx);
                 e.set_link_options(link_options);
                 e.set_readable_line_length(readable);
                 e.set_show_inline_title(inline_title);
@@ -5741,9 +5760,53 @@ impl Workspace {
         let recent = self.recent_commands.clone();
         self.close_editor_suggest(cx);
         self.modal = Modal::Palette;
-        self.palette
-            .update(cx, |p, cx| p.open(commands, recent, query, window, cx));
+        self.palette.update(cx, |p, cx| {
+            p.open(commands, pinned, recent, query, window, cx)
+        });
         cx.notify();
+    }
+
+    /// What a slash popup lists: the palette's commands as they stand,
+    /// with the palette's pins and this session's recent commands, which
+    /// order the empty query the same way (Obsidian 1.15.0).
+    fn slash_commands(&self, window: &Window, cx: &App) -> crate::editor::SlashCommands {
+        let registry = cx.global::<Commands>().0.clone();
+        let entries = registry
+            .iter()
+            .filter(|c| self.can_run(&c.id, window, cx))
+            .map(|c| scoria_suggest::CommandEntry {
+                id: c.id.clone(),
+                name: c.name.clone(),
+                hotkeys: c.hotkeys.iter().map(hotkey_label).collect(),
+            })
+            .collect();
+        crate::editor::SlashCommands {
+            entries,
+            pinned: self
+                .state
+                .as_ref()
+                .map(|s| s.palette.pinned.clone())
+                .unwrap_or_default(),
+            recent: self.recent_commands.clone(),
+        }
+    }
+
+    /// Runs the command a slash popup row named, once its `/query` is out
+    /// of the text. A command run this way is not one of the palette's
+    /// recent commands: Obsidian's list was unchanged after a row was
+    /// accepted. Then the editor makes the removal and the command's edits
+    /// one undo step.
+    fn run_slash_command(
+        &mut self,
+        editor: &Entity<Editor>,
+        id: &str,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.running_from_slash = true;
+        self.run_command(id, window, cx);
+        self.running_from_slash = false;
+        editor.update(cx, |e, _| e.finish_slash_command());
     }
 
     /// Opens a Settings dropdown's options, for `--menu`.
@@ -5858,7 +5921,7 @@ impl Workspace {
                 return;
             }
         }
-        if RUNNABLE.contains(&id) {
+        if RUNNABLE.contains(&id) && !self.running_from_slash {
             self.recent_commands.retain(|r| r != id);
             self.recent_commands.insert(0, id.to_string());
             self.recent_commands.truncate(20);
@@ -20090,6 +20153,15 @@ impl Render for Workspace {
         if let Some(value) = self.pending_title_rename.take() {
             cx.defer_in(window, move |this, window, cx| {
                 this.rename_from_inline_title(&value, window, cx)
+            });
+        }
+        for (editor, run) in std::mem::take(&mut self.pending_slash) {
+            cx.defer_in(window, move |this, window, cx| match run {
+                None => {
+                    let commands = this.slash_commands(window, cx);
+                    editor.update(cx, |e, cx| e.open_slash(commands, cx));
+                }
+                Some(id) => this.run_slash_command(&editor, &id, window, cx),
             });
         }
         self.dock_tree_keyboard = self.dock_tree_focus.is_focused(window);

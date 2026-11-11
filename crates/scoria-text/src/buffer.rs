@@ -1205,7 +1205,24 @@ impl TextBuffer {
                     floor,
                 ) {
                     format::Toggle::Strip(open, close) => {
-                        let ends = (shift(open.start), shift(close.start) - open.len());
+                        let ends = if sel.range().is_empty() && !outer {
+                            // A bare caret stays one, moved with the text
+                            // the markers leave behind.
+                            let head = sel.head;
+                            let mut at = if head >= open.end {
+                                head - open.len()
+                            } else {
+                                head.min(open.start)
+                            };
+                            if head >= close.end {
+                                at -= close.len();
+                            } else if head > close.start {
+                                at -= head - close.start;
+                            }
+                            (shift(at), shift(at))
+                        } else {
+                            (shift(open.start), shift(close.start) - open.len())
+                        };
                         floor = close.end;
                         delta -= (open.len() + close.len()) as isize;
                         edits.push((open, String::new()));
@@ -1215,6 +1232,14 @@ impl TextBuffer {
                     format::Toggle::Wrap(r) => {
                         let ends = if outer {
                             (shift(r.start), shift(r.end) + opener.len() + m)
+                        } else if sel.range().is_empty() {
+                            // A bare caret that took the word stays a bare
+                            // caret, where it was in the word: Obsidian
+                            // 1.15.0 gave `**Hello**` with the caret at 2
+                            // for a caret at 0 (slash-commands probe,
+                            // 2026-11-11, `/bold` accepted).
+                            let at = shift(sel.head) + opener.len();
+                            (at, at)
                         } else {
                             (shift(r.start) + opener.len(), shift(r.end) + opener.len())
                         };
@@ -1869,7 +1894,13 @@ mod tests {
         buf.set_cursor(4, None);
         assert!(buf.toggle_wrap("**"));
         assert_eq!(buf.text(), "one **two**\n");
-        assert_eq!(buf.selection(), 6..9);
+        // The caret stays a caret, moved with the word's text (Obsidian
+        // 1.15.0, the slash-commands probe of 2026-11-11), and a second
+        // press finds the pair around the word and takes it off.
+        assert_eq!(buf.selection(), 6..6);
+        assert!(buf.toggle_wrap("**"));
+        assert_eq!(buf.text(), "one two\n");
+        assert_eq!(buf.selection(), 4..4);
         // On whitespace there is no word: the pair goes in empty.
         let mut buf = TextBuffer::from_file("a  b\n");
         buf.set_cursor(2, None);

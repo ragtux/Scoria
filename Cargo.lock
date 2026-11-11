@@ -5784,7 +5784,9 @@ dependencies = [
  "scoria-formats",
  "scoria-markdown",
  "scoria-search",
+ "scoria-text",
  "scoria-vault",
+ "serde_json",
 ]
 
 [[package]]

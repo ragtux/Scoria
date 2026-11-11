@@ -55,6 +55,9 @@ pub enum Item {
     /// The query as typed: a note that does not exist yet, or display text
     /// after a `|` that is not one of the target's aliases.
     Literal,
+    /// A command the slash popup offers: accepting it removes the `/query`
+    /// and runs the command, and writes no link.
+    Command { id: String, hotkeys: Vec<String> },
 }
 
 /// The id a block row links by: the one it carries, or the one that has to

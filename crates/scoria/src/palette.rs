@@ -1,8 +1,10 @@
 //! The command palette (`command-palette:open`, Ctrl+P): fuzzy search over
 //! the names of the commands the workspace can run, with their hotkeys.
-//! While the query is empty, pinned commands (`command-palette.json`) come
-//! first, then the commands used this session, then the rest in Obsidian's
-//! registration order.
+//! While the query is empty, pinned commands (`command-palette.json`, in its
+//! order) come first, then the commands used this session, then the rest by
+//! name, which is how Obsidian 1.15.0's palette and its slash popup both
+//! listed them (slash-commands probe, 2026-11-11). The ordering is
+//! `scoria_suggest::rank_commands`, shared with the slash popup.
 
 use crate::text_input::{InputEvent, TextInput};
 use crate::theme::Theme;
@@ -12,7 +14,7 @@ use gpui::{
     UniformListScrollHandle, Window,
 };
 use scoria_commands::{hotkey_label, Command};
-use scoria_search::fuzzy_match;
+use scoria_suggest::{rank_commands, CommandEntry};
 use serde_json::{json, Value};
 use std::ops::Range;
 
@@ -55,6 +57,8 @@ pub struct CommandPalette {
     commands: Vec<PaletteCommand>,
     /// Command ids run this session, most recent first.
     recent: Vec<String>,
+    /// `command-palette.json`'s pinned ids, in its order.
+    pinned: Vec<String>,
     items: Vec<Item>,
     selected: usize,
     scroll: UniformListScrollHandle,
@@ -86,6 +90,7 @@ impl CommandPalette {
             input,
             commands: Vec::new(),
             recent: Vec::new(),
+            pinned: Vec::new(),
             items: Vec::new(),
             selected: 0,
             scroll: UniformListScrollHandle::new(),
@@ -93,17 +98,20 @@ impl CommandPalette {
         }
     }
 
-    /// Shows the palette over `commands` with `recent` ids (most recent
-    /// first) and focuses the input.
+    /// Shows the palette over `commands` with the `pinned` ids (in the
+    /// file's order) and `recent` ids (most recent first), and focuses the
+    /// input.
     pub fn open(
         &mut self,
         commands: Vec<PaletteCommand>,
+        pinned: Vec<String>,
         recent: Vec<String>,
         query: &str,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
         self.commands = commands;
+        self.pinned = pinned;
         self.recent = recent;
         self.input.update(cx, |i, cx| i.set_text(query, cx));
         window.focus(&self.input.focus_handle(cx), cx);
@@ -132,53 +140,22 @@ impl CommandPalette {
 
     fn refresh(&mut self, cx: &mut Context<Self>) {
         let query = self.input.read(cx).text().trim().to_string();
-        let mut items: Vec<Item> = Vec::new();
-        if query.is_empty() {
-            let plain = |c: &PaletteCommand| Item {
-                command: c.clone(),
-                ranges: Vec::new(),
-            };
-            let mut seen: Vec<&str> = Vec::new();
-            for c in self.commands.iter().filter(|c| c.pinned) {
-                seen.push(&c.id);
-                items.push(plain(c));
-            }
-            for id in &self.recent {
-                if seen.contains(&id.as_str()) {
-                    continue;
-                }
-                if let Some(c) = self.commands.iter().find(|c| &c.id == id) {
-                    seen.push(&c.id);
-                    items.push(plain(c));
-                }
-            }
-            for c in &self.commands {
-                if !seen.contains(&c.id.as_str()) {
-                    items.push(plain(c));
-                }
-            }
-        } else {
-            let mut scored: Vec<(f64, Item)> = self
-                .commands
-                .iter()
-                .filter_map(|c| {
-                    let m = fuzzy_match(&query, &c.name)?;
-                    Some((
-                        m.score,
-                        Item {
-                            command: c.clone(),
-                            ranges: m.ranges,
-                        },
-                    ))
-                })
-                .collect();
-            scored.sort_by(|a, b| {
-                b.0.partial_cmp(&a.0)
-                    .unwrap_or(std::cmp::Ordering::Equal)
-                    .then_with(|| a.1.command.name.len().cmp(&b.1.command.name.len()))
-            });
-            items = scored.into_iter().map(|(_, i)| i).collect();
-        }
+        let entries: Vec<CommandEntry> = self
+            .commands
+            .iter()
+            .map(|c| CommandEntry {
+                id: c.id.clone(),
+                name: c.name.clone(),
+                hotkeys: Vec::new(),
+            })
+            .collect();
+        let mut items: Vec<Item> = rank_commands(&entries, &self.pinned, &self.recent, &query)
+            .into_iter()
+            .map(|r| Item {
+                command: self.commands[r.index].clone(),
+                ranges: r.ranges,
+            })
+            .collect();
         items.truncate(MAX_RESULTS);
         self.items = items;
         self.selected = 0;

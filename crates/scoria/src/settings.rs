@@ -3296,17 +3296,22 @@ impl SettingsView {
         CORE_PLUGINS
             .iter()
             .map(|p| {
-                toggle(
+                let item = toggle(
                     p.name,
                     p.description,
                     CorePlugins::is_enabled_or_default(state.core_plugins().as_ref(), p),
                     Flag::CorePlugin(p.id, p.default_on),
-                )
+                );
                 // Scoria's own Files, Search, Graph and the rest do not
                 // turn off with the plugin that owns them in Obsidian; the
                 // one thing that follows is which plugin tabs this modal
-                // shows.
-                .not_yet()
+                // shows. Slash commands is the exception: it is nothing but
+                // the editor's `/` popup, which the toggle turns on and off.
+                if p.id == "slash-command" {
+                    item
+                } else {
+                    item.not_yet()
+                }
             })
             .collect()
     }
@@ -7888,6 +7893,9 @@ mod tests {
                 "Use [[Wikilinks]]",
                 "Show all file types",
                 "Confirm before deleting files",
+                // The one core plugin row Scoria follows: the editor's `/`
+                // popup, read by `Workspace::apply_app_config`.
+                "Slash commands",
                 // The Quick switcher tab's three, read by `QuickSwitcher::set_state`.
                 "Show existing only",
                 "Show attachments",
