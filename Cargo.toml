@@ -21,6 +21,7 @@ members = [
     "crates/scoria-pdf",
     "crates/scoria-math",
     "crates/scoria-highlight",
+    "crates/scoria-export",
     "crates/scoria-bench",
 ]
 
@@ -50,6 +51,7 @@ scoria-composer = { path = "crates/scoria-composer" }
 scoria-pdf = { path = "crates/scoria-pdf" }
 scoria-math = { path = "crates/scoria-math" }
 scoria-highlight = { path = "crates/scoria-highlight" }
+scoria-export = { path = "crates/scoria-export" }
 
 anyhow = "1"
 thiserror = "2"
@@ -115,6 +117,15 @@ http_client = { git = "https://github.com/zed-industries/zed", rev = "4ce18741ad
 ureq = "3"
 # Already in the tree through gpui; the HTTP client hands its answer back over a oneshot.
 futures = "0.3"
+# Export to PDF writes its pages with krilla (MIT OR Apache-2.0): a pure Rust
+# PDF writer that embeds and subsets the fonts it is handed. `simple-text` is
+# off: `scoria-export` lays the pages out and hands krilla positioned glyphs.
+krilla = { version = "0.8", default-features = false, features = ["raster-images"] }
+# Already in the tree through gpui: Export as image paints the canvas with
+# tiny-skia, draws the mark with resvg and writes the PNG with png.
+tiny-skia = "0.11"
+resvg = { version = "0.45", default-features = false }
+png = "0.17"
 
 [profile.dev]
 opt-level = 0

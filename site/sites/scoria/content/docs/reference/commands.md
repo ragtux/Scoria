@@ -1,13 +1,13 @@
 ---
 title: Commands and hotkeys
-description: The commands Scoria registers — the 244 Obsidian command ids, the 41 with a default hotkey, and the 201 Scoria can actually run today, with every id and default key listed.
+description: The commands Scoria registers — the 244 Obsidian command ids, the 41 with a default hotkey, and the 203 Scoria can actually run today, with every id and default key listed.
 ---
 
 # Commands and hotkeys
 
 Scoria registers **244 command ids** — the exact strings Obsidian registers, so your
 `hotkeys.json` matches them — of which **227 have an observed desktop name**. **41** carry a
-default hotkey. **201** do something in Scoria today; the 43 that do not are listed
+default hotkey. **203** do something in Scoria today; the 41 that do not are listed
 [below](#the-ones-that-do-not-run).
 
 Those four numbers are different things and the difference is the point:
@@ -20,14 +20,14 @@ Those four numbers are different things and the difference is the point:
   palette](/docs/app/switcher/) offers only these; the [Hotkeys tab](/docs/hotkeys/) lists
   all 244, so you can see your bindings for everything else.
 
-Some of the 201 are runnable only in the right place, which is also how Obsidian treats
+Some of the 203 are runnable only in the right place, which is also how Obsidian treats
 them: **63** need an editor on screen with the keyboard in it, so they leave the palette in
 a reading leaf, and the **fifteen table commands** that act on an existing table are offered
 only while the cursor is in one. `graph:open-local` and the five commands on the active file
 (the two copy-path commands, `workspace:copy-url` and the two `open-with-default-app`
-commands) are not offered with no file open; four `bases:*` commands need a base on screen;
+commands) are not offered with no file open; four `bases:*` commands need a base on screen and `canvas:export-as-image` a canvas;
 `editor:rename-heading` needs the cursor on a heading line; `editor:focus` needs a note open
-in some tab; `backlink:toggle-backlinks-in-document` needs a note active; and
+in some tab; `backlink:toggle-backlinks-in-document` and `workspace:export-pdf` need a note active; and
 `workspace:show-trash` is offered only when deleted files go to the vault's own `.trash`
 folder. `graph:animate` is offered only while the global graph is the active view, and
 `slides:start` only with a Markdown note active. A command whose core plugin is off is gone, as in Obsidian. The palette, the hotkey
@@ -114,6 +114,7 @@ in `hotkeys.json`. Several are worth binding on day one: `editor:toggle-source`,
 | Bookmarks: Show bookmarks | `bookmarks:open` |
 | Canvas: Convert to file... | `canvas:convert-to-file` |
 | Canvas: Create new canvas | `canvas:new-file` |
+| Canvas: Export as image | `canvas:export-as-image` |
 | Canvas: Jump to group | `canvas:jump-to-group` |
 | Change theme... | `theme:switch` |
 | Change vault... | `app:switch-vault` |
@@ -133,6 +134,7 @@ in `hotkeys.json`. Several are worth binding on day one: `editor:toggle-source`,
 | Decrease font size | `app:decrease-font-size` |
 | Delete current file | `app:delete-file` |
 | Download attachments for current file | `editor:download-attachments` |
+| Export to PDF... | `workspace:export-pdf` |
 | Files: Create new folder | `file-explorer:new-folder` |
 | Files: Reveal current file in navigation | `file-explorer:reveal-active-file` |
 | File recovery: Open local history | `file-recovery:open` |
@@ -268,7 +270,7 @@ A few keys belong to a widget rather than to the command registry, and are not r
 
 ## The ones that do not run
 
-43 of the 244 ids do nothing in Scoria yet, and the palette does not offer them:
+41 of the 244 ids do nothing in Scoria yet, and the palette does not offer them:
 
 - **Not registered on desktop** — 17 ids with no desktop name, which Obsidian itself does not
   offer there: the caret, clipboard and undo ids (`editor:go-start`, `editor:copy`,
@@ -279,7 +281,6 @@ A few keys belong to a widget rather than to the command registry, and are not r
   and the mobile Quick Action, and `app:reload`, which has no renderer to reload.
 - **Waiting on the toolkit** — `window:zoom-in`, `window:zoom-out`, `window:reset-zoom` and
   `window:toggle-always-on-top`.
-- **Not built yet** — `workspace:export-pdf` and `canvas:export-as-image`.
 
 ## The full id list
 

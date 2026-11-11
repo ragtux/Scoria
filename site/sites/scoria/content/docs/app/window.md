@@ -170,7 +170,7 @@ Every shortcut in Scoria is an Obsidian command bound from its default hotkey, s
 vault's `hotkeys.json` rebinds or unbinds all of them. The one exception is `Ctrl + Q`,
 which quits.
 
-The 197 commands Scoria can actually run are the ones the command palette offers; the rest
+The 199 commands Scoria can actually run are the ones the command palette offers; the rest
 are still listed in Settings' Hotkeys tab, so you can see your bindings for commands that
 do not do anything yet. The full list is in [commands and
 hotkeys](/docs/reference/commands/).

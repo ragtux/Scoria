@@ -21,6 +21,7 @@ use crate::editor::{Editor, EditorEvent};
 use crate::explorer::{
     self, display_name, kind_name, ExplorerEvent, FileExplorer, FileTree, SortOrder,
 };
+use crate::export_modals::{ImageExport, ImageExportEvent, PdfExport, PdfExportEvent};
 use crate::file_menu::{self, Pick};
 use crate::fold;
 use crate::graph::{GraphEvent, GraphView};
@@ -113,6 +114,9 @@ mod migrate_frontmatter;
 
 // File recovery: snapshots outside the vault, and Open local history.
 mod file_recovery;
+
+// Export to PDF and Export as image: pages and pixels without gpui.
+mod exports;
 
 actions!(
     workspace,
@@ -464,6 +468,8 @@ pub const RUNNABLE: &[&str] = &[
     "app:show-release-notes",
     "app:migrate-frontmatter",
     "file-recovery:open",
+    "workspace:export-pdf",
+    "canvas:export-as-image",
 ];
 
 /// Binds every runnable command's hotkeys in the Workspace context, and the
@@ -1817,6 +1823,10 @@ enum Modal {
     MigrateFrontmatter,
     /// "File recovery" (`file-recovery:open`).
     FileRecovery,
+    /// "Export to PDF" (`workspace:export-pdf`).
+    PdfExport,
+    /// "Export as image" (`canvas:export-as-image`).
+    ImageExport,
 }
 
 /// The file operation the open prompt will finish.
@@ -3412,6 +3422,10 @@ pub struct Workspace {
     debug_info: Entity<DebugInfo>,
     /// The presentation `slides:start` put up, while it is up.
     slides: Option<presentation::Presentation>,
+    /// "Export to PDF", filled each time it opens.
+    pdf_export: Entity<PdfExport>,
+    /// "Export as image", at its defaults each time it opens.
+    image_export: Entity<ImageExport>,
     /// The reading view release-notes tabs draw, and the version whose
     /// notes it holds.
     release_notes: Entity<ReadingView>,
@@ -3742,6 +3756,8 @@ impl Workspace {
         let prompt = cx.new(Prompt::new);
         let copy_results = cx.new(CopyResults::new);
         let debug_info = cx.new(DebugInfo::new);
+        let pdf_export = cx.new(PdfExport::new);
+        let image_export = cx.new(ImageExport::new);
         let release_notes = cx.new(ReadingView::new);
         let reading = cx.new(ReadingView::new);
         let editor = cx.new(|cx| Editor::new(window, cx));
@@ -3992,6 +4008,20 @@ impl Workspace {
                     DebugInfoEvent::Close => this.close_modal(window, cx),
                 },
             ),
+            cx.subscribe_in(
+                &pdf_export,
+                window,
+                |this, _, event: &PdfExportEvent, window, cx| {
+                    this.on_pdf_export_event(event, window, cx)
+                },
+            ),
+            cx.subscribe_in(
+                &image_export,
+                window,
+                |this, _, event: &ImageExportEvent, window, cx| {
+                    this.on_image_export_event(event, window, cx)
+                },
+            ),
             // The release notes' links: only ones to the web, which open
             // in the browser as a note's do.
             cx.subscribe(
@@ -4178,6 +4208,8 @@ impl Workspace {
             copy_results,
             debug_info,
             slides: None,
+            pdf_export,
+            image_export,
             release_notes,
             release_notes_built: RefCell::new(None),
             layouts_modal: None,
@@ -6355,6 +6387,9 @@ impl Workspace {
             "app:show-debug-info" => self.show_debug_info(window, cx),
             "app:migrate-frontmatter" => self.open_migrate_frontmatter(window, cx),
             "file-recovery:open" => self.open_file_recovery(window, cx),
+            "workspace:export-pdf" | "canvas:export-as-image" => {
+                self.run_export_command(id, window, cx);
+            }
             "app:show-release-notes" => self.show_release_notes(cx),
             _ => {
                 let name = self.command_name(id, cx);
@@ -6576,6 +6611,9 @@ impl Workspace {
             return can;
         }
         if let Some(can) = self.attachments_can_run(id) {
+            return can;
+        }
+        if let Some(can) = self.exports_can_run(id, cx) {
             return can;
         }
         if EDITOR_ONLY.contains(&id) {
@@ -14825,6 +14863,8 @@ impl Workspace {
                 Modal::DebugInfo => "debug-info",
                 Modal::MigrateFrontmatter => "migrate-frontmatter",
                 Modal::FileRecovery => "file-recovery",
+                Modal::PdfExport => "export-pdf",
+                Modal::ImageExport => "export-image",
             }),
         );
         // The popout it draws in, by id, or null for the vault window (and
@@ -14852,6 +14892,8 @@ impl Workspace {
             Modal::DebugInfo => Some(self.debug_info.read(cx).describe()),
             Modal::MigrateFrontmatter => self.describe_migrate(cx),
             Modal::FileRecovery => self.describe_recovery(cx),
+            Modal::PdfExport => Some(self.pdf_export.read(cx).describe()),
+            Modal::ImageExport => Some(self.image_export.read(cx).describe()),
             Modal::None => None,
         };
         if let Some(Value::Object(view)) = view {
@@ -15845,6 +15887,8 @@ impl Workspace {
             | Modal::DebugInfo
             | Modal::MigrateFrontmatter
             | Modal::FileRecovery
+            | Modal::PdfExport
+            | Modal::ImageExport
             | Modal::Layouts => {
                 let child: gpui::AnyElement = match self.modal {
                     Modal::Switcher => self.switcher.clone().into_any_element(),
@@ -15856,6 +15900,8 @@ impl Workspace {
                     Modal::DebugInfo => self.debug_info.clone().into_any_element(),
                     Modal::MigrateFrontmatter => self.migrate_element()?,
                     Modal::FileRecovery => self.recovery_element()?,
+                    Modal::PdfExport => self.pdf_export.clone().into_any_element(),
+                    Modal::ImageExport => self.image_export.clone().into_any_element(),
                     Modal::Layouts => self.layouts_modal.clone()?.into_any_element(),
                     _ => self.prompt.clone().into_any_element(),
                 };

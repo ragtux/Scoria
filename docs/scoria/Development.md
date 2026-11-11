@@ -331,6 +331,142 @@ uses behave as Obsidian's do.
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
 
+### Export as image, and both exports driven, 2026-11-11
+
+`canvas:export-as-image` runs, the second of the two exports
+[[#The last five ids probed, 2026-11-10]] left ([[Specification#Export as image]]). The
+pinned gpui cannot paint off screen, so `scoria-export::canvas` draws the canvas itself with
+tiny-skia from the model (`scoria-canvas`'s geometry: the same edge curves, stubs, arrow heads
+and label pills the view paints) in the colours of the theme on screen, which the app hands in
+(`workspace::exports::canvas_palette`). 203 of the 244 ids run, 41 do not.
+
+**The modal.** `crate::export_modals::ImageExport`: "Export as image", `Export “Board” as a
+PNG file with the settings below.` in the muted colour, Viewport (Full canvas / Viewport only,
+with Obsidian's description), Zoom (a cell slider from −1 to 1 in steps of 0.05, its value
+shown as `2^z` to two places, its description the live estimate `Estimated image dimensions:
+1,050px x 700px`), Show logo — whose line says "a Scoria logo", the mark being Scoria's —
+and Privacy mode, then Save. Every opening starts from the defaults; nothing is written
+anywhere. Offered on a canvas only.
+
+**The image.** Full canvas: the nodes' bounds plus 100 px on every side, times `2^zoom`
+(a guess the spec marks presumed), RGBA, on the canvas background with its dot grid, the
+groups' tinted frames and label pills, the edges with their arrows and stubs, the cards on
+`--background-primary` with their tint and border, the file cards' names above them, and the
+edge labels. Viewport only: the pane's visible area at the view's zoom, times `2^zoom`, RGB
+with no alpha. Show logo adds an 80 px strip (scaled with the zoom) with Scoria's mark
+(`assets/logo.svg`, drawn by resvg) and "Scoria" in Rubik Black at the bottom left. Privacy
+mode draws each word as a rounded bar of its colour, cards, group labels, file names and edge
+labels alike. A card's text is the reading view's model of its Markdown — a text card's own,
+a note's or its `subpath` section's — laid out by the PDF export's layout at the card's width
+and clipped to it; an image file card draws the image contained; a link card its address;
+any other file its name. The longest side is capped at 16384 px. Save asks the save dialog
+for `<basename>.png`; once written the modal closes, with no notice and nothing opened.
+
+**Driven.** A private headless sway with its own session bus (`dbus-run-session`), a
+private `XDG_RUNTIME_DIR` and `xdg-desktop-portal` with the GTK backend on that bus, so the
+save dialog opened inside the session and not on the desktop; Scoria on a scratch copy of
+`docs/scoria-demo` over the socket, `grim` on every stage. Export to PDF on `Rocks/Basalt`:
+the modal as recorded, the toggle clicked, Export to PDF wrote
+`{"pdfExportSettings": {"includeName": true, "pageSize": "Letter", "landscape": false,
+"margin": "0", "downscalePercent": 100}}` into an `app.json` that was `{}`, and the portal's
+dialog opened titled "Save File" with `Basalt.pdf` in its name field. The dialog could not be
+confirmed: `wtype` typed into it but Return never activated Save, and the seat has no pointer
+for `wlrctl`; killing it left the modal open and nothing written, which is the cancel path.
+Reopened, the modal showed Include file name on, read back from the file. On `Rock cycle`
+the PDF command was not offered and Export as image was: the estimate read 2,300px x 960px, a
+click near the slider's end made it 1.93 and 4,443px x 1,855px, Viewport only 1,460px x
+1,584px, and a reopening was back at Full canvas and 1.00. The files themselves were made by
+the same code paths outside the app (the reading model, the conversion, `scoria-export`) on
+the demo vault and looked at: `Basalt`, `Home` and `Glossary` as PDFs read back and rendered
+by `scoria-pdf` (the image at its `|560` width, the callout on its tint, the YAML and Python
+fences highlighted, the rocks table with its alignments), and `Rock cycle.canvas` as a PNG
+and its privacy twin. That look found a header row left alone at a page's foot, fixed in its
+own commit.
+
+**Left out of the first cut.** Card content below Obsidian's zoom threshold is still drawn in
+full, not as the zoomed-out title; a canvas or base embedded in a card draws nothing but its
+name; images inside a card's Markdown are drawn, remote ones are not; card text is clipped,
+not scrolled or faded; the selection ring, connector dots and floating menu are never drawn
+(as Obsidian leaves them out); Privacy mode bars words rather than whole runs.
+
+**Tests.** `scoria-export`: 4 in `canvas_tests`
+(`full_canvas_is_the_bounds_plus_a_hundred_and_the_strip_eighty`,
+`the_zoom_slider_scales_by_a_power_of_two`, `viewport_only_is_the_panes_area_without_alpha`,
+`the_canvas_is_drawn_in_its_colours_and_privacy_hides_text_under_bars`) and
+`a_tables_header_row_goes_over_with_its_first_row`. The app: `export_as_image_is_runnable`
+and `a_canvas_exports_its_cards_and_scorias_mark` in `workspace::exports`. The gate after
+both: 66 test binaries, 1,591 passed, 3 ignored.
+
+### Export to PDF, 2026-11-11
+
+`workspace:export-pdf` runs, built on what [[#The last five ids probed, 2026-11-10]] settled
+([[Specification#Export to PDF]]). Obsidian prints its reading view through Chromium; Scoria
+has neither a print path nor a PDF writer in gpui, so the pages are laid out and written by
+a new crate, `scoria-export` (no gpui), from the reading view's own model of the note — the
+one parser's tree, embeds resolved, footnotes gathered — converted to plain blocks by
+`workspace::exports`. 202 of the 244 ids run, 42 do not, with the 2026-11-11 Slides, timelapse, migration and File recovery merged beside it.
+
+**The modal.** `crate::export_modals::PdfExport`: "Export to PDF", the line `Export “Note” to
+PDF with the settings below.`, the five rows with no descriptions (Include file name as
+title, Page size A3…Tabloid, Landscape, Margin Default/Minimal/None, Downscale percent
+10–100 as a cell slider showing its value), Export to PDF (accented) and Cancel. It opens with
+`app.json`'s `pdfExportSettings`, Obsidian's defaults for whatever is missing. Offered for a
+note in all three modes; not for a canvas, an image or an empty tab.
+
+**The run.** Export to PDF writes `pdfExportSettings` (`margin` a string; `includeName` only
+once the toggle has been touched or the file already had it; unknown keys kept), asks the
+desktop's save dialog for `<basename>.pdf` starting in the vault folder, lays the pages out
+and writes them on a background thread, closes the modal, says `PDF Saved to <absolute
+path>` and opens the file with the system's viewer. Cancelled at the dialog, nothing is
+written and the modal stays open. The text is the editor's buffer when the note is being
+edited, the file otherwise.
+
+**The pages.** krilla 0.8 (MIT OR Apache-2.0) writes them, embedding subsets of the faces it
+is handed: the app's Inter for text, KaTeX's Typewriter for code (the one monospaced face
+the workspace already carries, through `scoria-math`; Inter stands in for a glyph it lacks)
+and the KaTeX faces for math. Advances come from `ab_glyph` and krilla draws the glyph ids
+the layout placed, with their text, so the PDF's text extracts. Page sizes are Chromium's,
+in points; the content box starts 51.75 pt in with the Default margin and 24 pt with
+Minimal and None, as measured; Downscale scales the content inside it. The look is the
+reading view's in the light theme over white (`Theme::light`, now outside the tests): 16 px
+text on a 1.5 line, Obsidian's heading scale, the 0.9 em block gap, inline code on its
+ground, highlights, struck and underlined runs, links underlined with a `/Link` annotation
+for a web link (a link into the vault is drawn as one and goes nowhere), bullets, numbers
+and task boxes (a done one struck and muted), code blocks highlighted through
+`scoria-highlight` and wrapped, display and inline math typeset by `scoria-math` (glyphs,
+rules and paths), quotes and embeds with their bar, callouts on their tint in their colour,
+tables with their rules and alignments, rules, and images (PNG, JPEG, GIF and WebP as they
+are, anything else `image` reads as RGBA) scaled to the column and the page. A container
+broken across pages paints its bar or ground on each, slice by slice. The frontmatter is
+left out, as Obsidian leaves it. Metadata: Title the basename, Creator `Scoria`.
+
+**Left out of the first cut.** Chromium's exact pagination (the 60-paragraph fixture is 5
+Letter pages in Obsidian, the same neighbourhood here, not the same breaks); a table row or
+an image taller than a page is not split; no header row repeated on a new page; callout
+icons and fold chevrons; a font fallback beyond Inter (CJK and emoji draw the missing-glyph
+box); embedded bases, PDFs, canvases and remote images (their link text stands in); `<sup>`
+raised but `<sub>` not lowered; no outline, no tagged PDF; a community theme's light colours
+are not used, the default light theme is. `includeName`, when it joins a file that already
+has `pdfExportSettings`, lands after the other keys rather than first: the config merge
+keeps the object's order. Whether the settings are written when the dialog is cancelled is
+unobserved; Scoria writes them at the button.
+
+**Tests.** `scoria-export`: 16 — the settings and geometry (`page_sizes_are_chromiums_points_and_landscape_swaps_them`,
+`margin_values_are_obsidians_strings_and_the_text_edge_is_where_it_was_measured`,
+`downscale_widens_the_content_box_in_layout_pixels`), the layout and pagination
+(`sixty_paragraphs_take_several_letter_pages_and_fewer_at_tabloid_landscape_and_half_scale`,
+`nothing_is_drawn_below_the_content_box`, `the_title_comes_first_only_when_asked_for`,
+`a_long_word_is_broken_rather_than_overflowing`, `a_heading_is_bold_and_larger_than_body_text`,
+`code_is_set_in_the_typewriter_face_and_highlighted`, `math_is_typeset_in_the_katex_faces`,
+`a_container_broken_across_pages_paints_its_bar_on_both`, `lists_draw_markers_and_tables_their_rules`)
+and the written file read back by `scoria-pdf` (`the_pdf_reads_back_with_its_pages_size_title_and_text`,
+`a_landscape_a5_pdf_has_the_swapped_size`, `an_empty_note_is_still_one_page`,
+`an_image_is_drawn_into_the_pdf`). The app: 5 in `workspace::exports` (the runnable test, the
+settings read and written, a rich text's runs cut into inlines, and a note with an embed, an
+image, a task list, code and frontmatter through the whole path to pages hayro reads, the
+frontmatter absent). `scoria-formats`:
+`pdf_export_settings_keep_obsidians_order_a_string_margin_and_unknown_keys`.
+
 ### Eleven more ids probed, five of them run, 2026-11-10
 
 Of the 54 ids left by [[#The probes ran, and what they unblocked, 2026-11-09]], 35 are not
