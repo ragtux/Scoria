@@ -1535,7 +1535,8 @@ impl<'a> Flow<'a> {
         };
         let left = self.left();
         let total_w: f32 = widths.iter().map(|w| w + 2.0 * PAD_X).sum();
-        for (r, (row, ctx)) in all_rows.enumerate() {
+        let mut laid = Vec::new();
+        for (row, ctx) in all_rows {
             let mut cells = Vec::new();
             let mut row_h: f32 = 0.0;
             for (c, w) in widths.iter().enumerate() {
@@ -1548,7 +1549,18 @@ impl<'a> Flow<'a> {
                 row_h = row_h.max(h);
                 cells.push(lines);
             }
-            let row_h = row_h + 2.0 * PAD_Y;
+            laid.push((cells, row_h + 2.0 * PAD_Y));
+        }
+        // The header row is not left alone at the foot of a page: it goes
+        // over with the first body row when the two do not fit together.
+        if let (Some(height), Some(first)) = (self.height, laid.get(1)) {
+            let both = laid[0].1 + first.1;
+            self.settle();
+            if self.y + both > height && !self.at_top() && both <= height {
+                self.new_page();
+            }
+        }
+        for (r, (cells, row_h)) in laid.into_iter().enumerate() {
             let top = self.place(row_h);
             let border = palette.table_border;
             // The row's top rule, and the table's bottom one after the last.

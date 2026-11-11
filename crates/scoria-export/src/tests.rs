@@ -405,3 +405,21 @@ fn an_image_is_drawn_into_the_pdf() {
     let (r, g, b) = at(60, 60);
     assert!(r > 150 && g < 80 && b < 80, "{:?}", (r, g, b));
 }
+
+#[test]
+fn a_tables_header_row_goes_over_with_its_first_row() {
+    let fonts = fonts();
+    let palette = Palette::light();
+    let blocks = vec![
+        para("Above"),
+        Block::Table {
+            alignments: vec![Align::Left],
+            header: vec![vec![Inline::plain("Head")]],
+            rows: vec![vec![vec![Inline::plain("Body")]]],
+        },
+    ];
+    let (pages, _) = layout::layout(&blocks, None, 300.0, Some(90.0), &fonts, &palette);
+    assert_eq!(pages.len(), 2);
+    assert_eq!(pages[0].text(), "Above");
+    assert_eq!(pages[1].text(), "Head Body");
+}
