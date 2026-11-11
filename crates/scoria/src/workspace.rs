@@ -3135,6 +3135,12 @@ pub(crate) fn frame_window_options(title: &'static str) -> gpui::WindowOptions {
             traffic_light_position: (cfg!(target_os = "macos") && hidden)
                 .then(|| point(px(19.), px(12.))),
         }),
+        // On macOS the hidden frame keeps the system's title bar, see-through,
+        // over the top 28 px of the content, and a movable window is dragged
+        // by any press there: the tab under it never saw its own drag start.
+        // Scoria moves the window itself from its drag areas
+        // (`window_handle`), which a window that is not movable still obeys.
+        is_movable: !(cfg!(target_os = "macos") && hidden),
         // KWin ties the activation token to the application by this id.
         app_id: Some("scoria".into()),
         icon: crate::custom_window_icon(),
