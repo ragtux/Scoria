@@ -506,6 +506,29 @@ nothing (Scoria shows none); whether closing the Finished page without Done offe
 treats it as Done). The new tests: 6 in `scoria_formats::migrate`, 4 in
 `workspace::migrate_frontmatter`.
 
+### The audio recorder's dependencies, weighed, 2026-11-11
+
+Nothing built: `audio-recorder:start` and `:stop` need microphone capture and an AAC-in-MP4
+encoder, and no encoder was found that can be shipped without a decision.
+
+- **Capture**: `cpal` 0.18 (Apache-2.0) covers Linux, macOS and Windows; on Linux its default
+  host is ALSA (`alsa-sys`, so `shell.nix` would need `alsa-lib`, with PipeWire reached through
+  its ALSA plugin), with `pulseaudio` and `pipewire` features as alternatives.
+- **The MP4 box**: an `.m4a` (`ftyp`, `moov` with one `mp4a`/`esds` track, `mdat`) is small enough
+  to write in-crate; the `mp4` crate (MIT) also writes one.
+- **AAC**: `fdk-aac` / `fdk-aac-sys` (MIT bindings) vendor Fraunhofer's FDK AAC, whose own
+  licence is not free by Debian's or Fedora's reading and grants no patent rights;
+  `shiguredo_fdk_aac` (Apache-2.0) dlopens a system libfdk-aac instead, which most Linux
+  installs lack. The pure-Rust `oxideav-aac` 0.1.7 (MIT, one dependency) and `rff-codec-aac`
+  1.1.11 (Apache-2.0) both claim an AAC-LC encoder, but are months old and validated against
+  their own decoders; neither has been run against an independent decoder here. The platform
+  encoders (AudioToolbox on macOS, Media Foundation on Windows) are free and built in, but Linux
+  has none, so one code path per platform still leaves Linux without one.
+
+Writing anything but `Recording YYYYMMDDHHmmss.m4a` with AAC inside would be a silent divergence,
+so the choice — a pure-Rust encoder after an independent check, FDK with its licence, or a
+platform encoder and no Linux recorder — is left to be made.
+
 ### File recovery, 2026-11-11
 
 `file-recovery:open` runs, over a snapshot store of Scoria's own
