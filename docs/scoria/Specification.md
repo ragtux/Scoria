@@ -65,7 +65,8 @@ with the command inventory and bundle evidence.
 | Canvas view: the dot grid, cards, groups, edges, labels and controls drawn as Obsidian 1.14.4 draws them; pan, zoom, selection, moving, resizing, drawing edges, typing into a card, the menus and the keyboard, saving through the canvas writer; the leaf's `viewState`, see [[#Observed canvas view behavior, Obsidian 1.14.4 (installer build 1.13.7)]] | `scoria::canvas`, `scoria-canvas` |
 | Bases top-level keys and recursive filters | `scoria-formats::base` |
 | Command ids, palette names and default hotkeys as Obsidian 1.14.4 registers them; `hotkeys.json` entries replace the defaults and an empty list unbinds; labels read `Ctrl + Shift + F` | `scoria-commands` |
-| Command palette: fuzzy over names, pinned ids from `command-palette.json` first, then this session's recent commands, then registration order; commands that cannot run are not listed | `scoria::palette` |
+| Command palette: fuzzy over names, pinned ids from `command-palette.json` first (in the file's order), then this session's recent commands, then by name; commands that cannot run are not listed | `scoria::palette`, `scoria-suggest::slash::rank_commands` |
+| Slash commands: `/` at a line start or after whitespace opens the palette's list in the editor, fuzzy matched, at most 100 rows; Enter takes the `/query` out and runs the command, one undo step with it (see [[#Observed Slash commands, Obsidian 1.15.0]]) | `scoria-suggest::slash`, `scoria::suggest` |
 | Settings tabs, rows and defaults as Obsidian 1.14.4 shows them, and the Daily notes and Templates tabs as 1.14.5 does (see [[#Observed Daily notes and Templates tabs, Obsidian 1.14.5]]); `switcher.json`, `command-palette.json`, `daily-notes.json`, `templates.json` and plugin manifests round-trip | `scoria::settings`, `scoria-formats::config` |
 | Settings toggles write: a click sets the key Obsidian writes in `app.json`, `appearance.json`, `switcher.json`, `core-plugins.json` or `community-plugins.json`, changing nothing else in the file, and the running app follows what it can (readable line length, smart lists, indentation, properties in document, strict line breaks, show all file types); a vault with no `core-plugins.json` gets the whole default map rather than a one-key file | `scoria::settings`, `scoria::workspace::Workspace::change_setting` |
 | Each settings row says how far it gets in Scoria: untagged means the app follows it at once, "on restart" the theme and fonts, "not in Scoria yet" a value written only for Obsidian to read. A Scoria divergence: Obsidian has no such tags, and shows every setting as live | `scoria::settings::Honored` |
@@ -7615,8 +7616,9 @@ what follows is this build's own reading where the run did not reach.
   every line's part. OBSERVE: where Obsidian's selection lands after a
   multi-line wrap.
 - **A bare caret on whitespace** gets an empty pair with the caret between
-  the halves; on a word it takes the word, as observed, and leaves the word
-  selected.
+  the halves; on a word it takes the word, as observed, and the caret stays a
+  caret, moved with the word's text (`**Hello**` at 2 for a caret at 0: the
+  slash-commands probe of 2026-11-11).
 - **`insert-horizontal-rule` at the start of a non-blank line** inserts
   `\n\n---\n` at the caret like any other mid-line position, giving two blank
   lines, the rule and the line. OBSERVE: ch 0 of a non-blank line.
@@ -10280,3 +10282,127 @@ Chromium's `MediaRecorder` here supporting `audio/webm`, `audio/mp4` and
   moves; the dimensions limit, if any; Privacy mode over images and embedded notes.
 - Audio: the ribbon button's click; Live Preview; the format on macOS and Windows, a recording across midnight or within the same second,
   what a missing or refused microphone shows.
+
+## Observed Slash commands, Obsidian 1.15.0
+
+`tools/obsidian-probe/slash-commands.mjs` over CDP with real key events, in a private headless
+sway on Linux (window 1600 × 1000, the installer build 1.13.7 running the 1.15.0 asar); results
+in `tools/obsidian-probe/results/2026-11-11-slash-commands.json` and screenshots beside it. Steps
+`s00`–`s08` were one run; `s09` and `s10` went back for what the first run's queries missed.
+
+**The plugin.** Core plugin `slash-command`, "Slash commands", described "Trigger commands in the
+editor by using the forward slash key."; **off** in a fresh vault (`"slash-command": false` in
+the `core-plugins.json` Obsidian writes). It has no options (`options` is null), **no settings
+tab**, writes no `slash-command.json`, registers **no command** and no ribbon button. Its Core
+plugins row sits between Search and Slides; its Options and Hotkeys buttons are in the markup but
+`display: none`. Turning the toggle on rewrote `core-plugins.json` with that one value flipped to
+`true`, the file's key order kept. The plugin is one more editor suggester.
+
+**What opens it.** The last `/` before the caret, on the caret's line, at the **start of the line
+or after whitespace**, with no whitespace between it and the caret. The query is what is between
+the `/` and the caret; text after the caret does not count (`/abc` with the caret after the `/` is
+the empty query). Identical in Source mode and Live Preview:
+
+| Before the `/` | Opens |
+| --- | --- |
+| nothing; text after the caret (`/abc`) | yes |
+| `hello ` · a tab · four spaces | yes |
+| `- ` · `- [ ] ` · `1. ` · `> ` · `# ` · `> [!note]` then `> ` | yes |
+| a line in a fenced code block or a `$$` block, `x ` in one | yes |
+| inside inline code (`` a `b /` c ``) · inside `%% x / %%` · `[[Other]] ` | yes |
+| frontmatter, Source mode (`key: /`, and a blank frontmatter line) | yes |
+| a table cell: Live Preview's cell editor and Source mode | yes |
+| `hello` (mid-word) · `he` (inside a word) · `call(` · `see http:` · `a /` (a second slash) · `<!-- x` | no |
+| over a selection: the selection is replaced by `/` | yes |
+
+`[[Oth/]]` opened the link suggester, not this one. Reading view: `/` does nothing. In Live Preview
+the frontmatter is the Properties widget, so no caret could be put in its YAML.
+
+**The rows.** The command palette's list: the same commands (`app.commands.listCommands()`, 150 in
+the probe vault: editor commands and every other kind, "Close window", "Change theme...", "Open
+settings"), in the palette's order — **pinned** commands first in `command-palette.json`'s order,
+then the palette's **recent** commands, then the rest **by name** (`Add alias`, `Add cursor above`,
+…, `Backlinks: Open backlinks for the current note`, …; case ignored, a space before punctuation:
+`Bookmarks: Bookmark all tabs...` before `Bookmarks: Bookmark...`). The palette itself listed the
+same way. At most **100 rows**. A query is fuzzy matched on the name, case ignored (`/HEAD` =
+`/head`); `/h1` gave only "Set as heading 1", `/sethead` the six "Set as heading" rows. A query
+that matches nothing **closes** the popup — there is no "No match found" row — and so does a
+space: `/insert table`, `/toggle bold ` and `/ ` all closed it. A pin does not lift a row once
+there is a query. Accepting a row does **not** make the command one of the palette's recent ones
+(its `recentCommands` was unchanged after `/strikethrough`).
+
+A row is the palette's row: `.suggestion-item.mod-complex` holding `.suggestion-content >
+.suggestion-title` — a plugin's command splits into a `.suggestion-prefix` span (`Backlinks`) and
+the name, drawn `Backlinks: Open backlinks for the current note` — and `.suggestion-aux` with one
+`kbd.suggestion-hotkey` per hotkey (`Ctrl + ;`, `Ctrl + Tab` and `Ctrl + Page Down` side by side).
+Matched characters are bold. There is no instructions footer.
+
+**The look** (dark theme). The `.suggestion-container`'s left edge is at the `/`, its top 5 px
+under the line (caret bottom 225.4, box top 230.4); it stayed below the line with 450 px of window
+left under it. As wide as its widest row up to `max-width: 500px` (436 px for the full list, 426
+for `/ta`, 378 for `/head`); `max-height: 300px`; 1 px border `rgb(51, 51, 51)`, radius 8 px,
+background `rgb(28, 28, 28)`, a three-layer shadow, `z-index: 60`. The list inside is padded 6 px
+and scrolls. Rows are 31.5 px with a 1 px gap, padding `6px 12px`, radius 4 px, 15 px text at a
+19.5 px line height, `rgb(218, 218, 218)`; the selected row takes `--background-modifier-hover`.
+A hotkey pill: 12 px text, padding `2px 6px`, radius 24 px, on the same hover colour.
+
+**Keys.** ArrowDown and ArrowUp move the selection and **wrap** (Up on the first of 100 rows
+selected the hundredth, Down there the first). PageDown moved it from 0 to 8; Home went back to
+0 with the caret unmoved. **Enter** and a click accept. **Tab does nothing** (the popup stays, the
+text too). **Escape** closes it and leaves the `/query` in the text; typing on reopens it on the
+longer query. **Shift+Enter** is a plain newline, and the popup closes. Backspace back to the bare
+`/` keeps it open with every row; deleting the `/` closes it. ArrowLeft inside the query shortens
+the query to what is before the caret; past the `/` it closes. A click elsewhere closes it.
+
+**Accepting a row.** The `/` through the caret is removed — only through the caret: `/bo|ld`
+accepted left `ld` — the caret goes where the `/` was, and the command runs on that. One Ctrl+Z
+then gives back the text with the `/query` in it (`Hello /bold`, not `Hello `), even with 1.2 s
+between the typing and Enter: the removal and the command's edit are one undo step. Before, the
+caret, then after (Live Preview and Source mode agreed on every case):
+
+| Note, caret | Typed | Row | After | Caret |
+| --- | --- | --- | --- | --- |
+| `Hello` at 0 | `/bold` | Toggle bold | `**Hello**` | 0:2 |
+| `Hello ` at 6 | `/bold` | Toggle bold | `Hello ****` | 0:8 |
+| `Hello world` at 6 | `/bold` | Toggle bold | `Hello **world**` | 0:8 |
+| `Hello ` at 6 | `/italic` (clicked) | Toggle italic | `Hello **` | 0:7 |
+| `word` at 4 | ` /strikethrough` | Toggle strikethrough | `word ~~~~` | 0:7 |
+| empty | `/table` | Insert table | `\n` + the table + `\n` | 1:1 |
+| `Intro\n`, line 1 | `/table` | Insert table | `Intro\n\n` + the table + `\n` | 2:1 |
+| `Intro ` at 6 | `/table` | Insert table | `Intro \n\n` + the table + `\n` | 2:1 |
+| empty | `/callout` | Insert callout | `\n> [!NOTE] Title\n> Contents\n` | 1:8 |
+| empty | `/horizontal` | Insert horizontal rule | `\n---\n` | 2:0 |
+| `Some ` at 5 | `/codeblock` | Insert code block | three backticks, `\nSome \n`, three backticks | 1:5 |
+| `x` at 0 | `/math` | Insert math block | `$$\nx\n$$` | 1:0 |
+| `x ` at 2 | `/footnote` | Insert footnote | `x [^1]\n\n[^1]: \n` | 0:6 |
+| `Text ` at 5 | `/link` | Insert Markdown link | `Text []()` | 0:6 |
+| `Item` at 0 | `/bullet` | Toggle bullet list | `- Item` | 0:2 |
+| `one\ntwo`, line 1 | `/quote` | Toggle blockquote | `one\n> two` | 1:2 |
+| `- item ` at 7 | `/checkbox` | Toggle checkbox status | `- [ ] item ` | 0:11 |
+| `Hello` at 0 | `/h2` | Set as heading 2 | `## Hello` | 0:3 |
+| `## Hello` at 3 | `/h1` | Set as heading 1 | `# Hello` | 0:2 |
+| `A\nB` at 0 | `/linedown` | Move line down | `B\nA` | 1:0 |
+| `Text ` at 5 | `/date` | Templates: Insert current date | `Text 2026-11-11` | 0:15 |
+| `Text ` at 5 | `/palette`, `/switcher`, `/template` | a modal | `Text `, the modal open ("Select a command...", "Find or create a note...", "Type name of a template...") | 0:5 |
+| `Text ` at 5 | `/newtab` | New tab | `Text `, and a new tab | 0:5 |
+
+The table is the two-by-two `|     |     |` / `| --- | --- |` / `|     |     |`. So the bare caret
+a toggle takes the word from **stays a caret**, moved with the word's text (`**Hello**` at 2, not
+the word selected). Editor commands are offered, and run, in both editing modes; the other
+commands too.
+
+### Not settled: Slash commands
+- "Open settings" accepted from the popup removed `/settings`, but no Settings modal was found
+  either time, 0.7 s and 2 s later: refused, or closed at once? Scoria opens Settings.
+- "Toggle heading" left `Hello` and `# Hello` unchanged; what that command does is its own
+  question.
+- End, PageUp, and Home from anywhere but the ninth row (a modal the previous case opened took the
+  keys of the step that would have recorded them).
+- Whether the popup opens above the line when there is no room below (not reached).
+- The order within a query: Obsidian's score puts `/bold`'s Bookmarks row before its Backlinks
+  row, the other way round from Scoria's matcher, and `Toggle pin` first for `/toggle`. The rows
+  matched are the same for every query probed but `/e`, which matched more than the 100 shown.
+- An HTML comment (the case typed was `<!-- x/`, mid-word); characters other than letters and
+  digits in a query (`/(`, `/#`); several cursors.
+- Whether the list is rebuilt on every keystroke (the check callbacks asked again) or once per
+  `/`. Scoria builds it once per `/`, and again whenever the popup reopens.
