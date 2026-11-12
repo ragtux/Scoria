@@ -321,7 +321,7 @@ fn render_image(bitmap: Bitmap) -> Option<Arc<RenderImage>> {
         height,
         mut rgba,
     } = bitmap;
-    for pixel in rgba.chunks_exact_mut(4) {
+    for pixel in rgba.as_chunks_mut::<4>().0 {
         pixel.swap(0, 2);
     }
     let buffer = RgbaImage::from_raw(width, height, rgba)?;

@@ -35,7 +35,9 @@ fn assert_size(size: PageSize, width: f32, height: f32) {
 fn dark_pixels(bitmap: &Bitmap) -> usize {
     bitmap
         .rgba
-        .chunks_exact(4)
+        .as_chunks::<4>()
+        .0
+        .iter()
         .filter(|p| p[0] < 128 && p[1] < 128 && p[2] < 128)
         .count()
 }
@@ -146,10 +148,12 @@ fn pages_fixture_renders_at_two_scales() {
             bitmap.rgba.len(),
             (bitmap.width * bitmap.height * 4) as usize
         );
-        assert!(bitmap.rgba.chunks_exact(4).all(|p| p[3] == 255));
+        assert!(bitmap.rgba.as_chunks::<4>().0.iter().all(|p| p[3] == 255));
         let white = bitmap
             .rgba
-            .chunks_exact(4)
+            .as_chunks::<4>()
+            .0
+            .iter()
             .filter(|p| p[0] == 255 && p[1] == 255 && p[2] == 255)
             .count();
         let total = (bitmap.width * bitmap.height) as usize;
@@ -226,8 +230,10 @@ fn blank_page_renders_white() {
     assert_eq!((bitmap.width, bitmap.height), (149, 211));
     assert!(bitmap
         .rgba
-        .chunks_exact(4)
-        .all(|p| p == [255, 255, 255, 255]));
+        .as_chunks::<4>()
+        .0
+        .iter()
+        .all(|p| p == &[255, 255, 255, 255]));
 }
 
 #[test]

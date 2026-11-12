@@ -138,7 +138,7 @@ impl<'a> Raster<'a> {
                 let (w, h) = rgba.dimensions();
                 let mut raw = rgba.into_raw();
                 // tiny-skia wants premultiplied alpha.
-                for px in raw.chunks_exact_mut(4) {
+                for px in raw.as_chunks_mut::<4>().0 {
                     let a = u16::from(px[3]);
                     for c in &mut px[..3] {
                         *c = ((u16::from(*c) * a + 127) / 255) as u8;
