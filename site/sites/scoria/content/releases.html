@@ -1,10 +1,10 @@
 ---
 title: Releases
 layout: page
-description: Every tagged release of Scoria, what landed in each, and the permanent addresses the archives live at. 0.5.0 is current: the Writer gate passed after a week of mixed use, the Bookmarks pane, table handles, renames on the row, and what the week's comparison fixed.
+description: Every tagged release of Scoria, what landed in each, and the permanent addresses the archives live at. 0.6.0 is current: most of the core plugins' commands, popout windows, page preview, Vim keys, Slash commands, and export to PDF and image.
 ---
 <section class="hero" style="padding-bottom:24px">
-  <span class="badge pre">Current: v0.5.0 · 9 November 2026 · MIT</span>
+  <span class="badge pre">Current: v0.6.0 · 11 November 2026 · MIT</span>
   <h1>Releases</h1>
   <p class="lede">
     A <code>v*</code> tag builds the <code>scoria</code> binary on both forges and publishes one
@@ -26,66 +26,64 @@ description: Every tagged release of Scoria, what landed in each, and the perman
 </section>
 
 <section class="band">
-  <h2>0.5.0 — the Writer gate passes</h2>
+  <h2>0.6.0 — the core plugins, nearly all of them</h2>
   <p class="lede">
-    Released 9 November 2026. The gate for the writing phase was a sentence about a person: a
-    vault round-trips byte-identical after a week of mixed use in both apps. A real vault spent
-    seven days being edited in Scoria and in Obsidian in turn, and every byte that moved was a
-    person's edit in one of the two; the comparison found and fixed what it was there to find.
+    Released 11 November 2026. Phase 4 is parity with Obsidian's core plugins, and this release
+    is most of its commands: 205 of the 244 command ids now run, each one probed against Obsidian
+    1.15.0 first and written to its bytes. The 39 left are services Scoria does not have, ids
+    Obsidian does not register on desktop, and the window zoom and always on top, which wait on
+    gpui.
   </p>
   <div class="grid">
     <div class="card">
-      <span class="k">The gate</span>
-      <h3>Seven days, two apps, one vault</h3>
-      <p>Notes, renames, moves, tables, suggesters, templates, daily notes, both canvases, the
-      editing and fold commands, splits, bookmarks and settings — each day's half in Scoria over
-      its control socket, the other half by hand in Obsidian 1.15.0, the vault diffed against a
-      baseline after each. Obsidian kept every byte Scoria wrote to <code>bookmarks.json</code>
-      and to the canvases, so those writers are fixed points of its own.</p>
+      <span class="k">Windows</span>
+      <h3>Popouts, and tabs between them</h3>
+      <p>A tab opens in a window of its own and comes back on the next launch where it was left;
+      tabs drag between windows where the platform allows; the tab header has Obsidian's menu
+      with pinned tabs; modals, the file menu and notices come up in the window they belong to;
+      and a tab group stacks with <code>workspace:toggle-stacked-tabs</code>.</p>
     </div>
     <div class="card">
-      <span class="k">What it fixed</span>
-      <h3>Found by the comparison</h3>
-      <p><code>alwaysUpdateLinks</code> defaulting on; <code>types.json</code> unseeded; a
-      dragged canvas card not raised to the end; Mod+B taking the list marker; the numbered
-      toggle counting straight down where Obsidian counts per depth; a fold over the scroll
-      anchor; Settings tabs sharing a scroll offset; and serde_json's float parser dropping an
-      ulp on a dock width, which <code>float_roundtrip</code> now keeps.</p>
+      <span class="k">Page preview</span>
+      <h3>Hover a link, read the note</h3>
+      <p>The popover over links in the reading view and the editor, the tab header, the Files,
+      Bookmarks, Backlinks, Outgoing links and Outline rows, bases and the graph — nested
+      previews raised over each other, a clicked one an editor of its note, and a missing note
+      created on click.</p>
     </div>
     <div class="card">
-      <span class="k">Bookmarks</span>
-      <h3>The pane, against 1.15.0</h3>
-      <p>Files, folders, headings, blocks, searches, graphs and groups, each with Obsidian's
-      icon, menu and rename on the row; drag a note in from Files and it is bookmarked at the
-      drop; the view header's bookmark action; and the writer that Obsidian re-read and kept
-      byte for byte.</p>
+      <span class="k">Editing</span>
+      <h3>Vim keys and Slash commands</h3>
+      <p>Vim key bindings behind <code>vimMode</code>; <code>/</code> at the start of a line or
+      after a space offers the palette's commands, pinned and recent first; rename a heading
+      and every link to it; add an alias; and the Format converter's frontmatter migration.</p>
     </div>
     <div class="card">
-      <span class="k">Tables</span>
-      <h3>Handles, bars and a padded entry</h3>
-      <p>Live Preview tables grew Obsidian's row and column handles that drag to reorder, the
-      "+" bars that append a row or a column, keys that leave a table the way Obsidian's do, and
-      the re-pad on the first click into a cell. The inline title is a field, and arrow keys
-      enter a table from the text around it.</p>
+      <span class="k">Core plugins</span>
+      <h3>Composer, Workspaces and the rest</h3>
+      <p>The Note composer's merge, split and extract; Workspaces' save and load in
+      <code>workspaces.json</code>'s bytes; the Unique note creator; Random note; the Footnotes
+      view; backlinks at a note's foot; File properties; File recovery's snapshots, kept outside
+      the vault and opened in a modal; and Slides and the graph timelapse.</p>
     </div>
     <div class="card">
-      <span class="k">Files</span>
-      <h3>Renames on the row</h3>
-      <p>A file tree row renames in place rather than in a dialog, new notes and folders are
-      named on their row, and the Update links prompt has Obsidian's three buttons — Always
-      update, Just once, Do not update — with none of them accented, as none is in Obsidian.</p>
+      <span class="k">Export and audio</span>
+      <h3>PDF, PNG and an .m4a</h3>
+      <p>A note exports to PDF with its blocks laid out and paginated, a canvas exports as an
+      image, and the Audio recorder writes an AAC <code>.m4a</code> to the attachment folder
+      and embeds it — all in pure Rust, in two new crates.</p>
     </div>
     <div class="card">
-      <span class="k">Commands</span>
-      <h3>Change theme, and the probes</h3>
-      <p><code>theme:switch</code> opens its suggester — Default with an Active flair, then the
-      installed themes — so <code>hotkeys.json</code>'s binding reaches it. The week's open
-      questions were settled by a probe against 1.15.0 and recorded in the specification beside
-      the behaviour each one extends.</p>
+      <span class="k">App</span>
+      <h3>Commands, debug info, release notes</h3>
+      <p>The app and window commands, the editor toggles, the file menu's path commands, the
+      attachment commands named and placed as Obsidian names them, Show debug info, and these
+      release notes inside the app. On macOS the hidden frame no longer drags the window off a
+      tab press, and windows keep clear of the traffic lights.</p>
     </div>
   </div>
   <p class="dim small" style="margin-top:18px">
-    <a href="https://github.com/ragtux/scoria/releases/tag/v0.5.0">The commit-level notes for 0.5.0 →</a>
+    <a href="https://github.com/ragtux/scoria/releases/tag/v0.6.0">The commit-level notes for 0.6.0 →</a>
   </p>
 </section>
 
@@ -101,6 +99,15 @@ description: Every tagged release of Scoria, what landed in each, and the perman
         <tr><th>Version</th><th>Date</th><th>What it was</th><th>Notes</th></tr>
       </thead>
       <tbody>
+        <tr>
+          <td><strong>0.5.0</strong></td>
+          <td>9 Nov 2026</td>
+          <td>The Writer gate passes: a real vault round-tripped byte-identical through a week of
+          mixed use in Scoria and Obsidian, with what the comparison found fixed; the Bookmarks
+          pane against 1.15.0; Live Preview table handles and "+" bars; renames on the file
+          tree's row; and <code>theme:switch</code>.</td>
+          <td><a href="https://github.com/ragtux/scoria/releases/tag/v0.5.0">v0.5.0</a></td>
+        </tr>
         <tr>
           <td><strong>0.4.0</strong></td>
           <td>5 Nov 2026</td>
@@ -167,8 +174,8 @@ description: Every tagged release of Scoria, what landed in each, and the perman
   </div>
   <p class="dim small" style="margin-top:18px">
     Scoria is before 1.0 and the minor number is where the work shows: 0.2 was writing, 0.3 was
-    the shell and the other platforms, 0.4 is the file types and the look. A tag with a hyphen in
-    it — <code>v0.5.0-rc1</code> — is published as a prerelease and is not what the addresses
+    the shell and the other platforms, 0.4 is the file types and the look, 0.5 the Writer gate, 0.6 the core plugins. A tag with a hyphen in
+    it — <code>v0.6.0-rc1</code> — is published as a prerelease and is not what the addresses
     above resolve to. Releases before 0.3.2 carry their archives under the tagged names only.
   </p>
 </section>

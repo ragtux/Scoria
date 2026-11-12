@@ -15,7 +15,7 @@ so in place, rather than describing Obsidian's behavior and leaving you to find 
 > **Note** Scoria is an independent implementation and is not affiliated with Obsidian.
 > Obsidian is a trademark of Dynalist Inc.
 
-> **Warning** This is version 0.5.0. Reading a vault is well covered, and writing one has
+> **Warning** This is version 0.6.0. Reading a vault is well covered, and writing one has
 > passed its gate on one vault for one week. Keep a backup of any vault you open with it, and see
 > [what differs from Obsidian](/docs/reference/differences/) for the current gaps.
 
