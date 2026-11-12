@@ -31,7 +31,8 @@ jobs:
           DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
             build-essential cmake pkg-config \
             libxcb1-dev libxkbcommon-dev libxkbcommon-x11-dev \
-            libfreetype-dev libfontconfig-dev libwayland-dev libvulkan-dev libgl-dev
+            libfreetype-dev libfontconfig-dev libwayland-dev libvulkan-dev libgl-dev \
+            libasound2-dev
 
       - name: Rust toolchain
         run: |

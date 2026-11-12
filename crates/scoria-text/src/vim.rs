@@ -2016,7 +2016,7 @@ fn quote_object(buf: &TextBuffer, pos: usize, q: char, around: bool) -> Option<T
         }
         escaped = c == '\\' && !escaped;
     }
-    let pairs = || quotes.chunks_exact(2).map(|p| (p[0], p[1]));
+    let pairs = || quotes.as_chunks::<2>().0.iter().map(|&[a, b]| (a, b));
     let (a, b) = pairs()
         .find(|&(a, b)| a <= pos && pos <= b)
         .or_else(|| pairs().find(|&(a, _)| a > pos))?;
