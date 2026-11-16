@@ -15,7 +15,7 @@ A write merges into the file's own JSON, so only the key you changed moves and k
 does not know about are left where they are.
 
 A few rows are deliberately read-only, because the control Obsidian offers is one Scoria
-does not have yet: the three font families, excluded files, accent
+does not have yet: the three font families, accent
 color, the theme list, and the vault name, vault folder, config folder and language rows,
 which are not settings of the vault at all. Change those in Obsidian or in the JSON.
 
@@ -71,6 +71,14 @@ which take effect on the next keystroke without reopening the note.
 out of the text, the guides follow the caret's list item, and the gutter moves to the right.
 A line's own direction comes from its first letter, Hebrew or Arabic making it run right to
 left, whatever the setting says; that is Obsidian's behavior too.
+
+**Excluded files** (`userIgnoreFilters`) opens a page of its own, as in Obsidian 1.15: one row
+per rule with a × to delete it, and a + that asks for a folder (picked from the vault's
+folders) or any text. A rule is a path prefix (`Archive/`) or, between slashes, a regular
+expression (`/daily-.*/`), and neither cares about case. Excluded files disappear from search,
+the graph, unlinked mentions, the Tags pane's counts and Bases, and come last, muted, in the
+quick switcher and link autocompletion; links to them still resolve and linked mentions still
+list them. Deleting the last rule writes `null`, as Obsidian does.
 
 A few settings are **shown but not yet acted on**. They are read from your configuration and displayed
 truthfully, and changing one still writes the key for Obsidian to honor; the behavior behind

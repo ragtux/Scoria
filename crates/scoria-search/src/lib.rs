@@ -9,15 +9,18 @@
 //! `prepareFuzzySearch` and `prepareSimpleSearch` counterparts used by the
 //! quick switcher and pickers. [`match_lines`] windows a note's hits into
 //! the context lines a result row shows. [`natural_cmp`] orders names the
-//! way Obsidian's numeric, locale-aware collation does.
+//! way Obsidian's numeric, locale-aware collation does. [`ExcludeFilters`]
+//! answers whether `app.json`'s Excluded files hide a path.
 
 pub mod collate;
+pub mod exclude;
 pub mod fuzzy;
 pub mod matcher;
 pub mod query;
 pub mod snippet;
 
 pub use collate::natural_cmp;
+pub use exclude::{ExcludeFilters, Offer};
 pub use fuzzy::{fuzzy_match, simple_search, FuzzyMatch};
 pub use matcher::{MatchSet, Search, SearchError, SearchFile, TaskLine};
 pub use query::{parse, Compare, Field, Query};

@@ -77,9 +77,15 @@ pub fn env_for(state: &VaultState, base_path: &str) -> Env {
     // two PNGs and its three `.base` files among the notes, the new base
     // itself included. A note is the only kind with a cache record, so an
     // attachment's row carries its names, size and stamps and nothing else.
+    //
+    // Excluded files are not rows at all (Obsidian 1.15.1, observed
+    // 2026-11-16: a table with no filters counted 7 results where the vault
+    // had 13 files, `excluded-files.mjs` step s07).
+    let excluded = state.excluded();
     let files: Vec<Arc<FileData>> = vault
         .files()
         .iter()
+        .filter(|file| !excluded.is_excluded(&file.path))
         .map(|file| Arc::new(build(file, &cache, &types)))
         .collect();
     // The base file is not a note, so it is never among the rows; `this`
@@ -456,6 +462,28 @@ mod tests {
         let deep = one(&state, "Rocks/Deep/Basalt.md");
         assert_eq!(deep.name, "Basalt");
         assert_eq!(deep.path, "Rocks/Deep/Basalt.md");
+    }
+
+    #[test]
+    fn excluded_files_are_not_rows() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        fs::create_dir_all(root.join(".obsidian")).unwrap();
+        fs::create_dir_all(root.join("Archive")).unwrap();
+        fs::write(
+            root.join(".obsidian/app.json"),
+            r#"{"userIgnoreFilters":["Archive/","/\\.png$/"]}"#,
+        )
+        .unwrap();
+        fs::write(root.join("Keep.md"), "keep").unwrap();
+        fs::write(root.join("Archive/Old.md"), "old").unwrap();
+        fs::write(root.join("pic.png"), "png").unwrap();
+        fs::write(root.join("Table.base"), "views: []\n").unwrap();
+        let state = Arc::new(VaultState::load(&root.to_path_buf()).unwrap());
+        let env = env_for(&state, "Table.base");
+        let mut paths: Vec<&str> = env.files.iter().map(|f| f.path.as_str()).collect();
+        paths.sort();
+        assert_eq!(paths, ["Keep.md", "Table.base"]);
     }
 
     #[test]

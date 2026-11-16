@@ -1817,6 +1817,10 @@ pub enum Page {
     /// "Add to dictionary" kept, each with a × that removes it. Obsidian
     /// opens it as a modal over Settings; here it is a page of Settings.
     SpellcheckDictionary,
+    /// "Excluded files", behind the Files and links tab's row: one row per
+    /// `userIgnoreFilters` rule with a Delete ×, and a + that opens the
+    /// Add exclusion form (Obsidian 1.15.1, probed 2026-11-16).
+    ExcludedFiles,
 }
 
 impl Page {
@@ -1825,6 +1829,7 @@ impl Page {
             Page::CssSnippets => "CSS snippets",
             Page::Font(slot) => slot.title(),
             Page::SpellcheckDictionary => "Spellcheck dictionary",
+            Page::ExcludedFiles => "Excluded files",
         }
     }
 }
@@ -2319,6 +2324,11 @@ pub struct SettingsView {
     /// view's, not the row's.
     editing: Option<TextField>,
     field: Entity<TextInput>,
+    /// The Add exclusion form's field, open while `adding_exclusion` is.
+    exclusion_input: Entity<TextInput>,
+    adding_exclusion: bool,
+    /// The highlighted row of the form's suggestions.
+    exclusion_selected: usize,
     /// The dropdown whose [`Typed::local`] option was picked, by the key it
     /// writes: a pick the file cannot hold (the Daily notes tab's "Custom"),
     /// kept here so the rows it reveals stay until another option is picked.
@@ -2340,7 +2350,23 @@ impl SettingsView {
         let snippet_search = cx.new(|cx| TextInput::new("Search snippets...", cx));
         let font_search = cx.new(|cx| TextInput::new("Enter font name...", cx));
         let field = cx.new(|cx| TextInput::new("", cx));
+        let exclusion_input = cx.new(|cx| TextInput::new("", cx));
         let subscriptions = vec![
+            // Enter takes the highlighted suggestion, as Obsidian's did: the
+            // `+ typed` row once nothing else matches, else a folder.
+            cx.subscribe(
+                &exclusion_input,
+                |this, _, event: &InputEvent, cx| match event {
+                    InputEvent::Changed => {
+                        this.exclusion_selected = 0;
+                        cx.notify();
+                    }
+                    InputEvent::Submit => this.pick_exclusion(this.exclusion_selected, cx),
+                    InputEvent::Cancel => this.close_exclusion_form(cx),
+                    InputEvent::Up => this.move_exclusion_selection(-1, cx),
+                    InputEvent::Down => this.move_exclusion_selection(1, cx),
+                },
+            ),
             cx.subscribe(
                 &snippet_search,
                 |this, _, event: &InputEvent, cx| match event {
@@ -2401,6 +2427,9 @@ impl SettingsView {
             editing: None,
             local_pick: None,
             field,
+            exclusion_input,
+            adding_exclusion: false,
+            exclusion_selected: 0,
             _subscriptions: subscriptions,
         };
         view.load_commands(cx);
@@ -2446,6 +2475,7 @@ impl SettingsView {
         self.font_search
             .update(cx, |input, cx| input.set_text(String::new(), cx));
         self.font_scroll = UniformListScrollHandle::new();
+        self.adding_exclusion = false;
         self.page = Some(page);
         self.focus_tab(window, cx);
         cx.notify();
@@ -2472,6 +2502,7 @@ impl SettingsView {
         // A page left open by the last session would come back instead of
         // the tab it belongs to.
         self.page = None;
+        self.adding_exclusion = false;
         // A filter typed last time would otherwise be what the next thing
         // typed appends to.
         self.hotkey_search
@@ -2607,6 +2638,11 @@ impl SettingsView {
     }
 
     fn close_action(&mut self, _: &Close, window: &mut Window, cx: &mut Context<Self>) {
+        if self.adding_exclusion {
+            self.close_exclusion_form(cx);
+            self.focus_tab(window, cx);
+            return;
+        }
         match escape_closes(
             self.capturing.is_some(),
             self.menu.is_some(),
@@ -3185,12 +3221,7 @@ impl SettingsView {
 
     fn files_items(state: &VaultState) -> Vec<Item> {
         let app = &state.app();
-        let excluded = app
-            .user_ignore_filters
-            .as_ref()
-            .filter(|f| !f.is_empty())
-            .map(|f| f.join(", "))
-            .unwrap_or_else(|| "None".into());
+        let excluded = scoria_search::exclude::summary(app.ignore_filters()).unwrap_or_default();
         let config_dir = state.vault().config_dir().to_string();
         let mut items = vec![
             app_toggle(
@@ -3288,11 +3319,14 @@ impl SettingsView {
                 TRASH_OPTION,
             ),
             heading("Advanced"),
-            text(
+            // A page of its own since Obsidian 1.15: the row shows the one
+            // rule, or "N rules", and opens the list.
+            navigable(
                 "Excluded files",
                 "Excluded files will be hidden in Search, Graph View, and Unlinked Mentions, less noticeable in Quick Switcher and link suggestions.",
                 excluded,
-            ).not_yet(),
+                Page::ExcludedFiles,
+            ),
             text(
                 "Override config folder",
                 "Use a different config folder than the default one. Must start with a dot.",
@@ -5244,6 +5278,303 @@ impl SettingsView {
             .child(div().flex_1().min_h_0().child(list))
     }
 
+    /// The rules as `app.json` has them.
+    fn exclusions(&self) -> Vec<String> {
+        self.state
+            .as_ref()
+            .map(|s| s.app().ignore_filters().to_vec())
+            .unwrap_or_default()
+    }
+
+    /// Writes a new rule list to `app.json`; the last one deleted leaves
+    /// `"userIgnoreFilters": null`, as Obsidian writes it.
+    fn write_exclusions(&mut self, next: Vec<String>, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let mut config = state.app().clone();
+        config.set_ignore_filters(next);
+        cx.emit(SettingsEvent::Changed(Box::new(SettingChange::App(config))));
+    }
+
+    /// The Add exclusion form's suggestions for what is typed.
+    fn exclusion_offers(&self, cx: &App) -> Vec<scoria_search::Offer> {
+        let typed = self.exclusion_input.read(cx).text().to_string();
+        match self.state.as_ref() {
+            Some(state) => scoria_search::exclude::offers(state.vault().folders(), &typed),
+            None => Vec::new(),
+        }
+    }
+
+    fn open_exclusion_form(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.exclusion_input
+            .update(cx, |input, cx| input.set_text(String::new(), cx));
+        self.exclusion_selected = 0;
+        self.adding_exclusion = true;
+        window.focus(&self.exclusion_input.focus_handle(cx), cx);
+        cx.notify();
+    }
+
+    fn close_exclusion_form(&mut self, cx: &mut Context<Self>) {
+        self.adding_exclusion = false;
+        cx.notify();
+    }
+
+    fn move_exclusion_selection(&mut self, by: isize, cx: &mut Context<Self>) {
+        let n = self.exclusion_offers(cx).len();
+        if n == 0 {
+            return;
+        }
+        self.exclusion_selected =
+            (self.exclusion_selected as isize + by).rem_euclid(n as isize) as usize;
+        cx.notify();
+    }
+
+    /// Adds the rule a suggestion stands for and closes the form; a blank
+    /// `+` row adds nothing and leaves the form open, as Obsidian's did.
+    fn pick_exclusion(&mut self, ix: usize, cx: &mut Context<Self>) {
+        let Some(rule) = self.exclusion_offers(cx).get(ix).and_then(|o| o.rule()) else {
+            return;
+        };
+        self.add_exclusion(rule, cx);
+    }
+
+    /// Done: what is typed, untrimmed, unless it is blank.
+    fn submit_exclusion(&mut self, cx: &mut Context<Self>) {
+        let typed = self.exclusion_input.read(cx).text().to_string();
+        if let Some(rule) = scoria_search::exclude::added_rule(&typed) {
+            self.add_exclusion(rule, cx);
+        }
+    }
+
+    /// Appends a rule, a duplicate included: Obsidian 1.15.1 kept both.
+    fn add_exclusion(&mut self, rule: String, cx: &mut Context<Self>) {
+        let mut next = self.exclusions();
+        next.push(rule);
+        self.adding_exclusion = false;
+        self.write_exclusions(next, cx);
+        cx.notify();
+    }
+
+    /// "Excluded files", the page Obsidian 1.15.1's Files and links row
+    /// opens (probed 2026-11-16, `excluded-files.mjs` steps s08 and s09):
+    /// a + "Add exclusion..." over one row per rule, each with a `lucide-x`
+    /// "Delete", or "No exclusions added." when there are none. The + opens
+    /// the Add exclusion form, which Obsidian draws as a modal over
+    /// Settings and Scoria as a card at the top of the page: a field whose
+    /// suggestions are the vault's folders and the text as typed, the line
+    /// of help, and Done and Cancel.
+    fn render_excluded_page(
+        &self,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> gpui::Stateful<gpui::Div> {
+        let rules = self.exclusions();
+        let icon_button = |id: SharedString, icon: &'static str, label: &'static str| {
+            div()
+                .id(id)
+                .flex()
+                .flex_shrink_0()
+                .items_center()
+                .justify_center()
+                .size(px(26.))
+                .rounded_sm()
+                .cursor_pointer()
+                .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                .tooltip(crate::canvas::menu::tooltip(label))
+                .child(crate::assets::icon(icon, 16., theme.tokens.icon_color))
+        };
+        let mut page = div()
+            .id("settings-excluded")
+            .overflow_y_scroll()
+            .size_full()
+            .flex()
+            .flex_col()
+            .child(div().flex().flex_row().justify_end().pb_2().child(
+                icon_button("settings-excluded-add".into(), "plus", "Add exclusion...").on_click(
+                    cx.listener(|this, _, window, cx| {
+                        cx.stop_propagation();
+                        if this.click_dismissed_a_popover(cx) {
+                            return;
+                        }
+                        this.open_exclusion_form(window, cx);
+                    }),
+                ),
+            ));
+        if self.adding_exclusion {
+            page = page.child(self.render_exclusion_form(theme, cx));
+        }
+        if rules.is_empty() {
+            page = page.child(
+                div()
+                    .py(px(10.))
+                    .border_t_1()
+                    .border_color(theme.tokens.background_modifier_border)
+                    .text_size(px(14.))
+                    .text_color(theme.tokens.text_muted)
+                    .child("No exclusions added."),
+            );
+        }
+        for (ix, rule) in rules.iter().enumerate() {
+            let without: Vec<String> = rules
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| *i != ix)
+                .map(|(_, r)| r.clone())
+                .collect();
+            page = page.child(
+                div()
+                    .flex()
+                    .flex_row()
+                    .items_center()
+                    .justify_between()
+                    .gap_4()
+                    .py(px(6.))
+                    .border_t_1()
+                    .border_color(theme.tokens.background_modifier_border)
+                    .child(
+                        div()
+                            .text_size(px(14.))
+                            .text_color(theme.tokens.text_normal)
+                            .whitespace_nowrap()
+                            .overflow_hidden()
+                            .text_ellipsis()
+                            .child(SharedString::from(rule.clone())),
+                    )
+                    .child(
+                        icon_button(
+                            SharedString::from(format!("settings-excluded-delete-{ix}")),
+                            "x",
+                            "Delete",
+                        )
+                        .on_click(cx.listener(move |this, _, _, cx| {
+                            cx.stop_propagation();
+                            if this.click_dismissed_a_popover(cx) {
+                                return;
+                            }
+                            this.write_exclusions(without.clone(), cx);
+                            cx.notify();
+                        })),
+                    ),
+            );
+        }
+        page
+    }
+
+    /// The Add exclusion form: Obsidian's `mod-form-sheet` modal's title,
+    /// field, help line and two buttons, with the field's suggestions under
+    /// it.
+    fn render_exclusion_form(&self, theme: &Theme, cx: &mut Context<Self>) -> gpui::Div {
+        let offers = self.exclusion_offers(cx);
+        let selected = self.exclusion_selected.min(offers.len().saturating_sub(1));
+        let mut list = div().flex().flex_col().py_1();
+        for (ix, offer) in offers.iter().enumerate() {
+            let (text, ranges) = match offer {
+                scoria_search::Offer::Folder { path, ranges } => (path.clone(), ranges.clone()),
+                scoria_search::Offer::Typed(t) => (format!("+ {t}"), Vec::new()),
+            };
+            let highlights: Vec<_> = ranges
+                .into_iter()
+                .map(|r| {
+                    (
+                        r,
+                        gpui::HighlightStyle {
+                            font_weight: Some(FontWeight::BOLD),
+                            ..gpui::HighlightStyle::default()
+                        },
+                    )
+                })
+                .collect();
+            list = list.child(
+                div()
+                    .id(("settings-excluded-offer", ix))
+                    .px_2()
+                    .py(px(3.))
+                    .rounded_sm()
+                    .cursor_pointer()
+                    .text_size(px(13.))
+                    .text_color(theme.tokens.text_normal)
+                    .when(ix == selected, |d| {
+                        d.bg(theme.tokens.background_modifier_hover)
+                    })
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                    .child(
+                        gpui::StyledText::new(SharedString::from(text)).with_highlights(highlights),
+                    )
+                    .on_click(cx.listener(move |this, _, _, cx| {
+                        cx.stop_propagation();
+                        this.pick_exclusion(ix, cx);
+                    })),
+            );
+        }
+        let button = |id: &'static str, label: &'static str, cta: bool| {
+            div()
+                .id(id)
+                .px_3()
+                .py(px(4.))
+                .rounded_md()
+                .cursor_pointer()
+                .text_size(px(13.))
+                .when(cta, |d| {
+                    d.bg(theme.tokens.interactive_accent)
+                        .text_color(theme.tokens.text_on_accent)
+                })
+                .when(!cta, |d| {
+                    d.bg(theme.tokens.background_modifier_hover)
+                        .text_color(theme.tokens.text_normal)
+                })
+                .child(label)
+        };
+        div()
+            .flex()
+            .flex_col()
+            .gap_2()
+            .mb_3()
+            .p_3()
+            .rounded_md()
+            .border_1()
+            .border_color(theme.tokens.background_modifier_border)
+            .bg(theme.tokens.background_secondary)
+            .child(
+                div()
+                    .text_size(px(15.))
+                    .font_weight(FontWeight::BOLD)
+                    .text_color(theme.tokens.text_normal)
+                    .child("Add exclusion"),
+            )
+            .child(self.exclusion_input.clone())
+            .child(list)
+            .child(
+                div()
+                    .text_size(px(12.))
+                    .text_color(theme.tokens.text_muted)
+                    .child("Enter a path or a regular expression, e.g. /daily-.*/"),
+            )
+            .child(
+                div()
+                    .flex()
+                    .flex_row()
+                    .justify_end()
+                    .gap_2()
+                    .child(
+                        button("settings-excluded-done", "Done", true).on_click(cx.listener(
+                            |this, _, _, cx| {
+                                cx.stop_propagation();
+                                this.submit_exclusion(cx);
+                            },
+                        )),
+                    )
+                    .child(
+                        button("settings-excluded-cancel", "Cancel", false).on_click(cx.listener(
+                            |this, _, _, cx| {
+                                cx.stop_propagation();
+                                this.close_exclusion_form(cx);
+                            },
+                        )),
+                    ),
+            )
+    }
+
     /// "Spellcheck dictionary": the custom words, one row each, the word
     /// and a `lucide-x` "Remove from dictionary" before it, as Obsidian's
     /// `spellchecker-dictionary-item` rows have them (probed 2026-11-15).
@@ -5934,6 +6265,7 @@ impl Render for SettingsView {
             Some(Page::SpellcheckDictionary) => {
                 self.render_dictionary_page(&theme, cx).into_any_element()
             }
+            Some(Page::ExcludedFiles) => self.render_excluded_page(&theme, cx).into_any_element(),
             None if tab == Tab::Hotkeys => self.render_hotkeys(&theme, cx).into_any_element(),
             None => {
                 let items = self.items(tab);
@@ -7130,6 +7462,50 @@ mod tests {
             .into_iter()
             .find(|(n, _)| n == name)
             .map(|(_, v)| v)
+    }
+
+    /// The Excluded files row opens its page and reads what Obsidian
+    /// 1.15.1's did: nothing for no rules, the rule for one, "N rules"
+    /// otherwise; and it is read, so it carries no tag. A change written
+    /// through `apply_setting` is what search sees next.
+    #[test]
+    fn the_excluded_files_row_opens_its_page_and_counts_the_rules() {
+        let (dir, mut state) = vault();
+        let item = || {
+            SettingsView::files_items(&state)
+                .into_iter()
+                .find(|i| i.name.as_ref() == "Excluded files")
+                .expect("the Files tab has the row")
+        };
+        assert_eq!(item().page, Some(Page::ExcludedFiles));
+        assert_eq!(item().honored, Honored::Live);
+        assert_eq!(row(&state, "Excluded files").as_deref(), Some(""));
+        let app_json = dir.path().join(".obsidian/app.json");
+        for (text, want) in [
+            (r#"{"userIgnoreFilters":["Archive/"]}"#, "Archive/"),
+            (
+                r#"{"userIgnoreFilters":["Archive/","Data","Other/"]}"#,
+                "3 rules",
+            ),
+            (r#"{"userIgnoreFilters":null}"#, ""),
+        ] {
+            std::fs::write(&app_json, text).unwrap();
+            state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+            assert_eq!(
+                row(&state, "Excluded files").as_deref(),
+                Some(want),
+                "{text}"
+            );
+        }
+        assert!(!state.is_excluded("Note.md"));
+        let mut config = state.app().clone();
+        config.set_ignore_filters(vec!["Note".into()]);
+        state.apply_setting(&SettingChange::App(config)).unwrap();
+        assert!(state.is_excluded("Note.md"));
+        assert_eq!(
+            std::fs::read_to_string(&app_json).unwrap(),
+            "{\n  \"userIgnoreFilters\": [\n    \"Note\"\n  ]\n}"
+        );
     }
 
     /// The spec's option table, row by row: the label each of the four

@@ -262,6 +262,28 @@ impl MetadataCache {
     pub fn tags(&self) -> &BTreeMap<String, TagEntry> {
         &self.tags
     }
+
+    /// [`MetadataCache::tags`] counted over the notes `skip` leaves, which
+    /// is what the Tags pane shows under Excluded files: Obsidian's
+    /// `getTags()` does not count an excluded note's tags. A name is as the
+    /// first counted note in path order wrote it.
+    pub fn tags_without(&self, skip: impl Fn(&str) -> bool) -> BTreeMap<String, TagEntry> {
+        let mut tags: BTreeMap<String, TagEntry> = BTreeMap::new();
+        for (path, meta) in &self.files {
+            if skip(path) {
+                continue;
+            }
+            for tag in all_tags(meta) {
+                let entry = tags.entry(tag.to_lowercase()).or_default();
+                if entry.name.is_empty() {
+                    entry.name = tag;
+                }
+                entry.count += 1;
+                entry.files.insert(path.clone());
+            }
+        }
+        tags
+    }
 }
 
 /// One row of the All properties pane: a property key as the vault uses it.
@@ -574,6 +596,16 @@ mod tests {
         assert_eq!(inbox.count, 1);
         assert_eq!(tags.get("inbox/weekly").unwrap().name, "Inbox/weekly");
         assert_eq!(tags.len(), 3);
+    }
+
+    #[test]
+    fn tags_without_skips_the_notes_it_is_told_to() {
+        let c = cache();
+        assert_eq!(&c.tags_without(|_| false), c.tags());
+        let tags = c.tags_without(|p| p.starts_with("Projects/"));
+        let names: Vec<(&str, usize)> = tags.values().map(|t| (t.name.as_str(), t.count)).collect();
+        assert_eq!(names, [("inbox", 1), ("Project", 2)]);
+        assert!(c.tags_without(|_| true).is_empty());
     }
 
     #[test]

@@ -59,12 +59,82 @@ struct Candidate {
     /// What is matched and shown: the file name without `.md`, or the alias.
     label: String,
     kind: ItemKind,
+    /// Under Excluded files: listed after every other match, in the muted
+    /// colour (`mod-downranked`), and left out of the recent files.
+    downranked: bool,
 }
 
 #[derive(Debug, Clone)]
 struct Item {
     candidate: Candidate,
     ranges: Vec<Range<usize>>,
+}
+
+/// The rows for `query`: the recent files while it is empty, otherwise
+/// every fuzzy match best first. Excluded files are not among the recent
+/// files and come after every other match, as in Obsidian 1.15.1 (observed
+/// 2026-11-16, `excluded-files.mjs` steps s03 and s10).
+fn rank(candidates: &[Candidate], recent: &[String], query: &str) -> Vec<Item> {
+    let mut items: Vec<(f64, Item)> = Vec::new();
+    if query.is_empty() {
+        for (ix, path) in recent.iter().enumerate() {
+            if let Some(c) = candidates
+                .iter()
+                .find(|c| c.kind == ItemKind::File && &c.path == path && !c.downranked)
+            {
+                items.push((
+                    -(ix as f64),
+                    Item {
+                        candidate: c.clone(),
+                        ranges: Vec::new(),
+                    },
+                ));
+            }
+        }
+    } else {
+        for c in candidates {
+            let by_label = fuzzy_match(query, &c.label);
+            let by_path = if c.kind == ItemKind::File {
+                fuzzy_match(query, &c.path).map(|m| (m.score - 2.0, m))
+            } else {
+                None
+            };
+            let best = match (by_label, by_path) {
+                (Some(l), Some((ps, _))) if l.score >= ps => Some((l.score, l.ranges)),
+                // A path match highlights nothing in the label.
+                (_, Some((ps, _))) => Some((ps, Vec::new())),
+                (Some(l), None) => Some((l.score, l.ranges)),
+                (None, None) => None,
+            };
+            if let Some((score, ranges)) = best {
+                let penalty = match c.kind {
+                    ItemKind::File => 0.0,
+                    ItemKind::Alias => 0.5,
+                    ItemKind::Unresolved => 3.0,
+                };
+                items.push((
+                    score - penalty,
+                    Item {
+                        candidate: c.clone(),
+                        ranges,
+                    },
+                ));
+            }
+        }
+        items.sort_by(|a, b| {
+            a.1.candidate
+                .downranked
+                .cmp(&b.1.candidate.downranked)
+                .then_with(|| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal))
+                .then_with(|| a.1.candidate.label.len().cmp(&b.1.candidate.label.len()))
+                .then_with(|| a.1.candidate.path.cmp(&b.1.candidate.path))
+        });
+    }
+    items
+        .into_iter()
+        .map(|(_, i)| i)
+        .take(MAX_RESULTS)
+        .collect()
 }
 
 pub enum SwitcherEvent {
@@ -135,10 +205,12 @@ impl QuickSwitcher {
             } else {
                 name.to_string()
             };
+            let downranked = state.is_excluded(&file.path);
             candidates.push(Candidate {
                 path: file.path.clone(),
                 label,
                 kind: ItemKind::File,
+                downranked,
             });
             if let Some(meta) = cache.file(&file.path) {
                 for alias in frontmatter_aliases(meta) {
@@ -146,6 +218,7 @@ impl QuickSwitcher {
                         path: file.path.clone(),
                         label: alias,
                         kind: ItemKind::Alias,
+                        downranked,
                     });
                 }
             }
@@ -171,6 +244,7 @@ impl QuickSwitcher {
                 path: target.clone(),
                 label: target,
                 kind: ItemKind::Unresolved,
+                downranked: false,
             });
         }
         drop(vault);
@@ -216,65 +290,7 @@ impl QuickSwitcher {
 
     fn refresh(&mut self, cx: &mut Context<Self>) {
         let query = self.input.read(cx).text().trim().to_string();
-        let mut items: Vec<(f64, Item)> = Vec::new();
-        if query.is_empty() {
-            for (ix, path) in self.recent.iter().enumerate() {
-                if let Some(c) = self
-                    .candidates
-                    .iter()
-                    .find(|c| c.kind == ItemKind::File && &c.path == path)
-                {
-                    items.push((
-                        -(ix as f64),
-                        Item {
-                            candidate: c.clone(),
-                            ranges: Vec::new(),
-                        },
-                    ));
-                }
-            }
-        } else {
-            for c in &self.candidates {
-                let by_label = fuzzy_match(&query, &c.label);
-                let by_path = if c.kind == ItemKind::File {
-                    fuzzy_match(&query, &c.path).map(|m| (m.score - 2.0, m))
-                } else {
-                    None
-                };
-                let best = match (by_label, by_path) {
-                    (Some(l), Some((ps, _))) if l.score >= ps => Some((l.score, l.ranges)),
-                    // A path match highlights nothing in the label.
-                    (_, Some((ps, _))) => Some((ps, Vec::new())),
-                    (Some(l), None) => Some((l.score, l.ranges)),
-                    (None, None) => None,
-                };
-                if let Some((score, ranges)) = best {
-                    let penalty = match c.kind {
-                        ItemKind::File => 0.0,
-                        ItemKind::Alias => 0.5,
-                        ItemKind::Unresolved => 3.0,
-                    };
-                    items.push((
-                        score - penalty,
-                        Item {
-                            candidate: c.clone(),
-                            ranges,
-                        },
-                    ));
-                }
-            }
-            items.sort_by(|a, b| {
-                b.0.partial_cmp(&a.0)
-                    .unwrap_or(std::cmp::Ordering::Equal)
-                    .then_with(|| a.1.candidate.label.len().cmp(&b.1.candidate.label.len()))
-                    .then_with(|| a.1.candidate.path.cmp(&b.1.candidate.path))
-            });
-        }
-        self.items = items
-            .into_iter()
-            .map(|(_, i)| i)
-            .take(MAX_RESULTS)
-            .collect();
+        self.items = rank(&self.candidates, &self.recent, &query);
         self.selected = 0;
         self.scroll.scroll_to_item(0, ScrollStrategy::Top);
         cx.notify();
@@ -372,7 +388,7 @@ impl QuickSwitcher {
                         .child(
                             div()
                                 .text_size(px(14.))
-                                .text_color(if c.kind == ItemKind::Unresolved {
+                                .text_color(if c.kind == ItemKind::Unresolved || c.downranked {
                                     theme.tokens.text_muted
                                 } else {
                                     theme.tokens.text_normal
@@ -484,6 +500,41 @@ mod tests {
         assert!(!offers(FileKind::Other, true, &config(false, true, false)));
         assert!(!offers(FileKind::Other, false, &config(false, true, true)));
         assert!(offers(FileKind::Other, true, &config(false, true, true)));
+    }
+
+    fn file(path: &str, downranked: bool) -> Candidate {
+        let name = path.rsplit('/').next().unwrap().trim_end_matches(".md");
+        Candidate {
+            path: path.into(),
+            label: name.into(),
+            kind: ItemKind::File,
+            downranked,
+        }
+    }
+
+    /// The probe's `old` and `o` queries: the excluded files are still
+    /// offered, after every other match, and the empty query's recent files
+    /// leave them out.
+    #[test]
+    fn excluded_files_come_last_and_are_not_recent() {
+        let candidates = vec![
+            file("Archive/Old.md", true),
+            file("Archive/Older.md", true),
+            file("Old twin.md", false),
+            file("Other/Archive/Nested.md", false),
+            file("Keep.md", false),
+        ];
+        let paths = |items: Vec<Item>| -> Vec<String> {
+            items.into_iter().map(|i| i.candidate.path).collect()
+        };
+        assert_eq!(
+            paths(rank(&candidates, &[], "old")),
+            ["Old twin.md", "Archive/Old.md", "Archive/Older.md"]
+        );
+        let o = paths(rank(&candidates, &[], "o"));
+        assert_eq!(&o[o.len() - 2..], ["Archive/Old.md", "Archive/Older.md"]);
+        let recent = vec!["Archive/Old.md".to_string(), "Keep.md".to_string()];
+        assert_eq!(paths(rank(&candidates, &recent, "")), ["Keep.md"]);
     }
 
     #[test]

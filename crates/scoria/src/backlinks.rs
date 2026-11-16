@@ -14,7 +14,7 @@ use scoria_cache::links::{link_path, LinkFormat};
 use scoria_cache::{LinkResolver, MetadataCache};
 use scoria_formats::FileKind;
 use scoria_markdown::{parse_linktext, Subpath};
-use scoria_search::natural_cmp;
+use scoria_search::{natural_cmp, ExcludeFilters};
 use std::collections::HashMap;
 use std::ops::Range;
 use std::sync::Arc;
@@ -309,14 +309,18 @@ pub fn unlinked_incoming(
     texts: &HashMap<String, Arc<String>>,
     path: &str,
     own: Option<&Finder>,
+    excluded: &ExcludeFilters,
     extra: bool,
 ) -> Section {
     let Some(finder) = own else {
         return Section::empty(UNLINKED);
     };
+    // A note under Excluded files mentions nothing here, as in Obsidian
+    // 1.15.1; its links still count under Linked mentions (observed
+    // 2026-11-16, `excluded-files.mjs` step s06).
     let mut found: Vec<(String, Range<usize>)> = texts
         .par_iter()
-        .filter(|(p, _)| p.as_str() != path)
+        .filter(|(p, _)| p.as_str() != path && !excluded.is_excluded(p))
         .flat_map_iter(|(p, text)| {
             finder
                 .find(text)
@@ -554,11 +558,45 @@ mod tests {
             "A.md".to_string(),
             Arc::new("before\nthe plan here\nafter".to_string()),
         );
-        let narrow = unlinked_incoming(&texts, "Plan.md", Some(&finder), false);
-        let wide = unlinked_incoming(&texts, "Plan.md", Some(&finder), true);
+        let narrow = unlinked_incoming(
+            &texts,
+            "Plan.md",
+            Some(&finder),
+            &ExcludeFilters::default(),
+            false,
+        );
+        let wide = unlinked_incoming(
+            &texts,
+            "Plan.md",
+            Some(&finder),
+            &ExcludeFilters::default(),
+            true,
+        );
         assert_ne!(narrow, wide);
         assert_eq!(with_context(&narrow, &texts, true), wide);
         assert_eq!(with_context(&wide, &texts, false), narrow);
+    }
+
+    #[test]
+    fn an_excluded_note_mentions_nothing() {
+        let names = [Name {
+            text: "Plan",
+            path: "Plan.md",
+        }];
+        let finder = Finder::new(&names).unwrap();
+        let mut texts = HashMap::new();
+        texts.insert("A.md".to_string(), Arc::new("the plan".to_string()));
+        texts.insert("Archive/B.md".to_string(), Arc::new("plan".to_string()));
+        texts.insert("archive/C.md".to_string(), Arc::new("plan".to_string()));
+        let excluded = ExcludeFilters::new(&["Archive/"]);
+        let section = unlinked_incoming(&texts, "Plan.md", Some(&finder), &excluded, false);
+        let shown: Vec<&str> = section
+            .groups
+            .iter()
+            .filter_map(|g| g.path.as_deref())
+            .collect();
+        assert_eq!(shown, ["A.md"]);
+        assert_eq!(section.count, 1);
     }
 
     #[test]
@@ -575,7 +613,13 @@ mod tests {
         );
         texts.insert("B.md".to_string(), Arc::new("plan".to_string()));
         texts.insert("Plan.md".to_string(), Arc::new("plan itself".to_string()));
-        let section = unlinked_incoming(&texts, "Plan.md", Some(&finder), false);
+        let section = unlinked_incoming(
+            &texts,
+            "Plan.md",
+            Some(&finder),
+            &ExcludeFilters::default(),
+            false,
+        );
         assert_eq!(section.label, UNLINKED);
         assert_eq!(section.count, 3);
         assert!(!section.capped);

@@ -45,7 +45,7 @@ Be realistic about this list before you make Scoria your daily reader.
 - **Remote images.** A `![](https://…)` does not load; local images do.
 - **The Bases view.** The Bases YAML format is implemented and round-trips; a `.base` does
   not open. A `.canvas` does, in a canvas view of its own.
-- **A few settings controls.** Most rows write; the font pickers, excluded files, accent
+- **A few settings controls.** Most rows write; the font pickers, accent
   color and the theme list do not.
 - **Multiple vaults in one window**, PDF export, heading folding,
   drag-and-drop in Files, inline title editing, pasting attachments.

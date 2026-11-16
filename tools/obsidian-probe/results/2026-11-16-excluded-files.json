@@ -1,0 +1,1772 @@
+{
+ "fixtures": {
+  "startedAt": "2026-11-16T06:04:26.113Z",
+  "steps": {},
+  "order": [],
+  "elapsedMs": 1
+ },
+ "run": {
+  "startedAt": "2026-11-16T06:04:27.281Z",
+  "steps": {
+   "s00": {
+    "ok": true,
+    "ms": 1,
+    "title": "New tab - vault - Obsidian 1.15.1",
+    "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+    "defaultFilters": [
+     "Archive/"
+    ],
+    "metadataCache": [
+     "userIgnoreFilters",
+     "userIgnoreFiltersString",
+     "userIgnoreFilterCache",
+     "updateUserIgnoreFilters",
+     "isUserIgnored"
+    ],
+    "vault": [],
+    "workspace": [],
+    "hasIsUserIgnored": "function",
+    "fields": [
+     "userIgnoreFilters",
+     "userIgnoreFiltersString",
+     "userIgnoreFilterCache"
+    ],
+    "ignoreState": {
+     "userIgnoreFilters": "/^Archive\\//i",
+     "userIgnoreFiltersString": "[\"Archive/\"]",
+     "userIgnoreFilterCache": "[object Object]"
+    }
+   },
+   "s01": {
+    "ok": true,
+    "ms": 5655,
+    "rows": [
+     {
+      "compiled": "",
+      "filters": [],
+      "ignored": [],
+      "odd": {}
+     },
+     {
+      "compiled": "/^Archive\\//i",
+      "filters": [
+       "Archive/"
+      ],
+      "ignored": [
+       "Archive/Old.md",
+       "Archive/Deep/Deepest.md",
+       "archive/x.md",
+       "Archive/pic.png"
+      ],
+      "odd": {}
+     },
+     {
+      "compiled": "/^Archive/i",
+      "filters": [
+       "Archive"
+      ],
+      "ignored": [
+       "Archive/Old.md",
+       "Archive/Deep/Deepest.md",
+       "Archive",
+       "Archive.md",
+       "Archived note.md",
+       "archive lower/lower.md",
+       "archive/x.md",
+       "Archive/pic.png",
+       "Archive Old.md"
+      ],
+      "odd": {}
+     },
+     {
+      "compiled": "/^\\/Archive/i",
+      "filters": [
+       "/Archive"
+      ],
+      "ignored": [],
+      "odd": {}
+     },
+     {
+      "compiled": "/^archive\\//i",
+      "filters": [
+       "archive/"
+      ],
+      "ignored": [
+       "Archive/Old.md",
+       "Archive/Deep/Deepest.md",
+       "archive/x.md",
+       "Archive/pic.png"
+      ],
+      "odd": {}
+     },
+     {
+      "compiled": "/^Archive\\/Old\\.md/i",
+      "filters": [
+       "Archive/Old.md"
+      ],
+      "ignored": [
+       "Archive/Old.md"
+      ],
+      "odd": {}
+     },
+     {
+      "compiled": "/^Archive\\/Old/i",
+      "filters": [
+       "Archive/Old"
+      ],
+      "ignored": [
+       "Archive/Old.md"
+      ],
+      "odd": {}
+     },
+     {
+      "compiled": "/arch/i",
+      "filters": [
+       "/arch/"
+      ],
+      "ignored": [
+       "Archive/Old.md",
+       "Archive/Deep/Deepest.md",
+       "Archive",
+       "Archive.md",
+       "Archived note.md",
+       "archive lower/lower.md",
+       "archive/x.md",
+       "Other/Archive/Nested.md",
+       "Archive/pic.png",
+       "Archive Old.md"
+      ],
+      "odd": {}
+     },
+     {
+      "compiled": "/Arch/i",
+      "filters": [
+       "/Arch/"
+      ],
+      "ignored": [
+       "Archive/Old.md",
+       "Archive/Deep/Deepest.md",
+       "Archive",
+       "Archive.md",
+       "Archived note.md",
+       "archive lower/lower.md",
+       "archive/x.md",
+       "Other/Archive/Nested.md",
+       "Archive/pic.png",
+       "Archive Old.md"
+      ],
+      "odd": {}
+     },
+     {
+      "compiled": "/^\\/arch\\/i/i",
+      "filters": [
+       "/arch/i"
+      ],
+      "ignored": [],
+      "odd": {}
+     },
+     {
+      "compiled": "/^Archive/i",
+      "filters": [
+       "/^Archive/"
+      ],
+      "ignored": [
+       "Archive/Old.md",
+       "Archive/Deep/Deepest.md",
+       "Archive",
+       "Archive.md",
+       "Archived note.md",
+       "archive lower/lower.md",
+       "archive/x.md",
+       "Archive/pic.png",
+       "Archive Old.md"
+      ],
+      "odd": {}
+     },
+     {
+      "compiled": "/Old\\.md$/i",
+      "filters": [
+       "/Old\\.md$/"
+      ],
+      "ignored": [
+       "Archive/Old.md",
+       "Archive Old.md"
+      ],
+      "odd": {}
+     },
+     {
+      "compiled": "",
+      "filters": [
+       "/[/"
+      ],
+      "ignored": [],
+      "odd": {}
+     },
+     {
+      "compiled": "/^\\*\\.png/i",
+      "filters": [
+       "*.png"
+      ],
+      "ignored": [],
+      "odd": {}
+     },
+     {
+      "compiled": "/\\.png$/i",
+      "filters": [
+       "/\\.png$/"
+      ],
+      "ignored": [
+       "Archive/pic.png",
+       "a.png"
+      ],
+      "odd": {}
+     },
+     {
+      "compiled": "/^Notes\\/Sub/i",
+      "filters": [
+       "Notes/Sub"
+      ],
+      "ignored": [
+       "Notes/Sub/x.md",
+       "Notes/Subway.md",
+       "Notes/sub/x.md"
+      ],
+      "odd": {}
+     },
+     {
+      "compiled": "/^Notes\\/Sub\\//i",
+      "filters": [
+       "Notes/Sub/"
+      ],
+      "ignored": [
+       "Notes/Sub/x.md",
+       "Notes/sub/x.md"
+      ],
+      "odd": {}
+     },
+     {
+      "compiled": "/^Archive\\//i",
+      "filters": [
+       " Archive/"
+      ],
+      "ignored": [
+       "Archive/Old.md",
+       "Archive/Deep/Deepest.md",
+       "archive/x.md",
+       "Archive/pic.png"
+      ],
+      "odd": {}
+     },
+     {
+      "compiled": "",
+      "filters": [
+       ""
+      ],
+      "ignored": [],
+      "odd": {}
+     },
+     {
+      "compiled": "/^\\//i",
+      "filters": [
+       "/"
+      ],
+      "ignored": [],
+      "odd": {}
+     },
+     {
+      "compiled": "/Daily\\/\\d{4}/i",
+      "filters": [
+       "/Daily\\/\\d{4}/"
+      ],
+      "ignored": [
+       "Daily/2024-01-01.md"
+      ],
+      "odd": {}
+     },
+     {
+      "compiled": "/^Archive\\//i,/^Keep\\.md/i",
+      "filters": [
+       "Archive/",
+       "Keep.md"
+      ],
+      "ignored": [
+       "Archive/Old.md",
+       "Archive/Deep/Deepest.md",
+       "archive/x.md",
+       "Keep.md",
+       "Archive/pic.png"
+      ],
+      "odd": {}
+     },
+     {
+      "compiled": "/^Folder\\.with\\.dots/i",
+      "filters": [
+       "Folder.with.dots"
+      ],
+      "ignored": [
+       "Folder.with.dots/a.md"
+      ],
+      "odd": {}
+     },
+     {
+      "compiled": "/^Archive\\//i",
+      "filters": [
+       "Archive/ "
+      ],
+      "ignored": [
+       "Archive/Old.md",
+       "Archive/Deep/Deepest.md",
+       "archive/x.md",
+       "Archive/pic.png"
+      ],
+      "odd": {}
+     },
+     {
+      "compiled": "/^ARCHIVE\\//i",
+      "filters": [
+       "ARCHIVE/"
+      ],
+      "ignored": [
+       "Archive/Old.md",
+       "Archive/Deep/Deepest.md",
+       "archive/x.md",
+       "Archive/pic.png"
+      ],
+      "odd": {}
+     },
+     {
+      "compiled": "/^archive\\/old/i",
+      "filters": [
+       "/^archive\\/old/"
+      ],
+      "ignored": [
+       "Archive/Old.md"
+      ],
+      "odd": {}
+     },
+     {
+      "compiled": "/^Archive\\//i",
+      "filters": [
+       "\tArchive/"
+      ],
+      "ignored": [
+       "Archive/Old.md",
+       "Archive/Deep/Deepest.md",
+       "archive/x.md",
+       "Archive/pic.png"
+      ],
+      "odd": {}
+     },
+     {
+      "compiled": "/ Old/i",
+      "filters": [
+       "/ Old/"
+      ],
+      "ignored": [
+       "Archive Old.md"
+      ],
+      "odd": {}
+     },
+     {
+      "compiled": "/^\\.\\/Archive/i",
+      "filters": [
+       "./Archive"
+      ],
+      "ignored": [],
+      "odd": {}
+     },
+     {
+      "compiled": "/^Archive\\\\/i",
+      "filters": [
+       "Archive\\"
+      ],
+      "ignored": [],
+      "odd": {}
+     },
+     {
+      "compiled": "/^\\/\\//i",
+      "filters": [
+       "//"
+      ],
+      "ignored": [],
+      "odd": {}
+     },
+     {
+      "compiled": "/.*/i",
+      "filters": [
+       "/.*/"
+      ],
+      "ignored": [
+       "Archive/Old.md",
+       "Archive/Deep/Deepest.md",
+       "Archive",
+       "Archive.md",
+       "Archived note.md",
+       "archive lower/lower.md",
+       "archive/x.md",
+       "Other/Archive/Nested.md",
+       "Keep.md",
+       "Old twin.md",
+       "Archive/pic.png",
+       "Data/Table.base",
+       "a.png",
+       "Notes/Sub/x.md",
+       "Notes/Subway.md",
+       "Notes/sub/x.md",
+       "x.md",
+       "Archive Old.md",
+       "Drafts/2024/a.md",
+       "Folder.with.dots/a.md",
+       "Daily/2024-01-01.md",
+       "Daily/notes.md",
+       ".hidden/a.md"
+      ],
+      "odd": {}
+     }
+    ],
+    "appJsonAfter": "{\n  \"userIgnoreFilters\": [\n    \"Archive/\"\n  ],\n  \"probeUnknownKey\": {\n    \"kept\": true\n  }\n}"
+   },
+   "s02": {
+    "ok": true,
+    "ms": 21615,
+    "withFilter": [
+     {
+      "q": "zebra",
+      "files": [
+       "Archived note",
+       "Keep",
+       "lower",
+       "Nested",
+       "Old twin",
+       "Target"
+      ],
+      "lookup": [
+       "Archived note.md",
+       "Keep.md",
+       "archive lower/lower.md",
+       "Other/Archive/Nested.md",
+       "Old twin.md",
+       "Target.md"
+      ],
+      "summary": "6 resultsFile name (A to Z)File name (Z to A)Modified time (new to old)Modified time (old to new)Created time (new to old)Created time (old to new)File name (A to Z)",
+      "text": "6 results\nFile name (A to Z)\nFile name (Z to A)\nModified time (new to old)\nModified time (old to new)\nCreated time (new to old)\nCreated time (old to new)\nArchived note\n1\nzebra archived Target\nKeep\n1\nzebra keep. Mentions Target here.\nlower\n1\nzebra lower Target\nNested\n1\nzebra nested Target\nOld twin\n1\nzebra twin of Old\nTarget\n1\nzebra target body"
+     },
+     {
+      "q": "path:Archive zebra",
+      "files": [
+       "Archived note.md",
+       "archive lower/lower.md",
+       "Other/Archive/Nested.md"
+      ],
+      "lookup": [
+       "Archived note.md",
+       "archive lower/lower.md",
+       "Other/Archive/Nested.md"
+      ],
+      "summary": "6 resultsFile name (A to Z)File name (Z to A)Modified time (new to old)Modified time (old to new)Created time (new to old)Created time (old to new)File name (A to Z)",
+      "text": "6 results\nFile name (A to Z)\nFile name (Z to A)\nModified time (new to old)\nModified time (old to new)\nCreated time (new to old)\nCreated time (old to new)\nArchived note.md\n2\nzebra archived Target\narchive lower/lower.md\n2\nzebra lower Target\nOther/Archive/Nested.md\n2\nzebra nested Target"
+     },
+     {
+      "q": "file:Old",
+      "files": [
+       "Old twin"
+      ],
+      "lookup": [
+       "Old twin.md"
+      ],
+      "summary": "1 resultFile name (A to Z)File name (Z to A)Modified time (new to old)Modified time (old to new)Created time (new to old)Created time (old to new)File name (A to Z)",
+      "text": "1 result\nFile name (A to Z)\nFile name (Z to A)\nModified time (new to old)\nModified time (old to new)\nCreated time (new to old)\nCreated time (old to new)\nOld twin"
+     },
+     {
+      "q": "Target",
+      "files": [
+       "Archived note",
+       "Keep",
+       "lower",
+       "Nested",
+       "Target"
+      ],
+      "lookup": [
+       "Archived note.md",
+       "Keep.md",
+       "archive lower/lower.md",
+       "Other/Archive/Nested.md",
+       "Target.md"
+      ],
+      "summary": "8 resultsFile name (A to Z)File name (Z to A)Modified time (new to old)Modified time (old to new)Created time (new to old)Created time (old to new)File name (A to Z)",
+      "text": "8 results\nFile name (A to Z)\nFile name (Z to A)\nModified time (new to old)\nModified time (old to new)\nCreated time (new to old)\nCreated time (old to new)\nArchived note\n1\nzebra archived Target\nKeep\n2\nzebra keep. Mentions Target here.\n[[Target]]\nlower\n1\nzebra lower Target\nNested\n1\nzebra nested Target\nTarget\n2\n# Target\nzebra target body"
+     },
+     {
+      "q": "/zeb.a/",
+      "files": [
+       "Archived note",
+       "Keep",
+       "lower",
+       "Nested",
+       "Old twin",
+       "Target"
+      ],
+      "lookup": [
+       "Archived note.md",
+       "Keep.md",
+       "archive lower/lower.md",
+       "Other/Archive/Nested.md",
+       "Old twin.md",
+       "Target.md"
+      ],
+      "summary": "6 resultsFile name (A to Z)File name (Z to A)Modified time (new to old)Modified time (old to new)Created time (new to old)Created time (old to new)File name (A to Z)",
+      "text": "6 results\nFile name (A to Z)\nFile name (Z to A)\nModified time (new to old)\nModified time (old to new)\nCreated time (new to old)\nCreated time (old to new)\nArchived note\n1\nzebra archived Target\nKeep\n1\nzebra keep. Mentions Target here.\nlower\n1\nzebra lower Target\nNested\n1\nzebra nested Target\nOld twin\n1\nzebra twin of Old\nTarget\n1\nzebra target body"
+     }
+    ],
+    "without": [
+     {
+      "q": "zebra",
+      "files": [
+       "Archived note",
+       "Deepest",
+       "Keep",
+       "lower",
+       "Nested",
+       "Old",
+       "Old twin",
+       "Older",
+       "Target"
+      ],
+      "lookup": [
+       "Archived note.md",
+       "Archive/Deep/Deepest.md",
+       "Keep.md",
+       "archive lower/lower.md",
+       "Other/Archive/Nested.md",
+       "Archive/Old.md",
+       "Old twin.md",
+       "Archive/Older.md",
+       "Target.md"
+      ],
+      "summary": "9 resultsFile name (A to Z)File name (Z to A)Modified time (new to old)Modified time (old to new)Created time (new to old)Created time (old to new)File name (A to Z)",
+      "text": "9 results\nFile name (A to Z)\nFile name (Z to A)\nModified time (new to old)\nModified time (old to new)\nCreated time (new to old)\nCreated time (old to new)\nArchived note\n1\nzebra archived Target\nDeepest\n1\nzebra deepest Target\nKeep\n1\nzebra keep. Mentions Target here.\nlower\n1\nzebra lower Target\nNested\n1\nzebra nested Target\nOld\n1\nzebra old. Mentions Target here.\nOld twin\n1\nzebra twin of Old\nOlder\n1\nzebra older, also Target unlinked.\nTarget\n1\nzebra target body"
+     },
+     {
+      "q": "path:Archive zebra",
+      "files": [
+       "Archived note.md",
+       "Archive/Deep/Deepest.md",
+       "archive lower/lower.md",
+       "Other/Archive/Nested.md",
+       "Archive/Old.md",
+       "Archive/Older.md"
+      ],
+      "lookup": [
+       "Archived note.md",
+       "Archive/Deep/Deepest.md",
+       "archive lower/lower.md",
+       "Other/Archive/Nested.md",
+       "Archive/Old.md",
+       "Archive/Older.md"
+      ],
+      "summary": "12 resultsFile name (A to Z)File name (Z to A)Modified time (new to old)Modified time (old to new)Created time (new to old)Created time (old to new)File name (A to Z)",
+      "text": "12 results\nFile name (A to Z)\nFile name (Z to A)\nModified time (new to old)\nModified time (old to new)\nCreated time (new to old)\nCreated time (old to new)\nArchived note.md\n2\nzebra archived Target\nArchive/Deep/Deepest.md\n2\nzebra deepest Target\narchive lower/lower.md\n2\nzebra lower Target\nOther/Archive/Nested.md\n2\nzebra nested Target\nArchive/Old.md\n2\nzebra old. Mentions Target here.\nArchive/Older.md\n2\nzebra older, also Target unlinked."
+     }
+    ],
+    "again": [
+     {
+      "q": "zebra",
+      "files": [
+       "Archived note",
+       "Keep",
+       "lower",
+       "Nested",
+       "Old twin",
+       "Target"
+      ],
+      "lookup": [
+       "Archived note.md",
+       "Keep.md",
+       "archive lower/lower.md",
+       "Other/Archive/Nested.md",
+       "Old twin.md",
+       "Target.md"
+      ],
+      "summary": "6 resultsFile name (A to Z)File name (Z to A)Modified time (new to old)Modified time (old to new)Created time (new to old)Created time (old to new)File name (A to Z)",
+      "text": "6 results\nFile name (A to Z)\nFile name (Z to A)\nModified time (new to old)\nModified time (old to new)\nCreated time (new to old)\nCreated time (old to new)\nArchived note\n1\nzebra archived Target\nKeep\n1\nzebra keep. Mentions Target here.\nlower\n1\nzebra lower Target\nNested\n1\nzebra nested Target\nOld twin\n1\nzebra twin of Old\nTarget\n1\nzebra target body"
+     }
+    ]
+   },
+   "s03": {
+    "ok": true,
+    "ms": 12065,
+    "rows": [
+     {
+      "q": "",
+      "items": []
+     },
+     {
+      "q": "old",
+      "items": [
+       {
+        "text": "Old twin",
+        "cls": "suggestion-item mod-complex is-selected",
+        "html": "<div class=\"suggestion-item mod-complex is-selected\" draggable=\"true\"><div class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Old</span> twin</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div></div>"
+       },
+       {
+        "text": "Archive/Old",
+        "cls": "suggestion-item mod-complex mod-downranked",
+        "html": "<div class=\"suggestion-item mod-complex mod-downranked\" draggable=\"true\"><div class=\"suggestion-content\"><div class=\"suggestion-title\">Archive/<span class=\"suggestion-highlight\">Old</span></div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div></div>"
+       },
+       {
+        "text": "Archive/Older",
+        "cls": "suggestion-item mod-complex mod-downranked",
+        "html": "<div class=\"suggestion-item mod-complex mod-downranked\" draggable=\"true\"><div class=\"suggestion-content\"><div class=\"suggestion-title\">Archive/<span class=\"suggestion-highlight\">Old</span>er</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div></div>"
+       }
+      ]
+     },
+     {
+      "q": "o",
+      "items": [
+       {
+        "text": "Old twin",
+        "cls": "suggestion-item mod-complex is-selected",
+        "html": "<div class=\"suggestion-item mod-complex is-selected\" draggable=\"true\"><div class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">O</span>ld twin</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div></div>"
+       },
+       {
+        "text": "archive lower/lower",
+        "cls": "suggestion-item mod-complex",
+        "html": "<div class=\"suggestion-item mod-complex\" draggable=\"true\"><div class=\"suggestion-content\"><div class=\"suggestion-title\">archive lower/l<span class=\"suggestion-highlight\">o</span>wer</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div></div>"
+       },
+       {
+        "text": "Archived note",
+        "cls": "suggestion-item mod-complex",
+        "html": "<div class=\"suggestion-item mod-complex\" draggable=\"true\"><div class=\"suggestion-content\"><div class=\"suggestion-title\">Archived n<span class=\"suggestion-highlight\">o</span>te</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div></div>"
+       },
+       {
+        "text": "Other/Archive/Nested",
+        "cls": "suggestion-item mod-complex",
+        "html": "<div class=\"suggestion-item mod-complex\" draggable=\"true\"><div class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">O</span>ther/Archive/Nested</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div></div>"
+       },
+       {
+        "text": "Archive/Old",
+        "cls": "suggestion-item mod-complex mod-downranked",
+        "html": "<div class=\"suggestion-item mod-complex mod-downranked\" draggable=\"true\"><div class=\"suggestion-content\"><div class=\"suggestion-title\">Archive/<span class=\"suggestion-highlight\">O</span>ld</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div></div>"
+       },
+       {
+        "text": "Archive/Older",
+        "cls": "suggestion-item mod-complex mod-downranked",
+        "html": "<div class=\"suggestion-item mod-complex mod-downranked\" draggable=\"true\"><div class=\"suggestion-content\"><div class=\"suggestion-title\">Archive/<span class=\"suggestion-highlight\">O</span>lder</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div></div>"
+       }
+      ]
+     },
+     {
+      "q": "arch",
+      "items": [
+       {
+        "text": "Archived note",
+        "cls": "suggestion-item mod-complex is-selected",
+        "html": "<div class=\"suggestion-item mod-complex is-selected\" draggable=\"true\"><div class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Arch</span>ived note</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div></div>"
+       },
+       {
+        "text": "archive lower/lower",
+        "cls": "suggestion-item mod-complex",
+        "html": "<div class=\"suggestion-item mod-complex\" draggable=\"true\"><div class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">arch</span>ive lower/lower</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div></div>"
+       },
+       {
+        "text": "Other/Archive/Nested",
+        "cls": "suggestion-item mod-complex",
+        "html": "<div class=\"suggestion-item mod-complex\" draggable=\"true\"><div class=\"suggestion-content\"><div class=\"suggestion-title\">Other/<span class=\"suggestion-highlight\">Arch</span>ive/Nested</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div></div>"
+       },
+       {
+        "text": "Archive/Old",
+        "cls": "suggestion-item mod-complex mod-downranked",
+        "html": "<div class=\"suggestion-item mod-complex mod-downranked\" draggable=\"true\"><div class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Arch</span>ive/Old</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div></div>"
+       },
+       {
+        "text": "Archive/Older",
+        "cls": "suggestion-item mod-complex mod-downranked",
+        "html": "<div class=\"suggestion-item mod-complex mod-downranked\" draggable=\"true\"><div class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Arch</span>ive/Older</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div></div>"
+       },
+       {
+        "text": "Archive/pic.png",
+        "cls": "suggestion-item mod-complex mod-downranked",
+        "html": "<div class=\"suggestion-item mod-complex mod-downranked\" draggable=\"true\"><div class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Arch</span>ive/pic.png</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div></div>"
+       },
+       {
+        "text": "Archive/Deep/Deepest",
+        "cls": "suggestion-item mod-complex mod-downranked",
+        "html": "<div class=\"suggestion-item mod-complex mod-downranked\" draggable=\"true\"><div class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Arch</span>ive/Deep/Deepest</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div></div>"
+       }
+      ]
+     },
+     {
+      "q": "deep",
+      "items": [
+       {
+        "text": "Archive/Deep/Deepest",
+        "cls": "suggestion-item mod-complex mod-downranked is-selected",
+        "html": "<div class=\"suggestion-item mod-complex mod-downranked is-selected\" draggable=\"true\"><div class=\"suggestion-content\"><div class=\"suggestion-title\">Archive/Deep/<span class=\"suggestion-highlight\">Deep</span>est</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div></div>"
+       }
+      ]
+     },
+     {
+      "q": "pic",
+      "items": [
+       {
+        "text": "Archive/pic.png",
+        "cls": "suggestion-item mod-complex mod-downranked is-selected",
+        "html": "<div class=\"suggestion-item mod-complex mod-downranked is-selected\" draggable=\"true\"><div class=\"suggestion-content\"><div class=\"suggestion-title\">Archive/<span class=\"suggestion-highlight\">pic</span>.png</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div></div>"
+       }
+      ]
+     },
+     {
+      "q": "zzz",
+      "items": [
+       {
+        "text": "zzz | Enter to create",
+        "cls": "suggestion-item mod-complex is-selected",
+        "html": "<div class=\"suggestion-item mod-complex is-selected\"><div class=\"suggestion-content\"><div class=\"suggestion-title\">zzz</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-action\">Enter to create</span></div></div>"
+       }
+      ]
+     }
+    ],
+    "internal": {
+     "keys": [
+      "id",
+      "name",
+      "description",
+      "defaultOn",
+      "plugin",
+      "options",
+      "activeModal",
+      "QuickSwitcherModal",
+      "app"
+     ]
+    }
+   },
+   "s04": {
+    "ok": true,
+    "ms": 3791,
+    "api": {
+     "Old": [
+      {
+       "type": "file",
+       "file": "Old twin.md",
+       "path": "Old twin",
+       "score": -0.0108,
+       "matches": "[[0,3]]",
+       "downranked": false
+      },
+      {
+       "type": "file",
+       "file": "Archive/Old.md",
+       "path": "Archive/Old",
+       "score": -10.0103,
+       "matches": "[[8,11]]",
+       "downranked": true
+      },
+      {
+       "type": "file",
+       "file": "Archive/Older.md",
+       "path": "Archive/Older",
+       "score": -10.0105,
+       "matches": "[[8,11]]",
+       "downranked": true
+      }
+     ],
+     "O": [
+      {
+       "type": "file",
+       "file": "Old twin.md",
+       "path": "Old twin",
+       "score": -0.0108,
+       "matches": "[[0,1]]",
+       "downranked": false
+      },
+      {
+       "type": "file",
+       "file": "archive lower/lower.md",
+       "path": "archive lower/lower",
+       "score": -0.1115,
+       "matches": "[[15,16]]",
+       "downranked": false
+      },
+      {
+       "type": "file",
+       "file": "Archived note.md",
+       "path": "Archived note",
+       "score": -0.12129999999999999,
+       "matches": "[[10,11]]",
+       "downranked": false
+      },
+      {
+       "type": "file",
+       "file": "Other/Archive/Nested.md",
+       "path": "Other/Archive/Nested",
+       "score": -1.012,
+       "matches": "[[0,1]]",
+       "downranked": false
+      },
+      {
+       "type": "file",
+       "file": "Archive/Old.md",
+       "path": "Archive/Old",
+       "score": -10.0103,
+       "matches": "[[8,9]]",
+       "downranked": true
+      },
+      {
+       "type": "file",
+       "file": "Archive/Older.md",
+       "path": "Archive/Older",
+       "score": -10.0105,
+       "matches": "[[8,9]]",
+       "downranked": true
+      }
+     ],
+     "": [
+      {
+       "type": "file",
+       "file": "Old twin.md",
+       "path": "Old twin",
+       "score": 1794808101623,
+       "matches": null
+      },
+      {
+       "type": "file",
+       "file": "Data/Table.base",
+       "path": "Data/Table.base",
+       "score": 1794808101623,
+       "matches": null
+      },
+      {
+       "type": "file",
+       "file": "archive lower/lower.md",
+       "path": "archive lower/lower",
+       "score": 1794808101622,
+       "matches": null
+      },
+      {
+       "type": "file",
+       "file": "Target.md",
+       "path": "Target",
+       "score": 1794808101622,
+       "matches": null
+      },
+      {
+       "type": "file",
+       "file": "Other/Archive/Nested.md",
+       "path": "Other/Archive/Nested",
+       "score": 1794808101622,
+       "matches": null
+      },
+      {
+       "type": "file",
+       "file": "Keep.md",
+       "path": "Keep",
+       "score": 1794808101622,
+       "matches": null
+      },
+      {
+       "type": "file",
+       "file": "Archived note.md",
+       "path": "Archived note",
+       "score": 1794808101622,
+       "matches": null
+      }
+     ],
+     "Deep": [
+      {
+       "type": "file",
+       "file": "Archive/Deep/Deepest.md",
+       "path": "Archive/Deep/Deepest",
+       "score": -10.0107,
+       "matches": "[[13,17]]",
+       "downranked": true
+      }
+     ],
+     "Archive": [
+      {
+       "type": "file",
+       "file": "Archived note.md",
+       "path": "Archived note",
+       "score": -0.011300000000000001,
+       "matches": "[[0,7]]",
+       "downranked": false
+      },
+      {
+       "type": "file",
+       "file": "archive lower/lower.md",
+       "path": "archive lower/lower",
+       "score": -1.0119,
+       "matches": "[[0,7]]",
+       "downranked": false
+      },
+      {
+       "type": "file",
+       "file": "Other/Archive/Nested.md",
+       "path": "Other/Archive/Nested",
+       "score": -1.018,
+       "matches": "[[6,13]]",
+       "downranked": false
+      },
+      {
+       "type": "file",
+       "file": "Archive/Old.md",
+       "path": "Archive/Old",
+       "score": -11.0111,
+       "matches": "[[0,7]]",
+       "downranked": true
+      },
+      {
+       "type": "file",
+       "file": "Archive/Older.md",
+       "path": "Archive/Older",
+       "score": -11.0113,
+       "matches": "[[0,7]]",
+       "downranked": true
+      },
+      {
+       "type": "file",
+       "file": "Archive/pic.png",
+       "path": "Archive/pic.png",
+       "score": -11.0115,
+       "matches": "[[0,7]]",
+       "downranked": true
+      },
+      {
+       "type": "file",
+       "file": "Archive/Deep/Deepest.md",
+       "path": "Archive/Deep/Deepest",
+       "score": -11.012,
+       "matches": "[[0,7]]",
+       "downranked": true
+      }
+     ],
+     "pic": [
+      {
+       "type": "file",
+       "file": "Archive/pic.png",
+       "path": "Archive/pic.png",
+       "score": -10.0107,
+       "matches": "[[8,11]]",
+       "downranked": true
+      }
+     ]
+    },
+    "typed": {
+     "O": [
+      {
+       "text": "Old twin",
+       "cls": "suggestion-item mod-complex is-selected",
+       "html": "<div class=\"suggestion-item mod-complex is-selected\"><div class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">O</span>ld twin</div><div class=\"suggestion-note\"></div></div><div class=\"suggestion-aux\"></div></div>"
+      },
+      {
+       "text": "lower | archive lower/",
+       "cls": "suggestion-item mod-complex",
+       "html": "<div class=\"suggestion-item mod-complex\"><div class=\"suggestion-content\"><div class=\"suggestion-title\">l<span class=\"suggestion-highlight\">o</span>wer</div><div class=\"suggestion-note\">archive lower/</div></div><div class=\"suggestion-aux\"></div></div>"
+      },
+      {
+       "text": "Archived note",
+       "cls": "suggestion-item mod-complex",
+       "html": "<div class=\"suggestion-item mod-complex\"><div class=\"suggestion-content\"><div class=\"suggestion-title\">Archived n<span class=\"suggestion-highlight\">o</span>te</div><div class=\"suggestion-note\"></div></div><div class=\"suggestion-aux\"></div></div>"
+      },
+      {
+       "text": "Nested | Other/Archive/",
+       "cls": "suggestion-item mod-complex",
+       "html": "<div class=\"suggestion-item mod-complex\"><div class=\"suggestion-content\"><div class=\"suggestion-title\">Nested</div><div class=\"suggestion-note\"><span class=\"suggestion-highlight\">O</span>ther/Archive/</div></div><div class=\"suggestion-aux\"></div></div>"
+      },
+      {
+       "text": "Old | Archive/",
+       "cls": "suggestion-item mod-complex mod-downranked",
+       "html": "<div class=\"suggestion-item mod-complex mod-downranked\"><div class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">O</span>ld</div><div class=\"suggestion-note\">Archive/</div></div><div class=\"suggestion-aux\"></div></div>"
+      },
+      {
+       "text": "Older | Archive/",
+       "cls": "suggestion-item mod-complex mod-downranked",
+       "html": "<div class=\"suggestion-item mod-complex mod-downranked\"><div class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">O</span>lder</div><div class=\"suggestion-note\">Archive/</div></div><div class=\"suggestion-aux\"></div></div>"
+      }
+     ],
+     "Deep": [
+      {
+       "text": "Deepest | Archive/Deep/",
+       "cls": "suggestion-item mod-complex mod-downranked is-selected",
+       "html": "<div class=\"suggestion-item mod-complex mod-downranked is-selected\"><div class=\"suggestion-content\"><div class=\"suggestion-title\"><span class=\"suggestion-highlight\">Deep</span>est</div><div class=\"suggestion-note\">Archive/Deep/</div></div><div class=\"suggestion-aux\"></div></div>"
+      }
+     ]
+    },
+    "keepAfter": "zebra keep. Mentions Target here.\n[[Target]]\n#keepta[[Deep]]"
+   },
+   "s05": {
+    "ok": true,
+    "ms": 7562,
+    "nodes": [
+     "Archived note.md",
+     "Keep.md",
+     "Old twin.md",
+     "Target.md",
+     "Data/Table.base",
+     "archive lower/lower.md",
+     "Other/Archive/Nested.md"
+    ],
+    "localNodes": [
+     "Target.md",
+     "Keep.md"
+    ]
+   },
+   "s06": {
+    "ok": true,
+    "ms": 4005,
+    "keys": [
+     "_loaded",
+     "_events",
+     "_children",
+     "collapseAll",
+     "extraContext",
+     "sortOrder",
+     "isShowingSearch",
+     "searchQuery",
+     "backlinkFile",
+     "backlinkCollapsed",
+     "backlinkHeaderEl",
+     "backlinkCountEl",
+     "backlinkQueue",
+     "unlinkedFile",
+     "unlinkedCollapsed",
+     "unlinkedHeaderEl",
+     "unlinkedCountEl",
+     "unlinkedAliases",
+     "unlinkedQueue",
+     "app",
+     "headerDom",
+     "collapseAllButtonEl",
+     "extraContextButtonEl",
+     "showSearchButtonEl",
+     "searchComponent",
+     "backlinkDom",
+     "unlinkedDom",
+     "file",
+     "tooltipPlacement"
+    ],
+    "linked": [
+     "Keep.md",
+     "Archive/Old.md"
+    ],
+    "unlinked": [
+     "Archived note.md",
+     "Keep.md",
+     "archive lower/lower.md",
+     "Other/Archive/Nested.md"
+    ],
+    "text": "Linked mentions\n2\nKeep\n1\n[[Target]]\nOld\n1\n[[Target]]\nUnlinked mentions\n4\nArchived note\n1\nzebra archived Target\nKeep\n1\nzebra keep. Mentions Target here.\nlower\n1\nzebra lower Target\nNested\n1\nzebra nested Target"
+   },
+   "s07": {
+    "ok": true,
+    "ms": 4337,
+    "tags": "keep\n1",
+    "getTags": {
+     "#keep": 1
+    },
+    "explorer": [
+     "Archive",
+     "Archived note.md",
+     "Data",
+     "Keep.md",
+     "Old twin.md",
+     "Other",
+     "Target.md",
+     "archive lower",
+     "Archive/Deep",
+     "Archive/Old.md",
+     "Archive/Older.md",
+     "Archive/pic.png",
+     "Data/Table.base",
+     "Other/Archive",
+     "archive lower/lower.md",
+     "Archive/Deep/Deepest.md",
+     "Other/Archive/Nested.md"
+    ],
+    "explorerCls": {
+     "Archive": "tree-item nav-folder is-collapsed / tree-item-self nav-folder-title is-clickable mod-collapsible",
+     "Archived note.md": "tree-item nav-file / tree-item-self nav-file-title tappable is-clickable",
+     "Archive/Deep": "tree-item nav-folder is-collapsed / tree-item-self nav-folder-title is-clickable mod-collapsible",
+     "Archive/Old.md": "tree-item nav-file / tree-item-self nav-file-title tappable is-clickable",
+     "Archive/Older.md": "tree-item nav-file / tree-item-self nav-file-title tappable is-clickable",
+     "Archive/pic.png": "tree-item nav-file / tree-item-self nav-file-title tappable is-clickable",
+     "Other/Archive": "tree-item nav-folder is-collapsed / tree-item-self nav-folder-title is-clickable mod-collapsible",
+     "Archive/Deep/Deepest.md": "tree-item nav-file / tree-item-self nav-file-title tappable is-clickable",
+     "Other/Archive/Nested.md": "tree-item nav-file / tree-item-self nav-file-title tappable is-clickable"
+    },
+    "baseRows": [
+     "file name",
+     "file name",
+     "Archived note",
+     "Archived note",
+     "Keep",
+     "Keep",
+     "lower",
+     "lower",
+     "Nested",
+     "Nested",
+     "Old twin",
+     "Old twin",
+     "Table.base",
+     "Table.base",
+     "Target",
+     "Target"
+    ],
+    "baseText": "Data\n/\nTable\nTable\n7 results\nfile name\nArchived note\nKeep\nlower\nNested\nOld twin\nTable.base\nTarget",
+    "resolvedKeep": {
+     "Target.md": 1
+    },
+    "resolvedOld": {
+     "Target.md": 1
+    },
+    "dest": "Archive/Old.md",
+    "random": false
+   },
+   "s08": {
+    "ok": true,
+    "ms": 25547,
+    "open": {
+     "chain": [
+      "DIV.setting-item.mod-navigable.tappable",
+      "DIV.setting-items",
+      "DIV.setting-group",
+      "DIV.vertical-tab-content",
+      "DIV.vertical-tab-content-container",
+      "DIV.modal-content.vertical-tabs-container",
+      "DIV.modal.mod-settings.mod-sidebar-layout",
+      "BODY.theme-dark.mod-linux.is-frameless.is-hidden-frameless.obsidian-app.styled-scrollbars.show-inline-title.is-floating-nav.auto-full-screen.show-ribbon.show-view-header.is-popout-window.is-popout-modal",
+      "HTML."
+     ],
+     "st": [
+      {
+       "t": "afterOpen",
+       "open": false,
+       "mods": 0,
+       "tab": "about"
+      },
+      {
+       "t": "afterTab",
+       "open": false,
+       "mods": 0,
+       "tab": "file"
+      },
+      {
+       "t": "800",
+       "open": false,
+       "mods": 0,
+       "tab": "file"
+      },
+      {
+       "t": "end",
+       "open": false,
+       "mods": 0,
+       "tab": "file"
+      }
+     ],
+     "x": 492,
+     "y": 571.2421875
+    },
+    "before": {
+     "settingOpen": false,
+     "mods": 0
+    },
+    "poll": [
+     {
+      "t": 0,
+      "settingOpen": false,
+      "mods": []
+     },
+     {
+      "t": 100,
+      "settingOpen": false,
+      "mods": []
+     },
+     {
+      "t": 200,
+      "settingOpen": false,
+      "mods": []
+     },
+     {
+      "t": 300,
+      "settingOpen": false,
+      "mods": []
+     },
+     {
+      "t": 400,
+      "settingOpen": false,
+      "mods": []
+     },
+     {
+      "t": 500,
+      "settingOpen": false,
+      "mods": []
+     },
+     {
+      "t": 600,
+      "settingOpen": false,
+      "mods": []
+     },
+     {
+      "t": 700,
+      "settingOpen": false,
+      "mods": []
+     },
+     {
+      "t": 800,
+      "settingOpen": false,
+      "mods": []
+     },
+     {
+      "t": 900,
+      "settingOpen": false,
+      "mods": []
+     },
+     {
+      "t": 1000,
+      "settingOpen": false,
+      "mods": []
+     },
+     {
+      "t": 1100,
+      "settingOpen": false,
+      "mods": []
+     },
+     {
+      "t": 1200,
+      "settingOpen": false,
+      "mods": []
+     },
+     {
+      "t": 1300,
+      "settingOpen": false,
+      "mods": []
+     },
+     {
+      "t": 1400,
+      "settingOpen": false,
+      "mods": []
+     }
+    ],
+    "after": {
+     "mods": [
+      {
+       "cls": "setting-page vertical-tab-content",
+       "text": "Excluded files\nArchive/",
+       "html": "<div class=\"setting-page vertical-tab-content\" style=\"\"><div class=\"setting-page-titlebar\"><div class=\"clickable-icon setting-page-back-button\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-chevron-left\"><path d=\"m15 18-6-6 6-6\"></path></svg></div><div class=\"setting-page-title\">Excluded files</div></div><div class=\"setting-page-content\"><div class=\"setting-group mod-list mod-no-icon\"><div class=\"setting-item setting-item-heading\"><div class=\"setting-item-name\"></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Add exclusion...\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-plus\"><path d=\"M5 12h14\"></path><path d=\"M12 5v14\"></path></svg></div></div></div><div class=\"setting-group-search\" tabindex=\"-1\"></div><div class=\"setting-items\"><div class=\"setting-item\" tabindex=\"-1\"><div class=\"setting-item-icon\"></div><div class=\"setting-item-info\"><div class=\"setting-item-name\">Archive/</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Delete\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></div></div></div></div></div></div></div>"
+      }
+     ],
+     "ctl": [
+      {
+       "tag": "DIV",
+       "cls": "clickable-icon setting-page-back-button",
+       "text": "",
+       "aria": null
+      },
+      {
+       "tag": "DIV",
+       "cls": "setting-item setting-item-heading",
+       "text": "",
+       "aria": null
+      },
+      {
+       "tag": "DIV",
+       "cls": "clickable-icon extra-setting-button",
+       "text": "",
+       "aria": "Add exclusion..."
+      },
+      {
+       "tag": "DIV",
+       "cls": "setting-item",
+       "text": "Archive/",
+       "aria": null
+      },
+      {
+       "tag": "DIV",
+       "cls": "clickable-icon extra-setting-button",
+       "text": "",
+       "aria": "Delete"
+      }
+     ],
+     "active": "<div class=\"vertical-tab-content-container\" tabindex=\"-1\"><div class=\"setting-page vertical-tab-content\" style=\"\"><div class=\"setting-page-titlebar\"><div class=\"clickable-icon setting-page-back-button\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon l",
+     "title": "Settings - vault - Obsidian 1.15.1"
+    },
+    "addClick": {
+     "popout": [
+      {
+       "cls": "setting-page vertical-tab-content",
+       "text": "Excluded files\nArchive/",
+       "html": "<div class=\"setting-page vertical-tab-content\" style=\"\"><div class=\"setting-page-titlebar\"><div class=\"clickable-icon setting-page-back-button\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-chevron-left\"><path d=\"m15 18-6-6 6-6\"></path></svg></div><div class=\"setting-page-title\">Excluded files</div></div><div class=\"setting-page-content\"><div class=\"setting-group mod-list mod-no-icon\"><div class=\"setting-item setting-item-heading\"><div class=\"setting-item-name\"></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Add exclusion...\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-plus\"><path d=\"M5 12h14\"></path><path d=\"M12 5v14\"></path></svg></div></div></div><div class=\"setting-group-search\" tabindex=\"-1\"></div><div class=\"setting-items\"><div class=\"setting-item\" tabindex=\"-1\"><div class=\"setting-item-icon\"></div><div class=\"setting-item-info\"><div class=\"setting-item-name\">Archive/</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Delete\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></div></div></div></div></div></div></div>"
+      },
+      {
+       "cls": "modal-container mod-dim",
+       "text": "Add exclusion\n\nEnter a path or a regular expression, e.g. /daily-.*/\n\nDone\nCancel",
+       "html": "<div class=\"modal-container mod-dim\"><div class=\"modal-bg\" style=\"opacity: 0.85;\"></div><div class=\"modal mod-lg mod-form-sheet\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></div><div class=\"modal-header\"><div class=\"modal-title\">Add exclusion</div></div><div class=\"modal-content\"><p class=\"form-field\"><label></label><input type=\"text\" spellcheck=\"false\"><div class=\"form-field-help\">Enter a path or a regular expression, e.g. /daily-.*/</div></p></div><div class=\"modal-button-container\"><button class=\"mod-cta\">Done</button><button>Cancel</button></div></div></div>"
+      }
+     ],
+     "main": [],
+     "active": "<input type=\"text\" spellcheck=\"false\">",
+     "mainActive": "<body class=\"theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header\" style=\"--zoom-factor: 1; --font-text-size: 16px; --indent-size: 4;\"><div class=\"titlebar\"><div class=\"titlebar-inner\"><di"
+    },
+    "type1": {
+     "input": "<input type=\"text\" spellcheck=\"false\">",
+     "inPopout": true,
+     "before": {
+      "value": "Drafts/",
+      "sugg": [
+       "+ Drafts/ :: suggestion-item is-selected"
+      ]
+     },
+     "config": [
+      "Archive/"
+     ]
+    },
+    "type1Dump": {
+     "popout": [
+      {
+       "cls": "setting-page vertical-tab-content",
+       "text": "Excluded files\nArchive/",
+       "html": "<div class=\"setting-page vertical-tab-content\" style=\"\"><div class=\"setting-page-titlebar\"><div class=\"clickable-icon setting-page-back-button\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-chevron-left\"><path d=\"m15 18-6-6 6-6\"></path></svg></div><div class=\"setting-page-title\">Excluded files</div></div><div class=\"setting-page-content\"><div class=\"setting-group mod-list mod-no-icon\"><div class=\"setting-item setting-item-heading\"><div class=\"setting-item-name\"></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Add exclusion...\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-plus\"><path d=\"M5 12h14\"></path><path d=\"M12 5v14\"></path></svg></div></div></div><div class=\"setting-group-search\" tabindex=\"-1\"></div><div class=\"setting-items\"><div class=\"setting-item\" tabindex=\"-1\"><div class=\"setting-item-icon\"></div><div class=\"setting-item-info\"><div class=\"setting-item-name\">Archive/</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Delete\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></div></div></div></div></div></div></div>"
+      },
+      {
+       "cls": "modal-container mod-dim",
+       "text": "Add exclusion\n\nEnter a path or a regular expression, e.g. /daily-.*/\n\nDone\nCancel",
+       "html": "<div class=\"modal-container mod-dim\"><div class=\"modal-bg\" style=\"opacity: 0.85;\"></div><div class=\"modal mod-lg mod-form-sheet\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></div><div class=\"modal-header\"><div class=\"modal-title\">Add exclusion</div></div><div class=\"modal-content\"><p class=\"form-field\"><label></label><input type=\"text\" spellcheck=\"false\"><div class=\"form-field-help\">Enter a path or a regular expression, e.g. /daily-.*/</div></p></div><div class=\"modal-button-container\"><button class=\"mod-cta\">Done</button><button>Cancel</button></div></div></div>"
+      },
+      {
+       "cls": "suggestion-container",
+       "text": "+ Drafts/",
+       "html": "<div class=\"suggestion-container\" style=\"left: 135px; top: 487.172px;\"><div class=\"suggestion\"><div class=\"suggestion-item is-selected\">+ Drafts/</div></div></div>"
+      }
+     ],
+     "main": [],
+     "active": "<input type=\"text\" spellcheck=\"false\">",
+     "mainActive": "<body class=\"theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header\" style=\"--zoom-factor: 1; --font-text-size: 16px; --indent-size: 4;\"><div class=\"titlebar\"><div class=\"titlebar-inner\"><di"
+    },
+    "enter1": {
+     "input": "<input type=\"text\" spellcheck=\"false\">",
+     "inPopout": true,
+     "before": {
+      "value": "Drafts/",
+      "sugg": [
+       "+ Drafts/ :: suggestion-item is-selected"
+      ]
+     },
+     "config": [
+      "Archive/",
+      "Drafts/"
+     ]
+    },
+    "enter1Dump": {
+     "popout": [
+      {
+       "cls": "setting-page vertical-tab-content",
+       "text": "Excluded files\nArchive/\nDrafts/",
+       "html": "<div class=\"setting-page vertical-tab-content\" style=\"\"><div class=\"setting-page-titlebar\"><div class=\"clickable-icon setting-page-back-button\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-chevron-left\"><path d=\"m15 18-6-6 6-6\"></path></svg></div><div class=\"setting-page-title\">Excluded files</div></div><div class=\"setting-page-content\"><div class=\"setting-group mod-list mod-no-icon\"><div class=\"setting-item setting-item-heading\"><div class=\"setting-item-name\"></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Add exclusion...\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-plus\"><path d=\"M5 12h14\"></path><path d=\"M12 5v14\"></path></svg></div></div></div><div class=\"setting-group-search\" tabindex=\"-1\"></div><div class=\"setting-items\"><div class=\"setting-item\" tabindex=\"-1\"><div class=\"setting-item-icon\"></div><div class=\"setting-item-info\"><div class=\"setting-item-name\">Archive/</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Delete\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></div></div></div><div class=\"setting-item\" tabindex=\"-1\"><div class=\"setting-item-icon\"></div><div class=\"setting-item-info\"><div class=\"setting-item-name\">Drafts/</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Delete\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></div></div></div></div></div></div></div>"
+      }
+     ],
+     "main": [],
+     "active": "<div class=\"setting-item\" tabindex=\"-1\"><div class=\"setting-item-icon\"></div><div class=\"setting-item-info\"><div class=\"setting-item-name\">Drafts/</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Delete\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" c",
+     "mainActive": "<body class=\"theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header\" style=\"--zoom-factor: 1; --font-text-size: 16px; --indent-size: 4;\"><div class=\"titlebar\"><div class=\"titlebar-inner\"><di"
+    },
+    "appJsonAfterAdd": "{\n  \"userIgnoreFilters\": [\n    \"Archive/\",\n    \"Drafts/\"\n  ],\n  \"probeUnknownKey\": {\n    \"kept\": true\n  }\n}",
+    "add2": {
+     "popout": [
+      {
+       "cls": "setting-page vertical-tab-content",
+       "text": "Excluded files\nArchive/\nDrafts/",
+       "html": "<div class=\"setting-page vertical-tab-content\" style=\"\"><div class=\"setting-page-titlebar\"><div class=\"clickable-icon setting-page-back-button\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-chevron-left\"><path d=\"m15 18-6-6 6-6\"></path></svg></div><div class=\"setting-page-title\">Excluded files</div></div><div class=\"setting-page-content\"><div class=\"setting-group mod-list mod-no-icon\"><div class=\"setting-item setting-item-heading\"><div class=\"setting-item-name\"></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Add exclusion...\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-plus\"><path d=\"M5 12h14\"></path><path d=\"M12 5v14\"></path></svg></div></div></div><div class=\"setting-group-search\" tabindex=\"-1\"></div><div class=\"setting-items\"><div class=\"setting-item\" tabindex=\"-1\"><div class=\"setting-item-icon\"></div><div class=\"setting-item-info\"><div class=\"setting-item-name\">Archive/</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Delete\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></div></div></div><div class=\"setting-item\" tabindex=\"-1\"><div class=\"setting-item-icon\"></div><div class=\"setting-item-info\"><div class=\"setting-item-name\">Drafts/</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Delete\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></div></div></div></div></div></div></div>"
+      },
+      {
+       "cls": "modal-container mod-dim",
+       "text": "Add exclusion\n\nEnter a path or a regular expression, e.g. /daily-.*/\n\nDone\nCancel",
+       "html": "<div class=\"modal-container mod-dim\"><div class=\"modal-bg\" style=\"opacity: 0.85;\"></div><div class=\"modal mod-lg mod-form-sheet\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></div><div class=\"modal-header\"><div class=\"modal-title\">Add exclusion</div></div><div class=\"modal-content\"><p class=\"form-field\"><label></label><input type=\"text\" spellcheck=\"false\"><div class=\"form-field-help\">Enter a path or a regular expression, e.g. /daily-.*/</div></p></div><div class=\"modal-button-container\"><button class=\"mod-cta\">Done</button><button>Cancel</button></div></div></div>"
+      }
+     ],
+     "main": [],
+     "active": "<input type=\"text\" spellcheck=\"false\">",
+     "mainActive": "<body class=\"theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header\" style=\"--zoom-factor: 1; --font-text-size: 16px; --indent-size: 4;\"><div class=\"titlebar\"><div class=\"titlebar-inner\"><di"
+    },
+    "enter2": {
+     "input": "<input type=\"text\" spellcheck=\"false\">",
+     "inPopout": true,
+     "before": {
+      "value": "/\\.png$/",
+      "sugg": [
+       "+ /\\.png$/ :: suggestion-item is-selected"
+      ]
+     },
+     "config": [
+      "Archive/",
+      "Drafts/",
+      "/\\.png$/"
+     ]
+    },
+    "appJsonAfterAdd2": "{\n  \"userIgnoreFilters\": [\n    \"Archive/\",\n    \"Drafts/\",\n    \"/\\\\.png$/\"\n  ],\n  \"probeUnknownKey\": {\n    \"kept\": true\n  }\n}",
+    "add3": true,
+    "enter3": {
+     "input": "<input type=\"text\" spellcheck=\"false\">",
+     "inPopout": true,
+     "before": {
+      "value": "Drafts/",
+      "sugg": [
+       "+ Drafts/ :: suggestion-item is-selected"
+      ]
+     },
+     "config": [
+      "Archive/",
+      "Drafts/",
+      "/\\.png$/",
+      "Drafts/"
+     ]
+    },
+    "add4": true,
+    "enter4": {
+     "input": "<input type=\"text\" spellcheck=\"false\">",
+     "inPopout": true,
+     "before": {
+      "value": "   ",
+      "sugg": [
+       "+     :: suggestion-item is-selected"
+      ]
+     },
+     "config": [
+      "Archive/",
+      "Drafts/",
+      "/\\.png$/",
+      "Drafts/"
+     ]
+    },
+    "afterDupDump": {
+     "popout": [
+      {
+       "cls": "setting-page vertical-tab-content",
+       "text": "Excluded files\nArchive/\nDrafts/\n/\\.png$/REGEX\nDrafts/",
+       "html": "<div class=\"setting-page vertical-tab-content\" style=\"\"><div class=\"setting-page-titlebar\"><div class=\"clickable-icon setting-page-back-button\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-chevron-left\"><path d=\"m15 18-6-6 6-6\"></path></svg></div><div class=\"setting-page-title\">Excluded files</div></div><div class=\"setting-page-content\"><div class=\"setting-group mod-list mod-no-icon\"><div class=\"setting-item setting-item-heading\"><div class=\"setting-item-name\"></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Add exclusion...\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-plus\"><path d=\"M5 12h14\"></path><path d=\"M12 5v14\"></path></svg></div></div></div><div class=\"setting-group-search\" tabindex=\"-1\"></div><div class=\"setting-items\"><div class=\"setting-item\" tabindex=\"-1\"><div class=\"setting-item-icon\"></div><div class=\"setting-item-info\"><div class=\"setting-item-name\">Archive/</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Delete\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></div></div></div><div class=\"setting-item\" tabindex=\"-1\"><div class=\"setting-item-icon\"></div><div class=\"setting-item-info\"><div class=\"setting-item-name\">Drafts/</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Delete\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></div></div></div><div class=\"setting-item\" tabindex=\"-1\"><div class=\"setting-item-icon\"></div><div class=\"setting-item-info\"><div class=\"setting-item-name\">/\\.png$/<span class=\"flair mod-flat\">Regex</span></div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Delete\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></div></div></div><div class=\"setting-item\" tabindex=\"-1\"><div class=\"setting-item-icon\"></div><div class=\"setting-item-info\"><div class=\"setting-item-name\">Drafts/</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Delete\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></div></div></div></div></div></div></div>"
+      },
+      {
+       "cls": "modal-container mod-dim",
+       "text": "Add exclusion\n\nEnter a path or a regular expression, e.g. /daily-.*/\n\nDone\nCancel",
+       "html": "<div class=\"modal-container mod-dim\"><div class=\"modal-bg\" style=\"opacity: 0.85;\"></div><div class=\"modal mod-lg mod-form-sheet\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></div><div class=\"modal-header\"><div class=\"modal-title\">Add exclusion</div></div><div class=\"modal-content\"><p class=\"form-field\"><label></label><input type=\"text\" spellcheck=\"false\"><div class=\"form-field-help\">Enter a path or a regular expression, e.g. /daily-.*/</div></p></div><div class=\"modal-button-container\"><button class=\"mod-cta\">Done</button><button>Cancel</button></div></div></div>"
+      }
+     ],
+     "main": [],
+     "active": "<input type=\"text\" spellcheck=\"false\">",
+     "mainActive": "<body class=\"theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header\" style=\"--zoom-factor: 1; --font-text-size: 16px; --indent-size: 4;\"><div class=\"titlebar\"><div class=\"titlebar-inner\"><di"
+    },
+    "appJsonAfterDup": "{\n  \"userIgnoreFilters\": [\n    \"Archive/\",\n    \"Drafts/\",\n    \"/\\\\.png$/\",\n    \"Drafts/\"\n  ],\n  \"probeUnknownKey\": {\n    \"kept\": true\n  }\n}",
+    "searchAfterAdd": {
+     "q": "zebra",
+     "files": [
+      "Archived note",
+      "Keep",
+      "lower",
+      "Nested",
+      "Old twin",
+      "Target"
+     ],
+     "lookup": [
+      "Archived note.md",
+      "Keep.md",
+      "archive lower/lower.md",
+      "Other/Archive/Nested.md",
+      "Old twin.md",
+      "Target.md"
+     ],
+     "summary": "6 resultsRelevanceFile name (A to Z)File name (Z to A)Modified time (new to old)Modified time (old to new)Created time (new to old)Created time (old to new)File name (A to Z)",
+     "text": "6 results\nRelevance\nFile name (A to Z)\nFile name (Z to A)\nModified time (new to old)\nModified time (old to new)\nCreated time (new to old)\nCreated time (old to new)\nArchived note\n1\nzebra archived Target\nKeep\n1\nzebra keep. Mentions Target here.\nlower\n1\nzebra lower Target\nNested\n1\nzebra nested Target\nOld twin\n1\nzebra twin of Old\nTarget\n1\nzebra target body"
+    },
+    "del": {
+     "popout": [
+      {
+       "cls": "setting-page vertical-tab-content",
+       "text": "Excluded files\nDrafts/\n/\\.png$/REGEX\nDrafts/",
+       "html": "<div class=\"setting-page vertical-tab-content\" style=\"\"><div class=\"setting-page-titlebar\"><div class=\"clickable-icon setting-page-back-button\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-chevron-left\"><path d=\"m15 18-6-6 6-6\"></path></svg></div><div class=\"setting-page-title\">Excluded files</div></div><div class=\"setting-page-content\"><div class=\"setting-group mod-list mod-no-icon\"><div class=\"setting-item setting-item-heading\"><div class=\"setting-item-name\"></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Add exclusion...\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-plus\"><path d=\"M5 12h14\"></path><path d=\"M12 5v14\"></path></svg></div></div></div><div class=\"setting-group-search\" tabindex=\"-1\"></div><div class=\"setting-items\"><div class=\"setting-item\" tabindex=\"-1\"><div class=\"setting-item-icon\"></div><div class=\"setting-item-info\"><div class=\"setting-item-name\">Drafts/</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Delete\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></div></div></div><div class=\"setting-item\" tabindex=\"-1\"><div class=\"setting-item-icon\"></div><div class=\"setting-item-info\"><div class=\"setting-item-name\">/\\.png$/<span class=\"flair mod-flat\">Regex</span></div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Delete\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></div></div></div><div class=\"setting-item\" tabindex=\"-1\"><div class=\"setting-item-icon\"></div><div class=\"setting-item-info\"><div class=\"setting-item-name\">Drafts/</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Delete\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></div></div></div></div></div></div></div>"
+      },
+      {
+       "cls": "modal-container mod-dim",
+       "text": "Add exclusion\n\nEnter a path or a regular expression, e.g. /daily-.*/\n\nDone\nCancel",
+       "html": "<div class=\"modal-container mod-dim\"><div class=\"modal-bg\" style=\"opacity: 0.85;\"></div><div class=\"modal mod-lg mod-form-sheet\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></div><div class=\"modal-header\"><div class=\"modal-title\">Add exclusion</div></div><div class=\"modal-content\"><p class=\"form-field\"><label></label><input type=\"text\" spellcheck=\"false\"><div class=\"form-field-help\">Enter a path or a regular expression, e.g. /daily-.*/</div></p></div><div class=\"modal-button-container\"><button class=\"mod-cta\">Done</button><button>Cancel</button></div></div></div>"
+      }
+     ],
+     "main": [],
+     "active": "<input type=\"text\" spellcheck=\"false\">",
+     "mainActive": "<input enterkeyhint=\"search\" type=\"search\" spellcheck=\"false\" placeholder=\"Search...\">",
+     "config": [
+      "Drafts/",
+      "/\\.png$/",
+      "Drafts/"
+     ]
+    },
+    "appJsonAfterDelete": "{\n  \"userIgnoreFilters\": [\n    \"Drafts/\",\n    \"/\\\\.png$/\",\n    \"Drafts/\"\n  ],\n  \"probeUnknownKey\": {\n    \"kept\": true\n  }\n}",
+    "delAll": {
+     "popout": [
+      {
+       "cls": "setting-page vertical-tab-content",
+       "text": "Excluded files\nNo exclusions added.",
+       "html": "<div class=\"setting-page vertical-tab-content\" style=\"\"><div class=\"setting-page-titlebar\"><div class=\"clickable-icon setting-page-back-button\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-chevron-left\"><path d=\"m15 18-6-6 6-6\"></path></svg></div><div class=\"setting-page-title\">Excluded files</div></div><div class=\"setting-page-content\"><div class=\"setting-group mod-list mod-no-icon\"><div class=\"setting-item setting-item-heading\"><div class=\"setting-item-name\"></div><div class=\"setting-item-control\"><div class=\"clickable-icon extra-setting-button\" tabindex=\"0\" aria-label=\"Add exclusion...\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-plus\"><path d=\"M5 12h14\"></path><path d=\"M12 5v14\"></path></svg></div></div></div><div class=\"setting-group-search\" tabindex=\"-1\"></div><div class=\"setting-items\"><div class=\"setting-item mod-empty-state\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\">No exclusions added.</div><div class=\"setting-item-description\"></div></div><div class=\"setting-item-control\"></div></div></div></div></div></div>"
+      },
+      {
+       "cls": "modal-container mod-dim",
+       "text": "Add exclusion\n\nEnter a path or a regular expression, e.g. /daily-.*/\n\nDone\nCancel",
+       "html": "<div class=\"modal-container mod-dim\"><div class=\"modal-bg\" style=\"opacity: 0.85;\"></div><div class=\"modal mod-lg mod-form-sheet\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></div><div class=\"modal-header\"><div class=\"modal-title\">Add exclusion</div></div><div class=\"modal-content\"><p class=\"form-field\"><label></label><input type=\"text\" spellcheck=\"false\"><div class=\"form-field-help\">Enter a path or a regular expression, e.g. /daily-.*/</div></p></div><div class=\"modal-button-container\"><button class=\"mod-cta\">Done</button><button>Cancel</button></div></div></div>"
+      }
+     ],
+     "main": [],
+     "active": "<input type=\"text\" spellcheck=\"false\">",
+     "mainActive": "<input enterkeyhint=\"search\" type=\"search\" spellcheck=\"false\" placeholder=\"Search...\">",
+     "config": null
+    },
+    "appJsonAfterDeleteAll": "{\n  \"userIgnoreFilters\": null,\n  \"probeUnknownKey\": {\n    \"kept\": true\n  }\n}",
+    "back": {
+     "rows": [
+      "<div class=\"setting-item mod-navigable tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\">Excluded files</div><div class=\"setting-item-description\">Excluded files will be hidden in Search, Graph View, and Unlinked Mentions, less noticeable in Quick Switcher and link suggestions.</div></div><div class=\"setting-item-control\"><div class=\"setting-item-chevron\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-chevron-right\"><path d=\"m9 18 6-6-6-6\"></path></svg></div></div></div>"
+     ]
+    }
+   },
+   "s09": {
+    "ok": true,
+    "ms": 19044,
+    "open": {
+     "rowHtml": "<div class=\"setting-item mod-navigable tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\">Excluded files</div><div class=\"setting-item-description\">Excluded files will be hidden in Search, Graph View, and Unlinked Mentions, less noticeable in Quick Switcher and link suggestions.</div></div><div class=\"setting-item-control\"><div class=\"setting-item-value\">Archive/</div><div class=\"setting-item-chevron\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-chevron-right\"><path d=\"m9 18 6-6-6-6\"></path></svg></div></div></div>",
+     "list": [
+      "Archive/"
+     ]
+    },
+    "sugg": {
+     "": [
+      {
+       "text": "Archive",
+       "html": "<div class=\"suggestion-item is-selected\">Archive</div>"
+      },
+      {
+       "text": "Data",
+       "html": "<div class=\"suggestion-item\">Data</div>"
+      },
+      {
+       "text": "Other",
+       "html": "<div class=\"suggestion-item\">Other</div>"
+      },
+      {
+       "text": "archive lower",
+       "html": "<div class=\"suggestion-item\">archive lower</div>"
+      },
+      {
+       "text": "Archive/Deep",
+       "html": "<div class=\"suggestion-item\">Archive/Deep</div>"
+      },
+      {
+       "text": "Other/Archive",
+       "html": "<div class=\"suggestion-item\">Other/Archive</div>"
+      }
+     ],
+     "A": [
+      {
+       "text": "Archive",
+       "html": "<div class=\"suggestion-item is-selected\"><span class=\"suggestion-highlight\">A</span>rchive</div>"
+      },
+      {
+       "text": "Archive/Deep",
+       "html": "<div class=\"suggestion-item\"><span class=\"suggestion-highlight\">A</span>rchive/Deep</div>"
+      },
+      {
+       "text": "archive lower",
+       "html": "<div class=\"suggestion-item\"><span class=\"suggestion-highlight\">a</span>rchive lower</div>"
+      },
+      {
+       "text": "Other/Archive",
+       "html": "<div class=\"suggestion-item\">Other/<span class=\"suggestion-highlight\">A</span>rchive</div>"
+      },
+      {
+       "text": "Data",
+       "html": "<div class=\"suggestion-item\">D<span class=\"suggestion-highlight\">a</span>ta</div>"
+      },
+      {
+       "text": "+ A",
+       "html": "<div class=\"suggestion-item\">+ A</div>"
+      }
+     ],
+     "Arch": [
+      {
+       "text": "Archive",
+       "html": "<div class=\"suggestion-item is-selected\"><span class=\"suggestion-highlight\">Arch</span>ive</div>"
+      },
+      {
+       "text": "Archive/Deep",
+       "html": "<div class=\"suggestion-item\"><span class=\"suggestion-highlight\">Arch</span>ive/Deep</div>"
+      },
+      {
+       "text": "archive lower",
+       "html": "<div class=\"suggestion-item\"><span class=\"suggestion-highlight\">arch</span>ive lower</div>"
+      },
+      {
+       "text": "Other/Archive",
+       "html": "<div class=\"suggestion-item\">Other/<span class=\"suggestion-highlight\">Arch</span>ive</div>"
+      },
+      {
+       "text": "+ Arch",
+       "html": "<div class=\"suggestion-item\">+ Arch</div>"
+      }
+     ],
+     "o": [
+      {
+       "text": "Other",
+       "html": "<div class=\"suggestion-item is-selected\"><span class=\"suggestion-highlight\">O</span>ther</div>"
+      },
+      {
+       "text": "Other/Archive",
+       "html": "<div class=\"suggestion-item\"><span class=\"suggestion-highlight\">O</span>ther/Archive</div>"
+      },
+      {
+       "text": "archive lower",
+       "html": "<div class=\"suggestion-item\">archive l<span class=\"suggestion-highlight\">o</span>wer</div>"
+      },
+      {
+       "text": "+ o",
+       "html": "<div class=\"suggestion-item\">+ o</div>"
+      }
+     ],
+     "Archive/": [
+      {
+       "text": "Archive/Deep",
+       "html": "<div class=\"suggestion-item is-selected\"><span class=\"suggestion-highlight\">Archive/</span>Deep</div>"
+      },
+      {
+       "text": "+ Archive/",
+       "html": "<div class=\"suggestion-item\">+ Archive/</div>"
+      }
+     ],
+     "Other/Ar": [
+      {
+       "text": "Other/Archive",
+       "html": "<div class=\"suggestion-item is-selected\"><span class=\"suggestion-highlight\">Other/Ar</span>chive</div>"
+      },
+      {
+       "text": "+ Other/Ar",
+       "html": "<div class=\"suggestion-item\">+ Other/Ar</div>"
+      }
+     ],
+     "Keep": [
+      {
+       "text": "+ Keep",
+       "html": "<div class=\"suggestion-item is-selected\">+ Keep</div>"
+      }
+     ],
+     "/x/": [
+      {
+       "text": "+ /x/",
+       "html": "<div class=\"suggestion-item is-selected\">+ /x/</div>"
+      }
+     ]
+    },
+    "done": {
+     "config": [
+      "Archive/",
+      "  Padded/  "
+     ],
+     "modals": 0,
+     "list": [
+      "Archive/",
+      "  Padded/  "
+     ]
+    },
+    "cancel": {
+     "config": [
+      "Archive/",
+      "  Padded/  "
+     ],
+     "modals": 0
+    },
+    "emptyDone": {
+     "config": [
+      "Archive/",
+      "  Padded/  "
+     ],
+     "modals": 1,
+     "notices": [],
+     "html": "<div class=\"modal-container mod-dim\"><div class=\"modal-bg\" style=\"opacity: 0.85;\"></div><div class=\"modal mod-lg mod-form-sheet\"><div class=\"modal-header-button mod-raised clickable-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-x\"><path d=\"M18 6 6 18\"></path><path d=\"m6 6 12 12\"></path></svg></div><div class=\"modal-header\"><div class=\"modal-title\">Add exclusion</div></div><div class=\"modal-content\"><p class=\"form-field\"><label></label><input type=\"text\" spellcheck=\"false\"><div class=\"form-field-help\">Enter a path or a regular expression, e.g. /daily-.*/</div></p></div><div class=\"modal-button-container\"><button class=\"mod-cta\">Done</button><button>Cancel</button></div></div></div>"
+    },
+    "pick": {
+     "picked": "Other",
+     "value": null,
+     "modals": 0,
+     "config": [
+      "Archive/",
+      "  Padded/  ",
+      "Other/"
+     ]
+    },
+    "afterPick": [
+     "Archive/",
+     "  Padded/  ",
+     "Other/"
+    ],
+    "back": {
+     "rows": [
+      "<div class=\"setting-item mod-navigable tappable\" tabindex=\"-1\"><div class=\"setting-item-info\"><div class=\"setting-item-name\">Excluded files</div><div class=\"setting-item-description\">Excluded files will be hidden in Search, Graph View, and Unlinked Mentions, less noticeable in Quick Switcher and link suggestions.</div></div><div class=\"setting-item-control\"><div class=\"setting-item-value\">3 rules</div><div class=\"setting-item-chevron\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-chevron-right\"><path d=\"m9 18 6-6-6-6\"></path></svg></div></div></div>"
+     ]
+    },
+    "appJson": "{\n  \"userIgnoreFilters\": [\n    \"Archive/\",\n    \"  Padded/  \",\n    \"Other/\"\n  ],\n  \"probeUnknownKey\": {\n    \"kept\": true\n  }\n}"
+   },
+   "s10": {
+    "ok": true,
+    "ms": 8601,
+    "recent": [
+     "Archive/Old.md",
+     "Keep.md"
+    ],
+    "switcherEmpty": {
+     "q": "",
+     "items": [
+      {
+       "text": "Keep",
+       "cls": "suggestion-item mod-complex is-selected",
+       "html": "<div class=\"suggestion-item mod-complex is-selected\" draggable=\"true\"><div class=\"suggestion-content\"><div class=\"suggestion-title\">Keep</div></div><div class=\"suggestion-aux\"><span class=\"suggestion-flair\"></span></div></div>"
+      }
+     ]
+    },
+    "styles": {
+     "plain": {
+      "cls": "suggestion-item mod-complex",
+      "opacity": "1",
+      "color": "rgb(218, 218, 218)",
+      "titleColor": "rgb(218, 218, 218)",
+      "titleOpacity": "1",
+      "filter": "none",
+      "fontStyle": "normal"
+     },
+     "down": {
+      "cls": "suggestion-item mod-complex mod-downranked",
+      "opacity": "1",
+      "color": "rgb(179, 179, 179)",
+      "titleColor": "rgb(179, 179, 179)",
+      "titleOpacity": "1",
+      "filter": "none",
+      "fontStyle": "normal"
+     },
+     "vars": {
+      "--text-normal": "#dadada",
+      "--text-muted": "#b3b3b3",
+      "--text-faint": "#666666"
+     }
+    },
+    "outgoing": "Links\n0\nUnlinked mentions",
+    "excludedOpen": {
+     "backlink": "Archive/BacklinksLinked mentions0No backlinks found.Unlinked mentions"
+    }
+   }
+  },
+  "order": [
+   "s00",
+   "s01",
+   "s02",
+   "s03",
+   "s04",
+   "s05",
+   "s06",
+   "s07",
+   "s08",
+   "s09",
+   "s10"
+  ],
+  "elapsedMs": 8650
+ }
+}

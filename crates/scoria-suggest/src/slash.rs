@@ -177,6 +177,7 @@ pub fn slash_rows(
                 label: c.name.clone(),
                 detail: None,
                 ranges: r.ranges,
+                downranked: false,
             }
         })
         .collect()

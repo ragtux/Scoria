@@ -169,7 +169,9 @@ pub fn render(
             .collect();
         let label =
             StyledText::new(SharedString::from(item.label.clone())).with_highlights(highlights);
-        let muted = matches!(item.item, Item::Literal);
+        // An excluded file's row is `mod-downranked`, `--text-muted` in
+        // Obsidian 1.15.1 (observed 2026-11-16).
+        let muted = matches!(item.item, Item::Literal) || item.downranked;
         div()
             .id(("suggest-row", ix))
             .w_full()
@@ -379,6 +381,7 @@ mod tests {
                     label: format!("Row {i}"),
                     detail: None,
                     ranges: Vec::new(),
+                    downranked: false,
                 })
                 .collect(),
             selected: 0,

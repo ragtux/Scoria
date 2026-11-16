@@ -4263,6 +4263,7 @@ impl Editor {
                 source: self.name.as_ref(),
                 show_unsupported,
                 text: &texts,
+                excluded: &state.excluded(),
             },
         )
     }
@@ -4409,6 +4410,7 @@ impl Editor {
                     source: self.name.as_ref(),
                     show_unsupported,
                     text: &texts,
+                    excluded: &state.excluded(),
                 },
                 &self.link_options,
             )
