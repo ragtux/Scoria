@@ -848,17 +848,19 @@ const PICKER_PRESETS: &[(&str, &str)] = &[
     ("Obsidian's purple", "#8a5cf6"),
 ];
 
-/// `baseFontSize` in `appearance.json`; Obsidian's slider offers 10 to 30.
+/// The text size; Obsidian's slider offers 10 to 30. It reads what the
+/// two font-size commands read — the size kept for the vault, else
+/// `baseFontSize` in `appearance.json` — and, as on 1.15.0, writes only the
+/// kept size, never `appearance.json`.
 const FONT_SIZE: Number = Number {
     key: "baseFontSize",
     min: 10,
     max: 30,
-    read: |state| state.appearance().base_font_size.unwrap_or(16) as i64,
-    write: |state, value| {
-        let mut next = state.appearance().clone();
-        next.base_font_size = Some(value as u32);
-        SettingChange::Appearance(next)
+    read: |state| {
+        crate::theme::fonts::vault_font_size(&state.root, state.appearance().base_font_size, false)
+            as i64
     },
+    write: |_, value| SettingChange::FontSize(value as u32),
 };
 
 /// `tabSize` in `app.json`; Obsidian's slider offers 2 to 8, default 4.
@@ -942,9 +944,10 @@ const SUBFOLDER_NAME: TextField = TextField {
     },
 };
 
-/// Every slider and text field that writes, for the tests that walk them.
+/// Every slider and text field that writes a vault's file, for the tests
+/// that walk them (the Font size slider writes none).
 #[cfg(test)]
-const NUMBERS: &[Number] = &[FONT_SIZE, TAB_SIZE];
+const NUMBERS: &[Number] = &[TAB_SIZE];
 #[cfg(test)]
 const TEXTS: &[TextField] = &[
     NEW_FILE_FOLDER,
@@ -1491,6 +1494,11 @@ pub enum SettingChange {
     /// `frame` key of `scoria.json` beside the vault list, where Obsidian's
     /// `obsidian.json` keeps its own.
     Frame(String),
+    /// The Font size slider, which is not a file's either: Obsidian 1.15.0
+    /// writes it to local storage under the vault's id and leaves
+    /// `baseFontSize` alone, so it goes beside the window zoom in Scoria's
+    /// `window/<vault id>.json` (see `theme::fonts::STORE_KEY`).
+    FontSize(u32),
 }
 
 impl SettingChange {
@@ -1513,6 +1521,7 @@ impl SettingChange {
             SettingChange::FileRecovery(_) => "file-recovery.json",
             SettingChange::Webviewer(_) => "webviewer.json",
             SettingChange::Frame(_) => scoria_vault::registry::FILE_NAME,
+            SettingChange::FontSize(_) => "the vault's window file",
         }
     }
 }
@@ -7344,6 +7353,28 @@ mod tests {
                 serde_json::json!(format!("{}Journal", field.prefix)),
                 "{}",
                 field.key
+            );
+        }
+    }
+
+    /// The Font size slider on 1.15.0 (2026-11-16): moved to 14 and then
+    /// Restore default, `appearance.json` stayed byte for byte as it was;
+    /// the size went to local storage, which Scoria keeps in its own
+    /// window file. The slider reads the file's size until one is kept.
+    #[test]
+    fn the_font_size_slider_writes_no_file_of_the_vault() {
+        let (dir, state) = vault();
+        let appearance = dir.path().join(".obsidian/appearance.json");
+        std::fs::write(&appearance, "{\n  \"baseFontSize\": 20\n}").unwrap();
+        let state = VaultState::load(&state.root).unwrap();
+        assert_eq!((FONT_SIZE.read)(&state), 20);
+        for value in [14, 16] {
+            let change = (FONT_SIZE.write)(&state, value);
+            assert!(matches!(change, SettingChange::FontSize(v) if v as i64 == value));
+            state.apply_setting(&change).unwrap();
+            assert_eq!(
+                std::fs::read_to_string(&appearance).unwrap(),
+                "{\n  \"baseFontSize\": 20\n}"
             );
         }
     }

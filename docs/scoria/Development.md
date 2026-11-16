@@ -417,6 +417,59 @@ nothing.
 then 1.15.1): read `document.title` every run. The view's `undoStack` holds `TFile`s, whose
 `vault` and `parent` are circular, so a dump of it needs a replacer that stops at depth.
 
+### The font size kept, and the backlinks block's sort and filter, 2026-11-16
+
+Two rows of the manual's differences page: the font size the two font-size commands set lasted
+the session, and the backlinks block at the foot of a note drew no sort menu and no search
+filter. Probed first, see
+[[Specification#Observed font size persistence and the backlinks block's sort and filter, Obsidian 1.15.0]].
+
+**The probe.** `tools/obsidian-probe/font-size-backlinks-block.mjs`, Obsidian 1.15.0 in a
+private headless sway (`XDG_RUNTIME_DIR` and `USER_DATA_DIR` under `/run/user/1000`,
+`CDP_PORT=9475`, `OBSIDIAN_ARGS=--ozone-platform=x11`), eleven steps and an after-restart phase
+in one pass. What it changed: the earlier note here said Ctrl+wheel writes nothing and the
+slider writes `baseFontSize` (both true of 1.14.5); on 1.15.0 **every** way of changing the size
+— both commands, Ctrl+wheel, the slider and its Restore default — writes the local storage key
+`<vault id>-base-font-size` and none writes `appearance.json`. The first read with no key copies
+the file's `baseFontSize` in, and after that the file is ignored: rewritten from outside with 24
+it changed nothing, and a relaunch drew the key's 18. The block's sort menu is the pane's six
+orders with its corner at the pointer, and the pick is the leaf's `sortOrder` only (the dock pane
+kept its own, no `backlink.json`). The filter field sits on the buttons' row at `100% - 150px`;
+Escape empties it and keeps it open; the button again hides it, empties the query and gives the
+note the keyboard. Typing does not ask for a layout save, so the query reached `workspace.json`
+neither within 2.5 s nor at quit.
+
+**What was built.**
+- The size is kept beside the window zoom, in Scoria's own `window/<vault id>.json`, under
+  `base-font-size` (`theme::fonts::STORE_KEY`): local storage is Obsidian's data directory's,
+  not the vault's, the way the zoom's window file is. `fonts::set_font_size` is what the
+  commands, Ctrl+wheel and the slider all call; `keep_vault_size` puts the kept size on every
+  theme rebuilt from `appearance.json` and copies the file's size in on the first read, as
+  Obsidian does; `main.rs` reads it, without copying, for the first frame. The session-only
+  `QuickFontSize` size and its "the file changed under it" rule are gone. A cache by vault root
+  lets the slider read the size every frame without the disk.
+- The Font size slider writes `SettingChange::FontSize`, handled like the frame style before it
+  reaches the vault: nothing under `.obsidian` is written. Scoria's slider still has no Restore
+  default.
+- The block: "Change sort order" opens `doc_sort_menu_element` (the pane's rows, drawn from the
+  block itself so it lands in whichever window the note is in, and in `sync_menu_focus` so
+  Escape reaches it), and "Show search filter" draws a field from the group's own
+  `doc_filter` input. Each tab group has one field; `sync_doc_filter`, run as the footer is
+  built, gives it the shown tab's `searchQuery` when the tab changes, judged against
+  `doc_filter_synced` (the query field and tab last agreed on) rather than the field's text —
+  comparing the text reset each keystroke the field had not yet reported, and "kiwi" typed came
+  out "i" in the first drive. The filter is `render_section_list`'s, as the pane's.
+
+**Driven.** The debug build in a private headless sway over the control socket, with grim: the
+size seeded at 20 from `appearance.json` into the window file, two Increases to 22, a relaunch,
+one more to 23, `appearance.json` untouched; the block's sort menu opened by a click, "Modified
+time (new to old)" picked (Alpha, Zulu, Mike; the dock pane still A to Z); the filter opened with
+the keyboard in it (`backlinks-in-document-filter`), "kiwi" leaving Mike alone with the count at
+1, Escape emptying it with the focus kept, the button hiding it with the query emptied and the
+focus back on the editor. Not driven: the Font size slider in the app (the unit test covers what
+it writes), a relaunch with the block's `showSearch` on (the scratch runs end with a kill, which
+writes no `workspace.json`), the block in a popout window.
+
 ### Excluded files, 2026-11-16
 
 Excluded files had been a row in Settings that showed the rules and did

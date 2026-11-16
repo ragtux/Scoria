@@ -12,6 +12,7 @@
 //! (probed 2026-11-04, `tools/obsidian-probe/font-pages.mjs`).
 
 use std::collections::HashSet;
+use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
 /// The families of a font field, in its order. A hand-written CSS list is
@@ -109,26 +110,126 @@ pub fn pickable(names: Vec<String>, drop: impl Fn(&str) -> bool) -> Vec<String> 
     out
 }
 
-/// The sizes "Quick font size adjustment" steps between: the Font size
-/// slider's own range. Ctrl+wheel stopped at 30 going up and 10 going down,
-/// one pixel a notch (probed 2026-11-04).
+/// The sizes the font size steps between: the Font size slider's own
+/// range. Ctrl+wheel and the two commands stopped at 30 going up and 10
+/// going down, one pixel a step (probed 2026-11-04 and 2026-11-16).
 pub const QUICK_MIN: f32 = 10.;
 pub const QUICK_MAX: f32 = 30.;
 /// Wheel pixels per step for a touchpad's fine-grained deltas: a delta of
 /// 10 alone did not move Obsidian's size, a notch of 120 moved it one.
 const QUICK_PIXEL_STEP: f32 = 50.;
 
-/// The size Ctrl+wheel reached this session. Obsidian writes it nowhere —
-/// not `baseFontSize`, not local storage, not even on a clean quit — so it
-/// lives as long as the process, and only until the file's own
-/// `baseFontSize` changes under it (the slider was moved, or the file was
-/// written from outside), which is the size the reader asked for last.
-#[derive(Debug, Default, Clone, Copy)]
+/// The key of the vault's window file the text size is kept under.
+///
+/// Obsidian 1.15.0 keeps the size in the browser's local storage as
+/// `<vault id>-base-font-size`, a bare number string, and nowhere in the
+/// vault: the two font-size commands, Ctrl+wheel, the Font size slider and
+/// its Restore default all write that key and leave `appearance.json`
+/// alone. The first read with no key copies the file's `baseFontSize` into
+/// it, and from then on the key alone decides: an `appearance.json`
+/// rewritten from outside with another size changed nothing, and a
+/// relaunch drew the key's size over the file's
+/// (`tools/obsidian-probe/font-size-backlinks-block.mjs`, 2026-11-16).
+/// Local storage belongs to the data directory, outside the vault, so
+/// Scoria keeps the size beside the window zoom in its own
+/// `window/<vault id>.json`, under the local storage key less its vault id.
+pub const STORE_KEY: &str = "base-font-size";
+
+type SizeCache = std::sync::Mutex<std::collections::HashMap<PathBuf, Option<f32>>>;
+
+/// The sizes read from or written to the window files this run, by vault
+/// root, so the Font size slider can read its value on every frame without
+/// touching the disk. `None` is a file with no size in it.
+fn cache() -> &'static SizeCache {
+    static CACHE: OnceLock<SizeCache> = OnceLock::new();
+    CACHE.get_or_init(Default::default)
+}
+
+/// The size recorded in the window file at `path`: a number, or the
+/// number string local storage holds.
+fn read_stored(path: &Path) -> Option<f32> {
+    let bytes = std::fs::read(path).ok()?;
+    let json = serde_json::from_slice::<serde_json::Value>(&bytes).ok()?;
+    let value = json.get(STORE_KEY)?;
+    let size = value
+        .as_f64()
+        .or_else(|| value.as_str().and_then(|s| s.trim().parse::<f64>().ok()))?;
+    // Only a zero or a negative is kept out of the layout: Obsidian copies
+    // the file's value in as it is.
+    (size.is_finite() && size >= 1.).then_some(size as f32)
+}
+
+/// Records `size` in the window file at `path`, keeping its other keys
+/// (the zoom). Whole sizes are written as integers.
+fn write_stored(path: &Path, size: f32) {
+    let mut json = std::fs::read(path)
+        .ok()
+        .and_then(|b| serde_json::from_slice::<serde_json::Value>(&b).ok())
+        .filter(serde_json::Value::is_object)
+        .unwrap_or_else(|| serde_json::json!({}));
+    json[STORE_KEY] = if size.fract() == 0.0 {
+        serde_json::json!(size as i64)
+    } else {
+        serde_json::json!(size as f64)
+    };
+    if let Some(dir) = path.parent() {
+        let _ = std::fs::create_dir_all(dir);
+    }
+    let _ = std::fs::write(path, json.to_string());
+}
+
+/// The size kept for the vault at `root`, if one is.
+pub fn stored_size(root: &Path) -> Option<f32> {
+    let mut cache = cache().lock().unwrap_or_else(|e| e.into_inner());
+    if let Some(size) = cache.get(root) {
+        return *size;
+    }
+    let size = crate::zoom::window_file(root).and_then(|p| read_stored(&p));
+    cache.insert(root.to_path_buf(), size);
+    size
+}
+
+/// Keeps `size` for the vault at `root`. A failure to write costs only the
+/// next launch's size.
+pub fn save_size(root: &Path, size: f32) {
+    if let Some(path) = crate::zoom::window_file(root) {
+        write_stored(&path, size);
+    }
+    cache()
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .insert(root.to_path_buf(), Some(size));
+}
+
+/// The size the vault at `root` draws at: the kept one, else the file's
+/// `baseFontSize`, else 16. With `seed`, a file's size is copied into the
+/// window file the first time it is read, the way Obsidian's first read
+/// copies it into local storage, after which the file no longer decides.
+pub fn vault_font_size(root: &Path, file_size: Option<u32>, seed: bool) -> f32 {
+    let (size, copy) = resolve_size(stored_size(root), file_size);
+    if seed && copy {
+        save_size(root, size);
+    }
+    size
+}
+
+/// The size drawn from what is kept and the file's `baseFontSize`, and
+/// whether the file's size is to be copied in: the kept size wins, a file
+/// with no key leaves 16 and nothing to copy.
+fn resolve_size(stored: Option<f32>, file_size: Option<u32>) -> (f32, bool) {
+    match (stored, file_size) {
+        (Some(size), _) => (size, false),
+        (None, Some(size)) => (size.max(1) as f32, true),
+        (None, None) => (16., false),
+    }
+}
+
+/// The vault the font size is kept for, and the touchpad pixels not yet
+/// worth a step.
+#[derive(Debug, Default, Clone)]
 pub struct QuickFontSize {
-    /// The size reached, if the wheel has moved it.
-    size: Option<f32>,
-    /// The file's size when it did.
-    from: f32,
+    /// The open vault's root, set when its theme is loaded.
+    root: Option<PathBuf>,
     /// Touchpad pixels not yet worth a step.
     pending: f32,
 }
@@ -154,6 +255,23 @@ impl QuickFontSize {
     }
 }
 
+/// `steps` pixels on from `current`, held between the clamps.
+fn stepped(current: f32, steps: i32) -> f32 {
+    (current + steps as f32).clamp(QUICK_MIN, QUICK_MAX)
+}
+
+/// Sets the text size to `size` and keeps it for the open vault: what each
+/// of the two commands, Ctrl+wheel and the Font size slider does.
+pub fn set_font_size(size: f32, cx: &mut gpui::App) {
+    cx.global_mut::<super::Theme>().base_font_size = size;
+    if let Some(root) = cx
+        .try_global::<QuickFontSize>()
+        .and_then(|q| q.root.clone())
+    {
+        save_size(&root, size);
+    }
+}
+
 /// Ctrl+wheel over a note with "Quick font size adjustment" on: steps the
 /// theme's size and says so, so the caller stops the wheel from scrolling
 /// too. `false` (nothing done) when the setting is off or Ctrl is not held.
@@ -165,48 +283,23 @@ pub fn quick_wheel(event: &gpui::ScrollWheelEvent, cx: &mut gpui::App) -> bool {
     let current = theme.base_font_size;
     let mut quick = cx
         .try_global::<QuickFontSize>()
-        .copied()
+        .cloned()
         .unwrap_or_default();
     let steps = quick.steps(event.delta);
-    if steps != 0 {
-        let next = quick.step(current, steps);
-        cx.global_mut::<super::Theme>().base_font_size = next;
-    }
     cx.set_global(quick);
-    true
-}
-
-impl QuickFontSize {
-    /// `steps` pixels on from `current`, held between the clamps, and
-    /// remembered as the session's size over the file's.
-    fn step(&mut self, current: f32, steps: i32) -> f32 {
-        let next = (current + steps as f32).clamp(QUICK_MIN, QUICK_MAX);
-        if self.size.is_none() {
-            self.from = current;
-        }
-        self.size = Some(next);
-        next
+    if steps != 0 {
+        set_font_size(stepped(current, steps), cx);
     }
+    true
 }
 
 /// `app:increase-font-size` (`steps` 1) and `app:decrease-font-size` (-1):
 /// the text size one pixel up or down between 10 and 30, the clamps and
 /// the step Obsidian 1.15.0 showed, with or without "Quick font size
-/// adjustment" on. The size is the same session size Ctrl+wheel moves.
-/// Obsidian keeps the commands' size in the browser's local storage under
-/// the vault's id, which outlives a relaunch; Scoria has nothing outside
-/// the vault to put it in that Obsidian would read, and writing
-/// `baseFontSize` would be a byte Obsidian never wrote, so it lasts the
-/// session.
+/// adjustment" on, and kept across launches (see [`STORE_KEY`]).
 pub fn step_font_size(steps: i32, cx: &mut gpui::App) {
     let current = cx.global::<super::Theme>().base_font_size;
-    let mut quick = cx
-        .try_global::<QuickFontSize>()
-        .copied()
-        .unwrap_or_default();
-    let next = quick.step(current, steps);
-    cx.global_mut::<super::Theme>().base_font_size = next;
-    cx.set_global(quick);
+    set_font_size(stepped(current, steps), cx);
 }
 
 /// A layer over a note's view that takes Ctrl+wheel for the font size when
@@ -233,17 +326,23 @@ pub fn quick_size_layer() -> impl gpui::IntoElement {
     .inset_0()
 }
 
-/// Carries the session's Ctrl+wheel size over to `theme`, rebuilt from the
-/// file, unless the file's own size has changed since the wheel moved it.
-pub fn keep_quick_size(theme: &mut super::Theme, cx: &mut gpui::App) {
-    let Some(quick) = cx.try_global::<QuickFontSize>().copied() else {
-        return;
-    };
-    match quick.size {
-        Some(size) if quick.from == theme.base_font_size => theme.base_font_size = size,
-        Some(_) => cx.set_global(QuickFontSize::default()),
-        None => {}
-    }
+/// Puts the size kept for the vault at `root` on `theme`, just rebuilt
+/// from `appearance.json` whose `baseFontSize` is `file_size`, seeding the
+/// window file from the file on the first read; and remembers the vault,
+/// so a later step is kept for it.
+pub fn keep_vault_size(
+    theme: &mut super::Theme,
+    root: &Path,
+    file_size: Option<u32>,
+    cx: &mut gpui::App,
+) {
+    theme.base_font_size = vault_font_size(root, file_size, true);
+    let mut quick = cx
+        .try_global::<QuickFontSize>()
+        .cloned()
+        .unwrap_or_default();
+    quick.root = Some(root.to_path_buf());
+    cx.set_global(quick);
 }
 
 #[cfg(test)]
@@ -268,29 +367,64 @@ mod tests {
     /// fourteenth and held there, 10 reached from 30 on the twentieth.
     #[test]
     fn the_font_size_commands_step_one_pixel_between_10_and_30() {
-        let mut q = QuickFontSize::default();
         let mut size = 16.;
-        size = q.step(size, 1);
+        size = stepped(size, 1);
         assert_eq!(size, 17.);
         for _ in 0..13 {
-            size = q.step(size, 1);
+            size = stepped(size, 1);
         }
         assert_eq!(size, 30.);
         for _ in 0..11 {
-            size = q.step(size, 1);
+            size = stepped(size, 1);
         }
         assert_eq!(size, 30., "held at the top");
         for run in 1..=25 {
-            size = q.step(size, -1);
+            size = stepped(size, -1);
             if run == 20 {
                 assert_eq!(size, 10.);
             }
         }
         assert_eq!(size, 10., "held at the bottom");
-        // The session's size is over the file's 16, which is what
-        // `keep_quick_size` carries across a reload of the theme.
-        assert_eq!(q.size, Some(10.));
-        assert_eq!(q.from, 16.);
+    }
+
+    /// The 2026-11-16 run: with `baseFontSize: 20` in the file and no key
+    /// the boot drew 20 and copied it in; once kept, a file rewritten with
+    /// 24 changed nothing and a relaunch drew the kept 18; a file with no
+    /// size and nothing kept is 16, with nothing to copy.
+    #[test]
+    fn the_kept_size_wins_over_the_file_once_the_file_is_copied_in() {
+        assert_eq!(resolve_size(None, Some(20)), (20., true));
+        assert_eq!(resolve_size(Some(16.), Some(24)), (16., false));
+        assert_eq!(resolve_size(Some(18.), Some(24)), (18., false));
+        assert_eq!(resolve_size(None, None), (16., false));
+        // The file's own value is honoured as it is, bar a zero.
+        assert_eq!(resolve_size(None, Some(99)), (99., true));
+        assert_eq!(resolve_size(None, Some(0)), (1., true));
+    }
+
+    /// The size goes in beside the zoom in the window file, which keeps
+    /// the zoom; it reads back, from a number and from local storage's
+    /// number string, and a file without it reads as nothing kept.
+    #[test]
+    fn the_size_is_kept_beside_the_zoom_in_the_window_file() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("window").join("0123456789abcdef.json");
+        assert_eq!(read_stored(&path), None);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(&path, r#"{"zoom":1}"#).unwrap();
+        assert_eq!(read_stored(&path), None);
+        write_stored(&path, 17.);
+        assert_eq!(
+            std::fs::read_to_string(&path).unwrap(),
+            r#"{"zoom":1,"base-font-size":17}"#
+        );
+        assert_eq!(read_stored(&path), Some(17.));
+        write_stored(&path, 21.);
+        assert_eq!(read_stored(&path), Some(21.));
+        std::fs::write(&path, r#"{"base-font-size":"19"}"#).unwrap();
+        assert_eq!(read_stored(&path), Some(19.));
+        std::fs::write(&path, r#"{"base-font-size":0}"#).unwrap();
+        assert_eq!(read_stored(&path), None);
     }
 
     #[test]

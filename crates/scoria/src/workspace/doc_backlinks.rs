@@ -16,13 +16,18 @@
 //! `unlinkedCollapsed: false` into the leaf's entry.
 //!
 //! The block is the pane's: [`Workspace::render_section_list`] over the
-//! same sections, with the leaf's own folds. Of its four nav buttons the two
-//! that act on what is already drawn are here — "Collapse results" and
-//! "Show more context". "Change sort order" and "Show search filter" are
-//! left out: the probe never drove the block's own controls, so where its
-//! sort menu opens and how its search field sits are not on record. A
-//! leaf's `sortOrder`, `showSearch` and `searchQuery` are still read and
-//! written back as they were, and the groups follow the sort order.
+//! same sections, with the leaf's own folds, and its four nav buttons.
+//! The last two were driven on 1.15.0 on 2026-11-16
+//! (`tools/obsidian-probe/font-size-backlinks-block.mjs`): "Change sort
+//! order" opens the pane's six orders in three pairs, the menu's corner at
+//! the pointer, and the pick goes to the leaf's `sortOrder` alone — the
+//! dock pane keeps its own and `backlink.json` is not written. "Show
+//! search filter" puts a 30 px field on the buttons' row, left of them and
+//! `100% - 150px` wide with 12 px under it, and the keyboard in it; what is
+//! typed filters both sections as the pane's filter does and is the leaf's
+//! `searchQuery`. Escape empties the field and leaves it open with the
+//! keyboard in it; the button pressed again hides it, empties the query
+//! and hands the keyboard to the note.
 
 use super::*;
 
@@ -119,9 +124,36 @@ impl DocBacklinks {
 
     /// Sets a flag in place, the other keys and their order left alone.
     fn set_flag(&mut self, key: &str, on: bool) {
+        self.set_value(key, json!(on));
+    }
+
+    /// Sets one of `backlinkOpts`' keys in place.
+    fn set_value(&mut self, key: &str, value: Value) {
         self.opts
             .get_or_insert_with(default_opts)
-            .insert(key.into(), json!(on));
+            .insert(key.into(), value);
+    }
+
+    /// The leaf's `searchQuery`, empty when it has none.
+    pub(super) fn query(&self) -> &str {
+        self.opts
+            .as_ref()
+            .and_then(|o| o.get("searchQuery"))
+            .and_then(Value::as_str)
+            .unwrap_or("")
+    }
+
+    /// Sets `searchQuery`; `false` when it already held `query`.
+    fn set_query(&mut self, query: &str) -> bool {
+        if self.query() == query {
+            return false;
+        }
+        self.set_value("searchQuery", json!(query));
+        true
+    }
+
+    fn set_sort(&mut self, order: SortOrder) {
+        self.set_value("sortOrder", json!(order.as_str()));
     }
 
     fn sort(&self) -> SortOrder {
@@ -187,6 +219,9 @@ pub(super) fn give_views_the_block(
         let ws = ws.clone();
         Rc::new(move |width, _window, cx| {
             let entity = ws.upgrade()?;
+            // The group's one filter field shows the query of the tab it
+            // shows now, whichever tab that is.
+            entity.update(cx, |ws, cx| ws.sync_doc_filter(host, cx));
             let theme = cx.global::<Theme>().clone();
             entity
                 .read(cx)
@@ -351,13 +386,62 @@ impl Workspace {
         }
         let sections = self.doc_sections(&path, doc);
         let (collapse_all, extra) = (doc.flag("collapseAll"), doc.flag("extraContext"));
-        // `div.nav-header` (padding 12px 0 0) → the buttons, right-aligned.
-        let header = div()
-            .w_full()
-            .pt(px(12.))
+        let show_search = doc.flag("showSearch");
+        let query = doc.query().to_string();
+        // The field: on the buttons' row, left of them, `100% - 150px` wide,
+        // 30 px tall and 12 px over the list (observed).
+        let field = show_search
+            .then(|| {
+                self.group_ix(id)
+                    .map(|ix| self.groups[ix].doc_filter.clone())
+            })
+            .flatten()
+            .map(|input| {
+                div()
+                    .relative()
+                    .flex_shrink_0()
+                    .w(px((width - 150.).max(60.)))
+                    .h(px(30.))
+                    .mb(px(12.))
+                    .child(input)
+                    .child(
+                        div()
+                            .absolute()
+                            .left(px(8.))
+                            .top(px(0.))
+                            .h(px(30.))
+                            .flex()
+                            .items_center()
+                            .child(icon("search", 14., theme.tokens.text_muted)),
+                    )
+                    .children((!query.is_empty()).then(|| {
+                        div()
+                            .id(("doc-backlinks-clear", id as usize))
+                            .absolute()
+                            .right(px(2.))
+                            .top(px(0.))
+                            .w(px(28.))
+                            .h(px(30.))
+                            .flex()
+                            .items_center()
+                            .justify_center()
+                            .cursor_pointer()
+                            .rounded_full()
+                            .tooltip(tooltip("Clear search"))
+                            .on_click(listen(
+                                this,
+                                move |ws: &mut Self, _: &ClickEvent, window, cx| {
+                                    ws.doc_clear_filter(id, window, cx)
+                                },
+                            ))
+                            .child(icon("x", 14., theme.tokens.text_muted))
+                    }))
+            });
+        let sort_menu = self.doc_sort_menu_element(id, doc.sort(), theme, this);
+        let buttons = div()
+            .ml_auto()
             .flex()
             .flex_row()
-            .justify_end()
             .gap(px(2.))
             .child(
                 Self::nav_button(
@@ -388,9 +472,65 @@ impl Workspace {
                         ws.doc_toggle_flag(id, "extraContext", cx)
                     },
                 )),
+            )
+            .child(
+                div()
+                    .relative()
+                    .child(
+                        Self::nav_button(
+                            "doc-backlinks-sort",
+                            "arrow-up-narrow-wide",
+                            "Change sort order",
+                            false,
+                            theme,
+                        )
+                        .on_click(listen(
+                            this,
+                            move |ws: &mut Self, event: &ClickEvent, _, cx| {
+                                ws.sort_menu_at = event.position();
+                                ws.doc_sort_menu = match ws.doc_sort_menu {
+                                    Some(open) if open == id => None,
+                                    _ => Some(id),
+                                };
+                                cx.notify();
+                            },
+                        )),
+                    )
+                    .children(sort_menu),
+            )
+            .child(
+                Self::nav_button(
+                    "doc-backlinks-search",
+                    "search",
+                    "Show search filter",
+                    show_search,
+                    theme,
+                )
+                .on_click(listen(
+                    this,
+                    move |ws: &mut Self, _: &ClickEvent, window, cx| {
+                        ws.doc_toggle_search(id, window, cx)
+                    },
+                )),
             );
-        let list =
-            self.render_section_list(SectionsOwner::Doc(id), &sections, &path, "", theme, this);
+        // `div.nav-header` (padding 12px 0 0): the field, then the buttons
+        // right-aligned.
+        let header = div()
+            .w_full()
+            .pt(px(12.))
+            .flex()
+            .flex_row()
+            .items_start()
+            .children(field)
+            .child(buttons);
+        let list = self.render_section_list(
+            SectionsOwner::Doc(id),
+            &sections,
+            &path,
+            &query,
+            theme,
+            this,
+        );
         Some(
             div()
                 .id(("doc-backlinks", id as usize))
@@ -405,6 +545,200 @@ impl Workspace {
                 .child(div().pt(px(4.)).child(list))
                 .into_any_element(),
         )
+    }
+
+    /// "Change sort order" under the block of group `id`: the pane's six
+    /// orders in three pairs, a check against the leaf's, the menu's
+    /// top-left corner at the pointer (observed: two pixels off it) and held
+    /// inside the window.
+    fn doc_sort_menu_element(
+        &self,
+        id: u64,
+        current: SortOrder,
+        theme: &Theme,
+        this: &gpui::WeakEntity<Self>,
+    ) -> Option<gpui::AnyElement> {
+        if self.doc_sort_menu != Some(id) {
+            return None;
+        }
+        let close = move |ws: &mut Self, cx: &mut Context<Self>| {
+            if ws.doc_sort_menu == Some(id) {
+                ws.doc_sort_menu = None;
+                cx.notify();
+            }
+        };
+        let mut list = div()
+            .id("doc-backlinks-sort-menu")
+            .flex()
+            .flex_col()
+            .min_w(px(190.))
+            .py_1()
+            .bg(theme.tokens.background_secondary)
+            .border_1()
+            .border_color(theme.tokens.background_modifier_border)
+            .rounded_md()
+            .shadow_lg()
+            .text_size(px(13.))
+            .text_color(theme.tokens.text_normal)
+            .track_focus(&self.menu_focus.handle)
+            .key_context("Menu")
+            .occlude()
+            .on_action(listen(
+                this,
+                move |ws: &mut Self, _: &file_menu::CloseMenu, _, cx| close(ws, cx),
+            ))
+            .on_mouse_down_out(listen(
+                this,
+                move |ws: &mut Self, _: &gpui::MouseDownEvent, _, cx| close(ws, cx),
+            ));
+        for (ix, order) in SortOrder::ALL.into_iter().enumerate() {
+            if ix > 0 && ix % 2 == 0 {
+                list = list.child(
+                    div()
+                        .my_1()
+                        .h(px(1.))
+                        .bg(theme.tokens.background_modifier_border),
+                );
+            }
+            list = list.child(
+                div()
+                    .id(("doc-backlinks-sort-item", ix))
+                    .flex()
+                    .flex_row()
+                    .items_center()
+                    .gap_2()
+                    .px_3()
+                    .py_1()
+                    .cursor_pointer()
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                    .on_click(listen(this, move |ws: &mut Self, _: &ClickEvent, _, cx| {
+                        ws.doc_set_sort(id, order, cx)
+                    }))
+                    .child(
+                        div()
+                            .w(px(16.))
+                            .flex_shrink_0()
+                            .flex()
+                            .items_center()
+                            .children(
+                                (order == current)
+                                    .then(|| icon("check", 14., theme.tokens.text_muted)),
+                            ),
+                    )
+                    .child(order.label()),
+            );
+        }
+        Some(
+            deferred(
+                anchored()
+                    .position(self.sort_menu_at)
+                    .anchor(Anchor::TopLeft)
+                    .snap_to_window_with_margin(px(8.))
+                    .child(list),
+            )
+            .with_priority(1)
+            .into_any_element(),
+        )
+    }
+
+    /// A pick from the block's sort menu: the leaf's `sortOrder`, the
+    /// dock pane's left as it is.
+    fn doc_set_sort(&mut self, id: u64, order: SortOrder, cx: &mut Context<Self>) {
+        if let Some(tab) = self.doc_tab_mut(id) {
+            tab.doc_backlinks.set_sort(order);
+        }
+        self.doc_sort_menu = None;
+        cx.notify();
+    }
+
+    /// "Show search filter" in the block: shown, with the keyboard in the
+    /// field; hidden, with the query emptied and the keyboard on the note.
+    fn doc_toggle_search(&mut self, id: u64, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(tab) = self.doc_tab_mut(id) else {
+            return;
+        };
+        let doc = &mut tab.doc_backlinks;
+        let on = !doc.flag("showSearch");
+        doc.set_flag("showSearch", on);
+        if !on {
+            doc.set_query("");
+        }
+        let Some(input) = self
+            .group_ix(id)
+            .map(|ix| self.groups[ix].doc_filter.clone())
+        else {
+            return;
+        };
+        if on {
+            window.focus(&input.focus_handle(cx), cx);
+        } else {
+            input.update(cx, |input, cx| input.set_text("", cx));
+            self.focus_main(window, cx);
+        }
+        cx.notify();
+    }
+
+    /// The field's "Clear search": emptied, the keyboard kept there.
+    fn doc_clear_filter(&mut self, id: u64, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(input) = self
+            .group_ix(id)
+            .map(|ix| self.groups[ix].doc_filter.clone())
+        else {
+            return;
+        };
+        input.update(cx, |input, cx| input.set_text("", cx));
+        window.focus(&input.focus_handle(cx), cx);
+        cx.notify();
+    }
+
+    /// What the field of group `id` says: a keystroke is the shown tab's
+    /// `searchQuery`; Escape empties it and keeps the field and the
+    /// keyboard where they are (observed).
+    pub(super) fn doc_filter_event(&mut self, id: u64, event: &InputEvent, cx: &mut Context<Self>) {
+        let Some(input) = self
+            .group_ix(id)
+            .map(|ix| self.groups[ix].doc_filter.clone())
+        else {
+            return;
+        };
+        match event {
+            InputEvent::Changed => {
+                let text = input.read(cx).text().to_string();
+                if let Some(ix) = self.group_ix(id) {
+                    self.groups[ix].doc_filter_synced = text.clone();
+                }
+                let changed = self
+                    .doc_tab_mut(id)
+                    .is_some_and(|tab| tab.doc_backlinks.set_query(&text));
+                if changed {
+                    cx.notify();
+                }
+            }
+            InputEvent::Cancel => input.update(cx, |input, cx| input.set_text("", cx)),
+            _ => {}
+        }
+    }
+
+    /// Puts the query of the tab the block under `host` shows into its
+    /// group's field, when the tab changed under it: a tab whose query is
+    /// not the one the field last agreed on. A keystroke the field has not
+    /// yet reported is left alone, since the tab still agrees with the
+    /// field's last report.
+    fn sync_doc_filter(&mut self, host: gpui::EntityId, cx: &mut Context<Self>) {
+        let Some((id, _, doc)) = self.doc_host(host) else {
+            return;
+        };
+        let query = doc.query().to_string();
+        let Some(ix) = self.group_ix(id) else {
+            return;
+        };
+        let group = &mut self.groups[ix];
+        if group.doc_filter_synced == query {
+            return;
+        }
+        group.doc_filter_synced = query.clone();
+        let input = group.doc_filter.clone();
+        input.update(cx, |input, cx| input.set_text(query, cx));
     }
 
     /// One of the block's `backlinkOpts` flags flipped in group `id`'s leaf.
@@ -642,6 +976,53 @@ mod tests {
             ]
         );
         assert_eq!(opts["unlinkedCollapsed"], json!(false));
+    }
+
+    /// The 2026-11-16 run: each order picked from the block's menu is the
+    /// leaf's `sortOrder` in place; the filter shown and typed into is
+    /// `showSearch: true` and the query; hidden again it is
+    /// `showSearch: false` with the query emptied. The key order never moves.
+    #[test]
+    fn the_block_sort_and_filter_write_the_leaf_options_in_place() {
+        let mut doc = DocBacklinks::default();
+        doc.toggle(false);
+        let opts_of = |doc: &DocBacklinks| {
+            let mut leaf =
+                markdown_leaf(r#"{"file": "Target.md", "mode": "source", "source": false}"#);
+            doc.write(&mut leaf, false);
+            serde_json::to_string(&leaf["state"]["state"]["backlinkOpts"]).unwrap()
+        };
+        for (order, written) in [
+            (SortOrder::AlphabeticalReverse, "alphabeticalReverse"),
+            (SortOrder::ByModifiedTime, "byModifiedTime"),
+            (SortOrder::ByModifiedTimeReverse, "byModifiedTimeReverse"),
+            (SortOrder::ByCreatedTime, "byCreatedTime"),
+            (SortOrder::ByCreatedTimeReverse, "byCreatedTimeReverse"),
+            (SortOrder::Alphabetical, "alphabetical"),
+        ] {
+            doc.set_sort(order);
+            assert_eq!(doc.sort(), order);
+            assert!(opts_of(&doc).contains(&format!(r#""sortOrder":"{written}""#)));
+        }
+        doc.set_sort(SortOrder::ByModifiedTime);
+        doc.set_flag("showSearch", true);
+        assert!(doc.set_query("kiwi"));
+        assert!(!doc.set_query("kiwi"), "the same query is no change");
+        assert_eq!(
+            opts_of(&doc),
+            compact(
+                r#"{"collapseAll": false, "extraContext": false, "sortOrder": "byModifiedTime", "showSearch": true, "searchQuery": "kiwi", "backlinkCollapsed": false, "unlinkedCollapsed": true}"#
+            )
+        );
+        doc.set_flag("showSearch", false);
+        doc.set_query("");
+        assert_eq!(doc.query(), "");
+        assert_eq!(
+            opts_of(&doc),
+            compact(
+                r#"{"collapseAll": false, "extraContext": false, "sortOrder": "byModifiedTime", "showSearch": false, "searchQuery": "", "backlinkCollapsed": false, "unlinkedCollapsed": true}"#
+            )
+        );
     }
 
     /// A leaf read from a real file is written back as it was, unknown keys

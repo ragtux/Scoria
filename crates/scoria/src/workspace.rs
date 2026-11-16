@@ -987,6 +987,9 @@ impl VaultState {
             // Not a vault's setting at all; `Workspace::change_setting`
             // writes it to `scoria.json` before it gets here.
             SettingChange::Frame(_) => {}
+            // Not a file of the vault: `Workspace::change_setting` keeps it
+            // in the vault's window file.
+            SettingChange::FontSize(_) => {}
         }
         Ok(())
     }
@@ -2374,12 +2377,19 @@ struct TabGroup {
     canvas: Entity<CanvasView>,
     bases: Entity<BasesView>,
     pdf: Entity<PdfView>,
+    /// The search field of the backlinks block under the note, holding the
+    /// query of whichever tab the group shows.
+    doc_filter: Entity<TextInput>,
+    /// The query the field and the shown tab last agreed on: a tab whose
+    /// query differs from it was switched to, and the field takes its query.
+    doc_filter_synced: String,
     /// The `tabs` node this group was restored from, less its children:
     /// `id`, a `dimension` from a dragged divider, and anything unknown.
     node: Map<String, Value>,
 }
 
 impl TabGroup {
+    #[allow(clippy::too_many_arguments)]
     fn new(
         id: u64,
         editor: Entity<Editor>,
@@ -2387,6 +2397,7 @@ impl TabGroup {
         canvas: Entity<CanvasView>,
         bases: Entity<BasesView>,
         pdf: Entity<PdfView>,
+        doc_filter: Entity<TextInput>,
         mode: ViewMode,
     ) -> TabGroup {
         let mut node = Map::new();
@@ -2405,6 +2416,8 @@ impl TabGroup {
             canvas,
             bases,
             pdf,
+            doc_filter,
+            doc_filter_synced: String::new(),
             node,
         }
     }
@@ -3697,6 +3710,8 @@ pub struct Workspace {
     /// Where the pointer was when a pane's sort button was clicked: the
     /// menu opens there, its top-right corner at the click, as Obsidian's does.
     sort_menu_at: gpui::Point<Pixels>,
+    /// The tab group whose backlinks block has its sort menu open.
+    doc_sort_menu: Option<u64>,
     /// The file menu a Backlinks or Outgoing links row opened, while it is
     /// up: where, and on which file.
     file_menu: Option<file_menu::Menu>,
@@ -4446,6 +4461,10 @@ impl Workspace {
                 ws.leave_file_properties_field(window, cx)
             }),
         );
+        let doc_filter = cx.new(pane_filter_input);
+        subscriptions.push(cx.subscribe(&doc_filter, |ws, _, event: &InputEvent, cx| {
+            ws.doc_filter_event(0, event, cx)
+        }));
         let groups = vec![TabGroup::new(
             0,
             editor.clone(),
@@ -4453,6 +4472,7 @@ impl Workspace {
             canvas.clone(),
             bases.clone(),
             pdf.clone(),
+            doc_filter,
             ViewMode::Reading,
         )];
         // Closing the window must not lose edits waiting for the autosave.
@@ -4573,6 +4593,7 @@ impl Workspace {
             backlink_state: BacklinkState::default(),
             outgoing_state: OutgoingState::default(),
             sort_menu_at: point(px(0.), px(0.)),
+            doc_sort_menu: None,
             file_menu: None,
             menu_focus: file_menu::MenuFocus::new(cx),
             menu_window: None,
@@ -4829,6 +4850,12 @@ impl Workspace {
                 self.report(format!("{} could not be written: {err}", change.file()), cx);
             }
             cx.notify();
+            return;
+        }
+        // The slider's size, kept outside the vault like the commands'.
+        if let SettingChange::FontSize(size) = change {
+            crate::theme::fonts::set_font_size(size as f32, cx);
+            cx.refresh_windows();
             return;
         }
         let Some(state) = self.state.clone() else {
@@ -5656,7 +5683,7 @@ impl Workspace {
         let config = state.reload_appearance();
         let system_dark = self.system_dark != self.scheme_flipped;
         let mut theme = Theme::load(&state.root, &state.config_dir(), &config, system_dark);
-        crate::theme::fonts::keep_quick_size(&mut theme, cx);
+        crate::theme::fonts::keep_vault_size(&mut theme, &state.root, config.base_font_size, cx);
         cx.set_global(theme);
         cx.notify();
     }
@@ -6216,8 +6243,8 @@ impl Workspace {
                 }
             }
             "theme:toggle-light-dark" => self.toggle_light_dark(cx),
-            // One pixel up or down, 10 to 30, for the session; see
-            // `fonts::step_font_size` for why nothing is written.
+            // One pixel up or down, 10 to 30, kept in the vault's window
+            // file and never in `appearance.json`; see `fonts::STORE_KEY`.
             "app:increase-font-size" | "app:decrease-font-size" => {
                 let steps = if id == "app:increase-font-size" {
                     1
@@ -12694,8 +12721,15 @@ impl Workspace {
         if let Some(state) = self.state.clone() {
             Self::give_editor_the_vault(&editor, &state, cx);
         }
-        self.groups
-            .push(TabGroup::new(id, editor, reading, canvas, bases, pdf, mode));
+        let doc_filter = cx.new(pane_filter_input);
+        self._subscriptions.push(
+            cx.subscribe(&doc_filter, move |ws, _, event: &InputEvent, cx| {
+                ws.doc_filter_event(id, event, cx)
+            }),
+        );
+        self.groups.push(TabGroup::new(
+            id, editor, reading, canvas, bases, pdf, doc_filter, mode,
+        ));
         if let Some(state) = self.state.clone() {
             self.apply_app_config(&state, cx);
         }
@@ -16681,6 +16715,13 @@ impl Workspace {
                 return name;
             }
         }
+        if self
+            .groups
+            .iter()
+            .any(|g| g.doc_filter.focus_handle(cx).is_focused(window))
+        {
+            return "backlinks-in-document-filter";
+        }
         if self.explorer.focus_handle(cx).is_focused(window) {
             return "explorer";
         }
@@ -17468,6 +17509,9 @@ impl Workspace {
     fn sync_menu_focus(&mut self, here: Option<u64>, window: &mut Window, cx: &mut Context<Self>) {
         let home = self.overlay_home();
         let open = (self.file_menu.is_some() && home == here)
+            || self
+                .doc_sort_menu
+                .is_some_and(|id| self.window_of_group(id) == here)
             || (here.is_none()
                 && (self.backlink_state.sort_menu_open
                     || self.tag_state.sort_menu_open

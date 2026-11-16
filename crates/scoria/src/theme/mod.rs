@@ -93,7 +93,8 @@ pub struct Theme {
     pub mono_font: SharedString,
     pub base_font_size: f32,
     /// `baseFontSizeAction`, "Quick font size adjustment": Ctrl+wheel over
-    /// a note steps [`Theme::base_font_size`] for the session.
+    /// a note steps [`Theme::base_font_size`], kept for the vault as the
+    /// two font-size commands keep it.
     pub quick_font_size: bool,
     /// The canvas: card background and the border of a card with no colour
     /// of its own, the dot grid, the six preset colours a card or edge can

@@ -1,0 +1,3191 @@
+{
+ "fixtures": {
+  "startedAt": "2026-11-16T14:40:17.749Z",
+  "steps": {},
+  "order": [],
+  "elapsedMs": 2203,
+  "files": [
+   ".obsidian",
+   "Alpha.md",
+   "Mention.md",
+   "Mike.md",
+   "Target.md",
+   "Zulu.md"
+  ],
+  "birth": {
+   "Zulu.md": 1794840017749.0803,
+   "Alpha.md": 1794840018850.1023,
+   "Mike.md": 1794840019950.124
+  }
+ },
+ "run": {
+  "startedAt": "2026-11-16T14:40:21.123Z",
+  "steps": {
+   "f01-boot": {
+    "ok": true,
+    "ms": 1,
+    "font": {
+     "cssVar": "20px",
+     "inline": "20px",
+     "rootFont": "calc(20px * var(--preferred-text-scale, 1))",
+     "config": 20,
+     "ls": {
+      "522fd2c5b030e218-base-font-size": "20"
+     }
+    },
+    "appearance": "{\n  \"baseFontSize\": 20,\n  \"baseFontSizeAction\": true\n}"
+   },
+   "f02-increase": {
+    "ok": true,
+    "ms": 2504,
+    "before": {
+     "cssVar": "20px",
+     "inline": "20px",
+     "rootFont": "calc(20px * var(--preferred-text-scale, 1))",
+     "config": 20,
+     "ls": {
+      "522fd2c5b030e218-base-font-size": "20"
+     }
+    },
+    "ran": true,
+    "after": {
+     "cssVar": "21px",
+     "inline": "21px",
+     "rootFont": "calc(21px * var(--preferred-text-scale, 1))",
+     "config": 20,
+     "ls": {
+      "522fd2c5b030e218-base-font-size": "21"
+     }
+    },
+    "appearance": "{\n  \"baseFontSize\": 20,\n  \"baseFontSizeAction\": true\n}"
+   },
+   "f03-wheel": {
+    "ok": true,
+    "ms": 3861,
+    "before": {
+     "cssVar": "21px",
+     "inline": "21px",
+     "rootFont": "calc(21px * var(--preferred-text-scale, 1))",
+     "config": 20,
+     "ls": {
+      "522fd2c5b030e218-base-font-size": "21"
+     }
+    },
+    "prevented": false,
+    "after": {
+     "cssVar": "22px",
+     "inline": "22px",
+     "rootFont": "calc(22px * var(--preferred-text-scale, 1))",
+     "config": 20,
+     "ls": {
+      "522fd2c5b030e218-base-font-size": "22"
+     }
+    },
+    "appearance": "{\n  \"baseFontSize\": 20,\n  \"baseFontSizeAction\": true\n}"
+   },
+   "f04-slider": {
+    "ok": true,
+    "ms": 7996,
+    "row": {
+     "value": "22",
+     "min": "10",
+     "max": "30",
+     "buttons": [
+      "Restore default"
+     ]
+    },
+    "setTo14": "14",
+    "after14": {
+     "cssVar": "14px",
+     "inline": "14px",
+     "rootFont": "calc(14px * var(--preferred-text-scale, 1))",
+     "config": 20,
+     "ls": {
+      "522fd2c5b030e218-base-font-size": "14"
+     }
+    },
+    "appearance14": "{\n  \"baseFontSize\": 20,\n  \"baseFontSizeAction\": true\n}",
+    "restore": true,
+    "afterRestore": {
+     "cssVar": "16px",
+     "inline": "16px",
+     "rootFont": "calc(16px * var(--preferred-text-scale, 1))",
+     "config": 20,
+     "ls": {
+      "522fd2c5b030e218-base-font-size": "16"
+     }
+    },
+    "appearanceRestore": "{\n  \"baseFontSize\": 20,\n  \"baseFontSizeAction\": true\n}",
+    "sliderAfter": "16"
+   },
+   "f05-external": {
+    "ok": true,
+    "ms": 3503,
+    "before": {
+     "cssVar": "16px",
+     "inline": "16px",
+     "rootFont": "calc(16px * var(--preferred-text-scale, 1))",
+     "config": 20,
+     "ls": {
+      "522fd2c5b030e218-base-font-size": "16"
+     }
+    },
+    "after": {
+     "cssVar": "16px",
+     "inline": "16px",
+     "rootFont": "calc(16px * var(--preferred-text-scale, 1))",
+     "config": 24,
+     "ls": {
+      "522fd2c5b030e218-base-font-size": "16"
+     }
+    },
+    "appearance": "{\n  \"baseFontSize\": 24,\n  \"baseFontSizeAction\": true\n}"
+   },
+   "b01-menu": {
+    "ok": true,
+    "ms": 3535,
+    "open": {
+     "file": "Target.md",
+     "mode": "source",
+     "source": false
+    },
+    "toggled": true,
+    "state": {
+     "file": "Target.md",
+     "mode": "source",
+     "source": false,
+     "backlinks": true,
+     "backlinkOpts": {
+      "collapseAll": false,
+      "extraContext": false,
+      "sortOrder": "alphabetical",
+      "showSearch": false,
+      "searchQuery": "",
+      "backlinkCollapsed": false,
+      "unlinkedCollapsed": true
+     }
+    },
+    "block": {
+     "rect": [
+      614,
+      593.5,
+      700,
+      347.5
+     ],
+     "display": "block",
+     "btns": [
+      {
+       "aria": "Collapse results",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-list",
+       "rect": [
+        1196,
+        606.5,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Show more context",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-move-vertical",
+       "rect": [
+        1226,
+        606.5,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Change sort order",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-sort-asc",
+       "rect": [
+        1256,
+        606.5,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Show search filter",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-search",
+       "rect": [
+        1286,
+        606.5,
+        28,
+        24
+       ]
+      }
+     ],
+     "search": {
+      "shown": false,
+      "html": "<div class=\"search-input-container\" style=\"display: none;\"><input enterkeyhint=\"search\" type=\"search\" spellcheck=\"false\" placeholder=\"Search...\"><div class=\"search-input-clear-button\" aria-label=\"Clear search\"></div></div>",
+      "value": "",
+      "placeholder": "Search...",
+      "inputRect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "style": {
+       "display": "none",
+       "margin": "0px 0px 12px",
+       "width": "calc(100% - 150px)",
+       "height": "auto"
+      },
+      "clear": {
+       "aria": "Clear search",
+       "shown": false,
+       "display": "none"
+      }
+     },
+     "sections": [
+      {
+       "text": "Linked mentions",
+       "flair": "4",
+       "collapsed": false
+      },
+      {
+       "text": "Unlinked mentions",
+       "flair": "",
+       "collapsed": true
+      }
+     ],
+     "groups": [
+      {
+       "shown": true,
+       "files": [
+        {
+         "name": "Alpha",
+         "flair": "2",
+         "matches": [
+          "Alpha says [[Target]] here.",
+          "And again [[Target|alias]] there."
+         ]
+        },
+        {
+         "name": "Mike",
+         "flair": "1",
+         "matches": [
+          "Mike links [[Target]] with a kiwi."
+         ]
+        },
+        {
+         "name": "Zulu",
+         "flair": "1",
+         "matches": [
+          "Zulu points at [[Target]] once."
+         ]
+        }
+       ]
+      },
+      {
+       "shown": false,
+       "files": []
+      }
+     ],
+     "empty": null
+    },
+    "dock": {
+     "file": "Target.md",
+     "collapseAll": false,
+     "extraContext": false,
+     "sortOrder": "alphabetical",
+     "showSearch": false,
+     "searchQuery": "",
+     "backlinkCollapsed": false,
+     "unlinkedCollapsed": true
+    },
+    "btn": {
+     "x": 1256,
+     "y": 606.5,
+     "w": 28,
+     "h": 24,
+     "cx": 1270,
+     "cy": 618.5
+    },
+    "click": {
+     "x": 1256,
+     "y": 606.5,
+     "w": 28,
+     "h": 24,
+     "cx": 1270,
+     "cy": 618.5
+    },
+    "menus": [
+     {
+      "rect": [
+       1272,
+       621,
+       190.109375,
+       189.34375
+      ],
+      "items": [
+       {
+        "title": "File name (A to Z)",
+        "icon": "svg-icon lucide-check",
+        "checked": true,
+        "cls": "menu-item tappable mod-checked",
+        "section": null
+       },
+       {
+        "title": "File name (Z to A)",
+        "icon": null,
+        "checked": false,
+        "cls": "menu-item tappable",
+        "section": null
+       },
+       "---",
+       {
+        "title": "Modified time (new to old)",
+        "icon": null,
+        "checked": false,
+        "cls": "menu-item tappable",
+        "section": null
+       },
+       {
+        "title": "Modified time (old to new)",
+        "icon": null,
+        "checked": false,
+        "cls": "menu-item tappable",
+        "section": null
+       },
+       "---",
+       {
+        "title": "Created time (new to old)",
+        "icon": null,
+        "checked": false,
+        "cls": "menu-item tappable",
+        "section": null
+       },
+       {
+        "title": "Created time (old to new)",
+        "icon": null,
+        "checked": false,
+        "cls": "menu-item tappable",
+        "section": null
+       }
+      ]
+     }
+    ],
+    "activeWithMenu": {
+     "tag": "DIV",
+     "cls": "cm-scroller",
+     "inBlock": false,
+     "inDock": false,
+     "cm": false
+    },
+    "menusAfterEscape": []
+   },
+   "b02-orders": {
+    "ok": true,
+    "ms": 21101,
+    "picks": [
+     {
+      "title": "File name (Z to A)",
+      "clicked": true,
+      "order": [
+       "Zulu",
+       "Mike",
+       "Alpha"
+      ],
+      "leaf": {
+       "file": "Target.md",
+       "mode": "source",
+       "source": false,
+       "backlinks": true,
+       "backlinkOpts": {
+        "collapseAll": false,
+        "extraContext": false,
+        "sortOrder": "alphabeticalReverse",
+        "showSearch": false,
+        "searchQuery": "",
+        "backlinkCollapsed": false,
+        "unlinkedCollapsed": true
+       }
+      },
+      "dock": {
+       "file": "Target.md",
+       "collapseAll": false,
+       "extraContext": false,
+       "sortOrder": "alphabetical",
+       "showSearch": false,
+       "searchQuery": "",
+       "backlinkCollapsed": false,
+       "unlinkedCollapsed": true
+      },
+      "wsChanged": true,
+      "wsLeaves": [
+       {
+        "type": "markdown",
+        "state": {
+         "file": "Target.md",
+         "mode": "source",
+         "source": false,
+         "backlinks": true,
+         "backlinkOpts": {
+          "collapseAll": false,
+          "extraContext": false,
+          "sortOrder": "alphabeticalReverse",
+          "showSearch": false,
+          "searchQuery": "",
+          "backlinkCollapsed": false,
+          "unlinkedCollapsed": true
+         }
+        }
+       },
+       {
+        "type": "backlink",
+        "state": {
+         "file": "Target.md",
+         "collapseAll": false,
+         "extraContext": false,
+         "sortOrder": "alphabetical",
+         "showSearch": false,
+         "searchQuery": "",
+         "backlinkCollapsed": false,
+         "unlinkedCollapsed": true
+        }
+       },
+       {
+        "type": "outgoing-link",
+        "state": {
+         "file": "Target.md",
+         "linksCollapsed": false,
+         "unlinkedCollapsed": true
+        }
+       },
+       {
+        "type": "tag",
+        "state": {
+         "sortOrder": "frequency",
+         "useHierarchy": true,
+         "showSearch": false,
+         "searchQuery": ""
+        }
+       },
+       {
+        "type": "all-properties",
+        "state": {
+         "sortOrder": "frequency",
+         "showSearch": false,
+         "searchQuery": ""
+        }
+       },
+       {
+        "type": "outline",
+        "state": {
+         "file": "Target.md",
+         "followCursor": false,
+         "showSearch": false,
+         "searchQuery": ""
+        }
+       }
+      ],
+      "backlinkJson": null,
+      "menusAfter": 0
+     },
+     {
+      "title": "Modified time (new to old)",
+      "clicked": true,
+      "order": [
+       "Alpha",
+       "Zulu",
+       "Mike"
+      ],
+      "leaf": {
+       "file": "Target.md",
+       "mode": "source",
+       "source": false,
+       "backlinks": true,
+       "backlinkOpts": {
+        "collapseAll": false,
+        "extraContext": false,
+        "sortOrder": "byModifiedTime",
+        "showSearch": false,
+        "searchQuery": "",
+        "backlinkCollapsed": false,
+        "unlinkedCollapsed": true
+       }
+      },
+      "dock": {
+       "file": "Target.md",
+       "collapseAll": false,
+       "extraContext": false,
+       "sortOrder": "alphabetical",
+       "showSearch": false,
+       "searchQuery": "",
+       "backlinkCollapsed": false,
+       "unlinkedCollapsed": true
+      },
+      "wsChanged": true,
+      "wsLeaves": [
+       {
+        "type": "markdown",
+        "state": {
+         "file": "Target.md",
+         "mode": "source",
+         "source": false,
+         "backlinks": true,
+         "backlinkOpts": {
+          "collapseAll": false,
+          "extraContext": false,
+          "sortOrder": "byModifiedTime",
+          "showSearch": false,
+          "searchQuery": "",
+          "backlinkCollapsed": false,
+          "unlinkedCollapsed": true
+         }
+        }
+       },
+       {
+        "type": "backlink",
+        "state": {
+         "file": "Target.md",
+         "collapseAll": false,
+         "extraContext": false,
+         "sortOrder": "alphabetical",
+         "showSearch": false,
+         "searchQuery": "",
+         "backlinkCollapsed": false,
+         "unlinkedCollapsed": true
+        }
+       },
+       {
+        "type": "outgoing-link",
+        "state": {
+         "file": "Target.md",
+         "linksCollapsed": false,
+         "unlinkedCollapsed": true
+        }
+       },
+       {
+        "type": "tag",
+        "state": {
+         "sortOrder": "frequency",
+         "useHierarchy": true,
+         "showSearch": false,
+         "searchQuery": ""
+        }
+       },
+       {
+        "type": "all-properties",
+        "state": {
+         "sortOrder": "frequency",
+         "showSearch": false,
+         "searchQuery": ""
+        }
+       },
+       {
+        "type": "outline",
+        "state": {
+         "file": "Target.md",
+         "followCursor": false,
+         "showSearch": false,
+         "searchQuery": ""
+        }
+       }
+      ],
+      "backlinkJson": null,
+      "menusAfter": 0
+     },
+     {
+      "title": "Modified time (old to new)",
+      "clicked": true,
+      "order": [
+       "Mike",
+       "Zulu",
+       "Alpha"
+      ],
+      "leaf": {
+       "file": "Target.md",
+       "mode": "source",
+       "source": false,
+       "backlinks": true,
+       "backlinkOpts": {
+        "collapseAll": false,
+        "extraContext": false,
+        "sortOrder": "byModifiedTimeReverse",
+        "showSearch": false,
+        "searchQuery": "",
+        "backlinkCollapsed": false,
+        "unlinkedCollapsed": true
+       }
+      },
+      "dock": {
+       "file": "Target.md",
+       "collapseAll": false,
+       "extraContext": false,
+       "sortOrder": "alphabetical",
+       "showSearch": false,
+       "searchQuery": "",
+       "backlinkCollapsed": false,
+       "unlinkedCollapsed": true
+      },
+      "wsChanged": true,
+      "wsLeaves": [
+       {
+        "type": "markdown",
+        "state": {
+         "file": "Target.md",
+         "mode": "source",
+         "source": false,
+         "backlinks": true,
+         "backlinkOpts": {
+          "collapseAll": false,
+          "extraContext": false,
+          "sortOrder": "byModifiedTimeReverse",
+          "showSearch": false,
+          "searchQuery": "",
+          "backlinkCollapsed": false,
+          "unlinkedCollapsed": true
+         }
+        }
+       },
+       {
+        "type": "backlink",
+        "state": {
+         "file": "Target.md",
+         "collapseAll": false,
+         "extraContext": false,
+         "sortOrder": "alphabetical",
+         "showSearch": false,
+         "searchQuery": "",
+         "backlinkCollapsed": false,
+         "unlinkedCollapsed": true
+        }
+       },
+       {
+        "type": "outgoing-link",
+        "state": {
+         "file": "Target.md",
+         "linksCollapsed": false,
+         "unlinkedCollapsed": true
+        }
+       },
+       {
+        "type": "tag",
+        "state": {
+         "sortOrder": "frequency",
+         "useHierarchy": true,
+         "showSearch": false,
+         "searchQuery": ""
+        }
+       },
+       {
+        "type": "all-properties",
+        "state": {
+         "sortOrder": "frequency",
+         "showSearch": false,
+         "searchQuery": ""
+        }
+       },
+       {
+        "type": "outline",
+        "state": {
+         "file": "Target.md",
+         "followCursor": false,
+         "showSearch": false,
+         "searchQuery": ""
+        }
+       }
+      ],
+      "backlinkJson": null,
+      "menusAfter": 0
+     },
+     {
+      "title": "Created time (new to old)",
+      "clicked": true,
+      "order": [
+       "Mike",
+       "Alpha",
+       "Zulu"
+      ],
+      "leaf": {
+       "file": "Target.md",
+       "mode": "source",
+       "source": false,
+       "backlinks": true,
+       "backlinkOpts": {
+        "collapseAll": false,
+        "extraContext": false,
+        "sortOrder": "byCreatedTime",
+        "showSearch": false,
+        "searchQuery": "",
+        "backlinkCollapsed": false,
+        "unlinkedCollapsed": true
+       }
+      },
+      "dock": {
+       "file": "Target.md",
+       "collapseAll": false,
+       "extraContext": false,
+       "sortOrder": "alphabetical",
+       "showSearch": false,
+       "searchQuery": "",
+       "backlinkCollapsed": false,
+       "unlinkedCollapsed": true
+      },
+      "wsChanged": true,
+      "wsLeaves": [
+       {
+        "type": "markdown",
+        "state": {
+         "file": "Target.md",
+         "mode": "source",
+         "source": false,
+         "backlinks": true,
+         "backlinkOpts": {
+          "collapseAll": false,
+          "extraContext": false,
+          "sortOrder": "byCreatedTime",
+          "showSearch": false,
+          "searchQuery": "",
+          "backlinkCollapsed": false,
+          "unlinkedCollapsed": true
+         }
+        }
+       },
+       {
+        "type": "backlink",
+        "state": {
+         "file": "Target.md",
+         "collapseAll": false,
+         "extraContext": false,
+         "sortOrder": "alphabetical",
+         "showSearch": false,
+         "searchQuery": "",
+         "backlinkCollapsed": false,
+         "unlinkedCollapsed": true
+        }
+       },
+       {
+        "type": "outgoing-link",
+        "state": {
+         "file": "Target.md",
+         "linksCollapsed": false,
+         "unlinkedCollapsed": true
+        }
+       },
+       {
+        "type": "tag",
+        "state": {
+         "sortOrder": "frequency",
+         "useHierarchy": true,
+         "showSearch": false,
+         "searchQuery": ""
+        }
+       },
+       {
+        "type": "all-properties",
+        "state": {
+         "sortOrder": "frequency",
+         "showSearch": false,
+         "searchQuery": ""
+        }
+       },
+       {
+        "type": "outline",
+        "state": {
+         "file": "Target.md",
+         "followCursor": false,
+         "showSearch": false,
+         "searchQuery": ""
+        }
+       }
+      ],
+      "backlinkJson": null,
+      "menusAfter": 0
+     },
+     {
+      "title": "Created time (old to new)",
+      "clicked": true,
+      "order": [
+       "Zulu",
+       "Alpha",
+       "Mike"
+      ],
+      "leaf": {
+       "file": "Target.md",
+       "mode": "source",
+       "source": false,
+       "backlinks": true,
+       "backlinkOpts": {
+        "collapseAll": false,
+        "extraContext": false,
+        "sortOrder": "byCreatedTimeReverse",
+        "showSearch": false,
+        "searchQuery": "",
+        "backlinkCollapsed": false,
+        "unlinkedCollapsed": true
+       }
+      },
+      "dock": {
+       "file": "Target.md",
+       "collapseAll": false,
+       "extraContext": false,
+       "sortOrder": "alphabetical",
+       "showSearch": false,
+       "searchQuery": "",
+       "backlinkCollapsed": false,
+       "unlinkedCollapsed": true
+      },
+      "wsChanged": true,
+      "wsLeaves": [
+       {
+        "type": "markdown",
+        "state": {
+         "file": "Target.md",
+         "mode": "source",
+         "source": false,
+         "backlinks": true,
+         "backlinkOpts": {
+          "collapseAll": false,
+          "extraContext": false,
+          "sortOrder": "byCreatedTimeReverse",
+          "showSearch": false,
+          "searchQuery": "",
+          "backlinkCollapsed": false,
+          "unlinkedCollapsed": true
+         }
+        }
+       },
+       {
+        "type": "backlink",
+        "state": {
+         "file": "Target.md",
+         "collapseAll": false,
+         "extraContext": false,
+         "sortOrder": "alphabetical",
+         "showSearch": false,
+         "searchQuery": "",
+         "backlinkCollapsed": false,
+         "unlinkedCollapsed": true
+        }
+       },
+       {
+        "type": "outgoing-link",
+        "state": {
+         "file": "Target.md",
+         "linksCollapsed": false,
+         "unlinkedCollapsed": true
+        }
+       },
+       {
+        "type": "tag",
+        "state": {
+         "sortOrder": "frequency",
+         "useHierarchy": true,
+         "showSearch": false,
+         "searchQuery": ""
+        }
+       },
+       {
+        "type": "all-properties",
+        "state": {
+         "sortOrder": "frequency",
+         "showSearch": false,
+         "searchQuery": ""
+        }
+       },
+       {
+        "type": "outline",
+        "state": {
+         "file": "Target.md",
+         "followCursor": false,
+         "showSearch": false,
+         "searchQuery": ""
+        }
+       }
+      ],
+      "backlinkJson": null,
+      "menusAfter": 0
+     },
+     {
+      "title": "File name (A to Z)",
+      "clicked": true,
+      "order": [
+       "Alpha",
+       "Mike",
+       "Zulu"
+      ],
+      "leaf": {
+       "file": "Target.md",
+       "mode": "source",
+       "source": false,
+       "backlinks": true,
+       "backlinkOpts": {
+        "collapseAll": false,
+        "extraContext": false,
+        "sortOrder": "alphabetical",
+        "showSearch": false,
+        "searchQuery": "",
+        "backlinkCollapsed": false,
+        "unlinkedCollapsed": true
+       }
+      },
+      "dock": {
+       "file": "Target.md",
+       "collapseAll": false,
+       "extraContext": false,
+       "sortOrder": "alphabetical",
+       "showSearch": false,
+       "searchQuery": "",
+       "backlinkCollapsed": false,
+       "unlinkedCollapsed": true
+      },
+      "wsChanged": true,
+      "wsLeaves": [
+       {
+        "type": "markdown",
+        "state": {
+         "file": "Target.md",
+         "mode": "source",
+         "source": false,
+         "backlinks": true,
+         "backlinkOpts": {
+          "collapseAll": false,
+          "extraContext": false,
+          "sortOrder": "alphabetical",
+          "showSearch": false,
+          "searchQuery": "",
+          "backlinkCollapsed": false,
+          "unlinkedCollapsed": true
+         }
+        }
+       },
+       {
+        "type": "backlink",
+        "state": {
+         "file": "Target.md",
+         "collapseAll": false,
+         "extraContext": false,
+         "sortOrder": "alphabetical",
+         "showSearch": false,
+         "searchQuery": "",
+         "backlinkCollapsed": false,
+         "unlinkedCollapsed": true
+        }
+       },
+       {
+        "type": "outgoing-link",
+        "state": {
+         "file": "Target.md",
+         "linksCollapsed": false,
+         "unlinkedCollapsed": true
+        }
+       },
+       {
+        "type": "tag",
+        "state": {
+         "sortOrder": "frequency",
+         "useHierarchy": true,
+         "showSearch": false,
+         "searchQuery": ""
+        }
+       },
+       {
+        "type": "all-properties",
+        "state": {
+         "sortOrder": "frequency",
+         "showSearch": false,
+         "searchQuery": ""
+        }
+       },
+       {
+        "type": "outline",
+        "state": {
+         "file": "Target.md",
+         "followCursor": false,
+         "showSearch": false,
+         "searchQuery": ""
+        }
+       }
+      ],
+      "backlinkJson": null,
+      "menusAfter": 0
+     },
+     {
+      "title": "Modified time (new to old)",
+      "clicked": true,
+      "order": [
+       "Alpha",
+       "Zulu",
+       "Mike"
+      ],
+      "leaf": {
+       "file": "Target.md",
+       "mode": "source",
+       "source": false,
+       "backlinks": true,
+       "backlinkOpts": {
+        "collapseAll": false,
+        "extraContext": false,
+        "sortOrder": "byModifiedTime",
+        "showSearch": false,
+        "searchQuery": "",
+        "backlinkCollapsed": false,
+        "unlinkedCollapsed": true
+       }
+      },
+      "dock": {
+       "file": "Target.md",
+       "collapseAll": false,
+       "extraContext": false,
+       "sortOrder": "alphabetical",
+       "showSearch": false,
+       "searchQuery": "",
+       "backlinkCollapsed": false,
+       "unlinkedCollapsed": true
+      },
+      "wsChanged": true,
+      "wsLeaves": [
+       {
+        "type": "markdown",
+        "state": {
+         "file": "Target.md",
+         "mode": "source",
+         "source": false,
+         "backlinks": true,
+         "backlinkOpts": {
+          "collapseAll": false,
+          "extraContext": false,
+          "sortOrder": "byModifiedTime",
+          "showSearch": false,
+          "searchQuery": "",
+          "backlinkCollapsed": false,
+          "unlinkedCollapsed": true
+         }
+        }
+       },
+       {
+        "type": "backlink",
+        "state": {
+         "file": "Target.md",
+         "collapseAll": false,
+         "extraContext": false,
+         "sortOrder": "alphabetical",
+         "showSearch": false,
+         "searchQuery": "",
+         "backlinkCollapsed": false,
+         "unlinkedCollapsed": true
+        }
+       },
+       {
+        "type": "outgoing-link",
+        "state": {
+         "file": "Target.md",
+         "linksCollapsed": false,
+         "unlinkedCollapsed": true
+        }
+       },
+       {
+        "type": "tag",
+        "state": {
+         "sortOrder": "frequency",
+         "useHierarchy": true,
+         "showSearch": false,
+         "searchQuery": ""
+        }
+       },
+       {
+        "type": "all-properties",
+        "state": {
+         "sortOrder": "frequency",
+         "showSearch": false,
+         "searchQuery": ""
+        }
+       },
+       {
+        "type": "outline",
+        "state": {
+         "file": "Target.md",
+         "followCursor": false,
+         "showSearch": false,
+         "searchQuery": ""
+        }
+       }
+      ],
+      "backlinkJson": null,
+      "menusAfter": 0
+     }
+    ]
+   },
+   "b03-filter": {
+    "ok": true,
+    "ms": 9344,
+    "beforeBlock": {
+     "rect": [
+      614,
+      593.5,
+      700,
+      347.5
+     ],
+     "display": "block",
+     "btns": [
+      {
+       "aria": "Collapse results",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-list",
+       "rect": [
+        1196,
+        606.5,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Show more context",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-move-vertical",
+       "rect": [
+        1226,
+        606.5,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Change sort order",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-sort-asc",
+       "rect": [
+        1256,
+        606.5,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Show search filter",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-search",
+       "rect": [
+        1286,
+        606.5,
+        28,
+        24
+       ]
+      }
+     ],
+     "search": {
+      "shown": false,
+      "html": "<div class=\"search-input-container\" style=\"display: none;\"><input enterkeyhint=\"search\" type=\"search\" spellcheck=\"false\" placeholder=\"Search...\"><div class=\"search-input-clear-button\" aria-label=\"Clear search\"></div></div>",
+      "value": "",
+      "placeholder": "Search...",
+      "inputRect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "style": {
+       "display": "none",
+       "margin": "0px 0px 12px",
+       "width": "calc(100% - 150px)",
+       "height": "auto"
+      },
+      "clear": {
+       "aria": "Clear search",
+       "shown": false,
+       "display": "none"
+      }
+     },
+     "sections": [
+      {
+       "text": "Linked mentions",
+       "flair": "4",
+       "collapsed": false
+      },
+      {
+       "text": "Unlinked mentions",
+       "flair": "",
+       "collapsed": true
+      }
+     ],
+     "groups": [
+      {
+       "shown": true,
+       "files": [
+        {
+         "name": "Alpha",
+         "flair": "2",
+         "matches": [
+          "Alpha says [[Target]] here.",
+          "And again [[Target|alias]] there."
+         ]
+        },
+        {
+         "name": "Zulu",
+         "flair": "1",
+         "matches": [
+          "Zulu points at [[Target]] once."
+         ]
+        },
+        {
+         "name": "Mike",
+         "flair": "1",
+         "matches": [
+          "Mike links [[Target]] with a kiwi."
+         ]
+        }
+       ]
+      },
+      {
+       "shown": false,
+       "files": []
+      }
+     ],
+     "empty": "No unlinked mentions found."
+    },
+    "click": {
+     "x": 1286,
+     "y": 606.5,
+     "w": 28,
+     "h": 24,
+     "cx": 1300,
+     "cy": 618.5
+    },
+    "blockShown": {
+     "rect": [
+      614,
+      562.09375,
+      700,
+      378.90625
+     ],
+     "display": "block",
+     "btns": [
+      {
+       "aria": "Collapse results",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-list",
+       "rect": [
+        1196,
+        575.09375,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Show more context",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-move-vertical",
+       "rect": [
+        1226,
+        575.09375,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Change sort order",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-sort-asc",
+       "rect": [
+        1256,
+        575.09375,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Show search filter",
+       "cls": "clickable-icon nav-action-button is-active",
+       "icon": "svg-icon lucide-search",
+       "rect": [
+        1286,
+        575.09375,
+        28,
+        24
+       ]
+      }
+     ],
+     "search": {
+      "shown": true,
+      "html": "<div class=\"search-input-container\" style=\"\"><input enterkeyhint=\"search\" type=\"search\" spellcheck=\"false\" placeholder=\"Search...\"><div class=\"search-input-clear-button\" aria-label=\"Clear search\"></div></div>",
+      "value": "",
+      "placeholder": "Search...",
+      "inputRect": [
+       614,
+       575.09375,
+       550,
+       30
+      ],
+      "style": {
+       "display": "block",
+       "margin": "0px 0px 12px",
+       "width": "550px",
+       "height": "30px"
+      },
+      "clear": {
+       "aria": "Clear search",
+       "shown": false,
+       "display": "none"
+      }
+     },
+     "sections": [
+      {
+       "text": "Linked mentions",
+       "flair": "4",
+       "collapsed": false
+      },
+      {
+       "text": "Unlinked mentions",
+       "flair": "",
+       "collapsed": true
+      }
+     ],
+     "groups": [
+      {
+       "shown": true,
+       "files": [
+        {
+         "name": "Alpha",
+         "flair": "2",
+         "matches": [
+          "Alpha says [[Target]] here.",
+          "And again [[Target|alias]] there."
+         ]
+        },
+        {
+         "name": "Zulu",
+         "flair": "1",
+         "matches": [
+          "Zulu points at [[Target]] once."
+         ]
+        },
+        {
+         "name": "Mike",
+         "flair": "1",
+         "matches": [
+          "Mike links [[Target]] with a kiwi."
+         ]
+        }
+       ]
+      },
+      {
+       "shown": false,
+       "files": []
+      }
+     ],
+     "empty": "No unlinked mentions found."
+    },
+    "active": {
+     "tag": "INPUT",
+     "cls": "",
+     "placeholder": "Search...",
+     "inBlock": true,
+     "inDock": false,
+     "cm": false
+    },
+    "leafShown": {
+     "file": "Target.md",
+     "mode": "source",
+     "source": false,
+     "backlinks": true,
+     "backlinkOpts": {
+      "collapseAll": false,
+      "extraContext": false,
+      "sortOrder": "byModifiedTime",
+      "showSearch": true,
+      "searchQuery": "",
+      "backlinkCollapsed": false,
+      "unlinkedCollapsed": true
+     }
+    },
+    "wsShown": [
+     {
+      "type": "markdown",
+      "state": {
+       "file": "Target.md",
+       "mode": "source",
+       "source": false,
+       "backlinks": true,
+       "backlinkOpts": {
+        "collapseAll": false,
+        "extraContext": false,
+        "sortOrder": "byModifiedTime",
+        "showSearch": true,
+        "searchQuery": "",
+        "backlinkCollapsed": false,
+        "unlinkedCollapsed": true
+       }
+      }
+     },
+     {
+      "type": "backlink",
+      "state": {
+       "file": "Target.md",
+       "collapseAll": false,
+       "extraContext": false,
+       "sortOrder": "alphabetical",
+       "showSearch": false,
+       "searchQuery": "",
+       "backlinkCollapsed": false,
+       "unlinkedCollapsed": true
+      }
+     },
+     {
+      "type": "outgoing-link",
+      "state": {
+       "file": "Target.md",
+       "linksCollapsed": false,
+       "unlinkedCollapsed": true
+      }
+     },
+     {
+      "type": "tag",
+      "state": {
+       "sortOrder": "frequency",
+       "useHierarchy": true,
+       "showSearch": false,
+       "searchQuery": ""
+      }
+     },
+     {
+      "type": "all-properties",
+      "state": {
+       "sortOrder": "frequency",
+       "showSearch": false,
+       "searchQuery": ""
+      }
+     },
+     {
+      "type": "outline",
+      "state": {
+       "file": "Target.md",
+       "followCursor": false,
+       "showSearch": false,
+       "searchQuery": ""
+      }
+     }
+    ],
+    "blockKiwi": {
+     "rect": [
+      614,
+      593.5,
+      700,
+      347.5
+     ],
+     "display": "block",
+     "btns": [
+      {
+       "aria": "Collapse results",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-list",
+       "rect": [
+        1196,
+        606.5,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Show more context",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-move-vertical",
+       "rect": [
+        1226,
+        606.5,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Change sort order",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-sort-asc",
+       "rect": [
+        1256,
+        606.5,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Show search filter",
+       "cls": "clickable-icon nav-action-button is-active",
+       "icon": "svg-icon lucide-search",
+       "rect": [
+        1286,
+        606.5,
+        28,
+        24
+       ]
+      }
+     ],
+     "search": {
+      "shown": true,
+      "html": "<div class=\"search-input-container\" style=\"\"><input enterkeyhint=\"search\" type=\"search\" spellcheck=\"false\" placeholder=\"Search...\"><div class=\"search-input-clear-button\" aria-label=\"Clear search\"></div></div>",
+      "value": "kiwi",
+      "placeholder": "Search...",
+      "inputRect": [
+       614,
+       606.5,
+       550,
+       30
+      ],
+      "style": {
+       "display": "block",
+       "margin": "0px 0px 12px",
+       "width": "550px",
+       "height": "30px"
+      },
+      "clear": {
+       "aria": "Clear search",
+       "shown": true,
+       "display": "flex"
+      }
+     },
+     "sections": [
+      {
+       "text": "Linked mentions",
+       "flair": "1",
+       "collapsed": false
+      },
+      {
+       "text": "Unlinked mentions",
+       "flair": "",
+       "collapsed": true
+      }
+     ],
+     "groups": [
+      {
+       "shown": true,
+       "files": [
+        {
+         "name": "Mike",
+         "flair": "1",
+         "matches": [
+          "Mike links [[Target]] with a kiwi."
+         ]
+        }
+       ]
+      },
+      {
+       "shown": false,
+       "files": []
+      }
+     ],
+     "empty": "No unlinked mentions found."
+    },
+    "leafKiwi": {
+     "file": "Target.md",
+     "mode": "source",
+     "source": false,
+     "backlinks": true,
+     "backlinkOpts": {
+      "collapseAll": false,
+      "extraContext": false,
+      "sortOrder": "byModifiedTime",
+      "showSearch": true,
+      "searchQuery": "kiwi",
+      "backlinkCollapsed": false,
+      "unlinkedCollapsed": true
+     }
+    },
+    "wsKiwi": [
+     {
+      "type": "markdown",
+      "state": {
+       "file": "Target.md",
+       "mode": "source",
+       "source": false,
+       "backlinks": true,
+       "backlinkOpts": {
+        "collapseAll": false,
+        "extraContext": false,
+        "sortOrder": "byModifiedTime",
+        "showSearch": true,
+        "searchQuery": "",
+        "backlinkCollapsed": false,
+        "unlinkedCollapsed": true
+       }
+      }
+     },
+     {
+      "type": "backlink",
+      "state": {
+       "file": "Target.md",
+       "collapseAll": false,
+       "extraContext": false,
+       "sortOrder": "alphabetical",
+       "showSearch": false,
+       "searchQuery": "",
+       "backlinkCollapsed": false,
+       "unlinkedCollapsed": true
+      }
+     },
+     {
+      "type": "outgoing-link",
+      "state": {
+       "file": "Target.md",
+       "linksCollapsed": false,
+       "unlinkedCollapsed": true
+      }
+     },
+     {
+      "type": "tag",
+      "state": {
+       "sortOrder": "frequency",
+       "useHierarchy": true,
+       "showSearch": false,
+       "searchQuery": ""
+      }
+     },
+     {
+      "type": "all-properties",
+      "state": {
+       "sortOrder": "frequency",
+       "showSearch": false,
+       "searchQuery": ""
+      }
+     },
+     {
+      "type": "outline",
+      "state": {
+       "file": "Target.md",
+       "followCursor": false,
+       "showSearch": false,
+       "searchQuery": ""
+      }
+     }
+    ],
+    "blockZulu": {
+     "rect": [
+      614,
+      593.5,
+      700,
+      347.5
+     ],
+     "display": "block",
+     "btns": [
+      {
+       "aria": "Collapse results",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-list",
+       "rect": [
+        1196,
+        606.5,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Show more context",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-move-vertical",
+       "rect": [
+        1226,
+        606.5,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Change sort order",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-sort-asc",
+       "rect": [
+        1256,
+        606.5,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Show search filter",
+       "cls": "clickable-icon nav-action-button is-active",
+       "icon": "svg-icon lucide-search",
+       "rect": [
+        1286,
+        606.5,
+        28,
+        24
+       ]
+      }
+     ],
+     "search": {
+      "shown": true,
+      "html": "<div class=\"search-input-container\" style=\"\"><input enterkeyhint=\"search\" type=\"search\" spellcheck=\"false\" placeholder=\"Search...\"><div class=\"search-input-clear-button\" aria-label=\"Clear search\"></div></div>",
+      "value": "Zulu",
+      "placeholder": "Search...",
+      "inputRect": [
+       614,
+       606.5,
+       550,
+       30
+      ],
+      "style": {
+       "display": "block",
+       "margin": "0px 0px 12px",
+       "width": "550px",
+       "height": "30px"
+      },
+      "clear": {
+       "aria": "Clear search",
+       "shown": true,
+       "display": "flex"
+      }
+     },
+     "sections": [
+      {
+       "text": "Linked mentions",
+       "flair": "1",
+       "collapsed": false
+      },
+      {
+       "text": "Unlinked mentions",
+       "flair": "",
+       "collapsed": true
+      }
+     ],
+     "groups": [
+      {
+       "shown": true,
+       "files": [
+        {
+         "name": "Zulu",
+         "flair": "1",
+         "matches": [
+          "Zulu points at [[Target]] once."
+         ]
+        }
+       ]
+      },
+      {
+       "shown": false,
+       "files": []
+      }
+     ],
+     "empty": "No unlinked mentions found."
+    },
+    "blockNone": {
+     "rect": [
+      614,
+      593.5,
+      700,
+      347.5
+     ],
+     "display": "block",
+     "btns": [
+      {
+       "aria": "Collapse results",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-list",
+       "rect": [
+        1196,
+        606.5,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Show more context",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-move-vertical",
+       "rect": [
+        1226,
+        606.5,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Change sort order",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-sort-asc",
+       "rect": [
+        1256,
+        606.5,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Show search filter",
+       "cls": "clickable-icon nav-action-button is-active",
+       "icon": "svg-icon lucide-search",
+       "rect": [
+        1286,
+        606.5,
+        28,
+        24
+       ]
+      }
+     ],
+     "search": {
+      "shown": true,
+      "html": "<div class=\"search-input-container\" style=\"\"><input enterkeyhint=\"search\" type=\"search\" spellcheck=\"false\" placeholder=\"Search...\"><div class=\"search-input-clear-button\" aria-label=\"Clear search\"></div></div>",
+      "value": "nomatchhere",
+      "placeholder": "Search...",
+      "inputRect": [
+       614,
+       606.5,
+       550,
+       30
+      ],
+      "style": {
+       "display": "block",
+       "margin": "0px 0px 12px",
+       "width": "550px",
+       "height": "30px"
+      },
+      "clear": {
+       "aria": "Clear search",
+       "shown": true,
+       "display": "flex"
+      }
+     },
+     "sections": [
+      {
+       "text": "Linked mentions",
+       "flair": "0",
+       "collapsed": false
+      },
+      {
+       "text": "Unlinked mentions",
+       "flair": "",
+       "collapsed": true
+      }
+     ],
+     "groups": [
+      {
+       "shown": true,
+       "files": []
+      },
+      {
+       "shown": false,
+       "files": []
+      }
+     ],
+     "empty": "No backlinks found."
+    },
+    "dock": {
+     "file": "Target.md",
+     "collapseAll": false,
+     "extraContext": false,
+     "sortOrder": "alphabetical",
+     "showSearch": false,
+     "searchQuery": "",
+     "backlinkCollapsed": false,
+     "unlinkedCollapsed": true
+    }
+   },
+   "b04-escape-clear-hide": {
+    "ok": true,
+    "ms": 6045,
+    "beforeEscape": {
+     "block": {
+      "rect": [
+       614,
+       593.5,
+       700,
+       347.5
+      ],
+      "display": "block",
+      "btns": [
+       {
+        "aria": "Collapse results",
+        "cls": "clickable-icon nav-action-button",
+        "icon": "svg-icon lucide-list",
+        "rect": [
+         1196,
+         606.5,
+         28,
+         24
+        ]
+       },
+       {
+        "aria": "Show more context",
+        "cls": "clickable-icon nav-action-button",
+        "icon": "svg-icon lucide-move-vertical",
+        "rect": [
+         1226,
+         606.5,
+         28,
+         24
+        ]
+       },
+       {
+        "aria": "Change sort order",
+        "cls": "clickable-icon nav-action-button",
+        "icon": "svg-icon lucide-sort-asc",
+        "rect": [
+         1256,
+         606.5,
+         28,
+         24
+        ]
+       },
+       {
+        "aria": "Show search filter",
+        "cls": "clickable-icon nav-action-button is-active",
+        "icon": "svg-icon lucide-search",
+        "rect": [
+         1286,
+         606.5,
+         28,
+         24
+        ]
+       }
+      ],
+      "search": {
+       "shown": true,
+       "html": "<div class=\"search-input-container\" style=\"\"><input enterkeyhint=\"search\" type=\"search\" spellcheck=\"false\" placeholder=\"Search...\"><div class=\"search-input-clear-button\" aria-label=\"Clear search\"></div></div>",
+       "value": "Alpha",
+       "placeholder": "Search...",
+       "inputRect": [
+        614,
+        606.5,
+        550,
+        30
+       ],
+       "style": {
+        "display": "block",
+        "margin": "0px 0px 12px",
+        "width": "550px",
+        "height": "30px"
+       },
+       "clear": {
+        "aria": "Clear search",
+        "shown": true,
+        "display": "flex"
+       }
+      },
+      "sections": [
+       {
+        "text": "Linked mentions",
+        "flair": "2",
+        "collapsed": false
+       },
+       {
+        "text": "Unlinked mentions",
+        "flair": "",
+        "collapsed": true
+       }
+      ],
+      "groups": [
+       {
+        "shown": true,
+        "files": [
+         {
+          "name": "Alpha",
+          "flair": "2",
+          "matches": [
+           "Alpha says [[Target]] here.",
+           "And again [[Target|alias]] there."
+          ]
+         }
+        ]
+       },
+       {
+        "shown": false,
+        "files": []
+       }
+      ],
+      "empty": "No unlinked mentions found."
+     },
+     "active": {
+      "tag": "INPUT",
+      "cls": "",
+      "placeholder": "Search...",
+      "inBlock": true,
+      "inDock": false,
+      "cm": false
+     }
+    },
+    "afterEscape": {
+     "block": {
+      "rect": [
+       614,
+       562.09375,
+       700,
+       378.90625
+      ],
+      "display": "block",
+      "btns": [
+       {
+        "aria": "Collapse results",
+        "cls": "clickable-icon nav-action-button",
+        "icon": "svg-icon lucide-list",
+        "rect": [
+         1196,
+         575.09375,
+         28,
+         24
+        ]
+       },
+       {
+        "aria": "Show more context",
+        "cls": "clickable-icon nav-action-button",
+        "icon": "svg-icon lucide-move-vertical",
+        "rect": [
+         1226,
+         575.09375,
+         28,
+         24
+        ]
+       },
+       {
+        "aria": "Change sort order",
+        "cls": "clickable-icon nav-action-button",
+        "icon": "svg-icon lucide-sort-asc",
+        "rect": [
+         1256,
+         575.09375,
+         28,
+         24
+        ]
+       },
+       {
+        "aria": "Show search filter",
+        "cls": "clickable-icon nav-action-button is-active",
+        "icon": "svg-icon lucide-search",
+        "rect": [
+         1286,
+         575.09375,
+         28,
+         24
+        ]
+       }
+      ],
+      "search": {
+       "shown": true,
+       "html": "<div class=\"search-input-container\" style=\"\"><input enterkeyhint=\"search\" type=\"search\" spellcheck=\"false\" placeholder=\"Search...\"><div class=\"search-input-clear-button\" aria-label=\"Clear search\"></div></div>",
+       "value": "",
+       "placeholder": "Search...",
+       "inputRect": [
+        614,
+        575.09375,
+        550,
+        30
+       ],
+       "style": {
+        "display": "block",
+        "margin": "0px 0px 12px",
+        "width": "550px",
+        "height": "30px"
+       },
+       "clear": {
+        "aria": "Clear search",
+        "shown": false,
+        "display": "none"
+       }
+      },
+      "sections": [
+       {
+        "text": "Linked mentions",
+        "flair": "4",
+        "collapsed": false
+       },
+       {
+        "text": "Unlinked mentions",
+        "flair": "",
+        "collapsed": true
+       }
+      ],
+      "groups": [
+       {
+        "shown": true,
+        "files": [
+         {
+          "name": "Alpha",
+          "flair": "2",
+          "matches": [
+           "Alpha says [[Target]] here.",
+           "And again [[Target|alias]] there."
+          ]
+         },
+         {
+          "name": "Zulu",
+          "flair": "1",
+          "matches": [
+           "Zulu points at [[Target]] once."
+          ]
+         },
+         {
+          "name": "Mike",
+          "flair": "1",
+          "matches": [
+           "Mike links [[Target]] with a kiwi."
+          ]
+         }
+        ]
+       },
+       {
+        "shown": false,
+        "files": []
+       }
+      ],
+      "empty": "No unlinked mentions found."
+     },
+     "active": {
+      "tag": "INPUT",
+      "cls": "",
+      "placeholder": "Search...",
+      "inBlock": true,
+      "inDock": false,
+      "cm": false
+     },
+     "leaf": {
+      "file": "Target.md",
+      "mode": "source",
+      "source": false,
+      "backlinks": true,
+      "backlinkOpts": {
+       "collapseAll": false,
+       "extraContext": false,
+       "sortOrder": "byModifiedTime",
+       "showSearch": true,
+       "searchQuery": "",
+       "backlinkCollapsed": false,
+       "unlinkedCollapsed": true
+      }
+     }
+    },
+    "clearRect": {
+     "x": 0,
+     "y": 0,
+     "w": 0,
+     "h": 0,
+     "cx": 0,
+     "cy": 0
+    },
+    "afterClear": {
+     "block": {
+      "rect": [
+       614,
+       562.09375,
+       700,
+       378.90625
+      ],
+      "display": "block",
+      "btns": [
+       {
+        "aria": "Collapse results",
+        "cls": "clickable-icon nav-action-button",
+        "icon": "svg-icon lucide-list",
+        "rect": [
+         1196,
+         575.09375,
+         28,
+         24
+        ]
+       },
+       {
+        "aria": "Show more context",
+        "cls": "clickable-icon nav-action-button",
+        "icon": "svg-icon lucide-move-vertical",
+        "rect": [
+         1226,
+         575.09375,
+         28,
+         24
+        ]
+       },
+       {
+        "aria": "Change sort order",
+        "cls": "clickable-icon nav-action-button",
+        "icon": "svg-icon lucide-sort-asc",
+        "rect": [
+         1256,
+         575.09375,
+         28,
+         24
+        ]
+       },
+       {
+        "aria": "Show search filter",
+        "cls": "clickable-icon nav-action-button is-active",
+        "icon": "svg-icon lucide-search",
+        "rect": [
+         1286,
+         575.09375,
+         28,
+         24
+        ]
+       }
+      ],
+      "search": {
+       "shown": true,
+       "html": "<div class=\"search-input-container\" style=\"\"><input enterkeyhint=\"search\" type=\"search\" spellcheck=\"false\" placeholder=\"Search...\"><div class=\"search-input-clear-button\" aria-label=\"Clear search\"></div></div>",
+       "value": "",
+       "placeholder": "Search...",
+       "inputRect": [
+        614,
+        575.09375,
+        550,
+        30
+       ],
+       "style": {
+        "display": "block",
+        "margin": "0px 0px 12px",
+        "width": "550px",
+        "height": "30px"
+       },
+       "clear": {
+        "aria": "Clear search",
+        "shown": false,
+        "display": "none"
+       }
+      },
+      "sections": [
+       {
+        "text": "Linked mentions",
+        "flair": "4",
+        "collapsed": false
+       },
+       {
+        "text": "Unlinked mentions",
+        "flair": "",
+        "collapsed": true
+       }
+      ],
+      "groups": [
+       {
+        "shown": true,
+        "files": [
+         {
+          "name": "Alpha",
+          "flair": "2",
+          "matches": [
+           "Alpha says [[Target]] here.",
+           "And again [[Target|alias]] there."
+          ]
+         },
+         {
+          "name": "Zulu",
+          "flair": "1",
+          "matches": [
+           "Zulu points at [[Target]] once."
+          ]
+         },
+         {
+          "name": "Mike",
+          "flair": "1",
+          "matches": [
+           "Mike links [[Target]] with a kiwi."
+          ]
+         }
+        ]
+       },
+       {
+        "shown": false,
+        "files": []
+       }
+      ],
+      "empty": "No unlinked mentions found."
+     },
+     "active": {
+      "tag": "INPUT",
+      "cls": "",
+      "placeholder": "Search...",
+      "inBlock": true,
+      "inDock": false,
+      "cm": false
+     },
+     "leaf": {
+      "file": "Target.md",
+      "mode": "source",
+      "source": false,
+      "backlinks": true,
+      "backlinkOpts": {
+       "collapseAll": false,
+       "extraContext": false,
+       "sortOrder": "byModifiedTime",
+       "showSearch": true,
+       "searchQuery": "",
+       "backlinkCollapsed": false,
+       "unlinkedCollapsed": true
+      }
+     }
+    },
+    "withMike": {
+     "rect": [
+      614,
+      593.5,
+      700,
+      347.5
+     ],
+     "display": "block",
+     "btns": [
+      {
+       "aria": "Collapse results",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-list",
+       "rect": [
+        1196,
+        606.5,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Show more context",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-move-vertical",
+       "rect": [
+        1226,
+        606.5,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Change sort order",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-sort-asc",
+       "rect": [
+        1256,
+        606.5,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Show search filter",
+       "cls": "clickable-icon nav-action-button is-active",
+       "icon": "svg-icon lucide-search",
+       "rect": [
+        1286,
+        606.5,
+        28,
+        24
+       ]
+      }
+     ],
+     "search": {
+      "shown": true,
+      "html": "<div class=\"search-input-container\" style=\"\"><input enterkeyhint=\"search\" type=\"search\" spellcheck=\"false\" placeholder=\"Search...\"><div class=\"search-input-clear-button\" aria-label=\"Clear search\"></div></div>",
+      "value": "Mike",
+      "placeholder": "Search...",
+      "inputRect": [
+       614,
+       606.5,
+       550,
+       30
+      ],
+      "style": {
+       "display": "block",
+       "margin": "0px 0px 12px",
+       "width": "550px",
+       "height": "30px"
+      },
+      "clear": {
+       "aria": "Clear search",
+       "shown": true,
+       "display": "flex"
+      }
+     },
+     "sections": [
+      {
+       "text": "Linked mentions",
+       "flair": "1",
+       "collapsed": false
+      },
+      {
+       "text": "Unlinked mentions",
+       "flair": "",
+       "collapsed": true
+      }
+     ],
+     "groups": [
+      {
+       "shown": true,
+       "files": [
+        {
+         "name": "Mike",
+         "flair": "1",
+         "matches": [
+          "Mike links [[Target]] with a kiwi."
+         ]
+        }
+       ]
+      },
+      {
+       "shown": false,
+       "files": []
+      }
+     ],
+     "empty": "No unlinked mentions found."
+    },
+    "hidden": {
+     "block": {
+      "rect": [
+       614,
+       593.5,
+       700,
+       347.5
+      ],
+      "display": "block",
+      "btns": [
+       {
+        "aria": "Collapse results",
+        "cls": "clickable-icon nav-action-button",
+        "icon": "svg-icon lucide-list",
+        "rect": [
+         1196,
+         606.5,
+         28,
+         24
+        ]
+       },
+       {
+        "aria": "Show more context",
+        "cls": "clickable-icon nav-action-button",
+        "icon": "svg-icon lucide-move-vertical",
+        "rect": [
+         1226,
+         606.5,
+         28,
+         24
+        ]
+       },
+       {
+        "aria": "Change sort order",
+        "cls": "clickable-icon nav-action-button",
+        "icon": "svg-icon lucide-sort-asc",
+        "rect": [
+         1256,
+         606.5,
+         28,
+         24
+        ]
+       },
+       {
+        "aria": "Show search filter",
+        "cls": "clickable-icon nav-action-button",
+        "icon": "svg-icon lucide-search",
+        "rect": [
+         1286,
+         606.5,
+         28,
+         24
+        ]
+       }
+      ],
+      "search": {
+       "shown": false,
+       "html": "<div class=\"search-input-container\" style=\"display: none;\"><input enterkeyhint=\"search\" type=\"search\" spellcheck=\"false\" placeholder=\"Search...\"><div class=\"search-input-clear-button\" aria-label=\"Clear search\"></div></div>",
+       "value": "",
+       "placeholder": "Search...",
+       "inputRect": [
+        0,
+        0,
+        0,
+        0
+       ],
+       "style": {
+        "display": "none",
+        "margin": "0px 0px 12px",
+        "width": "calc(100% - 150px)",
+        "height": "auto"
+       },
+       "clear": {
+        "aria": "Clear search",
+        "shown": false,
+        "display": "none"
+       }
+      },
+      "sections": [
+       {
+        "text": "Linked mentions",
+        "flair": "4",
+        "collapsed": false
+       },
+       {
+        "text": "Unlinked mentions",
+        "flair": "",
+        "collapsed": true
+       }
+      ],
+      "groups": [
+       {
+        "shown": true,
+        "files": [
+         {
+          "name": "Alpha",
+          "flair": "2",
+          "matches": [
+           "Alpha says [[Target]] here.",
+           "And again [[Target|alias]] there."
+          ]
+         },
+         {
+          "name": "Zulu",
+          "flair": "1",
+          "matches": [
+           "Zulu points at [[Target]] once."
+          ]
+         },
+         {
+          "name": "Mike",
+          "flair": "1",
+          "matches": [
+           "Mike links [[Target]] with a kiwi."
+          ]
+         }
+        ]
+       },
+       {
+        "shown": false,
+        "files": []
+       }
+      ],
+      "empty": "No unlinked mentions found."
+     },
+     "leaf": {
+      "file": "Target.md",
+      "mode": "source",
+      "source": false,
+      "backlinks": true,
+      "backlinkOpts": {
+       "collapseAll": false,
+       "extraContext": false,
+       "sortOrder": "byModifiedTime",
+       "showSearch": false,
+       "searchQuery": "",
+       "backlinkCollapsed": false,
+       "unlinkedCollapsed": true
+      }
+     },
+     "active": {
+      "tag": "DIV",
+      "cls": "cm-scroller",
+      "inBlock": false,
+      "inDock": false,
+      "cm": false
+     }
+    },
+    "reshown": {
+     "block": {
+      "rect": [
+       614,
+       562.09375,
+       700,
+       378.90625
+      ],
+      "display": "block",
+      "btns": [
+       {
+        "aria": "Collapse results",
+        "cls": "clickable-icon nav-action-button",
+        "icon": "svg-icon lucide-list",
+        "rect": [
+         1196,
+         575.09375,
+         28,
+         24
+        ]
+       },
+       {
+        "aria": "Show more context",
+        "cls": "clickable-icon nav-action-button",
+        "icon": "svg-icon lucide-move-vertical",
+        "rect": [
+         1226,
+         575.09375,
+         28,
+         24
+        ]
+       },
+       {
+        "aria": "Change sort order",
+        "cls": "clickable-icon nav-action-button",
+        "icon": "svg-icon lucide-sort-asc",
+        "rect": [
+         1256,
+         575.09375,
+         28,
+         24
+        ]
+       },
+       {
+        "aria": "Show search filter",
+        "cls": "clickable-icon nav-action-button is-active",
+        "icon": "svg-icon lucide-search",
+        "rect": [
+         1286,
+         575.09375,
+         28,
+         24
+        ]
+       }
+      ],
+      "search": {
+       "shown": true,
+       "html": "<div class=\"search-input-container\" style=\"\"><input enterkeyhint=\"search\" type=\"search\" spellcheck=\"false\" placeholder=\"Search...\"><div class=\"search-input-clear-button\" aria-label=\"Clear search\"></div></div>",
+       "value": "",
+       "placeholder": "Search...",
+       "inputRect": [
+        614,
+        575.09375,
+        550,
+        30
+       ],
+       "style": {
+        "display": "block",
+        "margin": "0px 0px 12px",
+        "width": "550px",
+        "height": "30px"
+       },
+       "clear": {
+        "aria": "Clear search",
+        "shown": false,
+        "display": "none"
+       }
+      },
+      "sections": [
+       {
+        "text": "Linked mentions",
+        "flair": "4",
+        "collapsed": false
+       },
+       {
+        "text": "Unlinked mentions",
+        "flair": "",
+        "collapsed": true
+       }
+      ],
+      "groups": [
+       {
+        "shown": true,
+        "files": [
+         {
+          "name": "Alpha",
+          "flair": "2",
+          "matches": [
+           "Alpha says [[Target]] here.",
+           "And again [[Target|alias]] there."
+          ]
+         },
+         {
+          "name": "Zulu",
+          "flair": "1",
+          "matches": [
+           "Zulu points at [[Target]] once."
+          ]
+         },
+         {
+          "name": "Mike",
+          "flair": "1",
+          "matches": [
+           "Mike links [[Target]] with a kiwi."
+          ]
+         }
+        ]
+       },
+       {
+        "shown": false,
+        "files": []
+       }
+      ],
+      "empty": "No unlinked mentions found."
+     },
+     "leaf": {
+      "file": "Target.md",
+      "mode": "source",
+      "source": false,
+      "backlinks": true,
+      "backlinkOpts": {
+       "collapseAll": false,
+       "extraContext": false,
+       "sortOrder": "byModifiedTime",
+       "showSearch": true,
+       "searchQuery": "",
+       "backlinkCollapsed": false,
+       "unlinkedCollapsed": true
+      }
+     },
+     "active": {
+      "tag": "INPUT",
+      "cls": "",
+      "placeholder": "Search...",
+      "inBlock": true,
+      "inDock": false,
+      "cm": false
+     }
+    }
+   },
+   "b05-leave-and-quit": {
+    "ok": true,
+    "ms": 4213,
+    "leaf": {
+     "file": "Target.md",
+     "mode": "source",
+     "source": false,
+     "backlinks": true,
+     "backlinkOpts": {
+      "collapseAll": false,
+      "extraContext": false,
+      "sortOrder": "byModifiedTime",
+      "showSearch": true,
+      "searchQuery": "Zulu",
+      "backlinkCollapsed": false,
+      "unlinkedCollapsed": true
+     }
+    },
+    "block": {
+     "rect": [
+      614,
+      593.5,
+      700,
+      347.5
+     ],
+     "display": "block",
+     "btns": [
+      {
+       "aria": "Collapse results",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-list",
+       "rect": [
+        1196,
+        606.5,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Show more context",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-move-vertical",
+       "rect": [
+        1226,
+        606.5,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Change sort order",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-sort-asc",
+       "rect": [
+        1256,
+        606.5,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Show search filter",
+       "cls": "clickable-icon nav-action-button is-active",
+       "icon": "svg-icon lucide-search",
+       "rect": [
+        1286,
+        606.5,
+        28,
+        24
+       ]
+      }
+     ],
+     "search": {
+      "shown": true,
+      "html": "<div class=\"search-input-container\" style=\"\"><input enterkeyhint=\"search\" type=\"search\" spellcheck=\"false\" placeholder=\"Search...\"><div class=\"search-input-clear-button\" aria-label=\"Clear search\"></div></div>",
+      "value": "Zulu",
+      "placeholder": "Search...",
+      "inputRect": [
+       614,
+       606.5,
+       550,
+       30
+      ],
+      "style": {
+       "display": "block",
+       "margin": "0px 0px 12px",
+       "width": "550px",
+       "height": "30px"
+      },
+      "clear": {
+       "aria": "Clear search",
+       "shown": true,
+       "display": "flex"
+      }
+     },
+     "sections": [
+      {
+       "text": "Linked mentions",
+       "flair": "1",
+       "collapsed": false
+      },
+      {
+       "text": "Unlinked mentions",
+       "flair": "",
+       "collapsed": true
+      }
+     ],
+     "groups": [
+      {
+       "shown": true,
+       "files": [
+        {
+         "name": "Zulu",
+         "flair": "1",
+         "matches": [
+          "Zulu points at [[Target]] once."
+         ]
+        }
+       ]
+      },
+      {
+       "shown": false,
+       "files": []
+      }
+     ],
+     "empty": "No unlinked mentions found."
+    },
+    "ws": [
+     {
+      "type": "markdown",
+      "state": {
+       "file": "Target.md",
+       "mode": "source",
+       "source": false,
+       "backlinks": true,
+       "backlinkOpts": {
+        "collapseAll": false,
+        "extraContext": false,
+        "sortOrder": "byModifiedTime",
+        "showSearch": true,
+        "searchQuery": "",
+        "backlinkCollapsed": false,
+        "unlinkedCollapsed": true
+       }
+      }
+     },
+     {
+      "type": "backlink",
+      "state": {
+       "file": "Target.md",
+       "collapseAll": false,
+       "extraContext": false,
+       "sortOrder": "alphabetical",
+       "showSearch": false,
+       "searchQuery": "",
+       "backlinkCollapsed": false,
+       "unlinkedCollapsed": true
+      }
+     },
+     {
+      "type": "outgoing-link",
+      "state": {
+       "file": "Target.md",
+       "linksCollapsed": false,
+       "unlinkedCollapsed": true
+      }
+     },
+     {
+      "type": "tag",
+      "state": {
+       "sortOrder": "frequency",
+       "useHierarchy": true,
+       "showSearch": false,
+       "searchQuery": ""
+      }
+     },
+     {
+      "type": "all-properties",
+      "state": {
+       "sortOrder": "frequency",
+       "showSearch": false,
+       "searchQuery": ""
+      }
+     },
+     {
+      "type": "outline",
+      "state": {
+       "file": "Target.md",
+       "followCursor": false,
+       "showSearch": false,
+       "searchQuery": ""
+      }
+     }
+    ]
+   },
+   "f06-increase-and-quit": {
+    "ok": true,
+    "ms": 1706,
+    "before": {
+     "cssVar": "16px",
+     "inline": "16px",
+     "rootFont": "calc(16px * var(--preferred-text-scale, 1))",
+     "config": 24,
+     "ls": {
+      "522fd2c5b030e218-base-font-size": "16"
+     }
+    },
+    "after": {
+     "cssVar": "18px",
+     "inline": "18px",
+     "rootFont": "calc(18px * var(--preferred-text-scale, 1))",
+     "config": 24,
+     "ls": {
+      "522fd2c5b030e218-base-font-size": "18"
+     }
+    },
+    "appearance": "{\n  \"baseFontSize\": 24,\n  \"baseFontSizeAction\": true\n}"
+   }
+  },
+  "order": [
+   "f01-boot",
+   "f02-increase",
+   "f03-wheel",
+   "f04-slider",
+   "f05-external",
+   "b01-menu",
+   "b02-orders",
+   "b03-filter",
+   "b04-escape-clear-hide",
+   "b05-leave-and-quit",
+   "f06-increase-and-quit"
+  ],
+  "elapsedMs": 64271,
+  "vaultPath": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/892bde44-e469-45b7-ae54-7ac59f66638d/scratchpad/font-backlinks/vault",
+  "title": "New tab - vault - Obsidian 1.15.0",
+  "appId": "522fd2c5b030e218",
+  "quitting": true,
+  "quit": true
+ },
+ "after-restart": {
+  "startedAt": "2026-11-16T14:41:28.601Z",
+  "steps": {
+   "after-font": {
+    "ok": true,
+    "ms": 2,
+    "font": {
+     "cssVar": "18px",
+     "inline": "18px",
+     "rootFont": "calc(18px * var(--preferred-text-scale, 1))",
+     "config": 24,
+     "ls": {
+      "522fd2c5b030e218-base-font-size": "18"
+     }
+    },
+    "appearance": "{\n  \"baseFontSize\": 24,\n  \"baseFontSizeAction\": true,\n  \"showRibbon\": true\n}"
+   },
+   "after-block": {
+    "ok": true,
+    "ms": 3,
+    "leafState": {
+     "file": "Target.md",
+     "mode": "source",
+     "source": false,
+     "backlinks": true,
+     "backlinkOpts": {
+      "collapseAll": false,
+      "extraContext": false,
+      "sortOrder": "byModifiedTime",
+      "showSearch": true,
+      "searchQuery": "",
+      "backlinkCollapsed": false,
+      "unlinkedCollapsed": true
+     }
+    },
+    "block": {
+     "rect": [
+      614,
+      550.0625,
+      700,
+      390.9375
+     ],
+     "display": "block",
+     "btns": [
+      {
+       "aria": "Collapse results",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-list",
+       "rect": [
+        1196,
+        563.0625,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Show more context",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-move-vertical",
+       "rect": [
+        1226,
+        563.0625,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Change sort order",
+       "cls": "clickable-icon nav-action-button",
+       "icon": "svg-icon lucide-sort-asc",
+       "rect": [
+        1256,
+        563.0625,
+        28,
+        24
+       ]
+      },
+      {
+       "aria": "Show search filter",
+       "cls": "clickable-icon nav-action-button is-active",
+       "icon": "svg-icon lucide-search",
+       "rect": [
+        1286,
+        563.0625,
+        28,
+        24
+       ]
+      }
+     ],
+     "search": {
+      "shown": true,
+      "html": "<div class=\"search-input-container\" style=\"\"><input enterkeyhint=\"search\" type=\"search\" spellcheck=\"false\" placeholder=\"Search...\"><div class=\"search-input-clear-button\" aria-label=\"Clear search\"></div></div>",
+      "value": "",
+      "placeholder": "Search...",
+      "inputRect": [
+       614,
+       563.0625,
+       550,
+       30
+      ],
+      "style": {
+       "display": "block",
+       "margin": "0px 0px 12px",
+       "width": "550px",
+       "height": "30px"
+      },
+      "clear": {
+       "aria": "Clear search",
+       "shown": false,
+       "display": "none"
+      }
+     },
+     "sections": [
+      {
+       "text": "Linked mentions",
+       "flair": "4",
+       "collapsed": false
+      },
+      {
+       "text": "Unlinked mentions",
+       "flair": "",
+       "collapsed": true
+      }
+     ],
+     "groups": [
+      {
+       "shown": true,
+       "files": [
+        {
+         "name": "Alpha",
+         "flair": "2",
+         "matches": [
+          "Alpha says [[Target]] here.",
+          "And again [[Target|alias]] there."
+         ]
+        },
+        {
+         "name": "Zulu",
+         "flair": "1",
+         "matches": [
+          "Zulu points at [[Target]] once."
+         ]
+        },
+        {
+         "name": "Mike",
+         "flair": "1",
+         "matches": [
+          "Mike links [[Target]] with a kiwi."
+         ]
+        }
+       ]
+      },
+      {
+       "shown": false,
+       "files": []
+      }
+     ],
+     "empty": "No unlinked mentions found."
+    },
+    "workspace": [
+     {
+      "type": "markdown",
+      "state": {
+       "file": "Target.md",
+       "mode": "source",
+       "source": false,
+       "backlinks": true,
+       "backlinkOpts": {
+        "collapseAll": false,
+        "extraContext": false,
+        "sortOrder": "byModifiedTime",
+        "showSearch": true,
+        "searchQuery": "",
+        "backlinkCollapsed": false,
+        "unlinkedCollapsed": true
+       }
+      }
+     },
+     {
+      "type": "backlink",
+      "state": {
+       "file": "Target.md",
+       "collapseAll": false,
+       "extraContext": false,
+       "sortOrder": "alphabetical",
+       "showSearch": false,
+       "searchQuery": "",
+       "backlinkCollapsed": false,
+       "unlinkedCollapsed": true
+      }
+     },
+     {
+      "type": "outgoing-link",
+      "state": {
+       "file": "Target.md",
+       "linksCollapsed": false,
+       "unlinkedCollapsed": true
+      }
+     },
+     {
+      "type": "tag",
+      "state": {
+       "sortOrder": "frequency",
+       "useHierarchy": true,
+       "showSearch": false,
+       "searchQuery": ""
+      }
+     },
+     {
+      "type": "all-properties",
+      "state": {
+       "sortOrder": "frequency",
+       "showSearch": false,
+       "searchQuery": ""
+      }
+     },
+     {
+      "type": "outline",
+      "state": {
+       "file": "Target.md",
+       "followCursor": false,
+       "showSearch": false,
+       "searchQuery": ""
+      }
+     }
+    ],
+    "backlinkJson": null
+   }
+  },
+  "order": [
+   "after-font",
+   "after-block"
+  ],
+  "elapsedMs": 1558,
+  "vaultPath": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/892bde44-e469-45b7-ae54-7ac59f66638d/scratchpad/font-backlinks/vault",
+  "title": "Target - vault - Obsidian 1.15.1",
+  "appId": "522fd2c5b030e218"
+ }
+}
