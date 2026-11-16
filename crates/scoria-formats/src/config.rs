@@ -599,9 +599,11 @@ pub struct BacklinkConfig {
 ///
 /// Obsidian's first write held both snap keys at once
 /// (`{"snapToObjects": true, "snapToGrid": false}`), with each dropdown's
-/// key appended as it was picked. Two rows of the tab are not here: the
-/// folder name the `folder` option reveals, and the zoom threshold slider,
-/// neither of whose key the probe observed.
+/// key appended as it was picked. The folder row's `newFileFolderPath` and
+/// the zoom threshold slider's `zoomBreakpoint` were observed on Obsidian
+/// 1.15.0 (2026-11-16, `tools/obsidian-probe/canvas-settings.mjs`); a first
+/// write from the slider alone was `snapToObjects`, `snapToGrid`,
+/// `zoomBreakpoint`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct CanvasConfig {
     /// "Snap to objects", on when absent.
@@ -625,6 +627,15 @@ pub struct CanvasConfig {
         skip_serializing_if = "Option::is_none"
     )]
     pub new_file_location: Option<String>,
+    /// "Folder to create new canvas files in", shown for `folder`: the
+    /// path as typed, which must name an existing folder exactly (Obsidian
+    /// put a canvas at the root for `/Canvases/` and for a missing folder).
+    #[serde(
+        default,
+        rename = "newFileFolderPath",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub new_file_folder_path: Option<String>,
     /// "Default mouse wheel behavior": `pan` or `zoom`.
     #[serde(
         default,
@@ -647,8 +658,30 @@ pub struct CanvasConfig {
         skip_serializing_if = "Option::is_none"
     )]
     pub card_label_visibility: Option<String>,
+    /// "Zoom threshold for hiding card content", a slider from -0.7 to 2.39
+    /// in steps of 0.01, 0 when absent: a card's content gives way to its
+    /// placeholder below zoom `-1.7 - zoomBreakpoint`. Kept as the number
+    /// the file holds, written through [`js_number`] (`0`, not `0.0`).
+    #[serde(
+        default,
+        rename = "zoomBreakpoint",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub zoom_breakpoint: Option<serde_json::Number>,
     #[serde(flatten)]
     pub extra: Map<String, Value>,
+}
+
+impl CanvasConfig {
+    /// The file as Obsidian writes it: its options object starts out
+    /// holding both snap keys, so every write carries them, `true` unless
+    /// they were turned off (the slider alone first wrote
+    /// `snapToObjects`, `snapToGrid`, `zoomBreakpoint`).
+    pub fn with_snap_keys(mut self) -> CanvasConfig {
+        self.snap_to_objects.get_or_insert(true);
+        self.snap_to_grid.get_or_insert(true);
+        self
+    }
 }
 
 /// `page-preview.json`: one key per surface the hover preview can be made
@@ -1211,8 +1244,10 @@ mod tests {
 
         let canvas = round_trip!(
             CanvasConfig,
-            r#"{"snapToObjects":true,"snapToGrid":false,"newFileLocation":"folder","defaultWheelBehavior":"zoom","defaultModDragBehavior":"group","cardLabelVisibility":"never","someFutureKey":{"nested":[1,2]}}"#
+            r#"{"snapToObjects":true,"snapToGrid":false,"newFileLocation":"folder","newFileFolderPath":"Canvases","defaultWheelBehavior":"zoom","defaultModDragBehavior":"group","cardLabelVisibility":"never","zoomBreakpoint":-0.35,"someFutureKey":{"nested":[1,2]}}"#
         );
+        assert_eq!(canvas.new_file_folder_path.as_deref(), Some("Canvases"));
+        assert_eq!(canvas.zoom_breakpoint, js_number(-0.35));
         assert_eq!(canvas.snap_to_objects, Some(true));
         assert_eq!(canvas.snap_to_grid, Some(false));
         assert_eq!(canvas.new_file_location.as_deref(), Some("folder"));
@@ -1261,6 +1296,18 @@ mod tests {
         assert_eq!(
             web.custom_search_engine.as_deref(),
             Some(WEBVIEWER_DEFAULT_SEARCH_URL)
+        );
+
+        // What Obsidian 1.15.0 wrote when the zoom threshold slider was the
+        // first control moved, byte for byte.
+        let first = CanvasConfig {
+            zoom_breakpoint: js_number(0.5),
+            ..Default::default()
+        }
+        .with_snap_keys();
+        assert_eq!(
+            serde_json::to_string_pretty(&first).unwrap(),
+            "{\n  \"snapToObjects\": true,\n  \"snapToGrid\": true,\n  \"zoomBreakpoint\": 0.5\n}"
         );
 
         // A file none of them has ever been written to is all defaults and

@@ -28,11 +28,12 @@ use gpui::{
     KeyUpEvent, MouseButton, MouseDownEvent, MouseMoveEvent, MouseUpEvent, PathBuilder, PinchEvent,
     Pixels, Render, ScrollWheelEvent, SharedString, Subscription, TextAlign, Window,
 };
+use scoria_canvas::options::{self as canvas_options, Guide, ModDrag, Options};
 use scoria_canvas::{
     anchor, arrow_head, edge_ends, edge_path_points, edge_stub, facing_side, hit_edge, hit_handle,
-    hit_node, nodes_in, side_normal, snap, visible_nodes, Color, Handle, Point as CPoint, Rect,
-    Scene, Selection, Viewport, ARROW, BORDER_WIDTH, CARD_RADIUS, EDGE_HIT, EDGE_TOLERANCE,
-    EDGE_WIDTH, HANDLE, MIN_NODE, NUDGE, NUDGE_LARGE, WHEEL_ZOOM, ZOOM_MAX, ZOOM_MIN,
+    hit_node, nodes_in, side_normal, visible_nodes, Color, Handle, Point as CPoint, Rect, Scene,
+    Selection, Viewport, ARROW, BORDER_WIDTH, CARD_RADIUS, EDGE_HIT, EDGE_TOLERANCE, EDGE_WIDTH,
+    HANDLE, MIN_NODE, NUDGE, NUDGE_LARGE, WHEEL_ZOOM, ZOOM_MAX, ZOOM_MIN, ZOOM_THRESHOLD,
 };
 use scoria_formats::canvas::{Canvas, Edge, Node, NodeType, Side};
 use serde_json::{json, Value};
@@ -50,6 +51,8 @@ const FIT_PADDING: f64 = 40.0;
 const ZOOM_STEP: f64 = 0.5;
 /// A press that travels less than this is a click, not a drag.
 const DRAG_THRESHOLD: f64 = 3.0;
+/// The radius of a snap guide's dots, screen pixels (8 px circles).
+const GUIDE_DOT: f32 = 4.0;
 /// The dot pattern doubles its spacing while it would fall below this on
 /// screen: 20 units at scale 1, 20 px again at scale 0.5, 14.14 px at 0.177.
 const MIN_DOT_SPACING: f64 = 14.142_135_623_730_951;
@@ -223,6 +226,9 @@ enum Drag {
         origin: Rect,
         press: CPoint,
     },
+    /// Ctrl (Cmd) and a left press on the background: a rectangle that
+    /// "Default Ctrl + Drag behavior" fills, or offers a menu for, on release.
+    Create { start: CPoint, end: CPoint },
     /// A press on a connector dot: an edge follows the pointer to a card.
     Connect {
         from: String,
@@ -286,6 +292,12 @@ pub struct CanvasView {
     /// The editor open in the card named by `editing`, made and dropped by
     /// `sync_editor` so every way into and out of editing is one field.
     card_editor: Option<CardEditor>,
+    /// The alignment lines drawn while a drag or a resize snaps to other
+    /// cards, in canvas units; empty otherwise.
+    guides: Vec<Guide>,
+    /// The rectangle a Ctrl+drag drew, while its creation menu or a file
+    /// picker it opened is up: what is made fills it.
+    pending_rect: Option<Rect>,
 }
 
 /// A text card being typed into: a Live Preview editor laid out in the
@@ -314,6 +326,8 @@ enum ContextTarget {
     Cards,
     Edge,
     Background,
+    /// The rectangle a Ctrl+drag drew, with "Show menu" picked.
+    Creation,
 }
 
 impl EventEmitter<CanvasEvent> for CanvasView {}
@@ -366,11 +380,81 @@ impl CanvasView {
             palette_open: false,
             label_hits: std::cell::RefCell::new(Vec::new()),
             card_editor: None,
+            guides: Vec::new(),
+            pending_rect: None,
         }
     }
 
     pub fn path(&self) -> Option<&str> {
         self.path.as_deref()
+    }
+
+    /// The Canvas plugin's settings as they stand now: read on every use,
+    /// so a change in Settings reaches an open canvas at once, as it does
+    /// in Obsidian.
+    fn options(&self) -> Options {
+        self.state
+            .as_ref()
+            .map(|s| Options::from_config(&s.canvas_options()))
+            .unwrap_or_default()
+    }
+
+    /// The end of a Ctrl+drag: what "Default Ctrl + Drag behavior" makes of
+    /// the rectangle, observed on 1.15.0 -- the creation menu, a text card
+    /// filling it and open for editing, the note or media picker whose pick
+    /// fills it, or an `Untitled group` filling it and selected. The
+    /// rectangle is the drag's own, unsnapped. A drag shorter than a click's
+    /// travel does nothing.
+    fn create_in(&mut self, rect: Rect, position: gpui::Point<Pixels>, cx: &mut Context<Self>) {
+        let rect = Rect::new(
+            rect.x.round(),
+            rect.y.round(),
+            rect.width.round(),
+            rect.height.round(),
+        );
+        if rect.width.max(rect.height) * self.scale() < DRAG_THRESHOLD {
+            cx.notify();
+            return;
+        }
+        match self.options().mod_drag {
+            ModDrag::Menu => {
+                self.pending_rect = Some(rect);
+                self.context_menu = Some((position, ContextTarget::Creation));
+                cx.notify();
+            }
+            ModDrag::Card => self.add_card_in(rect, cx),
+            ModDrag::Group => self.add_group_in(rect, cx),
+            ModDrag::Note => {
+                self.pending_rect = Some(rect);
+                cx.emit(CanvasEvent::PickFile(FilePick::Note));
+            }
+            ModDrag::Media => {
+                self.pending_rect = Some(rect);
+                cx.emit(CanvasEvent::PickFile(FilePick::Media));
+            }
+            // Obsidian asks for a URL ("Enter URL"); Scoria has no web page
+            // card to make yet, so the rectangle goes unused.
+            ModDrag::Webpage => cx.notify(),
+        }
+    }
+
+    /// A text card filling `rect`, at least the smallest card, open for
+    /// editing.
+    fn add_card_in(&mut self, rect: Rect, cx: &mut Context<Self>) {
+        self.scene.begin();
+        let id = self.scene.add_text_card(CPoint::new(rect.x, rect.y), "");
+        self.scene.set_node_rect(&id, at_least_min(rect));
+        self.scene.commit();
+        self.editing = Some(id);
+        self.edited(cx);
+    }
+
+    /// A group named `Untitled group` filling `rect`, selected.
+    fn add_group_in(&mut self, rect: Rect, cx: &mut Context<Self>) {
+        self.scene.begin();
+        self.scene.add_group(at_least_min(rect), None);
+        self.scene.commit();
+        self.edited(cx);
     }
 
     /// Where the view looks and how big it is: what Export as image's
@@ -772,8 +856,19 @@ impl CanvasView {
     }
 
     /// Adds a card embedding a vault file at the middle of the view, from
-    /// the pickers.
+    /// the pickers -- or filling the rectangle a Ctrl+drag drew, when the
+    /// picker was opened from one.
     pub fn add_file_card_at_center(&mut self, path: &str, cx: &mut Context<Self>) {
+        if let Some(rect) = self.pending_rect.take() {
+            self.scene.begin();
+            let id = self
+                .scene
+                .add_file_card(CPoint::new(rect.x, rect.y), path, None);
+            self.scene.set_node_rect(&id, at_least_min(rect));
+            self.scene.commit();
+            self.edited(cx);
+            return;
+        }
         let (w, h) = scoria_canvas::DEFAULT_FILE_CARD;
         let c = self.viewport.to_canvas(
             CPoint::new(self.size().0 / 2.0, self.size().1 / 2.0),
@@ -899,7 +994,17 @@ impl CanvasView {
             "copy" => self.copy(&Copy, window, cx),
             "paste" => self.paste(&Paste, window, cx),
             "undo" => self.undo(&Undo, window, cx),
-            "add-card" => self.add_card_at_center(cx),
+            // From the creation menu a Ctrl+drag opened, what is made fills
+            // its rectangle; the pickers keep it for the pick.
+            "add-card" => match self.pending_rect.take() {
+                Some(rect) => self.add_card_in(rect, cx),
+                None => self.add_card_at_center(cx),
+            },
+            "create-group" => {
+                if let Some(rect) = self.pending_rect.take() {
+                    self.add_group_in(rect, cx);
+                }
+            }
             "add-note" => cx.emit(CanvasEvent::PickFile(FilePick::Note)),
             "add-media" => cx.emit(CanvasEvent::PickFile(FilePick::Media)),
             "follow" => {
@@ -1020,6 +1125,8 @@ impl CanvasView {
         window.focus(&self.focus_handle, cx);
         let local = self.local(event.position);
         let at = self.to_canvas(event.position);
+        // A new press ends whatever a Ctrl+drag's rectangle was waiting for.
+        self.pending_rect = None;
         if event.button == MouseButton::Middle
             || (event.button == MouseButton::Left && self.space_held)
         {
@@ -1144,6 +1251,15 @@ impl CanvasView {
             return;
         }
         // The background.
+        if event.modifiers.secondary() {
+            // Ctrl+drag (Cmd on macOS) draws the rectangle "Default Ctrl +
+            // Drag behavior" acts on; a Ctrl+click with no drag does nothing.
+            self.scene.selection.clear();
+            self.editing = None;
+            self.drag = Some(Drag::Create { start: at, end: at });
+            cx.notify();
+            return;
+        }
         if event.click_count == 2 {
             // A new card is centred on the pointer, unsnapped, and opens
             // for editing (observed).
@@ -1222,16 +1338,41 @@ impl CanvasView {
                     self.scene.raise_selection();
                 }
                 // Back to the unsnapped positions plus the new delta, then
-                // the snap of the pressed card carries everything with it.
+                // one correction carries everything with it: to another
+                // card's line, else the pressed card to the grid, else to
+                // whole units (Alt suspends both snaps).
                 self.scene
                     .move_selection(total.x - applied.x, total.y - applied.y);
                 let mut applied = total;
-                if !event.modifiers.alt {
-                    if let Some(n) = self.scene.node(&primary) {
-                        let correction = CPoint::new(snap(n.x) - n.x, snap(n.y) - n.y);
-                        self.scene.move_selection(correction.x, correction.y);
-                        applied = CPoint::new(applied.x + correction.x, applied.y + correction.y);
-                    }
+                let mut options = self.options();
+                if event.modifiers.alt {
+                    options = options.without_snapping();
+                }
+                if let Some(n) = self.scene.node(&primary) {
+                    let anchor = CPoint::new(n.x, n.y);
+                    let carried = self.scene.carried_nodes();
+                    let rects = |scene: &Scene| -> Vec<Rect> {
+                        carried
+                            .iter()
+                            .map(|&i| Rect::of(&scene.canvas.nodes[i]))
+                            .collect()
+                    };
+                    let others = canvas_options::snap_targets(&self.scene.canvas, &carried);
+                    let correction = canvas_options::drag_correction(
+                        &options,
+                        anchor,
+                        &rects(&self.scene),
+                        &others,
+                        self.scale(),
+                        (total.x != 0.0, total.y != 0.0),
+                    );
+                    self.scene.move_selection(correction.x, correction.y);
+                    applied = CPoint::new(applied.x + correction.x, applied.y + correction.y);
+                    self.guides = if options.snap_to_objects {
+                        canvas_options::guides(&rects(&self.scene), &others)
+                    } else {
+                        Vec::new()
+                    };
                 }
                 self.drag = Some(Drag::Move {
                     press,
@@ -1247,10 +1388,27 @@ impl CanvasView {
                 press,
             } => {
                 let total = CPoint::new(at.x - press.x, at.y - press.y);
-                let mut target = handle.resize(&origin, total.x, total.y, MIN_NODE);
-                if !event.modifiers.alt {
-                    target = snap_rect_sides(handle, &origin, &target);
+                let target = handle.resize(&origin, total.x, total.y, MIN_NODE);
+                let mut options = self.options();
+                if event.modifiers.alt {
+                    options = options.without_snapping();
                 }
+                let resized: Vec<usize> = self.scene.node_index(&id).into_iter().collect();
+                let others = canvas_options::snap_targets(&self.scene.canvas, &resized);
+                let target = canvas_options::snap_resize(
+                    &options,
+                    handle,
+                    &origin,
+                    &target,
+                    &others,
+                    canvas_options::SNAP_DISTANCE / self.scale(),
+                    MIN_NODE,
+                );
+                self.guides = if options.snap_to_objects {
+                    canvas_options::guides(&[target], &others)
+                } else {
+                    Vec::new()
+                };
                 if let Some(now) = self.scene.node(&id).map(Rect::of) {
                     let (dx, dy) = resize_delta(handle, &now, &target);
                     self.scene.resize_node(&id, handle, dx, dy);
@@ -1258,6 +1416,9 @@ impl CanvasView {
             }
             Drag::Connect { from, side, .. } => {
                 self.drag = Some(Drag::Connect { from, side, to: at });
+            }
+            Drag::Create { start, .. } => {
+                self.drag = Some(Drag::Create { start, end: at });
             }
         }
         cx.notify();
@@ -1267,9 +1428,14 @@ impl CanvasView {
         let Some(drag) = self.drag.take() else {
             return;
         };
+        self.guides.clear();
         let at = self.to_canvas(event.position);
         match drag {
             Drag::Pan { .. } => {}
+            Drag::Create { start, .. } => {
+                self.create_in(Rect::between(start, at), event.position, cx);
+                return;
+            }
             Drag::Marquee {
                 start,
                 end,
@@ -1350,7 +1516,12 @@ impl CanvasView {
     fn scroll(&mut self, event: &ScrollWheelEvent, line_height: Pixels, cx: &mut Context<Self>) {
         let delta = event.delta.pixel_delta(line_height);
         let (mut dx, mut dy) = (f64::from(f32::from(delta.x)), f64::from(f32::from(delta.y)));
-        if event.modifiers.control {
+        // "Default mouse wheel behavior": Ctrl (or Cmd) swaps zooming and
+        // panning. A zoom takes the vertical delta only, so a sideways
+        // wheel in zoom mode does nothing; Shift turns a vertical pan
+        // sideways in either mode (1.15.0).
+        let ctrl = event.modifiers.control || event.modifiers.platform;
+        if self.options().wheel_zooms(ctrl) {
             self.viewport
                 .zoom_at(dy * WHEEL_ZOOM, self.local(event.position), self.size());
         } else {
@@ -1781,6 +1952,7 @@ impl CanvasView {
     ) {
         let scale = self.scale();
         let ls = self.label_scale();
+        let options = self.options();
         let visible = self.viewport.visible(self.size());
         for ix in visible_nodes(&self.scene.canvas, &visible) {
             let node = &self.scene.canvas.nodes[ix];
@@ -1814,7 +1986,14 @@ impl CanvasView {
             }
             // The name above a file card, the address above a link card
             // (Obsidian shows the page's title there, which it fetched).
+            // "Show card names" decides whether it is drawn -- always, only
+            // while the pointer is over the card, or never -- and the
+            // wrapper's `mod-zoomed-out` hides it at -1.7 and below whatever
+            // the zoom threshold setting says (1.15.0).
+            let shown = options.shows_card_label(self.hovered.as_deref() == Some(&node.id))
+                && self.viewport.zoom > ZOOM_THRESHOLD;
             let label = match node.kind {
+                _ if !shown => None,
                 NodeType::File => node.file.as_deref().map(|f| {
                     crate::explorer::display_name(f.rsplit('/').next().unwrap_or(f)).to_string()
                 }),
@@ -1899,8 +2078,18 @@ impl CanvasView {
                 }
             }
         }
-        if let Some(Drag::Marquee { start, end, .. }) = &self.drag {
-            let r = self.screen_rect(&Rect::between(*start, *end));
+        self.paint_guides(theme, window);
+        // A Ctrl+drag's rectangle is drawn as the marquee is
+        // (`.canvas-selection` in both, observed 2026-11-16), and stays up
+        // while the creation menu or a picker waits on it, as Obsidian's does.
+        let rect = match &self.drag {
+            Some(Drag::Marquee { start, end, .. } | Drag::Create { start, end }) => {
+                Some(Rect::between(*start, *end))
+            }
+            _ => self.pending_rect,
+        };
+        if let Some(rect) = rect {
+            let r = self.screen_rect(&rect);
             // `.canvas-selection`: `--color-accent` at 10 percent inside a
             // 2 px frame of it.
             let mut wash = theme.tokens.color_accent;
@@ -1918,6 +2107,38 @@ impl CanvasView {
             quad.border_widths = Edges::all(px(2.0));
             quad.border_color = theme.tokens.color_accent;
             window.paint_quad(quad);
+        }
+    }
+
+    /// The snap guides: `svg.canvas-snaps`, a 1 px `--color-accent` line
+    /// through the points a moving card shares with another, and an 8 px
+    /// dot on each point (Obsidian 1.15.0, `rgb(138, 92, 245)` in the
+    /// default dark theme).
+    fn paint_guides(&self, theme: &Theme, window: &mut Window) {
+        let to_window = |p: CPoint| {
+            let s = self.viewport.to_screen(p, self.size());
+            point(
+                self.bounds.origin.x + px(s.x as f32),
+                self.bounds.origin.y + px(s.y as f32),
+            )
+        };
+        for guide in &self.guides {
+            let (a, b) = (to_window(guide.from), to_window(guide.to));
+            let line = Bounds::from_corners(
+                point(a.x.min(b.x) - px(0.5), a.y.min(b.y) - px(0.5)),
+                point(a.x.max(b.x) + px(0.5), a.y.max(b.y) + px(0.5)),
+            );
+            window.paint_quad(fill(line, theme.tokens.color_accent));
+            for p in &guide.points {
+                let c = to_window(*p);
+                let dot = Bounds::new(
+                    point(c.x - px(GUIDE_DOT), c.y - px(GUIDE_DOT)),
+                    size(px(2.0 * GUIDE_DOT), px(2.0 * GUIDE_DOT)),
+                );
+                let mut quad = fill(dot, theme.tokens.color_accent);
+                quad.corner_radii = Corners::all(px(GUIDE_DOT));
+                window.paint_quad(quad);
+            }
         }
     }
 
@@ -2049,10 +2270,15 @@ impl CanvasView {
                 .group(SharedString::from(format!("canvas-card-menu-{ix}")))
                 .when(enabled, |d| d.cursor_pointer())
                 .tooltip(menu::tooltip(label))
-                .on_click(cx.listener(move |this, _, _, cx| match ix {
-                    0 => this.add_card_at_center(cx),
-                    1 => cx.emit(CanvasEvent::PickFile(FilePick::Note)),
-                    _ => cx.emit(CanvasEvent::PickFile(FilePick::Media)),
+                .on_click(cx.listener(move |this, _, _, cx| {
+                    // A pick from here goes to the middle of the view, not
+                    // into a rectangle an abandoned Ctrl+drag left behind.
+                    this.pending_rect = None;
+                    match ix {
+                        0 => this.add_card_at_center(cx),
+                        1 => cx.emit(CanvasEvent::PickFile(FilePick::Note)),
+                        _ => cx.emit(CanvasEvent::PickFile(FilePick::Media)),
+                    }
                 }))
                 // `.canvas-card-menu-button`: muted, and the accent under the
                 // pointer with no wash behind it.
@@ -2355,6 +2581,27 @@ impl CanvasView {
                     label: "Paste",
                 },
             ],
+            // Obsidian's list is Add card, Add note from vault, Add media
+            // from vault, Add web page, Create group; Scoria has no web page
+            // card to make.
+            ContextTarget::Creation => &[
+                ListItem {
+                    id: "add-card",
+                    label: "Add card",
+                },
+                ListItem {
+                    id: "add-note",
+                    label: "Add note from vault",
+                },
+                ListItem {
+                    id: "add-media",
+                    label: "Add media from vault",
+                },
+                ListItem {
+                    id: "create-group",
+                    label: "Create group",
+                },
+            ],
         };
         Some(menu::context_menu(items, position, theme, cx))
     }
@@ -2514,7 +2761,11 @@ impl CanvasView {
                 Drag::Move { .. } => "move",
                 Drag::Resize { .. } => "resize",
                 Drag::Connect { .. } => "connect",
+                Drag::Create { .. } => "create",
             }),
+            "guides": self.guides.iter().map(|g| [g.from.x, g.from.y, g.to.x, g.to.y]).collect::<Vec<_>>(),
+            "menu": self.context_menu.map(|(_, t)| format!("{t:?}")),
+            "pending_rect": self.pending_rect.map(|r| [r.x, r.y, r.width, r.height]),
         })
     }
 }
@@ -2732,34 +2983,14 @@ fn json_number(value: f64) -> Value {
     }
 }
 
-/// Snaps the sides a handle moves to the grid, leaving the still sides
-/// where `origin` has them. Candidate for `scoria-canvas`.
-fn snap_rect_sides(handle: Handle, origin: &Rect, target: &Rect) -> Rect {
-    let moves_left = matches!(handle, Handle::Left | Handle::TopLeft | Handle::BottomLeft);
-    let moves_right = matches!(
-        handle,
-        Handle::Right | Handle::TopRight | Handle::BottomRight
-    );
-    let moves_top = matches!(handle, Handle::Top | Handle::TopLeft | Handle::TopRight);
-    let moves_bottom = matches!(
-        handle,
-        Handle::Bottom | Handle::BottomLeft | Handle::BottomRight
-    );
-    let (mut x, mut right) = (target.x, target.right());
-    let (mut y, mut bottom) = (target.y, target.bottom());
-    if moves_left {
-        x = snap(x).min(origin.right() - MIN_NODE.0);
-    }
-    if moves_right {
-        right = snap(right).max(origin.x + MIN_NODE.0);
-    }
-    if moves_top {
-        y = snap(y).min(origin.bottom() - MIN_NODE.1);
-    }
-    if moves_bottom {
-        bottom = snap(bottom).max(origin.y + MIN_NODE.1);
-    }
-    Rect::new(x, y, right - x, bottom - y)
+/// `rect` grown, from its top left, to at least the smallest card.
+fn at_least_min(rect: Rect) -> Rect {
+    Rect::new(
+        rect.x,
+        rect.y,
+        rect.width.max(MIN_NODE.0),
+        rect.height.max(MIN_NODE.1),
+    )
 }
 
 /// The delta `Handle::resize` needs to take `now` to `target`: the moving
@@ -2861,16 +3092,14 @@ mod tests {
     }
 
     #[test]
-    fn resizing_snaps_the_moving_sides_only() {
+    fn resize_delta_is_the_moving_sides_displacement() {
         let origin = Rect::new(0.0, 0.0, 100.0, 100.0);
-        let target = Handle::Right.resize(&origin, 13.0, 0.0, MIN_NODE);
-        let snapped = snap_rect_sides(Handle::Right, &origin, &target);
-        assert_eq!((snapped.x, snapped.right()), (0.0, 120.0));
-        let target = Handle::TopLeft.resize(&origin, 7.0, 29.0, MIN_NODE);
-        let snapped = snap_rect_sides(Handle::TopLeft, &origin, &target);
-        assert_eq!((snapped.x, snapped.y), (0.0, 20.0));
-        assert_eq!((snapped.right(), snapped.bottom()), (100.0, 100.0));
-        let (dx, dy) = resize_delta(Handle::TopLeft, &origin, &snapped);
-        assert_eq!((dx, dy), (0.0, 20.0));
+        let snapped = Rect::new(0.0, 20.0, 100.0, 80.0);
+        assert_eq!(
+            resize_delta(Handle::TopLeft, &origin, &snapped),
+            (0.0, 20.0)
+        );
+        let wider = Rect::new(0.0, 0.0, 140.0, 100.0);
+        assert_eq!(resize_delta(Handle::Right, &origin, &wider), (40.0, 0.0));
     }
 }

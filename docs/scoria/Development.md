@@ -307,7 +307,7 @@ and [[#Day 7, the week closes, 2026-11-09]].
 | Writing settings back | done for every control Obsidian itself offers as one, see [[#Settings writing, 2026-10-18]], [[#Settings dropdowns, 2026-10-18]] and [[#Settings sliders and text fields, 2026-10-18]] |
 | Round-trip harness | done, see [[#Round-trip harness, 2026-10-18]] |
 | Canvas writer | done: the bytes Obsidian writes on an edited save, see [[#Canvas writer, 2026-10-19]]; the canvas view saves through it |
-| Canvas view | done: a `.canvas` opens in the main area, pans, zooms, selects, moves, resizes, draws edges, colours, groups, copies, pastes and undoes, cards are typed into, the menus, controls and commands are Obsidian's, and it autosaves in Obsidian's bytes, see [[#Canvas view, 2026-10-21]] and [[#Canvas view, measured, 2026-10-21]] |
+| Canvas view | done: a `.canvas` opens in the main area, pans, zooms, selects, moves, resizes, draws edges, colours, groups, copies, pastes and undoes, cards are typed into, the menus, controls and commands are Obsidian's, and it autosaves in Obsidian's bytes, see [[#Canvas view, 2026-10-21]] and [[#Canvas view, measured, 2026-10-21]]; the Canvas plugin's settings act on it (snapping to the grid and to cards, the wheel, Ctrl+drag, card names, the zoom threshold, where a new canvas goes), see [[#Canvas settings, 2026-11-16]] |
 | Tab groups | done: Split right, Split down, the four focus commands, draggable dividers and `workspace.json`'s `main` tree, see [[#Tab groups, 2026-10-20]]; tabs drag between groups and onto split edges, see [[#Dragging tabs, 2026-10-21]]; the strip's hover is Obsidian's inner box, see [[#Tab hover, 2026-10-22]] |
 | Bookmarks | done: the pane, the seven commands and `bookmarks.json` in Obsidian's bytes, see [[#Bookmarks, 2026-10-20]] |
 | Files header | done: New note, New folder, the six sort orders, Auto-reveal current file and Expand all / Collapse all, see [[#Files header, 2026-10-21]]; the tree takes the keyboard, see [[#Explorer keyboard, 2026-10-21]], and a row renames on the row rather than in a dialog, see [[#The file tree renames on the row, 2026-11-05]] |
@@ -359,6 +359,79 @@ the corpus at 1,008 of 1,009 and CommonMark at 652 of 652, `cargo fmt --check` a
 `drive.py` under the same name: one ran the other's script, against the other's app, three
 times before noticing. Nothing in the repo was touched, but a scratch vault was. Give each
 agent a scratch folder named after itself from the start.
+
+### Canvas settings, 2026-11-16
+
+The Canvas tab's rows were written to `canvas.json` for Obsidian and read by nothing. Each now
+does in Scoria's canvas what it does in Obsidian 1.15, probed first, see
+[[Specification#Observed Canvas settings, Obsidian 1.15.x]].
+
+**The probe.** By hand on 1.15.0, then `tools/obsidian-probe/canvas-settings.mjs` through
+`run-block.sh` on 1.15.1, in a private headless sway with its own runtime folder and dead bus,
+`USER_DATA_DIR`, `CDP_PORT=9471` and `OBSIDIAN_ARGS=--ozone-platform=x11`; eight steps, every
+option set through the tab's own controls. What surprised: the two missing keys are
+`newFileFolderPath` and `zoomBreakpoint`, and every write carries both snap keys first; the zoom
+threshold does not move `mod-zoomed-out` at all (it stays at -1.7) but where each card swaps its
+content for its placeholder, at `-1.7 - zoomBreakpoint`; `/Canvases/` and a missing folder both
+put a new canvas at the root; snapping to objects is 15 screen pixels, lines (left, centre,
+right; top, middle, bottom) rather than edges alone, only along an axis the drag moved, and
+never to a group; the grid only rounds a moved axis too; and an unsnapped position is rounded to
+whole units.
+
+**What was built.**
+- `scoria-formats`: `CanvasConfig` gains `new_file_folder_path` and `zoom_breakpoint` (a
+  `serde_json::Number`, so 0 writes `0`), and `with_snap_keys`, which `VaultState::apply_setting`
+  runs on every `canvas.json` write so the file starts as Obsidian's does.
+- `scoria-canvas::options`: `Options` (the six settings with Obsidian's defaults, from a
+  `CanvasConfig`), `wheel_zooms`, `content_hidden`, `shows_card_label`, and the snapping:
+  `snap_targets`, `object_snap`, `drag_correction` (objects, then the grid, then whole units, per
+  moved axis), `snap_resize` and `guides`.
+- `scoria::canvas::view`: the view reads `Options` from the vault state on every use, so a
+  change in Settings reaches an open canvas at once. A drag and a resize snap through the model
+  and draw the guides (`paint_guides`: the accent line and 8 px dots); Alt still suspends both.
+  The wheel swaps zoom and pan under `zoom`. Ctrl (Cmd) + drag on the background draws the
+  rectangle (`Drag::Create`) and, on release, opens the creation menu (*Add card*, *Add note from
+  vault*, *Add media from vault*, *Create group*) or does what the setting names: a text card or
+  an `Untitled group` filling it, or the note or media picker whose pick fills it
+  (`pending_rect`, drawn until then). File and link card names follow "Show card names" and hide
+  at -1.7; `cards.rs` hides content at the setting's threshold.
+- `Workspace`: `canvas:new-file` asks `VaultState::new_canvas_folder` (the explorer's "New
+  canvas" still uses its folder).
+- Settings: the Canvas tab's eight rows are untagged; the folder row is a text field over
+  `newFileFolderPath`, and the slider writes `zoomBreakpoint` (a `Number` gained `step` and
+  `divisor`, so it keeps hundredths and offers a cell per tenth).
+
+**Driven.** The debug build in the same sway over the control socket, with grim: a card dragged
+412 units toward another landed on 400 with the guides at x 400 and 500; dragged onto the other's
+row it drew five guides; Ctrl+drag under "Show menu" opened the creation menu at the pointer and
+*Create group* made `Untitled group` at (103, 607), 304 by 206; with `card` the card was made
+there, open for editing; with `note` the chooser came up and `Plan` filled the rectangle; with
+both snaps off a 33.4 by 7.3 drag landed on whole units; under `zoom` a plain wheel zoomed by a
+third, Ctrl panned and a sideways wheel did nothing; with `hover` the file card's name showed
+only under the pointer; at threshold -0.7 and zoom -1.01 the cards showed their placeholders
+with the name still above; `canvas:new-file` with `folder`/`Canvases` wrote
+`Canvases/Untitled.canvas`; and the slider's cell wrote `"zoomBreakpoint": 0.3`.
+
+**Left.** "Add web page" does nothing, as Scoria has no web page card to make; its row is not in
+the creation menu. The background menu's and the settings button's *Snap to grid* and *Snap to
+objects* rows are still missing. Two runs saw a card with only grid snapping on refuse to move
+under Alt; Scoria moves it unsnapped. Whether a moving group's frame snaps and whether cards out
+of view are targets were not probed: Scoria snaps every moving node's lines to every other
+non-group node.
+
+**Tests.** `scoria-canvas`: `options_tests::absent_keys_and_unknown_strings_are_obsidians_defaults`,
+`ctrl_swaps_what_the_wheel_does`, `the_zoom_threshold_moves_where_card_content_hides`,
+`card_names_follow_show_card_names`, `cards_snap_to_each_others_lines_within_fifteen_pixels`,
+`an_axis_the_drag_did_not_move_along_does_not_snap`,
+`objects_win_over_the_grid_and_alt_leaves_whole_units`, `groups_are_not_snapped_to`,
+`a_resized_side_snaps_to_objects_then_the_grid`, `guides_run_through_every_point_on_a_shared_line`;
+`scoria-formats`: `config::tests::core_plugin_option_files_round_trip_with_an_unknown_key` (the two keys and
+the first write's bytes); `scoria`: `workspace::tests::a_new_canvas_goes_where_the_canvas_location_setting_says`,
+`settings::tests::the_canvas_tab_shows_obsidians_rows_and_writes_its_observed_keys`, the
+ratchet `only_the_toggles_scoria_reads_are_untagged` with the two snap rows,
+`every_slider_and_field_writes_its_own_key_and_nothing_else` and
+`a_slider_and_a_field_read_back_what_they_wrote` over the new slider and field, and
+`canvas::view::tests::resize_delta_is_the_moving_sides_displacement`.
 
 ### Excluded files, 2026-11-16
 

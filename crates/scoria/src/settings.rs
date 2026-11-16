@@ -634,8 +634,38 @@ struct Number {
     key: &'static str,
     min: i64,
     max: i64,
+    /// The control's cells are this many units apart (the last one is
+    /// `max`), so a long range stays a short track.
+    step: i64,
+    /// The stored value is the unit divided by this: 1 for whole numbers,
+    /// 100 for the Canvas zoom threshold's hundredths.
+    divisor: i64,
     read: fn(&VaultState) -> i64,
     write: fn(&VaultState, i64) -> SettingChange,
+}
+
+impl Number {
+    /// The value as the row shows it and the file holds it: `-0.7`, `16`.
+    fn shown(&self, value: i64) -> String {
+        if self.divisor == 1 {
+            value.to_string()
+        } else {
+            scoria_formats::config::js_number(value as f64 / self.divisor as f64)
+                .map(|n| n.to_string())
+                .unwrap_or_default()
+        }
+    }
+
+    /// The values the track offers, one per cell.
+    fn cells(&self) -> Vec<i64> {
+        let mut cells: Vec<i64> = (self.min..=self.max)
+            .step_by(self.step.max(1) as usize)
+            .collect();
+        if cells.last() != Some(&self.max) {
+            cells.push(self.max);
+        }
+        cells
+    }
 }
 
 /// A free text field, written verbatim.
@@ -853,6 +883,8 @@ const FONT_SIZE: Number = Number {
     key: "baseFontSize",
     min: 10,
     max: 30,
+    step: 1,
+    divisor: 1,
     read: |state| state.appearance().base_font_size.unwrap_or(16) as i64,
     write: |state, value| {
         let mut next = state.appearance().clone();
@@ -866,11 +898,61 @@ const TAB_SIZE: Number = Number {
     key: "tabSize",
     min: 2,
     max: 8,
+    step: 1,
+    divisor: 1,
     read: |state| state.app().tab_size.unwrap_or(4) as i64,
     write: |state, value| {
         let mut next = state.app().clone();
         next.tab_size = Some(value as u8);
         SettingChange::App(next)
+    },
+};
+
+/// The Canvas tab's "Zoom threshold for hiding card content":
+/// `zoomBreakpoint` in `canvas.json`, a slider from -0.7 to 2.39 in steps
+/// of 0.01 at 0 (observed 2026-11-16: setting it to 0.5 wrote `0.5`, and
+/// 2.4 read back as 2.39). Kept here in hundredths; the track offers every
+/// tenth.
+const CANVAS_ZOOM_BREAKPOINT: Number = Number {
+    key: "zoomBreakpoint",
+    min: -70,
+    max: 239,
+    step: 10,
+    divisor: 100,
+    read: |state| {
+        state
+            .canvas_options()
+            .zoom_breakpoint
+            .as_ref()
+            .and_then(|n| n.as_f64())
+            .map(|v| (v * 100.0).round() as i64)
+            .unwrap_or(0)
+    },
+    write: |state, value| {
+        let mut next = state.canvas_options().clone();
+        next.zoom_breakpoint = scoria_formats::config::js_number(value as f64 / 100.0);
+        SettingChange::Canvas(next)
+    },
+};
+
+/// The Canvas tab's "Folder to create new canvas files in", shown for the
+/// `folder` location: `newFileFolderPath` in `canvas.json`, the path as
+/// typed.
+const CANVAS_NEW_FILE_FOLDER: TextField = TextField {
+    key: "newFileFolderPath",
+    placeholder: "Example: folder 1/folder 2",
+    prefix: "",
+    read: |state| {
+        state
+            .canvas_options()
+            .new_file_folder_path
+            .clone()
+            .unwrap_or_default()
+    },
+    write: |state, value| {
+        let mut next = state.canvas_options().clone();
+        next.new_file_folder_path = Some(value.to_string());
+        SettingChange::Canvas(next)
     },
 };
 
@@ -944,10 +1026,11 @@ const SUBFOLDER_NAME: TextField = TextField {
 
 /// Every slider and text field that writes, for the tests that walk them.
 #[cfg(test)]
-const NUMBERS: &[Number] = &[FONT_SIZE, TAB_SIZE];
+const NUMBERS: &[Number] = &[FONT_SIZE, TAB_SIZE, CANVAS_ZOOM_BREAKPOINT];
 #[cfg(test)]
 const TEXTS: &[TextField] = &[
     NEW_FILE_FOLDER,
+    CANVAS_NEW_FILE_FOLDER,
     ATTACHMENT_FOLDER,
     SUBFOLDER_NAME,
     DAILY_CUSTOM_FORMAT,
@@ -2189,7 +2272,7 @@ fn slider(name: &str, desc: &str, state: &VaultState, number: Number) -> Item {
         ..item(
             name,
             desc,
-            Control::Slider((number.read)(state).to_string().into()),
+            Control::Slider(number.shown((number.read)(state)).into()),
         )
     }
 }
@@ -4048,75 +4131,57 @@ impl SettingsView {
             }
             "canvas" => {
                 let c = &state.canvas_options();
+                // Every row is live: the canvas view reads the options on
+                // each use, so a change reaches an open canvas at once, as
+                // Obsidian 1.15.0's did.
                 let mut items = vec![choice(
                     "Default location for new canvas files",
                     "",
                     state,
                     CANVAS_NEW_FILE_LOCATION,
-                )
-                .not_yet()];
+                )];
                 // Obsidian hides this row for the other two options and
                 // reveals it for `folder`, as its twin on the Files and
-                // links tab does. No key was observed for it, so it shows
-                // what the file holds -- nothing -- and writes nothing.
+                // links tab does.
                 if CANVAS_NEW_FILE_LOCATION.value(state) == "folder" {
-                    items.push(
-                        text(
-                            "Folder to create new canvas files in",
-                            "Newly created canvas files will appear under this folder.",
-                            "",
-                        )
-                        .not_yet(),
-                    );
+                    items.push(field(
+                        "Folder to create new canvas files in",
+                        "Newly created canvas files will appear under this folder.",
+                        state,
+                        CANVAS_NEW_FILE_FOLDER,
+                    ));
                 }
-                items.push(
-                    choice(
-                        "Default mouse wheel behavior",
-                        "",
-                        state,
-                        CANVAS_WHEEL_BEHAVIOR,
-                    )
-                    .not_yet(),
-                );
-                items.push(
-                    choice(
-                        "Default Ctrl + Drag behavior",
-                        "",
-                        state,
-                        CANVAS_MOD_DRAG_BEHAVIOR,
-                    )
-                    .not_yet(),
-                );
-                items.push(choice("Show card names", "", state, CANVAS_CARD_LABELS).not_yet());
-                items.push(
-                    toggle(
-                        "Snap to grid",
-                        "Snap cards to the background grid when moving and resizing.",
-                        SNAP_TO_GRID.is_on(c),
-                        Flag::Canvas(SNAP_TO_GRID),
-                    )
-                    .not_yet(),
-                );
-                items.push(
-                    toggle(
-                        "Snap to objects",
-                        "Snap cards to nearby objects when moving and resizing.",
-                        SNAP_TO_OBJECTS.is_on(c),
-                        Flag::Canvas(SNAP_TO_OBJECTS),
-                    )
-                    .not_yet(),
-                );
-                // Obsidian's slider runs -0.7 to 2.4 in steps of 0.01 at 0.
-                // No key was observed, so the row shows that 0 and does
-                // nothing; `Number` is whole numbers anyway.
-                items.push(
-                    item(
-                        "Zoom threshold for hiding card content",
-                        "Lower values will increase performance but hide card content sooner when zooming out.",
-                        Control::Slider("0".into()),
-                    )
-                    .not_yet(),
-                );
+                items.push(choice(
+                    "Default mouse wheel behavior",
+                    "",
+                    state,
+                    CANVAS_WHEEL_BEHAVIOR,
+                ));
+                items.push(choice(
+                    "Default Ctrl + Drag behavior",
+                    "",
+                    state,
+                    CANVAS_MOD_DRAG_BEHAVIOR,
+                ));
+                items.push(choice("Show card names", "", state, CANVAS_CARD_LABELS));
+                items.push(toggle(
+                    "Snap to grid",
+                    "Snap cards to the background grid when moving and resizing.",
+                    SNAP_TO_GRID.is_on(c),
+                    Flag::Canvas(SNAP_TO_GRID),
+                ));
+                items.push(toggle(
+                    "Snap to objects",
+                    "Snap cards to nearby objects when moving and resizing.",
+                    SNAP_TO_OBJECTS.is_on(c),
+                    Flag::Canvas(SNAP_TO_OBJECTS),
+                ));
+                items.push(slider(
+                    "Zoom threshold for hiding card content",
+                    "Lower values will increase performance but hide card content sooner when zooming out.",
+                    state,
+                    CANVAS_ZOOM_BREAKPOINT,
+                ));
                 items
             }
             // One toggle per surface the hover preview pops up over, under a
@@ -4887,7 +4952,7 @@ impl SettingsView {
                 let now = self.state.as_ref().map(|s| (number.read)(s)).unwrap_or(0);
                 // One cell per step: the ranges are small, so a click lands
                 // on a value without measuring the track.
-                let steps = (number.min..=number.max).collect::<Vec<_>>();
+                let steps = number.cells();
                 let width = (120. / steps.len() as f32).max(3.);
                 div()
                     .flex()
@@ -7332,7 +7397,7 @@ mod tests {
         for number in NUMBERS {
             for value in [number.min, number.max] {
                 let written = one_key(&(number.write)(&state, value), number.key, number.key);
-                assert_eq!(written, serde_json::json!(value));
+                assert_eq!(written.to_string(), number.shown(value), "{}", number.key);
             }
         }
         for field in TEXTS {
@@ -7519,7 +7584,8 @@ mod tests {
 
     /// The Canvas tab: Obsidian's eight rows in order, with the folder row
     /// hidden until `folder` is picked, each dropdown writing the string
-    /// Obsidian writes, and both snap toggles writing their own key.
+    /// Obsidian writes, both snap toggles, the folder field and the zoom
+    /// threshold slider writing their own keys, and every row live.
     #[test]
     fn the_canvas_tab_shows_obsidians_rows_and_writes_its_observed_keys() {
         let (dir, mut state) = vault();
@@ -7546,10 +7612,21 @@ mod tests {
             "snap to grid is on"
         );
         assert_eq!(items[5].control, Control::Toggle(true));
-        // The slider has no key, so it has no `Number` and writes nothing.
+        // The slider is `zoomBreakpoint` (observed 2026-11-16), at 0.
         assert_eq!(items[6].control, Control::Slider("0".into()));
-        assert!(items[6].number.is_none());
-        assert!(items.iter().all(|i| i.honored == Honored::No));
+        assert_eq!(items[6].number.map(|n| n.key), Some("zoomBreakpoint"));
+        assert!(items.iter().all(|i| i.honored == Honored::Live));
+        state
+            .apply_setting(&(CANVAS_ZOOM_BREAKPOINT.write)(&state, 50))
+            .unwrap();
+        state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        let items = SettingsView::plugin_items(&state, &[], "canvas", None);
+        assert_eq!(items[6].control, Control::Slider("0.5".into()));
+        // Obsidian's first write from the slider alone.
+        assert_eq!(
+            std::fs::read_to_string(dir.path().join(".obsidian/canvas.json")).unwrap(),
+            "{\n  \"snapToObjects\": true,\n  \"snapToGrid\": true,\n  \"zoomBreakpoint\": 0.5\n}"
+        );
 
         // Every option of every dropdown: written, reloaded, read back, and
         // the one key it wrote is the one Obsidian wrote.
@@ -7576,7 +7653,7 @@ mod tests {
         assert_eq!(rows[1], "Folder to create new canvas files in");
         assert_eq!(rows.len(), 8);
         let revealed = SettingsView::plugin_items(&state, &[], "canvas", None);
-        assert!(revealed[1].field.is_none(), "no key was observed for it");
+        assert_eq!(revealed[1].field.map(|f| f.key), Some("newFileFolderPath"));
         assert_eq!(
             revealed[1].desc.as_ref(),
             "Newly created canvas files will appear under this folder."
@@ -7590,9 +7667,10 @@ mod tests {
         assert_eq!(json["defaultWheelBehavior"], json!("zoom"));
         assert_eq!(json["defaultModDragBehavior"], json!("group"));
         assert_eq!(json["cardLabelVisibility"], json!("never"));
+        assert_eq!(json["zoomBreakpoint"], json!(0.5));
         assert_eq!(
             json.as_object().map(|o| o.len()),
-            Some(6),
+            Some(7),
             "a row with no observed key wrote one anyway: {file}"
         );
     }
@@ -9133,6 +9211,10 @@ mod tests {
                 "Show all file types",
                 // The Backlinks tab's one, read by the backlinks block.
                 "Show backlinks at the bottom of notes",
+                // The Canvas tab's two, read by `CanvasView::options` on
+                // every drag and resize.
+                "Snap to grid",
+                "Snap to objects",
                 // Page preview's live sources, read on every hover by
                 // `Workspace::arm_preview_show`.
                 "Search, Backlinks, and Outgoing links",
@@ -9151,7 +9233,7 @@ mod tests {
         );
         // And the other way round: every toggle the new options tabs added
         // is tagged, because nothing in the app reads one of their keys.
-        // `grep -rn snapToGrid crates/` and its friends find the key in
+        // `grep -rn openExternalURLs crates/` and its friends find the key in
         // `scoria-formats` and in this file and nowhere else.
         let tagged: Vec<String> = toggles(&state)
             .into_iter()
@@ -9159,8 +9241,6 @@ mod tests {
             .map(|(name, _)| name)
             .collect();
         for name in [
-            "Snap to grid",
-            "Snap to objects",
             "Properties view",
             "Open external links",
             "Enable ad blocker",

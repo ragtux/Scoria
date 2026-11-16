@@ -931,8 +931,10 @@ impl VaultState {
                 *self.backlink.write().unwrap_or_else(|e| e.into_inner()) = config.clone();
             }
             SettingChange::Canvas(config) => {
-                self.write_config("canvas.json", config)?;
-                *self.canvas.write().unwrap_or_else(|e| e.into_inner()) = config.clone();
+                // Every write of Obsidian's carries both snap keys.
+                let config = config.clone().with_snap_keys();
+                self.write_config("canvas.json", &config)?;
+                *self.canvas.write().unwrap_or_else(|e| e.into_inner()) = config;
             }
             SettingChange::PagePreview(config) => {
                 self.write_config("page-preview.json", config)?;
@@ -1149,6 +1151,36 @@ impl VaultState {
     /// `promptDelete`: on by default.
     pub fn confirm_delete(&self) -> bool {
         self.app().prompt_delete.unwrap_or(true)
+    }
+
+    /// The folder `canvas:new-file` puts its canvas in, given the open file:
+    /// `canvas.json`'s own `newFileLocation` -- `root` (the default), `current`
+    /// (the open file's folder, the root with nothing open) or `folder`
+    /// (`newFileFolderPath`). The folder path is taken as typed: Obsidian
+    /// 1.15.0 used `Canvases` but put the canvas at the root for
+    /// `/Canvases/`, for an empty path and for a folder that does not exist,
+    /// which it did not create.
+    pub fn new_canvas_folder(&self, current: Option<&str>) -> String {
+        let options = self.canvas_options().clone();
+        match options.new_file_location.as_deref() {
+            Some("current") => current
+                .map(scoria_vault::ops::folder_of)
+                .unwrap_or("")
+                .to_string(),
+            Some("folder") => {
+                let folder = options.new_file_folder_path.unwrap_or_default();
+                let exact = !folder.is_empty()
+                    && !folder.starts_with('/')
+                    && !folder.ends_with('/')
+                    && !folder.contains('\\');
+                if exact && self.vault().absolute(&folder).is_dir() {
+                    folder
+                } else {
+                    String::new()
+                }
+            }
+            _ => String::new(),
+        }
     }
 
     /// Where a note created for the link text `name` goes, given the open
@@ -6147,7 +6179,14 @@ impl Workspace {
             "graph:animate" => self.graph.update(cx, |g, cx| g.animate(cx)),
             "slides:start" if !self.active_note_is_markdown() => {}
             "slides:start" => self.start_presentation(window, cx),
-            "canvas:new-file" => self.new_canvas("", cx),
+            "canvas:new-file" => {
+                let folder = self
+                    .state
+                    .as_ref()
+                    .map(|s| s.new_canvas_folder(self.current.as_deref()))
+                    .unwrap_or_default();
+                self.new_canvas(&folder, cx)
+            }
             "bases:new-file" => self.new_base("", cx),
             "bases:add-view" => self.add_base_view(cx),
             "bases:insert" => self.insert_base(window, cx),
@@ -9502,8 +9541,9 @@ impl Workspace {
     }
 
     /// `canvas:new-file`: `Untitled.canvas` (or the next free number) in
-    /// `folder` (the vault root for the command, the clicked folder for the
-    /// explorer's menu) as an empty file, which is what Obsidian writes until
+    /// `folder` (for the command, where [`VaultState::new_canvas_folder`]
+    /// says; the clicked folder for the explorer's menu) as an empty file,
+    /// which is what Obsidian writes until
     /// something is put in the canvas (see [[Specification#Observed canvas
     /// write behavior]]), opened the way a new note is: in a new tab unless
     /// the active one is empty.
@@ -21334,6 +21374,43 @@ mod tests {
         assert_eq!(
             state.unique_link_name(&unique_stamp(21), ""),
             Ok("2026-11-09 note 202107".to_string())
+        );
+    }
+
+    /// Where `canvas:new-file` put `Untitled.canvas` in Obsidian 1.15.0 under
+    /// each "Default location for new canvas files", and what a write of
+    /// `canvas.json` from Settings holds.
+    #[test]
+    fn a_new_canvas_goes_where_the_canvas_location_setting_says() {
+        let dir = tempfile::tempdir().unwrap();
+        fs::create_dir_all(dir.path().join(".obsidian")).unwrap();
+        fs::create_dir_all(dir.path().join("Sub")).unwrap();
+        fs::create_dir_all(dir.path().join("Canvases")).unwrap();
+        fs::write(dir.path().join("Sub/Note.md"), "# Note\n").unwrap();
+        let state = VaultState::load(&dir.path().to_path_buf()).unwrap();
+        // No canvas.json: the root, whatever is open.
+        assert_eq!(state.new_canvas_folder(Some("Sub/Note.md")), "");
+        let set = |location: &str, folder: Option<&str>| {
+            let mut next = state.canvas_options().clone();
+            next.new_file_location = Some(location.to_string());
+            next.new_file_folder_path = folder.map(str::to_string);
+            state.apply_setting(&SettingChange::Canvas(next)).unwrap();
+        };
+        set("current", None);
+        assert_eq!(state.new_canvas_folder(Some("Sub/Note.md")), "Sub");
+        assert_eq!(state.new_canvas_folder(Some("Plan.md")), "");
+        assert_eq!(state.new_canvas_folder(None), "");
+        set("folder", Some("Canvases"));
+        assert_eq!(state.new_canvas_folder(Some("Sub/Note.md")), "Canvases");
+        for root in ["Nope/Deep", "", "/Canvases/"] {
+            set("folder", Some(root));
+            assert_eq!(state.new_canvas_folder(Some("Sub/Note.md")), "", "{root:?}");
+        }
+        assert!(!dir.path().join("Nope").exists());
+        // Every write carries both snap keys, first, as Obsidian's does.
+        assert_eq!(
+            fs::read_to_string(dir.path().join(".obsidian/canvas.json")).unwrap(),
+            "{\n  \"snapToObjects\": true,\n  \"snapToGrid\": true,\n  \"newFileLocation\": \"folder\",\n  \"newFileFolderPath\": \"/Canvases/\"\n}"
         );
     }
 

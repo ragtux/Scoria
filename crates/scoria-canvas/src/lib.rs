@@ -14,6 +14,7 @@
 use scoria_formats::canvas::{Canvas, Edge, EndStyle, Node, NodeType, Side};
 
 pub mod minimap;
+pub mod options;
 
 // ---- constants ---------------------------------------------------------------
 // Observed in Obsidian 1.14.4 over CDP on 2026-10-21 unless marked otherwise;
@@ -33,8 +34,10 @@ pub const MIN_NODE: (f64, f64) = (50.0, 50.0);
 /// Zoom range as log2 of the scale, `Viewport::zoom`: scales 1/16 to 2.
 pub const ZOOM_MIN: f64 = -4.0;
 pub const ZOOM_MAX: f64 = 1.0;
-/// At and below this zoom a card hides its content and shows a placeholder
-/// (Obsidian's `mod-zoomed-out`, the "Zoom threshold" setting's default).
+/// At and below this zoom the view is `mod-zoomed-out`, which hides a file
+/// card's name; a card's content gives way to its placeholder here too
+/// unless the "Zoom threshold" setting moves that ([`options::Options::
+/// content_threshold`]).
 pub const ZOOM_THRESHOLD: f64 = -1.7;
 /// Zoom change per wheel pixel with Ctrl held, in log2: a 100-pixel notch
 /// is a third of a doubling.
@@ -1336,5 +1339,7 @@ impl Scene {
     }
 }
 
+#[cfg(test)]
+mod options_tests;
 #[cfg(test)]
 mod tests;

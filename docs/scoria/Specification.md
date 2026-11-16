@@ -1301,8 +1301,10 @@ at the base font size rather than scaled with the zoom; *Convert to
 file* names the note after the card's first line rather than asking.
 
 **Unprobed:** the exact fit padding of Shift+1, the zoom step of the
-buttons, snap-to-objects' rules, the creation rectangle of a Ctrl+drag,
-and the colour of an uncoloured card's selection ring.
+buttons, and the colour of an uncoloured card's selection ring.
+Snap-to-objects' rules, the Ctrl+drag rectangle and what the zoom threshold
+setting really moves (each card's content, not `mod-zoomed-out`) were
+observed on 2026-11-16, see [[#Observed Canvas settings, Obsidian 1.15.x]].
 
 ## Observed canvas menu behavior, Obsidian 1.14.5 (installer build 1.13.7)
 
@@ -8196,13 +8198,13 @@ visible in new tabs by default."), a toggle off by default, writing `backlinkInD
 | Row | Description | Control | Key and values |
 | --- | --- | --- | --- |
 | Default location for new canvas files | — | dropdown | `newFileLocation`: `root` "Vault folder" (default), `current` "Same folder as current file", `folder` "In the folder specified below" |
-| Folder to create new canvas files in | Newly created canvas files will appear under this folder. | text, placeholder `Example: folder 1/folder 2` | hidden unless `folder` is picked; key not probed (OBSERVE) |
+| Folder to create new canvas files in | Newly created canvas files will appear under this folder. | text, placeholder `Example: folder 1/folder 2` | hidden unless `folder` is picked; `newFileFolderPath` (observed 2026-11-16) |
 | Default mouse wheel behavior | — | dropdown | `defaultWheelBehavior`: `pan` "Pan" (default), `zoom` "Zoom" |
 | Default Ctrl + Drag behavior | — | dropdown | `defaultModDragBehavior`: `menu` "Show menu" (default), `card` "Add card", `note` "Add note from vault", `media` "Add media from vault", `webpage` "Add web page", `group` "Create group" |
 | Show card names | — | dropdown | `cardLabelVisibility`: `always` "Always" (default), `hover` "On hover", `never` "Never" |
 | Snap to grid | Snap cards to the background grid when moving and resizing. | toggle, on | `snapToGrid` |
 | Snap to objects | Snap cards to nearby objects when moving and resizing. | toggle, on | `snapToObjects` |
-| Zoom threshold for hiding card content | Lower values will increase performance but hide card content sooner when zooming out. | slider 0, min −0.7, max 2.4, step 0.01 | key not probed (OBSERVE) |
+| Zoom threshold for hiding card content | Lower values will increase performance but hide card content sooner when zooming out. | slider 0, min −0.7, max 2.4, step 0.01 | `zoomBreakpoint` (observed 2026-11-16, see [[#Observed Canvas settings, Obsidian 1.15.x]]) |
 
 The first toggle click wrote both snap keys at once (`{"snapToObjects": true, "snapToGrid": false}`).
 
@@ -11512,3 +11514,125 @@ delete “Two.md”?"). Copy path's submenu (section `copy`) is *as Obsidian URL
 (`lucide-link`: `obsidian://open?vault=…&file=search%2FOne`), *from vault folder* (`vault`:
 `search/One`, with no extension) and *from system root* (`lucide-hard-drive`: the absolute path
 with its extension).
+
+## Observed Canvas settings, Obsidian 1.15.x
+
+Observed on 2026-11-16 over CDP, first on 1.15.0 by hand and then by
+`tools/obsidian-probe/canvas-settings.mjs` on 1.15.1 (raw results in
+`tools/obsidian-probe/results/2026-11-16-canvas-settings.json`), in a private
+headless sway. The two runs agree everywhere they overlap. Every option was
+set through the Settings tab's own controls, and every one took effect in an
+open canvas at once, with no reopening. Built in Scoria on the same day, see
+[[Development#Canvas settings, 2026-11-16]].
+
+**The two keys the 2026-10-30 pass could not reach.** The folder row that
+`folder` reveals writes `newFileFolderPath`, the path as typed (placeholder
+"Example: folder 1/folder 2"). The zoom threshold slider (`-0.7` to
+`2.3999999999999995`, step `0.01`, at `0`) writes `zoomBreakpoint`; set to
+2.4 it stores 2.39. Every write carries both snap keys first, because the
+plugin's options start out holding them: moving the slider first, into a vault
+with no `canvas.json`, wrote
+
+```
+{
+  "snapToObjects": true,
+  "snapToGrid": true,
+  "zoomBreakpoint": 0.5
+}
+```
+
+with later keys appended in the order they were set, and `0` written as `0`.
+
+**Default location for new canvas files.** `canvas:new-file` writes
+`Untitled.canvas` (`{}`), numbered as notes are, and opens it. `root` (the
+default) puts it at the vault root whatever is open; `current` in the active
+file's folder (`Sub/Untitled.canvas` with `Sub/Note.md` open, the root with a
+root note or an empty tab); `folder` in `newFileFolderPath` when that names an
+existing folder exactly. `Canvases` was used; `Nope/Deep` (missing), the empty
+string and `/Canvases/` all put the canvas at the root, and the missing folder
+was not created.
+
+**Default mouse wheel behavior.** With `pan`, a plain wheel pans (a 100-unit
+step moved the view 93 units at scale 1), a sideways wheel pans sideways,
+Shift turns a vertical wheel sideways, Alt changes nothing, and Ctrl or Meta
+zooms by a third of a doubling around the pointer, from the vertical delta
+only (a sideways Ctrl wheel did nothing, Ctrl+Shift zoomed). With `zoom` the
+two swap: a plain wheel zooms (Shift and Alt too), a sideways wheel does
+nothing, and Ctrl or Meta pans — vertically, sideways for a sideways wheel,
+sideways with Shift.
+
+**Default Ctrl + Drag behavior.** A Ctrl+drag on the background draws the
+`.canvas-selection` rectangle; a Ctrl+click without a drag does nothing. On
+release, with the rectangle (103, 707) to (407, 913) at scale 1 — kept exactly,
+not snapped:
+
+| option | what happens |
+| --- | --- |
+| `menu` (default) | a menu *Add card*, *Add note from vault*, *Add media from vault*, *Add web page*, *Create group*; nothing selected, the rectangle stays drawn |
+| `card` | a text card at (103, 707), 304 by 206, selected and open for editing |
+| `note` | the note picker ("Type to search..."); the rectangle stays drawn |
+| `media` | the media picker |
+| `webpage` | the "Enter URL" prompt (`mod-confirmation`) |
+| `group` | a group labelled `Untitled group` at the rectangle, selected |
+
+**Show card names.** The name above a file card is `.canvas-node-label`.
+`always`: drawn. `hover`: the label gains `mod-hover-label` and sits at opacity
+0 until the pointer is over the card itself; a selected card the pointer has
+left hides it again. `never`: no label element at all. A group's label is not
+affected by any of the three. Separately, the wrapper's `mod-zoomed-out` (zoom
+-1.7 and below, whatever the threshold setting) hides the file card's label
+(`display: none`).
+
+**Zoom threshold for hiding card content.** The setting does not move
+`mod-zoomed-out`, which stayed at zoom -1.7 for every value. It moves where
+each card unmounts its content and shows `.canvas-node-placeholder` (a text
+card's `align-left` icon, a note card's name): at zoom `-1.7 -
+zoomBreakpoint` and below. Binary searches: -1.7 at 0, -2.2 at 0.5, -1.0 at
+-0.7, and at 2.39 no zoom in the range (-4 to 1) unmounts anything. So at
+-0.7 and zoom -1.2 a card shows its placeholder while its name is still drawn
+above it, and at 0.5 and zoom -2 the content is still there while the name is
+gone.
+
+**Snapping.** Both toggles are on out of the box; Alt held during a drag or a
+resize suspends both (a card dragged 403 units with Alt, only objects on,
+stayed at 403). One oddity, in both runs: with only the grid on, a card
+dragged with Alt held did not move at all; Scoria moves it, unsnapped. A dragged position that snaps to nothing is rounded to
+whole units (415.5 landed on 416, 30.4 by 2.6 from (7, 307) on (37, 310)).
+
+*To the grid* (20 units): the pressed card's position rounds to the grid on
+each axis the drag moved along, and only those — from (7, 307), +30 sideways
+landed on (40, 307), +9 down on (7, 320), (+30, +2) on (40, 300). A resize
+rounds the sides it moves: a 103 by 107 card at (7, 307) widened by 25 ended
+at x 140, by -25 on the left started at -20, and the bottom and a corner the
+same way. A move under 3 units or so was not a drag at all.
+
+*To objects*: each card offers three vertical lines (left, centre, right) and
+three horizontal ones (top, middle, bottom); a moving card's lines snap to the
+closest of every other card's within 15 screen pixels (a 14.5 px gap snapped,
+15.5 did not; at scale 2, 7.5 units snapped and 8 did not; at 0.5, 24 units
+did; at 0.25, 20), each axis on its own and only along an axis the drag moved: a card five units off another's
+left edge dragged straight up stayed five units off. A 100-unit card dragged
+toward a 200 by 100 card at (400, 0) landed with its left on 400, its centre
+on 500 (x 450), its right on 600 or 400, its left on 600; vertically its top
+on 0, its top on the middle (50), its bottom on 100. Groups are neither
+snapped to nor drawn against: a card 3 units off a group's frame stayed
+there. Objects win over the grid when both are on (13 from a card's edge
+snapped to the card, not to the grid). With several cards moving, each
+moving card's lines take part. A resize snaps the moving side the same way (a
+right side dragged to 396 went to 400, the other card's left).
+
+While a snap holds, `svg.canvas-snaps` draws a guide for every line a moving
+card shares with another: a 1 px line in `--color-accent` (`rgb(138, 92,
+245)` in the default dark theme) from the first to the last point on it, and
+an 8 px dot on each point, the points being a side's two corners or a card's
+centre. A card dropped at (400, 150) under the one at (400, 0) drew x 400
+from y 0 to 250 with four dots and x 500 from the upper card's centre (y 50)
+to 250 with three; on the upper card's row it drew x 400, x 500, y 0 across
+both, y 50 between the two centres and y 100 across both. A centre counts as
+a point like any corner: the same drop also drew y 200 from the note card's
+bottom corners at (-400, 200) and (-100, 200) to the moved card's centre. The
+grid draws no guides.
+
+**Unprobed:** whether a moving group's own frame snaps, whether a card out of
+view is a snap target, what the arrow keys' nudge does with snapping off, and
+the creation rectangle's smallest size.
