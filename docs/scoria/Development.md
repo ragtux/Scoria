@@ -683,6 +683,57 @@ ratchet `only_the_toggles_scoria_reads_are_untagged` with the two snap rows,
 `a_slider_and_a_field_read_back_what_they_wrote` over the new slider and field, and
 `canvas::view::tests::resize_delta_is_the_moving_sides_displacement`.
 
+### Focus on last note, the caret's menu and Random note, 2026-11-16
+
+The last two rows of [[#The unrunnable commands, 2026-11-09]]'s table still marked "done, to
+confirm". The evening of 2026-11-09 had already watched most of them — the menu's anchor and rows,
+Focus on last note over a canvas and an empty tab, and all of Random note — so
+`tools/obsidian-probe/focus-random-menu.mjs` went after what that left: Focus on last note over a
+base, a PDF and across tab groups, the menu where it has no room, Random note from odd places, and
+the three submenus of the editor menu nobody had opened. Obsidian 1.15.1 in a private headless
+sway, CDP port 9474; the observations are the last section of [[Specification]].
+
+**Focus on last note was too narrow.** Scoria gave the keyboard to the editor only when the active
+group showed one. Obsidian takes the Markdown leaf active last, anywhere, and focuses it when its
+group shows it in an editing mode: a note on screen in one group takes the keyboard from a canvas,
+a base, a PDF or an empty tab in another, and the last note hidden behind a tab stops the command
+even with an older note on screen. Each tab now carries a stamp, set at every paint that finds it
+the active tab over a note (Obsidian's `activeTime`), and `last_note_to_focus` picks by it; the
+probe's eleven cases are its test. One difference: Obsidian moves the keyboard into the note and
+leaves its active leaf on the canvas until the first key; Scoria's keyboard lives in the active
+group, so the group moves at once.
+
+**The menu turns over.** Near the window's bottom Obsidian's menu, a right click's and the
+command's alike, opens upward with its bottom at the point; near the right edge, leftward. Scoria's
+menus slid along the edge instead. `file_menu::render` now uses gpui's own `SwitchAnchor` fit,
+which is the same turn; Obsidian's leftward menu ends 4 px further left, not followed.
+
+**The submenus.** Format, Paragraph and Insert are drawn now, and Format's Highlight with its six
+colours and Default. Every row is the command of its name: the probe clicked each on a fresh note
+and then ran the command by id on another, and note, caret and selection agreed for all 25 (New
+base differing only in the base's free number). So a row is `Pick::Command(id)`, run after the
+keyboard is handed back to the note, which the command's check wants. Paragraph checks Heading N on
+a heading and Body elsewhere; Format checks Bold, Italic and Code with the caret inside them, read
+off the editor's highlight spans. `Menu.submenu` became `Submenu { row, nested }`, so one submenu
+opens at a time and a second level can, and the nested box has a hover flag of its own: without it
+a press on Highlight > Red counted as outside the menu and closed it unpicked, which the headless
+drive caught. Lucide's drawings came in for the nineteen icons (Obsidian's `code-2`,
+`check-square`, `file-signature` and `sigma-square` under their current names).
+
+**Random note** needed nothing: from an empty tab, a canvas, a pinned tab, the search field and a
+split it opens where `open_file` does, a canvas, base or PDF never comes up, and a pick of the open
+note leaves the history alone, all as observed. The ribbon's order is the plugins' load order,
+which a plugin turned on while running puts last.
+
+**Driven.** A debug build in a private headless sway over the control socket: Focus on last note
+from a canvas in a split moved the keyboard and the active group to the note; the caret's menu on
+the lowest line opened upward; Format > Highlight > Red over `beta` wrote `==🔴beta==`.
+
+**A harness trap, new.** Insert > Table leaves an Obsidian session unable to run the next editor
+command or open the next submenu (the commands return true and change nothing). The probe runs
+each submenu's rows last-first and opens every case on a fresh note in a fresh tab; rewriting one
+note under its open editor merged the previous case's bytes back in.
+
 ### Excluded files, 2026-11-16
 
 Excluded files had been a row in Settings that showed the rules and did
@@ -2450,7 +2501,7 @@ was built:
 | `note-composer:merge-file` | the merged bytes for Enter and Shift+Enter (the separator, with and without a trailing newline, and two frontmatters); what links to the source become (`[[A]]`, `[[A#H]]`, `[[A\|x]]`, `![[A]]`, `[x](A.md)`); where the source goes; the confirmation's text; Ctrl+Enter's new note |
 | `note-composer:split-file`, `note-composer:extract-heading` | the prompt; the new note's and the source's bytes under each `replacementText` and link format; whether the heading line moves; the default name; the template key in `note-composer.json` and how `{{content}}`'s absence is handled |
 | `zk-prefixer`, `insert-unique-link` | the three keys of `zk-prefixer.json`; the created path and bytes with the file empty; the second name within one minute; the template's expansion; the text the link command inserts |
-| `random-note` (done, to confirm) | current tab or new; whether the open note is drawn again; the empty vault's notice; the ribbon button's icon and place |
+| `random-note` (confirmed 2026-11-16) | current tab or new; whether the open note is drawn again; the empty vault's notice; the ribbon button's icon and place |
 | `app:increase-font-size`, `app:decrease-font-size` | the step from 16 px, the clamps, whether `baseFontSize` is written, whether it needs `baseFontSizeAction` |
 | `window:zoom-*` | the limits, a popout's `zoom` after one press, whether the main window's survives a relaunch |
 | `theme:toggle-light-dark` | `appearance.json` after a run from `obsidian`, `moonstone` and `system` |
@@ -2463,7 +2514,7 @@ was built:
 | `workspaces:*` | `workspaces.json` after two saves, a delete, a rename and a load; the modal's DOM; whether a load rewrites `workspace.json` at once |
 | `editor:rename-heading` | whether it hides off a heading line; the modal; the bytes in the heading and in every link form to it; odd names; `alwaysUpdateLinks` off |
 | `markdown:add-alias` | what is written before and after a value, over no frontmatter, `aliases: []`, a list and a scalar; where focus lands |
-| `editor:context-menu`, `editor:focus` (done, to confirm) | the menu's anchor and rows; Focus on last note over a canvas, a base, a PDF and an empty tab |
+| `editor:context-menu`, `editor:focus` (confirmed 2026-11-16; Focus on last note widened, the menu turns over, its submenus built) | the menu's anchor and rows; Focus on last note over a canvas, a base, a PDF and an empty tab |
 
 **The site, made true.** `compatibility.md` and `differences.md` had fallen three weeks behind;
 every row of both was checked against the code. Eleven "not yet" rows came out (HTML in notes,

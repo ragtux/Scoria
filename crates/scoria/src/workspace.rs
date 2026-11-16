@@ -2016,6 +2016,11 @@ struct Tab {
     /// (`backlink:toggle-backlinks-in-document`), kept by the tab like the
     /// pin, and the groups folded in it by hand.
     doc_backlinks: DocBacklinks,
+    /// When the tab was last the active one while showing a note, on
+    /// [`Workspace::note_clock`]: Obsidian's `activeTime`, which "Focus on
+    /// last note" reads to find the last note. 0 for a tab never active
+    /// over a note this session.
+    note_stamp: u64,
 }
 
 impl Tab {
@@ -2029,6 +2034,7 @@ impl Tab {
             view_state: None,
             pinned: false,
             doc_backlinks: DocBacklinks::default(),
+            note_stamp: 0,
         }
     }
 
@@ -3663,6 +3669,9 @@ pub struct Workspace {
     /// Group ids, most recently active first: where focus goes when a group
     /// closes, and which group a focus command lands in.
     group_mru: Vec<u64>,
+    /// The clock [`Tab::note_stamp`] is read on: moved on at every paint
+    /// that finds the active tab showing a note.
+    note_clock: u64,
     /// A tab is being dragged, so every group paints its drop zones. Set
     /// when the drag starts and cleared when the next frame finds no drag
     /// under way, however the drag ended.
@@ -3865,7 +3874,7 @@ fn bases_subscription(bases: &Entity<BasesView>, cx: &mut Context<Workspace>) ->
         BasesEvent::FileMenu { path, position } => {
             this.file_menu = Some(file_menu::Menu {
                 position: *position,
-                submenu: false,
+                submenu: Default::default(),
                 anchor: Anchor::TopLeft,
                 target: file_menu::Target::Row(path.clone()),
             });
@@ -3969,12 +3978,14 @@ fn view_subscriptions(
                     selected,
                     link,
                     spelling,
+                    checks,
                 } => this.open_editor_menu(
                     *position,
                     selection.clone(),
                     *selected,
                     link.clone(),
                     spelling.clone(),
+                    *checks,
                     cx,
                 ),
                 EditorEvent::RenameTo(value) => {
@@ -4367,7 +4378,7 @@ impl Workspace {
                     } => {
                         this.file_menu = Some(file_menu::Menu {
                             position: *position,
-                            submenu: false,
+                            submenu: Default::default(),
                             anchor: Anchor::TopLeft,
                             target: file_menu::Target::Search {
                                 path: path.clone(),
@@ -4599,6 +4610,7 @@ impl Workspace {
             rendering_window: None,
             next_group_id: 1,
             group_mru: vec![0],
+            note_clock: 0,
             dragging_tab: false,
             tab_drag: None,
             drag_bounds: Rc::default(),
@@ -6304,16 +6316,8 @@ impl Workspace {
                     self.editor.update(cx, |e, cx| e.context_menu_at_caret(cx));
                 }
             }
-            // "Focus on last note": the keyboard back on the note's editor
-            // the main area shows, wherever it was -- a dock tree, the
-            // search field. It never switches tabs: over a canvas, an empty
-            // tab or a note in the reading view Obsidian 1.15.0 did nothing
-            // visible, so only an editor on screen takes it.
-            "editor:focus" => {
-                if self.main_view(cx) == MainView::Editor {
-                    self.focus_main(window, cx);
-                }
-            }
+            // "Focus on last note": the keyboard to the last note's editor.
+            "editor:focus" => self.focus_last_note(window, cx),
             "editor:toggle-fold-properties" => {
                 if self.note_has_keys(window, cx) {
                     if self.mode.is_editing() {
@@ -7243,6 +7247,82 @@ impl Workspace {
             .flat_map(|(_, g)| g.tabs.iter())
             .map(|t| (t.path.as_deref(), t.mode == ViewMode::Graph));
         any_markdown_leaf(live.chain(mine).chain(others))
+    }
+
+    /// Stamps the active tab as the last note, when it shows one: run at
+    /// every paint, so a tab's stamp is the last time it was the active one
+    /// over a note, which is Obsidian's `activeTime` as far as "Focus on
+    /// last note" reads it. A dock pane taking the keyboard leaves the
+    /// main area's active tab where it was, as Obsidian's note stays the
+    /// last one when its Files pane is clicked.
+    fn stamp_live_note(&mut self) {
+        let note = self.mode != ViewMode::Graph
+            && self
+                .current
+                .as_deref()
+                .is_some_and(|p| FileKind::from_path(p) == FileKind::Markdown);
+        if !note {
+            return;
+        }
+        self.note_clock += 1;
+        if let Some(tab) = self.tabs.get_mut(self.active_tab) {
+            tab.note_stamp = self.note_clock;
+        }
+    }
+
+    /// "Focus on last note" (`editor:focus`): the keyboard to the last
+    /// note's editor, which [`last_note_to_focus`] picks. Over a canvas, a
+    /// base, a PDF or an empty tab whose group shows no note, that note's
+    /// group is made the active one; Obsidian 1.15.1 moved the keyboard
+    /// into the note there and left its active leaf on the canvas until the
+    /// first key, which went into the note and moved it
+    /// (`2026-11-16-focus-random-menu.json`, `s01`). Scoria's keyboard
+    /// lives in the active group, so the group moves at once.
+    fn focus_last_note(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let live = LastNoteLeaf {
+            group: self.active_group,
+            path: self.current.as_deref(),
+            mode: self.mode,
+            stamp: self.tabs.get(self.active_tab).map_or(0, |t| t.note_stamp),
+            shown: true,
+        };
+        let mine = self
+            .tabs
+            .iter()
+            .enumerate()
+            .filter(|(ix, _)| *ix != self.active_tab)
+            .map(|(_, t)| LastNoteLeaf {
+                group: self.active_group,
+                path: t.path.as_deref(),
+                mode: t.mode,
+                stamp: t.note_stamp,
+                shown: false,
+            });
+        let others = self
+            .groups
+            .iter()
+            .enumerate()
+            .filter(|(ix, _)| *ix != self.active_group)
+            .flat_map(|(gx, g)| {
+                g.tabs.iter().enumerate().map(move |(tx, t)| LastNoteLeaf {
+                    group: gx,
+                    path: t.path.as_deref(),
+                    mode: t.mode,
+                    stamp: t.note_stamp,
+                    shown: tx == g.active_tab,
+                })
+            });
+        let Some(group) = last_note_to_focus(std::iter::once(live).chain(mine).chain(others))
+        else {
+            return;
+        };
+        if group != self.active_group {
+            let id = self.groups[group].id;
+            self.activate_group(id, cx);
+        }
+        if self.main_view(cx) == MainView::Editor {
+            self.focus_main(window, cx);
+        }
     }
 
     fn note_has_keys(&self, window: &Window, cx: &App) -> bool {
@@ -11838,7 +11918,7 @@ impl Workspace {
         };
         self.file_menu = Some(file_menu::Menu {
             position,
-            submenu: false,
+            submenu: Default::default(),
             anchor: Anchor::TopRight,
             target,
         });
@@ -11872,7 +11952,7 @@ impl Workspace {
         };
         self.file_menu = Some(file_menu::Menu {
             position,
-            submenu: false,
+            submenu: Default::default(),
             anchor: Anchor::TopLeft,
             target: file_menu::Target::Tab {
                 group: id,
@@ -12346,6 +12426,7 @@ impl Workspace {
         // So is whether its note shows the backlinks block, which goes with
         // the tab as the pin does.
         let doc_backlinks = slot.map(|t| t.doc_backlinks.clone()).unwrap_or_default();
+        let note_stamp = slot.map_or(0, |t| t.note_stamp);
         let tab = Tab {
             path: self.current.clone(),
             mode: self.mode,
@@ -12355,6 +12436,7 @@ impl Workspace {
             view_state,
             pinned,
             doc_backlinks,
+            note_stamp,
         };
         match self.tabs.get_mut(self.active_tab) {
             Some(slot) => *slot = tab,
@@ -12855,6 +12937,7 @@ impl Workspace {
                 .get(self.active_tab)
                 .map(|t| t.doc_backlinks.clone())
                 .unwrap_or_default(),
+            note_stamp: 0,
         }
     }
 
@@ -12871,6 +12954,7 @@ impl Workspace {
             view_state: None,
             pinned: false,
             doc_backlinks: DocBacklinks::default(),
+            note_stamp: 0,
         }
     }
 
@@ -17194,7 +17278,7 @@ impl Workspace {
     ) {
         self.file_menu = Some(file_menu::Menu {
             position,
-            submenu: false,
+            submenu: Default::default(),
             anchor: Anchor::TopLeft,
             target: file_menu::Target::Linked(path),
         });
@@ -17220,6 +17304,7 @@ impl Workspace {
     /// rows — a wikilink that names a file wraps the file menu around them,
     /// a tag reads as a tag, and everything else (plain text, an external
     /// link, a dangling wikilink) is the plain menu.
+    #[allow(clippy::too_many_arguments)]
     fn open_editor_menu(
         &mut self,
         position: gpui::Point<Pixels>,
@@ -17227,6 +17312,7 @@ impl Workspace {
         selected: bool,
         link: Option<LinkTarget>,
         spelling: Option<crate::spellcheck::SpellHit>,
+        checks: file_menu::MenuChecks,
         cx: &mut Context<Self>,
     ) {
         let spot = match link {
@@ -17243,13 +17329,14 @@ impl Workspace {
         };
         self.file_menu = Some(file_menu::Menu {
             position,
-            submenu: false,
+            submenu: Default::default(),
             anchor: Anchor::TopLeft,
             target: file_menu::Target::Editor(file_menu::EditorClick {
                 spot,
                 selection,
                 selected,
                 spelling,
+                checks,
             }),
         });
         cx.notify();
@@ -17373,6 +17460,16 @@ impl Workspace {
                                 .update(cx, |e, cx| e.replace_misspelling(&hit, &with, window, cx));
                         }
                     }
+                }
+            }
+            // A Format, Paragraph or Insert row: the command it is named
+            // after. A row that only opens a submenu carries no id.
+            // The keyboard goes back to the note first: the editor commands
+            // check that it holds it, and the menu had it until now.
+            Pick::Command(id) => {
+                if !id.is_empty() {
+                    self.focus_main(window, cx);
+                    self.run_command(id, window, cx);
                 }
             }
             Pick::AddToDictionary => {
@@ -18988,7 +19085,7 @@ impl Workspace {
                     cx.listener(move |this, event: &MouseDownEvent, _, cx| {
                         this.file_menu = Some(file_menu::Menu {
                             position: event.position,
-                            submenu: false,
+                            submenu: Default::default(),
                             anchor: Anchor::TopLeft,
                             target: file_menu::Target::Property {
                                 name: menu_name.clone(),
@@ -19929,6 +20026,7 @@ fn tab_from_leaf(
                 view_state: inner.and_then(|s| s.get("viewState")).cloned(),
                 pinned: false,
                 doc_backlinks: DocBacklinks::read(inner),
+                note_stamp: 0,
             }
         }
         (Some("empty"), None) => Tab {
@@ -20745,6 +20843,7 @@ impl Render for Workspace {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         self.corners = WindowCorners::of(window);
         self.sync_stacks(cx);
+        self.stamp_live_note();
         if let Some(value) = self.pending_title_rename.take() {
             cx.defer_in(window, move |this, window, cx| {
                 this.rename_from_inline_title(&value, window, cx)
@@ -21220,6 +21319,43 @@ fn any_markdown_leaf<'a>(mut leaves: impl Iterator<Item = (Option<&'a str>, bool
     })
 }
 
+/// A tab as "Focus on last note" sees it.
+#[derive(Debug, Clone, Copy)]
+struct LastNoteLeaf<'a> {
+    /// The group's index in `groups`.
+    group: usize,
+    path: Option<&'a str>,
+    mode: ViewMode,
+    /// [`Tab::note_stamp`].
+    stamp: u64,
+    /// The group's active tab, the one on screen.
+    shown: bool,
+}
+
+/// The group whose note "Focus on last note" gives the keyboard to, or
+/// `None` when the command does nothing. The last note is the Markdown tab
+/// stamped last, anywhere; it takes the keyboard only when its group shows
+/// it and in an editing mode. Behind a canvas in its own group, or in the
+/// reading view, nothing happens, even with another note on screen
+/// elsewhere. Observed on Obsidian 1.15.0 (2026-11-09) and 1.15.1
+/// (2026-11-16, `focus-random-menu.mjs` `s01`). On a tie, which only
+/// tabs never active this session have, the first leaf given wins: the
+/// active group's tab, then its other tabs, then the other groups in order.
+fn last_note_to_focus<'a>(leaves: impl Iterator<Item = LastNoteLeaf<'a>>) -> Option<usize> {
+    let mut last: Option<LastNoteLeaf<'a>> = None;
+    for leaf in leaves {
+        let note = leaf.mode != ViewMode::Graph
+            && leaf
+                .path
+                .is_some_and(|p| FileKind::from_path(p) == FileKind::Markdown);
+        if note && last.is_none_or(|l| leaf.stamp > l.stamp) {
+            last = Some(leaf);
+        }
+    }
+    let last = last?;
+    (last.shown && last.mode.is_editing()).then_some(last.group)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -21452,6 +21588,92 @@ mod tests {
             [(Some("Board.canvas"), false), (Some("Note A.md"), false)].into_iter()
         ));
         assert!(!any_markdown_leaf(std::iter::empty()));
+    }
+
+    /// Every case of `focus-random-menu.mjs` `s01` (Obsidian 1.15.1,
+    /// 2026-11-16) and of `app-window-commands.mjs` `s14` (1.15.0,
+    /// 2026-11-09): which group's note the keyboard goes to, if any. The
+    /// active group is 0 throughout and its active tab is listed first.
+    #[test]
+    fn focus_on_last_note_goes_to_the_last_note_when_it_is_on_screen() {
+        use ViewMode::{Graph, LivePreview, Reading, Source};
+        let leaf = |group, path, mode, stamp, shown| LastNoteLeaf {
+            group,
+            path,
+            mode,
+            stamp,
+            shown,
+        };
+        let pick = |leaves: &[LastNoteLeaf<'static>]| last_note_to_focus(leaves.iter().copied());
+        // Note A behind a base, a PDF, a canvas or an empty tab in its own
+        // group: nothing.
+        for over in [
+            Some("Table.base"),
+            Some("Doc.pdf"),
+            Some("Board.canvas"),
+            None,
+        ] {
+            assert_eq!(
+                pick(&[
+                    leaf(0, over, LivePreview, 0, true),
+                    leaf(0, Some("Note A.md"), LivePreview, 5, false),
+                ]),
+                None,
+                "{over:?}"
+            );
+        }
+        // The same with Note A on screen in a second group: that group.
+        for over in [
+            Some("Table.base"),
+            Some("Doc.pdf"),
+            Some("Board.canvas"),
+            None,
+        ] {
+            assert_eq!(
+                pick(&[
+                    leaf(0, over, LivePreview, 0, true),
+                    leaf(1, Some("Note A.md"), Source, 5, true),
+                ]),
+                Some(1),
+                "{over:?}"
+            );
+        }
+        // Note B active in the reading view, Note A editing beside it:
+        // nothing.
+        assert_eq!(
+            pick(&[
+                leaf(0, Some("Note B.md"), Reading, 9, true),
+                leaf(1, Some("Note A.md"), LivePreview, 5, true),
+            ]),
+            None
+        );
+        // The last note hidden behind the active canvas, an older one on
+        // screen in the other group: nothing.
+        assert_eq!(
+            pick(&[
+                leaf(0, Some("Board.canvas"), LivePreview, 0, true),
+                leaf(0, Some("Note B.md"), LivePreview, 7, false),
+                leaf(1, Some("Note A.md"), LivePreview, 5, true),
+            ]),
+            None
+        );
+        // Three groups, the canvas between two notes: the one active last.
+        assert_eq!(
+            pick(&[
+                leaf(1, Some("Board.canvas"), LivePreview, 0, true),
+                leaf(0, Some("Note B.md"), LivePreview, 3, true),
+                leaf(2, Some("Note C.md"), LivePreview, 6, true),
+            ]),
+            Some(2)
+        );
+        // The note active, the keyboard in a dock pane: the note.
+        assert_eq!(
+            pick(&[leaf(0, Some("Note A.md"), Source, 4, true)]),
+            Some(0)
+        );
+        // A tab showing the graph is not a note, and no note is nothing.
+        assert_eq!(pick(&[leaf(0, Some("Note A.md"), Graph, 9, true)]), None);
+        assert_eq!(pick(&[]), None);
     }
 
     /// Unique note creator's two commands run, under its plugin; the link
@@ -21980,6 +22202,7 @@ mod tests {
             view_state: None,
             pinned: true,
             doc_backlinks: DocBacklinks::default(),
+            note_stamp: 0,
         };
         assert_eq!(leaf_json(&tab), read);
     }
@@ -21996,6 +22219,7 @@ mod tests {
             view_state: None,
             pinned: true,
             doc_backlinks: DocBacklinks::default(),
+            note_stamp: 0,
         };
         let written = leaf_json(&tab);
         assert_eq!(written["id"], read["id"]);
@@ -22025,6 +22249,7 @@ mod tests {
             view_state: Some(json!({"x": 100, "y": -20, "zoom": -1})),
             pinned: false,
             doc_backlinks: DocBacklinks::default(),
+            note_stamp: 0,
         };
         let written = leaf_json(&tab);
         assert_eq!(written["state"]["type"], json!("canvas"));
@@ -22057,6 +22282,7 @@ mod tests {
             view_state: None,
             pinned: false,
             doc_backlinks: DocBacklinks::default(),
+            note_stamp: 0,
         };
         let written = leaf_json(&tab);
         assert_eq!(written["state"]["type"], json!("bases"));
@@ -22099,6 +22325,7 @@ mod tests {
             view_state: None,
             pinned: false,
             doc_backlinks: DocBacklinks::default(),
+            note_stamp: 0,
         };
         let audio = leaf_json(&tab("tone.mp3"));
         assert_eq!(audio["state"]["type"], json!("audio"));
@@ -22130,6 +22357,7 @@ mod tests {
             view_state: None,
             pinned: false,
             doc_backlinks: DocBacklinks::default(),
+            note_stamp: 0,
         };
         let written = leaf_json(&tab);
         assert_eq!(written["state"]["type"], json!("pdf"));
@@ -22207,6 +22435,7 @@ mod tests {
             view_state: None,
             pinned: false,
             doc_backlinks: DocBacklinks::default(),
+            note_stamp: 0,
         };
         let written = leaf_json(&tab);
         let id = written["id"].as_str().unwrap();

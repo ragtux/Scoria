@@ -689,7 +689,8 @@ fn event_for(pick: Pick, target: &Target) -> Option<ExplorerEvent> {
         | Pick::SelectAll
         | Pick::ExtractSelection
         | Pick::Correction(_)
-        | Pick::AddToDictionary => return None,
+        | Pick::AddToDictionary
+        | Pick::Command(_) => return None,
     })
 }
 
@@ -1226,7 +1227,7 @@ impl FileExplorer {
             };
             self.menu = Some(Menu {
                 position,
-                submenu: false,
+                submenu: Default::default(),
                 anchor: gpui::Anchor::TopLeft,
                 target,
             });
@@ -1239,7 +1240,7 @@ impl FileExplorer {
     fn open_blank_menu(&mut self, position: Point<Pixels>, cx: &mut Context<Self>) {
         self.menu = Some(Menu {
             position,
-            submenu: false,
+            submenu: Default::default(),
             anchor: gpui::Anchor::TopLeft,
             target: Target::Blank,
         });

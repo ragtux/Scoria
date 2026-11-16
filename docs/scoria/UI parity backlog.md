@@ -1691,6 +1691,10 @@ are unobserved and were not guessed -- OBSERVE), *Extract current selection...*
 window* and *Start presentation*. Dropping the last empties the `view` section,
 so the capture's two consecutive separators are one here.
 
+The three submenus landed on 2026-11-16 once a probe had opened them: every row is the editor
+command of its name, checked byte for byte
+([[Specification#The editor menu's submenus]]).
+
 **Scoria.** A right click leaves `modal` at `{kind: "none", rows: []}`, the selection untouched and
 the caret where it was; `editor:context-menu` answers "Show context menu under cursor: not available
 in Scoria yet" and is `runnable: false`. The mouse-down hook filters on

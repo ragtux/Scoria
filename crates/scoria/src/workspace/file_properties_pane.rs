@@ -221,7 +221,7 @@ impl Workspace {
     ) {
         self.file_menu = Some(file_menu::Menu {
             position,
-            submenu: false,
+            submenu: Default::default(),
             anchor: Anchor::TopLeft,
             target: file_menu::Target::SideTab { kind },
         });

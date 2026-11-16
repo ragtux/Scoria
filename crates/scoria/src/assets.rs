@@ -198,6 +198,29 @@ icons!(
     "grip-horizontal",
     "wand-2",
     "x-square",
+    // The editor menu's Format, Paragraph and Insert rows and their
+    // submenus (2026-11-16). Obsidian's `code-2`, `check-square`,
+    // `file-signature` and `sigma-square` are Lucide's older names of
+    // `code-xml`, `square-check`, `file-pen-line` and `square-sigma`.
+    "paintbrush",
+    "pilcrow",
+    "list-plus",
+    "bold",
+    "italic",
+    "strikethrough",
+    "highlighter",
+    "code-xml",
+    "sigma",
+    "percent",
+    "list-ordered",
+    "heading-1",
+    "heading-2",
+    "heading-3",
+    "heading-4",
+    "heading-5",
+    "heading-6",
+    "file-pen-line",
+    "square-sigma",
 );
 
 /// The logo, the one bundled asset that is not a monochrome icon. It is

@@ -1,0 +1,6909 @@
+{
+ "_readme": "focus-random-menu.mjs on Obsidian 1.15.1 (installer build 1.13.7), 2026-11-16, private headless sway, USER_DATA_DIR, CDP port 9474. One key per run, each holding the steps it is authoritative for: run3 = s01 editor:focus and s03 random-note (clean reset); run4 = s01 again with otherGroupCanvasThenType (where the next key goes); run5 = s02 context-menu edges and the real right clicks; run8 = s05 Highlight submenu; run9 = s07 checks; run10 = s04 submenus and s06 the commands run by id (rows run last-first: Insert > Table leaves the session unable to run the next editor command, and Format effects at a caret did not run because the first submenu open of a session missed). An earlier s04 (results7, Format rows over a selection) agreed with run10 and is not kept.",
+ "run3": {
+  "startedAt": "2026-11-16T14:41:16.089Z",
+  "steps": {
+   "s00-meta": {
+    "ok": true,
+    "enable": {
+     "randomNote": true
+    },
+    "version": {
+     "app": "1.15.1",
+     "api": null,
+     "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+     "title": "New tab - vault-1794840072 - Obsidian 1.15.1",
+     "inner": [
+      1596,
+      973
+     ]
+    },
+    "commands": [
+     {
+      "id": "editor:focus",
+      "name": "Focus on last note",
+      "icon": null,
+      "kinds": [
+       "checkCallback"
+      ]
+     },
+     {
+      "id": "editor:context-menu",
+      "name": "Show context menu under cursor",
+      "icon": "lucide-menu",
+      "kinds": [
+       "checkCallback",
+       "editorCallback"
+      ]
+     },
+     {
+      "id": "random-note",
+      "name": "Random note: Open random note",
+      "icon": "dice-glyph",
+      "kinds": [
+       "callback"
+      ]
+     }
+    ]
+   },
+   "s01-editor-focus": {
+    "ok": true,
+    "sameGroupBase": {
+     "tabs": [
+      [
+       "markdown:Note A.md",
+       "bases:Table.base*(shown)"
+      ]
+     ],
+     "before": {
+      "leaf": {
+       "type": "bases",
+       "file": "Table.base",
+       "mode": null,
+       "pinned": false,
+       "group": 0
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "bases-table-container node-insert-event",
+       "inCm": false,
+       "leafType": "bases",
+       "leafFile": "Table.base"
+      }
+     },
+     "available": true,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "after": {
+      "leaf": {
+       "type": "bases",
+       "file": "Table.base",
+       "mode": null,
+       "pinned": false,
+       "group": 0
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "bases-table-container node-insert-event",
+       "inCm": false,
+       "leafType": "bases",
+       "leafFile": "Table.base"
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md",
+       "bases:Table.base*(shown)"
+      ]
+     ],
+     "md": [
+      {
+       "file": "Note A.md",
+       "mode": "source",
+       "hasFocus": false,
+       "holdsDomFocus": false,
+       "isActive": false,
+       "visible": false,
+       "group": 0
+      }
+     ],
+     "later": {
+      "active": {
+       "leaf": {
+        "type": "bases",
+        "file": "Table.base",
+        "mode": null,
+        "pinned": false,
+        "group": 0
+       },
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "bases-table-container node-insert-event",
+        "inCm": false,
+        "leafType": "bases",
+        "leafFile": "Table.base"
+       }
+      },
+      "activeEditorFile": null
+     }
+    },
+    "sameGroupPdf": {
+     "tabs": [
+      [
+       "markdown:Note A.md",
+       "pdf:Doc.pdf*(shown)"
+      ]
+     ],
+     "before": {
+      "leaf": {
+       "type": "pdf",
+       "file": "Doc.pdf",
+       "mode": null,
+       "pinned": false,
+       "group": 0
+      },
+      "activeElement": {
+       "tag": "BODY",
+       "cls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-tit",
+       "inCm": false,
+       "leafType": null,
+       "leafFile": null
+      }
+     },
+     "available": true,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "after": {
+      "leaf": {
+       "type": "pdf",
+       "file": "Doc.pdf",
+       "mode": null,
+       "pinned": false,
+       "group": 0
+      },
+      "activeElement": {
+       "tag": "BODY",
+       "cls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-tit",
+       "inCm": false,
+       "leafType": null,
+       "leafFile": null
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md",
+       "pdf:Doc.pdf*(shown)"
+      ]
+     ],
+     "md": [
+      {
+       "file": "Note A.md",
+       "mode": "source",
+       "hasFocus": false,
+       "holdsDomFocus": false,
+       "isActive": false,
+       "visible": false,
+       "group": 0
+      }
+     ],
+     "later": {
+      "active": {
+       "leaf": {
+        "type": "pdf",
+        "file": "Doc.pdf",
+        "mode": null,
+        "pinned": false,
+        "group": 0
+       },
+       "activeElement": {
+        "tag": "BODY",
+        "cls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-tit",
+        "inCm": false,
+        "leafType": null,
+        "leafFile": null
+       }
+      },
+      "activeEditorFile": null
+     }
+    },
+    "otherGroupCanvas": {
+     "tabs": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "canvas:Board.canvas*(shown)"
+      ]
+     ],
+     "before": {
+      "leaf": {
+       "type": "canvas",
+       "file": "Board.canvas",
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "canvas-wrapper node-insert-event",
+       "inCm": false,
+       "leafType": "canvas",
+       "leafFile": "Board.canvas"
+      }
+     },
+     "available": true,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "after": {
+      "leaf": {
+       "type": "canvas",
+       "file": "Board.canvas",
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "inCm": true,
+       "leafType": "markdown",
+       "leafFile": "Note A.md"
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "canvas:Board.canvas*(shown)"
+      ]
+     ],
+     "md": [
+      {
+       "file": "Note A.md",
+       "mode": "source",
+       "hasFocus": false,
+       "holdsDomFocus": true,
+       "isActive": false,
+       "visible": true,
+       "group": 0
+      }
+     ],
+     "later": {
+      "active": {
+       "leaf": {
+        "type": "canvas",
+        "file": "Board.canvas",
+        "mode": null,
+        "pinned": false,
+        "group": 1
+       },
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "inCm": true,
+        "leafType": "markdown",
+        "leafFile": "Note A.md"
+       }
+      },
+      "activeEditorFile": null
+     }
+    },
+    "otherGroupBase": {
+     "tabs": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "bases:Table.base*(shown)"
+      ]
+     ],
+     "before": {
+      "leaf": {
+       "type": "bases",
+       "file": "Table.base",
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "bases-table-container node-insert-event",
+       "inCm": false,
+       "leafType": "bases",
+       "leafFile": "Table.base"
+      }
+     },
+     "available": true,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "after": {
+      "leaf": {
+       "type": "bases",
+       "file": "Table.base",
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "inCm": true,
+       "leafType": "markdown",
+       "leafFile": "Note A.md"
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "bases:Table.base*(shown)"
+      ]
+     ],
+     "md": [
+      {
+       "file": "Note A.md",
+       "mode": "source",
+       "hasFocus": false,
+       "holdsDomFocus": true,
+       "isActive": false,
+       "visible": true,
+       "group": 0
+      }
+     ],
+     "later": {
+      "active": {
+       "leaf": {
+        "type": "bases",
+        "file": "Table.base",
+        "mode": null,
+        "pinned": false,
+        "group": 1
+       },
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "inCm": true,
+        "leafType": "markdown",
+        "leafFile": "Note A.md"
+       }
+      },
+      "activeEditorFile": null
+     }
+    },
+    "otherGroupPdf": {
+     "tabs": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "pdf:Doc.pdf*(shown)"
+      ]
+     ],
+     "before": {
+      "leaf": {
+       "type": "pdf",
+       "file": "Doc.pdf",
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "BODY",
+       "cls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-tit",
+       "inCm": false,
+       "leafType": null,
+       "leafFile": null
+      }
+     },
+     "available": true,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "after": {
+      "leaf": {
+       "type": "pdf",
+       "file": "Doc.pdf",
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "inCm": true,
+       "leafType": "markdown",
+       "leafFile": "Note A.md"
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "pdf:Doc.pdf*(shown)"
+      ]
+     ],
+     "md": [
+      {
+       "file": "Note A.md",
+       "mode": "source",
+       "hasFocus": false,
+       "holdsDomFocus": true,
+       "isActive": false,
+       "visible": true,
+       "group": 0
+      }
+     ],
+     "later": {
+      "active": {
+       "leaf": {
+        "type": "pdf",
+        "file": "Doc.pdf",
+        "mode": null,
+        "pinned": false,
+        "group": 1
+       },
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "inCm": true,
+        "leafType": "markdown",
+        "leafFile": "Note A.md"
+       }
+      },
+      "activeEditorFile": null
+     }
+    },
+    "otherGroupEmpty": {
+     "tabs": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "empty:*(shown)"
+      ]
+     ],
+     "before": {
+      "leaf": {
+       "type": "empty",
+       "file": null,
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "BODY",
+       "cls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-tit",
+       "inCm": false,
+       "leafType": null,
+       "leafFile": null
+      }
+     },
+     "available": true,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "after": {
+      "leaf": {
+       "type": "empty",
+       "file": null,
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "inCm": true,
+       "leafType": "markdown",
+       "leafFile": "Note A.md"
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "empty:*(shown)"
+      ]
+     ],
+     "md": [
+      {
+       "file": "Note A.md",
+       "mode": "source",
+       "hasFocus": false,
+       "holdsDomFocus": true,
+       "isActive": false,
+       "visible": true,
+       "group": 0
+      }
+     ],
+     "later": {
+      "active": {
+       "leaf": {
+        "type": "empty",
+        "file": null,
+        "mode": null,
+        "pinned": false,
+        "group": 1
+       },
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "inCm": true,
+        "leafType": "markdown",
+        "leafFile": "Note A.md"
+       }
+      },
+      "activeEditorFile": null
+     }
+    },
+    "readingBesideEditing": {
+     "tabs": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "markdown:Note B.md*(shown)"
+      ]
+     ],
+     "before": {
+      "leaf": {
+       "type": "markdown",
+       "file": "Note B.md",
+       "mode": "preview",
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings",
+       "inCm": false,
+       "leafType": "markdown",
+       "leafFile": "Note B.md"
+      }
+     },
+     "available": true,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "after": {
+      "leaf": {
+       "type": "markdown",
+       "file": "Note B.md",
+       "mode": "preview",
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings",
+       "inCm": false,
+       "leafType": "markdown",
+       "leafFile": "Note B.md"
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "markdown:Note B.md*(shown)"
+      ]
+     ],
+     "md": [
+      {
+       "file": "Note A.md",
+       "mode": "source",
+       "hasFocus": false,
+       "holdsDomFocus": false,
+       "isActive": false,
+       "visible": true,
+       "group": 0
+      },
+      {
+       "file": "Note B.md",
+       "mode": "preview",
+       "hasFocus": false,
+       "holdsDomFocus": true,
+       "isActive": true,
+       "visible": true,
+       "group": 1
+      }
+     ],
+     "later": {
+      "active": {
+       "leaf": {
+        "type": "markdown",
+        "file": "Note B.md",
+        "mode": "preview",
+        "pinned": false,
+        "group": 1
+       },
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings",
+        "inCm": false,
+        "leafType": "markdown",
+        "leafFile": "Note B.md"
+       }
+      },
+      "activeEditorFile": "Note B.md"
+     }
+    },
+    "recentNoteHiddenOtherOnScreen": {
+     "tabs": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "markdown:Note B.md",
+       "canvas:Board.canvas*(shown)"
+      ]
+     ],
+     "before": {
+      "leaf": {
+       "type": "canvas",
+       "file": "Board.canvas",
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "canvas-wrapper node-insert-event",
+       "inCm": false,
+       "leafType": "canvas",
+       "leafFile": "Board.canvas"
+      }
+     },
+     "available": true,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "after": {
+      "leaf": {
+       "type": "canvas",
+       "file": "Board.canvas",
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "canvas-wrapper node-insert-event",
+       "inCm": false,
+       "leafType": "canvas",
+       "leafFile": "Board.canvas"
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "markdown:Note B.md",
+       "canvas:Board.canvas*(shown)"
+      ]
+     ],
+     "md": [
+      {
+       "file": "Note A.md",
+       "mode": "source",
+       "hasFocus": false,
+       "holdsDomFocus": false,
+       "isActive": false,
+       "visible": true,
+       "group": 0
+      },
+      {
+       "file": "Note B.md",
+       "mode": "source",
+       "hasFocus": false,
+       "holdsDomFocus": false,
+       "isActive": false,
+       "visible": false,
+       "group": 1
+      }
+     ],
+     "later": {
+      "active": {
+       "leaf": {
+        "type": "canvas",
+        "file": "Board.canvas",
+        "mode": null,
+        "pinned": false,
+        "group": 1
+       },
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "canvas-wrapper node-insert-event",
+        "inCm": false,
+        "leafType": "canvas",
+        "leafFile": "Board.canvas"
+       }
+      },
+      "activeEditorFile": null
+     }
+    },
+    "threeGroupsLastNoteC": {
+     "tabs": [
+      [
+       "markdown:Note B.md(shown)"
+      ],
+      [
+       "canvas:Board.canvas*(shown)"
+      ],
+      [
+       "markdown:Note C.md(shown)"
+      ]
+     ],
+     "before": {
+      "leaf": {
+       "type": "canvas",
+       "file": "Board.canvas",
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "canvas-wrapper node-insert-event",
+       "inCm": false,
+       "leafType": "canvas",
+       "leafFile": "Board.canvas"
+      }
+     },
+     "available": true,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "after": {
+      "leaf": {
+       "type": "canvas",
+       "file": "Board.canvas",
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "inCm": true,
+       "leafType": "markdown",
+       "leafFile": "Note C.md"
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note B.md(shown)"
+      ],
+      [
+       "canvas:Board.canvas*(shown)"
+      ],
+      [
+       "markdown:Note C.md(shown)"
+      ]
+     ],
+     "md": [
+      {
+       "file": "Note B.md",
+       "mode": "source",
+       "hasFocus": false,
+       "holdsDomFocus": false,
+       "isActive": false,
+       "visible": true,
+       "group": 0
+      },
+      {
+       "file": "Note C.md",
+       "mode": "source",
+       "hasFocus": false,
+       "holdsDomFocus": true,
+       "isActive": false,
+       "visible": true,
+       "group": 2
+      }
+     ],
+     "later": {
+      "active": {
+       "leaf": {
+        "type": "canvas",
+        "file": "Board.canvas",
+        "mode": null,
+        "pinned": false,
+        "group": 1
+       },
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "inCm": true,
+        "leafType": "markdown",
+        "leafFile": "Note C.md"
+       }
+      },
+      "activeEditorFile": null
+     }
+    },
+    "searchFocused": {
+     "leaf": {
+      "type": "search",
+      "file": null,
+      "mode": null,
+      "pinned": false,
+      "group": -1
+     },
+     "activeElement": {
+      "tag": "INPUT",
+      "cls": "",
+      "inCm": false,
+      "leafType": "search",
+      "leafFile": null
+     }
+    },
+    "fromSearchField": {
+     "tabs": [
+      [
+       "markdown:Note A.md(shown)"
+      ]
+     ],
+     "before": {
+      "leaf": {
+       "type": "search",
+       "file": null,
+       "mode": null,
+       "pinned": false,
+       "group": -1
+      },
+      "activeElement": {
+       "tag": "INPUT",
+       "cls": "",
+       "inCm": false,
+       "leafType": "search",
+       "leafFile": null
+      }
+     },
+     "available": true,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "after": {
+      "leaf": {
+       "type": "markdown",
+       "file": "Note A.md",
+       "mode": "source",
+       "pinned": false,
+       "group": 0
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "inCm": true,
+       "leafType": "markdown",
+       "leafFile": "Note A.md"
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md*(shown)"
+      ]
+     ],
+     "md": [
+      {
+       "file": "Note A.md",
+       "mode": "source",
+       "hasFocus": true,
+       "holdsDomFocus": true,
+       "isActive": true,
+       "visible": true,
+       "group": 0
+      }
+     ],
+     "later": {
+      "active": {
+       "leaf": {
+        "type": "markdown",
+        "file": "Note A.md",
+        "mode": "source",
+        "pinned": false,
+        "group": 0
+       },
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "inCm": true,
+        "leafType": "markdown",
+        "leafFile": "Note A.md"
+       }
+      },
+      "activeEditorFile": "Note A.md"
+     }
+    },
+    "fromSearchFieldCanvasShown": {
+     "tabs": [
+      [
+       "markdown:Note A.md",
+       "canvas:Board.canvas(shown)"
+      ]
+     ],
+     "before": {
+      "leaf": {
+       "type": "search",
+       "file": null,
+       "mode": null,
+       "pinned": false,
+       "group": -1
+      },
+      "activeElement": {
+       "tag": "INPUT",
+       "cls": "",
+       "inCm": false,
+       "leafType": "search",
+       "leafFile": null
+      }
+     },
+     "available": true,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "after": {
+      "leaf": {
+       "type": "search",
+       "file": null,
+       "mode": null,
+       "pinned": false,
+       "group": -1
+      },
+      "activeElement": {
+       "tag": "INPUT",
+       "cls": "",
+       "inCm": false,
+       "leafType": "search",
+       "leafFile": null
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md",
+       "canvas:Board.canvas(shown)"
+      ]
+     ],
+     "md": [
+      {
+       "file": "Note A.md",
+       "mode": "source",
+       "hasFocus": false,
+       "holdsDomFocus": false,
+       "isActive": false,
+       "visible": false,
+       "group": 0
+      }
+     ],
+     "later": {
+      "active": {
+       "leaf": {
+        "type": "search",
+        "file": null,
+        "mode": null,
+        "pinned": false,
+        "group": -1
+       },
+       "activeElement": {
+        "tag": "INPUT",
+        "cls": "",
+        "inCm": false,
+        "leafType": "search",
+        "leafFile": null
+       }
+      },
+      "activeEditorFile": null
+     }
+    }
+   },
+   "s03-random-note": {
+    "ok": true,
+    "kinds": {
+     "before": {
+      "leaf": {
+       "type": "markdown",
+       "file": "Note A.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "inCm": true,
+       "leafType": "markdown",
+       "leafFile": "Note A.md"
+      }
+     },
+     "tabs": [
+      []
+     ],
+     "available": true,
+     "picks": [
+      {
+       "type": "markdown",
+       "file": "Note B.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note B.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Long.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Long.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note B.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note A.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note A.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note C.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Wide.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Wide.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note A.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note B.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note C.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Wide.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note A.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note A.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note C.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note B.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note B.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note C.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Long.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note A.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note B.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note C.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note B.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Wide.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note B.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note B.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note C.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note C.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Long.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note B.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note A.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note B.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Long.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note C.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Wide.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Wide.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note C.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      {
+       "type": "markdown",
+       "file": "Note A.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      }
+     ],
+     "after": {
+      "leaf": {
+       "type": "markdown",
+       "file": "Note A.md",
+       "mode": "source",
+       "pinned": false,
+       "group": -1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "inCm": true,
+       "leafType": "markdown",
+       "leafFile": "Note A.md"
+      }
+     },
+     "tabsAfter": [
+      []
+     ],
+     "history": {
+      "back": [
+       "Note A.md",
+       "Note B.md",
+       "Long.md",
+       "Note B.md",
+       "Note A.md",
+       "Note C.md",
+       "Wide.md",
+       "Note A.md",
+       "Note B.md",
+       "Note C.md",
+       "Wide.md",
+       "Note A.md",
+       "Note C.md",
+       "Note B.md",
+       "Note C.md",
+       "Long.md",
+       "Note A.md",
+       "Note B.md",
+       "Note C.md",
+       "Note B.md",
+       "Wide.md",
+       "Note B.md",
+       "Note C.md",
+       "Long.md",
+       "Note B.md",
+       "Note A.md",
+       "Note B.md",
+       "Long.md",
+       "Note C.md",
+       "Wide.md",
+       "Note C.md"
+      ],
+      "forward": 0
+     },
+     "notices": []
+    },
+    "kindsCount": {
+     "Note B.md": 12,
+     "Long.md": 5,
+     "Note A.md": 8,
+     "Note C.md": 9,
+     "Wide.md": 6
+    },
+    "fromEmptyTab": {
+     "before": {
+      "leaf": {
+       "type": "empty",
+       "file": null,
+       "mode": null,
+       "pinned": false,
+       "group": 0
+      },
+      "activeElement": {
+       "tag": "BODY",
+       "cls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-tit",
+       "inCm": false,
+       "leafType": null,
+       "leafFile": null
+      }
+     },
+     "tabs": [
+      [
+       "empty:*(shown)"
+      ]
+     ],
+     "available": true,
+     "picks": [
+      {
+       "type": "markdown",
+       "file": "Note B.md",
+       "mode": "source",
+       "pinned": false,
+       "group": 0
+      }
+     ],
+     "after": {
+      "leaf": {
+       "type": "markdown",
+       "file": "Note B.md",
+       "mode": "source",
+       "pinned": false,
+       "group": 0
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "inCm": true,
+       "leafType": "markdown",
+       "leafFile": "Note B.md"
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note B.md*(shown)"
+      ]
+     ],
+     "history": {
+      "back": [],
+      "forward": 0
+     },
+     "notices": []
+    },
+    "fromCanvas": {
+     "before": {
+      "leaf": {
+       "type": "canvas",
+       "file": "Board.canvas",
+       "mode": null,
+       "pinned": false,
+       "group": 0
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "canvas-wrapper node-insert-event",
+       "inCm": false,
+       "leafType": "canvas",
+       "leafFile": "Board.canvas"
+      }
+     },
+     "tabs": [
+      [
+       "canvas:Board.canvas*(shown)"
+      ]
+     ],
+     "available": true,
+     "picks": [
+      {
+       "type": "markdown",
+       "file": "Note A.md",
+       "mode": "source",
+       "pinned": false,
+       "group": 0
+      }
+     ],
+     "after": {
+      "leaf": {
+       "type": "markdown",
+       "file": "Note A.md",
+       "mode": "source",
+       "pinned": false,
+       "group": 0
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "inCm": true,
+       "leafType": "markdown",
+       "leafFile": "Note A.md"
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md*(shown)"
+      ]
+     ],
+     "history": {
+      "back": [
+       "Board.canvas"
+      ],
+      "forward": 0
+     },
+     "notices": []
+    },
+    "fromPinned": {
+     "before": {
+      "leaf": {
+       "type": "markdown",
+       "file": "Note A.md",
+       "mode": "source",
+       "pinned": true,
+       "group": 0
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "inCm": true,
+       "leafType": "markdown",
+       "leafFile": "Note A.md"
+      }
+     },
+     "tabs": [
+      [
+       "markdown:Note A.md*(shown)"
+      ]
+     ],
+     "available": true,
+     "picks": [
+      {
+       "type": "markdown",
+       "file": "Wide.md",
+       "mode": "source",
+       "pinned": false,
+       "group": 0
+      },
+      {
+       "type": "markdown",
+       "file": "Long.md",
+       "mode": "source",
+       "pinned": false,
+       "group": 0
+      },
+      {
+       "type": "markdown",
+       "file": "Wide.md",
+       "mode": "source",
+       "pinned": false,
+       "group": 0
+      }
+     ],
+     "after": {
+      "leaf": {
+       "type": "markdown",
+       "file": "Wide.md",
+       "mode": "source",
+       "pinned": false,
+       "group": 0
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "inCm": true,
+       "leafType": "markdown",
+       "leafFile": "Wide.md"
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md",
+       "markdown:Wide.md*(shown)"
+      ]
+     ],
+     "history": {
+      "back": [
+       "Wide.md",
+       "Long.md"
+      ],
+      "forward": 0
+     },
+     "notices": []
+    },
+    "fromSearchField": {
+     "before": {
+      "leaf": {
+       "type": "search",
+       "file": null,
+       "mode": null,
+       "pinned": false,
+       "group": -1
+      },
+      "activeElement": {
+       "tag": "INPUT",
+       "cls": "",
+       "inCm": false,
+       "leafType": "search",
+       "leafFile": null
+      }
+     },
+     "tabs": [
+      [
+       "markdown:Note A.md(shown)"
+      ]
+     ],
+     "available": true,
+     "picks": [
+      {
+       "type": "markdown",
+       "file": "Note A.md",
+       "mode": "source",
+       "pinned": false,
+       "group": 0
+      }
+     ],
+     "after": {
+      "leaf": {
+       "type": "markdown",
+       "file": "Note A.md",
+       "mode": "source",
+       "pinned": false,
+       "group": 0
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "inCm": true,
+       "leafType": "markdown",
+       "leafFile": "Note A.md"
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md*(shown)"
+      ]
+     ],
+     "history": {
+      "back": [],
+      "forward": 0
+     },
+     "notices": []
+    },
+    "splitFromLeftNote": {
+     "before": {
+      "leaf": {
+       "type": "markdown",
+       "file": "Note A.md",
+       "mode": "source",
+       "pinned": false,
+       "group": 0
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "inCm": true,
+       "leafType": "markdown",
+       "leafFile": "Note A.md"
+      }
+     },
+     "tabs": [
+      [
+       "markdown:Note A.md*(shown)"
+      ],
+      [
+       "canvas:Board.canvas(shown)"
+      ]
+     ],
+     "available": true,
+     "picks": [
+      {
+       "type": "markdown",
+       "file": "Long.md",
+       "mode": "source",
+       "pinned": false,
+       "group": 0
+      },
+      {
+       "type": "markdown",
+       "file": "Wide.md",
+       "mode": "source",
+       "pinned": false,
+       "group": 0
+      },
+      {
+       "type": "markdown",
+       "file": "Note A.md",
+       "mode": "source",
+       "pinned": false,
+       "group": 0
+      }
+     ],
+     "after": {
+      "leaf": {
+       "type": "markdown",
+       "file": "Note A.md",
+       "mode": "source",
+       "pinned": false,
+       "group": 0
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "inCm": true,
+       "leafType": "markdown",
+       "leafFile": "Note A.md"
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md*(shown)"
+      ],
+      [
+       "canvas:Board.canvas(shown)"
+      ]
+     ],
+     "history": {
+      "back": [
+       "Note A.md",
+       "Long.md",
+       "Wide.md"
+      ],
+      "forward": 0
+     },
+     "notices": []
+    },
+    "ribbon": [
+     "Open quick switcher [svg-icon lucide-file-search]",
+     "Open graph view [svg-icon lucide-git-fork]",
+     "Create new canvas [svg-icon lucide-layout-dashboard]",
+     "Open today's daily note [svg-icon lucide-calendar]",
+     "Insert template [svg-icon lucide-files]",
+     "Open command palette [svg-icon lucide-terminal]",
+     "Create new base [svg-icon lucide-layout-list]",
+     "Open random note [svg-icon dice]"
+    ]
+   }
+  }
+ },
+ "run4": {
+  "startedAt": "2026-11-16T14:43:06.723Z",
+  "steps": {
+   "s01-editor-focus": {
+    "ok": true,
+    "sameGroupBase": {
+     "tabs": [
+      [
+       "markdown:Note A.md",
+       "bases:Table.base*(shown)"
+      ]
+     ],
+     "before": {
+      "leaf": {
+       "type": "bases",
+       "file": "Table.base",
+       "mode": null,
+       "pinned": false,
+       "group": 0
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "bases-table-container node-insert-event",
+       "inCm": false,
+       "leafType": "bases",
+       "leafFile": "Table.base"
+      }
+     },
+     "available": true,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "after": {
+      "leaf": {
+       "type": "bases",
+       "file": "Table.base",
+       "mode": null,
+       "pinned": false,
+       "group": 0
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "bases-table-container node-insert-event",
+       "inCm": false,
+       "leafType": "bases",
+       "leafFile": "Table.base"
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md",
+       "bases:Table.base*(shown)"
+      ]
+     ],
+     "md": [
+      {
+       "file": "Note A.md",
+       "mode": "source",
+       "hasFocus": false,
+       "holdsDomFocus": false,
+       "isActive": false,
+       "visible": false,
+       "group": 0
+      }
+     ],
+     "later": {
+      "active": {
+       "leaf": {
+        "type": "bases",
+        "file": "Table.base",
+        "mode": null,
+        "pinned": false,
+        "group": 0
+       },
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "bases-table-container node-insert-event",
+        "inCm": false,
+        "leafType": "bases",
+        "leafFile": "Table.base"
+       }
+      },
+      "activeEditorFile": null
+     }
+    },
+    "sameGroupPdf": {
+     "tabs": [
+      [
+       "markdown:Note A.md",
+       "pdf:Doc.pdf*(shown)"
+      ]
+     ],
+     "before": {
+      "leaf": {
+       "type": "pdf",
+       "file": "Doc.pdf",
+       "mode": null,
+       "pinned": false,
+       "group": 0
+      },
+      "activeElement": {
+       "tag": "BODY",
+       "cls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-tit",
+       "inCm": false,
+       "leafType": null,
+       "leafFile": null
+      }
+     },
+     "available": true,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "after": {
+      "leaf": {
+       "type": "pdf",
+       "file": "Doc.pdf",
+       "mode": null,
+       "pinned": false,
+       "group": 0
+      },
+      "activeElement": {
+       "tag": "BODY",
+       "cls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-tit",
+       "inCm": false,
+       "leafType": null,
+       "leafFile": null
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md",
+       "pdf:Doc.pdf*(shown)"
+      ]
+     ],
+     "md": [
+      {
+       "file": "Note A.md",
+       "mode": "source",
+       "hasFocus": false,
+       "holdsDomFocus": false,
+       "isActive": false,
+       "visible": false,
+       "group": 0
+      }
+     ],
+     "later": {
+      "active": {
+       "leaf": {
+        "type": "pdf",
+        "file": "Doc.pdf",
+        "mode": null,
+        "pinned": false,
+        "group": 0
+       },
+       "activeElement": {
+        "tag": "BODY",
+        "cls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-tit",
+        "inCm": false,
+        "leafType": null,
+        "leafFile": null
+       }
+      },
+      "activeEditorFile": null
+     }
+    },
+    "otherGroupCanvas": {
+     "tabs": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "canvas:Board.canvas*(shown)"
+      ]
+     ],
+     "before": {
+      "leaf": {
+       "type": "canvas",
+       "file": "Board.canvas",
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "canvas-wrapper node-insert-event",
+       "inCm": false,
+       "leafType": "canvas",
+       "leafFile": "Board.canvas"
+      }
+     },
+     "available": true,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "after": {
+      "leaf": {
+       "type": "canvas",
+       "file": "Board.canvas",
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "inCm": true,
+       "leafType": "markdown",
+       "leafFile": "Note A.md"
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "canvas:Board.canvas*(shown)"
+      ]
+     ],
+     "md": [
+      {
+       "file": "Note A.md",
+       "mode": "source",
+       "hasFocus": false,
+       "holdsDomFocus": true,
+       "isActive": false,
+       "visible": true,
+       "group": 0
+      }
+     ],
+     "later": {
+      "active": {
+       "leaf": {
+        "type": "canvas",
+        "file": "Board.canvas",
+        "mode": null,
+        "pinned": false,
+        "group": 1
+       },
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "inCm": true,
+        "leafType": "markdown",
+        "leafFile": "Note A.md"
+       }
+      },
+      "activeEditorFile": null
+     }
+    },
+    "otherGroupBase": {
+     "tabs": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "bases:Table.base*(shown)"
+      ]
+     ],
+     "before": {
+      "leaf": {
+       "type": "bases",
+       "file": "Table.base",
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "bases-table-container node-insert-event",
+       "inCm": false,
+       "leafType": "bases",
+       "leafFile": "Table.base"
+      }
+     },
+     "available": true,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "after": {
+      "leaf": {
+       "type": "bases",
+       "file": "Table.base",
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "inCm": true,
+       "leafType": "markdown",
+       "leafFile": "Note A.md"
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "bases:Table.base*(shown)"
+      ]
+     ],
+     "md": [
+      {
+       "file": "Note A.md",
+       "mode": "source",
+       "hasFocus": false,
+       "holdsDomFocus": true,
+       "isActive": false,
+       "visible": true,
+       "group": 0
+      }
+     ],
+     "later": {
+      "active": {
+       "leaf": {
+        "type": "bases",
+        "file": "Table.base",
+        "mode": null,
+        "pinned": false,
+        "group": 1
+       },
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "inCm": true,
+        "leafType": "markdown",
+        "leafFile": "Note A.md"
+       }
+      },
+      "activeEditorFile": null
+     }
+    },
+    "otherGroupPdf": {
+     "tabs": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "pdf:Doc.pdf*(shown)"
+      ]
+     ],
+     "before": {
+      "leaf": {
+       "type": "pdf",
+       "file": "Doc.pdf",
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "BODY",
+       "cls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-tit",
+       "inCm": false,
+       "leafType": null,
+       "leafFile": null
+      }
+     },
+     "available": true,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "after": {
+      "leaf": {
+       "type": "pdf",
+       "file": "Doc.pdf",
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "inCm": true,
+       "leafType": "markdown",
+       "leafFile": "Note A.md"
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "pdf:Doc.pdf*(shown)"
+      ]
+     ],
+     "md": [
+      {
+       "file": "Note A.md",
+       "mode": "source",
+       "hasFocus": false,
+       "holdsDomFocus": true,
+       "isActive": false,
+       "visible": true,
+       "group": 0
+      }
+     ],
+     "later": {
+      "active": {
+       "leaf": {
+        "type": "pdf",
+        "file": "Doc.pdf",
+        "mode": null,
+        "pinned": false,
+        "group": 1
+       },
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "inCm": true,
+        "leafType": "markdown",
+        "leafFile": "Note A.md"
+       }
+      },
+      "activeEditorFile": null
+     }
+    },
+    "otherGroupEmpty": {
+     "tabs": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "empty:*(shown)"
+      ]
+     ],
+     "before": {
+      "leaf": {
+       "type": "empty",
+       "file": null,
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "BODY",
+       "cls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-tit",
+       "inCm": false,
+       "leafType": null,
+       "leafFile": null
+      }
+     },
+     "available": true,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "after": {
+      "leaf": {
+       "type": "empty",
+       "file": null,
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "inCm": true,
+       "leafType": "markdown",
+       "leafFile": "Note A.md"
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "empty:*(shown)"
+      ]
+     ],
+     "md": [
+      {
+       "file": "Note A.md",
+       "mode": "source",
+       "hasFocus": false,
+       "holdsDomFocus": true,
+       "isActive": false,
+       "visible": true,
+       "group": 0
+      }
+     ],
+     "later": {
+      "active": {
+       "leaf": {
+        "type": "empty",
+        "file": null,
+        "mode": null,
+        "pinned": false,
+        "group": 1
+       },
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "inCm": true,
+        "leafType": "markdown",
+        "leafFile": "Note A.md"
+       }
+      },
+      "activeEditorFile": null
+     }
+    },
+    "otherGroupCanvasThenType": {
+     "tabs": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "canvas:Board.canvas*(shown)"
+      ]
+     ],
+     "before": {
+      "leaf": {
+       "type": "canvas",
+       "file": "Board.canvas",
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "canvas-wrapper node-insert-event",
+       "inCm": false,
+       "leafType": "canvas",
+       "leafFile": "Board.canvas"
+      }
+     },
+     "available": true,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "after": {
+      "leaf": {
+       "type": "canvas",
+       "file": "Board.canvas",
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "inCm": true,
+       "leafType": "markdown",
+       "leafFile": "Note A.md"
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "canvas:Board.canvas*(shown)"
+      ]
+     ],
+     "md": [
+      {
+       "file": "Note A.md",
+       "mode": "source",
+       "hasFocus": false,
+       "holdsDomFocus": true,
+       "isActive": false,
+       "visible": true,
+       "group": 0
+      }
+     ],
+     "later": {
+      "active": {
+       "leaf": {
+        "type": "canvas",
+        "file": "Board.canvas",
+        "mode": null,
+        "pinned": false,
+        "group": 1
+       },
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "inCm": true,
+        "leafType": "markdown",
+        "leafFile": "Note A.md"
+       }
+      },
+      "activeEditorFile": null
+     },
+     "typed": {
+      "active": {
+       "leaf": {
+        "type": "markdown",
+        "file": "Note A.md",
+        "mode": "source",
+        "pinned": false,
+        "group": 0
+       },
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "inCm": true,
+        "leafType": "markdown",
+        "leafFile": "Note A.md"
+       }
+      },
+      "noteA": [
+       "ZAlpha body\n"
+      ],
+      "headerActive": [
+       true,
+       false
+      ]
+     }
+    },
+    "readingBesideEditing": {
+     "tabs": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "markdown:Note B.md*(shown)"
+      ]
+     ],
+     "before": {
+      "leaf": {
+       "type": "markdown",
+       "file": "Note B.md",
+       "mode": "preview",
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings",
+       "inCm": false,
+       "leafType": "markdown",
+       "leafFile": "Note B.md"
+      }
+     },
+     "available": true,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "after": {
+      "leaf": {
+       "type": "markdown",
+       "file": "Note B.md",
+       "mode": "preview",
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings",
+       "inCm": false,
+       "leafType": "markdown",
+       "leafFile": "Note B.md"
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "markdown:Note B.md*(shown)"
+      ]
+     ],
+     "md": [
+      {
+       "file": "Note A.md",
+       "mode": "source",
+       "hasFocus": false,
+       "holdsDomFocus": false,
+       "isActive": false,
+       "visible": true,
+       "group": 0
+      },
+      {
+       "file": "Note B.md",
+       "mode": "preview",
+       "hasFocus": false,
+       "holdsDomFocus": true,
+       "isActive": true,
+       "visible": true,
+       "group": 1
+      }
+     ],
+     "later": {
+      "active": {
+       "leaf": {
+        "type": "markdown",
+        "file": "Note B.md",
+        "mode": "preview",
+        "pinned": false,
+        "group": 1
+       },
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings",
+        "inCm": false,
+        "leafType": "markdown",
+        "leafFile": "Note B.md"
+       }
+      },
+      "activeEditorFile": "Note B.md"
+     }
+    },
+    "recentNoteHiddenOtherOnScreen": {
+     "tabs": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "markdown:Note B.md",
+       "canvas:Board.canvas*(shown)"
+      ]
+     ],
+     "before": {
+      "leaf": {
+       "type": "canvas",
+       "file": "Board.canvas",
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "canvas-wrapper node-insert-event",
+       "inCm": false,
+       "leafType": "canvas",
+       "leafFile": "Board.canvas"
+      }
+     },
+     "available": true,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "after": {
+      "leaf": {
+       "type": "canvas",
+       "file": "Board.canvas",
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "canvas-wrapper node-insert-event",
+       "inCm": false,
+       "leafType": "canvas",
+       "leafFile": "Board.canvas"
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md(shown)"
+      ],
+      [
+       "markdown:Note B.md",
+       "canvas:Board.canvas*(shown)"
+      ]
+     ],
+     "md": [
+      {
+       "file": "Note A.md",
+       "mode": "source",
+       "hasFocus": false,
+       "holdsDomFocus": false,
+       "isActive": false,
+       "visible": true,
+       "group": 0
+      },
+      {
+       "file": "Note B.md",
+       "mode": "source",
+       "hasFocus": false,
+       "holdsDomFocus": false,
+       "isActive": false,
+       "visible": false,
+       "group": 1
+      }
+     ],
+     "later": {
+      "active": {
+       "leaf": {
+        "type": "canvas",
+        "file": "Board.canvas",
+        "mode": null,
+        "pinned": false,
+        "group": 1
+       },
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "canvas-wrapper node-insert-event",
+        "inCm": false,
+        "leafType": "canvas",
+        "leafFile": "Board.canvas"
+       }
+      },
+      "activeEditorFile": null
+     }
+    },
+    "threeGroupsLastNoteC": {
+     "tabs": [
+      [
+       "markdown:Note B.md(shown)"
+      ],
+      [
+       "canvas:Board.canvas*(shown)"
+      ],
+      [
+       "markdown:Note C.md(shown)"
+      ]
+     ],
+     "before": {
+      "leaf": {
+       "type": "canvas",
+       "file": "Board.canvas",
+       "mode": null,
+       "pinned": false,
+       "group": 1
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "canvas-wrapper node-insert-event",
+       "inCm": false,
+       "leafType": "canvas",
+       "leafFile": "Board.canvas"
+      }
+     },
+     "available": true,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "after": {
+      "leaf": {
+       "type": "markdown",
+       "file": "Note C.md",
+       "mode": "source",
+       "pinned": false,
+       "group": 2
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "inCm": true,
+       "leafType": "markdown",
+       "leafFile": "Note C.md"
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note B.md(shown)"
+      ],
+      [
+       "canvas:Board.canvas(shown)"
+      ],
+      [
+       "markdown:Note C.md*(shown)"
+      ]
+     ],
+     "md": [
+      {
+       "file": "Note B.md",
+       "mode": "source",
+       "hasFocus": false,
+       "holdsDomFocus": false,
+       "isActive": false,
+       "visible": true,
+       "group": 0
+      },
+      {
+       "file": "Note C.md",
+       "mode": "source",
+       "hasFocus": true,
+       "holdsDomFocus": true,
+       "isActive": true,
+       "visible": true,
+       "group": 2
+      }
+     ],
+     "later": {
+      "active": {
+       "leaf": {
+        "type": "markdown",
+        "file": "Note C.md",
+        "mode": "source",
+        "pinned": false,
+        "group": 2
+       },
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "inCm": true,
+        "leafType": "markdown",
+        "leafFile": "Note C.md"
+       }
+      },
+      "activeEditorFile": "Note C.md"
+     }
+    },
+    "searchFocused": {
+     "leaf": {
+      "type": "search",
+      "file": null,
+      "mode": null,
+      "pinned": false,
+      "group": -1
+     },
+     "activeElement": {
+      "tag": "INPUT",
+      "cls": "",
+      "inCm": false,
+      "leafType": "search",
+      "leafFile": null
+     }
+    },
+    "fromSearchField": {
+     "tabs": [
+      [
+       "markdown:Note A.md(shown)"
+      ]
+     ],
+     "before": {
+      "leaf": {
+       "type": "search",
+       "file": null,
+       "mode": null,
+       "pinned": false,
+       "group": -1
+      },
+      "activeElement": {
+       "tag": "INPUT",
+       "cls": "",
+       "inCm": false,
+       "leafType": "search",
+       "leafFile": null
+      }
+     },
+     "available": true,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "after": {
+      "leaf": {
+       "type": "markdown",
+       "file": "Note A.md",
+       "mode": "source",
+       "pinned": false,
+       "group": 0
+      },
+      "activeElement": {
+       "tag": "DIV",
+       "cls": "cm-content cm-lineWrapping",
+       "inCm": true,
+       "leafType": "markdown",
+       "leafFile": "Note A.md"
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md*(shown)"
+      ]
+     ],
+     "md": [
+      {
+       "file": "Note A.md",
+       "mode": "source",
+       "hasFocus": true,
+       "holdsDomFocus": true,
+       "isActive": true,
+       "visible": true,
+       "group": 0
+      }
+     ],
+     "later": {
+      "active": {
+       "leaf": {
+        "type": "markdown",
+        "file": "Note A.md",
+        "mode": "source",
+        "pinned": false,
+        "group": 0
+       },
+       "activeElement": {
+        "tag": "DIV",
+        "cls": "cm-content cm-lineWrapping",
+        "inCm": true,
+        "leafType": "markdown",
+        "leafFile": "Note A.md"
+       }
+      },
+      "activeEditorFile": "Note A.md"
+     }
+    },
+    "fromSearchFieldCanvasShown": {
+     "tabs": [
+      [
+       "markdown:Note A.md",
+       "canvas:Board.canvas(shown)"
+      ]
+     ],
+     "before": {
+      "leaf": {
+       "type": "search",
+       "file": null,
+       "mode": null,
+       "pinned": false,
+       "group": -1
+      },
+      "activeElement": {
+       "tag": "INPUT",
+       "cls": "",
+       "inCm": false,
+       "leafType": "search",
+       "leafFile": null
+      }
+     },
+     "available": true,
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "after": {
+      "leaf": {
+       "type": "search",
+       "file": null,
+       "mode": null,
+       "pinned": false,
+       "group": -1
+      },
+      "activeElement": {
+       "tag": "INPUT",
+       "cls": "",
+       "inCm": false,
+       "leafType": "search",
+       "leafFile": null
+      }
+     },
+     "tabsAfter": [
+      [
+       "markdown:Note A.md",
+       "canvas:Board.canvas(shown)"
+      ]
+     ],
+     "md": [
+      {
+       "file": "Note A.md",
+       "mode": "source",
+       "hasFocus": false,
+       "holdsDomFocus": false,
+       "isActive": false,
+       "visible": false,
+       "group": 0
+      }
+     ],
+     "later": {
+      "active": {
+       "leaf": {
+        "type": "search",
+        "file": null,
+        "mode": null,
+        "pinned": false,
+        "group": -1
+       },
+       "activeElement": {
+        "tag": "INPUT",
+        "cls": "",
+        "inCm": false,
+        "leafType": "search",
+        "leafFile": null
+       }
+      },
+      "activeEditorFile": null
+     }
+    }
+   }
+  }
+ },
+ "run5": {
+  "startedAt": "2026-11-16T14:46:12.244Z",
+  "steps": {
+   "s00-meta": {
+    "ok": true,
+    "enable": {
+     "randomNote": true
+    },
+    "version": {
+     "app": "1.15.1",
+     "api": null,
+     "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+     "title": "New tab - vault-1794840368 - Obsidian 1.15.1",
+     "inner": [
+      1596,
+      973
+     ]
+    },
+    "commands": [
+     {
+      "id": "editor:focus",
+      "name": "Focus on last note",
+      "icon": null,
+      "kinds": [
+       "checkCallback"
+      ]
+     },
+     {
+      "id": "editor:context-menu",
+      "name": "Show context menu under cursor",
+      "icon": "lucide-menu",
+      "kinds": [
+       "checkCallback",
+       "editorCallback"
+      ]
+     },
+     {
+      "id": "random-note",
+      "name": "Random note: Open random note",
+      "icon": "dice-glyph",
+      "kinds": [
+       "callback"
+      ]
+     }
+    ]
+   },
+   "s02-context-menu-edges": {
+    "ok": true,
+    "lpNearBottom": {
+     "setup": {
+      "cursor": {
+       "line": 31,
+       "ch": 2
+      },
+      "sel": "",
+      "coords": {
+       "left": 622.25,
+       "right": 622.25,
+       "top": 925.453125,
+       "bottom": 947.453125
+      },
+      "inner": [
+       1596,
+       973
+      ],
+      "doc": [
+       1596,
+       973
+      ]
+     },
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "menu": {
+      "rect": {
+       "x": 624,
+       "y": 649,
+       "w": 164.4375,
+       "h": 288.90625
+      },
+      "cls": "menu",
+      "rows": [
+       "Add link",
+       "Add external link",
+       "---",
+       "Format",
+       "Paragraph",
+       "Insert",
+       "---",
+       "Cut (disabled)",
+       "Copy (disabled)",
+       "Paste (disabled)",
+       "Paste as plain text (disabled)",
+       "Select all"
+      ]
+     }
+    },
+    "sourceNearBottom": {
+     "setup": {
+      "cursor": {
+       "line": 32,
+       "ch": 2
+      },
+      "sel": "",
+      "coords": {
+       "left": 622.25,
+       "right": 622.25,
+       "top": 933.453125,
+       "bottom": 955.453125
+      },
+      "inner": [
+       1596,
+       973
+      ],
+      "doc": [
+       1596,
+       973
+      ]
+     },
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "menu": {
+      "rect": {
+       "x": 624,
+       "y": 657,
+       "w": 164.4375,
+       "h": 288.90625
+      },
+      "cls": "menu",
+      "rows": [
+       "Add link",
+       "Add external link",
+       "---",
+       "Format",
+       "Paragraph",
+       "Insert",
+       "---",
+       "Cut (disabled)",
+       "Copy (disabled)",
+       "Paste (disabled)",
+       "Paste as plain text (disabled)",
+       "Select all"
+      ]
+     }
+    },
+    "rightClickNearBottomSetup": {
+     "setup": {
+      "cursor": {
+       "line": 31,
+       "ch": 2
+      },
+      "sel": "",
+      "coords": {
+       "left": 622.25,
+       "right": 622.25,
+       "top": 925.453125,
+       "bottom": 947.453125
+      },
+      "inner": [
+       1596,
+       973
+      ],
+      "doc": [
+       1596,
+       973
+      ]
+     },
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "menu": {
+      "rect": {
+       "x": 624,
+       "y": 649,
+       "w": 164.4375,
+       "h": 288.90625
+      },
+      "cls": "menu",
+      "rows": [
+       "Add link",
+       "Add external link",
+       "---",
+       "Format",
+       "Paragraph",
+       "Insert",
+       "---",
+       "Cut (disabled)",
+       "Copy (disabled)",
+       "Paste (disabled)",
+       "Paste as plain text (disabled)",
+       "Select all"
+      ]
+     }
+    },
+    "rightClickNearBottom": {
+     "at": [
+      624,
+      936
+     ],
+     "menu": {
+      "rect": {
+       "x": 626,
+       "y": 649,
+       "w": 164.4375,
+       "h": 288.90625
+      },
+      "cls": "menu",
+      "rows": [
+       "Add link",
+       "Add external link",
+       "---",
+       "Format",
+       "Paragraph",
+       "Insert",
+       "---",
+       "Cut (disabled)",
+       "Copy (disabled)",
+       "Paste (disabled)",
+       "Paste as plain text (disabled)",
+       "Select all"
+      ]
+     },
+     "inner": [
+      1596,
+      973
+     ]
+    },
+    "lpScrolledMiddle": {
+     "setup": {
+      "cursor": {
+       "line": 80,
+       "ch": 4
+      },
+      "sel": "",
+      "coords": {
+       "left": 641.15625,
+       "right": 641.15625,
+       "top": 514.453125,
+       "bottom": 536.453125
+      },
+      "inner": [
+       1596,
+       973
+      ],
+      "doc": [
+       1596,
+       973
+      ]
+     },
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "menu": {
+      "rect": {
+       "x": 643,
+       "y": 527,
+       "w": 164.4375,
+       "h": 288.90625
+      },
+      "cls": "menu",
+      "rows": [
+       "Add link",
+       "Add external link",
+       "---",
+       "Format",
+       "Paragraph",
+       "Insert",
+       "---",
+       "Cut (disabled)",
+       "Copy (disabled)",
+       "Paste (disabled)",
+       "Paste as plain text (disabled)",
+       "Select all"
+      ]
+     }
+    },
+    "lpNearRight": {
+     "setup": {
+      "cursor": {
+       "line": 2,
+       "ch": 134
+      },
+      "sel": "",
+      "coords": {
+       "left": 1520.515625,
+       "right": 1520.515625,
+       "top": 229.453125,
+       "bottom": 251.453125
+      },
+      "inner": [
+       1596,
+       973
+      ],
+      "doc": [
+       1596,
+       973
+      ]
+     },
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "menu": {
+      "rect": {
+       "x": 1354,
+       "y": 242,
+       "w": 164.4375,
+       "h": 288.90625
+      },
+      "cls": "menu",
+      "rows": [
+       "Add link",
+       "Add external link",
+       "---",
+       "Format",
+       "Paragraph",
+       "Insert",
+       "---",
+       "Cut (disabled)",
+       "Copy (disabled)",
+       "Paste (disabled)",
+       "Paste as plain text (disabled)",
+       "Select all"
+      ]
+     }
+    },
+    "rightClickNearRightSetup": {
+     "setup": {
+      "cursor": {
+       "line": 2,
+       "ch": 128
+      },
+      "sel": "",
+      "coords": {
+       "left": 1468.140625,
+       "right": 1468.140625,
+       "top": 229.453125,
+       "bottom": 251.453125
+      },
+      "inner": [
+       1596,
+       973
+      ],
+      "doc": [
+       1596,
+       973
+      ]
+     },
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "menu": {
+      "rect": {
+       "x": 1302,
+       "y": 242,
+       "w": 164.4375,
+       "h": 288.90625
+      },
+      "cls": "menu",
+      "rows": [
+       "Add link",
+       "Add external link",
+       "---",
+       "Format",
+       "Paragraph",
+       "Insert",
+       "---",
+       "Cut (disabled)",
+       "Copy (disabled)",
+       "Paste (disabled)",
+       "Paste as plain text (disabled)",
+       "Select all"
+      ]
+     }
+    },
+    "rightClickNearRight": {
+     "at": [
+      1470,
+      240
+     ],
+     "menu": {
+      "rect": {
+       "x": 1304,
+       "y": 242,
+       "w": 164.4375,
+       "h": 288.90625
+      },
+      "cls": "menu",
+      "rows": [
+       "Add link",
+       "Add external link",
+       "---",
+       "Format",
+       "Paragraph",
+       "Insert",
+       "---",
+       "Cut (disabled)",
+       "Copy (disabled)",
+       "Paste (disabled)",
+       "Paste as plain text (disabled)",
+       "Select all"
+      ]
+     },
+     "inner": [
+      1596,
+      973
+     ]
+    },
+    "sourceSelection": {
+     "setup": {
+      "cursor": {
+       "line": 4,
+       "ch": 20
+      },
+      "sel": "selected words",
+      "coords": {
+       "left": 770.140625,
+       "right": 770.140625,
+       "top": 837.453125,
+       "bottom": 859.453125
+      },
+      "inner": [
+       1596,
+       973
+      ],
+      "doc": [
+       1596,
+       973
+      ]
+     },
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "menu": {
+      "rect": {
+       "x": 772,
+       "y": 511,
+       "w": 219.859375,
+       "h": 338.6875
+      },
+      "cls": "menu",
+      "rows": [
+       "Add link",
+       "Add external link",
+       "---",
+       "Search for \u201cselected words\u201d",
+       "Extract current selection...",
+       "Format",
+       "Paragraph",
+       "Insert",
+       "---",
+       "Cut",
+       "Copy",
+       "Paste (disabled)",
+       "Paste as plain text (disabled)",
+       "Select all"
+      ]
+     }
+    },
+    "lpSelectionBackward": {
+     "setup": {
+      "cursor": {
+       "line": 4,
+       "ch": 6
+      },
+      "sel": "selected words",
+      "coords": {
+       "left": 657.765625,
+       "right": 657.765625,
+       "top": 853.453125,
+       "bottom": 875.453125
+      },
+      "inner": [
+       1596,
+       973
+      ],
+      "doc": [
+       1596,
+       973
+      ]
+     },
+     "run": {
+      "ran": true,
+      "err": null
+     },
+     "menu": {
+      "rect": {
+       "x": 659,
+       "y": 527,
+       "w": 219.859375,
+       "h": 338.6875
+      },
+      "cls": "menu",
+      "rows": [
+       "Add link",
+       "Add external link",
+       "---",
+       "Search for \u201cselected words\u201d",
+       "Extract current selection...",
+       "Format",
+       "Paragraph",
+       "Insert",
+       "---",
+       "Cut",
+       "Copy",
+       "Paste (disabled)",
+       "Paste as plain text (disabled)",
+       "Select all"
+      ]
+     }
+    }
+   }
+  }
+ },
+ "run8": {
+  "startedAt": "2026-11-16T15:09:27.955Z",
+  "steps": {
+   "s05-highlight": {
+    "ok": true,
+    "seed0": true,
+    "rows": {
+     "menus": 3,
+     "rows": [
+      {
+       "title": "Default",
+       "icon": "svg-icon lucide-highlighter",
+       "iconHtml": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"svg-icon lucide-highlighter\"><path d=\"m9 11-6 6v3h9l3-3\"></path><path d=\"m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2",
+       "disabled": false
+      },
+      {
+       "title": "Red",
+       "icon": null,
+       "iconHtml": "<div class=\"highlight-swatch\" data-highlight=\"red\"></div>",
+       "disabled": false
+      },
+      {
+       "title": "Orange",
+       "icon": null,
+       "iconHtml": "<div class=\"highlight-swatch\" data-highlight=\"orange\"></div>",
+       "disabled": false
+      },
+      {
+       "title": "Yellow",
+       "icon": null,
+       "iconHtml": "<div class=\"highlight-swatch\" data-highlight=\"yellow\"></div>",
+       "disabled": false
+      },
+      {
+       "title": "Green",
+       "icon": null,
+       "iconHtml": "<div class=\"highlight-swatch\" data-highlight=\"green\"></div>",
+       "disabled": false
+      },
+      {
+       "title": "Blue",
+       "icon": null,
+       "iconHtml": "<div class=\"highlight-swatch\" data-highlight=\"blue\"></div>",
+       "disabled": false
+      },
+      {
+       "title": "Purple",
+       "icon": null,
+       "iconHtml": "<div class=\"highlight-swatch\" data-highlight=\"purple\"></div>",
+       "disabled": false
+      }
+     ]
+    },
+    "sel": [
+     {
+      "title": "Default",
+      "seeded": true,
+      "before": {
+       "sel": "beta"
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha ==beta== gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 8
+       },
+       "to": {
+        "line": 2,
+        "ch": 12
+       }
+      }
+     },
+     {
+      "title": "Red",
+      "seeded": true,
+      "before": {
+       "sel": "beta"
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha ==\ud83d\udd34beta== gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 10
+       },
+       "to": {
+        "line": 2,
+        "ch": 14
+       }
+      }
+     },
+     {
+      "title": "Orange",
+      "seeded": true,
+      "before": {
+       "sel": "beta"
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha ==\ud83d\udfe0beta== gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 10
+       },
+       "to": {
+        "line": 2,
+        "ch": 14
+       }
+      }
+     },
+     {
+      "title": "Yellow",
+      "seeded": true,
+      "before": {
+       "sel": "beta"
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha ==\ud83d\udfe1beta== gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 10
+       },
+       "to": {
+        "line": 2,
+        "ch": 14
+       }
+      }
+     },
+     {
+      "title": "Green",
+      "seeded": true,
+      "before": {
+       "sel": "beta"
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha ==\ud83d\udfe2beta== gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 10
+       },
+       "to": {
+        "line": 2,
+        "ch": 14
+       }
+      }
+     },
+     {
+      "title": "Blue",
+      "seeded": true,
+      "before": {
+       "sel": "beta"
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha ==\ud83d\udd35beta== gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 10
+       },
+       "to": {
+        "line": 2,
+        "ch": 14
+       }
+      }
+     },
+     {
+      "title": "Purple",
+      "seeded": true,
+      "before": {
+       "sel": "beta"
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha ==\ud83d\udfe3beta== gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 10
+       },
+       "to": {
+        "line": 2,
+        "ch": 14
+       }
+      }
+     }
+    ],
+    "caret": [
+     {
+      "title": "Default",
+      "seeded": true,
+      "before": {
+       "sel": ""
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha ==beta== gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 10
+       },
+       "to": {
+        "line": 2,
+        "ch": 10
+       }
+      }
+     },
+     {
+      "title": "Red",
+      "seeded": true,
+      "before": {
+       "sel": ""
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha ==\ud83d\udd34beta== gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 12
+       },
+       "to": {
+        "line": 2,
+        "ch": 12
+       }
+      }
+     },
+     {
+      "title": "Orange",
+      "seeded": true,
+      "before": {
+       "sel": ""
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha ==\ud83d\udfe0beta== gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 12
+       },
+       "to": {
+        "line": 2,
+        "ch": 12
+       }
+      }
+     },
+     {
+      "title": "Yellow",
+      "seeded": true,
+      "before": {
+       "sel": ""
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha ==\ud83d\udfe1beta== gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 12
+       },
+       "to": {
+        "line": 2,
+        "ch": 12
+       }
+      }
+     },
+     {
+      "title": "Green",
+      "seeded": true,
+      "before": {
+       "sel": ""
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha ==\ud83d\udfe2beta== gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 12
+       },
+       "to": {
+        "line": 2,
+        "ch": 12
+       }
+      }
+     },
+     {
+      "title": "Blue",
+      "seeded": true,
+      "before": {
+       "sel": ""
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha ==\ud83d\udd35beta== gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 12
+       },
+       "to": {
+        "line": 2,
+        "ch": 12
+       }
+      }
+     },
+     {
+      "title": "Purple",
+      "seeded": true,
+      "before": {
+       "sel": ""
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha ==\ud83d\udfe3beta== gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 12
+       },
+       "to": {
+        "line": 2,
+        "ch": 12
+       }
+      }
+     }
+    ]
+   }
+  }
+ },
+ "run9": {
+  "startedAt": "2026-11-16T15:13:48.385Z",
+  "steps": {
+   "s07-checks": {
+    "ok": true,
+    "h1": {
+     "line": "# One",
+     "Format": null,
+     "Paragraph": [
+      "Heading 1"
+     ]
+    },
+    "h3": {
+     "line": "### Three",
+     "Format": [],
+     "Paragraph": [
+      "Heading 3"
+     ]
+    },
+    "bullet": {
+     "line": "- bullet",
+     "Format": [],
+     "Paragraph": [
+      "Body"
+     ]
+    },
+    "numbered": {
+     "line": "1. numbered",
+     "Format": [],
+     "Paragraph": [
+      "Body"
+     ]
+    },
+    "task": {
+     "line": "- [ ] task",
+     "Format": [],
+     "Paragraph": [
+      "Body"
+     ]
+    },
+    "quote": {
+     "line": "> quote",
+     "Format": [],
+     "Paragraph": [
+      "Body"
+     ]
+    },
+    "plain": {
+     "line": "plain **bold** and *it* and ==hl== and `code` and %%c%% and $m$",
+     "Format": [],
+     "Paragraph": [
+      "Body"
+     ]
+    },
+    "inBold": {
+     "line": "plain **bold** and *it* and ==hl== and `code` and %%c%% and $m$",
+     "Format": [
+      "Bold"
+     ],
+     "Paragraph": [
+      "Body"
+     ]
+    },
+    "inItalic": {
+     "line": "plain **bold** and *it* and ==hl== and `code` and %%c%% and $m$",
+     "Format": [
+      "Italic"
+     ],
+     "Paragraph": [
+      "Body"
+     ]
+    },
+    "inHighlight": {
+     "line": "plain **bold** and *it* and ==hl== and `code` and %%c%% and $m$",
+     "Format": [],
+     "Paragraph": [
+      "Body"
+     ]
+    },
+    "inCode": {
+     "line": "plain **bold** and *it* and ==hl== and `code` and %%c%% and $m$",
+     "Format": [
+      "Code"
+     ],
+     "Paragraph": [
+      "Body"
+     ]
+    },
+    "inComment": {
+     "line": "plain **bold** and *it* and ==hl== and `code` and %%c%% and $m$",
+     "Format": [],
+     "Paragraph": [
+      "Body"
+     ]
+    },
+    "inMath": {
+     "line": "plain **bold** and *it* and ==hl== and `code` and %%c%% and $m$",
+     "Format": [],
+     "Paragraph": [
+      "Body"
+     ]
+    }
+   }
+  }
+ },
+ "run10": {
+  "startedAt": "2026-11-16T15:15:23.501Z",
+  "steps": {
+   "s00-meta": {
+    "ok": true,
+    "enable": {
+     "randomNote": true
+    },
+    "version": {
+     "app": "1.15.1",
+     "api": null,
+     "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+     "title": "New tab - vault-1794842119 - Obsidian 1.15.1",
+     "inner": [
+      1596,
+      973
+     ]
+    },
+    "commands": [
+     {
+      "id": "editor:focus",
+      "name": "Focus on last note",
+      "icon": null,
+      "kinds": [
+       "checkCallback"
+      ]
+     },
+     {
+      "id": "editor:context-menu",
+      "name": "Show context menu under cursor",
+      "icon": "lucide-menu",
+      "kinds": [
+       "checkCallback",
+       "editorCallback"
+      ]
+     },
+     {
+      "id": "random-note",
+      "name": "Random note: Open random note",
+      "icon": "dice-glyph",
+      "kinds": [
+       "callback"
+      ]
+     }
+    ]
+   },
+   "s04-submenus": {
+    "ok": true,
+    "lp": {
+     "Format": {
+      "menus": 1
+     },
+     "Paragraph": {
+      "menus": 2,
+      "rect": {
+       "x": 840.4375,
+       "y": 337.671875,
+       "w": 140.84375,
+       "h": 313.796875
+      },
+      "rows": [
+       {
+        "title": "Bullet list",
+        "icon": "svg-icon lucide-list",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Numbered list",
+        "icon": "svg-icon lucide-list-ordered",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Task list",
+        "icon": "svg-icon lucide-check-square",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       "---",
+       {
+        "title": "Heading 1",
+        "icon": "svg-icon lucide-heading-1",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Heading 2",
+        "icon": "svg-icon lucide-heading-2",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Heading 3",
+        "icon": "svg-icon lucide-heading-3",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Heading 4",
+        "icon": "svg-icon lucide-heading-4",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Heading 5",
+        "icon": "svg-icon lucide-heading-5",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Heading 6",
+        "icon": "svg-icon lucide-heading-6",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Body",
+        "icon": "svg-icon lucide-text",
+        "disabled": false,
+        "checked": true,
+        "sub": false
+       },
+       "---",
+       {
+        "title": "Quote",
+        "icon": "svg-icon lucide-quote",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       }
+      ]
+     },
+     "Insert": {
+      "menus": 2,
+      "rect": {
+       "x": 840.4375,
+       "y": 362.5625,
+       "w": 145.046875,
+       "h": 201.234375
+      },
+      "rows": [
+       {
+        "title": "Footnote",
+        "icon": "svg-icon lucide-file-signature",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Table",
+        "icon": "svg-icon lucide-table",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Callout",
+        "icon": "svg-icon lucide-quote",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Horizontal rule",
+        "icon": "svg-icon lucide-minus",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       "---",
+       {
+        "title": "Code block",
+        "icon": "svg-icon lucide-code",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Math block",
+        "icon": "svg-icon lucide-sigma-square",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "New base",
+        "icon": "svg-icon lucide-layout-list",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       }
+      ]
+     }
+    },
+    "lpSel": {
+     "Format": {
+      "menus": 2,
+      "rect": {
+       "x": 903.59375,
+       "y": 362.5625,
+       "w": 154.875,
+       "h": 239.125
+      },
+      "rows": [
+       {
+        "title": "Bold",
+        "icon": "svg-icon lucide-bold",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Italic",
+        "icon": "svg-icon lucide-italic",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Strikethrough",
+        "icon": "svg-icon lucide-strikethrough",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Highlight",
+        "icon": "svg-icon lucide-highlighter",
+        "disabled": false,
+        "checked": false,
+        "sub": true
+       },
+       "---",
+       {
+        "title": "Code",
+        "icon": "svg-icon lucide-code-2",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Math",
+        "icon": "svg-icon lucide-sigma",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Comment",
+        "icon": "svg-icon lucide-percent",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       "---",
+       {
+        "title": "Clear formatting",
+        "icon": "svg-icon lucide-eraser",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       }
+      ]
+     },
+     "Paragraph": {
+      "menus": 2,
+      "rect": {
+       "x": 903.59375,
+       "y": 387.453125,
+       "w": 140.84375,
+       "h": 313.796875
+      },
+      "rows": [
+       {
+        "title": "Bullet list",
+        "icon": "svg-icon lucide-list",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Numbered list",
+        "icon": "svg-icon lucide-list-ordered",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Task list",
+        "icon": "svg-icon lucide-check-square",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       "---",
+       {
+        "title": "Heading 1",
+        "icon": "svg-icon lucide-heading-1",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Heading 2",
+        "icon": "svg-icon lucide-heading-2",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Heading 3",
+        "icon": "svg-icon lucide-heading-3",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Heading 4",
+        "icon": "svg-icon lucide-heading-4",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Heading 5",
+        "icon": "svg-icon lucide-heading-5",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Heading 6",
+        "icon": "svg-icon lucide-heading-6",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Body",
+        "icon": "svg-icon lucide-text",
+        "disabled": false,
+        "checked": true,
+        "sub": false
+       },
+       "---",
+       {
+        "title": "Quote",
+        "icon": "svg-icon lucide-quote",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       }
+      ]
+     },
+     "Insert": {
+      "menus": 2,
+      "rect": {
+       "x": 903.59375,
+       "y": 412.34375,
+       "w": 145.046875,
+       "h": 201.234375
+      },
+      "rows": [
+       {
+        "title": "Footnote",
+        "icon": "svg-icon lucide-file-signature",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Table",
+        "icon": "svg-icon lucide-table",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Callout",
+        "icon": "svg-icon lucide-quote",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Horizontal rule",
+        "icon": "svg-icon lucide-minus",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       "---",
+       {
+        "title": "Code block",
+        "icon": "svg-icon lucide-code",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Math block",
+        "icon": "svg-icon lucide-sigma-square",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "New base",
+        "icon": "svg-icon lucide-layout-list",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       }
+      ]
+     }
+    },
+    "src": {
+     "Format": {
+      "menus": 2,
+      "rect": {
+       "x": 840.4375,
+       "y": 296.78125,
+       "w": 154.875,
+       "h": 239.125
+      },
+      "rows": [
+       {
+        "title": "Bold",
+        "icon": "svg-icon lucide-bold",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Italic",
+        "icon": "svg-icon lucide-italic",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Strikethrough",
+        "icon": "svg-icon lucide-strikethrough",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Highlight",
+        "icon": "svg-icon lucide-highlighter",
+        "disabled": false,
+        "checked": false,
+        "sub": true
+       },
+       "---",
+       {
+        "title": "Code",
+        "icon": "svg-icon lucide-code-2",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Math",
+        "icon": "svg-icon lucide-sigma",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Comment",
+        "icon": "svg-icon lucide-percent",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       "---",
+       {
+        "title": "Clear formatting",
+        "icon": "svg-icon lucide-eraser",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       }
+      ]
+     },
+     "Paragraph": {
+      "menus": 2,
+      "rect": {
+       "x": 840.4375,
+       "y": 321.671875,
+       "w": 140.84375,
+       "h": 313.796875
+      },
+      "rows": [
+       {
+        "title": "Bullet list",
+        "icon": "svg-icon lucide-list",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Numbered list",
+        "icon": "svg-icon lucide-list-ordered",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Task list",
+        "icon": "svg-icon lucide-check-square",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       "---",
+       {
+        "title": "Heading 1",
+        "icon": "svg-icon lucide-heading-1",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Heading 2",
+        "icon": "svg-icon lucide-heading-2",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Heading 3",
+        "icon": "svg-icon lucide-heading-3",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Heading 4",
+        "icon": "svg-icon lucide-heading-4",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Heading 5",
+        "icon": "svg-icon lucide-heading-5",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Heading 6",
+        "icon": "svg-icon lucide-heading-6",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Body",
+        "icon": "svg-icon lucide-text",
+        "disabled": false,
+        "checked": true,
+        "sub": false
+       },
+       "---",
+       {
+        "title": "Quote",
+        "icon": "svg-icon lucide-quote",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       }
+      ]
+     },
+     "Insert": {
+      "menus": 2,
+      "rect": {
+       "x": 840.4375,
+       "y": 346.5625,
+       "w": 145.046875,
+       "h": 201.234375
+      },
+      "rows": [
+       {
+        "title": "Footnote",
+        "icon": "svg-icon lucide-file-signature",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Table",
+        "icon": "svg-icon lucide-table",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Callout",
+        "icon": "svg-icon lucide-quote",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Horizontal rule",
+        "icon": "svg-icon lucide-minus",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       "---",
+       {
+        "title": "Code block",
+        "icon": "svg-icon lucide-code",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Math block",
+        "icon": "svg-icon lucide-sigma-square",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "New base",
+        "icon": "svg-icon lucide-layout-list",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       }
+      ]
+     }
+    },
+    "srcSel": {
+     "Format": {
+      "menus": 2,
+      "rect": {
+       "x": 903.59375,
+       "y": 346.5625,
+       "w": 154.875,
+       "h": 239.125
+      },
+      "rows": [
+       {
+        "title": "Bold",
+        "icon": "svg-icon lucide-bold",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Italic",
+        "icon": "svg-icon lucide-italic",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Strikethrough",
+        "icon": "svg-icon lucide-strikethrough",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Highlight",
+        "icon": "svg-icon lucide-highlighter",
+        "disabled": false,
+        "checked": false,
+        "sub": true
+       },
+       "---",
+       {
+        "title": "Code",
+        "icon": "svg-icon lucide-code-2",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Math",
+        "icon": "svg-icon lucide-sigma",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Comment",
+        "icon": "svg-icon lucide-percent",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       "---",
+       {
+        "title": "Clear formatting",
+        "icon": "svg-icon lucide-eraser",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       }
+      ]
+     },
+     "Paragraph": {
+      "menus": 2,
+      "rect": {
+       "x": 903.59375,
+       "y": 371.453125,
+       "w": 140.84375,
+       "h": 313.796875
+      },
+      "rows": [
+       {
+        "title": "Bullet list",
+        "icon": "svg-icon lucide-list",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Numbered list",
+        "icon": "svg-icon lucide-list-ordered",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Task list",
+        "icon": "svg-icon lucide-check-square",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       "---",
+       {
+        "title": "Heading 1",
+        "icon": "svg-icon lucide-heading-1",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Heading 2",
+        "icon": "svg-icon lucide-heading-2",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Heading 3",
+        "icon": "svg-icon lucide-heading-3",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Heading 4",
+        "icon": "svg-icon lucide-heading-4",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Heading 5",
+        "icon": "svg-icon lucide-heading-5",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Heading 6",
+        "icon": "svg-icon lucide-heading-6",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Body",
+        "icon": "svg-icon lucide-text",
+        "disabled": false,
+        "checked": true,
+        "sub": false
+       },
+       "---",
+       {
+        "title": "Quote",
+        "icon": "svg-icon lucide-quote",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       }
+      ]
+     },
+     "Insert": {
+      "menus": 2,
+      "rect": {
+       "x": 903.59375,
+       "y": 396.34375,
+       "w": 145.046875,
+       "h": 201.234375
+      },
+      "rows": [
+       {
+        "title": "Footnote",
+        "icon": "svg-icon lucide-file-signature",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Table",
+        "icon": "svg-icon lucide-table",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Callout",
+        "icon": "svg-icon lucide-quote",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Horizontal rule",
+        "icon": "svg-icon lucide-minus",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       "---",
+       {
+        "title": "Code block",
+        "icon": "svg-icon lucide-code",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "Math block",
+        "icon": "svg-icon lucide-sigma-square",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       },
+       {
+        "title": "New base",
+        "icon": "svg-icon lucide-layout-list",
+        "disabled": false,
+        "checked": false,
+        "sub": false
+       }
+      ]
+     }
+    },
+    "effectSel": {
+     "Format": [
+      {
+       "title": "Clear formatting",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\nalpha beta gamma\n\nsecond line\n",
+        "sel": "beta",
+        "from": {
+         "line": 2,
+         "ch": 6
+        },
+        "to": {
+         "line": 2,
+         "ch": 10
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Comment",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\nalpha %%beta%% gamma\n\nsecond line\n",
+        "sel": "beta",
+        "from": {
+         "line": 2,
+         "ch": 8
+        },
+        "to": {
+         "line": 2,
+         "ch": 12
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Math",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\nalpha $beta$ gamma\n\nsecond line\n",
+        "sel": "beta",
+        "from": {
+         "line": 2,
+         "ch": 7
+        },
+        "to": {
+         "line": 2,
+         "ch": 11
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Code",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\nalpha `beta` gamma\n\nsecond line\n",
+        "sel": "beta",
+        "from": {
+         "line": 2,
+         "ch": 7
+        },
+        "to": {
+         "line": 2,
+         "ch": 11
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Highlight",
+       "skipped": "has a submenu"
+      },
+      {
+       "title": "Strikethrough",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\nalpha ~~beta~~ gamma\n\nsecond line\n",
+        "sel": "beta",
+        "from": {
+         "line": 2,
+         "ch": 8
+        },
+        "to": {
+         "line": 2,
+         "ch": 12
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Italic",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\nalpha *beta* gamma\n\nsecond line\n",
+        "sel": "beta",
+        "from": {
+         "line": 2,
+         "ch": 7
+        },
+        "to": {
+         "line": 2,
+         "ch": 11
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Bold",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\nalpha **beta** gamma\n\nsecond line\n",
+        "sel": "beta",
+        "from": {
+         "line": 2,
+         "ch": 8
+        },
+        "to": {
+         "line": 2,
+         "ch": 12
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      }
+     ],
+     "Paragraph": [
+      {
+       "title": "Quote",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n> alpha beta gamma\n\nsecond line\n",
+        "sel": "beta",
+        "from": {
+         "line": 2,
+         "ch": 8
+        },
+        "to": {
+         "line": 2,
+         "ch": 12
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Body",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\nalpha beta gamma\n\nsecond line\n",
+        "sel": "beta",
+        "from": {
+         "line": 2,
+         "ch": 6
+        },
+        "to": {
+         "line": 2,
+         "ch": 10
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Heading 6",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n###### alpha beta gamma\n\nsecond line\n",
+        "sel": "beta",
+        "from": {
+         "line": 2,
+         "ch": 13
+        },
+        "to": {
+         "line": 2,
+         "ch": 17
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Heading 5",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n##### alpha beta gamma\n\nsecond line\n",
+        "sel": "beta",
+        "from": {
+         "line": 2,
+         "ch": 12
+        },
+        "to": {
+         "line": 2,
+         "ch": 16
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Heading 4",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n#### alpha beta gamma\n\nsecond line\n",
+        "sel": "beta",
+        "from": {
+         "line": 2,
+         "ch": 11
+        },
+        "to": {
+         "line": 2,
+         "ch": 15
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Heading 3",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n### alpha beta gamma\n\nsecond line\n",
+        "sel": "beta",
+        "from": {
+         "line": 2,
+         "ch": 10
+        },
+        "to": {
+         "line": 2,
+         "ch": 14
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Heading 2",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n## alpha beta gamma\n\nsecond line\n",
+        "sel": "beta",
+        "from": {
+         "line": 2,
+         "ch": 9
+        },
+        "to": {
+         "line": 2,
+         "ch": 13
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Heading 1",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n# alpha beta gamma\n\nsecond line\n",
+        "sel": "beta",
+        "from": {
+         "line": 2,
+         "ch": 8
+        },
+        "to": {
+         "line": 2,
+         "ch": 12
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Task list",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n- [ ] alpha beta gamma\n\nsecond line\n",
+        "sel": "beta",
+        "from": {
+         "line": 2,
+         "ch": 12
+        },
+        "to": {
+         "line": 2,
+         "ch": 16
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Numbered list",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n1. alpha beta gamma\n\nsecond line\n",
+        "sel": "beta",
+        "from": {
+         "line": 2,
+         "ch": 9
+        },
+        "to": {
+         "line": 2,
+         "ch": 13
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Bullet list",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n- alpha beta gamma\n\nsecond line\n",
+        "sel": "beta",
+        "from": {
+         "line": 2,
+         "ch": 8
+        },
+        "to": {
+         "line": 2,
+         "ch": 12
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      }
+     ],
+     "Insert": [
+      {
+       "title": "New base",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\nalpha \n![[Untitled.base]]\n gamma\n\nsecond line\n",
+        "sel": "",
+        "from": {
+         "line": 3,
+         "ch": 17
+        },
+        "to": {
+         "line": 3,
+         "ch": 17
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Math block",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n$$\nalpha beta gamma\n$$\n\nsecond line\n",
+        "sel": "beta",
+        "from": {
+         "line": 3,
+         "ch": 6
+        },
+        "to": {
+         "line": 3,
+         "ch": 10
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Code block",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n```\nalpha beta gamma\n```\n\nsecond line\n",
+        "sel": "beta",
+        "from": {
+         "line": 3,
+         "ch": 6
+        },
+        "to": {
+         "line": 3,
+         "ch": 10
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Horizontal rule",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\nalpha \n\n---\n gamma\n\nsecond line\n",
+        "sel": "",
+        "from": {
+         "line": 5,
+         "ch": 0
+        },
+        "to": {
+         "line": 5,
+         "ch": 0
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Callout",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n> [!NOTE]\n> alpha beta gamma\n\nsecond line\n",
+        "sel": "NOTE",
+        "from": {
+         "line": 2,
+         "ch": 4
+        },
+        "to": {
+         "line": 2,
+         "ch": 8
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Table",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\nalpha beta gamma\n\n|     |     |\n| --- | --- |\n|     |     |\n\n\nsecond line\n",
+        "sel": "",
+        "from": {
+         "line": 4,
+         "ch": 1
+        },
+        "to": {
+         "line": 4,
+         "ch": 1
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Footnote",
+       "before": {
+        "seeded": true,
+        "sel": "beta",
+        "cur": {
+         "line": 2,
+         "ch": 10
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\nalpha [^1]beta gamma\n\nsecond line\n\n[^1]: \n",
+        "sel": "",
+        "from": {
+         "line": 2,
+         "ch": 10
+        },
+        "to": {
+         "line": 2,
+         "ch": 10
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      }
+     ]
+    },
+    "effectCaret": {
+     "Format": [],
+     "Paragraph": [
+      {
+       "title": "Quote",
+       "before": {
+        "seeded": true,
+        "sel": "",
+        "cur": {
+         "line": 2,
+         "ch": 8
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n> alpha beta gamma\n\nsecond line\n",
+        "sel": "",
+        "from": {
+         "line": 2,
+         "ch": 10
+        },
+        "to": {
+         "line": 2,
+         "ch": 10
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Body",
+       "before": {
+        "seeded": true,
+        "sel": "",
+        "cur": {
+         "line": 2,
+         "ch": 8
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\nalpha beta gamma\n\nsecond line\n",
+        "sel": "",
+        "from": {
+         "line": 2,
+         "ch": 8
+        },
+        "to": {
+         "line": 2,
+         "ch": 8
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Heading 6",
+       "before": {
+        "seeded": true,
+        "sel": "",
+        "cur": {
+         "line": 2,
+         "ch": 8
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n###### alpha beta gamma\n\nsecond line\n",
+        "sel": "",
+        "from": {
+         "line": 2,
+         "ch": 15
+        },
+        "to": {
+         "line": 2,
+         "ch": 15
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Heading 5",
+       "before": {
+        "seeded": true,
+        "sel": "",
+        "cur": {
+         "line": 2,
+         "ch": 8
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n##### alpha beta gamma\n\nsecond line\n",
+        "sel": "",
+        "from": {
+         "line": 2,
+         "ch": 14
+        },
+        "to": {
+         "line": 2,
+         "ch": 14
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Heading 4",
+       "before": {
+        "seeded": true,
+        "sel": "",
+        "cur": {
+         "line": 2,
+         "ch": 8
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n#### alpha beta gamma\n\nsecond line\n",
+        "sel": "",
+        "from": {
+         "line": 2,
+         "ch": 13
+        },
+        "to": {
+         "line": 2,
+         "ch": 13
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Heading 3",
+       "before": {
+        "seeded": true,
+        "sel": "",
+        "cur": {
+         "line": 2,
+         "ch": 8
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n### alpha beta gamma\n\nsecond line\n",
+        "sel": "",
+        "from": {
+         "line": 2,
+         "ch": 12
+        },
+        "to": {
+         "line": 2,
+         "ch": 12
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Heading 2",
+       "before": {
+        "seeded": true,
+        "sel": "",
+        "cur": {
+         "line": 2,
+         "ch": 8
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n## alpha beta gamma\n\nsecond line\n",
+        "sel": "",
+        "from": {
+         "line": 2,
+         "ch": 11
+        },
+        "to": {
+         "line": 2,
+         "ch": 11
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Heading 1",
+       "before": {
+        "seeded": true,
+        "sel": "",
+        "cur": {
+         "line": 2,
+         "ch": 8
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n# alpha beta gamma\n\nsecond line\n",
+        "sel": "",
+        "from": {
+         "line": 2,
+         "ch": 10
+        },
+        "to": {
+         "line": 2,
+         "ch": 10
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Task list",
+       "before": {
+        "seeded": true,
+        "sel": "",
+        "cur": {
+         "line": 2,
+         "ch": 8
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n- [ ] alpha beta gamma\n\nsecond line\n",
+        "sel": "",
+        "from": {
+         "line": 2,
+         "ch": 14
+        },
+        "to": {
+         "line": 2,
+         "ch": 14
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Numbered list",
+       "before": {
+        "seeded": true,
+        "sel": "",
+        "cur": {
+         "line": 2,
+         "ch": 8
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n1. alpha beta gamma\n\nsecond line\n",
+        "sel": "",
+        "from": {
+         "line": 2,
+         "ch": 11
+        },
+        "to": {
+         "line": 2,
+         "ch": 11
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Bullet list",
+       "before": {
+        "seeded": true,
+        "sel": "",
+        "cur": {
+         "line": 2,
+         "ch": 8
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n- alpha beta gamma\n\nsecond line\n",
+        "sel": "",
+        "from": {
+         "line": 2,
+         "ch": 10
+        },
+        "to": {
+         "line": 2,
+         "ch": 10
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      }
+     ],
+     "Insert": [
+      {
+       "title": "New base",
+       "before": {
+        "seeded": true,
+        "sel": "",
+        "cur": {
+         "line": 2,
+         "ch": 8
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\nalpha be\n![[Untitled 1.base]]\nta gamma\n\nsecond line\n",
+        "sel": "",
+        "from": {
+         "line": 3,
+         "ch": 19
+        },
+        "to": {
+         "line": 3,
+         "ch": 19
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Math block",
+       "before": {
+        "seeded": true,
+        "sel": "",
+        "cur": {
+         "line": 2,
+         "ch": 8
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n$$\nalpha beta gamma\n$$\n\nsecond line\n",
+        "sel": "",
+        "from": {
+         "line": 3,
+         "ch": 8
+        },
+        "to": {
+         "line": 3,
+         "ch": 8
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Code block",
+       "before": {
+        "seeded": true,
+        "sel": "",
+        "cur": {
+         "line": 2,
+         "ch": 8
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n```\nalpha beta gamma\n```\n\nsecond line\n",
+        "sel": "",
+        "from": {
+         "line": 3,
+         "ch": 8
+        },
+        "to": {
+         "line": 3,
+         "ch": 8
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Horizontal rule",
+       "before": {
+        "seeded": true,
+        "sel": "",
+        "cur": {
+         "line": 2,
+         "ch": 8
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\nalpha be\n\n---\nta gamma\n\nsecond line\n",
+        "sel": "",
+        "from": {
+         "line": 5,
+         "ch": 0
+        },
+        "to": {
+         "line": 5,
+         "ch": 0
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Callout",
+       "before": {
+        "seeded": true,
+        "sel": "",
+        "cur": {
+         "line": 2,
+         "ch": 8
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\n> [!NOTE]\n> alpha beta gamma\n\nsecond line\n",
+        "sel": "NOTE",
+        "from": {
+         "line": 2,
+         "ch": 4
+        },
+        "to": {
+         "line": 2,
+         "ch": 8
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Table",
+       "before": {
+        "seeded": true,
+        "sel": "",
+        "cur": {
+         "line": 2,
+         "ch": 8
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\nalpha beta gamma\n\n|     |     |\n| --- | --- |\n|     |     |\n\n\nsecond line\n",
+        "sel": "",
+        "from": {
+         "line": 4,
+         "ch": 1
+        },
+        "to": {
+         "line": 4,
+         "ch": 1
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      },
+      {
+       "title": "Footnote",
+       "before": {
+        "seeded": true,
+        "sel": "",
+        "cur": {
+         "line": 2,
+         "ch": 8
+        }
+       },
+       "after": {
+        "value": "# Fmt\n\nalpha be[^1]ta gamma\n\nsecond line\n\n[^1]: \n",
+        "sel": "",
+        "from": {
+         "line": 2,
+         "ch": 12
+        },
+        "to": {
+         "line": 2,
+         "ch": 12
+        },
+        "focusInCm": true,
+        "modal": null,
+        "prompt": null,
+        "suggest": null,
+        "notices": []
+       }
+      }
+     ]
+    }
+   },
+   "s06-row-commands": {
+    "ok": true,
+    "commandNames": {
+     "editor:toggle-bold": "Toggle bold",
+     "editor:toggle-italics": "Toggle italic",
+     "editor:toggle-strikethrough": "Toggle strikethrough",
+     "editor:toggle-code": "Toggle code",
+     "editor:toggle-inline-math": "Toggle inline math",
+     "editor:toggle-comments": "Toggle comment",
+     "editor:clear-formatting": "Clear formatting",
+     "editor:toggle-bullet-list": "Toggle bullet list",
+     "editor:toggle-numbered-list": "Toggle numbered list",
+     "editor:toggle-checklist-status": "Toggle checkbox status",
+     "editor:set-heading-1": "Set as heading 1",
+     "editor:set-heading-2": "Set as heading 2",
+     "editor:set-heading-3": "Set as heading 3",
+     "editor:set-heading-4": "Set as heading 4",
+     "editor:set-heading-5": "Set as heading 5",
+     "editor:set-heading-6": "Set as heading 6",
+     "editor:set-heading-0": "Remove heading",
+     "editor:toggle-blockquote": "Toggle blockquote",
+     "editor:insert-footnote": "Insert footnote",
+     "editor:insert-table": "Insert table",
+     "editor:insert-callout": "Insert callout",
+     "editor:insert-horizontal-rule": "Insert horizontal rule",
+     "editor:insert-codeblock": "Insert code block",
+     "editor:insert-mathblock": "Insert math block",
+     "bases:insert": "Bases: Insert new base"
+    },
+    "sel": {
+     "New base": {
+      "id": "bases:insert",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha \n![[Untitled 2.base]]\n gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 3,
+        "ch": 19
+       },
+       "to": {
+        "line": 3,
+        "ch": 19
+       }
+      }
+     },
+     "Math block": {
+      "id": "editor:insert-mathblock",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n$$\nalpha beta gamma\n$$\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 3,
+        "ch": 6
+       },
+       "to": {
+        "line": 3,
+        "ch": 10
+       }
+      }
+     },
+     "Code block": {
+      "id": "editor:insert-codeblock",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n```\nalpha beta gamma\n```\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 3,
+        "ch": 6
+       },
+       "to": {
+        "line": 3,
+        "ch": 10
+       }
+      }
+     },
+     "Horizontal rule": {
+      "id": "editor:insert-horizontal-rule",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha \n\n---\n gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 5,
+        "ch": 0
+       },
+       "to": {
+        "line": 5,
+        "ch": 0
+       }
+      }
+     },
+     "Callout": {
+      "id": "editor:insert-callout",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n> [!NOTE]\n> alpha beta gamma\n\nsecond line\n",
+       "sel": "NOTE",
+       "from": {
+        "line": 2,
+        "ch": 4
+       },
+       "to": {
+        "line": 2,
+        "ch": 8
+       }
+      }
+     },
+     "Table": {
+      "id": "editor:insert-table",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha beta gamma\n\n|     |     |\n| --- | --- |\n|     |     |\n\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 4,
+        "ch": 1
+       },
+       "to": {
+        "line": 4,
+        "ch": 1
+       }
+      }
+     },
+     "Footnote": {
+      "id": "editor:insert-footnote",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha [^1]beta gamma\n\nsecond line\n\n[^1]: \n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 10
+       },
+       "to": {
+        "line": 2,
+        "ch": 10
+       }
+      }
+     },
+     "Quote": {
+      "id": "editor:toggle-blockquote",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n> alpha beta gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 8
+       },
+       "to": {
+        "line": 2,
+        "ch": 12
+       }
+      }
+     },
+     "Body": {
+      "id": "editor:set-heading-0",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha beta gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 6
+       },
+       "to": {
+        "line": 2,
+        "ch": 10
+       }
+      }
+     },
+     "Heading 6": {
+      "id": "editor:set-heading-6",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n###### alpha beta gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 13
+       },
+       "to": {
+        "line": 2,
+        "ch": 17
+       }
+      }
+     },
+     "Heading 5": {
+      "id": "editor:set-heading-5",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n##### alpha beta gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 12
+       },
+       "to": {
+        "line": 2,
+        "ch": 16
+       }
+      }
+     },
+     "Heading 4": {
+      "id": "editor:set-heading-4",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n#### alpha beta gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 11
+       },
+       "to": {
+        "line": 2,
+        "ch": 15
+       }
+      }
+     },
+     "Heading 3": {
+      "id": "editor:set-heading-3",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n### alpha beta gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 10
+       },
+       "to": {
+        "line": 2,
+        "ch": 14
+       }
+      }
+     },
+     "Heading 2": {
+      "id": "editor:set-heading-2",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n## alpha beta gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 9
+       },
+       "to": {
+        "line": 2,
+        "ch": 13
+       }
+      }
+     },
+     "Heading 1": {
+      "id": "editor:set-heading-1",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n# alpha beta gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 8
+       },
+       "to": {
+        "line": 2,
+        "ch": 12
+       }
+      }
+     },
+     "Task list": {
+      "id": "editor:toggle-checklist-status",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n- [ ] alpha beta gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 12
+       },
+       "to": {
+        "line": 2,
+        "ch": 16
+       }
+      }
+     },
+     "Numbered list": {
+      "id": "editor:toggle-numbered-list",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n1. alpha beta gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 9
+       },
+       "to": {
+        "line": 2,
+        "ch": 13
+       }
+      }
+     },
+     "Bullet list": {
+      "id": "editor:toggle-bullet-list",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n- alpha beta gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 8
+       },
+       "to": {
+        "line": 2,
+        "ch": 12
+       }
+      }
+     },
+     "Clear formatting": {
+      "id": "editor:clear-formatting",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha beta gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 6
+       },
+       "to": {
+        "line": 2,
+        "ch": 10
+       }
+      }
+     },
+     "Comment": {
+      "id": "editor:toggle-comments",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha %%beta%% gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 8
+       },
+       "to": {
+        "line": 2,
+        "ch": 12
+       }
+      }
+     },
+     "Math": {
+      "id": "editor:toggle-inline-math",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha $beta$ gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 7
+       },
+       "to": {
+        "line": 2,
+        "ch": 11
+       }
+      }
+     },
+     "Code": {
+      "id": "editor:toggle-code",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha `beta` gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 7
+       },
+       "to": {
+        "line": 2,
+        "ch": 11
+       }
+      }
+     },
+     "Strikethrough": {
+      "id": "editor:toggle-strikethrough",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha ~~beta~~ gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 8
+       },
+       "to": {
+        "line": 2,
+        "ch": 12
+       }
+      }
+     },
+     "Italic": {
+      "id": "editor:toggle-italics",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha *beta* gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 7
+       },
+       "to": {
+        "line": 2,
+        "ch": 11
+       }
+      }
+     },
+     "Bold": {
+      "id": "editor:toggle-bold",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha **beta** gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 8
+       },
+       "to": {
+        "line": 2,
+        "ch": 12
+       }
+      }
+     }
+    },
+    "caret": {
+     "New base": {
+      "id": "bases:insert",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha be\n![[Untitled 3.base]]\nta gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 3,
+        "ch": 19
+       },
+       "to": {
+        "line": 3,
+        "ch": 19
+       }
+      }
+     },
+     "Math block": {
+      "id": "editor:insert-mathblock",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n$$\nalpha beta gamma\n$$\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 3,
+        "ch": 8
+       },
+       "to": {
+        "line": 3,
+        "ch": 8
+       }
+      }
+     },
+     "Code block": {
+      "id": "editor:insert-codeblock",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n```\nalpha beta gamma\n```\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 3,
+        "ch": 8
+       },
+       "to": {
+        "line": 3,
+        "ch": 8
+       }
+      }
+     },
+     "Horizontal rule": {
+      "id": "editor:insert-horizontal-rule",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha be\n\n---\nta gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 5,
+        "ch": 0
+       },
+       "to": {
+        "line": 5,
+        "ch": 0
+       }
+      }
+     },
+     "Callout": {
+      "id": "editor:insert-callout",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n> [!NOTE]\n> alpha beta gamma\n\nsecond line\n",
+       "sel": "NOTE",
+       "from": {
+        "line": 2,
+        "ch": 4
+       },
+       "to": {
+        "line": 2,
+        "ch": 8
+       }
+      }
+     },
+     "Table": {
+      "id": "editor:insert-table",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha beta gamma\n\n|     |     |\n| --- | --- |\n|     |     |\n\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 4,
+        "ch": 1
+       },
+       "to": {
+        "line": 4,
+        "ch": 1
+       }
+      }
+     },
+     "Footnote": {
+      "id": "editor:insert-footnote",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha be[^1]ta gamma\n\nsecond line\n\n[^1]: \n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 12
+       },
+       "to": {
+        "line": 2,
+        "ch": 12
+       }
+      }
+     },
+     "Quote": {
+      "id": "editor:toggle-blockquote",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n> alpha beta gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 10
+       },
+       "to": {
+        "line": 2,
+        "ch": 10
+       }
+      }
+     },
+     "Body": {
+      "id": "editor:set-heading-0",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha beta gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 8
+       },
+       "to": {
+        "line": 2,
+        "ch": 8
+       }
+      }
+     },
+     "Heading 6": {
+      "id": "editor:set-heading-6",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n###### alpha beta gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 15
+       },
+       "to": {
+        "line": 2,
+        "ch": 15
+       }
+      }
+     },
+     "Heading 5": {
+      "id": "editor:set-heading-5",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n##### alpha beta gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 14
+       },
+       "to": {
+        "line": 2,
+        "ch": 14
+       }
+      }
+     },
+     "Heading 4": {
+      "id": "editor:set-heading-4",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n#### alpha beta gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 13
+       },
+       "to": {
+        "line": 2,
+        "ch": 13
+       }
+      }
+     },
+     "Heading 3": {
+      "id": "editor:set-heading-3",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n### alpha beta gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 12
+       },
+       "to": {
+        "line": 2,
+        "ch": 12
+       }
+      }
+     },
+     "Heading 2": {
+      "id": "editor:set-heading-2",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n## alpha beta gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 11
+       },
+       "to": {
+        "line": 2,
+        "ch": 11
+       }
+      }
+     },
+     "Heading 1": {
+      "id": "editor:set-heading-1",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n# alpha beta gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 10
+       },
+       "to": {
+        "line": 2,
+        "ch": 10
+       }
+      }
+     },
+     "Task list": {
+      "id": "editor:toggle-checklist-status",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n- [ ] alpha beta gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 14
+       },
+       "to": {
+        "line": 2,
+        "ch": 14
+       }
+      }
+     },
+     "Numbered list": {
+      "id": "editor:toggle-numbered-list",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n1. alpha beta gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 11
+       },
+       "to": {
+        "line": 2,
+        "ch": 11
+       }
+      }
+     },
+     "Bullet list": {
+      "id": "editor:toggle-bullet-list",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\n- alpha beta gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 10
+       },
+       "to": {
+        "line": 2,
+        "ch": 10
+       }
+      }
+     },
+     "Clear formatting": {
+      "id": "editor:clear-formatting",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha beta gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 8
+       },
+       "to": {
+        "line": 2,
+        "ch": 8
+       }
+      }
+     },
+     "Comment": {
+      "id": "editor:toggle-comments",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha %%beta%% gamma\n\nsecond line\n",
+       "sel": "beta",
+       "from": {
+        "line": 2,
+        "ch": 8
+       },
+       "to": {
+        "line": 2,
+        "ch": 12
+       }
+      }
+     },
+     "Math": {
+      "id": "editor:toggle-inline-math",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha $beta$ gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 9
+       },
+       "to": {
+        "line": 2,
+        "ch": 9
+       }
+      }
+     },
+     "Code": {
+      "id": "editor:toggle-code",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha `beta` gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 9
+       },
+       "to": {
+        "line": 2,
+        "ch": 9
+       }
+      }
+     },
+     "Strikethrough": {
+      "id": "editor:toggle-strikethrough",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha ~~beta~~ gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 10
+       },
+       "to": {
+        "line": 2,
+        "ch": 10
+       }
+      }
+     },
+     "Italic": {
+      "id": "editor:toggle-italics",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha *beta* gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 9
+       },
+       "to": {
+        "line": 2,
+        "ch": 9
+       }
+      }
+     },
+     "Bold": {
+      "id": "editor:toggle-bold",
+      "seeded": true,
+      "ran": {
+       "ran": true,
+       "err": null
+      },
+      "after": {
+       "value": "# Fmt\n\nalpha **beta** gamma\n\nsecond line\n",
+       "sel": "",
+       "from": {
+        "line": 2,
+        "ch": 10
+       },
+       "to": {
+        "line": 2,
+        "ch": 10
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}
