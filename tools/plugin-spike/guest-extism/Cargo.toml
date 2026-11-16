@@ -1,0 +1,22 @@
+# The extism route's guest: a plain core module for wasm32-unknown-unknown on
+# extism-pdk, JSON in and out. Outside the scoria workspace.
+[workspace]
+
+[package]
+name = "spike-guest-extism"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+extism-pdk = "1.4"
+serde = { version = "1", features = ["derive"] }
+
+[profile.release]
+opt-level = "s"
+lto = true
+strip = true
+panic = "abort"

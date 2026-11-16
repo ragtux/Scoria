@@ -1,0 +1,22 @@
+# The WIT route's guest: a core module for wasm32-unknown-unknown with
+# wit-bindgen's exports, wrapped into a component by `wasm-tools component new`
+# (see ../run.sh). Outside the scoria workspace: the empty [workspace] table.
+[workspace]
+
+[package]
+name = "spike-guest-wit"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wit-bindgen = { version = "0.63", default-features = false, features = ["macros", "realloc"] }
+
+[profile.release]
+opt-level = "s"
+lto = true
+strip = true
+panic = "abort"

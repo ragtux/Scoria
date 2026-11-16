@@ -1,0 +1,13 @@
+# The baseline host: the spike's commands in plain Rust, no runtime.
+[workspace]
+
+[package]
+name = "spike-host-baseline"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+
+[profile.release]
+strip = true

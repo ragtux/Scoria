@@ -1,0 +1,34 @@
+# The WIT route's host: wasmtime's component model with `bindgen!` over
+# ../wit/plugin.wit. One feature per compiler tier, built one at a time into
+# its own target directory by ../run.sh so each binary carries only its tier:
+#
+#   default      wasmtime's own default features (Cranelift and everything else)
+#   cranelift    the minimum for components plus Cranelift
+#   cranelift-parallel  and compiling a component's functions on rayon's pool
+#   winch        the minimum plus Winch, the baseline compiler
+#   pulley       the minimum plus Cranelift targeting Pulley, the interpreter
+#   runtime      no compiler: loads a component another build precompiled
+#   runtime-pulley  no compiler, the Pulley interpreter: runs precompiled Pulley bytecode
+[workspace]
+
+[package]
+name = "spike-host-wit"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[features]
+default = []
+wasmtime-default = ["wasmtime/default"]
+cranelift = ["wasmtime/cranelift"]
+cranelift-parallel = ["cranelift", "wasmtime/parallel-compilation"]
+winch = ["wasmtime/winch"]
+pulley = ["wasmtime/cranelift", "wasmtime/pulley"]
+runtime = []
+runtime-pulley = ["wasmtime/pulley"]
+
+[dependencies]
+wasmtime = { version = "49", default-features = false, features = ["std", "runtime", "component-model"] }
+
+[profile.release]
+strip = true
