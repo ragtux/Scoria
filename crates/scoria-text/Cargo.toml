@@ -16,6 +16,10 @@ scoria-markdown.workspace = true
 # Deletion and caret motion step by grapheme cluster, so one Backspace
 # takes an accented letter or a joined emoji whole.
 unicode-segmentation = "1"
+# Which way a line runs and which way each of its glyphs does, for
+# right-to-left text: the crate the text system's own shaper (cosmic-text)
+# reorders with, so the two agree. Pure Rust, MIT or Apache-2.0.
+unicode-bidi = "0.3"
 
 [dev-dependencies]
 scoria-cache.workspace = true

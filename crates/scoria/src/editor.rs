@@ -22,6 +22,7 @@
 //! `scoria-text/tests/writer_roundtrip.rs` hold that over the corpus).
 
 use crate::fold::{self, Foldable};
+use crate::gutter;
 use crate::inline_field;
 use crate::math::SpaceWidths;
 use crate::preview::{self, DisplayLine, Piece};
@@ -32,6 +33,7 @@ use crate::reading::model::{
 use crate::reading::view::{LinkHandler, Renderer, ToggleHandler};
 use crate::reading::view::{PropertiesHost, PropertyAction};
 use crate::reading::view::{TableAction, TableAxis, TableDragView, TableHost, TableSelect};
+use crate::rtl::{rtl_row_origin, rtl_rows, RtlRows};
 use crate::suggest::{Anchor, SuggestState};
 use crate::text_input::{InputEvent, TextInput};
 use crate::theme::Theme;
@@ -343,6 +345,12 @@ struct Palette {
     checkbox_border: Hsla,
     checkbox_marker: Hsla,
     mono: SharedString,
+    /// The line numbers' `--text-faint` in the interface font, and the
+    /// indentation guides' two colours.
+    faint: Hsla,
+    ui_font: SharedString,
+    guide: Hsla,
+    guide_active: Hsla,
 }
 
 impl Palette {
@@ -391,6 +399,10 @@ impl Palette {
             checkbox_border: k.checkbox_border_color,
             checkbox_marker: k.checkbox_marker_color,
             mono: t.mono_font.clone(),
+            faint: k.text_faint,
+            ui_font: t.ui_font.clone(),
+            guide: k.indentation_guide_color,
+            guide_active: k.indentation_guide_color_active,
         }
     }
 }
@@ -422,13 +434,56 @@ impl VisibleLine {
 /// bytes and the display text that was shaped (they differ in Live Preview).
 struct Shaped {
     display: DisplayLine,
+    /// The whole line as gpui shaped it: wrapped at the text's width when
+    /// it runs left to right, unwrapped when it runs right to left (and
+    /// then only what nothing below reads through `rtl`).
     line: WrappedLine,
     row_height: Pixels,
+    /// A right-to-left line's rows, broken and laid out here.
+    rtl: Option<RtlRows>,
 }
 
 impl Shaped {
     fn rows(&self) -> usize {
-        self.line.wrap_boundaries().len() + 1
+        match &self.rtl {
+            Some(rtl) => rtl.rows.len().max(1),
+            None => self.line.wrap_boundaries().len() + 1,
+        }
+    }
+
+    /// Whether the line runs right to left.
+    fn is_rtl(&self) -> bool {
+        self.rtl.is_some()
+    }
+
+    /// The boxes the display bytes `s..e` cover, one per row they touch,
+    /// as `(row, left, right)` from the text's left edge; a row in the
+    /// middle of the range runs the text's full `width` on a
+    /// left-to-right line and the row's own extent on a right-to-left one.
+    fn range_boxes(&self, s: usize, e: usize, width: Pixels) -> Vec<(usize, Pixels, Pixels)> {
+        if let Some(rtl) = &self.rtl {
+            let (rs, re) = (rtl.row_of(s), rtl.row_of(e));
+            return (rs..=re)
+                .map(|r| {
+                    let row = &rtl.rows[r];
+                    let a = if r == rs { s } else { row.range.start };
+                    let b = if r == re { e } else { row.range.end };
+                    let off = rtl.offset(r);
+                    let xa = off + px(row.map.caret_x(a.saturating_sub(row.range.start)));
+                    let xb = off + px(row.map.caret_x(b.saturating_sub(row.range.start)));
+                    (r, xa.min(xb), xa.max(xb))
+                })
+                .collect();
+        }
+        let (rs, xs) = self.display_row_and_x(s);
+        let (re, xe) = self.display_row_and_x(e);
+        (rs..=re)
+            .map(|r| {
+                let x0 = if r == rs { xs } else { px(0.) };
+                let x1 = if r == re { xe } else { width };
+                (r, x0, x1)
+            })
+            .collect()
     }
 
     fn height(&self) -> Pixels {
@@ -436,21 +491,38 @@ impl Shaped {
     }
 
     /// The display byte each wrapped row after the first begins at.
-    fn row_starts(&self) -> impl Iterator<Item = usize> + '_ {
+    fn row_starts(&self) -> Vec<usize> {
+        if let Some(rtl) = &self.rtl {
+            return rtl.rows.iter().skip(1).map(|r| r.range.start).collect();
+        }
         let layout = &self.line.unwrapped_layout;
         self.line
             .wrap_boundaries()
             .iter()
             .map(move |b| layout.runs[b.run_ix].glyphs[b.glyph_ix].index)
+            .collect()
     }
 
     /// The wrapped row and x of source byte `col`.
     fn row_and_x(&self, col: usize) -> (usize, Pixels) {
+        self.display_row_and_x(self.display.to_display(col))
+    }
+
+    /// Where display byte `d` stands from the line's top-left corner.
+    fn display_point(&self, d: usize) -> Point<Pixels> {
+        let (row, x) = self.display_row_and_x(d);
+        point(x, self.row_height * row as f32)
+    }
+
+    /// The wrapped row and x of display byte `d`.
+    fn display_row_and_x(&self, d: usize) -> (usize, Pixels) {
         if self.row_height <= px(0.) {
             return (0, px(0.));
         }
-        let d = self.display.to_display(col);
-        if self.row_starts().any(|start| start == d) {
+        if let Some(rtl) = &self.rtl {
+            return rtl.caret(d);
+        }
+        if self.row_starts().contains(&d) {
             // gpui reports a byte that falls on a wrap point at the right
             // edge of the row before, which strands the caret a row above
             // the text it is in and leaves Home with nowhere for End to go.
@@ -465,6 +537,12 @@ impl Shaped {
     /// The display byte nearest `x` on `row`.
     fn display_index_at(&self, x: Pixels, row: usize) -> usize {
         let row = row.min(self.rows() - 1);
+        if let Some(rtl) = &self.rtl {
+            let Some(r) = rtl.rows.get(row) else {
+                return 0;
+            };
+            return r.range.start + r.map.index_at(f32::from(x - rtl.offset(row)));
+        }
         self.line
             .closest_index_for_position(
                 point(x.max(px(0.)), self.row_height * row as f32),
@@ -484,6 +562,13 @@ impl Shaped {
     fn glyph_index_at(&self, x: Pixels, row: usize) -> Option<usize> {
         if row >= self.rows() {
             return None;
+        }
+        if let Some(rtl) = &self.rtl {
+            let r = rtl.rows.get(row)?;
+            return r
+                .map
+                .glyph_at(f32::from(x - rtl.offset(row)))
+                .map(|b| r.range.start + b);
         }
         self.line
             .index_for_position(point(x, self.row_height * row as f32), self.row_height)
@@ -771,6 +856,9 @@ pub struct Editor {
     /// Tab inserts a tab (`useTab`) or `tab_size` spaces.
     use_tab: bool,
     tab_size: u8,
+    /// `showLineNumber`, `showIndentGuide` and `rightToLeft`: what the
+    /// editor draws beside its text, and which side.
+    chrome: gutter::Chrome,
     /// Shaping time per painted frame since the note was opened.
     pub frame_samples: Sample,
     /// Parse time per completed decoration pass since the note was opened.
@@ -893,6 +981,7 @@ impl Editor {
             smart_indent_list: true,
             use_tab: true,
             tab_size: 4,
+            chrome: gutter::Chrome::default(),
             frame_samples: Sample::default(),
             parse_samples: Sample::default(),
             parse_latency: Sample::default(),
@@ -1002,6 +1091,15 @@ impl Editor {
 
     pub fn set_show_inline_title(&mut self, on: bool) {
         self.show_inline_title = on;
+    }
+
+    /// `showLineNumber`, `showIndentGuide` and `rightToLeft`, which take
+    /// effect on the next frame.
+    pub fn set_chrome(&mut self, chrome: gutter::Chrome, cx: &mut Context<Self>) {
+        if self.chrome != chrome {
+            self.chrome = chrome;
+            cx.notify();
+        }
     }
 
     /// Hands the editor what to draw under the note's last line.
@@ -2261,7 +2359,23 @@ impl Editor {
             spans,
             code,
             &self.palette,
+            self.line_is_rtl(line),
         ))
+    }
+
+    /// Whether `line` runs right to left: by its first strong character,
+    /// else the nearest line above's, else `rightToLeft`.
+    fn line_is_rtl(&self, line: usize) -> bool {
+        use scoria_text::bidi::{line_direction, Direction};
+        if line >= self.line_count() {
+            return false;
+        }
+        let base = if self.chrome.right_to_left {
+            Direction::Rtl
+        } else {
+            Direction::Ltr
+        };
+        line_direction(|i| self.buf.line_text(i), line, base, 256) == Direction::Rtl
     }
 
     fn rows_of(&self, window: &mut Window, line: usize) -> usize {
@@ -2818,6 +2932,12 @@ impl Editor {
     ) {
         self.move_each(select, window, cx, |this, _, s| {
             let sel = s.range();
+            // The arrows move the way the text runs on screen: on a
+            // right-to-left line Left goes forward and Right back, as in
+            // Obsidian (whose caret is visual throughout; Scoria's is by
+            // the line's direction, which is the same on a line of one
+            // direction).
+            let left = left != this.line_is_rtl(this.buf.cursor_at(s.head).line);
             let target = if !select && !s.is_empty() {
                 // A plain arrow collapses the selection to its edge.
                 if left {
@@ -2933,7 +3053,13 @@ impl Editor {
             let target = match this.shape(window, c.line) {
                 Some(shaped) if this.layout.line_height > px(0.) => {
                     let (row, _) = shaped.row_and_x(c.col);
-                    let x = if end { px(f32::MAX / 4.) } else { px(0.) };
+                    // The row's logical end, which on a right-to-left line
+                    // is its left edge.
+                    let x = if end != shaped.is_rtl() {
+                        px(f32::MAX / 4.)
+                    } else {
+                        px(f32::MIN / 4.)
+                    };
                     let col = this.buf.clamp_col(c.line, shaped.index_at(x, row));
                     this.buf.line_starts()[c.line] + col
                 }
@@ -6641,15 +6767,19 @@ fn paint_task_boxes(
 ) {
     let rh = shaped.row_height;
     for task in &shaped.display.tasks {
-        let Some(start) = shaped.line.position_for_index(task.display.start, rh) else {
-            continue;
+        let start = shaped.display_point(task.display.start);
+        let end = shaped.display_point(task.display.end);
+        let room = if end.y == start.y {
+            (end.x - start.x).abs()
+        } else {
+            em
         };
-        let room = shaped
-            .line
-            .position_for_index(task.display.end, rh)
-            .filter(|end| end.y == start.y)
-            .map(|end| end.x - start.x)
-            .unwrap_or(em);
+        // On a right-to-left line the box's start is its right edge.
+        let start = if end.y == start.y && end.x < start.x {
+            end
+        } else {
+            start
+        };
         let side = (em * 0.9).min(room).max(px(8.));
         let top = origin.y + start.y + (rh - side) / 2.;
         let left = origin.x + start.x + px(1.);
@@ -6673,6 +6803,58 @@ fn paint_task_boxes(
     }
 }
 
+/// The indentation guides of one painted line, a line `shaped.height()`
+/// tall from `top`: one per indent unit of its leading whitespace, each in
+/// `--indentation-guide-color`, or the active colour where it is the guide
+/// the caret lights.
+#[allow(clippy::too_many_arguments)]
+fn line_guides(
+    shaped: &Shaped,
+    source: &str,
+    line: usize,
+    tab_size: u8,
+    live: bool,
+    active: Option<&scoria_text::gutter::ActiveGuide>,
+    content_x: Pixels,
+    top: Pixels,
+    font_size: Pixels,
+    p: &Palette,
+) -> Vec<PaintQuad> {
+    let units = scoria_text::gutter::indent_units(source, tab_size);
+    if units.is_empty() {
+        return Vec::new();
+    }
+    let code = shaped.display.decor.code_block;
+    // Under the parent's marker: Obsidian's Live Preview bullet stands
+    // 0.85 em into its unit and its guide with it; Scoria's stands at the
+    // start of its marker, a quarter em in, as Source mode's dash does.
+    let offset = match (live, code) {
+        (true, true) => 0.,
+        _ => gutter::GUIDE_SOURCE_EM,
+    };
+    // A wrapped line's further rows start at the text's edge (Scoria has
+    // no hanging indent), so its guides stop with its first row rather
+    // than cross them.
+    let height = if shaped.rows() > 1 {
+        shaped.row_height
+    } else {
+        shaped.height()
+    };
+    // A code block's text is the monospace `--code-size`, 0.875 em.
+    let em = font_size * shaped.display.scale * if code { 0.875 } else { 1. };
+    let rtl = shaped.is_rtl();
+    units
+        .iter()
+        .enumerate()
+        .map(|(level, &byte)| {
+            let (_, x) = shaped.row_and_x(byte);
+            let lit = active.is_some_and(|a| a.level == level && a.lines.contains(&line));
+            let color = if lit { p.guide_active } else { p.guide };
+            gutter::guide(content_x + x, top, height, em, offset, rtl, color)
+        })
+        .collect()
+}
+
 /// Shapes a display line at the editor's font, scaled for a heading.
 #[allow(clippy::too_many_arguments)]
 fn shape_display(
@@ -6685,7 +6867,11 @@ fn shape_display(
     spans: &[HighlightSpan],
     code: &[CodeRun],
     p: &Palette,
+    rtl: bool,
 ) -> Shaped {
+    // A code block's lines run left to right whatever their text (Obsidian
+    // 1.15.0 kept them `direction: ltr` under a right-to-left `dir`).
+    let rtl = rtl && !display.decor.code_block;
     let runs = runs_for_display(&display, spans, code, style, p);
     let size = font_size * display.scale;
     // Headings keep Obsidian's tighter line height, never below the body's.
@@ -6700,12 +6886,14 @@ fn shape_display(
             SharedString::from(display.text.clone()),
             size,
             &runs,
-            wrap_width,
+            // A right-to-left line is broken into rows below, not by gpui.
+            if rtl { None } else { wrap_width },
             None,
         )
         .ok()
         .and_then(|lines| lines.into_iter().next())
         .unwrap_or_default();
+    let rtl = rtl.then(|| rtl_rows(window, &display.text, &line, &runs, size, wrap_width));
     // A line with a tall inline formula (a fraction, a sum with limits)
     // grows to hold it, the way CodeMirror's line grows around an inline
     // widget; every wrapped row of the line shares the height.
@@ -6729,6 +6917,7 @@ fn shape_display(
         display,
         line,
         row_height,
+        rtl,
     }
 }
 
@@ -6762,6 +6951,11 @@ struct Prepaint {
     footer: Option<AnyElement>,
     /// Quote bars, code block bands and rules, behind the text.
     decor: Vec<PaintQuad>,
+    /// The line numbers, when `showLineNumber` is on.
+    numbers: Vec<gutter::Number>,
+    /// The indentation guides, over the runs' backgrounds (a code block's
+    /// is one) and under the text.
+    guides: Vec<PaintQuad>,
     line_height: Pixels,
     font_size: Pixels,
     text_style: TextStyle,
@@ -6869,12 +7063,35 @@ impl Element for EditorElement {
             let thumb_dragging = editor.thumb_drag.is_some();
 
             let available = (bounds.size.width - px(GUTTER * 2.)).max(px(50.));
-            let content_width = if editor.readable_line_length {
+            let column_width = if editor.readable_line_length {
                 available.min(px(READABLE_WIDTH))
             } else {
                 available
             };
-            let content_x = bounds.origin.x + (bounds.size.width - content_width) / 2.;
+            let column_x = bounds.origin.x + (bounds.size.width - column_width) / 2.;
+            // The line numbers take their column out of the text's, at the
+            // start edge; the inline title, the properties block and the
+            // footer keep the whole column.
+            let chrome = editor.chrome;
+            let gutter_width = chrome
+                .line_numbers
+                .then(|| gutter::gutter_width(window, &palette.ui_font, count));
+            let columns =
+                gutter::columns(column_x, column_width, gutter_width, chrome.right_to_left);
+            let (content_x, content_width) = (columns.text_x, columns.text_width);
+            let mut numbers: Vec<gutter::Number> = Vec::new();
+            // The guides the caret lights: its list item's depth, on the
+            // lines under it.
+            let active_guide = if chrome.indent_guides {
+                let head_line = editor.buf.cursor_at(head).line;
+                scoria_text::gutter::active_guide(
+                    |i| (i < count).then(|| editor.buf.line_text(i)),
+                    head_line,
+                    editor.tab_size,
+                )
+            } else {
+                None
+            };
             let wrap_width = Some(content_width);
 
             let live = editor.live_preview;
@@ -6953,11 +7170,13 @@ impl Element for EditorElement {
             let renderer = match embed_views.as_ref() {
                 Some(views) => renderer.with_embed_views(entity.entity_id(), views),
                 None => renderer,
-            };
+            }
+            .with_chrome(chrome);
             let mut lines: Vec<(VisibleLine, Shaped)> = Vec::new();
             let mut widgets: Vec<WidgetPaint> = Vec::new();
             let mut flair_elements: Vec<AnyElement> = Vec::new();
             let mut decor_quads = Vec::new();
+            let mut guide_quads = Vec::new();
             let mut selection_quads = Vec::new();
             let mut cursor_quads = Vec::new();
             let mut cursor_top = px(0.);
@@ -6983,7 +7202,7 @@ impl Element for EditorElement {
                 if let Some(title) = title {
                     let (scale, weight, line_height) = crate::theme::heading_style(1);
                     let h1 = font_size * scale;
-                    let origin = point(content_x, y + px(crate::reading::view::HEADER_TOP));
+                    let origin = point(column_x, y + px(crate::reading::view::HEADER_TOP));
                     let mut element = match editor.title_edit.clone() {
                         // Entered: the title is a field, painted as a shaped
                         // line with its selection and caret, the way the
@@ -7001,7 +7220,7 @@ impl Element for EditorElement {
                             selection.a = selection.a.max(0.3);
                             let shape_edit = edit.clone();
                             div()
-                                .w(content_width)
+                                .w(column_width)
                                 .h(h1 * line_height)
                                 .text_size(h1)
                                 .font_weight(FontWeight(weight))
@@ -7033,7 +7252,7 @@ impl Element for EditorElement {
                         None => {
                             *editor.title_layout.borrow_mut() = None;
                             div()
-                                .w(content_width)
+                                .w(column_width)
                                 .text_size(h1)
                                 .line_height(h1 * line_height)
                                 .font_weight(FontWeight(weight))
@@ -7044,7 +7263,7 @@ impl Element for EditorElement {
                     };
                     element.layout_as_root(
                         size(
-                            AvailableSpace::Definite(content_width),
+                            AvailableSpace::Definite(column_width),
                             AvailableSpace::MinContent,
                         ),
                         window,
@@ -7053,7 +7272,7 @@ impl Element for EditorElement {
                     element.prepaint_at(origin, window, cx);
                     editor.title_hit.set(Some(Bounds::new(
                         origin,
-                        size(content_width, h1 * line_height),
+                        size(column_width, h1 * line_height),
                     )));
                     header = Some(element);
                 }
@@ -7109,12 +7328,22 @@ impl Element for EditorElement {
                             first_spans,
                             &[],
                             &palette,
+                            false,
                         )
                     });
                     let indent = prefix
                         .as_ref()
                         .map(|p| p.line.unwrapped_layout.width)
                         .unwrap_or_default();
+                    // The properties block keeps the whole column, gutter
+                    // or not, and has no number; every other widget sits
+                    // with the text and shows its first line's.
+                    let properties = matches!(widget.block, RBlock::Properties(_));
+                    let (content_x, content_width) = if properties {
+                        (column_x, column_width)
+                    } else {
+                        (content_x, content_width)
+                    };
                     let width = (content_width - indent).max(px(0.));
                     let mut element = if crate::bases::embed::is_base_embed(&widget.block) {
                         // Obsidian's `embed-action edit-block-button` over
@@ -7183,6 +7412,17 @@ impl Element for EditorElement {
                         y = bounds.origin.y;
                     }
                     element.prepaint_at(point(content_x + indent, y), window, cx);
+                    if let (Some(g), false) = (columns.gutter, properties) {
+                        numbers.push(gutter::number(
+                            window,
+                            &palette.ui_font,
+                            palette.faint,
+                            g,
+                            wlines.start,
+                            y,
+                            lh,
+                        ));
+                    }
                     // The marker sits at the widget's foot, on the line the
                     // picture stands on, as Obsidian's bullet does; a quote's
                     // bars run the widget's whole height.
@@ -7226,6 +7466,7 @@ impl Element for EditorElement {
                     spans,
                     code,
                     &palette,
+                    editor.line_is_rtl(line),
                 );
                 let rows = shaped.rows();
                 let rh = shaped.row_height;
@@ -7246,7 +7487,13 @@ impl Element for EditorElement {
                         ));
                     }
                     for level in 0..d.quote_depth {
-                        let x = content_x - px(10.) * (d.quote_depth - level) as f32;
+                        // The bars stand at the line's start edge.
+                        let inset = px(10.) * (d.quote_depth - level) as f32;
+                        let x = if shaped.is_rtl() {
+                            content_x + content_width + inset - px(2.)
+                        } else {
+                            content_x - inset
+                        };
                         let mut bar = palette.muted;
                         bar.a = 0.6;
                         decor_quads.push(fill(Bounds::new(point(x, y), size(px(2.), height)), bar));
@@ -7315,6 +7562,31 @@ impl Element for EditorElement {
                         flair_elements.push(element);
                     }
                 }
+                if let Some(g) = columns.gutter {
+                    numbers.push(gutter::number(
+                        window,
+                        &palette.ui_font,
+                        palette.faint,
+                        g,
+                        line,
+                        y,
+                        rh,
+                    ));
+                }
+                if chrome.indent_guides {
+                    guide_quads.extend(line_guides(
+                        &shaped,
+                        editor.buf.line_text(line),
+                        line,
+                        editor.tab_size,
+                        live,
+                        active_guide.as_ref(),
+                        content_x,
+                        y,
+                        font_size,
+                        &palette,
+                    ));
+                }
                 // The fold indicator: Obsidian's `cm-fold-indicator`, a
                 // hover-revealed chevron at `left: -15px` on a heading line
                 // and `-10px` on a list line, shown whenever the line is
@@ -7351,11 +7623,15 @@ impl Element for EditorElement {
                             window,
                             cx,
                         );
+                        // At the line's start edge: the right one on a
+                        // right-to-left line (`inset-inline-start`).
+                        let centre = if shaped.is_rtl() {
+                            content_x + content_width + offset
+                        } else {
+                            content_x - offset
+                        };
                         element.prepaint_at(
-                            point(
-                                content_x - offset - px(8.),
-                                y + (rh - px(16.)).max(px(0.)) / 2.,
-                            ),
+                            point(centre - px(8.), y + (rh - px(16.)).max(px(0.)) / 2.),
                             window,
                             cx,
                         );
@@ -7370,18 +7646,18 @@ impl Element for EditorElement {
                         if m.start > range.end {
                             break;
                         }
-                        let s = m.start.max(range.start) - range.start;
-                        let e = m.end.min(range.end) - range.start;
-                        let (rs, xs) = shaped.row_and_x(s);
-                        let (re, xe) = shaped.row_and_x(e);
+                        let s = shaped
+                            .display
+                            .to_display(m.start.max(range.start) - range.start);
+                        let e = shaped
+                            .display
+                            .to_display(m.end.min(range.end) - range.start);
                         let color = if current_match == Some(ix) {
                             palette.find_current
                         } else {
                             palette.find_match
                         };
-                        for r in rs..=re {
-                            let x0 = if r == rs { xs } else { px(0.) };
-                            let x1 = if r == re { xe } else { content_width };
+                        for (r, x0, x1) in shaped.range_boxes(s, e, content_width) {
                             if x1 > x0 {
                                 decor_quads.push(fill(
                                     Bounds::new(
@@ -7400,15 +7676,23 @@ impl Element for EditorElement {
                         && selection.start <= range.end
                         && selection.end > range.start
                     {
-                        let s = selection.start.max(range.start) - range.start;
-                        let e = selection.end.min(range.end) - range.start;
-                        let (rs, xs) = shaped.row_and_x(s);
-                        let (re, xe) = shaped.row_and_x(e);
-                        for r in rs..=re {
-                            let x0 = if r == rs { xs } else { px(0.) };
-                            let mut x1 = if r == re { xe } else { content_width };
-                            if r == re && selection.end > range.end {
-                                x1 += font_size * 0.4;
+                        let s = shaped
+                            .display
+                            .to_display(selection.start.max(range.start) - range.start);
+                        let e = shaped
+                            .display
+                            .to_display(selection.end.min(range.end) - range.start);
+                        let boxes = shaped.range_boxes(s, e, content_width);
+                        let last = boxes.last().map(|b| b.0);
+                        for (r, mut x0, mut x1) in boxes {
+                            // A selection running on past the line shows
+                            // the newline it takes, at the line's end edge.
+                            if Some(r) == last && selection.end > range.end {
+                                if shaped.is_rtl() {
+                                    x0 -= font_size * 0.4;
+                                } else {
+                                    x1 += font_size * 0.4;
+                                }
                             }
                             if x1 > x0 {
                                 selection_quads.push(fill(
@@ -7427,18 +7711,25 @@ impl Element for EditorElement {
                     };
                     if caret >= range.start && caret <= range.end {
                         let (row, x) = shaped.row_and_x(caret - range.start);
-                        let (width, color) = match block {
+                        let (x, width, color) = match block {
                             Some(_) => {
                                 let next = editor.buf.next_grapheme_boundary(caret).min(range.end);
                                 let (next_row, next_x) = shaped.row_and_x(next - range.start);
-                                let width = if next_row == row && next_x > x {
-                                    next_x - x
+                                // A right-to-left character runs from the
+                                // next caret leftwards.
+                                let (x, width) = if next_row == row && next_x > x {
+                                    (x, next_x - x)
+                                } else if next_row == row && next_x < x {
+                                    (next_x, x - next_x)
                                 } else {
-                                    font_size * 0.5
+                                    (x, font_size * 0.5)
                                 };
-                                (width, palette.text.opacity(0.45))
+                                (x, width, palette.text.opacity(0.45))
                             }
-                            None => (px(2.), palette.text),
+                            // The bar stands inside the line on the side it
+                            // starts from.
+                            None if shaped.is_rtl() => (x - px(2.), px(2.), palette.text),
+                            None => (x, px(2.), palette.text),
                         };
                         cursor_quads.push(fill(
                             Bounds::new(point(content_x + x, y + rh * row as f32), size(width, rh)),
@@ -7500,6 +7791,7 @@ impl Element for EditorElement {
                             .map(Vec::as_slice)
                             .unwrap_or(&[]),
                         &palette,
+                        editor.line_is_rtl(cursor_line_ix),
                     ))
                 });
             // The caret is in the inline title while that is open, and a
@@ -7514,11 +7806,11 @@ impl Element for EditorElement {
             editor.footer_hit.set(None);
             if line >= count {
                 if let Some(build) = editor.footer.clone() {
-                    match build(f32::from(content_width), window, cx) {
+                    match build(f32::from(column_width), window, cx) {
                         Some(mut element) => {
                             let measured = element.layout_as_root(
                                 size(
-                                    AvailableSpace::Definite(content_width),
+                                    AvailableSpace::Definite(column_width),
                                     AvailableSpace::MinContent,
                                 ),
                                 window,
@@ -7528,10 +7820,10 @@ impl Element for EditorElement {
                                 editor.footer_shrank = true;
                             }
                             editor.footer_height = measured.height;
-                            element.prepaint_at(point(content_x, y), window, cx);
+                            element.prepaint_at(point(column_x, y), window, cx);
                             editor
                                 .footer_hit
-                                .set(Some(Bounds::new(point(content_x, y), measured)));
+                                .set(Some(Bounds::new(point(column_x, y), measured)));
                             y += measured.height;
                             footer = Some(element);
                         }
@@ -7582,6 +7874,8 @@ impl Element for EditorElement {
                 header,
                 footer,
                 decor: decor_quads,
+                numbers,
+                guides: guide_quads,
                 line_height: lh,
                 font_size,
                 text_style,
@@ -7627,12 +7921,28 @@ impl Element for EditorElement {
             if let Some(header) = prepaint.header.as_mut() {
                 header.paint(window, cx);
             }
+            gutter::paint_numbers(&prepaint.numbers, window, cx);
             for quad in prepaint.selection.drain(..) {
                 window.paint_quad(quad);
             }
+            // Run backgrounds (code, highlights) are a pass of their own,
+            // under the guides.
             for (visible, shaped) in prepaint.lines.iter() {
                 let origin = point(content_x, bounds.origin.y + visible.top);
-                // Run backgrounds (code, highlights) are a separate pass.
+                if let Some(rtl) = &shaped.rtl {
+                    for (r, row) in rtl.rows.iter().enumerate() {
+                        let at = rtl_row_origin(origin, rtl, r, visible.row_height);
+                        let _ = row.line.paint_background(
+                            at,
+                            visible.row_height,
+                            TextAlign::Left,
+                            None,
+                            window,
+                            cx,
+                        );
+                    }
+                    continue;
+                }
                 let _ = shaped.line.paint_background(
                     origin,
                     visible.row_height,
@@ -7641,14 +7951,37 @@ impl Element for EditorElement {
                     window,
                     cx,
                 );
-                let _ = shaped.line.paint(
-                    origin,
-                    visible.row_height,
-                    TextAlign::Left,
-                    None,
-                    window,
-                    cx,
-                );
+            }
+            for quad in prepaint.guides.drain(..) {
+                window.paint_quad(quad);
+            }
+            for (visible, shaped) in prepaint.lines.iter() {
+                let origin = point(content_x, bounds.origin.y + visible.top);
+                match &shaped.rtl {
+                    Some(rtl) => {
+                        for (r, row) in rtl.rows.iter().enumerate() {
+                            let at = rtl_row_origin(origin, rtl, r, visible.row_height);
+                            let _ = row.line.paint(
+                                at,
+                                visible.row_height,
+                                TextAlign::Left,
+                                None,
+                                window,
+                                cx,
+                            );
+                        }
+                    }
+                    None => {
+                        let _ = shaped.line.paint(
+                            origin,
+                            visible.row_height,
+                            TextAlign::Left,
+                            None,
+                            window,
+                            cx,
+                        );
+                    }
+                }
                 // Inline formulas over their placeholders, on the text
                 // baseline and centred in the placeholder's slack, in the
                 // text colour: rendered math is not markup.
@@ -7659,16 +7992,18 @@ impl Element for EditorElement {
                     let em = font_size * shaped.display.scale;
                     let rh = visible.row_height;
                     let layout = &shaped.line.unwrapped_layout;
-                    let Some(start) = shaped.line.position_for_index(m.display.start, rh) else {
-                        continue;
-                    };
+                    let start = shaped.display_point(m.display.start);
                     let width = crate::math::width_px(&formula, em);
-                    let end_x = shaped
-                        .line
-                        .position_for_index(m.display.end, rh)
-                        .filter(|end| end.y == start.y)
-                        .map(|end| end.x)
-                        .unwrap_or(start.x + width);
+                    let end = shaped.display_point(m.display.end);
+                    // On a right-to-left line the placeholder's start is
+                    // its right edge.
+                    let (start, end_x) = if end.y != start.y {
+                        (start, start.x + width)
+                    } else if end.x < start.x {
+                        (end, start.x)
+                    } else {
+                        (start, end.x)
+                    };
                     let slack = (end_x - start.x - width).max(px(0.));
                     let baseline = point(
                         origin.x + start.x + slack / 2.,

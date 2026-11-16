@@ -14,9 +14,11 @@
 //! bytes.
 
 pub mod autopair;
+pub mod bidi;
 mod buffer;
 pub mod find;
 pub mod format;
+pub mod gutter;
 pub mod lists;
 mod plan;
 pub mod table;

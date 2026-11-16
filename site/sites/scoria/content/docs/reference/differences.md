@@ -53,7 +53,7 @@ Things Obsidian does that Scoria intends to do and does not.
 | **Editing properties in reading view** | A property's value pill can be removed there; keys, values, the type menu and **Add property** are edited in Live Preview or Source mode only |
 | **Editing the title in reading view** | The inline title is an editable field in Live Preview and Source mode; in reading view it is plain text. `F2` works everywhere |
 | **Vim mode** | The common core is there (modes, motions, operators, text objects, registers, search, `.`); visual block, macros, marks, `:` commands and `.obsidian.vimrc` are not |
-| **Line numbers, indentation guides, right-to-left** | Read and shown in Settings, not acted on. `editor:toggle-line-numbers` writes the setting for Obsidian to read; no gutter is drawn |
+| **Line numbers, indentation guides, right-to-left** | Built. On a line that mixes directions the arrow keys move by the line's direction rather than visually through each run; a link in a right-to-left paragraph of the reading view does not follow and its text cannot be selected; with **Right-to-left** on, the reading view's code blocks stay left-aligned; a wrapped list line's guide stops at its first row |
 | **Spellcheck** | No spellcheck, and `editor:toggle-spellcheck` is not a command yet |
 | **Page preview from File properties** | Page preview works from links, panes, tabs, bases and the graph (see [links](/docs/format/links/#page-preview)); Scoria has no File properties view to preview from |
 | **Pasting and attachments** | A paste is text: copied HTML is not converted to Markdown, and a pasted or dropped image or file is not saved as an attachment. `editor:attach-file` and `editor:download-attachments` are not implemented. Put the file in the folder yourself |

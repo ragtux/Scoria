@@ -66,8 +66,13 @@ are the ones that change how Scoria behaves:
 So are auto-pairing of brackets and of Markdown (`autoPairBrackets`, `autoPairMarkdown`),
 which take effect on the next keystroke without reopening the note.
 
-Settings that are **shown but not yet acted on** include spellcheck, line numbers,
-indent guides and right-to-left. They are read from your configuration and displayed
+**Line numbers** (`showLineNumber`), **Indentation guides** (`showIndentGuide`) and
+**Right-to-left** (`rightToLeft`) are acted on as soon as they change: the gutter takes its width
+out of the text, the guides follow the caret's list item, and the gutter moves to the right.
+A line's own direction comes from its first letter, Hebrew or Arabic making it run right to
+left, whatever the setting says; that is Obsidian's behavior too.
+
+Settings that are **shown but not yet acted on** include spellcheck. They are read from your configuration and displayed
 truthfully, and changing one still writes the key for Obsidian to honor; the behavior behind
 them is not implemented here. Each such row says so on its own line — "not in Scoria yet", or
 "on restart" for the window frame style and, on Linux, the custom app icon — so you can tell
