@@ -64,6 +64,9 @@ pub enum Source {
     Bases,
     /// `graph`, "Graph view": a note's or an attachment's node.
     Graph,
+    /// `properties`, "Properties view": a link in a value of the File
+    /// properties pane (`s11` of 2026-11-11: no popover without Mod).
+    Properties,
 }
 
 impl Source {
@@ -80,6 +83,7 @@ impl Source {
             Source::Outline => config.outline.unwrap_or(true),
             Source::Bases => config.bases.unwrap_or(true),
             Source::Graph => config.graph.unwrap_or(true),
+            Source::Properties => config.properties.unwrap_or(true),
         }
     }
 }
@@ -555,6 +559,7 @@ mod tests {
             Source::Outline,
             Source::Bases,
             Source::Graph,
+            Source::Properties,
         ] {
             assert!(source.requires_mod(&config), "{source:?}");
         }
@@ -566,6 +571,7 @@ mod tests {
             outline: Some(false),
             bases: Some(false),
             graph: Some(false),
+            properties: Some(false),
             ..PagePreviewConfig::default()
         };
         for source in [
@@ -576,6 +582,7 @@ mod tests {
             Source::Outline,
             Source::Bases,
             Source::Graph,
+            Source::Properties,
         ] {
             assert!(!source.requires_mod(&off), "{source:?}");
         }

@@ -55,6 +55,18 @@ that writes nothing until it is named. `markdown:add-metadata-property` (`Ctrl +
 `markdown:clear-metadata-properties` and `editor:toggle-fold-properties` do the same from a
 key, and `propertiesInDocument` chooses the table, nothing, or the raw YAML.
 
+**The File properties pane.** `properties:open-local` puts the open note's properties in the
+right dock, as the same table: keys, values, the type menu and *+ Add property* edit there
+exactly as in Live Preview, writing the same bytes, in every view mode — reading view and
+Source mode included. Running the command again shows the pane rather than making a second
+one, and puts the keyboard in it. `Escape` leaves a field, and a second `Escape` hands the
+keyboard back to the note. In Source mode, where the note shows its YAML, `markdown:add-alias`
+writes the `aliases` key and puts the caret in the pane's alias field, ready for the first
+alias. With no note open, or a file that is not a note, the pane says *No properties found.*
+Right-click its tab and choose **Close**, or press `Ctrl + W` while it has the keyboard, to
+close it; the command opens it again. A link in a value previews with `Ctrl` held, as links in
+the side panes do.
+
 **What a write touches.** Obsidian rewrites the *whole* frontmatter block on any property
 write, which costs you your YAML comments and your flow lists. Scoria writes Obsidian's
 canonical form only for the entries whose **value** actually changed, and compares values

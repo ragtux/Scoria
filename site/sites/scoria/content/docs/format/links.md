@@ -158,8 +158,9 @@ it.
 **Where it needs `Ctrl`.** In reading view a plain hover is enough. Everywhere else you hold
 `Ctrl` (`Cmd` on macOS) while hovering, or press it with the pointer already resting there:
 Live Preview and Source mode, the tab header, the Files view, Bookmarks, Backlinks, Outgoing
-links, Outline (a heading previews its own section), a base's table (a row's file name) and the
-graph (a note's node). Each of these is a toggle under *Settings → Page preview*, written to
+links, Outline (a heading previews its own section), a link in the File properties pane, a
+base's table (a row's file name) and the graph (a note's node). Each of these is a toggle
+under *Settings → Page preview*, written to
 `.obsidian/page-preview.json` with Obsidian's keys, and switching one on means that place needs
 `Ctrl`. Turning the Page preview core plugin off turns all of it off.
 
@@ -171,9 +172,7 @@ on a link in a popover opens it in the main area.
 
 ## Not yet
 
-- The *Properties view* toggle is written but has no surface: a link in the File properties
-  pane (`properties:open-local`) opens on a click and does not preview. Search results do not preview, as they did not
-  in Obsidian when it was observed.
+- Search results do not preview, as they did not in Obsidian when it was observed.
 
 ## Next
 

@@ -330,12 +330,94 @@ uses behave as Obsidian's do.
 | PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]]; text selection and its copies, `#selection=` links, two-page spreads, Adapt to theme and the password prompt landed 2026-11-15, see [[#PDF selection, spreads, themes and passwords, 2026-11-15]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
-| Page preview | probed 2026-11-11 on macOS, see [[Specification#Observed page preview, Obsidian 1.15.0]] and [[#Page preview, the probe, 2026-11-11]]; step 1 landed the same day — the popover over links in the reading view and both editing modes, see [[#Page preview, step 1, 2026-11-11]]; step 2 the same day — the tab header and the Files, Bookmarks, Backlinks, Outgoing links and Outline rows, see [[#Page preview, step 2, 2026-11-11]]; step 3 the same day — nested popovers and the click that makes one an editor, see [[#Page preview, step 3, 2026-11-11]]; step 4 the same day — the Bases and Graph sources, the second-link timing and "Click to create", from a second probe pass, see [[#Page preview, step 4, 2026-11-11]] — done, bar the "Properties view" source, whose File properties view Scoria does not have |
+| Page preview | probed 2026-11-11 on macOS, see [[Specification#Observed page preview, Obsidian 1.15.0]] and [[#Page preview, the probe, 2026-11-11]]; step 1 landed the same day — the popover over links in the reading view and both editing modes, see [[#Page preview, step 1, 2026-11-11]]; step 2 the same day — the tab header and the Files, Bookmarks, Backlinks, Outgoing links and Outline rows, see [[#Page preview, step 2, 2026-11-11]]; step 3 the same day — nested popovers and the click that makes one an editor, see [[#Page preview, step 3, 2026-11-11]]; step 4 the same day — the Bases and Graph sources, the second-link timing and "Click to create", from a second probe pass, see [[#Page preview, step 4, 2026-11-11]] — done; the "Properties view" source followed with the editable File properties pane, see [[#The File properties pane, 2026-11-16]] |
+| The File properties pane | done 2026-11-16: edited through Live Preview's property editor, closable from its tab's menu and with Mod+W, Add alias from Source mode lands in it, its links preview, see [[#The File properties pane, 2026-11-16]] and [[Specification#Observed File properties pane, Obsidian 1.15.1 (installer build 1.13.7)]] |
 | Mermaid diagrams | done 2026-11-15: laid out by limu (a Rust port of Pele, the renderer Obsidian bundles) and painted natively in the reading view, Live Preview, embeds, hover previews and Export to PDF, see [[#Mermaid diagrams, 2026-11-15]] and [[Specification#Observed Mermaid diagrams, Obsidian 1.15.1]] |
 | Slash commands | done 2026-11-11: probed in a headless sway and built on the autocompletion popup, see [[#Slash commands, 2026-11-11]] and [[Specification#Observed Slash commands, Obsidian 1.15.0]] |
 | Canvas embeds, audio and video | 2026-11-15: `![[x.canvas]]` is the canvas's minimap as Obsidian draws it, audio plays in a tab and embedded, video is a card with "Open in default app" (no pure-Rust decoder is credible yet), see [[#Canvas embeds, the audio player and video, 2026-11-15]] and [[Specification#Observed canvas embeds, audio and video, Obsidian 1.15.0]] |
 | Paste and drop | done 2026-11-15: pasted HTML as Markdown, clipboard images and files saved as attachments, files dropped from a file manager, see [[#Paste and drop, 2026-11-15]] and [[Specification#Observed HTML paste and file drops, Obsidian 1.15.0]] |
 | Spellcheck | done 2026-11-15: probed in a headless sway, then `scoria-spell` (spellbook, a bundled `en-US`), squiggles in both editing modes, the corrections and "Add to dictionary" in the editor menu, the custom dictionary page and the languages row, see [[#Spellcheck, 2026-11-15]] and [[Specification#Observed spellcheck, Obsidian 1.15.0 (installer build 1.13.7)]] |
+
+### The File properties pane, 2026-11-16
+
+The right dock's `file-properties` leaf (`properties:open-local`) was read-only, could not be
+closed, its links did not preview, and in Source mode `markdown:add-alias` wrote the key and
+opened a pane that could not be typed into. Probed first, see
+[[Specification#Observed File properties pane, Obsidian 1.15.1 (installer build 1.13.7)]].
+
+**The probe.** `tools/obsidian-probe/file-properties.mjs`, Obsidian 1.15.1 in a private headless
+sway with `USER_DATA_DIR`, `CDP_PORT=9362` and a private `XDG_RUNTIME_DIR`, nine steps in one
+run: the command's leaf and focus, the command run again, the pane under five kinds of file and
+no file, the tab menu and its Close, the leaf made again, Mod+W, Add alias from Source mode with
+the leaf open and closed, and edits typed into the pane. What it settled: the command reveals an
+existing leaf rather than making a second; Close and Mod+W remove the leaf from `workspace.json`
+and the dock shows the tab before it; focus after Add alias is in the pane's aliases input, and
+the second Escape hands it back to the note; the pane's bytes are Live Preview's, with Tab after
+a new key writing the bare key at once.
+
+**What was built.**
+- The pane draws its rows with the renderer Live Preview's properties block uses, through a
+  `PropertiesHost` the editor builds (`Editor::pane_properties_host`), and every click goes to the
+  editor's own `property_action`. There is no second property editor: the field, the pill
+  Backspace, the type menu, Add property and the writer (`apply_property_changes`, one undo step,
+  the note's BOM and line endings) are the ones Live Preview runs. The editor remembers which
+  surface opened the field (`property_in_pane`) and each surface draws the field, the selected
+  pill and the menu only when they are its own, so a field opened in the pane has no twin caret
+  in the note's block.
+- The pane has a focus handle of its own and the `PropertyPane` key context. The keys a field
+  takes (arrows, Home, End, Backspace, Delete, Enter, Tab) are bound there to the editor's
+  actions and forwarded to the editor's handlers while the pane has a field or menu open
+  (`editor::pane_field_keys`); typed text reaches the field through the editor's own input
+  handler, registered against the pane's handle. Escape closes the menu or abandons the field,
+  and a second Escape returns the keyboard to the note. The pane losing the keyboard writes its
+  field, as leaving a field in the note does.
+- In reading view the hidden editor still holds the note, so the pane edits there too, and the
+  reading view is rebuilt from the buffer after each edit.
+- `properties:open-local` makes or reveals the leaf, expands the dock and focuses the pane; a
+  click on its dock tab focuses it too. A right click on the File properties or Footnotes tab
+  raises a menu with Close (`file_menu::Target::SideTab`); Close, and Mod+W while the pane has
+  the keyboard, remove the leaf, show the tab before it and hand the keyboard back to the note.
+  `workspace.json` loses the leaf with its group's `currentTab` moved as Obsidian moved it, and a
+  leaf made again becomes the current tab.
+- `markdown:add-alias` where the note draws no properties table opens the pane and puts the
+  caret in its aliases input, writing what Live Preview writes.
+- Links in a value preview under Mod, as the `properties` hover source (`Source::Properties`,
+  `page-preview.json`'s `properties`).
+- The pane draws no "Properties" heading and cannot fold, as observed, and the type menu now
+  opens under its row rather than beside it (in the 300 px dock the menu beside the value had
+  squeezed it to a letter a line), in Live Preview too.
+- The state dump's `docks.right.file_properties` gains `editable`, `field` and `menu`; the focus
+  names `file-properties` and `file-properties-field`, the latter taking the socket's `type`.
+
+**Driven.** A debug build in a private headless sway over the control socket, with grim: the
+pane opened by the command with the keyboard in it; the `title` value clicked, cleared with
+Backspace (real keystrokes), retyped through `type` and a real `z` keystroke, committed with
+Enter (`title: New title` on disk); `two` appended to `tags`; Add property, `status`, Tab
+(`status:` on disk), `done`, Enter; the type menu under its row in the pane while Live Preview's
+block showed none; Add alias in Source mode on `Body only.\n`, `Al2`, Enter, Escape, Escape
+(`---\naliases:\n  - Al2\n---\nBody only.\n`, the keyboard back in the editor); an edit from the
+pane in reading view, the reading view following; Ctrl+hover on `Target` raising the popover, a
+plain hover raising none; the tab's menu and Close (Outline shown); Mod+W after a click in the
+pane; a canvas showing "No properties found."; and `workspace.json` after quitting with the leaf
+open (`{"file": "Props.md"}`, `lucide-info`, `currentTab: 5`) and after closing it (the leaf
+gone, `currentTab: 4`). Every byte matched the probe's.
+
+**Traps.**
+- The pane's handle wears the key context itself rather than borrowing the editor's handle: the
+  editor's bindings live in the `Editor` context its own element carries, and that element is not
+  painted in reading view, where a handle off screen is outside the dispatch tree and its keys
+  reach nothing.
+- The editor's single `property_field` is what both surfaces read, so the field needs the
+  surface it belongs to; without it a field opened in the pane would also draw its caret in
+  Live Preview's block.
+- The probe's scratchpad was shared with another agent's: a `drive.py` of the same name was
+  overwritten under this run and the other agent's script was run three times against its own
+  app before the clash was noticed. Keep drive files in a folder named for the agent.
+
+**Left.** The sidebar tab menu has Close only (Pin, Link with tab, Move to new window and the
+splits are not run in a sidebar); the pane's key column keeps Live Preview's 160 px, which leaves
+a narrow value column in a 300 px dock; Undo after a pane edit and the pane in a popout were not
+probed.
 
 ### Canvas embeds, the audio player and video, 2026-11-15
 

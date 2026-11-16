@@ -557,6 +557,9 @@ pub(crate) struct PropertiesHost {
     pub mode: PropertiesInDocument,
     /// The key whose type menu is open, if any.
     pub menu: Option<String>,
+    /// Whether the foldable "Properties" heading is drawn. The File
+    /// properties pane draws the rows without it, and never folds.
+    pub heading: bool,
     pub on_action: PropertyHandler,
 }
 
@@ -3168,7 +3171,8 @@ impl<'a> Renderer<'a> {
             // and neither the editor nor the rendered text shows it.
             return div().into_any_element();
         }
-        let folded = self.toggled.contains(&PROPERTIES_FOLD_ID);
+        let heading = host.is_none_or(|h| h.heading);
+        let folded = heading && self.toggled.contains(&PROPERTIES_FOLD_ID);
         let mut next_id = PROPERTY_ID_BASE;
         let rows = crate::properties::rows(
             entries,
@@ -3188,27 +3192,30 @@ impl<'a> Renderer<'a> {
             .border_color(t.tokens.metadata_border_color)
             .pb(px(base * 0.6))
             .text_size(px(base * 0.875))
-            .child(
-                div()
-                    .id("properties-heading")
-                    .flex()
-                    .flex_row()
-                    .items_center()
-                    .gap_1()
-                    .py_1()
-                    .cursor_pointer()
-                    .text_color(t.tokens.text_normal)
-                    .font_weight(FontWeight::MEDIUM)
-                    .child(SharedString::from(if folded {
-                        "\u{25b8}"
-                    } else {
-                        "\u{25be}"
-                    }))
-                    .child(SharedString::from("Properties"))
-                    .on_mouse_down(gpui::MouseButton::Left, move |_, _, cx| {
-                        on_toggle(PROPERTIES_FOLD_ID, cx);
-                    }),
-            )
+            .when(!heading, |d| d.mb_0().border_b_0())
+            .when(heading, |d| {
+                d.child(
+                    div()
+                        .id("properties-heading")
+                        .flex()
+                        .flex_row()
+                        .items_center()
+                        .gap_1()
+                        .py_1()
+                        .cursor_pointer()
+                        .text_color(t.tokens.text_normal)
+                        .font_weight(FontWeight::MEDIUM)
+                        .child(SharedString::from(if folded {
+                            "\u{25b8}"
+                        } else {
+                            "\u{25be}"
+                        }))
+                        .child(SharedString::from("Properties"))
+                        .on_mouse_down(gpui::MouseButton::Left, move |_, _, cx| {
+                            on_toggle(PROPERTIES_FOLD_ID, cx);
+                        }),
+                )
+            })
             .when(!folded, |d| {
                 d.children(rows.into_iter().map(|row| self.property_row(row)))
             })
@@ -3297,7 +3304,12 @@ impl<'a> Renderer<'a> {
         let t = self.theme;
         let base = t.base_font_size;
         let host = self.properties_host;
-        div()
+        // The type menu opens under the row rather than beside it, so a
+        // narrow column (the File properties pane) keeps the value's width.
+        let menu = host
+            .filter(|h| h.menu.as_deref() == Some(row.key.as_str()))
+            .map(|h| self.property_type_menu(&row, h));
+        let line = div()
             .flex()
             .flex_row()
             .items_start()
@@ -3414,11 +3426,12 @@ impl<'a> Renderer<'a> {
                                 }),
                         )
                     }),
-            )
-            .when_some(
-                host.filter(|h| h.menu.as_deref() == Some(row.key.as_str())),
-                |d, h| d.child(self.property_type_menu(&row, h)),
-            )
+            );
+        div()
+            .flex()
+            .flex_col()
+            .child(line)
+            .children(menu)
             .into_any_element()
     }
 

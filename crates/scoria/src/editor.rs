@@ -187,6 +187,54 @@ pub fn bind_keys(cx: &mut App) {
         KeyBinding::new("ctrl-n", MoveDown, Some("SuggestPopup")),
         KeyBinding::new("ctrl-p", MoveUp, Some("SuggestPopup")),
     ]);
+    // The File properties pane's field: the keys a field takes in the note,
+    // bound to the same actions, in the context the pane wears.
+    let ctx = Some(PANE_CONTEXT);
+    cx.bind_keys([
+        KeyBinding::new("left", MoveLeft, ctx),
+        KeyBinding::new("right", MoveRight, ctx),
+        KeyBinding::new("home", LineStart, ctx),
+        KeyBinding::new("end", LineEnd, ctx),
+        KeyBinding::new("backspace", Backspace, ctx),
+        KeyBinding::new("shift-backspace", Backspace, ctx),
+        KeyBinding::new("delete", Delete, ctx),
+        KeyBinding::new("enter", Newline, ctx),
+        KeyBinding::new("tab", Tab, ctx),
+        KeyBinding::new("escape", CloseFind, ctx),
+    ]);
+}
+
+/// The key context of the File properties pane.
+pub const PANE_CONTEXT: &str = "PropertyPane";
+
+/// Hands the keys of the File properties pane to `editor`'s own handlers --
+/// the ones a field in the note's block takes -- while the pane has a field
+/// or menu open ([`Editor::pane_field_open`]); with neither, the key goes
+/// on up. Escape is the pane's own (see [`Editor::escape_pane_field`]), so
+/// it is not forwarded here. The element must wear [`PANE_CONTEXT`].
+pub fn pane_field_keys<E: InteractiveElement>(el: E, editor: &Entity<Editor>) -> E {
+    fn forward<A: gpui::Action, E: InteractiveElement>(
+        el: E,
+        editor: &Entity<Editor>,
+        run: fn(&mut Editor, &A, &mut Window, &mut Context<Editor>),
+    ) -> E {
+        let editor = editor.clone();
+        el.on_action(move |action: &A, window, cx| {
+            if !editor.read(cx).pane_field_open() {
+                cx.propagate();
+                return;
+            }
+            editor.update(cx, |e, cx| run(e, action, window, cx));
+        })
+    }
+    let el = forward(el, editor, Editor::move_left);
+    let el = forward(el, editor, Editor::move_right);
+    let el = forward(el, editor, Editor::line_start);
+    let el = forward(el, editor, Editor::line_end);
+    let el = forward(el, editor, Editor::backspace);
+    let el = forward(el, editor, Editor::delete);
+    let el = forward(el, editor, Editor::newline);
+    forward(el, editor, Editor::tab)
 }
 
 /// The dominant line ending of `text`, which is what a write into it uses.
@@ -833,6 +881,12 @@ pub struct Editor {
     hovered_link: Option<(usize, Range<usize>)>,
     /// The property whose type menu is open.
     property_menu: Option<String>,
+    /// Whether `property_field`, `selected_pill` and `property_menu` belong
+    /// to the File properties pane rather than the note's own block. The
+    /// pane edits through this editor -- the same field, keys and writer --
+    /// and each surface draws the field only when it is its own, so a field
+    /// opened in the pane has no twin caret in Live Preview's block.
+    property_in_pane: bool,
     /// The table cell being typed into. Like a properties field, the keys
     /// go to it while it is open and the document changes once, on commit.
     table_field: Option<CellEdit>,
@@ -992,6 +1046,7 @@ impl Editor {
             hover_line: None,
             hovered_link: None,
             property_menu: None,
+            property_in_pane: false,
             table_field: None,
             table_select: None,
             table_drag: None,
@@ -4923,6 +4978,7 @@ impl Editor {
     ) -> bool {
         self.commit_property_field(Some(window), cx);
         self.property_menu = None;
+        self.property_in_pane = false;
         let change = properties::alias_key(&self.property_rows());
         let wrote = change.is_some();
         if let Some(change) = change {
@@ -4934,6 +4990,117 @@ impl Editor {
             self.property_field = properties::alias_field(&self.property_rows());
         }
         cx.notify();
+        wrote
+    }
+
+    // ------------------------------------------- the File properties pane
+
+    /// The host the File properties pane draws this note's properties
+    /// with: the field, pill and type menu when they are the pane's, and
+    /// every click routed to [`Editor::pane_property_action`]. The pane shows
+    /// the rows whatever `propertiesInDocument` says, and no "Properties"
+    /// heading (its element is in Obsidian's markup but not drawn: the
+    /// 2026-11-15 probe read it `display: none` under every file).
+    pub(crate) fn pane_properties_host(editor: &Entity<Editor>, cx: &App) -> PropertiesHost {
+        let e = editor.read(cx);
+        let own = e.property_in_pane;
+        PropertiesHost {
+            field: e.property_field.clone().filter(|_| own),
+            selected_pill: e.selected_pill.filter(|_| own),
+            mode: PropertiesInDocument::Visible,
+            menu: e.property_menu.clone().filter(|_| own),
+            heading: false,
+            on_action: Rc::new({
+                let editor = editor.clone();
+                move |action, window, cx| {
+                    editor.update(cx, |e, cx| e.pane_property_action(action, window, cx));
+                }
+            }),
+        }
+    }
+
+    /// A click in the File properties pane: the same action Live Preview's
+    /// block raises, through the same handler, so the pane writes the same
+    /// bytes. A field or table cell open in the note is written first, as a
+    /// click elsewhere in the note would write it.
+    pub fn pane_property_action(
+        &mut self,
+        action: PropertyAction,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if !self.property_in_pane {
+            self.commit_property_field(Some(window), cx);
+            self.property_menu = None;
+        }
+        if self.table_field.is_some() {
+            self.commit_table_field(Some(window), cx, None);
+        }
+        self.title_edit = None;
+        self.property_in_pane = true;
+        self.property_action(action, window, cx);
+    }
+
+    /// Whether the pane has a field or a type menu open, which is when the
+    /// keys it forwards ([`pane_field_keys`]) act.
+    pub fn pane_field_open(&self) -> bool {
+        self.property_in_pane && (self.property_field.is_some() || self.property_menu.is_some())
+    }
+
+    /// The field the pane has open, for the state dump.
+    pub fn pane_field(&self) -> Option<&Field> {
+        self.property_field
+            .as_ref()
+            .filter(|_| self.property_in_pane)
+    }
+
+    /// The key whose type menu the pane has open.
+    pub fn pane_menu(&self) -> Option<&str> {
+        self.property_menu
+            .as_deref()
+            .filter(|_| self.property_in_pane)
+    }
+
+    /// The pane lost the keyboard: its field is written, as a field in the
+    /// note is when the caret leaves it, and its menu closes.
+    pub fn leave_pane_field(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if !self.property_in_pane {
+            return;
+        }
+        self.commit_property_field(Some(window), cx);
+        self.property_menu = None;
+        self.property_in_pane = false;
+        cx.notify();
+    }
+
+    /// Escape in the pane: the type menu closes, else the open field is
+    /// abandoned, as Escape abandons it in the note's own block. `false`
+    /// when there was neither, which is the second Escape Obsidian answers
+    /// by handing the keyboard back to the note.
+    pub fn escape_pane_field(&mut self, cx: &mut Context<Self>) -> bool {
+        if !self.property_in_pane {
+            return false;
+        }
+        if self.property_menu.take().is_some() {
+            cx.notify();
+            return true;
+        }
+        self.cancel_property_field(cx)
+    }
+
+    /// `markdown:add-alias` where the note shows no properties table
+    /// (Source mode, or `propertiesInDocument` other than the table): the
+    /// key written exactly as in Live Preview and the caret put in the
+    /// pane's aliases input, where Obsidian 1.15.1 puts it (the
+    /// `file-properties.mjs` probe, `s07`). Returns whether the note
+    /// changed.
+    pub fn add_alias_in_pane(&mut self, window: &mut Window, cx: &mut Context<Self>) -> bool {
+        if self.table_field.is_some() {
+            self.commit_table_field(Some(window), cx, None);
+        }
+        self.title_edit = None;
+        let wrote = self.add_alias(true, window, cx);
+        self.property_in_pane = true;
         wrote
     }
 
@@ -7401,16 +7568,22 @@ impl Element for EditorElement {
             }
             let property_types = editor.property_types.clone();
             // Live Preview's properties block is editable: the open field is
-            // drawn with its caret, and clicks come back as actions.
+            // drawn with its caret, and clicks come back as actions. A field
+            // the File properties pane opened is drawn there, not here.
+            let own = !editor.property_in_pane;
             let properties_host = PropertiesHost {
-                field: editor.property_field.clone(),
-                selected_pill: editor.selected_pill,
+                field: editor.property_field.clone().filter(|_| own),
+                selected_pill: editor.selected_pill.filter(|_| own),
                 mode: editor.properties_in_document,
-                menu: editor.property_menu.clone(),
+                menu: editor.property_menu.clone().filter(|_| own),
+                heading: true,
                 on_action: Rc::new({
                     let entity = entity.clone();
                     move |action, window, cx| {
-                        entity.update(cx, |e, cx| e.property_action(action, window, cx));
+                        entity.update(cx, |e, cx| {
+                            e.property_in_pane = false;
+                            e.property_action(action, window, cx)
+                        });
                     }
                 }),
             };

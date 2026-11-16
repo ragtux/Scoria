@@ -1,0 +1,4200 @@
+{
+ "fixtures": {
+  "startedAt": "2026-11-16T05:55:36.948Z",
+  "steps": {},
+  "order": [],
+  "elapsedMs": 0,
+  "files": [
+   ".obsidian",
+   "Alias.md",
+   "Board.canvas",
+   "Edit.md",
+   "Plain.md",
+   "Props.md",
+   "Target.md",
+   "doc.pdf",
+   "pic.png"
+  ]
+ },
+ "run": {
+  "startedAt": "2026-11-16T05:55:38.201Z",
+  "steps": {
+   "s00-context": {
+    "ok": false,
+    "ms": 10,
+    "error": "TypeError: Cannot read properties of null (reading 'right')\n    at wsRight (file:///home/ragtux/bstore2/raga/repos/scoria/.claude/worktrees/agent-a9c8b314a83d3d89d/tools/obsidian-probe/file-properties.mjs:72:22)\n    at file:///home/ragtux/bstore2/raga/repos/scoria/.claude/worktrees/agent-a9c8b314a83d3d89d/tools/obsidian-probe/file-properties.mjs:226:10\n    at async step (file:///home/ragtux/bstore2/raga/repos/scoria/.claude/worktrees/agent-a9c8b314a83d3d89d/tools/obsidian-probe/file-properties.mjs:51:19)\n    at async file:///home/ragtux/bstore2/raga/repos/scoria/.claude/worktrees/agent-a9c8b314a83d3d89d/tools/obsidian-probe/file-properties.mjs:221:1",
+    "partial": {
+     "versions": {
+      "title": "New tab - scoria-probe-vault.4oZ6LL - Obsidian 1.15.1",
+      "apiVersion": "undefined",
+      "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36"
+     },
+     "cmds": {
+      "properties:open-local": {
+       "name": "Properties view: Show file properties",
+       "icon": "lucide-info",
+       "check": false,
+       "editor": false,
+       "keys": null
+      },
+      "markdown:add-alias": {
+       "name": "Add alias",
+       "icon": "lucide-forward",
+       "check": true,
+       "editor": false,
+       "keys": null
+      },
+      "workspace:close": {
+       "name": "Close current tab",
+       "icon": "lucide-x",
+       "check": true,
+       "editor": false,
+       "keys": [
+        {
+         "modifiers": [
+          "Mod"
+         ],
+         "key": "W"
+        }
+       ]
+      }
+     },
+     "listed": [
+      "properties:open-local"
+     ],
+     "start": {
+      "leaves": [
+       {
+        "id": "58dfedd859020f57",
+        "type": "empty",
+        "where": "main",
+        "index": 0,
+        "groupActive": 0,
+        "display": "New tab",
+        "icon": "lucide-file",
+        "state": {
+         "type": "empty",
+         "state": {},
+         "icon": "lucide-file",
+         "title": "New tab"
+        },
+        "isActive": true,
+        "shown": true
+       },
+       {
+        "id": "37de59b58c030b41",
+        "type": "backlink",
+        "where": "right",
+        "index": 0,
+        "groupActive": -1,
+        "display": "Backlinks",
+        "icon": "links-coming-in",
+        "state": {
+         "type": "backlink",
+         "state": {
+          "collapseAll": false,
+          "extraContext": false,
+          "sortOrder": "alphabetical",
+          "showSearch": false,
+          "searchQuery": "",
+          "backlinkCollapsed": false,
+          "unlinkedCollapsed": true
+         },
+         "icon": "links-coming-in",
+         "title": "Backlinks"
+        },
+        "isActive": false,
+        "shown": false
+       },
+       {
+        "id": "09ef246f38d94c34",
+        "type": "outgoing-link",
+        "where": "right",
+        "index": 1,
+        "groupActive": -1,
+        "display": "Outgoing links",
+        "icon": "links-going-out",
+        "state": {
+         "type": "outgoing-link",
+         "state": {
+          "linksCollapsed": false,
+          "unlinkedCollapsed": true
+         },
+         "icon": "links-going-out",
+         "title": "Outgoing links"
+        },
+        "isActive": false,
+        "shown": false
+       },
+       {
+        "id": "bc5c22340d9d7d08",
+        "type": "tag",
+        "where": "right",
+        "index": 2,
+        "groupActive": -1,
+        "display": "Tags",
+        "icon": "lucide-tags",
+        "state": {
+         "type": "tag",
+         "state": {
+          "sortOrder": "frequency",
+          "useHierarchy": true,
+          "showSearch": false,
+          "searchQuery": ""
+         },
+         "icon": "lucide-tags",
+         "title": "Tags"
+        },
+        "isActive": false,
+        "shown": false
+       },
+       {
+        "id": "0afedc7bb1e8c161",
+        "type": "all-properties",
+        "where": "right",
+        "index": 3,
+        "groupActive": -1,
+        "display": "All properties",
+        "icon": "lucide-archive",
+        "state": {
+         "type": "all-properties",
+         "state": {
+          "sortOrder": "frequency",
+          "showSearch": false,
+          "searchQuery": ""
+         },
+         "icon": "lucide-archive",
+         "title": "All properties"
+        },
+        "isActive": false,
+        "shown": false
+       },
+       {
+        "id": "d7d03787ef5b51e9",
+        "type": "outline",
+        "where": "right",
+        "index": 4,
+        "groupActive": -1,
+        "display": "Outline",
+        "icon": "lucide-list",
+        "state": {
+         "type": "outline",
+         "state": {
+          "followCursor": false,
+          "showSearch": false,
+          "searchQuery": ""
+         },
+         "icon": "lucide-list",
+         "title": "Outline"
+        },
+        "isActive": false,
+        "shown": false
+       }
+      ],
+      "rightTabs": [
+       {
+        "type": "backlink",
+        "active": true,
+        "aria": "Backlinks"
+       },
+       {
+        "type": "outgoing-link",
+        "active": false,
+        "aria": "Outgoing links"
+       },
+       {
+        "type": "tag",
+        "active": false,
+        "aria": "Tags"
+       },
+       {
+        "type": "all-properties",
+        "active": false,
+        "aria": "All properties"
+       },
+       {
+        "type": "outline",
+        "active": false,
+        "aria": "Outline"
+       }
+      ],
+      "rightCollapsed": true,
+      "active": {
+       "tag": "BODY",
+       "cls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header",
+       "text": "New tab - scoria-probe-vault.4oZ6LL - Obsidian 1.15.1 \n\n(function () {\n\tvar started = false;\n\t// Whether the snapshot may still arrive\n\tvar pending = false;\n\tva",
+       "aria": null,
+       "inLeaf": null,
+       "inRightSplit": false,
+       "rowKey": null
+      },
+      "activeLeafType": "empty",
+      "pane": null
+     }
+    }
+   },
+   "s01-open-first": {
+    "ok": true,
+    "ms": 2647,
+    "opened": {
+     "file": "Props.md",
+     "type": "markdown",
+     "state": {
+      "file": "Props.md",
+      "mode": "source",
+      "source": false
+     }
+    },
+    "ran": true,
+    "after": {
+     "leaves": [
+      {
+       "id": "58dfedd859020f57",
+       "type": "markdown",
+       "where": "main",
+       "index": 0,
+       "groupActive": 0,
+       "display": "Props",
+       "icon": "lucide-file",
+       "state": {
+        "type": "markdown",
+        "state": {
+         "file": "Props.md",
+         "mode": "source",
+         "source": false
+        },
+        "icon": "lucide-file",
+        "title": "Props"
+       },
+       "isActive": false,
+       "shown": true
+      },
+      {
+       "id": "37de59b58c030b41",
+       "type": "backlink",
+       "where": "right",
+       "index": 0,
+       "groupActive": 5,
+       "display": "Backlinks",
+       "icon": "links-coming-in",
+       "state": {
+        "type": "backlink",
+        "state": {
+         "file": "Props.md",
+         "collapseAll": false,
+         "extraContext": false,
+         "sortOrder": "alphabetical",
+         "showSearch": false,
+         "searchQuery": "",
+         "backlinkCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-coming-in",
+        "title": "Backlinks"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "09ef246f38d94c34",
+       "type": "outgoing-link",
+       "where": "right",
+       "index": 1,
+       "groupActive": 5,
+       "display": "Outgoing links",
+       "icon": "links-going-out",
+       "state": {
+        "type": "outgoing-link",
+        "state": {
+         "file": "Props.md",
+         "linksCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-going-out",
+        "title": "Outgoing links"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "bc5c22340d9d7d08",
+       "type": "tag",
+       "where": "right",
+       "index": 2,
+       "groupActive": 5,
+       "display": "Tags",
+       "icon": "lucide-tags",
+       "state": {
+        "type": "tag",
+        "state": {
+         "sortOrder": "frequency",
+         "useHierarchy": true,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-tags",
+        "title": "Tags"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "0afedc7bb1e8c161",
+       "type": "all-properties",
+       "where": "right",
+       "index": 3,
+       "groupActive": 5,
+       "display": "All properties",
+       "icon": "lucide-archive",
+       "state": {
+        "type": "all-properties",
+        "state": {
+         "sortOrder": "frequency",
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-archive",
+        "title": "All properties"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "d7d03787ef5b51e9",
+       "type": "outline",
+       "where": "right",
+       "index": 4,
+       "groupActive": 5,
+       "display": "Outline",
+       "icon": "lucide-list",
+       "state": {
+        "type": "outline",
+        "state": {
+         "file": "Props.md",
+         "followCursor": false,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-list",
+        "title": "Outline"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "ccf5e1021ad46a45",
+       "type": "file-properties",
+       "where": "right",
+       "index": 5,
+       "groupActive": 5,
+       "display": "File properties",
+       "icon": "lucide-info",
+       "state": {
+        "type": "file-properties",
+        "state": {
+         "file": "Props.md"
+        },
+        "icon": "lucide-info",
+        "title": "File properties"
+       },
+       "isActive": true,
+       "shown": true
+      }
+     ],
+     "rightTabs": [
+      {
+       "type": "backlink",
+       "active": false,
+       "aria": "Backlinks"
+      },
+      {
+       "type": "outgoing-link",
+       "active": false,
+       "aria": "Outgoing links"
+      },
+      {
+       "type": "tag",
+       "active": false,
+       "aria": "Tags"
+      },
+      {
+       "type": "all-properties",
+       "active": false,
+       "aria": "All properties"
+      },
+      {
+       "type": "outline",
+       "active": false,
+       "aria": "Outline"
+      },
+      {
+       "type": "file-properties",
+       "active": true,
+       "aria": "File properties"
+      }
+     ],
+     "rightCollapsed": false,
+     "active": {
+      "tag": "DIV",
+      "cls": "metadata-container",
+      "text": "PropertiesOld titleoneTargetAdd property",
+      "aria": null,
+      "inLeaf": "file-properties",
+      "inRightSplit": true,
+      "rowKey": null
+     },
+     "activeLeafType": "file-properties",
+     "pane": {
+      "file": "Props.md",
+      "state": {
+       "file": "Props.md"
+      },
+      "text": "Old title\none\nTarget\nAdd property",
+      "rows": [
+       "title",
+       "tags",
+       "related"
+      ],
+      "add": {
+       "present": true,
+       "shown": true,
+       "text": "Add property"
+      },
+      "empty": {
+       "present": true,
+       "shown": false,
+       "text": "No properties found."
+      },
+      "heading": {
+       "present": true,
+       "shown": false,
+       "text": "Properties"
+      },
+      "container": {
+       "present": true,
+       "shown": true,
+       "text": "Old title\none\nTarget\nAdd property"
+      },
+      "shown": true
+     }
+    },
+    "ws": {
+     "changed": true,
+     "ms": 201,
+     "bytes": "{\n  \"main\": {\n    \"id\": \"07ebd88e397c3501\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"75567b0706775822\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"58dfedd859020f57\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Props.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Props\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"vertical\"\n  },\n  \"left\": {\n    \"id\": \"0ca6d8cf03814cf5\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"bfb67051fd1884a1\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"2d72cc2528fbc91e\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"file-explorer\",\n              \"state\": {\n                \"sortOrder\": \"alphabetical\",\n                \"autoReveal\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-folder-closed\",\n              \"title\": \"Files\"\n            }\n          },\n          {\n            \"id\": \"e43c9594340c1c23\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"search\",\n              \"state\": {\n                \"query\": \"\",\n                \"matchingCase\": false,\n                \"explainSearch\": false,\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\"\n              },\n              \"icon\": \"lucide-search\",\n              \"title\": \"Search\"\n            }\n          },\n          {\n            \"id\": \"03873230ed074edd\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"bookmarks\",\n              \"state\": {\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-bookmark\",\n              \"title\": \"Bookmarks\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300\n  },\n  \"right\": {\n    \"id\": \"8bfaf6236d13cc3c\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"e2db11aa94ec418d\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"37de59b58c030b41\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"backlink\",\n              \"state\": {\n                \"file\": \"Props.md\",\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\",\n                \"backlinkCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-coming-in\",\n              \"title\": \"Backlinks\"\n            }\n          },\n          {\n            \"id\": \"09ef246f38d94c34\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outgoing-link\",\n              \"state\": {\n                \"file\": \"Props.md\",\n                \"linksCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-going-out\",\n              \"title\": \"Outgoing links\"\n            }\n          },\n          {\n            \"id\": \"bc5c22340d9d7d08\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"tag\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"useHierarchy\": true,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-tags\",\n              \"title\": \"Tags\"\n            }\n          },\n          {\n            \"id\": \"0afedc7bb1e8c161\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"all-properties\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-archive\",\n              \"title\": \"All properties\"\n            }\n          },\n          {\n            \"id\": \"d7d03787ef5b51e9\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outline\",\n              \"state\": {\n                \"file\": \"Props.md\",\n                \"followCursor\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-list\",\n              \"title\": \"Outline\"\n            }\n          },\n          {\n            \"id\": \"ccf5e1021ad46a45\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"file-properties\",\n              \"state\": {\n                \"file\": \"Props.md\"\n              },\n              \"icon\": \"lucide-info\",\n              \"title\": \"File properties\"\n            }\n          }\n        ],\n        \"currentTab\": 5\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300\n  },\n  \"left-ribbon\": {\n    \"hiddenItems\": {\n      \"switcher:Open quick switcher\": false,\n      \"canvas:Create new canvas\": false,\n      \"daily-notes:Open today's daily note\": false,\n      \"templates:Insert template\": false,\n      \"command-palette:Open command palette\": false,\n      \"bases:Create new base\": false\n    }\n  },\n  \"active\": \"ccf5e1021ad46a45\",\n  \"lastOpenFiles\": []\n}"
+    },
+    "wsRight": {
+     "right": {
+      "id": "8bfaf6236d13cc3c",
+      "type": "split",
+      "children": [
+       {
+        "id": "e2db11aa94ec418d",
+        "type": "tabs",
+        "children": [
+         {
+          "id": "37de59b58c030b41",
+          "type": "leaf",
+          "state": {
+           "type": "backlink",
+           "state": {
+            "file": "Props.md",
+            "collapseAll": false,
+            "extraContext": false,
+            "sortOrder": "alphabetical",
+            "showSearch": false,
+            "searchQuery": "",
+            "backlinkCollapsed": false,
+            "unlinkedCollapsed": true
+           },
+           "icon": "links-coming-in",
+           "title": "Backlinks"
+          }
+         },
+         {
+          "id": "09ef246f38d94c34",
+          "type": "leaf",
+          "state": {
+           "type": "outgoing-link",
+           "state": {
+            "file": "Props.md",
+            "linksCollapsed": false,
+            "unlinkedCollapsed": true
+           },
+           "icon": "links-going-out",
+           "title": "Outgoing links"
+          }
+         },
+         {
+          "id": "bc5c22340d9d7d08",
+          "type": "leaf",
+          "state": {
+           "type": "tag",
+           "state": {
+            "sortOrder": "frequency",
+            "useHierarchy": true,
+            "showSearch": false,
+            "searchQuery": ""
+           },
+           "icon": "lucide-tags",
+           "title": "Tags"
+          }
+         },
+         {
+          "id": "0afedc7bb1e8c161",
+          "type": "leaf",
+          "state": {
+           "type": "all-properties",
+           "state": {
+            "sortOrder": "frequency",
+            "showSearch": false,
+            "searchQuery": ""
+           },
+           "icon": "lucide-archive",
+           "title": "All properties"
+          }
+         },
+         {
+          "id": "d7d03787ef5b51e9",
+          "type": "leaf",
+          "state": {
+           "type": "outline",
+           "state": {
+            "file": "Props.md",
+            "followCursor": false,
+            "showSearch": false,
+            "searchQuery": ""
+           },
+           "icon": "lucide-list",
+           "title": "Outline"
+          }
+         },
+         {
+          "id": "ccf5e1021ad46a45",
+          "type": "leaf",
+          "state": {
+           "type": "file-properties",
+           "state": {
+            "file": "Props.md"
+           },
+           "icon": "lucide-info",
+           "title": "File properties"
+          }
+         }
+        ],
+        "currentTab": 5
+       }
+      ],
+      "direction": "horizontal",
+      "width": 300
+     },
+     "active": "ccf5e1021ad46a45"
+    }
+   },
+   "s02-open-again": {
+    "ok": true,
+    "ms": 1318,
+    "before": {
+     "leaves": [
+      {
+       "id": "58dfedd859020f57",
+       "type": "markdown",
+       "where": "main",
+       "index": 0,
+       "groupActive": 0,
+       "display": "Props",
+       "icon": "lucide-file",
+       "state": {
+        "type": "markdown",
+        "state": {
+         "file": "Props.md",
+         "mode": "source",
+         "source": false
+        },
+        "icon": "lucide-file",
+        "title": "Props"
+       },
+       "isActive": false,
+       "shown": true
+      },
+      {
+       "id": "37de59b58c030b41",
+       "type": "backlink",
+       "where": "right",
+       "index": 0,
+       "groupActive": 0,
+       "display": "Backlinks",
+       "icon": "links-coming-in",
+       "state": {
+        "type": "backlink",
+        "state": {
+         "file": "Props.md",
+         "collapseAll": false,
+         "extraContext": false,
+         "sortOrder": "alphabetical",
+         "showSearch": false,
+         "searchQuery": "",
+         "backlinkCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-coming-in",
+        "title": "Backlinks"
+       },
+       "isActive": false,
+       "shown": true
+      },
+      {
+       "id": "09ef246f38d94c34",
+       "type": "outgoing-link",
+       "where": "right",
+       "index": 1,
+       "groupActive": 0,
+       "display": "Outgoing links",
+       "icon": "links-going-out",
+       "state": {
+        "type": "outgoing-link",
+        "state": {
+         "file": "Props.md",
+         "linksCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-going-out",
+        "title": "Outgoing links"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "bc5c22340d9d7d08",
+       "type": "tag",
+       "where": "right",
+       "index": 2,
+       "groupActive": 0,
+       "display": "Tags",
+       "icon": "lucide-tags",
+       "state": {
+        "type": "tag",
+        "state": {
+         "sortOrder": "frequency",
+         "useHierarchy": true,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-tags",
+        "title": "Tags"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "0afedc7bb1e8c161",
+       "type": "all-properties",
+       "where": "right",
+       "index": 3,
+       "groupActive": 0,
+       "display": "All properties",
+       "icon": "lucide-archive",
+       "state": {
+        "type": "all-properties",
+        "state": {
+         "sortOrder": "frequency",
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-archive",
+        "title": "All properties"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "d7d03787ef5b51e9",
+       "type": "outline",
+       "where": "right",
+       "index": 4,
+       "groupActive": 0,
+       "display": "Outline",
+       "icon": "lucide-list",
+       "state": {
+        "type": "outline",
+        "state": {
+         "file": "Props.md",
+         "followCursor": false,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-list",
+        "title": "Outline"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "ccf5e1021ad46a45",
+       "type": "file-properties",
+       "where": "right",
+       "index": 5,
+       "groupActive": 0,
+       "display": "File properties",
+       "icon": "lucide-info",
+       "state": {
+        "type": "file-properties",
+        "state": {
+         "file": "Props.md"
+        },
+        "icon": "lucide-info",
+        "title": "File properties"
+       },
+       "isActive": true,
+       "shown": false
+      }
+     ],
+     "rightTabs": [
+      {
+       "type": "backlink",
+       "active": true,
+       "aria": "Backlinks"
+      },
+      {
+       "type": "outgoing-link",
+       "active": false,
+       "aria": "Outgoing links"
+      },
+      {
+       "type": "tag",
+       "active": false,
+       "aria": "Tags"
+      },
+      {
+       "type": "all-properties",
+       "active": false,
+       "aria": "All properties"
+      },
+      {
+       "type": "outline",
+       "active": false,
+       "aria": "Outline"
+      },
+      {
+       "type": "file-properties",
+       "active": false,
+       "aria": "File properties"
+      }
+     ],
+     "rightCollapsed": false,
+     "active": {
+      "tag": "BODY",
+      "cls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header",
+      "text": "Props - scoria-probe-vault.4oZ6LL - Obsidian 1.15.1 \n\n(function () {\n\tvar started = false;\n\t// Whether the snapshot may still arrive\n\tvar pending = false;\n\tvar ",
+      "aria": null,
+      "inLeaf": null,
+      "inRightSplit": false,
+      "rowKey": null
+     },
+     "activeLeafType": "file-properties",
+     "pane": {
+      "file": "Props.md",
+      "state": {
+       "file": "Props.md"
+      },
+      "text": "File propertiesPropertiesOld titleoneTargetAdd propertyNo properties found.",
+      "rows": [
+       "title",
+       "tags",
+       "related"
+      ],
+      "add": {
+       "present": true,
+       "shown": false,
+       "text": "Add property"
+      },
+      "empty": {
+       "present": true,
+       "shown": false,
+       "text": "No properties found."
+      },
+      "heading": {
+       "present": true,
+       "shown": false,
+       "text": "Properties"
+      },
+      "container": {
+       "present": true,
+       "shown": false,
+       "text": "PropertiesOld titleoneTargetAdd property"
+      },
+      "shown": false
+     }
+    },
+    "ran": true,
+    "after": {
+     "leaves": [
+      {
+       "id": "58dfedd859020f57",
+       "type": "markdown",
+       "where": "main",
+       "index": 0,
+       "groupActive": 0,
+       "display": "Props",
+       "icon": "lucide-file",
+       "state": {
+        "type": "markdown",
+        "state": {
+         "file": "Props.md",
+         "mode": "source",
+         "source": false
+        },
+        "icon": "lucide-file",
+        "title": "Props"
+       },
+       "isActive": false,
+       "shown": true
+      },
+      {
+       "id": "37de59b58c030b41",
+       "type": "backlink",
+       "where": "right",
+       "index": 0,
+       "groupActive": 5,
+       "display": "Backlinks",
+       "icon": "links-coming-in",
+       "state": {
+        "type": "backlink",
+        "state": {
+         "file": "Props.md",
+         "collapseAll": false,
+         "extraContext": false,
+         "sortOrder": "alphabetical",
+         "showSearch": false,
+         "searchQuery": "",
+         "backlinkCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-coming-in",
+        "title": "Backlinks"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "09ef246f38d94c34",
+       "type": "outgoing-link",
+       "where": "right",
+       "index": 1,
+       "groupActive": 5,
+       "display": "Outgoing links",
+       "icon": "links-going-out",
+       "state": {
+        "type": "outgoing-link",
+        "state": {
+         "file": "Props.md",
+         "linksCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-going-out",
+        "title": "Outgoing links"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "bc5c22340d9d7d08",
+       "type": "tag",
+       "where": "right",
+       "index": 2,
+       "groupActive": 5,
+       "display": "Tags",
+       "icon": "lucide-tags",
+       "state": {
+        "type": "tag",
+        "state": {
+         "sortOrder": "frequency",
+         "useHierarchy": true,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-tags",
+        "title": "Tags"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "0afedc7bb1e8c161",
+       "type": "all-properties",
+       "where": "right",
+       "index": 3,
+       "groupActive": 5,
+       "display": "All properties",
+       "icon": "lucide-archive",
+       "state": {
+        "type": "all-properties",
+        "state": {
+         "sortOrder": "frequency",
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-archive",
+        "title": "All properties"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "d7d03787ef5b51e9",
+       "type": "outline",
+       "where": "right",
+       "index": 4,
+       "groupActive": 5,
+       "display": "Outline",
+       "icon": "lucide-list",
+       "state": {
+        "type": "outline",
+        "state": {
+         "file": "Props.md",
+         "followCursor": false,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-list",
+        "title": "Outline"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "ccf5e1021ad46a45",
+       "type": "file-properties",
+       "where": "right",
+       "index": 5,
+       "groupActive": 5,
+       "display": "File properties",
+       "icon": "lucide-info",
+       "state": {
+        "type": "file-properties",
+        "state": {
+         "file": "Props.md"
+        },
+        "icon": "lucide-info",
+        "title": "File properties"
+       },
+       "isActive": true,
+       "shown": true
+      }
+     ],
+     "rightTabs": [
+      {
+       "type": "backlink",
+       "active": false,
+       "aria": "Backlinks"
+      },
+      {
+       "type": "outgoing-link",
+       "active": false,
+       "aria": "Outgoing links"
+      },
+      {
+       "type": "tag",
+       "active": false,
+       "aria": "Tags"
+      },
+      {
+       "type": "all-properties",
+       "active": false,
+       "aria": "All properties"
+      },
+      {
+       "type": "outline",
+       "active": false,
+       "aria": "Outline"
+      },
+      {
+       "type": "file-properties",
+       "active": true,
+       "aria": "File properties"
+      }
+     ],
+     "rightCollapsed": false,
+     "active": {
+      "tag": "DIV",
+      "cls": "metadata-container",
+      "text": "PropertiesOld titleoneTargetAdd property",
+      "aria": null,
+      "inLeaf": "file-properties",
+      "inRightSplit": true,
+      "rowKey": null
+     },
+     "activeLeafType": "file-properties",
+     "pane": {
+      "file": "Props.md",
+      "state": {
+       "file": "Props.md"
+      },
+      "text": "Old title\none\nTarget\nAdd property",
+      "rows": [
+       "title",
+       "tags",
+       "related"
+      ],
+      "add": {
+       "present": true,
+       "shown": true,
+       "text": "Add property"
+      },
+      "empty": {
+       "present": true,
+       "shown": false,
+       "text": "No properties found."
+      },
+      "heading": {
+       "present": true,
+       "shown": false,
+       "text": "Properties"
+      },
+      "container": {
+       "present": true,
+       "shown": true,
+       "text": "Old title\none\nTarget\nAdd property"
+      },
+      "shown": true
+     }
+    },
+    "count": 1
+   },
+   "s03-bound-file": {
+    "ok": true,
+    "ms": 16988,
+    "Props.md": {
+     "opened": {
+      "file": "Props.md",
+      "type": "markdown",
+      "state": {
+       "file": "Props.md",
+       "mode": "source",
+       "source": false
+      }
+     },
+     "pane": {
+      "file": "Props.md",
+      "state": {
+       "file": "Props.md"
+      },
+      "text": "Old title\none\nTarget\nAdd property",
+      "rows": [
+       "title",
+       "tags",
+       "related"
+      ],
+      "add": {
+       "present": true,
+       "shown": true,
+       "text": "Add property"
+      },
+      "empty": {
+       "present": true,
+       "shown": false,
+       "text": "No properties found."
+      },
+      "heading": {
+       "present": true,
+       "shown": false,
+       "text": "Properties"
+      },
+      "container": {
+       "present": true,
+       "shown": true,
+       "text": "Old title\none\nTarget\nAdd property"
+      },
+      "shown": true
+     },
+     "listed": true
+    },
+    "Plain.md": {
+     "opened": {
+      "file": "Plain.md",
+      "type": "markdown",
+      "state": {
+       "file": "Plain.md",
+       "mode": "source",
+       "source": false
+      }
+     },
+     "pane": {
+      "file": "Plain.md",
+      "state": {
+       "file": "Plain.md"
+      },
+      "text": "Add property",
+      "rows": [],
+      "add": {
+       "present": true,
+       "shown": true,
+       "text": "Add property"
+      },
+      "empty": {
+       "present": true,
+       "shown": false,
+       "text": "No properties found."
+      },
+      "heading": {
+       "present": true,
+       "shown": false,
+       "text": "Properties"
+      },
+      "container": {
+       "present": true,
+       "shown": true,
+       "text": "Add property"
+      },
+      "shown": true
+     },
+     "listed": true
+    },
+    "Board.canvas": {
+     "opened": {
+      "file": "Board.canvas",
+      "type": "canvas",
+      "state": {
+       "file": "Board.canvas",
+       "viewState": {
+        "x": 0,
+        "y": 0,
+        "zoom": 0
+       }
+      }
+     },
+     "pane": {
+      "file": "Board.canvas",
+      "state": {
+       "file": "Board.canvas"
+      },
+      "text": "No properties found.",
+      "rows": [],
+      "add": {
+       "present": true,
+       "shown": false,
+       "text": "Add property"
+      },
+      "empty": {
+       "present": true,
+       "shown": true,
+       "text": "No properties found."
+      },
+      "heading": {
+       "present": true,
+       "shown": false,
+       "text": "Properties"
+      },
+      "container": {
+       "present": true,
+       "shown": false,
+       "text": "Invalid propertiesShow sourcePropertiesAdd property"
+      },
+      "shown": true
+     },
+     "listed": true
+    },
+    "pic.png": {
+     "opened": {
+      "file": "pic.png",
+      "type": "image",
+      "state": {
+       "file": "pic.png"
+      }
+     },
+     "pane": {
+      "file": "pic.png",
+      "state": {
+       "file": "pic.png"
+      },
+      "text": "No properties found.",
+      "rows": [],
+      "add": {
+       "present": true,
+       "shown": false,
+       "text": "Add property"
+      },
+      "empty": {
+       "present": true,
+       "shown": true,
+       "text": "No properties found."
+      },
+      "heading": {
+       "present": true,
+       "shown": false,
+       "text": "Properties"
+      },
+      "container": {
+       "present": true,
+       "shown": false,
+       "text": "Invalid propertiesShow sourcePropertiesAdd property"
+      },
+      "shown": true
+     },
+     "listed": true
+    },
+    "doc.pdf": {
+     "opened": {
+      "file": "doc.pdf",
+      "type": "pdf",
+      "state": {
+       "file": "doc.pdf"
+      }
+     },
+     "pane": {
+      "file": "doc.pdf",
+      "state": {
+       "file": "doc.pdf"
+      },
+      "text": "No properties found.",
+      "rows": [],
+      "add": {
+       "present": true,
+       "shown": false,
+       "text": "Add property"
+      },
+      "empty": {
+       "present": true,
+       "shown": true,
+       "text": "No properties found."
+      },
+      "heading": {
+       "present": true,
+       "shown": false,
+       "text": "Properties"
+      },
+      "container": {
+       "present": true,
+       "shown": false,
+       "text": "Invalid propertiesShow sourcePropertiesAdd property"
+      },
+      "shown": true
+     },
+     "listed": true
+    },
+    "Props.md#2": {
+     "opened": {
+      "file": "Props.md",
+      "type": "markdown",
+      "state": {
+       "file": "Props.md",
+       "mode": "source",
+       "source": false
+      }
+     },
+     "pane": {
+      "file": "Props.md",
+      "state": {
+       "file": "Props.md"
+      },
+      "text": "Old title\none\nTarget\nAdd property",
+      "rows": [
+       "title",
+       "tags",
+       "related"
+      ],
+      "add": {
+       "present": true,
+       "shown": true,
+       "text": "Add property"
+      },
+      "empty": {
+       "present": true,
+       "shown": false,
+       "text": "No properties found."
+      },
+      "heading": {
+       "present": true,
+       "shown": false,
+       "text": "Properties"
+      },
+      "container": {
+       "present": true,
+       "shown": true,
+       "text": "Old title\none\nTarget\nAdd property"
+      },
+      "shown": true
+     },
+     "listed": true
+    },
+    "noFile": {
+     "pane": {
+      "file": null,
+      "state": {},
+      "text": "No properties found.",
+      "rows": [],
+      "add": {
+       "present": true,
+       "shown": false,
+       "text": "Add property"
+      },
+      "empty": {
+       "present": true,
+       "shown": true,
+       "text": "No properties found."
+      },
+      "heading": {
+       "present": true,
+       "shown": false,
+       "text": "Properties"
+      },
+      "container": {
+       "present": true,
+       "shown": false,
+       "text": "Invalid propertiesShow sourcePropertiesAdd property"
+      },
+      "shown": true
+     },
+     "mainLeaves": [
+      "empty"
+     ],
+     "listed": true
+    },
+    "ranNoFile": true,
+    "noFileAfterRun": {
+     "file": null,
+     "state": {},
+     "text": "No properties found.",
+     "rows": [],
+     "add": {
+      "present": true,
+      "shown": false,
+      "text": "Add property"
+     },
+     "empty": {
+      "present": true,
+      "shown": true,
+      "text": "No properties found."
+     },
+     "heading": {
+      "present": true,
+      "shown": false,
+      "text": "Properties"
+     },
+     "container": {
+      "present": true,
+      "shown": false,
+      "text": "Invalid propertiesShow sourcePropertiesAdd property"
+     },
+     "shown": true
+    },
+    "ws": {
+     "right": {
+      "id": "8bfaf6236d13cc3c",
+      "type": "split",
+      "children": [
+       {
+        "id": "e2db11aa94ec418d",
+        "type": "tabs",
+        "children": [
+         {
+          "id": "37de59b58c030b41",
+          "type": "leaf",
+          "state": {
+           "type": "backlink",
+           "state": {
+            "collapseAll": false,
+            "extraContext": false,
+            "sortOrder": "alphabetical",
+            "showSearch": false,
+            "searchQuery": "",
+            "backlinkCollapsed": false,
+            "unlinkedCollapsed": true
+           },
+           "icon": "links-coming-in",
+           "title": "Backlinks"
+          }
+         },
+         {
+          "id": "09ef246f38d94c34",
+          "type": "leaf",
+          "state": {
+           "type": "outgoing-link",
+           "state": {
+            "linksCollapsed": false,
+            "unlinkedCollapsed": true
+           },
+           "icon": "links-going-out",
+           "title": "Outgoing links"
+          }
+         },
+         {
+          "id": "bc5c22340d9d7d08",
+          "type": "leaf",
+          "state": {
+           "type": "tag",
+           "state": {
+            "sortOrder": "frequency",
+            "useHierarchy": true,
+            "showSearch": false,
+            "searchQuery": ""
+           },
+           "icon": "lucide-tags",
+           "title": "Tags"
+          }
+         },
+         {
+          "id": "0afedc7bb1e8c161",
+          "type": "leaf",
+          "state": {
+           "type": "all-properties",
+           "state": {
+            "sortOrder": "frequency",
+            "showSearch": false,
+            "searchQuery": ""
+           },
+           "icon": "lucide-archive",
+           "title": "All properties"
+          }
+         },
+         {
+          "id": "d7d03787ef5b51e9",
+          "type": "leaf",
+          "state": {
+           "type": "outline",
+           "state": {
+            "followCursor": false,
+            "showSearch": false,
+            "searchQuery": ""
+           },
+           "icon": "lucide-list",
+           "title": "Outline"
+          }
+         },
+         {
+          "id": "ccf5e1021ad46a45",
+          "type": "leaf",
+          "state": {
+           "type": "file-properties",
+           "state": {},
+           "icon": "lucide-info",
+           "title": "File properties"
+          }
+         }
+        ],
+        "currentTab": 5
+       }
+      ],
+      "direction": "horizontal",
+      "width": 300
+     },
+     "active": "ccf5e1021ad46a45"
+    },
+    "reopened": {
+     "file": "Props.md",
+     "state": {
+      "file": "Props.md"
+     },
+     "text": "Old title\none\nTarget\nAdd property",
+     "rows": [
+      "title",
+      "tags",
+      "related"
+     ],
+     "add": {
+      "present": true,
+      "shown": true,
+      "text": "Add property"
+     },
+     "empty": {
+      "present": true,
+      "shown": false,
+      "text": "No properties found."
+     },
+     "heading": {
+      "present": true,
+      "shown": false,
+      "text": "Properties"
+     },
+     "container": {
+      "present": true,
+      "shown": true,
+      "text": "Old title\none\nTarget\nAdd property"
+     },
+     "shown": true
+    }
+   },
+   "s04-tab-menu-close": {
+    "ok": true,
+    "ms": 2937,
+    "hit": {
+     "x": 1434,
+     "y": 7,
+     "w": 28,
+     "h": 25,
+     "cx": 1448,
+     "cy": 19.5
+    },
+    "menus": [
+     [
+      {
+       "title": "Close",
+       "icon": "svg-icon lucide-x",
+       "disabled": false,
+       "section": "close"
+      },
+      "---",
+      {
+       "title": "Pin",
+       "icon": "svg-icon lucide-pin",
+       "disabled": false,
+       "section": "pane"
+      },
+      {
+       "title": "Link with tab...",
+       "icon": "svg-icon lucide-link",
+       "disabled": false,
+       "section": "pane"
+      },
+      "---",
+      {
+       "title": "Move to new window",
+       "icon": "svg-icon lucide-picture-in-picture",
+       "disabled": false,
+       "section": "open"
+      },
+      {
+       "title": "Split right",
+       "icon": "svg-icon lucide-separator-vertical",
+       "disabled": true,
+       "section": "open"
+      },
+      {
+       "title": "Split down",
+       "icon": "svg-icon lucide-separator-horizontal",
+       "disabled": false,
+       "section": "open"
+      }
+     ]
+    ],
+    "closeClick": {
+     "x": 1354.390625,
+     "y": 41.4453125
+    },
+    "after": {
+     "leaves": [
+      {
+       "id": "43d362b8d961f985",
+       "type": "markdown",
+       "where": "main",
+       "index": 0,
+       "groupActive": 0,
+       "display": "Props",
+       "icon": "lucide-file",
+       "state": {
+        "type": "markdown",
+        "state": {
+         "file": "Props.md",
+         "mode": "source",
+         "source": false
+        },
+        "icon": "lucide-file",
+        "title": "Props"
+       },
+       "isActive": true,
+       "shown": true
+      },
+      {
+       "id": "37de59b58c030b41",
+       "type": "backlink",
+       "where": "right",
+       "index": 0,
+       "groupActive": 4,
+       "display": "Backlinks",
+       "icon": "links-coming-in",
+       "state": {
+        "type": "backlink",
+        "state": {
+         "file": "Props.md",
+         "collapseAll": false,
+         "extraContext": false,
+         "sortOrder": "alphabetical",
+         "showSearch": false,
+         "searchQuery": "",
+         "backlinkCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-coming-in",
+        "title": "Backlinks"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "09ef246f38d94c34",
+       "type": "outgoing-link",
+       "where": "right",
+       "index": 1,
+       "groupActive": 4,
+       "display": "Outgoing links",
+       "icon": "links-going-out",
+       "state": {
+        "type": "outgoing-link",
+        "state": {
+         "file": "Props.md",
+         "linksCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-going-out",
+        "title": "Outgoing links"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "bc5c22340d9d7d08",
+       "type": "tag",
+       "where": "right",
+       "index": 2,
+       "groupActive": 4,
+       "display": "Tags",
+       "icon": "lucide-tags",
+       "state": {
+        "type": "tag",
+        "state": {
+         "sortOrder": "frequency",
+         "useHierarchy": true,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-tags",
+        "title": "Tags"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "0afedc7bb1e8c161",
+       "type": "all-properties",
+       "where": "right",
+       "index": 3,
+       "groupActive": 4,
+       "display": "All properties",
+       "icon": "lucide-archive",
+       "state": {
+        "type": "all-properties",
+        "state": {
+         "sortOrder": "frequency",
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-archive",
+        "title": "All properties"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "d7d03787ef5b51e9",
+       "type": "outline",
+       "where": "right",
+       "index": 4,
+       "groupActive": 4,
+       "display": "Outline",
+       "icon": "lucide-list",
+       "state": {
+        "type": "outline",
+        "state": {
+         "file": "Props.md",
+         "followCursor": false,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-list",
+        "title": "Outline"
+       },
+       "isActive": false,
+       "shown": true
+      }
+     ],
+     "rightTabs": [
+      {
+       "type": "backlink",
+       "active": false,
+       "aria": "Backlinks"
+      },
+      {
+       "type": "outgoing-link",
+       "active": false,
+       "aria": "Outgoing links"
+      },
+      {
+       "type": "tag",
+       "active": false,
+       "aria": "Tags"
+      },
+      {
+       "type": "all-properties",
+       "active": false,
+       "aria": "All properties"
+      },
+      {
+       "type": "outline",
+       "active": true,
+       "aria": "Outline"
+      }
+     ],
+     "rightCollapsed": false,
+     "active": {
+      "tag": "BODY",
+      "cls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header",
+      "text": "Props - scoria-probe-vault.4oZ6LL - Obsidian 1.15.1 \n\n(function () {\n\tvar started = false;\n\t// Whether the snapshot may still arrive\n\tvar pending = false;\n\tvar ",
+      "aria": null,
+      "inLeaf": null,
+      "inRightSplit": false,
+      "rowKey": null
+     },
+     "activeLeafType": "markdown",
+     "pane": null
+    },
+    "ws": {
+     "changed": true,
+     "ms": 201,
+     "bytes": "{\n  \"main\": {\n    \"id\": \"07ebd88e397c3501\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"4afce43b47a802e6\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"43d362b8d961f985\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Props.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Props\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"vertical\"\n  },\n  \"left\": {\n    \"id\": \"0ca6d8cf03814cf5\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"bfb67051fd1884a1\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"2d72cc2528fbc91e\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"file-explorer\",\n              \"state\": {\n                \"sortOrder\": \"alphabetical\",\n                \"autoReveal\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-folder-closed\",\n              \"title\": \"Files\"\n            }\n          },\n          {\n            \"id\": \"e43c9594340c1c23\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"search\",\n              \"state\": {\n                \"query\": \"\",\n                \"matchingCase\": false,\n                \"explainSearch\": false,\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\"\n              },\n              \"icon\": \"lucide-search\",\n              \"title\": \"Search\"\n            }\n          },\n          {\n            \"id\": \"03873230ed074edd\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"bookmarks\",\n              \"state\": {\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-bookmark\",\n              \"title\": \"Bookmarks\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300\n  },\n  \"right\": {\n    \"id\": \"8bfaf6236d13cc3c\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"e2db11aa94ec418d\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"37de59b58c030b41\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"backlink\",\n              \"state\": {\n                \"file\": \"Props.md\",\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\",\n                \"backlinkCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-coming-in\",\n              \"title\": \"Backlinks\"\n            }\n          },\n          {\n            \"id\": \"09ef246f38d94c34\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outgoing-link\",\n              \"state\": {\n                \"file\": \"Props.md\",\n                \"linksCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-going-out\",\n              \"title\": \"Outgoing links\"\n            }\n          },\n          {\n            \"id\": \"bc5c22340d9d7d08\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"tag\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"useHierarchy\": true,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-tags\",\n              \"title\": \"Tags\"\n            }\n          },\n          {\n            \"id\": \"0afedc7bb1e8c161\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"all-properties\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-archive\",\n              \"title\": \"All properties\"\n            }\n          },\n          {\n            \"id\": \"d7d03787ef5b51e9\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outline\",\n              \"state\": {\n                \"file\": \"Props.md\",\n                \"followCursor\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-list\",\n              \"title\": \"Outline\"\n            }\n          }\n        ],\n        \"currentTab\": 4\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300\n  },\n  \"left-ribbon\": {\n    \"hiddenItems\": {\n      \"switcher:Open quick switcher\": false,\n      \"canvas:Create new canvas\": false,\n      \"daily-notes:Open today's daily note\": false,\n      \"templates:Insert template\": false,\n      \"command-palette:Open command palette\": false,\n      \"bases:Create new base\": false\n    }\n  },\n  \"active\": \"43d362b8d961f985\",\n  \"lastOpenFiles\": [\n    \"Props.md\",\n    \"doc.pdf\",\n    \"pic.png\",\n    \"Board.canvas\",\n    \"Plain.md\"\n  ]\n}"
+    },
+    "wsRight": {
+     "right": {
+      "id": "8bfaf6236d13cc3c",
+      "type": "split",
+      "children": [
+       {
+        "id": "e2db11aa94ec418d",
+        "type": "tabs",
+        "children": [
+         {
+          "id": "37de59b58c030b41",
+          "type": "leaf",
+          "state": {
+           "type": "backlink",
+           "state": {
+            "file": "Props.md",
+            "collapseAll": false,
+            "extraContext": false,
+            "sortOrder": "alphabetical",
+            "showSearch": false,
+            "searchQuery": "",
+            "backlinkCollapsed": false,
+            "unlinkedCollapsed": true
+           },
+           "icon": "links-coming-in",
+           "title": "Backlinks"
+          }
+         },
+         {
+          "id": "09ef246f38d94c34",
+          "type": "leaf",
+          "state": {
+           "type": "outgoing-link",
+           "state": {
+            "file": "Props.md",
+            "linksCollapsed": false,
+            "unlinkedCollapsed": true
+           },
+           "icon": "links-going-out",
+           "title": "Outgoing links"
+          }
+         },
+         {
+          "id": "bc5c22340d9d7d08",
+          "type": "leaf",
+          "state": {
+           "type": "tag",
+           "state": {
+            "sortOrder": "frequency",
+            "useHierarchy": true,
+            "showSearch": false,
+            "searchQuery": ""
+           },
+           "icon": "lucide-tags",
+           "title": "Tags"
+          }
+         },
+         {
+          "id": "0afedc7bb1e8c161",
+          "type": "leaf",
+          "state": {
+           "type": "all-properties",
+           "state": {
+            "sortOrder": "frequency",
+            "showSearch": false,
+            "searchQuery": ""
+           },
+           "icon": "lucide-archive",
+           "title": "All properties"
+          }
+         },
+         {
+          "id": "d7d03787ef5b51e9",
+          "type": "leaf",
+          "state": {
+           "type": "outline",
+           "state": {
+            "file": "Props.md",
+            "followCursor": false,
+            "showSearch": false,
+            "searchQuery": ""
+           },
+           "icon": "lucide-list",
+           "title": "Outline"
+          }
+         }
+        ],
+        "currentTab": 4
+       }
+      ],
+      "direction": "horizontal",
+      "width": 300
+     },
+     "active": "43d362b8d961f985"
+    },
+    "backlinkHit": {
+     "x": 1304,
+     "y": 7,
+     "w": 28,
+     "h": 25,
+     "cx": 1318,
+     "cy": 19.5
+    },
+    "backlinkMenus": [
+     [
+      {
+       "title": "Close",
+       "icon": "svg-icon lucide-x",
+       "disabled": false,
+       "section": "close"
+      },
+      "---",
+      {
+       "title": "Pin",
+       "icon": "svg-icon lucide-pin",
+       "disabled": false,
+       "section": "pane"
+      },
+      {
+       "title": "Link with tab...",
+       "icon": "svg-icon lucide-link",
+       "disabled": false,
+       "section": "pane"
+      },
+      "---",
+      {
+       "title": "Move to new window",
+       "icon": "svg-icon lucide-picture-in-picture",
+       "disabled": false,
+       "section": "open"
+      }
+     ]
+    ]
+   },
+   "s05-reopen": {
+    "ok": true,
+    "ms": 2676,
+    "before": {
+     "leaves": [
+      {
+       "id": "43d362b8d961f985",
+       "type": "markdown",
+       "where": "main",
+       "index": 0,
+       "groupActive": 0,
+       "display": "Props",
+       "icon": "lucide-file",
+       "state": {
+        "type": "markdown",
+        "state": {
+         "file": "Props.md",
+         "mode": "source",
+         "source": false
+        },
+        "icon": "lucide-file",
+        "title": "Props"
+       },
+       "isActive": true,
+       "shown": true
+      },
+      {
+       "id": "37de59b58c030b41",
+       "type": "backlink",
+       "where": "right",
+       "index": 0,
+       "groupActive": 4,
+       "display": "Backlinks",
+       "icon": "links-coming-in",
+       "state": {
+        "type": "backlink",
+        "state": {
+         "file": "Props.md",
+         "collapseAll": false,
+         "extraContext": false,
+         "sortOrder": "alphabetical",
+         "showSearch": false,
+         "searchQuery": "",
+         "backlinkCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-coming-in",
+        "title": "Backlinks"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "09ef246f38d94c34",
+       "type": "outgoing-link",
+       "where": "right",
+       "index": 1,
+       "groupActive": 4,
+       "display": "Outgoing links",
+       "icon": "links-going-out",
+       "state": {
+        "type": "outgoing-link",
+        "state": {
+         "file": "Props.md",
+         "linksCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-going-out",
+        "title": "Outgoing links"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "bc5c22340d9d7d08",
+       "type": "tag",
+       "where": "right",
+       "index": 2,
+       "groupActive": 4,
+       "display": "Tags",
+       "icon": "lucide-tags",
+       "state": {
+        "type": "tag",
+        "state": {
+         "sortOrder": "frequency",
+         "useHierarchy": true,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-tags",
+        "title": "Tags"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "0afedc7bb1e8c161",
+       "type": "all-properties",
+       "where": "right",
+       "index": 3,
+       "groupActive": 4,
+       "display": "All properties",
+       "icon": "lucide-archive",
+       "state": {
+        "type": "all-properties",
+        "state": {
+         "sortOrder": "frequency",
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-archive",
+        "title": "All properties"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "d7d03787ef5b51e9",
+       "type": "outline",
+       "where": "right",
+       "index": 4,
+       "groupActive": 4,
+       "display": "Outline",
+       "icon": "lucide-list",
+       "state": {
+        "type": "outline",
+        "state": {
+         "file": "Props.md",
+         "followCursor": false,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-list",
+        "title": "Outline"
+       },
+       "isActive": false,
+       "shown": true
+      }
+     ],
+     "rightTabs": [
+      {
+       "type": "backlink",
+       "active": false,
+       "aria": "Backlinks"
+      },
+      {
+       "type": "outgoing-link",
+       "active": false,
+       "aria": "Outgoing links"
+      },
+      {
+       "type": "tag",
+       "active": false,
+       "aria": "Tags"
+      },
+      {
+       "type": "all-properties",
+       "active": false,
+       "aria": "All properties"
+      },
+      {
+       "type": "outline",
+       "active": true,
+       "aria": "Outline"
+      }
+     ],
+     "rightCollapsed": false,
+     "active": {
+      "tag": "DIV",
+      "cls": "cm-content cm-lineWrapping",
+      "text": "Body.",
+      "aria": null,
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "rowKey": null,
+      "contentEditable": true,
+      "selText": ""
+     },
+     "activeLeafType": "markdown",
+     "pane": null
+    },
+    "ran": true,
+    "after": {
+     "leaves": [
+      {
+       "id": "43d362b8d961f985",
+       "type": "markdown",
+       "where": "main",
+       "index": 0,
+       "groupActive": 0,
+       "display": "Props",
+       "icon": "lucide-file",
+       "state": {
+        "type": "markdown",
+        "state": {
+         "file": "Props.md",
+         "mode": "source",
+         "source": false
+        },
+        "icon": "lucide-file",
+        "title": "Props"
+       },
+       "isActive": false,
+       "shown": true
+      },
+      {
+       "id": "37de59b58c030b41",
+       "type": "backlink",
+       "where": "right",
+       "index": 0,
+       "groupActive": 5,
+       "display": "Backlinks",
+       "icon": "links-coming-in",
+       "state": {
+        "type": "backlink",
+        "state": {
+         "file": "Props.md",
+         "collapseAll": false,
+         "extraContext": false,
+         "sortOrder": "alphabetical",
+         "showSearch": false,
+         "searchQuery": "",
+         "backlinkCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-coming-in",
+        "title": "Backlinks"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "09ef246f38d94c34",
+       "type": "outgoing-link",
+       "where": "right",
+       "index": 1,
+       "groupActive": 5,
+       "display": "Outgoing links",
+       "icon": "links-going-out",
+       "state": {
+        "type": "outgoing-link",
+        "state": {
+         "file": "Props.md",
+         "linksCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-going-out",
+        "title": "Outgoing links"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "bc5c22340d9d7d08",
+       "type": "tag",
+       "where": "right",
+       "index": 2,
+       "groupActive": 5,
+       "display": "Tags",
+       "icon": "lucide-tags",
+       "state": {
+        "type": "tag",
+        "state": {
+         "sortOrder": "frequency",
+         "useHierarchy": true,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-tags",
+        "title": "Tags"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "0afedc7bb1e8c161",
+       "type": "all-properties",
+       "where": "right",
+       "index": 3,
+       "groupActive": 5,
+       "display": "All properties",
+       "icon": "lucide-archive",
+       "state": {
+        "type": "all-properties",
+        "state": {
+         "sortOrder": "frequency",
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-archive",
+        "title": "All properties"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "d7d03787ef5b51e9",
+       "type": "outline",
+       "where": "right",
+       "index": 4,
+       "groupActive": 5,
+       "display": "Outline",
+       "icon": "lucide-list",
+       "state": {
+        "type": "outline",
+        "state": {
+         "file": "Props.md",
+         "followCursor": false,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-list",
+        "title": "Outline"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "29df1dc3dd0d3e0b",
+       "type": "file-properties",
+       "where": "right",
+       "index": 5,
+       "groupActive": 5,
+       "display": "File properties",
+       "icon": "lucide-info",
+       "state": {
+        "type": "file-properties",
+        "state": {
+         "file": "Props.md"
+        },
+        "icon": "lucide-info",
+        "title": "File properties"
+       },
+       "isActive": true,
+       "shown": true
+      }
+     ],
+     "rightTabs": [
+      {
+       "type": "backlink",
+       "active": false,
+       "aria": "Backlinks"
+      },
+      {
+       "type": "outgoing-link",
+       "active": false,
+       "aria": "Outgoing links"
+      },
+      {
+       "type": "tag",
+       "active": false,
+       "aria": "Tags"
+      },
+      {
+       "type": "all-properties",
+       "active": false,
+       "aria": "All properties"
+      },
+      {
+       "type": "outline",
+       "active": false,
+       "aria": "Outline"
+      },
+      {
+       "type": "file-properties",
+       "active": true,
+       "aria": "File properties"
+      }
+     ],
+     "rightCollapsed": false,
+     "active": {
+      "tag": "DIV",
+      "cls": "metadata-container",
+      "text": "PropertiesOld titleoneTargetAdd property",
+      "aria": null,
+      "inLeaf": "file-properties",
+      "inRightSplit": true,
+      "rowKey": null
+     },
+     "activeLeafType": "file-properties",
+     "pane": {
+      "file": "Props.md",
+      "state": {
+       "file": "Props.md"
+      },
+      "text": "Old title\none\nTarget\nAdd property",
+      "rows": [
+       "title",
+       "tags",
+       "related"
+      ],
+      "add": {
+       "present": true,
+       "shown": true,
+       "text": "Add property"
+      },
+      "empty": {
+       "present": true,
+       "shown": false,
+       "text": "No properties found."
+      },
+      "heading": {
+       "present": true,
+       "shown": false,
+       "text": "Properties"
+      },
+      "container": {
+       "present": true,
+       "shown": true,
+       "text": "Old title\none\nTarget\nAdd property"
+      },
+      "shown": true
+     }
+    },
+    "ws": {
+     "changed": true,
+     "ms": 201,
+     "bytes": "{\n  \"main\": {\n    \"id\": \"07ebd88e397c3501\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"4afce43b47a802e6\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"43d362b8d961f985\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Props.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Props\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"vertical\"\n  },\n  \"left\": {\n    \"id\": \"0ca6d8cf03814cf5\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"bfb67051fd1884a1\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"2d72cc2528fbc91e\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"file-explorer\",\n              \"state\": {\n                \"sortOrder\": \"alphabetical\",\n                \"autoReveal\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-folder-closed\",\n              \"title\": \"Files\"\n            }\n          },\n          {\n            \"id\": \"e43c9594340c1c23\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"search\",\n              \"state\": {\n                \"query\": \"\",\n                \"matchingCase\": false,\n                \"explainSearch\": false,\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\"\n              },\n              \"icon\": \"lucide-search\",\n              \"title\": \"Search\"\n            }\n          },\n          {\n            \"id\": \"03873230ed074edd\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"bookmarks\",\n              \"state\": {\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-bookmark\",\n              \"title\": \"Bookmarks\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300\n  },\n  \"right\": {\n    \"id\": \"8bfaf6236d13cc3c\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"e2db11aa94ec418d\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"37de59b58c030b41\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"backlink\",\n              \"state\": {\n                \"file\": \"Props.md\",\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\",\n                \"backlinkCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-coming-in\",\n              \"title\": \"Backlinks\"\n            }\n          },\n          {\n            \"id\": \"09ef246f38d94c34\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outgoing-link\",\n              \"state\": {\n                \"file\": \"Props.md\",\n                \"linksCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-going-out\",\n              \"title\": \"Outgoing links\"\n            }\n          },\n          {\n            \"id\": \"bc5c22340d9d7d08\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"tag\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"useHierarchy\": true,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-tags\",\n              \"title\": \"Tags\"\n            }\n          },\n          {\n            \"id\": \"0afedc7bb1e8c161\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"all-properties\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-archive\",\n              \"title\": \"All properties\"\n            }\n          },\n          {\n            \"id\": \"d7d03787ef5b51e9\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outline\",\n              \"state\": {\n                \"file\": \"Props.md\",\n                \"followCursor\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-list\",\n              \"title\": \"Outline\"\n            }\n          },\n          {\n            \"id\": \"29df1dc3dd0d3e0b\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"file-properties\",\n              \"state\": {\n                \"file\": \"Props.md\"\n              },\n              \"icon\": \"lucide-info\",\n              \"title\": \"File properties\"\n            }\n          }\n        ],\n        \"currentTab\": 5\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300\n  },\n  \"left-ribbon\": {\n    \"hiddenItems\": {\n      \"switcher:Open quick switcher\": false,\n      \"canvas:Create new canvas\": false,\n      \"daily-notes:Open today's daily note\": false,\n      \"templates:Insert template\": false,\n      \"command-palette:Open command palette\": false,\n      \"bases:Create new base\": false\n    }\n  },\n  \"active\": \"29df1dc3dd0d3e0b\",\n  \"lastOpenFiles\": [\n    \"Props.md\",\n    \"doc.pdf\",\n    \"pic.png\",\n    \"Board.canvas\",\n    \"Plain.md\"\n  ]\n}"
+    },
+    "wsRight": {
+     "right": {
+      "id": "8bfaf6236d13cc3c",
+      "type": "split",
+      "children": [
+       {
+        "id": "e2db11aa94ec418d",
+        "type": "tabs",
+        "children": [
+         {
+          "id": "37de59b58c030b41",
+          "type": "leaf",
+          "state": {
+           "type": "backlink",
+           "state": {
+            "file": "Props.md",
+            "collapseAll": false,
+            "extraContext": false,
+            "sortOrder": "alphabetical",
+            "showSearch": false,
+            "searchQuery": "",
+            "backlinkCollapsed": false,
+            "unlinkedCollapsed": true
+           },
+           "icon": "links-coming-in",
+           "title": "Backlinks"
+          }
+         },
+         {
+          "id": "09ef246f38d94c34",
+          "type": "leaf",
+          "state": {
+           "type": "outgoing-link",
+           "state": {
+            "file": "Props.md",
+            "linksCollapsed": false,
+            "unlinkedCollapsed": true
+           },
+           "icon": "links-going-out",
+           "title": "Outgoing links"
+          }
+         },
+         {
+          "id": "bc5c22340d9d7d08",
+          "type": "leaf",
+          "state": {
+           "type": "tag",
+           "state": {
+            "sortOrder": "frequency",
+            "useHierarchy": true,
+            "showSearch": false,
+            "searchQuery": ""
+           },
+           "icon": "lucide-tags",
+           "title": "Tags"
+          }
+         },
+         {
+          "id": "0afedc7bb1e8c161",
+          "type": "leaf",
+          "state": {
+           "type": "all-properties",
+           "state": {
+            "sortOrder": "frequency",
+            "showSearch": false,
+            "searchQuery": ""
+           },
+           "icon": "lucide-archive",
+           "title": "All properties"
+          }
+         },
+         {
+          "id": "d7d03787ef5b51e9",
+          "type": "leaf",
+          "state": {
+           "type": "outline",
+           "state": {
+            "file": "Props.md",
+            "followCursor": false,
+            "showSearch": false,
+            "searchQuery": ""
+           },
+           "icon": "lucide-list",
+           "title": "Outline"
+          }
+         },
+         {
+          "id": "29df1dc3dd0d3e0b",
+          "type": "leaf",
+          "state": {
+           "type": "file-properties",
+           "state": {
+            "file": "Props.md"
+           },
+           "icon": "lucide-info",
+           "title": "File properties"
+          }
+         }
+        ],
+        "currentTab": 5
+       }
+      ],
+      "direction": "horizontal",
+      "width": 300
+     },
+     "active": "29df1dc3dd0d3e0b"
+    }
+   },
+   "s06-workspace-close": {
+    "ok": true,
+    "ms": 3342,
+    "beforeKey": {
+     "leaves": [
+      {
+       "id": "43d362b8d961f985",
+       "type": "markdown",
+       "where": "main",
+       "index": 0,
+       "groupActive": 0,
+       "display": "Props",
+       "icon": "lucide-file",
+       "state": {
+        "type": "markdown",
+        "state": {
+         "file": "Props.md",
+         "mode": "source",
+         "source": false
+        },
+        "icon": "lucide-file",
+        "title": "Props"
+       },
+       "isActive": false,
+       "shown": true
+      },
+      {
+       "id": "37de59b58c030b41",
+       "type": "backlink",
+       "where": "right",
+       "index": 0,
+       "groupActive": 5,
+       "display": "Backlinks",
+       "icon": "links-coming-in",
+       "state": {
+        "type": "backlink",
+        "state": {
+         "file": "Props.md",
+         "collapseAll": false,
+         "extraContext": false,
+         "sortOrder": "alphabetical",
+         "showSearch": false,
+         "searchQuery": "",
+         "backlinkCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-coming-in",
+        "title": "Backlinks"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "09ef246f38d94c34",
+       "type": "outgoing-link",
+       "where": "right",
+       "index": 1,
+       "groupActive": 5,
+       "display": "Outgoing links",
+       "icon": "links-going-out",
+       "state": {
+        "type": "outgoing-link",
+        "state": {
+         "file": "Props.md",
+         "linksCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-going-out",
+        "title": "Outgoing links"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "bc5c22340d9d7d08",
+       "type": "tag",
+       "where": "right",
+       "index": 2,
+       "groupActive": 5,
+       "display": "Tags",
+       "icon": "lucide-tags",
+       "state": {
+        "type": "tag",
+        "state": {
+         "sortOrder": "frequency",
+         "useHierarchy": true,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-tags",
+        "title": "Tags"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "0afedc7bb1e8c161",
+       "type": "all-properties",
+       "where": "right",
+       "index": 3,
+       "groupActive": 5,
+       "display": "All properties",
+       "icon": "lucide-archive",
+       "state": {
+        "type": "all-properties",
+        "state": {
+         "sortOrder": "frequency",
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-archive",
+        "title": "All properties"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "d7d03787ef5b51e9",
+       "type": "outline",
+       "where": "right",
+       "index": 4,
+       "groupActive": 5,
+       "display": "Outline",
+       "icon": "lucide-list",
+       "state": {
+        "type": "outline",
+        "state": {
+         "file": "Props.md",
+         "followCursor": false,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-list",
+        "title": "Outline"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "29df1dc3dd0d3e0b",
+       "type": "file-properties",
+       "where": "right",
+       "index": 5,
+       "groupActive": 5,
+       "display": "File properties",
+       "icon": "lucide-info",
+       "state": {
+        "type": "file-properties",
+        "state": {
+         "file": "Props.md"
+        },
+        "icon": "lucide-info",
+        "title": "File properties"
+       },
+       "isActive": true,
+       "shown": true
+      }
+     ],
+     "rightTabs": [
+      {
+       "type": "backlink",
+       "active": false,
+       "aria": "Backlinks"
+      },
+      {
+       "type": "outgoing-link",
+       "active": false,
+       "aria": "Outgoing links"
+      },
+      {
+       "type": "tag",
+       "active": false,
+       "aria": "Tags"
+      },
+      {
+       "type": "all-properties",
+       "active": false,
+       "aria": "All properties"
+      },
+      {
+       "type": "outline",
+       "active": false,
+       "aria": "Outline"
+      },
+      {
+       "type": "file-properties",
+       "active": true,
+       "aria": "File properties"
+      }
+     ],
+     "rightCollapsed": false,
+     "active": {
+      "tag": "DIV",
+      "cls": "metadata-container",
+      "text": "PropertiesOld titleoneTargetAdd property",
+      "aria": null,
+      "inLeaf": "file-properties",
+      "inRightSplit": true,
+      "rowKey": null
+     },
+     "activeLeafType": "file-properties",
+     "pane": {
+      "file": "Props.md",
+      "state": {
+       "file": "Props.md"
+      },
+      "text": "Old title\none\nTarget\nAdd property",
+      "rows": [
+       "title",
+       "tags",
+       "related"
+      ],
+      "add": {
+       "present": true,
+       "shown": true,
+       "text": "Add property"
+      },
+      "empty": {
+       "present": true,
+       "shown": false,
+       "text": "No properties found."
+      },
+      "heading": {
+       "present": true,
+       "shown": false,
+       "text": "Properties"
+      },
+      "container": {
+       "present": true,
+       "shown": true,
+       "text": "Old title\none\nTarget\nAdd property"
+      },
+      "shown": true
+     }
+    },
+    "afterCtrlW": {
+     "leaves": [
+      {
+       "id": "43d362b8d961f985",
+       "type": "markdown",
+       "where": "main",
+       "index": 0,
+       "groupActive": 0,
+       "display": "Props",
+       "icon": "lucide-file",
+       "state": {
+        "type": "markdown",
+        "state": {
+         "file": "Props.md",
+         "mode": "source",
+         "source": false
+        },
+        "icon": "lucide-file",
+        "title": "Props"
+       },
+       "isActive": false,
+       "shown": true
+      },
+      {
+       "id": "37de59b58c030b41",
+       "type": "backlink",
+       "where": "right",
+       "index": 0,
+       "groupActive": 4,
+       "display": "Backlinks",
+       "icon": "links-coming-in",
+       "state": {
+        "type": "backlink",
+        "state": {
+         "file": "Props.md",
+         "collapseAll": false,
+         "extraContext": false,
+         "sortOrder": "alphabetical",
+         "showSearch": false,
+         "searchQuery": "",
+         "backlinkCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-coming-in",
+        "title": "Backlinks"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "09ef246f38d94c34",
+       "type": "outgoing-link",
+       "where": "right",
+       "index": 1,
+       "groupActive": 4,
+       "display": "Outgoing links",
+       "icon": "links-going-out",
+       "state": {
+        "type": "outgoing-link",
+        "state": {
+         "file": "Props.md",
+         "linksCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-going-out",
+        "title": "Outgoing links"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "bc5c22340d9d7d08",
+       "type": "tag",
+       "where": "right",
+       "index": 2,
+       "groupActive": 4,
+       "display": "Tags",
+       "icon": "lucide-tags",
+       "state": {
+        "type": "tag",
+        "state": {
+         "sortOrder": "frequency",
+         "useHierarchy": true,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-tags",
+        "title": "Tags"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "0afedc7bb1e8c161",
+       "type": "all-properties",
+       "where": "right",
+       "index": 3,
+       "groupActive": 4,
+       "display": "All properties",
+       "icon": "lucide-archive",
+       "state": {
+        "type": "all-properties",
+        "state": {
+         "sortOrder": "frequency",
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-archive",
+        "title": "All properties"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "d7d03787ef5b51e9",
+       "type": "outline",
+       "where": "right",
+       "index": 4,
+       "groupActive": 4,
+       "display": "Outline",
+       "icon": "lucide-list",
+       "state": {
+        "type": "outline",
+        "state": {
+         "file": "Props.md",
+         "followCursor": false,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-list",
+        "title": "Outline"
+       },
+       "isActive": true,
+       "shown": true
+      }
+     ],
+     "rightTabs": [
+      {
+       "type": "backlink",
+       "active": false,
+       "aria": "Backlinks"
+      },
+      {
+       "type": "outgoing-link",
+       "active": false,
+       "aria": "Outgoing links"
+      },
+      {
+       "type": "tag",
+       "active": false,
+       "aria": "Tags"
+      },
+      {
+       "type": "all-properties",
+       "active": false,
+       "aria": "All properties"
+      },
+      {
+       "type": "outline",
+       "active": true,
+       "aria": "Outline"
+      }
+     ],
+     "rightCollapsed": false,
+     "active": {
+      "tag": "BODY",
+      "cls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header",
+      "text": "Props - scoria-probe-vault.4oZ6LL - Obsidian 1.15.1 \n\n(function () {\n\tvar started = false;\n\t// Whether the snapshot may still arrive\n\tvar pending = false;\n\tvar ",
+      "aria": null,
+      "inLeaf": null,
+      "inRightSplit": false,
+      "rowKey": null
+     },
+     "activeLeafType": "outline",
+     "pane": null
+    },
+    "activeBeforeCmd": "file-properties",
+    "ranClose": true,
+    "afterCmd": {
+     "leaves": [
+      {
+       "id": "43d362b8d961f985",
+       "type": "markdown",
+       "where": "main",
+       "index": 0,
+       "groupActive": 0,
+       "display": "Props",
+       "icon": "lucide-file",
+       "state": {
+        "type": "markdown",
+        "state": {
+         "file": "Props.md",
+         "mode": "source",
+         "source": false
+        },
+        "icon": "lucide-file",
+        "title": "Props"
+       },
+       "isActive": false,
+       "shown": true
+      },
+      {
+       "id": "37de59b58c030b41",
+       "type": "backlink",
+       "where": "right",
+       "index": 0,
+       "groupActive": 4,
+       "display": "Backlinks",
+       "icon": "links-coming-in",
+       "state": {
+        "type": "backlink",
+        "state": {
+         "file": "Props.md",
+         "collapseAll": false,
+         "extraContext": false,
+         "sortOrder": "alphabetical",
+         "showSearch": false,
+         "searchQuery": "",
+         "backlinkCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-coming-in",
+        "title": "Backlinks"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "09ef246f38d94c34",
+       "type": "outgoing-link",
+       "where": "right",
+       "index": 1,
+       "groupActive": 4,
+       "display": "Outgoing links",
+       "icon": "links-going-out",
+       "state": {
+        "type": "outgoing-link",
+        "state": {
+         "file": "Props.md",
+         "linksCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-going-out",
+        "title": "Outgoing links"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "bc5c22340d9d7d08",
+       "type": "tag",
+       "where": "right",
+       "index": 2,
+       "groupActive": 4,
+       "display": "Tags",
+       "icon": "lucide-tags",
+       "state": {
+        "type": "tag",
+        "state": {
+         "sortOrder": "frequency",
+         "useHierarchy": true,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-tags",
+        "title": "Tags"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "0afedc7bb1e8c161",
+       "type": "all-properties",
+       "where": "right",
+       "index": 3,
+       "groupActive": 4,
+       "display": "All properties",
+       "icon": "lucide-archive",
+       "state": {
+        "type": "all-properties",
+        "state": {
+         "sortOrder": "frequency",
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-archive",
+        "title": "All properties"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "d7d03787ef5b51e9",
+       "type": "outline",
+       "where": "right",
+       "index": 4,
+       "groupActive": 4,
+       "display": "Outline",
+       "icon": "lucide-list",
+       "state": {
+        "type": "outline",
+        "state": {
+         "file": "Props.md",
+         "followCursor": false,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-list",
+        "title": "Outline"
+       },
+       "isActive": true,
+       "shown": true
+      }
+     ],
+     "rightTabs": [
+      {
+       "type": "backlink",
+       "active": false,
+       "aria": "Backlinks"
+      },
+      {
+       "type": "outgoing-link",
+       "active": false,
+       "aria": "Outgoing links"
+      },
+      {
+       "type": "tag",
+       "active": false,
+       "aria": "Tags"
+      },
+      {
+       "type": "all-properties",
+       "active": false,
+       "aria": "All properties"
+      },
+      {
+       "type": "outline",
+       "active": true,
+       "aria": "Outline"
+      }
+     ],
+     "rightCollapsed": false,
+     "active": {
+      "tag": "BODY",
+      "cls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header",
+      "text": "Props - scoria-probe-vault.4oZ6LL - Obsidian 1.15.1 \n\n(function () {\n\tvar started = false;\n\t// Whether the snapshot may still arrive\n\tvar pending = false;\n\tvar ",
+      "aria": null,
+      "inLeaf": null,
+      "inRightSplit": false,
+      "rowKey": null
+     },
+     "activeLeafType": "outline",
+     "pane": null
+    }
+   },
+   "s07-alias-source-leaf-open": {
+    "ok": true,
+    "ms": 5967,
+    "before": {
+     "leaves": [
+      {
+       "id": "43d362b8d961f985",
+       "type": "markdown",
+       "where": "main",
+       "index": 0,
+       "groupActive": 0,
+       "display": "Alias",
+       "icon": "lucide-file",
+       "state": {
+        "type": "markdown",
+        "state": {
+         "file": "Alias.md",
+         "mode": "source",
+         "source": true
+        },
+        "icon": "lucide-file",
+        "title": "Alias"
+       },
+       "isActive": true,
+       "shown": true
+      },
+      {
+       "id": "37de59b58c030b41",
+       "type": "backlink",
+       "where": "right",
+       "index": 0,
+       "groupActive": 0,
+       "display": "Backlinks",
+       "icon": "links-coming-in",
+       "state": {
+        "type": "backlink",
+        "state": {
+         "file": "Alias.md",
+         "collapseAll": false,
+         "extraContext": false,
+         "sortOrder": "alphabetical",
+         "showSearch": false,
+         "searchQuery": "",
+         "backlinkCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-coming-in",
+        "title": "Backlinks"
+       },
+       "isActive": false,
+       "shown": true
+      },
+      {
+       "id": "09ef246f38d94c34",
+       "type": "outgoing-link",
+       "where": "right",
+       "index": 1,
+       "groupActive": 0,
+       "display": "Outgoing links",
+       "icon": "links-going-out",
+       "state": {
+        "type": "outgoing-link",
+        "state": {
+         "file": "Alias.md",
+         "linksCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-going-out",
+        "title": "Outgoing links"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "bc5c22340d9d7d08",
+       "type": "tag",
+       "where": "right",
+       "index": 2,
+       "groupActive": 0,
+       "display": "Tags",
+       "icon": "lucide-tags",
+       "state": {
+        "type": "tag",
+        "state": {
+         "sortOrder": "frequency",
+         "useHierarchy": true,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-tags",
+        "title": "Tags"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "0afedc7bb1e8c161",
+       "type": "all-properties",
+       "where": "right",
+       "index": 3,
+       "groupActive": 0,
+       "display": "All properties",
+       "icon": "lucide-archive",
+       "state": {
+        "type": "all-properties",
+        "state": {
+         "sortOrder": "frequency",
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-archive",
+        "title": "All properties"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "d7d03787ef5b51e9",
+       "type": "outline",
+       "where": "right",
+       "index": 4,
+       "groupActive": 0,
+       "display": "Outline",
+       "icon": "lucide-list",
+       "state": {
+        "type": "outline",
+        "state": {
+         "file": "Alias.md",
+         "followCursor": false,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-list",
+        "title": "Outline"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "4b83da7b5c5f3b2a",
+       "type": "file-properties",
+       "where": "right",
+       "index": 5,
+       "groupActive": 0,
+       "display": "File properties",
+       "icon": "lucide-info",
+       "state": {
+        "type": "file-properties",
+        "state": {
+         "file": "Alias.md"
+        },
+        "icon": "lucide-info",
+        "title": "File properties"
+       },
+       "isActive": false,
+       "shown": false
+      }
+     ],
+     "rightTabs": [
+      {
+       "type": "backlink",
+       "active": true,
+       "aria": "Backlinks"
+      },
+      {
+       "type": "outgoing-link",
+       "active": false,
+       "aria": "Outgoing links"
+      },
+      {
+       "type": "tag",
+       "active": false,
+       "aria": "Tags"
+      },
+      {
+       "type": "all-properties",
+       "active": false,
+       "aria": "All properties"
+      },
+      {
+       "type": "outline",
+       "active": false,
+       "aria": "Outline"
+      },
+      {
+       "type": "file-properties",
+       "active": false,
+       "aria": "File properties"
+      }
+     ],
+     "rightCollapsed": false,
+     "active": {
+      "tag": "DIV",
+      "cls": "cm-content cm-lineWrapping",
+      "text": "Body only.",
+      "aria": null,
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "rowKey": null,
+      "contentEditable": true,
+      "selText": ""
+     },
+     "activeLeafType": "markdown",
+     "pane": {
+      "file": "Alias.md",
+      "state": {
+       "file": "Alias.md"
+      },
+      "text": "File propertiesPropertiesAdd propertyNo properties found.",
+      "rows": [],
+      "add": {
+       "present": true,
+       "shown": false,
+       "text": "Add property"
+      },
+      "empty": {
+       "present": true,
+       "shown": false,
+       "text": "No properties found."
+      },
+      "heading": {
+       "present": true,
+       "shown": false,
+       "text": "Properties"
+      },
+      "container": {
+       "present": true,
+       "shown": false,
+       "text": "PropertiesAdd property"
+      },
+      "shown": false
+     }
+    },
+    "ran": true,
+    "afterRun": {
+     "leaves": [
+      {
+       "id": "43d362b8d961f985",
+       "type": "markdown",
+       "where": "main",
+       "index": 0,
+       "groupActive": 0,
+       "display": "Alias",
+       "icon": "lucide-file",
+       "state": {
+        "type": "markdown",
+        "state": {
+         "file": "Alias.md",
+         "mode": "source",
+         "source": true
+        },
+        "icon": "lucide-file",
+        "title": "Alias"
+       },
+       "isActive": false,
+       "shown": true
+      },
+      {
+       "id": "37de59b58c030b41",
+       "type": "backlink",
+       "where": "right",
+       "index": 0,
+       "groupActive": 5,
+       "display": "Backlinks",
+       "icon": "links-coming-in",
+       "state": {
+        "type": "backlink",
+        "state": {
+         "file": "Alias.md",
+         "collapseAll": false,
+         "extraContext": false,
+         "sortOrder": "alphabetical",
+         "showSearch": false,
+         "searchQuery": "",
+         "backlinkCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-coming-in",
+        "title": "Backlinks"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "09ef246f38d94c34",
+       "type": "outgoing-link",
+       "where": "right",
+       "index": 1,
+       "groupActive": 5,
+       "display": "Outgoing links",
+       "icon": "links-going-out",
+       "state": {
+        "type": "outgoing-link",
+        "state": {
+         "file": "Alias.md",
+         "linksCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-going-out",
+        "title": "Outgoing links"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "bc5c22340d9d7d08",
+       "type": "tag",
+       "where": "right",
+       "index": 2,
+       "groupActive": 5,
+       "display": "Tags",
+       "icon": "lucide-tags",
+       "state": {
+        "type": "tag",
+        "state": {
+         "sortOrder": "frequency",
+         "useHierarchy": true,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-tags",
+        "title": "Tags"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "0afedc7bb1e8c161",
+       "type": "all-properties",
+       "where": "right",
+       "index": 3,
+       "groupActive": 5,
+       "display": "All properties",
+       "icon": "lucide-archive",
+       "state": {
+        "type": "all-properties",
+        "state": {
+         "sortOrder": "frequency",
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-archive",
+        "title": "All properties"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "d7d03787ef5b51e9",
+       "type": "outline",
+       "where": "right",
+       "index": 4,
+       "groupActive": 5,
+       "display": "Outline",
+       "icon": "lucide-list",
+       "state": {
+        "type": "outline",
+        "state": {
+         "file": "Alias.md",
+         "followCursor": false,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-list",
+        "title": "Outline"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "4b83da7b5c5f3b2a",
+       "type": "file-properties",
+       "where": "right",
+       "index": 5,
+       "groupActive": 5,
+       "display": "File properties",
+       "icon": "lucide-info",
+       "state": {
+        "type": "file-properties",
+        "state": {
+         "file": "Alias.md"
+        },
+        "icon": "lucide-info",
+        "title": "File properties"
+       },
+       "isActive": true,
+       "shown": true
+      }
+     ],
+     "rightTabs": [
+      {
+       "type": "backlink",
+       "active": false,
+       "aria": "Backlinks"
+      },
+      {
+       "type": "outgoing-link",
+       "active": false,
+       "aria": "Outgoing links"
+      },
+      {
+       "type": "tag",
+       "active": false,
+       "aria": "Tags"
+      },
+      {
+       "type": "all-properties",
+       "active": false,
+       "aria": "All properties"
+      },
+      {
+       "type": "outline",
+       "active": false,
+       "aria": "Outline"
+      },
+      {
+       "type": "file-properties",
+       "active": true,
+       "aria": "File properties"
+      }
+     ],
+     "rightCollapsed": false,
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "aria": null,
+      "inLeaf": "file-properties",
+      "inRightSplit": true,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "selText": ""
+     },
+     "activeLeafType": "file-properties",
+     "pane": {
+      "file": "Alias.md",
+      "state": {
+       "file": "Alias.md"
+      },
+      "text": "Add property",
+      "rows": [
+       "aliases"
+      ],
+      "add": {
+       "present": true,
+       "shown": true,
+       "text": "Add property"
+      },
+      "empty": {
+       "present": true,
+       "shown": false,
+       "text": "No properties found."
+      },
+      "heading": {
+       "present": true,
+       "shown": false,
+       "text": "Properties"
+      },
+      "container": {
+       "present": true,
+       "shown": true,
+       "text": "Add property"
+      },
+      "shown": true
+     }
+    },
+    "diskAfterRun": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\naliases:\n---\nBody only.\n"
+    },
+    "activeAfterType": {
+     "tag": "DIV",
+     "cls": "multi-select-input",
+     "text": "Al2",
+     "aria": null,
+     "inLeaf": "file-properties",
+     "inRightSplit": true,
+     "rowKey": "aliases",
+     "contentEditable": true,
+     "selText": ""
+    },
+    "activeAfterEnter": {
+     "tag": "DIV",
+     "cls": "multi-select-input",
+     "text": "",
+     "aria": null,
+     "inLeaf": "file-properties",
+     "inRightSplit": true,
+     "rowKey": "aliases",
+     "contentEditable": true,
+     "selText": ""
+    },
+    "diskAfterEnter": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\naliases:\n  - Al2\n---\nBody only.\n"
+    },
+    "activeAfterEscape": {
+     "tag": "DIV",
+     "cls": "metadata-property",
+     "text": "Al2",
+     "aria": null,
+     "inLeaf": "file-properties",
+     "inRightSplit": true,
+     "rowKey": "aliases"
+    },
+    "activeAfterSecondEscape": {
+     "tag": "DIV",
+     "cls": "cm-content cm-lineWrapping",
+     "text": "---aliases:  - Al2---Body only.",
+     "aria": null,
+     "inLeaf": "markdown",
+     "inRightSplit": false,
+     "rowKey": null,
+     "contentEditable": true,
+     "selText": ""
+    },
+    "activeLeafAfter": "markdown"
+   },
+   "s07-alias-source-leaf-closed": {
+    "ok": true,
+    "ms": 5453,
+    "before": {
+     "leaves": [
+      {
+       "id": "43d362b8d961f985",
+       "type": "markdown",
+       "where": "main",
+       "index": 0,
+       "groupActive": 0,
+       "display": "Alias",
+       "icon": "lucide-file",
+       "state": {
+        "type": "markdown",
+        "state": {
+         "file": "Alias.md",
+         "mode": "source",
+         "source": true
+        },
+        "icon": "lucide-file",
+        "title": "Alias"
+       },
+       "isActive": true,
+       "shown": true
+      },
+      {
+       "id": "37de59b58c030b41",
+       "type": "backlink",
+       "where": "right",
+       "index": 0,
+       "groupActive": -1,
+       "display": "Backlinks",
+       "icon": "links-coming-in",
+       "state": {
+        "type": "backlink",
+        "state": {
+         "file": "Alias.md",
+         "collapseAll": false,
+         "extraContext": false,
+         "sortOrder": "alphabetical",
+         "showSearch": false,
+         "searchQuery": "",
+         "backlinkCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-coming-in",
+        "title": "Backlinks"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "09ef246f38d94c34",
+       "type": "outgoing-link",
+       "where": "right",
+       "index": 1,
+       "groupActive": -1,
+       "display": "Outgoing links",
+       "icon": "links-going-out",
+       "state": {
+        "type": "outgoing-link",
+        "state": {
+         "file": "Alias.md",
+         "linksCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-going-out",
+        "title": "Outgoing links"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "bc5c22340d9d7d08",
+       "type": "tag",
+       "where": "right",
+       "index": 2,
+       "groupActive": -1,
+       "display": "Tags",
+       "icon": "lucide-tags",
+       "state": {
+        "type": "tag",
+        "state": {
+         "sortOrder": "frequency",
+         "useHierarchy": true,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-tags",
+        "title": "Tags"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "0afedc7bb1e8c161",
+       "type": "all-properties",
+       "where": "right",
+       "index": 3,
+       "groupActive": -1,
+       "display": "All properties",
+       "icon": "lucide-archive",
+       "state": {
+        "type": "all-properties",
+        "state": {
+         "sortOrder": "frequency",
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-archive",
+        "title": "All properties"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "d7d03787ef5b51e9",
+       "type": "outline",
+       "where": "right",
+       "index": 4,
+       "groupActive": -1,
+       "display": "Outline",
+       "icon": "lucide-list",
+       "state": {
+        "type": "outline",
+        "state": {
+         "file": "Alias.md",
+         "followCursor": false,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-list",
+        "title": "Outline"
+       },
+       "isActive": false,
+       "shown": false
+      }
+     ],
+     "rightTabs": [
+      {
+       "type": "backlink",
+       "active": false,
+       "aria": "Backlinks"
+      },
+      {
+       "type": "outgoing-link",
+       "active": false,
+       "aria": "Outgoing links"
+      },
+      {
+       "type": "tag",
+       "active": false,
+       "aria": "Tags"
+      },
+      {
+       "type": "all-properties",
+       "active": false,
+       "aria": "All properties"
+      },
+      {
+       "type": "outline",
+       "active": true,
+       "aria": "Outline"
+      }
+     ],
+     "rightCollapsed": true,
+     "active": {
+      "tag": "DIV",
+      "cls": "cm-content cm-lineWrapping",
+      "text": "Body only.",
+      "aria": null,
+      "inLeaf": "markdown",
+      "inRightSplit": false,
+      "rowKey": null,
+      "contentEditable": true,
+      "selText": ""
+     },
+     "activeLeafType": "markdown",
+     "pane": null
+    },
+    "ran": true,
+    "afterRun": {
+     "leaves": [
+      {
+       "id": "43d362b8d961f985",
+       "type": "markdown",
+       "where": "main",
+       "index": 0,
+       "groupActive": 0,
+       "display": "Alias",
+       "icon": "lucide-file",
+       "state": {
+        "type": "markdown",
+        "state": {
+         "file": "Alias.md",
+         "mode": "source",
+         "source": true
+        },
+        "icon": "lucide-file",
+        "title": "Alias"
+       },
+       "isActive": false,
+       "shown": true
+      },
+      {
+       "id": "37de59b58c030b41",
+       "type": "backlink",
+       "where": "right",
+       "index": 0,
+       "groupActive": 5,
+       "display": "Backlinks",
+       "icon": "links-coming-in",
+       "state": {
+        "type": "backlink",
+        "state": {
+         "file": "Alias.md",
+         "collapseAll": false,
+         "extraContext": false,
+         "sortOrder": "alphabetical",
+         "showSearch": false,
+         "searchQuery": "",
+         "backlinkCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-coming-in",
+        "title": "Backlinks"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "09ef246f38d94c34",
+       "type": "outgoing-link",
+       "where": "right",
+       "index": 1,
+       "groupActive": 5,
+       "display": "Outgoing links",
+       "icon": "links-going-out",
+       "state": {
+        "type": "outgoing-link",
+        "state": {
+         "file": "Alias.md",
+         "linksCollapsed": false,
+         "unlinkedCollapsed": true
+        },
+        "icon": "links-going-out",
+        "title": "Outgoing links"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "bc5c22340d9d7d08",
+       "type": "tag",
+       "where": "right",
+       "index": 2,
+       "groupActive": 5,
+       "display": "Tags",
+       "icon": "lucide-tags",
+       "state": {
+        "type": "tag",
+        "state": {
+         "sortOrder": "frequency",
+         "useHierarchy": true,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-tags",
+        "title": "Tags"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "0afedc7bb1e8c161",
+       "type": "all-properties",
+       "where": "right",
+       "index": 3,
+       "groupActive": 5,
+       "display": "All properties",
+       "icon": "lucide-archive",
+       "state": {
+        "type": "all-properties",
+        "state": {
+         "sortOrder": "frequency",
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-archive",
+        "title": "All properties"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "d7d03787ef5b51e9",
+       "type": "outline",
+       "where": "right",
+       "index": 4,
+       "groupActive": 5,
+       "display": "Outline",
+       "icon": "lucide-list",
+       "state": {
+        "type": "outline",
+        "state": {
+         "file": "Alias.md",
+         "followCursor": false,
+         "showSearch": false,
+         "searchQuery": ""
+        },
+        "icon": "lucide-list",
+        "title": "Outline"
+       },
+       "isActive": false,
+       "shown": false
+      },
+      {
+       "id": "6e9551bc0af06325",
+       "type": "file-properties",
+       "where": "right",
+       "index": 5,
+       "groupActive": 5,
+       "display": "File properties",
+       "icon": "lucide-info",
+       "state": {
+        "type": "file-properties",
+        "state": {
+         "file": "Alias.md"
+        },
+        "icon": "lucide-info",
+        "title": "File properties"
+       },
+       "isActive": true,
+       "shown": true
+      }
+     ],
+     "rightTabs": [
+      {
+       "type": "backlink",
+       "active": false,
+       "aria": "Backlinks"
+      },
+      {
+       "type": "outgoing-link",
+       "active": false,
+       "aria": "Outgoing links"
+      },
+      {
+       "type": "tag",
+       "active": false,
+       "aria": "Tags"
+      },
+      {
+       "type": "all-properties",
+       "active": false,
+       "aria": "All properties"
+      },
+      {
+       "type": "outline",
+       "active": false,
+       "aria": "Outline"
+      },
+      {
+       "type": "file-properties",
+       "active": true,
+       "aria": "File properties"
+      }
+     ],
+     "rightCollapsed": false,
+     "active": {
+      "tag": "DIV",
+      "cls": "multi-select-input",
+      "text": "",
+      "aria": null,
+      "inLeaf": "file-properties",
+      "inRightSplit": true,
+      "rowKey": "aliases",
+      "contentEditable": true,
+      "selText": ""
+     },
+     "activeLeafType": "file-properties",
+     "pane": {
+      "file": "Alias.md",
+      "state": {
+       "file": "Alias.md"
+      },
+      "text": "Add property",
+      "rows": [
+       "aliases"
+      ],
+      "add": {
+       "present": true,
+       "shown": true,
+       "text": "Add property"
+      },
+      "empty": {
+       "present": true,
+       "shown": false,
+       "text": "No properties found."
+      },
+      "heading": {
+       "present": true,
+       "shown": false,
+       "text": "Properties"
+      },
+      "container": {
+       "present": true,
+       "shown": true,
+       "text": "Add property"
+      },
+      "shown": true
+     }
+    },
+    "diskAfterRun": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\naliases:\n---\nBody only.\n"
+    },
+    "activeAfterType": {
+     "tag": "DIV",
+     "cls": "multi-select-input",
+     "text": "Al2",
+     "aria": null,
+     "inLeaf": "file-properties",
+     "inRightSplit": true,
+     "rowKey": "aliases",
+     "contentEditable": true,
+     "selText": ""
+    },
+    "activeAfterEnter": {
+     "tag": "DIV",
+     "cls": "multi-select-input",
+     "text": "",
+     "aria": null,
+     "inLeaf": "file-properties",
+     "inRightSplit": true,
+     "rowKey": "aliases",
+     "contentEditable": true,
+     "selText": ""
+    },
+    "diskAfterEnter": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\naliases:\n  - Al2\n---\nBody only.\n"
+    },
+    "activeAfterEscape": {
+     "tag": "DIV",
+     "cls": "metadata-property",
+     "text": "Al2",
+     "aria": null,
+     "inLeaf": "file-properties",
+     "inRightSplit": true,
+     "rowKey": "aliases"
+    },
+    "activeAfterSecondEscape": {
+     "tag": "DIV",
+     "cls": "cm-content cm-lineWrapping",
+     "text": "---aliases:  - Al2---Body only.",
+     "aria": null,
+     "inLeaf": "markdown",
+     "inRightSplit": false,
+     "rowKey": null,
+     "contentEditable": true,
+     "selText": ""
+    },
+    "activeLeafAfter": "markdown"
+   },
+   "s08-edit-in-pane": {
+    "ok": true,
+    "ms": 8458,
+    "valueClick": {
+     "x": 1443,
+     "y": 52,
+     "w": 141,
+     "h": 29,
+     "cx": 1513.5,
+     "cy": 66.5
+    },
+    "activeOnValue": {
+     "tag": "DIV",
+     "cls": "metadata-input-longtext",
+     "text": "Old title",
+     "aria": null,
+     "inLeaf": "file-properties",
+     "inRightSplit": true,
+     "rowKey": "title",
+     "contentEditable": true,
+     "selText": ""
+    },
+    "activeAfterValueEnter": {
+     "tag": "DIV",
+     "cls": "metadata-property",
+     "text": "New title",
+     "aria": null,
+     "inLeaf": "file-properties",
+     "inRightSplit": true,
+     "rowKey": "title"
+    },
+    "diskValue": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\ntitle: New title\ntags:\n  - one\nrelated: \"[[Target]]\"\n---\nBody.\n"
+    },
+    "tagsClick": {
+     "x": 1510.671875,
+     "y": 86.796875,
+     "w": 7.421875,
+     "h": 16.890625,
+     "cx": 1514.3828125,
+     "cy": 95.2421875
+    },
+    "activeOnTags": {
+     "tag": "DIV",
+     "cls": "multi-select-input",
+     "text": "",
+     "aria": null,
+     "inLeaf": "file-properties",
+     "inRightSplit": true,
+     "rowKey": "tags",
+     "contentEditable": true,
+     "selText": ""
+    },
+    "diskTags": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\ntitle: New title\ntags:\n  - one\n  - two\nrelated: \"[[Target]]\"\n---\nBody.\n"
+    },
+    "addClick": {
+     "x": 1308,
+     "y": 168.890625,
+     "w": 110.671875,
+     "h": 24.890625,
+     "cx": 1363.3359375,
+     "cy": 181.3359375
+    },
+    "activeOnAdd": {
+     "tag": "INPUT",
+     "cls": "metadata-property-key-input",
+     "text": "",
+     "aria": "",
+     "inLeaf": "file-properties",
+     "inRightSplit": true,
+     "rowKey": "",
+     "selStart": 0,
+     "selEnd": 0,
+     "value": ""
+    },
+    "suggestOpen": 0,
+    "activeAfterKeyTab": {
+     "tag": "DIV",
+     "cls": "metadata-input-longtext",
+     "text": "",
+     "aria": null,
+     "inLeaf": "file-properties",
+     "inRightSplit": true,
+     "rowKey": "status",
+     "contentEditable": true,
+     "selText": ""
+    },
+    "diskAfterKey": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\ntitle: New title\ntags:\n  - one\n  - two\nrelated: \"[[Target]]\"\nstatus:\n---\nBody.\n"
+    },
+    "activeAfterValueEnter2": {
+     "tag": "DIV",
+     "cls": "metadata-property",
+     "text": "done",
+     "aria": null,
+     "inLeaf": "file-properties",
+     "inRightSplit": true,
+     "rowKey": "status"
+    },
+    "diskAdd": {
+     "changed": true,
+     "ms": 0,
+     "bytes": "---\ntitle: New title\ntags:\n  - one\n  - two\nrelated: \"[[Target]]\"\nstatus: done\n---\nBody.\n"
+    },
+    "pane": {
+     "file": "Edit.md",
+     "state": {
+      "file": "Edit.md"
+     },
+     "text": "New title\none\ntwo\nTarget\ndone\nAdd property",
+     "rows": [
+      "title",
+      "tags",
+      "related",
+      "status"
+     ],
+     "add": {
+      "present": true,
+      "shown": true,
+      "text": "Add property"
+     },
+     "empty": {
+      "present": true,
+      "shown": false,
+      "text": "No properties found."
+     },
+     "heading": {
+      "present": true,
+      "shown": false,
+      "text": "Properties"
+     },
+     "container": {
+      "present": true,
+      "shown": true,
+      "text": "New title\none\ntwo\nTarget\ndone\nAdd property"
+     },
+     "shown": true
+    },
+    "iconClick": {
+     "x": 1308,
+     "y": 162.390625,
+     "w": 18,
+     "h": 28,
+     "cx": 1317,
+     "cy": 176.390625
+    },
+    "iconMenus": [
+     [
+      {
+       "title": "Property type",
+       "icon": "svg-icon lucide-info",
+       "disabled": false,
+       "section": null
+      },
+      {
+       "title": "Cut",
+       "icon": "svg-icon lucide-scissors",
+       "disabled": false,
+       "section": "clipboard"
+      },
+      {
+       "title": "Copy",
+       "icon": "svg-icon lucide-copy",
+       "disabled": false,
+       "section": "clipboard"
+      },
+      {
+       "title": "Paste",
+       "icon": "svg-icon lucide-clipboard-check",
+       "disabled": false,
+       "section": "clipboard"
+      },
+      "---",
+      "---",
+      {
+       "title": "Remove",
+       "icon": "svg-icon lucide-trash-2",
+       "disabled": false,
+       "section": "danger"
+      }
+     ]
+    ]
+   }
+  },
+  "order": [
+   "s00-context",
+   "s01-open-first",
+   "s02-open-again",
+   "s03-bound-file",
+   "s04-tab-menu-close",
+   "s05-reopen",
+   "s06-workspace-close",
+   "s07-alias-source-leaf-open",
+   "s07-alias-source-leaf-closed",
+   "s08-edit-in-pane"
+  ],
+  "elapsedMs": 50076,
+  "vaultPath": "/run/user/1000/fpx/t/scoria-probe-vault.4oZ6LL"
+ }
+}

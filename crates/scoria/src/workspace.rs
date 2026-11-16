@@ -78,7 +78,7 @@ use scoria_text::table::TableCommand;
 use scoria_text::{BlockInsert, LinePrefix, LinkSyntax};
 use scoria_vault::{FileChange, TrashOption, Vault, VaultError, VaultRegistry};
 use serde_json::{json, Map, Value};
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::ops::Range;
 use std::path::{Component, Path, PathBuf};
@@ -87,6 +87,7 @@ use std::sync::{Arc, RwLock, RwLockReadGuard};
 use std::time::{Duration, Instant};
 
 mod doc_backlinks;
+mod file_properties_pane;
 mod footnotes_pane;
 mod layouts;
 mod stacked;
@@ -3691,8 +3692,12 @@ pub struct Workspace {
     /// Each note's unlinked mentions as last found, for the backlinks
     /// block of a group whose note is not the open one.
     doc_mentions: HashMap<String, Section>,
-    /// The File properties pane's folded blocks: its Properties heading.
-    file_properties_folds: HashSet<usize>,
+    /// The File properties pane's keyboard: Obsidian's active side leaf
+    /// while it holds focus, and the handle a field of the pane types
+    /// through (the keys are forwarded to the editor that owns the note).
+    file_properties_focus: FocusHandle,
+    /// The link in the pane the pointer is on, for page preview.
+    file_properties_hover: Rc<Cell<Option<(usize, usize)>>>,
     /// Matcher over every note name and alias, rebuilt when files change.
     name_finder: Option<Arc<Finder>>,
     mention_generation: u64,
@@ -3852,6 +3857,9 @@ fn view_subscriptions(
                 EditorEvent::Edited => {
                     this.schedule_save(cx);
                     this.refresh_outline_from_buffer(cx);
+                    // In reading view the File properties pane is what
+                    // edits the hidden editor: the reading view follows.
+                    this.reading_follows_pane_edit(&editor, cx);
                 }
                 EditorEvent::OpenLink(target) => this.follow_link(target.clone(), cx),
                 EditorEvent::OpenLinkInNewTab(target) => {
@@ -4362,6 +4370,14 @@ impl Workspace {
         subscriptions.extend(view_subscriptions(
             &editor, &reading, &canvas, &bases, &pdf, cx,
         ));
+        // The File properties pane losing the keyboard writes its open
+        // field, as leaving a field in the note does.
+        let file_properties_focus = cx.focus_handle();
+        subscriptions.push(
+            cx.on_focus_out(&file_properties_focus, window, |ws, _, window, cx| {
+                ws.leave_file_properties_field(window, cx)
+            }),
+        );
         let groups = vec![TabGroup::new(
             0,
             editor.clone(),
@@ -4507,7 +4523,8 @@ impl Workspace {
             footnotes: footnotes_pane::FootnotesPane::default(),
             stacks: stacked::Stacks::default(),
             doc_mentions: HashMap::new(),
-            file_properties_folds: HashSet::new(),
+            file_properties_focus,
+            file_properties_hover: Rc::new(Cell::new(None)),
             name_finder: None,
             mention_generation: 0,
             status: "Pass a vault folder as the first argument".into(),
@@ -6471,6 +6488,11 @@ impl Workspace {
             "workspace:new-tab" => self.new_tab(cx),
             // A pinned tab is unpinned by the close, not closed (observed).
             "workspace:close" if self.active_tab_pinned() => self.toggle_pin(cx),
+            // Mod+W with the File properties leaf active closes that leaf,
+            // not the note's tab (the 2026-11-15 probe, `s06`).
+            "workspace:close" if self.file_properties_focus.is_focused(window) => {
+                self.close_side_leaf("file-properties", window, cx)
+            }
             "workspace:close" => self.close_tab(self.active_tab, cx),
             "workspace:close-others" => self.close_other_tabs(cx),
             "workspace:toggle-pin" => self.toggle_pin(cx),
@@ -6695,10 +6717,7 @@ impl Workspace {
                 self.right_visible = true;
                 self.show_right_tab("properties", cx);
             }
-            "properties:open-local" => {
-                self.right_visible = true;
-                self.show_right_tab("file-properties", cx);
-            }
+            "properties:open-local" => self.open_file_properties(window, cx),
             "footnotes:open" => {
                 self.right_visible = true;
                 self.show_right_tab("footnotes", cx);
@@ -10942,28 +10961,30 @@ impl Workspace {
     /// `markdown:add-alias`. In Live Preview it is Obsidian's command: the
     /// `aliases` key written at once where the note has none, and the caret
     /// in the empty input after the row's pills (see [`Editor::add_alias`]).
-    /// In Source mode Obsidian edits the field in the File properties pane,
-    /// which is read-only in Scoria, so the command does the part that pane
-    /// does not need: the same key written, and the pane opened, as Obsidian
-    /// opens it -- which leaves exactly what Obsidian leaves when the field
-    /// is left with Escape. Reading view is not offered (see `can_run`).
+    /// In Source mode (and wherever the note draws no table) Obsidian edits
+    /// the field in the File properties pane: the same key is written, the
+    /// pane's leaf is made or revealed with the dock expanded, and the caret
+    /// lands in the pane's aliases input (the 2026-11-15 probe, `s07`, with
+    /// the leaf open and with it closed). Reading view is not offered (see
+    /// `can_run`).
     fn add_alias(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         if !self.mode.is_editing() || !self.note_has_keys(window, cx) {
             return;
         }
         let in_table =
             self.mode == ViewMode::LivePreview && self.editor.read(cx).draws_properties_table();
-        let changed = self
-            .editor
-            .update(cx, |e, cx| e.add_alias(in_table, window, cx));
+        let changed = if in_table {
+            self.editor
+                .update(cx, |e, cx| e.add_alias(true, window, cx))
+        } else {
+            self.open_file_properties(window, cx);
+            self.editor
+                .update(cx, |e, cx| e.add_alias_in_pane(window, cx))
+        };
         // The key reached the disk within 0.3 s in Obsidian, not on the
         // autosave's debounce.
         if changed {
             self.flush_save(cx);
-        }
-        if !in_table {
-            self.right_visible = true;
-            self.show_right_tab("file-properties", cx);
         }
         cx.notify();
     }
@@ -15344,14 +15365,22 @@ impl Workspace {
                 object.insert(dock.into(), json);
             }
         }
-        if self.file_properties_open {
-            if let Some(right) = object.get_mut("right") {
-                push_file_properties_leaf(right, self.current.as_deref());
+        // A leaf closed from its tab's menu or with Mod+W leaves the file
+        // with the rest of the dock, as Obsidian's Close leaves it.
+        if let Some(right) = object.get_mut("right") {
+            if self.file_properties_open {
+                if push_file_properties_leaf(right, self.current.as_deref())
+                    && self.right_tab == RightTab::FileProperties
+                {
+                    file_properties_pane::point_current_tab_at(right, "file-properties");
+                }
+            } else {
+                file_properties_pane::remove_leaf(right, "file-properties");
             }
-        }
-        if self.footnotes.open {
-            if let Some(right) = object.get_mut("right") {
+            if self.footnotes.open {
                 footnotes_pane::push_footnotes_leaf(right, self.right_tab == RightTab::Footnotes);
+            } else {
+                file_properties_pane::remove_leaf(right, "footnotes");
             }
         }
         // The Files leaf's own state, where the file has that leaf.
@@ -15928,9 +15957,18 @@ impl Workspace {
             json!({
                 "open": self.file_properties_open,
                 "file": self.file_properties_note(cx).map(|(path, _)| path),
-                "folded": self
-                    .file_properties_folds
-                    .contains(&crate::properties::PROPERTIES_FOLD_ID),
+                "editable": self.file_properties_editable(cx),
+                // The pane's open field: which row and part, and its text.
+                "field": self.editor.read(cx).pane_field().map(|f| json!({
+                    "key": f.key(),
+                    "part": match f.part {
+                        crate::properties::Part::Key => "key",
+                        crate::properties::Part::Value => "value",
+                    },
+                    "text": f.text,
+                    "item": f.item_index(),
+                })),
+                "menu": self.editor.read(cx).pane_menu(),
                 "rows": self
                     .file_property_rows(cx)
                     .iter()
@@ -16225,7 +16263,11 @@ impl Workspace {
                 MainView::Canvas => "canvas-editor",
                 _ => "none",
             },
-            "workspace" | "reading" | "graph" | "canvas" | "bases" | "pdf" | "none" => "none",
+            // The pane is on screen whatever the main area paints, and its
+            // field is the editor's, in reading view too.
+            "file-properties-field" => "editor",
+            "workspace" | "reading" | "graph" | "canvas" | "bases" | "pdf" | "file-properties"
+            | "none" => "none",
             _ => "input",
         }
     }
@@ -16288,6 +16330,15 @@ impl Workspace {
         }
         if self.reading.focus_handle(cx).is_focused(window) {
             return "reading";
+        }
+        // The File properties pane, and a field of it, which takes typed
+        // text into the editor that holds the note.
+        if self.file_properties_focus.is_focused(window) {
+            return if self.editor.read(cx).pane_field().is_some() {
+                "file-properties-field"
+            } else {
+                "file-properties"
+            };
         }
         if self.graph.focus_handle(cx).is_focused(window) {
             return "graph";
@@ -16876,6 +16927,11 @@ impl Workspace {
     ) {
         let path = target.path().to_string();
         match pick {
+            Pick::CloseTab if matches!(target, file_menu::Target::SideTab { .. }) => {
+                if let file_menu::Target::SideTab { kind } = target {
+                    self.close_side_leaf(kind, window, cx);
+                }
+            }
             Pick::CloseTab
             | Pick::CloseOthers
             | Pick::CloseAfter
@@ -18894,123 +18950,6 @@ impl Workspace {
             .into_any_element()
     }
 
-    /// The note File properties shows and its text: the open note when it
-    /// is Markdown, read from the buffer while the editor holds it (so the
-    /// rows follow typing) and from the index otherwise.
-    fn file_properties_note(&self, cx: &App) -> Option<(String, Arc<String>)> {
-        let path = self.current.clone()?;
-        if FileKind::from_path(&path) != FileKind::Markdown {
-            return None;
-        }
-        let editor = self.editor.read(cx);
-        if editor.name.as_ref() == path.as_str() {
-            return Some((path, Arc::new(editor.text().to_string())));
-        }
-        let text = self.state.as_ref()?.texts().get(&path).cloned()?;
-        Some((path, text))
-    }
-
-    /// File properties' rows: the open note's properties block, each key at
-    /// the type `types.json` assigns it, in the block's own order.
-    fn file_property_rows(&self, cx: &App) -> Vec<crate::properties::Row> {
-        let Some((_, text)) = self.file_properties_note(cx) else {
-            return Vec::new();
-        };
-        let Some(block) = scoria_cache::note_properties(&text) else {
-            return Vec::new();
-        };
-        let types = self
-            .state
-            .as_ref()
-            .map(|s| s.property_types().clone())
-            .unwrap_or_default();
-        let mut next_id = crate::properties::PROPERTY_ID_BASE;
-        crate::properties::rows(
-            &block.entries,
-            |key| scoria_formats::properties::type_of(key, &block.entries, &types),
-            &mut next_id,
-        )
-    }
-
-    /// File properties (`properties:open-local`): the open note's
-    /// properties drawn as its reading view draws them, under the same
-    /// foldable "Properties" heading Obsidian's pane carries (probe of
-    /// 2026-10-19), links and tags in a value clickable. With no Markdown
-    /// note open it says Obsidian's "No properties found.".
-    fn render_file_properties_pane(
-        &mut self,
-        theme: &Theme,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) -> gpui::AnyElement {
-        let block = self.file_properties_note(cx).map(|(_, text)| {
-            scoria_cache::note_properties(&text)
-                .map(|b| b.entries)
-                .unwrap_or_default()
-        });
-        let Some(block) = block else {
-            // Obsidian's `.pane-empty`, as the Outline draws it.
-            return div()
-                .flex_1()
-                .px(px(12.))
-                .child(
-                    div()
-                        .my(px(8.))
-                        .px(px(16.))
-                        .py(px(24.))
-                        .text_size(px(FONT_UI_SMALL))
-                        .text_color(theme.tokens.text_faint)
-                        .text_center()
-                        .child("No properties found."),
-                )
-                .into_any_element();
-        };
-        let types = self
-            .state
-            .as_ref()
-            .map(|s| s.property_types().clone())
-            .unwrap_or_default();
-        let this = cx.entity().downgrade();
-        let on_link: reading::view::LinkHandler = Rc::new(move |target, _, cx| {
-            let _ = this.update(cx, |this, cx| this.follow_link(target, cx));
-        });
-        let this = cx.entity().downgrade();
-        let on_toggle: reading::view::ToggleHandler = Rc::new(move |id, cx| {
-            let _ = this.update(cx, |this, cx| {
-                if !this.file_properties_folds.remove(&id) {
-                    this.file_properties_folds.insert(id);
-                }
-                cx.notify();
-            });
-        });
-        let available = (self.right_width as f32 - 24.).max(100.);
-        let renderer = reading::view::Renderer::new(
-            theme,
-            window.text_system().clone(),
-            available,
-            &self.file_properties_folds,
-            &types,
-            // Read-only for now: the pane's fields are not wired to an
-            // editor of their own.
-            None,
-            None,
-            on_link,
-            on_toggle,
-        );
-        let content = renderer.properties(&block);
-        div()
-            .id("file-properties")
-            .flex()
-            .flex_col()
-            .size_full()
-            .overflow_y_scroll()
-            .px(px(12.))
-            .pt(px(8.))
-            .text_color(theme.tokens.text_normal)
-            .child(content)
-            .into_any_element()
-    }
-
     /// Whether a left-dock pane's core plugin is on, by its id.
     fn left_pane_enabled(&self, id: &str) -> bool {
         self.state
@@ -19085,17 +19024,40 @@ impl Workspace {
                           which: RightTab,
                           cx: &mut Context<Self>| {
             this.pane_enabled(which).then(|| {
-                this.dock_tab(
+                let button = this.dock_tab(
                     label,
                     icon_name,
                     tab == which,
                     theme,
                     move |this, window, cx| {
                         this.select_right_tab(which, cx);
-                        this.focus_dock_tree(window, cx);
+                        if which == RightTab::FileProperties {
+                            this.focus_file_properties(window, cx);
+                        } else {
+                            this.focus_dock_tree(window, cx);
+                        }
                     },
                     cx,
-                )
+                );
+                // The two leaves a command makes can be closed from their
+                // tab's menu, and the command makes them again.
+                let kind = match which {
+                    RightTab::FileProperties => Some("file-properties"),
+                    RightTab::Footnotes => Some("footnotes"),
+                    _ => None,
+                };
+                div()
+                    .child(button)
+                    .when_some(kind, |d, kind| {
+                        d.on_mouse_down(
+                            MouseButton::Right,
+                            cx.listener(move |this, e: &MouseDownEvent, _, cx| {
+                                cx.stop_propagation();
+                                this.open_side_tab_menu(kind, e.position, cx);
+                            }),
+                        )
+                    })
+                    .into_any_element()
             })
         };
         let frameless = self.frameless;
@@ -23291,6 +23253,39 @@ mod tests {
             Workspace::typed_text_target("workspace", MainView::Editor),
             "none"
         );
+    }
+
+    /// A field of the File properties pane is the editor's, and the pane is
+    /// on screen whatever the main area paints, so typed text reaches it in
+    /// reading view too; the pane with no field takes none.
+    #[test]
+    fn typing_reaches_a_file_properties_field_in_every_view() {
+        for painted in [MainView::Editor, MainView::Reading, MainView::Empty] {
+            assert_eq!(
+                Workspace::typed_text_target("file-properties-field", painted),
+                "editor"
+            );
+            assert_eq!(
+                Workspace::typed_text_target("file-properties", painted),
+                "none"
+            );
+        }
+    }
+
+    /// The File properties leaf's state is only the file it shows: the
+    /// open file whatever its kind (a canvas, an image and a PDF kept theirs
+    /// in the probe), and `{}` with no file (`s03`).
+    #[test]
+    fn file_properties_leaf_state_follows_the_open_file() {
+        let mut right = default_dock_json("right", None, 0);
+        push_file_properties_leaf(&mut right, Some("Board.canvas"));
+        let leaf = leaf_of_kind(&right, "file-properties").unwrap();
+        assert_eq!(leaf["state"]["state"], json!({"file": "Board.canvas"}));
+        set_leaf_state(&mut right, "file-properties", &[("file", Value::Null)]);
+        let leaf = leaf_of_kind(&right, "file-properties").unwrap();
+        assert_eq!(leaf["state"]["state"], json!({}));
+        assert_eq!(leaf["state"]["icon"], "lucide-info");
+        assert_eq!(leaf["state"]["title"], "File properties");
     }
 
     /// Outline rows carry the byte offsets of the text they were built from.

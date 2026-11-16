@@ -3361,8 +3361,8 @@ The File properties pane, titled "File properties", draws the rows with **no**
 `div.metadata-add-button.text-icon-button` reading "Add property"
 (lucide-plus). (The CDP run's dump of the pane while its tab was hidden shows a
 `div.metadata-properties-heading` inside the pane's `metadata-container`, so the
-heading is in the markup and its absence is a matter of style; whether CSS
-hides it was not measured.) Its key inputs are editable in every row. Its
+heading is in the markup and its absence is a matter of style; the 2026-11-15
+probe read it not shown under every file.) Its key inputs are editable in every row. Its
 "More options" menu holds only "Split right" (disabled) and "Split down" —
 nothing property-specific. For a Markdown note with no frontmatter the pane
 shows zero rows and its visible text is just "Add property" (a "No properties
@@ -3619,8 +3619,8 @@ retype (its API-written shape is in
 key-suggestion popup, and what it offers on a partial match (it closed on
 `demo`, which matched nothing). The Settings dropdown path for
 `propertiesInDocument` (the run used `setConfig`). The All properties rename's
-scope — current file or case-sensitive match. Whether the File properties
-pane's heading element is hidden by CSS. Whether the fold record is written on
+scope — current file or case-sensitive match.
+Whether the fold record is written on
 unfold as well as on fold (the key was first read after folding), and where
 `properties:open` puts its leaf when the right sidebar is collapsed. Pane
 geometry on a default theme beyond the row rects above. What clicking
@@ -9911,8 +9911,71 @@ there; the bytes written are the same as in Live Preview.
   duplicated in the note; the brief's "`[[Note#Old]]` whose display …" case was read as `F`
   (`|Old`) and `H` (`|Note > Old`).
 - Add alias: values with commas, quotes or `#`; a singular `alias:` key; a flow list with items
-  (`aliases: [a, b]`); whether the File properties leaf is created or only revealed when one
-  already exists (in the probe's fresh vault none existed before the command).
+  (`aliases: [a, b]`). (Whether the File properties leaf is created or only revealed when one
+  exists is settled in [[#Observed File properties pane, Obsidian 1.15.1 (installer build 1.13.7)]]:
+  revealed.)
+
+## Observed File properties pane, Obsidian 1.15.1 (installer build 1.13.7)
+
+Recorded by `tools/obsidian-probe/file-properties.mjs` on 2026-11-15 on Linux, against Obsidian
+1.15.1 (window title; user agent `obsidian/1.13.7`, Electron 43.1.0), with a `--user-data-dir` of
+its own and `CDP_PORT=9362`, on a fresh scratch vault, in a private headless sway (1600 × 1000,
+Wayland, `DISPLAY` unset, a private `XDG_RUNTIME_DIR`). Raw run:
+`tools/obsidian-probe/results/2026-11-15-file-properties.json` (its `s00` step stopped on a
+missing `workspace.json` after recording the versions and commands; every later step passed).
+The fixture `Props.md` was `---\ntitle: Old title\ntags:\n  - one\nrelated: "[[Target]]"\n---\nBody.\n`.
+
+**The leaf.** `properties:open-local` ("Properties view: Show file properties", `lucide-info`, a
+plain callback with no hotkey, offered by the palette with any file and with none) makes a
+`file-properties` leaf **last in the right dock's first tab group**, makes it the active leaf and
+the group's current tab, expands a collapsed dock, and puts the keyboard in the pane
+(`document.activeElement` is the pane's `div.metadata-container`). Run again while another tab
+of the dock shows, it **reveals the same leaf** (still one `file-properties` leaf) and focuses it
+the same way. In `workspace.json` the leaf is
+`{"type": "file-properties", "state": {"file": "Props.md"}, "icon": "lucide-info", "title": "File properties"}`
+with the group's `currentTab` on it and `active` naming it.
+
+**What it shows.** The leaf's `state.file` follows the active file whatever its kind:
+`Props.md`, `Plain.md`, `Board.canvas`, `pic.png`, `doc.pdf` each in turn. A note with properties
+shows its rows (`title`, `tags`, `related`) and "Add property"; a note with none shows only "Add
+property"; a canvas, an image and a PDF show "No properties found." (the pane's `div.pane-empty`,
+the only element shown) and no Add property. With every main leaf closed (one empty "New tab")
+the state is `{}` and the pane says "No properties found."; running the command then changes
+nothing. The `div.metadata-properties-heading` ("Properties") is in the pane's markup under every
+file but never shown.
+
+**Closing.** A real right click on the leaf's tab header raises Close (`close`, `lucide-x`), ---,
+Pin, Link with tab... (`pane`), ---, Move to new window, Split right (disabled), Split down
+(`open`); an inactive sidebar tab's menu (Backlinks) stops after Move to new window. Close takes
+the leaf out: the dock stays expanded and shows the tab **before** it (Outline), the main leaf
+becomes active, and `workspace.json` loses the leaf, its group's `currentTab` going from 5 to 4.
+Mod+W after a click in the pane's empty space, and `workspace:close` with the leaf made active,
+close it the same way (the active leaf is then Outline). `properties:open-local` after a close
+makes a new leaf (a new id), last and current again.
+
+**Add alias from Source mode** (`s07`, `Alias.md` seeded `Body only.\n`, run with the leaf open
+behind Backlinks and again with it closed and the dock collapsed). Both runs: the leaf is revealed
+or made, the dock expanded, the leaf active, the key on disk at once
+(`---\naliases:\n---\nBody only.\n`), and focus in the pane's `div.multi-select-input` of the
+`aliases` row. Typing `Al2` and Enter writes `---\naliases:\n  - Al2\n---\nBody only.\n` and
+leaves focus in the emptied input; Escape moves focus to the pane's `div.metadata-property`
+row; a **second Escape puts focus back in the note's editor** (`.cm-content`), the markdown leaf
+active.
+
+**Editing in the pane** (`s08`, Source mode, the same fixture). A click on the `title` value
+focuses its `div.metadata-input-longtext`; Select All, `New title` and Enter write
+`title: New title` and move focus to the row. A click on the `tags` input after the pills, `two`
+and Enter append `  - two`. A click on "Add property" focuses an empty
+`input.metadata-property-key-input`; `status` then **Tab writes the bare key at once**
+(`status:` on disk) and moves to the new row's value; `done` and Enter write `status: done`. The
+bytes are those Live Preview's block writes for the same edits. The type icon's menu in the pane
+is Property type ▸, Cut, Copy, Paste, ---, Remove, as in the note's block.
+
+**Page preview** from the pane was settled on 2026-11-11 (`s11` of
+[[#Observed page preview, Obsidian 1.15.0]]): the `properties` hover source, Mod needed.
+
+Not run: the pane's own look (row geometry, the key column's width in a 300 px dock), Undo after a
+pane edit, a pane edit while the same note is open in two tabs, and the leaf in a popout window.
 
 ## Observed attachment commands, Obsidian 1.15.0 (installer build 1.13.7)
 
