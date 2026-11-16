@@ -167,6 +167,19 @@ command there — `/table` then `Enter` inserts a table where the `/` was — an
 puts the `/table` back. `↑` and `↓` wrap round the list, `Escape` closes it and leaves the
 text, `Tab` does nothing, and `Shift + Enter` is an ordinary new line.
 
+## The right-click menu
+
+A right click in the text places the cursor (or keeps a selection you clicked inside) and opens
+Obsidian's menu: **Add link** and **Add external link**; with a selection, **Search for "…"** and
+**Extract current selection...**; then **Format**, **Paragraph** and **Insert**, each a submenu of
+the editing commands of the same names — Bold to Clear formatting, with Highlight's six colours
+under it; the three lists, Heading 1 to 6, Body and Quote; Footnote, Table, Callout, Horizontal
+rule, Code block, Math block and New base — and the clipboard rows. Paragraph ticks the line's
+heading level, or Body; Format ticks Bold, Italic or Code when the cursor is inside one. On a link
+the file's own rows wrap these, and Format makes way. **Show context menu under cursor**
+(`editor:context-menu`) opens the same menu at the cursor; near the bottom or the right of the
+window it opens upward or leftward, as Obsidian's does.
+
 ## Spellcheck
 
 With **Spellcheck** on (Settings → Editor, on by default, or **Toggle spellcheck** in the

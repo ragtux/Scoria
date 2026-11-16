@@ -611,7 +611,7 @@ impl BookmarksPane {
         self.menu_key = row.map(|r| r.key.clone());
         self.menu = Some(file_menu::Menu {
             position,
-            submenu: false,
+            submenu: Default::default(),
             anchor: Anchor::TopLeft,
             target: Target::Bookmark { kind, path },
         });

@@ -278,6 +278,8 @@ pub enum EditorEvent {
         link: Option<LinkTarget>,
         /// The misspelled word clicked, with its corrections.
         spelling: Option<crate::spellcheck::SpellHit>,
+        /// What the Format and Paragraph submenus check at the caret.
+        checks: crate::file_menu::MenuChecks,
     },
     /// Enter in the note's inline title: the file takes the typed name. The
     /// workspace owns renames, and the validator and link rewrite with them.
@@ -4599,6 +4601,30 @@ impl Editor {
             .map(|h| format!("#{}", h.heading.trim()))
     }
 
+    /// What the editor menu's Format and Paragraph rows check at the caret:
+    /// the caret line's heading level, and whether the caret sits inside a
+    /// strong, an emphasis or a code span, read off the line's highlight
+    /// spans (the one parser's).
+    pub fn menu_checks(&self) -> crate::file_menu::MenuChecks {
+        let cursor = self.cursor();
+        let spans = self
+            .highlights
+            .get(cursor.line)
+            .map(Vec::as_slice)
+            .unwrap_or(&[]);
+        let inside = |want: fn(&HighlightKind) -> bool| {
+            spans
+                .iter()
+                .any(|s| want(&s.kind) && s.range.start < cursor.col && cursor.col < s.range.end)
+        };
+        crate::file_menu::MenuChecks {
+            heading: self.heading_to_rename().map_or(0, |h| h.level),
+            bold: inside(|k| matches!(k, HighlightKind::Strong)),
+            italic: inside(|k| matches!(k, HighlightKind::Emphasis)),
+            code: inside(|k| matches!(k, HighlightKind::Code)),
+        }
+    }
+
     /// The ATX heading the caret's line is, which is when
     /// `editor:rename-heading` is offered: not off a heading, and not on
     /// either line of a setext heading (Obsidian 1.15.0, 2026-11-09).
@@ -6028,12 +6054,14 @@ impl Editor {
         // Preview, and the click was on the link either way.
         let cursor = self.buf.cursor_at(at);
         let link = self.link_at(cursor.line, cursor.col, false);
+        let checks = self.menu_checks();
         cx.emit(EditorEvent::ContextMenu {
             position: event.position,
             selection,
             selected: keep,
             link,
             spelling,
+            checks,
         });
         cx.notify();
     }
@@ -6062,12 +6090,14 @@ impl Editor {
         let selection = self.buf.clipboard_text(&[self.buf.selection()]);
         let link = self.link_at(cursor.line, cursor.col, false);
         let selected = !selection.is_empty();
+        let checks = self.menu_checks();
         cx.emit(EditorEvent::ContextMenu {
             position,
             selection,
             selected,
             link,
             spelling: None,
+            checks,
         });
         true
     }
@@ -8785,7 +8815,10 @@ impl Element for EditorElement {
 /// it 1 to 2 px right of and below the caret's left and its line's middle
 /// (not under the line), which over the five readings of
 /// `tools/obsidian-probe/results/2026-11-09-app-window-commands.json` is
-/// that point a pixel on, rounded up.
+/// that point a pixel on, rounded up; 1.15.1's three more readings on
+/// 2026-11-16 (`focus-random-menu.mjs`) agree. When the menu has no room
+/// below or to the right it turns over this point, which the menu's own
+/// drawing sees to (`file_menu::render`).
 fn caret_menu_point(left: f32, top: f32, bottom: f32) -> (f32, f32) {
     let middle = (top + bottom) / 2.;
     ((left + 1.).ceil(), (middle + 1.).ceil())
@@ -8805,6 +8838,12 @@ mod tests {
             (806.75, 229.5, 251.5, (808., 242.)),
             (752.84, 277.5, 299.5, (754., 290.)),
             (638.94, 213.5, 235.5, (640., 226.)),
+            // 1.15.1: a scrolled note, and the two whose menus turned over
+            // (their normal corner, which became the bottom-left and,
+            // with Obsidian's 4 px, the top-right).
+            (641.16, 514.45, 536.45, (643., 527.)),
+            (622.25, 925.45, 947.45, (624., 938.)),
+            (1520.52, 229.45, 251.45, (1522., 242.)),
         ] {
             assert_eq!(caret_menu_point(left, top, bottom), corner, "{left}");
         }

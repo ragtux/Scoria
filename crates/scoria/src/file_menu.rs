@@ -17,14 +17,15 @@
 //! with the clipboard rows and — over a wikilink — the whole file menu
 //! wrapped around them
 //! ([[Specification#Observed editor context menu and view header actions, Obsidian 1.14.5 (installer build 1.13.7)]]).
-//! Three of its rows open **submenus** — Format, Paragraph and Insert, and
-//! "Copy path" has one of its own — and the probe never opened them, so
-//! what they hold is unobserved. A menu here lists only what it can run and
-//! never draws a dead row, so those rows are left out rather than guessed,
-//! even where Scoria has the commands behind them; they await a probe that
-//! opens each submenu and reads it. The reading view has no text menu at
-//! all: a right click there raises the file menu on a link and nothing
-//! anywhere else, which is what Obsidian does.
+//! Three of its rows open **submenus** — Format, Paragraph and Insert —
+//! read on Obsidian 1.15.1 (2026-11-16, `focus-random-menu.mjs`): every row
+//! is the editor command of its name, run by id, each pairing checked byte
+//! for byte against the command run on its own, and Format's Highlight has
+//! a submenu of its own, the six colours and Default. On a wikilink "Copy
+//! path" has one too, still unread, so it keeps the one flat row. The
+//! reading view has no text menu at all: a right click there raises the
+//! file menu on a link and nothing anywhere else, which is what Obsidian
+//! does.
 //!
 //! "Show in system explorer" is also here, as the command lines that select
 //! a file in the desktop's file manager, so the one platform table has a test
@@ -110,6 +111,10 @@ thread_local! {
     /// afresh in each render would read `false` again after the re-render
     /// the submenu's own opening causes, and never see the hover again.
     static OVER_SUBMENU: Rc<Cell<bool>> = Rc::new(Cell::new(false));
+    /// The same for a submenu's own submenu (Format > Highlight), which
+    /// stands outside the first submenu's bounds as that one stands outside
+    /// the menu's.
+    static OVER_NESTED: Rc<Cell<bool>> = Rc::new(Cell::new(false));
 }
 
 /// [`menu_box`] for a menu with a submenu drawn beside the list.
@@ -134,7 +139,7 @@ pub fn menu_box_with_submenu<V: 'static>(
             move |this, _: &CloseMenu, _, cx| on_close(this, cx)
         }))
         .on_mouse_down_out(cx.listener(move |this, _, _, cx| {
-            if !over_submenu.get() {
+            if !over_submenu.get() && !OVER_NESTED.with(|c| c.get()) {
                 on_close(this, cx)
             }
         }))
@@ -181,6 +186,9 @@ pub enum Section {
     /// The All properties row's "Delete property": one separator before it,
     /// not the danger pair.
     Remove,
+    /// A submenu's groups, which Obsidian draws a line between: the editor
+    /// menu's Format, Paragraph and Insert are two or three groups each.
+    Group(u8),
 }
 
 /// What a clicked row asks for. The path it acts on is the menu's
@@ -249,6 +257,12 @@ pub enum Pick {
     Correction(u8),
     /// "Add to dictionary": the word into the custom dictionary.
     AddToDictionary,
+    /// A row of the editor menu's Format, Paragraph and Insert submenus:
+    /// the command it is named after, run by id. Each pairing was checked
+    /// byte for byte in Obsidian 1.15.1 (`focus-random-menu.mjs` `s04`
+    /// against `s06`): the row and the command wrote the same note, caret
+    /// and selection.
+    Command(&'static str),
     /// "Add link": the wikilink shape around the selection
     /// (`editor:insert-wikilink`). Obsidian's own label for that command is
     /// "Add internal link", and the row wears `lucide-link`, so the pairing
@@ -303,6 +317,9 @@ pub struct Item {
     pub checked: bool,
     /// `has-submenu`: the rows a hover opens beside this one.
     pub submenu: Vec<Item>,
+    /// A highlight colour row's swatch, drawn where the icon goes
+    /// (`div.highlight-swatch[data-highlight=red]` in Obsidian).
+    pub swatch: Option<scoria_markdown::HighlightColor>,
 }
 
 /// What was right-clicked. Paths are vault-relative, folders without a
@@ -427,6 +444,24 @@ pub struct EditorClick {
     pub selected: bool,
     /// A misspelled word under the click: its corrections lead the menu.
     pub spelling: Option<crate::spellcheck::SpellHit>,
+    /// What the Format and Paragraph submenus check at the caret.
+    pub checks: MenuChecks,
+}
+
+/// The checks the editor menu's Format and Paragraph submenus draw for the
+/// caret (Obsidian 1.15.1, `focus-random-menu.mjs` `s07`): Paragraph checks
+/// **Heading N** on an ATX heading of level N and **Body** on every other
+/// line, a list item, a task and a quote included; Format checks **Bold**,
+/// **Italic** and **Code** with the caret inside that span. Inside a
+/// highlight, a comment or inline math nothing was checked; strikethrough
+/// was not tried.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct MenuChecks {
+    /// The caret line's ATX heading level, 0 off a heading.
+    pub heading: u8,
+    pub bold: bool,
+    pub italic: bool,
+    pub code: bool,
 }
 
 /// What a right click in the editor landed on.
@@ -1010,6 +1045,7 @@ fn item(label: &'static str, icon: &'static str, section: Section, pick: Pick) -
         warning: false,
         checked: false,
         submenu: Vec::new(),
+        swatch: None,
         label: SharedString::new_static(label),
         icon,
         section,
@@ -1020,10 +1056,10 @@ fn item(label: &'static str, icon: &'static str, section: Section, pick: Pick) -
 
 /// The editor menu for a click, in Obsidian's order.
 ///
-/// Four of the captured rows open submenus nobody has read — **Format**,
-/// **Paragraph**, **Insert** and, on a wikilink, **Copy path** — so the
-/// three text ones are left out whole and Copy path keeps the one flat row
-/// the rest of Scoria's menus give it. Three more are left out for want of
+/// **Format**, **Paragraph** and **Insert** open their submenus
+/// ([`format_rows`], [`paragraph_rows`], [`insert_rows`]); on a wikilink
+/// **Copy path**'s submenu is unread, so it keeps the one flat row the rest
+/// of Scoria's menus give it. Three rows are left out for want of
 /// a command: **Edit link** and **Edit tag** (no inline rename of a link or
 /// a tag) and
 /// **Start presentation** (no presentation mode). Dropping the only row of a section drops its
@@ -1095,6 +1131,7 @@ fn editor_items(click: &EditorClick) -> Vec<Item> {
             warning: false,
             checked: false,
             submenu: Vec::new(),
+            swatch: None,
         });
         out.push(item(
             "Extract current selection...",
@@ -1103,6 +1140,22 @@ fn editor_items(click: &EditorClick) -> Vec<Item> {
             P::ExtractSelection,
         ));
     }
+    // Format, Paragraph and Insert. A link's and a tag's menus put Edit
+    // link or Edit tag where Format sits, which Scoria leaves out.
+    if matches!(click.spot, Spot::Text) {
+        out.push(Item {
+            submenu: format_rows(&click.checks),
+            ..item("Format", "paintbrush", S::Selection, P::Command(""))
+        });
+    }
+    out.push(Item {
+        submenu: paragraph_rows(&click.checks),
+        ..item("Paragraph", "pilcrow", S::Selection, P::Command(""))
+    });
+    out.push(Item {
+        submenu: insert_rows(),
+        ..item("Insert", "list-plus", S::Selection, P::Command(""))
+    });
     // `lucide-box-select` is Lucide's deprecated alias of `square-dashed`,
     // from its own alias data, the way `lucide-edit-3` is `pen-line`.
     for (label, icon, pick, needs_selection) in [
@@ -1149,6 +1202,120 @@ fn editor_items(click: &EditorClick) -> Vec<Item> {
     out
 }
 
+/// A submenu row that runs `id`.
+fn command_row(label: &'static str, icon: &'static str, group: u8, id: &'static str) -> Item {
+    item(label, icon, Section::Group(group), Pick::Command(id))
+}
+
+/// Format's rows (Obsidian 1.15.1, `focus-random-menu.mjs` `s04`), with
+/// Highlight's own six colours and Default under it (`s05`). Obsidian's
+/// `code-2` is Lucide's `code-xml`.
+fn format_rows(checks: &MenuChecks) -> Vec<Item> {
+    use scoria_markdown::HighlightColor as C;
+    let mut highlight = vec![command_row(
+        "Default",
+        "highlighter",
+        0,
+        "editor:toggle-highlight",
+    )];
+    for (label, color, id) in [
+        ("Red", C::Red, "editor:toggle-highlight-red"),
+        ("Orange", C::Orange, "editor:toggle-highlight-orange"),
+        ("Yellow", C::Yellow, "editor:toggle-highlight-yellow"),
+        ("Green", C::Green, "editor:toggle-highlight-green"),
+        ("Blue", C::Blue, "editor:toggle-highlight-blue"),
+        ("Purple", C::Purple, "editor:toggle-highlight-purple"),
+    ] {
+        highlight.push(Item {
+            swatch: Some(color),
+            ..command_row(label, "", 0, id)
+        });
+    }
+    vec![
+        Item {
+            checked: checks.bold,
+            ..command_row("Bold", "bold", 0, "editor:toggle-bold")
+        },
+        Item {
+            checked: checks.italic,
+            ..command_row("Italic", "italic", 0, "editor:toggle-italics")
+        },
+        command_row(
+            "Strikethrough",
+            "strikethrough",
+            0,
+            "editor:toggle-strikethrough",
+        ),
+        Item {
+            submenu: highlight,
+            ..command_row("Highlight", "highlighter", 0, "")
+        },
+        Item {
+            checked: checks.code,
+            ..command_row("Code", "code-xml", 1, "editor:toggle-code")
+        },
+        command_row("Math", "sigma", 1, "editor:toggle-inline-math"),
+        command_row("Comment", "percent", 1, "editor:toggle-comments"),
+        command_row("Clear formatting", "eraser", 2, "editor:clear-formatting"),
+    ]
+}
+
+/// Paragraph's rows: the three lists, the six headings and Body (which
+/// is `editor:set-heading-0`, "Remove heading"), then Quote. Obsidian's
+/// `check-square` is Lucide's `square-check`.
+fn paragraph_rows(checks: &MenuChecks) -> Vec<Item> {
+    let mut out = vec![
+        command_row("Bullet list", "list", 0, "editor:toggle-bullet-list"),
+        command_row(
+            "Numbered list",
+            "list-ordered",
+            0,
+            "editor:toggle-numbered-list",
+        ),
+        command_row(
+            "Task list",
+            "square-check",
+            0,
+            "editor:toggle-checklist-status",
+        ),
+    ];
+    for (level, label, icon, id) in [
+        (1, "Heading 1", "heading-1", "editor:set-heading-1"),
+        (2, "Heading 2", "heading-2", "editor:set-heading-2"),
+        (3, "Heading 3", "heading-3", "editor:set-heading-3"),
+        (4, "Heading 4", "heading-4", "editor:set-heading-4"),
+        (5, "Heading 5", "heading-5", "editor:set-heading-5"),
+        (6, "Heading 6", "heading-6", "editor:set-heading-6"),
+        (0, "Body", "text", "editor:set-heading-0"),
+    ] {
+        out.push(Item {
+            checked: checks.heading == level,
+            ..command_row(label, icon, 1, id)
+        });
+    }
+    out.push(command_row("Quote", "quote", 2, "editor:toggle-blockquote"));
+    out
+}
+
+/// Insert's rows. Obsidian's `file-signature` and `sigma-square` are
+/// Lucide's `file-pen-line` and `square-sigma`.
+fn insert_rows() -> Vec<Item> {
+    vec![
+        command_row("Footnote", "file-pen-line", 0, "editor:insert-footnote"),
+        command_row("Table", "table", 0, "editor:insert-table"),
+        command_row("Callout", "quote", 0, "editor:insert-callout"),
+        command_row(
+            "Horizontal rule",
+            "minus",
+            0,
+            "editor:insert-horizontal-rule",
+        ),
+        command_row("Code block", "code", 1, "editor:insert-codeblock"),
+        command_row("Math block", "square-sigma", 1, "editor:insert-mathblock"),
+        command_row("New base", "layout-list", 1, "bases:insert"),
+    ]
+}
+
 /// How many separators sit above an item given the section above it: one
 /// wherever the section changes, and two above [`Section::Danger`] for the
 /// empty section Obsidian puts there.
@@ -1177,13 +1344,23 @@ pub fn drawn(target: &Target) -> Vec<String> {
     out
 }
 
+/// The submenus showing: `row` is the menu's row whose submenu is open,
+/// `nested` the row of that submenu whose own submenu is (the editor menu's
+/// Format > Highlight). Obsidian opens one at a time at each depth.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct Submenu {
+    pub row: Option<usize>,
+    pub nested: Option<usize>,
+}
+
 /// An open menu: where it is and what it was opened on.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Menu {
     pub position: Point<Pixels>,
-    /// Whether a row's submenu is showing beside it: the pointer rests on
-    /// the row, or did last.
-    pub submenu: bool,
+    /// Which row's submenu is showing beside it, and which of that
+    /// submenu's rows has its own open: the pointer rests on the row, or
+    /// did last.
+    pub submenu: Submenu,
     /// Which corner of the list sits at `position`: the top-left for a
     /// right click, the top-right for a menu hung under a button at the
     /// window's right edge, the way the view header's **More options**
@@ -1229,7 +1406,7 @@ pub fn describe(menu: &Menu) -> Value {
         "path": menu.target.path(),
         "items": drawn(&menu.target),
         "disabled": disabled,
-        "submenu": menu.submenu,
+        "submenu": menu.submenu.row.is_some(),
     });
     // What the editor's menu was built from, which no other target has.
     if let Target::Editor(click) = &menu.target {
@@ -1255,19 +1432,23 @@ pub fn render<V: 'static>(
     cx: &mut Context<V>,
     on_close: impl Fn(&mut V, &mut Context<V>) + 'static,
     on_pick: impl Fn(&mut V, Pick, &mut Window, &mut Context<V>) + 'static,
-    on_submenu: impl Fn(&mut V, bool, &mut Context<V>) + 'static,
+    on_submenu: impl Fn(&mut V, Submenu, &mut Context<V>) + 'static,
 ) -> AnyElement {
     let on_close = Rc::new(on_close);
     let on_pick = Rc::new(on_pick);
     let on_submenu = Rc::new(on_submenu);
-    let submenu_open = menu.submenu;
+    let open = menu.submenu;
     // A submenu opens beside its row on the right, or on the left when the
     // menu stands near the window's right edge and there is no room.
     let flip_submenu = menu.position.x + px(180. + 140.) > viewport_width;
     let over_submenu = OVER_SUBMENU.with(Rc::clone);
-    if !menu.submenu {
+    if open.row.is_none() {
         // A menu closed under the pointer never hears the hover end.
         over_submenu.set(false);
+    }
+    let over_nested = OVER_NESTED.with(Rc::clone);
+    if open.nested.is_none() {
+        over_nested.set(false);
     }
     let mut list = menu_box_with_submenu(
         // Obsidian's `.menu`: `--menu-background` inside a
@@ -1340,7 +1521,8 @@ pub fn render<V: 'static>(
                     .hover(|s| s.bg(theme.tokens.background_modifier_hover))
                     .on_hover(cx.listener(move |this, hovered: &bool, _, cx| {
                         if *hovered {
-                            on_hover(this, has_submenu, cx);
+                            let row = has_submenu.then_some(ix);
+                            on_hover(this, Submenu { row, nested: None }, cx);
                         }
                     }))
                     .when(!has_submenu, |d| {
@@ -1378,70 +1560,175 @@ pub fn render<V: 'static>(
             });
         // The submenu stands beside its row, open while the pointer rested
         // on that row last; its rows pick like the menu's own.
-        if has_submenu && submenu_open {
-            let mut sub = div()
-                .id(("file-submenu", ix))
-                .absolute()
+        if has_submenu && open.row == Some(ix) {
+            let mut sub = submenu_box(("file-submenu", ix), theme)
                 .when(!flip_submenu, |d| d.left(relative(1.)))
                 .when(flip_submenu, |d| d.right(relative(1.)))
-                .top(px(-6.))
-                .flex()
-                .flex_col()
-                .min_w(px(126.))
-                .py_1()
-                .bg(theme.tokens.menu_background)
-                .border_1()
-                .border_color(theme.tokens.menu_border_color)
-                .rounded_md()
-                .shadow_lg()
-                .occlude()
                 .on_hover({
                     let over_submenu = over_submenu.clone();
                     move |hovered: &bool, _, _| over_submenu.set(*hovered)
                 });
+            let mut sub_previous: Option<Section> = None;
             for (sx, subitem) in item.submenu.iter().enumerate() {
-                let pick = subitem.pick;
-                let on_close = on_close.clone();
-                let on_pick = on_pick.clone();
-                sub = sub.child(
-                    div()
-                        .id(("file-submenu-item", ix * 64 + sx))
-                        .flex()
-                        .items_center()
-                        .gap_2()
-                        .px_3()
-                        .py_1()
-                        .text_color(theme.tokens.text_normal)
-                        .cursor_pointer()
-                        .hover(|s| s.bg(theme.tokens.background_modifier_hover))
-                        .on_click(cx.listener(move |this, _, window, cx| {
-                            on_close(this, cx);
-                            on_pick(this, pick, window, cx);
-                        }))
-                        .child(crate::assets::icon(
-                            subitem.icon,
-                            16.,
-                            theme.tokens.text_muted,
-                        ))
-                        .child(div().flex_1().child(subitem.label.clone()))
-                        .when(subitem.checked, |d| {
-                            d.child(crate::assets::icon("check", 14., theme.tokens.text_muted))
-                        }),
-                );
+                // A submenu's sections are separated as the menu's are.
+                if separators_above(sub_previous, subitem.section) > 0 {
+                    sub = sub.child(
+                        div()
+                            .id(("file-submenu-separator", ix * 64 + sx))
+                            .my_1()
+                            .h(px(1.))
+                            .w_full()
+                            .bg(theme.tokens.background_modifier_border),
+                    );
+                }
+                sub_previous = Some(subitem.section);
+                let nested_rows = !subitem.submenu.is_empty();
+                let on_hover = on_submenu.clone();
+                let mut subrow = submenu_row(
+                    ("file-submenu-item", ix * 64 + sx),
+                    subitem,
+                    theme,
+                    cx,
+                    on_close.clone(),
+                    on_pick.clone(),
+                )
+                .relative()
+                .on_hover(cx.listener(move |this, hovered: &bool, _, cx| {
+                    if *hovered {
+                        let nested = nested_rows.then_some(sx);
+                        on_hover(
+                            this,
+                            Submenu {
+                                row: Some(ix),
+                                nested,
+                            },
+                            cx,
+                        );
+                    }
+                }));
+                if nested_rows && open.nested == Some(sx) {
+                    let mut nested = submenu_box(("file-nested-submenu", ix * 64 + sx), theme)
+                        .when(!flip_submenu, |d| d.left(relative(1.)))
+                        .when(flip_submenu, |d| d.right(relative(1.)))
+                        .on_hover({
+                            let over_nested = over_nested.clone();
+                            move |hovered: &bool, _, _| over_nested.set(*hovered)
+                        });
+                    for (nx, nitem) in subitem.submenu.iter().enumerate() {
+                        nested = nested.child(submenu_row(
+                            ("file-nested-item", (ix * 64 + sx) * 64 + nx),
+                            nitem,
+                            theme,
+                            cx,
+                            on_close.clone(),
+                            on_pick.clone(),
+                        ));
+                    }
+                    subrow = subrow.child(nested);
+                }
+                sub = sub.child(subrow);
             }
             row = row.child(sub);
         }
         list = list.child(row);
     }
+    // A menu that does not fit turns over its point rather than sliding
+    // along the window's edge: one too low for the room below opens upward
+    // with its bottom at the point, one too wide for the room on the right
+    // opens leftward with its right edge there (Obsidian 1.15.1, a right
+    // click and `editor:context-menu` alike, `focus-random-menu.mjs` `s02`;
+    // Obsidian's right edge sits 4 px further left). gpui's default fit,
+    // `SwitchAnchor`, is exactly that turn, and it still snaps to the
+    // window when neither side has room.
     deferred(
         anchored()
             .position(menu.position)
             .anchor(menu.anchor)
-            .snap_to_window_with_margin(px(8.))
             .child(list),
     )
     .with_priority(1)
     .into_any_element()
+}
+
+/// What a submenu row runs when it closes the menu, and then when it picks.
+type OnClose<V> = Rc<dyn Fn(&mut V, &mut Context<V>)>;
+type OnPick<V> = Rc<dyn Fn(&mut V, Pick, &mut Window, &mut Context<V>)>;
+
+/// A submenu's box, beside the row that opens it.
+fn submenu_box(id: (&'static str, usize), theme: &Theme) -> Stateful<gpui::Div> {
+    div()
+        .id(id)
+        .absolute()
+        .top(px(-6.))
+        .flex()
+        .flex_col()
+        .min_w(px(126.))
+        .py_1()
+        .bg(theme.tokens.menu_background)
+        .border_1()
+        .border_color(theme.tokens.menu_border_color)
+        .rounded_md()
+        .shadow_lg()
+        .occlude()
+}
+
+/// One row of a submenu: its icon (or the colour swatch a highlight row
+/// wears), its label, a check or a chevron. A row with rows of its own
+/// opens them on hover and picks nothing itself.
+fn submenu_row<V: 'static>(
+    id: (&'static str, usize),
+    item: &Item,
+    theme: &Theme,
+    cx: &mut Context<V>,
+    on_close: OnClose<V>,
+    on_pick: OnPick<V>,
+) -> Stateful<gpui::Div> {
+    let pick = item.pick;
+    let has_rows = !item.submenu.is_empty();
+    let icon = match item.swatch {
+        Some(color) => div()
+            .size(px(16.))
+            .flex_shrink_0()
+            .flex()
+            .items_center()
+            .justify_center()
+            .child(
+                div()
+                    .size(px(12.))
+                    .rounded_full()
+                    .bg(theme.highlight_color(color)),
+            )
+            .into_any_element(),
+        None => crate::assets::icon(item.icon, 16., theme.tokens.text_muted).into_any_element(),
+    };
+    div()
+        .id(id)
+        .flex()
+        .items_center()
+        .gap_2()
+        .px_3()
+        .py_1()
+        .text_color(theme.tokens.text_normal)
+        .cursor_pointer()
+        .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+        .when(!has_rows, |d| {
+            d.on_click(cx.listener(move |this, _, window, cx| {
+                on_close(this, cx);
+                on_pick(this, pick, window, cx);
+            }))
+        })
+        .child(icon)
+        .child(div().flex_1().child(item.label.clone()))
+        .when(item.checked, |d| {
+            d.child(crate::assets::icon("check", 14., theme.tokens.text_muted))
+        })
+        .when(has_rows, |d| {
+            d.child(crate::assets::icon(
+                "chevron-right",
+                14.,
+                theme.tokens.text_muted,
+            ))
+        })
 }
 
 // ----- "Show in system explorer" --------------------------------------------
@@ -2027,6 +2314,7 @@ mod tests {
     /// The editor click the plain menu came from: no selection, plain text.
     fn spelling_click(suggestions: &[&str]) -> Target {
         Target::Editor(EditorClick {
+            checks: MenuChecks::default(),
             spot: Spot::Text,
             selection: "wrold".into(),
             selected: true,
@@ -2090,6 +2378,7 @@ mod tests {
 
     fn plain_click() -> Target {
         Target::Editor(EditorClick {
+            checks: MenuChecks::default(),
             spot: Spot::Text,
             selection: String::new(),
             selected: false,
@@ -2107,16 +2396,19 @@ mod tests {
             .collect()
     }
 
-    /// The plain menu of `s01-editor-menu-live`, minus the three submenu
-    /// rows nobody has opened: the two link rows, one separator where
-    /// Format's section was, then the clipboard five.
+    /// The plain menu of `s01-editor-menu-live`: the two link rows, the
+    /// three submenu rows, then the clipboard five.
     #[test]
-    fn the_editor_menu_is_obsidians_plain_list_without_the_submenus() {
+    fn the_editor_menu_is_obsidians_plain_list() {
         assert_eq!(
             drawn(&plain_click()),
             [
                 "Add link",
                 "Add external link",
+                "---",
+                "Format",
+                "Paragraph",
+                "Insert",
                 "---",
                 "Cut",
                 "Copy",
@@ -2125,6 +2417,167 @@ mod tests {
                 "Select all",
             ]
         );
+    }
+
+    /// A submenu's rows as drawn: its label or `---` between groups, and a
+    /// `*` after a checked row and `>` after one with rows of its own.
+    fn submenu_drawn(rows: &[Item]) -> Vec<String> {
+        let mut out = Vec::new();
+        let mut previous = None;
+        for row in rows {
+            if separators_above(previous, row.section) > 0 {
+                out.push("---".to_string());
+            }
+            previous = Some(row.section);
+            let mut label = row.label.to_string();
+            if row.checked {
+                label.push('*');
+            }
+            if !row.submenu.is_empty() {
+                label.push('>');
+            }
+            out.push(label);
+        }
+        out
+    }
+
+    /// The three submenus of Obsidian 1.15.1 (`focus-random-menu.mjs`
+    /// `s04`, `s05`), each row with the command whose bytes it wrote
+    /// (`s06`), and the checks `s07` read on a paragraph line.
+    #[test]
+    fn the_editor_submenus_are_obsidians_rows_and_run_its_commands() {
+        let rows = items(&plain_click());
+        let sub = |label: &str| {
+            rows.iter()
+                .find(|i| i.label == label)
+                .map(|i| i.submenu.clone())
+                .unwrap()
+        };
+        let format = sub("Format");
+        assert_eq!(
+            submenu_drawn(&format),
+            [
+                "Bold",
+                "Italic",
+                "Strikethrough",
+                "Highlight>",
+                "---",
+                "Code",
+                "Math",
+                "Comment",
+                "---",
+                "Clear formatting",
+            ]
+        );
+        let highlight: Vec<(&str, Pick)> = format[3]
+            .submenu
+            .iter()
+            .map(|i| (i.label.as_ref(), i.pick))
+            .collect();
+        assert_eq!(
+            highlight[0],
+            ("Default", Pick::Command("editor:toggle-highlight"))
+        );
+        assert_eq!(
+            highlight[1],
+            ("Red", Pick::Command("editor:toggle-highlight-red"))
+        );
+        assert_eq!(
+            highlight[6],
+            ("Purple", Pick::Command("editor:toggle-highlight-purple"))
+        );
+        assert_eq!(
+            submenu_drawn(&sub("Paragraph")),
+            [
+                "Bullet list",
+                "Numbered list",
+                "Task list",
+                "---",
+                "Heading 1",
+                "Heading 2",
+                "Heading 3",
+                "Heading 4",
+                "Heading 5",
+                "Heading 6",
+                "Body*",
+                "---",
+                "Quote",
+            ]
+        );
+        assert_eq!(
+            submenu_drawn(&sub("Insert")),
+            [
+                "Footnote",
+                "Table",
+                "Callout",
+                "Horizontal rule",
+                "---",
+                "Code block",
+                "Math block",
+                "New base",
+            ]
+        );
+        let picks: Vec<(String, Pick)> = ["Format", "Paragraph", "Insert"]
+            .iter()
+            .flat_map(|p| sub(p))
+            .filter(|i| i.submenu.is_empty())
+            .map(|i| (i.label.to_string(), i.pick))
+            .collect();
+        for (label, id) in [
+            ("Bold", "editor:toggle-bold"),
+            ("Italic", "editor:toggle-italics"),
+            ("Math", "editor:toggle-inline-math"),
+            ("Comment", "editor:toggle-comments"),
+            ("Task list", "editor:toggle-checklist-status"),
+            ("Body", "editor:set-heading-0"),
+            ("Quote", "editor:toggle-blockquote"),
+            ("Footnote", "editor:insert-footnote"),
+            ("New base", "bases:insert"),
+        ] {
+            assert!(
+                picks.contains(&(label.to_string(), Pick::Command(id))),
+                "{label}"
+            );
+        }
+    }
+
+    /// The checks follow the caret: Heading N on a heading line (Body
+    /// unchecked), and Bold, Italic and Code inside their spans; a tag's
+    /// menu has no Format, a link's neither.
+    #[test]
+    fn the_submenu_checks_follow_the_caret() {
+        let at = |checks: MenuChecks| {
+            items(&Target::Editor(EditorClick {
+                checks,
+                spot: Spot::Text,
+                selection: String::new(),
+                selected: false,
+                spelling: None,
+            }))
+        };
+        let checked = |rows: &[Item], parent: &str| -> Vec<String> {
+            rows.iter()
+                .find(|i| i.label == parent)
+                .unwrap()
+                .submenu
+                .iter()
+                .filter(|i| i.checked)
+                .map(|i| i.label.to_string())
+                .collect()
+        };
+        let h3 = at(MenuChecks {
+            heading: 3,
+            ..MenuChecks::default()
+        });
+        assert_eq!(checked(&h3, "Paragraph"), ["Heading 3"]);
+        assert!(checked(&h3, "Format").is_empty());
+        let bold = at(MenuChecks {
+            bold: true,
+            code: true,
+            ..MenuChecks::default()
+        });
+        assert_eq!(checked(&bold, "Format"), ["Bold", "Code"]);
+        assert_eq!(checked(&bold, "Paragraph"), ["Body"]);
     }
 
     /// "Cut and Copy are drawn disabled with no selection" -- and enabled
@@ -2142,6 +2595,7 @@ mod tests {
             ]
         );
         let live = Target::Editor(EditorClick {
+            checks: MenuChecks::default(),
             spot: Spot::Text,
             selection: "paragraph with".into(),
             selected: true,
@@ -2162,6 +2616,7 @@ mod tests {
     #[test]
     fn a_selection_adds_the_quoted_search_row() {
         let target = Target::Editor(EditorClick {
+            checks: MenuChecks::default(),
             spot: Spot::Text,
             selection: "paragraph with".into(),
             selected: true,
@@ -2175,6 +2630,9 @@ mod tests {
                 "---",
                 "Search for \u{201c}paragraph with\u{201d}",
                 "Extract current selection...",
+                "Format",
+                "Paragraph",
+                "Insert",
                 "---",
                 "Cut",
                 "Copy",
@@ -2191,6 +2649,7 @@ mod tests {
     #[test]
     fn a_click_outside_the_selection_keeps_the_search_row_and_disables_cut() {
         let target = Target::Editor(EditorClick {
+            checks: MenuChecks::default(),
             spot: Spot::Text,
             selection: "paragraph with".into(),
             selected: false,
@@ -2204,29 +2663,35 @@ mod tests {
     }
 
     /// "On a tag the Format row is replaced by Edit tag; the rest is the
-    /// plain menu." Edit tag has no command behind it and Format is a
-    /// submenu, so both are out and a tag's rows are the plain menu's --
-    /// the one place the tag's name still reaches is [`describe`].
+    /// plain menu." Edit tag has no command behind it, so a tag's rows are
+    /// the plain menu's without Format -- the one place the tag's name
+    /// still reaches is [`describe`].
     #[test]
-    fn a_tag_draws_the_plain_menu_until_edit_tag_has_a_command() {
+    fn a_tag_draws_the_plain_menu_without_format() {
         let tag = Target::Editor(EditorClick {
+            checks: MenuChecks::default(),
             spot: Spot::Tag("project".into()),
             selection: String::new(),
             selected: false,
             spelling: None,
         });
-        assert_eq!(drawn(&tag), drawn(&plain_click()));
+        let plain: Vec<String> = drawn(&plain_click())
+            .into_iter()
+            .filter(|row| row != "Format")
+            .collect();
+        assert_eq!(drawn(&tag), plain);
         assert_eq!(tag.path(), "", "a tag names no file");
     }
 
-    /// `s01-editor-menu-live`'s `onWikilink`, minus Edit link, Paragraph,
-    /// Insert and Start presentation: the three Open rows above the text
+    /// `s01-editor-menu-live`'s `onWikilink`, minus Edit link and Start
+    /// presentation: the three Open rows above the text
     /// rows, then Copy path, the action three and the
     /// system three. Dropping Start presentation empties the `view`
     /// section, so the capture's two consecutive separators are one here.
     #[test]
     fn a_wikilink_wraps_the_text_rows_in_the_file_menu() {
         let target = Target::Editor(EditorClick {
+            checks: MenuChecks::default(),
             spot: Spot::Link("Notes/Plan.md".into()),
             selection: String::new(),
             selected: false,
@@ -2241,6 +2706,9 @@ mod tests {
                 "---",
                 "Add link",
                 "Add external link",
+                "---",
+                "Paragraph",
+                "Insert",
                 "---",
                 "Cut",
                 "Copy",
@@ -2359,7 +2827,7 @@ mod tests {
     fn describe_reports_the_target_and_the_drawn_rows() {
         let menu = Menu {
             position: Point::new(px(10.), px(20.)),
-            submenu: false,
+            submenu: Default::default(),
             anchor: Anchor::TopLeft,
             target: Target::Linked("Notes/Plan.md".into()),
         };
@@ -2385,6 +2853,7 @@ mod tests {
             plain_click(),
             spelling_click(&["world"]),
             Target::Editor(EditorClick {
+                checks: MenuChecks::default(),
                 spot: Spot::Link("Plan.md".into()),
                 selection: "some words".into(),
                 selected: true,

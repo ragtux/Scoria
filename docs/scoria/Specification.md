@@ -11512,3 +11512,109 @@ delete “Two.md”?"). Copy path's submenu (section `copy`) is *as Obsidian URL
 (`lucide-link`: `obsidian://open?vault=…&file=search%2FOne`), *from vault folder* (`vault`:
 `search/One`, with no extension) and *from system root* (`lucide-hard-drive`: the absolute path
 with its extension).
+
+## Observed Focus on last note, the caret's menu and Random note, Obsidian 1.15.1
+
+`tools/obsidian-probe/focus-random-menu.mjs`, run 2026-11-16 in a private headless sway with a
+data directory of its own (CDP port 9474); window title "… - Obsidian 1.15.1", user agent
+`obsidian/1.13.7`. The record is `tools/obsidian-probe/results/2026-11-16-focus-random-menu.json`
+(its `_readme` says which run holds which step). It finishes what
+[[#Show context menu under cursor]], [[#Focus on last note]] and
+[[#Observed Random note, Obsidian 1.15.0 (installer build 1.13.7)]] left open.
+
+### Focus on last note, more cases
+
+`editor:focus` is a `checkCallback` (no icon). Each case below started from one group holding
+one empty tab; "the note" is `Note A` in Live Preview.
+
+| Before | After |
+| --- | --- |
+| The note behind a **base** in the same group, the base active | nothing: the base keeps the keyboard |
+| The note behind a **PDF** in the same group | nothing |
+| The note on screen in group 1, a **canvas** active in group 2 | the note's editor (`.cm-content`) takes DOM focus; the **active leaf stays the canvas** |
+| The same with a **base**, a **PDF** or an **empty tab** in group 2 | the same: focus into the note, the active leaf unchanged |
+| The note editing in group 1, `Note B` in the **reading view** active in group 2 | nothing |
+| `Note A` on screen in group 1; group 2 holds `Note B` (made active after A) under a canvas, the canvas active | nothing: the last note, B, is hidden |
+| Three groups, B / canvas / C, C active last of the notes, the canvas active | C's editor takes focus |
+| The search field typing, the note the main area shows | the note becomes the active leaf and takes focus |
+| The search field, the note hidden behind a canvas in its tab | nothing; the search field keeps the keyboard |
+
+After the run over a canvas, a typed `Z` went into the note at its caret (`ZAlpha body`) and
+made it the active leaf (its group took `mod-active`). The rule that fits every case, the
+1.15.0 table's included: take the Markdown leaf **active last**; if its group shows it and it is
+in Live Preview or Source mode, its editor takes the keyboard; otherwise nothing happens, even
+with another note on screen.
+
+### The caret's menu where it has no room
+
+Show context menu under cursor raised the same menu as before; in this session Paste and Paste
+as plain text were disabled (the private session's clipboard was empty). Where the menu fits it
+opens as in the 1.15.0 table: its top-left a pixel past the caret's left and its line's middle
+(a scrolled note's caret at 641.16, 514.45–536.45 gave 643, 527). Where it does not, it **turns
+over**, the way a real right click's menu does:
+
+| Case (window 1596 × 973) | Caret or click | Menu |
+| --- | --- | --- |
+| Caret on the lowest visible line, Live Preview | 622.25, 925.45–947.45 | x 624, y 649, 164.4 × 288.9: its **bottom** at 937.9, the point |
+| The same, Source mode | 622.25, 933.45–955.45 | x 624, y 657: bottom at 945.9 |
+| A real right click there | 624, 936 | x 626, y 649: bottom at 937.9 |
+| Caret at the end of the first row of a long line, readable line length off | 1520.52, 229.45–251.45 | x 1354, y 242: its **right edge** at 1518.4 |
+| A real right click near the right edge | 1470, 240 | x 1304, y 242: right edge at 1468.4 |
+| Source mode, `selected words` selected, caret low | 770.14, 837.45–859.45 | x 772, y 511, 219.9 × 338.7: bottom at 849.7 |
+
+So a menu turned upward keeps its left edge and puts its bottom where its top would have been;
+one turned leftward keeps its top and puts its right edge about 2 px left of the caret (or the
+click), 4 px left of where its left edge would have been.
+
+### The editor menu's submenus
+
+Hovering **Format**, **Paragraph** and **Insert** (real pointer moves) opens each. The rows were
+the same in Live Preview and Source mode, with and without a selection:
+
+| Submenu | Rows (icon) |
+| --- | --- |
+| Format | Bold (`lucide-bold`), Italic (`lucide-italic`), Strikethrough (`lucide-strikethrough`), Highlight ▸ (`lucide-highlighter`), ---, Code (`lucide-code-2`), Math (`lucide-sigma`), Comment (`lucide-percent`), ---, Clear formatting (`lucide-eraser`) |
+| Format ▸ Highlight | Default (`lucide-highlighter`), Red, Orange, Yellow, Green, Blue, Purple (each a `div.highlight-swatch[data-highlight=<colour>]` where the icon goes) |
+| Paragraph | Bullet list (`lucide-list`), Numbered list (`lucide-list-ordered`), Task list (`lucide-check-square`), ---, Heading 1 … Heading 6 (`lucide-heading-1` … `-6`), Body (`lucide-text`), ---, Quote (`lucide-quote`) |
+| Insert | Footnote (`lucide-file-signature`), Table (`lucide-table`), Callout (`lucide-quote`), Horizontal rule (`lucide-minus`), ---, Code block (`lucide-code`), Math block (`lucide-sigma-square`), New base (`lucide-layout-list`) |
+
+**Every row is a command.** Each row was clicked on a fresh copy of `# Fmt\n\nalpha beta
+gamma\n\nsecond line\n` with `beta` selected and, for Paragraph and Insert, with the caret inside
+it; then the command of the same name was run by id on another fresh copy. Note, caret and
+selection matched for every pair: Bold `editor:toggle-bold`, Italic `editor:toggle-italics`,
+Strikethrough `editor:toggle-strikethrough`, Code `editor:toggle-code`, Math
+`editor:toggle-inline-math`, Comment `editor:toggle-comments`, Clear formatting
+`editor:clear-formatting`, Bullet list `editor:toggle-bullet-list`, Numbered list
+`editor:toggle-numbered-list`, Task list `editor:toggle-checklist-status`, Heading N
+`editor:set-heading-N`, Body `editor:set-heading-0` ("Remove heading"), Quote
+`editor:toggle-blockquote`, Footnote `editor:insert-footnote`, Table `editor:insert-table`,
+Callout `editor:insert-callout`, Horizontal rule `editor:insert-horizontal-rule`, Code block
+`editor:insert-codeblock`, Math block `editor:insert-mathblock`, New base `bases:insert` (the
+same `![[Untitled N.base]]`, N the next free number). Highlight's rows wrote `==beta==` and
+`==🔴beta==` … `==🟣beta==`, the selection kept on `beta`; at a caret the same around the word,
+which is what `editor:toggle-highlight` and `editor:toggle-highlight-<colour>` write.
+
+**Checks.** With the caret on each kind of line, Paragraph checked **Heading N** on an ATX
+heading of level N and **Body** on everything else — a bullet, a numbered item, a task, a quote,
+a paragraph. Format checked **Bold** inside `**bold**`, **Italic** inside `*it*` and **Code**
+inside `` `code` ``, and nothing inside `==hl==`, `%%c%%` or `$m$`.
+
+### Random note, more cases
+
+Forty runs over five notes beside a canvas, a base and a PDF picked only notes (12, 9, 8, 6 and
+5 times), the same note twice running more than once. Each pick that changed the file pushed one
+history entry; a pick of the note already open pushed none. From an **empty tab** the note opens
+in it and the tab's history stays empty; from a **canvas** tab it replaces the canvas, which goes
+into the history; from a **pinned** tab the first run opens a new tab beside it and later runs
+reuse that tab; with the search field typing it opens in the main area's last tab; with two
+groups it opens in the group active last. No notice in any case. Enabling the plugin at runtime
+put its ribbon button after Create new base, last: the ribbon's order is the order the plugins
+were loaded, which at launch is `core-plugins.json`'s.
+
+### Not settled: Focus on last note, the menu and Random note
+- Which note Focus on last note picks after a relaunch, before any note has been active (the
+  probe always made one active first).
+- Format's rows at a caret (the first submenu opened in each session missed its hover, and the
+  caret run of Format had no rows to click); the selection run and the commands agree.
+- Strikethrough's check, and the checks in Live Preview (read in Source mode).
+- The highlight swatch's size and colour.
