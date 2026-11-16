@@ -1,0 +1,1335 @@
+{
+ "fixtures": {
+  "startedAt": "2026-11-16T01:21:51.928Z",
+  "steps": {},
+  "order": [],
+  "elapsedMs": 1
+ },
+ "run": {
+  "startedAt": "2026-11-16T01:21:53.146Z",
+  "steps": {
+   "s00-registry": {
+    "ok": true,
+    "ms": 1180,
+    "title": "New tab - scoria-probe-vault.0NONif - Obsidian 1.15.0",
+    "apiVersion": null,
+    "isMobile": false,
+    "ids": [
+     {
+      "id": "app:reload",
+      "registered": true,
+      "inEditorCommands": false,
+      "name": "Reload app without saving",
+      "kinds": [
+       "callback"
+      ],
+      "listed": true,
+      "mobileOnly": false,
+      "defaultKeys": null
+     },
+     {
+      "id": "app:show-tab-switcher",
+      "registered": false,
+      "inEditorCommands": false,
+      "name": null,
+      "kinds": [],
+      "listed": false,
+      "mobileOnly": null,
+      "defaultKeys": null
+     },
+     {
+      "id": "editor:configure-toolbar",
+      "registered": false,
+      "inEditorCommands": false,
+      "name": null,
+      "kinds": [],
+      "listed": false,
+      "mobileOnly": null,
+      "defaultKeys": null
+     },
+     {
+      "id": "editor:copy",
+      "registered": false,
+      "inEditorCommands": false,
+      "name": null,
+      "kinds": [],
+      "listed": false,
+      "mobileOnly": null,
+      "defaultKeys": null
+     },
+     {
+      "id": "editor:cut",
+      "registered": false,
+      "inEditorCommands": false,
+      "name": null,
+      "kinds": [],
+      "listed": false,
+      "mobileOnly": null,
+      "defaultKeys": null
+     },
+     {
+      "id": "editor:paste",
+      "registered": false,
+      "inEditorCommands": false,
+      "name": null,
+      "kinds": [],
+      "listed": false,
+      "mobileOnly": null,
+      "defaultKeys": null
+     },
+     {
+      "id": "editor:undo",
+      "registered": false,
+      "inEditorCommands": false,
+      "name": null,
+      "kinds": [],
+      "listed": false,
+      "mobileOnly": null,
+      "defaultKeys": null
+     },
+     {
+      "id": "editor:redo",
+      "registered": false,
+      "inEditorCommands": false,
+      "name": null,
+      "kinds": [],
+      "listed": false,
+      "mobileOnly": null,
+      "defaultKeys": null
+     },
+     {
+      "id": "editor:go-start",
+      "registered": false,
+      "inEditorCommands": false,
+      "name": null,
+      "kinds": [],
+      "listed": false,
+      "mobileOnly": null,
+      "defaultKeys": null
+     },
+     {
+      "id": "editor:go-end",
+      "registered": false,
+      "inEditorCommands": false,
+      "name": null,
+      "kinds": [],
+      "listed": false,
+      "mobileOnly": null,
+      "defaultKeys": null
+     },
+     {
+      "id": "editor:move-caret-up",
+      "registered": false,
+      "inEditorCommands": false,
+      "name": null,
+      "kinds": [],
+      "listed": false,
+      "mobileOnly": null,
+      "defaultKeys": null
+     },
+     {
+      "id": "editor:move-caret-down",
+      "registered": false,
+      "inEditorCommands": false,
+      "name": null,
+      "kinds": [],
+      "listed": false,
+      "mobileOnly": null,
+      "defaultKeys": null
+     },
+     {
+      "id": "editor:move-caret-left",
+      "registered": false,
+      "inEditorCommands": false,
+      "name": null,
+      "kinds": [],
+      "listed": false,
+      "mobileOnly": null,
+      "defaultKeys": null
+     },
+     {
+      "id": "editor:move-caret-right",
+      "registered": false,
+      "inEditorCommands": false,
+      "name": null,
+      "kinds": [],
+      "listed": false,
+      "mobileOnly": null,
+      "defaultKeys": null
+     },
+     {
+      "id": "editor:toggle-keyboard",
+      "registered": false,
+      "inEditorCommands": false,
+      "name": null,
+      "kinds": [],
+      "listed": false,
+      "mobileOnly": null,
+      "defaultKeys": null
+     },
+     {
+      "id": "editor:table-col-duplicate",
+      "registered": false,
+      "inEditorCommands": false,
+      "name": null,
+      "kinds": [],
+      "listed": false,
+      "mobileOnly": null,
+      "defaultKeys": null
+     },
+     {
+      "id": "editor:table-row-duplicate",
+      "registered": false,
+      "inEditorCommands": false,
+      "name": null,
+      "kinds": [],
+      "listed": false,
+      "mobileOnly": null,
+      "defaultKeys": null
+     },
+     {
+      "id": "editor:table-row-copy",
+      "registered": true,
+      "inEditorCommands": true,
+      "name": "Table: Duplicate row",
+      "kinds": [
+       "checkCallback",
+       "editorCheckCallback"
+      ],
+      "listed": false,
+      "mobileOnly": false,
+      "defaultKeys": null
+     },
+     {
+      "id": "editor:table-col-copy",
+      "registered": true,
+      "inEditorCommands": true,
+      "name": "Table: Duplicate column",
+      "kinds": [
+       "checkCallback",
+       "editorCheckCallback"
+      ],
+      "listed": false,
+      "mobileOnly": false,
+      "defaultKeys": null
+     },
+     {
+      "id": "markdown-importer:open",
+      "registered": false,
+      "inEditorCommands": false,
+      "name": null,
+      "kinds": [],
+      "listed": false,
+      "mobileOnly": null,
+      "defaultKeys": null
+     },
+     {
+      "id": "mobile:quick-action",
+      "registered": true,
+      "inEditorCommands": false,
+      "name": "Configure mobile Quick Action",
+      "kinds": [
+       "checkCallback"
+      ],
+      "listed": false,
+      "mobileOnly": false,
+      "defaultKeys": null
+     },
+     {
+      "id": "window:zoom-in",
+      "registered": true,
+      "inEditorCommands": false,
+      "name": "Zoom in",
+      "kinds": [
+       "callback"
+      ],
+      "listed": true,
+      "mobileOnly": false,
+      "defaultKeys": null
+     },
+     {
+      "id": "window:zoom-out",
+      "registered": true,
+      "inEditorCommands": false,
+      "name": "Zoom out",
+      "kinds": [
+       "callback"
+      ],
+      "listed": true,
+      "mobileOnly": false,
+      "defaultKeys": null
+     },
+     {
+      "id": "window:reset-zoom",
+      "registered": true,
+      "inEditorCommands": false,
+      "name": "Reset zoom",
+      "kinds": [
+       "callback"
+      ],
+      "listed": true,
+      "mobileOnly": false,
+      "defaultKeys": null
+     },
+     {
+      "id": "window:toggle-always-on-top",
+      "registered": true,
+      "inEditorCommands": false,
+      "name": "Toggle window always on top",
+      "kinds": [
+       "checkCallback"
+      ],
+      "listed": false,
+      "mobileOnly": false,
+      "defaultKeys": null
+     }
+    ],
+    "commandsOwnKeys": [
+     "_",
+     "commands",
+     "editorCommands",
+     "app"
+    ],
+    "allIds": [
+     "app:decrease-font-size",
+     "app:delete-file",
+     "app:go-back",
+     "app:go-forward",
+     "app:increase-font-size",
+     "app:migrate-frontmatter",
+     "app:open-another-vault",
+     "app:open-file",
+     "app:open-help",
+     "app:open-sandbox-vault",
+     "app:open-settings",
+     "app:open-vault",
+     "app:reload",
+     "app:show-debug-info",
+     "app:show-release-notes",
+     "app:switch-vault",
+     "app:toggle-default-new-pane-mode",
+     "app:toggle-left-sidebar",
+     "app:toggle-ribbon",
+     "app:toggle-right-sidebar",
+     "backlink:open",
+     "backlink:open-backlinks",
+     "backlink:toggle-backlinks-in-document",
+     "bases:add-item",
+     "bases:add-view",
+     "bases:change-view",
+     "bases:copy-table",
+     "bases:insert",
+     "bases:new-file",
+     "bookmarks:bookmark-all-tabs",
+     "bookmarks:bookmark-current-heading",
+     "bookmarks:bookmark-current-search",
+     "bookmarks:bookmark-current-section",
+     "bookmarks:bookmark-current-view",
+     "bookmarks:open",
+     "bookmarks:unbookmark-current-view",
+     "canvas:convert-to-file",
+     "canvas:export-as-image",
+     "canvas:jump-to-group",
+     "canvas:new-file",
+     "command-palette:open",
+     "daily-notes",
+     "daily-notes:goto-next",
+     "daily-notes:goto-prev",
+     "editor:add-cursor-above",
+     "editor:add-cursor-below",
+     "editor:attach-file",
+     "editor:clear-formatting",
+     "editor:context-menu",
+     "editor:cycle-list-checklist",
+     "editor:delete-paragraph",
+     "editor:download-attachments",
+     "editor:focus",
+     "editor:focus-bottom",
+     "editor:focus-left",
+     "editor:focus-right",
+     "editor:focus-top",
+     "editor:fold-all",
+     "editor:fold-less",
+     "editor:fold-more",
+     "editor:follow-link",
+     "editor:indent-list",
+     "editor:insert-callout",
+     "editor:insert-codeblock",
+     "editor:insert-embed",
+     "editor:insert-footnote",
+     "editor:insert-horizontal-rule",
+     "editor:insert-link",
+     "editor:insert-mathblock",
+     "editor:insert-table",
+     "editor:insert-tag",
+     "editor:insert-wikilink",
+     "editor:open-link-in-new-leaf",
+     "editor:open-link-in-new-split",
+     "editor:open-link-in-new-window",
+     "editor:open-search",
+     "editor:open-search-replace",
+     "editor:rename-heading",
+     "editor:save-file",
+     "editor:set-heading",
+     "editor:set-heading-0",
+     "editor:set-heading-1",
+     "editor:set-heading-2",
+     "editor:set-heading-3",
+     "editor:set-heading-4",
+     "editor:set-heading-5",
+     "editor:set-heading-6",
+     "editor:swap-line-down",
+     "editor:swap-line-up",
+     "editor:table-col-after",
+     "editor:table-col-align-center",
+     "editor:table-col-align-left",
+     "editor:table-col-align-right",
+     "editor:table-col-before",
+     "editor:table-col-copy",
+     "editor:table-col-delete",
+     "editor:table-col-left",
+     "editor:table-col-right",
+     "editor:table-row-after",
+     "editor:table-row-before",
+     "editor:table-row-copy",
+     "editor:table-row-delete",
+     "editor:table-row-down",
+     "editor:table-row-up",
+     "editor:toggle-blockquote",
+     "editor:toggle-bold",
+     "editor:toggle-bullet-list",
+     "editor:toggle-checklist-status",
+     "editor:toggle-code",
+     "editor:toggle-comments",
+     "editor:toggle-fold",
+     "editor:toggle-fold-properties",
+     "editor:toggle-highlight",
+     "editor:toggle-highlight-blue",
+     "editor:toggle-highlight-green",
+     "editor:toggle-highlight-orange",
+     "editor:toggle-highlight-purple",
+     "editor:toggle-highlight-red",
+     "editor:toggle-highlight-yellow",
+     "editor:toggle-inline-math",
+     "editor:toggle-italics",
+     "editor:toggle-line-numbers",
+     "editor:toggle-numbered-list",
+     "editor:toggle-readable-line-length",
+     "editor:toggle-source",
+     "editor:toggle-spellcheck",
+     "editor:toggle-strikethrough",
+     "editor:unfold-all",
+     "editor:unindent-list",
+     "file-explorer:duplicate-file",
+     "file-explorer:move-file",
+     "file-explorer:new-file",
+     "file-explorer:new-file-in-current-tab",
+     "file-explorer:new-file-in-new-pane",
+     "file-explorer:new-folder",
+     "file-explorer:open",
+     "file-explorer:reveal-active-file",
+     "file-recovery:open",
+     "global-search:open",
+     "graph:animate",
+     "graph:open",
+     "graph:open-local",
+     "insert-current-date",
+     "insert-current-time",
+     "insert-template",
+     "markdown:add-alias",
+     "markdown:add-metadata-property",
+     "markdown:clear-metadata-properties",
+     "markdown:toggle-preview",
+     "mobile:quick-action",
+     "note-composer:extract-heading",
+     "note-composer:merge-file",
+     "note-composer:split-file",
+     "open-with-default-app:open",
+     "open-with-default-app:show",
+     "outgoing-links:open",
+     "outgoing-links:open-for-current",
+     "outline:open",
+     "outline:open-for-current",
+     "properties:open",
+     "properties:open-local",
+     "switcher:open",
+     "sync:open-sync-log",
+     "sync:open-sync-view",
+     "sync:setup",
+     "sync:view-version-history",
+     "tag-pane:open",
+     "theme:switch",
+     "theme:toggle-light-dark",
+     "window:reset-zoom",
+     "window:toggle-always-on-top",
+     "window:zoom-in",
+     "window:zoom-out",
+     "workspace:close",
+     "workspace:close-others",
+     "workspace:close-others-tab-group",
+     "workspace:close-tab-group",
+     "workspace:close-window",
+     "workspace:copy-full-path",
+     "workspace:copy-path",
+     "workspace:copy-url",
+     "workspace:edit-file-title",
+     "workspace:export-pdf",
+     "workspace:goto-last-tab",
+     "workspace:goto-tab-1",
+     "workspace:goto-tab-2",
+     "workspace:goto-tab-3",
+     "workspace:goto-tab-4",
+     "workspace:goto-tab-5",
+     "workspace:goto-tab-6",
+     "workspace:goto-tab-7",
+     "workspace:goto-tab-8",
+     "workspace:move-to-new-window",
+     "workspace:new-tab",
+     "workspace:new-window",
+     "workspace:next-tab",
+     "workspace:open-in-new-window",
+     "workspace:previous-tab",
+     "workspace:show-trash",
+     "workspace:split-horizontal",
+     "workspace:split-vertical",
+     "workspace:toggle-pin",
+     "workspace:toggle-stacked-tabs",
+     "workspace:undo-close-pane"
+    ],
+    "internalPlugins": [
+     "audio-recorder",
+     "backlink",
+     "bases",
+     "bookmarks",
+     "canvas",
+     "command-palette",
+     "daily-notes",
+     "editor-status",
+     "file-explorer",
+     "file-recovery",
+     "footnotes",
+     "global-search",
+     "graph",
+     "note-composer",
+     "outgoing-link",
+     "outline",
+     "page-preview",
+     "properties",
+     "publish",
+     "random-note",
+     "slash-command",
+     "slides",
+     "switcher",
+     "sync",
+     "tag-pane",
+     "templates",
+     "webviewer",
+     "word-count",
+     "workspaces",
+     "zk-prefixer"
+    ]
+   },
+   "s01-menu": {
+    "ok": true,
+    "ms": 5,
+    "menu": {
+     "app": [
+      {
+       "label": "&File",
+       "role": null,
+       "accelerator": null,
+       "id": null,
+       "visible": true,
+       "sub": [
+        {
+         "label": "Open Vault...",
+         "role": null,
+         "accelerator": null,
+         "id": "open-vault",
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "",
+         "role": null,
+         "accelerator": null,
+         "id": "open-section",
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "Close",
+         "role": "close",
+         "accelerator": "CommandOrControl+W",
+         "id": "close-window",
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "",
+         "role": null,
+         "accelerator": null,
+         "id": null,
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "Quit",
+         "role": "quit",
+         "accelerator": "CommandOrControl+Q",
+         "id": "quit",
+         "visible": true,
+         "sub": null
+        }
+       ]
+      },
+      {
+       "label": "&Edit",
+       "role": null,
+       "accelerator": null,
+       "id": null,
+       "visible": true,
+       "sub": [
+        {
+         "label": "Undo",
+         "role": "undo",
+         "accelerator": "CommandOrControl+Z",
+         "id": null,
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "Redo",
+         "role": null,
+         "accelerator": "CmdOrCtrl+Shift+Z",
+         "id": null,
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "",
+         "role": null,
+         "accelerator": null,
+         "id": "undo-section",
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "Cut",
+         "role": "cut",
+         "accelerator": "CommandOrControl+X",
+         "id": null,
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "Copy",
+         "role": "copy",
+         "accelerator": "CommandOrControl+C",
+         "id": null,
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "Paste",
+         "role": "paste",
+         "accelerator": "CommandOrControl+V",
+         "id": null,
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "Paste and Match Style",
+         "role": "pasteandmatchstyle",
+         "accelerator": "Shift+CommandOrControl+V",
+         "id": null,
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "Paste and Match Style",
+         "role": null,
+         "accelerator": "Shift+CommandOrControl+Alt+V",
+         "id": null,
+         "visible": false,
+         "sub": null
+        },
+        {
+         "label": "Delete",
+         "role": "delete",
+         "accelerator": null,
+         "id": null,
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "Select All",
+         "role": "selectall",
+         "accelerator": "CommandOrControl+A",
+         "id": null,
+         "visible": true,
+         "sub": null
+        }
+       ]
+      },
+      {
+       "label": "&View",
+       "role": null,
+       "accelerator": null,
+       "id": null,
+       "visible": true,
+       "sub": [
+        {
+         "label": "Actual Size",
+         "role": null,
+         "accelerator": "CommandOrControl+0",
+         "id": "actual-size",
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "Zoom In",
+         "role": null,
+         "accelerator": "CommandOrControl+=",
+         "id": null,
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "Zoom Out",
+         "role": null,
+         "accelerator": "CommandOrControl+-",
+         "id": null,
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "",
+         "role": null,
+         "accelerator": null,
+         "id": "developer-section",
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "Force Reload",
+         "role": "forcereload",
+         "accelerator": null,
+         "id": null,
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "Toggle Developer Tools",
+         "role": null,
+         "accelerator": "Ctrl+Shift+I",
+         "id": null,
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "",
+         "role": null,
+         "accelerator": null,
+         "id": null,
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "Toggle Full Screen",
+         "role": "togglefullscreen",
+         "accelerator": "F11",
+         "id": null,
+         "visible": true,
+         "sub": null
+        }
+       ]
+      },
+      {
+       "label": "&Window",
+       "role": "window",
+       "accelerator": null,
+       "id": null,
+       "visible": true,
+       "sub": [
+        {
+         "label": "Minimize",
+         "role": "minimize",
+         "accelerator": null,
+         "id": null,
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "",
+         "role": null,
+         "accelerator": null,
+         "id": null,
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "Always on Top",
+         "role": null,
+         "accelerator": null,
+         "id": "window-always-on-top",
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "Bring All to Front",
+         "role": "front",
+         "accelerator": null,
+         "id": null,
+         "visible": true,
+         "sub": null
+        }
+       ]
+      },
+      {
+       "label": "&Help",
+       "role": "help",
+       "accelerator": null,
+       "id": null,
+       "visible": true,
+       "sub": [
+        {
+         "label": "Open Help",
+         "role": null,
+         "accelerator": null,
+         "id": null,
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "",
+         "role": null,
+         "accelerator": null,
+         "id": "help-links",
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "Homepage",
+         "role": null,
+         "accelerator": null,
+         "id": null,
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "Community",
+         "role": null,
+         "accelerator": null,
+         "id": null,
+         "visible": true,
+         "sub": null
+        },
+        {
+         "label": "Help Center",
+         "role": null,
+         "accelerator": null,
+         "id": null,
+         "visible": true,
+         "sub": null
+        }
+       ]
+      }
+     ],
+     "wins": [
+      {
+       "title": "Table - scoria-probe-vault.0NONif - Obsidian 1.15.0",
+       "menuBarVisible": false,
+       "autoHide": false,
+       "zoom": 0
+      }
+     ]
+    }
+   },
+   "s02-reload": {
+    "ok": true,
+    "ms": 14357,
+    "before": {
+     "groups": [
+      {
+       "tabs": [
+        {
+         "type": "markdown",
+         "file": "Long.md",
+         "mode": "source",
+         "ed": {
+          "cursor": {
+           "line": 120,
+           "ch": 5
+          },
+          "scroll": 4560.703125
+         },
+         "preview": null,
+         "active": true,
+         "backHistory": [
+          "Table.md",
+          "Third.md"
+         ],
+         "ephemeral": {
+          "cursor": {
+           "from": {
+            "line": 120,
+            "ch": 5
+           },
+           "to": {
+            "line": 120,
+            "ch": 5
+           }
+          },
+          "scroll": 81.86505692505249
+         }
+        },
+        {
+         "type": "markdown",
+         "file": "Third.md",
+         "mode": "source",
+         "ed": {
+          "cursor": {
+           "line": 0,
+           "ch": 0
+          },
+          "scroll": 0
+         },
+         "preview": null,
+         "active": false,
+         "backHistory": [],
+         "ephemeral": {
+          "cursor": {
+           "from": {
+            "line": 0,
+            "ch": 0
+           },
+           "to": {
+            "line": 0,
+            "ch": 0
+           }
+          }
+         }
+        }
+       ],
+       "current": 0
+      },
+      {
+       "tabs": [
+        {
+         "type": "markdown",
+         "file": "Other.md",
+         "mode": "preview",
+         "ed": {
+          "cursor": {
+           "line": 0,
+           "ch": 0
+          },
+          "scroll": 0
+         },
+         "preview": 0,
+         "active": false,
+         "backHistory": [],
+         "ephemeral": {}
+        }
+       ],
+       "current": 0
+      }
+     ],
+     "search": {
+      "query": "needle",
+      "visible": true
+     },
+     "leftWidth": 300,
+     "leftCollapsed": false,
+     "rightCollapsed": true,
+     "popouts": 1,
+     "zoom": 0.5,
+     "dpr": 1.095445156097412,
+     "font": "17px",
+     "probeVar": "",
+     "showLineNumber": false,
+     "snippets": [],
+     "lineNumbersInDom": false,
+     "lastOpen": [
+      "Other.md",
+      "Third.md",
+      "Long.md",
+      "Table.md"
+     ]
+    },
+    "workspaceBefore": "{\n  \"main\": {\n    \"id\": \"3c1fc6bfd121401e\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"3a5c7114d96d41ca\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"95894577d7fd4299\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Long.md\",\n                \"mode\": \"source\",\n                \"source\": true\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Long\"\n            }\n          },\n          {\n            \"id\": \"04cfce502d3a2dbe\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Third.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Third\"\n            }\n          }\n        ]\n      },\n      {\n        \"id\": \"ad521e4b61d9ff05\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"33820a94817ff190\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Other.md\",\n                \"mode\": \"preview\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Other\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"vertical\"\n  },\n  \"left\": {\n    \"id\": \"7a2421ebc4e7d919\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"576ce9b45e47676f\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"4264289a9780b16a\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"file-explorer\",\n              \"state\": {\n                \"sortOrder\": \"alphabetical\",\n                \"autoReveal\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-folder-closed\",\n              \"title\": \"Files\"\n            }\n          },\n          {\n            \"id\": \"959a645ab32f33c0\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"search\",\n              \"state\": {\n                \"query\": \"needle\",\n                \"matchingCase\": false,\n                \"explainSearch\": false,\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\"\n              },\n              \"icon\": \"lucide-search\",\n              \"title\": \"Search\"\n            }\n          },\n          {\n            \"id\": \"2685eb6f8b2393f7\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"bookmarks\",\n              \"state\": {\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-bookmark\",\n              \"title\": \"Bookmarks\"\n            }\n          }\n        ],\n        \"currentTab\": 1\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300\n  },\n  \"right\": {\n    \"id\": \"fe55c7698b9e81f3\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"86dd5e1ddd373dd5\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"ce0380062279b9ee\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"backlink\",\n              \"state\": {\n                \"file\": \"Long.md\",\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\",\n                \"backlinkCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-coming-in\",\n              \"title\": \"Backlinks\"\n            }\n          },\n          {\n            \"id\": \"7f35f4cf53cfbdce\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outgoing-link\",\n              \"state\": {\n                \"file\": \"Long.md\",\n                \"linksCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-going-out\",\n              \"title\": \"Outgoing links\"\n            }\n          },\n          {\n            \"id\": \"094f2546872bf90c\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"tag\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"useHierarchy\": true,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-tags\",\n              \"title\": \"Tags\"\n            }\n          },\n          {\n            \"id\": \"ede11da6515d9925\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"all-properties\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-archive\",\n              \"title\": \"All properties\"\n            }\n          },\n          {\n            \"id\": \"29c917a18a07759b\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outline\",\n              \"state\": {\n                \"file\": \"Long.md\",\n                \"followCursor\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-list\",\n              \"title\": \"Outline\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300,\n    \"collapsed\": true\n  },\n  \"left-ribbon\": {\n    \"hiddenItems\": {\n      \"switcher:Open quick switcher\": false,\n      \"graph:Open graph view\": false,\n      \"canvas:Create new canvas\": false,\n      \"daily-notes:Open today's daily note\": false,\n      \"templates:Insert template\": false,\n      \"command-palette:Open command palette\": false,\n      \"bases:Create new base\": false\n    }\n  },\n  \"floating\": {\n    \"id\": \"b4fb38ee259ffe31\",\n    \"type\": \"floating\",\n    \"children\": [\n      {\n        \"id\": \"619fc3b423c8e255\",\n        \"type\": \"window\",\n        \"children\": [\n          {\n            \"id\": \"c2357f1bbafcbede\",\n            \"type\": \"tabs\",\n            \"children\": [\n              {\n                \"id\": \"a01107db85f47f89\",\n                \"type\": \"leaf\",\n                \"state\": {\n                  \"type\": \"markdown\",\n                  \"state\": {\n                    \"file\": \"Pop.md\",\n                    \"mode\": \"source\",\n                    \"source\": false\n                  },\n                  \"icon\": \"lucide-file\",\n                  \"title\": \"Pop\"\n                }\n              }\n            ]\n          }\n        ],\n        \"direction\": \"vertical\",\n        \"x\": 10,\n        \"y\": 10,\n        \"width\": 956,\n        \"height\": 1173,\n        \"maximize\": false,\n        \"zoom\": 0\n      }\n    ]\n  },\n  \"active\": \"95894577d7fd4299\",\n  \"lastOpenFiles\": [\n    \"Other.md\",\n    \"Third.md\",\n    \"Long.md\",\n    \"Table.md\"\n  ]\n}",
+    "beforeReloadAfterExternal": {
+     "groups": [
+      {
+       "tabs": [
+        {
+         "type": "markdown",
+         "file": "Long.md",
+         "mode": "source",
+         "ed": {
+          "cursor": {
+           "line": 120,
+           "ch": 5
+          },
+          "scroll": 4815.39404296875
+         },
+         "preview": null,
+         "active": true,
+         "backHistory": [
+          "Table.md",
+          "Third.md"
+         ],
+         "ephemeral": {
+          "cursor": {
+           "from": {
+            "line": 120,
+            "ch": 5
+           },
+           "to": {
+            "line": 120,
+            "ch": 5
+           }
+          },
+          "scroll": 82.23889579488804
+         }
+        },
+        {
+         "type": "markdown",
+         "file": "Third.md",
+         "mode": "source",
+         "ed": {
+          "cursor": {
+           "line": 0,
+           "ch": 0
+          },
+          "scroll": 0
+         },
+         "preview": null,
+         "active": false,
+         "backHistory": [],
+         "ephemeral": {
+          "cursor": {
+           "from": {
+            "line": 0,
+            "ch": 0
+           },
+           "to": {
+            "line": 0,
+            "ch": 0
+           }
+          }
+         }
+        }
+       ],
+       "current": 0
+      },
+      {
+       "tabs": [
+        {
+         "type": "markdown",
+         "file": "Other.md",
+         "mode": "preview",
+         "ed": {
+          "cursor": {
+           "line": 0,
+           "ch": 0
+          },
+          "scroll": 0
+         },
+         "preview": 0,
+         "active": false,
+         "backHistory": [],
+         "ephemeral": {}
+        }
+       ],
+       "current": 0
+      }
+     ],
+     "search": {
+      "query": "needle",
+      "visible": true
+     },
+     "leftWidth": 300,
+     "leftCollapsed": false,
+     "rightCollapsed": true,
+     "popouts": 1,
+     "zoom": 0.5,
+     "dpr": 1.095445156097412,
+     "font": "17px",
+     "probeVar": "",
+     "showLineNumber": true,
+     "snippets": [],
+     "lineNumbersInDom": true,
+     "lastOpen": [
+      "Other.md",
+      "Third.md",
+      "Long.md",
+      "Table.md"
+     ]
+    },
+    "workspaceAtReload": "{\n  \"main\": {\n    \"id\": \"3c1fc6bfd121401e\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"3a5c7114d96d41ca\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"95894577d7fd4299\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Long.md\",\n                \"mode\": \"source\",\n                \"source\": true\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Long\"\n            }\n          },\n          {\n            \"id\": \"04cfce502d3a2dbe\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Third.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Third\"\n            }\n          }\n        ]\n      },\n      {\n        \"id\": \"ad521e4b61d9ff05\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"33820a94817ff190\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Other.md\",\n                \"mode\": \"preview\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Other\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"vertical\"\n  },\n  \"left\": {\n    \"id\": \"7a2421ebc4e7d919\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"576ce9b45e47676f\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"4264289a9780b16a\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"file-explorer\",\n              \"state\": {\n                \"sortOrder\": \"alphabetical\",\n                \"autoReveal\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-folder-closed\",\n              \"title\": \"Files\"\n            }\n          },\n          {\n            \"id\": \"959a645ab32f33c0\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"search\",\n              \"state\": {\n                \"query\": \"needle\",\n                \"matchingCase\": false,\n                \"explainSearch\": false,\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\"\n              },\n              \"icon\": \"lucide-search\",\n              \"title\": \"Search\"\n            }\n          },\n          {\n            \"id\": \"2685eb6f8b2393f7\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"bookmarks\",\n              \"state\": {\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-bookmark\",\n              \"title\": \"Bookmarks\"\n            }\n          }\n        ],\n        \"currentTab\": 1\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300\n  },\n  \"right\": {\n    \"id\": \"fe55c7698b9e81f3\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"86dd5e1ddd373dd5\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"ce0380062279b9ee\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"backlink\",\n              \"state\": {\n                \"file\": \"Long.md\",\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\",\n                \"backlinkCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-coming-in\",\n              \"title\": \"Backlinks\"\n            }\n          },\n          {\n            \"id\": \"7f35f4cf53cfbdce\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outgoing-link\",\n              \"state\": {\n                \"file\": \"Long.md\",\n                \"linksCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-going-out\",\n              \"title\": \"Outgoing links\"\n            }\n          },\n          {\n            \"id\": \"094f2546872bf90c\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"tag\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"useHierarchy\": true,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-tags\",\n              \"title\": \"Tags\"\n            }\n          },\n          {\n            \"id\": \"ede11da6515d9925\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"all-properties\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-archive\",\n              \"title\": \"All properties\"\n            }\n          },\n          {\n            \"id\": \"29c917a18a07759b\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outline\",\n              \"state\": {\n                \"file\": \"Long.md\",\n                \"followCursor\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-list\",\n              \"title\": \"Outline\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300,\n    \"collapsed\": true\n  },\n  \"left-ribbon\": {\n    \"hiddenItems\": {\n      \"switcher:Open quick switcher\": false,\n      \"graph:Open graph view\": false,\n      \"canvas:Create new canvas\": false,\n      \"daily-notes:Open today's daily note\": false,\n      \"templates:Insert template\": false,\n      \"command-palette:Open command palette\": false,\n      \"bases:Create new base\": false\n    }\n  },\n  \"floating\": {\n    \"id\": \"b4fb38ee259ffe31\",\n    \"type\": \"floating\",\n    \"children\": [\n      {\n        \"id\": \"619fc3b423c8e255\",\n        \"type\": \"window\",\n        \"children\": [\n          {\n            \"id\": \"c2357f1bbafcbede\",\n            \"type\": \"tabs\",\n            \"children\": [\n              {\n                \"id\": \"a01107db85f47f89\",\n                \"type\": \"leaf\",\n                \"state\": {\n                  \"type\": \"markdown\",\n                  \"state\": {\n                    \"file\": \"Pop.md\",\n                    \"mode\": \"source\",\n                    \"source\": false\n                  },\n                  \"icon\": \"lucide-file\",\n                  \"title\": \"Pop\"\n                }\n              }\n            ]\n          }\n        ],\n        \"direction\": \"vertical\",\n        \"x\": 10,\n        \"y\": 10,\n        \"width\": 956,\n        \"height\": 1173,\n        \"maximize\": false,\n        \"zoom\": 0\n      }\n    ]\n  },\n  \"active\": \"95894577d7fd4299\",\n  \"lastOpenFiles\": [\n    \"Other.md\",\n    \"Third.md\",\n    \"Long.md\",\n    \"Table.md\"\n  ]\n}",
+    "run": true,
+    "targets": 2,
+    "after": {
+     "groups": [
+      {
+       "tabs": [
+        {
+         "type": "markdown",
+         "file": "Long.md",
+         "mode": "source",
+         "ed": {
+          "cursor": {
+           "line": 0,
+           "ch": 0
+          },
+          "scroll": 0
+         },
+         "preview": null,
+         "active": true,
+         "backHistory": [],
+         "ephemeral": {
+          "cursor": {
+           "from": {
+            "line": 0,
+            "ch": 0
+           },
+           "to": {
+            "line": 0,
+            "ch": 0
+           }
+          }
+         }
+        },
+        {
+         "type": "markdown",
+         "file": "Third.md",
+         "mode": "source",
+         "ed": null,
+         "preview": null,
+         "active": false,
+         "backHistory": [],
+         "ephemeral": {}
+        }
+       ],
+       "current": 0
+      },
+      {
+       "tabs": [
+        {
+         "type": "markdown",
+         "file": "Other.md",
+         "mode": "preview",
+         "ed": {
+          "cursor": {
+           "line": 0,
+           "ch": 0
+          },
+          "scroll": 0
+         },
+         "preview": 0,
+         "active": false,
+         "backHistory": [],
+         "ephemeral": {}
+        }
+       ],
+       "current": 0
+      }
+     ],
+     "search": {
+      "query": "needle",
+      "visible": true
+     },
+     "leftWidth": 300,
+     "leftCollapsed": false,
+     "rightCollapsed": true,
+     "popouts": 1,
+     "zoom": 0.5,
+     "dpr": 1.095445156097412,
+     "font": "17px",
+     "probeVar": "7px",
+     "showLineNumber": true,
+     "snippets": [
+      "probe"
+     ],
+     "lineNumbersInDom": true,
+     "lastOpen": [
+      "Other.md",
+      "Third.md",
+      "Long.md",
+      "Table.md"
+     ]
+    },
+    "workspaceAfter": "{\n  \"main\": {\n    \"id\": \"3c1fc6bfd121401e\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"3a5c7114d96d41ca\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"95894577d7fd4299\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Long.md\",\n                \"mode\": \"source\",\n                \"source\": true\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Long\"\n            }\n          },\n          {\n            \"id\": \"04cfce502d3a2dbe\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Third.md\",\n                \"mode\": \"source\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Third\"\n            }\n          }\n        ]\n      },\n      {\n        \"id\": \"ad521e4b61d9ff05\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"33820a94817ff190\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"markdown\",\n              \"state\": {\n                \"file\": \"Other.md\",\n                \"mode\": \"preview\",\n                \"source\": false\n              },\n              \"icon\": \"lucide-file\",\n              \"title\": \"Other\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"vertical\"\n  },\n  \"left\": {\n    \"id\": \"7a2421ebc4e7d919\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"576ce9b45e47676f\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"4264289a9780b16a\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"file-explorer\",\n              \"state\": {\n                \"sortOrder\": \"alphabetical\",\n                \"autoReveal\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-folder-closed\",\n              \"title\": \"Files\"\n            }\n          },\n          {\n            \"id\": \"959a645ab32f33c0\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"search\",\n              \"state\": {\n                \"query\": \"needle\",\n                \"matchingCase\": false,\n                \"explainSearch\": false,\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\"\n              },\n              \"icon\": \"lucide-search\",\n              \"title\": \"Search\"\n            }\n          },\n          {\n            \"id\": \"2685eb6f8b2393f7\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"bookmarks\",\n              \"state\": {\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-bookmark\",\n              \"title\": \"Bookmarks\"\n            }\n          }\n        ],\n        \"currentTab\": 1\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300\n  },\n  \"right\": {\n    \"id\": \"fe55c7698b9e81f3\",\n    \"type\": \"split\",\n    \"children\": [\n      {\n        \"id\": \"86dd5e1ddd373dd5\",\n        \"type\": \"tabs\",\n        \"children\": [\n          {\n            \"id\": \"ce0380062279b9ee\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"backlink\",\n              \"state\": {\n                \"file\": \"Long.md\",\n                \"collapseAll\": false,\n                \"extraContext\": false,\n                \"sortOrder\": \"alphabetical\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\",\n                \"backlinkCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-coming-in\",\n              \"title\": \"Backlinks\"\n            }\n          },\n          {\n            \"id\": \"7f35f4cf53cfbdce\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outgoing-link\",\n              \"state\": {\n                \"file\": \"Long.md\",\n                \"linksCollapsed\": false,\n                \"unlinkedCollapsed\": true\n              },\n              \"icon\": \"links-going-out\",\n              \"title\": \"Outgoing links\"\n            }\n          },\n          {\n            \"id\": \"094f2546872bf90c\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"tag\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"useHierarchy\": true,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-tags\",\n              \"title\": \"Tags\"\n            }\n          },\n          {\n            \"id\": \"ede11da6515d9925\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"all-properties\",\n              \"state\": {\n                \"sortOrder\": \"frequency\",\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-archive\",\n              \"title\": \"All properties\"\n            }\n          },\n          {\n            \"id\": \"29c917a18a07759b\",\n            \"type\": \"leaf\",\n            \"state\": {\n              \"type\": \"outline\",\n              \"state\": {\n                \"file\": \"Long.md\",\n                \"followCursor\": false,\n                \"showSearch\": false,\n                \"searchQuery\": \"\"\n              },\n              \"icon\": \"lucide-list\",\n              \"title\": \"Outline\"\n            }\n          }\n        ]\n      }\n    ],\n    \"direction\": \"horizontal\",\n    \"width\": 300,\n    \"collapsed\": true\n  },\n  \"left-ribbon\": {\n    \"hiddenItems\": {\n      \"switcher:Open quick switcher\": false,\n      \"graph:Open graph view\": false,\n      \"canvas:Create new canvas\": false,\n      \"daily-notes:Open today's daily note\": false,\n      \"templates:Insert template\": false,\n      \"command-palette:Open command palette\": false,\n      \"bases:Create new base\": false\n    }\n  },\n  \"floating\": {\n    \"id\": \"b4fb38ee259ffe31\",\n    \"type\": \"floating\",\n    \"children\": [\n      {\n        \"id\": \"619fc3b423c8e255\",\n        \"type\": \"window\",\n        \"children\": [\n          {\n            \"id\": \"c2357f1bbafcbede\",\n            \"type\": \"tabs\",\n            \"children\": [\n              {\n                \"id\": \"a01107db85f47f89\",\n                \"type\": \"leaf\",\n                \"state\": {\n                  \"type\": \"markdown\",\n                  \"state\": {\n                    \"file\": \"Pop.md\",\n                    \"mode\": \"source\",\n                    \"source\": false\n                  },\n                  \"icon\": \"lucide-file\",\n                  \"title\": \"Pop\"\n                }\n              }\n            ]\n          }\n        ],\n        \"direction\": \"vertical\",\n        \"x\": 10,\n        \"y\": 10,\n        \"width\": 956,\n        \"height\": 1173,\n        \"maximize\": false,\n        \"zoom\": 0.5\n      }\n    ]\n  },\n  \"active\": \"95894577d7fd4299\",\n  \"lastOpenFiles\": [\n    \"Other.md\",\n    \"Third.md\",\n    \"Long.md\",\n    \"Table.md\"\n  ]\n}",
+    "workspaceChangedByReload": true,
+    "appJsonAfter": "{\n  \"showLineNumber\": true\n}",
+    "appearanceAfter": "{\n  \"enabledCssSnippets\": [\n    \"probe\"\n  ]\n}",
+    "windowFile": null
+   },
+   "s03-reload-unsaved": {
+    "ok": false,
+    "ms": 15000,
+    "error": "Error: Runtime.evaluate timeout\n    at Timeout._onTimeout (file:///home/ragtux/bstore2/raga/repos/scoria/.claude/worktrees/agent-ab78e44dfa9fe54a7/tools/obsidian-probe/cdp.mjs:54:71)\n    at listOnTimeout (node:internal/timers:685:17)\n    at process.processTimers (node:internal/timers:618:7)"
+   },
+   "s04-menu-items": {
+    "ok": false,
+    "ms": 15005,
+    "error": "Error: Runtime.evaluate timeout\n    at Timeout._onTimeout (file:///home/ragtux/bstore2/raga/repos/scoria/.claude/worktrees/agent-ab78e44dfa9fe54a7/tools/obsidian-probe/cdp.mjs:54:71)\n    at listOnTimeout (node:internal/timers:685:17)\n    at process.processTimers (node:internal/timers:618:7)"
+   }
+  },
+  "order": [
+   "s00-registry",
+   "s01-menu",
+   "s02-reload",
+   "s03-reload-unsaved",
+   "s04-menu-items"
+  ],
+  "elapsedMs": 45600,
+  "vaultPath": "/run/user/1000/commands/t/scoria-probe-vault.0NONif"
+ },
+ "fixtures:b": {
+  "startedAt": "2026-11-16T01:23:00.756Z",
+  "steps": {},
+  "order": [],
+  "elapsedMs": 2
+ },
+ "run:b": {
+  "startedAt": "2026-11-16T01:23:02.015Z",
+  "steps": {
+   "s03-reload-unsaved": {
+    "ok": true,
+    "ms": 11610,
+    "popoutsLeft": 0,
+    "diskBefore": "Before\n",
+    "bufferBeforeReload": {
+     "file": "Edit.md",
+     "text": "Before typed\n"
+    },
+    "diskJustBefore": "Before\n",
+    "diskAfter": "Before\n",
+    "bufferAfter": {
+     "file": "Edit.md",
+     "text": "Before\n"
+    },
+    "bufferAfterCtrlZ": "Before\n",
+    "diskAtEnd": "Before\n"
+   },
+   "s04-menu-items": {
+    "ok": true,
+    "ms": 10085,
+    "zoomIn": [
+     {
+      "level": 0.5,
+      "onTop": false
+     },
+     {
+      "level": 1,
+      "onTop": false
+     },
+     {
+      "level": 1.5,
+      "onTop": false
+     },
+     {
+      "level": 2,
+      "onTop": false
+     },
+     {
+      "level": 2.5,
+      "onTop": false
+     },
+     {
+      "level": 3,
+      "onTop": false
+     },
+     {
+      "level": 3,
+      "onTop": false
+     },
+     {
+      "level": 3,
+      "onTop": false
+     }
+    ],
+    "rendererLevel": 3,
+    "zoomOut": [
+     {
+      "level": 2.5,
+      "onTop": false
+     },
+     {
+      "level": 2,
+      "onTop": false
+     },
+     {
+      "level": 1.5,
+      "onTop": false
+     },
+     {
+      "level": 1,
+      "onTop": false
+     },
+     {
+      "level": 0.5,
+      "onTop": false
+     },
+     {
+      "level": 0,
+      "onTop": false
+     },
+     {
+      "level": -0.5,
+      "onTop": false
+     },
+     {
+      "level": -1,
+      "onTop": false
+     },
+     {
+      "level": -1.5,
+      "onTop": false
+     },
+     {
+      "level": -2,
+      "onTop": false
+     },
+     {
+      "level": -2.5,
+      "onTop": false
+     },
+     {
+      "level": -2.5,
+      "onTop": false
+     },
+     {
+      "level": -2.5,
+      "onTop": false
+     },
+     {
+      "level": -2.5,
+      "onTop": false
+     }
+    ],
+    "actual": {
+     "level": 0,
+     "onTop": false
+    },
+    "onTop1": {
+     "level": 0,
+     "onTop": true
+    },
+    "onTop2": {
+     "level": 0,
+     "onTop": false
+    }
+   }
+  },
+  "order": [
+   "s03-reload-unsaved",
+   "s04-menu-items"
+  ],
+  "elapsedMs": 21751,
+  "vaultPath": "/run/user/1000/commands/t/scoria-probe-vault.sDTMEZ"
+ }
+}

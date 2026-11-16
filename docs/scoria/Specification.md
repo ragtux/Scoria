@@ -10406,3 +10406,82 @@ commands too.
   digits in a query (`/(`, `/#`); several cursors.
 - Whether the list is rebuilt on every keystroke (the check callbacks asked again) or once per
   `/`. Scoria builds it once per `/`, and again whenever the popup reopens.
+
+## Observed app reload and the last unregistered ids, Obsidian 1.15.0
+
+Probed 2026-11-15 by `tools/obsidian-probe/commands-reload.mjs` (results in
+`tools/obsidian-probe/results/2026-11-15-commands-reload.json`, `run` and `run:b`), Obsidian 1.15.0
+(window title; installer build 1.13.7) in a private headless sway with a data directory of its own
+and Node's inspector on the main process. The registry was read again on a data directory that had
+updated itself to 1.15.1 and gave the same answers.
+
+### Which ids a desktop registers
+
+With a note open in Source mode and the caret in a table cell, `app.commands.commands` (and the
+editor command table beside it, `app.commands.editorCommands`) has:
+
+| Id | Registered | Palette | Kind |
+| --- | --- | --- | --- |
+| `app:reload` | yes, "Reload app without saving" | offered | callback |
+| `window:zoom-in`, `window:zoom-out`, `window:reset-zoom` | yes | offered | callback |
+| `window:toggle-always-on-top` | yes | not in the vault window | check |
+| `mobile:quick-action` | yes, "Configure mobile Quick Action" | never offered | check |
+| `editor:table-row-copy`, `editor:table-col-copy` | yes, "Table: Duplicate row/column" | offered in Live Preview with the caret in a table ([[#Observed table editing behavior, Obsidian 1.14.4]]); not in Source mode, where this read was taken | editor check |
+| `app:show-tab-switcher`, `editor:configure-toolbar`, `editor:toggle-keyboard` | no | — | — |
+| `editor:copy`, `editor:cut`, `editor:paste`, `editor:undo`, `editor:redo` | no | — | — |
+| `editor:go-start`, `editor:go-end`, `editor:move-caret-up`/`-down`/`-left`/`-right` | no | — | — |
+| `editor:table-row-duplicate`, `editor:table-col-duplicate` | no | — | — |
+| `markdown-importer:open` | no; no `markdown-importer` internal plugin either | — | — |
+
+None of them has a default hotkey. The unregistered editor ids are the mobile toolbar's; the two
+`-duplicate` ids are 1.12's names for what is now `-copy`. On a desktop the clipboard, undo and
+caret keys are CodeMirror's and the Edit menu's (below), not commands.
+
+### The application menu
+
+The main process sets a menu whose bar is hidden (`isMenuBarVisible()` false): **File** (Open
+Vault…, Close `Ctrl+W`, Quit `Ctrl+Q`), **Edit** (Undo `Ctrl+Z`, Redo `Ctrl+Shift+Z`, Cut, Copy,
+Paste, Paste and Match Style `Ctrl+Shift+V`, Delete, Select All, Electron's roles), **View**
+(Actual Size `Ctrl+0`, Zoom In `Ctrl+=`, Zoom Out `Ctrl+-`, Force Reload, Toggle Developer Tools
+`Ctrl+Shift+I`, Toggle Full Screen `F11`), **Window** (Minimize, Always on Top, Bring All to Front)
+and **Help**. Clicked from the main process, Zoom In stepped the vault window 0.5 → 1 → … → 3 and
+held, Zoom Out stepped back to −2.5 and held, and Actual Size went to 0: **the same step and limits
+as the commands**. Window ▸ Always on Top turned the *vault* window's `isAlwaysOnTop()` on and a
+second click off — the command is not offered there, the menu item is. Whether a key press reaches
+these accelerators with the bar hidden was not watched: CDP's key events go to the page, not to the
+menu.
+
+### App reload
+
+`app:reload` reloads the renderer. Set up first: two groups (Long.md then Third.md in one, Other.md
+in reading view in the other), Long.md active with a back history of one, its caret at line 120 and
+scrolled 4,216 px; a popout with Pop.md; the Search pane showing `needle`; one Zoom in (level 0.5)
+and one Increase font size (17 px). Then `app.json` (`showLineNumber: true`) and `appearance.json`
+(`enabledCssSnippets: ["probe"]`) were rewritten from outside, and the command run.
+
+| | Before | After |
+| --- | --- | --- |
+| Groups, tabs, modes, active tab | as set up | the same |
+| The popout | open | open again (the page targets were two) |
+| Search pane | `needle`, shown | the same |
+| Left dock, right dock | 300 px, right collapsed | the same |
+| Caret and scroll of Long.md | line 120, 4,216 px | line 0, 0 |
+| Back history of Long.md | Third.md | empty |
+| An inactive tab's editor | built | not built until shown |
+| Zoom level, font size | 0.5, 17 px | 0.5, 17 px |
+| `showLineNumber` (rewritten outside) | already `true`: `app.json` was re-read live | `true` |
+| The snippet (enabled outside) | not applied | applied (`--probe-var: 7px`) |
+| `lastOpenFiles` | Other, Third, Long | the same |
+
+`workspace.json` before and after differed only in the popout's `"zoom"`, 0 → 0.5: the reopened
+popout took the vault window's zoom level. The window file was not written.
+
+**Without saving.** Typing ` typed` into `Before\n` and running the command 50 ms later, inside the
+two-second autosave: the file stayed `Before\n`, the reopened note showed `Before\n`, and Ctrl+Z
+afterwards changed nothing. The edit is lost, and so is the undo history.
+
+### Not settled: app reload
+
+- Whether a canvas or a base with a pending save loses it the same way (only a note was tried).
+- Whether a plugin's own state (a community plugin) is re-read; Scoria has no plugins.
+- Whether Ctrl+=, Ctrl+- and Ctrl+0 reach the View menu's items with the menu bar hidden.
