@@ -1,0 +1,1309 @@
+{
+ "canvasSettings": {
+  "fixtures": {
+   "startedAt": "2026-11-16T15:23:43.492Z",
+   "steps": {
+    "fixtures": {
+     "ok": true,
+     "ms": 0,
+     "vaultFiles": [
+      ".obsidian",
+      "Canvases",
+      "Fixture.canvas",
+      "Plan.md",
+      "Sub"
+     ]
+    }
+   },
+   "order": [
+    "fixtures"
+   ],
+   "elapsedMs": 1
+  },
+  "run": {
+   "startedAt": "2026-11-16T15:23:44.743Z",
+   "steps": {
+    "s01-tab-and-keys": {
+     "ok": true,
+     "ms": 7415,
+     "before": null,
+     "rows": [
+      {
+       "name": "Default location for new canvas files",
+       "desc": "",
+       "hidden": false,
+       "controls": [
+        {
+         "tag": "SELECT",
+         "type": "select-one",
+         "value": "root",
+         "options": [
+          "root",
+          "current",
+          "folder"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "Folder to create new canvas files in",
+       "desc": "Newly created canvas files will appear under this folder.",
+       "hidden": true,
+       "controls": [
+        {
+         "tag": "INPUT",
+         "type": "text",
+         "value": "",
+         "min": "",
+         "max": "",
+         "step": "",
+         "placeholder": "Example: folder 1/folder 2"
+        }
+       ]
+      },
+      {
+       "name": "Default mouse wheel behavior",
+       "desc": "",
+       "hidden": false,
+       "controls": [
+        {
+         "tag": "SELECT",
+         "type": "select-one",
+         "value": "pan",
+         "options": [
+          "pan",
+          "zoom"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "Default Ctrl + Drag behavior",
+       "desc": "",
+       "hidden": false,
+       "controls": [
+        {
+         "tag": "SELECT",
+         "type": "select-one",
+         "value": "menu",
+         "options": [
+          "menu",
+          "card",
+          "note",
+          "media",
+          "webpage",
+          "group"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "Show card names",
+       "desc": "",
+       "hidden": false,
+       "controls": [
+        {
+         "tag": "SELECT",
+         "type": "select-one",
+         "value": "always",
+         "options": [
+          "always",
+          "hover",
+          "never"
+         ]
+        }
+       ]
+      },
+      {
+       "name": "Snap to grid",
+       "desc": "Snap cards to the background grid when moving and resizing.",
+       "hidden": false,
+       "controls": [
+        {
+         "tag": "INPUT",
+         "type": "checkbox",
+         "value": "on",
+         "min": "",
+         "max": "",
+         "step": "",
+         "placeholder": ""
+        }
+       ]
+      },
+      {
+       "name": "Snap to objects",
+       "desc": "Snap cards to nearby objects when moving and resizing.",
+       "hidden": false,
+       "controls": [
+        {
+         "tag": "INPUT",
+         "type": "checkbox",
+         "value": "on",
+         "min": "",
+         "max": "",
+         "step": "",
+         "placeholder": ""
+        }
+       ]
+      },
+      {
+       "name": "Zoom threshold for hiding card content",
+       "desc": "Lower values will increase performance but hide card content sooner when zooming out.",
+       "hidden": false,
+       "controls": [
+        {
+         "tag": "INPUT",
+         "type": "range",
+         "value": "0",
+         "min": "-0.7",
+         "max": "2.3999999999999995",
+         "step": "0.01",
+         "placeholder": ""
+        }
+       ]
+      }
+     ],
+     "afterSlider": "{\n  \"snapToObjects\": true,\n  \"snapToGrid\": true,\n  \"zoomBreakpoint\": 0.5\n}",
+     "afterFolder": "{\n  \"snapToObjects\": true,\n  \"snapToGrid\": true,\n  \"zoomBreakpoint\": 0.5,\n  \"newFileLocation\": \"folder\",\n  \"newFileFolderPath\": \"Canvases\"\n}",
+     "sliderAt24": 2.39,
+     "final": "{\n  \"snapToObjects\": true,\n  \"snapToGrid\": true,\n  \"zoomBreakpoint\": 0,\n  \"newFileLocation\": \"folder\",\n  \"newFileFolderPath\": \"Canvases\"\n}"
+    },
+    "s02-new-file-location": {
+     "ok": true,
+     "ms": 27171,
+     "root, Sub/Note.md open": {
+      "added": [
+       "Untitled.canvas"
+      ],
+      "active": "Untitled.canvas"
+     },
+     "current, Sub/Note.md open": {
+      "added": [
+       "Sub/Untitled.canvas"
+      ],
+      "active": "Sub/Untitled.canvas"
+     },
+     "current, Plan.md open": {
+      "added": [
+       "Untitled 1.canvas"
+      ],
+      "active": "Untitled 1.canvas"
+     },
+     "current, nothing open": {
+      "added": [
+       "Untitled 2.canvas"
+      ],
+      "active": "Untitled 2.canvas"
+     },
+     "folder \"Canvases\"": {
+      "added": [
+       "Canvases/Untitled.canvas"
+      ],
+      "active": "Canvases/Untitled.canvas"
+     },
+     "folder \"Nope/Deep\"": {
+      "added": [
+       "Untitled 3.canvas"
+      ],
+      "active": "Untitled 3.canvas"
+     },
+     "folder \"\"": {
+      "added": [
+       "Untitled 4.canvas"
+      ],
+      "active": "Untitled 4.canvas"
+     },
+     "folder \"/Canvases/\"": {
+      "added": [
+       "Untitled 5.canvas"
+      ],
+      "active": "Untitled 5.canvas"
+     },
+     "nopeCreated": false,
+     "untitledBytes": "{}"
+    },
+    "s03-wheel": {
+     "ok": true,
+     "ms": 39240,
+     "pan": {
+      "down": {
+       "dx": 0,
+       "dy": 93,
+       "dzoom": 0
+      },
+      "up": {
+       "dx": 0,
+       "dy": -93,
+       "dzoom": 0
+      },
+      "sideways": {
+       "dx": 93,
+       "dy": 0,
+       "dzoom": 0
+      },
+      "ctrl": {
+       "dx": 0,
+       "dy": 0,
+       "dzoom": -0.3333
+      },
+      "ctrlUp": {
+       "dx": 61.89,
+       "dy": 41.21,
+       "dzoom": 0.3333
+      },
+      "ctrlSideways": {
+       "dx": 0,
+       "dy": 0,
+       "dzoom": 0
+      },
+      "shift": {
+       "dx": 93,
+       "dy": 0,
+       "dzoom": 0
+      },
+      "ctrlShift": {
+       "dx": 0,
+       "dy": 0,
+       "dzoom": -0.3333
+      },
+      "alt": {
+       "dx": 0,
+       "dy": 93,
+       "dzoom": 0
+      },
+      "meta": {
+       "dx": 0,
+       "dy": 0,
+       "dzoom": -0.3333
+      }
+     },
+     "zoom": {
+      "down": {
+       "dx": 0,
+       "dy": 0,
+       "dzoom": -0.3333
+      },
+      "up": {
+       "dx": 61.89,
+       "dy": 41.21,
+       "dzoom": 0.3333
+      },
+      "sideways": {
+       "dx": 0,
+       "dy": 0,
+       "dzoom": 0
+      },
+      "ctrl": {
+       "dx": 0,
+       "dy": 93,
+       "dzoom": 0
+      },
+      "ctrlUp": {
+       "dx": 0,
+       "dy": -93,
+       "dzoom": 0
+      },
+      "ctrlSideways": {
+       "dx": 93,
+       "dy": 0,
+       "dzoom": 0
+      },
+      "shift": {
+       "dx": 0,
+       "dy": 0,
+       "dzoom": -0.3333
+      },
+      "ctrlShift": {
+       "dx": 93,
+       "dy": 0,
+       "dzoom": 0
+      },
+      "alt": {
+       "dx": 0,
+       "dy": 0,
+       "dzoom": -0.3333
+      },
+      "meta": {
+       "dx": 0,
+       "dy": 93,
+       "dzoom": 0
+      }
+     }
+    },
+    "s04-card-names": {
+     "ok": true,
+     "ms": 19964,
+     "always": {
+      "pointerAway": {
+       "f": {
+        "cls": "canvas-node-label",
+        "text": "Plan",
+        "display": "block",
+        "opacity": "1"
+       },
+       "g": {
+        "cls": "canvas-group-label",
+        "text": "Grp",
+        "display": "",
+        "opacity": ""
+       },
+       "zoomedOut": false
+      },
+      "pointerOverCard": {
+       "f": {
+        "cls": "canvas-node-label",
+        "text": "Plan",
+        "display": "block",
+        "opacity": "1"
+       },
+       "g": {
+        "cls": "canvas-group-label",
+        "text": "Grp",
+        "display": "",
+        "opacity": ""
+       },
+       "zoomedOut": false
+      },
+      "selectedPointerAway": {
+       "f": {
+        "cls": "canvas-node-label",
+        "text": "Plan",
+        "display": "block",
+        "opacity": "1"
+       },
+       "g": {
+        "cls": "canvas-group-label",
+        "text": "Grp",
+        "display": "",
+        "opacity": ""
+       },
+       "zoomedOut": false
+      },
+      "zoomedOut": {
+       "f": {
+        "cls": "canvas-node-label",
+        "text": "Plan",
+        "display": "none",
+        "opacity": "1"
+       },
+       "g": {
+        "cls": "canvas-group-label",
+        "text": "Grp",
+        "display": "block",
+        "opacity": "1"
+       },
+       "zoomedOut": true
+      }
+     },
+     "hover": {
+      "pointerAway": {
+       "f": {
+        "cls": "canvas-node-label mod-hover-label",
+        "text": "Plan",
+        "display": "block",
+        "opacity": "0"
+       },
+       "g": {
+        "cls": "canvas-group-label",
+        "text": "Grp",
+        "display": "",
+        "opacity": ""
+       },
+       "zoomedOut": false
+      },
+      "pointerOverCard": {
+       "f": {
+        "cls": "canvas-node-label mod-hover-label",
+        "text": "Plan",
+        "display": "block",
+        "opacity": "1"
+       },
+       "g": {
+        "cls": "canvas-group-label",
+        "text": "Grp",
+        "display": "",
+        "opacity": ""
+       },
+       "zoomedOut": false
+      },
+      "selectedPointerAway": {
+       "f": {
+        "cls": "canvas-node-label mod-hover-label",
+        "text": "Plan",
+        "display": "block",
+        "opacity": "0"
+       },
+       "g": {
+        "cls": "canvas-group-label",
+        "text": "Grp",
+        "display": "",
+        "opacity": ""
+       },
+       "zoomedOut": false
+      },
+      "zoomedOut": {
+       "f": {
+        "cls": "canvas-node-label mod-hover-label",
+        "text": "Plan",
+        "display": "none",
+        "opacity": "0"
+       },
+       "g": {
+        "cls": "canvas-group-label",
+        "text": "Grp",
+        "display": "block",
+        "opacity": "1"
+       },
+       "zoomedOut": true
+      }
+     },
+     "never": {
+      "pointerAway": {
+       "f": null,
+       "g": {
+        "cls": "canvas-group-label",
+        "text": "Grp",
+        "display": "",
+        "opacity": ""
+       },
+       "zoomedOut": false
+      },
+      "pointerOverCard": {
+       "f": null,
+       "g": {
+        "cls": "canvas-group-label",
+        "text": "Grp",
+        "display": "",
+        "opacity": ""
+       },
+       "zoomedOut": false
+      },
+      "selectedPointerAway": {
+       "f": null,
+       "g": {
+        "cls": "canvas-group-label",
+        "text": "Grp",
+        "display": "",
+        "opacity": ""
+       },
+       "zoomedOut": false
+      },
+      "zoomedOut": {
+       "f": null,
+       "g": {
+        "cls": "canvas-group-label",
+        "text": "Grp",
+        "display": "block",
+        "opacity": "1"
+       },
+       "zoomedOut": true
+      }
+     }
+    },
+    "s05-zoom-threshold": {
+     "0": {
+      "stored": 0,
+      "zoomedOut": -1.7,
+      "m": -1.7,
+      "labelAtMinus12": "block",
+      "labelAtMinus2": "none"
+     },
+     "ok": true,
+     "ms": 37712,
+     "0.5": {
+      "stored": 0.5,
+      "zoomedOut": -1.7,
+      "m": -2.2,
+      "labelAtMinus12": "block",
+      "labelAtMinus2": "none"
+     },
+     "-0.7": {
+      "stored": -0.7,
+      "zoomedOut": -1.7,
+      "m": -1,
+      "labelAtMinus12": "block",
+      "labelAtMinus2": "none"
+     },
+     "2.4": {
+      "stored": 2.39,
+      "zoomedOut": -1.7,
+      "m": {
+       "atMin": true,
+       "atMax": true
+      },
+      "labelAtMinus12": "block",
+      "labelAtMinus2": "none"
+     }
+    },
+    "s06-ctrl-drag": {
+     "ok": true,
+     "ms": 43038,
+     "menu": {
+      "ui": {
+       "menus": [
+        [
+         "Add card",
+         "Add note from vault",
+         "Add media from vault",
+         "Add web page",
+         "Create group"
+        ]
+       ],
+       "modals": [],
+       "editing": [],
+       "selection": [],
+       "rectShown": true
+      },
+      "added": []
+     },
+     "card": {
+      "ui": {
+       "menus": [],
+       "modals": [],
+       "editing": [
+        "10dce30e0de072e4"
+       ],
+       "selection": [
+        "10dce30e0de072e4"
+       ],
+       "rectShown": false
+      },
+      "added": [
+       {
+        "id": "10dce30e0de072e4",
+        "x": 103,
+        "y": 707,
+        "w": 304,
+        "h": 206,
+        "type": "text",
+        "text": ""
+       }
+      ]
+     },
+     "note": {
+      "ui": {
+       "menus": [],
+       "modals": [
+        {
+         "cls": "modal-container mod-dim",
+         "placeholder": "Type to search..."
+        }
+       ],
+       "editing": [],
+       "selection": [],
+       "rectShown": true
+      },
+      "added": []
+     },
+     "media": {
+      "ui": {
+       "menus": [],
+       "modals": [
+        {
+         "cls": "modal-container mod-dim",
+         "placeholder": "Type to search..."
+        }
+       ],
+       "editing": [],
+       "selection": [],
+       "rectShown": true
+      },
+      "added": []
+     },
+     "webpage": {
+      "ui": {
+       "menus": [],
+       "modals": [
+        {
+         "cls": "modal-container mod-confirmation mod-dim",
+         "title": "Enter URL"
+        }
+       ],
+       "editing": [],
+       "selection": [],
+       "rectShown": true
+      },
+      "added": []
+     },
+     "group": {
+      "ui": {
+       "menus": [],
+       "modals": [],
+       "editing": [],
+       "selection": [
+        "d2fa49858187e7e1"
+       ],
+       "rectShown": false
+      },
+      "added": [
+       {
+        "id": "d2fa49858187e7e1",
+        "x": 103,
+        "y": 707,
+        "w": 304,
+        "h": 206,
+        "type": "group",
+        "label": "Untitled group"
+       }
+      ]
+     },
+     "ctrlClickNoDrag": {
+      "ui": {
+       "menus": [],
+       "modals": [],
+       "editing": [],
+       "selection": [],
+       "rectShown": false
+      },
+      "added": []
+     }
+    },
+    "s07-snap-grid": {
+     "ok": true,
+     "ms": 23528,
+     "drags": [
+      {
+       "by": [
+        30,
+        0
+       ],
+       "from": [
+        7,
+        307
+       ],
+       "to": [
+        40,
+        307
+       ],
+       "guides": null
+      },
+      {
+       "by": [
+        33,
+        0
+       ],
+       "from": [
+        7,
+        307
+       ],
+       "to": [
+        40,
+        307
+       ],
+       "guides": null
+      },
+      {
+       "by": [
+        9,
+        0
+       ],
+       "from": [
+        7,
+        307
+       ],
+       "to": [
+        20,
+        307
+       ],
+       "guides": null
+      },
+      {
+       "by": [
+        0,
+        9
+       ],
+       "from": [
+        7,
+        307
+       ],
+       "to": [
+        7,
+        320
+       ],
+       "guides": null
+      },
+      {
+       "by": [
+        30,
+        2
+       ],
+       "from": [
+        7,
+        307
+       ],
+       "to": [
+        40,
+        300
+       ],
+       "guides": null
+      },
+      {
+       "by": [
+        0,
+        2
+       ],
+       "from": [
+        7,
+        307
+       ],
+       "to": [
+        7,
+        307
+       ],
+       "guides": null
+      },
+      {
+       "by": [
+        2,
+        0
+       ],
+       "from": [
+        7,
+        307
+       ],
+       "to": [
+        7,
+        307
+       ],
+       "guides": null
+      }
+     ],
+     "alt": {
+      "from": [
+       7,
+       307
+      ],
+      "to": [
+       7,
+       307
+      ],
+      "guides": null
+     },
+     "resize right": {
+      "rect": [
+       7,
+       307,
+       133,
+       107
+      ],
+      "guides": null
+     },
+     "resize left": {
+      "rect": [
+       -20,
+       307,
+       130,
+       107
+      ],
+      "guides": null
+     },
+     "resize bottom": {
+      "rect": [
+       7,
+       307,
+       103,
+       133
+      ],
+      "guides": null
+     },
+     "resize br": {
+      "rect": [
+       7,
+       307,
+       133,
+       133
+      ],
+      "guides": null
+     },
+     "neither": {
+      "from": [
+       7,
+       307
+      ],
+      "to": [
+       7,
+       307
+      ],
+      "guides": null
+     },
+     "neitherResize": {
+      "rect": [
+       7,
+       307,
+       128,
+       107
+      ],
+      "guides": null
+     }
+    },
+    "s08-snap-objects": {
+     "ok": true,
+     "ms": 58980,
+     "scale 1": [
+      [
+       395,
+       400
+      ],
+      [
+       412,
+       400
+      ],
+      [
+       413.5,
+       400
+      ],
+      [
+       414.5,
+       400
+      ],
+      [
+       415.5,
+       416
+      ],
+      [
+       434.5,
+       435
+      ],
+      [
+       435.5,
+       450
+      ],
+      [
+       445,
+       450
+      ],
+      [
+       455,
+       450
+      ],
+      [
+       495,
+       500
+      ],
+      [
+       597,
+       600
+      ],
+      [
+       296,
+       300
+      ],
+      [
+       304,
+       300
+      ]
+     ],
+     "scale 2": [
+      [
+       405,
+       400
+      ],
+      [
+       407.5,
+       400
+      ],
+      [
+       408,
+       408
+      ],
+      [
+       409,
+       409
+      ]
+     ],
+     "scale 0.5": [
+      [
+       413,
+       400
+      ],
+      [
+       421,
+       400
+      ],
+      [
+       424,
+       400
+      ],
+      [
+       427,
+       450
+      ],
+      [
+       430,
+       450
+      ],
+      [
+       440,
+       450
+      ]
+     ],
+     "scale 0.25": [
+      [
+       440,
+       450
+      ],
+      [
+       455,
+       450
+      ],
+      [
+       470,
+       450
+      ]
+     ],
+     "guidesBelow": {
+      "from": [
+       0,
+       300
+      ],
+      "to": [
+       400,
+       150
+      ],
+      "guides": {
+       "lines": [
+        [
+         400,
+         0,
+         400,
+         250
+        ],
+        [
+         500,
+         50,
+         500,
+         250
+        ],
+        [
+         -400,
+         200,
+         450,
+         200
+        ]
+       ],
+       "dots": [
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ]
+       ],
+       "stroke": "rgb(138, 92, 245)",
+       "fill": "rgb(138, 92, 245)"
+      }
+     },
+     "guidesOnRow": {
+      "from": [
+       0,
+       300
+      ],
+      "to": [
+       400,
+       0
+      ],
+      "guides": {
+       "lines": [
+        [
+         400,
+         0,
+         400,
+         100
+        ],
+        [
+         500,
+         0,
+         500,
+         100
+        ],
+        [
+         -400,
+         0,
+         600,
+         0
+        ],
+        [
+         450,
+         50,
+         500,
+         50
+        ],
+        [
+         -250,
+         100,
+         600,
+         100
+        ]
+       ],
+       "dots": [
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ]
+       ],
+       "stroke": "rgb(138, 92, 245)",
+       "fill": "rgb(138, 92, 245)"
+      }
+     },
+     "straightUp": {
+      "from": [
+       405,
+       300
+      ],
+      "to": [
+       405,
+       260
+      ],
+      "guides": null
+     },
+     "sideways": {
+      "from": [
+       405,
+       300
+      ],
+      "to": [
+       450,
+       300
+      ],
+      "guides": {
+       "lines": [
+        [
+         500,
+         50,
+         500,
+         350
+        ]
+       ],
+       "dots": [
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ]
+       ],
+       "stroke": "rgb(138, 92, 245)",
+       "fill": "rgb(138, 92, 245)"
+      }
+     },
+     "groupNotATarget": {
+      "from": [
+       405,
+       300
+      ],
+      "to": [
+       897,
+       400
+      ],
+      "guides": {
+       "lines": [],
+       "dots": [],
+       "stroke": null,
+       "fill": null
+      }
+     },
+     "alt": {
+      "from": [
+       0,
+       300
+      ],
+      "to": [
+       403,
+       300
+      ],
+      "guides": null
+     },
+     "resizeRightNearB": {
+      "rect": [
+       100,
+       200,
+       300,
+       100
+      ],
+      "guides": {
+       "lines": [
+        [
+         400,
+         0,
+         400,
+         300
+        ]
+       ],
+       "dots": [
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ],
+        [
+         8,
+         8
+        ]
+       ],
+       "stroke": "rgb(138, 92, 245)",
+       "fill": "rgb(138, 92, 245)"
+      }
+     },
+     "both": [
+      [
+       393,
+       400
+      ],
+      [
+       397,
+       400
+      ],
+      [
+       403,
+       400
+      ],
+      [
+       407,
+       400
+      ],
+      [
+       413,
+       400
+      ]
+     ]
+    }
+   },
+   "order": [
+    "s01-tab-and-keys",
+    "s02-new-file-location",
+    "s03-wheel",
+    "s04-card-names",
+    "s05-zoom-threshold",
+    "s06-ctrl-drag",
+    "s07-snap-grid",
+    "s08-snap-objects"
+   ],
+   "elapsedMs": 257104,
+   "vault": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/892bde44-e469-45b7-ae54-7ac59f66638d/scratchpad/canvas-settings/pvault",
+   "title": "New tab - pvault - Obsidian 1.15.1"
+  }
+ }
+}

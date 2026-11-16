@@ -28,7 +28,6 @@ use gpui::{
     FontWeight, GlobalElementId, Hitbox, InspectorElementId, LayoutId, ObjectFit, Pixels,
     SharedString, Size, Window,
 };
-use scoria_canvas::ZOOM_THRESHOLD;
 use scoria_formats::canvas::{BackgroundStyle, Node, NodeType};
 use scoria_formats::properties::PropertiesInDocument;
 use scoria_formats::FileKind;
@@ -288,8 +287,10 @@ impl Cards {
         // label is the view's. A link card keeps Scoria's address card.
         // OBSERVE: whether a PDF card keeps its pages when zoomed out the
         // way an image does, or shows its name the way a note does; it
-        // shows its name here.
-        let zoomed_out = (scale as f64).log2() <= ZOOM_THRESHOLD;
+        // shows its name here. The threshold is -1.7 less the Canvas
+        // settings' "Zoom threshold for hiding card content" (1.15.0).
+        let zoomed_out = scoria_canvas::options::Options::from_config(&state.canvas_options())
+            .content_hidden((scale as f64).log2());
         let keeps_content = matches!(entry.content, Content::Image(_))
             || matches!(node.kind, NodeType::Group | NodeType::Link);
         let body = if zoomed_out && !keeps_content {
