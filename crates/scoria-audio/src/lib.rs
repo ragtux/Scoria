@@ -17,7 +17,9 @@
 //!
 //! - [`player`]: decoding an audio file (symphonia, and opus-decoder for
 //!   Opus) and playing it through the default output device, with pause,
-//!   seek, volume and the position.
+//!   seek, volume, the playback rate and the position.
+//! - [`stretch`]: the playback rate with the pitch kept (WSOLA), as
+//!   Chromium's `<audio>` plays a rate other than 1.
 //! - [`video`]: what a video file holds — its size, length and codecs —
 //!   read from the MP4/QuickTime boxes or the Matroska/WebM elements, for
 //!   the card Scoria shows in place of a video player.
@@ -27,6 +29,7 @@ pub mod encode;
 pub mod m4a;
 pub mod player;
 pub mod session;
+pub mod stretch;
 pub mod video;
 
 use chrono::{Datelike, NaiveDateTime, Timelike};

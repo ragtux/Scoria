@@ -11512,3 +11512,97 @@ delete “Two.md”?"). Copy path's submenu (section `copy`) is *as Obsidian URL
 (`lucide-link`: `obsidian://open?vault=…&file=search%2FOne`), *from vault folder* (`vault`:
 `search/One`, with no extension) and *from system root* (`lucide-hard-drive`: the absolute path
 with its extension).
+
+## Observed audio player extras, Obsidian 1.15.1
+
+Probed 2026-11-16 with `tools/obsidian-probe/audio-extras.mjs` in a private headless sway
+(results and screenshots in `tools/obsidian-probe/results/2026-11-16-audio-extras.json` and
+`-shots/`), Obsidian 1.15.1 on the installer build 1.13.7, Chrome 150, Electron 43.1, a
+1600 × 1000 window, dark theme. Chromium's `<audio controls>` was read through its user-agent
+shadow tree (CDP `DOM.describeNode` with `pierce`), and played into Chromium's paced fake
+sink (`--disable-audio-output`): ALSA's null device takes samples as fast as they come and a
+minute's file then ends in under a second. Built in
+[[Development#The audio player's extras, 2026-11-16]]; the rest of the player is in
+[[#Observed canvas embeds, audio and video, Obsidian 1.15.0]].
+
+### The control's parts
+
+In an audio tab 1556 px wide the `<audio>` is 1532 × 42 (12 px in from the view's edges, not in
+the readable column). Its `-webkit-media-controls-enclosure` is `rgb(35, 35, 35)`, the panel
+1 px inside it, 40 px tall. Left to right: the play button 32 × 32, 10 px in; the current time
+(`0:00`) and `/ 1:00`, 14 px white at 0.87 opacity; the seek bar (`-webkit-media-controls-timeline`,
+`aria-label` "audio time scrubber") filling the rest, its 4 px track inset 16 px at each end —
+`rgba(255,255,255,0.2)` under a played part at 0.87 and a buffered part at 0.54, a 12 px thumb
+shown on hover; the volume control; the overflow button (⋮, "show more media controls")
+32 × 32, 11 px from the right. A fullscreen button, a cast button and a captions button exist
+in the tree but are not drawn for audio.
+
+### The volume slider
+
+- `-webkit-media-controls-volume-control-container` is the 32 px mute button alone at rest.
+  **Hovering the mute button** opens it to 100 px: 16 px of padding, the 52 px slider
+  (`input type=range`, `step=any`, `max=1`, `aria-label` "volume"), then the button; the seek
+  bar gives up the 68 px. It opened within 50 ms and was fully open at 150 ms. Hovering the
+  play button or the overflow button does not open it; moving off the control (onto the ⋮ or
+  off the player) closes it at once (0 px 100 ms later). After a press on the slider it stays
+  open while the slider has the focus, pointer or not.
+- **The value under a press** runs from 6 px in to 6 px from the end (the thumb is 12 px): the
+  probe's presses 13 and 39 px into the 52 px slider read 0.175 and 0.825; a drag to the middle
+  0.5. With the slider focused the arrows step 0.01 (Right and Up add, Left and Down take),
+  Home is 0 and End is 1.
+- **Mute against the slider.** The mute button toggles `muted` and leaves `volume`; while muted
+  the slider shows 0 (`aria-valuenow` 0) and unmuting shows the volume again. Moving the slider
+  of a muted player unmutes it (volume 0.5, `muted` false). Taken to 0 the volume is 0 with
+  `muted` false, and the button already reads "unmute" (the muted speaker); a click on it then
+  sets `muted` true, and another false, the volume staying 0 throughout.
+
+### The overflow menu and playback speed
+
+- The ⋮ opens `-internal-media-controls-overflow-menu-list` (`role=menu`), 200 px wide, its
+  bottom right 4 px in from the button's bottom right (so it covers the button), in
+  `rgb(59, 59, 59)`. For an audio file with `controlslist="nodownload"` it has **one row**:
+  "Playback speed" (46 px tall, an icon of a dashed circle round a play triangle). The tree holds
+  Play, Fullscreen, Download, Mute, Cast, Captions, Video Tracks and Audio Tracks rows too, none
+  drawn.
+- **Playback speed** replaces the menu with `-internal-media-controls-playback-speed-list`, 200 ×
+  250 at most and scrolling, anchored the same way: a header "Options" (`aria-label` "back to
+  options", with a back arrow), then eight `menuitemcheckbox` rows 48 px tall — **0.25, 0.5,
+  0.75, Normal, 1.25, 1.5, 1.75, 2** — the current one `aria-checked` and drawn with a blue check
+  at its right. Opened over a player at the top of the view the list runs off the window's top.
+- Picking **1.5** closed the menu and set `playbackRate` 1.5 with `preservesPitch` true (the
+  pitch is kept). Opened again, 1.5 is the checked row. The rate stays on the element across
+  plays; a new element starts at 1. Escape closes the list; so does a press anywhere outside
+  the menu.
+
+### Space and the keyboard
+
+- **Space plays and pauses only while the `<audio>` has the focus**, which a click on its play
+  button or its time display gives it (`document.activeElement` is the `AUDIO`). In a tab, a
+  click on the view's empty space leaves the focus on `body`, and Space does nothing. In the
+  reading view after a click on a paragraph Space does nothing (the preview has the focus); in
+  Live Preview with the caret in a line Space types a space.
+- After a click on play, Space pauses and Space again plays — in a tab, in the reading view and
+  in Live Preview, where the click left the caret where it was (`2:0`) and Space wrote nothing
+  into the note.
+- After a click on the **seek bar** Space does nothing; the arrows then step the time by 1 % of
+  the length (0.6 s of a 60 s file), Right forward, Left back. On the play button the arrows,
+  Home, End, `k` and `m` do nothing (2026-11-15), and Enter did not play either. Tab from the
+  view's background lands on the `AUDIO` and stays there.
+
+### Two embeds, scrolling away, background tabs
+
+- Two `![[long.mp3]]` in one note are **two players**: playing the first (reading view) or the
+  second (Live Preview) left the other paused at 0.
+- A playing embed **scrolled far away is paused**: the reading view drops the section's
+  element and puts it back, paused at its place, when scrolled back; Live Preview destroys the
+  widget. A playing tab left for another tab **keeps playing**, and a note's reading-view
+  player keeps playing, hidden, after a switch to Live Preview.
+
+### Live Preview's margins
+
+An audio embed on a line of its own in Live Preview is a block widget
+(`internal-embed media-embed audio-embed`, a child of `.cm-content`) 48 px tall — the 42 px
+control and 6 px of line under it — with **no margin or padding**: the 24 px blank line above it
+ends at its top and the next line starts at its bottom (`Line one` at 154.4, the blank line at
+178.4, the embed 202.4–250.4, the blank line at 250.4). Two embeds on consecutive lines stand
+48 px apart. In the reading view the same embed's `<p>` has the paragraph's 16 px margins.

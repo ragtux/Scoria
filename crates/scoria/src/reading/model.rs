@@ -32,6 +32,9 @@ pub const MAX_EMBED_DEPTH: usize = 4;
 struct BaseCache {
     exists: RefCell<Vec<(String, bool)>>,
     counts: RefCell<Vec<(EmbedKey, usize)>>,
+    /// The same ordinal for audio and video embeds, by lowercased path:
+    /// each `![[x.mp3]]` of a note is a player of its own.
+    media: RefCell<Vec<(String, usize)>>,
 }
 
 /// A base and view as the ordinals are counted: lowercased, like every
@@ -80,6 +83,24 @@ impl BaseCache {
             view: view.map(str::to_string),
             nth,
         })
+    }
+}
+
+impl BaseCache {
+    /// The ordinal of this embed of `path` among the model's embeds of it.
+    fn media_nth(&self, path: &str) -> usize {
+        let key = path.to_lowercase();
+        let mut media = self.media.borrow_mut();
+        match media.iter_mut().find(|(k, _)| *k == key) {
+            Some((_, n)) => {
+                *n += 1;
+                *n
+            }
+            None => {
+                media.push((key, 0));
+                0
+            }
+        }
     }
 }
 
@@ -1444,6 +1465,8 @@ impl<'v> Builder<'v> {
                         id,
                         path: path.clone(),
                         absolute: self.vault.absolute(&path),
+                        owner: self.source_path.to_string(),
+                        nth: self.bases.media_nth(&path),
                     };
                     if FileKind::from_path(&path) == FileKind::Audio {
                         EmbedKind::Audio(media)
@@ -3126,8 +3149,11 @@ mod tests {
         assert_eq!(kind, "audio");
         assert_eq!(audio.absolute, PathBuf::from("/vault/tone.mp3"));
         assert_eq!(media(3).0, "video");
-        // Two embeds of one file are two elements.
+        // Two embeds of one file are two elements, and two players: the
+        // ordinal tells them apart however the note is rebuilt.
         assert_ne!(media(4).1.id, audio.id);
+        assert_eq!((audio.nth, media(4).1.nth, media(3).1.nth), (0, 1, 0));
+        assert_eq!(audio.owner, "Self.md");
         assert!(matches!(first_embed(&m.blocks[5]).kind, EmbedKind::Missing));
     }
 

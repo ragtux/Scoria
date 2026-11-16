@@ -1610,7 +1610,8 @@ impl ReadingView {
         )
         .with_reading_host(&host)
         .with_selection(&select)
-        .with_chrome(self.chrome);
+        .with_chrome(self.chrome)
+        .with_media_host(self.id);
         let r = match self.embed_views.as_ref() {
             Some(views) => r.with_embed_views(self.id, views),
             None => r,
@@ -1908,6 +1909,11 @@ pub(crate) struct Renderer<'a> {
     /// The host's live views for its embedded bases, by the host's id. A
     /// renderer without one draws an embedded base as a titled box.
     embeds: Option<(gpui::EntityId, &'a crate::bases::embed::EmbedViews)>,
+    /// The view drawing the note, which with the embed's note and ordinal
+    /// names an audio embed's player (`media`): one per embed, kept while
+    /// the tab is in the background. `None` for a host with no state of
+    /// its own (a hover preview, a canvas card).
+    media_host: Option<gpui::EntityId>,
     /// `showIndentGuide` (a nested list's guide) and `rightToLeft`.
     chrome: crate::gutter::Chrome,
 }
@@ -1937,6 +1943,7 @@ impl<'a> Renderer<'a> {
             on_link,
             on_toggle,
             embeds: None,
+            media_host: None,
             text_system,
             available: available.max(100.),
             chrome: crate::gutter::Chrome::default(),
@@ -1978,6 +1985,12 @@ impl<'a> Renderer<'a> {
         views: &'a crate::bases::embed::EmbedViews,
     ) -> Renderer<'a> {
         self.embeds = Some((host, views));
+        self
+    }
+
+    /// The view whose audio embeds' players these are.
+    pub(crate) fn with_media_host(mut self, host: gpui::EntityId) -> Renderer<'a> {
+        self.media_host = Some(host);
         self
     }
 
@@ -3312,7 +3325,7 @@ impl<'a> Renderer<'a> {
                 crate::canvas::minimap::render(canvas, t, self.available, open)
             }
             // `![[x.mp3]]`: the player; `![[x.mp4]]`: Scoria's card (`media`).
-            EmbedKind::Audio(media) => crate::media::audio(media, t),
+            EmbedKind::Audio(media) => crate::media::audio(media, self.media_host, t),
             EmbedKind::Video(media) => crate::media::video(media, t),
             // A missing canvas is offered for creation, as a missing note is
             // (observed: `“Missing.canvas” is not created yet. Click to

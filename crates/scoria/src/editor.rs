@@ -7671,7 +7671,8 @@ impl Element for EditorElement {
                 Some(views) => renderer.with_embed_views(entity.entity_id(), views),
                 None => renderer,
             }
-            .with_chrome(chrome);
+            .with_chrome(chrome)
+            .with_media_host(entity.entity_id());
             let mut lines: Vec<(VisibleLine, Shaped)> = Vec::new();
             let mut widgets: Vec<WidgetPaint> = Vec::new();
             let mut flair_elements: Vec<AnyElement> = Vec::new();
@@ -7896,9 +7897,14 @@ impl Element for EditorElement {
                             )
                             .into_any_element()
                     } else {
+                        // An audio embed stands on its line with nothing
+                        // under it but its own 6 px (observed: the lines
+                        // around `.audio-embed` touch its 48 px box), so its
+                        // paragraph drops the reading view's gap.
+                        let tight = crate::media::is_audio_widget(&widget.block);
                         div()
                             .w(width)
-                            .child(renderer.block(&widget.block, false))
+                            .child(renderer.block(&widget.block, tight))
                             .into_any_element()
                     };
                     let measured = element.layout_as_root(
