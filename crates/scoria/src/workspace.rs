@@ -3866,9 +3866,15 @@ fn view_subscriptions(
                     selection,
                     selected,
                     link,
-                } => {
-                    this.open_editor_menu(*position, selection.clone(), *selected, link.clone(), cx)
-                }
+                    spelling,
+                } => this.open_editor_menu(
+                    *position,
+                    selection.clone(),
+                    *selected,
+                    link.clone(),
+                    spelling.clone(),
+                    cx,
+                ),
                 EditorEvent::RenameTo(value) => {
                     this.pending_title_rename = Some(value.clone());
                     cx.notify();
@@ -4644,6 +4650,8 @@ impl Workspace {
             markdown_links: state.app().use_markdown_links.unwrap_or(false),
         };
         let slash = state.core_plugin_enabled("slash-command");
+        // The editors watch the spellchecker and recheck when it changes.
+        crate::spellcheck::set_enabled(state.app().spellcheck.unwrap_or(true), cx);
         // Every group's views, the active one's among them.
         for group in &self.groups {
             group.reading.update(cx, |r, cx| {
@@ -16804,6 +16812,7 @@ impl Workspace {
         selection: String,
         selected: bool,
         link: Option<LinkTarget>,
+        spelling: Option<crate::spellcheck::SpellHit>,
         cx: &mut Context<Self>,
     ) {
         let spot = match link {
@@ -16826,6 +16835,7 @@ impl Workspace {
                 spot,
                 selection,
                 selected,
+                spelling,
             }),
         });
         cx.notify();
@@ -16934,6 +16944,25 @@ impl Workspace {
             // The clipboard's plain text only: no HTML conversion, no files.
             Pick::PastePlain => self.editor.update(cx, |e, cx| e.paste_plain(window, cx)),
             Pick::SelectAll => self.editor.update(cx, |e, cx| e.select_all_text(cx)),
+            // A misspelled word's rows.
+            Pick::Correction(i) => {
+                if let file_menu::Target::Editor(click) = target {
+                    if let Some(hit) = &click.spelling {
+                        if let Some(with) = hit.suggestions.get(i as usize) {
+                            let (hit, with) = (hit.clone(), with.clone());
+                            self.editor
+                                .update(cx, |e, cx| e.replace_misspelling(&hit, &with, window, cx));
+                        }
+                    }
+                }
+            }
+            Pick::AddToDictionary => {
+                if let file_menu::Target::Editor(click) = target {
+                    if let Some(hit) = &click.spelling {
+                        crate::spellcheck::add_word(&hit.word, cx);
+                    }
+                }
+            }
             // The All properties row's menu.
             Pick::RenameProperty => {
                 if let file_menu::Target::Property { name, .. } = target {

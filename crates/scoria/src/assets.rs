@@ -143,6 +143,7 @@ icons!(
     "rectangle-vertical-double",
     "redo-2",
     "refresh-cw",
+    "repeat",
     "rotate-ccw",
     "scissors",
     "search",

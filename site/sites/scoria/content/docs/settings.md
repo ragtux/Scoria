@@ -15,7 +15,7 @@ A write merges into the file's own JSON, so only the key you changed moves and k
 does not know about are left where they are.
 
 A few rows are deliberately read-only, because the control Obsidian offers is one Scoria
-does not have yet: the three font families, spellcheck languages, excluded files, accent
+does not have yet: the three font families, excluded files, accent
 color, the theme list, and the vault name, vault folder, config folder and language rows,
 which are not settings of the vault at all. Change those in Obsidian or in the JSON.
 
@@ -66,7 +66,7 @@ are the ones that change how Scoria behaves:
 So are auto-pairing of brackets and of Markdown (`autoPairBrackets`, `autoPairMarkdown`),
 which take effect on the next keystroke without reopening the note.
 
-Settings that are **shown but not yet acted on** include spellcheck, line numbers,
+Settings that are **shown but not yet acted on** include line numbers,
 indent guides and right-to-left. They are read from your configuration and displayed
 truthfully, and changing one still writes the key for Obsidian to honor; the behavior behind
 them is not implemented here. Each such row says so on its own line — "not in Scoria yet", or

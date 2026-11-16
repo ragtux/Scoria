@@ -165,6 +165,30 @@ command there — `/table` then `Enter` inserts a table where the `/` was — an
 puts the `/table` back. `↑` and `↓` wrap round the list, `Escape` closes it and leaves the
 text, `Tab` does nothing, and `Shift + Enter` is an ordinary new line.
 
+## Spellcheck
+
+With **Spellcheck** on (Settings → Editor, on by default, or **Toggle spellcheck** in the
+command palette) a misspelled word gets a red wavy underline in both Live Preview and Source
+mode, as you type: a word you are still typing waits until the space after it. Code, URLs,
+tags, math, the frontmatter, block ids and footnote references are never checked; link text,
+the inside of a `[[wikilink]]`, raw HTML, comments, callouts and table cells are, as in
+Obsidian. Words break where Obsidian's checker breaks them: digits and capitals exempt nothing
+(`v2`, `MISPELED`), hyphens and underscores split a word, and `foo.bar` or `rock'n'roll` pass
+when every part is a word.
+
+Right-click a squiggled word for up to three corrections (or "No suggestions...") and
+**Add to dictionary**. Picking a correction replaces the word, and one `Ctrl + Z` puts it back.
+Added words live in `Custom Dictionary.txt` in Scoria's configuration folder
+(`~/.config/scoria` on Linux), outside every vault — the same file, in the same bytes, that
+Obsidian keeps in its own data folder, so you can copy yours across. The cog beside the
+Spellcheck toggle lists them, with a × to take one out.
+
+English (United States) is built in. **Spellcheck languages** adds others from the Hunspell
+dictionaries your system already has (`/usr/share/hunspell` and the like on Linux,
+`~/Library/Spelling` on macOS, `%APPDATA%\Microsoft\Spelling` on Windows), or from a pair of
+`.aff` and `.dic` files you drop into `dictionaries/` in Scoria's configuration folder. A word
+is right when any chosen language knows it.
+
 ## Multiple cursors
 
 | To add a cursor | |

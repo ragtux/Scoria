@@ -25,6 +25,7 @@ members = [
     "crates/scoria-export",
     "crates/scoria-audio",
     "crates/scoria-paste",
+    "crates/scoria-spell",
     "crates/scoria-bench",
 ]
 
@@ -58,6 +59,7 @@ scoria-mermaid = { path = "crates/scoria-mermaid" }
 scoria-export = { path = "crates/scoria-export" }
 scoria-audio = { path = "crates/scoria-audio" }
 scoria-paste = { path = "crates/scoria-paste" }
+scoria-spell = { path = "crates/scoria-spell" }
 
 anyhow = "1"
 # The WHATWG HTML parser Servo uses, pure Rust (MIT/Apache-2.0), and the
@@ -175,6 +177,16 @@ png = "0.17"
 # RFC 8251's twelve conformance vectors, one dependency: thiserror), fed the
 # packets symphonia's demuxer reads. Output is the same cpal.
 cpal = "0.18"
+# Spellchecking (scoria-spell). spellbook (MPL-2.0, used unmodified, the Helix
+# editor's checker) reads Hunspell .aff/.dic files in pure Rust, no_std plus
+# alloc, and checks and suggests the way Hunspell does; chosen 2026-11-15 over
+# zspell (suggestions still behind an unstable flag) and spellkit and the
+# hunspell crates (native libraries: NSSpellChecker, the Windows checker, or C
+# hunspell). option-ext puts MPL-2.0 in the tree already. md-5 (already in the
+# tree through gpui) writes the checksum line of `Custom Dictionary.txt`, the
+# file Chromium, and so Obsidian, keeps the added words in.
+spellbook = "0.4"
+md-5 = "0.10"
 oxideav-aac = "=0.1.7"
 symphonia = { version = "0.5", default-features = false, features = ["aac", "isomp4", "mp3", "pcm", "wav", "adpcm", "flac", "ogg", "vorbis", "mkv"] }
 opus-decoder = "0.1.1"

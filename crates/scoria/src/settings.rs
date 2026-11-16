@@ -1719,6 +1719,11 @@ enum Control {
     /// once the icon has changed this session. Holds the chosen file's
     /// name, empty at the default.
     AppIcon(SharedString),
+    /// "Spellcheck languages": a pill per chosen language (each with a ×
+    /// while there is more than one), a "Restore default" icon once the
+    /// list is not Obsidian's `["en-US"]`, and a "+" dropdown of the rest.
+    /// Read from the session's spellchecker when drawn.
+    Languages,
 }
 
 /// How far a setting gets in Scoria.
@@ -1808,6 +1813,10 @@ pub enum Page {
     /// "Interface font", "Text font" or "Monospace font": the families
     /// applied, then a search box over the installed ones.
     Font(FontSlot),
+    /// "Spellcheck dictionary", behind the Spellcheck row's cog: the words
+    /// "Add to dictionary" kept, each with a × that removes it. Obsidian
+    /// opens it as a modal over Settings; here it is a page of Settings.
+    SpellcheckDictionary,
 }
 
 impl Page {
@@ -1815,6 +1824,7 @@ impl Page {
         match self {
             Page::CssSnippets => "CSS snippets",
             Page::Font(slot) => slot.title(),
+            Page::SpellcheckDictionary => "Spellcheck dictionary",
         }
     }
 }
@@ -2023,6 +2033,9 @@ struct Item {
     /// control opens: Obsidian puts one on the Themes row and one on the
     /// CSS snippets page.
     folder: Option<&'static str>,
+    /// The page a `lucide-settings` clickable icon before the control
+    /// opens (`extra-setting-button`): the Spellcheck row's dictionary.
+    cog: Option<Page>,
     honored: Honored,
 }
 
@@ -2057,6 +2070,7 @@ fn heading(name: &str) -> Item {
         field: None,
         page: None,
         folder: None,
+        cog: None,
         honored: Honored::Live,
     }
 }
@@ -2074,6 +2088,7 @@ fn item(name: &str, desc: &str, control: Control) -> Item {
         field: None,
         page: None,
         folder: None,
+        cog: None,
         honored: Honored::Live,
     }
 }
@@ -2557,6 +2572,7 @@ impl SettingsView {
                     Control::Color(v) => ("color", json!(v.as_ref())),
                     Control::Navigable(v) => ("navigable", json!(v.as_ref())),
                     Control::AppIcon(v) => ("app_icon", json!(v.as_ref())),
+                    Control::Languages => ("languages", Value::Null),
                 };
                 json!({
                     "kind": if item.heading { "heading" } else { "setting" },
@@ -3027,11 +3043,6 @@ impl SettingsView {
 
     fn editor_items(state: &VaultState) -> Vec<Item> {
         let app = &state.app();
-        let languages = app
-            .spellcheck_languages
-            .as_ref()
-            .map(|l| l.join(", "))
-            .unwrap_or_default();
         let editor_status = match state.core_plugins().as_ref() {
             Some(CorePlugins::Map(m)) => m.get("editor-status").copied().unwrap_or(true),
             Some(CorePlugins::List(l)) => l.iter().any(|x| x == "editor-status"),
@@ -3112,17 +3123,20 @@ impl SettingsView {
                 RIGHT_TO_LEFT,
             ).not_yet(),
             heading("Behavior"),
-            app_toggle(
-                "Spellcheck",
-                "Turn on the spellchecker.",
-                app,
-                SPELLCHECK,
-            ).not_yet(),
-            text(
+            Item {
+                cog: Some(Page::SpellcheckDictionary),
+                ..app_toggle(
+                    "Spellcheck",
+                    "Turn on the spellchecker.",
+                    app,
+                    SPELLCHECK,
+                )
+            },
+            item(
                 "Spellcheck languages",
                 "Choose the languages for the spellchecker to use.",
-                languages,
-            ).not_yet(),
+                Control::Languages,
+            ),
             app_toggle(
                 "Auto-pair brackets",
                 "Pair brackets and quotes automatically.",
@@ -4383,6 +4397,7 @@ impl SettingsView {
                 .text_color(theme.tokens.text_normal)
                 .child(label.clone())
                 .into_any_element(),
+            Control::Languages => self.render_languages(theme, cx),
             Control::AppIcon(name) => {
                 let chosen = !name.is_empty();
                 let button = |id: &'static str, label: &'static str, cta: bool| {
@@ -5070,9 +5085,40 @@ impl SettingsView {
                             cx,
                         )
                     }))
+                    .children(item.cog.map(|page| self.cog_button(page, theme, cx)))
                     .child(self.render_control(item, theme, cx)),
             )
             .into_any_element()
+    }
+
+    /// A `lucide-settings` clickable icon that opens one of the pages.
+    fn cog_button(
+        &self,
+        page: Page,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> gpui::Stateful<gpui::Div> {
+        div()
+            .id(SharedString::from(format!("settings-cog-{}", page.title())))
+            .flex()
+            .items_center()
+            .justify_center()
+            .size(px(24.))
+            .rounded_sm()
+            .cursor_pointer()
+            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+            .child(crate::assets::icon(
+                "settings",
+                16.,
+                theme.tokens.icon_color,
+            ))
+            .on_click(cx.listener(move |this, _, window, cx| {
+                cx.stop_propagation();
+                if this.click_dismissed_a_popover(cx) {
+                    return;
+                }
+                this.open_page(page, window, cx)
+            }))
     }
 
     /// A `lucide-folder-open` clickable icon that opens one of the
@@ -5196,6 +5242,236 @@ impl SettingsView {
             )
             .child(div().pb_2().child(self.snippet_search.clone()))
             .child(div().flex_1().min_h_0().child(list))
+    }
+
+    /// "Spellcheck dictionary": the custom words, one row each, the word
+    /// and a `lucide-x` "Remove from dictionary" before it, as Obsidian's
+    /// `spellchecker-dictionary-item` rows have them (probed 2026-11-15).
+    fn render_dictionary_page(
+        &self,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> gpui::Stateful<gpui::Div> {
+        let words = crate::spellcheck::custom_words(cx);
+        let mut list = div()
+            .id("settings-spell-dictionary")
+            .overflow_y_scroll()
+            .size_full()
+            .flex()
+            .flex_col();
+        if words.is_empty() {
+            list = list.child(
+                div()
+                    .py_4()
+                    .text_size(px(12.))
+                    .text_color(theme.tokens.text_muted)
+                    .child("No words added."),
+            );
+        }
+        for (ix, word) in words.into_iter().enumerate() {
+            let remove = word.clone();
+            list = list.child(
+                div()
+                    .flex()
+                    .flex_row()
+                    .items_center()
+                    .gap_2()
+                    .py(px(2.))
+                    .child(
+                        div()
+                            .id(SharedString::from(format!("settings-spell-remove-{ix}")))
+                            .flex()
+                            .items_center()
+                            .justify_center()
+                            .size(px(20.))
+                            .rounded_sm()
+                            .cursor_pointer()
+                            .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                            .tooltip(crate::canvas::menu::tooltip("Remove from dictionary"))
+                            .child(crate::assets::icon("x", 14., theme.tokens.icon_color))
+                            .on_click(cx.listener(move |_, _, _, cx| {
+                                cx.stop_propagation();
+                                crate::spellcheck::remove_word(&remove, cx);
+                                cx.notify();
+                            })),
+                    )
+                    .child(
+                        div()
+                            .text_size(px(14.))
+                            .text_color(theme.tokens.text_normal)
+                            .child(word),
+                    ),
+            );
+        }
+        list
+    }
+
+    /// "Spellcheck languages": the chosen languages as pills, a restore
+    /// icon away from the default, and the "+" dropdown of the others a
+    /// dictionary was found for.
+    fn render_languages(&self, theme: &Theme, cx: &mut Context<Self>) -> gpui::AnyElement {
+        const KEY: &str = "spellcheck-languages";
+        let chosen = crate::spellcheck::languages(cx);
+        let missing = crate::spellcheck::missing(cx);
+        let others: Vec<String> = crate::spellcheck::available(cx)
+            .into_iter()
+            .filter(|a| !chosen.iter().any(|c| c.eq_ignore_ascii_case(a)))
+            .collect();
+        let several = chosen.len() > 1;
+        let mut pills = Vec::new();
+        for (ix, code) in chosen.iter().enumerate() {
+            let without: Vec<String> = chosen.iter().filter(|c| *c != code).cloned().collect();
+            let absent = missing.iter().any(|m| m == code);
+            let name = crate::spellcheck::display_name(code);
+            let label = if absent {
+                format!("{name} (no dictionary)")
+            } else {
+                name
+            };
+            pills.push(
+                div()
+                    .flex()
+                    .flex_row()
+                    .items_center()
+                    .gap_1()
+                    .px(px(6.))
+                    .py(px(1.))
+                    .rounded_sm()
+                    .bg(theme.tokens.background_modifier_hover)
+                    .text_size(px(12.))
+                    .text_color(if absent {
+                        theme.tokens.text_faint
+                    } else {
+                        theme.tokens.text_normal
+                    })
+                    .child(SharedString::from(label))
+                    .when(several, |d| {
+                        d.child(
+                            div()
+                                .id(SharedString::from(format!(
+                                    "settings-spell-lang-remove-{ix}"
+                                )))
+                                .cursor_pointer()
+                                .child(crate::assets::icon("x", 12., theme.tokens.icon_color))
+                                .on_click(cx.listener(move |this, _, _, cx| {
+                                    cx.stop_propagation();
+                                    if this.click_dismissed_a_popover(cx) {
+                                        return;
+                                    }
+                                    crate::spellcheck::set_languages(without.clone(), cx);
+                                    cx.notify();
+                                })),
+                        )
+                    }),
+            );
+        }
+        let open = self.menu == Some(KEY);
+        let at_default = chosen == scoria_spell::default_languages();
+        let mut rows = Vec::new();
+        for (ix, code) in others.into_iter().enumerate() {
+            let mut next = chosen.clone();
+            next.push(code.clone());
+            rows.push(
+                div()
+                    .id(SharedString::from(format!("settings-option-{KEY}-{ix}")))
+                    .px_3()
+                    .py_1()
+                    .text_size(px(12.))
+                    .cursor_pointer()
+                    .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                    .text_color(theme.tokens.text_normal)
+                    .child(SharedString::from(crate::spellcheck::display_name(&code)))
+                    .on_click(cx.listener(move |this, _, _, cx| {
+                        cx.stop_propagation();
+                        this.menu = None;
+                        crate::spellcheck::set_languages(next.clone(), cx);
+                        cx.notify();
+                    })),
+            );
+        }
+        div()
+            .flex()
+            .flex_row()
+            .items_center()
+            .gap_2()
+            .child(div().flex().flex_row().flex_wrap().gap_1().children(pills))
+            .when(!at_default, |d| {
+                d.child(
+                    div()
+                        .id("settings-spell-lang-restore")
+                        .flex()
+                        .items_center()
+                        .justify_center()
+                        .size(px(24.))
+                        .rounded_sm()
+                        .cursor_pointer()
+                        .hover(|s| s.bg(theme.tokens.background_modifier_hover))
+                        .tooltip(crate::canvas::menu::tooltip("Restore default"))
+                        .child(crate::assets::icon(
+                            "rotate-ccw",
+                            16.,
+                            theme.tokens.icon_color,
+                        ))
+                        .on_click(cx.listener(|this, _, _, cx| {
+                            cx.stop_propagation();
+                            if this.click_dismissed_a_popover(cx) {
+                                return;
+                            }
+                            crate::spellcheck::set_languages(scoria_spell::default_languages(), cx);
+                            cx.notify();
+                        })),
+                )
+            })
+            .child(
+                div()
+                    .relative()
+                    .child(
+                        div()
+                            .id("settings-menu-spellcheck-languages")
+                            .px_2()
+                            .py(px(3.))
+                            .rounded_sm()
+                            .cursor_pointer()
+                            .bg(theme.tokens.dropdown_background)
+                            .border_1()
+                            .border_color(theme.tokens.background_modifier_border)
+                            .text_size(px(12.))
+                            .text_color(theme.tokens.text_normal)
+                            .child("+")
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                cx.stop_propagation();
+                                if this.click_dismissed_a_popover(cx) {
+                                    return;
+                                }
+                                this.commit_field(cx);
+                                this.menu = Some(KEY);
+                                cx.notify();
+                            })),
+                    )
+                    .when(open, |d| {
+                        // Deferred, or the rows after this one paint over it.
+                        d.child(deferred(
+                            div()
+                                .id("settings-spell-lang-options")
+                                .absolute()
+                                .top(px(26.))
+                                .right(px(0.))
+                                .min_w(px(200.))
+                                .max_h(px(300.))
+                                .overflow_y_scroll()
+                                .flex()
+                                .flex_col()
+                                .bg(theme.tokens.background_secondary)
+                                .border_1()
+                                .border_color(theme.tokens.background_modifier_border)
+                                .rounded_md()
+                                .shadow_lg()
+                                .py_1()
+                                .children(rows),
+                        ))
+                    }),
+            )
+            .into_any_element()
     }
 
     /// Writes one edit of a font page's list to `appearance.json`; an edit
@@ -5655,6 +5931,9 @@ impl Render for SettingsView {
         let body: gpui::AnyElement = match page {
             Some(Page::CssSnippets) => self.render_snippets_page(&theme, cx).into_any_element(),
             Some(Page::Font(slot)) => self.render_font_page(slot, &theme, cx).into_any_element(),
+            Some(Page::SpellcheckDictionary) => {
+                self.render_dictionary_page(&theme, cx).into_any_element()
+            }
             None if tab == Tab::Hotkeys => self.render_hotkeys(&theme, cx).into_any_element(),
             None => {
                 let items = self.items(tab);
@@ -6839,7 +7118,7 @@ mod tests {
                         v.to_string()
                     }
                     Control::Toggle(on) => on.to_string(),
-                    Control::None => String::new(),
+                    Control::None | Control::Languages => String::new(),
                 };
                 (item.name.to_string(), value)
             })
@@ -7418,6 +7697,7 @@ mod tests {
                     Control::Slider(_) => "slider",
                     Control::Toggle(_) => "toggle",
                     Control::None => "none",
+                    Control::Languages => "languages",
                 };
                 (i.name.to_string(), kind)
             })
@@ -7884,6 +8164,8 @@ mod tests {
                 "Strict line breaks",
                 "Fold heading",
                 "Fold indent",
+                // Read by `spellcheck::set_enabled` from `apply_app_config`.
+                "Spellcheck",
                 "Auto-pair brackets",
                 "Auto-pair Markdown syntax",
                 "Smart lists",
