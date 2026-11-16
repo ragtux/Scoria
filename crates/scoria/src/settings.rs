@@ -8164,11 +8164,11 @@ mod tests {
                 "Strict line breaks",
                 "Fold heading",
                 "Fold indent",
-                // Read by `spellcheck::set_enabled` from `apply_app_config`.
-                "Spellcheck",
                 "Line numbers",
                 "Indentation guides",
                 "Right-to-left (RTL)",
+                // Read by `spellcheck::set_enabled` from `apply_app_config`.
+                "Spellcheck",
                 "Auto-pair brackets",
                 "Auto-pair Markdown syntax",
                 "Smart lists",

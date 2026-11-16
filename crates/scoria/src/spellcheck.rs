@@ -356,6 +356,11 @@ pub fn squiggle_color() -> Hsla {
     gpui::rgb(0xff0000).into()
 }
 
+/// A right-to-left line's boxes for the display bytes `s..e`, as
+/// `(row, left, right)` from the text's left edge (the editor's
+/// `Shaped::range_boxes`).
+pub type RowBoxes<'a> = dyn Fn(usize, usize) -> Vec<(usize, Pixels, Pixels)> + 'a;
+
 /// Paints the squiggles of one shaped line. `ranges` are source columns of
 /// the line; only the parts shown as typed (a [`Piece::Copy`]) are marked,
 /// so hidden markup and rendered widgets never carry one.
@@ -363,6 +368,7 @@ pub fn paint_line(
     ranges: &[Range<usize>],
     display: &DisplayLine,
     line: &WrappedLine,
+    rtl_boxes: Option<&RowBoxes<'_>>,
     origin: Point<Pixels>,
     row_height: Pixels,
     window: &mut Window,
@@ -390,7 +396,19 @@ pub fn paint_line(
             if a >= b {
                 continue;
             }
-            for (y, x0, x1) in segments(display, line, d + (a - s), d + (b - s), row_height) {
+            let (from, to) = (d + (a - s), d + (b - s));
+            // A right-to-left line is laid out in rows of the editor's own
+            // (`crate::rtl`), not in gpui's wrapped layout, so its boxes come
+            // from there.
+            let pieces = match rtl_boxes {
+                Some(boxes) => boxes(from, to)
+                    .into_iter()
+                    .map(|(r, x0, x1)| (row_height * r as f32, x0, x1))
+                    .filter(|(_, x0, x1)| x1 > x0)
+                    .collect(),
+                None => segments(display, line, from, to, row_height),
+            };
+            for (y, x0, x1) in pieces {
                 paint_wave(
                     origin.x + x0,
                     origin.x + x1,

@@ -8301,10 +8301,14 @@ impl Element for EditorElement {
                     window,
                 );
                 if let Some(misspelled) = spell_lines.get(visible.line) {
+                    let rtl_boxes = |s: usize, e: usize| shaped.range_boxes(s, e, px(0.));
                     crate::spellcheck::paint_line(
                         misspelled,
                         &shaped.display,
                         &shaped.line,
+                        shaped
+                            .is_rtl()
+                            .then_some(&rtl_boxes as &crate::spellcheck::RowBoxes<'_>),
                         origin,
                         visible.row_height,
                         window,
