@@ -10406,3 +10406,85 @@ commands too.
   digits in a query (`/(`, `/#`); several cursors.
 - Whether the list is rebuilt on every keystroke (the check callbacks asked again) or once per
   `/`. Scoria builds it once per `/`, and again whenever the popup reopens.
+
+## Observed canvas embeds, audio and video, Obsidian 1.15.0
+
+Probed 2026-11-15 with `tools/obsidian-probe/embeds-media.mjs` in a private headless sway
+(results and screenshots in `tools/obsidian-probe/results/2026-11-15-embeds-media.json` and
+`-shots/`), Obsidian 1.15.0 on the installer build 1.13.7, Electron 43, a 1596 × 973 window,
+dark theme unless noted. Built in [[Development#Canvas embeds, the audio player and video, 2026-11-15]].
+
+### A canvas embedded in a note
+
+- **It is not a live canvas.** `![[Board.canvas]]` renders `span.internal-embed.canvas-embed.inline-embed`
+  holding a `div.embed-title` and an `svg.canvas-minimap`: a static picture. Nothing pans, zooms
+  or selects; the wheel scrolls the note (`scrollTop` 0 → 200 for a 200 px wheel over it); the
+  pointer stays `auto`; no element in it reacts to hover.
+- **A click anywhere on it opens the canvas**, on the picture or on the title, in the reading
+  view and in Live Preview alike, in the same tab; Ctrl+click opens it in another tab. In Live
+  Preview the click does not put the caret in the embed's line.
+- **The block** is the note's full width (700 px at the readable line width), no border, padding
+  or margin. Its height is the title's 32 + the picture + 6 px (the descent an inline `svg`
+  leaves): 438 px for a board, 129.9 for a 3000 × 100 canvas.
+- **The title** (`.embed-title`): a flex row, `gap: 4px`, `padding-bottom: 8px`, `line-height: 24px`,
+  16 px weight 600 in the normal text colour, holding `span.file-embed-icon` (Lucide
+  `layout-dashboard`, 16 px, the muted colour) and the file's name without `.canvas` (a
+  `Board.canvas#t2` embed is titled "Board" too).
+- **The picture** (`svg.canvas-minimap`): `width: 100%`, `max-height: 400px`, `padding: 4px`; its
+  `viewBox` is the cards' bounding box grown on every side by 5 % of the box's longer side
+  (`-98 -98 836 496` over cards spanning 760 × 420; `-15 -15 330 70` over 300 × 40;
+  `-55 -55 1210 710` over 1100 × 600), drawn `xMidYMid meet`.
+- **In paint order**: every group, then every edge, then every other card, each in file order.
+  A card is a `rect` at its own `x`, `y`, `width`, `height` with `rx = ry = 20` and a 5-unit
+  stroke. Uncoloured: fill and stroke `--background-modifier-border` (`#333333` dark, `#e4e4e4`
+  light), `fill-opacity: 0.65`. Coloured (`mod-canvas-color-N`, or `mod-canvas-color-custom` with
+  `--canvas-color: #ff0000` for a hex colour): fill and stroke the colour, `fill-opacity: 0.5`.
+  A group is drawn the same way as a card; its label is not drawn. No text, no images, no file
+  names.
+- **An edge** is a `path` `M from C c1 c2 to` from the middle of one side to the middle of the
+  other (on the card's edge, not inset), each control point out along its side's normal by half
+  the distance between the ends, held within 70..150 (`M100,20 C170,20 130,20 200,20`;
+  `M250,30 C326.49,30 323.51,60 400,60`; `M100,50 C250,50 1050,350 1050,500`). Its stroke width is
+  `sqrt(2 × margin)` = `sqrt(0.1 × longer side)` units (8.7178, 5.47723, 10.4881); its colour
+  `#c0c0c0` in both themes, or its own (`mod-canvas-color-1` red). No arrow heads, no labels.
+- **An edge with no `fromSide` or `toSide`** makes the whole picture disappear: the embed is its
+  title alone (`Edges.canvas`; the same cards with the sides written draw normally). Scoria does
+  not copy this.
+- An **empty** canvas file is the title alone, with no picture. A **missing** one is
+  `div.internal-embed.file-embed.mod-empty`: "“Missing.canvas” is not created yet. Click to create."
+- The `|400`, `|400x300` and `|x300` hints set `width`/`height` attributes on the span and change
+  nothing drawn.
+- **Nested**: a note embed holding a canvas embed draws the same title and picture inside the
+  note embed (662 px wide there). A **canvas file card** on a canvas that points at a canvas
+  (itself included) draws that canvas's minimap filling the card; the card's label is the file
+  name.
+
+### The audio player
+
+- An audio file in a tab is the leaf type `audio`: `div.view-content > div.audio-container > audio`,
+  the container 12 px in from the view's edges and the `audio` its full width, 42 px tall. The
+  element is `<audio controls controlslist="nodownload" src="app://…?mtime">`: Chromium's own
+  control in its dark style — the play button, `0:00 / 0:03`, the seek bar, the volume button
+  and the overflow (⋮) menu, on a `#232323` rounded box with a `#333333` hairline.
+- Every extension Obsidian opens as audio loaded and reported 3 s for a 3 s tone: `wav`, `mp3`,
+  `m4a`, `flac`, `ogg`, `oga`, `opus` (3.0065 s) and `3gp` (AAC). `canPlayType('audio/3gpp')`
+  is nonetheless `""`.
+- `![[tone.mp3]]` is `span.internal-embed.media-embed.audio-embed` with the same `<audio>`, the
+  note's full width; the span is 48 px tall (42 + the descent). `|300` changes nothing. In Live
+  Preview the embeds stand 72 px apart. A missing one is
+  `file-embed mod-empty-attachment`: "“missing.mp3” could not be found."
+- A click on the play button plays and focuses the `<audio>`; Space then pauses. Arrow keys,
+  Home, End, `k` and `m` sent to the focused player changed neither time, volume nor mute.
+- The leaf in `workspace.json`: `{"type": "audio", "state": {"file": "tone.mp3"}, "icon":
+  "lucide-file-audio", "title": "tone"}`; the tab and view header say "tone".
+
+### Video
+
+- A video file in a tab is the leaf type `video`: `div.video-container > video` with `controls`,
+  `preload="metadata"` and an empty `style`, the video at its own size (320 × 240) centred in the
+  container. The leaf: `{"type": "video", "state": {"file": "clip.mp4"}, "icon": "lucide-file",
+  "title": "clip"}`.
+- H.264 in `mp4` and `mov`, VP9 in `webm` and `mkv` all loaded (320 × 240, 3 s). Theora in `ogv`
+  failed (`error.code` 4, `MEDIA_ERR_SRC_NOT_SUPPORTED`) and drew Chromium's empty 300 × 150 box.
+- `![[clip.mp4]]` is `span.internal-embed.media-embed.video-embed`, the video at its own size,
+  left-aligned; `|200` and `|200x100` set attributes on the span and left the video 320 × 240.

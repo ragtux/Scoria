@@ -332,6 +332,114 @@ uses behave as Obsidian's do.
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
 | Page preview | probed 2026-11-11 on macOS, see [[Specification#Observed page preview, Obsidian 1.15.0]] and [[#Page preview, the probe, 2026-11-11]]; step 1 landed the same day — the popover over links in the reading view and both editing modes, see [[#Page preview, step 1, 2026-11-11]]; step 2 the same day — the tab header and the Files, Bookmarks, Backlinks, Outgoing links and Outline rows, see [[#Page preview, step 2, 2026-11-11]]; step 3 the same day — nested popovers and the click that makes one an editor, see [[#Page preview, step 3, 2026-11-11]]; step 4 the same day — the Bases and Graph sources, the second-link timing and "Click to create", from a second probe pass, see [[#Page preview, step 4, 2026-11-11]] — done, bar the "Properties view" source, whose File properties view Scoria does not have |
 | Slash commands | done 2026-11-11: probed in a headless sway and built on the autocompletion popup, see [[#Slash commands, 2026-11-11]] and [[Specification#Observed Slash commands, Obsidian 1.15.0]] |
+| Canvas embeds, audio and video | 2026-11-15: `![[x.canvas]]` is the canvas's minimap as Obsidian draws it, audio plays in a tab and embedded, video is a card with "Open in default app" (no pure-Rust decoder is credible yet), see [[#Canvas embeds, the audio player and video, 2026-11-15]] and [[Specification#Observed canvas embeds, audio and video, Obsidian 1.15.0]] |
+
+### Canvas embeds, the audio player and video, 2026-11-15
+
+Two rows of the manual's differences page ("A canvas embedded in a note", "Audio and video
+players"), probed first, then built. See [[Specification#Observed canvas embeds, audio and video, Obsidian 1.15.0]].
+
+**The probe.** `tools/obsidian-probe/embeds-media.mjs`, Obsidian 1.15.0 in a private headless
+sway with its own `XDG_RUNTIME_DIR`, a dead session bus, `USER_DATA_DIR` and `CDP_PORT=9355`;
+the media fixtures were made by ffmpeg 8.1.3 (`MEDIA_DIR`). What it changed: the brief assumed
+an embedded canvas is a live, read-only canvas viewport, and it is not — it is a static SVG
+minimap of the cards' outlines and edges under the file's name, and a click anywhere on it opens
+the canvas. The geometry was read off the SVG (`viewBox`, every `rect` and `path`, the computed
+paint in both themes) and three more canvases pinned the margin (5 % of the longer side), the
+edge width (`sqrt(0.1 × longer side)`) and the control points (the canvas view's reach, without
+its inset). It also found that Obsidian draws no picture for a canvas holding an edge with no
+recorded side, which Scoria does not copy. Audio is Chromium's `<audio controls>`; every one of
+the eight audio extensions played, and Theora was the one video codec that did not.
+
+**What was built.**
+- `scoria-canvas::minimap`, no gpui: `Minimap::of(&Canvas)` (the view box, groups, edges, cards,
+  the edge width), `fit` (`xMidYMid meet`) and `picture_height`; seven tests hold the probe's
+  own numbers.
+- `scoria-audio::player`, no gpui: `Source` opens a file with symphonia 0.5 (MP3, WAV and ADPCM,
+  FLAC, Vorbis, AAC in MP4/M4A/3GP, the Ogg, Matroska and WebM containers) and decodes Opus,
+  which symphonia demuxes but cannot decode, with `opus-decoder` 0.1.1 (MIT OR Apache-2.0, pure
+  Rust, no unsafe, one dependency); it drops Opus's pre-skip, seeks accurately and falls back to
+  decoding forward from the start where a container cannot seek. `Engine` sits between a worker
+  thread that decodes half a second ahead (resampled linearly to the device's rate, channels
+  remixed) and the cpal callback: play, pause, seek, volume, mute, the position, the end (paused
+  at the length, as `<audio>` stops; play again starts over). `Player` is the engine with its
+  worker and a cpal output stream in any of f32, i16, i32, u16. `probe` reads the length
+  without decoding (adding packet durations up when the container does not say).
+  `opus-decoder` shifts a `u8` past its width on some CELT bands, which panics with overflow
+  checks on: the workspace turns them off for that crate in the dev profile (release wraps,
+  which keeps the low bits as libopus does), and the decode runs under `catch_unwind` so a bad
+  packet loses that packet, not the player.
+- `scoria-audio::video`, no gpui: the picture size (turned by the track matrix), length and
+  codecs from MP4/QuickTime boxes (skipping `mdat` wherever it sits; QuickTime's second `hdlr`
+  in `minf` caught by the drive), Matroska/WebM elements (unknown-size clusters included), or a
+  Theora header; `codec_name` turns `avc1` and `V_MPEG4/ISO/AVC` into "H.264".
+- The app: `EmbedKind::Canvas`, `Audio` and `Video` in the reading model (the canvas read and
+  reduced to its minimap when the note is built; media read nothing), drawn by the reading
+  renderer's embed dispatch, which is Live Preview's too. `canvas::minimap` draws the title row
+  and the picture (quads for the cards, the stroke centred on the edge as SVG's is; gpui paths
+  for the edges); a `.canvas` file card on a canvas draws the picture filling the card. `media`
+  keeps one entry per file in an app-wide registry: the header read on the background executor,
+  and once played, the `Player`; the controls are built where gpui hands the element an `App`
+  (a small deferring element, as the PDF embed's frame does), and the windows are redrawn four
+  times a second while anything plays. An audio or video file in a tab is its own embed, the way
+  an image is; its leaf is Obsidian's (`audio` with `lucide-file-audio`, `video` with the plain
+  file, the title without the extension). A dangling `![[Missing.canvas]]` says "is not created
+  yet. Click to create." and the click now makes `Missing.canvas`, not `Missing.canvas.md`
+  (OBSERVE: what Obsidian writes for that click). Six Lucide icons were added (`play`, `pause`,
+  `volume-2`, `volume-x`, `file-audio`, `film`).
+
+**Video: why there is no player.** Searched 2026-11-15, crates.io:
+
+| Codec | Pure-Rust decoder | Licence | First published | Note |
+| --- | --- | --- | --- | --- |
+| H.264 | `rust_h264` 0.6.1; `rusty_h264-decoder` 0.17.2 | MIT/Apache-2.0; BSD-2-Clause | 2026-04; 2026-06 | the second claims Baseline, B-slices and most of High, bit-exact against OpenH264 |
+| H.264 | `openh264` 0.9.10 | BSD-2-Clause | — | compiles Cisco's C++ source: not pure Rust, and the H.264 patent licence covers only Cisco's own binary |
+| HEVC (phones' `.mov`) | `rust_h265` 0.4.1 | MIT/Apache-2.0 | 2026-04 | Main and Main 10; widely pulled in by HEIC decoders |
+| AV1 | `rav1d` 1.1.0 | BSD-2-Clause | 2025 | a port of dav1d; its speed is assembly that needs nasm, the Rust fallback is slow |
+| VP9 / VP8 | `vp9dec`, `rusty_vp9`; `vp8-decoder` | MIT; Apache-2.0; MIT/Apache + BSD-3 | 2026-07; 2026-11 | — |
+| Containers | symphonia 0.5 `isomp4`/`mkv` (no video track parameters until 0.6's experimental video codecs), `matroska-demuxer` 0.8.1, `mp4parse` 0.17 | MPL-2.0; MIT/Apache/Zlib; MPL-2.0 | — | — |
+
+A path exists on paper — H.264 and HEVC cover what phones and cameras write — but every
+pure-Rust decoder for them is under eight months old and from one author, with no record yet on
+real files, and a player needs more than a decoder: B-frame reordering, YUV to RGBA for every
+frame and its upload to gpui, audio and video kept in step, seeking to keyframes. That is a
+project of its own and not a credible one yet, so the fallback was built: a card with the name,
+`320 × 240 · 0:03 · H.264 / AAC · 46 KB`, and "Open in default app" (gpui's `open_with_system`).
+No webview and no system ffmpeg. Worth revisiting when `rust_h264`/`rust_h265` have a year
+behind them and symphonia 0.6 reports video tracks.
+
+**Tests.** `scoria-canvas`: seven `minimap::tests`. `scoria-audio`: `player::tests` (the clock,
+a WAV decoded whole and seeked, remixing, resampling in blocks with no step at the joins, the
+engine through play/pause/volume/mute/seek/the end, a seek kept within the file, unreadable
+files), `video::tests` (codec names, synthetic MP4 with `mdat` first, a turned matrix and
+QuickTime's second `hdlr`, synthetic WebM with an unknown-size cluster, audio-only and junk),
+and `tests/formats.rs` over real files in `tests/data` (half a second of 1 kHz by ffmpeg 8.1.3:
+`-f lavfi -i sine=frequency=1000:duration=0.5` as MP3 22.05 kHz 32 kbps, FLAC 16 kHz, Vorbis
+22.05 kHz q0, Opus 48 kHz 24 kbps, AAC in 3GP 16 kHz, Opus in WebM, IMA ADPCM WAV 8 kHz, and
+64 × 48 `testsrc` clips as H.264 MP4, VP9 WebM and Theora Ogg): every format's length and
+pitch, a seek into each within 40 ms (Vorbis loses its first block after a seek, 34 ms), the
+recorder's own `.m4a` decoded at 1000 Hz, and the video probe against ffmpeg's files. The app:
+the minimap embed's name and height (438 px at 700 wide, 129.9 for the wide canvas, as observed),
+an empty or broken canvas as the title alone, the model's three new kinds, the leaves, the
+size and facts strings. The gate: 71 test binaries, 1,713 passed; clippy clean.
+
+**Driven.** The private headless sway, the release build on a scratch vault, the socket, and ALSA
+pointed (`ALSA_CONFIG_PATH`) at a `file` plugin over `null`, so nothing reached a speaker. Seen:
+the board's minimap in reading view and Live Preview, its colours and its curve matching
+Obsidian's screenshot; a click on the picture (Live Preview) and on the title (reading view)
+opening `Board.canvas` in the tab; the nested embed; `Self.canvas`'s card drawing its own
+minimap; the edges canvas drawn where Obsidian draws nothing; the empty canvas as its title;
+the missing one's line. Nine audio embeds reading `0:00 / 0:03`; play showing pause and the bar
+moving, then the end; the file the ALSA plugin wrote held 144,000 frames of 440 Hz at 48 kHz
+stereo f32 — the 44.1 kHz WAV, resampled; a press on the bar before any play seeking to
+`0:01` with the caret left at line 1 in Live Preview; mute. The video embeds and a `.mov` tab
+as cards with their facts.
+
+**Left.** Space to play and pause, the volume slider and playback speed; a player per embed
+rather than per file; the audio tab's full width (it sits in the readable column); the
+null device is not paced, so playback in the drive ran faster than real time and the timing on a
+real device was not watched; macOS and Windows output untried; what Obsidian writes when the
+missing-canvas line is clicked; a video player.
 
 ### Slash commands, 2026-11-11
 
