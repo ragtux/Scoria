@@ -27,6 +27,8 @@ mod trigger;
 
 pub use candidates::{suggestions, BlockId, Item, Suggestion, Vault, LIMIT};
 pub use insert::{file_link, insert, Accept, Insertion, Options};
+/// The Excluded files rules a [`Vault`] carries, from `scoria-search`.
+pub use scoria_search::ExcludeFilters;
 pub use slash::{
     rank_commands, slash_accept_edit, slash_rows, slash_trigger, CommandEntry, SlashTriggered,
 };

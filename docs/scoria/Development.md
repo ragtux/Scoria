@@ -337,6 +337,69 @@ uses behave as Obsidian's do.
 | Canvas embeds, audio and video | 2026-11-15: `![[x.canvas]]` is the canvas's minimap as Obsidian draws it, audio plays in a tab and embedded, video is a card with "Open in default app" (no pure-Rust decoder is credible yet), see [[#Canvas embeds, the audio player and video, 2026-11-15]] and [[Specification#Observed canvas embeds, audio and video, Obsidian 1.15.0]] |
 | Paste and drop | done 2026-11-15: pasted HTML as Markdown, clipboard images and files saved as attachments, files dropped from a file manager, see [[#Paste and drop, 2026-11-15]] and [[Specification#Observed HTML paste and file drops, Obsidian 1.15.0]] |
 | Spellcheck | done 2026-11-15: probed in a headless sway, then `scoria-spell` (spellbook, a bundled `en-US`), squiggles in both editing modes, the corrections and "Add to dictionary" in the editor menu, the custom dictionary page and the languages row, see [[#Spellcheck, 2026-11-15]] and [[Specification#Observed spellcheck, Obsidian 1.15.0 (installer build 1.13.7)]] |
+| Excluded files | done 2026-11-16: `userIgnoreFilters` matched as Obsidian 1.15.1 does and applied to search, the graph, unlinked mentions, the switcher, link autocompletion, the Tags pane and Bases; the Settings row edits it, see [[#Excluded files, 2026-11-16]] and [[Specification#Observed Excluded files, Obsidian 1.15.1]] |
+
+### Excluded files, 2026-11-16
+
+Excluded files had been a row in Settings that showed the rules and did
+nothing else. It is now a page that edits them, and the rules hide or demote
+files where Obsidian's do.
+
+**What was probed.** `tools/obsidian-probe/excluded-files.mjs` ran Obsidian
+1.15.1 in a private headless sway (its own `USER_DATA_DIR`, CDP port 9361).
+The matcher was answered by `metadataCache.isUserIgnored` over 33 filter
+shapes and 23 paths, and `metadataCache.userIgnoreFilters` showed what each
+shape compiles to, which made the rules plain: trim, `/…/` with something
+inside is a regex searched anywhere, everything else is an escaped prefix,
+and both ignore case. Then each surface with `Archive/` excluded: search, the
+switcher, link autocompletion, both graphs, backlinks, the Tags pane, the
+explorer and a Bases table; then the Settings page and its modal, with the
+`app.json` bytes after every add and delete.
+
+Three answers were not what the setting's own description suggests. Linked
+mentions still list an excluded note; only unlinked mentions drop it. The
+Tags pane does not count an excluded note's tags. And Bases leaves excluded
+files out of every view. The description names none of that.
+
+**What was built.** The matcher is `scoria_search::ExcludeFilters`, compiled
+on the `regex` crate with case folding, with the probe's whole table as its
+test. `VaultState` keeps one compiled copy, rebuilt whenever `app.json` is
+written through Settings, and every surface asks it: the search pane's
+runner, the graph's builder (notes, attachments and link targets, the local
+centre excepted), `unlinked_incoming`, the quick switcher's ranking (now a
+plain function, `rank`), the link suggester (`Vault::excluded`, a
+`downranked` flag on each row), the Tags pane through the cache's new
+`tags_without`, and the Bases row set. A downranked row is drawn in
+`--text-muted`, as Obsidian's `mod-downranked` computed to.
+
+The Files and links row is navigable now, with the value Obsidian shows
+(the rule, or "N rules"). Its page lists the rules with a Delete each and a
++ that opens the Add exclusion form: the field, folder suggestions and a
+`+ typed` row from `scoria_search::exclude::offers`, the help line, Done and
+Cancel. Obsidian draws the form as a modal over Settings; Scoria draws it as
+a card at the top of the page, which is how the Spellcheck dictionary was
+done too. It was driven in a headless sway over the control socket: a folder
+picked by Enter wrote `Other/`, a typed regex wrote itself, and a delete
+removed the right row, with the unknown key in the test's `app.json` left
+where it was.
+
+**The traps.** Deleting the last rule writes `"userIgnoreFilters": null`.
+`Option<Vec<String>>` cannot say that and still give back a `[]` or a
+missing key unchanged, so the field is now a double option read through a
+small `present` deserializer: missing, `null`, `[]` and a list each come back
+as they were read, and `AppConfig::set_ignore_filters` writes `null` for an
+empty list. In the probe, the Settings window of 1.15 is a popout window:
+`app.setting.containerEl` was never connected to the main document, `.modal`
+queries found nothing, and a real CDP click on the row's rect landed in the
+main window and closed Settings. The probe reaches it through the row's
+`ownerDocument` and drives its inputs by setting values and dispatching
+events in that window. The regex crate is not JavaScript's: lookaround and
+backreferences do not compile here, and such a rule is dropped as Obsidian
+drops one that does not compile.
+
+**Left.** Whether the Outgoing links pane's unlinked mentions should drop
+an excluded note's name, and whether tag search and tag autocompletion count
+excluded notes, were not observed, so both are unchanged.
 
 ### The File properties pane, 2026-11-16
 

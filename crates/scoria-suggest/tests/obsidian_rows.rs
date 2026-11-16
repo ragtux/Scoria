@@ -10,6 +10,7 @@
 use scoria_cache::links::LinkFormat;
 use scoria_cache::{index_markdown, LinkResolver, MetadataCache};
 use scoria_formats::FileKind;
+use scoria_search::ExcludeFilters;
 use scoria_suggest::{insert, suggestions, trigger, Accept, Item, Options, Vault};
 use scoria_vault::VaultFile;
 
@@ -84,6 +85,7 @@ fn cache() -> MetadataCache {
 struct Fixture {
     files: Vec<VaultFile>,
     cache: MetadataCache,
+    excluded: ExcludeFilters,
 }
 
 impl Fixture {
@@ -91,6 +93,7 @@ impl Fixture {
         Fixture {
             files: files(),
             cache: cache(),
+            excluded: ExcludeFilters::default(),
         }
     }
 
@@ -101,6 +104,7 @@ impl Fixture {
             source,
             show_unsupported: false,
             text: &note_text,
+            excluded: &self.excluded,
         }
     }
 
@@ -432,6 +436,39 @@ fn an_empty_query_is_ordered_by_modification_time() {
     // Unlike the quick switcher, no unresolved link target is offered.
     assert!(!labels.contains(&"No Such Note At All"));
     assert_eq!(items.len(), 6 + 1 + 3);
+}
+
+/// Excluded files (`userIgnoreFilters`), as Obsidian 1.15.1 offered them
+/// (2026-11-16, `excluded-files.mjs` step s04): an empty query leaves them
+/// out, aliases with them, and a query puts them after every other match,
+/// marked `downranked`.
+#[test]
+fn excluded_files_are_offered_last_and_not_on_an_empty_query() {
+    let mut f = Fixture::new();
+    f.excluded = ExcludeFilters::new(&["Sub/"]);
+    let v = f.vault("Scratch.md");
+    let t = trigger("[[", 2).expect("triggers");
+    let labels: Vec<String> = suggestions(&t, &v)
+        .iter()
+        .map(|s| s.label.clone())
+        .collect();
+    assert!(!labels
+        .iter()
+        .any(|l| l.starts_with("Sub/") || l == "Sub Alias"));
+    assert_eq!(labels.len(), 3 + 1 + 2);
+    let t = trigger("[[al", 4).expect("triggers");
+    let rows = suggestions(&t, &v);
+    let shown: Vec<(&str, bool)> = rows
+        .iter()
+        .map(|s| (s.label.as_str(), s.downranked))
+        .collect();
+    let first_down = shown
+        .iter()
+        .position(|(_, d)| *d)
+        .expect("a downranked row");
+    assert!(shown[first_down..].iter().all(|(_, d)| *d), "{shown:?}");
+    assert!(shown[..first_down].iter().any(|(l, _)| *l == "Alpha"));
+    assert!(shown[first_down..].iter().any(|(l, _)| *l == "Sub/Alpha"));
 }
 
 #[test]

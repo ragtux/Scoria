@@ -72,8 +72,7 @@ Things Obsidian does that Scoria intends to do and does not.
 |---|---|
 | **New folder** | Asks for a name in a prompt first, where Obsidian creates `Untitled` and renames it on the row |
 | **System trash on Windows and macOS** | Implemented on Linux (freedesktop trash with a `.trashinfo` record); elsewhere it falls back to the vault's `.trash/` |
-| **Excluded files** | `userIgnoreFilters` is shown in Settings but cannot be edited there, and search, the graph and unlinked mentions do not hide what it excludes |
-| **Settings Scoria does not act on yet** | The rows write what Obsidian writes, bar Excluded files and Override config folder (Spellcheck languages, which Obsidian keeps outside the vault, goes to `scoria.json`), and the option tabs of plugins Scoria does not have, which show their values only. Rows for behavior Scoria lacks are written for Obsidian and marked "not in Scoria yet": Language, Native menus, and the plugin options above. **Custom app icon** takes effect on X11 only. See [Settings](/docs/settings/) |
+| **Settings Scoria does not act on yet** | The rows write what Obsidian writes, bar Override config folder (Spellcheck languages, which Obsidian keeps outside the vault, goes to `scoria.json`), and the option tabs of plugins Scoria does not have, which show their values only. Rows for behavior Scoria lacks are written for Obsidian and marked "not in Scoria yet": Language, Native menus, and the plugin options above. **Custom app icon** takes effect on X11 only. See [Settings](/docs/settings/) |
 | **Search result context menu** | Sorting, copying, collapsing and the keyboard are in; a result has no right-click menu yet. See [search](/docs/app/search/) |
 | **URI links from a browser on macOS** | A URI given on the command line works on all three platforms; a `scoria://` or `obsidian://` link clicked in a browser does not reach Scoria on macOS yet |
 

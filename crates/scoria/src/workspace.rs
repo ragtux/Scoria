@@ -73,6 +73,7 @@ use scoria_formats::properties::Change;
 use scoria_formats::properties::PropertiesInDocument;
 use scoria_formats::{validate_renamed_file, FileKind};
 use scoria_markdown::Subpath;
+use scoria_search::ExcludeFilters;
 use scoria_templates as templates;
 use scoria_text::table::TableCommand;
 use scoria_text::{BlockInsert, LinePrefix, LinkSyntax};
@@ -542,6 +543,8 @@ pub struct VaultState {
     /// The config files Settings writes, behind locks for the same reason
     /// `property_types` is: a control changes one while the vault is open.
     app: RwLock<AppConfig>,
+    /// `app.json`'s Excluded files, compiled whenever `app` is set.
+    excluded: RwLock<ExcludeFilters>,
     appearance: RwLock<AppearanceConfig>,
     core_plugins: RwLock<Option<CorePlugins>>,
     community_plugins: RwLock<Vec<String>>,
@@ -707,6 +710,7 @@ impl VaultState {
             vault: RwLock::new(vault),
             cache: RwLock::new(cache),
             texts: RwLock::new(texts),
+            excluded: RwLock::new(ExcludeFilters::new(app.ignore_filters())),
             app: RwLock::new(app),
             appearance: RwLock::new(appearance),
             core_plugins: RwLock::new(core_plugins),
@@ -769,6 +773,18 @@ impl VaultState {
 
     pub fn app(&self) -> RwLockReadGuard<'_, AppConfig> {
         self.app.read().unwrap_or_else(|e| e.into_inner())
+    }
+
+    /// The Excluded files rules: what search, the graph, unlinked
+    /// mentions, the tags pane and Bases leave out, and what the quick
+    /// switcher and link autocompletion put last.
+    pub fn excluded(&self) -> RwLockReadGuard<'_, ExcludeFilters> {
+        self.excluded.read().unwrap_or_else(|e| e.into_inner())
+    }
+
+    /// Whether Excluded files covers a vault path.
+    pub fn is_excluded(&self, path: &str) -> bool {
+        self.excluded().is_excluded(path)
     }
 
     pub fn appearance(&self) -> RwLockReadGuard<'_, AppearanceConfig> {
@@ -890,6 +906,8 @@ impl VaultState {
         match change {
             SettingChange::App(config) => {
                 self.write_config("app.json", config)?;
+                *self.excluded.write().unwrap_or_else(|e| e.into_inner()) =
+                    ExcludeFilters::new(config.ignore_filters());
                 *self.app.write().unwrap_or_else(|e| e.into_inner()) = config.clone();
             }
             SettingChange::Appearance(config) => {
@@ -5465,7 +5483,14 @@ impl Workspace {
 
     /// Rebuilds the Tags pane's tree from the cache, in the pane's order.
     fn refresh_tag_tree(&mut self, state: &VaultState) {
-        let mut tree = panes::tag_tree(state.cache().tags());
+        // An excluded note's tags are not counted (Obsidian 1.15.1, observed
+        // 2026-11-16, `excluded-files.mjs` step s07).
+        let excluded = state.excluded();
+        let mut tree = if excluded.is_empty() {
+            panes::tag_tree(state.cache().tags())
+        } else {
+            panes::tag_tree(&state.cache().tags_without(|p| excluded.is_excluded(p)))
+        };
         panes::sort_tags(&mut tree, self.tag_state.sort);
         self.tag_tree = tree;
     }
@@ -19278,7 +19303,8 @@ fn mention_sections(
     }
     let own_refs: Vec<Name<'_>> = own.iter().map(|t| Name { text: t, path }).collect();
     let own_finder = Finder::new(&own_refs);
-    let incoming = backlinks::unlinked_incoming(&texts, path, own_finder.as_ref(), extra);
+    let incoming =
+        backlinks::unlinked_incoming(&texts, path, own_finder.as_ref(), &state.excluded(), extra);
     let outgoing = match texts.get(path) {
         Some(text) => backlinks::unlinked_outgoing(text, path, finder, extra),
         None => Section::empty(backlinks::UNLINKED),

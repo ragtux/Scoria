@@ -1477,7 +1477,13 @@ pub fn run_search(search: &Search, state: &VaultState) -> Vec<FileResult> {
         .iter()
         .map(|f| (f.path.clone(), (f.mtime, f.ctime)))
         .collect();
-    let files: Vec<(&str, &CachedMetadata)> = cache.files().collect();
+    // Excluded files are not searched at all, an explicit `path:` included
+    // (Obsidian 1.15.1, observed 2026-11-16, `excluded-files.mjs` step s02).
+    let excluded = state.excluded();
+    let files: Vec<(&str, &CachedMetadata)> = cache
+        .files()
+        .filter(|(path, _)| !excluded.is_excluded(path))
+        .collect();
     let mut results: Vec<FileResult> = files
         .par_iter()
         .filter_map(|(path, meta)| {
@@ -1675,6 +1681,37 @@ pub fn copy_text(
 #[allow(clippy::single_range_in_vec_init)]
 mod tests {
     use super::*;
+
+    /// A vault in a tempdir with `app.json` excluding `Archive/`.
+    fn excluding_vault() -> (tempfile::TempDir, VaultState) {
+        let dir = tempfile::tempdir().unwrap();
+        let r = dir.path();
+        std::fs::create_dir_all(r.join(".obsidian")).unwrap();
+        std::fs::create_dir_all(r.join("Archive")).unwrap();
+        std::fs::write(
+            r.join(".obsidian/app.json"),
+            r#"{"userIgnoreFilters":["Archive/"]}"#,
+        )
+        .unwrap();
+        std::fs::write(r.join("Keep.md"), "zebra keep").unwrap();
+        std::fs::write(r.join("Archived note.md"), "zebra archived").unwrap();
+        std::fs::write(r.join("Archive/Old.md"), "zebra old").unwrap();
+        let state = VaultState::load(&r.to_path_buf()).unwrap();
+        (dir, state)
+    }
+
+    #[test]
+    fn excluded_files_are_not_searched_even_by_path() {
+        let (_dir, state) = excluding_vault();
+        let paths = |q: &str| -> Vec<String> {
+            run_search(&Search::new(q).unwrap(), &state)
+                .into_iter()
+                .map(|r| r.path)
+                .collect()
+        };
+        assert_eq!(paths("zebra"), ["Archived note.md", "Keep.md"]);
+        assert_eq!(paths("path:Archive zebra"), ["Archived note.md"]);
+    }
 
     fn result(path: &str) -> FileResult {
         let name = path

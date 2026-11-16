@@ -1913,7 +1913,14 @@ fn build(
         .as_deref()
         .filter(|q| !q.trim().is_empty())
         .and_then(|q| Search::new(q).ok());
+    // Excluded files are left out of the graph and the local graph, links
+    // into them and out of them with them (Obsidian 1.15.1, observed
+    // 2026-11-16, `excluded-files.mjs` step s05).
+    let excluded = state.excluded();
     let passes = |path: &str| -> bool {
+        if excluded.is_excluded(path) {
+            return false;
+        }
         let Some(search) = &filter else { return true };
         let (Some(meta), Some(text)) = (cache.file(path), texts.get(path)) else {
             return true;
@@ -1945,7 +1952,10 @@ fn build(
     }
     if show_attachments {
         for file in vault.files() {
-            if file.kind != FileKind::Markdown && file.kind != FileKind::Other {
+            if file.kind != FileKind::Markdown
+                && file.kind != FileKind::Other
+                && !excluded.is_excluded(&file.path)
+            {
                 add(
                     &mut index,
                     &mut nodes,
@@ -1989,6 +1999,9 @@ fn build(
                 // say about its kind, for the same reason the node is.
                 let is_center = local == Some(target.as_str());
                 if kind != FileKind::Markdown && !show_attachments && !is_center {
+                    continue;
+                }
+                if excluded.is_excluded(target) && !is_center {
                     continue;
                 }
                 let to = match index.get(target) {
@@ -2609,6 +2622,38 @@ fn arrowhead(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn excluded_files_leave_the_graph_and_the_local_graph() {
+        let dir = tempfile::tempdir().unwrap();
+        let r = dir.path();
+        std::fs::create_dir_all(r.join(".obsidian")).unwrap();
+        std::fs::create_dir_all(r.join("Archive")).unwrap();
+        std::fs::write(
+            r.join(".obsidian/app.json"),
+            r#"{"userIgnoreFilters":["Archive/"]}"#,
+        )
+        .unwrap();
+        std::fs::write(r.join("Target.md"), "# Target").unwrap();
+        std::fs::write(r.join("Keep.md"), "[[Target]] ![[pic.png]]").unwrap();
+        std::fs::write(r.join("Archive/Old.md"), "[[Target]] [[Keep]]").unwrap();
+        std::fs::write(r.join("Archive/pic.png"), "png").unwrap();
+        std::fs::write(r.join("Archive/Lonely.md"), "").unwrap();
+        let state = VaultState::load(&r.to_path_buf()).unwrap();
+        let config = GraphConfig {
+            show_attachments: Some(true),
+            ..GraphConfig::default()
+        };
+        let ids = |b: &Built| -> Vec<String> {
+            let mut v: Vec<String> = b.nodes.iter().map(|n| n.id.clone()).collect();
+            v.sort();
+            v
+        };
+        let global = build(&state, &config, None, &LocalOptions::default());
+        assert_eq!(ids(&global), ["Keep.md", "Target.md"]);
+        let local = build(&state, &config, Some("Target.md"), &LocalOptions::default());
+        assert_eq!(ids(&local), ["Keep.md", "Target.md"]);
+    }
 
     #[test]
     fn a_fresh_graph_json_has_obsidians_twenty_keys_in_its_order() {

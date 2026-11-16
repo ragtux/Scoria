@@ -182,12 +182,16 @@ pub struct AppConfig {
         skip_serializing_if = "Option::is_none"
     )]
     pub attachment_folder_path: Option<String>,
+    /// Excluded files. `Some(None)` is the `null` Obsidian 1.15.1 writes when
+    /// the last rule is deleted (observed 2026-11-16), kept apart from a
+    /// missing key and from `[]` so each comes back as it was read.
     #[serde(
         default,
         rename = "userIgnoreFilters",
-        skip_serializing_if = "Option::is_none"
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "present"
     )]
-    pub user_ignore_filters: Option<Vec<String>>,
+    pub user_ignore_filters: Option<Option<Vec<String>>>,
     /// Export to PDF's last values, written by every export (observed
     /// 2026-11-10, Obsidian 1.15.0).
     #[serde(
@@ -198,6 +202,32 @@ pub struct AppConfig {
     pub pdf_export_settings: Option<PdfExportSettings>,
     #[serde(flatten)]
     pub extra: Map<String, Value>,
+}
+
+impl AppConfig {
+    /// The Excluded files rules, none when the key is missing or `null`.
+    pub fn ignore_filters(&self) -> &[String] {
+        self.user_ignore_filters
+            .as_ref()
+            .and_then(Option::as_deref)
+            .unwrap_or(&[])
+    }
+
+    /// Replaces the Excluded files rules the way Obsidian's Settings does:
+    /// deleting the last one leaves the key as `null`, not `[]`.
+    pub fn set_ignore_filters(&mut self, filters: Vec<String>) {
+        self.user_ignore_filters = Some((!filters.is_empty()).then_some(filters));
+    }
+}
+
+/// A key that is present, `null` included: `Some(None)` for `null`, so a
+/// double option tells it from a missing key (which `default` makes `None`).
+fn present<'de, D, T>(d: D) -> Result<Option<Option<T>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    Option::<T>::deserialize(d).map(Some)
 }
 
 /// `app.json`'s `pdfExportSettings`, in the key order Obsidian writes:
@@ -993,6 +1023,33 @@ pub const PROPERTY_TYPES: &[&str] = &[
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn user_ignore_filters_keep_missing_null_and_empty_apart() {
+        for text in [
+            r#"{"x":1}"#,
+            r#"{"userIgnoreFilters":null,"x":1}"#,
+            r#"{"userIgnoreFilters":[],"x":1}"#,
+            r#"{"userIgnoreFilters":["Archive/","/\\.png$/"],"x":1}"#,
+        ] {
+            let app: AppConfig = serde_json::from_str(text).unwrap();
+            assert_eq!(serde_json::to_string(&app).unwrap(), text);
+        }
+        let mut app: AppConfig =
+            serde_json::from_str(r#"{"userIgnoreFilters":["Archive/"]}"#).unwrap();
+        assert_eq!(app.ignore_filters(), ["Archive/"]);
+        app.set_ignore_filters(vec![]);
+        assert!(app.ignore_filters().is_empty());
+        assert_eq!(
+            serde_json::to_string(&app).unwrap(),
+            r#"{"userIgnoreFilters":null}"#
+        );
+        app.set_ignore_filters(vec!["Drafts/".into()]);
+        assert_eq!(
+            serde_json::to_string(&app).unwrap(),
+            r#"{"userIgnoreFilters":["Drafts/"]}"#
+        );
+    }
 
     #[test]
     fn pdf_export_settings_keep_obsidians_order_a_string_margin_and_unknown_keys() {

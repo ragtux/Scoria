@@ -3196,7 +3196,7 @@ Obsidian builds but does not show at the default settings:
 | Delete attachments when deleting files | dropdown: `ask` Ask each time, `always`, … |
 | Deleted files | dropdown: `system` Move to system trash, `local`, … |
 | Advanced | heading |
-| Excluded files | button row |
+| Excluded files | navigable row (a page since 1.15.1; see [[#Observed Excluded files, Obsidian 1.15.1]]) |
 | Override config folder | text, placeholder `.obsidian` |
 | Allow URI callbacks | toggle, off |
 | Rebuild vault cache | button `Rebuild` |
@@ -11253,3 +11253,69 @@ path **with** its extension (`"template": "Templates/Deep/Nested.md"`, the same 
 files); a typed full path, any case, picks that file (`templates/composer.md` →
 `Templates/Composer.md`). Escape or a click outside closes the list and writes nothing. The clear
 button writes `"template": ""`.
+
+## Observed Excluded files, Obsidian 1.15.1
+
+`tools/obsidian-probe/excluded-files.mjs` over CDP in a private headless sway on Linux (the
+installer build 1.13.7 running the 1.15.1 asar, which the fresh data folder updated itself to);
+results in `tools/obsidian-probe/results/2026-11-16-excluded-files.json`. The setting is
+`userIgnoreFilters` in `app.json`, a list of strings; `app.metadataCache.isUserIgnored(path)`
+answers for one path and `metadataCache.userIgnoreFilters` holds the compiled patterns.
+Scoria's matcher is `scoria_search::ExcludeFilters`, tested against this section's table.
+
+**The matcher.** Each entry is trimmed (spaces and tabs at either end). An entry that then
+starts and ends with `/` and has something between is a regular expression of what is between,
+searched for anywhere in the vault path (`/Old\.md$/` excludes `Archive Old.md` and
+`Archive/Old.md`). Anything else is a path prefix, matched as literal text from the start of the
+path: `Archive/` is the folder, `Archive` also takes `Archive.md`, `Archived note.md` and
+`archive lower/x.md`, `Notes/Sub` takes `Notes/Subway.md`. Both kinds ignore case (`archive/`
+and `/^Archive/` behave as `Archive/` and `/^archive/`); every pattern is compiled with the `i`
+flag and no other, so `/arch/i` is the literal prefix `/arch/i`. The compiled forms seen:
+`Archive/` → `/^Archive\//i`, `*.png` → `/^\*\.png/i` (no globs), `/Archive` → `/^\/Archive/i`
+(vault paths have no leading slash, so it excludes nothing), `/` and `//` → the prefixes `/` and
+`//`. An empty entry is dropped, and so is a regex that does not compile (`/[/`): the other
+entries still apply and nothing throws. A file path, a folder path (`Archive`) and a dot-folder
+path are all answered.
+
+**Where it applies.** With `["Archive/"]`:
+
+| Surface | Excluded files |
+| --- | --- |
+| Search pane | not searched at all, even by `path:Archive`, `file:` or a `/regex/` |
+| Graph view, local graph | no node; a local graph of `Target` lost the excluded note linking to it |
+| Backlinks, Linked mentions | **still listed** (`Archive/Old.md` linking `[[Target]]`) |
+| Backlinks, Unlinked mentions | not listed |
+| Quick switcher | listed after every other match, `suggestion-item mod-complex mod-downranked`, in `--text-muted`; an empty query's recent files leave them out |
+| Link autocompletion | after every other match (`downranked: true`, score less 10, class `mod-downranked`); an empty `[[` leaves them out entirely |
+| Tags pane, `getTags()` | an excluded note's tags are not counted (`#oldtag` gone) |
+| Bases | not rows: an unfiltered table counted 7 of the vault's 13 files |
+| File explorer | listed as usual, no class |
+| Link resolution | unchanged: `[[Old]]` still resolves to `Archive/Old.md` |
+
+A change to the setting takes effect at once: the same search re-run after `setConfig` lists
+the files again or hides them.
+
+**Settings.** The Files and links row is a navigable row (`setting-item mod-navigable
+tappable`) named "Excluded files" with the description "Excluded files will be hidden in Search,
+Graph View, and Unlinked Mentions, less noticeable in Quick Switcher and link suggestions." Its
+value reads the rule itself when there is one, "3 rules" for three, and nothing with none. (The
+Settings window is a popout window of its own in 1.15.) The row opens a page titled "Excluded
+files" with a back chevron: a `+` icon (`aria-label` "Add exclusion...") over one row per rule,
+each with a `lucide-x` icon labelled "Delete", or "No exclusions added." when the list is empty.
+The `+` opens a modal (`mod-lg mod-form-sheet`) titled "Add exclusion": a text field, the help
+"Enter a path or a regular expression, e.g. /daily-.*/", and the buttons Done (`mod-cta`) and
+Cancel. Under the field a suggestion list offers the vault's folders (never files), fuzzy
+matched, and once anything is typed a last row `+ <typed>`; with nothing typed it lists every
+folder, shallowest first (`Archive`, `Data`, `Other`, `archive lower`, `Archive/Deep`,
+`Other/Archive`). Enter takes the highlighted row; a picked folder adds `Other/` (its path and a
+slash) and closes the modal. Done adds the text exactly as typed, spaces included
+(`"  Padded/  "` was stored so); Done with nothing typed, and the blank `+    ` row, add nothing
+and leave the modal open. A rule already in the list is added again. Cancel adds nothing.
+
+**The bytes.** Each add or delete rewrites `app.json` at once, two-space indented, unknown keys
+in place: `"userIgnoreFilters": ["Archive/", "Drafts/"]` after an add. Deleting the last rule
+writes `"userIgnoreFilters": null`, not `[]` and not a missing key.
+
+**Unprobed:** whether the Outgoing links pane's unlinked mentions offer an excluded note's name
+(the pane read empty in the probe), whether a tag search or tag autocompletion counts an excluded
+note, and Random note.

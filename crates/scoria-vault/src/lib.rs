@@ -1160,6 +1160,50 @@ mod tests {
         assert!(written.contains("\"trashOption\": \"local\""), "{written}");
     }
 
+    /// The Excluded files page's writes, against the bytes Obsidian 1.15.1
+    /// wrote for the same edits (2026-11-16, `excluded-files.mjs` step s08):
+    /// a rule appended, a duplicate kept, the last one deleted leaving
+    /// `null`, and the key Scoria does not model where it was.
+    #[test]
+    fn excluded_files_edits_write_the_bytes_obsidian_wrote() {
+        let dir = sample_vault();
+        let path = dir.path().join(".obsidian/app.json");
+        fs::write(
+            &path,
+            "{\n  \"userIgnoreFilters\": [\n    \"Archive/\"\n  ],\n  \"probeUnknownKey\": {\n    \"kept\": true\n  }\n}",
+        )
+        .unwrap();
+        let vault = Vault::open(dir.path()).unwrap();
+        let mut app = vault.app_config().unwrap();
+        let mut rules = app.ignore_filters().to_vec();
+        rules.push("Drafts/".into());
+        app.set_ignore_filters(rules.clone());
+        vault.write_config("app.json", &app).unwrap();
+        assert_eq!(
+            fs::read_to_string(&path).unwrap(),
+            "{\n  \"userIgnoreFilters\": [\n    \"Archive/\",\n    \"Drafts/\"\n  ],\n  \"probeUnknownKey\": {\n    \"kept\": true\n  }\n}"
+        );
+        rules.push("/\\.png$/".into());
+        rules.push("Drafts/".into());
+        app.set_ignore_filters(rules);
+        vault.write_config("app.json", &app).unwrap();
+        assert_eq!(
+            fs::read_to_string(&path).unwrap(),
+            "{\n  \"userIgnoreFilters\": [\n    \"Archive/\",\n    \"Drafts/\",\n    \"/\\\\.png$/\",\n    \"Drafts/\"\n  ],\n  \"probeUnknownKey\": {\n    \"kept\": true\n  }\n}"
+        );
+        app.set_ignore_filters(Vec::new());
+        vault.write_config("app.json", &app).unwrap();
+        let cleared = "{\n  \"userIgnoreFilters\": null,\n  \"probeUnknownKey\": {\n    \"kept\": true\n  }\n}";
+        assert_eq!(fs::read_to_string(&path).unwrap(), cleared);
+        // Read back, the `null` stays put when another setting is written.
+        let mut app = vault.app_config().unwrap();
+        assert!(app.ignore_filters().is_empty());
+        app.vim_mode = Some(true);
+        vault.write_config("app.json", &app).unwrap();
+        let written = fs::read_to_string(&path).unwrap();
+        assert!(written.contains("\"userIgnoreFilters\": null"), "{written}");
+    }
+
     /// A config file nothing can parse is a file nothing may overwrite:
     /// reading it gave defaults, so writing it would put those defaults on
     /// disk in place of everything the user had. Both the merging write

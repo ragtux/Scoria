@@ -431,6 +431,7 @@ fn accepting_a_suggestion_replaces_only_the_query_and_undoes_cleanly() {
                 source: "Note.md",
                 show_unsupported: false,
                 text: &|_| None,
+                excluded: &scoria_suggest::ExcludeFilters::default(),
             };
             let items = scoria_suggest::suggestions(&t, &vault);
             let item = &items.first().expect("`al` offers Alpha").item;

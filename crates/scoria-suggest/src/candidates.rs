@@ -11,7 +11,7 @@ use crate::trigger::{Kind, Triggered};
 use scoria_cache::{frontmatter_aliases, MetadataCache};
 use scoria_formats::FileKind;
 use scoria_markdown::{parse_linktext, Subpath};
-use scoria_search::fuzzy_match;
+use scoria_search::{fuzzy_match, ExcludeFilters};
 use scoria_vault::VaultFile;
 use std::ops::Range;
 
@@ -31,6 +31,9 @@ pub struct Vault<'a> {
     /// asks for it, so the common `[[` keystroke costs nothing. The same
     /// shape as the `texts` the rename planner takes.
     pub text: &'a dyn Fn(&str) -> Option<String>,
+    /// `userIgnoreFilters`: the files a query offers last, and an empty
+    /// query not at all.
+    pub excluded: &'a ExcludeFilters,
 }
 
 /// What accepting a row links to.
@@ -82,6 +85,8 @@ pub struct Suggestion {
     pub detail: Option<String>,
     /// Byte ranges of `label` that the query matched.
     pub ranges: Vec<Range<usize>>,
+    /// A file under Excluded files: drawn muted, Obsidian's `mod-downranked`.
+    pub downranked: bool,
 }
 
 impl Suggestion {
@@ -91,6 +96,7 @@ impl Suggestion {
             label,
             detail,
             ranges: Vec::new(),
+            downranked: false,
         }
     }
 }
@@ -139,10 +145,19 @@ fn link_suggestions(query: &str, v: &Vault<'_>) -> Vec<Suggestion> {
 
 /// Every file and alias, by modification time while the query is empty and
 /// fuzzy matched once it is not.
+///
+/// A file under Excluded files is left out of the empty query's list and
+/// comes after every other match of a query, with `downranked` set: what
+/// Obsidian 1.15.1 did (observed 2026-11-16, `excluded-files.mjs` step s04,
+/// where its score was the match's less 10).
 fn file_suggestions(query: &str, v: &Vault<'_>) -> Vec<Suggestion> {
     let mut scored: Vec<(f64, u64, Suggestion)> = Vec::new();
     for file in v.files {
         if file.kind == FileKind::Other && !v.show_unsupported {
+            continue;
+        }
+        let downranked = v.excluded.is_excluded(&file.path);
+        if downranked && query.is_empty() {
             continue;
         }
         let shown = display_path(&file.path);
@@ -162,6 +177,7 @@ fn file_suggestions(query: &str, v: &Vault<'_>) -> Vec<Suggestion> {
             if let Some(m) = fuzzy_match(query, label) {
                 let mut s = Suggestion::new(item, label.to_string(), detail);
                 s.ranges = m.ranges;
+                s.downranked = downranked;
                 scored.push((m.score, file.mtime, s));
             }
         };
@@ -187,8 +203,9 @@ fn file_suggestions(query: &str, v: &Vault<'_>) -> Vec<Suggestion> {
     }
     // An alias scores just below its file, and the newest file wins a tie.
     scored.sort_by(|a, b| {
-        b.0.partial_cmp(&a.0)
-            .unwrap_or(std::cmp::Ordering::Equal)
+        a.2.downranked
+            .cmp(&b.2.downranked)
+            .then_with(|| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal))
             .then_with(|| b.1.cmp(&a.1))
             .then_with(|| a.2.label.cmp(&b.2.label))
     });
