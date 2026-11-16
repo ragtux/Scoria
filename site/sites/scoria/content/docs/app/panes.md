@@ -133,8 +133,7 @@ link counts, because a note appearing can make a link elsewhere resolve.
 
 ## Not yet
 
-- A right-click menu on a Tags or Outline row.
-- The keyboard in these panes, and dragging a row.
+- Dragging a row.
 - Per-match "Show more context" chevrons in the Outgoing links pane.
 - A local-graph side pane (the [graph](/docs/app/graph/) has a local mode of its own).
 
