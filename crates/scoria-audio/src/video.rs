@@ -37,6 +37,29 @@ pub struct VideoInfo {
     pub audio_codec: Option<String>,
 }
 
+/// A codec's everyday name, from the name its container gives it: `avc1`
+/// and `V_MPEG4/ISO/AVC` are both H.264. An unknown one is shown as written.
+pub fn codec_name(codec: &str) -> String {
+    let named = match codec {
+        "avc1" | "avc3" | "V_MPEG4/ISO/AVC" => "H.264",
+        "hvc1" | "hev1" | "V_MPEGH/ISO/HEVC" => "HEVC",
+        "av01" | "V_AV1" => "AV1",
+        "vp09" | "V_VP9" => "VP9",
+        "vp08" | "V_VP8" => "VP8",
+        "mp4v" => "MPEG-4",
+        "theora" | "V_THEORA" => "Theora",
+        "mp4a" | "A_AAC" => "AAC",
+        "Opus" | "opus" | "A_OPUS" => "Opus",
+        "vorbis" | "A_VORBIS" => "Vorbis",
+        ".mp3" | "A_MPEG/L3" => "MP3",
+        "ac-3" | "A_AC3" => "AC-3",
+        "ec-3" | "A_EAC3" => "E-AC-3",
+        "flac" | "fLaC" | "A_FLAC" => "FLAC",
+        other => return other.to_string(),
+    };
+    named.to_string()
+}
+
 /// Reads `path`'s header. An unknown container is an error; a known one
 /// missing a field leaves it `None`.
 pub fn probe(path: &Path) -> Result<VideoInfo, String> {
@@ -158,9 +181,13 @@ fn walk_boxes(
                         tkhd(&b, t);
                     }
                 }
+                // The media's handler is `mdia`'s, the first in the track:
+                // QuickTime puts a data handler (`alis`) in `minf` after it.
                 b"hdlr" => {
                     if let (Some(t), Some(h)) = (tracks.last_mut(), b.get(8..12)) {
-                        t.handler.copy_from_slice(h);
+                        if t.handler == [0; 4] {
+                            t.handler.copy_from_slice(h);
+                        }
                     }
                 }
                 _ => {
@@ -207,7 +234,11 @@ fn mvhd(b: &[u8]) -> Option<f64> {
 /// `tkhd`: the picture size (16.16 fixed) and whether the matrix turns it a
 /// quarter.
 fn tkhd(b: &[u8], t: &mut Track) {
-    let base = if b.first() == Some(&1) { 4 + 32 } else { 4 + 20 };
+    let base = if b.first() == Some(&1) {
+        4 + 32
+    } else {
+        4 + 20
+    };
     // reserved 8, layer 2, alternate group 2, volume 2, reserved 2.
     let matrix = base + 16;
     let size = matrix + 36;
@@ -349,7 +380,9 @@ fn mkv_walk(
                 read_up_to(f, &mut b)?;
                 *duration = match b.len() {
                     4 => Some(f32::from_be_bytes([b[0], b[1], b[2], b[3]]) as f64),
-                    8 => Some(f64::from_be_bytes([b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]])),
+                    8 => Some(f64::from_be_bytes([
+                        b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7],
+                    ])),
                     _ => None,
                 };
             }
@@ -363,7 +396,11 @@ fn mkv_walk(
                 let mut b = vec![0u8; size.min(64) as usize];
                 read_up_to(f, &mut b)?;
                 if let Some(t) = tracks.last_mut() {
-                    t.codec = Some(String::from_utf8_lossy(&b).trim_end_matches('\0').to_string());
+                    t.codec = Some(
+                        String::from_utf8_lossy(&b)
+                            .trim_end_matches('\0')
+                            .to_string(),
+                    );
                 }
             }
             PIXEL_WIDTH | PIXEL_HEIGHT => {
@@ -470,7 +507,15 @@ mod tests {
                     b"mdia",
                     &[
                         bx(b"hdlr", &hdlr(b"vide")),
-                        bx(b"minf", &bx(b"stbl", &bx(b"stsd", &stsd(b"avc1")))),
+                        // QuickTime's data handler, after the media's.
+                        bx(
+                            b"minf",
+                            &[
+                                bx(b"hdlr", &hdlr(b"alis")),
+                                bx(b"stbl", &bx(b"stsd", &stsd(b"avc1"))),
+                            ]
+                            .concat(),
+                        ),
                     ]
                     .concat(),
                 ),
@@ -502,6 +547,16 @@ mod tests {
     }
 
     #[test]
+    fn codecs_go_by_their_everyday_names() {
+        assert_eq!(codec_name("avc1"), "H.264");
+        assert_eq!(codec_name("V_MPEG4/ISO/AVC"), "H.264");
+        assert_eq!(codec_name("V_VP9"), "VP9");
+        assert_eq!(codec_name("hvc1"), "HEVC");
+        assert_eq!(codec_name("mp4a"), "AAC");
+        assert_eq!(codec_name("xyz9"), "xyz9");
+    }
+
+    #[test]
     fn an_mp4s_size_length_and_codecs_come_from_its_boxes() {
         let dir = tempfile::tempdir().unwrap();
         let p = dir.path().join("clip.mp4");
@@ -523,7 +578,12 @@ mod tests {
     }
 
     fn el(id: u32, body: &[u8]) -> Vec<u8> {
-        let idb: Vec<u8> = id.to_be_bytes().iter().copied().skip_while(|&b| b == 0).collect();
+        let idb: Vec<u8> = id
+            .to_be_bytes()
+            .iter()
+            .copied()
+            .skip_while(|&b| b == 0)
+            .collect();
         let mut v = idb;
         // An 8-byte size, as some muxers write every size.
         v.push(0x01);
@@ -544,11 +604,17 @@ mod tests {
             &[
                 el(TRACK_TYPE, &[1]),
                 el(CODEC_ID, b"V_VP9"),
-                el(VIDEO, &[el(PIXEL_WIDTH, &[0x01, 0x40]), el(PIXEL_HEIGHT, &[0xF0])].concat()),
+                el(
+                    VIDEO,
+                    &[el(PIXEL_WIDTH, &[0x01, 0x40]), el(PIXEL_HEIGHT, &[0xF0])].concat(),
+                ),
             ]
             .concat(),
         );
-        let audio = el(TRACK_ENTRY, &[el(TRACK_TYPE, &[2]), el(CODEC_ID, b"A_OPUS")].concat());
+        let audio = el(
+            TRACK_ENTRY,
+            &[el(TRACK_TYPE, &[2]), el(CODEC_ID, b"A_OPUS")].concat(),
+        );
         let mut segment_body = [el(INFO, &info), el(TRACKS, &[video, audio].concat())].concat();
         // A cluster of unknown size, as a live recording writes one.
         segment_body.extend_from_slice(&[0x1F, 0x43, 0xB6, 0x75, 0xFF, 0xA3, 0x81, 0x00]);

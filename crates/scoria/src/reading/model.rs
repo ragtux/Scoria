@@ -191,6 +191,13 @@ pub enum EmbedKind {
     /// A `.pdf`: the path and the subpath, nothing read. The pages come
     /// from the document cache when the embed is drawn (`pdf::embed`).
     Pdf(crate::pdf::embed::PdfEmbed),
+    /// A `.canvas`: its minimap under its name, read when the note is
+    /// built (`canvas::minimap`). Not a live canvas: Obsidian's is a picture.
+    Canvas(crate::canvas::minimap::CanvasEmbed),
+    /// An audio file: the player (`media`), nothing read here.
+    Audio(crate::media::MediaEmbed),
+    /// A video file: the card Scoria draws in place of a player (`media`).
+    Video(crate::media::MediaEmbed),
     /// `![alt](https://...)`: an `http:` or `https:` image, fetched with
     /// no prompt and drawn when it arrives; a failed load shows the alt
     /// text ([[Specification#Observed remote image behavior, Obsidian 1.14.4 (installer build 1.13.7)]]).
@@ -1289,6 +1296,27 @@ impl<'v> Builder<'v> {
                         link,
                         height,
                     ))
+                }
+                // A canvas is drawn as its minimap, which needs nothing but
+                // the file's cards and edges: read and reduced here, as a
+                // note embed is read here. It nests no further.
+                FileKind::Canvas => EmbedKind::Canvas(crate::canvas::minimap::CanvasEmbed::new(
+                    &path,
+                    self.vault.read(&path).as_deref(),
+                )),
+                FileKind::Audio | FileKind::Video => {
+                    let id = self.next_id;
+                    self.next_id += 1;
+                    let media = crate::media::MediaEmbed {
+                        id,
+                        path: path.clone(),
+                        absolute: self.vault.absolute(&path),
+                    };
+                    if FileKind::from_path(&path) == FileKind::Audio {
+                        EmbedKind::Audio(media)
+                    } else {
+                        EmbedKind::Video(media)
+                    }
                 }
                 other => EmbedKind::Unsupported(other),
             },
@@ -2653,6 +2681,55 @@ mod tests {
         // Every embed has an id of its own, so two of one file scroll apart.
         assert_ne!(pdf(0).id, pdf(1).id);
         assert!(matches!(first_embed(&m.blocks[4]).kind, EmbedKind::Missing));
+    }
+
+    #[test]
+    fn a_canvas_embed_is_its_minimap_and_media_embeds_read_nothing() {
+        let mut s = stub();
+        s.files.insert(
+            "Board.canvas",
+            r#"{"nodes":[{"id":"a","type":"text","x":0,"y":0,"width":250,"height":60,"text":"A"}],"edges":[]}"#,
+        );
+        s.files.insert("Empty.canvas", "");
+        s.files.insert("tone.mp3", "");
+        s.files.insert("clip.mp4", "");
+        let m = build(
+            "Self.md",
+            "![[Board.canvas]]\n\n![[Empty.canvas|400]]\n\n![[tone.mp3]]\n\n![[clip.mp4]]\n\n\
+             ![[tone.mp3|300]]\n\n![[Gone.canvas]]",
+            &s,
+        );
+        match &first_embed(&m.blocks[0]).kind {
+            EmbedKind::Canvas(c) => {
+                assert_eq!(
+                    (c.path.as_str(), c.name.as_str()),
+                    ("Board.canvas", "Board")
+                );
+                let map = c
+                    .minimap
+                    .as_ref()
+                    .expect("a canvas with a card has a picture");
+                assert_eq!(map.cards.len(), 1);
+            }
+            other => panic!("{other:?}"),
+        }
+        // An empty file is the title alone; the size hint changes nothing.
+        match &first_embed(&m.blocks[1]).kind {
+            EmbedKind::Canvas(c) => assert!(c.minimap.is_none()),
+            other => panic!("{other:?}"),
+        }
+        let media = |ix: usize| match &first_embed(&m.blocks[ix]).kind {
+            EmbedKind::Audio(a) => ("audio", a.clone()),
+            EmbedKind::Video(v) => ("video", v.clone()),
+            other => panic!("{other:?}"),
+        };
+        let (kind, audio) = media(2);
+        assert_eq!(kind, "audio");
+        assert_eq!(audio.absolute, PathBuf::from("/vault/tone.mp3"));
+        assert_eq!(media(3).0, "video");
+        // Two embeds of one file are two elements.
+        assert_ne!(media(4).1.id, audio.id);
+        assert!(matches!(first_embed(&m.blocks[5]).kind, EmbedKind::Missing));
     }
 
     #[test]

@@ -50,7 +50,9 @@ fn every_audio_format_decodes_to_the_tone() {
         let p = data(name);
         let info = probe(&p).unwrap_or_else(|e| panic!("{name}: {e}"));
         assert_eq!(info.sample_rate, rate, "{name}");
-        let d = info.duration.unwrap_or_else(|| panic!("{name}: no duration"));
+        let d = info
+            .duration
+            .unwrap_or_else(|| panic!("{name}: no duration"));
         // AAC in MP4 counts the encoder's priming and padding, which the
         // file's edit list would trim and symphonia does not read: 0.564 s
         // for the 3GP.
@@ -66,7 +68,14 @@ fn every_audio_format_decodes_to_the_tone() {
 
 #[test]
 fn a_seek_into_each_format_lands_near_its_target() {
-    for name in ["tone.mp3", "tone.flac", "tone.ogg", "tone.opus", "tone.3gp", "tone.wav"] {
+    for name in [
+        "tone.mp3",
+        "tone.flac",
+        "tone.ogg",
+        "tone.opus",
+        "tone.3gp",
+        "tone.wav",
+    ] {
         let p = data(name);
         let (rate, channels, whole) = decode(&p);
         let total = whole.len() / channels;
@@ -93,7 +102,9 @@ fn the_recorders_own_m4a_plays() {
     use scoria_audio::session::Destination;
     let rate = 48_000u32;
     let tone: Vec<f32> = (0..rate as usize)
-        .map(|i| (0.4 * (2.0 * std::f64::consts::PI * 1000.0 * i as f64 / rate as f64).sin()) as f32)
+        .map(|i| {
+            (0.4 * (2.0 * std::f64::consts::PI * 1000.0 * i as f64 / rate as f64).sin()) as f32
+        })
         .collect();
     let dir = tempfile::tempdir().unwrap();
     let (session, feed) = feed_from(rate, 1).unwrap();
@@ -109,7 +120,11 @@ fn the_recorders_own_m4a_plays() {
     let file = done.recv().unwrap().expect("the recording is written").path;
     let info = probe(&file).unwrap();
     assert_eq!((info.sample_rate, info.channels), (rate, 1));
-    assert!((info.duration.unwrap() - 1.0).abs() < 0.05, "{:?}", info.duration);
+    assert!(
+        (info.duration.unwrap() - 1.0).abs() < 0.05,
+        "{:?}",
+        info.duration
+    );
     let (_, channels, samples) = decode(&file);
     assert!((pitch(&samples, channels, rate) - 1000.0).abs() < 5.0);
 }
@@ -119,11 +134,19 @@ fn the_video_probe_reads_ffmpegs_files() {
     use scoria_audio::video::probe;
     let mp4 = probe(&data("clip.mp4")).unwrap();
     assert_eq!((mp4.width, mp4.height), (Some(64), Some(48)));
-    assert!((mp4.duration.unwrap() - 0.5).abs() < 0.01, "{:?}", mp4.duration);
+    assert!(
+        (mp4.duration.unwrap() - 0.5).abs() < 0.01,
+        "{:?}",
+        mp4.duration
+    );
     assert_eq!(mp4.video_codec.as_deref(), Some("avc1"));
     let webm = probe(&data("clip.webm")).unwrap();
     assert_eq!((webm.width, webm.height), (Some(64), Some(48)));
-    assert!((webm.duration.unwrap() - 0.5).abs() < 0.01, "{:?}", webm.duration);
+    assert!(
+        (webm.duration.unwrap() - 0.5).abs() < 0.01,
+        "{:?}",
+        webm.duration
+    );
     assert_eq!(webm.video_codec.as_deref(), Some("V_VP9"));
     let ogv = probe(&data("clip.ogv")).unwrap();
     assert_eq!((ogv.width, ogv.height), (Some(64), Some(48)));

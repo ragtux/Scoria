@@ -124,8 +124,15 @@ impl Source {
         let track = format
             .tracks()
             .iter()
-            .find(|t| t.codec_params.codec != CODEC_TYPE_NULL && t.codec_params.sample_rate.is_some())
-            .or_else(|| format.tracks().iter().find(|t| t.codec_params.codec != CODEC_TYPE_NULL))
+            .find(|t| {
+                t.codec_params.codec != CODEC_TYPE_NULL && t.codec_params.sample_rate.is_some()
+            })
+            .or_else(|| {
+                format
+                    .tracks()
+                    .iter()
+                    .find(|t| t.codec_params.codec != CODEC_TYPE_NULL)
+            })
             .ok_or_else(|| "The file holds no audio".to_string())?;
         let params = track.codec_params.clone();
         let id = track.id;
@@ -134,7 +141,8 @@ impl Source {
             if channels > 2 {
                 return Err("Opus with more than two channels is not supported".into());
             }
-            let dec = opus_decoder::OpusDecoder::new(48_000, channels).map_err(|e| e.to_string())?;
+            let dec =
+                opus_decoder::OpusDecoder::new(48_000, channels).map_err(|e| e.to_string())?;
             let max = dec.max_frame_size_per_channel() * channels;
             (Codec::Opus(Box::new(dec), vec![0.0; max]), 48_000)
         } else {
@@ -513,7 +521,9 @@ impl Engine {
             return t;
         }
         if s.ended {
-            return s.duration.unwrap_or(s.base + s.played as f64 / self.out.rate as f64);
+            return s
+                .duration
+                .unwrap_or(s.base + s.played as f64 / self.out.rate as f64);
         }
         let p = s.base + s.played as f64 / self.out.rate as f64;
         match s.duration {
@@ -709,7 +719,11 @@ impl Player {
                     None,
                 )
             }
-            other => return Err(format!("The audio output's {other} samples are not supported")),
+            other => {
+                return Err(format!(
+                    "The audio output's {other} samples are not supported"
+                ))
+            }
         }
         .map_err(|e| format!("The audio output could not be opened: {e}"))?;
         stream
@@ -765,7 +779,8 @@ mod tests {
         let n = (rate as f64 * seconds) as usize;
         let mut data = Vec::with_capacity(n * 2);
         for i in 0..n {
-            let v = (0.5 * (2.0 * std::f64::consts::PI * tone * i as f64 / rate as f64).sin()
+            let v = (0.5
+                * (2.0 * std::f64::consts::PI * tone * i as f64 / rate as f64).sin()
                 * 32767.0) as i16;
             data.extend_from_slice(&v.to_le_bytes());
         }
@@ -788,7 +803,10 @@ mod tests {
 
     fn crossings(x: &[f32], channels: usize, rate: u32) -> f64 {
         let mono: Vec<f32> = x.iter().step_by(channels).copied().collect();
-        let n = mono.windows(2).filter(|w| (w[0] < 0.0) != (w[1] < 0.0)).count();
+        let n = mono
+            .windows(2)
+            .filter(|w| (w[0] < 0.0) != (w[1] < 0.0))
+            .count();
         n as f64 / 2.0 / (mono.len() as f64 / rate as f64)
     }
 
@@ -846,7 +864,10 @@ mod tests {
         assert!((out.len() as i64 - 48_000).abs() <= 2, "{}", out.len());
         assert!((crossings(&out, 1, 48_000) - 1000.0).abs() < 3.0);
         // No step at a block boundary: the largest jump is the tone's own.
-        let max_jump = out.windows(2).map(|w| (w[1] - w[0]).abs()).fold(0.0, f32::max);
+        let max_jump = out
+            .windows(2)
+            .map(|w| (w[1] - w[0]).abs())
+            .fold(0.0, f32::max);
         assert!(max_jump < 0.14, "{max_jump}");
     }
 
@@ -923,7 +944,13 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let p = dir.path().join("tone.wav");
         wav(&p, 8_000, 1.0, 500.0);
-        let (e, _, _) = engine_on(&p, Output { rate: 8_000, channels: 1 });
+        let (e, _, _) = engine_on(
+            &p,
+            Output {
+                rate: 8_000,
+                channels: 1,
+            },
+        );
         e.seek(-3.0);
         assert_eq!(e.position(), 0.0);
         e.seek(9.0);

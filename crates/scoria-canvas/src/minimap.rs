@@ -286,7 +286,10 @@ mod tests {
             "edges":[{"id":"e","fromNode":"a","toNode":"b"}]}"#,
         );
         let e = &Minimap::of(&c).unwrap().edges[0];
-        assert_eq!((e.from, e.to), (Point::new(100.0, 50.0), Point::new(1000.0, 50.0)));
+        assert_eq!(
+            (e.from, e.to),
+            (Point::new(100.0, 50.0), Point::new(1000.0, 50.0))
+        );
     }
 
     #[test]

@@ -174,6 +174,10 @@ enum Content {
         absolute: PathBuf,
         page: Option<usize>,
     },
+    /// A `.canvas` file card: the canvas's minimap filling the card, as
+    /// Obsidian draws one (observed on `Self.canvas`, 2026-11-15); a canvas
+    /// with no cards is an empty card.
+    Minimap(Option<scoria_canvas::minimap::Minimap>),
     /// A file Scoria does not draw inside a card: its name and kind.
     Placeholder {
         name: String,
@@ -340,6 +344,8 @@ impl Cards {
                         absolute, &path, *page, &node.id, scale, theme, open,
                     )
                 }
+                Content::Minimap(Some(m)) => crate::canvas::minimap::card(m.clone(), theme, scale),
+                Content::Minimap(None) => div().into_any_element(),
                 Content::Placeholder { name, kind } => Cards::placeholder(
                     kind_icon(*kind),
                     name,
@@ -497,6 +503,12 @@ impl Cards {
                             .as_deref()
                             .and_then(|s| scoria_pdf::parse_subpath(s).page),
                     },
+                    FileKind::Canvas => Content::Minimap(
+                        vault
+                            .read(&path)
+                            .and_then(|t| scoria_formats::canvas::Canvas::from_json(&t).ok())
+                            .and_then(|c| scoria_canvas::minimap::Minimap::of(&c)),
+                    ),
                     kind => Content::Placeholder {
                         name: path.rsplit('/').next().unwrap_or(&path).to_string(),
                         kind,
@@ -792,6 +804,7 @@ fn collect_deps(blocks: &[RBlock], out: &mut Vec<Dep>) {
                             }
                             EmbedKind::Image(path) => out.extend(Dep::name(path)),
                             EmbedKind::Pdf(pdf) => out.push(Dep::path(&pdf.path)),
+                            EmbedKind::Canvas(c) => out.push(Dep::path(&c.path)),
                             _ => {}
                         }
                     }
