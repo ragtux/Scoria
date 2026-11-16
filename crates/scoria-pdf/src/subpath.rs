@@ -1,4 +1,41 @@
-//! The subpath of a PDF link: `[[x.pdf#page=3&height=400]]`.
+//! The subpath of a PDF link: `[[x.pdf#page=3&height=400]]`, and the
+//! `selection=a,b,c,d` of one Obsidian copied from a selection.
+
+/// A `selection=` range: from character `start_offset` of text item
+/// `start_item` to character `end_offset` of item `end_item`, on the link's
+/// page, items numbered as [`crate::TextItem`]s are and offsets in UTF-16
+/// units (observed: `selection=8,0,8,17` is all of `This is page one.`, the
+/// ninth item of the page).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Selection {
+    pub start_item: usize,
+    pub start_offset: usize,
+    pub end_item: usize,
+    pub end_offset: usize,
+}
+
+impl Selection {
+    /// `a,b,c,d`; anything else (too few numbers, a sign, a letter) is `None`.
+    pub fn parse(value: &str) -> Option<Selection> {
+        let mut parts = value.split(',').map(|p| p.trim().parse::<usize>());
+        let mut next = || parts.next()?.ok();
+        let selection = Selection {
+            start_item: next()?,
+            start_offset: next()?,
+            end_item: next()?,
+            end_offset: next()?,
+        };
+        Some(selection)
+    }
+
+    /// The value a link writes: `a,b,c,d`.
+    pub fn to_value(self) -> String {
+        format!(
+            "{},{},{},{}",
+            self.start_item, self.start_offset, self.end_item, self.end_offset
+        )
+    }
+}
 
 /// A parsed PDF link subpath. `page` is zero-based here: a link's `page=3`
 /// opens the third page as a human counts, so it parses to `Some(2)`. `rest`
@@ -7,6 +44,7 @@
 pub struct Subpath {
     pub page: Option<usize>,
     pub height: Option<f32>,
+    pub selection: Option<Selection>,
     pub rest: Vec<(String, String)>,
 }
 
@@ -19,6 +57,7 @@ pub fn parse_subpath(subpath: &str) -> Subpath {
     let mut parsed = Subpath {
         page: None,
         height: None,
+        selection: None,
         rest: Vec::new(),
     };
     for pair in body.split('&').filter(|pair| !pair.is_empty()) {
@@ -34,6 +73,7 @@ pub fn parse_subpath(subpath: &str) -> Subpath {
             "height" => {
                 parsed.height = value.parse::<f32>().ok().filter(|h| h.is_finite());
             }
+            "selection" => parsed.selection = Selection::parse(value),
             _ => parsed.rest.push((key.to_string(), value.to_string())),
         }
     }
@@ -102,6 +142,7 @@ mod tests {
         let empty = Subpath {
             page: None,
             height: None,
+            selection: None,
             rest: vec![],
         };
         assert_eq!(parse_subpath(""), empty);
@@ -129,6 +170,31 @@ mod tests {
     fn value_may_contain_equals() {
         let s = parse_subpath("q=a=b");
         assert_eq!(s.rest, rest(&[("q", "a=b")]));
+    }
+
+    #[test]
+    fn a_selection_is_four_numbers() {
+        let s = parse_subpath("#page=1&selection=8,0,8,17");
+        assert_eq!(s.page, Some(0));
+        let sel = s.selection.unwrap();
+        assert_eq!(
+            (
+                sel.start_item,
+                sel.start_offset,
+                sel.end_item,
+                sel.end_offset
+            ),
+            (8, 0, 8, 17)
+        );
+        assert_eq!(sel.to_value(), "8,0,8,17");
+        assert!(s.rest.is_empty());
+        assert_eq!(parse_subpath("selection=1,2,3").selection, None);
+        assert_eq!(parse_subpath("selection=1,2,3,x").selection, None);
+        assert_eq!(parse_subpath("selection=-1,2,3,4").selection, None);
+        // Observed: `&color=red` is kept but changes nothing.
+        let c = parse_subpath("page=1&selection=8,0,8,17&color=red");
+        assert!(c.selection.is_some());
+        assert_eq!(c.rest, rest(&[("color", "red")]));
     }
 
     #[test]

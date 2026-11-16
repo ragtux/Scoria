@@ -12,3 +12,14 @@ Generated once and committed; the tests read them as bytes.
   `blank.pdf` is an A4 page with no content stream.
 
 Regenerate with the commands above from this directory.
+
+The `probe-*` files are the fixtures of `tools/obsidian-probe/pdf-selection.mjs`
+(2026-11-15), copied out of the probe's vault so the tests read the very bytes Obsidian was
+observed on: `probe-doc.pdf` is that script's typst document (typst 0.14.2, tagged, so its
+text sits in marked content), `probe-text.pdf` its hand-written content stream (standard 14
+fonts, every way two text runs meet, colour swatches and an RGB inline image), and the three
+`probe-locked-*`/`probe-owner-only` files are `probe-doc.pdf` encrypted by qpdf 12.3.2 (AES-256
+and RC4-128 with the user password `secret`, and AES-256 with an owner password only).
+`probe-items.json` is pdf.js's `getTextContent()` for the first two pages of the two text
+files as Obsidian 1.15.0 returned it, marked content left out: `[str, hasEOL, x, y, width,
+height]` per item, which is what a `#selection=` link counts in.

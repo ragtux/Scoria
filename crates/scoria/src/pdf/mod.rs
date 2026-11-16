@@ -13,6 +13,10 @@
 
 pub mod documents;
 pub mod embed;
+pub mod selection;
 pub mod view;
 
-pub use documents::{documents, page_source, DocState, Documents, Loaded};
+pub use documents::{
+    adapt_to_theme, documents, page_source, theming, toggle_adapt_to_theme, DocState, Documents,
+    Loaded,
+};

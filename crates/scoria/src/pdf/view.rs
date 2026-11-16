@@ -44,17 +44,21 @@
 
 use crate::assets::icon;
 use crate::canvas::menu::tooltip;
-use crate::pdf::{documents, page_source, DocState, Loaded};
+use crate::pdf::selection::{self, TextPos};
+use crate::pdf::{
+    adapt_to_theme, documents, page_source, theming, toggle_adapt_to_theme, DocState, Loaded,
+};
 use crate::search::{menu, menu_item};
 use crate::text_input::{InputEvent, TextInput};
 use crate::theme::{Theme, FONT_UI_SMALL, FONT_UI_SMALLER, ICON_SIZE};
 use gpui::{
     actions, anchored, canvas, deferred, div, img, point, prelude::*, px, Anchor, AnyElement, App,
-    Bounds, BoxShadow, ClickEvent, Context, Entity, EventEmitter, FocusHandle, Focusable, Hsla,
-    KeyBinding, MouseButton, ObjectFit, Pixels, Point, Render, ScrollHandle, ScrollWheelEvent,
-    SharedString, Size, Subscription, Task, Window,
+    Bounds, BoxShadow, ClickEvent, ClipboardItem, Context, Entity, EventEmitter, FocusHandle,
+    Focusable, Hsla, KeyBinding, KeyDownEvent, MouseButton, MouseDownEvent, MouseMoveEvent,
+    MouseUpEvent, ObjectFit, Pixels, Point, Render, ScrollHandle, ScrollWheelEvent, SharedString,
+    Size, Subscription, Task, Window,
 };
-use scoria_pdf::{OutlineItem, PageSize};
+use scoria_pdf::{OutlineItem, PageSize, Selection, TextItem, Theming};
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
@@ -131,6 +135,18 @@ const WHEEL_STEP: f32 = 33.0;
 const VIEW_STATE_DEBOUNCE: Duration = Duration::from_millis(300);
 /// The zoom on open: observed `page-width`.
 const DEFAULT_ZOOM: Zoom = Zoom::FitWidth;
+/// How far below the viewport's top a followed selection's first line
+/// lands. Observed: 36 px at scale 2.90 and 2.52 on the typst file, 41 on
+/// the hand-written one; pdf.js's `FitBH` destination at the item's top,
+/// less what the run did not isolate.
+const FOLLOW_MARGIN: f32 = 37.0;
+/// A `#selection=` link's mark: `.textLayer .mod-focused`, `#ffd000` with
+/// a 4 px pad and radius, under the text layer's 0.2 opacity.
+const FOLLOW_MARK: u32 = 0xffd000;
+const FOLLOW_PAD: f32 = 4.0;
+/// The text layer's opacity, which every mark and the selection's
+/// `--color-accent` are drawn through.
+const TEXT_LAYER_OPACITY: f32 = 0.2;
 
 // ---- actions --------------------------------------------------------------------
 
@@ -148,7 +164,8 @@ actions!(
         Find,
         FindNext,
         FindPrevious,
-        Dismiss
+        Dismiss,
+        CopySelection
     ]
 );
 
@@ -166,7 +183,7 @@ actions!(
 /// view has the keyboard.
 pub fn bind_keys(cx: &mut App) {
     let view = Some("PdfView");
-    let keys = Some("PdfView && !TextInput");
+    let keys = Some("PdfView && !TextInput && !PdfPassword");
     cx.bind_keys([
         KeyBinding::new("left", PreviousPage, keys),
         KeyBinding::new("right", NextPage, keys),
@@ -183,6 +200,9 @@ pub fn bind_keys(cx: &mut App) {
         KeyBinding::new("shift-f3", FindPrevious, view),
         KeyBinding::new("shift-enter", FindPrevious, view),
         KeyBinding::new("escape", Dismiss, view),
+        // Observed: Ctrl+C copies the selection as "Copy" does; Ctrl+A
+        // selects nothing, so it is not bound.
+        KeyBinding::new("ctrl-c", CopySelection, keys),
     ]);
 }
 
@@ -190,6 +210,62 @@ pub fn bind_keys(cx: &mut App) {
 pub enum PdfEvent {
     /// Something the view has to say, as a Notice.
     Report(String),
+    /// "Copy link to selection" (`quote: None`) or "Copy as quote" (the
+    /// selection's text): the workspace writes the link to the file it
+    /// shows, `[[<link path>#<subpath>|<alias>]]`, since the link path
+    /// depends on the vault.
+    CopyLink {
+        subpath: String,
+        alias: String,
+        quote: Option<String>,
+    },
+}
+
+/// The Display options menu's spreads, pdf.js's `spreadMode`: one page to
+/// a row, or two with the odd pages on the left, or two with page 1 alone
+/// and the even pages on the left (observed: each row centred, page 1
+/// alone and centred in the even mode).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Spread {
+    #[default]
+    None,
+    Odd,
+    Even,
+}
+
+impl Spread {
+    /// pdf.js's number, which the session's memory keeps.
+    pub fn mode(self) -> u64 {
+        match self {
+            Spread::None => 0,
+            Spread::Odd => 1,
+            Spread::Even => 2,
+        }
+    }
+
+    pub fn from_mode(mode: u64) -> Spread {
+        match mode {
+            1 => Spread::Odd,
+            2 => Spread::Even,
+            _ => Spread::None,
+        }
+    }
+
+    /// The pages of each row, in order.
+    pub fn rows(self, count: usize) -> Vec<Vec<usize>> {
+        let mut rows = Vec::new();
+        let mut ix = 0;
+        if self == Spread::Even && count > 0 {
+            rows.push(vec![0]);
+            ix = 1;
+        }
+        let per = if self == Spread::None { 1 } else { 2 };
+        while ix < count {
+            rows.push((ix..(ix + per).min(count)).collect());
+            ix += per;
+        }
+        rows
+    }
 }
 
 /// How the pages are scaled, in pdf.js's vocabulary: the Display options
@@ -245,13 +321,23 @@ impl Zoom {
     /// over the same file is 0.791 set on an A4 page and 0.559 set on its
     /// landscape page). The fit modes need the viewport, and answer `1.0`
     /// until there is one.
-    pub fn resolve(self, sizes: &[PageSize], page: usize, viewport: Size<f32>) -> f32 {
+    pub fn resolve(
+        self,
+        sizes: &[PageSize],
+        page: usize,
+        viewport: Size<f32>,
+        spread: Spread,
+    ) -> f32 {
         let (width, height) = sizes
             .get(page)
             .or(sizes.first())
             .map_or((0.0, 0.0), |s| (s.width, s.height));
         let can_fit = viewport.width > 0.0 && viewport.height > 0.0 && width > 0.0 && height > 0.0;
-        let fit_width = || (viewport.width - SCROLLBAR_PADDING).max(1.0) / (width * CSS_UNITS);
+        // In a spread the width fits two of the page (observed: 0.791 to
+        // 0.396 at the same width, pages 318 by 448).
+        let across = if spread == Spread::None { 1.0 } else { 2.0 };
+        let fit_width =
+            || (viewport.width - SCROLLBAR_PADDING).max(1.0) / (width * CSS_UNITS * across);
         let fit_height = || (viewport.height - VERTICAL_PADDING).max(1.0) / (height * CSS_UNITS);
         let scale = match self {
             Zoom::Percent(s) => s,
@@ -289,35 +375,62 @@ pub struct Layout {
 }
 
 impl Layout {
-    /// Lays `sizes` out in a column, the borders touching. Each page is
-    /// centred in the viewport's width on its own; one wider than the
-    /// viewport sits flush left and overflows (observed: the landscape
-    /// page at the viewer's left edge while the A4 pages centre).
-    pub fn new(sizes: &[PageSize], scale: f32, viewport_width: f32) -> Layout {
-        let widest = sizes.iter().map(|s| s.width * scale).fold(0.0, f32::max);
-        let width = viewport_width.max(widest + 2.0 * PAGE_BORDER);
+    /// Lays `sizes` out in a column of rows, the borders touching: one page
+    /// to a row, or two in a spread. Each row is centred in the viewport's
+    /// width on its own, and a row wider than the viewport sits flush left
+    /// and overflows (observed: the landscape page at the viewer's left
+    /// edge while the A4 pages centre); a page shorter than its row is
+    /// centred in it (observed: the landscape page beside a portrait one).
+    pub fn new(sizes: &[PageSize], scale: f32, viewport_width: f32, spread: Spread) -> Layout {
+        let mut pages = vec![Bounds::default(); sizes.len()];
+        let mut width = viewport_width;
         let mut y = 0.0;
-        let pages = sizes
-            .iter()
-            .map(|s| {
-                let w = s.width * scale;
-                let h = s.height * scale;
-                let bounds = Bounds::new(
-                    Point::new(
-                        ((viewport_width - w) / 2.0).max(PAGE_BORDER),
-                        y + PAGE_BORDER,
-                    ),
+        for row in spread.rows(sizes.len()) {
+            let row_w: f32 = row
+                .iter()
+                .map(|&ix| sizes[ix].width * scale + 2.0 * PAGE_BORDER)
+                .sum();
+            let row_h = row
+                .iter()
+                .map(|&ix| sizes[ix].height * scale)
+                .fold(0.0, f32::max);
+            width = width.max(row_w);
+            let mut x = ((viewport_width - row_w) / 2.0).max(0.0);
+            for &ix in &row {
+                let (w, h) = (sizes[ix].width * scale, sizes[ix].height * scale);
+                pages[ix] = Bounds::new(
+                    Point::new(x + PAGE_BORDER, y + PAGE_BORDER + (row_h - h) / 2.0),
                     Size::new(w, h),
                 );
-                y += h + 2.0 * PAGE_BORDER;
-                bounds
-            })
-            .collect();
+                x += w + 2.0 * PAGE_BORDER;
+            }
+            y += row_h + 2.0 * PAGE_BORDER;
+        }
         Layout {
             scale,
             pages,
             content: Size::new(width, y),
         }
+    }
+
+    /// The page nearest the point `(x, y)` of the column, and the point in
+    /// that page's own points.
+    pub fn page_point(&self, x: f32, y: f32) -> Option<(usize, f32, f32)> {
+        let mut best: Option<(f32, usize)> = None;
+        for (ix, b) in self.pages.iter().enumerate() {
+            let dx = (b.left() - x).max(x - b.right()).max(0.0);
+            let dy = (b.top() - y).max(y - b.bottom()).max(0.0);
+            let d = dx * dx + dy * dy;
+            if best.is_none_or(|(bd, _)| d < bd) {
+                best = Some((d, ix));
+            }
+        }
+        let (_, ix) = best?;
+        let b = self.pages[ix];
+        if self.scale <= 0.0 {
+            return None;
+        }
+        Some((ix, (x - b.left()) / self.scale, (y - b.top()) / self.scale))
     }
 
     /// The page the viewport is on, as pdf.js decides it: of the pages in
@@ -386,6 +499,9 @@ enum Target {
     /// is in the border above the page, and is kept as pixels rather than
     /// scaled with the page.
     Anchor { page: usize, frac: f32, offset: f32 },
+    /// A link's `#page=N&selection=a,b,c,d`: the selection marked and its
+    /// first line near the top, once the page's text is read.
+    Selection { page: usize, selection: Selection },
 }
 
 /// Which menu is open.
@@ -396,6 +512,8 @@ enum Menu {
     Sidebar,
     /// "Display options", under its chevron.
     Display,
+    /// The selection's menu, where it was asked for.
+    Selection,
 }
 
 /// What the sidebar shows.
@@ -468,6 +586,24 @@ pub struct PdfView {
     /// Take the keyboard back from a field on the next frame.
     refocus: bool,
     settle_task: Option<Task<()>>,
+    spread: Spread,
+    /// The selection, anchor then head, in either order.
+    selection: Option<(TextPos, TextPos)>,
+    /// A drag is selecting.
+    selecting: bool,
+    /// What a `#selection=` link marked, start then end.
+    highlight: Option<(TextPos, TextPos)>,
+    /// Where the selection's menu was asked for, in the window.
+    menu_at: Point<f32>,
+    /// The file wants a password: `Some(wrong)` once asked, `wrong` after a
+    /// refused try.
+    locked: Option<bool>,
+    password: String,
+    password_focus: FocusHandle,
+    /// Focus the password field on the next frame.
+    focus_password: bool,
+    /// Whether it has the keyboard this frame, for its ring and caret.
+    focus_password_now: bool,
     _subscriptions: Vec<Subscription>,
 }
 
@@ -553,6 +689,16 @@ impl PdfView {
             wheel_accum: 0.0,
             refocus: false,
             settle_task: None,
+            spread: Spread::None,
+            selection: None,
+            selecting: false,
+            highlight: None,
+            menu_at: Point::default(),
+            locked: None,
+            password: String::new(),
+            password_focus: cx.focus_handle(),
+            focus_password: false,
+            focus_password_now: false,
             _subscriptions: subscriptions,
         }
     }
@@ -576,6 +722,12 @@ impl PdfView {
         self.expanded.clear();
         self.sidebar_followed = None;
         self.settle_task = None;
+        self.spread = Spread::None;
+        self.selection = None;
+        self.selecting = false;
+        self.highlight = None;
+        self.locked = None;
+        self.password.clear();
         if let Some(state) = self.positions.get(path).cloned() {
             self.apply_view_state(&state);
         }
@@ -589,6 +741,9 @@ impl PdfView {
     fn apply_view_state(&mut self, state: &Value) {
         if let Some(zoom) = state.get("zoom").and_then(Zoom::from_json) {
             self.zoom = zoom;
+        }
+        if let Some(mode) = state.get("spread").and_then(Value::as_u64) {
+            self.spread = Spread::from_mode(mode);
         }
         if let Some(page) = state.get("page").and_then(Value::as_u64) {
             if page >= 1 {
@@ -607,7 +762,10 @@ impl PdfView {
         documents(cx).invalidate(&absolute, cx);
         self.loaded = None;
         self.error = None;
+        self.locked = None;
         self.layout = None;
+        self.selection = None;
+        self.highlight = None;
         self.pending = Some(Target::Page(self.page));
         if let Some(find) = self.find.as_mut() {
             find.matches.clear();
@@ -629,6 +787,9 @@ impl PdfView {
         self.find = None;
         self.menu = Menu::None;
         self.settle_task = None;
+        self.selection = None;
+        self.highlight = None;
+        self.locked = None;
         cx.notify();
     }
 
@@ -671,6 +832,25 @@ impl PdfView {
         cx.notify();
     }
 
+    /// Follows a link's `#page=N&selection=a,b,c,d`: page `page`
+    /// (zero-based), with the selection marked and its first line a little
+    /// below the viewport's top, once the page's text is read. A page past
+    /// the end leaves the view where it is, as `#page=` does; a selection
+    /// naming items the page does not have marks nothing (observed).
+    pub fn go_to_selection(&mut self, page: usize, selection: Selection, cx: &mut Context<Self>) {
+        if let Some(n) = self.loaded.as_ref().map(|l| l.sizes.len()) {
+            if page >= n {
+                return;
+            }
+        }
+        self.page = page;
+        self.highlight = None;
+        self.selection = None;
+        self.pending = Some(Target::Selection { page, selection });
+        self.settle(cx);
+        cx.notify();
+    }
+
     /// Sets the zoom, keeping the point `offset` pixels below the viewport's
     /// top where it is.
     pub fn set_zoom(&mut self, zoom: Zoom, offset: f32, cx: &mut Context<Self>) {
@@ -681,6 +861,19 @@ impl PdfView {
         self.zoom = zoom;
         self.fit_page = self.page;
         self.menu = Menu::None;
+        self.settle(cx);
+        cx.notify();
+    }
+
+    /// Sets the spread from the Display options menu, keeping the page at
+    /// the top; a fit zoom refits (observed: fit width halves in a spread).
+    pub fn set_spread(&mut self, spread: Spread, cx: &mut Context<Self>) {
+        if self.spread == spread {
+            return;
+        }
+        self.spread = spread;
+        self.fit_page = self.page;
+        self.pending = Some(Target::Page(self.page));
         self.settle(cx);
         cx.notify();
     }
@@ -737,6 +930,7 @@ impl PdfView {
             "left": json_number(self.scroll.x),
             "top": json_number(self.scroll.y),
             "zoom": self.zoom.to_json(),
+            "spread": self.spread.mode(),
         })
     }
 
@@ -778,14 +972,212 @@ impl PdfView {
                 Menu::None => Value::Null,
                 Menu::Sidebar => json!("sidebar"),
                 Menu::Display => json!("display"),
+                Menu::Selection => json!("selection"),
             },
             "find": find,
+            "spread": self.spread.mode(),
+            "adapt_to_theme": adapt_to_theme(cx),
+            "locked": self.locked.map(|wrong| json!({"wrong": wrong})),
+            "selection": self.selection.and_then(|(a, b)| {
+                let (start, end) = if a <= b { (a, b) } else { (b, a) };
+                (start != end).then(|| json!({
+                    "start": [start.page + 1, start.item, start.offset],
+                    "end": [end.page + 1, end.item, end.offset],
+                    "text": self.selected_text(cx),
+                }))
+            }),
+            "highlight": self.highlight.map(|(a, b)| json!({
+                "start": [a.page + 1, a.item, a.offset],
+                "end": [b.page + 1, b.item, b.offset],
+            })),
             "remembered": self.positions.len(),
             "visible": self.visible,
             "requested": self.requested,
             "rendered": self.rendered,
             "cached_bytes": cx.try_global::<crate::pdf::Documents>().map_or(0, |d| d.cached_bytes()),
         })
+    }
+
+    // ---- the text --------------------------------------------------------------
+
+    /// Page `page`'s text items if they are read.
+    fn items(&self, page: usize, cx: &App) -> Option<Arc<Vec<TextItem>>> {
+        let absolute = self.absolute.as_ref()?;
+        cx.try_global::<crate::pdf::Documents>()?
+            .cached_text(absolute, page)
+    }
+
+    /// The selection, start first, when it covers anything.
+    fn ordered_selection(&self) -> Option<(TextPos, TextPos)> {
+        let (a, b) = self.selection?;
+        let (start, end) = if a <= b { (a, b) } else { (b, a) };
+        (start != end).then_some((start, end))
+    }
+
+    /// The selection as the text layer reads it (line breaks kept).
+    fn selected_text(&self, cx: &App) -> String {
+        let Some((start, end)) = self.ordered_selection() else {
+            return String::new();
+        };
+        selection::selected_text(start, end, &|page| self.items(page, cx))
+    }
+
+    /// The place in the text under the window point `at`, on the nearest
+    /// page; `None` while that page's text is not read or it has none.
+    fn text_pos_at(&self, at: Point<Pixels>, cx: &mut Context<Self>) -> Option<TextPos> {
+        let layout = self.layout.as_ref()?;
+        let x = f32::from(at.x) - self.origin.x + self.scroll.x;
+        let y = f32::from(at.y) - self.origin.y + self.scroll.y;
+        let (page, px_, py_) = layout.page_point(x, y)?;
+        let absolute = self.absolute.clone()?;
+        let items = documents(cx).text(&absolute, page, cx)?;
+        let (item, offset) = selection::hit(&items, px_, py_)?;
+        Some(TextPos { page, item, offset })
+    }
+
+    fn mouse_down(&mut self, event: &MouseDownEvent, window: &mut Window, cx: &mut Context<Self>) {
+        self.menu = Menu::None;
+        self.highlight = None;
+        if !self.focus.is_focused(window) {
+            window.focus(&self.focus, cx);
+        }
+        let Some(at) = self.text_pos_at(event.position, cx) else {
+            self.selection = None;
+            cx.notify();
+            return;
+        };
+        let items = self.items(at.page, cx);
+        let item = items.as_ref().and_then(|items| items.get(at.item));
+        match (event.click_count, item) {
+            (2, Some(item)) => {
+                let (from, to) = selection::word_at(item, at.offset);
+                self.selection =
+                    Some((TextPos { offset: from, ..at }, TextPos { offset: to, ..at }));
+            }
+            (n, Some(item)) if n >= 3 => {
+                self.selection = Some((
+                    TextPos { offset: 0, ..at },
+                    TextPos {
+                        offset: item.len(),
+                        ..at
+                    },
+                ));
+            }
+            _ => {
+                self.selection = Some((at, at));
+                self.selecting = true;
+            }
+        }
+        cx.notify();
+    }
+
+    fn mouse_move(&mut self, event: &MouseMoveEvent, _: &mut Window, cx: &mut Context<Self>) {
+        if !self.selecting || event.pressed_button != Some(MouseButton::Left) {
+            return;
+        }
+        if let Some(head) = self.text_pos_at(event.position, cx) {
+            if let Some((anchor, old)) = self.selection {
+                if old != head {
+                    self.selection = Some((anchor, head));
+                    cx.notify();
+                }
+            }
+        }
+    }
+
+    fn mouse_up(&mut self, cx: &mut Context<Self>) {
+        if self.selecting {
+            self.selecting = false;
+            if self.ordered_selection().is_none() {
+                self.selection = None;
+            }
+            cx.notify();
+        }
+    }
+
+    /// A right click: with a selection, its menu (observed: none without
+    /// one, anywhere on the view).
+    fn secondary_down(&mut self, event: &MouseDownEvent, cx: &mut Context<Self>) {
+        if self.ordered_selection().is_some() {
+            self.menu = Menu::Selection;
+            self.menu_at = Point::new(f32::from(event.position.x), f32::from(event.position.y));
+            cx.stop_propagation();
+            cx.notify();
+        }
+    }
+
+    /// "Copy" and `Ctrl+C`.
+    fn copy_selection(&mut self, _: &CopySelection, _: &mut Window, cx: &mut Context<Self>) {
+        let text = self.selected_text(cx);
+        if text.is_empty() {
+            cx.propagate();
+            return;
+        }
+        cx.write_to_clipboard(ClipboardItem::new_string(selection::copy_text(&text)));
+    }
+
+    /// "Copy link to selection" and "Copy as quote": the subpath and alias
+    /// go to the workspace, which knows the link path. A selection over
+    /// two pages has no link (observed: the menu offers "Copy" alone).
+    fn copy_link(&mut self, quote: bool, cx: &mut Context<Self>) {
+        let Some((start, end)) = self.ordered_selection() else {
+            return;
+        };
+        if start.page != end.page {
+            return;
+        }
+        let Some(items) = self.items(start.page, cx) else {
+            return;
+        };
+        let Some(sel) = selection::link_selection(&items, start, end) else {
+            return;
+        };
+        let page = start.page + 1;
+        let name = self
+            .path
+            .as_deref()
+            .map(|p| p.rsplit('/').next().unwrap_or(p))
+            .map(|n| {
+                n.strip_suffix(".pdf")
+                    .or(n.strip_suffix(".PDF"))
+                    .unwrap_or(n)
+            })
+            .unwrap_or_default()
+            .to_string();
+        let text = self.selected_text(cx);
+        cx.emit(PdfEvent::CopyLink {
+            subpath: format!("page={page}&selection={}", sel.to_value()),
+            alias: format!("{name}, page {page}"),
+            quote: quote.then_some(text),
+        });
+    }
+
+    // ---- the password ------------------------------------------------------------
+
+    fn password_key(&mut self, event: &KeyDownEvent, _: &mut Window, cx: &mut Context<Self>) {
+        let keystroke = &event.keystroke;
+        let mods = keystroke.modifiers;
+        match keystroke.key.as_str() {
+            "enter" => {
+                if let Some(absolute) = self.absolute.clone() {
+                    let password = std::mem::take(&mut self.password);
+                    documents(cx).unlock(&absolute, &password, cx);
+                    self.locked = None;
+                    self.error = None;
+                    self.focus_password = true;
+                }
+            }
+            "backspace" => {
+                self.password.pop();
+            }
+            _ if mods.control || mods.platform || mods.alt => return,
+            _ => match &keystroke.key_char {
+                Some(ch) if !ch.chars().any(char::is_control) => self.password.push_str(ch),
+                _ => return,
+            },
+        }
+        cx.stop_propagation();
+        cx.notify();
     }
 
     // ---- the keys -------------------------------------------------------------
@@ -1105,8 +1497,19 @@ impl PdfView {
         if self.loaded.is_none() && self.error.is_none() {
             match documents(cx).document(&absolute, cx) {
                 DocState::Loading => {}
-                DocState::Ready(loaded) => self.loaded = Some(loaded),
+                DocState::Ready(loaded) => {
+                    self.loaded = Some(loaded);
+                    self.locked = None;
+                }
                 DocState::Failed(message) => self.error = Some(message),
+                DocState::Locked { wrong } => {
+                    if self.locked.is_none() {
+                        // Observed: the field has the keyboard as soon as
+                        // the prompt shows, and again after a refusal.
+                        self.focus_password = true;
+                    }
+                    self.locked = Some(wrong);
+                }
             }
         }
         let Some(loaded) = self.loaded.clone() else {
@@ -1115,14 +1518,41 @@ impl PdfView {
         };
         let scale = self
             .zoom
-            .resolve(&loaded.sizes, self.fit_page, self.viewport);
+            .resolve(&loaded.sizes, self.fit_page, self.viewport, self.spread);
         self.resolved = scale;
-        let layout = Layout::new(&loaded.sizes, scale * CSS_UNITS, self.viewport.width);
+        let layout = Layout::new(
+            &loaded.sizes,
+            scale * CSS_UNITS,
+            self.viewport.width,
+            self.spread,
+        );
         let fits_known = self.viewport.width > 0.0 && self.viewport.height > 0.0;
         if let Some(target) = self.pending {
             if fits_known {
                 self.pending = None;
                 match target {
+                    Target::Selection { page, selection } => {
+                        let items = documents(cx).text(&absolute, page, cx);
+                        match items {
+                            // Not read yet: wait at the page's top.
+                            None => {
+                                self.pending = Some(target);
+                                self.scroll.y = layout.top_of(page);
+                            }
+                            Some(items) => {
+                                let resolved =
+                                    selection::resolve_selection(&items, page, selection);
+                                self.highlight = resolved;
+                                self.scroll.y = match (resolved, layout.pages.get(page)) {
+                                    (Some((start, _)), Some(b)) => {
+                                        let top = items[start.item].bounds()[1];
+                                        (b.top() + top * layout.scale - FOLLOW_MARGIN).max(0.0)
+                                    }
+                                    _ => layout.top_of(page),
+                                };
+                            }
+                        }
+                    }
                     Target::Page(page) => self.scroll.y = layout.top_of(page),
                     Target::Anchor { page, frac, offset } => {
                         if let Some(b) = layout.pages.get(page) {
@@ -1223,8 +1653,11 @@ impl PdfView {
         let theme = cx.global::<Theme>().clone();
         let pages = self.loaded.as_ref().map_or(0, |l| l.sizes.len());
         let ready = pages > 0;
-        let page_text = if ready || self.error.is_some() {
+        // Observed for a broken and for a locked file: `0`, `of 0`.
+        let page_text = if ready {
             (self.page + 1).to_string()
+        } else if self.error.is_some() || self.locked.is_some() {
+            "0".to_string()
         } else {
             String::new()
         };
@@ -1234,7 +1667,7 @@ impl PdfView {
             self.page_input
                 .update(cx, |input, cx| input.set_text(page_text, cx));
         }
-        let count: SharedString = if ready || self.error.is_some() {
+        let count: SharedString = if ready || self.error.is_some() || self.locked.is_some() {
             format!("of {pages}").into()
         } else {
             "".into()
@@ -1377,6 +1810,7 @@ impl PdfView {
     fn render_menu(&self, theme: &Theme, cx: &mut Context<Self>) -> Option<AnyElement> {
         let (id, left) = match self.menu {
             Menu::None => return None,
+            Menu::Selection => ("pdf-selection-menu", 0.0),
             Menu::Sidebar => (
                 "pdf-sidebar-menu",
                 TOOLBAR_PAD_X + CONTROL_WIDTH + CONTROL_GAP,
@@ -1395,13 +1829,17 @@ impl PdfView {
                     + CONTROL_GAP,
             ),
         };
-        let at = point(
-            px(self.toolbar_origin.x + left),
-            px(self.toolbar_origin.y
-                + (TOOLBAR_HEIGHT - CONTROL_HEIGHT) / 2.0
-                + CONTROL_HEIGHT
-                + 2.0),
-        );
+        let at = if self.menu == Menu::Selection {
+            point(px(self.menu_at.x), px(self.menu_at.y))
+        } else {
+            point(
+                px(self.toolbar_origin.x + left),
+                px(self.toolbar_origin.y
+                    + (TOOLBAR_HEIGHT - CONTROL_HEIGHT) / 2.0
+                    + CONTROL_HEIGHT
+                    + 2.0),
+            )
+        };
         let mut body = menu(id, theme).on_mouse_down_out(cx.listener(|this, _, _, cx| {
             this.menu = Menu::None;
             cx.notify();
@@ -1461,47 +1899,36 @@ impl PdfView {
                     cx,
                 ))
                 .child(Self::menu_separator(theme))
-                // The spreads and the theme adaptation are drawn as
-                // observed and say so when asked for; single page is the
-                // one spread this build draws. Obsidian's two-page rows
-                // carry its own `rectangle-vertical-double` icon, which is
-                // not Lucide's; the single rectangle stands in.
+                // The two-page rows carry Obsidian's own
+                // `rectangle-vertical-double`, drawn in `assets`.
                 .child(self.menu_row(
                     "pdf-display-menu-item",
                     2,
                     "rectangle-vertical",
                     "Single page",
-                    true,
+                    self.spread == Spread::None,
                     theme,
-                    |_, _| {},
+                    |this, cx| this.set_spread(Spread::None, cx),
                     cx,
                 ))
                 .child(self.menu_row(
                     "pdf-display-menu-item",
                     3,
-                    "rectangle-vertical",
+                    "rectangle-vertical-double",
                     "Two-page (odd)",
-                    false,
+                    self.spread == Spread::Odd,
                     theme,
-                    |_, cx| {
-                        cx.emit(PdfEvent::Report(
-                            "Two-page spreads are not supported yet".into(),
-                        ))
-                    },
+                    |this, cx| this.set_spread(Spread::Odd, cx),
                     cx,
                 ))
                 .child(self.menu_row(
                     "pdf-display-menu-item",
                     4,
-                    "rectangle-vertical",
+                    "rectangle-vertical-double",
                     "Two-page (even)",
-                    false,
+                    self.spread == Spread::Even,
                     theme,
-                    |_, cx| {
-                        cx.emit(PdfEvent::Report(
-                            "Two-page spreads are not supported yet".into(),
-                        ))
-                    },
+                    |this, cx| this.set_spread(Spread::Even, cx),
                     cx,
                 ))
                 .child(Self::menu_separator(theme))
@@ -1510,15 +1937,59 @@ impl PdfView {
                     5,
                     "palette",
                     "Adapt to theme",
-                    false,
+                    adapt_to_theme(cx),
                     theme,
-                    |_, cx| {
-                        cx.emit(PdfEvent::Report(
-                            "Adapt to theme is not supported yet".into(),
-                        ))
-                    },
+                    |_, cx| toggle_adapt_to_theme(cx),
                     cx,
                 )),
+            // Observed rows, all `lucide-copy`, in the `selection` section;
+            // a selection over two pages offers "Copy" alone.
+            Menu::Selection => {
+                let one_page = self
+                    .ordered_selection()
+                    .is_some_and(|(a, b)| a.page == b.page);
+                let body = body.child(self.menu_row(
+                    "pdf-selection-menu-item",
+                    0,
+                    "copy",
+                    "Copy",
+                    false,
+                    theme,
+                    |this, cx| {
+                        let text = this.selected_text(cx);
+                        if !text.is_empty() {
+                            cx.write_to_clipboard(ClipboardItem::new_string(selection::copy_text(
+                                &text,
+                            )));
+                        }
+                    },
+                    cx,
+                ));
+                if one_page {
+                    body.child(self.menu_row(
+                        "pdf-selection-menu-item",
+                        1,
+                        "copy",
+                        "Copy as quote",
+                        false,
+                        theme,
+                        |this, cx| this.copy_link(true, cx),
+                        cx,
+                    ))
+                    .child(self.menu_row(
+                        "pdf-selection-menu-item",
+                        2,
+                        "copy",
+                        "Copy link to selection",
+                        false,
+                        theme,
+                        |this, cx| this.copy_link(false, cx),
+                        cx,
+                    ))
+                } else {
+                    body
+                }
+            }
             Menu::None => body,
         };
         Some(
@@ -1792,9 +2263,12 @@ impl PdfView {
                 .shadow(frame.clone());
             if near && size.width > 0.0 {
                 let scale = inner_w / size.width * window.scale_factor();
-                let _ = cache.has_page(&absolute, ix, scale);
+                // OBSERVE: whether Adapt to theme recolours the thumbnails;
+                // they follow the pages here.
+                let themed = theming(cx);
+                let _ = cache.has_page(&absolute, ix, scale, themed);
                 image = image.child(
-                    img(page_source(absolute.clone(), ix, scale))
+                    img(page_source(absolute.clone(), ix, scale, themed))
                         .size_full()
                         .object_fit(ObjectFit::Fill),
                 );
@@ -1941,15 +2415,6 @@ impl PdfView {
             .overflow_hidden()
             .bg(theme.tokens.pdf_background)
             .on_scroll_wheel(cx.listener(|this, event, window, cx| this.wheel(event, window, cx)))
-            .on_mouse_down(
-                MouseButton::Left,
-                cx.listener(|this, _, window, cx| {
-                    this.menu = Menu::None;
-                    if !this.focus.is_focused(window) {
-                        window.focus(&this.focus, cx);
-                    }
-                }),
-            )
             .child(
                 canvas(
                     move |bounds, window, cx| {
@@ -1963,6 +2428,26 @@ impl PdfView {
         self.requested = 0;
         self.rendered = 0;
         self.visible = 0;
+        if let Some(wrong) = self.locked {
+            return area
+                .child(self.render_password(wrong, theme, cx))
+                .into_any_element();
+        }
+        area = area
+            .on_mouse_down(MouseButton::Left, cx.listener(Self::mouse_down))
+            .on_mouse_down(
+                MouseButton::Right,
+                cx.listener(|this, event, _, cx| this.secondary_down(event, cx)),
+            )
+            .on_mouse_move(cx.listener(Self::mouse_move))
+            .on_mouse_up(
+                MouseButton::Left,
+                cx.listener(|this, _: &MouseUpEvent, _, cx| this.mouse_up(cx)),
+            )
+            .on_mouse_up_out(
+                MouseButton::Left,
+                cx.listener(|this, _: &MouseUpEvent, _, cx| this.mouse_up(cx)),
+            );
         let (Some(layout), Some(absolute)) = (self.layout.clone(), self.absolute.clone()) else {
             return area.into_any_element();
         };
@@ -1970,7 +2455,14 @@ impl PdfView {
         let top = self.scroll.y;
         let scale = layout.scale * window.scale_factor();
         let cache = documents(cx);
+        let themed = theming(cx);
+        let ground = themed.map_or(gpui::white(), theming_colour);
         let shadow = crate::theme::box_shadows(&theme.tokens.pdf_shadow);
+        let selection = self.ordered_selection();
+        let mut accent = theme.tokens.color_accent;
+        accent.a *= TEXT_LAYER_OPACITY;
+        let mut mark: Hsla = gpui::rgb(FOLLOW_MARK).into();
+        mark.a *= TEXT_LAYER_OPACITY;
         let mut column = div()
             .absolute()
             .left(px(-self.scroll.x))
@@ -1994,23 +2486,141 @@ impl PdfView {
                 .top(px(b.origin.y))
                 .w(px(b.size.width))
                 .h(px(b.size.height))
-                .bg(gpui::white())
-                .shadow(shadow.clone());
+                .bg(ground)
+                .shadow(shadow.clone())
+                .cursor_text();
             if wanted && vw > 0.0 {
                 self.requested += 1;
-                if cache.has_page(&absolute, ix, scale) {
+                if cache.has_page(&absolute, ix, scale, themed) {
                     self.rendered += 1;
                 }
                 page = page.child(
-                    img(page_source(absolute.clone(), ix, scale))
+                    img(page_source(absolute.clone(), ix, scale, themed))
                         .size_full()
                         .object_fit(ObjectFit::Fill),
                 );
+                // The text is read for every page in view, so a press on it
+                // finds it there.
+                if let Some(items) = cache.text(&absolute, ix, cx) {
+                    let k = layout.scale;
+                    let boxes = |start: TextPos, end: TextPos, pad: f32, colour: Hsla| {
+                        selection::page_ranges(&items, ix, start, end)
+                            .into_iter()
+                            .filter_map(|(item, from, to)| {
+                                let it = &items[item];
+                                let (x0, x1) = it.span(from, to)?;
+                                let [_, t, _, bot] = it.bounds();
+                                Some(
+                                    div()
+                                        .absolute()
+                                        .left(px(x0 * k - pad))
+                                        .top(px(t * k - pad))
+                                        .w(px((x1 - x0) * k + 2.0 * pad))
+                                        .h(px((bot - t) * k + 2.0 * pad))
+                                        .when(pad > 0.0, |d| d.rounded(px(pad)))
+                                        .bg(colour)
+                                        .into_any_element(),
+                                )
+                            })
+                            .collect::<Vec<_>>()
+                    };
+                    if let Some((a, z)) = self.highlight {
+                        page = page.children(boxes(a, z, FOLLOW_PAD, mark));
+                    }
+                    if let Some((a, z)) = selection {
+                        page = page.children(boxes(a, z, 0.0, accent));
+                    }
+                }
             }
             column = column.child(page);
         }
         area = area.child(column);
         area.into_any_element()
+    }
+
+    /// A file encrypted with a user password, as observed: centred over the
+    /// pages area, a 32 px `lucide-lock`, "This PDF is password protected"
+    /// (15 px), "Enter the password below" (13 px) or, after a refused try,
+    /// "Invalid password" in `--text-warning`, and a 214 by 30 password
+    /// field with the placeholder "Password", which has the keyboard.
+    /// Enter tries it; Escape does nothing.
+    fn render_password(&self, wrong: bool, theme: &Theme, cx: &mut Context<Self>) -> AnyElement {
+        let focused = self.focus_password_now;
+        let field = div()
+            .id("pdf-password-input")
+            .track_focus(&self.password_focus)
+            .key_context("PdfPassword")
+            .on_key_down(cx.listener(Self::password_key))
+            .on_mouse_down(
+                MouseButton::Left,
+                cx.listener(|this, _, window, cx| {
+                    cx.stop_propagation();
+                    window.focus(&this.password_focus, cx);
+                }),
+            )
+            .w(px(214.))
+            .h(px(30.))
+            .mt(px(12.))
+            .px(px(8.))
+            .flex()
+            .items_center()
+            .rounded(px(5.))
+            .border_1()
+            .border_color(if focused {
+                theme.tokens.background_modifier_border_focus
+            } else {
+                theme.tokens.background_modifier_border
+            })
+            .bg(theme.tokens.background_modifier_form_field)
+            .text_size(px(FONT_UI_SMALL))
+            .cursor_text()
+            // The caret sits before the placeholder, after the dots.
+            .when(focused && self.password.is_empty(), |d| {
+                d.child(div().w(px(1.)).h(px(15.)).bg(theme.tokens.text_normal))
+            })
+            .child(if self.password.is_empty() {
+                div()
+                    .text_color(theme.tokens.text_faint)
+                    .child("Password")
+                    .into_any_element()
+            } else {
+                div()
+                    .text_color(theme.tokens.text_normal)
+                    .child(SharedString::from(
+                        "\u{2022}".repeat(self.password.chars().count()),
+                    ))
+                    .into_any_element()
+            })
+            .when(focused && !self.password.is_empty(), |d| {
+                d.child(div().w(px(1.)).h(px(15.)).bg(theme.tokens.text_normal))
+            });
+        div()
+            .absolute()
+            .size_full()
+            .flex()
+            .flex_col()
+            .items_center()
+            .justify_center()
+            .text_color(theme.tokens.text_normal)
+            .child(icon("lock", 32., theme.tokens.text_normal))
+            .child(
+                div()
+                    .mt(px(4.))
+                    .text_size(px(15.))
+                    .child("This PDF is password protected"),
+            )
+            .child(if wrong {
+                div()
+                    .text_size(px(FONT_UI_SMALL))
+                    .text_color(theme.tokens.text_warning)
+                    .child("Invalid password")
+            } else {
+                div()
+                    .text_size(px(FONT_UI_SMALL))
+                    .child("Enter the password below")
+            })
+            .child(field)
+            .into_any_element()
     }
 }
 
@@ -2029,6 +2639,10 @@ impl Render for PdfView {
             window.focus(&self.focus, cx);
         }
         self.prepare(cx);
+        if self.locked.is_some() && std::mem::take(&mut self.focus_password) {
+            window.focus(&self.password_focus, cx);
+        }
+        self.focus_password_now = self.password_focus.is_focused(window);
         // A file that will not open, or one not yet read, is the toolbar
         // over nothing: observed for a broken file ("of 0", no message).
         let sidebar = (self.sidebar && self.loaded.is_some())
@@ -2060,6 +2674,7 @@ impl Render for PdfView {
             .on_action(cx.listener(Self::find_next))
             .on_action(cx.listener(Self::find_previous))
             .on_action(cx.listener(Self::dismiss))
+            .on_action(cx.listener(Self::copy_selection))
             .flex()
             .flex_col()
             .size_full()
@@ -2071,6 +2686,16 @@ impl Render for PdfView {
             .child(body)
             .children(menu)
     }
+}
+
+/// A recolouring's ground as a gpui colour.
+fn theming_colour(t: Theming) -> Hsla {
+    gpui::rgb(
+        (u32::from(t.background[0]) << 16)
+            | (u32::from(t.background[1]) << 8)
+            | u32::from(t.background[2]),
+    )
+    .into()
 }
 
 /// A finite number for JSON, rounded to a hundredth so a scroll settles to
@@ -2132,29 +2757,32 @@ mod tests {
         // 0.7912, and a 683 px tall one fits its height at 0.5844.
         let viewport = Size::new(668.0, 672.0);
         let sizes = [a4(), landscape(), a4()];
-        let scale = Zoom::FitWidth.resolve(&sizes, 0, viewport);
+        let scale = Zoom::FitWidth.resolve(&sizes, 0, viewport, Spread::None);
         assert!((scale - 0.79123).abs() < 1e-4, "{scale}");
         // Set on the landscape page it fits that one: observed 0.5595.
-        let scale = Zoom::FitWidth.resolve(&sizes, 1, viewport);
+        let scale = Zoom::FitWidth.resolve(&sizes, 1, viewport, Spread::None);
         assert!((scale - 0.55946).abs() < 1e-4, "{scale}");
-        let fit_height = Zoom::FitHeight.resolve(&[a4()], 0, Size::new(668.0, 683.0));
+        let fit_height = Zoom::FitHeight.resolve(&[a4()], 0, Size::new(668.0, 683.0), Spread::None);
         assert!((fit_height - 0.5844).abs() < 1e-4, "{fit_height}");
-        assert_eq!(Zoom::Percent(2.5).resolve(&[a4()], 0, viewport), 2.5);
         assert_eq!(
-            Zoom::FitWidth.resolve(&[a4()], 0, Size::default()),
+            Zoom::Percent(2.5).resolve(&[a4()], 0, viewport, Spread::None),
+            2.5
+        );
+        assert_eq!(
+            Zoom::FitWidth.resolve(&[a4()], 0, Size::default(), Spread::None),
             1.0,
             "no viewport yet: 100% until there is one"
         );
         assert_eq!(
-            Zoom::FitWidth.resolve(&sizes, 99, viewport),
-            Zoom::FitWidth.resolve(&sizes, 0, viewport),
+            Zoom::FitWidth.resolve(&sizes, 99, viewport, Spread::None),
+            Zoom::FitWidth.resolve(&sizes, 0, viewport, Spread::None),
             "a page past the end fits the first"
         );
     }
 
     #[test]
     fn pages_stack_in_their_borders_and_centre_in_the_column() {
-        let layout = Layout::new(&[a4(), landscape()], 1.0, 1000.0);
+        let layout = Layout::new(&[a4(), landscape()], 1.0, 1000.0, Spread::None);
         assert_eq!(layout.pages[0].top(), PAGE_BORDER);
         assert_eq!(layout.pages[1].top(), 3.0 * PAGE_BORDER + 841.8898);
         assert_eq!(
@@ -2164,7 +2792,7 @@ mod tests {
         assert_eq!(layout.content.width, 1000.0);
         assert_eq!(layout.pages[0].origin.x, (1000.0 - 595.2756) / 2.0);
         // A page wider than the viewport widens the column instead.
-        let wide = Layout::new(&[landscape(), a4()], 1.0, 700.0);
+        let wide = Layout::new(&[landscape(), a4()], 1.0, 700.0, Spread::None);
         assert_eq!(wide.content.width, 841.8898 + 2.0 * PAGE_BORDER);
         assert_eq!(wide.pages[0].origin.x, PAGE_BORDER);
         assert_eq!(
@@ -2186,8 +2814,8 @@ mod tests {
     fn the_current_page_is_the_one_showing_most_of_itself() {
         let sizes = [a4(), a4(), landscape(), a4(), a4()];
         let viewport = Size::new(668.0, 672.0);
-        let scale = Zoom::FitWidth.resolve(&sizes, 0, viewport) * CSS_UNITS;
-        let layout = Layout::new(&sizes, scale, viewport.width);
+        let scale = Zoom::FitWidth.resolve(&sizes, 0, viewport, Spread::None) * CSS_UNITS;
+        let layout = Layout::new(&sizes, scale, viewport.width, Spread::None);
         let at = |y: f32| layout.current_page(Point::new(0.0, y), viewport, 0);
         let page3_top = layout.top_of(2);
         assert_eq!(at(page3_top - 10.0), 2);
@@ -2206,7 +2834,7 @@ mod tests {
 
     #[test]
     fn locating_a_height_gives_the_page_and_the_fraction_down_it() {
-        let layout = Layout::new(&[a4(), a4()], 1.0, 1000.0);
+        let layout = Layout::new(&[a4(), a4()], 1.0, 1000.0, Spread::None);
         let (page, frac) = layout.locate(layout.pages[1].top() + 841.8898 / 2.0);
         assert_eq!(page, 1);
         assert!((frac - 0.5).abs() < 1e-6);
@@ -2233,6 +2861,51 @@ mod tests {
         assert_eq!(json_number(1.0 / 3.0), json!(0.33));
         assert_eq!(json_number(f32::NAN), json!(0.0));
         assert_eq!(json_number(120.0), json!(120.0));
+    }
+
+    #[test]
+    fn spreads_pair_pages_as_pdf_js_does() {
+        assert_eq!(Spread::None.rows(3), vec![vec![0], vec![1], vec![2]]);
+        assert_eq!(Spread::Odd.rows(5), vec![vec![0, 1], vec![2, 3], vec![4]]);
+        assert_eq!(Spread::Even.rows(5), vec![vec![0], vec![1, 2], vec![3, 4]]);
+        assert_eq!(Spread::Even.rows(0), Vec::<Vec<usize>>::new());
+        assert_eq!(Spread::from_mode(Spread::Even.mode()), Spread::Even);
+    }
+
+    #[test]
+    fn a_spread_fits_two_pages_across_and_centres_its_rows() {
+        // Observed at 2340 px: single page-width 2.8978, a spread 1.4489.
+        let viewport = Size::new(2340.0, 1443.0);
+        let sizes = [a4(), a4(), landscape(), a4(), a4()];
+        let one = Zoom::FitWidth.resolve(&sizes, 0, viewport, Spread::None);
+        let two = Zoom::FitWidth.resolve(&sizes, 0, viewport, Spread::Odd);
+        assert!((one - 2.8978).abs() < 0.001, "{one}");
+        assert!((two - 1.4489).abs() < 0.001, "{two}");
+        let layout = Layout::new(&sizes, two * CSS_UNITS, viewport.width, Spread::Odd);
+        let (p1, p2, p3, p4, p5) = (
+            layout.pages[0],
+            layout.pages[1],
+            layout.pages[2],
+            layout.pages[3],
+            layout.pages[4],
+        );
+        // Side by side, borders touching, on one row.
+        assert_eq!(p1.top(), p2.top());
+        assert!((p2.left() - (p1.right() + 2.0 * PAGE_BORDER)).abs() < 0.01);
+        // The landscape page sits centred in its row beside the portrait one.
+        assert!((p3.top() - p4.top() - (p4.size.height - p3.size.height) / 2.0).abs() < 0.01);
+        // Page 5 alone, centred.
+        let centre = (p5.left() + p5.right()) / 2.0;
+        assert!((centre - viewport.width / 2.0).abs() < 0.01);
+        // The point in a page's own points.
+        let (page, x, y) = layout
+            .page_point(
+                p2.left() + 10.0 * layout.scale,
+                p2.top() + 20.0 * layout.scale,
+            )
+            .unwrap();
+        assert_eq!(page, 1);
+        assert!((x - 10.0).abs() < 0.01 && (y - 20.0).abs() < 0.01);
     }
 
     #[test]

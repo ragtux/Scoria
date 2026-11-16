@@ -42,7 +42,7 @@ note doing the embedding.
 | Local image | Displayed, with size hints honored |
 | Remote image (`https://…`) | **Not loaded yet** |
 | Audio, video | Recognized as a file kind; no player yet |
-| PDF | Recognized; no viewer yet |
+| PDF | Drawn in a viewer of its own, with the toolbar; `#page=N` opens it at that page and `#height=` sets its height |
 | Canvas | Not drawn inside a note. A `.canvas` opens in a canvas view of its own |
 | Base | Recognized and round-tripped on disk; no view yet |
 

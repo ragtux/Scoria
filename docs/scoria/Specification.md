@@ -7537,15 +7537,210 @@ marked `OBSERVE:` in the code.
 - **A loading file** draws the broken file's chrome (`0` `of 0`) until the
   pages are known; Obsidian's loading frame was not captured.
 - **The outline's empty state** says "No outline available"; unprobed.
-- **Inert by design**, with the menus saying so: Two-page (odd/even), Adapt
-  to theme, Search settings' three toggles, the sidebar resizer, the embed's
-  *Open* menu (the button opens the file in the tab), *Save current position
-  in document*, the alias size hint (`|300`) which stands in for `#height=`
-  only when there is none.
-- **Not drawn at all**: a text layer, so no selection, no copy strings and no
-  highlight of a find match (find scrolls to the page); the hover popover;
-  the `rectangle-vertical-double` icon, which is not Lucide's (the single
-  rectangle stands in).
+- **Inert by design**, with the menus saying so: Search settings' three
+  toggles, the sidebar resizer, the embed's *Open* menu (the button opens
+  the file in the tab), *Save current position in document*, the alias size
+  hint (`|300`) which stands in for `#height=` only when there is none.
+  Two-page (odd/even) and Adapt to theme were in this list until
+  2026-11-15; see [[#What building PDF selection settled, 2026-11-15]].
+- **Not drawn at all**: the highlight of a find match (find scrolls to the
+  page); the hover popover. The text layer, the selection and the
+  `rectangle-vertical-double` icon landed 2026-11-15.
+
+## Observed PDF text selection, Obsidian 1.15.0
+
+Observed on 2026-11-15 over CDP in a private headless sway
+(`tools/obsidian-probe/pdf-selection.mjs`; raw results in
+`tools/obsidian-probe/results/2026-11-15-pdf-selection.json`, screenshots
+beside it). `document.title` said 1.15.0, the user agent `obsidian/1.13.7`;
+window 2396 by 1573 at a device pixel ratio of 1. Fixtures: the typst
+`doc.pdf` of [[#Observed PDF view behavior, Obsidian 1.14.5 (installer build 1.13.7)]]
+(tagged, so its text sits in marked content), `text.pdf` written by hand
+(standard 14 fonts and a content stream that meets every way two text runs
+can: one `Tj` after another, a small and a large `TJ` kern, a font change, a
+line move inside one `BT`, a superscript, a far gap, a space run, a wrapped
+paragraph, four colour swatches, grey and black text, a two-pixel RGB
+image), and `doc.pdf` encrypted by qpdf: AES-256 and RC4-128 with the user
+password `secret`, and AES-256 with an owner password only. The PDFs are
+committed as `crates/scoria-pdf/tests/fixtures/probe-*.pdf`.
+
+### What a `selection=` counts
+
+`selection=a,b,c,d` is item `a`, offset `b` to item `c`, offset `d`, where
+the items are pdf.js's `getTextContent()` items with the marked-content
+entries left out and the offsets are JavaScript (UTF-16) string offsets.
+Selecting each text-layer span in turn and copying its link proved it: the
+26 spans of `text.pdf`'s page 1 are items 0-13, 15-21, 23, 24 and 26-28 —
+the gaps are empty items with `hasEOL`, which the text layer draws as a
+`<br>` and no span. `This is page one.` is item 8 of `doc.pdf`'s page 1
+behind `1`, `" "`, `One`, `""`, `1.1`, `" "`, `One point one`, `""`.
+
+How pdf.js cuts items, as both files show (`probe-items.json` has them):
+
+- glyphs of one font at one size on one line run together across text
+  operators: `(Hello) Tj ( world) Tj` is the one item `Hello world`;
+- a gap inside such a run is a space in the item when it is wider than about
+  a tenth of the size (`[(Kern)-120(ed)] TJ`, 0.12 em, is `Kern ed`), and so
+  is a space glyph (`Spaced words`);
+- a gap wider than the size cuts the run, and the gap is an item `" "` of
+  its own width (`Wide`, `" "` 24 pt wide, `gap`; `Left column`, `" "`,
+  `Right column`; `Tab`, `" "`, `stop`; `Grey text`, `" "`, `Black text`);
+- a change of font or size cuts it too, and a space glyph or a gap at the
+  cut becomes an item `" "` (`Plain`, `" "`, `bold`, `" "`, `again`; the 8 pt
+  superscript `2` is an item beside `E = mc`, on the same line);
+- the start and end of marked content cut it (every `doc.pdf` span is one
+  marked-content sequence, and the 5.88 pt word gap after `1` opens the next
+  sequence as an item `" "`);
+- a move to another line ends the open item with `hasEOL`; when the item
+  before was already cut (by a font, size or marked-content change), an
+  empty item `""` with `hasEOL` is put before the next line instead. The
+  page's last item has no `hasEOL`. A space glyph at the end of a line
+  makes no item.
+
+### Selecting
+
+The text layer has opacity 0.2 over the canvas; a span is transparent text
+(`cursor: text`), and its `::selection` is `--color-accent`
+(`rgb(138, 92, 245)`), so a selection shows as the accent at a fifth over
+the page, one box per span (the shot `04-drag-two-lines.png`). A drag selects
+characters (`Hell`); a double click a word (`world` of `Hello world`); a
+triple click the one span (`First wrapped line of a paragraph that goes on`,
+one line of the paragraph). `Ctrl+A` selects nothing, focused on the page or
+on a span (0 characters, as in 1.14.5). A drag from a span into the blank
+page below it left the selection collapsed; Shift+click extended it oddly
+(Chrome's own behaviour over absolutely placed spans).
+
+### The menu and what it copies
+
+A right-click on a selection opens **Copy**, **Copy as quote** and **Copy
+link to selection**, all `lucide-copy`, section `selection`, no submenus
+and no highlight colours; an embed's pages had no text layer built in the
+run, so the embed's menu was not seen. What they write:
+
+| selection | Copy | Copy link to selection |
+| --- | --- | --- |
+| span 0 whole | `Hello world` | `[[text.pdf#page=1&selection=0,0,0,11\|text, page 1]]` |
+| `rn ` of `Kern ed` | `rn ` | `…selection=1,2,1,5…` |
+| `llo world` to `gap` | `llo world Kern ed Wide gap` | `…selection=0,2,4,3…` |
+| `Wide` to `bold` | `Wide gap Plain bold` | `…selection=2,0,7,4…` |
+
+`Copy as quote` is `> ` and the copied text, a blank line, the link:
+`> rn \n\n[[text.pdf#page=1&selection=1,2,1,5|text, page 1]]` (the trailing
+space kept). The selection reads with `\n` where a span ends its line
+(`llo world\nKern ed\nWide gap`) and every `\n` is copied as a space;
+`Ctrl+C` writes what Copy writes (`Line one Line two`). A selection from the
+last span of page 1 to the first of page 2 offers **Copy** alone and copies
+`Black text Second page first line`. The alias is `<basename>, page <n>`.
+
+### Following a `selection=` link
+
+A click on `[[doc.pdf#page=1&selection=8,0,8,17|doc, page 1]]` opens the PDF
+at page 1 and wraps the named text in `span.mod-focused.selected.appended`
+inside its span: `.textLayer .mod-focused { background-color: rgb(255, 208, 0);
+border-radius: var(--radius-s); padding: var(--size-4-1); margin:
+calc(var(--size-4-1) * -1) }`, so yellow at a fifth through the layer, 4 px
+of pad and radius around the text, one box per span. It stays (unchanged at
+8 s). `selection=8,5,8,12` marks `is page` alone; `0,2,4,3` on `text.pdf`
+marks `llo world` to `gap` span by span (the partial first and last
+parts wrapped as `mod-focused begin` and `mod-focused end`, the spans between
+marked whole; the shot `03-follow-spans.png`).
+The view lands with the first marked line 36 px (scale 2.90 and 2.52) to
+41 px (the hand-written file) below the viewport's top: pdf.js's `FitBH`
+destination at the item's top less a margin this run did not isolate.
+`&color=red` changes nothing. `page=2&selection=8,0,8,17` marks
+`This is page two.` on page 2. `selection=999,0,999,4` lands on the page
+and marks nothing. The window's own selection stays empty throughout.
+
+### Spreads
+
+*Display options* is unchanged from 1.14.5 (Fit width, Fit height, ---,
+Single page, Two-page (odd), Two-page (even), ---, Adapt to theme); the
+two-page rows' icon is `svg-icon rectangle-vertical-double`. Nothing offers
+a scroll mode. **Two-page (odd)** wraps the pages in `.pdfViewer > .spread`
+rows (1 2 / 3 4 / 5); **(even)** puts page 1 alone (1 / 2 3 / 4 5). In
+both, `page-width` fits two of the current page across (2.8978 single, 1.4489
+in a spread at 2340 px), each row is centred (a lone page 1 or 5 in the
+middle), the two pages abut, and a shorter page is centred in its row's
+height (the landscape page 3 238 px down a 1640 px row). Fit height fits the
+page's height (1.2712). Right and Left still move one page at a time and
+scroll to that page's own top (3 → 4 → 3), End and Home to the ends. The
+spread is kept in `pdfjs.history` (`"spreadMode": 1`) and a re-open of the
+file comes back in it. Single page puts everything back.
+
+### Adapt to theme
+
+The toggle adds `mod-themed` to `.pdf-container` and sets the owner's
+`pageInvert` (true in the dark theme, false in the light) and
+`pageBackground` (`#1C1C1C` dark, `#ffffff` light); the canvas, its wrapper
+and the page have no CSS filter. The canvas read back:
+
+| sample | off | dark, on |
+| --- | --- | --- |
+| page ground | 255 255 255 | 28 28 28 |
+| black text | 0 0 0 | 255 255 255 |
+| `#666666` text | 102 102 102 | 153 153 153 |
+| `#808080` fill | 128 128 128 | 127 127 127 |
+| red, blue fills | 255 0 0, 0 0 255 | 255 0 0, 0 0 255 |
+| `#008000` fill | 0 128 0 | 127 255 127 |
+| the RGB image | 255 128 0, 0 128 255 | 255 128 0, 0 128 255 |
+
+So the ground becomes `--pdf-background`, every drawn colour keeps its hue
+and saturation and has its HSL lightness turned over (`c + 255 - max - min`
+per channel), and images are left alone. In the light theme every sample is
+unchanged. The toggle is stored in `localStorage['<appId>-pdfjs-is-themed']`
+(`"true"`), nothing under `.obsidian`; another file, a re-open and a new
+leaf all come up themed, and the menu row shows a check.
+
+### A password-protected file
+
+Both encrypted files open in a pdf leaf whose toolbar reads `0` `of 0` over
+`.pdf-password-dialog`, centred in the viewer: a 32 px `lucide-lock`,
+"This PDF is password protected" (15 px), "Enter the password below"
+(`mod-small`, 13 px) and `input[type=password]` with the placeholder
+`Password` (214 by 30, `padding: 4px 8px`, radius 5, `rgb(46, 46, 46)` on a
+1 px `rgb(85, 85, 85)` border), which has the keyboard. A wrong password and
+Enter replaces the second line with "Invalid password" (`mod-warning`,
+`rgb(233, 151, 63)`) and empties the field; the right one opens the five
+pages. Escape leaves the dialog as it is. No modal, no notice. The
+owner-password-only file opens at once.
+
+### Not observed
+
+Where the selection's 36-41 px landing margin comes from; whether the
+thumbnails are recoloured by Adapt to theme; an embed's selection menu (its
+text layer was not built in the run); how a link copied from a file in a
+folder is written (the fixtures sat at the vault root); whether the
+`mod-focused` mark goes on a later click.
+
+## What building PDF selection settled, 2026-11-15
+
+Built to [[#Observed PDF text selection, Obsidian 1.15.0]]; this build's own
+reading where the run did not reach, each marked `OBSERVE:` in the code.
+
+- **The items** are cut by `scoria-pdf` from hayro's glyph runs with the
+  rules above, a cut at more than one em of gap, a space at more than a
+  tenth. They match pdf.js exactly on both probe files, item for item and
+  `hasEOL` for `hasEOL`, positions within half a point
+  (`crates/scoria-pdf/tests/probe.rs`); a file that cuts differently in
+  pdf.js would number a link differently.
+- **A selection box** is the item's characters across, from 0.8 of the size
+  above the baseline to 0.2 below; Chrome's own selection boxes are a few
+  pixels taller.
+- **A drag outside any text** takes the nearest item on the pointer's line,
+  else the nearest at all, where Chrome sometimes collapsed the selection.
+- **The selection's colour** is Scoria's `--color-accent` at a fifth, which
+  is Scoria's accent, not Obsidian's purple.
+- **The landing margin** of a followed selection is 37 px.
+- **Adapt to theme** is kept for the session, app-wide, not written
+  anywhere; images are found by their placement boxes, so a transparent part
+  of an image's box is left unrecoloured; a white fill the PDF draws turns
+  black, where the unpainted ground becomes `--pdf-background`. Thumbnails
+  and embeds are recoloured too.
+- **The link** is a wikilink whatever `useMarkdownLinks` says, with the
+  file's path in the vault's link format.
+- **A password** that opened a file is kept for the session, so an embed of
+  the same file opens once the leaf is unlocked; an embed of a locked file
+  draws the broken file's chrome.
 
 ## What building math rendering settled, 2026-10-26
 
