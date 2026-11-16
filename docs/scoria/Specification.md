@@ -9974,8 +9974,9 @@ there; the bytes written are the same as in Live Preview.
   footnote's row; whether editing in the pane always rewrites a four-space continuation indent as
   a tab or only when the edited definition is re-serialised next to it (one observation); the
   pane's light theme and hover styles.
-- Backlinks in document: the in-note block's own controls (sort menu, search filter, Show more
-  context) were not driven; the Settings toggle for `backlinkInDocument` was not driven (the file
+- Backlinks in document: Show more context in the block was not driven (the sort menu and the
+  search filter were on 2026-11-16, see
+  [[#Observed font size persistence and the backlinks block's sort and filter, Obsidian 1.15.0]]); the Settings toggle for `backlinkInDocument` was not driven (the file
   was written before launch), so the key and file the toggle writes are inferred only from what
   was loaded.
 - Workspaces: no rename exists in the UI (no control, the name not editable), so "rename" is
@@ -11512,3 +11513,79 @@ delete “Two.md”?"). Copy path's submenu (section `copy`) is *as Obsidian URL
 (`lucide-link`: `obsidian://open?vault=…&file=search%2FOne`), *from vault folder* (`vault`:
 `search/One`, with no extension) and *from system root* (`lucide-hard-drive`: the absolute path
 with its extension).
+
+## Observed font size persistence and the backlinks block's sort and filter, Obsidian 1.15.0
+
+`tools/obsidian-probe/font-size-backlinks-block.mjs`, 2026-11-16, Obsidian 1.15.0 (window title
+"… - Obsidian 1.15.0", the `obsidian-1.15.0.asar` of the data directory) in a private headless
+sway with its own `USER_DATA_DIR` and `CDP_PORT=9475`; results in
+`tools/obsidian-probe/results/2026-11-16-font-size-backlinks-block.json`. The scratch vault's
+`appearance.json` was `{"baseFontSize": 20, "baseFontSizeAction": true}` before launch, with
+no local storage key for the vault.
+
+### Where the text size is kept
+
+The size lives in **local storage** under `<vault id>-base-font-size` (here
+`522fd2c5b030e218-base-font-size`), a bare number string. `appearance.json` was byte for byte
+unchanged by every step below.
+
+| Step | Size drawn | Local storage | `appearance.json` |
+| --- | --- | --- | --- |
+| Boot, no key, file says 20 | 20 px | `"20"` — copied in from the file | unchanged |
+| `app:increase-font-size` | 21 px | `"21"` | unchanged |
+| Ctrl+wheel up one notch (`deltaY` −120) | 22 px | `"22"` | unchanged |
+| Font size slider to 14 | 14 px | `"14"` | unchanged |
+| The slider's Restore default | 16 px (the slider reads 16) | `"16"` | unchanged |
+| `appearance.json` rewritten from outside with `"baseFontSize": 24` | 16 px | `"16"` | 24, as written |
+| Increase twice, then quit and relaunch | 18 px, and 18 px after the relaunch | `"18"` | 24 |
+
+So: the first read with no key copies the file's `baseFontSize` into the key; from then on the
+key alone decides, and the file's own value is ignored. On 1.15.0 the slider and its Restore
+default no longer write `baseFontSize` (1.14.5 did, see
+[[#Observed font pages, quick font size and app icon, Obsidian 1.14.5]]), and **Ctrl+wheel now
+writes the key too** where 1.14.5 wrote nothing. Every one of these moves `--font-text-size`
+on `body` and sets the root element's `font-size` to `calc(<n>px * var(--preferred-text-scale,
+1))`. With no key and no `baseFontSize` the size is 16. A side note from the relaunch:
+`appearance.json` gained `"showRibbon": true` after it, which no step asked for.
+
+### The backlinks block's sort menu
+
+Under `backlink:toggle-backlinks-in-document` on `Target.md` (linked from `Alpha`, `Mike` and
+`Zulu`, whose modified order is Alpha, Zulu, Mike newest first and created order Mike, Alpha,
+Zulu). The nav buttons sit at the block's top right, 28×24 at 30 px pitch, the four in the
+order Collapse results, Show more context, Change sort order (`lucide-sort-asc`), Show search
+filter (`lucide-search`).
+
+A real click on "Change sort order" opens a `.menu` whose top-left corner is at the pointer (two
+pixels right of and below it): the pane's six orders in three pairs split by
+`menu-separator` — "File name (A to Z)", "File name (Z to A)" / "Modified time (new to old)",
+"Modified time (old to new)" / "Created time (new to old)", "Created time (old to new)" — the
+order in force `mod-checked` with `lucide-check`, the others with no icon, no `data-section`.
+Escape closes it; the keyboard stays where it was (the note's `.cm-scroller`).
+
+Each pick reorders the linked mentions at once (Z to A: Zulu, Mike, Alpha; modified new to old:
+Alpha, Zulu, Mike; old to new: Mike, Zulu, Alpha; created new to old: Mike, Alpha, Zulu; old to
+new: Zulu, Alpha, Mike) and writes **the leaf's** `backlinkOpts.sortOrder`, in place, to
+`workspace.json` within 2.5 s. The dock's Backlinks pane kept `"sortOrder": "alphabetical"`
+throughout, and there is no `backlink.json`.
+
+### The backlinks block's search filter
+
+"Show search filter" turns the button `is-active`, writes `"showSearch": true` into the leaf's
+`backlinkOpts` (and to `workspace.json`), and shows `div.search-input-container` with the
+keyboard in its `<input type="search" placeholder="Search...">`. The container is on the
+buttons' row, to their left: `width: calc(100% - 150px)` (550 px in a 700 px block), 30 px tall,
+its top level with the buttons', `margin: 0 0 12px`. "Clear search" (`search-input-clear-button`)
+shows only while the field holds text.
+
+Typing filters the block as the pane's filter does: `kiwi` (only in Mike's line) left one file
+and the "Linked mentions" count went to 1; `nomatchhere` left none, the count 0 and "No
+backlinks found.". The query is the leaf's `searchQuery` at once, but typing does not ask for a
+layout save: `workspace.json` still held `""` 2.5 s after typing, and after the quit, and the
+relaunched block came back with the field shown, empty, and the sort order kept. A later layout
+save for another reason would write the query, since the leaf's state carries it.
+
+**Escape** in the field empties it and every row comes back; the field stays shown and keeps
+the keyboard. **The button pressed again** hides the field, empties the query
+(`"showSearch": false, "searchQuery": ""`) and hands the keyboard to the note; pressed once more
+the field comes back empty with the keyboard in it.

@@ -134,8 +134,10 @@ pub fn window_size(window: &Window) -> Size<Pixels> {
 /// `window/<vault id>.json` under Scoria's configuration folder. Obsidian
 /// keeps it in its data directory's `<vault id>.json`, the window file, as
 /// `zoom` beside the window's bounds; Scoria's file has the same name and
-/// key in Scoria's folder, never in the vault and never in Obsidian's.
-fn window_file(root: &Path) -> Option<PathBuf> {
+/// key in Scoria's folder, never in the vault and never in Obsidian's. The
+/// text size the font-size commands set is kept in the same file, under
+/// `base-font-size` (see [`crate::theme::fonts::STORE_KEY`]).
+pub(crate) fn window_file(root: &Path) -> Option<PathBuf> {
     window_file_in(&scoria_vault::registry::config_dir()?, root)
 }
 

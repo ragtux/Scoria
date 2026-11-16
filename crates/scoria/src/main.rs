@@ -395,7 +395,13 @@ fn main() {
     // the window can answer, which only matters for `theme: "system"`.
     let appearance = vault.as_ref().and_then(|v| v.appearance_config().ok());
     let theme = match (vault.as_ref(), appearance.as_ref()) {
-        (Some(v), Some(a)) => Theme::load(v.root(), v.config_dir(), a, true),
+        (Some(v), Some(a)) => {
+            let mut theme = Theme::load(v.root(), v.config_dir(), a, true);
+            // The size kept for the vault, read only: the workspace's first
+            // theme reload copies the file's size in when none is kept.
+            theme.base_font_size = theme::fonts::vault_font_size(v.root(), a.base_font_size, false);
+            theme
+        }
         _ => Theme::dark(),
     };
     let mut registry = CommandRegistry::with_known_ids();
