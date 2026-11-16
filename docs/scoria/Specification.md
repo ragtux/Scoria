@@ -10406,3 +10406,81 @@ commands too.
   digits in a query (`/(`, `/#`); several cursors.
 - Whether the list is rebuilt on every keystroke (the check callbacks asked again) or once per
   `/`. Scoria builds it once per `/`, and again whenever the popup reopens.
+
+## Observed line numbers, indentation guides and right-to-left, Obsidian 1.15.0
+
+`tools/obsidian-probe/gutter-guides-rtl.mjs` over CDP in a private headless sway on Linux
+(window 1400 × 900, the installer build 1.13.7 running the 1.15.0 asar); results in
+`tools/obsidian-probe/results/2026-11-15-gutter-guides-rtl.json`, eight screenshots beside it.
+Geometry and computed styles were read from the DOM; nothing of Obsidian's CSS was kept.
+
+**Defaults.** `showLineNumber` off, `showIndentGuide` on, `rightToLeft` off (`getConfig` with no
+key in `app.json`). `editor:toggle-line-numbers` ("Toggle line numbers") flips `showLineNumber`
+and the gutter comes and goes at once; no command toggles the other two. The reading view has no
+line numbers.
+
+**The gutter.** One `cm-lineNumbers` gutter at the start edge of the text column: the 700 px
+readable column (or the whole pane with readable line length off) keeps its width, and the text
+moves over by the gutter's width plus a 24 px margin (`margin-inline-end`), so it loses that
+much: text at 561.7 and 654.3 wide beside a two-digit gutter in a column at 516. The inline
+title and Live Preview's properties block stay at the column's edge. The gutter is sized for a
+run of nines with as many digits as the note has lines (a hidden spacer `9`, `99`, `999` …):
+20 px for one to nine lines (its minimum), 21.7 from ten, 28.6 from a hundred, 35.5 from a
+thousand, 42.3 from ten thousand — 6.87 px a digit plus 8 of padding. A number is the interface
+font at 12 px (`--font-ui-smaller`), `font-variant-numeric: tabular-nums`, right-aligned with
+5 px of padding before and 3 after, in `--text-faint` (#666666 dark, #ababab light), on no
+background. The caret's line gets `cm-active` on its number but is drawn the same in the default
+theme (under a selection only the head's line is marked; with two cursors both are, and they
+stay marked when the editor loses focus). No `--gutter-*` variable exists.
+
+One number per line block. A wrapped line has one number, at its first row (the element is the
+block's full height, the number at its top); a heading's number sits level with the heading. In
+Live Preview the properties block (lines 1-4 here) is outside the content and has no number:
+numbering starts at 5 beside the first body line. A table (26-28), an embed (30) and a math block
+(32-34) are each one block showing its first line's number; a code block in Live Preview is
+lines, each numbered. The caret inside the table or the properties changed nothing. (The
+probe's fold commands did not take, so a folded heading's numbering was not seen; CodeMirror
+numbers a folded block by its first line and hides the rest, which is what Scoria does.)
+
+**Fold markers** stay with the text, not the gutter: a heading's `cm-fold-indicator` is
+`inset-inline-start: -15px` from the line (x 546.7 beside text at 561.7 with the gutter, 501
+beside 516 without), a list item's `-10px` in Live Preview; they sit in the gutter's margin.
+
+**Indentation guides** are drawn in Source mode and Live Preview alike, on any line with leading
+whitespace: list items (tab or space indented, ordered, tasks), a paragraph continuing an item,
+an indented paragraph line, and the lines of a code block. Each indent unit of the leading
+whitespace (a tab, or four spaces) is a `cm-indent` span 36 px wide (`--indent-unit` 0.5625 em ×
+`--indent-size` 4) whose `::before` is a 1 px line (`--indentation-guide-width`, the active one
+too) the full height of the line block, the wrapped rows of a long item included. It stands
+`--indentation-guide-source-indent` (0.25 em, 4 px) into the unit in Source mode and
+`--indentation-guide-editing-indent` (0.85 em, 13.6 px) in Live Preview, under the parent's
+bullet; in a code block 0.25 em of the code font in Source mode and 0 in Live Preview. Colour
+`--indentation-guide-color`, 12 % of white on dark and of black on light; the lit guide
+`--indentation-guide-color-active`, 30 %. With `showIndentGuide` off there are no `cm-indent`
+spans at all.
+
+**The lit guide** (`cm-active-indent`): with the caret on a list item at depth *d*, guide *d* on
+every line of the item's subtree (its children and theirs). A caret on a leaf item, on a
+paragraph continuing an item, or outside lists lights nothing: on `- tab one` guide 0 of the four
+lines under it; on `\t- tab child` guide 1 of its two descendants; on the great-grandchild
+nothing.
+
+**Reading view.** The view has `show-indentation-guide` while the setting is on; each nested `ul`
+or `ol` is `position: relative` and its `::before` is a 1 px line its full height,
+`inset-inline-start: -13.6px` (`--indentation-guide-reading-indent`, -0.85 em), under the
+parent's bullet.
+
+**Right-to-left.** Every editor line has its own `dir` from its first strong character, Hebrew
+making it `rtl` and Latin `ltr`, **whatever `rightToLeft` says**; a line with no strong
+character (blank, a fence) takes the direction of the line above (the blank line after a Hebrew
+heading was `rtl`, after an English line `ltr`). An `rtl` line is right-aligned (`text-align:
+start`), its list marker and quote marker on the right; a code block's lines stay `direction:
+ltr` even under `dir="rtl"`. Arrow keys move the caret visually: on a Hebrew line Right goes back
+(from column 0 to the line above) and Left forward; across the Hebrew run of `Mixed שלום world`
+Right walked 6, 9, 8, 7, 10; Home and End are logical (0 and the length). None of that changed
+with the setting. What `rightToLeft` changes: the source view gets `is-rtl`, CodeMirror's
+`textDirection` becomes RTL, the gutter moves to the right edge of the column (text at the left
+edge, 654.3 wide), and the reading view gets `rtl` (`direction: rtl` on the view, so a code block
+is right-aligned too). In the reading view every block is `dir="auto"` in both modes, so Hebrew
+paragraphs, headings, list items (bullet on the right) and quotes run right to left with the
+setting off.
