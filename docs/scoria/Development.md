@@ -319,6 +319,7 @@ and [[#Day 7, the week closes, 2026-11-09]].
 
 Started 2026-10-21 with the canvas. Gate: the core plugins a vault actually
 uses behave as Obsidian's do.
+The gate's run, its sheet and its log are in [[Parity gate run]].
 
 | Parity item | Status |
 | --- | --- |
