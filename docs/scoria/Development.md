@@ -332,6 +332,85 @@ uses behave as Obsidian's do.
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
 | Page preview | probed 2026-11-11 on macOS, see [[Specification#Observed page preview, Obsidian 1.15.0]] and [[#Page preview, the probe, 2026-11-11]]; step 1 landed the same day — the popover over links in the reading view and both editing modes, see [[#Page preview, step 1, 2026-11-11]]; step 2 the same day — the tab header and the Files, Bookmarks, Backlinks, Outgoing links and Outline rows, see [[#Page preview, step 2, 2026-11-11]]; step 3 the same day — nested popovers and the click that makes one an editor, see [[#Page preview, step 3, 2026-11-11]]; step 4 the same day — the Bases and Graph sources, the second-link timing and "Click to create", from a second probe pass, see [[#Page preview, step 4, 2026-11-11]] — done, bar the "Properties view" source, whose File properties view Scoria does not have |
 | Slash commands | done 2026-11-11: probed in a headless sway and built on the autocompletion popup, see [[#Slash commands, 2026-11-11]] and [[Specification#Observed Slash commands, Obsidian 1.15.0]] |
+| Spellcheck | done 2026-11-15: probed in a headless sway, then `scoria-spell` (spellbook, a bundled `en-US`), squiggles in both editing modes, the corrections and "Add to dictionary" in the editor menu, the custom dictionary page and the languages row, see [[#Spellcheck, 2026-11-15]] and [[Specification#Observed spellcheck, Obsidian 1.15.0 (installer build 1.13.7)]] |
+
+### Spellcheck, 2026-11-15
+
+The `spellcheck` setting and `editor:toggle-spellcheck` already wrote Obsidian's bytes; now they
+check. Probed first, see [[Specification#Observed spellcheck, Obsidian 1.15.0 (installer build 1.13.7)]].
+
+**The probe.** `tools/obsidian-probe/spellcheck.mjs`, Obsidian 1.15.0 in a private headless sway
+with its own data directory and CDP port 9353. Two harness traps cost most of the time: the
+renderer had no dictionary at launch (every word read as correct) until the session's checker
+was switched off and on and the page reloaded, and only *typed* text is ever squiggled, so every
+word-rule step types its text first and then right-clicks each word. What surprised: digits and
+capitals exempt nothing (`zorp42`, `MISPELED` are flagged); a joined word (`foo.bar`,
+`rock'n'roll`) passes when its parts do; the wikilink target and raw HTML attributes are checked
+while tags, URLs, code, math and the whole frontmatter are not; the languages live in local
+storage (`spellcheck-languages`), not in `app.json` as Scoria's config type had guessed; and the
+Spellcheck row carries a cog that opens the custom dictionary.
+
+**The checker.** `scoria-spell`, no gpui, on [spellbook](https://crates.io/crates/spellbook)
+0.4 (MPL-2.0, used unmodified): pure Rust, reads Hunspell `.aff`/`.dic`, checks and suggests the
+Hunspell way. Chosen over zspell (suggestions behind an unstable flag, no stated licence on
+crates.io) and the native wrappers (spellkit, hunspell, hunspell-sys: C hunspell or the
+platform checker). MPL-2.0 is already in the tree (option-ext).
+
+**The dictionaries.** `en-US` is bundled: SCOWL's `en_US` (size 60, 2020.12.07, from the
+`dictionary-en` package), the dictionary Chromium's own `en-US` is built from, under SCOWL's
+permission notice with Ispell's BSD and WordNet's licences (all permissive, kept beside it as
+`crates/scoria-spell/dictionaries/en_US/LICENSE`). The GPL-licensed `en_US` spellbook ships for
+its tests was not used. Other languages come from the desktop's Hunspell folders — `$DICPATH`,
+`$XDG_DATA_HOME/hunspell`, each `$XDG_DATA_DIRS/{hunspell,myspell}` (NixOS profiles included),
+`/usr/share/hunspell`, `/usr/share/myspell`; `~/Library/Spelling` and `/Library/Spelling` on
+macOS; `%APPDATA%\Microsoft\Spelling\<tag>` on Windows — and first from `dictionaries/` under
+Scoria's configuration folder. UTF-8 and ISO-8859-1 files are read. Chromium's `.bdic` files are
+a format of its own and are not read.
+
+**What is checked.** `scoria_spell::text::checked_ranges` walks `scoria-markdown`'s tree (the one
+parser) for the text Obsidian leaves to the checker, and `for_each_word` breaks it the way
+Chromium did; the probe's 60-word line is a unit test (`the_probes_words_are_flagged_as_chromium_flagged_them`)
+and every verdict matches Obsidian's. A word still being typed (the caret at its end after a
+letter) waits for a space or a move, as Chromium's does.
+
+**The editor.** The check runs in the background parse every edit already pays for, so the
+squiggles update with the decorations. The speller remembers each distinct word's verdict and
+takes its lock once per note. Measured with `--synthetic 50000 --stress` (4.2 MB, 50,000 lines,
+release, this machine): parse mean 308 ms with the check, of which the check is 38 ms (271 ms
+with spellcheck off); a typical note costs well under a millisecond. The stress report now
+prints the check's share. The squiggle is painted by `crate::spellcheck::paint_line`, its own
+module, after the text: Chromium's wave measured off the probe's pictures (`#ff0000`, period
+6 px, 5 px tall, bottom on the font box's bottom), only over text shown as typed, so hidden
+markup and rendered widgets never carry one.
+
+**The menu.** A right click on a squiggled word selects it and leads the editor menu with up to
+three corrections (`lucide-repeat`, section `correction`) or a disabled "No suggestions...",
+then "Add to dictionary" (`lucide-folder-tree`); a correction replaces the word as one undo
+step if the word is still there. The custom words go to `Custom Dictionary.txt` under Scoria's
+configuration folder in Chromium's bytes (the MD5 checksum line included), so the file can be
+copied across from Obsidian's data folder; every editor rechecks at once.
+
+**Settings.** The Spellcheck toggle is live and has the cog, which opens a "Spellcheck
+dictionary" page of the words with a × each. "Spellcheck languages" is Obsidian's pills, restore
+and "+" dropdown, over the languages a dictionary was found for (named as Obsidian names them);
+the list is kept in `scoria.json` as `spellcheck-languages`, the default dropping the key.
+`AppConfig.spellcheck_languages` (an `app.json` key Obsidian never writes) is gone.
+
+**Driven.** The release build in the private sway over the control socket: the squiggles under
+`heding`, `teh`, `recieve`, `seperate`, `liist`, `Untill`, `wrold`, `qzxqzxqzvv` and none under
+code, the tag, the URL or the fence; the right click on `wrold` drew world, wold, ---, Add to
+dictionary, ---, Add link, ..., with `wrold` selected; picking world wrote it; "Add to
+dictionary" on `qzxqzxqzvv` wrote Obsidian's exact bytes and the squiggle went; the cog's page
+listed it and its × left `checksum_v1 = d41d8cd98f00b204e9800998ecf8427e`; adding French (a
+dictionary dropped in the configuration folder) drew two pills, the restore icon and wrote
+`["en-US","fr"]`; the toggle and `editor:toggle-spellcheck` took the squiggles away and back.
+
+**Left.** Text already in a note is checked where the probe's Obsidian only marked what was
+typed (deliberate: a checker that finds nothing until you retype is the harness's, or Chromium's,
+limitation, not a behavior to copy); the properties view's fields and the title are not
+checked; corrections across two languages are interleaved, an order not observed; the
+"Spellcheck dictionary" is a page of Settings rather than a modal over it; macOS's system
+checker is not imitated.
 
 ### Slash commands, 2026-11-11
 

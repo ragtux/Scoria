@@ -16,12 +16,9 @@ pub struct AppConfig {
     // Editor
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub spellcheck: Option<bool>,
-    #[serde(
-        default,
-        rename = "spellcheckLanguages",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub spellcheck_languages: Option<Vec<String>>,
+    // No `spellcheckLanguages`: Obsidian keeps the languages in local
+    // storage, not in `app.json` (probed 2026-11-15); Scoria keeps them in
+    // `scoria.json`. A stray key here is kept in `extra`.
     #[serde(
         default,
         rename = "autoPairBrackets",

@@ -50,6 +50,7 @@ mod remote;
 mod search;
 mod settings;
 mod slides;
+mod spellcheck;
 mod suggest;
 mod switcher;
 mod text_input;

@@ -149,6 +149,11 @@ pub fn menu_box_with_submenu<V: 'static>(
 /// separators that leaves.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Section {
+    /// `correction`: a misspelled word's suggestions, first in the editor
+    /// menu.
+    Correction,
+    /// `spellcheck`: "Add to dictionary".
+    Spellcheck,
     /// `close`: the tab header menu's Close, Close others and Close all.
     Close,
     /// `pane`: the tab header menu's Pin.
@@ -239,6 +244,11 @@ pub enum Pick {
     NewBase,
     SearchInFolder,
     // ----- the editor menu's rows ------------------------------------------
+    /// One of a misspelled word's corrections, by its place in the menu:
+    /// the word replaced by it.
+    Correction(u8),
+    /// "Add to dictionary": the word into the custom dictionary.
+    AddToDictionary,
     /// "Add link": the wikilink shape around the selection
     /// (`editor:insert-wikilink`). Obsidian's own label for that command is
     /// "Add internal link", and the row wears `lucide-link`, so the pairing
@@ -400,6 +410,8 @@ pub struct EditorClick {
     /// Whether a selection survived the click: a click inside one keeps it,
     /// a click anywhere else collapses it. Cut and Copy follow this.
     pub selected: bool,
+    /// A misspelled word under the click: its corrections lead the menu.
+    pub spelling: Option<crate::spellcheck::SpellHit>,
 }
 
 /// What a right click in the editor landed on.
@@ -951,6 +963,29 @@ fn editor_items(click: &EditorClick) -> Vec<Item> {
     use Section as S;
     let on_link = matches!(click.spot, Spot::Link(_));
     let mut out = Vec::new();
+    // A misspelled word (observed 2026-11-15): up to three corrections,
+    // `lucide-repeat`, or a disabled "No suggestions..." when there are
+    // none; then "Add to dictionary"; then the rest of the menu.
+    if let Some(hit) = &click.spelling {
+        if hit.suggestions.is_empty() {
+            out.push(Item {
+                disabled: true,
+                ..item("No suggestions...", "", S::Correction, P::Correction(0))
+            });
+        }
+        for (i, s) in hit.suggestions.iter().enumerate().take(3) {
+            out.push(Item {
+                label: s.clone().into(),
+                ..item("", "repeat", S::Correction, P::Correction(i as u8))
+            });
+        }
+        out.push(item(
+            "Add to dictionary",
+            "folder-tree",
+            S::Spellcheck,
+            P::AddToDictionary,
+        ));
+    }
     if on_link {
         out.push(item(
             "Open in new tab",
@@ -1239,15 +1274,21 @@ pub fn render<V: 'static>(
                         }))
                     })
             })
-            .child(crate::assets::icon(
-                item.icon,
-                16.,
-                if item.disabled {
-                    faded
-                } else {
-                    theme.tokens.text_muted
-                },
-            ))
+            // "No suggestions..." has no icon; its text keeps the column.
+            .child(if item.icon.is_empty() {
+                div().size(px(16.)).flex_shrink_0().into_any_element()
+            } else {
+                crate::assets::icon(
+                    item.icon,
+                    16.,
+                    if item.disabled {
+                        faded
+                    } else {
+                        theme.tokens.text_muted
+                    },
+                )
+                .into_any_element()
+            })
             .child(div().flex_1().child(item.label.clone()))
             .when(item.checked, |d| {
                 d.child(crate::assets::icon("check", 14., theme.tokens.text_muted))
@@ -1855,11 +1896,75 @@ mod tests {
     }
 
     /// The editor click the plain menu came from: no selection, plain text.
+    fn spelling_click(suggestions: &[&str]) -> Target {
+        Target::Editor(EditorClick {
+            spot: Spot::Text,
+            selection: "wrold".into(),
+            selected: true,
+            spelling: Some(crate::spellcheck::SpellHit {
+                range: 8..13,
+                word: "wrold".into(),
+                suggestions: suggestions.iter().map(|s| s.to_string()).collect(),
+            }),
+        })
+    }
+
+    /// The misspelled word's menu as Obsidian 1.15.0 drew it on "wrold"
+    /// (`results/2026-11-15-spellcheck.json`, `s02`): the corrections, ---,
+    /// Add to dictionary, ---, then the menu of a selected word.
+    #[test]
+    fn a_misspelled_word_leads_with_its_corrections() {
+        let drawn = drawn(&spelling_click(&["world", "wold"]));
+        assert_eq!(
+            drawn[..9],
+            [
+                "world",
+                "wold",
+                "---",
+                "Add to dictionary",
+                "---",
+                "Add link",
+                "Add external link",
+                "---",
+                "Search for \u{201c}wrold\u{201d}"
+            ]
+        );
+        let rows = items(&spelling_click(&["world", "wold"]));
+        assert_eq!(rows[0].icon, "repeat");
+        assert_eq!(rows[0].pick, Pick::Correction(0));
+        assert_eq!(rows[1].pick, Pick::Correction(1));
+        assert_eq!(rows[2].icon, "folder-tree");
+        assert_eq!(rows[2].pick, Pick::AddToDictionary);
+        assert!(!rows.iter().find(|r| r.label == "Copy").unwrap().disabled);
+        // No corrections: one disabled row says so.
+        let none = items(&spelling_click(&[]));
+        assert_eq!(none[0].label, "No suggestions...");
+        assert!(none[0].disabled);
+        assert_eq!(
+            drawn_of(&none)[..3],
+            ["No suggestions...", "---", "Add to dictionary"]
+        );
+    }
+
+    fn drawn_of(items: &[Item]) -> Vec<String> {
+        let mut out = Vec::new();
+        let mut previous = None;
+        for item in items {
+            for _ in 0..separators_above(previous, item.section) {
+                out.push("---".to_string());
+            }
+            previous = Some(item.section);
+            out.push(item.label.to_string());
+        }
+        out
+    }
+
     fn plain_click() -> Target {
         Target::Editor(EditorClick {
             spot: Spot::Text,
             selection: String::new(),
             selected: false,
+            spelling: None,
         })
     }
 
@@ -1911,6 +2016,7 @@ mod tests {
             spot: Spot::Text,
             selection: "paragraph with".into(),
             selected: true,
+            spelling: None,
         });
         assert_eq!(
             clipboard_rows(&live)
@@ -1930,6 +2036,7 @@ mod tests {
             spot: Spot::Text,
             selection: "paragraph with".into(),
             selected: true,
+            spelling: None,
         });
         assert_eq!(
             drawn(&target),
@@ -1958,6 +2065,7 @@ mod tests {
             spot: Spot::Text,
             selection: "paragraph with".into(),
             selected: false,
+            spelling: None,
         });
         assert!(drawn(&target).contains(&"Search for \u{201c}paragraph with\u{201d}".to_string()));
         assert_eq!(
@@ -1976,6 +2084,7 @@ mod tests {
             spot: Spot::Tag("project".into()),
             selection: String::new(),
             selected: false,
+            spelling: None,
         });
         assert_eq!(drawn(&tag), drawn(&plain_click()));
         assert_eq!(tag.path(), "", "a tag names no file");
@@ -1992,6 +2101,7 @@ mod tests {
             spot: Spot::Link("Notes/Plan.md".into()),
             selection: String::new(),
             selected: false,
+            spelling: None,
         });
         assert_eq!(
             drawn(&target),
@@ -2144,10 +2254,12 @@ mod tests {
             Target::Blank,
             Target::Linked("Plan.md".into()),
             plain_click(),
+            spelling_click(&["world"]),
             Target::Editor(EditorClick {
                 spot: Spot::Link("Plan.md".into()),
                 selection: "some words".into(),
                 selected: true,
+                spelling: None,
             }),
         ];
         for target in targets {

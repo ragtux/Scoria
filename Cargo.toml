@@ -23,6 +23,7 @@ members = [
     "crates/scoria-highlight",
     "crates/scoria-export",
     "crates/scoria-audio",
+    "crates/scoria-spell",
     "crates/scoria-bench",
 ]
 
@@ -54,6 +55,7 @@ scoria-math = { path = "crates/scoria-math" }
 scoria-highlight = { path = "crates/scoria-highlight" }
 scoria-export = { path = "crates/scoria-export" }
 scoria-audio = { path = "crates/scoria-audio" }
+scoria-spell = { path = "crates/scoria-spell" }
 
 anyhow = "1"
 thiserror = "2"
@@ -136,6 +138,16 @@ png = "0.17"
 # it encodes at about 0.75x real time, so a recording finishes encoding after
 # Stop. symphonia (MPL-2.0) is a test-only decoder for the round trip.
 cpal = "0.18"
+# Spellchecking (scoria-spell). spellbook (MPL-2.0, used unmodified, the Helix
+# editor's checker) reads Hunspell .aff/.dic files in pure Rust, no_std plus
+# alloc, and checks and suggests the way Hunspell does; chosen 2026-11-15 over
+# zspell (suggestions still behind an unstable flag) and spellkit and the
+# hunspell crates (native libraries: NSSpellChecker, the Windows checker, or C
+# hunspell). option-ext puts MPL-2.0 in the tree already. md-5 (already in the
+# tree through gpui) writes the checksum line of `Custom Dictionary.txt`, the
+# file Chromium, and so Obsidian, keeps the added words in.
+spellbook = "0.4"
+md-5 = "0.10"
 oxideav-aac = "=0.1.7"
 symphonia = { version = "0.5", default-features = false, features = ["aac", "isomp4"] }
 

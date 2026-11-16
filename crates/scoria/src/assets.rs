@@ -135,6 +135,7 @@ icons!(
     "rectangle-vertical",
     "redo-2",
     "refresh-cw",
+    "repeat",
     "rotate-ccw",
     "scissors",
     "search",

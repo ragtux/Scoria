@@ -687,7 +687,9 @@ fn event_for(pick: Pick, target: &Target) -> Option<ExplorerEvent> {
         | Pick::Paste
         | Pick::PastePlain
         | Pick::SelectAll
-        | Pick::ExtractSelection => return None,
+        | Pick::ExtractSelection
+        | Pick::Correction(_)
+        | Pick::AddToDictionary => return None,
     })
 }
 

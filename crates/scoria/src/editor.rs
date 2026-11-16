@@ -223,6 +223,8 @@ pub enum EditorEvent {
         selection: String,
         selected: bool,
         link: Option<LinkTarget>,
+        /// The misspelled word clicked, with its corrections.
+        spelling: Option<crate::spellcheck::SpellHit>,
     },
     /// Enter in the note's inline title: the file takes the typed name. The
     /// workspace owns renames, and the validator and link rewrite with them.
@@ -658,6 +660,12 @@ pub struct Editor {
     thumb_drag: Option<Pixels>,
     find: FindState,
     _subscriptions: Vec<Subscription>,
+    /// The note's misspelled words, from the same parse as the highlights
+    /// (empty with the spellchecker off).
+    spelling: crate::spellcheck::NoteSpelling,
+    /// The caret right after a typed letter: the word ending there is
+    /// still being typed and is not checked yet.
+    spell_typing: Option<usize>,
     highlights: Arc<Vec<Vec<HighlightSpan>>>,
     /// Syntax highlighting inside fenced blocks, per line, from the same
     /// parse as `highlights`.
@@ -775,6 +783,8 @@ pub struct Editor {
     pub frame_samples: Sample,
     /// Parse time per completed decoration pass since the note was opened.
     pub parse_samples: Sample,
+    /// The spellcheck's share of each pass (inside `parse_samples`).
+    pub spell_samples: Sample,
     /// Edit-to-decoration latency, including waiting for the background thread.
     pub parse_latency: Sample,
     /// What the host draws under the note's last line: the backlinks
@@ -817,6 +827,8 @@ impl Editor {
                         InputEvent::Changed | InputEvent::Up | InputEvent::Down => {}
                     },
                 ),
+                // Languages, custom words or the setting changed: recheck.
+                cx.observe_global::<crate::spellcheck::Spelling>(|this, cx| this.request_parse(cx)),
             ];
         Editor {
             focus_handle: cx.focus_handle(),
@@ -830,6 +842,8 @@ impl Editor {
                 current: None,
             },
             _subscriptions: subscriptions,
+            spelling: Default::default(),
+            spell_typing: None,
             // A view that has not been given a file yet belongs to none,
             // and a placeholder name here would read as one: the shell
             // would mount this editor on launch over an empty vault and
@@ -895,6 +909,7 @@ impl Editor {
             tab_size: 4,
             frame_samples: Sample::default(),
             parse_samples: Sample::default(),
+            spell_samples: Sample::default(),
             parse_latency: Sample::default(),
         }
     }
@@ -930,6 +945,7 @@ impl Editor {
         self.scroll_px = px(0.);
         self.frame_samples = Sample::default();
         self.parse_samples = Sample::default();
+        self.spell_samples = Sample::default();
         self.parse_latency = Sample::default();
         // The matches point into the note that was open; drop them rather
         // than let the panel count or step through another note's offsets.
@@ -1671,13 +1687,15 @@ impl Editor {
     /// Summary of the stress run for the terminal.
     pub fn report(&self) -> String {
         format!(
-            "frames {}: shape mean {:.2} ms, max {:.2} ms\nparses {}: parse mean {:.1} ms, max {:.1} ms\nedit-to-decoration latency mean {:.1} ms, max {:.1} ms\n{} lines, {} KB, {} spans",
+            "frames {}: shape mean {:.2} ms, max {:.2} ms\nparses {}: parse mean {:.1} ms, max {:.1} ms (spellcheck mean {:.1} ms, max {:.1} ms)\nedit-to-decoration latency mean {:.1} ms, max {:.1} ms\n{} lines, {} KB, {} spans",
             self.frame_samples.count,
             self.frame_samples.mean_ms(),
             self.frame_samples.max_ms,
             self.parse_samples.count,
             self.parse_samples.mean_ms(),
             self.parse_samples.max_ms,
+            self.spell_samples.mean_ms(),
+            self.spell_samples.max_ms,
             self.parse_latency.mean_ms(),
             self.parse_latency.max_ms,
             self.line_count(),
@@ -1734,6 +1752,8 @@ impl Editor {
             "line_count": self.buf.line_count(),
             "folds": self.folds.record(&self.foldables).iter().map(|(from, to)| serde_json::json!({"from": from, "to": to})).collect::<Vec<_>>(),
             "foldable_lines": self.foldables.iter().map(|f| f.line).collect::<Vec<_>>(),
+            // The squiggled words, as text, in order.
+            "misspelled": self.spelling.ranges.iter().filter_map(|r| self.buf.text().get(r.clone())).collect::<Vec<_>>(),
             "field": self.field_kind(),
             "parsing": self.is_parsing(),
             "find": {
@@ -2580,6 +2600,12 @@ impl Editor {
     fn type_char(&mut self, s: &str, kind: EditKind, window: &mut Window, cx: &mut Context<Self>) {
         let opts = self.auto_pair();
         if Self::type_char_in(&mut self.buf, s, kind, opts) {
+            // A letter extends the word at the caret, which waits to be
+            // checked until a space or a move ends it, as Chromium's does.
+            self.spell_typing = s
+                .chars()
+                .all(char::is_alphanumeric)
+                .then_some(self.buf.head);
             self.after_edit(Some(window), cx);
         }
     }
@@ -2651,6 +2677,8 @@ impl Editor {
         let live = self.live_preview;
         let path = self.name.to_string();
         let fold_options = self.fold_options();
+        let speller = crate::spellcheck::active(cx);
+        let typing = self.spell_typing.filter(|&t| t == self.buf.head);
         self.pending_parse = Some(cx.spawn(async move |this, cx| {
             let result = cx
                 .background_executor()
@@ -2660,6 +2688,9 @@ impl Editor {
                     let lines = highlight_lines(&doc);
                     let code = code_highlights(&doc);
                     let foldables = fold::foldables(&doc, &text, fold_options);
+                    let spelling = speller
+                        .map(|s| crate::spellcheck::NoteSpelling::check(&s, &doc, typing))
+                        .unwrap_or_default();
                     let widgets = match &widget_source {
                         Some(source) => {
                             let built = build_widgets(&path, &doc, source.as_ref(), build_options);
@@ -2686,6 +2717,7 @@ impl Editor {
                         flairs,
                         foldables,
                         code,
+                        spelling,
                     )
                 })
                 .await;
@@ -2694,6 +2726,10 @@ impl Editor {
                 // A slightly stale decoration set is better than none while typing.
                 editor.highlights = Arc::new(result.0);
                 editor.code_runs = Arc::new(result.9);
+                editor.spelling = result.10;
+                if editor.spelling.check_ms > 0. {
+                    editor.spell_samples.add(editor.spelling.check_ms);
+                }
                 let widgets = result.6;
                 editor
                     .widget_heights
@@ -5456,9 +5492,20 @@ impl Editor {
         let Some(at) = self.offset_at_point(window, event.position) else {
             return;
         };
-        let selection = self.buf.clipboard_text(&[self.buf.selection()]);
-        let keep = crate::file_menu::right_click_caret(&self.buf.selection(), at).is_none();
-        if !keep {
+        let mut selection = self.buf.clipboard_text(&[self.buf.selection()]);
+        let mut keep = crate::file_menu::right_click_caret(&self.buf.selection(), at).is_none();
+        // A misspelled word under the pointer is selected, the caret at its
+        // end, and the menu leads with its corrections (Chromium's way).
+        let spelling = self.misspelling_at(at, cx);
+        if let Some(hit) = &spelling {
+            self.buf.collapse_cursors();
+            self.buf.goal = None;
+            self.buf.marked = None;
+            self.buf.anchor = hit.range.start;
+            self.buf.head = hit.range.end;
+            selection = hit.word.clone();
+            keep = true;
+        } else if !keep {
             self.buf.collapse_cursors();
             self.buf.goal = None;
             self.buf.marked = None;
@@ -5475,6 +5522,7 @@ impl Editor {
             selection,
             selected: keep,
             link,
+            spelling,
         });
         cx.notify();
     }
@@ -5508,8 +5556,50 @@ impl Editor {
             selection,
             selected,
             link,
+            spelling: None,
         });
         true
+    }
+
+    /// The misspelled word at byte `at`, from the last check, with the
+    /// speller's corrections; `None` when the spellchecker is off or the
+    /// word has changed since.
+    fn misspelling_at(&self, at: usize, cx: &App) -> Option<crate::spellcheck::SpellHit> {
+        let speller = crate::spellcheck::active(cx)?;
+        let range = self.spelling.at(at)?;
+        let word = self.buf.text().get(range.clone())?.to_string();
+        if speller.check(&word) {
+            return None;
+        }
+        let suggestions = speller.suggest(&word);
+        Some(crate::spellcheck::SpellHit {
+            range,
+            word,
+            suggestions,
+        })
+    }
+
+    /// A correction picked from the menu: the word replaced, the caret
+    /// after it, one undo step. Nothing happens when the text there is no
+    /// longer the word the menu was opened on.
+    pub fn replace_misspelling(
+        &mut self,
+        hit: &crate::spellcheck::SpellHit,
+        with: &str,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if self.buf.text().get(hit.range.clone()) != Some(hit.word.as_str()) {
+            return;
+        }
+        let end = hit.range.start + with.len();
+        self.edit_many(
+            vec![(hit.range.clone(), with.to_string())],
+            end,
+            None,
+            window,
+            cx,
+        );
     }
 
     fn mouse_down(&mut self, event: &MouseDownEvent, window: &mut Window, cx: &mut Context<Self>) {
@@ -7620,6 +7710,7 @@ impl Element for EditorElement {
         let font_size = prepaint.font_size;
         let palette = self.editor.read(cx).palette.clone();
         let text_color = palette.text;
+        let spell_lines = self.editor.read(cx).spelling.lines.clone();
         window.with_content_mask(Some(gpui::ContentMask { bounds }), |window| {
             for quad in prepaint.decor.drain(..) {
                 window.paint_quad(quad);
@@ -7686,6 +7777,16 @@ impl Element for EditorElement {
                     &palette,
                     window,
                 );
+                if let Some(misspelled) = spell_lines.get(visible.line) {
+                    crate::spellcheck::paint_line(
+                        misspelled,
+                        &shaped.display,
+                        &shaped.line,
+                        origin,
+                        visible.row_height,
+                        window,
+                    );
+                }
             }
             for w in prepaint.widgets.iter_mut() {
                 if let Some((origin, shaped)) = &w.prefix {

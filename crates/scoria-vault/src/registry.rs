@@ -63,6 +63,17 @@ struct Document {
     /// 2026-11-04).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     icon: Option<String>,
+    /// "Spellcheck languages" of Settings → Editor. Obsidian keeps the list
+    /// in the browser's local storage under `spellcheck-languages`, a JSON
+    /// array of codes such as `["en-US","de"]`, with no vault in the key
+    /// and nothing under any `.obsidian` (probed 2026-11-15), so it is the
+    /// machine's, like the frame style. Absent means `["en-US"]`.
+    #[serde(
+        default,
+        rename = "spellcheck-languages",
+        skip_serializing_if = "Option::is_none"
+    )]
+    spellcheck_languages: Option<Vec<String>>,
     #[serde(flatten)]
     extra: Map<String, Value>,
 }
@@ -177,6 +188,16 @@ impl VaultRegistry {
     /// Records the window frame style; `None` drops the key.
     pub fn set_frame(&mut self, frame: Option<&str>) {
         self.doc.frame = frame.map(str::to_string);
+    }
+
+    /// The spellcheck languages, if they were ever changed.
+    pub fn spellcheck_languages(&self) -> Option<&[String]> {
+        self.doc.spellcheck_languages.as_deref()
+    }
+
+    /// Records the spellcheck languages; `None` drops the key.
+    pub fn set_spellcheck_languages(&mut self, languages: Option<Vec<String>>) {
+        self.doc.spellcheck_languages = languages;
     }
 
     /// The custom app icon's file name, relative to the folder this file
@@ -474,6 +495,28 @@ mod tests {
         assert!(!text.contains("icon"), "{text}");
         // Restoring with nothing chosen is harmless.
         reg.clear_icon().unwrap();
+    }
+
+    #[test]
+    fn spellcheck_languages_live_beside_the_vaults() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("scoria.json");
+        let mut reg = VaultRegistry::load(&path).unwrap();
+        assert_eq!(reg.spellcheck_languages(), None);
+        reg.set_spellcheck_languages(Some(vec!["en-US".into(), "de".into()]));
+        reg.save().unwrap();
+        let text = std::fs::read_to_string(&path).unwrap();
+        assert!(
+            text.contains("\"spellcheck-languages\":[\"en-US\",\"de\"]"),
+            "{text}"
+        );
+        let mut again = VaultRegistry::load(&path).unwrap();
+        assert_eq!(again.spellcheck_languages().unwrap(), ["en-US", "de"]);
+        again.set_spellcheck_languages(None);
+        again.save().unwrap();
+        assert!(!std::fs::read_to_string(&path)
+            .unwrap()
+            .contains("spellcheck"));
     }
 
     #[test]

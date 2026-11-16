@@ -5594,6 +5594,7 @@ dependencies = [
  "scoria-math",
  "scoria-pdf",
  "scoria-search",
+ "scoria-spell",
  "scoria-suggest",
  "scoria-templates",
  "scoria-text",
@@ -5774,6 +5775,16 @@ version = "0.6.0"
 dependencies = [
  "regex",
  "serde_yaml",
+]
+
+[[package]]
+name = "scoria-spell"
+version = "0.6.0"
+dependencies = [
+ "md-5",
+ "scoria-markdown",
+ "spellbook",
+ "tempfile",
 ]
 
 [[package]]
@@ -6205,6 +6216,16 @@ checksum = "4aaa7368fcf4852a4c2dd92df0cace6a71f2091ca0a23391ce7f3a31833f1523"
 dependencies = [
  "borsh",
  "serde_core",
+]
+
+[[package]]
+name = "spellbook"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0d204abcbdf8e88729306a8d0ca01a79d8a49969fe1f84696909d6dbc4321c1a"
+dependencies = [
+ "foldhash 0.2.0",
+ "hashbrown 0.17.1",
 ]
 
 [[package]]
