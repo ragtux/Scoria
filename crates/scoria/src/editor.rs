@@ -28,7 +28,7 @@ use crate::math::SpaceWidths;
 use crate::preview::{self, DisplayLine, Piece};
 use crate::properties::{self, Field, Part, PillStep, Target};
 use crate::reading::model::{
-    build_widgets, BuildOptions, EmbedSource, InlineStyle, LinkTarget, RBlock, Widget,
+    build_widgets, BuildOptions, EmbedSource, InlineStyle, LinkTarget, RBlock, Script, Widget,
 };
 use crate::reading::view::{LinkHandler, Renderer, ToggleHandler};
 use crate::reading::view::{PropertiesHost, PropertyAction};
@@ -46,7 +46,7 @@ use gpui::{
     KeyBinding, KeyDownEvent, LayoutId, MouseButton, MouseDownEvent, MouseMoveEvent, MouseUpEvent,
     PaintQuad, Pixels, Point, ScrollWheelEvent, SharedString, StrikethroughStyle, Style,
     Subscription, Task, TextAlign, TextRun, TextStyle, UTF16Selection, UnderlineStyle, Window,
-    WrappedLine,
+    WindowTextSystem, WrappedLine,
 };
 use scoria_formats::config::PropertyTypes;
 use scoria_formats::properties::{self as props, PropertiesInDocument};
@@ -837,6 +837,10 @@ pub struct Editor {
     /// first frame, when nothing has been measured and inline math shows
     /// its source with the dollars hidden.
     spaces: Option<(Pixels, SpaceWidths)>,
+    /// What measures a scripted run (`<sup>`, `<sub>`, `<small>`) of an
+    /// inline HTML element for its placeholder: the text system and the
+    /// body font, caught in the same frame as `spaces`.
+    script_measure: Option<(Arc<WindowTextSystem>, Font)>,
     /// Resolves embeds for the widgets; `None` before a vault is open.
     embed_source: Option<Arc<dyn EmbedSource + Send + Sync>>,
     /// The live views behind the note's embedded bases, shared with the
@@ -1030,6 +1034,7 @@ impl Editor {
             flairs: Arc::new(Vec::new()),
             widget_heights: HashMap::new(),
             spaces: None,
+            script_measure: None,
             embed_source: None,
             embed_views: None,
             build_options: BuildOptions::default(),
@@ -2154,7 +2159,42 @@ impl Editor {
                 let formula = scoria_math::typeset(tex, block).ok()?;
                 Some(spaces.placeholder(crate::math::width_px(&formula, *size)).0)
             };
-            preview::display_line_with(text, spans, &self.touches_on_line(line), &math)
+            // A scripted run of an inline HTML element is shaped as a
+            // placeholder its own width at its own size, which a heading's
+            // scale then scales with the rest of the line.
+            let script = |own: &str, style: InlineStyle, sc: Script| -> Option<String> {
+                let (size, spaces) = self.spaces.as_ref()?;
+                let (system, font) = self.script_measure.as_ref()?;
+                let (scaled, _) = sc.at(f32::from(*size));
+                let mut run_font = font.clone();
+                if style.bold {
+                    run_font.weight = FontWeight::BOLD;
+                }
+                if style.italic {
+                    run_font.style = FontStyle::Italic;
+                }
+                if style.code || style.kbd {
+                    run_font.family = self.palette.mono.clone();
+                }
+                let run = TextRun {
+                    len: own.len(),
+                    font: run_font,
+                    color: Hsla::default(),
+                    background_color: None,
+                    underline: None,
+                    strikethrough: None,
+                };
+                let width = system
+                    .shape_line(
+                        SharedString::from(own.to_string()),
+                        px(scaled),
+                        &[run],
+                        None,
+                    )
+                    .width;
+                Some(spaces.nearest(width).0)
+            };
+            preview::display_line_scripted(text, spans, &self.touches_on_line(line), &math, &script)
         } else {
             DisplayLine::verbatim(text, 1.0, Default::default())
         };
@@ -7153,8 +7193,12 @@ fn unstrike(runs: &mut Vec<TextRun>, range: Range<usize>) {
 
 /// Lays an inline HTML element's own style over its run, the way the
 /// reading view draws the same tags: `<kbd>` wears inline code's box,
-/// `<u>` underlines in the text colour, a raw `<a href>` is a link. `<sup>`
-/// and `<sub>` have no look of their own, as in the reading view.
+/// `<u>` underlines in the text colour, a raw `<a href>` is a link, and an
+/// inline `style`'s colour and background apply. `<mark>` is the one that
+/// differs: in Live Preview's widget it is the browser's own yellow behind
+/// black text, not the theme's highlight (probe of 2026-11-04, again on
+/// 1.15.0 on 2026-11-15). `<sup>`, `<sub>` and `<small>` are painted over
+/// placeholders at their own size (`InlineHtml::scripts`).
 fn style_html_run(run: &mut TextRun, s: InlineStyle, p: &Palette) {
     if s.bold {
         run.font.weight = FontWeight::BOLD;
@@ -7170,7 +7214,14 @@ fn style_html_run(run: &mut TextRun, s: InlineStyle, p: &Palette) {
         run.background_color = Some(p.code_bg);
     }
     if s.highlight {
-        run.background_color = Some(p.highlight_bg);
+        run.background_color = Some(gpui::rgb(0xffff00).into());
+        run.color = gpui::black();
+    }
+    if let Some(c) = s.color {
+        run.color = crate::reading::view::rgba_hsla(c);
+    }
+    if let Some(c) = s.background {
+        run.background_color = Some(crate::reading::view::rgba_hsla(c));
     }
     if s.strike {
         run.strikethrough = Some(StrikethroughStyle {
@@ -7477,6 +7528,7 @@ impl Element for EditorElement {
                 font_size,
                 SpaceWidths::measure(window.text_system(), &text_style.font(), font_size),
             ));
+            editor.script_measure = Some((window.text_system().clone(), text_style.font()));
             // A cursor sent into a fold from outside (a link, a search hit,
             // an outline row) opens it before anything is laid out.
             if editor.pending_reveal {
@@ -8367,6 +8419,7 @@ impl Element for EditorElement {
         let font_size = prepaint.font_size;
         let palette = self.editor.read(cx).palette.clone();
         let text_color = palette.text;
+        let text_font = window.text_style().font();
         let spell_lines = self.editor.read(cx).spelling.lines.clone();
         window.with_content_mask(Some(gpui::ContentMask { bounds }), |window| {
             for quad in prepaint.decor.drain(..) {
@@ -8467,6 +8520,55 @@ impl Element for EditorElement {
                             + layout.ascent,
                     );
                     crate::math::paint(&formula, baseline, em, text_color, window);
+                }
+                // Scripted runs of inline HTML over their placeholders, at
+                // their own size, raised or lowered from the text baseline.
+                for html in &shaped.display.html {
+                    for sc in &html.scripts {
+                        let at = html.display.start + sc.display.start;
+                        let start = shaped.display_point(at);
+                        let end = shaped.display_point(html.display.start + sc.display.end);
+                        // On a right-to-left line the placeholder's start is
+                        // its right edge.
+                        let (start, slot) = if end.y != start.y {
+                            (start, px(0.))
+                        } else if end.x < start.x {
+                            (end, start.x - end.x)
+                        } else {
+                            (start, end.x - start.x)
+                        };
+                        let em = font_size * shaped.display.scale;
+                        let (own, rise) = sc.script.at(f32::from(em));
+                        let layout = &shaped.line.unwrapped_layout;
+                        let rh = visible.row_height;
+                        let baseline = origin.y
+                            + start.y
+                            + (rh - layout.ascent - layout.descent) / 2.
+                            + layout.ascent
+                            - px(rise);
+                        let mut run = TextRun {
+                            len: sc.text.len(),
+                            font: text_font.clone(),
+                            color: text_color,
+                            background_color: None,
+                            underline: None,
+                            strikethrough: None,
+                        };
+                        if shaped.display.scale > 1.0 {
+                            run.font.weight = FontWeight::BOLD;
+                            run.color = palette.accent;
+                        }
+                        style_html_run(&mut run, sc.style, &palette);
+                        crate::math::paint_script_run(
+                            &SharedString::from(sc.text.clone()),
+                            run,
+                            px(own),
+                            point(origin.x + start.x, baseline),
+                            slot,
+                            window,
+                            cx,
+                        );
+                    }
                 }
                 paint_task_boxes(
                     shaped,

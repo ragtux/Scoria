@@ -41,7 +41,7 @@ Be realistic about this list before you make Scoria your daily reader.
   is not. A variable-level subset of Obsidian's CSS custom properties is a later phase.
 - **MathJax's extras.** Math is typeset, but with KaTeX's syntax; a MathJax-only command
   shows its source in red. See [tables, code and math](/docs/format/code-math/).
-- **HTML in notes.** Shown as text rather than rendered.
+- **Some HTML in notes.** The common tags render, `<iframe>` and `<form>` do not; see [what differs](/docs/reference/differences/).
 - **Remote images.** A `![](https://…)` does not load; local images do.
 - **The Bases view.** The Bases YAML format is implemented and round-trips; a `.base` does
   not open. A `.canvas` does, in a canvas view of its own.

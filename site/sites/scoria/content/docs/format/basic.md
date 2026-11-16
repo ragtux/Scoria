@@ -125,10 +125,28 @@ should, and match Obsidian:
 
 ## HTML in notes
 
-Raw HTML is parsed as Obsidian parses it, but **not rendered** — the tags show as literal
-text in reading view. The one place it has an effect is frontmatter sanitising, where a
-`<script>` is removed, unknown elements are unwrapped, and a raw `<a>` gains `target` and
-`rel`. Rendering HTML is a later phase.
+Raw HTML is parsed as Obsidian parses it, and the common tags render in the reading view
+and, one element at a time, in Live Preview (an element shows its source while the cursor
+is in it, as in Obsidian):
+
+- **Inline**: `<b>`, `<strong>`, `<i>`, `<em>`, `<u>`, `<s>`, `<del>`, `<strike>`,
+  `<mark>`, `<kbd>`, `<code>`, `<a href>` and `<br>`. `<sup>` and `<sub>` are drawn at five sixths
+  of the text's size, raised or lowered as a browser does it; `<small>` is five sixths
+  and `<big>` six fifths, on the line. `<span>`, `<font>`, `<ins>`, `<samp>`, `<var>`
+  and `<tt>` keep their text.
+- **An inline `style`** on any of these, or on a block: `color`, `background-color` (or
+  `background` with a colour), `font-weight`, `font-style` and `text-decoration`.
+  Colours can be names, `#hex`, `rgb()` or `hsl()`; `<font color>` works too. Other
+  properties, and a `var(--…)` colour, are ignored.
+- **Blocks**: `<div>`, `<p>`, `<center>` and the like as a paragraph, `<pre>` as a code
+  block, `<details>` with its `<summary>` as a fold, an `<img>` as an image, and
+  `<table>` as a table, with `colspan`, `rowspan` and a `<caption>` (`caption-side:
+  bottom` puts it underneath). A raw table stays source in Live Preview, as in Obsidian.
+- **Hidden**: comments and `<script>`. A tag Scoria has no drawing for (`<iframe>`,
+  `<form>`, `<video>`, …) shows as source.
+
+Frontmatter sanitising follows Obsidian too: a `<script>` is removed, unknown elements are
+unwrapped, and a raw `<a>` gains `target` and `rel`.
 
 ## Escaping
 

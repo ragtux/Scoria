@@ -2551,6 +2551,80 @@ two columns; `style="color: red"` colours the cell; `border="1"` adds an
 `outset` border to the table only. Without `<thead>` the browser wraps the rows
 in `<tbody>`, a first row of `th` cells included.
 
+### The 2026-11-15 pass: sizes, baselines, inline styles and spanned tables
+
+`tools/obsidian-probe/html-inline-tables.mjs` against **Obsidian 1.15.0**
+(the 1.15.0 asar copied into the run's own data directory; the script's
+version read failed, since `require('obsidian')` does not resolve from a CDP
+evaluation) in a private headless sway, results in
+`tools/obsidian-probe/results/2026-11-15-html-inline-tables.json` with
+screenshots of both themes in `2026-11-15-html-inline-tables-shots/`. Two
+notes, read in the reading view and in Live Preview with the cursor parked on
+the first line. A baseline was read from a zero-size `inline-block` marker put
+into the rendered DOM beside and inside an element (an empty inline-block sits
+on the baseline); the notes were never edited.
+
+**Sizes and baseline shifts.** Over the 16 px body (line height 24 px), in
+both views and both themes alike:
+
+| Element | Size | Baseline | Its line |
+| --- | --- | --- | --- |
+| `<sup>` | 13.333 px (5/6) | raised 6.328 px | 26.33 px tall, not 24 |
+| `<sub>` | 13.333 px | lowered 4.187 px | 28.17 px |
+| `<small>` | 13.333 px | on the baseline | 24 px |
+| `<big>` | 19.2 px (6/5) | on the baseline | 28.8 px |
+| `<kbd>` | 14 px, the monospace stack, on `rgb(35, 35, 35)` (dark), padding `1.4px 3.5px` (0.1 em 0.25 em), radius 4 px, no border | on the baseline | 24 px |
+| `<mark>` | 16 px | on the baseline | reading view: the theme's `--text-highlight-bg`; Live Preview's widget: `rgb(255, 255, 0)` behind black text |
+| `<samp>`, `<tt>` | 16 px `monospace` (not the theme's code font), no background | | |
+| `<code>` written as HTML | reading view 14 px on the code background with a `1px solid` border; Live Preview's widget 16 px `monospace`, no background | | |
+| `<ins>`, `<var>` | unstyled | | |
+
+These are Chromium's own rules, not the theme's: `font-size: smaller` is
+five sixths of the parent and `larger` six fifths; `vertical-align: super`
+raises the baseline by a third of the *parent's* size plus one pixel, `sub`
+lowers it by a fifth plus one. Under the 23.392 px H2 a `<sup>` is 19.493 px
+raised 8.797 px (23.392/3 + 1) and a `<sub>` lowered 5.672 px. Nesting
+compounds: `<sup><sup>2</sup></sup>` puts the inner one at 11.111 px raised a
+further 5.437 px (13.333/3 + 1), `<small><small>` is 11.111 px. A footnote
+reference in the reading view is a `sup.footnote-ref` and measures exactly as a
+`<sup>`; Live Preview's `cm-footref` is 12.8 px raised 5.546 px. The line box
+grows around a shifted run (a wrapped paragraph grows only on the row that
+holds it: 74.33 px for three rows against 72).
+
+**Inline `style`.** Every property takes effect in both views, Live Preview's
+widget included: `color` as a name (`red`, `rebeccapurple` →
+`rgb(102, 51, 153)`), `#00ff00`, `rgb()`, `hsl(120, 100%, 25%)` →
+`rgb(0, 128, 0)`, and `var(--text-accent)` (the theme's accent, so it follows
+the theme); `background-color` and the `background` shorthand; `font-weight:
+bold` and `700` (700, where `<b>` alone is the theme's 600); `font-style`;
+`text-decoration: underline` and `line-through`; `font-size: 20px`. A colour
+on `<b style>` keeps the tag's 600. `<font color="red">` is `rgb(255, 0, 0)`.
+
+**A raw table's spans and caption** (reading view; a raw table stays source
+in Live Preview, as on 2026-11-04):
+
+- `colspan="2"` covers two columns and `rowspan="2"` two rows: the next row's
+  first cell starts in the column after the spanning one, and a cell spanning
+  rows is as tall as those rows together (59.594 px for two rows of 29.797).
+  Every cell is `vertical-align: top`, so a tall cell's text sits at its top.
+- The table is as wide as the last column a cell *starts* in: `colspan="5"`
+  over a table whose other row has two cells spans those two, and the table
+  stays two columns wide.
+- `colspan="0"` is one column (the DOM's `colSpan` reads 1). `rowspan="0"`
+  spans to the end of its section (the DOM keeps `rowSpan` 0, the box is two
+  rows tall), and `rowspan="5"` in a two-row table stops at the last row.
+- `<caption>` is drawn inside the table's box above the grid, 16 px in the
+  note's text colour at weight 400 (a `<b>` in it is bold), `text-align:
+  -webkit-center`, no padding, line height 20.8 px, and exactly as wide as
+  the table: "The caption" over a 165.7 px table is centred in 165.7 px. A
+  caption longer than the table wraps to the table's width, and only its
+  longest word widens the table: a one-column table of `x` became 55.97 px,
+  the width of "caption", and its caption broke into a word or two per line. `style="caption-side: bottom"` puts it under the
+  grid. The cell borders do not run round the caption.
+- Columns otherwise size as for a Markdown table: three one-letter columns
+  were 54.906 px each, and a `rowspan="3"` cell holding "tall cell with more
+  words" set its column to 199.98 px on one line.
+
 ## Observed remote image behavior, Obsidian 1.14.4 (installer build 1.13.7)
 
 Observed on 2026-10-18 with a throwaway plugin in a scratch vault: a table of

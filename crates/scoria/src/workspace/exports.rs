@@ -621,6 +621,53 @@ fn export_block(block: &RBlock, theme: &Theme, palette: &ex::Palette, out: &mut 
             alignments,
             header,
             rows,
+            html: Some(extras),
+            ..
+        } if !extras.places.is_empty() || extras.caption.is_some() => {
+            // A raw table's caption is a paragraph before it, and a cell
+            // that spans is drawn in its first column with the columns it
+            // covers left empty: the export's table is a plain grid.
+            if let Some(caption) = &extras.caption {
+                out.push(ex::Block::Paragraph(inlines(caption, theme, palette)));
+            }
+            let grid = |r: usize, line: &[RichText]| -> Vec<Vec<ex::Inline>> {
+                let Some(places) = extras.places.get(r) else {
+                    return line.iter().map(|c| inlines(c, theme, palette)).collect();
+                };
+                let mut cells = vec![Vec::new(); extras.columns];
+                for (cell, place) in line.iter().zip(places) {
+                    if let Some(slot) = cells.get_mut(place.col) {
+                        *slot = inlines(cell, theme, palette);
+                    }
+                }
+                cells
+            };
+            let head = usize::from(!header.is_empty());
+            out.push(ex::Block::Table {
+                alignments: alignments
+                    .iter()
+                    .map(|a| match a {
+                        scoria_markdown::Alignment::Center => ex::Align::Center,
+                        scoria_markdown::Alignment::Right => ex::Align::Right,
+                        _ => ex::Align::Left,
+                    })
+                    .collect(),
+                header: if header.is_empty() {
+                    Vec::new()
+                } else {
+                    grid(0, header)
+                },
+                rows: rows
+                    .iter()
+                    .enumerate()
+                    .map(|(i, r)| grid(i + head, r))
+                    .collect(),
+            });
+        }
+        RBlock::Table {
+            alignments,
+            header,
+            rows,
             ..
         } => out.push(ex::Block::Table {
             alignments: alignments

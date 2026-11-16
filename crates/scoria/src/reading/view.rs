@@ -6,11 +6,12 @@
 //! ranges for links, tags and footnote references.
 
 use super::model::{
-    Embed, EmbedKind, InlineStyle, LinkTarget, Model, RBlock, RItem, RichText, Segment, TaskMarker,
+    Embed, EmbedKind, HtmlTableExtras, InlineStyle, LinkTarget, Model, RBlock, RItem, RichText,
+    Script, Segment, TaskMarker,
 };
 use crate::assets::{callout_icon, icon};
 use crate::fold::{self, FoldKey};
-use crate::math::{self, FormulaElement, Inline, Overlay, SpaceWidths};
+use crate::math::{self, FormulaElement, Inline, Overlay, ScriptText, SpaceWidths};
 use crate::properties::{Field, Part, Target};
 use crate::properties::{PROPERTIES_FOLD_ID, PROPERTY_ID_BASE};
 use crate::theme::Theme;
@@ -421,6 +422,53 @@ pub(crate) struct SelectHost {
     pub ranges: Rc<HashMap<usize, Range<usize>>>,
     pub color: Hsla,
     pub on_select: SelectHandler,
+}
+
+/// Where a paragraph's own bytes landed in the string laid out for it, when
+/// formulas and scripted runs stand there as placeholders: each edit is a
+/// range of the paragraph's text and the length of what replaced it.
+#[derive(Debug, Clone, Default)]
+pub(crate) struct Remap {
+    edits: Vec<(Range<usize>, usize)>,
+}
+
+impl Remap {
+    /// A paragraph offset in the laid-out string; one inside a replaced
+    /// range is that placeholder's start.
+    pub(crate) fn to_shaped(&self, offset: usize) -> usize {
+        let mut shift = 0isize;
+        for (range, len) in &self.edits {
+            if offset <= range.start {
+                break;
+            }
+            if offset < range.end {
+                return (range.start as isize + shift) as usize;
+            }
+            shift += *len as isize - range.len() as isize;
+        }
+        (offset as isize + shift) as usize
+    }
+
+    /// A laid-out offset back in the paragraph's text; one inside a
+    /// placeholder is the nearer end of what it stands for.
+    pub(crate) fn to_model(&self, shaped: usize) -> usize {
+        let mut shift = 0isize;
+        for (range, len) in &self.edits {
+            let start = (range.start as isize + shift) as usize;
+            if shaped <= start {
+                break;
+            }
+            if shaped < start + len {
+                return if (shaped - start) * 2 < *len {
+                    range.start
+                } else {
+                    range.end
+                };
+            }
+            shift += *len as isize - range.len() as isize;
+        }
+        (shaped as isize - shift).max(0) as usize
+    }
 }
 
 /// The byte offset a point fell on in a laid-out run: the exact one when
@@ -1982,26 +2030,15 @@ impl<'a> Renderer<'a> {
         font_size: f32,
         editing: Option<(usize, &str)>,
     ) -> Vec<f32> {
-        const PADDING: f32 = 17.;
         let count = header
             .len()
             .max(rows.iter().map(Vec::len).max().unwrap_or(0));
         let mut max = vec![0f32; count];
         let mut min = vec![0f32; count];
         let mut fold = |ix: usize, cell: &RichText, bold: bool| {
-            let mono = cell.runs.iter().any(|(_, s)| s.code || s.kbd);
-            let longest_line = cell
-                .text
-                .lines()
-                .max_by_key(|l| l.chars().count())
-                .unwrap_or("");
-            let longest_word = cell
-                .text
-                .split_whitespace()
-                .max_by_key(|w| w.chars().count())
-                .unwrap_or("");
-            max[ix] = max[ix].max(self.measure(longest_line, font_size, bold, mono));
-            min[ix] = min[ix].max(self.measure(longest_word, font_size, bold, mono));
+            let (mx, mn) = self.cell_extent(cell, font_size, bold);
+            max[ix] = max[ix].max(mx);
+            min[ix] = min[ix].max(mn);
         };
         for (ix, cell) in header.iter().enumerate() {
             fold(ix, cell, true);
@@ -2016,12 +2053,42 @@ impl<'a> Renderer<'a> {
             max[ix] = max[ix].max(width);
             min[ix] = min[ix].max(width);
         }
+        self.fit_columns(&max, &min)
+    }
+
+    /// A cell's content widths: its longest line (max-content) and its
+    /// longest word (min-content).
+    fn cell_extent(&self, cell: &RichText, font_size: f32, bold: bool) -> (f32, f32) {
+        let mono = cell.runs.iter().any(|(_, s)| s.code || s.kbd);
+        let longest_line = cell
+            .text
+            .lines()
+            .max_by_key(|l| l.chars().count())
+            .unwrap_or("");
+        let longest_word = cell
+            .text
+            .split_whitespace()
+            .max_by_key(|w| w.chars().count())
+            .unwrap_or("");
+        (
+            self.measure(longest_line, font_size, bold, mono),
+            self.measure(longest_word, font_size, bold, mono),
+        )
+    }
+
+    /// Column widths from each column's content widths: the padding added,
+    /// and the slack shared out when the note cannot give every column its
+    /// longest line.
+    fn fit_columns(&self, max: &[f32], min: &[f32]) -> Vec<f32> {
         // Two pixels of slack: the wrapper measures advances a little
         // differently from the shaper and must not break a line that fits.
-        let max: Vec<f32> = max.iter().map(|m| m.ceil() + 2. + PADDING).collect();
+        let max: Vec<f32> = max
+            .iter()
+            .map(|m| m.ceil() + 2. + TABLE_CELL_PADDING)
+            .collect();
         let min: Vec<f32> = min
             .iter()
-            .map(|m| m.max(8.).ceil() + 2. + PADDING)
+            .map(|m| m.max(8.).ceil() + 2. + TABLE_CELL_PADDING)
             .collect();
         let sum_max: f32 = max.iter().sum();
         let sum_min: f32 = min.iter().sum();
@@ -2035,6 +2102,172 @@ impl<'a> Renderer<'a> {
                 .zip(&min)
                 .map(|(mx, mn)| (mn + (mx - mn) * share).floor())
                 .collect()
+        }
+    }
+
+    /// A raw table's `<caption>` with the table: centred across the
+    /// table's width (or its own longest word, when that is wider), in the
+    /// note's text at the body size, above the table or, under
+    /// `caption-side: bottom`, below it (Obsidian 1.15.0, probe of
+    /// 2026-11-15).
+    fn captioned(
+        &self,
+        table: AnyElement,
+        caption: &RichText,
+        bottom: bool,
+        table_width: f32,
+        gap: Pixels,
+    ) -> AnyElement {
+        let (_, word) = self.cell_extent(caption, self.theme.base_font_size, false);
+        let width = table_width.max(word.ceil() + 2.);
+        let caption = div()
+            .w(px(width))
+            .flex_shrink_0()
+            .text_center()
+            .child(self.rich(caption))
+            .into_any_element();
+        let (first, second) = if bottom {
+            (table, caption)
+        } else {
+            (caption, table)
+        };
+        div()
+            .mb(gap)
+            .flex()
+            .flex_col()
+            .items_start()
+            .child(first)
+            .child(second)
+            .into_any_element()
+    }
+
+    /// A raw table whose cells span columns or rows: a grid with every cell
+    /// placed where the table model puts it ([`super::model::CellPlace`]), columns sized
+    /// the way `column_widths` sizes them from the cells that span one
+    /// column, with a spanning cell's extra need shared over its columns,
+    /// and rows as tall as their content (a cell spanning rows as tall as
+    /// those rows together). The cells look like a Markdown table's; the
+    /// first row is the header when the table has one. Never edited in
+    /// place: a raw table is source in Live Preview.
+    fn spanned_table(
+        &self,
+        header: &[RichText],
+        rows: &[Vec<RichText>],
+        extras: &HtmlTableExtras,
+        font_size: f32,
+        gap: Pixels,
+    ) -> AnyElement {
+        let t = self.theme;
+        let columns = extras.columns.max(1);
+        let has_header = !header.is_empty();
+        let mut lines: Vec<&[RichText]> = Vec::with_capacity(rows.len() + 1);
+        if has_header {
+            lines.push(header);
+        }
+        lines.extend(rows.iter().map(Vec::as_slice));
+        let row_count = lines.len();
+        let bold_at = |r: usize| has_header && r == 0;
+        // Content widths: one-column cells first, then each spanning cell's
+        // shortfall shared evenly over its columns.
+        let mut max = vec![0f32; columns];
+        let mut min = vec![0f32; columns];
+        let mut spanning = Vec::new();
+        for (r, line) in lines.iter().enumerate() {
+            let places = extras.places.get(r).map(Vec::as_slice).unwrap_or(&[]);
+            for (cell, place) in line.iter().zip(places) {
+                let (mx, mn) = self.cell_extent(cell, font_size, bold_at(r));
+                if place.colspan == 1 {
+                    max[place.col] = max[place.col].max(mx);
+                    min[place.col] = min[place.col].max(mn);
+                } else {
+                    spanning.push((*place, mx, mn));
+                }
+            }
+        }
+        let between = 2. + TABLE_CELL_PADDING;
+        for (place, mx, mn) in spanning {
+            let cols = place.col..place.col + place.colspan;
+            let n = place.colspan as f32;
+            for (need, have) in [(mx, &mut max), (mn, &mut min)] {
+                let room: f32 = have[cols.clone()].iter().sum::<f32>() + (n - 1.) * between;
+                if need > room {
+                    for w in &mut have[cols.clone()] {
+                        *w += (need - room) / n;
+                    }
+                }
+            }
+        }
+        let widths = self.fit_columns(&max, &min);
+        let table_width: f32 = widths.iter().sum();
+        let mut cells: Vec<AnyElement> = Vec::new();
+        for (r, line) in lines.iter().enumerate() {
+            let places = extras.places.get(r).map(Vec::as_slice).unwrap_or(&[]);
+            for (cell, place) in line.iter().zip(places) {
+                let width: f32 = widths[place.col..place.col + place.colspan].iter().sum();
+                let last_col = place.col + place.colspan >= columns;
+                let last_row = r + place.rowspan >= row_count;
+                let head = bold_at(r);
+                cells.push(
+                    div()
+                        .col_start(place.col as i16 + 1)
+                        .col_end((place.col + place.colspan) as i16 + 1)
+                        .row_start(r as i16 + 1)
+                        .row_end((r + place.rowspan) as i16 + 1)
+                        .w(px(width))
+                        .px_2()
+                        .py_1()
+                        .when(!last_col, |d| d.border_r_1())
+                        .when(!last_row, |d| d.border_b_1())
+                        .border_color(if head && place.rowspan == 1 {
+                            t.tokens.table_header_border_color
+                        } else {
+                            t.tokens.table_border_color
+                        })
+                        .when(head, |d| {
+                            d.bg(t.tokens.table_header_background)
+                                .font_weight(FontWeight::SEMIBOLD)
+                                .text_color(t.tokens.table_header_color)
+                        })
+                        .map(|d| match place.align {
+                            Alignment::Center => d.text_center(),
+                            Alignment::Right => d.text_right(),
+                            _ => d,
+                        })
+                        .child(self.rich(cell))
+                        .into_any_element(),
+                );
+            }
+        }
+        // A zero-height row that pins every column to its width, so a column
+        // only spanning cells reach is not left for the grid to guess.
+        for (ix, w) in widths.iter().enumerate() {
+            cells.push(
+                div()
+                    .col_start(ix as i16 + 1)
+                    .col_end(ix as i16 + 2)
+                    .row_start(row_count as i16 + 1)
+                    .row_end(row_count as i16 + 2)
+                    .w(px(*w))
+                    .h(px(0.))
+                    .into_any_element(),
+            );
+        }
+        let table = div()
+            .w(px(table_width + 2.))
+            .flex_shrink_0()
+            .grid()
+            .grid_cols_max_content(columns as u16)
+            .border_1()
+            .border_color(t.tokens.table_border_color)
+            .rounded_sm()
+            .text_size(px(font_size))
+            .children(cells)
+            .into_any_element();
+        match &extras.caption {
+            Some(caption) => {
+                self.captioned(table, caption, extras.caption_bottom, table_width + 2., gap)
+            }
+            None => div().mb(gap).flex().child(table).into_any_element(),
         }
     }
 
@@ -2366,8 +2599,15 @@ impl<'a> Renderer<'a> {
                 header,
                 rows,
                 spans,
+                html,
             } => {
                 let font_size = base * 0.9375;
+                if let Some(extras) = html.as_deref().filter(|e| !e.places.is_empty()) {
+                    return self.spanned_table(header, rows, extras, font_size, gap);
+                }
+                let caption = html
+                    .as_deref()
+                    .and_then(|e| e.caption.as_ref().map(|c| (c, e.caption_bottom)));
                 let host = self.table_host;
                 // The column holding the open cell measures the text in
                 // hand, so it grows as the cell is typed into.
@@ -2700,8 +2940,8 @@ impl<'a> Renderer<'a> {
                     )
                 };
                 // The table is as wide as its columns, like an HTML table.
-                div()
-                    .mb(gap)
+                let table = div()
+                    .when(caption.is_none(), |d| d.mb(gap))
                     .relative()
                     .flex()
                     .flex_row()
@@ -2751,7 +2991,13 @@ impl<'a> Renderer<'a> {
                         // The release is the editor's to see, wherever it is.
                         grid.into_any_element()
                     })
-                    .into_any_element()
+                    .into_any_element();
+                match caption {
+                    Some((caption, bottom)) => {
+                        self.captioned(table, caption, bottom, table_width, gap)
+                    }
+                    None => table,
+                }
             }
             RBlock::Math(text) => self.math_block(text, gap),
             RBlock::Footnotes(notes) => div()
@@ -3756,7 +4002,9 @@ impl<'a> Renderer<'a> {
     }
 
     /// Inline content set at `size` pixels: one `InteractiveText`, with
-    /// inline formulas typeset over placeholders when the text has any.
+    /// inline formulas typeset over placeholders when the text has any, and
+    /// the runs set at another size (`<sup>`, `<sub>`, `<small>`, a
+    /// footnote reference) painted over placeholders of their own.
     pub(crate) fn rich_at(&self, text: &RichText, size: f32) -> AnyElement {
         // Each `$x$` run, typeset in text style. A formula that does not
         // parse stays as its source, in the error red (`highlight`).
@@ -3770,14 +4018,21 @@ impl<'a> Renderer<'a> {
             })
             .collect();
         // A paragraph that runs right to left is laid out by Scoria, since
-        // gpui's wrapping cannot (see `crate::rtl`).
+        // gpui's wrapping cannot (see `crate::rtl`); its scripted runs stay
+        // at the paragraph's size there.
         if formulas.is_empty() && crate::rtl::is_rtl(&text.text) {
             return self.rtl_text(text);
         }
-        if formulas.is_empty() {
+        let scripts: Vec<(Range<usize>, InlineStyle, Script)> = text
+            .runs
+            .iter()
+            .filter(|(r, s)| !s.math && !r.is_empty() && !text.text[r.clone()].contains('\n'))
+            .filter_map(|(r, s)| s.script().map(|sc| (r.clone(), *s, sc)))
+            .collect();
+        if formulas.is_empty() && scripts.is_empty() {
             let (interactive, layout) =
-                self.interactive_with_layout(text, &text.text, &text.runs, &text.links);
-            let element = self.selectable(interactive.into_any_element(), text, &layout);
+                self.interactive_with_layout(text, &text.text, &text.runs, &text.links, None);
+            let element = self.selectable(interactive.into_any_element(), text, &layout, None);
             return self.with_link_menu(element, layout, text.id, text.links.clone());
         }
         let t = self.theme;
@@ -3790,52 +4045,78 @@ impl<'a> Renderer<'a> {
             style: FontStyle::Normal,
         };
         let spaces = SpaceWidths::measure(&self.text_system, &font, em);
-        // Rebuild the string with a placeholder where each formula was,
-        // and carry the other runs and the links across the edits.
+        enum Stand {
+            Formula(Arc<scoria_math::Formula>),
+            Script(InlineStyle, Script),
+        }
+        let mut stands: Vec<(Range<usize>, Stand)> = formulas
+            .into_iter()
+            .map(|(r, f)| (r, Stand::Formula(f)))
+            .chain(
+                scripts
+                    .into_iter()
+                    .map(|(r, s, sc)| (r, Stand::Script(s, sc))),
+            )
+            .collect();
+        stands.sort_by_key(|(r, _)| r.start);
+        // Rebuild the string with a placeholder where each formula or
+        // scripted run was, and carry the other runs and the links across
+        // the edits.
         let mut edits: Vec<(Range<usize>, usize)> = Vec::new();
         let mut shaped = String::with_capacity(text.text.len());
         let mut inlines = Vec::new();
+        let mut texts = Vec::new();
         let mut at = 0;
-        for (range, formula) in &formulas {
+        for (range, stand) in &stands {
+            if range.start < at {
+                continue;
+            }
             shaped.push_str(&text.text[at..range.start]);
-            let (placeholder, slot) = spaces.placeholder(math::width_px(formula, em));
             let start = shaped.len();
-            shaped.push_str(&placeholder);
-            inlines.push(Inline {
-                range: start..shaped.len(),
-                formula: formula.clone(),
-                slot,
-            });
-            edits.push((range.clone(), placeholder.len()));
+            match stand {
+                Stand::Formula(formula) => {
+                    let (placeholder, slot) = spaces.placeholder(math::width_px(formula, em));
+                    shaped.push_str(&placeholder);
+                    inlines.push(Inline {
+                        range: start..shaped.len(),
+                        formula: formula.clone(),
+                        slot,
+                    });
+                }
+                Stand::Script(style, script) => {
+                    let own = &text.text[range.clone()];
+                    let (scaled, _) = script.at(size);
+                    let width = self.measure_styled(own, scaled, *style);
+                    let (placeholder, _) = spaces.nearest(px(width));
+                    shaped.push_str(&placeholder);
+                    texts.push(ScriptText {
+                        range: start..shaped.len(),
+                        text: SharedString::from(own.to_string()),
+                        highlight: self.highlight(*style),
+                        family: (style.code || style.kbd || style.html)
+                            .then(|| t.mono_font.clone()),
+                        script: *script,
+                    });
+                }
+            }
+            edits.push((range.clone(), shaped.len() - start));
             at = range.end;
         }
         shaped.push_str(&text.text[at..]);
-        let remap = |offset: usize| -> usize {
-            let mut shift = 0isize;
-            for (range, len) in &edits {
-                if offset <= range.start {
-                    break;
-                }
-                if offset < range.end {
-                    // Inside a formula: its start.
-                    return (range.start as isize + shift) as usize;
-                }
-                shift += *len as isize - range.len() as isize;
-            }
-            (offset as isize + shift) as usize
-        };
+        let remap = Rc::new(Remap { edits });
         let runs: Vec<(Range<usize>, InlineStyle)> = text
             .runs
             .iter()
-            .filter(|(r, s)| !(s.math && formulas.iter().any(|(f, _)| f == r)))
-            .map(|(r, s)| (remap(r.start)..remap(r.end), *s))
+            .filter(|(r, _)| !stands.iter().any(|(f, _)| f == r))
+            .map(|(r, s)| (remap.to_shaped(r.start)..remap.to_shaped(r.end), *s))
             .collect();
         let links: Vec<(Range<usize>, LinkTarget)> = text
             .links
             .iter()
-            .map(|(r, l)| (remap(r.start)..remap(r.end), l.clone()))
+            .map(|(r, l)| (remap.to_shaped(r.start)..remap.to_shaped(r.end), l.clone()))
             .collect();
-        let (interactive, layout) = self.interactive_with_layout(text, &shaped, &runs, &links);
+        let (interactive, layout) =
+            self.interactive_with_layout(text, &shaped, &runs, &links, Some(&remap));
         let overlay = Overlay::new(
             interactive.into_any_element(),
             layout.clone(),
@@ -3843,9 +4124,49 @@ impl<'a> Renderer<'a> {
             em,
             t.tokens.text_normal,
         )
+        .with_texts(texts)
         .into_any_element();
-        let element = self.selectable(overlay, text, &layout);
+        let element = self.selectable(overlay, text, &layout, Some(remap));
         self.with_link_menu(element, layout, text.id, links)
+    }
+
+    /// The advance of `text` set at `size` in the run style `s`.
+    fn measure_styled(&self, text: &str, size: f32, s: InlineStyle) -> f32 {
+        let t = self.theme;
+        let font = Font {
+            family: if s.code || s.kbd || s.html {
+                t.mono_font.clone()
+            } else {
+                t.text_font.clone()
+            },
+            features: Default::default(),
+            fallbacks: None,
+            weight: if s.bold {
+                FontWeight::BOLD
+            } else {
+                FontWeight::NORMAL
+            },
+            style: if s.italic {
+                FontStyle::Italic
+            } else {
+                FontStyle::Normal
+            },
+        };
+        let run = TextRun {
+            len: text.len(),
+            font,
+            color: Hsla::default(),
+            background_color: None,
+            underline: None,
+            strikethrough: None,
+        };
+        let line = self.text_system.shape_line(
+            SharedString::from(text.to_string()),
+            px(size),
+            &[run],
+            None,
+        );
+        f32::from(line.width)
     }
 
     /// The text element with a right click on a link raising the host's
@@ -3890,11 +4211,18 @@ impl<'a> Renderer<'a> {
         element: AnyElement,
         text: &RichText,
         layout: &gpui::TextLayout,
+        remap: Option<Rc<Remap>>,
     ) -> AnyElement {
         let Some(host) = self.select else {
             return element;
         };
         let id = text.id;
+        // A hit in the laid-out string, as an offset of the paragraph's own.
+        let at = move |layout: &gpui::TextLayout, position| {
+            let shaped = index_at(layout, position);
+            remap.as_ref().map_or(shaped, |r| r.to_model(shaped))
+        };
+        let at2 = at.clone();
         div()
             .child(element)
             .on_mouse_down(MouseButton::Left, {
@@ -3905,7 +4233,7 @@ impl<'a> Renderer<'a> {
                         2 => SelectGesture::Word,
                         _ => SelectGesture::Line,
                     };
-                    on_select(gesture, id, index_at(&layout, event.position), window, cx);
+                    on_select(gesture, id, at(&layout, event.position), window, cx);
                 }
             })
             .on_mouse_move({
@@ -3915,7 +4243,7 @@ impl<'a> Renderer<'a> {
                         on_select(
                             SelectGesture::Drag,
                             id,
-                            index_at(&layout, event.position),
+                            at2(&layout, event.position),
                             window,
                             cx,
                         );
@@ -3934,6 +4262,7 @@ impl<'a> Renderer<'a> {
         string: &str,
         runs: &[(Range<usize>, InlineStyle)],
         links: &[(Range<usize>, LinkTarget)],
+        remap: Option<&Remap>,
     ) -> (InteractiveText, gpui::TextLayout) {
         let t = self.theme;
         let highlights: Vec<_> = runs
@@ -3951,7 +4280,10 @@ impl<'a> Renderer<'a> {
         let highlights = match self
             .select
             .and_then(|h| h.ranges.get(&text.id).map(|range| (range.clone(), h.color)))
-        {
+            .map(|(range, color)| match remap {
+                Some(r) => (r.to_shaped(range.start)..r.to_shaped(range.end), color),
+                None => (range, color),
+            }) {
             Some((range, color)) => with_selection(highlights, string, range, color),
             None => highlights,
         };
@@ -4034,9 +4366,16 @@ impl<'a> Renderer<'a> {
                 wavy: false,
             });
         }
-        // `s.sup` and `s.sub` have no look yet: a gpui text run cannot be
-        // raised, lowered or shrunk on its own, so the text sits at body
-        // size with the tags dropped.
+        // An inline `style`'s colour and background (or `<font color>`):
+        // after the tags' own looks, as an author's style attribute wins
+        // over the stylesheet, and before a link's colour, since in
+        // Obsidian `a { color }` is the anchor's own rule.
+        if let Some(c) = s.color {
+            h.color = Some(rgba_hsla(c));
+        }
+        if let Some(c) = s.background {
+            h.background_color = Some(rgba_hsla(c));
+        }
         if s.math {
             // Only a formula that failed to typeset is still text here.
             h.color = Some(math::error_color());
@@ -4060,6 +4399,14 @@ impl<'a> Renderer<'a> {
         }
         h
     }
+}
+
+/// A table cell's horizontal padding, both sides, plus its border.
+const TABLE_CELL_PADDING: f32 = 17.;
+
+/// A `0xRRGGBBAA` colour as gpui's.
+pub(crate) fn rgba_hsla(c: u32) -> Hsla {
+    gpui::rgba(c).into()
 }
 
 /// `text` in capitals, for a slide's headings. A character whose capital is
@@ -4228,8 +4575,34 @@ mod tests {
     use super::{
         header_height, inline_title, line_distance, ordered, page_distance, runs, same_note,
         selected_ranges, selected_text, shown_title, whole_note, with_selection, word_at,
-        ReadingPos, HEADER_TOP, LINE_HEIGHT,
+        ReadingPos, Remap, HEADER_TOP, LINE_HEIGHT,
     };
+
+    /// A paragraph with a scripted run or a formula is laid out with a
+    /// placeholder in its place: offsets either side map across both ways,
+    /// and a hit inside a placeholder lands on the nearer end of what it
+    /// stands for, so a selection over `x<sup>2</sup> end` copies the
+    /// paragraph's own bytes.
+    #[test]
+    fn offsets_map_across_placeholders_both_ways() {
+        // "ab[cd]ef[g]h": `cd` (2..4) became 5 bytes, `g` (6..7) 2 bytes.
+        let r = Remap {
+            edits: vec![(2..4, 5), (6..7, 2)],
+        };
+        assert_eq!(r.to_shaped(0), 0);
+        assert_eq!(r.to_shaped(2), 2);
+        assert_eq!(r.to_shaped(3), 2);
+        assert_eq!(r.to_shaped(4), 7);
+        assert_eq!(r.to_shaped(6), 9);
+        assert_eq!(r.to_shaped(7), 11);
+        assert_eq!(r.to_shaped(8), 12);
+        for model in [0, 1, 2, 4, 5, 6, 7, 8] {
+            assert_eq!(r.to_model(r.to_shaped(model)), model, "{model}");
+        }
+        assert_eq!(r.to_model(3), 2);
+        assert_eq!(r.to_model(6), 4);
+        assert_eq!(r.to_model(10), 7);
+    }
     use crate::reading::model::{build, EmbedSource, Model};
     use gpui::{hsla, HighlightStyle};
     use std::ops::Range;

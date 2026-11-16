@@ -122,16 +122,84 @@ pub struct InlineStyle {
     pub underline: bool,
     /// `<kbd>`: drawn the way inline code is.
     pub kbd: bool,
-    /// `<sup>` and `<sub>`. A gpui text run cannot shift its baseline or
-    /// change its size, so for now these carry the markup's meaning without
-    /// a look of their own.
+    /// `<sup>` and `<sub>`: five sixths of the size around them, raised a
+    /// third of that size plus a pixel or lowered a fifth plus a pixel
+    /// ([`InlineStyle::script`]). Drawn over a placeholder, since a gpui
+    /// text run can neither change size nor leave the baseline.
     pub sup: bool,
     pub sub: bool,
+    /// `<small>` (five sixths) and `<big>` (six fifths), on the baseline.
+    pub small: bool,
+    pub big: bool,
+    /// A colour from an inline `style` (`color`) or `<font color>`, and a
+    /// `background-color`, as `0xRRGGBBAA`.
+    pub color: Option<u32>,
+    pub background: Option<u32>,
+}
+
+/// How a run set at another size than its paragraph sits: the size as a
+/// fraction of the paragraph's, and how far its baseline rises above the
+/// paragraph's as a fraction of the paragraph's size plus whole pixels
+/// (negative to lower it). Chromium's `vertical-align: super` raises by a
+/// third of the parent's size plus one pixel and `sub` lowers by a fifth
+/// plus one; `font-size: smaller` is five sixths and `larger` six fifths
+/// (Obsidian 1.15.0, probe of 2026-11-15: 13.333 px raised 6.328 px over a
+/// 16 px body, lowered 4.187 px; 8.797 px over a 23.392 px heading).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Script {
+    pub scale: f32,
+    pub rise_em: f32,
+    pub rise_px: f32,
+}
+
+impl Script {
+    /// The size and the rise, in pixels, over a paragraph set at `size`.
+    pub fn at(&self, size: f32) -> (f32, f32) {
+        let rise = if self.rise_em == 0. {
+            0.
+        } else {
+            size * self.rise_em + self.rise_px
+        };
+        (size * self.scale, rise)
+    }
 }
 
 impl InlineStyle {
     pub fn is_plain(&self) -> bool {
         *self == InlineStyle::default()
+    }
+
+    /// The run's size and baseline when it is not the paragraph's: `<sup>`
+    /// and `<sub>` (and a footnote reference, which Obsidian renders as a
+    /// `<sup>`), `<small>` and `<big>`. One level only: a `<sup>` inside a
+    /// `<sup>` is drawn as one.
+    pub fn script(&self) -> Option<Script> {
+        let scale = if self.big && !(self.small || self.sup || self.sub) {
+            6. / 5.
+        } else {
+            5. / 6.
+        };
+        if self.sup || self.footnote {
+            Some(Script {
+                scale,
+                rise_em: 1. / 3.,
+                rise_px: 1.,
+            })
+        } else if self.sub {
+            Some(Script {
+                scale,
+                rise_em: -1. / 5.,
+                rise_px: -1.,
+            })
+        } else if self.small || self.big {
+            Some(Script {
+                scale,
+                rise_em: 0.,
+                rise_px: 0.,
+            })
+        } else {
+            None
+        }
     }
 }
 
@@ -322,10 +390,42 @@ pub enum RBlock {
         /// The bytes each cell stands for, the header row first, so Live
         /// Preview can edit a cell in place.
         spans: Vec<Vec<Range<usize>>>,
+        /// What only a raw `<table>` has: a `<caption>`, and cells that span
+        /// columns or rows. `None` for a Markdown table.
+        html: Option<Box<HtmlTableExtras>>,
     },
     Math(String),
     /// `(number, body)` in reference order, rendered after a rule.
     Footnotes(Vec<(usize, Vec<RBlock>)>),
+}
+
+/// A raw `<table>`'s caption and cell spans.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct HtmlTableExtras {
+    /// The `<caption>`: centred over the table, as wide as it, wrapping
+    /// (Obsidian 1.15.0, probe of 2026-11-15).
+    pub caption: Option<RichText>,
+    /// `caption-side: bottom` in the caption's `style`.
+    pub caption_bottom: bool,
+    /// Where each cell sits when a `colspan` or `rowspan` makes the grid
+    /// other than one cell per column, the header row first and then
+    /// `rows`, one entry per cell the row has (the rows are not padded
+    /// then). Empty when every cell spans one column and one row.
+    pub places: Vec<Vec<CellPlace>>,
+    /// The number of columns `places` lays the cells out in.
+    pub columns: usize,
+}
+
+/// One cell of a raw table with spans: its first column, how many columns
+/// and rows it covers (resolved: `colspan="0"` is one, `rowspan="0"` and a
+/// span past the last row run to the end of the cell's section, and a
+/// `colspan` past the last column stops there), and its own `align`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CellPlace {
+    pub col: usize,
+    pub colspan: usize,
+    pub rowspan: usize,
+    pub align: Alignment,
 }
 
 /// A built note.
@@ -821,6 +921,7 @@ impl<'v> Builder<'v> {
                     .chain(rows.iter())
                     .map(|r| r.iter().map(|c| c.span.start..c.span.end).collect())
                     .collect(),
+                html: None,
             },
             BlockKind::Math { content } => RBlock::Math(content.trim_matches('\n').to_string()),
             BlockKind::Comment { .. } | BlockKind::FootnoteDefinition { .. } => return None,
@@ -1006,10 +1107,21 @@ impl<'v> Builder<'v> {
     /// cell spans, so Live Preview never edits it in place -- it is not a
     /// widget there at all.
     fn html_table(&mut self, table: HtmlTable) -> RBlock {
-        let columns = table
-            .header
-            .len()
-            .max(table.rows.iter().map(Vec::len).max().unwrap_or(0));
+        let places = place_cells(&table);
+        let spanned = places
+            .iter()
+            .flatten()
+            .any(|p| p.colspan != 1 || p.rowspan != 1);
+        let columns = if spanned {
+            0
+        } else {
+            table
+                .header
+                .len()
+                .max(table.rows.iter().map(Vec::len).max().unwrap_or(0))
+        };
+        let caption = table.caption.as_ref().map(|(html, _)| self.rich_html(html));
+        let caption_bottom = table.caption.as_ref().is_some_and(|(_, b)| *b);
         let mut row_of = |cells: &[HtmlCell]| -> Vec<RichText> {
             let mut row: Vec<RichText> = cells
                 .iter()
@@ -1037,13 +1149,28 @@ impl<'v> Builder<'v> {
             row_of(&table.header)
         };
         let rows: Vec<Vec<RichText>> = table.rows.iter().map(|r| row_of(r)).collect();
+        let grid_columns = places
+            .iter()
+            .flatten()
+            .map(|p| p.col + p.colspan)
+            .max()
+            .unwrap_or(0);
         let mut alignments = table.alignments;
-        alignments.resize(columns, Alignment::None);
+        alignments.resize(columns.max(grid_columns), Alignment::None);
+        let html = (spanned || caption.is_some()).then(|| {
+            Box::new(HtmlTableExtras {
+                caption,
+                caption_bottom,
+                places: if spanned { places } else { Vec::new() },
+                columns: grid_columns,
+            })
+        });
         RBlock::Table {
             alignments,
             header,
             rows,
             spans: Vec::new(),
+            html,
         }
     }
 
@@ -1444,6 +1571,8 @@ struct RichBuilder {
 /// One open raw HTML tag.
 struct HtmlOpen {
     name: HtmlTag,
+    /// What the tag's `style` attribute (or `<font color>`) lays over it.
+    css: InlineCss,
     /// For `<a href>`: where its text started and what it points at,
     /// recorded as a link when the tag closes.
     link: Option<(usize, LinkTarget)>,
@@ -1462,6 +1591,10 @@ enum HtmlTag {
     Kbd,
     Sup,
     Sub,
+    Small,
+    Big,
+    /// `<code>` written as HTML: inline code's look (probe of 2026-11-15).
+    Code,
     Anchor,
     /// `<span>`, `<div>`, `<font>`, ...: dropped, content kept.
     Transparent,
@@ -1478,9 +1611,12 @@ impl HtmlTag {
             "kbd" => HtmlTag::Kbd,
             "sup" => HtmlTag::Sup,
             "sub" => HtmlTag::Sub,
+            "small" => HtmlTag::Small,
+            "big" => HtmlTag::Big,
+            "code" => HtmlTag::Code,
             "a" => HtmlTag::Anchor,
-            "span" | "div" | "font" | "center" | "small" | "big" | "p" | "section" | "article"
-            | "ins" | "samp" | "var" | "tt" => HtmlTag::Transparent,
+            "span" | "div" | "font" | "center" | "p" | "section" | "article" | "ins" | "samp"
+            | "var" | "tt" => HtmlTag::Transparent,
             _ => return None,
         })
     }
@@ -1495,10 +1631,148 @@ impl HtmlTag {
             HtmlTag::Kbd => s.kbd = true,
             HtmlTag::Sup => s.sup = true,
             HtmlTag::Sub => s.sub = true,
+            HtmlTag::Small => s.small = true,
+            HtmlTag::Big => s.big = true,
+            HtmlTag::Code => s.code = true,
             // The link style belongs to an anchor with somewhere to go, so
             // `open_tag` sets it on the entry instead.
             HtmlTag::Anchor | HtmlTag::Transparent => {}
         }
+    }
+}
+
+/// The part of an inline `style` attribute the reading model draws: the
+/// text colour, the background, the weight, the slant and the line
+/// (`text-decoration`), which map onto a text run's own style. Every other
+/// property -- a size, a font, a box, `display` -- is dropped, and a
+/// `var(--…)` colour too, since the theme it names is not known here.
+/// `<font color>` is the same colour by another spelling.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+struct InlineCss {
+    color: Option<u32>,
+    background: Option<u32>,
+    bold: Option<bool>,
+    italic: Option<bool>,
+    underline: Option<bool>,
+    strike: Option<bool>,
+}
+
+impl InlineCss {
+    fn from_attrs(attrs: &str, font: bool) -> InlineCss {
+        let mut css = InlineCss::default();
+        let Some(attrs) = html_attrs(attrs) else {
+            return css;
+        };
+        for (name, value) in attrs {
+            match name.as_str() {
+                "style" => css.declarations(&value),
+                "color" if font => {
+                    if let Some(c) = css_color(&value) {
+                        css.color = Some(c);
+                    }
+                }
+                _ => {}
+            }
+        }
+        css
+    }
+
+    /// `prop: value; …`, later declarations winning, as in CSS.
+    fn declarations(&mut self, style: &str) {
+        for decl in style.split(';') {
+            let Some((prop, value)) = decl.split_once(':') else {
+                continue;
+            };
+            let prop = prop.trim().to_ascii_lowercase();
+            let value = value
+                .trim()
+                .trim_end_matches("!important")
+                .trim()
+                .to_ascii_lowercase();
+            match prop.as_str() {
+                "color" => {
+                    if let Some(c) = css_color(&value) {
+                        self.color = Some(c);
+                    }
+                }
+                // The shorthand's colour, when it is the whole value.
+                "background-color" | "background" => {
+                    if let Some(c) = css_color(&value) {
+                        self.background = Some(c);
+                    }
+                }
+                "font-weight" => {
+                    self.bold = match value.as_str() {
+                        "bold" | "bolder" => Some(true),
+                        "normal" | "lighter" => Some(false),
+                        n => n.parse::<u32>().ok().map(|w| w >= 600),
+                    }
+                    .or(self.bold);
+                }
+                "font-style" => {
+                    self.italic = match value.as_str() {
+                        "italic" | "oblique" => Some(true),
+                        "normal" => Some(false),
+                        _ => self.italic,
+                    };
+                }
+                "text-decoration" | "text-decoration-line" => {
+                    let words: Vec<&str> = value.split_whitespace().collect();
+                    if words.contains(&"none") {
+                        self.underline = Some(false);
+                        self.strike = Some(false);
+                    } else {
+                        if words.contains(&"underline") {
+                            self.underline = Some(true);
+                        }
+                        if words.contains(&"line-through") {
+                            self.strike = Some(true);
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    fn apply(&self, s: &mut InlineStyle) {
+        if let Some(c) = self.color {
+            s.color = Some(c);
+        }
+        if let Some(c) = self.background {
+            s.background = Some(c);
+        }
+        if let Some(b) = self.bold {
+            s.bold = b;
+        }
+        if let Some(i) = self.italic {
+            s.italic = i;
+        }
+        if let Some(u) = self.underline {
+            s.underline = u;
+        }
+        if let Some(x) = self.strike {
+            s.strike = x;
+        }
+    }
+}
+
+/// A CSS colour value as `0xRRGGBBAA`: a hex literal, a named colour,
+/// `rgb()`/`rgba()`/`hsl()`/`hsla()`, read by the theme loader's own value
+/// grammar. `None` for anything else (`var()`, `currentcolor`, a gradient).
+fn css_color(value: &str) -> Option<u32> {
+    use crate::theme::value::{parse, Table, Value};
+    let value = value.trim();
+    if value.is_empty() || value.contains("var(") {
+        return None;
+    }
+    match Table::new().resolve(&parse(value)) {
+        Value::Color(c) => {
+            let rgba = gpui::Rgba::from(c);
+            let byte = |v: f32| ((v.clamp(0., 1.) * 255.).round() as u32) & 0xff;
+            Some(byte(rgba.r) << 24 | byte(rgba.g) << 16 | byte(rgba.b) << 8 | byte(rgba.a))
+        }
+        _ => None,
     }
 }
 
@@ -1552,6 +1826,7 @@ impl RichBuilder {
         let mut s = self.style;
         for open in &self.html {
             open.name.apply(&mut s);
+            open.css.apply(&mut s);
             if open.link.is_some() {
                 s.link = true;
             }
@@ -1590,7 +1865,7 @@ impl RichBuilder {
                 self.push("\n")
             }
             Some(HtmlToken::Open { name, attrs }) => match HtmlTag::from_name(name) {
-                Some(tag) => self.open_tag(tag, attrs),
+                Some(tag) => self.open_tag(tag, attrs, name.eq_ignore_ascii_case("font")),
                 None => self.styled(|s| s.html = true, |a| a.push(raw)),
             },
             Some(HtmlToken::Close(name)) => match HtmlTag::from_name(name) {
@@ -1601,7 +1876,7 @@ impl RichBuilder {
         }
     }
 
-    fn open_tag(&mut self, name: HtmlTag, attrs: &str) {
+    fn open_tag(&mut self, name: HtmlTag, attrs: &str, font: bool) {
         let mut link = None;
         if name == HtmlTag::Anchor {
             // Obsidian keeps a raw anchor's href as written -- no vault
@@ -1621,7 +1896,8 @@ impl RichBuilder {
                 });
             link = href.map(|href| (self.text.len(), LinkTarget::External(href)));
         }
-        self.html.push(HtmlOpen { name, link });
+        let css = InlineCss::from_attrs(attrs, font);
+        self.html.push(HtmlOpen { name, css, link });
     }
 
     /// Closes the innermost open tag of this name and whatever was opened
@@ -1759,6 +2035,8 @@ struct HtmlTable {
     rows: Vec<Vec<HtmlCell>>,
     /// Per column, from the `align` attribute of the first row's cells.
     alignments: Vec<Alignment>,
+    /// The `<caption>`'s inner HTML, and whether its `style` puts it below.
+    caption: Option<(String, bool)>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1766,6 +2044,11 @@ struct HtmlCell {
     html: String,
     /// A `<th>` outside the header row, drawn bold.
     head: bool,
+    /// `colspan` and `rowspan` as written (1 when absent or unreadable;
+    /// 0 is kept, it means something).
+    colspan: usize,
+    rowspan: usize,
+    align: Alignment,
 }
 
 /// Whether a raw HTML block renders as a Live Preview widget. Everything
@@ -1806,22 +2089,87 @@ fn embolden(
     out
 }
 
+/// Where each cell of `table` sits, the header row first: the table model's
+/// slot-finding. A cell takes the first column of its row that no `rowspan`
+/// above still covers; `rowspan="0"` and a span past the end stop at the end
+/// of the cell's section (the header, or the body); and the table is as
+/// wide as the last column a cell *starts* in, a wider `colspan` stopping
+/// there (Obsidian 1.15.0, probe of 2026-11-15: `colspan="5"` over a
+/// two-column table spans the two).
+fn place_cells(table: &HtmlTable) -> Vec<Vec<CellPlace>> {
+    let mut sections: Vec<(usize, usize)> = Vec::new();
+    let head = usize::from(!table.header.is_empty());
+    if head == 1 {
+        sections.push((0, 1));
+    }
+    sections.push((head, head + table.rows.len()));
+    let all: Vec<&Vec<HtmlCell>> = (!table.header.is_empty())
+        .then_some(&table.header)
+        .into_iter()
+        .chain(table.rows.iter())
+        .collect();
+    // `taken[r]` holds the columns row `r` has lost to a span from above.
+    let mut taken: Vec<Vec<bool>> = vec![Vec::new(); all.len()];
+    let mut out: Vec<Vec<CellPlace>> = Vec::with_capacity(all.len());
+    for (r, cells) in all.iter().enumerate() {
+        let end = sections
+            .iter()
+            .find(|(a, b)| (*a..*b).contains(&r))
+            .map(|(_, b)| *b)
+            .unwrap_or(all.len());
+        let mut col = 0;
+        let mut row = Vec::with_capacity(cells.len());
+        for cell in cells.iter() {
+            while taken[r].get(col).copied().unwrap_or(false) {
+                col += 1;
+            }
+            let colspan = cell.colspan.max(1);
+            let rowspan = match cell.rowspan {
+                0 => end - r,
+                n => n.min(end - r),
+            };
+            for line in taken.iter_mut().skip(r).take(rowspan) {
+                if line.len() < col + colspan {
+                    line.resize(col + colspan, false);
+                }
+                for slot in &mut line[col..col + colspan] {
+                    *slot = true;
+                }
+            }
+            row.push(CellPlace {
+                col,
+                colspan,
+                rowspan,
+                align: cell.align,
+            });
+            col += colspan;
+        }
+        out.push(row);
+    }
+    let columns = out.iter().flatten().map(|p| p.col + 1).max().unwrap_or(0);
+    for p in out.iter_mut().flatten() {
+        p.colspan = p.colspan.min(columns - p.col);
+    }
+    out
+}
+
 /// The cells of a raw `<table>` block, or `None` for one this grid cannot
 /// hold: a table nested in a cell, or one with no cell at all.
 fn parse_html_table(html: &str) -> Option<HtmlTable> {
     let mut table = HtmlTable::default();
     let mut row: Option<(Vec<HtmlCell>, bool)> = None;
-    let mut cell: Option<(String, bool, Alignment)> = None;
+    let mut cell: Option<HtmlCell> = None;
     let mut in_head = false;
+    let mut in_caption = false;
     let mut first_alignments: Option<Vec<Alignment>> = None;
     let mut depth = 0usize;
-    let finish_cell = |cell: &mut Option<(String, bool, Alignment)>,
+    let finish_cell = |cell: &mut Option<HtmlCell>,
                        row: &mut Option<(Vec<HtmlCell>, bool)>,
                        aligns: &mut Vec<Alignment>| {
-        if let Some((html, head, align)) = cell.take() {
+        if let Some(c) = cell.take() {
             let (cells, _) = row.get_or_insert_with(|| (Vec::new(), false));
-            cells.push(HtmlCell { html, head });
-            aligns.push(align);
+            aligns.push(c.align);
+            cells.push(c);
         }
     };
     let mut row_aligns: Vec<Alignment> = Vec::new();
@@ -1869,8 +2217,12 @@ fn parse_html_table(html: &str) -> Option<HtmlTable> {
             }
         };
         let Some(token) = token else {
-            if let Some((inner, ..)) = cell.as_mut() {
-                inner.push_str(text);
+            if in_caption {
+                if let Some((inner, _)) = table.caption.as_mut() {
+                    inner.push_str(text);
+                }
+            } else if let Some(c) = cell.as_mut() {
+                c.html.push_str(text);
             }
             continue;
         };
@@ -1879,7 +2231,35 @@ fn parse_html_table(html: &str) -> Option<HtmlTable> {
             Some(HtmlToken::Close(name)) => (name.to_ascii_lowercase(), true, ""),
             _ => (String::new(), false, ""),
         };
+        if in_caption && !(name == "caption" && closing) && name != "table" {
+            if let Some((inner, _)) = table.caption.as_mut() {
+                inner.push_str(token);
+            }
+            continue;
+        }
         match (name.as_str(), closing) {
+            ("caption", false) => {
+                finish_cell(&mut cell, &mut row, &mut row_aligns);
+                finish_row(&mut row, &mut row_aligns, &mut table);
+                in_caption = true;
+                // Only the first caption counts, as in a browser.
+                if table.caption.is_none() {
+                    let bottom = html_attrs(attrs)
+                        .into_iter()
+                        .flatten()
+                        .find(|(n, _)| n == "style")
+                        .is_some_and(|(_, v)| {
+                            v.split(';').any(|d| {
+                                d.split_once(':').is_some_and(|(p, v)| {
+                                    p.trim().eq_ignore_ascii_case("caption-side")
+                                        && v.trim().eq_ignore_ascii_case("bottom")
+                                })
+                            })
+                        });
+                    table.caption = Some((String::new(), bottom));
+                }
+            }
+            ("caption", true) => in_caption = false,
             ("table", false) => {
                 if depth > 0 {
                     return None;
@@ -1915,23 +2295,36 @@ fn parse_html_table(html: &str) -> Option<HtmlTable> {
                 if row.is_none() {
                     row = Some((Vec::new(), in_head));
                 }
-                let align = html_attrs(attrs)
-                    .into_iter()
-                    .flatten()
-                    .find(|(n, _)| n == "align")
-                    .map(|(_, v)| match v.to_ascii_lowercase().as_str() {
+                let attrs = html_attrs(attrs).unwrap_or_default();
+                let attr = |key: &str| attrs.iter().find(|(n, _)| n == key).map(|(_, v)| v);
+                let align = attr("align")
+                    .map(|v| match v.to_ascii_lowercase().as_str() {
                         "left" => Alignment::Left,
                         "center" => Alignment::Center,
                         "right" => Alignment::Right,
                         _ => Alignment::None,
                     })
                     .unwrap_or(Alignment::None);
-                cell = Some((String::new(), name == "th", align));
+                // A span that does not read as a number is one, as in a
+                // browser; HTML caps them at 1000 and 65534.
+                let span = |key: &str, cap: usize| -> usize {
+                    attr(key)
+                        .and_then(|v| v.trim().parse::<usize>().ok())
+                        .unwrap_or(1)
+                        .min(cap)
+                };
+                cell = Some(HtmlCell {
+                    html: String::new(),
+                    head: name == "th",
+                    colspan: span("colspan", 1000),
+                    rowspan: span("rowspan", 65534),
+                    align,
+                });
             }
             ("td" | "th", true) => finish_cell(&mut cell, &mut row, &mut row_aligns),
             _ => {
-                if let Some((inner, ..)) = cell.as_mut() {
-                    inner.push_str(token);
+                if let Some(c) = cell.as_mut() {
+                    c.html.push_str(token);
                 }
             }
         }
@@ -3168,6 +3561,7 @@ mod tests {
             header,
             rows,
             spans,
+            ..
         } = &m.blocks[0]
         else {
             panic!("{:?}", m.blocks[0]);
@@ -3470,6 +3864,10 @@ mod tests {
         assert_eq!(style_at(t, "2"), only(|s| s.sup = true));
         assert_eq!(style_at(t, "0"), only(|s| s.sub = true));
         assert!(t.runs.iter().all(|(_, s)| !s.html), "{:?}", t.runs);
+        let m = build("Self.md", "a <code>c</code> <big>B</big>", &stub());
+        let t = para_text(&m.blocks[0]);
+        assert_eq!(style_at(t, "c"), only(|s| s.code = true));
+        assert_eq!(style_at(t, "B"), only(|s| s.big = true));
     }
 
     #[test]
@@ -3493,8 +3891,170 @@ mod tests {
                     })
                 ),
                 (1..2, only(|s| s.underline = true)),
+                // `<font color>` is the colour; `<small>` its size.
+                (5..6, only(|s| s.color = Some(0xff0000ff))),
+                (7..8, only(|s| s.small = true)),
             ]
         );
+    }
+
+    /// The five properties of an inline `style` Scoria draws, as Obsidian
+    /// 1.15.0 computed them (probe of 2026-11-15): named, hex, `rgb()` and
+    /// `hsl()` colours, `background` as well as `background-color`, weight,
+    /// slant and line; a `var()` colour, a size and a `<span>`'s stray
+    /// `color` attribute are dropped.
+    #[test]
+    fn an_inline_style_attribute_colours_and_weights_its_text() {
+        let m = build(
+            "Self.md",
+            "<span style=\"color: red\">a</span> <span style=\"color:#00ff00\">b</span> \
+             <span style=\"background-color: yellow\">c</span> <span style=\"font-weight: bold\">d</span> \
+             <span style=\"font-style: italic\">e</span> <span style=\"text-decoration: underline\">f</span> \
+             <span style=\"text-decoration: line-through\">g</span> <span style=\"color: rgb(0, 0, 255)\">h</span> \
+             <span style=\"color: hsl(120, 100%, 25%)\">i</span> <span style=\"color: var(--text-accent)\">j</span> \
+             <span style=\"font-size: 20px\">k</span> <b style=\"color: red; font-weight: normal\">l</b> \
+             <span style=\"COLOR: RebeccaPurple !important; color: nope\">m</span> <span style=\"background: orange\">n</span> \
+             <span color=\"red\">o</span> <u style=\"text-decoration: none\">p</u>",
+            &stub(),
+        );
+        let t = para_text(&m.blocks[0]);
+        assert_eq!(style_at(t, "a"), only(|s| s.color = Some(0xff0000ff)));
+        assert_eq!(style_at(t, "b"), only(|s| s.color = Some(0x00ff00ff)));
+        assert_eq!(style_at(t, "c"), only(|s| s.background = Some(0xffff00ff)));
+        assert_eq!(style_at(t, "d"), only(|s| s.bold = true));
+        assert_eq!(style_at(t, "e"), only(|s| s.italic = true));
+        assert_eq!(style_at(t, "f"), only(|s| s.underline = true));
+        assert_eq!(style_at(t, "g"), only(|s| s.strike = true));
+        assert_eq!(style_at(t, "h"), only(|s| s.color = Some(0x0000ffff)));
+        assert_eq!(style_at(t, "i"), only(|s| s.color = Some(0x008000ff)));
+        assert_eq!(style_at(t, "j"), InlineStyle::default());
+        assert_eq!(style_at(t, "k"), InlineStyle::default());
+        // The attribute wins over the tag's own weight.
+        assert_eq!(style_at(t, "l"), only(|s| s.color = Some(0xff0000ff)));
+        assert_eq!(style_at(t, "m"), only(|s| s.color = Some(0x663399ff)));
+        assert_eq!(style_at(t, "n"), only(|s| s.background = Some(0xffa500ff)));
+        assert_eq!(style_at(t, "o"), InlineStyle::default());
+        assert_eq!(style_at(t, "p"), InlineStyle::default());
+    }
+
+    /// Chromium's numbers for `font-size: smaller`/`larger` and
+    /// `vertical-align: super`/`sub`, which Obsidian 1.15.0 computed over
+    /// a 16 px body and a 23.392 px heading (probe of 2026-11-15).
+    #[test]
+    fn scripts_shrink_and_rise_the_way_chromium_does() {
+        let near = |a: f32, b: f32| (a - b).abs() < 0.02;
+        let sup = only(|s| s.sup = true).script().unwrap();
+        let (size, rise) = sup.at(16.);
+        assert!(near(size, 13.333) && near(rise, 6.328), "{size} {rise}");
+        let (size, rise) = sup.at(23.392);
+        assert!(near(size, 19.493) && near(rise, 8.797), "{size} {rise}");
+        let (size, rise) = only(|s| s.sub = true).script().unwrap().at(16.);
+        assert!(near(size, 13.333) && near(rise, -4.187), "{size} {rise}");
+        let (size, rise) = only(|s| s.small = true).script().unwrap().at(16.);
+        assert!(near(size, 13.333) && rise == 0., "{size} {rise}");
+        let (size, rise) = only(|s| s.big = true).script().unwrap().at(16.);
+        assert!(near(size, 19.2) && rise == 0., "{size} {rise}");
+        // A footnote reference is a `<sup>` in Obsidian's reading view.
+        assert_eq!(only(|s| s.footnote = true).script(), Some(sup));
+        assert_eq!(only(|s| s.bold = true).script(), None);
+    }
+
+    fn html_table_of(src: &str) -> (Vec<RichText>, Vec<Vec<RichText>>, HtmlTableExtras) {
+        let m = build("Self.md", src, &stub());
+        let RBlock::Table {
+            header, rows, html, ..
+        } = &m.blocks[0]
+        else {
+            panic!("{:?}", m.blocks[0]);
+        };
+        (
+            header.clone(),
+            rows.clone(),
+            html.as_deref().cloned().unwrap_or_default(),
+        )
+    }
+
+    fn place(col: usize, colspan: usize, rowspan: usize) -> CellPlace {
+        CellPlace {
+            col,
+            colspan,
+            rowspan,
+            align: Alignment::None,
+        }
+    }
+
+    /// The probe's tables, placed where Obsidian 1.15.0's grid put them
+    /// (probe of 2026-11-15): a `colspan`, a `rowspan` pushing the next
+    /// row's cells right, `rowspan="0"` and a span past the end stopping at
+    /// the last row, and a `colspan` wider than the table stopping at its
+    /// last column.
+    #[test]
+    fn a_raw_tables_spans_place_its_cells_like_a_browser() {
+        let (header, rows, x) = html_table_of(
+            "<table>\n<caption>The caption</caption>\n<tr><th>A</th><th>B</th><th>C</th></tr>\n\
+             <tr><td colspan=\"2\">ab</td><td>c</td></tr>\n\
+             <tr><td rowspan=\"2\">d</td><td>e</td><td>f</td></tr>\n\
+             <tr><td>g</td><td>h</td></tr>\n</table>\n",
+        );
+        assert_eq!(header.len(), 3);
+        assert_eq!(rows.iter().map(Vec::len).collect::<Vec<_>>(), [2, 3, 2]);
+        assert_eq!(
+            x.caption.as_ref().map(|c| c.text.as_str()),
+            Some("The caption")
+        );
+        assert!(!x.caption_bottom);
+        assert_eq!(x.columns, 3);
+        assert_eq!(
+            x.places,
+            vec![
+                vec![place(0, 1, 1), place(1, 1, 1), place(2, 1, 1)],
+                vec![place(0, 2, 1), place(2, 1, 1)],
+                vec![place(0, 1, 2), place(1, 1, 1), place(2, 1, 1)],
+                vec![place(1, 1, 1), place(2, 1, 1)],
+            ]
+        );
+        let (_, _, x) = html_table_of(
+            "<table><tr><td colspan=\"5\">over-wide</td></tr><tr><td>a</td><td>b</td></tr></table>\n",
+        );
+        assert_eq!(x.columns, 2);
+        assert_eq!(x.places[0], vec![place(0, 2, 1)]);
+        let (_, _, x) = html_table_of(
+            "<table><tr><td rowspan=\"0\">zero</td><td>a</td></tr><tr><td>b</td></tr></table>\n",
+        );
+        assert_eq!(
+            x.places,
+            vec![vec![place(0, 1, 2), place(1, 1, 1)], vec![place(1, 1, 1)]]
+        );
+        let (_, _, x) = html_table_of(
+            "<table><tr><td rowspan=\"5\">past</td><td>a</td></tr><tr><td>b</td></tr></table>\n",
+        );
+        assert_eq!(x.places[0][0], place(0, 1, 2));
+        // `colspan="0"` is one column and a header row's span stays in the
+        // header, so once resolved this table spans nothing: the plain grid.
+        let (header, rows, x) = html_table_of(
+            "<table><thead><tr><th rowspan=\"3\">h</th><th>i</th></tr></thead>\
+             <tbody><tr><td colspan=\"0\">c0</td><td rowspan=\"2\">x</td></tr></tbody></table>\n",
+        );
+        assert_eq!((header.len(), rows[0].len()), (2, 2));
+        assert!(x.places.is_empty());
+    }
+
+    /// A caption alone keeps the plain grid, and `caption-side: bottom`
+    /// is read from its `style`; the caption's own tags style it.
+    #[test]
+    fn a_raw_tables_caption_is_kept_with_its_side() {
+        let (_, rows, x) = html_table_of(
+            "<table><caption style=\"caption-side: bottom\"><b>bold</b> caption</caption><tr><td>x</td><td>y</td></tr></table>\n",
+        );
+        assert_eq!(rows.len(), 1);
+        assert!(x.places.is_empty());
+        assert!(x.caption_bottom);
+        let caption = x.caption.unwrap();
+        assert_eq!(caption.text, "bold caption");
+        assert_eq!(caption.runs, vec![(0..4, only(|s| s.bold = true))]);
+        // No caption and no span: a Markdown table's shape, nothing extra.
+        let m = build("Self.md", "<table><tr><td>x</td></tr></table>\n", &stub());
+        assert!(matches!(&m.blocks[0], RBlock::Table { html: None, .. }));
     }
 
     #[test]

@@ -338,6 +338,7 @@ uses behave as Obsidian's do.
 | Paste and drop | done 2026-11-15: pasted HTML as Markdown, clipboard images and files saved as attachments, files dropped from a file manager, see [[#Paste and drop, 2026-11-15]] and [[Specification#Observed HTML paste and file drops, Obsidian 1.15.0]] |
 | Spellcheck | done 2026-11-15: probed in a headless sway, then `scoria-spell` (spellbook, a bundled `en-US`), squiggles in both editing modes, the corrections and "Add to dictionary" in the editor menu, the custom dictionary page and the languages row, see [[#Spellcheck, 2026-11-15]] and [[Specification#Observed spellcheck, Obsidian 1.15.0 (installer build 1.13.7)]] |
 | Excluded files | done 2026-11-16: `userIgnoreFilters` matched as Obsidian 1.15.1 does and applied to search, the graph, unlinked mentions, the switcher, link autocompletion, the Tags pane and Bases; the Settings row edits it, see [[#Excluded files, 2026-11-16]] and [[Specification#Observed Excluded files, Obsidian 1.15.1]] |
+| Some HTML in notes | 2026-11-15: `<sup>`, `<sub>`, `<small>` and `<big>` at their size and baseline, an inline `style`'s colour, background, weight, slant and line, and a raw table's `colspan`, `rowspan` and `<caption>`, see [[#Some HTML in notes: scripts, inline styles and spanned tables, 2026-11-15]] |
 
 ### Excluded files, 2026-11-16
 
@@ -481,6 +482,74 @@ gone, `currentTab: 4`). Every byte matched the probe's.
 splits are not run in a sidebar); the pane's key column keeps Live Preview's 160 px, which leaves
 a narrow value column in a 300 px dock; Undo after a pane edit and the pane in a popout were not
 probed.
+
+### Some HTML in notes: scripts, inline styles and spanned tables, 2026-11-15
+
+The "Some HTML in notes" row of the manual's differences page listed three gaps: `<sup>` and
+`<sub>` drawn at body size, an inline `style` ignored, and a raw table's `colspan`, `rowspan`
+and `<caption>` dropped. Probed first, see
+[[Specification#The 2026-11-15 pass: sizes, baselines, inline styles and spanned tables]].
+
+**The probe.** `tools/obsidian-probe/html-inline-tables.mjs`, Obsidian 1.15.0 in a private
+headless sway with its own `XDG_RUNTIME_DIR`, `USER_DATA_DIR` and `CDP_PORT=9365`. Two notes,
+both themes, the reading view and Live Preview. Baselines were read by putting a zero-size
+`inline-block` beside and inside each element of the rendered DOM; the notes were never edited.
+What it settled: the sizes and shifts are Chromium's own rules (`smaller` is 5/6, `super`
+raises by a third of the parent's size plus a pixel, `sub` lowers by a fifth plus a pixel), so
+one formula covers the body, headings and nesting; every inline `style` property takes effect
+in both views, `var(--…)` included; a raw table's grid follows the HTML table model to the
+letter (a `colspan` past the last column stops there, `rowspan="0"` runs to the end of its
+section); and the caption is as wide as the table, centred, and widens it only by its longest
+word.
+
+**What was built.**
+- `reading::model`: `InlineStyle` gains `small`, `big`, `color` and `background`, and
+  `InlineStyle::script()` answers a run's size and rise as a `Script` (sup, sub, a footnote
+  reference, small, big). `<small>`, `<big>` and `<code>` are tags of their own now.
+  `InlineCss` reads a tag's `style` (`color`, `background-color` or a `background` colour,
+  `font-weight`, `font-style`, `text-decoration`) and `<font color>`; colours go through the
+  theme loader's value grammar (`theme::value`), whose named colours grew from 19 to all 148.
+  A raw table's cells keep their spans, `place_cells` puts them on the grid, and the block
+  carries `HtmlTableExtras` (caption, side, places, column count); a table with neither a
+  caption nor a span keeps the old shape.
+- The reading view: `rich_at` sets each scripted run as a placeholder of no-break spaces its
+  own width (the nearest run of spaces, a hair short or over, `SpaceWidths::nearest`) and
+  `math::Overlay` paints the text over it at its size and rise, centred, in the inherited text
+  style with the run's highlight. A `Remap` carries offsets between the paragraph's text and the
+  laid-out string both ways, so a selection or a click across a `<sup>` (or a formula, which had
+  the same drift) lands on the paragraph's own bytes. An inline `style`'s colour and background
+  are part of `highlight`. `spanned_table` draws a table with spans as a gpui grid: every cell
+  placed by line, columns sized from the one-column cells with a spanning cell's shortfall
+  shared over its columns, and a zero-height row pinning each column's width. `captioned` puts
+  the caption above or below either kind of table.
+- Live Preview: `preview::display_line_scripted` swaps the scripted runs of an inline HTML
+  widget for placeholders (`InlineHtml::scripts`), and the editor paints them at the line's
+  scale like an inline formula. `<mark>` in a widget is the browser's yellow behind black, and
+  the inline `style` applies there too, as the probe showed.
+- Export to PDF draws a spanned table's cells in their first column and the caption as a
+  paragraph before it.
+
+**Driven.** The release build in a private headless sway over the control socket, with grim,
+on a scratch vault holding the probe's two notes, in both themes: the superscripts and
+subscripts raised, lowered and smaller in paragraphs, a heading and a list in both views, H₂O
+without a gap, the footnote reference raised, every `style` case coloured as in Obsidian's
+shots, and the probe's tables with their spans, a three-row cell, both caption sides and the
+over-wide and zero spans.
+
+**Traps.** Another agent's drive shared the session scratchpad and drove the app on this run's
+socket, so scratch notes and scripts have to live in a folder of the run's own. And
+`Table::resolve` was test-only; the inline colours made it public.
+
+**Left.** The line box does not grow around a raised or lowered run (Obsidian's 24 px line is
+26.33 px with a `<sup>` and 28.17 px with a `<sub>`): a gpui paragraph has one line height.
+Nesting draws one level (`<sup><sup>` is one superscript, not 11.1 px and two shifts). `<kbd>`
+and HTML `<code>` stay at the text's size rather than 14 px, `<samp>` and `<tt>` are not
+monospace, and `var(--…)` colours and every other `style` property are dropped. The caption
+widens its box to its longest word but not the table under it. A right-to-left paragraph keeps
+its scripted runs at body size (`RtlText` has no placeholders), and Live Preview's `cm-footref`
+(12.8 px, raised 5.5 px) is still drawn at body size. Obsidian's cells have a minimum width (a
+one-letter column is 54.9 px) that neither Scoria's Markdown nor raw tables apply; that is an
+older gap, noted here because the probe measured it.
 
 ### Canvas embeds, the audio player and video, 2026-11-15
 
