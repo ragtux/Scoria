@@ -1,0 +1,2459 @@
+{
+ "run": {
+  "startedAt": "2026-11-16T14:39:34.474Z",
+  "steps": {
+   "s01-order-at-load": {
+    "ok": true,
+    "ms": 7013,
+    "files": {
+     "getFiles": [
+      "x.png",
+      "m.md",
+      "k.md",
+      "a.md",
+      "Z.md",
+      "Untitled.md",
+      "Templates/T.md",
+      "Templates/Deep/N.md",
+      "Proj/Plan.md",
+      "B/y.md",
+      "B/c.md"
+     ],
+     "loaded": [
+      "/",
+      "B",
+      "Empty",
+      "Proj",
+      "Templates",
+      "Untitled.md",
+      "Z.md",
+      "a.md",
+      "k.md",
+      "m.md",
+      "x.png",
+      "B/c.md",
+      "B/y.md",
+      "Proj/Plan.md",
+      "Templates/Deep",
+      "Templates/T.md",
+      "Templates/Deep/N.md"
+     ],
+     "md": [
+      "m.md",
+      "k.md",
+      "a.md",
+      "Z.md",
+      "Untitled.md",
+      "Templates/T.md",
+      "Templates/Deep/N.md",
+      "Proj/Plan.md",
+      "B/y.md",
+      "B/c.md"
+     ],
+     "stat": {
+      "x.png": [
+       1794839973155,
+       1794839973155
+      ],
+      "m.md": [
+       1794839972836,
+       1794839972836
+      ],
+      "k.md": [
+       1794839973236,
+       1794839973236
+      ],
+      "a.md": [
+       1794839972915,
+       1794839972915
+      ],
+      "Z.md": [
+       1794839972954,
+       1794839972954
+      ],
+      "Untitled.md": [
+       1794839973076,
+       1794839973076
+      ],
+      "Templates/T.md": [
+       1794839973035,
+       1794839973035
+      ],
+      "Templates/Deep/N.md": [
+       1794839973114,
+       1794839973115
+      ],
+      "Proj/Plan.md": [
+       1794839973195,
+       1794839973195
+      ],
+      "B/y.md": [
+       1794839972875,
+       1794839972875
+      ],
+      "B/c.md": [
+       1794839972996,
+       1794839972996
+      ]
+     }
+    },
+    "picker": {
+     "popout": true,
+     "items": [
+      "m",
+      "k",
+      "a",
+      "Z",
+      "Untitled",
+      "Templates/T",
+      "Templates/Deep/N",
+      "Proj/Plan",
+      "B/y",
+      "B/c"
+     ]
+    },
+    "merge": [],
+    "switcher": []
+   },
+   "s02-order-after-changes": {
+    "ok": true,
+    "ms": 25272,
+    "afterCreate": {
+     "files": [
+      "Aaa new.md",
+      "Zeta new.md",
+      "x.png",
+      "m.md",
+      "k.md",
+      "a.md",
+      "Z.md",
+      "Untitled.md",
+      "Templates/T.md",
+      "Templates/Deep/N.md",
+      "Proj/Plan.md",
+      "B/Mid new.md",
+      "B/y.md",
+      "B/c.md"
+     ],
+     "picker": [
+      "Aaa new",
+      "Zeta new",
+      "m",
+      "k",
+      "a",
+      "Z",
+      "Untitled",
+      "Templates/T",
+      "Templates/Deep/N",
+      "Proj/Plan",
+      "B/Mid new",
+      "B/y",
+      "B/c"
+     ]
+    },
+    "afterModify": {
+     "files": [
+      "Aaa new.md",
+      "Zeta new.md",
+      "x.png",
+      "m.md",
+      "k.md",
+      "a.md",
+      "Z.md",
+      "Untitled.md",
+      "Templates/T.md",
+      "Templates/Deep/N.md",
+      "Proj/Plan.md",
+      "B/Mid new.md",
+      "B/y.md",
+      "B/c.md"
+     ],
+     "picker": [
+      "Aaa new",
+      "Zeta new",
+      "m",
+      "k",
+      "a",
+      "Z",
+      "Untitled",
+      "Templates/T",
+      "Templates/Deep/N",
+      "Proj/Plan",
+      "B/Mid new",
+      "B/y",
+      "B/c"
+     ]
+    },
+    "afterRename": {
+     "files": [
+      "m renamed.md",
+      "Aaa new.md",
+      "Zeta new.md",
+      "x.png",
+      "k.md",
+      "a.md",
+      "Z.md",
+      "Untitled.md",
+      "Templates/T.md",
+      "Templates/Deep/N.md",
+      "Proj/Plan.md",
+      "B/Mid new.md",
+      "B/y.md",
+      "B/c.md"
+     ],
+     "picker": [
+      "m renamed",
+      "Aaa new",
+      "Zeta new",
+      "k",
+      "a",
+      "Z",
+      "Untitled",
+      "Templates/T",
+      "Templates/Deep/N",
+      "Proj/Plan",
+      "B/Mid new",
+      "B/y",
+      "B/c"
+     ]
+    },
+    "afterFolderRename": {
+     "files": [
+      "B moved/Mid new.md",
+      "B moved/y.md",
+      "B moved/c.md",
+      "m renamed.md",
+      "Aaa new.md",
+      "Zeta new.md",
+      "x.png",
+      "k.md",
+      "a.md",
+      "Z.md",
+      "Untitled.md",
+      "Templates/T.md",
+      "Templates/Deep/N.md",
+      "Proj/Plan.md"
+     ],
+     "picker": [
+      "B moved/Mid new",
+      "B moved/y",
+      "B moved/c",
+      "m renamed",
+      "Aaa new",
+      "Zeta new",
+      "k",
+      "a",
+      "Z",
+      "Untitled",
+      "Templates/T",
+      "Templates/Deep/N",
+      "Proj/Plan"
+     ],
+     "merge": [
+      "B moved/Mid new",
+      "Aaa new",
+      "Zeta new"
+     ]
+    },
+    "afterOutside": {
+     "files": [
+      "Outside.md",
+      "B moved/Mid new.md",
+      "B moved/y.md",
+      "B moved/c.md",
+      "m renamed.md",
+      "Aaa new.md",
+      "Zeta new.md",
+      "x.png",
+      "k.md",
+      "a.md",
+      "Z.md",
+      "Untitled.md",
+      "Templates/T.md",
+      "Templates/Deep/N.md",
+      "Proj/Plan.md"
+     ],
+     "picker": [
+      "Outside",
+      "B moved/Mid new",
+      "B moved/y",
+      "B moved/c",
+      "m renamed",
+      "Aaa new",
+      "Zeta new",
+      "k",
+      "a",
+      "Z",
+      "Untitled",
+      "Templates/T",
+      "Templates/Deep/N",
+      "Proj/Plan"
+     ]
+    }
+   },
+   "s03-header-button": {
+    "ok": true,
+    "ms": 5054,
+    "config": {
+     "newFileLocation": "root",
+     "newFileFolderPath": "/"
+    },
+    "created": [
+     "Untitled/"
+    ],
+    "snap": {
+     "rows": [
+      {
+       "path": "B moved",
+       "text": "B moved",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Empty",
+       "text": "Empty",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Proj",
+       "text": "Proj",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Templates",
+       "text": "Templates",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Untitled",
+       "text": "Untitled",
+       "folder": true,
+       "renaming": true,
+       "focus": true,
+       "active": false
+      },
+      {
+       "path": "a.md",
+       "text": "a",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Aaa new.md",
+       "text": "Aaa new",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "k.md",
+       "text": "k",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "m renamed.md",
+       "text": "m renamed",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Outside.md",
+       "text": "Outside",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Untitled.md",
+       "text": "Untitled",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "x.png",
+       "text": "x",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Z.md",
+       "text": "Z",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Zeta new.md",
+       "text": "Zeta new",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      }
+     ],
+     "editing": {
+      "text": "Untitled",
+      "editable": "true",
+      "focused": true,
+      "selected": "Untitled",
+      "path": "Untitled"
+     },
+     "active": "tree-item-inner nav-folder-title-content DIV",
+     "notices": []
+    },
+    "afterEscape": {
+     "created": [
+      "Untitled/"
+     ],
+     "snap": {
+      "rows": [
+       {
+        "path": "B moved",
+        "text": "B moved",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Empty",
+        "text": "Empty",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Proj",
+        "text": "Proj",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Templates",
+        "text": "Templates",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled",
+        "text": "Untitled",
+        "folder": true,
+        "renaming": false,
+        "focus": true,
+        "active": false
+       },
+       {
+        "path": "a.md",
+        "text": "a",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Aaa new.md",
+        "text": "Aaa new",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "k.md",
+        "text": "k",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "m renamed.md",
+        "text": "m renamed",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Outside.md",
+        "text": "Outside",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled.md",
+        "text": "Untitled",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "x.png",
+        "text": "x",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Z.md",
+        "text": "Z",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Zeta new.md",
+        "text": "Zeta new",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       }
+      ],
+      "editing": null,
+      "active": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-focused BODY",
+      "notices": []
+     }
+    },
+    "second": {
+     "created": [
+      "Untitled/",
+      "Untitled 1/"
+     ],
+     "editing": {
+      "text": "Untitled 1",
+      "editable": "true",
+      "focused": true,
+      "selected": "Untitled 1",
+      "path": "Untitled 1"
+     }
+    },
+    "third": {
+     "created": [
+      "Untitled/",
+      "Untitled 1/",
+      "Untitled 2/"
+     ],
+     "editing": {
+      "text": "Untitled 2",
+      "editable": "true",
+      "focused": true,
+      "selected": "Untitled 2",
+      "path": "Untitled 2"
+     }
+    },
+    "folders": [
+     "B moved/",
+     "Empty/",
+     "Proj/",
+     "Templates/",
+     "Templates/Deep/",
+     "Untitled/",
+     "Untitled 1/",
+     "Untitled 2/"
+    ]
+   },
+   "s04-type-and-enter": {
+    "ok": true,
+    "ms": 2078,
+    "created": [
+     "Untitled 3/"
+    ],
+    "editing": {
+     "text": "Untitled 3",
+     "editable": "true",
+     "focused": true,
+     "selected": "Untitled 3",
+     "path": "Untitled 3"
+    },
+    "whileTyping": {
+     "text": "Fresh",
+     "editable": "true",
+     "focused": true,
+     "selected": "",
+     "path": "Untitled 3"
+    },
+    "after": {
+     "created": [
+      "Fresh/"
+     ],
+     "snap": {
+      "rows": [
+       {
+        "path": "B moved",
+        "text": "B moved",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Empty",
+        "text": "Empty",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Fresh",
+        "text": "Fresh",
+        "folder": true,
+        "renaming": false,
+        "focus": true,
+        "active": false
+       },
+       {
+        "path": "Proj",
+        "text": "Proj",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Templates",
+        "text": "Templates",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled",
+        "text": "Untitled",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 1",
+        "text": "Untitled 1",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 2",
+        "text": "Untitled 2",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "a.md",
+        "text": "a",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Aaa new.md",
+        "text": "Aaa new",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "k.md",
+        "text": "k",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "m renamed.md",
+        "text": "m renamed",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Outside.md",
+        "text": "Outside",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled.md",
+        "text": "Untitled",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "x.png",
+        "text": "x",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Z.md",
+        "text": "Z",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Zeta new.md",
+        "text": "Zeta new",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       }
+      ],
+      "editing": null,
+      "active": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-focused BODY",
+      "notices": []
+     }
+    }
+   },
+   "s05-empty-name": {
+    "ok": true,
+    "ms": 2528,
+    "created": [
+     "Untitled 3/"
+    ],
+    "emptied": {
+     "text": "",
+     "editable": "true",
+     "focused": true,
+     "selected": "",
+     "path": "Untitled 3"
+    },
+    "after": {
+     "created": [
+      "Untitled 3/"
+     ],
+     "snap": {
+      "rows": [
+       {
+        "path": "B moved",
+        "text": "B moved",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Empty",
+        "text": "Empty",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Fresh",
+        "text": "Fresh",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Proj",
+        "text": "Proj",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Templates",
+        "text": "Templates",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled",
+        "text": "Untitled",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 1",
+        "text": "Untitled 1",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 2",
+        "text": "Untitled 2",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 3",
+        "text": "",
+        "folder": true,
+        "renaming": true,
+        "focus": true,
+        "active": false
+       },
+       {
+        "path": "a.md",
+        "text": "a",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Aaa new.md",
+        "text": "Aaa new",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "k.md",
+        "text": "k",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "m renamed.md",
+        "text": "m renamed",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Outside.md",
+        "text": "Outside",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled.md",
+        "text": "Untitled",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "x.png",
+        "text": "x",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Z.md",
+        "text": "Z",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Zeta new.md",
+        "text": "Zeta new",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       }
+      ],
+      "editing": {
+       "text": "",
+       "editable": "true",
+       "focused": true,
+       "selected": "",
+       "path": "Untitled 3"
+      },
+      "active": "tree-item-inner nav-folder-title-content DIV",
+      "notices": []
+     }
+    },
+    "afterEscape": {
+     "created": [
+      "Untitled 3/"
+     ],
+     "snap": {
+      "rows": [
+       {
+        "path": "B moved",
+        "text": "B moved",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Empty",
+        "text": "Empty",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Fresh",
+        "text": "Fresh",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Proj",
+        "text": "Proj",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Templates",
+        "text": "Templates",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled",
+        "text": "Untitled",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 1",
+        "text": "Untitled 1",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 2",
+        "text": "Untitled 2",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 3",
+        "text": "Untitled 3",
+        "folder": true,
+        "renaming": false,
+        "focus": true,
+        "active": false
+       },
+       {
+        "path": "a.md",
+        "text": "a",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Aaa new.md",
+        "text": "Aaa new",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "k.md",
+        "text": "k",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "m renamed.md",
+        "text": "m renamed",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Outside.md",
+        "text": "Outside",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled.md",
+        "text": "Untitled",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "x.png",
+        "text": "x",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Z.md",
+        "text": "Z",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Zeta new.md",
+        "text": "Zeta new",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       }
+      ],
+      "editing": null,
+      "active": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-focused BODY",
+      "notices": []
+     }
+    }
+   },
+   "s06-taken-name": {
+    "ok": true,
+    "ms": 2759,
+    "created": [
+     "Untitled 4/"
+    ],
+    "after": {
+     "created": [
+      "Untitled 4/"
+     ],
+     "snap": {
+      "rows": [
+       {
+        "path": "B moved",
+        "text": "B moved",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Empty",
+        "text": "Empty",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Fresh",
+        "text": "Fresh",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Proj",
+        "text": "Proj",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Templates",
+        "text": "Templates",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled",
+        "text": "Untitled",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 1",
+        "text": "Untitled 1",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 2",
+        "text": "Untitled 2",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 3",
+        "text": "Untitled 3",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 4",
+        "text": "Proj",
+        "folder": true,
+        "renaming": true,
+        "focus": true,
+        "active": false
+       },
+       {
+        "path": "a.md",
+        "text": "a",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Aaa new.md",
+        "text": "Aaa new",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "k.md",
+        "text": "k",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "m renamed.md",
+        "text": "m renamed",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Outside.md",
+        "text": "Outside",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled.md",
+        "text": "Untitled",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "x.png",
+        "text": "x",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Z.md",
+        "text": "Z",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Zeta new.md",
+        "text": "Zeta new",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       }
+      ],
+      "editing": {
+       "text": "Proj",
+       "editable": "true",
+       "focused": true,
+       "selected": "",
+       "path": "Untitled 4"
+      },
+      "active": "tree-item-inner nav-folder-title-content DIV",
+      "notices": []
+     },
+     "modals": []
+    },
+    "afterEscape": {
+     "created": [
+      "Untitled 4/"
+     ],
+     "snap": {
+      "rows": [
+       {
+        "path": "B moved",
+        "text": "B moved",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Empty",
+        "text": "Empty",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Fresh",
+        "text": "Fresh",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Proj",
+        "text": "Proj",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Templates",
+        "text": "Templates",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled",
+        "text": "Untitled",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 1",
+        "text": "Untitled 1",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 2",
+        "text": "Untitled 2",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 3",
+        "text": "Untitled 3",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 4",
+        "text": "Untitled 4",
+        "folder": true,
+        "renaming": false,
+        "focus": true,
+        "active": false
+       },
+       {
+        "path": "a.md",
+        "text": "a",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Aaa new.md",
+        "text": "Aaa new",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "k.md",
+        "text": "k",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "m renamed.md",
+        "text": "m renamed",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Outside.md",
+        "text": "Outside",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled.md",
+        "text": "Untitled",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "x.png",
+        "text": "x",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Z.md",
+        "text": "Z",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Zeta new.md",
+        "text": "Zeta new",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       }
+      ],
+      "editing": null,
+      "active": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-focused BODY",
+      "notices": []
+     }
+    }
+   },
+   "s07-click-away": {
+    "ok": true,
+    "ms": 2249,
+    "created": [
+     "Untitled 5/"
+    ],
+    "after": {
+     "created": [
+      "Blurred/"
+     ],
+     "snap": {
+      "rows": [
+       {
+        "path": "B moved",
+        "text": "B moved",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Blurred",
+        "text": "Blurred",
+        "folder": true,
+        "renaming": false,
+        "focus": true,
+        "active": false
+       },
+       {
+        "path": "Empty",
+        "text": "Empty",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Fresh",
+        "text": "Fresh",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Proj",
+        "text": "Proj",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Templates",
+        "text": "Templates",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled",
+        "text": "Untitled",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 1",
+        "text": "Untitled 1",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 2",
+        "text": "Untitled 2",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 3",
+        "text": "Untitled 3",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 4",
+        "text": "Untitled 4",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "a.md",
+        "text": "a",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Aaa new.md",
+        "text": "Aaa new",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "k.md",
+        "text": "k",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "m renamed.md",
+        "text": "m renamed",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Outside.md",
+        "text": "Outside",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled.md",
+        "text": "Untitled",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "x.png",
+        "text": "x",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Z.md",
+        "text": "Z",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Zeta new.md",
+        "text": "Zeta new",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       }
+      ],
+      "editing": null,
+      "active": "cm-content cm-lineWrapping DIV",
+      "notices": []
+     }
+    }
+   },
+   "s08-escape-after-typing": {
+    "ok": true,
+    "ms": 2150,
+    "created": [
+     "Untitled 5/"
+    ],
+    "after": {
+     "created": [
+      "Untitled 5/"
+     ],
+     "snap": {
+      "rows": [
+       {
+        "path": "B moved",
+        "text": "B moved",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Blurred",
+        "text": "Blurred",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Empty",
+        "text": "Empty",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Fresh",
+        "text": "Fresh",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Proj",
+        "text": "Proj",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Templates",
+        "text": "Templates",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled",
+        "text": "Untitled",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 1",
+        "text": "Untitled 1",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 2",
+        "text": "Untitled 2",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 3",
+        "text": "Untitled 3",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 4",
+        "text": "Untitled 4",
+        "folder": true,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled 5",
+        "text": "Untitled 5",
+        "folder": true,
+        "renaming": false,
+        "focus": true,
+        "active": false
+       },
+       {
+        "path": "a.md",
+        "text": "a",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Aaa new.md",
+        "text": "Aaa new",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "k.md",
+        "text": "k",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "m renamed.md",
+        "text": "m renamed",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Outside.md",
+        "text": "Outside",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Untitled.md",
+        "text": "Untitled",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "x.png",
+        "text": "x",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Z.md",
+        "text": "Z",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       },
+       {
+        "path": "Zeta new.md",
+        "text": "Zeta new",
+        "folder": false,
+        "renaming": false,
+        "focus": false,
+        "active": false
+       }
+      ],
+      "editing": null,
+      "active": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-focused BODY",
+      "notices": []
+     }
+    }
+   },
+   "s09-folder-menu": {
+    "ok": true,
+    "ms": 4344,
+    "menu": [
+     [
+      "New note",
+      "New folder",
+      "New canvas",
+      "New base",
+      "---",
+      "Make a copy",
+      "Move folder to...",
+      "Search in folder",
+      "Bookmark...",
+      "---",
+      "Copy path",
+      "---",
+      "Show in system explorer",
+      "---",
+      "---",
+      "Rename...",
+      "Delete"
+     ]
+    ],
+    "created": [
+     "Proj/Untitled/"
+    ],
+    "snap": {
+     "rows": [
+      {
+       "path": "B moved",
+       "text": "B moved",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Blurred",
+       "text": "Blurred",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Empty",
+       "text": "Empty",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Fresh",
+       "text": "Fresh",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Proj",
+       "text": "Proj",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Proj/Untitled",
+       "text": "Untitled",
+       "folder": true,
+       "renaming": true,
+       "focus": true,
+       "active": false
+      },
+      {
+       "path": "Proj/Plan.md",
+       "text": "Plan",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": true
+      },
+      {
+       "path": "Templates",
+       "text": "Templates",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Untitled",
+       "text": "Untitled",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Untitled 1",
+       "text": "Untitled 1",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Untitled 2",
+       "text": "Untitled 2",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Untitled 3",
+       "text": "Untitled 3",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Untitled 4",
+       "text": "Untitled 4",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Untitled 5",
+       "text": "Untitled 5",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "a.md",
+       "text": "a",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Aaa new.md",
+       "text": "Aaa new",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "k.md",
+       "text": "k",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "m renamed.md",
+       "text": "m renamed",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Outside.md",
+       "text": "Outside",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Untitled.md",
+       "text": "Untitled",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "x.png",
+       "text": "x",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Z.md",
+       "text": "Z",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Zeta new.md",
+       "text": "Zeta new",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      }
+     ],
+     "editing": {
+      "text": "Untitled",
+      "editable": "true",
+      "focused": true,
+      "selected": "Untitled",
+      "path": "Proj/Untitled"
+     },
+     "active": "tree-item-inner nav-folder-title-content DIV",
+     "notices": []
+    },
+    "second": {
+     "created": [
+      "Proj/Untitled/",
+      "Proj/Untitled 1/"
+     ],
+     "editing": {
+      "text": "Untitled 1",
+      "editable": "true",
+      "focused": true,
+      "selected": "Untitled 1",
+      "path": "Proj/Untitled 1"
+     }
+    }
+   },
+   "s10-file-menu": {
+    "ok": true,
+    "ms": 918,
+    "menu": [
+     [
+      "Open in new tab",
+      "Open to the right",
+      "Open in new window",
+      "---",
+      "Make a copy",
+      "Move file to...",
+      "Bookmark...",
+      "Merge entire file with...",
+      "---",
+      "Copy path",
+      "---",
+      "Open version history",
+      "---",
+      "Open in default app",
+      "Show in system explorer",
+      "---",
+      "---",
+      "Rename...",
+      "Delete"
+     ]
+    ]
+   },
+   "s11-blank-menu": {
+    "ok": true,
+    "ms": 2014,
+    "menu": [
+     [
+      "New note",
+      "New folder",
+      "New canvas",
+      "New base"
+     ]
+    ],
+    "created": [
+     "Untitled 6/"
+    ],
+    "editing": {
+     "text": "Untitled 6",
+     "editable": "true",
+     "focused": true,
+     "selected": "Untitled 6",
+     "path": "Untitled 6"
+    }
+   },
+   "s12-command": {
+    "ok": true,
+    "ms": 1908,
+    "ran": true,
+    "created": [
+     "Untitled 7/"
+    ],
+    "snap": {
+     "rows": [
+      {
+       "path": "B moved",
+       "text": "B moved",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Blurred",
+       "text": "Blurred",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Empty",
+       "text": "Empty",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Fresh",
+       "text": "Fresh",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Proj",
+       "text": "Proj",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Proj/Untitled",
+       "text": "Untitled",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Proj/Untitled 1",
+       "text": "Untitled 1",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Proj/Plan.md",
+       "text": "Plan",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": true
+      },
+      {
+       "path": "Templates",
+       "text": "Templates",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Untitled",
+       "text": "Untitled",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Untitled 1",
+       "text": "Untitled 1",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Untitled 2",
+       "text": "Untitled 2",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Untitled 3",
+       "text": "Untitled 3",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Untitled 4",
+       "text": "Untitled 4",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Untitled 5",
+       "text": "Untitled 5",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Untitled 6",
+       "text": "Untitled 6",
+       "folder": true,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Untitled 7",
+       "text": "Untitled 7",
+       "folder": true,
+       "renaming": true,
+       "focus": true,
+       "active": false
+      },
+      {
+       "path": "a.md",
+       "text": "a",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Aaa new.md",
+       "text": "Aaa new",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "k.md",
+       "text": "k",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "m renamed.md",
+       "text": "m renamed",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Outside.md",
+       "text": "Outside",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Untitled.md",
+       "text": "Untitled",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "x.png",
+       "text": "x",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Z.md",
+       "text": "Z",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      },
+      {
+       "path": "Zeta new.md",
+       "text": "Zeta new",
+       "folder": false,
+       "renaming": false,
+       "focus": false,
+       "active": false
+      }
+     ],
+     "editing": {
+      "text": "Untitled 7",
+      "editable": "true",
+      "focused": true,
+      "selected": "Untitled 7",
+      "path": "Untitled 7"
+     },
+     "active": "tree-item-inner nav-folder-title-content DIV",
+     "notices": []
+    }
+   },
+   "s13-new-file-location": {
+    "ok": true,
+    "ms": 5342,
+    "current": {
+     "created": [
+      "Untitled 8/"
+     ],
+     "editing": {
+      "text": "Untitled 8",
+      "editable": "true",
+      "focused": true,
+      "selected": "Untitled 8",
+      "path": "Untitled 8"
+     }
+    },
+    "currentCommand": true,
+    "currentCommandCreated": [
+     "Untitled 9/"
+    ],
+    "folder": {
+     "created": [
+      "Untitled 10/"
+     ],
+     "editing": {
+      "text": "Untitled 10",
+      "editable": "true",
+      "focused": true,
+      "selected": "Untitled 10",
+      "path": "Untitled 10"
+     }
+    }
+   },
+   "s14-focused-folder-row": {
+    "ok": true,
+    "ms": 1927,
+    "before": [
+     {
+      "path": "Proj/Plan.md",
+      "text": "Plan",
+      "folder": false,
+      "renaming": false,
+      "focus": false,
+      "active": true
+     }
+    ],
+    "created": [
+     "Untitled 11/"
+    ],
+    "editing": {
+     "text": "Untitled 11",
+     "editable": "true",
+     "focused": true,
+     "selected": "Untitled 11",
+     "path": "Untitled 11"
+    }
+   }
+  },
+  "order": [
+   "s01-order-at-load",
+   "s02-order-after-changes",
+   "s03-header-button",
+   "s04-type-and-enter",
+   "s05-empty-name",
+   "s06-taken-name",
+   "s07-click-away",
+   "s08-escape-after-typing",
+   "s09-folder-menu",
+   "s10-file-menu",
+   "s11-blank-menu",
+   "s12-command",
+   "s13-new-file-location",
+   "s14-focused-folder-row"
+  ],
+  "elapsedMs": 65675,
+  "vaultPath": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/892bde44-e469-45b7-ae54-7ac59f66638d/scratchpad/new-folder/vault1",
+  "title": "New tab - vault1 - Obsidian 1.15.0",
+  "version": null,
+  "readdir": {
+   "/": [
+    ".obsidian",
+    "B",
+    "Empty",
+    "Proj",
+    "Templates",
+    "Untitled.md",
+    "Z.md",
+    "a.md",
+    "k.md",
+    "m.md",
+    "x.png"
+   ],
+   "B": [
+    "c.md",
+    "y.md"
+   ],
+   "Templates": [
+    "Deep",
+    "T.md"
+   ],
+   "Proj": [
+    "Plan.md"
+   ]
+  },
+  "finishedAt": "2026-11-16T14:40:40.149Z",
+  "vaultAtEnd": [
+   "Aaa new.md",
+   "B moved/",
+   "B moved/Mid new.md",
+   "B moved/c.md",
+   "B moved/y.md",
+   "Blurred/",
+   "Empty/",
+   "Fresh/",
+   "Outside.md",
+   "Proj/",
+   "Proj/Plan.md",
+   "Proj/Untitled/",
+   "Proj/Untitled 1/",
+   "Templates/",
+   "Templates/Deep/",
+   "Templates/Deep/N.md",
+   "Templates/T.md",
+   "Untitled/",
+   "Untitled 1/",
+   "Untitled 10/",
+   "Untitled 11/",
+   "Untitled 2/",
+   "Untitled 3/",
+   "Untitled 4/",
+   "Untitled 5/",
+   "Untitled 6/",
+   "Untitled 7/",
+   "Untitled 8/",
+   "Untitled 9/",
+   "Untitled.md",
+   "Z.md",
+   "Zeta new.md",
+   "a.md",
+   "k.md",
+   "m renamed.md",
+   "x.png"
+  ]
+ }
+}

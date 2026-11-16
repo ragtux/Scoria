@@ -27,7 +27,7 @@ Five icon buttons across the top of the pane, the ones Obsidian puts there:
 | Button | Does |
 |---|---|
 | New note | `file-explorer:new-file`, which follows `newFileLocation` |
-| New folder | `file-explorer:new-folder`, at the vault root |
+| New folder | `file-explorer:new-folder`: an `Untitled` folder at the vault root, its name open for typing on the row |
 | Change sort order | A menu of the six orders, with a check on the one in force |
 | Auto-reveal current file | A toggle; it wears the accent color while on |
 | Expand all / Collapse all | The label follows the tree — one folder opened by hand makes it *Collapse all* |
@@ -107,7 +107,11 @@ Right-click a file or a folder for:
 | | Delete |
 
 **Open in new window** opens the file in a [popout window](/docs/app/window/#popout-windows)
-of its own. A right click on the empty space below the last row offers the four New rows
+of its own. **New folder** asks nothing first, as in Obsidian: it makes `Untitled` (then
+`Untitled 1`, `Untitled 2`, …) at once, in the folder you right-clicked or, from the header,
+the command and the empty space, at the vault root, and opens the name on its row. Type a name
+and press `Enter` or click away to rename it; `Escape` keeps it as `Untitled`, and the folder
+stays either way. A right click on the empty space below the last row offers the four New rows
 alone, rooted at the vault. Several rows are commands too, so they can have a key of their
 own — `file-explorer:new-file`, `file-explorer:new-folder`, `file-explorer:move-file`,
 `workspace:edit-file-title` (`F2`), `file-explorer:duplicate-file`, `app:delete-file`.
@@ -128,8 +132,6 @@ takes everything under it out of the index.
 
 - **Pasting or dropping attachments into the vault.** Put the file in the folder yourself;
   the tree will notice.
-- **Inline naming of a new folder.** The header's New folder opens a prompt and creates the
-  folder at the vault root.
 
 ## Bookmarks
 

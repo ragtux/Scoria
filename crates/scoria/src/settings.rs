@@ -2230,15 +2230,16 @@ fn file_field(name: &str, desc: &str, state: &VaultState, field: TextField, any:
 
 /// What the file suggester offers, as (row, path written): every note —
 /// or with `any` every file — by its vault path, a note's without `.md`,
-/// in reverse path order, the order Obsidian 1.15's listed a vault's files
-/// in when it was opened (2026-11-15, `settings-gaps.mjs` s05). Obsidian
-/// lists a file created since then above them all; Scoria does not keep
-/// that order.
+/// in the order Obsidian 1.15's lists them with no query, which is
+/// `vault.getFiles()`'s ([`scoria_vault::Vault::file_order`]: the tree
+/// depth first, each folder's newest arrivals first, then the rest in
+/// descending name order; 2026-11-15 `settings-gaps.mjs` s05, 2026-11-16
+/// `new-folder-picker-order.mjs` s01 and s02).
 fn file_choices(state: &VaultState, any: bool) -> Vec<(String, String)> {
-    let mut out: Vec<(String, String)> = state
+    state
         .vault()
-        .files()
-        .iter()
+        .file_order()
+        .into_iter()
         .filter(|f| any || f.kind == scoria_formats::FileKind::Markdown)
         .map(|f| {
             let label = match f.kind {
@@ -2249,9 +2250,7 @@ fn file_choices(state: &VaultState, any: bool) -> Vec<(String, String)> {
             };
             (label, f.path.clone())
         })
-        .collect();
-    out.sort_by(|a, b| b.1.cmp(&a.1));
-    out
+        .collect()
 }
 
 /// The rows a query leaves, best match first (ties in list order), each
@@ -9260,7 +9259,8 @@ mod tests {
 
     /// What the list offers and what a pick writes (2026-11-15, s05 and
     /// s06): notes by path without `.md`, every file with its extension for
-    /// the Unique note creator, in reverse path order; a query filters
+    /// the Unique note creator, in `vault.getFiles()` order (2026-11-16: a
+    /// note made since the vault opened heads its folder); a query filters
     /// fuzzily, best first, and one matching nothing lists nothing; the
     /// pick is the path with its extension.
     #[test]
@@ -9295,6 +9295,20 @@ mod tests {
                 "Other",
             ]
         );
+        state.create_note("Other new.md", "n\n").unwrap();
+        state.create_note("Templates/Aaa.md", "a\n").unwrap();
+        assert_eq!(
+            labels(false),
+            [
+                "Other new",
+                "Templates/Aaa",
+                "Templates/Unique",
+                "Templates/Deep/Nested",
+                "Templates/Composer",
+                "Target",
+                "Other",
+            ]
+        );
         let notes = file_choices(&state, false);
         let shown = |q: &str| -> Vec<String> {
             filter_choices(&notes, q)
@@ -9304,7 +9318,7 @@ mod tests {
         };
         assert_eq!(shown("nested"), ["Templates/Deep/Nested"]);
         assert_eq!(shown("zzqqxx"), Vec::<String>::new());
-        assert_eq!(shown("").len(), 5);
+        assert_eq!(shown("").len(), 7);
         assert_eq!(shown("Templates/Composer")[0], "Templates/Composer");
         let (ix, ranges) = filter_choices(&notes, "nested").remove(0);
         assert_eq!(notes[ix].1, "Templates/Deep/Nested.md");

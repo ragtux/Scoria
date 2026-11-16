@@ -793,7 +793,9 @@ impl FileExplorer {
     /// steps `s09` and `s11`). The name is the one the row shows, so a
     /// file's extension is neither selected nor typed over.
     pub fn start_rename(&mut self, path: &str, cx: &mut Context<Self>) {
-        self.reveal(path, cx);
+        // Scrolled to and its folders opened, but not marked as the open
+        // file: a folder made by "New folder" is never that.
+        self.show(path, cx);
         let Some(row) = self
             .tree
             .visible_index(path)
@@ -807,6 +809,29 @@ impl FileExplorer {
             editing: inline_field::Editing::selected(row.name),
             layout: None,
         });
+        cx.notify();
+    }
+
+    /// The keyboard an open field holds: the workspace watches it leave,
+    /// because a click away commits the field as Enter does.
+    pub fn rename_focus_handle(&self) -> FocusHandle {
+        self.rename_focus.handle.clone()
+    }
+
+    /// The row being renamed and the name typed into it, trimmed: what
+    /// Enter would hand the workspace.
+    pub fn rename_draft(&self) -> Option<(String, String)> {
+        let edit = self.renaming.as_ref()?;
+        Some((
+            edit.path.clone(),
+            edit.editing.field.text().trim().to_string(),
+        ))
+    }
+
+    /// Puts the focus ring on `path`: the row a rename went through keeps
+    /// it under its new name (`has-focus` on `Fresh`, 2026-11-16).
+    pub fn set_focused_row(&mut self, path: &str, cx: &mut Context<Self>) {
+        self.focused = Some(path.to_string());
         cx.notify();
     }
 

@@ -11,13 +11,14 @@ hardest to get right, so the rules are spelled out rather than summarised.
 | To | Use |
 |---|---|
 | New note | `Ctrl + N`, the Files menu, a click on a link nobody has created, or Enter in the switcher on a name nothing matches |
-| New folder | `file-explorer:new-folder`, or the Files menu |
+| New folder | `file-explorer:new-folder`, the Files header, or the Files menu |
 | Rename | `F2` (`workspace:edit-file-title`), or the Files menu |
 | Move | `file-explorer:move-file` — a fuzzy folder picker |
 | Make a copy | `file-explorer:duplicate-file`, or the Files menu |
 | Delete | `app:delete-file`, or the Files menu |
 
-Each opens a small prompt. The index is brought up to date before the file watcher's events
+New folder makes an `Untitled` folder at once and opens its name on the Files row (see
+[Files](/docs/app/files/#the-right-click-menu)); the others open a small prompt. The index is brought up to date before the file watcher's events
 even arrive, so the Files tree, the panes and the graph are correct the moment the operation
 finishes.
 

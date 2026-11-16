@@ -140,7 +140,7 @@ part, because something outside it is already driving that process.
 | `--find <text>` | Open with the find panel up and this matched |
 | `--find-all <text>` | As `--find`, then select every match (a cursor per match) |
 | `--rename <name>` | Rename the opened note at startup, rewriting links. **Writes to the vault** |
-| `--prompt <kind>` | Open a file-operation prompt: `rename`, `move`, `delete`, `folder` |
+| `--prompt <kind>` | Open a file-operation prompt: `rename`, `move`, `delete` |
 | `--cell <n>` | Open this cell of the note's first table for editing |
 | `--template <text>` | Open the template chooser and pick the template this matches |
 | `--type <text>` | Type this at the cursor in the editor, which is how the completion popup is opened for a screenshot |

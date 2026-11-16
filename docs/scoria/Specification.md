@@ -5880,8 +5880,9 @@ the five buttons with the same Lucide drawings and labels, the sort menu and
 its six orders (files by name, mtime or birth time; folders by name), the
 leaf's two keys read from and written back into `workspace.json`, and
 `FileExplorer::follow`, which highlights the open file and only expands to it
-with auto-reveal on. New folder goes through Scoria's prompt modal rather
-than inline rename, and the search filter is not built.
+with auto-reveal on. New folder makes `Untitled` and renames it on the row
+since 2026-11-16 (see [[#Observed New folder and the file pickers' order, Obsidian 1.15.0]]),
+and the search filter is not built.
 
 **Unprobed:** the computed colour and background of the `is-active` button
 (Scoria paints the accent on the hover wash); whether a visible row of the
@@ -11319,9 +11320,11 @@ tall) with a focused `Search...` field over every file it offers, the first sele
 no cap on their number (68 listed and scrolled): the Note composer's and Daily notes' list the
 notes by path without `.md`, the Unique note creator's lists **every file**, other kinds with
 their extension (`Templates/Pic.png`, `Templates/Sheet.canvas`, `Templates/Data.base`). The order
-is the vault's own reversed: files the vault opened with in reverse path order (`hd-c`, `hd-b`,
+is the vault's own: files the vault opened with in reverse path order (`hd-c`, `hd-b`,
 `Templates/Unique`, `Templates/Deep/Nested`, `Templates/Composer`, `Target`, …), files created
-since above them, newest first. Typing filters fuzzily with `suggestion-highlight` spans, the best
+since above them, newest first. (A second probe made this exact: it is `vault.getFiles()`, and
+a file created since heads its own folder, not the list; see
+[[#Observed New folder and the file pickers' order, Obsidian 1.15.0]].) Typing filters fuzzily with `suggestion-highlight` spans, the best
 match selected; a query matching nothing lists nothing (no empty-state line) and Enter then does
 nothing, the list staying open. Up and Down move the selection; Enter or a click picks, writing the
 path **with** its extension (`"template": "Templates/Deep/Nested.md"`, the same in all three
@@ -11512,3 +11515,76 @@ delete “Two.md”?"). Copy path's submenu (section `copy`) is *as Obsidian URL
 (`lucide-link`: `obsidian://open?vault=…&file=search%2FOne`), *from vault folder* (`vault`:
 `search/One`, with no extension) and *from system root* (`lucide-hard-drive`: the absolute path
 with its extension).
+
+## Observed New folder and the file pickers' order, Obsidian 1.15.0
+
+`tools/obsidian-probe/new-folder-picker-order.mjs` over CDP on 2026-11-16, Obsidian 1.15.0 (the
+installer build 1.13.7 running the 1.15.0 asar) in a private headless sway with its own
+`USER_DATA_DIR` and `CDP_PORT=9473`, on a scratch vault on ext4; results in
+`tools/obsidian-probe/results/2026-11-16-new-folder-picker-order.json`. Fourteen steps, all ok.
+
+**New folder makes the folder first and asks nothing.** Every way in creates `Untitled` at
+once, or `Untitled 1`, `Untitled 2`, … when the name is taken (a note `Untitled.md` beside it
+does not take it), and turns that folder's row into the inline rename: `is-being-renamed`, the
+label `contenteditable`, focused, the whole name selected. No modal, no notice.
+
+| From | Where the folder goes |
+| --- | --- |
+| the Files header's New folder | the vault root |
+| `file-explorer:new-folder` | the vault root |
+| the empty space's menu (New note, New folder, New canvas, New base) | the vault root |
+| a folder's menu, New folder | inside that folder (`Proj/Untitled`, then `Proj/Untitled 1`), the folder opened to show it |
+| a file's menu | not offered: Open in new tab, Open to the right, Open in new window, Make a copy, Move file to..., Bookmark..., Merge entire file with..., Copy path, Open version history, Open in default app, Show in system explorer, Rename..., Delete |
+
+The root is the answer whatever the setting and focus say: with a note in `Proj` open,
+`newFileLocation` `root`, `current` and `folder` (`newFileFolderPath: Templates`) all put the
+header's and the command's folder at the root, and so did a click on the `Templates` row first.
+The new row is not marked as the open file (`is-active` stays on the note); it carries
+`has-focus`.
+
+**The rename that follows** is the row's own (see [[#Observed file explorer drag-and-drop and inline rename behavior, Obsidian 1.14.4]]):
+
+| Then | Result |
+| --- | --- |
+| type `Fresh`, Enter | the folder is `Fresh`; the row keeps `has-focus`, the keyboard goes to the body |
+| Escape (typed or not) | the folder stays as `Untitled N`; it is never removed |
+| select all and delete, Enter | nothing: the field stays open and empty, no notice; Escape then leaves `Untitled N` |
+| type a taken name (`Proj`), Enter | nothing: the field stays open with `Proj`, no notice, no modal; Escape leaves `Untitled N` |
+| type `Blurred`, click in the editor | the folder is `Blurred`: a click away commits |
+
+So a cancelled rename leaves the folder behind under the name it was made with.
+
+**The file pickers' order with no query.** The template file picker (Note composer's here; the
+2026-11-15 pass showed Unique note creator's and Daily notes' use the same list) shows the notes
+in the order of `app.vault.getFiles()`, and that order is the folder tree walked depth first from
+the root, each folder's children in reverse of the order they joined it. At load a folder's
+children join in ascending byte order of their names (the adapter's listing, which Node sorts),
+so the opened vault reads in descending order, files and folders mixed by name:
+
+```
+x.png  m.md  k.md  a.md  Z.md  Untitled.md  Templates/T.md  Templates/Deep/N.md
+Proj/Plan.md  B/y.md  B/c.md
+```
+
+(`getAllLoadedFiles()` is the breadth-first listing in ascending order, `/`, `B`, `Empty`,
+`Proj`, `Templates`, `Untitled.md`, …, `B/c.md`, … — not the picker's order.) After that:
+
+| Change | Where it lands |
+| --- | --- |
+| `Zeta new.md`, then `Aaa new.md` created at the root | at the top, newest first: `Aaa new`, `Zeta new`, `x.png`, … |
+| `B/Mid new.md` created | first in `B` (`…, Proj/Plan, B/Mid new, B/y, B/c`), not at the top |
+| `a.md` modified | stays where it was |
+| `m.md` renamed `m renamed.md` | to the top of its folder, as if new |
+| folder `B` renamed `B moved` | to the top of the root with its files in the order they had (`B moved/Mid new`, `B moved/y`, `B moved/c`) |
+| `Outside.md` written by another program | to the top, the same as a created file |
+
+The Note composer's "Merge with" modal and the quick switcher list recent files with no query
+(nothing in a fresh vault), not this order.
+
+Scoria matches both since 2026-11-16 ([[Development#New folder and the file pickers' order, 2026-11-16]]):
+`scoria_vault::Vault::file_order` keeps each folder's arrivals since the vault opened, and the
+template rows list in its order; New folder makes `Untitled` and opens the row's rename, which
+commits on a click away. **Unprobed:** where New folder goes and whether the Files pane is shown
+when the command runs with the left dock hidden or on another tab (Scoria shows the Files pane,
+since the field is on the row); a click away from an empty or taken name (Scoria drops the edit
+and keeps the name the row had).

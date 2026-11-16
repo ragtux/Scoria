@@ -31,7 +31,7 @@ cargo run --release -p scoria -- <vault> --note X --source --command editor:tabl
 cargo run --release -p scoria -- <vault> --note X --cell 2 --type new --press enter   # open a table cell, type in it, press keys (enter, tab, shift-tab, escape, up, down)
 cargo run --release -p scoria -- <vault> --note X --template Daily   # open the template chooser and pick what the query matches
 cargo run --release -p scoria -- <vault> --note X --find word     # open with the find panel up and the query matched
-cargo run --release -p scoria -- <vault> --note X --prompt rename  # open the rename prompt (move, delete, folder) for screenshots
+cargo run --release -p scoria -- <vault> --note X --prompt rename  # open the rename prompt (move, delete) for screenshots
 cargo run --release -p scoria -- <vault> --note X --rename "New"   # rename the note at startup, rewriting links (use a scratch vault)
 cargo run --release -p scoria -- <vault> --control /run/user/1000/scoria.sock   # the JSON control socket, see the section below (not with --stress)
 cargo run --release -p scoria -- <vault> --frame native            # the desktop's own title bar; the default is Obsidian's hidden frame (SCORIA_FRAME=native does the same)
@@ -341,6 +341,7 @@ uses behave as Obsidian's do.
 | Some HTML in notes | 2026-11-15: `<sup>`, `<sub>`, `<small>` and `<big>` at their size and baseline, an inline `style`'s colour, background, weight, slant and line, and a raw table's `colspan`, `rowspan` and `<caption>`, see [[#Some HTML in notes: scripts, inline styles and spanned tables, 2026-11-15]] |
 | Settings rows and small gaps | done 2026-11-16: Show tab title bar and Always focus new tabs acted on, Ctrl+Enter in an extraction prompt, File recovery's View and Clear, and a file picker for the template rows, see [[#Tab title bar, new-tab focus, extraction Ctrl+Enter, File recovery's buttons and the template picker, 2026-11-16]] and [[Specification#Observed tab title bar, new-tab focus, extraction Ctrl+Enter, File recovery's buttons and the file picker, Obsidian 1.15.0]] |
 | Bases cell ranges and the Search result menu | done 2026-11-16: ranges by Shift and Ctrl+A, copied as tab-separated text, pasted over and emptied; a file row's and a match line's right-click menus, see [[#Bases cell selection and the Search result menu, 2026-11-16]], [[Specification#Observed Bases cell selection, Obsidian 1.15.1]] and [[Specification#Observed Search result menus, Obsidian 1.15.1]] |
+| New folder and the file pickers' order | done 2026-11-16: New folder makes `Untitled` and renames it on the Files row, a click away commits a row rename, and the template pickers list in `vault.getFiles()` order, see [[#New folder and the file pickers' order, 2026-11-16]] and [[Specification#Observed New folder and the file pickers' order, Obsidian 1.15.0]] |
 
 ### The 2026-11-16 merge and 0.7.0
 
@@ -359,6 +360,65 @@ the corpus at 1,008 of 1,009 and CommonMark at 652 of 652, `cargo fmt --check` a
 `drive.py` under the same name: one ran the other's script, against the other's app, three
 times before noticing. Nothing in the repo was touched, but a scratch vault was. Give each
 agent a scratch folder named after itself from the start.
+
+### New folder and the file pickers' order, 2026-11-16
+
+Two rows of the differences page: New folder asked for a name in a prompt, and the template
+pickers listed in reverse path order where Obsidian put new files first. Probed first, see
+[[Specification#Observed New folder and the file pickers' order, Obsidian 1.15.0]].
+
+**The probe.** `tools/obsidian-probe/new-folder-picker-order.mjs`, Obsidian 1.15.0 in a private
+headless sway (its own `XDG_RUNTIME_DIR` under `/run/user/1000`, a dead session bus,
+`USER_DATA_DIR` there, `CDP_PORT=9473`, `OBSIDIAN_ARGS=--ozone-platform=x11` on the sway's
+XWayland), fourteen steps in one pass, the vault on ext4 so that a readdir order could not pass
+for a sorted one. What surprised: the header's New folder, the command and the empty space's
+menu all go to the vault root whatever `newFileLocation` says and whichever row is focused; a
+cancelled rename never removes the folder; and "files created since the vault opened first" was
+only half right. The list is `vault.getFiles()`, which walks the folder tree depth first with
+each folder's children in reverse of the order they joined it, so a new file heads *its own
+folder* (`B/Mid new` came after `Proj/Plan`, not first), a renamed file or folder is new again,
+and a folder's files ride along with it in the order they had.
+
+**What was built.**
+- `scoria_vault::Vault::file_order`, that walk. The vault keeps an `arrived` map from a path to
+  the turn it came in on (a file or folder `refresh_path` adds, so Scoria's own writes and the
+  watcher's alike); a folder's children sort by turn, newest first, then the ones the vault
+  opened with by name, descending in byte order. `rename` carries the turns of what moved under
+  a renamed folder and gives the renamed item a fresh one; a removal forgets the path. The
+  folder walk that `refresh_path` makes sorts what it finds, so files arriving together are
+  numbered the same on every filesystem.
+- `settings::file_choices` lists in that order: the three "Template file location" rows.
+- New folder: `start_new_folder` makes `available_path(parent, "Untitled", "")` at once, shows
+  the Files pane and calls `FileExplorer::start_rename` on the new row. Enter, the empty and the
+  taken name go through the row rename that F2 already had (`commit_row_rename`); Escape leaves
+  the folder. `PendingOp::NewFolder` and its prompt are gone, and so is `--prompt folder`.
+- A click away commits a Files row's rename (Obsidian's `onTitleBlur`, recorded on 2026-10-25 but
+  never built): the workspace watches the field's focus handle with `on_focus_out` and commits
+  what was typed; a name the rename refuses drops the edit, since nothing would hold the field.
+  `start_rename` scrolls to the row without marking it the open file, and a rename that went
+  through leaves the focus ring on the new name.
+
+**Driven.** The debug build in the same sway over the control socket: `file-explorer:new-folder`
+made `Untitled` with the field open on the row and the name selected; `Fresh` + Enter renamed it;
+Escape left `Untitled 1`; an emptied field and `Proj` (taken) each stayed open on Enter and
+Escape left the folder; with the window active, typing `Blur` and clicking in the editor renamed
+the folder `Blur`, and an emptied or taken name clicked away from left `Untitled N`.
+
+**Traps.** A headless sway with no input device never gives a window the keyboard, so gpui
+reports the window inactive and delivers no focus events at all (the click away seemed not to
+commit). `wtype -s 900000 -P shift_l -p shift_l` in the background holds a virtual keyboard open;
+after `swaymsg '[app_id=scoria] focus'` the window is active. A field left open by the inactive
+run then swallowed the next New folder's focus (the keys went to the note), so restart the app
+after making the window active.
+
+**Left.** Whether the command shows a hidden Files pane in Obsidian is unprobed (Scoria shows
+it, since the field is on the row), and what a click away does with an empty or taken name.
+
+**Tests.** `scoria_vault::tests::file_order_is_obsidians_get_files` (the probe's fixture and
+steps against the `getFiles()` lists Obsidian printed),
+`ops::tests::a_new_folder_is_untitled_then_numbered`, and
+`settings::tests::the_file_suggester_lists_filters_and_writes_the_path` with two notes created
+after the vault opened.
 
 ### Excluded files, 2026-11-16
 
