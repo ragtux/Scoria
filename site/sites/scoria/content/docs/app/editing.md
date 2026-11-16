@@ -179,6 +179,30 @@ when the counts match, and otherwise pastes the whole clipboard at each. Movemen
 every cursor, and selections that come to overlap merge. `Escape`, or a plain click, keeps
 only the primary cursor.
 
+## Pasting and dropping
+
+`Ctrl + V` in Live Preview or Source mode takes the best of what the clipboard holds:
+
+| On the clipboard | What the paste writes |
+|---|---|
+| Files a file manager copied | each file copied into the [attachment folder](/docs/settings/) under its own name, and embedded, a blank line between two: `![[photo.png]]` |
+| An image (a screenshot, a browser's *Copy image*) | the image saved as `Pasted image 20261115195041.png`, named after the time to the second, and embedded |
+| Rich text from a web page or a document | the text as Markdown: headings, bold and italic, links, images, lists, tables, code and quotes; scripts and styles are left out |
+| Plain text | the text as it is |
+
+`Ctrl + Shift + V`, and **Paste as plain text** in the right-click menu, always paste the plain
+text. Turn off **Settings → Editor → Convert pasted HTML to Markdown** (`autoConvertHtml`)
+for every paste to do the same.
+
+Files dragged in from a file manager drop where you let go of them: each is copied in and
+embedded at that point, the caret after them. A file that is already in the vault is not
+copied; its embed goes in at the caret instead. A name that is taken gets the next number,
+`photo 1.png`. One `Ctrl + Z` takes a paste or a drop back as a whole; the saved files stay.
+
+On Linux, files and rich text are read with the desktop's own clipboard tools, `wl-paste`
+(wl-clipboard) under Wayland and `xclip` under X11; without them a paste is the plain text
+or the image.
+
 ## Undo
 
 Undo and redo group the way CodeMirror's do: consecutive typing, or consecutive deleting,

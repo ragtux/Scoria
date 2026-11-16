@@ -56,7 +56,7 @@ Things Obsidian does that Scoria intends to do and does not.
 | **Line numbers, indentation guides, right-to-left** | Read and shown in Settings, not acted on. `editor:toggle-line-numbers` writes the setting for Obsidian to read; no gutter is drawn |
 | **Spellcheck** | No spellcheck. `editor:toggle-spellcheck` writes the setting for Obsidian to read |
 | **Page preview from File properties** | Page preview works from links, panes, tabs, bases and the graph (see [links](/docs/format/links/#page-preview)); a link in the File properties pane (`properties:open-local`) opens on a click but does not preview |
-| **Pasting and attachments** | A paste is text: copied HTML is not converted to Markdown, and a pasted or dropped image or file is not saved as an attachment. Put the file in the folder yourself, or pick it with **Insert attachment** (`editor:attach-file`), which copies it where the attachment setting says; **Download attachments for current file** (`editor:download-attachments`) fetches a note's remote images into the vault. Neither downloads a bare URL in frontmatter |
+| **Pasting and dropping** | Copied HTML, a clipboard image, files a file manager copied and files dropped on the editor all work as in Obsidian. On Linux the files and the HTML are read through `wl-paste` or `xclip`, so without those tools a paste is the plain text or the image; on macOS and Windows a paste is the plain text or the image for now. Text or HTML dragged in from another app is not dropped (only files are), and a paste or drop into a canvas or an editing page preview does nothing |
 
 ### Panes and plugins
 
@@ -74,7 +74,7 @@ Things Obsidian does that Scoria intends to do and does not.
 | **New folder** | Asks for a name in a prompt first, where Obsidian creates `Untitled` and renames it on the row |
 | **System trash on Windows and macOS** | Implemented on Linux (freedesktop trash with a `.trashinfo` record); elsewhere it falls back to the vault's `.trash/` |
 | **Excluded files** | `userIgnoreFilters` is shown in Settings but cannot be edited there, and search, the graph and unlinked mentions do not hide what it excludes |
-| **Settings Scoria does not act on yet** | The rows write what Obsidian writes, bar Spellcheck languages, Excluded files and Override config folder, and the option tabs of plugins Scoria does not have, which show their values only. Rows for behavior Scoria lacks are written for Obsidian and marked "not in Scoria yet": Language, Show tab title bar, Native menus, Always focus new tabs, Convert pasted HTML to Markdown, and the plugin options above. **Custom app icon** takes effect on X11 only. See [Settings](/docs/settings/) |
+| **Settings Scoria does not act on yet** | The rows write what Obsidian writes, bar Spellcheck languages, Excluded files and Override config folder, and the option tabs of plugins Scoria does not have, which show their values only. Rows for behavior Scoria lacks are written for Obsidian and marked "not in Scoria yet": Language, Show tab title bar, Native menus, Always focus new tabs, and the plugin options above. **Custom app icon** takes effect on X11 only. See [Settings](/docs/settings/) |
 | **Search result context menu** | Sorting, copying, collapsing and the keyboard are in; a result has no right-click menu yet. See [search](/docs/app/search/) |
 | **URI links from a browser on macOS** | A URI given on the command line works on all three platforms; a `scoria://` or `obsidian://` link clicked in a browser does not reach Scoria on macOS yet |
 

@@ -3159,7 +3159,7 @@ impl SettingsView {
                 "Automatically convert HTML to Markdown when pasting and drag-and-drop from web pages.",
                 app,
                 AUTO_CONVERT_HTML,
-            ).not_yet(),
+            ),
             app_toggle(
                 "Vim key bindings",
                 "Use Vim key bindings when editing.",
@@ -7888,6 +7888,9 @@ mod tests {
                 "Auto-pair Markdown syntax",
                 "Smart lists",
                 "Indent using tabs",
+                // Read by `Editor::paste_clipboard`, through
+                // `Editor::set_convert_html`.
+                "Convert pasted HTML to Markdown",
                 "Vim key bindings",
                 "Automatically update internal links",
                 "Use [[Wikilinks]]",

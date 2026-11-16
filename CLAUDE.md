@@ -36,6 +36,7 @@ crates/scoria-math      TeX math typeset on RaTeX (KaTeX-compatible): a drawing 
 crates/scoria-highlight code highlighting: Prism's tokenizer and grammars ported, and the --code-* each token paints from (no gpui)
 crates/scoria-export    Export to PDF and Export as image: block layout and pagination, the PDF (krilla), the canvas PNG (tiny-skia) (no gpui)
 crates/scoria-audio     the Audio recorder (cpal capture, AAC encoding on a worker, the .m4a writer) and the player (symphonia + opus-decoder, cpal out), a video file's header (no gpui)
+crates/scoria-paste     what a paste or a drop writes: copied HTML as Markdown (html5ever), attachment names, a uri-list's paths (no gpui)
 crates/scoria-bench     spike benchmarks: synthetic vault generator, index timer (bin)
 docs/anya_scoria_gen    procedural scoria-logo generator (bin, zero deps, OUTSIDE the cargo workspace)
 docs/scoria             Obsidian vault: spec and design notes (dogfooded by Scoria)

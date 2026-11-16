@@ -4068,7 +4068,127 @@ basename alone would have been ambiguous.
 does (the harness can only put an image there); a collision between two
 attachments of the same name, which the timestamped name makes hard to
 provoke; a drop onto a folder row in the explorer or onto a canvas; and whether
-the `Pasted image` prefix is localized.
+the `Pasted image` prefix is localized. The 2026-11-15 pass below answers
+files on the clipboard and several files dropped at once.
+
+## Observed HTML paste and file drops, Obsidian 1.15.0
+
+`tools/obsidian-probe/paste-html-and-drops.mjs` on 2026-11-15, against
+Obsidian 1.15.0 (installer 1.13.7, Electron 43.1.0) in a private headless
+sway with a data directory of its own; results in
+`tools/obsidian-probe/results/2026-11-15-paste-html-and-drops.json` (three
+passes: the first lost its later paste steps to a mode switch that left the
+keyboard off the editor, so the second re-ran them with a click into the
+text first, and the third added fifteen fixtures). Every paste is a real
+Ctrl+V of what `clipboard.write({ html, text })` put on Electron's clipboard;
+every drop is `Input.dispatchDragEvent`.
+
+**The setting.** `autoConvertHtml` ("Convert pasted HTML to Markdown"), read
+as `true` with no key in `app.json`. Off, the vault's `app.json` gained
+`"autoConvertHtml": false`.
+
+**What a paste takes.** With the setting on, a clipboard holding `text/html`
+is converted, whatever `text/plain` beside it says (`<p>from html</p>` with
+the text `from text` pasted `from html`), and an HTML-only clipboard converts
+too. With the setting off, or with **Ctrl+Shift+V** at any setting, the paste
+is the `text/plain` alone, and a clipboard with HTML and no text pastes
+nothing. No entry of `app.commands.commands` had an id or name that
+mentions paste or drop in this build (the recorded id list in
+`scoria-commands` carries an `editor:paste` from an earlier dump).
+
+The converted text goes in at the cursor as it stands: mid-line
+(`BEFORE # One…###### SixAFTER`), after a list marker (`- item - one\n- two…`),
+inside a quote, inside a fenced code block and inside a code span alike, with
+nothing added on either side, and over a selection it replaces it. Source
+mode and Live Preview paste the same text. The caret ends after the paste,
+and one Ctrl+Z takes the whole paste back.
+
+**The conversion**, from the 51 fixtures (each is a test case in
+`crates/scoria-paste/tests/obsidian-html-paste.json`, html and the text the
+editor held):
+
+| HTML | Markdown |
+| --- | --- |
+| `<h1>`…`<h6>` | `# One` … `###### Six`, a blank line apart |
+| `<p>`, `<div>`, `<center>`, `<dl>`/`<dt>`/`<dd>`, `<figure>` | paragraphs, a blank line apart |
+| `<br>` | two spaces and a newline (`line one  \nline two`); `a<br><br><br>b` is `a  \n  \n  \nb` |
+| `<hr>` | `---` |
+| `<b>`, `<strong>` | `**b**`; `<b> padded </b>x` is `**padded** x`; an empty one writes nothing |
+| `<i>`, `<em>` | `_i_` |
+| `<del>`, `<s>` | `~~del~~` (but `<strike>` is plain text) |
+| `<mark>` | `==mark==` |
+| `<u>`, `<sup>`, `<sub>`, `<kbd>`, `<span>`, `<font>` | their text |
+| `<code>` | `` `code` ``; ``a`b`` is ` ``a`b`` `, ```` ``x```` is `` ` ``x ` ``; markup inside is converted (`` `a **b**` ``) |
+| `<pre><code class="language-rust">` | a fence, ```` ```rust ````, the code's last newline dropped, markup inside ignored; a fence inside makes it ```` ```` ```` |
+| `<pre>` without `<code>` | a paragraph of its text |
+| `<a href="…" title="T">` | `[text](href "T")`, the href trimmed, spaces as `%20`, `(` `)` as `\(` `\)`, `"` `<` and non-ASCII as they are; a title's `"` as `\"`; no href: the text |
+| `<img src alt title>` | `![alt](src "title")`, the src escaped as an href; no src: nothing; a `data:` src stays inline, no file is saved |
+| `<ul>`, `<ol>` | `- one`, `1. first`, nested items indented four spaces; `start="5"` counts from 5 |
+| `<li><p>…</p><p>…</p></li>` | `- para one\n    \n    para two\n    \n- plain` |
+| `<input type="checkbox" checked>` in an item | `- [x]  done` (the item's own space follows) |
+| `<blockquote>` | `> ` on every line, blank ones too (`> quoted\n> \n> > nested`) |
+| `<table>` | a pipe table with no padding (below); `align` gives `:--` `:-:` `--:`; a cell's pipe is escaped with a backslash, its line breaks are `<br>`; a `colspan="2"` cell is followed by an empty three-space cell |
+| `<script>`, `<style>`, `<noscript>`, comments, `<iframe>`, `<video>` | nothing |
+| entities | decoded; `&nbsp;` stays U+00A0 |
+| `*stars* _under_ # [x] [[wiki]] #tag` in text | unchanged: nothing is escaped |
+| whitespace | runs collapse to one space; space at a block's edges goes |
+| Chromium's `<meta charset='utf-8'>…<!--StartFragment-->` wrapper | ignored |
+| Google Docs' `<b style="font-weight:normal">` around paragraphs | `**\n\n…\n\n**`: the wrapper is still a `<b>`, and the spans' `font-weight:700` is not bold |
+
+A table with a header row, and one without (which gets an empty header):
+
+```
+|A|B|
+|---|---|
+|1|2|
+|x \| y|**bold**|
+
+|   |   |
+|---|---|
+|a|b|
+```
+
+The result is trimmed of leading newlines and trailing whitespace, but a
+leading space stays (` ![sp](…)` after an `<img>` with no src).
+
+Two things in the editor's text are the editor's, not the conversion's. An
+`<ol>` that follows another one is numbered on from it once it lands (`3.
+five` for `<ol start="5">`): a blank line does not end a CommonMark list, and
+Obsidian renumbers it. And a table pasted in Live Preview was padded by the
+time it was read back on one pass (`| A      | B        |`), where the first
+pass and both Source-mode pastes read it unpadded: that is the table editor
+formatting a table the caret is in.
+
+**Files on the clipboard.** A `text/uri-list` on the clipboard, which is what
+a file manager's Copy puts there, is a paste of the files: each is copied into
+`attachmentFolderPath` under its own name and embedded, two files a blank line
+apart (`BEFORE ![[photo 1.png]]\n\n![[notes.txt]]AFTER`), the next number
+taken when a name is in use. Nothing else is inserted. (The pass's `wl-copy`
+rows are void: the compositor never handed Obsidian that selection.)
+
+**Drops.**
+
+| Dropped | Result |
+| --- | --- |
+| a file from outside the vault | copied in under its own name, embedded **at the drop point**, not the caret; the caret ends after it |
+| two files | both copied, `![[photo 8.png]]\n\n![[notes 7.txt]]` at the drop point |
+| a `.md` file from outside | copied in like any file, embedded as `![[Outside Note]]` |
+| a file already in the vault | not copied; embedded `![[Inside.png]]` **at the caret**, the caret then moved to the drop point |
+| one in-vault and two outside files | the two at the drop point; `![[Inside.png]]\n\n` at the caret |
+| onto a selection | inserted at the drop point inside it; the selection is not replaced |
+| dragged `text/html` | converted (setting on) and inserted at the drop point, the caret after it; setting off, its text |
+| dragged `text/plain` or a URL | inserted at the drop point and left selected |
+
+One Ctrl+Z takes a drop back whole; the copied files stay. Source mode drops
+the same way. One drop, the first into a freshly opened note, landed at the
+caret rather than the pointer; the same drop repeated, and every other one,
+landed at the pointer.
+
+**Unprobed:** a real OS clipboard from another application (the pass could
+only write Electron's own), so whether Chromium hands a `text/uri-list`
+alongside `text/plain` to the same paste, and what a browser's Copy image
+(`text/html` plus `image/png`) pastes, are open; drops onto reading view, a
+canvas or the explorer; a folder dropped.
 
 ## Observed file explorer drag-and-drop and inline rename behavior, Obsidian 1.14.4
 

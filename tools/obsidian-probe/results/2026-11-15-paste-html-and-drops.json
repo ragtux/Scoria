@@ -1,0 +1,5096 @@
+{
+ "about": "tools/obsidian-probe/paste-html-and-drops.mjs, three passes on 2026-11-15 in a private headless sway, Obsidian 1.15.0 (installer 1.13.7, Electron 43.1.0), USER_DATA_DIR of its own and CDP port 9351. pass1 ran every step; its s02 overSelection/undo, s03 and s04 are void (a mode switch left the keyboard off the editor and every Ctrl+V after it reached nothing) and its wl-copy rows in s05 are void in every pass (the compositor never handed Obsidian the selection wl-copy offered: the formats read back are the previous Electron write). pass2 re-ran s00 and s02-s06 with a click into the editor before each paste. pass3 re-ran s00-s01 with fifteen more fixtures.",
+ "pass1": {
+  "startedAt": "2026-11-16T01:21:13.118Z",
+  "steps": {
+   "s00-context": {
+    "ok": false,
+    "ms": 1,
+    "error": "Error: Error: Cannot find module 'obsidian'\nRequire stack:\n- electron/js2c/renderer_init\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1524:15)\n    at a._resolveFilename (node:electron/js2c/renderer_init:2:4844)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1078:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1102:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1129:12)\n    at Module._load (node:internal/modules/cjs/loader:1301:5)\n    at c._load (node:electron/js2c/node_init:2:18095)\n    at s._load (node:electron/js2c/renderer_init:2:34531)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:262:19)\n    at Module.require (node:internal/modules/cjs/loader:1624:12)\n    at Object.evaluate (file:///home/ragtux/bstore2/raga/repos/scoria/.claude/worktrees/agent-ae8071726b88b07cb/tools/obsidian-probe/cdp.mjs:104:13)\n    at async file:///home/ragtux/bstore2/raga/repos/scoria/.claude/worktrees/agent-ae8071726b88b07cb/tools/obsidian-probe/paste-html-and-drops.mjs:218:15\n    at async step (file:///home/ragtux/bstore2/raga/repos/scoria/.claude/worktrees/agent-ae8071726b88b07cb/tools/obsidian-probe/paste-html-and-drops.mjs:45:19)\n    at async file:///home/ragtux/bstore2/raga/repos/scoria/.claude/worktrees/agent-ae8071726b88b07cb/tools/obsidian-probe/paste-html-and-drops.mjs:217:1",
+    "partial": {}
+   },
+   "s01-fixtures-live-preview": {
+    "ok": true,
+    "ms": 36725,
+    "cases": {
+     "headings": {
+      "html": "<h1>One</h1><h2>Two</h2><h3>Three</h3><h4>Four</h4><h5>Five</h5><h6>Six</h6>",
+      "text": "One\nTwo\nThree\nFour\nFive\nSix",
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "# One\n\n## Two\n\n### Three\n\n#### Four\n\n##### Five\n\n###### Six",
+      "cursor": {
+       "cursor": {
+        "line": 10,
+        "ch": 10
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 10,
+          "ch": 10
+         },
+         "head": {
+          "line": 10,
+          "ch": 10
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "inline-marks": {
+      "html": "<p><b>b</b> <strong>strong</strong> <i>i</i> <em>em</em> <del>del</del> <s>s</s> <strike>strike</strike> <code>code</code> <u>u</u> <mark>mark</mark> <sup>sup</sup> <sub>sub</sub> <kbd>kbd</kbd></p>",
+      "text": "b strong i em del s strike code u mark sup sub kbd",
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "**b** **strong** _i_ _em_ ~~del~~ ~~s~~ strike `code` u ==mark== sup sub kbd",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 76
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 76
+         },
+         "head": {
+          "line": 0,
+          "ch": 76
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "nested-marks": {
+      "html": "<p><b>bold <i>both</i></b> and <em><strong>both2</strong></em> and <b> padded </b>x</p>",
+      "text": "bold both and both2 and padded x",
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "**bold _both_** and _**both2**_ and **padded** x",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 48
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 48
+         },
+         "head": {
+          "line": 0,
+          "ch": 48
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "links": {
+      "html": "<p><a href=\"https://example.com/a b?q=1&amp;r=2\">Example</a> <a href=\"https://example.com\" title=\"T\">titled</a> <a>no href</a> <a href=\"/rel/path\">relative</a> <a href=\"https://example.com/x\">https://example.com/x</a> <a href=\"mailto:a@b.c\">mail</a> <a href=\"#frag\">frag</a></p>",
+      "text": "Example titled no href relative https://example.com/x mail frag",
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "[Example](https://example.com/a%20b?q=1&r=2) [titled](https://example.com \"T\") no href [relative](/rel/path) [https://example.com/x](https://example.com/x) [mail](mailto:a@b.c) [frag](#frag)",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 190
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 190
+         },
+         "head": {
+          "line": 0,
+          "ch": 190
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "images": {
+      "html": "<p><img src=\"https://example.com/a.png\" alt=\"Alt text\"> <img src=\"https://example.com/b.png\"> <img src=\"https://example.com/c.png\" alt=\"t\" title=\"Title\" width=\"100\"></p>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "![Alt text](https://example.com/a.png) ![](https://example.com/b.png) ![t](https://example.com/c.png \"Title\")",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 109
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 109
+         },
+         "head": {
+          "line": 0,
+          "ch": 109
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "image-in-link": {
+      "html": "<a href=\"https://example.com/page\"><img src=\"https://example.com/i.png\" alt=\"I\"></a>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "[![I](https://example.com/i.png)](https://example.com/page)",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 59
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 59
+         },
+         "head": {
+          "line": 0,
+          "ch": 59
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "ul-nested": {
+      "html": "<ul><li>one</li><li>two<ul><li>two a</li><li>two b<ul><li>deep</li></ul></li></ul></li><li>three</li></ul>",
+      "text": "one\ntwo\ntwo a\ntwo b\ndeep\nthree",
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "- one\n- two\n    - two a\n    - two b\n        - deep\n- three",
+      "cursor": {
+       "cursor": {
+        "line": 5,
+        "ch": 7
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 5,
+          "ch": 7
+         },
+         "head": {
+          "line": 5,
+          "ch": 7
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "ol": {
+      "html": "<ol><li>first</li><li>second<ol><li>inner</li></ol></li></ol><ol start=\"5\"><li>five</li><li>six</li></ol>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "1. first\n2. second\n    1. inner\n\n3. five\n4. six",
+      "cursor": {
+       "cursor": {
+        "line": 5,
+        "ch": 6
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 5,
+          "ch": 6
+         },
+         "head": {
+          "line": 5,
+          "ch": 6
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "li-paragraphs": {
+      "html": "<ul><li><p>para one</p><p>para two</p></li><li>plain</li></ul>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "- para one\n    \n    para two\n    \n- plain",
+      "cursor": {
+       "cursor": {
+        "line": 4,
+        "ch": 7
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 4,
+          "ch": 7
+         },
+         "head": {
+          "line": 4,
+          "ch": 7
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "tasks": {
+      "html": "<ul><li><input type=\"checkbox\" checked> done</li><li><input type=\"checkbox\"> todo</li></ul>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "- [x]  done\n- [ ]  todo",
+      "cursor": {
+       "cursor": {
+        "line": 1,
+        "ch": 11
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 1,
+          "ch": 11
+         },
+         "head": {
+          "line": 1,
+          "ch": 11
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "table-thead": {
+      "html": "<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr><tr><td>x | y</td><td><b>bold</b></td></tr></tbody></table>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "|A|B|\n|---|---|\n|1|2|\n|x \\| y|**bold**|",
+      "cursor": {
+       "cursor": {
+        "line": 3,
+        "ch": 17
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 3,
+          "ch": 17
+         },
+         "head": {
+          "line": 3,
+          "ch": 17
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "table-no-thead": {
+      "html": "<table><tr><td>a</td><td>b</td></tr><tr><td>c</td><td>d</td></tr></table>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "|   |   |\n|---|---|\n|a|b|\n|c|d|",
+      "cursor": {
+       "cursor": {
+        "line": 3,
+        "ch": 5
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 3,
+          "ch": 5
+         },
+         "head": {
+          "line": 3,
+          "ch": 5
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "table-align-uneven": {
+      "html": "<table><tr><th align=\"left\">L</th><th align=\"center\">C</th><th align=\"right\">R</th></tr><tr><td>1</td><td>2</td></tr></table>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "|L|C|R|\n|:--|:-:|--:|\n|1|2|",
+      "cursor": {
+       "cursor": {
+        "line": 2,
+        "ch": 5
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 2,
+          "ch": 5
+         },
+         "head": {
+          "line": 2,
+          "ch": 5
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "pre": {
+      "html": "<pre><code>fn main() {\n    println!(\"hi\");\n}</code></pre>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "```\nfn main() {\n    println!(\"hi\");\n}\n```",
+      "cursor": {
+       "cursor": {
+        "line": 4,
+        "ch": 3
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 4,
+          "ch": 3
+         },
+         "head": {
+          "line": 4,
+          "ch": 3
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "pre-lang": {
+      "html": "<pre><code class=\"language-rust\">let x = 1;\n</code></pre><pre class=\"lang-js\">var y;</pre>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "```rust\nlet x = 1;\n```\n\nvar y;",
+      "cursor": {
+       "cursor": {
+        "line": 4,
+        "ch": 6
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 4,
+          "ch": 6
+         },
+         "head": {
+          "line": 4,
+          "ch": 6
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "blockquote": {
+      "html": "<blockquote><p>quoted</p><blockquote><p>nested</p></blockquote></blockquote><p>after</p>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "> quoted\n> \n> > nested\n\nafter",
+      "cursor": {
+       "cursor": {
+        "line": 4,
+        "ch": 5
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 4,
+          "ch": 5
+         },
+         "head": {
+          "line": 4,
+          "ch": 5
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "br-and-paras": {
+      "html": "<p>line one<br>line two</p><p>second para</p><hr><p>after rule</p>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "line one  \nline two\n\nsecond para\n\n---\n\nafter rule",
+      "cursor": {
+       "cursor": {
+        "line": 7,
+        "ch": 10
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 7,
+          "ch": 10
+         },
+         "head": {
+          "line": 7,
+          "ch": 10
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "entities": {
+      "html": "<p>&amp; &lt;tag&gt; &quot;q&quot; &nbsp;nbsp&nbsp; &copy; &#8212; &eacute;</p>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "& <tag> \"q\"  nbsp  © — é",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 24
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 24
+         },
+         "head": {
+          "line": 0,
+          "ch": 24
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "script-style-comment": {
+      "html": "<style>p{color:red}</style><p>visible</p><script>alert(1)</script><!-- comment --><noscript>ns</noscript>",
+      "text": "visible",
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "visible",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 7
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 7
+         },
+         "head": {
+          "line": 0,
+          "ch": 7
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "chromium-wrapper": {
+      "html": "<meta charset='utf-8'><html><head></head><body><!--StartFragment--><span style=\"color: rgb(0, 0, 0);\">Hello <b>world</b></span><!--EndFragment--></body></html>",
+      "text": "Hello world",
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "Hello **world**",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 15
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 15
+         },
+         "head": {
+          "line": 0,
+          "ch": 15
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "plain-span-only": {
+      "html": "<meta charset='utf-8'><html><head></head><body><!--StartFragment--><span>just text</span><!--EndFragment--></body></html>",
+      "text": "just text",
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "just text",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 9
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 9
+         },
+         "head": {
+          "line": 0,
+          "ch": 9
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "markdown-chars": {
+      "html": "<p>*stars* _under_ # hash [brackets] `tick` 1. num &lt;angle&gt; a\\b ~tilde~ ==eq== [[wiki]] #tag</p>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "*stars* _under_ # hash [brackets] `tick` 1. num <angle> a\\b ~tilde~ ==eq== [[wiki]] #tag",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 88
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 88
+         },
+         "head": {
+          "line": 0,
+          "ch": 88
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "whitespace": {
+      "html": "<p>a\n   b\t\tc</p>\n\n<div>div one</div><div>div two</div>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "a b c\n\ndiv one\n\ndiv two",
+      "cursor": {
+       "cursor": {
+        "line": 4,
+        "ch": 7
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 4,
+          "ch": 7
+         },
+         "head": {
+          "line": 4,
+          "ch": 7
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "gdocs-spans": {
+      "html": "<meta charset='utf-8'><html><head></head><body><!--StartFragment--><b style=\"font-weight:normal;\" id=\"docs-internal-guid-1\"><p dir=\"ltr\"><span style=\"font-weight:700;\">Bold by style</span><span style=\"font-style:italic;\"> italic by style</span></p></b><!--EndFragment--></body></html>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "**\n\nBold by style italic by style\n\n**",
+      "cursor": {
+       "cursor": {
+        "line": 4,
+        "ch": 2
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 4,
+          "ch": 2
+         },
+         "head": {
+          "line": 4,
+          "ch": 2
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "headings-with-inline": {
+      "html": "<h2><a href=\"https://e.com\">Linked</a> <code>code</code> heading</h2>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "## [Linked](https://e.com) `code` heading",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 41
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 41
+         },
+         "head": {
+          "line": 0,
+          "ch": 41
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "empty-elements": {
+      "html": "<p></p><p><b></b></p><p>x</p><div></div>",
+      "text": "x",
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "x",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 1
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 1
+         },
+         "head": {
+          "line": 0,
+          "ch": 1
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "dl-sup": {
+      "html": "<dl><dt>Term</dt><dd>Definition</dd></dl>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "Term\n\nDefinition",
+      "cursor": {
+       "cursor": {
+        "line": 2,
+        "ch": 10
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 2,
+          "ch": 10
+         },
+         "head": {
+          "line": 2,
+          "ch": 10
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "html-no-text": {
+      "html": "<b>only html</b>",
+      "text": null,
+      "formats": [
+       "text/html"
+      ],
+      "value": "**only html**",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 13
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 13
+         },
+         "head": {
+          "line": 0,
+          "ch": 13
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "text-differs": {
+      "html": "<p>from html</p>",
+      "text": "from text",
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "from html",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 9
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 9
+         },
+         "head": {
+          "line": 0,
+          "ch": 9
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "iframe-video": {
+      "html": "<p>before</p><iframe src=\"https://www.youtube.com/embed/x\"></iframe><video src=\"v.mp4\"></video><p>after</p>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "before\n\nafter",
+      "cursor": {
+       "cursor": {
+        "line": 2,
+        "ch": 5
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 2,
+          "ch": 5
+         },
+         "head": {
+          "line": 2,
+          "ch": 5
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "inline-code-backtick": {
+      "html": "<p><code>a`b</code> and <code>``x</code></p>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "``a`b`` and ` ``x `",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 19
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 19
+         },
+         "head": {
+          "line": 0,
+          "ch": 19
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "pre-with-backticks": {
+      "html": "<pre><code>```\ninner\n```</code></pre>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "````\n```\ninner\n```\n````",
+      "cursor": {
+       "cursor": {
+        "line": 4,
+        "ch": 4
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 4,
+          "ch": 4
+         },
+         "head": {
+          "line": 4,
+          "ch": 4
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "nested-list-in-ol-with-p": {
+      "html": "<ol><li>one<ul><li>a</li></ul></li><li>two</li></ol>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "1. one\n    - a\n2. two",
+      "cursor": {
+       "cursor": {
+        "line": 2,
+        "ch": 6
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 2,
+          "ch": 6
+         },
+         "head": {
+          "line": 2,
+          "ch": 6
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "center-font": {
+      "html": "<center>centered</center><font color=\"red\">font</font>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "centered\n\nfont",
+      "cursor": {
+       "cursor": {
+        "line": 2,
+        "ch": 4
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 2,
+          "ch": 4
+         },
+         "head": {
+          "line": 2,
+          "ch": 4
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "heading-in-li": {
+      "html": "<ul><li><h3>Heading item</h3></li></ul>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "- ### Heading item",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 18
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 18
+         },
+         "head": {
+          "line": 0,
+          "ch": 18
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "br-only": {
+      "html": "a<br><br><br>b",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "a  \n  \n  \nb",
+      "cursor": {
+       "cursor": {
+        "line": 3,
+        "ch": 1
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 3,
+          "ch": 1
+         },
+         "head": {
+          "line": 3,
+          "ch": 1
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     }
+    }
+   },
+   "s02-context": {
+    "ok": true,
+    "ms": 13085,
+    "midLineBlock": {
+     "formats": [
+      "text/plain",
+      "text/html"
+     ],
+     "value": "BEFORE # One\n\n## Two\n\n### Three\n\n#### Four\n\n##### Five\n\n###### SixAFTER",
+     "cursor": {
+      "cursor": {
+       "line": 10,
+       "ch": 10
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 10,
+         "ch": 10
+        },
+        "head": {
+         "line": 10,
+         "ch": 10
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "midLineParas": {
+     "formats": [
+      "text/html"
+     ],
+     "value": "BEFORE line one  \nline two\n\nsecond para\n\n---\n\nafter ruleAFTER",
+     "cursor": {
+      "cursor": {
+       "line": 7,
+       "ch": 10
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 7,
+         "ch": 10
+        },
+        "head": {
+         "line": 7,
+         "ch": 10
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "midLineInline": {
+     "formats": [
+      "text/plain",
+      "text/html"
+     ],
+     "value": "BEFORE **bold _both_** and _**both2**_ and **padded** xAFTER",
+     "cursor": {
+      "cursor": {
+       "line": 0,
+       "ch": 55
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 0,
+         "ch": 55
+        },
+        "head": {
+         "line": 0,
+         "ch": 55
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "inListItem": {
+     "formats": [
+      "text/plain",
+      "text/html"
+     ],
+     "value": "- item - one\n- two\n    - two a\n    - two b\n        - deep\n- three",
+     "cursor": {
+      "cursor": {
+       "line": 5,
+       "ch": 7
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 5,
+         "ch": 7
+        },
+        "head": {
+         "line": 5,
+         "ch": 7
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "inIndentedListItem": {
+     "formats": [
+      "text/plain",
+      "text/html"
+     ],
+     "value": "- item\n\t- sub - one\n- two\n    - two a\n    - two b\n        - deep\n- three",
+     "cursor": {
+      "cursor": {
+       "line": 6,
+       "ch": 7
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 6,
+         "ch": 7
+        },
+        "head": {
+         "line": 6,
+         "ch": 7
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "inQuote": {
+     "formats": [
+      "text/html"
+     ],
+     "value": "> quote line one  \nline two\n\nsecond para\n\n---\n\nafter rule",
+     "cursor": {
+      "cursor": {
+       "line": 7,
+       "ch": 10
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 7,
+         "ch": 10
+        },
+        "head": {
+         "line": 7,
+         "ch": 10
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "inCodeBlock": {
+     "formats": [
+      "text/plain",
+      "text/html"
+     ],
+     "value": "```\n**bold _both_** and _**both2**_ and **padded** x\n```",
+     "cursor": {
+      "cursor": {
+       "line": 1,
+       "ch": 48
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 1,
+         "ch": 48
+        },
+        "head": {
+         "line": 1,
+         "ch": 48
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "inInlineCode": {
+     "formats": [
+      "text/plain",
+      "text/html"
+     ],
+     "value": "`x**bold _both_** and _**both2**_ and **padded** x`",
+     "cursor": {
+      "cursor": {
+       "line": 0,
+       "ch": 50
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 0,
+         "ch": 50
+        },
+        "head": {
+         "line": 0,
+         "ch": 50
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "sourceMode": {
+     "formats": [
+      "text/plain",
+      "text/html"
+     ],
+     "value": "**bold _both_** and _**both2**_ and **padded** x",
+     "cursor": {
+      "cursor": {
+       "line": 0,
+       "ch": 48
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 0,
+         "ch": 48
+        },
+        "head": {
+         "line": 0,
+         "ch": 48
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "sourceModeTable": {
+     "formats": [
+      "text/html"
+     ],
+     "value": "|A|B|\n|---|---|\n|1|2|\n|x \\| y|**bold**|",
+     "cursor": {
+      "cursor": {
+       "line": 3,
+       "ch": 17
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 3,
+         "ch": 17
+        },
+        "head": {
+         "line": 3,
+         "ch": 17
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "overSelection": {
+     "value": "keep SELECTED keep",
+     "cursor": {
+      "cursor": {
+       "line": 0,
+       "ch": 13
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 0,
+         "ch": 5
+        },
+        "head": {
+         "line": 0,
+         "ch": 13
+        }
+       }
+      ]
+     }
+    },
+    "undo": {
+     "pasted": "start ",
+     "afterOneUndo": "start "
+    }
+   },
+   "s03-plain-paste-and-the-setting": {
+    "ok": true,
+    "ms": 13709,
+    "ctrlShiftV": {
+     "inline-marks": {
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 0
+         },
+         "head": {
+          "line": 0,
+          "ch": 0
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "links": {
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 0
+         },
+         "head": {
+          "line": 0,
+          "ch": 0
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "table-thead": {
+      "formats": [
+       "text/html"
+      ],
+      "value": "",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 0
+         },
+         "head": {
+          "line": 0,
+          "ch": 0
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "text-differs": {
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 0
+         },
+         "head": {
+          "line": 0,
+          "ch": 0
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "html-no-text": {
+      "formats": [
+       "text/html"
+      ],
+      "value": "",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 0
+         },
+         "head": {
+          "line": 0,
+          "ch": 0
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     }
+    },
+    "setFalse": false,
+    "appJsonFalse": "{}",
+    "settingOff": {
+     "inline-marks": {
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 0
+         },
+         "head": {
+          "line": 0,
+          "ch": 0
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "links": {
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 0
+         },
+         "head": {
+          "line": 0,
+          "ch": 0
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "table-thead": {
+      "formats": [
+       "text/html"
+      ],
+      "value": "",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 0
+         },
+         "head": {
+          "line": 0,
+          "ch": 0
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "text-differs": {
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 0
+         },
+         "head": {
+          "line": 0,
+          "ch": 0
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "html-no-text": {
+      "formats": [
+       "text/html"
+      ],
+      "value": "",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 0
+         },
+         "head": {
+          "line": 0,
+          "ch": 0
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     }
+    },
+    "settingOffShift": {
+     "inline-marks": {
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 0
+         },
+         "head": {
+          "line": 0,
+          "ch": 0
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "links": {
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 0
+         },
+         "head": {
+          "line": 0,
+          "ch": 0
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     }
+    },
+    "setTrue": true,
+    "appJsonTrue": "{\n  \"autoConvertHtml\": false\n}"
+   },
+   "s04-images-in-html": {
+    "ok": true,
+    "ms": 4040,
+    "dataUri": {
+     "formats": [
+      "text/plain",
+      "text/html"
+     ],
+     "value": "",
+     "cursor": {
+      "cursor": {
+       "line": 0,
+       "ch": 0
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 0,
+         "ch": 0
+        },
+        "head": {
+         "line": 0,
+         "ch": 0
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "htmlPlusImage": {
+     "formats": [
+      "text/html"
+     ],
+     "value": "",
+     "cursor": {
+      "cursor": {
+       "line": 0,
+       "ch": 0
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 0,
+         "ch": 0
+        },
+        "head": {
+         "line": 0,
+         "ch": 0
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "htmlPlusImageAndText": {
+     "formats": [
+      "text/plain",
+      "text/html"
+     ],
+     "value": "",
+     "cursor": {
+      "cursor": {
+       "line": 0,
+       "ch": 0
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 0,
+         "ch": 0
+        },
+        "head": {
+         "line": 0,
+         "ch": 0
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "htmlPlusImageOff": {
+     "formats": [
+      "text/html"
+     ],
+     "value": "",
+     "cursor": {
+      "cursor": {
+       "line": 0,
+       "ch": 0
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 0,
+         "ch": 0
+        },
+        "head": {
+         "line": 0,
+         "ch": 0
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    }
+   },
+   "s05-files-on-the-clipboard": {
+    "ok": true,
+    "ms": 14083,
+    "electronUriListOne": {
+     "formats": [
+      "text/uri-list"
+     ],
+     "value": "BEFORE AFTER",
+     "treeDelta": [],
+     "notices": []
+    },
+    "electronUriListTwo": {
+     "formats": [
+      "text/uri-list"
+     ],
+     "value": "BEFORE AFTER",
+     "treeDelta": [
+      "Target.md (12b)"
+     ],
+     "notices": []
+    },
+    "wlUriListOne": {
+     "formats": [
+      "text/uri-list"
+     ],
+     "value": "BEFORE AFTER",
+     "treeDelta": [],
+     "notices": []
+    },
+    "wlUriListTwo": {
+     "formats": [
+      "text/uri-list"
+     ],
+     "value": "BEFORE AFTER",
+     "treeDelta": [],
+     "notices": []
+    },
+    "wlGnomeCopied": {
+     "formats": [
+      "text/uri-list"
+     ],
+     "value": "BEFORE AFTER",
+     "treeDelta": [],
+     "notices": []
+    },
+    "wlHtml": {
+     "formats": [
+      "text/uri-list"
+     ],
+     "value": "",
+     "treeDelta": [
+      "Target.md (0b)"
+     ],
+     "notices": []
+    }
+   },
+   "s06-drops": {
+    "ok": true,
+    "ms": 25016,
+    "twoFilesAtPointer": {
+     "at": [
+      2,
+      4
+     ],
+     "point": {
+      "x": 643,
+      "y": 214
+     },
+     "dispatched": "dispatched",
+     "value": "![[photo.png]]\n\n![[notes.txt]]line zero\nline one\nline two\nline three\n",
+     "cursor": {
+      "cursor": {
+       "line": 4,
+       "ch": 0
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 4,
+         "ch": 0
+        },
+        "head": {
+         "line": 4,
+         "ch": 0
+        }
+       }
+      ]
+     },
+     "treeDelta": [
+      "Attachments/",
+      "Attachments/notes.txt (11b)",
+      "Attachments/photo.png (71b)"
+     ],
+     "notices": []
+    },
+    "oneFileAtLineEnd": {
+     "at": [
+      1,
+      8
+     ],
+     "point": {
+      "x": 676,
+      "y": 190
+     },
+     "dispatched": "dispatched",
+     "value": "line zero\nline one![[second shot.png]]\nline two\nline three\n",
+     "cursor": {
+      "cursor": {
+       "line": 1,
+       "ch": 28
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 1,
+         "ch": 28
+        },
+        "head": {
+         "line": 1,
+         "ch": 28
+        }
+       }
+      ]
+     },
+     "treeDelta": [
+      "Attachments/second shot.png (71b)"
+     ],
+     "notices": []
+    },
+    "fileInsideVault": {
+     "at": [
+      2,
+      4
+     ],
+     "point": {
+      "x": 643,
+      "y": 214
+     },
+     "dispatched": "dispatched",
+     "value": "![[Inside.png]]line zero\nline one\nline two\nline three\n",
+     "cursor": {
+      "cursor": {
+       "line": 2,
+       "ch": 4
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 2,
+         "ch": 4
+        },
+        "head": {
+         "line": 2,
+         "ch": 4
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "mdFromOutside": {
+     "at": [
+      2,
+      4
+     ],
+     "point": {
+      "x": 643,
+      "y": 214
+     },
+     "dispatched": "dispatched",
+     "value": "line zero\nline one\nline![[Outside Note]] two\nline three\n",
+     "cursor": {
+      "cursor": {
+       "line": 2,
+       "ch": 21
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 2,
+         "ch": 21
+        },
+        "head": {
+         "line": 2,
+         "ch": 21
+        }
+       }
+      ]
+     },
+     "treeDelta": [
+      "Attachments/Outside Note.md (10b)"
+     ],
+     "notices": []
+    },
+    "html": {
+     "at": [
+      2,
+      4
+     ],
+     "point": {
+      "x": 643,
+      "y": 214
+     },
+     "dispatched": "dispatched",
+     "value": "line zero\nline one\nline**dragged** [link](https://e.com) two\nline three\n",
+     "cursor": {
+      "cursor": {
+       "line": 2,
+       "ch": 37
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 2,
+         "ch": 37
+        },
+        "head": {
+         "line": 2,
+         "ch": 37
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "plain": {
+     "at": [
+      2,
+      4
+     ],
+     "point": {
+      "x": 643,
+      "y": 214
+     },
+     "dispatched": "dispatched",
+     "value": "line zero\nline one\nlineplain dragged two\nline three\n",
+     "cursor": {
+      "cursor": {
+       "line": 2,
+       "ch": 17
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 2,
+         "ch": 4
+        },
+        "head": {
+         "line": 2,
+         "ch": 17
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "uriListItem": {
+     "at": [
+      2,
+      4
+     ],
+     "point": {
+      "x": 643,
+      "y": 214
+     },
+     "dispatched": "dispatched",
+     "value": "line zero\nline one\nlinehttps://example.com/page two\nline three\n",
+     "cursor": {
+      "cursor": {
+       "line": 2,
+       "ch": 28
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 2,
+         "ch": 4
+        },
+        "head": {
+         "line": 2,
+         "ch": 28
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "overSelection": {
+     "at": [
+      0,
+      6
+     ],
+     "point": {
+      "x": 655,
+      "y": 166
+     },
+     "dispatched": "dispatched",
+     "value": "line z![[photo 1.png]]ero\nline one\nline two\nline three\n",
+     "cursor": {
+      "cursor": {
+       "line": 0,
+       "ch": 22
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 0,
+         "ch": 22
+        },
+        "head": {
+         "line": 0,
+         "ch": 22
+        }
+       }
+      ]
+     },
+     "treeDelta": [
+      "Attachments/photo 1.png (71b)"
+     ],
+     "notices": []
+    },
+    "outsideSelection": {
+     "at": [
+      2,
+      4
+     ],
+     "point": {
+      "x": 643,
+      "y": 214
+     },
+     "dispatched": "dispatched",
+     "value": "line zero\nline one\nline![[photo 2.png]] two\nline three\n",
+     "cursor": {
+      "cursor": {
+       "line": 2,
+       "ch": 20
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 2,
+         "ch": 20
+        },
+        "head": {
+         "line": 2,
+         "ch": 20
+        }
+       }
+      ]
+     },
+     "treeDelta": [
+      "Attachments/photo 2.png (71b)"
+     ],
+     "notices": []
+    },
+    "htmlSettingOff": {
+     "at": [
+      2,
+      4
+     ],
+     "point": {
+      "x": 643,
+      "y": 214
+     },
+     "dispatched": "dispatched",
+     "value": "line zero\nline one\nlinedragged two\nline three\n",
+     "cursor": {
+      "cursor": {
+       "line": 2,
+       "ch": 11
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 2,
+         "ch": 4
+        },
+        "head": {
+         "line": 2,
+         "ch": 11
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "undoTwoFiles": {
+     "dropped": "line zero\nline one\nline![[photo 3.png]]\n\n![[notes 1.txt]] two\nline three\n",
+     "afterOneUndo": "line zero\nline one\nline two\nline three\n"
+    },
+    "sourceMode": {
+     "at": [
+      2,
+      4
+     ],
+     "point": {
+      "x": 643,
+      "y": 214
+     },
+     "dispatched": "dispatched",
+     "value": "line zero\nline one\nline![[photo 4.png]] two\nline three\n",
+     "cursor": {
+      "cursor": {
+       "line": 2,
+       "ch": 20
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 2,
+         "ch": 20
+        },
+        "head": {
+         "line": 2,
+         "ch": 20
+        }
+       }
+      ]
+     },
+     "treeDelta": [
+      "Attachments/photo 4.png (71b)"
+     ],
+     "notices": []
+    }
+   }
+  },
+  "order": [
+   "s00-context",
+   "s01-fixtures-live-preview",
+   "s02-context",
+   "s03-plain-paste-and-the-setting",
+   "s04-images-in-html",
+   "s05-files-on-the-clipboard",
+   "s06-drops"
+  ],
+  "elapsedMs": 106710,
+  "vaultPath": "/run/user/1000/paste/tmp/scoria-probe-vault.6dW4FZ",
+  "treeAtEnd": [
+   "Attachments/",
+   "Attachments/notes 1.txt (11b)",
+   "Attachments/notes.txt (11b)",
+   "Attachments/Outside Note.md (10b)",
+   "Attachments/photo 1.png (71b)",
+   "Attachments/photo 2.png (71b)",
+   "Attachments/photo 3.png (71b)",
+   "Attachments/photo 4.png (71b)",
+   "Attachments/photo.png (71b)",
+   "Attachments/second shot.png (71b)",
+   "Drop.md (39b)",
+   "Inside.png (71b)",
+   "Sub/",
+   "Target.md (0b)"
+  ],
+  "appJsonAtEnd": "{\n  \"autoConvertHtml\": true,\n  \"attachmentFolderPath\": \"Attachments\"\n}",
+  "finishedAt": "2026-11-16T01:22:59.828Z"
+ },
+ "pass2": {
+  "startedAt": "2026-11-16T01:24:10.262Z",
+  "steps": {
+   "s00-context": {
+    "ok": true,
+    "ms": 3,
+    "version": {
+     "title": "New tab - scoria-probe-vault.VkVYFC - Obsidian 1.15.0",
+     "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+     "apiVersion": null
+    },
+    "autoConvertHtml": true,
+    "appJson": "{}",
+    "commands": [],
+    "defaultHotkeys": {}
+   },
+   "s02-context": {
+    "ok": true,
+    "ms": 15192,
+    "midLineBlock": {
+     "formats": [
+      "text/plain",
+      "text/html"
+     ],
+     "value": "BEFORE # One\n\n## Two\n\n### Three\n\n#### Four\n\n##### Five\n\n###### SixAFTER",
+     "cursor": {
+      "cursor": {
+       "line": 10,
+       "ch": 10
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 10,
+         "ch": 10
+        },
+        "head": {
+         "line": 10,
+         "ch": 10
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "midLineParas": {
+     "formats": [
+      "text/html"
+     ],
+     "value": "BEFORE line one  \nline two\n\nsecond para\n\n---\n\nafter ruleAFTER",
+     "cursor": {
+      "cursor": {
+       "line": 7,
+       "ch": 10
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 7,
+         "ch": 10
+        },
+        "head": {
+         "line": 7,
+         "ch": 10
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "midLineInline": {
+     "formats": [
+      "text/plain",
+      "text/html"
+     ],
+     "value": "BEFORE **bold _both_** and _**both2**_ and **padded** xAFTER",
+     "cursor": {
+      "cursor": {
+       "line": 0,
+       "ch": 55
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 0,
+         "ch": 55
+        },
+        "head": {
+         "line": 0,
+         "ch": 55
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "inListItem": {
+     "formats": [
+      "text/plain",
+      "text/html"
+     ],
+     "value": "- item - one\n- two\n    - two a\n    - two b\n        - deep\n- three",
+     "cursor": {
+      "cursor": {
+       "line": 5,
+       "ch": 7
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 5,
+         "ch": 7
+        },
+        "head": {
+         "line": 5,
+         "ch": 7
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "inIndentedListItem": {
+     "formats": [
+      "text/plain",
+      "text/html"
+     ],
+     "value": "- item\n\t- sub - one\n- two\n    - two a\n    - two b\n        - deep\n- three",
+     "cursor": {
+      "cursor": {
+       "line": 6,
+       "ch": 7
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 6,
+         "ch": 7
+        },
+        "head": {
+         "line": 6,
+         "ch": 7
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "inQuote": {
+     "formats": [
+      "text/html"
+     ],
+     "value": "> quote line one  \nline two\n\nsecond para\n\n---\n\nafter rule",
+     "cursor": {
+      "cursor": {
+       "line": 7,
+       "ch": 10
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 7,
+         "ch": 10
+        },
+        "head": {
+         "line": 7,
+         "ch": 10
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "inCodeBlock": {
+     "formats": [
+      "text/plain",
+      "text/html"
+     ],
+     "value": "```\n**bold _both_** and _**both2**_ and **padded** x\n```",
+     "cursor": {
+      "cursor": {
+       "line": 1,
+       "ch": 48
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 1,
+         "ch": 48
+        },
+        "head": {
+         "line": 1,
+         "ch": 48
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "inInlineCode": {
+     "formats": [
+      "text/plain",
+      "text/html"
+     ],
+     "value": "`x**bold _both_** and _**both2**_ and **padded** x`",
+     "cursor": {
+      "cursor": {
+       "line": 0,
+       "ch": 50
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 0,
+         "ch": 50
+        },
+        "head": {
+         "line": 0,
+         "ch": 50
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "sourceMode": {
+     "formats": [
+      "text/plain",
+      "text/html"
+     ],
+     "value": "**bold _both_** and _**both2**_ and **padded** x",
+     "cursor": {
+      "cursor": {
+       "line": 0,
+       "ch": 48
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 0,
+         "ch": 48
+        },
+        "head": {
+         "line": 0,
+         "ch": 48
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "sourceModeTable": {
+     "formats": [
+      "text/html"
+     ],
+     "value": "|A|B|\n|---|---|\n|1|2|\n|x \\| y|**bold**|",
+     "cursor": {
+      "cursor": {
+       "line": 3,
+       "ch": 17
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 3,
+         "ch": 17
+        },
+        "head": {
+         "line": 3,
+         "ch": 17
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "overSelection": {
+     "value": "keep **bold** keep",
+     "cursor": {
+      "cursor": {
+       "line": 0,
+       "ch": 13
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 0,
+         "ch": 13
+        },
+        "head": {
+         "line": 0,
+         "ch": 13
+        }
+       }
+      ]
+     }
+    },
+    "undo": {
+     "pasted": "start line one  \nline two\n\nsecond para\n\n---\n\nafter rule",
+     "afterOneUndo": "start "
+    }
+   },
+   "s03-plain-paste-and-the-setting": {
+    "ok": true,
+    "ms": 15591,
+    "ctrlShiftV": {
+     "inline-marks": {
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "b strong i em del s strike code u mark sup sub kbd",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 50
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 50
+         },
+         "head": {
+          "line": 0,
+          "ch": 50
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "links": {
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "Example titled no href relative https://example.com/x mail frag",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 63
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 63
+         },
+         "head": {
+          "line": 0,
+          "ch": 63
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "table-thead": {
+      "formats": [
+       "text/html"
+      ],
+      "value": "",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 0
+         },
+         "head": {
+          "line": 0,
+          "ch": 0
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "text-differs": {
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "from text",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 9
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 9
+         },
+         "head": {
+          "line": 0,
+          "ch": 9
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "html-no-text": {
+      "formats": [
+       "text/html"
+      ],
+      "value": "",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 0
+         },
+         "head": {
+          "line": 0,
+          "ch": 0
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     }
+    },
+    "setFalse": false,
+    "appJsonFalse": "{}",
+    "settingOff": {
+     "inline-marks": {
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "b strong i em del s strike code u mark sup sub kbd",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 50
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 50
+         },
+         "head": {
+          "line": 0,
+          "ch": 50
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "links": {
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "Example titled no href relative https://example.com/x mail frag",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 63
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 63
+         },
+         "head": {
+          "line": 0,
+          "ch": 63
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "table-thead": {
+      "formats": [
+       "text/html"
+      ],
+      "value": "",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 0
+         },
+         "head": {
+          "line": 0,
+          "ch": 0
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "text-differs": {
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "from text",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 9
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 9
+         },
+         "head": {
+          "line": 0,
+          "ch": 9
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "html-no-text": {
+      "formats": [
+       "text/html"
+      ],
+      "value": "",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 0
+         },
+         "head": {
+          "line": 0,
+          "ch": 0
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     }
+    },
+    "settingOffShift": {
+     "inline-marks": {
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "b strong i em del s strike code u mark sup sub kbd",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 50
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 50
+         },
+         "head": {
+          "line": 0,
+          "ch": 50
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "links": {
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "Example titled no href relative https://example.com/x mail frag",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 63
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 63
+         },
+         "head": {
+          "line": 0,
+          "ch": 63
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     }
+    },
+    "setTrue": true,
+    "appJsonTrue": "{\n  \"autoConvertHtml\": false\n}"
+   },
+   "s04-images-in-html": {
+    "ok": true,
+    "ms": 4672,
+    "dataUri": {
+     "formats": [
+      "text/plain",
+      "text/html"
+     ],
+     "value": "x ![inline](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNg+M/A8B8ABQACAeIhPrwAAAAASUVORK5CYII=) y",
+     "cursor": {
+      "cursor": {
+       "line": 0,
+       "ch": 133
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 0,
+         "ch": 133
+        },
+        "head": {
+         "line": 0,
+         "ch": 133
+        }
+       }
+      ]
+     },
+     "treeDelta": [
+      "Target.md (133b)"
+     ],
+     "notices": []
+    },
+    "htmlPlusImage": {
+     "formats": [
+      "text/html"
+     ],
+     "value": "![copied](https://example.com/copied.png)",
+     "cursor": {
+      "cursor": {
+       "line": 0,
+       "ch": 41
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 0,
+         "ch": 41
+        },
+        "head": {
+         "line": 0,
+         "ch": 41
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "htmlPlusImageAndText": {
+     "formats": [
+      "text/plain",
+      "text/html"
+     ],
+     "value": "![](https://example.com/copied.png)",
+     "cursor": {
+      "cursor": {
+       "line": 0,
+       "ch": 35
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 0,
+         "ch": 35
+        },
+        "head": {
+         "line": 0,
+         "ch": 35
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "htmlPlusImageOff": {
+     "formats": [
+      "text/html"
+     ],
+     "value": "",
+     "cursor": {
+      "cursor": {
+       "line": 0,
+       "ch": 0
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 0,
+         "ch": 0
+        },
+        "head": {
+         "line": 0,
+         "ch": 0
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    }
+   },
+   "s05-files-on-the-clipboard": {
+    "ok": true,
+    "ms": 21366,
+    "electronUriListOne": {
+     "formats": [
+      "text/uri-list"
+     ],
+     "value": "BEFORE ![[photo.png]]AFTER",
+     "treeDelta": [
+      "Attachments/",
+      "Attachments/photo.png (71b)",
+      "Target.md (26b)"
+     ],
+     "notices": []
+    },
+    "electronUriListTwo": {
+     "formats": [
+      "text/uri-list"
+     ],
+     "value": "BEFORE ![[photo 1.png]]\n\n![[notes.txt]]AFTER",
+     "treeDelta": [
+      "Attachments/notes.txt (11b)",
+      "Attachments/photo 1.png (71b)"
+     ],
+     "notices": []
+    },
+    "wlUriListOne": {
+     "formats": [
+      "text/uri-list"
+     ],
+     "value": "BEFORE ![[photo 2.png]]\n\n![[notes 1.txt]]AFTER",
+     "treeDelta": [
+      "Attachments/notes 1.txt (11b)",
+      "Attachments/photo 2.png (71b)",
+      "Target.md (46b)"
+     ],
+     "notices": []
+    },
+    "wlUriListTwo": {
+     "formats": [
+      "text/uri-list"
+     ],
+     "value": "BEFORE ![[photo 3.png]]\n\n![[notes 2.txt]]AFTER",
+     "treeDelta": [
+      "Attachments/notes 2.txt (11b)",
+      "Attachments/photo 3.png (71b)"
+     ],
+     "notices": []
+    },
+    "wlGnomeCopied": {
+     "formats": [
+      "text/uri-list"
+     ],
+     "value": "BEFORE ![[photo 4.png]]\n\n![[notes 3.txt]]AFTER",
+     "treeDelta": [
+      "Attachments/notes 3.txt (11b)",
+      "Attachments/photo 4.png (71b)"
+     ],
+     "notices": []
+    },
+    "wlHtml": {
+     "formats": [
+      "text/uri-list"
+     ],
+     "value": "![[photo 5.png]]\n\n![[notes 4.txt]]",
+     "treeDelta": [
+      "Attachments/notes 4.txt (11b)",
+      "Attachments/photo 5.png (71b)",
+      "Target.md (34b)"
+     ],
+     "notices": []
+    },
+    "wlPlain": {
+     "formats": [
+      "text/uri-list"
+     ],
+     "value": "![[photo 6.png]]\n\n![[notes 5.txt]]",
+     "treeDelta": [
+      "Attachments/notes 5.txt (11b)",
+      "Attachments/photo 6.png (71b)"
+     ],
+     "notices": []
+    },
+    "wlPng": {
+     "formats": [
+      "text/uri-list"
+     ],
+     "value": "![[photo 7.png]]\n\n![[notes 6.txt]]",
+     "treeDelta": [
+      "Attachments/notes 6.txt (11b)",
+      "Attachments/photo 7.png (71b)"
+     ],
+     "notices": []
+    }
+   },
+   "s06-drops": {
+    "ok": true,
+    "ms": 31122,
+    "twoFilesAtPointer": {
+     "at": [
+      2,
+      4
+     ],
+     "point": {
+      "x": 643,
+      "y": 214
+     },
+     "dispatched": "dispatched",
+     "value": "line zero\nline one\nline![[photo 8.png]]\n\n![[notes 7.txt]] two\nline three\n",
+     "cursor": {
+      "cursor": {
+       "line": 4,
+       "ch": 16
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 4,
+         "ch": 16
+        },
+        "head": {
+         "line": 4,
+         "ch": 16
+        }
+       }
+      ]
+     },
+     "treeDelta": [
+      "Attachments/notes 7.txt (11b)",
+      "Attachments/photo 8.png (71b)"
+     ],
+     "notices": []
+    },
+    "oneFileAtLineEnd": {
+     "at": [
+      1,
+      8
+     ],
+     "point": {
+      "x": 676,
+      "y": 190
+     },
+     "dispatched": "dispatched",
+     "value": "line zero\nline one![[second shot.png]]\nline two\nline three\n",
+     "cursor": {
+      "cursor": {
+       "line": 1,
+       "ch": 28
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 1,
+         "ch": 28
+        },
+        "head": {
+         "line": 1,
+         "ch": 28
+        }
+       }
+      ]
+     },
+     "treeDelta": [
+      "Attachments/second shot.png (71b)"
+     ],
+     "notices": []
+    },
+    "fileInsideVault": {
+     "at": [
+      2,
+      4
+     ],
+     "point": {
+      "x": 643,
+      "y": 214
+     },
+     "dispatched": "dispatched",
+     "value": "![[Inside.png]]line zero\nline one\nline two\nline three\n",
+     "cursor": {
+      "cursor": {
+       "line": 2,
+       "ch": 4
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 2,
+         "ch": 4
+        },
+        "head": {
+         "line": 2,
+         "ch": 4
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "fileInsideVaultCaretElsewhere": {
+     "at": [
+      1,
+      4
+     ],
+     "point": {
+      "x": 643,
+      "y": 190
+     },
+     "dispatched": "dispatched",
+     "value": "line zero\nline one\nline two\nli![[Inside.png]]ne three\n",
+     "cursor": {
+      "cursor": {
+       "line": 1,
+       "ch": 4
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 1,
+         "ch": 4
+        },
+        "head": {
+         "line": 1,
+         "ch": 4
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "twoFilesCaretElsewhere": {
+     "at": [
+      1,
+      4
+     ],
+     "point": {
+      "x": 643,
+      "y": 190
+     },
+     "dispatched": "dispatched",
+     "value": "line zero\nline![[photo 9.png]]\n\n![[notes 8.txt]] one\nline two\nline three\n",
+     "cursor": {
+      "cursor": {
+       "line": 3,
+       "ch": 16
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 3,
+         "ch": 16
+        },
+        "head": {
+         "line": 3,
+         "ch": 16
+        }
+       }
+      ]
+     },
+     "treeDelta": [
+      "Attachments/notes 8.txt (11b)",
+      "Attachments/photo 9.png (71b)"
+     ],
+     "notices": []
+    },
+    "threeFilesInsideAndOut": {
+     "at": [
+      1,
+      4
+     ],
+     "point": {
+      "x": 643,
+      "y": 190
+     },
+     "dispatched": "dispatched",
+     "value": "line zero\nline![[photo 10.png]]\n\n![[Outside Note]] one\nline two\nli![[Inside.png]]\n\nne three\n",
+     "cursor": {
+      "cursor": {
+       "line": 3,
+       "ch": 17
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 3,
+         "ch": 17
+        },
+        "head": {
+         "line": 3,
+         "ch": 17
+        }
+       }
+      ]
+     },
+     "treeDelta": [
+      "Attachments/Outside Note.md (10b)",
+      "Attachments/photo 10.png (71b)"
+     ],
+     "notices": []
+    },
+    "mdFromOutside": {
+     "at": [
+      2,
+      4
+     ],
+     "point": {
+      "x": 643,
+      "y": 214
+     },
+     "dispatched": "dispatched",
+     "value": "line zero\nline one\nline![[Outside Note 1]] two\nline three\n",
+     "cursor": {
+      "cursor": {
+       "line": 2,
+       "ch": 23
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 2,
+         "ch": 23
+        },
+        "head": {
+         "line": 2,
+         "ch": 23
+        }
+       }
+      ]
+     },
+     "treeDelta": [
+      "Attachments/Outside Note 1.md (10b)"
+     ],
+     "notices": []
+    },
+    "html": {
+     "at": [
+      2,
+      4
+     ],
+     "point": {
+      "x": 643,
+      "y": 214
+     },
+     "dispatched": "dispatched",
+     "value": "line zero\nline one\nline**dragged** [link](https://e.com) two\nline three\n",
+     "cursor": {
+      "cursor": {
+       "line": 2,
+       "ch": 37
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 2,
+         "ch": 37
+        },
+        "head": {
+         "line": 2,
+         "ch": 37
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "plain": {
+     "at": [
+      2,
+      4
+     ],
+     "point": {
+      "x": 643,
+      "y": 214
+     },
+     "dispatched": "dispatched",
+     "value": "line zero\nline one\nlineplain dragged two\nline three\n",
+     "cursor": {
+      "cursor": {
+       "line": 2,
+       "ch": 17
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 2,
+         "ch": 4
+        },
+        "head": {
+         "line": 2,
+         "ch": 17
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "uriListItem": {
+     "at": [
+      2,
+      4
+     ],
+     "point": {
+      "x": 643,
+      "y": 214
+     },
+     "dispatched": "dispatched",
+     "value": "line zero\nline one\nlinehttps://example.com/page two\nline three\n",
+     "cursor": {
+      "cursor": {
+       "line": 2,
+       "ch": 28
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 2,
+         "ch": 4
+        },
+        "head": {
+         "line": 2,
+         "ch": 28
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "overSelection": {
+     "at": [
+      0,
+      6
+     ],
+     "point": {
+      "x": 655,
+      "y": 166
+     },
+     "dispatched": "dispatched",
+     "value": "line z![[photo 11.png]]ero\nline one\nline two\nline three\n",
+     "cursor": {
+      "cursor": {
+       "line": 0,
+       "ch": 23
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 0,
+         "ch": 23
+        },
+        "head": {
+         "line": 0,
+         "ch": 23
+        }
+       }
+      ]
+     },
+     "treeDelta": [
+      "Attachments/photo 11.png (71b)"
+     ],
+     "notices": []
+    },
+    "outsideSelection": {
+     "at": [
+      2,
+      4
+     ],
+     "point": {
+      "x": 643,
+      "y": 214
+     },
+     "dispatched": "dispatched",
+     "value": "line zero\nline one\nline![[photo 12.png]] two\nline three\n",
+     "cursor": {
+      "cursor": {
+       "line": 2,
+       "ch": 21
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 2,
+         "ch": 21
+        },
+        "head": {
+         "line": 2,
+         "ch": 21
+        }
+       }
+      ]
+     },
+     "treeDelta": [
+      "Attachments/photo 12.png (71b)"
+     ],
+     "notices": []
+    },
+    "htmlSettingOff": {
+     "at": [
+      2,
+      4
+     ],
+     "point": {
+      "x": 643,
+      "y": 214
+     },
+     "dispatched": "dispatched",
+     "value": "line zero\nline one\nlinedragged two\nline three\n",
+     "cursor": {
+      "cursor": {
+       "line": 2,
+       "ch": 11
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 2,
+         "ch": 4
+        },
+        "head": {
+         "line": 2,
+         "ch": 11
+        }
+       }
+      ]
+     },
+     "treeDelta": [],
+     "notices": []
+    },
+    "undoTwoFiles": {
+     "dropped": "line zero\nline one\nline![[photo 13.png]]\n\n![[notes 9.txt]] two\nline three\n",
+     "afterOneUndo": "line zero\nline one\nline two\nline three\n"
+    },
+    "sourceMode": {
+     "at": [
+      2,
+      4
+     ],
+     "point": {
+      "x": 643,
+      "y": 214
+     },
+     "dispatched": "dispatched",
+     "value": "line zero\nline one\nline![[photo 14.png]] two\nline three\n",
+     "cursor": {
+      "cursor": {
+       "line": 2,
+       "ch": 21
+      },
+      "selections": [
+       {
+        "anchor": {
+         "line": 2,
+         "ch": 21
+        },
+        "head": {
+         "line": 2,
+         "ch": 21
+        }
+       }
+      ]
+     },
+     "treeDelta": [
+      "Attachments/photo 14.png (71b)"
+     ],
+     "notices": []
+    }
+   }
+  },
+  "order": [
+   "s00-context",
+   "s02-context",
+   "s03-plain-paste-and-the-setting",
+   "s04-images-in-html",
+   "s05-files-on-the-clipboard",
+   "s06-drops"
+  ],
+  "elapsedMs": 88001,
+  "vaultPath": "/run/user/1000/paste/tmp/scoria-probe-vault.VkVYFC",
+  "treeAtEnd": [
+   "Attachments/",
+   "Attachments/notes 1.txt (11b)",
+   "Attachments/notes 2.txt (11b)",
+   "Attachments/notes 3.txt (11b)",
+   "Attachments/notes 4.txt (11b)",
+   "Attachments/notes 5.txt (11b)",
+   "Attachments/notes 6.txt (11b)",
+   "Attachments/notes 7.txt (11b)",
+   "Attachments/notes 8.txt (11b)",
+   "Attachments/notes 9.txt (11b)",
+   "Attachments/notes.txt (11b)",
+   "Attachments/Outside Note 1.md (10b)",
+   "Attachments/Outside Note.md (10b)",
+   "Attachments/photo 1.png (71b)",
+   "Attachments/photo 10.png (71b)",
+   "Attachments/photo 11.png (71b)",
+   "Attachments/photo 12.png (71b)",
+   "Attachments/photo 13.png (71b)",
+   "Attachments/photo 14.png (71b)",
+   "Attachments/photo 2.png (71b)",
+   "Attachments/photo 3.png (71b)",
+   "Attachments/photo 4.png (71b)",
+   "Attachments/photo 5.png (71b)",
+   "Attachments/photo 6.png (71b)",
+   "Attachments/photo 7.png (71b)",
+   "Attachments/photo 8.png (71b)",
+   "Attachments/photo 9.png (71b)",
+   "Attachments/photo.png (71b)",
+   "Attachments/second shot.png (71b)",
+   "Drop.md (39b)",
+   "Inside.png (71b)",
+   "Sub/",
+   "Target.md (34b)"
+  ],
+  "appJsonAtEnd": "{\n  \"autoConvertHtml\": true,\n  \"attachmentFolderPath\": \"Attachments\"\n}",
+  "finishedAt": "2026-11-16T01:25:38.263Z"
+ },
+ "pass3": {
+  "startedAt": "2026-11-16T01:27:09.658Z",
+  "steps": {
+   "s00-context": {
+    "ok": true,
+    "ms": 2,
+    "version": {
+     "title": "New tab - scoria-probe-vault.sIbUfL - Obsidian 1.15.0",
+     "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+     "apiVersion": null
+    },
+    "autoConvertHtml": true,
+    "appJson": "{}",
+    "commands": [],
+    "defaultHotkeys": {}
+   },
+   "s01-fixtures-live-preview": {
+    "ok": true,
+    "ms": 60199,
+    "cases": {
+     "headings": {
+      "html": "<h1>One</h1><h2>Two</h2><h3>Three</h3><h4>Four</h4><h5>Five</h5><h6>Six</h6>",
+      "text": "One\nTwo\nThree\nFour\nFive\nSix",
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "# One\n\n## Two\n\n### Three\n\n#### Four\n\n##### Five\n\n###### Six",
+      "cursor": {
+       "cursor": {
+        "line": 10,
+        "ch": 10
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 10,
+          "ch": 10
+         },
+         "head": {
+          "line": 10,
+          "ch": 10
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "inline-marks": {
+      "html": "<p><b>b</b> <strong>strong</strong> <i>i</i> <em>em</em> <del>del</del> <s>s</s> <strike>strike</strike> <code>code</code> <u>u</u> <mark>mark</mark> <sup>sup</sup> <sub>sub</sub> <kbd>kbd</kbd></p>",
+      "text": "b strong i em del s strike code u mark sup sub kbd",
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "**b** **strong** _i_ _em_ ~~del~~ ~~s~~ strike `code` u ==mark== sup sub kbd",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 76
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 76
+         },
+         "head": {
+          "line": 0,
+          "ch": 76
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "nested-marks": {
+      "html": "<p><b>bold <i>both</i></b> and <em><strong>both2</strong></em> and <b> padded </b>x</p>",
+      "text": "bold both and both2 and padded x",
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "**bold _both_** and _**both2**_ and **padded** x",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 48
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 48
+         },
+         "head": {
+          "line": 0,
+          "ch": 48
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "links": {
+      "html": "<p><a href=\"https://example.com/a b?q=1&amp;r=2\">Example</a> <a href=\"https://example.com\" title=\"T\">titled</a> <a>no href</a> <a href=\"/rel/path\">relative</a> <a href=\"https://example.com/x\">https://example.com/x</a> <a href=\"mailto:a@b.c\">mail</a> <a href=\"#frag\">frag</a></p>",
+      "text": "Example titled no href relative https://example.com/x mail frag",
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "[Example](https://example.com/a%20b?q=1&r=2) [titled](https://example.com \"T\") no href [relative](/rel/path) [https://example.com/x](https://example.com/x) [mail](mailto:a@b.c) [frag](#frag)",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 190
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 190
+         },
+         "head": {
+          "line": 0,
+          "ch": 190
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "images": {
+      "html": "<p><img src=\"https://example.com/a.png\" alt=\"Alt text\"> <img src=\"https://example.com/b.png\"> <img src=\"https://example.com/c.png\" alt=\"t\" title=\"Title\" width=\"100\"></p>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "![Alt text](https://example.com/a.png) ![](https://example.com/b.png) ![t](https://example.com/c.png \"Title\")",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 109
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 109
+         },
+         "head": {
+          "line": 0,
+          "ch": 109
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "image-in-link": {
+      "html": "<a href=\"https://example.com/page\"><img src=\"https://example.com/i.png\" alt=\"I\"></a>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "[![I](https://example.com/i.png)](https://example.com/page)",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 59
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 59
+         },
+         "head": {
+          "line": 0,
+          "ch": 59
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "ul-nested": {
+      "html": "<ul><li>one</li><li>two<ul><li>two a</li><li>two b<ul><li>deep</li></ul></li></ul></li><li>three</li></ul>",
+      "text": "one\ntwo\ntwo a\ntwo b\ndeep\nthree",
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "- one\n- two\n    - two a\n    - two b\n        - deep\n- three",
+      "cursor": {
+       "cursor": {
+        "line": 5,
+        "ch": 7
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 5,
+          "ch": 7
+         },
+         "head": {
+          "line": 5,
+          "ch": 7
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "ol": {
+      "html": "<ol><li>first</li><li>second<ol><li>inner</li></ol></li></ol><ol start=\"5\"><li>five</li><li>six</li></ol>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "1. first\n2. second\n    1. inner\n\n3. five\n4. six",
+      "cursor": {
+       "cursor": {
+        "line": 5,
+        "ch": 6
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 5,
+          "ch": 6
+         },
+         "head": {
+          "line": 5,
+          "ch": 6
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "li-paragraphs": {
+      "html": "<ul><li><p>para one</p><p>para two</p></li><li>plain</li></ul>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "- para one\n    \n    para two\n    \n- plain",
+      "cursor": {
+       "cursor": {
+        "line": 4,
+        "ch": 7
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 4,
+          "ch": 7
+         },
+         "head": {
+          "line": 4,
+          "ch": 7
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "tasks": {
+      "html": "<ul><li><input type=\"checkbox\" checked> done</li><li><input type=\"checkbox\"> todo</li></ul>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "- [x]  done\n- [ ]  todo",
+      "cursor": {
+       "cursor": {
+        "line": 1,
+        "ch": 11
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 1,
+          "ch": 11
+         },
+         "head": {
+          "line": 1,
+          "ch": 11
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "table-thead": {
+      "html": "<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr><tr><td>x | y</td><td><b>bold</b></td></tr></tbody></table>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "| A      | B        |\n| ------ | -------- |\n| 1      | 2        |\n| x \\| y | **bold** |",
+      "cursor": {
+       "cursor": {
+        "line": 3,
+        "ch": 2
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 3,
+          "ch": 2
+         },
+         "head": {
+          "line": 3,
+          "ch": 2
+         }
+        }
+       ]
+      },
+      "treeDelta": [
+       "Target.md (39b)"
+      ],
+      "notices": []
+     },
+     "table-no-thead": {
+      "html": "<table><tr><td>a</td><td>b</td></tr><tr><td>c</td><td>d</td></tr></table>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "|   |   |\n|---|---|\n|a|b|\n|c|d|",
+      "cursor": {
+       "cursor": {
+        "line": 3,
+        "ch": 5
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 3,
+          "ch": 5
+         },
+         "head": {
+          "line": 3,
+          "ch": 5
+         }
+        }
+       ]
+      },
+      "treeDelta": [
+       "Target.md (31b)"
+      ],
+      "notices": []
+     },
+     "table-align-uneven": {
+      "html": "<table><tr><th align=\"left\">L</th><th align=\"center\">C</th><th align=\"right\">R</th></tr><tr><td>1</td><td>2</td></tr></table>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "|L|C|R|\n|:--|:-:|--:|\n|1|2|",
+      "cursor": {
+       "cursor": {
+        "line": 2,
+        "ch": 5
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 2,
+          "ch": 5
+         },
+         "head": {
+          "line": 2,
+          "ch": 5
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "pre": {
+      "html": "<pre><code>fn main() {\n    println!(\"hi\");\n}</code></pre>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "```\nfn main() {\n    println!(\"hi\");\n}\n```",
+      "cursor": {
+       "cursor": {
+        "line": 4,
+        "ch": 3
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 4,
+          "ch": 3
+         },
+         "head": {
+          "line": 4,
+          "ch": 3
+         }
+        }
+       ]
+      },
+      "treeDelta": [
+       "Target.md (41b)"
+      ],
+      "notices": []
+     },
+     "pre-lang": {
+      "html": "<pre><code class=\"language-rust\">let x = 1;\n</code></pre><pre class=\"lang-js\">var y;</pre>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "```rust\nlet x = 1;\n```\n\nvar y;",
+      "cursor": {
+       "cursor": {
+        "line": 4,
+        "ch": 6
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 4,
+          "ch": 6
+         },
+         "head": {
+          "line": 4,
+          "ch": 6
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "blockquote": {
+      "html": "<blockquote><p>quoted</p><blockquote><p>nested</p></blockquote></blockquote><p>after</p>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "> quoted\n> \n> > nested\n\nafter",
+      "cursor": {
+       "cursor": {
+        "line": 4,
+        "ch": 5
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 4,
+          "ch": 5
+         },
+         "head": {
+          "line": 4,
+          "ch": 5
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "br-and-paras": {
+      "html": "<p>line one<br>line two</p><p>second para</p><hr><p>after rule</p>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "line one  \nline two\n\nsecond para\n\n---\n\nafter rule",
+      "cursor": {
+       "cursor": {
+        "line": 7,
+        "ch": 10
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 7,
+          "ch": 10
+         },
+         "head": {
+          "line": 7,
+          "ch": 10
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "entities": {
+      "html": "<p>&amp; &lt;tag&gt; &quot;q&quot; &nbsp;nbsp&nbsp; &copy; &#8212; &eacute;</p>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "& <tag> \"q\"  nbsp  © — é",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 24
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 24
+         },
+         "head": {
+          "line": 0,
+          "ch": 24
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "script-style-comment": {
+      "html": "<style>p{color:red}</style><p>visible</p><script>alert(1)</script><!-- comment --><noscript>ns</noscript>",
+      "text": "visible",
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "visible",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 7
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 7
+         },
+         "head": {
+          "line": 0,
+          "ch": 7
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "chromium-wrapper": {
+      "html": "<meta charset='utf-8'><html><head></head><body><!--StartFragment--><span style=\"color: rgb(0, 0, 0);\">Hello <b>world</b></span><!--EndFragment--></body></html>",
+      "text": "Hello world",
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "Hello **world**",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 15
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 15
+         },
+         "head": {
+          "line": 0,
+          "ch": 15
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "plain-span-only": {
+      "html": "<meta charset='utf-8'><html><head></head><body><!--StartFragment--><span>just text</span><!--EndFragment--></body></html>",
+      "text": "just text",
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "just text",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 9
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 9
+         },
+         "head": {
+          "line": 0,
+          "ch": 9
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "markdown-chars": {
+      "html": "<p>*stars* _under_ # hash [brackets] `tick` 1. num &lt;angle&gt; a\\b ~tilde~ ==eq== [[wiki]] #tag</p>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "*stars* _under_ # hash [brackets] `tick` 1. num <angle> a\\b ~tilde~ ==eq== [[wiki]] #tag",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 88
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 88
+         },
+         "head": {
+          "line": 0,
+          "ch": 88
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "whitespace": {
+      "html": "<p>a\n   b\t\tc</p>\n\n<div>div one</div><div>div two</div>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "a b c\n\ndiv one\n\ndiv two",
+      "cursor": {
+       "cursor": {
+        "line": 4,
+        "ch": 7
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 4,
+          "ch": 7
+         },
+         "head": {
+          "line": 4,
+          "ch": 7
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "gdocs-spans": {
+      "html": "<meta charset='utf-8'><html><head></head><body><!--StartFragment--><b style=\"font-weight:normal;\" id=\"docs-internal-guid-1\"><p dir=\"ltr\"><span style=\"font-weight:700;\">Bold by style</span><span style=\"font-style:italic;\"> italic by style</span></p></b><!--EndFragment--></body></html>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "**\n\nBold by style italic by style\n\n**",
+      "cursor": {
+       "cursor": {
+        "line": 4,
+        "ch": 2
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 4,
+          "ch": 2
+         },
+         "head": {
+          "line": 4,
+          "ch": 2
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "headings-with-inline": {
+      "html": "<h2><a href=\"https://e.com\">Linked</a> <code>code</code> heading</h2>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "## [Linked](https://e.com) `code` heading",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 41
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 41
+         },
+         "head": {
+          "line": 0,
+          "ch": 41
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "empty-elements": {
+      "html": "<p></p><p><b></b></p><p>x</p><div></div>",
+      "text": "x",
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "x",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 1
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 1
+         },
+         "head": {
+          "line": 0,
+          "ch": 1
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "dl-sup": {
+      "html": "<dl><dt>Term</dt><dd>Definition</dd></dl>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "Term\n\nDefinition",
+      "cursor": {
+       "cursor": {
+        "line": 2,
+        "ch": 10
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 2,
+          "ch": 10
+         },
+         "head": {
+          "line": 2,
+          "ch": 10
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "html-no-text": {
+      "html": "<b>only html</b>",
+      "text": null,
+      "formats": [
+       "text/html"
+      ],
+      "value": "**only html**",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 13
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 13
+         },
+         "head": {
+          "line": 0,
+          "ch": 13
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "text-differs": {
+      "html": "<p>from html</p>",
+      "text": "from text",
+      "formats": [
+       "text/plain",
+       "text/html"
+      ],
+      "value": "from html",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 9
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 9
+         },
+         "head": {
+          "line": 0,
+          "ch": 9
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "iframe-video": {
+      "html": "<p>before</p><iframe src=\"https://www.youtube.com/embed/x\"></iframe><video src=\"v.mp4\"></video><p>after</p>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "before\n\nafter",
+      "cursor": {
+       "cursor": {
+        "line": 2,
+        "ch": 5
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 2,
+          "ch": 5
+         },
+         "head": {
+          "line": 2,
+          "ch": 5
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "inline-code-backtick": {
+      "html": "<p><code>a`b</code> and <code>``x</code></p>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "``a`b`` and ` ``x `",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 19
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 19
+         },
+         "head": {
+          "line": 0,
+          "ch": 19
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "pre-with-backticks": {
+      "html": "<pre><code>```\ninner\n```</code></pre>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "````\n```\ninner\n```\n````",
+      "cursor": {
+       "cursor": {
+        "line": 4,
+        "ch": 4
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 4,
+          "ch": 4
+         },
+         "head": {
+          "line": 4,
+          "ch": 4
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "nested-list-in-ol-with-p": {
+      "html": "<ol><li>one<ul><li>a</li></ul></li><li>two</li></ol>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "1. one\n    - a\n2. two",
+      "cursor": {
+       "cursor": {
+        "line": 2,
+        "ch": 6
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 2,
+          "ch": 6
+         },
+         "head": {
+          "line": 2,
+          "ch": 6
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "center-font": {
+      "html": "<center>centered</center><font color=\"red\">font</font>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "centered\n\nfont",
+      "cursor": {
+       "cursor": {
+        "line": 2,
+        "ch": 4
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 2,
+          "ch": 4
+         },
+         "head": {
+          "line": 2,
+          "ch": 4
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "heading-in-li": {
+      "html": "<ul><li><h3>Heading item</h3></li></ul>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "- ### Heading item",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 18
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 18
+         },
+         "head": {
+          "line": 0,
+          "ch": 18
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "br-only": {
+      "html": "a<br><br><br>b",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "a  \n  \n  \nb",
+      "cursor": {
+       "cursor": {
+        "line": 3,
+        "ch": 1
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 3,
+          "ch": 1
+         },
+         "head": {
+          "line": 3,
+          "ch": 1
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "ol-start-alone": {
+      "html": "<ol start=\"5\"><li>five</li><li>six</li></ol>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "5. five\n6. six",
+      "cursor": {
+       "cursor": {
+        "line": 1,
+        "ch": 6
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 1,
+          "ch": 6
+         },
+         "head": {
+          "line": 1,
+          "ch": 6
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "ol-after-ul": {
+      "html": "<ul><li>u</li></ul><ol><li>o1</li><li>o2</li></ol>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "- u\n\n1. o1\n2. o2",
+      "cursor": {
+       "cursor": {
+        "line": 3,
+        "ch": 5
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 3,
+          "ch": 5
+         },
+         "head": {
+          "line": 3,
+          "ch": 5
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "link-escapes": {
+      "html": "<p><a href=\"https://e.com/a_(b)\">parens</a> <a href=\"https://e.com/café?x=%20y\">unicode</a> <a href=\"https://e.com/q?a=&quot;b&quot;\" title='say \"hi\"'>quote</a> <a href=\"https://e.com/x\"></a> <a href=\"https://e.com/<b>\">angle</a> <a href=\" https://e.com/trim \">trim</a></p>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "[parens](https://e.com/a_\\(b\\)) [unicode](https://e.com/café?x=%20y) [quote](https://e.com/q?a=\"b\" \"say \\\"hi\\\"\") [](https://e.com/x)[angle](https://e.com/<b>) [trim](https://e.com/trim)",
+      "cursor": {
+       "cursor": {
+        "line": 0,
+        "ch": 185
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 0,
+          "ch": 185
+         },
+         "head": {
+          "line": 0,
+          "ch": 185
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "img-odd": {
+      "html": "<p><img alt=\"no src\"> <img src=\"https://e.com/a b.png\" alt=\"sp\"> <img src=\"https://e.com/(p).png\" alt=\"multi\nline alt\"></p>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": " ![sp](https://e.com/a%20b.png) ![multi\nline alt](https://e.com/\\(p\\).png)",
+      "cursor": {
+       "cursor": {
+        "line": 1,
+        "ch": 34
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 1,
+          "ch": 34
+         },
+         "head": {
+          "line": 1,
+          "ch": 34
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "table-cell-blocks": {
+      "html": "<table><tr><th>h<br>two</th><th>h2</th></tr><tr><td><p>p1</p><p>p2</p></td><td colspan=\"2\">wide</td></tr></table>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "|h  <br>two|h2|\n|---|---|\n|p1<br><br>p2|wide|   |",
+      "cursor": {
+       "cursor": {
+        "line": 2,
+        "ch": 23
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 2,
+          "ch": 23
+         },
+         "head": {
+          "line": 2,
+          "ch": 23
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "table-in-text": {
+      "html": "<p>before</p><table><tr><th>a</th></tr><tr><td>1</td></tr></table><p>after</p>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "before\n\n|a|\n|---|\n|1|\n\nafter",
+      "cursor": {
+       "cursor": {
+        "line": 6,
+        "ch": 5
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 6,
+          "ch": 5
+         },
+         "head": {
+          "line": 6,
+          "ch": 5
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "trailing-space-in-block": {
+      "html": "<p>a </p>b<p> c</p>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "a\n\nb\n\nc",
+      "cursor": {
+       "cursor": {
+        "line": 4,
+        "ch": 1
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 4,
+          "ch": 1
+         },
+         "head": {
+          "line": 4,
+          "ch": 1
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "code-with-markup": {
+      "html": "<pre><code><span class=\"k\">let</span> x = <b>1</b>;\n\n\nend</code></pre><p><code>a <b>b</b></code></p>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "```\nlet x = 1;\n\n\nend\n```\n\n`a **b**`",
+      "cursor": {
+       "cursor": {
+        "line": 7,
+        "ch": 9
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 7,
+          "ch": 9
+         },
+         "head": {
+          "line": 7,
+          "ch": 9
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "quote-with-list": {
+      "html": "<blockquote><ul><li>a</li><li>b</li></ul></blockquote>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "> - a\n> - b",
+      "cursor": {
+       "cursor": {
+        "line": 1,
+        "ch": 5
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 1,
+          "ch": 5
+         },
+         "head": {
+          "line": 1,
+          "ch": 5
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "emphasis-edge": {
+      "html": "<p>a<em>b</em>c <strong> </strong> <em>x </em>y <b>multi<br>line</b></p>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "a_b_c _x_ y **multi  \nline**",
+      "cursor": {
+       "cursor": {
+        "line": 1,
+        "ch": 6
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 1,
+          "ch": 6
+         },
+         "head": {
+          "line": 1,
+          "ch": 6
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "heading-br": {
+      "html": "<h3>one<br>two</h3>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "### one  \ntwo",
+      "cursor": {
+       "cursor": {
+        "line": 1,
+        "ch": 3
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 1,
+          "ch": 3
+         },
+         "head": {
+          "line": 1,
+          "ch": 3
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "unknown-and-section": {
+      "html": "<section><article><custom-el>custom</custom-el></article></section><figure><img src=\"https://e.com/f.png\" alt=\"f\"><figcaption>cap</figcaption></figure>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "custom\n\n![f](https://e.com/f.png)\n\ncap",
+      "cursor": {
+       "cursor": {
+        "line": 4,
+        "ch": 3
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 4,
+          "ch": 3
+         },
+         "head": {
+          "line": 4,
+          "ch": 3
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "list-loose-text": {
+      "html": "<ul><li>one\n  <b>bold</b>\n</li><li>  two  </li></ul>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "- one **bold**\n- two",
+      "cursor": {
+       "cursor": {
+        "line": 1,
+        "ch": 5
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 1,
+          "ch": 5
+         },
+         "head": {
+          "line": 1,
+          "ch": 5
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "ol-in-ul-depth": {
+      "html": "<ul><li>a<ol><li>b<ul><li>c</li></ul></li></ol></li></ul>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "- a\n    1. b\n        - c",
+      "cursor": {
+       "cursor": {
+        "line": 2,
+        "ch": 11
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 2,
+          "ch": 11
+         },
+         "head": {
+          "line": 2,
+          "ch": 11
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     },
+     "crlf-text": {
+      "html": "<p>line\r\nnext</p><pre><code>x\r\ny</code></pre>",
+      "text": "",
+      "formats": [
+       "text/html"
+      ],
+      "value": "line next\n\n```\nx\ny\n```",
+      "cursor": {
+       "cursor": {
+        "line": 5,
+        "ch": 3
+       },
+       "selections": [
+        {
+         "anchor": {
+          "line": 5,
+          "ch": 3
+         },
+         "head": {
+          "line": 5,
+          "ch": 3
+         }
+        }
+       ]
+      },
+      "treeDelta": [],
+      "notices": []
+     }
+    }
+   }
+  },
+  "order": [
+   "s00-context",
+   "s01-fixtures-live-preview"
+  ],
+  "elapsedMs": 60252,
+  "vaultPath": "/run/user/1000/paste/tmp/scoria-probe-vault.sIbUfL",
+  "treeAtEnd": [
+   "Drop.md (39b)",
+   "Inside.png (71b)",
+   "Sub/",
+   "Target.md (24b)"
+  ],
+  "appJsonAtEnd": "{}",
+  "finishedAt": "2026-11-16T01:28:09.910Z"
+ }
+}

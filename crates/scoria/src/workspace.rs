@@ -17,7 +17,7 @@ use crate::canvas::{CanvasEvent, CanvasView};
 use crate::chooser::{Chooser, ChooserEvent, Row as ChooserRow};
 use crate::copy_results::{CopyResults, CopyResultsEvent};
 use crate::debug_info::{DebugInfo, DebugInfoEvent};
-use crate::editor::{Editor, EditorEvent};
+use crate::editor::{Editor, EditorEvent, IncomingAttachments};
 use crate::explorer::{
     self, display_name, kind_name, ExplorerEvent, FileExplorer, FileTree, SortOrder,
 };
@@ -3580,6 +3580,9 @@ pub struct Workspace {
     /// same reason: the palette's check callbacks and the commands need the
     /// window.
     pending_slash: Vec<(Entity<Editor>, Option<String>)>,
+    /// Files and images an editor was pasted or dropped onto, waiting for a
+    /// frame: the embeds go in through the editor, which needs the window.
+    pending_attachments: Vec<(Entity<Editor>, IncomingAttachments)>,
     /// A slash popup's command is running: it is not recorded as one of
     /// the palette's recent commands.
     running_from_slash: bool,
@@ -3850,6 +3853,11 @@ fn view_subscriptions(
                 }
                 EditorEvent::RunCommand(id) => {
                     this.pending_slash.push((editor.clone(), Some(id.clone())));
+                    cx.notify();
+                }
+                EditorEvent::Attachments(incoming) => {
+                    this.pending_attachments
+                        .push((editor.clone(), incoming.clone()));
                     cx.notify();
                 }
             },
@@ -4427,6 +4435,7 @@ impl Workspace {
             title_edit: None,
             pending_title_rename: None,
             pending_slash: Vec::new(),
+            pending_attachments: Vec::new(),
             running_from_slash: false,
             title_layout: HashMap::new(),
             layout: None,
@@ -4616,6 +4625,7 @@ impl Workspace {
                 e.set_readable_line_length(readable);
                 e.set_show_inline_title(inline_title);
                 e.set_indent_options(smart, use_tab, tab_size);
+                e.set_convert_html(state.app().auto_convert_html.unwrap_or(true));
                 e.set_vim_mode(state.app().vim_mode.unwrap_or(false), cx);
                 e.set_property_types(state.property_types().clone());
                 e.set_properties_in_document(properties);
@@ -4642,6 +4652,7 @@ impl Workspace {
         editor.update(cx, |e, cx| {
             e.set_link_options(link_options);
             e.set_indent_options(smart, use_tab, tab_size);
+            e.set_convert_html(state.app().auto_convert_html.unwrap_or(true));
             e.set_vim_mode(state.app().vim_mode.unwrap_or(false), cx);
             e.set_property_types(state.property_types().clone());
             e.set_properties_in_document(properties);
@@ -16772,11 +16783,11 @@ impl Workspace {
             }
             Pick::Cut => self.editor.update(cx, |e, cx| e.cut_selection(window, cx)),
             Pick::Copy => self.editor.update(cx, |e, cx| e.copy_selection(cx)),
-            // One paste: the clipboard is read as text and written
-            // verbatim, so there is no formatting for the plain row to drop.
-            Pick::Paste | Pick::PastePlain => self
+            Pick::Paste => self
                 .editor
                 .update(cx, |e, cx| e.paste_clipboard(window, cx)),
+            // The clipboard's plain text only: no HTML conversion, no files.
+            Pick::PastePlain => self.editor.update(cx, |e, cx| e.paste_plain(window, cx)),
             Pick::SelectAll => self.editor.update(cx, |e, cx| e.select_all_text(cx)),
             // The All properties row's menu.
             Pick::RenameProperty => {
@@ -20243,6 +20254,11 @@ impl Render for Workspace {
                     editor.update(cx, |e, cx| e.open_slash(commands, cx));
                 }
                 Some(id) => this.run_slash_command(&editor, &id, window, cx),
+            });
+        }
+        for (editor, incoming) in std::mem::take(&mut self.pending_attachments) {
+            cx.defer_in(window, move |this, window, cx| {
+                this.save_incoming(&editor, incoming, window, cx)
             });
         }
         self.dock_tree_keyboard = self.dock_tree_focus.is_focused(window);

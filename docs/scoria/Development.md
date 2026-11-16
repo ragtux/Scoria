@@ -334,6 +334,7 @@ uses behave as Obsidian's do.
 | Mermaid diagrams | done 2026-11-15: laid out by limu (a Rust port of Pele, the renderer Obsidian bundles) and painted natively in the reading view, Live Preview, embeds, hover previews and Export to PDF, see [[#Mermaid diagrams, 2026-11-15]] and [[Specification#Observed Mermaid diagrams, Obsidian 1.15.1]] |
 | Slash commands | done 2026-11-11: probed in a headless sway and built on the autocompletion popup, see [[#Slash commands, 2026-11-11]] and [[Specification#Observed Slash commands, Obsidian 1.15.0]] |
 | Canvas embeds, audio and video | 2026-11-15: `![[x.canvas]]` is the canvas's minimap as Obsidian draws it, audio plays in a tab and embedded, video is a card with "Open in default app" (no pure-Rust decoder is credible yet), see [[#Canvas embeds, the audio player and video, 2026-11-15]] and [[Specification#Observed canvas embeds, audio and video, Obsidian 1.15.0]] |
+| Paste and drop | done 2026-11-15: pasted HTML as Markdown, clipboard images and files saved as attachments, files dropped from a file manager, see [[#Paste and drop, 2026-11-15]] and [[Specification#Observed HTML paste and file drops, Obsidian 1.15.0]] |
 
 ### Canvas embeds, the audio player and video, 2026-11-15
 
@@ -564,6 +565,81 @@ headless session takes no writes, so the copied strings are held by the unit tes
 **Left.** The landing margin's origin; the embeds' own selection, spreads and Display options menu
 (the embed's chevron stays inert); whether thumbnails recolour; a find match's highlight; Adapt to
 theme surviving a restart.
+
+
+### Paste and drop, 2026-11-15
+
+What a paste or a drop does in the editor: probed first, then built. See
+[[Specification#Observed HTML paste and file drops, Obsidian 1.15.0]] and, for the attachment
+names, [[Specification#Observed attachment paste behavior, Obsidian 1.14.4]].
+
+**The probe.** `tools/obsidian-probe/paste-html-and-drops.mjs`, Obsidian 1.15.0 in a private
+headless sway with its own `USER_DATA_DIR` and `CDP_PORT=9351`. HTML goes on Electron's
+clipboard with `clipboard.write({ html, text })` and a real Ctrl+V reads it back; files go on it
+as a `text/uri-list` buffer; drops are `Input.dispatchDragEvent` at a point found with
+CodeMirror's `coordsAtPos`. Three passes: the first lost its later paste steps (a `setViewState`
+mode switch leaves the keyboard off the editor, so every Ctrl+V after it reached nothing — click
+into `.cm-content` before each paste), the second re-ran them, the third added fifteen fixtures
+to settle `ol start`, link escaping, table cells, inline code with markup and CRLF. `wl-copy`
+from the probe never reached Obsidian (the compositor hands the selection to a focused client
+only), so every clipboard in the run is Electron's own. What surprised: Ctrl+Shift+V is the
+plain paste and an HTML-only clipboard then pastes nothing; inline code converts the markup
+inside it; a table cell's line breaks become `<br>`; a file already in the vault is dropped at
+the **caret**, not the pointer, and the caret then jumps to the pointer; and the editor itself
+renumbers a pasted `<ol start="5">` that follows another list.
+
+**Built.**
+
+- `crates/scoria-paste` (no gpui): `html::to_markdown`, the converter, parsing with html5ever
+  (the WHATWG parser, pure Rust, MIT/Apache-2.0; new to the tree with `markup5ever_rcdom`, its
+  reference DOM) and writing Markdown by the observed rules — a whitespace pass first, then a
+  walk that joins blocks at two newlines at most. It is held to all 51 probe fixtures
+  (`tests/obsidian-html-paste.json`, html beside the editor text Obsidian held), plus unit
+  tests for code spans, fences, joins and destinations. Two fixtures record the conversion
+  rather than the editor's text, with the observed text and the reason beside them (the
+  renumbered list, and a table the Live Preview table editor had padded). `attachment` names
+  what is saved (`Pasted image <local yyyyMMddHHmmss>.png`; a file keeps its own name) and joins
+  several embeds; `clipboard` decodes a `text/uri-list` into paths and clipboard text by its
+  byte-order mark.
+- The editor: Ctrl+V reads files, then an image, then HTML (while `autoConvertHtml` is on),
+  then text; Ctrl+Shift+V and the menu's **Paste as plain text** read the text only. Files and
+  images go to the workspace as `EditorEvent::Attachments`; it saves them through the existing
+  `add_attachment` / `import_attachment` (now also sending an `attachmentFolderPath` that names
+  a file to the root, as `Blocker.md` showed in 2026-10-18), and the editor writes the embeds as
+  one undo step: at every cursor for a paste; for a drop, the copied files at the drop point and
+  the in-vault ones at the caret. A clipboard image that is not PNG is re-encoded as PNG with
+  `image`, since every clipboard image reaches Obsidian as one; an SVG keeps its bytes.
+- The clipboard on Linux. gpui's (the pinned Zed commit's `gpui_linux`) reads `text/plain` and
+  the image types only, on both Wayland and X11, and keeps its data offer private. A second
+  Wayland connection cannot read the selection without data-control, and a patched gpui means a
+  fork of the pin, so `crates/scoria/src/clipboard_extra.rs` asks the desktop's own tools —
+  `wl-paste --list-types` / `wl-paste --type T` under Wayland, `xclip -selection clipboard -t
+  TARGETS|T -o` under X11 — for `text/uri-list` and `text/html`, with an 800 ms deadline per
+  call. gpui's own offer (`pid/<pid>` in the type list) is skipped, since asking this process
+  for it from a tool would wait on the thread that asks. Without the tools a paste is what it
+  was. macOS and Windows read nothing extra yet.
+- Drops. gpui hands a file manager's drag over as an `ExternalPaths` drag, but its `on_drop`
+  asks whether the element is hovered, and after any keystroke nothing is: a platform drop is
+  not pointer input, so the keyboard modality survives it and every drop after typing was
+  ignored. The editor follows the drag with `on_drag_move` (not hover-gated) and catches the
+  release in its own mouse-up listener by bounds.
+- The control socket's `drop` method sends a platform file drop (enter, hover, release) at a
+  window point, which is how the drops were driven.
+
+**Driven.** The release build in the private sway on a scratch vault with
+`attachmentFolderPath: "Attachments"`, the clipboard set with `wl-copy` and a virtual keyboard
+held by `wtype` so the window had the selection. In Source mode and Live Preview: copied HTML
+(a heading, marks, a link with a space, a nested list) pasted as Obsidian writes it; a
+`text/uri-list` of two files pasted `![[photo.png]]\n\n![[notes.txt]]` and copied both; an
+`image/png` pasted `![[Pasted image 20261115195041.png]]`; one Ctrl+Z took each back and left
+the files; two files dropped on `line |one` wrote `line ![[photo.png]]\n\n![[notes.txt]]one`
+with the caret after; `Inside.png` from the vault dropped there went in at the caret instead;
+both at once matched Obsidian's mixed drop. `wl-copy -t text/html` also offers its bytes as
+`text/plain`, so a Ctrl+Shift+V of it pastes the HTML source: that is the tool, not Scoria.
+
+**Left.** Text or HTML dragged from another app (gpui has file drops only); paste and drop in a
+canvas and in an editing page preview; the extra formats on macOS and Windows; and the editor's
+renumbering of a pasted list that continues another.
 
 ### Slash commands, 2026-11-11
 

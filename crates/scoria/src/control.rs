@@ -594,6 +594,35 @@ fn handle(
             })
             .map(Some)
         }
+        "drop" => {
+            let paths: Vec<std::path::PathBuf> = request
+                .str_list("paths")?
+                .into_iter()
+                .map(std::path::PathBuf::from)
+                .collect();
+            let position = position(request)?;
+            ctl.input(request.opt_str("window"), |window, cx| {
+                // The three events a platform drop sends: the drag comes in
+                // over the point, hovers, and is let go.
+                window.dispatch_event(
+                    PlatformInput::FileDrop(gpui::FileDropEvent::Entered {
+                        position,
+                        paths: gpui::ExternalPaths(paths.into()),
+                    }),
+                    cx,
+                );
+                window.dispatch_event(
+                    PlatformInput::FileDrop(gpui::FileDropEvent::Pending { position }),
+                    cx,
+                );
+                window.dispatch_event(
+                    PlatformInput::FileDrop(gpui::FileDropEvent::Submit { position }),
+                    cx,
+                );
+                Ok(json!({"ok": true}))
+            })
+            .map(Some)
+        }
         "scroll" => {
             let position = position(request)?;
             let dx = request.f32_param("dx")?;
