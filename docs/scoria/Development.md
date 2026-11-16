@@ -1101,6 +1101,78 @@ checked; corrections across two languages are interleaved, an order not observed
 "Spellcheck dictionary" is a page of Settings rather than a modal over it; macOS's system
 checker is not imitated.
 
+### Bases cell selection and the Search result menu, 2026-11-16
+
+Two rows of the manual's differences page: a base's table had no range of cells, and a Search
+result had no right-click menu. Both were probed first, see
+[[Specification#Observed Bases cell selection, Obsidian 1.15.1]] and
+[[Specification#Observed Search result menus, Obsidian 1.15.1]].
+
+**The probe.** `tools/obsidian-probe/bases-cells-search-menu.mjs`, Obsidian 1.15.1 in a private
+headless sway with `USER_DATA_DIR` and `CDP_PORT=9364`, nine steps: the cursor and the range by
+keys and by Shift+click with their computed look, every clipboard type a copy carries, Delete
+and Backspace with undo, 32 pastes of outside text and of the table's own copies over every
+property type, a grouped table, and the Search pane's two menus and what each of their rows
+does. Most of it was found first by hand, through a run held open (`HOLD=1`) and short CDP
+scripts against it, then written down as the script's steps and run once whole. What surprised:
+1.15.1 changed two things 1.14.5 did (leaving a field keeps the cursor; Delete on a lone cell
+empties it rather than opening its editor), external text is always written as a string whatever
+the property's type, and a paste more than one column wide is broken in Obsidian (every cell of
+a row takes the clipboard's value at the index of the target's first column). That last one is
+a bug that scrambles notes, so Scoria does not follow it and says so on the differences page.
+
+**What was built.**
+- `scoria-bases::selection`, no gpui: `Selection` (the cursor, the far corner, Ctrl+A's range),
+  `CellRange`, the group `Bounds` a range stays in, the copy's text (`copy_text`, `encode_tsv`
+  with the CSV-style quoting) and its typed cells (`copied_value`), the paste's parse
+  (`parse_text`: one value over a lone cursor when there is no tab, else naive line and tab
+  splits), `paste_plan` (one value fills, a block lands at the top-left, cut at the table's edge,
+  each cell its own value), `delete_plan` and `by_row`. Fifteen tests, each named for what the
+  probe saw.
+- `scoria::bases::select`: the selection over the table's flattened lines, Shift+arrows,
+  Shift+click, Ctrl+A, Ctrl+C, Ctrl+V and Delete, and one `BasesEvent::SetProperties` per row,
+  which the workspace writes through `bases::edit::write_values` (every key in one write, the
+  values as they are, a new block for a note with none) under the same unsaved-buffer guard as
+  a single cell. gpui's clipboard carries text only, so the table's own copy keeps its typed
+  cells in a global and a paste whose text is still that copy's takes them; anything else is
+  outside text. The cursor's ring (#555, or the accent at a range's cursor) and the range's wash
+  are drawn only while the view itself has focus. Escape on a range drops it; leaving a field
+  keeps the cursor.
+- `file_menu::Target::Search`: the observed rows, Delete on a file row only, Copy path last, and
+  the Search pane's rows raising it on a right click (`SearchEvent::ContextMenu`). The picks go
+  through the workspace's existing handlers.
+
+**Driven.** The debug build in the private sway over the control socket, with grim and
+wl-clipboard: the cursor's ring after Escape, a two-by-three range, Escape dropping it,
+Shift+click, Ctrl+A, a paste of the table's own two-by-two copy (`price: 1.5` written as a
+number), outside text into a number column (`price: abc`), a two-cell block at the cursor
+(`items: a`, `note: b`, each its own value), Delete over a note with no frontmatter (a new block
+of two empty keys), both Search menus as the socket's `file_menu` reports them, and *Open to the
+right* from a match row (a new group on the note).
+
+**Traps.**
+- The session's scratchpad was shared with other agents; one overwrote this session's sway
+  config and another ran an Obsidian on a `udd` folder of the same name. Keep every scratch file
+  in a folder named for the task, and give `run-block.sh` a short `TMPDIR`: Chromium's
+  `SingletonSocket` lives there and a scratchpad path is past the 108-byte socket limit (the
+  launch dies with "Socket path too long").
+- `run-block.sh` is not executable on the share; run it with `bash`.
+- A fresh `USER_DATA_DIR` updates itself (to 1.15.1 here) on its first launch on Linux, so label
+  the run with `document.title`.
+- A click near a date cell's right edge hits *Open daily note* and creates the day's note; reach
+  date and checkbox cells by the arrows.
+- `wl-copy` adds a newline unless given `-n`, which made the table's own copy look like outside
+  text; and it stays alive serving the selection, so a `| tail` on the drive never ends.
+- A synthetic Ctrl+C under the headless compositor leaves its clipboard empty (as the memory
+  notes say); the internal round trip was checked by putting the same bytes there with
+  `wl-copy -n`.
+
+**Left out.** Ctrl+Z does not undo a paste or a Delete (the table has no undo stack of its own
+yet); the clipboard gets only the text, not Obsidian's `text/markdown`, `obsidian/table` and
+`obsidian/bases-cells`; a Search result's Copy path is one row, not Obsidian's submenu of three,
+as on every other file menu; a lone cursor's Escape leaves the cursor, as observed, so nothing
+clears it short of leaving the view.
+
 ### Line numbers, indentation guides and right-to-left, 2026-11-15
 
 Three Editor-tab toggles Settings showed and wrote but the editor ignored. Probed first, see

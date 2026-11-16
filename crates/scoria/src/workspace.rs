@@ -3813,6 +3813,9 @@ fn bases_subscription(bases: &Entity<BasesView>, cx: &mut Context<Workspace>) ->
         BasesEvent::SetProperty { path, key, value } => {
             this.set_note_property(path.clone(), key.clone(), value.clone(), cx)
         }
+        BasesEvent::SetProperties { path, values } => {
+            this.set_note_properties(path.clone(), values.clone(), cx)
+        }
         BasesEvent::ExportCsv { name, csv } => this.export_base_csv(name.clone(), csv.clone(), cx),
         BasesEvent::SetPropertyType { key, ty } => this.assign_property_type(key.clone(), *ty, cx),
         BasesEvent::AddItem => this.add_base_item_from(&bases, cx),
@@ -4314,6 +4317,22 @@ impl Workspace {
                     }
                     SearchEvent::Dismiss => this.focus_main(window, cx),
                     SearchEvent::StateChanged => {}
+                    SearchEvent::ContextMenu {
+                        path,
+                        file_row,
+                        position,
+                    } => {
+                        this.file_menu = Some(file_menu::Menu {
+                            position: *position,
+                            submenu: false,
+                            anchor: Anchor::TopLeft,
+                            target: file_menu::Target::Search {
+                                path: path.clone(),
+                                file_row: *file_row,
+                            },
+                        });
+                        cx.notify();
+                    }
                 },
             ),
             cx.subscribe_in(
@@ -9825,6 +9844,47 @@ impl Workspace {
         self.report(format!("{key} set in {path}"), cx);
         // The index is what every base resolves against, so the table comes
         // back through the same path an outside edit would take.
+        self.files_changed(vec![absolute], cx);
+    }
+
+    /// A paste or a Delete over a Bases range, one row's note: every key set
+    /// in one write, guarded as [`Self::set_note_property`] guards its own.
+    /// A success says nothing (observed: no Notice for either), a refusal
+    /// says why.
+    fn set_note_properties(
+        &mut self,
+        path: String,
+        values: Vec<(String, scoria_formats::properties::Value)>,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let absolute = match state.vault().write_path(&path) {
+            Ok(absolute) => absolute,
+            Err(err) => {
+                self.report(format!("{path} not written: {err}"), cx);
+                return;
+            }
+        };
+        let on_disk = match std::fs::read_to_string(&absolute) {
+            Ok(text) => text,
+            Err(err) => {
+                self.report(format!("Could not read {path}: {err}"), cx);
+                return;
+            }
+        };
+        if self.buffer_differs(&path, &on_disk, cx) {
+            self.report(format!("{path} has unsaved edits; not written"), cx);
+            return;
+        }
+        let Some(written) = crate::bases::edit::write_values(&on_disk, &values) else {
+            return;
+        };
+        if let Err(err) = scoria_vault::write_no_follow(&absolute, written.as_bytes()) {
+            self.report(format!("Could not write {path}: {err}"), cx);
+            return;
+        }
         self.files_changed(vec![absolute], cx);
     }
 

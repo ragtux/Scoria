@@ -71,6 +71,14 @@ pub enum BasesEvent {
         key: String,
         value: String,
     },
+    /// A paste or a Delete over a range of cells: set every `(key, value)`
+    /// in the note `path`, in one write, with the values as they are (see
+    /// [`crate::bases::edit::write_values`]). Written by the workspace for
+    /// the reason [`BasesEvent::SetProperty`] is.
+    SetProperties {
+        path: String,
+        values: Vec<(String, scoria_formats::properties::Value)>,
+    },
     /// The results panel's *Export CSV...*: the workspace asks where the
     /// file goes and writes these bytes there.
     ExportCsv { name: String, csv: String },
@@ -558,6 +566,7 @@ impl BasesView {
             "embedded": self.embedded,
             "toolbar": self.toolbar.state_json(),
             "editing": self.editing.state_json(),
+            "selection": self.selection_json(),
         })
     }
 
@@ -744,6 +753,7 @@ fn apply_search(table: &mut Table, needle: &str) {
 impl Render for BasesView {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = cx.global::<Theme>().clone();
+        self.table_state.view_focused = self.focus.is_focused(window);
         let body: Vec<AnyElement> = if let Some(message) = self.error.clone() {
             vec![self.render_error(true, &message, &theme)]
         } else if let Some(kind) = self.table.as_ref().and_then(|t| t.unknown_kind.clone()) {
@@ -787,6 +797,13 @@ impl Render for BasesView {
             .on_action(cx.listener(Self::cursor_next_action))
             .on_action(cx.listener(Self::cursor_prev_action))
             .on_action(cx.listener(Self::delete_cell_action))
+            .on_action(cx.listener(Self::extend_up_action))
+            .on_action(cx.listener(Self::extend_down_action))
+            .on_action(cx.listener(Self::extend_left_action))
+            .on_action(cx.listener(Self::extend_right_action))
+            .on_action(cx.listener(Self::select_all_cells_action))
+            .on_action(cx.listener(Self::copy_cells_action))
+            .on_action(cx.listener(Self::paste_cells_action))
             // Typing on the cursor opens the cell with the character: the
             // keys that are not a binding reach here with their `key_char`.
             .on_key_down(cx.listener(|this, event: &gpui::KeyDownEvent, window, cx| {

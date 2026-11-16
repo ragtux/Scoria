@@ -75,7 +75,14 @@ actions!(
         CursorRight,
         CursorNext,
         CursorPrev,
-        DeleteCell
+        DeleteCell,
+        ExtendUp,
+        ExtendDown,
+        ExtendLeft,
+        ExtendRight,
+        SelectAllCells,
+        CopyCells,
+        PasteCells
     ]
 );
 
@@ -99,6 +106,17 @@ pub fn bind_keys(cx: &mut App) {
         KeyBinding::new("shift-tab", CursorPrev, ctx),
         KeyBinding::new("delete", DeleteCell, ctx),
         KeyBinding::new("backspace", DeleteCell, ctx),
+        // The range (`select`): Shift+arrows grow it from the cursor,
+        // Ctrl+A takes the group, Ctrl+C and Ctrl+V copy and paste it. A
+        // field inside the view has its own Ctrl+A/C/V, which its deeper
+        // key context wins.
+        KeyBinding::new("shift-up", ExtendUp, ctx),
+        KeyBinding::new("shift-down", ExtendDown, ctx),
+        KeyBinding::new("shift-left", ExtendLeft, ctx),
+        KeyBinding::new("shift-right", ExtendRight, ctx),
+        KeyBinding::new("ctrl-a", SelectAllCells, ctx),
+        KeyBinding::new("ctrl-c", CopyCells, ctx),
+        KeyBinding::new("ctrl-v", PasteCells, ctx),
     ]);
 }
 
@@ -888,6 +906,10 @@ impl BasesView {
             self.toolbar.search = None;
             self.toolbar.editing = None;
             self.resolve_search();
+        } else if self.selected_range().is_some() {
+            // Observed (`2026-11-16` `s01`): Escape on a range drops the
+            // range and keeps the cursor.
+            self.collapse_selection();
         } else {
             cx.propagate();
             return;
@@ -1005,17 +1027,101 @@ impl BasesView {
         }
     }
 
-    /// Delete or Backspace on the cursor: the editor opens without clearing
-    /// (observed, `s25` `deleteOnFocused`: the field opened and the file
-    /// did not change).
+    /// Delete or Backspace on the cursor or a range: every note-property
+    /// cell of it emptied. Observed on 1.15.1 (`s04`), single cells too;
+    /// 1.14.5 had opened the cell's editor without clearing (`s25`
+    /// `deleteOnFocused`).
     pub(super) fn delete_cell_action(
         &mut self,
         _: &DeleteCell,
-        window: &mut Window,
+        _: &mut Window,
         cx: &mut Context<Self>,
     ) {
         if self.cursor_takes_keys() {
-            self.open_focused_cell(window, cx);
+            self.delete_cells(cx);
+        } else {
+            cx.propagate();
+        }
+    }
+
+    fn extend_by(&mut self, d_row: i32, d_col: i32, cx: &mut Context<Self>) {
+        if self.cursor_takes_keys() {
+            self.extend_selection(d_row, d_col, cx);
+        } else {
+            cx.propagate();
+        }
+    }
+
+    pub(super) fn extend_up_action(
+        &mut self,
+        _: &ExtendUp,
+        _: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.extend_by(-1, 0, cx);
+    }
+
+    pub(super) fn extend_down_action(
+        &mut self,
+        _: &ExtendDown,
+        _: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.extend_by(1, 0, cx);
+    }
+
+    pub(super) fn extend_left_action(
+        &mut self,
+        _: &ExtendLeft,
+        _: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.extend_by(0, -1, cx);
+    }
+
+    pub(super) fn extend_right_action(
+        &mut self,
+        _: &ExtendRight,
+        _: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.extend_by(0, 1, cx);
+    }
+
+    pub(super) fn select_all_cells_action(
+        &mut self,
+        _: &SelectAllCells,
+        _: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if self.cursor_takes_keys() {
+            self.select_all_cells(cx);
+        } else {
+            cx.propagate();
+        }
+    }
+
+    pub(super) fn copy_cells_action(
+        &mut self,
+        _: &CopyCells,
+        _: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if self.cursor_takes_keys() {
+            self.copy_cells(cx);
+        } else {
+            cx.propagate();
+        }
+    }
+
+    pub(super) fn paste_cells_action(
+        &mut self,
+        _: &PasteCells,
+        _: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if self.cursor_takes_keys() {
+            self.paste_cells(cx);
         } else {
             cx.propagate();
         }
@@ -1397,7 +1503,9 @@ impl BasesView {
             }
             Some(_) if self.toolbar.header_menu => self.toolbar.header_menu = false,
             Some(_) => self.close_panel(window, cx),
-            None if self.table_state.focused.is_some() => self.table_state.focused = None,
+            // Observed (`s01`): Escape on a range drops the range and keeps
+            // the cursor, and a second Escape leaves the cursor where it is.
+            None if self.selected_range().is_some() => self.collapse_selection(),
             None => {}
         }
         cx.notify();

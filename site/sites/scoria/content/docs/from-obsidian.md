@@ -28,7 +28,7 @@ What follows is what to expect.
 | `bookmarks.json` | Read into the Bookmarks pane and written back in Obsidian's bytes |
 | `workspace.json` | The `main` tree of tab groups and the panes' own leaf state are read at restore and written back in place |
 | Canvas files | Opened in a canvas view and saved in Obsidian's bytes |
-| Bases files | Recognized, parsed and round-tripped on disk, but **not drawn yet** |
+| Bases files | Opened in the base view (table, cards, list, kanban) and saved in Obsidian's bytes; table cells edit the notes, one at a time or as a range — see [formats](/docs/reference/formats/#bases) |
 
 ## What you will miss
 
@@ -43,8 +43,6 @@ Be realistic about this list before you make Scoria your daily reader.
   shows its source in red. See [tables, code and math](/docs/format/code-math/).
 - **Some HTML in notes.** The common tags render, `<iframe>` and `<form>` do not; see [what differs](/docs/reference/differences/).
 - **Remote images.** A `![](https://…)` does not load; local images do.
-- **The Bases view.** The Bases YAML format is implemented and round-trips; a `.base` does
-  not open. A `.canvas` does, in a canvas view of its own.
 - **A few settings controls.** Most rows write; the font pickers, accent
   color and the theme list do not.
 - **Multiple vaults in one window**, PDF export, heading folding,
