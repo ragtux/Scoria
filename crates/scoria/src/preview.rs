@@ -4,7 +4,7 @@
 //! highlight spans, so the editor shapes exactly what these return and
 //! maps clicks back through the same pieces.
 
-use crate::reading::model::{html_inline_widget, InlineStyle, RichText};
+use crate::reading::model::{html_inline_widget, InlineStyle, RichText, Script};
 use scoria_markdown::highlight::{HighlightKind, HighlightSpan};
 use std::borrow::Cow;
 use std::ops::Range;
@@ -97,7 +97,26 @@ pub struct InlineHtml {
     pub display: Range<usize>,
     /// Styled runs relative to `display.start`; gaps are plain.
     pub runs: Vec<(Range<usize>, InlineStyle)>,
+    /// The runs set at another size (`<sup>`, `<sub>`, `<small>`): each is
+    /// shaped as a placeholder in the display text, relative to
+    /// `display.start` like `runs`, and painted over it.
+    pub scripts: Vec<InlineScript>,
 }
+
+/// A run of an inline HTML element drawn at its own size and baseline.
+#[derive(Debug, Clone, PartialEq)]
+pub struct InlineScript {
+    /// The placeholder's bytes, relative to the element's display start.
+    pub display: Range<usize>,
+    pub text: String,
+    pub style: InlineStyle,
+    pub script: Script,
+}
+
+/// Lays out a scripted run for the display text: its text, its style and
+/// its script, to the placeholder shaped in its place, or `None` to draw it
+/// at the line's size (nothing can measure one yet).
+pub type ScriptPlaceholder<'a> = dyn Fn(&str, InlineStyle, Script) -> Option<String> + 'a;
 
 /// Lays out an inline formula for the display text: given the TeX and
 /// whether it is `$$`-delimited, the placeholder text to shape in its
@@ -294,6 +313,55 @@ pub fn display_line_with(
     spans: &[HighlightSpan],
     touch: &[Range<usize>],
     math: &MathPlaceholder<'_>,
+) -> DisplayLine {
+    display_line_scripted(line, spans, touch, math, &|_, _, _| None)
+}
+
+/// An inline HTML element's rendered text with each scripted run swapped
+/// for the placeholder `script` answers, the runs moved with the edits, and
+/// the swapped runs listed.
+fn scripted(rich: RichText, script: &ScriptPlaceholder<'_>) -> (RichText, Vec<InlineScript>) {
+    let mut text = String::with_capacity(rich.text.len());
+    let mut runs = Vec::with_capacity(rich.runs.len());
+    let mut scripts = Vec::new();
+    let mut at = 0;
+    for (range, style) in &rich.runs {
+        let own = &rich.text[range.clone()];
+        text.push_str(&rich.text[at..range.start]);
+        let start = text.len();
+        let placeholder = style
+            .script()
+            .and_then(|sc| script(own, *style, sc).map(|p| (p, sc)));
+        match placeholder {
+            Some((placeholder, sc)) => {
+                text.push_str(&placeholder);
+                scripts.push(InlineScript {
+                    display: start..text.len(),
+                    text: own.to_string(),
+                    style: *style,
+                    script: sc,
+                });
+            }
+            None => {
+                text.push_str(own);
+                runs.push((start..text.len(), *style));
+            }
+        }
+        at = range.end;
+    }
+    text.push_str(&rich.text[at..]);
+    (RichText { text, runs, ..rich }, scripts)
+}
+
+/// [`display_line_with`] with the runs an inline HTML element sets at
+/// another size (`<sup>`, `<sub>`, `<small>`) shaped as the placeholders
+/// `script` answers, to be painted over them.
+pub fn display_line_scripted(
+    line: &str,
+    spans: &[HighlightSpan],
+    touch: &[Range<usize>],
+    math: &MathPlaceholder<'_>,
+    script: &ScriptPlaceholder<'_>,
 ) -> DisplayLine {
     let (scale, mut decor) = line_block(spans);
     let mut formulas: Vec<(Range<usize>, String, bool)> = Vec::new();
@@ -512,14 +580,15 @@ pub fn display_line_with(
     }
     // Each inline HTML element no cursor touches is drawn as what it
     // renders to; a touched one keeps its source, nested elements and all.
-    let mut widgets: Vec<(Range<usize>, RichText)> = Vec::new();
+    let mut widgets: Vec<(Range<usize>, RichText, Vec<InlineScript>)> = Vec::new();
     for range in html_elements(line, spans) {
         if touches(touch, &range) {
             continue;
         }
         if let Some(rich) = html_inline_widget(&line[range.clone()]) {
+            let (rich, scripts) = scripted(rich, script);
             hides.push((range.clone(), rich.text.clone().into(), HighlightKind::Html));
-            widgets.push((range, rich));
+            widgets.push((range, rich, scripts));
         }
     }
     if hides.is_empty() {
@@ -583,7 +652,7 @@ pub fn display_line_with(
         .collect();
     let html = widgets
         .into_iter()
-        .filter_map(|(source, rich)| {
+        .filter_map(|(source, rich, scripts)| {
             pieces.iter().find_map(|p| match p {
                 Piece::Sub {
                     display,
@@ -593,6 +662,7 @@ pub fn display_line_with(
                 } if *s == source => Some(InlineHtml {
                     display: *display..display + len,
                     runs: rich.runs.clone(),
+                    scripts: scripts.clone(),
                 }),
                 _ => None,
             })
@@ -711,6 +781,39 @@ mod tests {
         assert_eq!(render("**b** *c*", Some(5..5)).text, "**b** c");
         assert_eq!(render("**b** *c*", Some(0..0)).text, "**b** c");
         assert_eq!(render("**b** *c*", Some(6..6)).text, "b *c*");
+    }
+
+    /// A `<sup>`, `<sub>` or `<small>` run inside an inline HTML element is
+    /// shaped as the placeholder the measure answers and listed to be
+    /// painted at its own size; the runs after it move with it, and with
+    /// nothing to measure (`display_line`) the text stays as it is.
+    #[test]
+    fn scripted_runs_of_an_inline_element_stand_as_placeholders() {
+        let src = "H<sub>2</sub>O and <b>x<sup>2</sup>y</b> end";
+        let doc = scoria_markdown::parse(src);
+        let lines = highlight_lines(&doc);
+        let measure = |own: &str, _: InlineStyle, _: Script| Some("~".repeat(own.len() + 1));
+        let d = display_line_scripted(src, &lines[0], &[], &|_, _| None, &measure);
+        assert_eq!(d.text, "H~~O and x~~y end");
+        assert_eq!(d.html.len(), 2);
+        let sub = &d.html[0];
+        assert_eq!(sub.display, 1..3);
+        assert!(sub.runs.is_empty());
+        assert_eq!(sub.scripts.len(), 1);
+        assert_eq!(sub.scripts[0].display, 0..2);
+        assert_eq!(sub.scripts[0].text, "2");
+        assert!(sub.scripts[0].style.sub);
+        let bold = &d.html[1];
+        assert_eq!(bold.display, 9..13);
+        let b = |sup: bool| InlineStyle {
+            bold: true,
+            sup,
+            ..InlineStyle::default()
+        };
+        assert_eq!(bold.runs, vec![(0..1, b(false)), (3..4, b(false))]);
+        assert_eq!(bold.scripts[0].display, 1..3);
+        assert_eq!(bold.scripts[0].style, b(true));
+        assert_eq!(render(src, None).text, "H2O and x2y end");
     }
 
     /// An inline HTML element no cursor touches is drawn as what it renders

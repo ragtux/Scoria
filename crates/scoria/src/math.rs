@@ -27,9 +27,11 @@ use std::ops::Range;
 
 use gpui::{
     fill, point, px, rgb, size, AnyElement, App, Bounds, Corners, Element, ElementId, Font,
-    GlobalElementId, Hsla, InspectorElementId, IntoElement, LayoutId, PathBuilder, Pixels, Point,
-    Style, TextLayout, TextSystem, Window,
+    GlobalElementId, HighlightStyle, Hsla, InspectorElementId, IntoElement, LayoutId, PathBuilder,
+    Pixels, Point, SharedString, Style, TextLayout, TextSystem, Window,
 };
+
+use crate::reading::model::Script;
 use scoria_math::{Face, Formula, Item, PathCommand, Rgba, STROKE_WIDTH};
 
 pub use scoria_math::typeset;
@@ -331,6 +333,31 @@ impl SpaceWidths {
         }
     }
 
+    /// The run of no-break spaces whose width comes nearest `width`, a hair
+    /// short or a hair over: what a run of text drawn over it, centred,
+    /// needs, where a formula needs never to be cut ([`Self::placeholder`]).
+    pub fn nearest(&self, width: Pixels) -> (String, Pixels) {
+        let (over, total) = self.placeholder(width);
+        let mut short = over.clone();
+        let Some(last) = short.pop() else {
+            return (over, total);
+        };
+        if short.is_empty() {
+            return (over, total);
+        }
+        let less = match last {
+            '\u{2007}' => self.figure,
+            '\u{a0}' => self.nbsp,
+            _ => self.narrow,
+        };
+        let under = total - less;
+        if (width - under).abs() < (total - width).abs() {
+            (short, under)
+        } else {
+            (over, total)
+        }
+    }
+
     /// A run of no-break spaces at least `width` wide, and its width. The
     /// run is never empty, so a formula with no ink still has somewhere to
     /// be clicked.
@@ -461,14 +488,31 @@ pub struct Inline {
     pub slot: Pixels,
 }
 
+/// A run of text set at another size than its paragraph, off its baseline
+/// (`<sup>`, `<sub>`, `<small>`): shaped over a placeholder the same way a
+/// formula is, and painted at its own size with its baseline `rise` above
+/// the row's.
+pub struct ScriptText {
+    /// The placeholder's bytes in the shaped string.
+    pub range: Range<usize>,
+    pub text: SharedString,
+    /// The run's own look, laid over the paragraph's inherited text style.
+    pub highlight: HighlightStyle,
+    /// A family that replaces the inherited one (`<kbd>`'s).
+    pub family: Option<SharedString>,
+    pub script: Script,
+}
+
 /// Shaped text with formulas painted over its placeholders: wraps the
 /// text element and, once that has laid out, reads where each placeholder
 /// landed and paints the formula on the row's baseline, centred in the
-/// placeholder's slack.
+/// placeholder's slack. Scripted runs ([`ScriptText`]) are painted over
+/// theirs at their own size, from the left of the placeholder.
 pub struct Overlay {
     child: AnyElement,
     layout: TextLayout,
     inlines: Vec<Inline>,
+    texts: Vec<ScriptText>,
     em: Pixels,
     color: Hsla,
 }
@@ -485,10 +529,62 @@ impl Overlay {
             child,
             layout,
             inlines,
+            texts: Vec::new(),
             em,
             color,
         }
     }
+
+    pub fn with_texts(mut self, texts: Vec<ScriptText>) -> Overlay {
+        self.texts = texts;
+        self
+    }
+}
+
+/// Shapes `text` at `size` in `style` with `highlight` over it and paints it
+/// with its baseline at `origin.y`, centred in the `slot` that starts at
+/// `origin.x`: the background first, then the glyphs and their lines.
+#[allow(clippy::too_many_arguments)]
+pub fn paint_script(
+    text: &SharedString,
+    style: &gpui::TextStyle,
+    highlight: HighlightStyle,
+    family: Option<&SharedString>,
+    size: Pixels,
+    origin: Point<Pixels>,
+    slot: Pixels,
+    window: &mut Window,
+    cx: &mut App,
+) {
+    let mut style = style.clone().highlight(highlight);
+    if let Some(family) = family {
+        style.font_family = family.clone();
+    }
+    let run = style.to_run(text.len());
+    paint_script_run(text, run, size, origin, slot, window, cx);
+}
+
+/// [`paint_script`] with the run already styled: Live Preview builds it
+/// from the editor's palette.
+pub fn paint_script_run(
+    text: &SharedString,
+    run: gpui::TextRun,
+    size: Pixels,
+    origin: Point<Pixels>,
+    slot: Pixels,
+    window: &mut Window,
+    cx: &mut App,
+) {
+    let line = window
+        .text_system()
+        .shape_line(text.clone(), size, &[run], None);
+    let height = line.ascent + line.descent;
+    // No slot measured (the placeholder's end landed on another row): from
+    // the start, as the text would be drawn.
+    let slot = if slot > px(0.) { slot } else { line.width };
+    let top = point(origin.x + (slot - line.width) / 2., origin.y - line.ascent);
+    let _ = line.paint_background(top, height, gpui::TextAlign::Left, None, window, cx);
+    let _ = line.paint(top, height, gpui::TextAlign::Left, None, window, cx);
 }
 
 impl IntoElement for Overlay {
@@ -570,6 +666,41 @@ impl Element for Overlay {
             );
             paint(&inline.formula, baseline, self.em, self.color, window);
         }
+        if self.texts.is_empty() {
+            return;
+        }
+        // The paragraph's own size and look, which the element around the
+        // text set and the runs inherit.
+        let style = window.text_style();
+        let size = style.font_size.to_pixels(window.rem_size());
+        for text in &self.texts {
+            let Some(start) = self.layout.position_for_index(text.range.start) else {
+                continue;
+            };
+            let Some(line) = self.layout.line_layout_for_index(text.range.start) else {
+                continue;
+            };
+            let (ascent, descent) = (line.unwrapped_layout.ascent, line.unwrapped_layout.descent);
+            let (own, rise) = text.script.at(f32::from(size));
+            let baseline = start.y + (line_height - ascent - descent) / 2. + ascent - px(rise);
+            let slot = self
+                .layout
+                .position_for_index(text.range.end)
+                .filter(|end| end.y == start.y)
+                .map(|end| end.x - start.x)
+                .unwrap_or(px(0.));
+            paint_script(
+                &text.text,
+                &style,
+                text.highlight,
+                text.family.as_ref(),
+                px(own),
+                point(start.x, baseline),
+                slot,
+                window,
+                cx,
+            );
+        }
     }
 }
 
@@ -591,6 +722,27 @@ mod tests {
         let (s, total) = w.placeholder(px(0.));
         assert_eq!((s.as_str(), total), ("\u{202f}", px(2.)));
         assert!(s.chars().all(|c| c != ' '));
+    }
+
+    /// Text over a placeholder is centred in it, so the nearer of the two
+    /// runs either side of the width wins: a subscript `2` does not leave
+    /// a space-wide gap before the `O` of H₂O.
+    #[test]
+    fn the_nearest_placeholder_may_fall_a_hair_short() {
+        let w = SpaceWidths {
+            figure: px(10.),
+            nbsp: px(4.),
+            narrow: px(3.),
+        };
+        // 8.2: two nbsp and a narrow (11) overshoot by 2.8, two nbsp (8)
+        // fall 0.2 short.
+        assert_eq!(w.nearest(px(8.2)), ("\u{a0}\u{a0}".to_string(), px(8.)));
+        // 10.5: a figure and a narrow (13) over by 2.5 against a figure
+        // (10) short by 0.5; 12: 13 over by 1 against 10 short by 2.
+        assert_eq!(w.nearest(px(10.5)).1, px(10.));
+        assert_eq!(w.nearest(px(12.)).1, px(13.));
+        // A single space is never dropped.
+        assert_eq!(w.nearest(px(1.)), ("\u{202f}".to_string(), px(3.)));
     }
 
     #[test]
