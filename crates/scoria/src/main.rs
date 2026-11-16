@@ -22,6 +22,7 @@ mod bases;
 mod bookmarks;
 mod canvas;
 mod chooser;
+mod clipboard_extra;
 mod control;
 mod copy_results;
 mod debug_info;

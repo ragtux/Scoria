@@ -23,6 +23,7 @@ members = [
     "crates/scoria-highlight",
     "crates/scoria-export",
     "crates/scoria-audio",
+    "crates/scoria-paste",
     "crates/scoria-bench",
 ]
 
@@ -54,8 +55,15 @@ scoria-math = { path = "crates/scoria-math" }
 scoria-highlight = { path = "crates/scoria-highlight" }
 scoria-export = { path = "crates/scoria-export" }
 scoria-audio = { path = "crates/scoria-audio" }
+scoria-paste = { path = "crates/scoria-paste" }
 
 anyhow = "1"
+# The WHATWG HTML parser Servo uses, pure Rust (MIT/Apache-2.0), and the
+# reference tree it builds: copied rich text (`text/html`) is parsed with them
+# before `scoria-paste` writes it out as Markdown. A browser's fragment is
+# rarely well formed, and a spec parser recovers from it the way the page did.
+html5ever = "0.40"
+markup5ever_rcdom = "0.40"
 thiserror = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }

@@ -350,6 +350,36 @@ pub const METHODS: &[MethodSpec] = &[
         ],
     ),
     m(
+        "drop",
+        "Drop files on a point, the way a file manager's drag arrives.",
+        &[
+            p(
+                "paths",
+                ParamType::StrList,
+                true,
+                "Absolute paths of the files dropped, in order.",
+            ),
+            p(
+                "x",
+                ParamType::Num,
+                true,
+                "Window-local logical pixels from the left edge.",
+            ),
+            p(
+                "y",
+                ParamType::Num,
+                true,
+                "Window-local logical pixels from the top edge.",
+            ),
+            p(
+                "window",
+                ParamType::Str,
+                false,
+                "Which window takes the drop: `main`, or a popout's id as `state.groups.windows` lists it. Default: the window the active group is in.",
+            ),
+        ],
+    ),
+    m(
         "scroll",
         "Scroll the wheel over a point.",
         &[

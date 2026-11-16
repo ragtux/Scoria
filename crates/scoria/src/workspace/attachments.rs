@@ -79,13 +79,17 @@ impl VaultState {
         bytes: &[u8],
     ) -> Result<(String, Changes), String> {
         let setting = self.app().attachment_folder_path.clone();
-        let folder = scoria_vault::ops::attachment_folder(setting.as_deref(), note);
-        let (path, files) = self
-            .vault
-            .write()
-            .unwrap_or_else(|e| e.into_inner())
+        let mut folder = scoria_vault::ops::attachment_folder(setting.as_deref(), note);
+        let mut vault = self.vault.write().unwrap_or_else(|e| e.into_inner());
+        // A setting that names a file, not a folder, puts the attachment at
+        // the vault root (`Blocker.md`, 2026-10-18).
+        if !folder.is_empty() && !vault.folders().contains(&folder) && vault.exists(&folder) {
+            folder.clear();
+        }
+        let (path, files) = vault
             .add_attachment(&folder, stem, ext, bytes)
             .map_err(|e| e.user_message())?;
+        drop(vault);
         Ok((path, self.absorb(files)))
     }
 
@@ -100,13 +104,86 @@ impl VaultState {
             .file_name()
             .map(|n| n.to_string_lossy().into_owned())
             .ok_or_else(|| format!("{} is not a file", source.display()))?;
-        let (stem, ext) = match name.rsplit_once('.') {
-            Some((stem, ext)) if !stem.is_empty() => (stem.to_string(), ext.to_string()),
-            _ => (name.clone(), String::new()),
-        };
+        let (stem, ext) = scoria_paste::split_name(&name);
         let bytes = std::fs::read(source)
             .map_err(|e| format!("Could not read {}: {e}", source.display()))?;
         self.add_attachment(note, &stem, &ext, &bytes)
+    }
+
+    /// Saves an image from the clipboard as `Pasted image <local
+    /// yyyyMMddHHmmss>.png` beside `note`.
+    pub(super) fn paste_image(
+        &self,
+        note: &str,
+        image: &gpui::Image,
+        at: scoria_paste::Civil,
+    ) -> Result<(String, Changes), String> {
+        let (stem, ext, bytes) = match png_bytes(image) {
+            Some(png) => {
+                let (stem, ext) =
+                    scoria_paste::saved_name(scoria_paste::Incoming::ClipboardImage, at);
+                (stem, ext, png)
+            }
+            // What nothing here decodes (SVG, a damaged image) keeps its
+            // bytes and its own extension under the same name.
+            None => (
+                scoria_paste::attachment::pasted_image_stem(at),
+                own_extension(image.format()).to_string(),
+                image.bytes().to_vec(),
+            ),
+        };
+        self.add_attachment(note, &stem, &ext, &bytes)
+    }
+}
+
+/// The clipboard image as PNG bytes: a PNG as it came, any other raster
+/// format decoded and written as PNG — Obsidian saves every clipboard
+/// image as one. `None` for what cannot be decoded.
+fn png_bytes(image: &gpui::Image) -> Option<Vec<u8>> {
+    use gpui::ImageFormat as F;
+    let format = match image.format() {
+        F::Png => return Some(image.bytes().to_vec()),
+        F::Jpeg => image::ImageFormat::Jpeg,
+        F::Webp => image::ImageFormat::WebP,
+        F::Gif => image::ImageFormat::Gif,
+        F::Bmp => image::ImageFormat::Bmp,
+        F::Tiff => image::ImageFormat::Tiff,
+        F::Ico => image::ImageFormat::Ico,
+        F::Pnm => image::ImageFormat::Pnm,
+        _ => return None,
+    };
+    let decoded = image::load_from_memory_with_format(image.bytes(), format).ok()?;
+    let mut out = std::io::Cursor::new(Vec::new());
+    decoded.write_to(&mut out, image::ImageFormat::Png).ok()?;
+    Some(out.into_inner())
+}
+
+fn own_extension(format: gpui::ImageFormat) -> &'static str {
+    use gpui::ImageFormat as F;
+    match format {
+        F::Png => "png",
+        F::Jpeg => "jpg",
+        F::Webp => "webp",
+        F::Gif => "gif",
+        F::Svg => "svg",
+        F::Bmp => "bmp",
+        F::Tiff => "tiff",
+        F::Ico => "ico",
+        F::Pnm => "pnm",
+    }
+}
+
+/// Now, as the local civil time a pasted image is named after.
+fn local_now() -> scoria_paste::Civil {
+    use chrono::{Datelike, Timelike};
+    let now = chrono::Local::now();
+    scoria_paste::Civil {
+        year: now.year(),
+        month: now.month(),
+        day: now.day(),
+        hour: now.hour(),
+        minute: now.minute(),
+        second: now.second(),
     }
 }
 
@@ -187,6 +264,76 @@ impl Workspace {
         self.editor
             .update(cx, |e, cx| e.replace_range(range, &link, window, cx));
         window.focus(&self.editor.focus_handle(cx), cx);
+        cx.notify();
+    }
+
+    /// What a paste or a drop brought into `editor`'s note: a clipboard
+    /// image saved as `Pasted image …png`; a file from outside the vault
+    /// copied in under its own name; a file already in the vault linked
+    /// where it is. The embeds go in as one undo step
+    /// ([`Editor::insert_attachments`]); the files stay on an undo, as in
+    /// Obsidian.
+    pub(super) fn save_incoming(
+        &mut self,
+        editor: &Entity<Editor>,
+        incoming: IncomingAttachments,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let note = editor.read(cx).name.to_string();
+        if FileKind::from_path(&note) != FileKind::Markdown {
+            return;
+        }
+        let root = self.vault_root();
+        let mut copied: Vec<String> = Vec::new();
+        let mut linked: Vec<String> = Vec::new();
+        if let Some(image) = &incoming.image {
+            match state.paste_image(&note, image, local_now()) {
+                Ok((path, changes)) => {
+                    self.after_changes(changes, cx);
+                    copied.push(state.embed_link(&path, &note));
+                }
+                Err(err) => return self.report(err, cx),
+            }
+        }
+        for source in &incoming.paths {
+            if source.is_dir() {
+                continue;
+            }
+            if let Some(path) = root.as_deref().and_then(|r| path_in_vault(r, source)) {
+                let link = state.embed_link(&path, &note);
+                // A paste writes every embed in the order the files came.
+                match incoming.dropped_at {
+                    Some(_) => linked.push(link),
+                    None => copied.push(link),
+                }
+                continue;
+            }
+            match state.import_attachment(&note, source) {
+                Ok((path, changes)) => {
+                    self.after_changes(changes, cx);
+                    copied.push(state.embed_link(&path, &note));
+                }
+                Err(err) => return self.report(err, cx),
+            }
+        }
+        if copied.is_empty() && linked.is_empty() {
+            return;
+        }
+        let at_pointer = scoria_paste::joined_embeds(&copied);
+        let mut at_caret = scoria_paste::joined_embeds(&linked);
+        // A drop of files from inside and outside the vault at once: the
+        // linked ones were followed by a blank line (one run, 2026-11-15).
+        if incoming.dropped_at.is_some() && !at_caret.is_empty() && !at_pointer.is_empty() {
+            at_caret.push_str("\n\n");
+        }
+        editor.update(cx, |e, cx| {
+            e.insert_attachments(incoming.dropped_at, &at_pointer, &at_caret, window, cx)
+        });
+        window.focus(&editor.focus_handle(cx), cx);
         cx.notify();
     }
 
@@ -443,6 +590,68 @@ mod tests {
             state.embed_link(&again, "Sub/Note.md"),
             "![[pic one 1.png]]"
         );
+    }
+
+    const AT: scoria_paste::Civil = scoria_paste::Civil {
+        year: 2026,
+        month: 10,
+        day: 25,
+        hour: 10,
+        minute: 38,
+        second: 53,
+    };
+
+    /// A clipboard image is `Pasted image <local time>.png` under
+    /// `attachmentFolderPath`, the folder chain made (`att/deep/new`), and
+    /// a second in the same second numbered (2026-10-18 and -25 passes).
+    #[test]
+    fn a_pasted_image_is_named_after_the_local_second() {
+        let (dir, state, _) = setup("{\"attachmentFolderPath\": \"att/deep/new\"}");
+        let png = gpui::Image::from_bytes(gpui::ImageFormat::Png, PNG.to_vec());
+        let (path, _) = state.paste_image("Sub/Note.md", &png, AT).unwrap();
+        assert_eq!(path, "att/deep/new/Pasted image 20261025103853.png");
+        assert_eq!(
+            std::fs::read(dir.path().join("Probe Vault").join(&path)).unwrap(),
+            PNG,
+            "a PNG is written as it came"
+        );
+        assert_eq!(
+            state.embed_link(&path, "Sub/Note.md"),
+            "![[Pasted image 20261025103853.png]]"
+        );
+        let (again, _) = state.paste_image("Sub/Note.md", &png, AT).unwrap();
+        assert_eq!(again, "att/deep/new/Pasted image 20261025103853 1.png");
+    }
+
+    /// Any other raster format on the clipboard is written as a PNG, the
+    /// way every clipboard image reaches Obsidian.
+    #[test]
+    fn a_pasted_jpeg_is_saved_as_a_png() {
+        let (dir, state, _) = setup("{}");
+        let mut jpeg = std::io::Cursor::new(Vec::new());
+        image::DynamicImage::new_rgb8(2, 2)
+            .write_to(&mut jpeg, image::ImageFormat::Jpeg)
+            .unwrap();
+        let image = gpui::Image::from_bytes(gpui::ImageFormat::Jpeg, jpeg.into_inner());
+        let (path, _) = state.paste_image("Sub/Note.md", &image, AT).unwrap();
+        assert_eq!(path, "Pasted image 20261025103853.png");
+        let bytes = std::fs::read(dir.path().join("Probe Vault").join(&path)).unwrap();
+        assert!(bytes.starts_with(b"\x89PNG\r\n\x1a\n"));
+        // An SVG keeps its bytes and its extension.
+        let svg = gpui::Image::from_bytes(gpui::ImageFormat::Svg, b"<svg/>".to_vec());
+        let (path, _) = state.paste_image("Sub/Note.md", &svg, AT).unwrap();
+        assert_eq!(path, "Pasted image 20261025103853.svg");
+    }
+
+    /// `attachmentFolderPath` naming a file puts the attachment at the
+    /// vault root (`Blocker.md`, 2026-10-18).
+    #[test]
+    fn an_attachment_folder_that_is_a_file_means_the_root() {
+        let (dir, state, pic) = setup("{\"attachmentFolderPath\": \"Blocker.md\"}");
+        std::fs::write(dir.path().join("Probe Vault/Blocker.md"), "x\n").unwrap();
+        let state = VaultState::load(&dir.path().join("Probe Vault")).unwrap_or(state);
+        let (path, _) = state.import_attachment("Sub/Note.md", &pic).unwrap();
+        assert_eq!(path, "pic one.png");
     }
 
     /// `s02` `markdownLinks` and `markdownRelative`, and a file already in

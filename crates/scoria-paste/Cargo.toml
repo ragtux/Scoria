@@ -1,0 +1,16 @@
+[package]
+name = "scoria-paste"
+description = "What a paste or a drop writes into a note: copied HTML as Markdown, and the names pasted and dropped attachments are saved under"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+html5ever.workspace = true
+markup5ever_rcdom.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

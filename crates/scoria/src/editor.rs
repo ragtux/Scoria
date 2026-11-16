@@ -106,6 +106,7 @@ actions!(
         Copy,
         Cut,
         Paste,
+        PastePlain,
         FindNext,
         FindPrevious,
         FindAll,
@@ -160,6 +161,7 @@ pub fn bind_keys(cx: &mut App) {
         KeyBinding::new("ctrl-c", Copy, ctx),
         KeyBinding::new("ctrl-x", Cut, ctx),
         KeyBinding::new("ctrl-v", Paste, ctx),
+        KeyBinding::new("ctrl-shift-v", PastePlain, ctx),
         KeyBinding::new("escape", CloseFind, ctx),
         KeyBinding::new("shift-enter", FindPrevious, Some("FindPanel")),
         KeyBinding::new("alt-enter", FindAll, Some("FindPanel")),
@@ -172,6 +174,7 @@ pub fn bind_keys(cx: &mut App) {
         KeyBinding::new("ctrl-c", Copy, Some("VimEditor")),
         KeyBinding::new("ctrl-x", Cut, Some("VimEditor")),
         KeyBinding::new("ctrl-v", Paste, Some("VimEditor")),
+        KeyBinding::new("ctrl-shift-v", PastePlain, Some("VimEditor")),
         KeyBinding::new("ctrl-z", Undo, Some("VimEditor")),
         KeyBinding::new("ctrl-shift-z", Redo, Some("VimEditor")),
         KeyBinding::new("ctrl-a", SelectAll, Some("VimEditor")),
@@ -245,6 +248,22 @@ pub enum EditorEvent {
         key: String,
         ty: props::PropertyType,
     },
+    /// Files or an image pasted or dropped into the note: the workspace,
+    /// which owns the vault, saves them as attachments and answers with
+    /// [`Editor::insert_attachments`].
+    Attachments(IncomingAttachments),
+}
+
+/// What a paste or a drop brought in to be saved as attachments.
+#[derive(Debug, Clone)]
+pub struct IncomingAttachments {
+    /// Image data on the clipboard, with no file behind it.
+    pub image: Option<gpui::Image>,
+    /// Files, from a file manager's copy or drag, in the order they came.
+    pub paths: Vec<std::path::PathBuf>,
+    /// Where a drop landed, as a byte offset; `None` for a paste, which
+    /// writes at every cursor.
+    pub dropped_at: Option<usize>,
 }
 
 /// The commands a slash popup offers: the palette's list as it stands when
@@ -771,6 +790,12 @@ pub struct Editor {
     /// Tab inserts a tab (`useTab`) or `tab_size` spaces.
     use_tab: bool,
     tab_size: u8,
+    /// `autoConvertHtml`: a paste of copied rich text writes it as
+    /// Markdown rather than as its plain text.
+    convert_html: bool,
+    /// Files from outside the app being dragged over the editor, until the
+    /// release drops them or the pointer leaves.
+    drop_hover: Option<Vec<std::path::PathBuf>>,
     /// Shaping time per painted frame since the note was opened.
     pub frame_samples: Sample,
     /// Parse time per completed decoration pass since the note was opened.
@@ -893,6 +918,8 @@ impl Editor {
             smart_indent_list: true,
             use_tab: true,
             tab_size: 4,
+            convert_html: true,
+            drop_hover: None,
             frame_samples: Sample::default(),
             parse_samples: Sample::default(),
             parse_latency: Sample::default(),
@@ -1169,6 +1196,11 @@ impl Editor {
     }
 
     /// Editor settings from `app.json`: smart lists, and tabs or spaces.
+    /// `autoConvertHtml` (on unless `app.json` turns it off).
+    pub fn set_convert_html(&mut self, on: bool) {
+        self.convert_html = on;
+    }
+
     pub fn set_indent_options(&mut self, smart_indent_list: bool, use_tab: bool, tab_size: u8) {
         self.smart_indent_list = smart_indent_list;
         self.use_tab = use_tab;
@@ -3538,26 +3570,170 @@ impl Editor {
         self.paste_clipboard(window, cx);
     }
 
-    /// Ctrl+V, and the context menu's Paste row — and its "Paste as plain
-    /// text" row, which is the same paste here: the clipboard is read as
-    /// text and written verbatim, with no HTML or Markdown conversion on
-    /// the way in for a plain paste to skip.
+    /// Ctrl+Shift+V: the clipboard's plain text, whatever else it holds.
+    fn paste_plain_action(&mut self, _: &PastePlain, window: &mut Window, cx: &mut Context<Self>) {
+        self.paste_plain(window, cx);
+    }
+
+    /// Ctrl+V, and the context menu's Paste row. Files a file manager
+    /// copied, and an image, are saved as attachments and embedded (the
+    /// workspace does the saving); copied rich text is written as Markdown
+    /// while `autoConvertHtml` is on; anything else is the plain text, as
+    /// Obsidian 1.15.0 does it
+    /// ([[Specification#Observed HTML paste and file drops, Obsidian 1.15.0]]).
     pub fn paste_clipboard(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        let Some(text) = cx.read_from_clipboard().and_then(|item| item.text()) else {
+        let item = cx.read_from_clipboard();
+        let text = item.as_ref().and_then(|item| item.text());
+        // An open field takes text only, and drops the newlines a row
+        // cannot hold.
+        if self.title_edit.is_some() || self.active_field().is_some() {
+            if let Some(text) = text {
+                self.paste_text(&text, window, cx);
+            }
             return;
-        };
+        }
+        let extra = crate::clipboard_extra::read(self.convert_html);
+        if !extra.files.is_empty() {
+            cx.emit(EditorEvent::Attachments(IncomingAttachments {
+                image: None,
+                paths: extra.files,
+                dropped_at: None,
+            }));
+            return;
+        }
+        let image = item.as_ref().and_then(|item| {
+            item.entries().iter().find_map(|e| match e {
+                gpui::ClipboardEntry::Image(image) => Some(image.clone()),
+                _ => None,
+            })
+        });
+        if let Some(image) = image {
+            cx.emit(EditorEvent::Attachments(IncomingAttachments {
+                image: Some(image),
+                paths: Vec::new(),
+                dropped_at: None,
+            }));
+            return;
+        }
+        if self.convert_html {
+            if let Some(html) = extra.html {
+                let markdown = scoria_paste::to_markdown(&html);
+                if !markdown.is_empty() && self.buf.paste(&markdown) {
+                    self.after_edit(Some(window), cx);
+                }
+                return;
+            }
+        }
+        if let Some(text) = text {
+            self.paste_text(&text, window, cx);
+        }
+    }
+
+    /// The context menu's "Paste as plain text" and Ctrl+Shift+V: the
+    /// clipboard's `text/plain`, verbatim. A clipboard with only HTML on
+    /// it pastes nothing, as in Obsidian.
+    pub fn paste_plain(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if let Some(text) = cx.read_from_clipboard().and_then(|item| item.text()) {
+            self.paste_text(&text, window, cx);
+        }
+    }
+
+    fn paste_text(&mut self, text: &str, window: &mut Window, cx: &mut Context<Self>) {
         // Into the open field, which drops the newlines a row cannot hold.
-        if self.title_apply(cx, |f| f.insert(&text)) {
+        if self.title_apply(cx, |f| f.insert(text)) {
             return;
         }
         if let Some(field) = self.active_field() {
-            field.insert(&text);
+            field.insert(text);
             cx.notify();
             return;
         }
-        if self.buf.paste(&text) {
+        if self.buf.paste(text) {
             self.after_edit(Some(window), cx);
         }
+    }
+
+    /// Files from outside the app dragged over the editor: kept while the
+    /// pointer is over it, for the release to drop.
+    fn drag_paths_over(
+        &mut self,
+        event: &gpui::DragMoveEvent<gpui::ExternalPaths>,
+        _: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.drop_hover = event
+            .bounds
+            .contains(&event.event.position)
+            .then(|| event.drag(cx).paths().to_vec());
+    }
+
+    /// Files dropped on the editor: their paths and the offset under the
+    /// pointer, for the workspace to save and embed.
+    fn drop_paths(
+        &mut self,
+        paths: Vec<std::path::PathBuf>,
+        position: Point<Pixels>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if paths.is_empty() || self.title_edit.is_some() {
+            return;
+        }
+        let at = self
+            .offset_at_point(window, position)
+            .unwrap_or_else(|| self.buf.selection().end);
+        window.focus(&self.focus_handle, cx);
+        cx.emit(EditorEvent::Attachments(IncomingAttachments {
+            image: None,
+            paths,
+            dropped_at: Some(at),
+        }));
+    }
+
+    /// The embeds of what a paste or a drop brought in, as one undo step.
+    /// A paste writes them at every cursor, over any selection. A drop
+    /// writes `at_pointer` (the files copied in) where it landed and
+    /// `at_caret` (files already in the vault, linked where they are) at
+    /// the caret, which then sits after the dropped text: Obsidian 1.15.0's
+    /// drop, both halves.
+    pub fn insert_attachments(
+        &mut self,
+        dropped_at: Option<usize>,
+        at_pointer: &str,
+        at_caret: &str,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(at) = dropped_at else {
+            let parts: Vec<&str> = [at_caret, at_pointer]
+                .into_iter()
+                .filter(|t| !t.is_empty())
+                .collect();
+            self.insert_at_cursors(&scoria_paste::joined_embeds(&parts), window, cx);
+            return;
+        };
+        let at = at.min(self.buf.text().len());
+        let caret = self.buf.selection().end;
+        let mut edits = Vec::new();
+        if !at_caret.is_empty() {
+            edits.push((caret..caret, at_caret.to_string()));
+        }
+        if !at_pointer.is_empty() {
+            edits.push((at..at, at_pointer.to_string()));
+        }
+        if edits.is_empty() {
+            return;
+        }
+        edits.sort_by_key(|(r, _)| r.start);
+        let shift = if !at_caret.is_empty() && caret <= at {
+            at_caret.len()
+        } else {
+            0
+        };
+        let cursor = at + shift + at_pointer.len();
+        self.buf
+            .apply_edits(edits, Cursors::at(cursor), EditKind::Other);
+        self.after_edit(Some(window), cx);
     }
 
     // ----- find and replace ------------------------------------------------------
@@ -6168,6 +6344,8 @@ impl Render for Editor {
             .on_action(cx.listener(Self::copy))
             .on_action(cx.listener(Self::cut))
             .on_action(cx.listener(Self::paste))
+            .on_action(cx.listener(Self::paste_plain_action))
+            .on_drag_move(cx.listener(Self::drag_paths_over))
             .on_action(cx.listener(Self::close_find))
             .on_action(cx.listener(Self::add_cursor_above))
             .on_action(cx.listener(Self::add_cursor_below))
@@ -7762,7 +7940,26 @@ impl Element for EditorElement {
         });
         let editor = self.editor.clone();
         let entity_for_drop = self.editor.clone();
+        let drop_box = prepaint.hitbox.clone();
         window.on_mouse_event(move |event: &MouseUpEvent, phase, window, cx| {
+            // Files let go over the text. gpui's own `on_drop` asks whether
+            // the element is hovered, which it never is after a keystroke
+            // (a platform drop does not count as pointer input), so the
+            // drop is caught here by the bounds instead.
+            if phase == DispatchPhase::Bubble
+                && cx.has_active_drag()
+                && drop_box.bounds.contains(&event.position)
+            {
+                let dropped = editor.update(cx, |editor, _| editor.drop_hover.take());
+                if let Some(paths) = dropped {
+                    cx.stop_active_drag(window);
+                    editor.update(cx, |editor, cx| {
+                        editor.drop_paths(paths, event.position, window, cx)
+                    });
+                    cx.stop_propagation();
+                    return;
+                }
+            }
             if phase == DispatchPhase::Bubble && event.button == MouseButton::Left {
                 editor.update(cx, |editor, cx| {
                     editor.dragging = false;
