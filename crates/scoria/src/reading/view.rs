@@ -2057,6 +2057,17 @@ impl<'a> Renderer<'a> {
                 wrap,
                 copyable,
             } => {
+                // A ```mermaid fence is the diagram, with no band, no copy
+                // button and the block's width to lay out in; an inline
+                // `<svg>` leaves a few pixels under itself.
+                if scoria_mermaid::is_mermaid(language.as_deref()) {
+                    return div()
+                        .mb(gap)
+                        .w_full()
+                        .pb(px(crate::mermaid::BOTTOM_GAP))
+                        .child(crate::mermaid::block(text, t))
+                        .into_any_element();
+                }
                 let id = *id;
                 let (wrap, copyable) = (*wrap, *copyable);
                 let payload = copy.clone();

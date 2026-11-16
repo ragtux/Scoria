@@ -86,7 +86,6 @@ The gaps, honestly — none of these are in reading view today:
 | Not drawn | What you see instead |
 |---|---|
 | MathJax-only syntax | The source, in red; the common TeX that KaTeX also takes is typeset |
-| Mermaid diagrams | The code block |
 | An inline `style` attribute | The element, unstyled |
 | `<iframe>`, `<form>` and other tags Scoria has no drawing for | Their source |
 | Editing a property | The properties table is read-only here; edit it in [Live Preview](/docs/app/editing/) |

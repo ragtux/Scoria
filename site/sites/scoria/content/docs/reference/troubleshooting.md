@@ -88,7 +88,7 @@ If Scoria and Obsidian disagree about where a link goes, that *is* a bug — ple
 ## A note looks different from Obsidian
 
 Check [what differs](/docs/reference/differences/) first — math, HTML, remote images and
-Mermaid are all known.
+Mermaid's small gaps are all known.
 
 If it is none of those, it is a parser bug and a valuable one. The useful report is the
 smallest note that shows it, plus what Obsidian renders. The project keeps a 1,009-note

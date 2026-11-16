@@ -21,6 +21,7 @@ members = [
     "crates/scoria-pdf",
     "crates/scoria-math",
     "crates/scoria-highlight",
+    "crates/scoria-mermaid",
     "crates/scoria-export",
     "crates/scoria-audio",
     "crates/scoria-bench",
@@ -52,6 +53,7 @@ scoria-composer = { path = "crates/scoria-composer" }
 scoria-pdf = { path = "crates/scoria-pdf" }
 scoria-math = { path = "crates/scoria-math" }
 scoria-highlight = { path = "crates/scoria-highlight" }
+scoria-mermaid = { path = "crates/scoria-mermaid" }
 scoria-export = { path = "crates/scoria-export" }
 scoria-audio = { path = "crates/scoria-audio" }
 
@@ -89,6 +91,18 @@ ratex-layout = "0.1.15"
 ratex-types = "0.1.15"
 ratex-font = "0.1.15"
 ratex-katex-fonts = "0.1.15"
+# limu: a Rust port of Pele, the Mermaid renderer Obsidian bundles (Pele 1.13.0
+# in Obsidian 1.15.1), whose tests hold its layout to Pele's number for number.
+# It stops at a scene (shapes, paths and text runs) that scoria-mermaid turns
+# into a drawing list the app paints with gpui. MIT, standard library only.
+# Pinned exactly: it is 0.x and its API moves between releases.
+limu = "=0.2.1"
+# Already in the tree through krilla; scoria-mermaid shapes diagram text with
+# it to measure it as the browser's canvas does (HarfBuzz's own port).
+rustybuzz = "0.20"
+# Already in the tree through gpui, whose PathBuilder takes lyon's stroke
+# options; the app names its caps and joins for Mermaid diagrams' strokes.
+lyon = "1"
 # Rasterizes the KaTeX glyphs for the app to paint as images: gpui's own font
 # database prunes a face with no `m` glyph (every KaTeX size face) and cannot
 # tell the KaTeX italics from the uprights (no italic flag in the files).

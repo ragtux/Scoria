@@ -75,7 +75,7 @@ At version 0.6.0, honestly:
   Source mode, find and replace, multiple cursors, link-rewriting renames, tables, properties
   — and it has passed a week of mixed use beside Obsidian with the vault byte-identical, but
   that is one vault and one week, and it is the newest code in the project.
-- **Not yet:** anyone who needs Mermaid diagrams, MathJax-only syntax, community plugins,
+- **Not yet:** anyone who needs MathJax-only syntax, community plugins,
   or a Prism grammar outside the 85 ported.
 
 ## Where to go next

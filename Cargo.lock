@@ -3510,6 +3510,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "limu"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d772f75c00ace019ab37de5b2957fede57f4108050d64e27551246bcdb8ef06e"
+dependencies = [
+ "limu-scene",
+]
+
+[[package]]
+name = "limu-scene"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d0ef98422626b58004c49b1175cf428a2a99842a56f7687a8b15e51c55b7456c"
+
+[[package]]
 name = "linebender_resource_handle"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5576,6 +5591,7 @@ dependencies = [
  "http_client",
  "image",
  "indexmap",
+ "lyon",
  "notify",
  "rayon",
  "regex",
@@ -5592,6 +5608,7 @@ dependencies = [
  "scoria-highlight",
  "scoria-markdown",
  "scoria-math",
+ "scoria-mermaid",
  "scoria-pdf",
  "scoria-search",
  "scoria-suggest",
@@ -5706,6 +5723,7 @@ dependencies = [
  "scoria-formats",
  "scoria-highlight",
  "scoria-math",
+ "scoria-mermaid",
  "scoria-pdf",
  "tiny-skia",
 ]
@@ -5757,6 +5775,16 @@ name = "scoria-mcp"
 version = "0.6.0"
 dependencies = [
  "scoria-control",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "scoria-mermaid"
+version = "0.6.0"
+dependencies = [
+ "limu",
+ "rustybuzz",
  "serde",
  "serde_json",
 ]

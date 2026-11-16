@@ -1,0 +1,17 @@
+[package]
+name = "scoria-mermaid"
+description = "Mermaid diagrams laid out as Obsidian's Pele lays them out, into a drawing list of paths and text runs in CSS pixels"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+limu = { workspace = true }
+rustybuzz = { workspace = true }
+
+[dev-dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }

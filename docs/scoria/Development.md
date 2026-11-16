@@ -331,7 +331,70 @@ uses behave as Obsidian's do.
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
 | Page preview | probed 2026-11-11 on macOS, see [[Specification#Observed page preview, Obsidian 1.15.0]] and [[#Page preview, the probe, 2026-11-11]]; step 1 landed the same day — the popover over links in the reading view and both editing modes, see [[#Page preview, step 1, 2026-11-11]]; step 2 the same day — the tab header and the Files, Bookmarks, Backlinks, Outgoing links and Outline rows, see [[#Page preview, step 2, 2026-11-11]]; step 3 the same day — nested popovers and the click that makes one an editor, see [[#Page preview, step 3, 2026-11-11]]; step 4 the same day — the Bases and Graph sources, the second-link timing and "Click to create", from a second probe pass, see [[#Page preview, step 4, 2026-11-11]] — done, bar the "Properties view" source, whose File properties view Scoria does not have |
+| Mermaid diagrams | done 2026-11-15: laid out by limu (a Rust port of Pele, the renderer Obsidian bundles) and painted natively in the reading view, Live Preview, embeds, hover previews and Export to PDF, see [[#Mermaid diagrams, 2026-11-15]] and [[Specification#Observed Mermaid diagrams, Obsidian 1.15.1]] |
 | Slash commands | done 2026-11-11: probed in a headless sway and built on the autocompletion popup, see [[#Slash commands, 2026-11-11]] and [[Specification#Observed Slash commands, Obsidian 1.15.0]] |
+
+### Mermaid diagrams, 2026-11-15
+
+A ```` ```mermaid ```` fence showed as plain code. Probed first, then built on a dependency
+rather than a parser of our own. See [[Specification#Observed Mermaid diagrams, Obsidian 1.15.1]].
+
+**What Obsidian runs.** Not Mermaid: since 1.15 Obsidian bundles **Pele** (`lib/pele.min.js`,
+"Pele 1.13.0 | MIT License" in 1.15.1), its own Mermaid-compatible renderer. That decided the
+reference: the target is Pele's numbers, not Mermaid's.
+
+**The choice.** Searched crates.io and GitHub. `merman` (MIT/Apache, used by Zed) and
+`mermaid-little` port Mermaid itself (12.3 and 11.14) and write SVG; `mermaid-rs-renderer`,
+`mermaid-render`, `ferrigura` are independent layouts; `flowmaid` is GPL. **`limu` 0.2.1**
+(MIT, standard library only, github.com/firede/limu-rs) is a port of Pele itself, follows Pele
+1.13.0 exactly, holds its tests to Pele's output number for number through pele-oracle's
+fixtures, and stops at a *scene* — shapes, paths and text runs — with a `Measurer` trait for
+text and a `Canvas` trait for drawing: the architecture `scoria-math` has, already built, for
+33 diagram types. Writing our own would have meant porting the same 115k lines to reach what
+limu has. Pinned with `=0.2.1` (0.x). `rustybuzz` (already in the tree through krilla)
+measures text; `lyon` (already in through gpui) names stroke caps and joins.
+
+**What was built.**
+- `crates/scoria-mermaid` (no gpui): `render(source, max_width, theme)` lays a fence out with
+  limu, measuring text with rustybuzz in the Inter the app bundles (`set_fonts`, bold at
+  SemiBold, as Obsidian's `--bold-weight` 600), and draws the scene through a recording
+  `Canvas` into a drawing list: filled and stroked paths (rotations applied to the points) and
+  anchored text runs of spans, colours settled from a `Theme` whose fields are Obsidian's
+  `--mermaid-*` variables. Cached on source, whole-pixel width and theme; an error is cached
+  with Pele's message.
+- `crates/scoria/src/mermaid.rs`: the theme mapped from Scoria's tokens; `DiagramElement`, a
+  gpui element measured through `request_measured_layout` so the diagram is laid out for the
+  width it is given and shrunk to it when still wider; paths through `PathBuilder` (non-zero
+  fill, lyon stroke options, dashes), text shaped with `shape_line` in the interface face and
+  set from each run's anchor; the error as mono text at 0.8 em in `--text-error`.
+- Reading view: the code-block arm draws a `mermaid` fence as the diagram (no band, no copy
+  button, 6 px under it). Embeds and hover previews share that renderer. Live Preview: a
+  `mermaid` fence is a widget (`build_widgets`) with the **Edit this block** button the base
+  embed has.
+- Export to PDF: `scoria-export` lays a fence out at the column's width and emits its paths and
+  glyph runs (dashes solid); an error prints in the error colour.
+
+**Tests and fidelity.** `crates/scoria-mermaid/tests/data/obsidian-1.15.1.json` is the probe
+reduced by `tools/obsidian-probe/mermaid-fixture.py`. `tests/obsidian.rs` lays out all 24 cases
+and compares: every error message byte for byte; diagram sizes — 10 of 21 diagrams exact,
+flowcharts and sequence diagrams within 3 px (e.g. flow-td 185×489 vs 184×489, sequence 545×419
+vs 542×419), the rest within 11 (ER, whose capitals gather the most); node boxes within 5.5 px
+for flowcharts and sequence diagrams; text centres within 6 px; the colours of nodes, edges and
+text in both themes; and the six narrow-column layouts. The residual is the face: Scoria's
+static Inter 4.0 against Obsidian's InterVariable at optical size 16 differ by up to a pixel a
+word ("Rethink" 56.2 vs 57.2). The one larger gap is a label with 日本語, a line taller in
+Obsidian (its fallback face's line box). Plus five unit tests in `scoria-mermaid`, one in the
+reading model, one in the export.
+
+**Driven.** The release build in the private headless sway over the control socket: flow-td,
+sequence, sequence-full (Live Preview, with the button), class, gantt, a syntax error and an
+embed, compared by eye with Obsidian's captures of the same notes — the same shapes, places and
+colours.
+
+**Left.** `click` links and tooltips (limu keeps them in the scene; nothing hit-tests them);
+icons (`fa:`) and images in nodes; a halo under text and rotated text (gpui cannot stroke or
+turn glyphs; an axis title would draw level); dashes in the PDF; the CJK line height; and
+measuring in InterVariable, which would close most of the pixel gap.
 
 ### Slash commands, 2026-11-11
 

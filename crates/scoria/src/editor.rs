@@ -5671,6 +5671,11 @@ impl Editor {
     }
 }
 
+/// Whether a widget is a ```mermaid fence drawn as its diagram.
+fn is_mermaid_block(block: &RBlock) -> bool {
+    matches!(block, RBlock::Code { language, .. } if scoria_mermaid::is_mermaid(language.as_deref()))
+}
+
 /// The display of the bytes before a nested embed on its line -- `- `,
 /// `1. `, `- [ ] `, `> `, `  ` -- or `None` for a widget that starts its
 /// line. Built from the line's own highlight spans with no cursor on it,
@@ -7116,11 +7121,16 @@ impl Element for EditorElement {
                         .map(|p| p.line.unwrapped_layout.width)
                         .unwrap_or_default();
                     let width = (content_width - indent).max(px(0.));
-                    let mut element = if crate::bases::embed::is_base_embed(&widget.block) {
+                    let mut element = if crate::bases::embed::is_base_embed(&widget.block)
+                        || is_mermaid_block(&widget.block)
+                    {
                         // Obsidian's `embed-action edit-block-button` over
                         // an embedded base: `lucide-code-2` (the current
                         // `code-xml`), 28 by 24, 8 px down and 4 px in from
                         // the embed's top-right, tooltip "Edit this block".
+                        // A Mermaid diagram has the same one, at the same
+                        // place (observed 1184,232.5 over a block at
+                        // 516..1216, 228.5).
                         let first = wlines.start;
                         let entity = entity.clone();
                         div()
