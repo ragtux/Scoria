@@ -1,0 +1,4364 @@
+{
+ "fixtures": {
+  "startedAt": "2026-11-16T01:24:50.033Z",
+  "steps": {},
+  "order": [],
+  "elapsedMs": 1
+ },
+ "run": {
+  "startedAt": "2026-11-16T01:24:51.234Z",
+  "steps": {
+   "s00-context": {
+    "ok": true,
+    "ms": 3,
+    "version": {
+     "title": "New tab - vault - Obsidian 1.15.0",
+     "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+     "win": [
+      1596,
+      973
+     ],
+     "dpr": 1,
+     "apiVersion": null
+    }
+   },
+   "s01-canvas-reading": {
+    "ok": true,
+    "ms": 2979,
+    "open": {
+     "file": "Note.md",
+     "type": "markdown",
+     "state": {
+      "file": "Note.md",
+      "mode": "preview",
+      "source": false
+     }
+    },
+    "markup": {
+     "tag": "span",
+     "cls": "internal-embed canvas-embed inline-embed is-loaded",
+     "rect": [
+      464,
+      241.5,
+      700,
+      438
+     ],
+     "src": "Board.canvas",
+     "alt": "Board.canvas",
+     "children": [
+      {
+       "tag": "div",
+       "cls": "embed-title",
+       "rect": [
+        464,
+        241.5,
+        700,
+        32
+       ],
+       "children": [
+        {
+         "tag": "span",
+         "cls": "file-embed-icon",
+         "rect": [
+          464,
+          245.5,
+          16,
+          16
+         ],
+         "children": [
+          {
+           "tag": "svg",
+           "cls": "svg-icon lucide-layout-dashboard",
+           "rect": [
+            464,
+            245.5,
+            16,
+            16
+           ],
+           "width": "24",
+           "height": "24",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "tag": "svg",
+       "cls": "canvas-minimap",
+       "rect": [
+        464,
+        273.5,
+        700,
+        400
+       ],
+       "children": []
+      }
+     ]
+    },
+    "state": {
+     "src": "Board.canvas",
+     "cls": "internal-embed canvas-embed inline-embed is-loaded",
+     "rect": [
+      464,
+      241.5,
+      700,
+      438
+     ],
+     "style": null,
+     "styles": {
+      "display": "block",
+      "position": "static",
+      "width": "700px",
+      "height": "438px",
+      "max-height": "none",
+      "margin": "0px",
+      "padding": "0px",
+      "border": "0px none rgb(218, 218, 218)",
+      "border-radius": "0px",
+      "background-color": "rgba(0, 0, 0, 0)",
+      "overflow": "visible",
+      "cursor": "auto",
+      "box-shadow": "none",
+      "outline": "rgb(218, 218, 218) none 3px",
+      "color": "rgb(218, 218, 218)",
+      "font-size": "16px"
+     },
+     "canvasTransform": null,
+     "wrapper": null,
+     "nodes": [],
+     "model": null,
+     "edges": 0,
+     "scroller": 0,
+     "active": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties",
+     "leafType": "markdown",
+     "leafFile": "Note.md"
+    },
+    "deep": {
+     "header": [
+      {
+       "cls": "embed-title",
+       "rect": [
+        464,
+        241.5,
+        700,
+        32
+       ],
+       "styles": {
+        "display": "flex",
+        "position": "static",
+        "width": "700px",
+        "height": "32px",
+        "max-height": "none",
+        "margin": "0px",
+        "padding": "0px 0px 8px",
+        "border": "0px none rgb(218, 218, 218)",
+        "border-radius": "0px",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "overflow": "visible",
+        "cursor": "auto",
+        "box-shadow": "none",
+        "outline": "rgb(218, 218, 218) none 3px",
+        "color": "rgb(218, 218, 218)",
+        "font-size": "16px"
+       }
+      }
+     ],
+     "link": [],
+     "controls": [],
+     "minimap": [
+      {
+       "cls": "canvas-minimap",
+       "rect": [
+        464,
+        273.5,
+        700,
+        400
+       ],
+       "styles": {
+        "display": "inline",
+        "position": "static",
+        "width": "700px",
+        "height": "400px",
+        "max-height": "400px",
+        "margin": "0px",
+        "padding": "4px",
+        "border": "0px none rgb(218, 218, 218)",
+        "border-radius": "0px",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "overflow": "hidden",
+        "cursor": "auto",
+        "box-shadow": "none",
+        "outline": "rgb(218, 218, 218) none 3px",
+        "color": "rgb(218, 218, 218)",
+        "font-size": "16px"
+       }
+      }
+     ],
+     "background": [],
+     "wrapper": [],
+     "card": [],
+     "linkAria": []
+    },
+    "shot": "01-canvas-reading.png"
+   },
+   "s02-canvas-sizes": {
+    "ok": true,
+    "ms": 7122,
+    "embeds": [
+     {
+      "src": "Board.canvas",
+      "alt": null,
+      "width": "400",
+      "height": null,
+      "cls": "internal-embed canvas-embed inline-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "style": null,
+      "text": null,
+      "inner": "embed-title",
+      "nodes": 0,
+      "transform": null
+     },
+     {
+      "src": "Board.canvas",
+      "alt": null,
+      "width": "400",
+      "height": "300",
+      "cls": "internal-embed canvas-embed inline-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "style": null,
+      "text": null,
+      "inner": "embed-title",
+      "nodes": 0,
+      "transform": null
+     },
+     {
+      "src": "Board.canvas",
+      "alt": "x300",
+      "width": null,
+      "height": null,
+      "cls": "internal-embed canvas-embed inline-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "style": null,
+      "text": null,
+      "inner": "embed-title",
+      "nodes": 0,
+      "transform": null
+     },
+     {
+      "src": "Tall.canvas",
+      "alt": "Tall.canvas",
+      "width": null,
+      "height": null,
+      "cls": "internal-embed canvas-embed inline-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "style": null,
+      "text": null,
+      "inner": "embed-title",
+      "nodes": 0,
+      "transform": null
+     },
+     {
+      "src": "Wide.canvas",
+      "alt": "Wide.canvas",
+      "width": null,
+      "height": null,
+      "cls": "internal-embed canvas-embed inline-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "style": null,
+      "text": null,
+      "inner": "embed-title",
+      "nodes": 0,
+      "transform": null
+     },
+     {
+      "src": "Empty.canvas",
+      "alt": "Empty.canvas",
+      "width": null,
+      "height": null,
+      "cls": "internal-embed canvas-embed inline-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "style": null,
+      "text": null,
+      "inner": "embed-title",
+      "nodes": 0,
+      "transform": null
+     },
+     {
+      "src": "Board.canvas#t2",
+      "alt": "Board.canvas > t2",
+      "width": null,
+      "height": null,
+      "cls": "internal-embed canvas-embed inline-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "style": null,
+      "text": null,
+      "inner": "embed-title",
+      "nodes": 0,
+      "transform": null
+     },
+     {
+      "src": "Missing.canvas",
+      "alt": "Missing.canvas",
+      "width": null,
+      "height": null,
+      "cls": "internal-embed is-loaded file-embed mod-empty",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "style": null,
+      "text": "“Missing.canvas” is not created yet. Click to create.",
+      "inner": null,
+      "nodes": 0,
+      "transform": null
+     },
+     {
+      "src": "Board.canvas",
+      "alt": "Board.canvas",
+      "width": "400",
+      "height": null,
+      "cls": "internal-embed canvas-embed inline-embed is-loaded",
+      "rect": [
+       464,
+       201.5,
+       700,
+       438
+      ],
+      "style": null,
+      "text": null,
+      "inner": "embed-title",
+      "nodes": 0,
+      "transform": null
+     },
+     {
+      "src": "Board.canvas",
+      "alt": "Board.canvas",
+      "width": "400",
+      "height": "300",
+      "cls": "internal-embed canvas-embed inline-embed is-loaded",
+      "rect": [
+       464,
+       655.5,
+       700,
+       438
+      ],
+      "style": null,
+      "text": null,
+      "inner": "embed-title",
+      "nodes": 0,
+      "transform": null
+     },
+     {
+      "src": "Board.canvas",
+      "alt": "x300",
+      "width": null,
+      "height": null,
+      "cls": "internal-embed canvas-embed inline-embed is-loaded",
+      "rect": [
+       464,
+       1109.5,
+       700,
+       438
+      ],
+      "style": null,
+      "text": null,
+      "inner": "embed-title",
+      "nodes": 0,
+      "transform": null
+     },
+     {
+      "src": "Tall.canvas",
+      "alt": "Tall.canvas",
+      "width": null,
+      "height": null,
+      "cls": "internal-embed canvas-embed inline-embed is-loaded",
+      "rect": [
+       464,
+       1563.5,
+       700,
+       438
+      ],
+      "style": null,
+      "text": null,
+      "inner": "embed-title",
+      "nodes": 0,
+      "transform": null
+     },
+     {
+      "src": "Wide.canvas",
+      "alt": "Wide.canvas",
+      "width": null,
+      "height": null,
+      "cls": "internal-embed canvas-embed inline-embed is-loaded",
+      "rect": [
+       464,
+       2017.5,
+       700,
+       129.9
+      ],
+      "style": null,
+      "text": null,
+      "inner": "embed-title",
+      "nodes": 0,
+      "transform": null
+     }
+    ],
+    "missing": {
+     "tag": "div",
+     "cls": "internal-embed is-loaded file-embed mod-empty",
+     "rect": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "tabindex": "-1",
+     "src": "Missing.canvas",
+     "alt": "Missing.canvas",
+     "contenteditable": "false",
+     "text": "“Missing.canvas” is not created yet. Click to create."
+    },
+    "empty": {
+     "tag": "div",
+     "cls": "internal-embed canvas-embed inline-embed is-loaded",
+     "rect": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "tabindex": "-1",
+     "src": "Empty.canvas",
+     "alt": "Empty.canvas",
+     "contenteditable": "false",
+     "children": [
+      {
+       "tag": "div",
+       "cls": "embed-title",
+       "rect": [
+        0,
+        0,
+        0,
+        0
+       ],
+       "children": [
+        {
+         "tag": "span",
+         "cls": "file-embed-icon",
+         "rect": [
+          0,
+          0,
+          0,
+          0
+         ],
+         "children": [
+          {
+           "tag": "svg",
+           "cls": "svg-icon lucide-layout-dashboard",
+           "rect": [
+            0,
+            0,
+            0,
+            0
+           ],
+           "width": "24",
+           "height": "24",
+           "children": []
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "shot": "03-canvas-sizes.png"
+   },
+   "s03b-canvas-hover": {
+    "ok": true,
+    "ms": 3529,
+    "hover": {
+     "hovered": [
+      [
+       "embed-title",
+       [
+        464,
+        241.5,
+        700,
+        32
+       ],
+       null
+      ]
+     ]
+    },
+    "shot": "04-canvas-hover.png"
+   },
+   "s04-canvas-live": {
+    "ok": true,
+    "ms": 10435,
+    "markup": {
+     "tag": "div",
+     "cls": "internal-embed canvas-embed inline-embed is-loaded",
+     "rect": [
+      464,
+      276.5,
+      700,
+      438
+     ],
+     "tabindex": "-1",
+     "src": "Board.canvas",
+     "alt": "Board.canvas",
+     "contenteditable": "false",
+     "children": [
+      {
+       "tag": "div",
+       "cls": "embed-title",
+       "rect": [
+        464,
+        276.5,
+        700,
+        32
+       ],
+       "children": [
+        {
+         "tag": "span",
+         "cls": "file-embed-icon",
+         "rect": [
+          464,
+          280.5,
+          16,
+          16
+         ],
+         "children": [
+          {
+           "tag": "svg",
+           "cls": "svg-icon lucide-layout-dashboard",
+           "rect": [
+            464,
+            280.5,
+            16,
+            16
+           ],
+           "width": "24",
+           "height": "24",
+           "children": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "tag": "svg",
+       "cls": "canvas-minimap",
+       "rect": [
+        464,
+        308.5,
+        700,
+        400
+       ],
+       "children": []
+      }
+     ]
+    },
+    "state": {
+     "src": "Board.canvas",
+     "cls": "internal-embed canvas-embed inline-embed is-loaded",
+     "rect": [
+      464,
+      276.5,
+      700,
+      438
+     ],
+     "style": null,
+     "styles": {
+      "display": "block",
+      "position": "static",
+      "width": "700px",
+      "height": "438px",
+      "max-height": "none",
+      "margin": "0px",
+      "padding": "0px",
+      "border": "0px none rgb(218, 218, 218)",
+      "border-radius": "0px",
+      "background-color": "rgba(0, 0, 0, 0)",
+      "overflow": "visible",
+      "cursor": "auto",
+      "box-shadow": "none",
+      "outline": "rgb(218, 218, 218) none 3px",
+      "color": "rgb(218, 218, 218)",
+      "font-size": "16px"
+     },
+     "canvasTransform": null,
+     "wrapper": null,
+     "nodes": [],
+     "model": null,
+     "edges": 0,
+     "scroller": 0,
+     "active": "cm-content cm-lineWrapping",
+     "leafType": "markdown",
+     "leafFile": "Note.md"
+    },
+    "shot": "02-canvas-live.png",
+    "clickBg": {
+     "leaf": {
+      "type": "canvas",
+      "file": "Board.canvas",
+      "cursor": null
+     },
+     "shot": "03-canvas-live-click.png"
+    },
+    "clickTitle": {
+     "type": "canvas",
+     "file": "Board.canvas",
+     "cursor": null
+    },
+    "state2": {
+     "src": "Board.canvas",
+     "cls": "internal-embed canvas-embed inline-embed is-loaded",
+     "rect": [
+      464,
+      276.5,
+      700,
+      438
+     ],
+     "style": null,
+     "styles": {
+      "display": "block",
+      "position": "static",
+      "width": "700px",
+      "height": "438px",
+      "max-height": "none",
+      "margin": "0px",
+      "padding": "0px",
+      "border": "0px none rgb(218, 218, 218)",
+      "border-radius": "0px",
+      "background-color": "rgba(0, 0, 0, 0)",
+      "overflow": "visible",
+      "cursor": "auto",
+      "box-shadow": "none",
+      "outline": "rgb(218, 218, 218) none 3px",
+      "color": "rgb(218, 218, 218)",
+      "font-size": "16px"
+     },
+     "canvasTransform": null,
+     "wrapper": null,
+     "nodes": [],
+     "model": null,
+     "edges": 0,
+     "scroller": 0,
+     "active": "cm-content cm-lineWrapping",
+     "leafType": "markdown",
+     "leafFile": "Note.md"
+    },
+    "wheel": {
+     "src": "Board.canvas",
+     "cls": "internal-embed canvas-embed inline-embed is-loaded",
+     "rect": [
+      464,
+      156.5,
+      700,
+      438
+     ],
+     "style": null,
+     "styles": {
+      "display": "block",
+      "position": "static",
+      "width": "700px",
+      "height": "438px",
+      "max-height": "none",
+      "margin": "0px",
+      "padding": "0px",
+      "border": "0px none rgb(218, 218, 218)",
+      "border-radius": "0px",
+      "background-color": "rgba(0, 0, 0, 0)",
+      "overflow": "visible",
+      "cursor": "auto",
+      "box-shadow": "none",
+      "outline": "rgb(218, 218, 218) none 3px",
+      "color": "rgb(218, 218, 218)",
+      "font-size": "16px"
+     },
+     "canvasTransform": null,
+     "wrapper": null,
+     "nodes": [],
+     "model": null,
+     "edges": 0,
+     "scroller": 120,
+     "active": "cm-content cm-lineWrapping",
+     "leafType": "markdown",
+     "leafFile": "Note.md"
+    },
+    "editButton": null
+   },
+   "s05-nested": {
+    "ok": true,
+    "ms": 7336,
+    "nested": [
+     {
+      "src": "Inner",
+      "cls": "internal-embed markdown-embed inline-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "depth": 0,
+      "nodes": 0,
+      "text": "Inner"
+     },
+     {
+      "src": "Loop",
+      "cls": "internal-embed markdown-embed inline-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "depth": 0,
+      "nodes": 0,
+      "text": "Loop"
+     },
+     {
+      "src": "Inner",
+      "cls": "internal-embed markdown-embed inline-embed is-loaded",
+      "rect": [
+       464,
+       201.5,
+       700,
+       498.1
+      ],
+      "depth": 0,
+      "nodes": 0,
+      "text": "Inner\n\nInner embeds the board:\n\nBoard"
+     },
+     {
+      "src": "Board.canvas",
+      "cls": "internal-embed canvas-embed inline-embed is-loaded",
+      "rect": [
+       490,
+       265.6,
+       662,
+       434
+      ],
+      "depth": 1,
+      "nodes": 0,
+      "text": "Board"
+     },
+     {
+      "src": "Loop",
+      "cls": "internal-embed markdown-embed inline-embed is-loaded",
+      "rect": [
+       464,
+       715.7,
+       700,
+       367.7
+      ],
+      "depth": 0,
+      "nodes": 0,
+      "text": "Loop\n\nLoop embeds the canvas:\n\nSelf"
+     },
+     {
+      "src": "Self.canvas",
+      "cls": "internal-embed canvas-embed inline-embed is-loaded",
+      "rect": [
+       490,
+       779.8,
+       662,
+       303.6
+      ],
+      "depth": 1,
+      "nodes": 0,
+      "text": "Self"
+     }
+    ],
+    "shotA": "06-nested.png",
+    "self": {
+     "nodes": [
+      {
+       "rect": [
+        370,
+        375.9,
+        400,
+        300
+       ],
+       "cls": "canvas-node",
+       "text": "Self.canvas",
+       "innerEmbeds": 0,
+       "innerCanvas": 0
+      },
+      {
+       "rect": [
+        870,
+        375.9,
+        400,
+        300
+       ],
+       "cls": "canvas-node",
+       "text": "Loop\n\nLoop embeds the canvas:\n\nSelf\n\nLoop",
+       "innerEmbeds": 1,
+       "innerCanvas": 0
+      }
+     ]
+    },
+    "shotB": "07-self-canvas.png"
+   },
+   "s06-audio-tab": {
+    "ok": true,
+    "ms": 16317,
+    "canPlay": {
+     "audio/mpeg": "probably",
+     "audio/wav": "maybe",
+     "audio/mp4": "maybe",
+     "audio/aac": "probably",
+     "audio/flac": "probably",
+     "audio/ogg": "maybe",
+     "audio/ogg; codecs=opus": "probably",
+     "audio/webm": "maybe",
+     "audio/3gpp": "",
+     "video/mp4": "maybe",
+     "video/mp4; codecs=\"avc1.42E01E\"": "probably",
+     "video/webm; codecs=\"vp9\"": "probably",
+     "video/quicktime": "",
+     "video/x-matroska": "maybe",
+     "video/ogg; codecs=\"theora\"": ""
+    },
+    "formats": {
+     "wav": {
+      "open": {
+       "file": "tone.wav",
+       "type": "audio",
+       "state": {
+        "file": "tone.wav"
+       }
+      },
+      "viewType": "audio",
+      "audio": {
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "controlslist",
+         "nodownload"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ]
+       ],
+       "duration": 3,
+       "readyState": 4,
+       "error": null,
+       "rect": [
+        56,
+        90.3,
+        1528,
+        42
+       ],
+       "styles": {
+        "display": "inline",
+        "position": "static",
+        "width": "1528px",
+        "height": "42px",
+        "max-height": "none",
+        "margin": "0px",
+        "padding": "0px",
+        "border": "0px none rgb(218, 218, 218)",
+        "border-radius": "0px",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "overflow": "visible",
+        "cursor": "auto",
+        "box-shadow": "none",
+        "outline": "rgb(218, 218, 218) none 3px",
+        "color": "rgb(218, 218, 218)",
+        "font-size": "15px"
+       }
+      },
+      "content": {
+       "tag": "div",
+       "cls": "view-content",
+       "rect": [
+        44,
+        78.3,
+        1552,
+        894.7
+       ],
+       "children": [
+        {
+         "tag": "div",
+         "cls": "audio-container",
+         "rect": [
+          56,
+          90.3,
+          1528,
+          46.5
+         ],
+         "children": [
+          {
+           "tag": "audio",
+           "rect": [
+            56,
+            90.3,
+            1528,
+            42
+           ],
+           "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/tone.wav?1794791903647",
+           "controls": "",
+           "controlslist": "nodownload"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "mp3": {
+      "open": {
+       "file": "tone.mp3",
+       "type": "audio",
+       "state": {
+        "file": "tone.mp3"
+       }
+      },
+      "viewType": "audio",
+      "audio": {
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "controlslist",
+         "nodownload"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ]
+       ],
+       "duration": 3,
+       "readyState": 4,
+       "error": null,
+       "rect": [
+        56,
+        90.3,
+        1528,
+        42
+       ],
+       "styles": {
+        "display": "inline",
+        "position": "static",
+        "width": "1528px",
+        "height": "42px",
+        "max-height": "none",
+        "margin": "0px",
+        "padding": "0px",
+        "border": "0px none rgb(218, 218, 218)",
+        "border-radius": "0px",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "overflow": "visible",
+        "cursor": "auto",
+        "box-shadow": "none",
+        "outline": "rgb(218, 218, 218) none 3px",
+        "color": "rgb(218, 218, 218)",
+        "font-size": "15px"
+       }
+      },
+      "content": {
+       "tag": "div",
+       "cls": "view-content",
+       "rect": [
+        44,
+        78.3,
+        1552,
+        894.7
+       ],
+       "children": [
+        {
+         "tag": "div",
+         "cls": "audio-container",
+         "rect": [
+          56,
+          90.3,
+          1528,
+          46.5
+         ],
+         "children": [
+          {
+           "tag": "audio",
+           "rect": [
+            56,
+            90.3,
+            1528,
+            42
+           ],
+           "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/tone.mp3?1794791903646",
+           "controls": "",
+           "controlslist": "nodownload"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "m4a": {
+      "open": {
+       "file": "tone.m4a",
+       "type": "audio",
+       "state": {
+        "file": "tone.m4a"
+       }
+      },
+      "viewType": "audio",
+      "audio": {
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "controlslist",
+         "nodownload"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ]
+       ],
+       "duration": 3,
+       "readyState": 4,
+       "error": null,
+       "rect": [
+        56,
+        90.3,
+        1528,
+        42
+       ],
+       "styles": {
+        "display": "inline",
+        "position": "static",
+        "width": "1528px",
+        "height": "42px",
+        "max-height": "none",
+        "margin": "0px",
+        "padding": "0px",
+        "border": "0px none rgb(218, 218, 218)",
+        "border-radius": "0px",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "overflow": "visible",
+        "cursor": "auto",
+        "box-shadow": "none",
+        "outline": "rgb(218, 218, 218) none 3px",
+        "color": "rgb(218, 218, 218)",
+        "font-size": "15px"
+       }
+      },
+      "content": {
+       "tag": "div",
+       "cls": "view-content",
+       "rect": [
+        44,
+        78.3,
+        1552,
+        894.7
+       ],
+       "children": [
+        {
+         "tag": "div",
+         "cls": "audio-container",
+         "rect": [
+          56,
+          90.3,
+          1528,
+          46.5
+         ],
+         "children": [
+          {
+           "tag": "audio",
+           "rect": [
+            56,
+            90.3,
+            1528,
+            42
+           ],
+           "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/tone.m4a?1794791903646",
+           "controls": "",
+           "controlslist": "nodownload"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "flac": {
+      "open": {
+       "file": "tone.flac",
+       "type": "audio",
+       "state": {
+        "file": "tone.flac"
+       }
+      },
+      "viewType": "audio",
+      "audio": {
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "controlslist",
+         "nodownload"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ]
+       ],
+       "duration": 3,
+       "readyState": 4,
+       "error": null,
+       "rect": [
+        56,
+        90.3,
+        1528,
+        42
+       ],
+       "styles": {
+        "display": "inline",
+        "position": "static",
+        "width": "1528px",
+        "height": "42px",
+        "max-height": "none",
+        "margin": "0px",
+        "padding": "0px",
+        "border": "0px none rgb(218, 218, 218)",
+        "border-radius": "0px",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "overflow": "visible",
+        "cursor": "auto",
+        "box-shadow": "none",
+        "outline": "rgb(218, 218, 218) none 3px",
+        "color": "rgb(218, 218, 218)",
+        "font-size": "15px"
+       }
+      },
+      "content": {
+       "tag": "div",
+       "cls": "view-content",
+       "rect": [
+        44,
+        78.3,
+        1552,
+        894.7
+       ],
+       "children": [
+        {
+         "tag": "div",
+         "cls": "audio-container",
+         "rect": [
+          56,
+          90.3,
+          1528,
+          46.5
+         ],
+         "children": [
+          {
+           "tag": "audio",
+           "rect": [
+            56,
+            90.3,
+            1528,
+            42
+           ],
+           "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/tone.flac?1794791903646",
+           "controls": "",
+           "controlslist": "nodownload"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "ogg": {
+      "open": {
+       "file": "tone.ogg",
+       "type": "audio",
+       "state": {
+        "file": "tone.ogg"
+       }
+      },
+      "viewType": "audio",
+      "audio": {
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "controlslist",
+         "nodownload"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ]
+       ],
+       "duration": 3,
+       "readyState": 4,
+       "error": null,
+       "rect": [
+        56,
+        90.3,
+        1528,
+        42
+       ],
+       "styles": {
+        "display": "inline",
+        "position": "static",
+        "width": "1528px",
+        "height": "42px",
+        "max-height": "none",
+        "margin": "0px",
+        "padding": "0px",
+        "border": "0px none rgb(218, 218, 218)",
+        "border-radius": "0px",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "overflow": "visible",
+        "cursor": "auto",
+        "box-shadow": "none",
+        "outline": "rgb(218, 218, 218) none 3px",
+        "color": "rgb(218, 218, 218)",
+        "font-size": "15px"
+       }
+      },
+      "content": {
+       "tag": "div",
+       "cls": "view-content",
+       "rect": [
+        44,
+        78.3,
+        1552,
+        894.7
+       ],
+       "children": [
+        {
+         "tag": "div",
+         "cls": "audio-container",
+         "rect": [
+          56,
+          90.3,
+          1528,
+          46.5
+         ],
+         "children": [
+          {
+           "tag": "audio",
+           "rect": [
+            56,
+            90.3,
+            1528,
+            42
+           ],
+           "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/tone.ogg?1794791903646",
+           "controls": "",
+           "controlslist": "nodownload"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "oga": {
+      "open": {
+       "file": "tone.oga",
+       "type": "audio",
+       "state": {
+        "file": "tone.oga"
+       }
+      },
+      "viewType": "audio",
+      "audio": {
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "controlslist",
+         "nodownload"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ]
+       ],
+       "duration": 3,
+       "readyState": 4,
+       "error": null,
+       "rect": [
+        56,
+        90.3,
+        1528,
+        42
+       ],
+       "styles": {
+        "display": "inline",
+        "position": "static",
+        "width": "1528px",
+        "height": "42px",
+        "max-height": "none",
+        "margin": "0px",
+        "padding": "0px",
+        "border": "0px none rgb(218, 218, 218)",
+        "border-radius": "0px",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "overflow": "visible",
+        "cursor": "auto",
+        "box-shadow": "none",
+        "outline": "rgb(218, 218, 218) none 3px",
+        "color": "rgb(218, 218, 218)",
+        "font-size": "15px"
+       }
+      },
+      "content": {
+       "tag": "div",
+       "cls": "view-content",
+       "rect": [
+        44,
+        78.3,
+        1552,
+        894.7
+       ],
+       "children": [
+        {
+         "tag": "div",
+         "cls": "audio-container",
+         "rect": [
+          56,
+          90.3,
+          1528,
+          46.5
+         ],
+         "children": [
+          {
+           "tag": "audio",
+           "rect": [
+            56,
+            90.3,
+            1528,
+            42
+           ],
+           "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/tone.oga?1794791903646",
+           "controls": "",
+           "controlslist": "nodownload"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "opus": {
+      "open": {
+       "file": "tone.opus",
+       "type": "audio",
+       "state": {
+        "file": "tone.opus"
+       }
+      },
+      "viewType": "audio",
+      "audio": {
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "controlslist",
+         "nodownload"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ]
+       ],
+       "duration": 3.0065,
+       "readyState": 4,
+       "error": null,
+       "rect": [
+        56,
+        90.3,
+        1528,
+        42
+       ],
+       "styles": {
+        "display": "inline",
+        "position": "static",
+        "width": "1528px",
+        "height": "42px",
+        "max-height": "none",
+        "margin": "0px",
+        "padding": "0px",
+        "border": "0px none rgb(218, 218, 218)",
+        "border-radius": "0px",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "overflow": "visible",
+        "cursor": "auto",
+        "box-shadow": "none",
+        "outline": "rgb(218, 218, 218) none 3px",
+        "color": "rgb(218, 218, 218)",
+        "font-size": "15px"
+       }
+      },
+      "content": {
+       "tag": "div",
+       "cls": "view-content",
+       "rect": [
+        44,
+        78.3,
+        1552,
+        894.7
+       ],
+       "children": [
+        {
+         "tag": "div",
+         "cls": "audio-container",
+         "rect": [
+          56,
+          90.3,
+          1528,
+          46.5
+         ],
+         "children": [
+          {
+           "tag": "audio",
+           "rect": [
+            56,
+            90.3,
+            1528,
+            42
+           ],
+           "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/tone.opus?1794791903647",
+           "controls": "",
+           "controlslist": "nodownload"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "3gp": {
+      "open": {
+       "file": "tone.3gp",
+       "type": "audio",
+       "state": {
+        "file": "tone.3gp"
+       }
+      },
+      "viewType": "audio",
+      "audio": {
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "controlslist",
+         "nodownload"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ]
+       ],
+       "duration": 3,
+       "readyState": 4,
+       "error": null,
+       "rect": [
+        56,
+        90.3,
+        1528,
+        42
+       ],
+       "styles": {
+        "display": "inline",
+        "position": "static",
+        "width": "1528px",
+        "height": "42px",
+        "max-height": "none",
+        "margin": "0px",
+        "padding": "0px",
+        "border": "0px none rgb(218, 218, 218)",
+        "border-radius": "0px",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "overflow": "visible",
+        "cursor": "auto",
+        "box-shadow": "none",
+        "outline": "rgb(218, 218, 218) none 3px",
+        "color": "rgb(218, 218, 218)",
+        "font-size": "15px"
+       }
+      },
+      "content": {
+       "tag": "div",
+       "cls": "view-content",
+       "rect": [
+        44,
+        78.3,
+        1552,
+        894.7
+       ],
+       "children": [
+        {
+         "tag": "div",
+         "cls": "audio-container",
+         "rect": [
+          56,
+          90.3,
+          1528,
+          46.5
+         ],
+         "children": [
+          {
+           "tag": "audio",
+           "rect": [
+            56,
+            90.3,
+            1528,
+            42
+           ],
+           "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/tone.3gp?1794791903646",
+           "controls": "",
+           "controlslist": "nodownload"
+          }
+         ]
+        }
+       ]
+      }
+     }
+    },
+    "shot": "06-audio-tab-mp3.png",
+    "leafState": {
+     "type": "audio",
+     "state": {
+      "file": "tone.3gp"
+     },
+     "icon": "lucide-file-audio",
+     "title": "tone"
+    },
+    "headerTitle": "tone",
+    "actions": [
+     "Bookmark",
+     "More options"
+    ]
+   },
+   "s07-audio-embed": {
+    "ok": true,
+    "ms": 12210,
+    "reading": [
+     {
+      "src": "tone.wav",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       464,
+       201.5,
+       700,
+       48
+      ],
+      "width": null,
+      "skel": {
+       "tag": "span",
+       "cls": "internal-embed media-embed audio-embed is-loaded",
+       "rect": [
+        464,
+        201.5,
+        700,
+        48
+       ],
+       "src": "tone.wav",
+       "alt": "tone.wav",
+       "children": [
+        {
+         "tag": "audio",
+         "rect": [
+          464,
+          201.5,
+          700,
+          42
+         ],
+         "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/tone.wav?1794791903647",
+         "controls": "",
+         "controlslist": "nodownload"
+        }
+       ]
+      },
+      "audio": {
+       "duration": 3,
+       "error": null,
+       "rect": [
+        464,
+        201.5,
+        700,
+        42
+       ],
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "controlslist",
+         "nodownload"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ]
+       ]
+      }
+     },
+     {
+      "src": "tone.mp3",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       464,
+       265.5,
+       700,
+       48
+      ],
+      "width": null,
+      "skel": {
+       "tag": "span",
+       "cls": "internal-embed media-embed audio-embed is-loaded",
+       "rect": [
+        464,
+        265.5,
+        700,
+        48
+       ],
+       "src": "tone.mp3",
+       "alt": "tone.mp3",
+       "children": [
+        {
+         "tag": "audio",
+         "rect": [
+          464,
+          265.5,
+          700,
+          42
+         ],
+         "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/tone.mp3?1794791903646",
+         "controls": "",
+         "controlslist": "nodownload"
+        }
+       ]
+      },
+      "audio": {
+       "duration": 3,
+       "error": null,
+       "rect": [
+        464,
+        265.5,
+        700,
+        42
+       ],
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "controlslist",
+         "nodownload"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ]
+       ]
+      }
+     },
+     {
+      "src": "tone.m4a",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       464,
+       329.5,
+       700,
+       48
+      ],
+      "width": null,
+      "skel": {
+       "tag": "span",
+       "cls": "internal-embed media-embed audio-embed is-loaded",
+       "rect": [
+        464,
+        329.5,
+        700,
+        48
+       ],
+       "src": "tone.m4a",
+       "alt": "tone.m4a",
+       "children": [
+        {
+         "tag": "audio",
+         "rect": [
+          464,
+          329.5,
+          700,
+          42
+         ],
+         "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/tone.m4a?1794791903646",
+         "controls": "",
+         "controlslist": "nodownload"
+        }
+       ]
+      },
+      "audio": {
+       "duration": 3,
+       "error": null,
+       "rect": [
+        464,
+        329.5,
+        700,
+        42
+       ],
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "controlslist",
+         "nodownload"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ]
+       ]
+      }
+     },
+     {
+      "src": "tone.flac",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       464,
+       393.5,
+       700,
+       48
+      ],
+      "width": null,
+      "skel": {
+       "tag": "span",
+       "cls": "internal-embed media-embed audio-embed is-loaded",
+       "rect": [
+        464,
+        393.5,
+        700,
+        48
+       ],
+       "src": "tone.flac",
+       "alt": "tone.flac",
+       "children": [
+        {
+         "tag": "audio",
+         "rect": [
+          464,
+          393.5,
+          700,
+          42
+         ],
+         "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/tone.flac?1794791903646",
+         "controls": "",
+         "controlslist": "nodownload"
+        }
+       ]
+      },
+      "audio": {
+       "duration": 3,
+       "error": null,
+       "rect": [
+        464,
+        393.5,
+        700,
+        42
+       ],
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "controlslist",
+         "nodownload"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ]
+       ]
+      }
+     },
+     {
+      "src": "tone.ogg",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       464,
+       457.5,
+       700,
+       48
+      ],
+      "width": null,
+      "skel": {
+       "tag": "span",
+       "cls": "internal-embed media-embed audio-embed is-loaded",
+       "rect": [
+        464,
+        457.5,
+        700,
+        48
+       ],
+       "src": "tone.ogg",
+       "alt": "tone.ogg",
+       "children": [
+        {
+         "tag": "audio",
+         "rect": [
+          464,
+          457.5,
+          700,
+          42
+         ],
+         "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/tone.ogg?1794791903646",
+         "controls": "",
+         "controlslist": "nodownload"
+        }
+       ]
+      },
+      "audio": {
+       "duration": 3,
+       "error": null,
+       "rect": [
+        464,
+        457.5,
+        700,
+        42
+       ],
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "controlslist",
+         "nodownload"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ]
+       ]
+      }
+     },
+     {
+      "src": "tone.oga",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       464,
+       521.5,
+       700,
+       48
+      ],
+      "width": null,
+      "skel": {
+       "tag": "span",
+       "cls": "internal-embed media-embed audio-embed is-loaded",
+       "rect": [
+        464,
+        521.5,
+        700,
+        48
+       ],
+       "src": "tone.oga",
+       "alt": "tone.oga",
+       "children": [
+        {
+         "tag": "audio",
+         "rect": [
+          464,
+          521.5,
+          700,
+          42
+         ],
+         "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/tone.oga?1794791903646",
+         "controls": "",
+         "controlslist": "nodownload"
+        }
+       ]
+      },
+      "audio": {
+       "duration": 3,
+       "error": null,
+       "rect": [
+        464,
+        521.5,
+        700,
+        42
+       ],
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "controlslist",
+         "nodownload"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ]
+       ]
+      }
+     },
+     {
+      "src": "tone.opus",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       464,
+       585.5,
+       700,
+       48
+      ],
+      "width": null,
+      "skel": {
+       "tag": "span",
+       "cls": "internal-embed media-embed audio-embed is-loaded",
+       "rect": [
+        464,
+        585.5,
+        700,
+        48
+       ],
+       "src": "tone.opus",
+       "alt": "tone.opus",
+       "children": [
+        {
+         "tag": "audio",
+         "rect": [
+          464,
+          585.5,
+          700,
+          42
+         ],
+         "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/tone.opus?1794791903647",
+         "controls": "",
+         "controlslist": "nodownload"
+        }
+       ]
+      },
+      "audio": {
+       "duration": 3.0065,
+       "error": null,
+       "rect": [
+        464,
+        585.5,
+        700,
+        42
+       ],
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "controlslist",
+         "nodownload"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ]
+       ]
+      }
+     },
+     {
+      "src": "tone.3gp",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       464,
+       649.5,
+       700,
+       48
+      ],
+      "width": null,
+      "skel": {
+       "tag": "span",
+       "cls": "internal-embed media-embed audio-embed is-loaded",
+       "rect": [
+        464,
+        649.5,
+        700,
+        48
+       ],
+       "src": "tone.3gp",
+       "alt": "tone.3gp",
+       "children": [
+        {
+         "tag": "audio",
+         "rect": [
+          464,
+          649.5,
+          700,
+          42
+         ],
+         "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/tone.3gp?1794791903646",
+         "controls": "",
+         "controlslist": "nodownload"
+        }
+       ]
+      },
+      "audio": {
+       "duration": 3,
+       "error": null,
+       "rect": [
+        464,
+        649.5,
+        700,
+        42
+       ],
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "controlslist",
+         "nodownload"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ]
+       ]
+      }
+     },
+     {
+      "src": "tone.mp3",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       464,
+       713.5,
+       700,
+       48
+      ],
+      "width": "300",
+      "skel": {
+       "tag": "span",
+       "cls": "internal-embed media-embed audio-embed is-loaded",
+       "rect": [
+        464,
+        713.5,
+        700,
+        48
+       ],
+       "src": "tone.mp3",
+       "alt": "tone.mp3",
+       "width": "300",
+       "children": [
+        {
+         "tag": "audio",
+         "rect": [
+          464,
+          713.5,
+          700,
+          42
+         ],
+         "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/tone.mp3?1794791903646",
+         "controls": "",
+         "controlslist": "nodownload"
+        }
+       ]
+      },
+      "audio": {
+       "duration": 3,
+       "error": null,
+       "rect": [
+        464,
+        713.5,
+        700,
+        42
+       ],
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "controlslist",
+         "nodownload"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ]
+       ]
+      }
+     },
+     {
+      "src": "missing.mp3",
+      "cls": "internal-embed is-loaded file-embed mod-empty-attachment",
+      "rect": [
+       464,
+       777.5,
+       700,
+       37
+      ],
+      "width": null,
+      "skel": {
+       "tag": "span",
+       "cls": "internal-embed is-loaded file-embed mod-empty-attachment",
+       "rect": [
+        464,
+        777.5,
+        700,
+        37
+       ],
+       "src": "missing.mp3",
+       "alt": "missing.mp3",
+       "text": "“missing.mp3” could not be found."
+      },
+      "audio": null
+     }
+    ],
+    "readingShot": "07-audio-reading.png",
+    "afterPlayClick": {
+     "paused": false,
+     "t": 0.479546,
+     "active": "AUDIO"
+    },
+    "afterSpace": {
+     "paused": true,
+     "t": 1.285219
+    },
+    "key_ArrowRight": {
+     "before": {
+      "t": 1.285219,
+      "v": 1,
+      "muted": false,
+      "paused": true
+     },
+     "after": {
+      "t": 1.285219,
+      "v": 1,
+      "muted": false,
+      "paused": true,
+      "active": "AUDIO"
+     }
+    },
+    "key_ArrowLeft": {
+     "before": {
+      "t": 1.285219,
+      "v": 1,
+      "muted": false,
+      "paused": true
+     },
+     "after": {
+      "t": 1.285219,
+      "v": 1,
+      "muted": false,
+      "paused": true,
+      "active": "AUDIO"
+     }
+    },
+    "key_ArrowUp": {
+     "before": {
+      "t": 1.285219,
+      "v": 1,
+      "muted": false,
+      "paused": true
+     },
+     "after": {
+      "t": 1.285219,
+      "v": 1,
+      "muted": false,
+      "paused": true,
+      "active": "AUDIO"
+     }
+    },
+    "key_ArrowDown": {
+     "before": {
+      "t": 1.285219,
+      "v": 1,
+      "muted": false,
+      "paused": true
+     },
+     "after": {
+      "t": 1.285219,
+      "v": 1,
+      "muted": false,
+      "paused": true,
+      "active": "AUDIO"
+     }
+    },
+    "key_Home": {
+     "before": {
+      "t": 1.285219,
+      "v": 1,
+      "muted": false,
+      "paused": true
+     },
+     "after": {
+      "t": 1.285219,
+      "v": 1,
+      "muted": false,
+      "paused": true,
+      "active": "AUDIO"
+     }
+    },
+    "key_End": {
+     "before": {
+      "t": 1.285219,
+      "v": 1,
+      "muted": false,
+      "paused": true
+     },
+     "after": {
+      "t": 1.285219,
+      "v": 1,
+      "muted": false,
+      "paused": true,
+      "active": "AUDIO"
+     }
+    },
+    "key_k": {
+     "before": {
+      "t": 1.285219,
+      "v": 1,
+      "muted": false,
+      "paused": true
+     },
+     "after": {
+      "t": 1.285219,
+      "v": 1,
+      "muted": false,
+      "paused": true,
+      "active": "AUDIO"
+     }
+    },
+    "key_m": {
+     "before": {
+      "t": 1.285219,
+      "v": 1,
+      "muted": false,
+      "paused": true
+     },
+     "after": {
+      "t": 1.285219,
+      "v": 1,
+      "muted": false,
+      "paused": true,
+      "active": "AUDIO"
+     }
+    },
+    "live": [
+     {
+      "src": "tone.wav",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       464,
+       141.5,
+       700,
+       48
+      ],
+      "parent": "cm-content cm-lineWrapping",
+      "audio": true
+     },
+     {
+      "src": "tone.mp3",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       464,
+       213.5,
+       700,
+       48
+      ],
+      "parent": "cm-content cm-lineWrapping",
+      "audio": true
+     },
+     {
+      "src": "tone.m4a",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       464,
+       285.5,
+       700,
+       48
+      ],
+      "parent": "cm-content cm-lineWrapping",
+      "audio": true
+     },
+     {
+      "src": "tone.flac",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       464,
+       357.5,
+       700,
+       48
+      ],
+      "parent": "cm-content cm-lineWrapping",
+      "audio": true
+     },
+     {
+      "src": "tone.ogg",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       464,
+       429.5,
+       700,
+       48
+      ],
+      "parent": "cm-content cm-lineWrapping",
+      "audio": true
+     },
+     {
+      "src": "tone.oga",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       464,
+       501.5,
+       700,
+       48
+      ],
+      "parent": "cm-content cm-lineWrapping",
+      "audio": true
+     },
+     {
+      "src": "tone.opus",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       464,
+       573.5,
+       700,
+       48
+      ],
+      "parent": "cm-content cm-lineWrapping",
+      "audio": true
+     },
+     {
+      "src": "tone.3gp",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       464,
+       645.5,
+       700,
+       48
+      ],
+      "parent": "cm-content cm-lineWrapping",
+      "audio": true
+     },
+     {
+      "src": "tone.mp3",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       464,
+       717.5,
+       700,
+       48
+      ],
+      "parent": "cm-content cm-lineWrapping",
+      "audio": true
+     },
+     {
+      "src": "missing.mp3",
+      "cls": "internal-embed is-loaded file-embed mod-empty-attachment",
+      "rect": [
+       464,
+       789.5,
+       700,
+       37
+      ],
+      "parent": "cm-content cm-lineWrapping",
+      "audio": false
+     },
+     {
+      "src": "tone.wav",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "parent": "",
+      "audio": true
+     },
+     {
+      "src": "tone.mp3",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "parent": "",
+      "audio": true
+     },
+     {
+      "src": "tone.m4a",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "parent": "",
+      "audio": true
+     },
+     {
+      "src": "tone.flac",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "parent": "",
+      "audio": true
+     },
+     {
+      "src": "tone.ogg",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "parent": "",
+      "audio": true
+     },
+     {
+      "src": "tone.oga",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "parent": "",
+      "audio": true
+     },
+     {
+      "src": "tone.opus",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "parent": "",
+      "audio": true
+     },
+     {
+      "src": "tone.3gp",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "parent": "",
+      "audio": true
+     },
+     {
+      "src": "tone.mp3",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "parent": "",
+      "audio": true
+     },
+     {
+      "src": "missing.mp3",
+      "cls": "internal-embed is-loaded file-embed mod-empty-attachment",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "parent": "",
+      "audio": false
+     }
+    ],
+    "liveShot": "08-audio-live.png",
+    "liveClickEnd": {
+     "cursor": {
+      "line": 0,
+      "ch": 0
+     },
+     "paused": true
+    }
+   },
+   "s08-video": {
+    "ok": true,
+    "ms": 21832,
+    "tabs": {
+     "mp4": {
+      "open": {
+       "file": "clip.mp4",
+       "type": "video",
+       "state": {
+        "file": "clip.mp4"
+       }
+      },
+      "viewType": "video",
+      "video": {
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "preload",
+         "metadata"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ],
+        [
+         "style",
+         ""
+        ]
+       ],
+       "duration": 3,
+       "w": 320,
+       "h": 240,
+       "readyState": 4,
+       "error": null,
+       "rect": [
+        660,
+        90.3,
+        320,
+        240
+       ],
+       "styles": {
+        "display": "inline",
+        "position": "static",
+        "width": "320px",
+        "height": "240px",
+        "max-height": "none",
+        "margin": "0px",
+        "padding": "0px",
+        "border": "0px none rgb(218, 218, 218)",
+        "border-radius": "0px",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "overflow": "clip",
+        "cursor": "auto",
+        "box-shadow": "none",
+        "outline": "rgb(218, 218, 218) none 3px",
+        "color": "rgb(218, 218, 218)",
+        "font-size": "15px"
+       }
+      },
+      "content": {
+       "tag": "div",
+       "cls": "view-content",
+       "rect": [
+        44,
+        78.3,
+        1552,
+        894.7
+       ],
+       "children": [
+        {
+         "tag": "div",
+         "cls": "video-container",
+         "rect": [
+          56,
+          90.3,
+          1528,
+          244.5
+         ],
+         "children": [
+          {
+           "tag": "video",
+           "rect": [
+            660,
+            90.3,
+            320,
+            240
+           ],
+           "style": "",
+           "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/clip.mp4?1794791903646#t=0.001",
+           "controls": "",
+           "preload": "metadata"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "webm": {
+      "open": {
+       "file": "clip.webm",
+       "type": "video",
+       "state": {
+        "file": "clip.webm"
+       }
+      },
+      "viewType": "video",
+      "video": {
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "preload",
+         "metadata"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ],
+        [
+         "style",
+         ""
+        ]
+       ],
+       "duration": 3.008,
+       "w": 320,
+       "h": 240,
+       "readyState": 4,
+       "error": null,
+       "rect": [
+        660,
+        90.3,
+        320,
+        240
+       ],
+       "styles": {
+        "display": "inline",
+        "position": "static",
+        "width": "320px",
+        "height": "240px",
+        "max-height": "none",
+        "margin": "0px",
+        "padding": "0px",
+        "border": "0px none rgb(218, 218, 218)",
+        "border-radius": "0px",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "overflow": "clip",
+        "cursor": "auto",
+        "box-shadow": "none",
+        "outline": "rgb(218, 218, 218) none 3px",
+        "color": "rgb(218, 218, 218)",
+        "font-size": "15px"
+       }
+      },
+      "content": {
+       "tag": "div",
+       "cls": "view-content",
+       "rect": [
+        44,
+        78.3,
+        1552,
+        894.7
+       ],
+       "children": [
+        {
+         "tag": "div",
+         "cls": "video-container",
+         "rect": [
+          56,
+          90.3,
+          1528,
+          244.5
+         ],
+         "children": [
+          {
+           "tag": "video",
+           "rect": [
+            660,
+            90.3,
+            320,
+            240
+           ],
+           "style": "",
+           "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/clip.webm?1794791903646#t=0.001",
+           "controls": "",
+           "preload": "metadata"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "mov": {
+      "open": {
+       "file": "clip.mov",
+       "type": "video",
+       "state": {
+        "file": "clip.mov"
+       }
+      },
+      "viewType": "video",
+      "video": {
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "preload",
+         "metadata"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ],
+        [
+         "style",
+         ""
+        ]
+       ],
+       "duration": 3,
+       "w": 320,
+       "h": 240,
+       "readyState": 4,
+       "error": null,
+       "rect": [
+        660,
+        90.3,
+        320,
+        240
+       ],
+       "styles": {
+        "display": "inline",
+        "position": "static",
+        "width": "320px",
+        "height": "240px",
+        "max-height": "none",
+        "margin": "0px",
+        "padding": "0px",
+        "border": "0px none rgb(218, 218, 218)",
+        "border-radius": "0px",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "overflow": "clip",
+        "cursor": "auto",
+        "box-shadow": "none",
+        "outline": "rgb(218, 218, 218) none 3px",
+        "color": "rgb(218, 218, 218)",
+        "font-size": "15px"
+       }
+      },
+      "content": {
+       "tag": "div",
+       "cls": "view-content",
+       "rect": [
+        44,
+        78.3,
+        1552,
+        894.7
+       ],
+       "children": [
+        {
+         "tag": "div",
+         "cls": "video-container",
+         "rect": [
+          56,
+          90.3,
+          1528,
+          244.5
+         ],
+         "children": [
+          {
+           "tag": "video",
+           "rect": [
+            660,
+            90.3,
+            320,
+            240
+           ],
+           "style": "",
+           "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/clip.mov?1794791903646#t=0.001",
+           "controls": "",
+           "preload": "metadata"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "mkv": {
+      "open": {
+       "file": "clip.mkv",
+       "type": "video",
+       "state": {
+        "file": "clip.mkv"
+       }
+      },
+      "viewType": "video",
+      "video": {
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "preload",
+         "metadata"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ],
+        [
+         "style",
+         ""
+        ]
+       ],
+       "duration": 3.008,
+       "w": 320,
+       "h": 240,
+       "readyState": 4,
+       "error": null,
+       "rect": [
+        660,
+        90.3,
+        320,
+        240
+       ],
+       "styles": {
+        "display": "inline",
+        "position": "static",
+        "width": "320px",
+        "height": "240px",
+        "max-height": "none",
+        "margin": "0px",
+        "padding": "0px",
+        "border": "0px none rgb(218, 218, 218)",
+        "border-radius": "0px",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "overflow": "clip",
+        "cursor": "auto",
+        "box-shadow": "none",
+        "outline": "rgb(218, 218, 218) none 3px",
+        "color": "rgb(218, 218, 218)",
+        "font-size": "15px"
+       }
+      },
+      "content": {
+       "tag": "div",
+       "cls": "view-content",
+       "rect": [
+        44,
+        78.3,
+        1552,
+        894.7
+       ],
+       "children": [
+        {
+         "tag": "div",
+         "cls": "video-container",
+         "rect": [
+          56,
+          90.3,
+          1528,
+          244.5
+         ],
+         "children": [
+          {
+           "tag": "video",
+           "rect": [
+            660,
+            90.3,
+            320,
+            240
+           ],
+           "style": "",
+           "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/clip.mkv?1794791903646#t=0.001",
+           "controls": "",
+           "preload": "metadata"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "ogv": {
+      "open": {
+       "file": "clip.ogv",
+       "type": "video",
+       "state": {
+        "file": "clip.ogv"
+       }
+      },
+      "viewType": "video",
+      "video": {
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "preload",
+         "metadata"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ],
+        [
+         "style",
+         ""
+        ]
+       ],
+       "duration": null,
+       "w": 0,
+       "h": 0,
+       "readyState": 0,
+       "error": 4,
+       "rect": [
+        670,
+        90.3,
+        300,
+        150
+       ],
+       "styles": {
+        "display": "inline",
+        "position": "static",
+        "width": "300px",
+        "height": "150px",
+        "max-height": "none",
+        "margin": "0px",
+        "padding": "0px",
+        "border": "0px none rgb(218, 218, 218)",
+        "border-radius": "0px",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "overflow": "clip",
+        "cursor": "auto",
+        "box-shadow": "none",
+        "outline": "rgb(218, 218, 218) none 3px",
+        "color": "rgb(218, 218, 218)",
+        "font-size": "15px"
+       }
+      },
+      "content": {
+       "tag": "div",
+       "cls": "view-content",
+       "rect": [
+        44,
+        78.3,
+        1552,
+        894.7
+       ],
+       "children": [
+        {
+         "tag": "div",
+         "cls": "video-container",
+         "rect": [
+          56,
+          90.3,
+          1528,
+          154.5
+         ],
+         "children": [
+          {
+           "tag": "video",
+           "rect": [
+            670,
+            90.3,
+            300,
+            150
+           ],
+           "style": "",
+           "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/clip.ogv?1794791903646#t=0.001",
+           "controls": "",
+           "preload": "metadata"
+          }
+         ]
+        }
+       ]
+      }
+     }
+    },
+    "shot_mp4": "09-video-tab-mp4.png",
+    "shot_webm": "10-video-tab-webm.png",
+    "reading": [
+     {
+      "src": "clip.mp4",
+      "cls": "internal-embed media-embed video-embed is-loaded",
+      "rect": [
+       464,
+       201.5,
+       700,
+       246
+      ],
+      "width": null,
+      "height": null,
+      "skel": {
+       "tag": "span",
+       "cls": "internal-embed media-embed video-embed is-loaded",
+       "rect": [
+        464,
+        201.5,
+        700,
+        246
+       ],
+       "src": "clip.mp4",
+       "alt": "clip.mp4",
+       "children": [
+        {
+         "tag": "video",
+         "rect": [
+          464,
+          201.5,
+          320,
+          240
+         ],
+         "style": "",
+         "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/clip.mp4?1794791903646#t=0.001",
+         "controls": "",
+         "preload": "metadata"
+        }
+       ]
+      },
+      "video": {
+       "duration": 3,
+       "w": 320,
+       "h": 240,
+       "error": null,
+       "rect": [
+        464,
+        201.5,
+        320,
+        240
+       ],
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "preload",
+         "metadata"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ],
+        [
+         "style",
+         ""
+        ]
+       ]
+      }
+     },
+     {
+      "src": "clip.webm",
+      "cls": "internal-embed media-embed video-embed is-loaded",
+      "rect": [
+       464,
+       463.5,
+       700,
+       246
+      ],
+      "width": null,
+      "height": null,
+      "skel": {
+       "tag": "span",
+       "cls": "internal-embed media-embed video-embed is-loaded",
+       "rect": [
+        464,
+        463.5,
+        700,
+        246
+       ],
+       "src": "clip.webm",
+       "alt": "clip.webm",
+       "children": [
+        {
+         "tag": "video",
+         "rect": [
+          464,
+          463.5,
+          320,
+          240
+         ],
+         "style": "",
+         "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/clip.webm?1794791903646#t=0.001",
+         "controls": "",
+         "preload": "metadata"
+        }
+       ]
+      },
+      "video": {
+       "duration": 3.008,
+       "w": 320,
+       "h": 240,
+       "error": null,
+       "rect": [
+        464,
+        463.5,
+        320,
+        240
+       ],
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "preload",
+         "metadata"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ],
+        [
+         "style",
+         ""
+        ]
+       ]
+      }
+     },
+     {
+      "src": "clip.mov",
+      "cls": "internal-embed media-embed video-embed is-loaded",
+      "rect": [
+       464,
+       725.5,
+       700,
+       246
+      ],
+      "width": null,
+      "height": null,
+      "skel": {
+       "tag": "span",
+       "cls": "internal-embed media-embed video-embed is-loaded",
+       "rect": [
+        464,
+        725.5,
+        700,
+        246
+       ],
+       "src": "clip.mov",
+       "alt": "clip.mov",
+       "children": [
+        {
+         "tag": "video",
+         "rect": [
+          464,
+          725.5,
+          320,
+          240
+         ],
+         "style": "",
+         "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/clip.mov?1794791903646#t=0.001",
+         "controls": "",
+         "preload": "metadata"
+        }
+       ]
+      },
+      "video": {
+       "duration": 3,
+       "w": 320,
+       "h": 240,
+       "error": null,
+       "rect": [
+        464,
+        725.5,
+        320,
+        240
+       ],
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "preload",
+         "metadata"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ],
+        [
+         "style",
+         ""
+        ]
+       ]
+      }
+     },
+     {
+      "src": "clip.mkv",
+      "cls": "internal-embed media-embed video-embed is-loaded",
+      "rect": [
+       464,
+       987.5,
+       700,
+       246
+      ],
+      "width": null,
+      "height": null,
+      "skel": {
+       "tag": "span",
+       "cls": "internal-embed media-embed video-embed is-loaded",
+       "rect": [
+        464,
+        987.5,
+        700,
+        246
+       ],
+       "src": "clip.mkv",
+       "alt": "clip.mkv",
+       "children": [
+        {
+         "tag": "video",
+         "rect": [
+          464,
+          987.5,
+          320,
+          240
+         ],
+         "style": "",
+         "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/clip.mkv?1794791903646#t=0.001",
+         "controls": "",
+         "preload": "metadata"
+        }
+       ]
+      },
+      "video": {
+       "duration": 3.008,
+       "w": 320,
+       "h": 240,
+       "error": null,
+       "rect": [
+        464,
+        987.5,
+        320,
+        240
+       ],
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "preload",
+         "metadata"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ],
+        [
+         "style",
+         ""
+        ]
+       ]
+      }
+     },
+     {
+      "src": "clip.ogv",
+      "cls": "internal-embed media-embed video-embed is-loaded",
+      "rect": [
+       464,
+       1249.5,
+       700,
+       156
+      ],
+      "width": null,
+      "height": null,
+      "skel": {
+       "tag": "span",
+       "cls": "internal-embed media-embed video-embed is-loaded",
+       "rect": [
+        464,
+        1249.5,
+        700,
+        156
+       ],
+       "src": "clip.ogv",
+       "alt": "clip.ogv",
+       "children": [
+        {
+         "tag": "video",
+         "rect": [
+          464,
+          1249.5,
+          300,
+          150
+         ],
+         "style": "",
+         "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/clip.ogv?1794791903646#t=0.001",
+         "controls": "",
+         "preload": "metadata"
+        }
+       ]
+      },
+      "video": {
+       "duration": null,
+       "w": 0,
+       "h": 0,
+       "error": 4,
+       "rect": [
+        464,
+        1249.5,
+        300,
+        150
+       ],
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "preload",
+         "metadata"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ],
+        [
+         "style",
+         ""
+        ]
+       ]
+      }
+     },
+     {
+      "src": "clip.mp4",
+      "cls": "internal-embed media-embed video-embed is-loaded",
+      "rect": [
+       464,
+       1421.5,
+       700,
+       246
+      ],
+      "width": "200",
+      "height": null,
+      "skel": {
+       "tag": "span",
+       "cls": "internal-embed media-embed video-embed is-loaded",
+       "rect": [
+        464,
+        1421.5,
+        700,
+        246
+       ],
+       "src": "clip.mp4",
+       "alt": "clip.mp4",
+       "width": "200",
+       "children": [
+        {
+         "tag": "video",
+         "rect": [
+          464,
+          1421.5,
+          320,
+          240
+         ],
+         "style": "",
+         "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/clip.mp4?1794791903646#t=0.001",
+         "controls": "",
+         "preload": "metadata"
+        }
+       ]
+      },
+      "video": {
+       "duration": 3,
+       "w": 320,
+       "h": 240,
+       "error": null,
+       "rect": [
+        464,
+        1421.5,
+        320,
+        240
+       ],
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "preload",
+         "metadata"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ],
+        [
+         "style",
+         ""
+        ]
+       ]
+      }
+     },
+     {
+      "src": "clip.mp4",
+      "cls": "internal-embed media-embed video-embed is-loaded",
+      "rect": [
+       464,
+       1683.5,
+       700,
+       246
+      ],
+      "width": "200",
+      "height": "100",
+      "skel": {
+       "tag": "span",
+       "cls": "internal-embed media-embed video-embed is-loaded",
+       "rect": [
+        464,
+        1683.5,
+        700,
+        246
+       ],
+       "src": "clip.mp4",
+       "alt": "clip.mp4",
+       "width": "200",
+       "height": "100",
+       "children": [
+        {
+         "tag": "video",
+         "rect": [
+          464,
+          1683.5,
+          320,
+          240
+         ],
+         "style": "",
+         "src": "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault/clip.mp4?1794791903646#t=0.001",
+         "controls": "",
+         "preload": "metadata"
+        }
+       ]
+      },
+      "video": {
+       "duration": 3,
+       "w": 320,
+       "h": 240,
+       "error": null,
+       "rect": [
+        464,
+        1683.5,
+        320,
+        240
+       ],
+       "attrs": [
+        [
+         "controls",
+         ""
+        ],
+        [
+         "preload",
+         "metadata"
+        ],
+        [
+         "src",
+         "app://e0a4c3a6cf7d3212ab56d15b03ce149b0a0b/tmp/claude-1000/-"
+        ],
+        [
+         "style",
+         ""
+        ]
+       ]
+      }
+     },
+     {
+      "src": "missing.mp4",
+      "cls": "internal-embed is-loaded file-embed mod-empty-attachment",
+      "rect": [
+       464,
+       1945.5,
+       700,
+       37
+      ],
+      "width": null,
+      "height": null,
+      "skel": {
+       "tag": "span",
+       "cls": "internal-embed is-loaded file-embed mod-empty-attachment",
+       "rect": [
+        464,
+        1945.5,
+        700,
+        37
+       ],
+       "src": "missing.mp4",
+       "alt": "missing.mp4",
+       "text": "“missing.mp4” could not be found."
+      },
+      "video": null
+     }
+    ],
+    "readingShot": "11-video-reading.png",
+    "live": [
+     {
+      "src": "clip.mp4",
+      "cls": "internal-embed media-embed video-embed is-loaded",
+      "rect": [
+       464,
+       228.5,
+       700,
+       246
+      ],
+      "video": true
+     },
+     {
+      "src": "clip.webm",
+      "cls": "internal-embed media-embed video-embed is-loaded",
+      "rect": [
+       464,
+       498.5,
+       700,
+       246
+      ],
+      "video": true
+     },
+     {
+      "src": "clip.mov",
+      "cls": "internal-embed media-embed video-embed is-loaded",
+      "rect": [
+       464,
+       768.5,
+       700,
+       246
+      ],
+      "video": true
+     },
+     {
+      "src": "clip.mkv",
+      "cls": "internal-embed media-embed video-embed is-loaded",
+      "rect": [
+       464,
+       1038.5,
+       700,
+       246
+      ],
+      "video": true
+     },
+     {
+      "src": "clip.ogv",
+      "cls": "internal-embed media-embed video-embed is-loaded",
+      "rect": [
+       464,
+       1308.5,
+       700,
+       156
+      ],
+      "video": true
+     },
+     {
+      "src": "clip.mp4",
+      "cls": "internal-embed media-embed video-embed is-loaded",
+      "rect": [
+       464,
+       1488.5,
+       700,
+       246
+      ],
+      "video": true
+     },
+     {
+      "src": "clip.mp4",
+      "cls": "internal-embed media-embed video-embed is-loaded",
+      "rect": [
+       464,
+       1758.5,
+       700,
+       246
+      ],
+      "video": true
+     },
+     {
+      "src": "missing.mp4",
+      "cls": "internal-embed is-loaded file-embed mod-empty-attachment",
+      "rect": [
+       464,
+       2028.5,
+       700,
+       37
+      ],
+      "video": false
+     },
+     {
+      "src": "clip.mp4",
+      "cls": "internal-embed media-embed video-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "video": true
+     },
+     {
+      "src": "clip.webm",
+      "cls": "internal-embed media-embed video-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "video": true
+     },
+     {
+      "src": "clip.mov",
+      "cls": "internal-embed media-embed video-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "video": true
+     },
+     {
+      "src": "clip.mkv",
+      "cls": "internal-embed media-embed video-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "video": true
+     },
+     {
+      "src": "clip.ogv",
+      "cls": "internal-embed media-embed video-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "video": true
+     },
+     {
+      "src": "clip.mp4",
+      "cls": "internal-embed media-embed video-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "video": true
+     },
+     {
+      "src": "clip.mp4",
+      "cls": "internal-embed media-embed video-embed is-loaded",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "video": true
+     },
+     {
+      "src": "missing.mp4",
+      "cls": "internal-embed is-loaded file-embed mod-empty-attachment",
+      "rect": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "video": false
+     }
+    ],
+    "liveShot": "12-video-live.png"
+   },
+   "s09-leaf-json": {
+    "ok": true,
+    "ms": 6443,
+    "audio": [
+     {
+      "type": "audio",
+      "state": {
+       "file": "tone.mp3"
+      },
+      "icon": "lucide-file-audio",
+      "title": "tone"
+     }
+    ],
+    "video": [
+     {
+      "type": "video",
+      "state": {
+       "file": "clip.mp4"
+      },
+      "icon": "lucide-file",
+      "title": "clip"
+     }
+    ]
+   },
+   "s01b-minimap": {
+    "ok": true,
+    "ms": 2754,
+    "svg": {
+     "tag": "svg",
+     "attrs": {
+      "class": "canvas-minimap",
+      "viewBox": "-98 -98 836 496"
+     },
+     "cs": {
+      "fill": "rgb(0, 0, 0)",
+      "stroke": "none",
+      "strokeWidth": "1px",
+      "opacity": "1",
+      "fillOpacity": "1",
+      "rx": "auto",
+      "ry": "auto",
+      "strokeLinecap": "butt",
+      "filter": "none"
+     },
+     "rect": [
+      464,
+      273.5,
+      700,
+      400
+     ],
+     "children": [
+      {
+       "tag": "rect",
+       "attrs": {
+        "x": "-60",
+        "y": "-60",
+        "width": "760",
+        "height": "420",
+        "rx": "20",
+        "ry": "20"
+       },
+       "cs": {
+        "fill": "rgb(51, 51, 51)",
+        "stroke": "rgb(51, 51, 51)",
+        "strokeWidth": "5px",
+        "opacity": "1",
+        "fillOpacity": "0.65",
+        "rx": "20px",
+        "ry": "20px",
+        "strokeLinecap": "butt",
+        "filter": "none"
+       },
+       "rect": [
+        513.7,
+        307.6,
+        600.6,
+        331.9
+       ],
+       "children": []
+      },
+      {
+       "tag": "path",
+       "attrs": {
+        "d": "M250,30 C326.4852927038918,30 323.5147072961082,60 400,60",
+        "style": "stroke-width: 8.7178;"
+       },
+       "cs": {
+        "fill": "none",
+        "stroke": "rgb(192, 192, 192)",
+        "strokeWidth": "8.7178px",
+        "opacity": "1",
+        "fillOpacity": "1",
+        "rx": "auto",
+        "ry": "auto",
+        "strokeLinecap": "butt",
+        "filter": "none"
+       },
+       "rect": [
+        758.7,
+        378.7,
+        118.5,
+        23.7
+       ],
+       "children": []
+      },
+      {
+       "tag": "rect",
+       "attrs": {
+        "x": "0",
+        "y": "0",
+        "width": "250",
+        "height": "60",
+        "rx": "20",
+        "ry": "20"
+       },
+       "cs": {
+        "fill": "rgb(51, 51, 51)",
+        "stroke": "rgb(51, 51, 51)",
+        "strokeWidth": "5px",
+        "opacity": "1",
+        "fillOpacity": "0.65",
+        "rx": "20px",
+        "ry": "20px",
+        "strokeLinecap": "butt",
+        "filter": "none"
+       },
+       "rect": [
+        561.1,
+        355,
+        197.6,
+        47.4
+       ],
+       "children": []
+      },
+      {
+       "tag": "rect",
+       "attrs": {
+        "x": "400",
+        "y": "0",
+        "width": "250",
+        "height": "120",
+        "rx": "20",
+        "ry": "20",
+        "class": "is-themed mod-canvas-color-4"
+       },
+       "cs": {
+        "fill": "rgb(68, 207, 110)",
+        "stroke": "rgb(68, 207, 110)",
+        "strokeWidth": "5px",
+        "opacity": "1",
+        "fillOpacity": "0.5",
+        "rx": "20px",
+        "ry": "20px",
+        "strokeLinecap": "butt",
+        "filter": "none"
+       },
+       "rect": [
+        877.2,
+        355,
+        197.6,
+        94.8
+       ],
+       "children": []
+      },
+      {
+       "tag": "rect",
+       "attrs": {
+        "x": "0",
+        "y": "160",
+        "width": "300",
+        "height": "160",
+        "rx": "20",
+        "ry": "20"
+       },
+       "cs": {
+        "fill": "rgb(51, 51, 51)",
+        "stroke": "rgb(51, 51, 51)",
+        "strokeWidth": "5px",
+        "opacity": "1",
+        "fillOpacity": "0.65",
+        "rx": "20px",
+        "ry": "20px",
+        "strokeLinecap": "butt",
+        "filter": "none"
+       },
+       "rect": [
+        561.1,
+        481.5,
+        237.1,
+        126.5
+       ],
+       "children": []
+      },
+      {
+       "tag": "rect",
+       "attrs": {
+        "x": "400",
+        "y": "200",
+        "width": "250",
+        "height": "100",
+        "rx": "20",
+        "ry": "20"
+       },
+       "cs": {
+        "fill": "rgb(51, 51, 51)",
+        "stroke": "rgb(51, 51, 51)",
+        "strokeWidth": "5px",
+        "opacity": "1",
+        "fillOpacity": "0.65",
+        "rx": "20px",
+        "ry": "20px",
+        "strokeLinecap": "butt",
+        "filter": "none"
+       },
+       "rect": [
+        877.2,
+        513.1,
+        197.6,
+        79
+       ],
+       "children": []
+      }
+     ]
+    },
+    "svgStyles": {
+     "width": "700px",
+     "height": "400px",
+     "max-height": "400px",
+     "padding": "4px",
+     "background-color": "rgba(0, 0, 0, 0)",
+     "border-radius": "0px",
+     "display": "inline",
+     "margin": "0px",
+     "cursor": "auto"
+    },
+    "title": {
+     "text": "Board",
+     "rect": [
+      464,
+      241.5,
+      700,
+      32
+     ],
+     "styles": {
+      "font-size": "16px",
+      "font-weight": "600",
+      "color": "rgb(218, 218, 218)",
+      "gap": "4px",
+      "padding": "0px 0px 8px",
+      "line-height": "24px",
+      "align-items": "center",
+      "cursor": "auto"
+     },
+     "icon": {
+      "width": "16px",
+      "height": "16px",
+      "color": "rgb(179, 179, 179)",
+      "margin-right": "0px"
+     }
+    },
+    "embedStyles": {
+     "cursor": "auto",
+     "margin": "0px",
+     "padding": "0px",
+     "display": "block"
+    }
+   },
+   "s01c-minimap-light": {
+    "ok": true,
+    "ms": 1503,
+    "light": [
+     [
+      "rect",
+      null,
+      "rgb(228, 228, 228)",
+      "rgb(228, 228, 228)",
+      "5px",
+      "1"
+     ],
+     [
+      "path",
+      null,
+      "none",
+      "rgb(192, 192, 192)",
+      "8.7178px",
+      "1"
+     ],
+     [
+      "rect",
+      null,
+      "rgb(228, 228, 228)",
+      "rgb(228, 228, 228)",
+      "5px",
+      "1"
+     ],
+     [
+      "rect",
+      "is-themed mod-canvas-color-4",
+      "rgb(8, 185, 78)",
+      "rgb(8, 185, 78)",
+      "5px",
+      "1"
+     ],
+     [
+      "rect",
+      null,
+      "rgb(228, 228, 228)",
+      "rgb(228, 228, 228)",
+      "5px",
+      "1"
+     ],
+     [
+      "rect",
+      null,
+      "rgb(228, 228, 228)",
+      "rgb(228, 228, 228)",
+      "5px",
+      "1"
+     ]
+    ],
+    "shot": "01-canvas-reading-light.png"
+   },
+   "s01d-minimap-click": {
+    "ok": true,
+    "ms": 16833,
+    "cursorOverMinimap": [
+     null,
+     "auto",
+     "rect"
+    ],
+    "hoverShot": "02-minimap-hover.png",
+    "afterMinimapClick": [
+     {
+      "type": "canvas",
+      "file": "Board.canvas",
+      "active": true
+     }
+    ],
+    "afterTitleClick": [
+     {
+      "type": "canvas",
+      "file": "Board.canvas",
+      "active": true
+     }
+    ],
+    "afterCtrlClick": [
+     {
+      "type": "markdown",
+      "file": "Note.md",
+      "active": false
+     }
+    ],
+    "wheelScrollsNote": 200
+   },
+   "s01e-minimap-edges": {
+    "ok": true,
+    "ms": 5446,
+    "embeds": [
+     null,
+     {
+      "src": "Small.canvas",
+      "rect": [
+       464,
+       249.5,
+       700,
+       192.8
+      ],
+      "svgRect": [
+       464,
+       281.5,
+       700,
+       154.8
+      ],
+      "viewBox": "-15 -15 330 70",
+      "els": [
+       {
+        "tag": "path",
+        "attrs": {
+         "d": "M100,20 C170,20 130,20 200,20",
+         "style": "stroke-width: 5.47723;"
+        },
+        "fill": "none",
+        "stroke": "rgb(192, 192, 192)",
+        "sw": "5.47723px",
+        "fo": "1"
+       },
+       {
+        "tag": "rect",
+        "attrs": {
+         "x": "0",
+         "y": "0",
+         "width": "100",
+         "height": "40",
+         "rx": "20",
+         "ry": "20"
+        },
+        "fill": "rgb(51, 51, 51)",
+        "stroke": "rgb(51, 51, 51)",
+        "sw": "5px",
+        "fo": "0.65"
+       },
+       {
+        "tag": "rect",
+        "attrs": {
+         "x": "200",
+         "y": "0",
+         "width": "100",
+         "height": "40",
+         "rx": "20",
+         "ry": "20"
+        },
+        "fill": "rgb(51, 51, 51)",
+        "stroke": "rgb(51, 51, 51)",
+        "sw": "5px",
+        "fo": "0.65"
+       }
+      ]
+     },
+     {
+      "src": "Edges2.canvas",
+      "rect": [
+       464,
+       458.3,
+       700,
+       438
+      ],
+      "svgRect": [
+       464,
+       490.3,
+       700,
+       400
+      ],
+      "viewBox": "-55 -55 1210 710",
+      "els": [
+       {
+        "tag": "path",
+        "attrs": {
+         "d": "M50,100 C50,250 50,350 50,500",
+         "style": "stroke-width: 10.4881;"
+        },
+        "fill": "none",
+        "stroke": "rgb(192, 192, 192)",
+        "sw": "10.4881px",
+        "fo": "1"
+       },
+       {
+        "tag": "path",
+        "attrs": {
+         "d": "M100,50 C250,50 1050,350 1050,500",
+         "class": "is-themed mod-canvas-color-1",
+         "style": "stroke-width: 10.4881;"
+        },
+        "fill": "none",
+        "stroke": "rgb(251, 70, 76)",
+        "sw": "10.4881px",
+        "fo": "1"
+       },
+       {
+        "tag": "path",
+        "attrs": {
+         "d": "M100,550 C250,550 850,550 1000,550",
+         "style": "stroke-width: 10.4881;"
+        },
+        "fill": "none",
+        "stroke": "rgb(192, 192, 192)",
+        "sw": "10.4881px",
+        "fo": "1"
+       },
+       {
+        "tag": "path",
+        "attrs": {
+         "d": "M1000,50 C850,50 250,50 100,50",
+         "style": "stroke-width: 10.4881;"
+        },
+        "fill": "none",
+        "stroke": "rgb(192, 192, 192)",
+        "sw": "10.4881px",
+        "fo": "1"
+       },
+       {
+        "tag": "rect",
+        "attrs": {
+         "x": "0",
+         "y": "0",
+         "width": "100",
+         "height": "100",
+         "rx": "20",
+         "ry": "20"
+        },
+        "fill": "rgb(51, 51, 51)",
+        "stroke": "rgb(51, 51, 51)",
+        "sw": "5px",
+        "fo": "0.65"
+       },
+       {
+        "tag": "rect",
+        "attrs": {
+         "x": "1000",
+         "y": "500",
+         "width": "100",
+         "height": "100",
+         "rx": "20",
+         "ry": "20",
+         "class": "is-themed mod-canvas-color-custom",
+         "style": "--canvas-color: #ff0000;"
+        },
+        "fill": "rgb(255, 0, 0)",
+        "stroke": "rgb(255, 0, 0)",
+        "sw": "5px",
+        "fo": "0.5"
+       },
+       {
+        "tag": "rect",
+        "attrs": {
+         "x": "0",
+         "y": "500",
+         "width": "100",
+         "height": "100",
+         "rx": "20",
+         "ry": "20",
+         "class": "is-themed mod-canvas-color-1"
+        },
+        "fill": "rgb(251, 70, 76)",
+        "stroke": "rgb(251, 70, 76)",
+        "sw": "5px",
+        "fo": "0.5"
+       },
+       {
+        "tag": "rect",
+        "attrs": {
+         "x": "1000",
+         "y": "0",
+         "width": "100",
+         "height": "100",
+         "rx": "20",
+         "ry": "20",
+         "class": "is-themed mod-canvas-color-6"
+        },
+        "fill": "rgb(168, 130, 255)",
+        "stroke": "rgb(168, 130, 255)",
+        "sw": "5px",
+        "fo": "0.5"
+       }
+      ]
+     },
+     {
+      "src": "Edges3.canvas",
+      "rect": [
+       464,
+       912.3,
+       700,
+       438
+      ],
+      "svgRect": [
+       464,
+       944.3,
+       700,
+       400
+      ],
+      "viewBox": "-55 -55 1210 710",
+      "els": [
+       {
+        "tag": "rect",
+        "attrs": {
+         "x": "0",
+         "y": "0",
+         "width": "100",
+         "height": "100",
+         "rx": "20",
+         "ry": "20"
+        },
+        "fill": "rgb(51, 51, 51)",
+        "stroke": "rgb(51, 51, 51)",
+        "sw": "5px",
+        "fo": "0.65"
+       },
+       {
+        "tag": "rect",
+        "attrs": {
+         "x": "1000",
+         "y": "500",
+         "width": "100",
+         "height": "100",
+         "rx": "20",
+         "ry": "20",
+         "class": "is-themed mod-canvas-color-custom",
+         "style": "--canvas-color: #ff0000;"
+        },
+        "fill": "rgb(255, 0, 0)",
+        "stroke": "rgb(255, 0, 0)",
+        "sw": "5px",
+        "fo": "0.5"
+       }
+      ]
+     }
+    ],
+    "shot": "01-minimap-edges.png"
+   }
+  },
+  "order": [
+   "s00-context",
+   "s01-canvas-reading",
+   "s02-canvas-sizes",
+   "s03b-canvas-hover",
+   "s04-canvas-live",
+   "s05-nested",
+   "s06-audio-tab",
+   "s07-audio-embed",
+   "s08-video",
+   "s09-leaf-json",
+   "s01b-minimap",
+   "s01c-minimap-light",
+   "s01d-minimap-click",
+   "s01e-minimap-edges"
+  ],
+  "elapsedMs": 5512,
+  "vaultPath": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/cde4bca6-984f-45e6-af68-2aa4502e5777/scratchpad/embeds/vault",
+  "version": {
+   "title": "New tab - vault - Obsidian 1.15.0",
+   "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+   "win": [
+    1596,
+    973
+   ],
+   "dpr": 1,
+   "apiVersion": null
+  }
+ }
+}
