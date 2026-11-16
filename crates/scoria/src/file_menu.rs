@@ -376,6 +376,14 @@ pub enum Target {
         active: bool,
         backlinks: Option<bool>,
     },
+    /// A right click on a sidebar tab whose leaf can be closed and opened
+    /// again by its command (`file-properties`, `footnotes`; `kind` is the
+    /// view type). Obsidian 1.15.1's menu there is Close, Pin, Link with
+    /// tab..., Move to new window and the two splits
+    /// (`tools/obsidian-probe/results/2026-11-15-file-properties.json`,
+    /// `s04`); Scoria runs Close alone, since a sidebar leaf is neither
+    /// pinned, linked, moved nor split here, and a menu draws no dead row.
+    SideTab { kind: &'static str },
 }
 
 /// What a Bookmarks pane row stands for, as far as its menu is concerned:
@@ -444,7 +452,7 @@ impl Target {
             Target::Bookmark { path, .. }
             | Target::Tab { path, .. }
             | Target::Note { path, .. } => path,
-            Target::Blank | Target::Property { .. } => "",
+            Target::Blank | Target::Property { .. } | Target::SideTab { .. } => "",
             Target::Editor(click) => match &click.spot {
                 Spot::Link(path) => path,
                 Spot::Text | Spot::Tag(_) => "",
@@ -773,6 +781,7 @@ pub fn items(target: &Target) -> Vec<Item> {
             backlinks,
             ..
         } => tab_items(path, *ix, *tabs, *pinned, *active, *backlinks),
+        Target::SideTab { .. } => vec![item("Close", "x", S::Close, P::CloseTab)],
         Target::Note { path, backlinks } => {
             let mut out = vec![backlinks_row(*backlinks)];
             out.extend(items(&Target::View(path.clone())));
@@ -1139,6 +1148,7 @@ pub fn describe(menu: &Menu) -> Value {
         Target::View(_) | Target::Note { .. } => "view",
         Target::Row(_) => "row",
         Target::Property { .. } => "property",
+        Target::SideTab { .. } => "side-tab",
         Target::Bookmark { .. } => "bookmark",
         Target::Tab { .. } => "tab",
     };
@@ -1508,6 +1518,19 @@ pub fn open_folder(dir: &Path) -> Result<(), String> {
 mod tests {
     use super::*;
     use gpui::AssetSource;
+
+    /// A sidebar tab a command makes (File properties, Footnotes): Close,
+    /// the first row of Obsidian's menu there, alone -- Pin, Link with tab,
+    /// Move to new window and the splits are not run in a sidebar here.
+    #[test]
+    fn a_closable_side_tabs_menu_is_close_alone() {
+        for kind in ["file-properties", "footnotes"] {
+            let target = Target::SideTab { kind };
+            assert_eq!(drawn(&target), ["Close"]);
+            assert_eq!(items(&target)[0].pick, Pick::CloseTab);
+            assert_eq!(target.path(), "");
+        }
+    }
 
     /// [[Specification#The file explorer's context menus]], the file-row
     /// table, minus the one item Scoria has no command for -- Open version

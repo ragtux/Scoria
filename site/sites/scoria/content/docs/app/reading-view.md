@@ -88,7 +88,7 @@ The gaps, honestly — none of these are in reading view today:
 | MathJax-only syntax | The source, in red; the common TeX that KaTeX also takes is typeset |
 | An inline `style` attribute | The element, unstyled |
 | `<iframe>`, `<form>` and other tags Scoria has no drawing for | Their source |
-| Editing a property | Only a value's pill can be removed here; edit the rest in [Live Preview](/docs/app/editing/) |
+| Editing a property | Only a value's pill can be removed here; edit the rest in [Live Preview](/docs/app/editing/) or in the [File properties pane](/docs/format/properties/#editing-properties), which edits in reading view too |
 
 Frontmatter edge cases match Obsidian: a `<script>` in a note is removed, unknown HTML
 elements are unwrapped, and a raw `<a>` gains `target` and `rel`.

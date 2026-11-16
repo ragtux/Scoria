@@ -1646,4 +1646,89 @@ mod tests {
         assert_eq!(run, "---\naliases:\n---\nBody only.\n");
         assert_eq!(enter, run);
     }
+
+    // ------------------------------------------- the File properties pane
+    //
+    // The pane edits through the editor's own fields, so its bytes are these
+    // steps' bytes. The seed and every expected file are the 2026-11-15
+    // probe's (`file-properties.json`, `s08-edit-in-pane`), typed into the
+    // pane of Obsidian 1.15.1.
+
+    const PANE_SEED: &str =
+        "---\ntitle: Old title\ntags:\n  - one\nrelated: \"[[Target]]\"\n---\nBody.\n";
+
+    fn row<'a>(rows: &'a [Row], key: &str) -> &'a Row {
+        rows.iter().find(|r| r.key == key).expect("the row")
+    }
+
+    /// A text value selected whole, retyped and committed with Enter.
+    #[test]
+    fn pane_retyping_a_text_value_writes_obsidians_bytes() {
+        let rows = note_rows(PANE_SEED);
+        let mut field = value_field(row(&rows, "title"));
+        assert_eq!(field.text, "Old title");
+        field.home();
+        for _ in 0.."Old title".len() {
+            field.delete();
+        }
+        field.insert("New title");
+        let change = commit(&field, row(&rows, "title").ty).unwrap();
+        assert_eq!(
+            write(PANE_SEED, &change),
+            "---\ntitle: New title\ntags:\n  - one\nrelated: \"[[Target]]\"\n---\nBody.\n"
+        );
+    }
+
+    /// A tag typed into the input after the pills, and Enter.
+    #[test]
+    fn pane_appending_a_tag_writes_obsidians_bytes() {
+        let rows = note_rows(PANE_SEED);
+        let mut field = value_field(row(&rows, "tags"));
+        assert_eq!(field.text, "", "the input after the pills");
+        field.insert("two");
+        let change = commit(&field, row(&rows, "tags").ty).unwrap();
+        assert_eq!(
+            write(PANE_SEED, &change),
+            "---\ntitle: Old title\ntags:\n  - one\n  - two\nrelated: \"[[Target]]\"\n---\nBody.\n"
+        );
+    }
+
+    /// Add property: the key, then Tab, which writes the bare key at once
+    /// (`status:` was on disk before the value was typed), then the value
+    /// and Enter.
+    #[test]
+    fn pane_add_property_writes_the_key_on_tab_then_the_value() {
+        let mut key = Field::new(Target::New, Part::Key, "");
+        key.insert("status");
+        let change = commit(&key, PropertyType::Text).unwrap();
+        let after_key = write(PANE_SEED, &change);
+        assert_eq!(
+            after_key,
+            "---\ntitle: Old title\ntags:\n  - one\nrelated: \"[[Target]]\"\nstatus:\n---\nBody.\n"
+        );
+        // Tab moves to the value of the row just named, as the editor's
+        // `tab` opens it.
+        let rows = note_rows(&after_key);
+        let status = row(&rows, "status");
+        let mut value = Field::new(
+            Target::Existing("status".into()),
+            Part::Value,
+            status.edit_text.clone(),
+        );
+        value.insert("done");
+        let change = commit(&value, status.ty).unwrap();
+        assert_eq!(
+            write(&after_key, &change),
+            "---\ntitle: Old title\ntags:\n  - one\nrelated: \"[[Target]]\"\nstatus: done\n---\nBody.\n"
+        );
+    }
+
+    /// `markdown:add-alias` from Source mode, with the pane's leaf open or
+    /// made by the command: the same key, then `Al2` and Enter (`s07`).
+    #[test]
+    fn pane_add_alias_writes_what_live_preview_writes() {
+        let (run, enter) = add_alias("Body only.\n", "Al2");
+        assert_eq!(run, "---\naliases:\n---\nBody only.\n");
+        assert_eq!(enter, "---\naliases:\n  - Al2\n---\nBody only.\n");
+    }
 }

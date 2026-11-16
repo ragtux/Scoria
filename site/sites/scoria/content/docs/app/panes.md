@@ -1,6 +1,6 @@
 ---
 title: Backlinks and the side panes
-description: The right dock — Backlinks with linked and unlinked mentions, Outgoing links with unresolved ones, the vault-wide Tags and All properties panes, and the Outline of headings.
+description: The right dock — Backlinks with linked and unlinked mentions, Outgoing links with unresolved ones, the vault-wide Tags and All properties panes, the Outline of headings, and the editable File properties pane.
 ---
 
 # Backlinks and the side panes
@@ -8,7 +8,8 @@ description: The right dock — Backlinks with linked and unlinked mentions, Out
 The right dock holds five tabs, in Obsidian's order: Backlinks, Outgoing links, Tags, All
 properties, Outline. Three are about the note you are reading; Tags and All properties are
 about the whole vault. `app:toggle-right-sidebar` hides and shows the dock, and each tab has
-a command of its own so you can bind a key straight to it.
+a command of its own so you can bind a key straight to it. A sixth, File properties, joins
+them when its command asks for it, and can be closed again.
 
 ## Backlinks
 
@@ -97,6 +98,18 @@ or a question mark for a key whose value is a nested mapping. Keys declared in
 `.obsidian/types.json` are listed even at a count of zero, and two spellings of one key merge
 case-insensitively under the one seen first. The header offers sort order and a search
 filter; clicking a row searches for the key.
+
+## File properties
+
+`properties:open-local`
+
+The open note's properties as an editable table, after the five tabs: keys, values, the type
+menu and *+ Add property* work as they do in [Live Preview](/docs/format/properties/#editing-properties)
+and write the same bytes, whichever mode the note is in. The command makes the tab the first
+time and shows it after that, with the keyboard in it. With no note open, or a file that is not
+a note, it says *No properties found.* A right click on its tab offers **Close**, and
+`Ctrl + W` closes it while it has the keyboard; the dock then shows the tab before it, and
+`.obsidian/workspace.json` loses the leaf as Obsidian's does.
 
 ## Outline
 
