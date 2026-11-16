@@ -9641,7 +9641,8 @@ never dropped when it returns to the default:
 | `{}` (reads `true`) | `{"spellcheck": false}` | `{"spellcheck": true}` |
 | `{"spellcheck": false}` | `{"spellcheck": true}` | `{"spellcheck": false}` |
 
-The editor's `.cm-content` takes `spellcheck="false"` / `"true"` with it. No notice.
+The editor's `.cm-content` takes `spellcheck="false"` / `"true"` with it. No notice. What the
+checker does is in [[#Observed spellcheck, Obsidian 1.15.0 (installer build 1.13.7)]].
 
 ### Insert attachment
 
@@ -9801,6 +9802,103 @@ their order; `meta:\n  k: v` and `d: 2024-01-02` kept their bytes.
 - Where a renamed key goes in a block with other keys (every rename observed was the block's only
   key); a singular in another case (`Tag: x`); a block that does not parse; the notice after Done
   when nothing was modified; whether the close button on the Finished page still offers Undo.
+
+## Observed spellcheck, Obsidian 1.15.0 (installer build 1.13.7)
+
+Run on 2026-11-15 over CDP (`tools/obsidian-probe/spellcheck.mjs`, raw run in
+`results/2026-11-15-spellcheck.json`, pictures in `results/2026-11-15-spellcheck-shots/`) in a
+private headless sway with its own data directory (`USER_DATA_DIR`), on Linux, where the checker
+is Chromium's Hunspell with the `en-US-10-1.bdic` it downloads into `Dictionaries/` of the data
+folder. **Harness trap:** in that session the renderer's dictionary was not there at launch
+(`webFrame.isWordMisspelled` said false for every word) until the session's checker was switched
+off and on and its languages set again; the script does that first, then reloads the page.
+
+**What gets checked is decided by the editor's markup.** CodeMirror marks some tokens
+`spellcheck="false"`; Chromium checks the rest of `.cm-content` (`spellcheck="true"`,
+`autocorrect="on"`, `autocapitalize="on"`, `lang="en"`). In Source mode:
+
+| Checked | Not checked (`spellcheck="false"`) |
+| --- | --- |
+| plain text, headings, bold, italic, strikethrough, highlight | inline code, fenced and indented code (a comment inside a fence too) |
+| a wikilink's inside: target, `#heading` and alias; an embed's target | a Markdown link's URL, a bare URL, an `<autolink>`, an email address |
+| a Markdown link's text | tags, nested tags |
+| raw HTML, tag names and attribute values included | the frontmatter, keys and values |
+| `%%comments%%` | `$math$` and `$$math$$` |
+| a callout's `[!type]`, its title and its body | a `^block-id`, a footnote reference `[^1]` |
+| list and task items, quotes, table cells, a footnote definition's text, `key:: value` fields | |
+
+In Live Preview the same rules hold for the text lines; what is drawn as a widget is not
+editable and so not checked (rendered HTML, math, a callout while the caret is outside it), and
+the Properties view's text values are fields of their own with `spellcheck="true"`.
+
+**Words, as Chromium breaks them** (typed into a plain paragraph, a right click on each):
+flagged — `zorp42`, `abc123xyz`, `2ndd`, `v2`, `mp3`, `web3` (digits do not exempt a word),
+`MISPELED`, `ZORPVILLE`, `Mispeled`, `mIspeled` (case does not), `camelCaseWrod`, `dont`,
+`dont't`, `recieve's`, `recieve’s`, `Imaage.png` and `zorp·ville` as whole words, `wrod` of
+`snake_case_wrod` and `awarness` of `self-awarness` alone, `naïve`, `café`, `macOS`, `teh`,
+`wrold` of `wrold.`; not flagged — `42nd`, `1st`, `3rd`, `don't`, `don’t`, `it’s`, `o'clock`,
+`rock'n'roll`, `'quoted'`, `e.g.`, `foo.bar`, `a.b.c`, `hello_world`, `COVID-19`, `e-mail`,
+`co-operate`, `x`, `I`, `i`, `ABCs`, `URLs`, `iPhone`, `GitHub`, `JavaScript`, `Dr.`, `Mr`. So a
+word is letters, marks and digits; an apostrophe, a period, a middle dot or a colon between two
+of them joins it, and a joined word passes when every part is a word; hyphens, underscores and
+everything else split.
+
+**When.** Only typed text was ever squiggled in the probe: a note opened with misspellings in it
+showed none, after a click, arrow keys, Page Up or an `Input.insertText` of the whole note. A
+word being typed is not flagged, however long the pause (3.2 s); the space after it flags it at
+once (the next frame); moving the caret back into it keeps the squiggle; correcting it removes
+it; a word left with an arrow key instead of a space stays unflagged.
+
+**The look.** Chromium's spelling marker: `#ff0000` in both themes, a wave of period 6 px whose
+1 px stroke spans 5 px, its lowest point on the bottom of the font's box (22 px box, 24 px line,
+16 px text), from the word's first pixel to its last; the same under bold text. At a device
+scale of 2 every measure doubles.
+
+**The right-click menu on a misspelled word** (Live Preview and Source mode alike) selects the
+word, the caret at its end, and leads the editor menu with:
+
+| Row | Icon | Section |
+| --- | --- | --- |
+| each correction, at most three (`recieve`: receive, relieve, reverie; `wrold`: world, wold) | `lucide-repeat` | `correction` |
+| or **No suggestions...**, disabled, when there are none | — | `correction` |
+| --- | | |
+| **Add to dictionary** | `lucide-folder-tree` | `spellcheck` |
+| --- | | |
+| the rest of the menu of a selected word (Add link, ..., Search for “word”, Extract current selection..., Format, ..., Cut, Copy enabled) | | |
+
+Picking a correction replaces the word, the caret after it, no selection; one Ctrl+Z puts the
+word back. On a word that is not misspelled, and anywhere with spellcheck off, none of these
+rows appear. The reading view has no text menu, as before.
+
+**Add to dictionary** writes Chromium's `Custom Dictionary.txt` in the data folder
+(`~/.config/obsidian` on Linux), outside every vault, and nothing under `.obsidian`:
+
+```
+qzxqzxqzvv
+checksum_v1 = 0a4d1c7d3f4e9a4f57380a86619fae97
+```
+
+one word per line and a last line `checksum_v1 = ` plus the MD5 of everything before it, no
+newline at the end. Removing the last word leaves `checksum_v1 = d41d8cd98f00b204e9800998ecf8427e`.
+After adding a word, the same word lower-case and ALL-CAPS were no longer flagged.
+
+**Settings → Editor → Behavior.** The **Spellcheck** row is a toggle with a `lucide-settings`
+clickable icon before it (`extra-setting-button`) that opens a **Spellcheck dictionary** modal:
+one `spellchecker-dictionary-item` per added word, a `lucide-x` "Remove from dictionary" before
+the word. **Spellcheck languages** ("Choose the languages for the spellchecker to use.") shows
+the chosen languages as `setting-hotkey` pills — the × on each only while there is more than one
+— then, once the list is not the default, a `lucide-rotate-ccw` restore button, then an 80 px
+`select.dropdown` whose first option is `+` and whose others are Chromium's 57 languages by name
+(Afrikaans ... Welsh, `en-US` "English (United States)", `de` "German"). Picking German wrote
+nothing to `app.json` or anywhere in the vault: the list is kept in local storage as
+`spellcheck-languages` = `["en-US","de"]` (no vault id in the key) and handed to Electron's
+session. Both rows stay shown with spellcheck off. `editor:toggle-spellcheck` and the toggle flip
+`.cm-content`'s `spellcheck` attribute, and the squiggles go and come back with it.
+
+Not settled: what Obsidian does on macOS (the system checker, and no languages row is expected);
+whether a desktop session that loads its dictionary in time squiggles text already in a note
+(the probe's could not; Scoria checks the whole note); the order of corrections between two
+languages.
 
 ## Observed app info and open-file commands, Obsidian 1.15.0 (installer build 1.13.7)
 
