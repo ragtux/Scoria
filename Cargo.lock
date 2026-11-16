@@ -5957,6 +5957,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tempfile",
+ "unicode-bidi",
  "unicode-segmentation",
 ]
 

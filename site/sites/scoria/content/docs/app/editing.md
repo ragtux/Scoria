@@ -288,9 +288,21 @@ in normal mode.
 Not there: visual block mode, macros, marks, `:` commands other than a line number,
 replace mode (`R`), and a `.obsidian.vimrc`. `j` and `k` move by line, not by wrapped row.
 
-## Not yet
+## Line numbers, guides and direction
 
-- Indent guides, line numbers.
+**Line numbers** (Settings → Editor, or *Toggle line numbers* in the palette) put a gutter at
+the start of the text column: one number per line, a wrapped line numbered once, a table, embed
+or math block by its first line, and the properties block not at all. The text moves over to
+make room.
+
+**Indentation guides** draw a faint line down each level of indentation, in lists, under an
+item's continuation and in code blocks. With the caret on a list item, the guide that runs down
+that item's children is drawn brighter. The reading view draws one down each nested list.
+
+A line written in Hebrew or Arabic runs **right to left**: it is right-aligned, its list marker
+and quote bar move to the right, and on it the Left arrow moves forward and Right back. That
+follows each line's first letter, as Obsidian does; the **Right-to-left** setting moves the
+gutter to the right and decides the direction of a blank first line.
 
 ## Next
 

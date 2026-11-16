@@ -3109,19 +3109,19 @@ impl SettingsView {
                 "Show line numbers in the gutter.",
                 app,
                 SHOW_LINE_NUMBER,
-            ).not_yet(),
+            ),
             app_toggle(
                 "Indentation guides",
                 "Show vertical relationship lines between list items.",
                 app,
                 SHOW_INDENT_GUIDE,
-            ).not_yet(),
+            ),
             app_toggle(
                 "Right-to-left (RTL)",
                 "Sets the default text direction of notes to right-to-left.",
                 app,
                 RIGHT_TO_LEFT,
-            ).not_yet(),
+            ),
             heading("Behavior"),
             Item {
                 cog: Some(Page::SpellcheckDictionary),
@@ -8166,6 +8166,9 @@ mod tests {
                 "Fold indent",
                 // Read by `spellcheck::set_enabled` from `apply_app_config`.
                 "Spellcheck",
+                "Line numbers",
+                "Indentation guides",
+                "Right-to-left (RTL)",
                 "Auto-pair brackets",
                 "Auto-pair Markdown syntax",
                 "Smart lists",

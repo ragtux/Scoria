@@ -4652,6 +4652,7 @@ impl Workspace {
         let slash = state.core_plugin_enabled("slash-command");
         // The editors watch the spellchecker and recheck when it changes.
         crate::spellcheck::set_enabled(state.app().spellcheck.unwrap_or(true), cx);
+        let chrome = crate::gutter::Chrome::from_app(&state.app());
         // Every group's views, the active one's among them.
         for group in &self.groups {
             group.reading.update(cx, |r, cx| {
@@ -4660,6 +4661,7 @@ impl Workspace {
                 r.set_property_types(state.property_types().clone());
                 r.set_properties_in_document(properties);
                 r.set_fold_headings(state.app().fold_heading.unwrap_or(true));
+                r.set_chrome(chrome);
                 cx.notify();
             });
             group.editor.update(cx, |e, cx| {
@@ -4673,6 +4675,7 @@ impl Workspace {
                 e.set_property_types(state.property_types().clone());
                 e.set_properties_in_document(properties);
                 e.set_build_options(build_options, cx);
+                e.set_chrome(chrome, cx);
             });
         }
     }
@@ -4692,7 +4695,9 @@ impl Workspace {
             state.app().tab_size.unwrap_or(4),
         );
         let build_options = state.build_options();
+        let chrome = crate::gutter::Chrome::from_app(&state.app());
         editor.update(cx, |e, cx| {
+            e.set_chrome(chrome, cx);
             e.set_link_options(link_options);
             e.set_indent_options(smart, use_tab, tab_size);
             e.set_convert_html(state.app().auto_convert_html.unwrap_or(true));
@@ -6086,9 +6091,8 @@ impl Workspace {
             }
             // The Editor tab's two rows as commands: the same `app.json`
             // write a click on the row makes, applied the same way, so the
-            // open Settings window and the views follow it. Line numbers
-            // are written for Obsidian to read; Scoria draws no gutter yet,
-            // which the row says ("not in Scoria yet").
+            // open Settings window and the views follow it: the gutter
+            // comes and goes on the next frame.
             //
             // "Toggle ribbon" is the Interface tab's "Show ribbon" the same
             // way: `showRibbon` in `appearance.json`, no notice, and the

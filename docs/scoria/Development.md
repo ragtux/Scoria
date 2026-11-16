@@ -803,6 +803,69 @@ checked; corrections across two languages are interleaved, an order not observed
 "Spellcheck dictionary" is a page of Settings rather than a modal over it; macOS's system
 checker is not imitated.
 
+### Line numbers, indentation guides and right-to-left, 2026-11-15
+
+Three Editor-tab toggles Settings showed and wrote but the editor ignored. Probed first, see
+[[Specification#Observed line numbers, indentation guides and right-to-left, Obsidian 1.15.0]].
+
+**The probe.** `tools/obsidian-probe/gutter-guides-rtl.mjs`, Obsidian 1.15.0 in a private
+headless sway with `USER_DATA_DIR` and `CDP_PORT=9352`. Nine steps in one run: the gutter's box,
+numbers and computed styles in both modes and both themes, its width from 1 to 10 000 lines, the
+numbering beside Live Preview's widgets, the fold markers' place, the toggle command, the guides'
+spans and `::before` styles in three modes, the lit guide for six carets, and right-to-left in
+three modes with the caret walked across Latin, Hebrew and mixed lines. What surprised: the
+gutter takes its room out of the text, not the margin; a line's direction never depends on the
+setting (each line's own first strong character decides, in the editor and the reading view);
+and the guides are drawn on code and continuation lines too, not only list items.
+
+**What was built.**
+- `scoria-text::gutter`, no gpui: the gutter's digits and width, a line's indent units (a tab or
+  `tabSize` spaces), and the guide the caret lights (`active_guide`: the item's depth on its
+  subtree). `scoria-text::bidi`: a line's direction (first strong character, else the line
+  above's, else `rightToLeft`), `VisualRow` (caret x and click index among glyphs laid out right
+  to left) and `break_rows` (rows broken in logical order). New dependency `unicode-bidi` 0.3,
+  already in the tree under cosmic-text, pure Rust, MIT/Apache-2.0: the crate the shaper itself
+  reorders with, so the two agree on each glyph's direction.
+- `scoria::gutter`: the column split (`columns`), the numbers (interface font, 12 px, tabular
+  figures, `--text-faint`, right-aligned, centred on the line's first row), the guide quads, and
+  `Chrome` (the three toggles from `app.json`). The editor shifts its text by the gutter and the
+  24 px margin and keeps the inline title, the properties block and the footer at the column;
+  every text line and every widget but the properties block gets its first line's number; fold
+  markers stay with the text. Guides are painted over the runs' backgrounds (a code block's is
+  one) and under the text; the lit one in `--indentation-guide-color-active`.
+- `scoria::rtl`: right-to-left lines laid out by Scoria. The pinned gpui shapes RTL correctly
+  but keeps the glyphs in byte order with falling x, and its wrapping and byte-to-x maps assume
+  rising x: a Hebrew paragraph never wrapped (every width measured negative) and ran off the left
+  edge, and the caret stood at the wrong end. `rtl_rows` breaks the line in logical order from the
+  unwrapped advances, shapes each row on its own and right-aligns it; the editor's `Shaped` maps
+  carets, clicks, selections and find matches through it; Home and End are logical, the arrows
+  swap on an RTL line, quote bars and fold markers move to the right. `RtlText` does the same for
+  a reading-view paragraph or heading; list items and quotes whose first paragraph runs right to
+  left put their marker and bar on the right. The reading view draws a guide down each nested
+  list under its parent's marker.
+- Settings: the three rows lose "not in Scoria yet"; `apply_app_config` and `configure_editor`
+  hand the editor and the reading views the toggles, so `editor:toggle-line-numbers` and the rows
+  take effect on the next frame.
+
+**Driven.** The release build in the private sway over the control socket, with grim: the gutter
+in Source mode (numbers 1-26, the wrapped line numbered once) and Live Preview (none beside the
+properties, numbering from 5, the code block's lines numbered), `rightToLeft` moving it right;
+the guides in both modes and on code lines, the lit one on the children of the caret's item;
+the reading view's nested-list guides; the RTL note in all three modes: Hebrew lines
+right-aligned, a 42-word Hebrew paragraph wrapped into four right-aligned rows, a selection across
+its rows, clicks along a Hebrew line giving 0, 2, 11, 28, 31 from right to left, and Right on
+column 0 going to the line above.
+
+**Left.** Scoria's caret on a line of mixed direction moves by the line's direction, not
+visually through each run (Obsidian walked the Hebrew run of an LTR line backwards); a link in a
+right-to-left reading-view paragraph does not follow and its text cannot be selected (`RtlText`
+takes no clicks); inline math in an RTL reading-view paragraph keeps gpui's path; under
+`rightToLeft` the reading view's code blocks stay left-aligned; Scoria's Live Preview tab is
+narrower than Obsidian's 36 px unit, so the guide stands a quarter em into the unit (under
+Scoria's bullet) rather than 0.85 em; and a wrapped list line's guide stops with its first row,
+since Scoria has no hanging indent for the rows after it. The active line's number is drawn like
+the rest, as in Obsidian's default theme.
+
 ### Slash commands, 2026-11-11
 
 The one core plugin Scoria had not built, and the one with no command id: probed first, then

@@ -444,6 +444,18 @@ pub(crate) fn selection_color(theme: &Theme) -> Hsla {
 /// selection covers gain its background, and any run it starts or ends
 /// inside is split, so the list stays sorted and non-overlapping the way
 /// `StyledText::with_highlights` needs it.
+/// Whether the first paragraph among `blocks` runs right to left, by its
+/// first strong character: what a `dir="auto"` container goes by.
+fn blocks_rtl(blocks: &[RBlock]) -> bool {
+    blocks.iter().find_map(|b| match b {
+        RBlock::Paragraph(segments) => segments.iter().find_map(|s| match s {
+            Segment::Text(t) => scoria_text::bidi::strong_direction(&t.text),
+            _ => None,
+        }),
+        _ => None,
+    }) == Some(scoria_text::bidi::Direction::Rtl)
+}
+
 pub(crate) fn with_selection(
     highlights: Vec<(Range<usize>, HighlightStyle)>,
     text: &str,
@@ -760,6 +772,8 @@ pub struct ReadingView {
     folds: Vec<FoldKey>,
     /// `foldHeading`: with it off the indicator is not drawn.
     fold_headings: bool,
+    /// `showIndentGuide` and `rightToLeft`, for the renderer.
+    chrome: crate::gutter::Chrome,
     /// Per top-level block: inside a collapsed heading's section.
     hidden: Vec<bool>,
     readable_line_length: bool,
@@ -875,6 +889,7 @@ impl ReadingView {
             toggled: HashSet::new(),
             folds: Vec::new(),
             fold_headings: true,
+            chrome: crate::gutter::Chrome::default(),
             hidden: Vec::new(),
             readable_line_length: true,
             show_inline_title: true,
@@ -1183,6 +1198,10 @@ impl ReadingView {
         self.folds = keys;
         self.recompute_hidden();
         cx.notify();
+    }
+
+    pub fn set_chrome(&mut self, chrome: crate::gutter::Chrome) {
+        self.chrome = chrome;
     }
 
     pub fn set_fold_headings(&mut self, on: bool) {
@@ -1539,7 +1558,8 @@ impl ReadingView {
             on_toggle,
         )
         .with_reading_host(&host)
-        .with_selection(&select);
+        .with_selection(&select)
+        .with_chrome(self.chrome);
         let r = match self.embed_views.as_ref() {
             Some(views) => r.with_embed_views(self.id, views),
             None => r,
@@ -1837,6 +1857,8 @@ pub(crate) struct Renderer<'a> {
     /// The host's live views for its embedded bases, by the host's id. A
     /// renderer without one draws an embedded base as a titled box.
     embeds: Option<(gpui::EntityId, &'a crate::bases::embed::EmbedViews)>,
+    /// `showIndentGuide` (a nested list's guide) and `rightToLeft`.
+    chrome: crate::gutter::Chrome,
 }
 
 impl<'a> Renderer<'a> {
@@ -1866,7 +1888,14 @@ impl<'a> Renderer<'a> {
             embeds: None,
             text_system,
             available: available.max(100.),
+            chrome: crate::gutter::Chrome::default(),
         }
+    }
+
+    /// The Editor tab's `showIndentGuide` and `rightToLeft`.
+    pub(crate) fn with_chrome(mut self, chrome: crate::gutter::Chrome) -> Renderer<'a> {
+        self.chrome = chrome;
+        self
     }
 
     /// Sets the blocks in `style` instead of the reading view's metrics.
@@ -2202,6 +2231,17 @@ impl<'a> Renderer<'a> {
                 .text_size(px(base * 0.875))
                 .text_color(t.tokens.text_muted)
                 .child(SharedString::from(text.clone()))
+                .into_any_element(),
+            // A quote whose text runs right to left has its bar on the
+            // right (`blockquote` is `dir="auto"`).
+            RBlock::Quote(children) if blocks_rtl(children) => div()
+                .mb(gap)
+                .border_r_2()
+                .border_color(t.tokens.interactive_accent)
+                .pr_4()
+                .flex()
+                .flex_col()
+                .children(self.blocks(children, false))
                 .into_any_element(),
             RBlock::Quote(children) => div()
                 .mb(gap)
@@ -2800,9 +2840,37 @@ impl<'a> Renderer<'a> {
                 .into_any_element(),
         };
         let done = item.task.is_some_and(|c| c != ' ');
+        // An item whose text runs right to left has its marker on the right
+        // (Obsidian's `li` is `dir="auto"`).
+        let rtl = blocks_rtl(&item.children);
+        // `showIndentGuide`: a line down a nested list, under this item's
+        // marker (`--indentation-guide-color`, 1 px, from the item's first
+        // line to its end; Obsidian 1.15.0 drew it on the nested `ul`, at
+        // the parent's bullet).
+        let guide = (self.chrome.indent_guides
+            && item
+                .children
+                .iter()
+                .any(|b| matches!(b, RBlock::List { .. })))
+        .then(|| {
+            let line = div()
+                .absolute()
+                .top(px(base * 1.5))
+                .bottom_0()
+                .w(px(1.))
+                .bg(k.indentation_guide_color);
+            // The marker's middle: 3 px in from the column's inner edge,
+            // across the 8 px gap.
+            if rtl {
+                line.right(px(-11.))
+            } else {
+                line.left(px(-11.))
+            }
+        });
         div()
             .flex()
-            .flex_row()
+            .when(rtl, |d| d.flex_row_reverse())
+            .when(!rtl, |d| d.flex_row())
             .gap_2()
             .when(!tight, |d| d.mb(px(base * 0.4)))
             .child(
@@ -2810,7 +2878,8 @@ impl<'a> Renderer<'a> {
                     .min_w(px(22.))
                     .flex_shrink_0()
                     .flex()
-                    .justify_end()
+                    .when(rtl, |d| d.justify_start())
+                    .when(!rtl, |d| d.justify_end())
                     .child(marker),
             )
             .child(
@@ -2825,6 +2894,8 @@ impl<'a> Renderer<'a> {
                     .when(done, |d| {
                         d.text_color(k.checklist_done_color).line_through()
                     })
+                    .relative()
+                    .children(guide)
                     .children(self.blocks(&item.children, tight)),
             )
             .into_any_element()
@@ -3685,6 +3756,11 @@ impl<'a> Renderer<'a> {
                 math::typeset(tex, false).ok().map(|f| (r.clone(), f))
             })
             .collect();
+        // A paragraph that runs right to left is laid out by Scoria, since
+        // gpui's wrapping cannot (see `crate::rtl`).
+        if formulas.is_empty() && crate::rtl::is_rtl(&text.text) {
+            return self.rtl_text(text);
+        }
         if formulas.is_empty() {
             let (interactive, layout) =
                 self.interactive_with_layout(text, &text.text, &text.runs, &text.links);
@@ -3884,6 +3960,24 @@ impl<'a> Renderer<'a> {
             },
         );
         (interactive, layout)
+    }
+
+    /// A right-to-left run of inline content, in its styles, right-aligned
+    /// in rows of the block's width.
+    fn rtl_text(&self, text: &RichText) -> AnyElement {
+        let highlights: Vec<_> = text
+            .runs
+            .iter()
+            .map(|(range, style)| (range.clone(), self.highlight(*style)))
+            .collect();
+        let mono: Vec<_> = text
+            .runs
+            .iter()
+            .filter(|(_, s)| s.code || s.kbd || s.html)
+            .map(|(range, _)| (range.clone(), self.theme.mono_font.clone()))
+            .collect();
+        crate::rtl::RtlText::new(SharedString::from(text.text.clone()), highlights, mono)
+            .into_any_element()
     }
 
     /// The inline runs, by the tokens Obsidian's reading view paints them
