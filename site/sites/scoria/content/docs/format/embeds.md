@@ -1,6 +1,6 @@
 ---
 title: Embedding files
-description: Embedding notes, sections, blocks and images with ![[…]] in Scoria — the size hints, how deep embeds nest, what the alt text becomes, and which file kinds display.
+description: Embedding notes, sections, blocks, images, canvases and audio with ![[…]] in Scoria — the size hints, how deep embeds nest, what the alt text becomes, and which file kinds display.
 ---
 
 # Embedding files
@@ -41,13 +41,15 @@ note doing the embedding.
 |---|---|
 | Local image | Displayed, with size hints honored |
 | Remote image (`https://…`) | **Not loaded yet** |
-| Audio, video | Recognized as a file kind; no player yet |
+| Audio | A player: play and pause, the time, a seek bar, mute. The file decodes in Scoria (MP3, WAV, M4A, 3GP, FLAC, Ogg, Opus) and plays through the default output device; nothing is opened until you press play |
+| Video | A card with the name, picture size, length, codecs and file size, and **Open in default app**: Scoria does not play video |
 | PDF | Drawn in a viewer of its own, with the toolbar; `#page=N` opens it at that page and `#height=` sets its height |
-| Canvas | Not drawn inside a note. A `.canvas` opens in a canvas view of its own |
-| Base | Recognized and round-tripped on disk; no view yet |
+| Canvas | Its minimap, as Obsidian draws it: the name over a picture of the cards' outlines and the edges between them, as wide as the note and at most 400 px tall. Nothing in it moves; a click opens the canvas. An empty canvas shows its name alone, and a missing one offers to create it |
+| Base | The live base view, with its toolbar: the same table, cards, list or kanban a `.base` opens on in a tab |
 
-Size hints are Obsidian's: `|400` sets the width, `|400x300` fits a box. A hint is not an
-alias — Scoria tells them apart the way Obsidian does, described next.
+Size hints are Obsidian's: `|400` sets the width, `|400x300` fits a box. They size images;
+a canvas or an audio embed ignores them, as Obsidian's do. A hint is not
+an alias — Scoria tells them apart the way Obsidian does, described next.
 
 ## What the alt text becomes
 

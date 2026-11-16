@@ -5584,6 +5584,14 @@ impl Workspace {
                 });
             }
         }
+        // A changed audio or video file is read again, and its player (if
+        // it was played) stopped: what it was playing is not the file now.
+        for change in &changes.files {
+            let path = change.path();
+            if matches!(FileKind::from_path(path), FileKind::Audio | FileKind::Video) {
+                crate::media::players(cx).invalidate(&state.vault().absolute(path));
+            }
+        }
         // A changed `.pdf` is forgotten by the cache every drawing shares --
         // the embeds and the canvas cards read it afresh on their next
         // frame -- and every view holding it reloads, keeping its page and
@@ -7536,7 +7544,9 @@ impl Workspace {
                 }
                 self.status = path.to_string().into();
             }
-            FileKind::Image => {
+            // An image, an audio or a video file is drawn as its own embed:
+            // the picture, the player, or Scoria's video card.
+            FileKind::Image | FileKind::Audio | FileKind::Video => {
                 let model = reading::build_with(
                     path,
                     &format!("![[{path}]]"),
@@ -9756,7 +9766,16 @@ impl Workspace {
         let Some(state) = self.state.clone() else {
             return;
         };
-        let path = state.new_note_path(name, self.current.as_deref());
+        let mut path = state.new_note_path(name, self.current.as_deref());
+        // A dangling link that names a canvas makes the canvas, empty, as
+        // "“Missing.canvas” is not created yet. Click to create." offers
+        // (OBSERVE: the file Obsidian writes for it; the embed's words were
+        // observed, the click was not).
+        if FileKind::from_path(name) == FileKind::Canvas {
+            if let Some(canvas) = path.strip_suffix(".md") {
+                path = canvas.to_string();
+            }
+        }
         match state.create_note(&path, "") {
             Ok(changes) => {
                 self.after_changes(changes, cx);
@@ -10826,7 +10845,7 @@ impl Workspace {
         let image = self
             .current
             .as_deref()
-            .is_some_and(|p| FileKind::from_path(p) == FileKind::Image);
+            .is_some_and(|p| shown_as_embed(FileKind::from_path(p)));
         let has_buffer = !self.editor.read(cx).name.is_empty();
         let canvas =
             self.current.is_some() && self.canvas.read(cx).path() == self.current.as_deref();
@@ -11672,7 +11691,7 @@ impl Workspace {
         let image = view
             .current
             .as_deref()
-            .is_some_and(|p| FileKind::from_path(p) == FileKind::Image);
+            .is_some_and(|p| shown_as_embed(FileKind::from_path(p)));
         let has_buffer = !view.editor.read(cx).name.is_empty();
         let canvas =
             view.current.is_some() && view.canvas.read(cx).path() == view.current.as_deref();
@@ -19933,14 +19952,26 @@ fn set_pinned(leaf: &mut Value, pinned: bool) {
 /// `tools/obsidian-probe/results/2026-10-26-pdf.json`), the plain file
 /// otherwise.
 ///
+/// An audio file's is `lucide-file-audio` and a video's the plain file
+/// (observed: `tools/obsidian-probe/results/2026-11-15-embeds-media.json`,
+/// `s09`).
+///
 /// OBSERVE: what it writes for images and the rest.
 fn leaf_icon(path: &str) -> &'static str {
     match FileKind::from_path(path) {
         FileKind::Canvas => "lucide-layout-dashboard",
         FileKind::Base => "lucide-table",
         FileKind::Pdf => "lucide-file-text",
+        FileKind::Audio => "lucide-file-audio",
         _ => "lucide-file",
     }
+}
+
+/// A file the main view shows as the embed `![[file]]` would draw it, in
+/// every mode: an image, the audio player, Scoria's video card. None has a
+/// source to edit.
+fn shown_as_embed(kind: FileKind) -> bool {
+    matches!(kind, FileKind::Image | FileKind::Audio | FileKind::Video)
 }
 
 /// One foot of the active tab: the region just outside its bottom corner
@@ -19991,8 +20022,9 @@ fn tab_foot(left: bool, theme: &Theme) -> impl IntoElement {
 }
 
 /// The tab strip's name for a file: a note's name without `.md`, and a
-/// canvas without `.canvas`, a base without `.base` or a PDF without
-/// `.pdf` too, which is how Obsidian titles its tabs -- no view of its own
+/// canvas without `.canvas`, a base without `.base`, a PDF without `.pdf`
+/// or an audio or video file without its extension too (observed: `tone.mp3`
+/// is "tone", `clip.mp4` "clip"), which is how Obsidian titles its tabs -- no view of its own
 /// ever shows an extension (the PDF's is observed: `doc.pdf` is the tab
 /// "doc" and the leaf's `title` "doc").
 fn tab_display_name(file_name: &str) -> &str {
@@ -20000,7 +20032,11 @@ fn tab_display_name(file_name: &str) -> &str {
         Some((stem, ext))
             if (ext.eq_ignore_ascii_case("canvas")
                 || ext.eq_ignore_ascii_case("base")
-                || ext.eq_ignore_ascii_case("pdf"))
+                || ext.eq_ignore_ascii_case("pdf")
+                || matches!(
+                    FileKind::from_extension(&ext.to_ascii_lowercase()),
+                    FileKind::Audio | FileKind::Video
+                ))
                 && !stem.is_empty() =>
         {
             stem
@@ -21448,6 +21484,35 @@ mod tests {
         let known = |_: &str| true;
         let (_, restored) = tab_from_leaf(&written, ViewMode::Reading, &known).unwrap();
         assert_eq!(leaf_json(&restored), written);
+    }
+
+    /// Audio and video tabs are Obsidian's `audio` and `video` leaves:
+    /// observed, `{"type":"audio","state":{"file":"tone.mp3"},"icon":
+    /// "lucide-file-audio","title":"tone"}` and the video's with the plain
+    /// file icon (`2026-11-15-embeds-media.json`, `s09`).
+    #[test]
+    fn audio_and_video_tabs_are_written_as_obsidian_writes_them() {
+        let tab = |path: &str| Tab {
+            path: Some(path.into()),
+            mode: ViewMode::Reading,
+            history: Vec::new(),
+            history_ix: 0,
+            leaf: None,
+            view_state: None,
+            pinned: false,
+            doc_backlinks: DocBacklinks::default(),
+        };
+        let audio = leaf_json(&tab("tone.mp3"));
+        assert_eq!(audio["state"]["type"], json!("audio"));
+        assert_eq!(audio["state"]["icon"], json!("lucide-file-audio"));
+        assert_eq!(audio["state"]["title"], json!("tone"));
+        assert_eq!(audio["state"]["state"], json!({"file": "tone.mp3"}));
+        let video = leaf_json(&tab("Clips/clip.MP4"));
+        assert_eq!(video["state"]["type"], json!("video"));
+        assert_eq!(video["state"]["icon"], json!("lucide-file"));
+        assert_eq!(video["state"]["title"], json!("clip"));
+        assert!(shown_as_embed(FileKind::Audio) && shown_as_embed(FileKind::Video));
+        assert!(!shown_as_embed(FileKind::Pdf));
     }
 
     /// A PDF tab is written as Obsidian's `pdf` leaf, which is the file

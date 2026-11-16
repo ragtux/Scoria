@@ -149,9 +149,17 @@ png = "0.17"
 # a sine and a sweep decoded by ffmpeg and symphonia (62-65 dB against 24-28 dB);
 # it encodes at about 0.75x real time, so a recording finishes encoding after
 # Stop. symphonia (MPL-2.0) is a test-only decoder for the round trip.
+#
+# The audio player (2026-11-15) decodes with symphonia, pure Rust: MP3, WAV
+# (PCM and ADPCM), FLAC, Ogg Vorbis, AAC in MP4/M4A/3GP, and the Matroska
+# and WebM containers. symphonia 0.5 has no Opus decoder, so `.opus` (and Opus
+# in Ogg or WebM) is opus-decoder (MIT OR Apache-2.0, pure Rust, no unsafe,
+# RFC 8251's twelve conformance vectors, one dependency: thiserror), fed the
+# packets symphonia's demuxer reads. Output is the same cpal.
 cpal = "0.18"
 oxideav-aac = "=0.1.7"
-symphonia = { version = "0.5", default-features = false, features = ["aac", "isomp4"] }
+symphonia = { version = "0.5", default-features = false, features = ["aac", "isomp4", "mp3", "pcm", "wav", "adpcm", "flac", "ogg", "vorbis", "mkv"] }
+opus-decoder = "0.1.1"
 
 [profile.dev]
 opt-level = 0
@@ -159,3 +167,10 @@ opt-level = 0
 # gpui and its graphics stack are slow at opt-level 0; keep dependencies optimized in debug builds.
 [profile.dev.package."*"]
 opt-level = 2
+
+# opus-decoder 0.1.1 shifts a `u8` collapse mask past its width for some CELT
+# bands (`celt/vq.rs`, `extract_collapse_mask`), which panics with overflow
+# checks on and wraps in a release build; libopus keeps the low bits too, so
+# debug builds (and the tests) run it the way release does.
+[profile.dev.package.opus-decoder]
+overflow-checks = false

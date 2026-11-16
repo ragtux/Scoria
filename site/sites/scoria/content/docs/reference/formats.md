@@ -89,8 +89,9 @@ round-trips through Scoria unchanged.
 A `.canvas` **opens** in a canvas view of its own in the main area: it pans, zooms, selects,
 moves, resizes, draws edges, colors, groups, copies, pastes and undoes, cards are typed
 into, and it autosaves through the same writer — the bytes Obsidian writes on an edited
-save. The menus, controls and commands are Obsidian's. An embed of a canvas inside a note is
-still not drawn.
+save. The menus, controls and commands are Obsidian's. An embed of a canvas inside a note,
+`![[Board.canvas]]`, is the canvas's minimap under its name, as in Obsidian, and a click on it
+opens the canvas; a file card on another canvas draws the same picture.
 
 ## Bases
 

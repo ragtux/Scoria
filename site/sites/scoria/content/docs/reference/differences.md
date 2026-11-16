@@ -26,8 +26,8 @@ Things Obsidian does that Scoria intends to do and does not.
 | **Mermaid diagrams** | Drawn as Obsidian draws them, laid out by a Rust port of Pele (Obsidian's own Mermaid renderer), in the reading view, Live Preview, embeds, hover previews and Export to PDF. Text is measured in Inter's static faces rather than its variable one, so a box can come out a pixel or a few wider or narrower; a label in a script Inter lacks (日本語) is a line shorter; dashed lines print solid in a PDF; there are no clickable `click` links or tooltips |
 | **Code highlighting in rarer languages** | Fenced code is highlighted by a port of Prism: 85 languages under 122 names, against the 171 names Obsidian's Prism highlights. A block in any other language renders plain |
 | **PDF selection and export** | A PDF opens in a viewer with Obsidian's toolbar, sidebar and find bar, and `![[x.pdf]]` embeds it. Its text selects and copies, with Obsidian's "Copy as quote" and "Copy link to selection", and a `#page=N&selection=` link marks what it names; two-page spreads, Adapt to theme and the password prompt work in a tab. A link copied from a PDF whose text pdf.js cuts differently from Scoria can name other characters; an embedded PDF has no selection and no Display options; Adapt to theme is forgotten at quit. Export to PDF (`workspace:export-pdf`) lays the reading view out on pages of its own rather than printing it through a browser: the page breaks differ from Obsidian's, a table row or an image taller than a page is not split, callouts have no icon, and an embedded base, PDF or canvas prints as its link |
-| **Audio and video players** | Recognized as file kinds; no player, in a tab or embedded |
-| **A canvas embedded in a note** | `![[Board.canvas]]` is not drawn; the file opens in a view of its own |
+| **Video** | Scoria has no video decoder. A video file, in a tab or embedded with `![[clip.mp4]]`, is a card with its name, picture size, length, codecs and file size, and **Open in default app**, where Obsidian plays it in place |
+| **The audio player's extras** | Audio plays in a tab and embedded, with play and pause, the time, a seek bar and mute. Not drawn: the volume slider and the playback-speed menu of Obsidian's (Chromium's) player, and Space does not play or pause. Two embeds of the same file share one player. In Live Preview the player sits a little further from the lines around it than Obsidian's |
 
 ### Views and windows
 
@@ -122,6 +122,11 @@ override it.
 `hsl(14, 62%, 46%)`, a brick from the logo's palette, where Obsidian's is a purple. It is declared exactly
 where Obsidian declares its own, so an accent set in Settings, or a theme's, still wins, and
 nothing is written to your vault.
+
+**A canvas minimap draws edges that record no side.** Obsidian 1.15.0 draws no picture at all
+for an embedded canvas that holds an edge without a `fromSide` or `toSide` — the embed is its
+name alone. Scoria draws the edge from the side facing the other card, the way the canvas
+view does.
 
 **A second bold over task lines removes the bold.** Over `- [ ] **task**` lines Obsidian's
 second `Ctrl + B` changes nothing; Scoria's strips the bold, as it does over any other line.

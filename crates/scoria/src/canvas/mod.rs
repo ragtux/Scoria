@@ -4,10 +4,12 @@
 //! selection, dragging, resizing, drawing edges, saving through
 //! `scoria_formats::canvas` — over the model in the `scoria-canvas` crate.
 //! `cards` builds what is drawn inside a card: a text card's Markdown, a file
-//! card's note or image, a link card, a group's label.
+//! card's note or image, a link card, a group's label. `minimap` is the
+//! picture a canvas embedded in a note is drawn as.
 
 pub mod cards;
 pub mod menu;
+pub mod minimap;
 pub mod view;
 
 pub use view::{CanvasEvent, CanvasView, FilePick};

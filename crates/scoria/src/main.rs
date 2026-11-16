@@ -35,6 +35,7 @@ mod help;
 mod hover_preview;
 mod inline_field;
 mod math;
+mod media;
 mod mentions;
 mod mermaid;
 mod migrate_modal;

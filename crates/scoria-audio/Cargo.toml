@@ -1,6 +1,6 @@
 [package]
 name = "scoria-audio"
-description = "The Audio recorder: microphone capture, AAC-LC encoding as it arrives, the .m4a file, its name and the embed a note gets (no gpui)"
+description = "The Audio recorder and the media player: microphone capture, AAC-LC encoding, the .m4a file; decoding and playing audio files, and what a video file holds (no gpui)"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -12,7 +12,8 @@ publish.workspace = true
 oxideav-aac = { workspace = true }
 cpal = { workspace = true }
 chrono = { workspace = true }
+symphonia = { workspace = true }
+opus-decoder = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }
-symphonia = { workspace = true }

@@ -13,6 +13,8 @@
 
 use scoria_formats::canvas::{Canvas, Edge, EndStyle, Node, NodeType, Side};
 
+pub mod minimap;
+
 // ---- constants ---------------------------------------------------------------
 // Observed in Obsidian 1.14.4 over CDP on 2026-10-21 unless marked otherwise;
 // see `docs/scoria/Specification.md`, "Observed canvas view behavior".

@@ -2981,6 +2981,47 @@ impl<'a> Renderer<'a> {
                     });
                 crate::pdf::embed::render(pdf, t, self.available, open)
             }
+            // `![[x.canvas]]`: the minimap under the name (`canvas::minimap`),
+            // and a click anywhere on it opens the canvas.
+            EmbedKind::Canvas(canvas) => {
+                let on_link = self.on_link.clone();
+                let open: crate::canvas::minimap::OpenPath =
+                    Rc::new(move |path: &str, window: &mut Window, cx: &mut App| {
+                        on_link(LinkTarget::Internal(path.to_string()), window, cx)
+                    });
+                crate::canvas::minimap::render(canvas, t, self.available, open)
+            }
+            // `![[x.mp3]]`: the player; `![[x.mp4]]`: Scoria's card (`media`).
+            EmbedKind::Audio(media) => crate::media::audio(media, t),
+            EmbedKind::Video(media) => crate::media::video(media, t),
+            // A missing canvas is offered for creation, as a missing note is
+            // (observed: `“Missing.canvas” is not created yet. Click to
+            // create.`, `file-embed mod-empty`).
+            EmbedKind::Missing
+                if FileKind::from_path(scoria_markdown::parse_linktext(&embed.link).path)
+                    == FileKind::Canvas =>
+            {
+                let on_link = self.on_link.clone();
+                let link = embed.link.clone();
+                div()
+                    .id(SharedString::from(format!("embed-missing:{}", embed.link)))
+                    .my_1()
+                    .p(px(8.))
+                    .rounded(px(8.))
+                    .bg(t.tokens.background_modifier_hover)
+                    .text_size(px(14.))
+                    .text_color(t.tokens.text_muted)
+                    .text_center()
+                    .cursor_pointer()
+                    .on_click(move |_, window, cx| {
+                        on_link(LinkTarget::Internal(link.clone()), window, cx)
+                    })
+                    .child(SharedString::from(format!(
+                        "\u{201c}{}\u{201d} is not created yet. Click to create.",
+                        embed.link
+                    )))
+                    .into_any_element()
+            }
             // A missing attachment is Obsidian's `file-embed
             // mod-empty-attachment` box (observed on `![[missing.pdf]]`,
             // `tools/obsidian-probe/results/2026-10-26-pdf.json` s08): a
