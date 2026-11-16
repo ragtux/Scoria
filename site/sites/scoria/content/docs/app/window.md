@@ -167,13 +167,35 @@ from the switcher all push onto the same back stack.
 ## Keys
 
 Every shortcut in Scoria is an Obsidian command bound from its default hotkey, so your
-vault's `hotkeys.json` rebinds or unbinds all of them. The one exception is `Ctrl + Q`,
-which quits.
+vault's `hotkeys.json` rebinds or unbinds all of them. The exceptions are `Ctrl + Q`, which
+quits, and the zoom keys below, which are Obsidian's View menu keys rather than hotkeys.
 
-The 199 commands Scoria can actually run are the ones the command palette offers; the rest
+The 210 commands Scoria can actually run are the ones the command palette offers; the rest
 are still listed in Settings' Hotkeys tab, so you can see your bindings for commands that
 do not do anything yet. The full list is in [commands and
 hotkeys](/docs/reference/commands/).
+
+## Zoom and keeping a window on top
+
+`Ctrl + =` zooms the vault window in, `Ctrl + -` out and `Ctrl + 0` back to 100% (`Cmd` on
+macOS), as do the commands **Zoom in**, **Zoom out** and **Reset zoom**. Each step is a
+half zoom level, a factor of 1.2 for a whole level, from 63% to 173%, the steps Obsidian's
+take. The whole window zooms — text, icons, docks and the tab strip — and stays sharp: the
+zoom is applied as the window's pixel density, the way a browser's is. It acts on the vault
+window whichever window you run it in, and the vault window comes back at the same zoom next
+time, kept in Scoria's own folder rather than in the vault. A canvas and the graph keep
+`Ctrl + =`, `Ctrl + -` and `Ctrl + 0` for their own zoom while they have the keyboard.
+
+**Toggle window always on top** keeps a popout above every other window, and a second run
+lets it go. As in Obsidian it is offered only in a popout that is not maximized, and nothing
+is written. It works on X11, macOS and Windows; Wayland gives a window no way to ask, and
+there Scoria says so.
+
+**Reload app without saving** reads the vault, its settings, theme, snippets, hotkeys and
+core plugins from disk again — what you want after changing `.obsidian` files by hand or
+from another app — and puts every tab, split and popout back where it was. As the name
+says, the open note's unsaved edits are dropped, and so are the carets, scroll positions and
+each tab's back and forward history; the zoom and the font size stay.
 
 ## The theme
 
