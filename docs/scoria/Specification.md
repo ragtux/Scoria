@@ -10406,3 +10406,43 @@ commands too.
   digits in a query (`/(`, `/#`); several cursors.
 - Whether the list is rebuilt on every keystroke (the check callbacks asked again) or once per
   `/`. Scoria builds it once per `/`, and again whenever the popup reopens.
+
+## Observed Mermaid diagrams, Obsidian 1.15.1
+
+Probed 2026-11-15 by `tools/obsidian-probe/mermaid.mjs` (results in
+`tools/obsidian-probe/results/2026-11-15-mermaid.json`), in a private headless sway with its own
+data directory; 24 fences, both base themes, Live Preview, an embed, a hover popover, the
+hover controls and two narrow columns.
+
+- **The renderer is Pele, not Mermaid.** Obsidian 1.15 bundles `lib/pele.min.js`, "Pele 1.13.0 |
+  MIT License" in 1.15.1 (1.8.0 in 1.15.0), the Obsidian team's own Mermaid renderer; there is
+  no `mermaid` global and no `loadMermaid`. The block is `div.el-pre > div.mermaid >
+  svg.pele.pele-<type>` with `width`/`height` equal to its viewBox and `max-width: 100%;
+  height: auto`: drawn at its own size, left-aligned, shrunk proportionally only when wider
+  than the column. The section is 6 px taller than the svg (the inline svg's line box).
+- **The column's width is a layout input.** At a 280 px column `flowchart LR` became a
+  156×1420 top-down diagram (1934×103 at 700), `flowchart TD` stayed 184×489, and a sequence
+  diagram rewrapped from 542×419 to 310×528; at 80 px the flowchart narrowed to 169×441. A
+  hover popover laid the sequence diagram out at 342×477 for its 452 px.
+- **Text is measured in the face it is drawn in.** On Linux `--pele-font` falls through the
+  system names to Obsidian's bundled Inter; forcing Inter by a snippet changed no number. Bold
+  is `--bold-weight`, 600. Labels are 16 px, edge labels 14, sequence frame tags 12 at 600.
+- **Colours** are `--mermaid-*`, handed to Pele as `--pele-*`, each one of the theme's own:
+  background `--background-primary`, text and line `--text-normal`, muted `--text-muted`,
+  surface `--background-secondary`, surface-alt `--background-primary-alt`, border
+  `--background-modifier-border-hover`, accent `--interactive-accent`, critical `--color-red`,
+  error `--text-error`, radius `--radius-s`, title and heading weights `--font-semibold`,
+  series 1–8 `--color-blue`, `-orange`, `-green`, `-red`, `-cyan`, `-yellow`, `-purple`,
+  `-pink`.
+- **Errors** are `div.pele.pele-error` in place of the svg: Pele's message, `white-space:
+  pre-wrap`, `--pele-font-mono` at 0.8 em (12.8 px) in `--text-error`. An unknown type and an
+  empty fence say "No diagram type detected for the given text."; a syntax error is
+  jison-style, e.g. "Parse error on line 3:\n    ((\n----^\nExpecting 'NODE_STRING', got
+  'PS'". A `%%{init}%%` theme of its own is ignored (the diagram keeps Obsidian's colours);
+  frontmatter titles are drawn.
+- **Live Preview** draws the fence as a widget, `cm-preview-code-block cm-embed-block
+  markdown-rendered cm-lang-mermaid`, the same size as in reading view, with the `embed-action
+  edit-block-button` ("Edit this block", 28×24) at its top-right, 4 px in and 4 px down. Errors
+  are widgets too.
+- **No controls.** Hovering a diagram in reading view shows no button; Ctrl+wheel neither zooms
+  nor pans it.
