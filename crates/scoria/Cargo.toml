@@ -57,6 +57,17 @@ futures.workspace = true
 # Already in the tree through gpui; a rendered PDF page is handed to gpui as
 # one of its `image` frames.
 image.workspace = true
+raw-window-handle.workspace = true
+smallvec.workspace = true
+
+[target.'cfg(any(target_os = "linux", target_os = "freebsd"))'.dependencies]
+x11rb.workspace = true
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2.workspace = true
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows.workspace = true
 
 [build-dependencies]
 embed-resource.workspace = true

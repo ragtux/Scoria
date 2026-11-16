@@ -333,6 +333,88 @@ uses behave as Obsidian's do.
 | Page preview | probed 2026-11-11 on macOS, see [[Specification#Observed page preview, Obsidian 1.15.0]] and [[#Page preview, the probe, 2026-11-11]]; step 1 landed the same day — the popover over links in the reading view and both editing modes, see [[#Page preview, step 1, 2026-11-11]]; step 2 the same day — the tab header and the Files, Bookmarks, Backlinks, Outgoing links and Outline rows, see [[#Page preview, step 2, 2026-11-11]]; step 3 the same day — nested popovers and the click that makes one an editor, see [[#Page preview, step 3, 2026-11-11]]; step 4 the same day — the Bases and Graph sources, the second-link timing and "Click to create", from a second probe pass, see [[#Page preview, step 4, 2026-11-11]] — done, bar the "Properties view" source, whose File properties view Scoria does not have |
 | Slash commands | done 2026-11-11: probed in a headless sway and built on the autocompletion popup, see [[#Slash commands, 2026-11-11]] and [[Specification#Observed Slash commands, Obsidian 1.15.0]] |
 
+### Window zoom, always on top and app reload, 2026-11-15
+
+The last ids a desktop clone can run. Five run now — `window:zoom-in`, `window:zoom-out`,
+`window:reset-zoom`, `window:toggle-always-on-top` and `app:reload` — and 210 of the 244 do;
+the other 34 are Obsidian's mobile, service or retired ids, each in the table below. See
+[[Specification#Observed app reload and the last unregistered ids, Obsidian 1.15.0]] and
+[[Specification#Window zoom]].
+
+**The probe.** `tools/obsidian-probe/commands-reload.mjs`, Obsidian 1.15.0 in a private headless
+sway with its own data directory (`USER_DATA_DIR`, `CDP_PORT=9357`) and Node's inspector on the
+main process for the menu. Three answers: the registry, read again on 1.15.0, has none of the
+caret, clipboard, undo, toolbar or `-duplicate` ids and no `markdown-importer` plugin, which
+settles the lead's question about them (they stay out, see below); the View menu's Zoom In / Zoom
+Out / Actual Size carry `Ctrl+=` / `Ctrl+-` / `Ctrl+0` and step exactly as the commands do; and
+`app:reload` keeps the layout, popouts, search query, zoom and font size, re-reads the config
+(a snippet enabled from outside took effect), and loses the caret, scroll, history and an edit
+made inside the autosave's two seconds. Trap: a data directory without `"updateDisabled": true`
+updates itself — the second run came up as 1.15.1, and was redone on 1.15.0. `run-block.sh` only
+writes that key on macOS.
+
+**The zoom.** gpui keeps a window's scale factor to itself, and Scoria paints in logical pixels,
+so the zoom goes one layer down: `crate::zoom::ZoomPlatform` wraps the platform `main.rs` starts
+gpui on, and each window it opens is a `ZoomWindow` that delegates everything but reports the
+display's scale × 1.2^level, a content size divided by the factor, and every pointer position
+(and pixel scroll delta, and drop position) divided by it on the way in — Chromium's
+`devicePixelRatio`, which is what Obsidian's zoom is. gpui then lays out a smaller logical window
+and rasterizes text and paths at the larger scale, so every surface zooms, sharp, with nothing
+in the views knowing. A step is `Window::bounds_changed`, which re-reads both. Half a level a
+press, −2.5 to +3, on the vault window wherever the command runs; the level is written to
+`window/<vault id>.json` under Scoria's configuration folder (`{"zoom":1}`, the key and name of
+Obsidian's window file, never Obsidian's folder) and read back when the vault opens.
+`secondary-=`, `secondary-shift-=`, `secondary--` and `secondary-0` run the commands as the
+menu's accelerators, bound in the Workspace context so a canvas or the graph keeps its own
+zoom keys. The client frame's resize edges now measure the window in the zoomed pixels
+(`zoom::window_size`). Left: the IME's caret rectangle is asked of gpui's private
+`PlatformInputHandler`, which the wrapper cannot reach, so a composition window opens off by the
+factor; popouts are never zoomed (a recorded popout `zoom` is still kept, not applied), and
+after a reload Obsidian's popout took the vault window's level, which Scoria's does not.
+
+**Always on top.** The wrapper also holds each window's native handle, so the call is the
+desktop's own: a `_NET_WM_STATE` client message adding or removing `_NET_WM_STATE_ABOVE` on X11
+(x11rb's pure-Rust connection), the window's level (`NSFloatingWindowLevel`) on macOS, and
+`SetWindowPos(HWND_TOPMOST)` on Windows. Offered only in a popout that is not maximized; nothing
+written. Wayland has no protocol for it, so there the command says "This desktop does not let a
+window keep itself on top". X11 was driven under Xvfb with openbox: six runs alternated
+`_NET_WM_STATE` between `_NET_WM_STATE_ABOVE` and empty on the popout, and the vault window was
+never touched. The first cut closed its connection straight after the flush, and about one
+message in three never reached openbox; the send is now checked, a round trip. The macOS and
+Windows calls compile only on their targets and have not been run.
+
+**App reload.** `reload_app` defers to the vault window (the groups it makes belong to that
+window), takes `layout_json`, drops the pending autosave and the note in hand, closes every group
+and popout through `forget_vault` (`leave_vault` less `on_quit`'s writes), clears the history and
+loads the vault again; `set_state` then rebuilds the command registry and keys and applies the
+kept layout instead of `workspace.json`. Driven headless: two groups and a history before, the
+same two groups and an empty history after, an `X` typed just before the command absent from
+the file and the view, and an `accentColor` written into `appearance.json` from outside drawn.
+That drive found an older fault: `set_system_dark` runs before the vault is read and so rebuilt
+nothing, and a light desktop opened Scoria dark until something reloaded the theme; `set_state`
+now rebuilds the theme every time.
+
+**Left out, and why.** The 34 ids that do not run:
+
+| Ids | Why |
+| --- | --- |
+| `editor:copy`, `editor:cut`, `editor:paste`, `editor:undo`, `editor:redo` | not registered on a desktop (1.15.0 registry); the mobile toolbar's. On a desktop these are the editor's own keys and the Edit menu's roles, which Scoria's editor already has |
+| `editor:go-start`, `editor:go-end`, `editor:move-caret-up`, `-down`, `-left`, `-right` | not registered on a desktop; the mobile toolbar's caret buttons |
+| `editor:configure-toolbar`, `editor:toggle-keyboard` | not registered on a desktop; the mobile toolbar and keyboard |
+| `mobile:quick-action` | registered on a desktop but its check never passes there: mobile only |
+| `app:show-tab-switcher` | not registered on a desktop (1.15.0, and the 2026-11-09 probe) |
+| `editor:table-row-duplicate`, `editor:table-col-duplicate` | not registered: 1.12's names for `editor:table-row-copy` and `-col-copy`, which run |
+| `markdown-importer:open` | not registered and no such internal plugin; the Format converter lives on only as `app:migrate-frontmatter`, which runs |
+| `publish:open-in-live-site`, `publish:publish-file`, `publish:view-changes` | Obsidian Publish, a paid service |
+| `sync:open-sync-log`, `sync:open-sync-view`, `sync:setup`, `sync:view-version-history` | Obsidian Sync, a paid service |
+| `webviewer:open`, `webviewer:search`, `webviewer:focus-address-bar`, `webviewer:open-history`, `webviewer:save-to-vault`, `webviewer:toggle-reader-mode`, `webviewer:zoom-in`, `webviewer:zoom-out`, `webviewer:zoom-reset` | the Web viewer needs a web engine, which Scoria does not have |
+
+**Tests.** `zoom::tests` (4): the factor table to four places, the half steps and both limits
+over 20 and 40 presses, the window file (another key kept, a whole level written as an integer,
+a hand-written 9 held to 3, nothing in the vault), and a pointer position shrunk by the factor.
+`the_observed_app_and_window_commands_are_runnable` now holds the five ids runnable and
+`app:show-tab-switcher` out. The gate: 70 test binaries, 1,689 passed, 694 in the app's bin.
+
 ### Slash commands, 2026-11-11
 
 The one core plugin Scoria had not built, and the one with no command id: probed first, then

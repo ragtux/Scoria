@@ -5577,6 +5577,8 @@ dependencies = [
  "image",
  "indexmap",
  "notify",
+ "objc2",
+ "raw-window-handle",
  "rayon",
  "regex",
  "scoria-audio",
@@ -5601,8 +5603,11 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
+ "smallvec",
  "tempfile",
  "ureq",
+ "windows 0.61.3",
+ "x11rb",
 ]
 
 [[package]]

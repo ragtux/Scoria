@@ -464,7 +464,7 @@ impl FoldStore {
 }
 
 /// Sixteen hex digits for a vault folder, the shape of the registry's ids.
-fn vault_id(root: &Path) -> String {
+pub(crate) fn vault_id(root: &Path) -> String {
     use std::hash::{Hash, Hasher};
     let mut h = std::collections::hash_map::DefaultHasher::new();
     root.hash(&mut h);

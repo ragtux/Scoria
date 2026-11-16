@@ -119,6 +119,16 @@ http_client = { git = "https://github.com/zed-industries/zed", rev = "4ce18741ad
 ureq = "3"
 # Already in the tree through gpui; the HTTP client hands its answer back over a oneshot.
 futures = "0.3"
+# Already in the tree through gpui. The window zoom wraps gpui's platform and
+# its windows (`crates/scoria/src/zoom.rs`), whose traits name these two; and
+# Toggle window always on top calls each desktop's own API through the native
+# handle: x11rb's pure-Rust connection on X11, objc2 on macOS, windows on
+# Windows, each the version gpui's own platform crates use.
+raw-window-handle = "0.6"
+smallvec = "1"
+x11rb = { version = "0.13", default-features = false }
+objc2 = "0.6"
+windows = { version = "0.61", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging"] }
 # Export to PDF writes its pages with krilla (MIT OR Apache-2.0): a pure Rust
 # PDF writer that embeds and subsets the fonts it is handed. `simple-text` is
 # off: `scoria-export` lays the pages out and hands krilla positioned glyphs.

@@ -47,6 +47,7 @@ use crate::theme::{
 use crate::tree;
 use crate::vaults::VaultManager;
 use crate::watch;
+use crate::zoom;
 use gpui::{
     actions, anchored, canvas, deferred, div, point, prelude::*, px, relative, rgb, rgba,
     transparent_black, Action, Anchor, App, Bounds, BoxShadow, ClickEvent, ClipboardItem, Context,
@@ -475,6 +476,11 @@ pub const RUNNABLE: &[&str] = &[
     "audio-recorder:stop",
     "workspace:export-pdf",
     "canvas:export-as-image",
+    "window:zoom-in",
+    "window:zoom-out",
+    "window:reset-zoom",
+    "window:toggle-always-on-top",
+    "app:reload",
 ];
 
 /// Binds every runnable command's hotkeys in the Workspace context, and the
@@ -493,6 +499,20 @@ pub fn bind_keys(cx: &mut App, registry: &CommandRegistry) {
         })
         .collect();
     cx.bind_keys(bindings);
+    // The window zoom's keys are not the commands' hotkeys (Obsidian
+    // 1.15.0 gives the three commands none) but its View menu's
+    // accelerators, Ctrl+= / Ctrl+- / Ctrl+0 (Cmd on macOS), whose items
+    // step the same half level within the same limits (2026-11-15 probe).
+    // Bound here, not in `hotkeys.json`'s table, so the Hotkeys tab shows
+    // the commands unbound, as Obsidian's does; a canvas or a graph keeps
+    // these keys for its own zoom.
+    let zoom = |key: &str, id: &str| KeyBinding::new(key, RunCommand { id: id.into() }, ctx);
+    cx.bind_keys([
+        zoom("secondary-=", "window:zoom-in"),
+        zoom("secondary-shift-=", "window:zoom-in"),
+        zoom("secondary--", "window:zoom-out"),
+        zoom("secondary-0", "window:reset-zoom"),
+    ]);
     // The Tags, All properties and Outline trees, while one has the
     // keyboard: the arrows walk and fold, Enter and Space do what a click
     // does. Home, End, Escape, F2 and Delete are not theirs (2026-11-04).
@@ -3070,13 +3090,13 @@ pub(crate) fn client_frame(
                             window.insert_hitbox(
                                 gpui::Bounds::new(
                                     point(px(0.), px(0.)),
-                                    window.window_bounds().get_bounds().size,
+                                    crate::zoom::window_size(window),
                                 ),
                                 HitboxBehavior::Normal,
                             )
                         },
                         move |_, hitbox, window, _| {
-                            let size = window.window_bounds().get_bounds().size;
+                            let size = crate::zoom::window_size(window);
                             let Some(edge) = resize_edge(window.mouse_position(), size, tiling)
                             else {
                                 return;
@@ -3101,7 +3121,7 @@ pub(crate) fn client_frame(
                 )
                 .on_mouse_move(|_, window, _| window.refresh())
                 .on_mouse_down(MouseButton::Left, move |e, window, _| {
-                    let size = window.window_bounds().get_bounds().size;
+                    let size = crate::zoom::window_size(window);
                     if let Some(edge) = resize_edge(e.position, size, tiling) {
                         window.start_window_resize(edge);
                     }
@@ -3536,6 +3556,13 @@ pub struct Workspace {
     /// The main window: where the groups of `layout_tree` are, and so
     /// where the keyboard goes when the active group is one of them.
     main_window: gpui::AnyWindowHandle,
+    /// The vault window's zoom level (see [[Specification#Window zoom]]):
+    /// what the three zoom commands step, applied by [`crate::zoom`] and
+    /// kept in Scoria's window file for the vault.
+    zoom_level: f32,
+    /// The layout `app:reload` took down, restored in place of
+    /// `workspace.json` once the vault has been read again.
+    reload_layout: Option<Value>,
     /// The popout whose groups are being drawn, while [`Workspace::render_popout`]
     /// runs; `None` while the main window renders. The group renderers
     /// read it for the tree their group is in.
@@ -4404,6 +4431,8 @@ impl Workspace {
             layout_tree: Layout::split(SplitDirection::Vertical, vec![Layout::Group(0)]),
             windows: Vec::new(),
             main_window: window.window_handle(),
+            zoom_level: 0.0,
+            reload_layout: None,
             rendering_window: None,
             next_group_id: 1,
             group_mru: vec![0],
@@ -4529,6 +4558,12 @@ impl Workspace {
             return;
         }
         self.on_quit(cx);
+        self.forget_vault(cx);
+    }
+
+    /// [`Self::leave_vault`] less the writes: every group and popout
+    /// closed and everything read from the vault dropped.
+    fn forget_vault(&mut self, cx: &mut Context<Self>) {
         let ids: Vec<u64> = self.groups.iter().map(|g| g.id).collect();
         for id in ids {
             self.close_group(id, false, cx);
@@ -4731,6 +4766,12 @@ impl Workspace {
         let state = Arc::new(state);
         self.state = Some(state.clone());
         self.embed_views.set_state(Some(state.clone()));
+        // The vault window comes back at the zoom it was left at.
+        let level = zoom::load_level(&state.root);
+        if level != self.zoom_level {
+            self.zoom_level = level;
+            self.apply_main_zoom(cx);
+        }
         if self.record_vault {
             let root = state.root.clone();
             self.remember_vault(&root, cx);
@@ -4741,7 +4782,18 @@ impl Workspace {
         self.apply_app_config(&state, cx);
         self.refresh_vault_views(cx);
         self.start_watching(&state, cx);
-        if let Some(current) = self.current.clone() {
+        // The theme from the vault's files and the desktop's scheme: the
+        // window opened on a theme read before it could say whether the
+        // desktop is dark, and `set_system_dark`, run before the vault was
+        // read, had no vault to rebuild it from.
+        self.reload_theme(cx);
+        if let Some(layout) = self.reload_layout.take() {
+            // A reload: the commands and keys from the files as they are
+            // now, and the layout as it was left.
+            self.rebuild_commands(&state, None, cx);
+            self.apply_layout(layout, &state, window, cx);
+            self.focus_main(window, cx);
+        } else if let Some(current) = self.current.clone() {
             self.open_file(current, None, cx);
         } else {
             self.restore_layout(&state, window, cx);
@@ -6628,6 +6680,26 @@ impl Workspace {
                 self.run_export_command(id, window, cx);
             }
             "app:show-release-notes" => self.show_release_notes(cx),
+            // Zoom in, Zoom out and Reset zoom: half a level a press between
+            // -2.5 and +3, on the vault window whichever window is active,
+            // as Obsidian 1.15.0's did (see [[Specification#Window zoom]]).
+            "app:reload" => self.reload_app(cx),
+            "window:zoom-in" => self.zoom_main(zoom::stepped(self.zoom_level, 1), cx),
+            "window:zoom-out" => self.zoom_main(zoom::stepped(self.zoom_level, -1), cx),
+            "window:reset-zoom" => self.zoom_main(0.0, cx),
+            // A popout's command only (`can_run`): that window above the
+            // others, a second run back. Nothing is written.
+            "window:toggle-always-on-top" => {
+                if self.can_run(id, window, cx) {
+                    let on = !zoom::always_on_top(window);
+                    if !zoom::set_always_on_top(window, on) {
+                        self.report(
+                            "This desktop does not let a window keep itself on top".to_string(),
+                            cx,
+                        );
+                    }
+                }
+            }
             _ => {
                 let name = self.command_name(id, cx);
                 self.report(format!("{name}: not available in Scoria yet"), cx);
@@ -6771,6 +6843,73 @@ impl Workspace {
     /// filter, the socket's `runnable` flag and the refusal in
     /// `run_command` -- ask the same question, so they cannot disagree
     /// about what is offered and what happens when it is chosen.
+    /// "Reload app without saving", once this update is over and in the
+    /// vault window (the groups it makes belong to that window): the vault,
+    /// its config, theme, snippets, hotkeys and core plugins read from disk
+    /// again, the layout put back as it stands, the open note's unsaved
+    /// edits dropped. What Obsidian 1.15.0's reload kept and lost is
+    /// [[Specification#Observed app reload, Obsidian 1.15.0]]: tabs, groups,
+    /// popouts, modes, the active tab, the docks and the search query stay;
+    /// the caret, the scroll and each tab's history go; the zoom and the
+    /// font size stay.
+    fn reload_app(&mut self, cx: &mut Context<Self>) {
+        if self.state.is_none() {
+            return;
+        }
+        let this = cx.entity();
+        let main = self.main_window;
+        cx.defer(move |cx| {
+            main.update(cx, |_, window, cx| {
+                this.update(cx, |ws, cx| ws.reload_now(window, cx))
+            })
+            .ok();
+        });
+    }
+
+    fn reload_now(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let layout = self.layout_json(cx);
+        // Without saving: the pending autosave is dropped, and with no
+        // note in hand the closing groups' `flush_save` writes nothing.
+        self.save_task = None;
+        self.current = None;
+        self.forget_vault(cx);
+        self.history.clear();
+        self.history_ix = 0;
+        self.reload_layout = Some(layout);
+        let record = self.record_vault;
+        self.load_vault_with(state.root.clone(), record, window, cx);
+    }
+
+    /// Sets the vault window's zoom level to `level`, records it in the
+    /// vault's window file and applies it.
+    fn zoom_main(&mut self, level: f32, cx: &mut Context<Self>) {
+        if level == self.zoom_level {
+            return;
+        }
+        self.zoom_level = level;
+        if let Some(state) = &self.state {
+            zoom::save_level(&state.root, level);
+        }
+        self.apply_main_zoom(cx);
+    }
+
+    /// Applies [`Self::zoom_level`] to the vault window, after this
+    /// update: the command may have run in a popout, and the vault window's
+    /// root is this workspace, which is being updated.
+    fn apply_main_zoom(&self, cx: &mut Context<Self>) {
+        let main = self.main_window;
+        let level = self.zoom_level;
+        cx.defer(move |cx| {
+            main.update(cx, |_, window, cx| {
+                zoom::set_level(window, cx, level);
+            })
+            .ok();
+        });
+    }
+
     pub fn can_run(&self, id: &str, window: &Window, cx: &App) -> bool {
         if !RUNNABLE.contains(&id) {
             return false;
@@ -6815,6 +6954,12 @@ impl Workspace {
         }
         if id == "audio-recorder:stop" {
             return self.is_recording();
+        }
+        // "Toggle window always on top" is a check callback offered in a
+        // popout that is not maximized, never in the vault window.
+        if id == "window:toggle-always-on-top" {
+            return window.window_handle().downcast::<PopoutWindow>().is_some()
+                && !window.is_maximized();
         }
         if id == "slides:start" {
             return self.active_note_is_markdown();
@@ -20755,10 +20900,13 @@ mod tests {
             "window:zoom-out",
             "window:reset-zoom",
             "window:toggle-always-on-top",
-            "app:show-tab-switcher",
+            "app:reload",
         ] {
-            assert!(!RUNNABLE.contains(&id), "{id} is left unrunnable");
+            assert!(RUNNABLE.contains(&id), "{id} runnable");
+            assert!(known.contains(&id), "{id} is Obsidian's");
         }
+        // Not registered on a desktop (2026-11-15 probe).
+        assert!(!RUNNABLE.contains(&"app:show-tab-switcher"));
         for id in ACTIVE_FILE_ONLY {
             assert!(RUNNABLE.contains(id), "{id} runnable");
         }

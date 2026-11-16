@@ -184,8 +184,10 @@ in `hotkeys.json`. Several are worth binding on day one: `editor:toggle-source`,
 | Properties view: Show all properties | `properties:open` |
 | Properties view: Show file properties | `properties:open-local` |
 | Random note: Open random note | `random-note` |
+| Reload app without saving | `app:reload` |
 | Remove heading | `editor:set-heading-0` |
 | Rename this heading... | `editor:rename-heading` |
+| Reset zoom | `window:reset-zoom` |
 | Set as heading 1 | `editor:set-heading-1` |
 | Set as heading 2 | `editor:set-heading-2` |
 | Set as heading 3 | `editor:set-heading-3` |
@@ -245,6 +247,7 @@ in `hotkeys.json`. Several are worth binding on day one: `editor:toggle-source`,
 | Toggle spellcheck | `editor:toggle-spellcheck` |
 | Toggle stacked tabs | `workspace:toggle-stacked-tabs` |
 | Toggle strikethrough | `editor:toggle-strikethrough` |
+| Toggle window always on top | `window:toggle-always-on-top` |
 | Toggle yellow highlight | `editor:toggle-highlight-yellow` |
 | Unfold all headings and lists | `editor:unfold-all` |
 | Unindent list item | `editor:unindent-list` |
@@ -254,6 +257,8 @@ in `hotkeys.json`. Several are worth binding on day one: `editor:toggle-source`,
 | Workspaces: Manage workspace layouts | `workspaces:open-modal` |
 | Workspaces: Save and load another layout | `workspaces:save-and-load` |
 | Workspaces: Save layout | `workspaces:save` |
+| Zoom in | `window:zoom-in` |
+| Zoom out | `window:zoom-out` |
 
 ## Keys that are not commands
 
@@ -268,21 +273,22 @@ A few keys belong to a widget rather than to the command registry, and are not r
 | `Alt + Enter` | The find panel | *Find all* — a cursor at every match |
 | `Alt + click` | The editor | Add or remove a cursor |
 | `Ctrl + click` | Source mode | Follow a link |
+| `Ctrl + =`, `Ctrl + -`, `Ctrl + 0` | Anywhere but a canvas or the graph | Zoom in, zoom out and reset the zoom (the three commands; Obsidian's View menu keys) |
 | `Ctrl + 0` | The graph | Refit the view |
 
 ## The ones that do not run
 
-39 of the 244 ids do nothing in Scoria yet, and the palette does not offer them:
+34 of the 244 ids do nothing in Scoria, and the palette does not offer them:
 
-- **Not registered on desktop** — 17 ids with no desktop name, which Obsidian itself does not
-  offer there: the caret, clipboard and undo ids (`editor:go-start`, `editor:copy`,
-  `editor:undo` and their kin), the mobile toolbar's, `app:show-tab-switcher`,
+- **Not registered on desktop** — 17 ids Obsidian 1.15.0 itself does not register on a
+  desktop: the caret, clipboard and undo ids (`editor:go-start`, `editor:copy`,
+  `editor:undo` and their kin), the mobile toolbar's two, `app:show-tab-switcher`,
   `markdown-importer:open`, and the 1.12.7 `editor:table-row-duplicate` and
-  `editor:table-col-duplicate`, which became the `-copy` commands that do run.
-- **Services Scoria does not have** — Sync, Publish, the Web viewer and the mobile Quick
-  Action, and `app:reload`, which has no renderer to reload.
-- **Waiting on the toolkit** — `window:zoom-in`, `window:zoom-out`, `window:reset-zoom` and
-  `window:toggle-always-on-top`.
+  `editor:table-col-duplicate`, which became the `-copy` commands that do run. On a desktop
+  the clipboard, undo and caret keys belong to the editor, not to commands.
+- **Mobile only** — `mobile:quick-action`, which Obsidian registers on a desktop but never
+  offers there.
+- **Services Scoria does not have** — Sync, Publish and the Web viewer.
 
 ## The full id list
 
