@@ -1,0 +1,6266 @@
+{
+ "fixtures": {
+  "startedAt": "2026-11-16T14:54:04.763Z",
+  "steps": {},
+  "order": [],
+  "elapsedMs": 2
+ },
+ "run": {
+  "startedAt": "2026-11-16T14:54:09.333Z",
+  "steps": {
+   "s00-context": {
+    "ok": true,
+    "ms": 18,
+    "version": {
+     "title": "New tab - vault - Obsidian 1.15.1",
+     "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+     "win": [
+      1600,
+      1000
+     ],
+     "dpr": 1
+    }
+   },
+   "s01-shadow-tab": {
+    "ok": true,
+    "ms": 3106,
+    "open": {
+     "file": "long.mp3",
+     "type": "audio",
+     "state": {
+      "file": "long.mp3"
+     }
+    },
+    "audio": {
+     "rect": [
+      56,
+      90.4,
+      1532,
+      42
+     ],
+     "st": {
+      "paused": true,
+      "t": 0,
+      "volume": 1,
+      "muted": false,
+      "rate": 1,
+      "pitch": true,
+      "connected": true
+     },
+     "attrs": [
+      [
+       "controls",
+       ""
+      ],
+      [
+       "controlslist",
+       "nodownload"
+      ],
+      [
+       "src",
+       "app://9a7acc3b723938537f8e784b2035e0990d59/tmp/claude-1000/-"
+      ]
+     ]
+    },
+    "tree": [
+     {
+      "depth": 0,
+      "tag": "audio",
+      "attrs": {
+       "controls": "",
+       "controlslist": "nodownload",
+       "src": "app://9a7acc3b723938537f8e784b2035e0990d59/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/892bde44-e469-45b7-ae54-7ac59f66638d/scratchpad/audio-extras/vault/long.mp3?1794840661866"
+      },
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "styles": {
+       "color": "rgb(218, 218, 218)",
+       "font-size": "15px",
+       "accent-color": "auto",
+       "background-color": "rgba(0, 0, 0, 0)",
+       "cursor": "auto",
+       "display": "inline",
+       "height": "42px",
+       "opacity": "1",
+       "visibility": "visible",
+       "width": "1532px"
+      }
+     },
+     {
+      "depth": 2,
+      "tag": "div",
+      "pseudo": "-webkit-media-controls",
+      "cls": "phase-ready state-stopped",
+      "attrs": {
+       "pseudo": "-webkit-media-controls",
+       "class": "phase-ready state-stopped"
+      },
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "styles": {
+       "color": "rgb(0, 0, 0)",
+       "font-size": "14px",
+       "accent-color": "auto",
+       "background-color": "rgba(0, 0, 0, 0)",
+       "cursor": "auto",
+       "display": "flex",
+       "height": "42px",
+       "opacity": "1",
+       "visibility": "visible",
+       "width": "1532px"
+      }
+     },
+     {
+      "depth": 3,
+      "tag": "div",
+      "pseudo": "-webkit-media-controls-overlay-enclosure",
+      "attrs": {
+       "pseudo": "-webkit-media-controls-overlay-enclosure"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 4,
+      "tag": "input",
+      "pseudo": "-internal-media-controls-overlay-cast-button",
+      "aria": "play on remote device",
+      "type": "button",
+      "attrs": {
+       "pseudo": "-internal-media-controls-overlay-cast-button",
+       "type": "button",
+       "aria-label": "play on remote device",
+       "style": "display: none;"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 3,
+      "tag": "div",
+      "pseudo": "-webkit-media-controls-enclosure",
+      "attrs": {
+       "pseudo": "-webkit-media-controls-enclosure"
+      },
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "styles": {
+       "color": "rgb(0, 0, 0)",
+       "font-size": "14px",
+       "accent-color": "auto",
+       "background-color": "rgb(35, 35, 35)",
+       "cursor": "auto",
+       "display": "flex",
+       "height": "42px",
+       "opacity": "1",
+       "visibility": "visible",
+       "width": "1532px"
+      }
+     },
+     {
+      "depth": 4,
+      "tag": "div",
+      "pseudo": "-webkit-media-controls-panel",
+      "attrs": {
+       "pseudo": "-webkit-media-controls-panel"
+      },
+      "box": [
+       57,
+       91.359375,
+       1530,
+       40
+      ],
+      "styles": {
+       "color": "rgb(0, 0, 0)",
+       "font-size": "12px",
+       "accent-color": "auto",
+       "background-color": "rgba(0, 0, 0, 0)",
+       "cursor": "auto",
+       "display": "flex",
+       "height": "40px",
+       "opacity": "1",
+       "visibility": "visible",
+       "width": "1510px"
+      }
+     },
+     {
+      "depth": 5,
+      "tag": "input",
+      "pseudo": "-webkit-media-controls-play-button",
+      "aria": "play",
+      "type": "button",
+      "cls": "pause",
+      "attrs": {
+       "type": "button",
+       "pseudo": "-webkit-media-controls-play-button",
+       "aria-label": "play",
+       "class": "pause",
+       "style": ""
+      },
+      "box": [
+       67,
+       95.359375,
+       32,
+       32
+      ],
+      "styles": {
+       "color": "rgb(0, 0, 0)",
+       "font-size": "13.3333px",
+       "accent-color": "auto",
+       "background-color": "rgba(0, 0, 0, 0)",
+       "cursor": "pointer",
+       "display": "block",
+       "height": "32px",
+       "opacity": "1",
+       "visibility": "visible",
+       "width": "32px"
+      }
+     },
+     {
+      "depth": 7,
+      "tag": "div",
+      "pseudo": "-internal-media-controls-button-hover-background",
+      "attrs": {
+       "pseudo": "-internal-media-controls-button-hover-background"
+      },
+      "box": [
+       67,
+       95.359375,
+       32,
+       32
+      ],
+      "styles": {
+       "color": "rgb(0, 0, 0)",
+       "font-size": "13.3333px",
+       "accent-color": "auto",
+       "background-color": "rgba(32, 33, 36, 0)",
+       "cursor": "pointer",
+       "display": "block",
+       "height": "32px",
+       "opacity": "1",
+       "visibility": "visible",
+       "width": "32px"
+      }
+     },
+     {
+      "depth": 5,
+      "tag": "div",
+      "pseudo": "-webkit-media-controls-current-time-display",
+      "attrs": {
+       "aria-hidden": "true",
+       "pseudo": "-webkit-media-controls-current-time-display",
+       "style": ""
+      },
+      "text": "0:00",
+      "box": [
+       104,
+       102.265625,
+       27.8,
+       18.2
+      ],
+      "styles": {
+       "color": "rgb(255, 255, 255)",
+       "font-size": "14px",
+       "accent-color": "auto",
+       "background-color": "rgba(0, 0, 0, 0)",
+       "cursor": "auto",
+       "display": "block",
+       "height": "18.1875px",
+       "opacity": "0.87",
+       "visibility": "visible",
+       "width": "27.7812px"
+      }
+     },
+     {
+      "depth": 5,
+      "tag": "div",
+      "pseudo": "-webkit-media-controls-time-remaining-display",
+      "attrs": {
+       "aria-hidden": "true",
+       "pseudo": "-webkit-media-controls-time-remaining-display",
+       "style": ""
+      },
+      "text": "/ 1:00",
+      "box": [
+       135.78125,
+       102.265625,
+       36.6,
+       18.2
+      ],
+      "styles": {
+       "color": "rgb(255, 255, 255)",
+       "font-size": "14px",
+       "accent-color": "auto",
+       "background-color": "rgba(0, 0, 0, 0)",
+       "cursor": "auto",
+       "display": "block",
+       "height": "18.1875px",
+       "opacity": "0.87",
+       "visibility": "visible",
+       "width": "36.625px"
+      }
+     },
+     {
+      "depth": 5,
+      "tag": "input",
+      "pseudo": "-webkit-media-controls-timeline",
+      "aria": "audio time scrubber",
+      "type": "range",
+      "attrs": {
+       "type": "range",
+       "step": "any",
+       "pseudo": "-webkit-media-controls-timeline",
+       "max": "60",
+       "min": "0",
+       "aria-label": "audio time scrubber",
+       "aria-valuetext": "elapsed time: 0:00",
+       "aria-description": "total time: 1:00"
+      },
+      "box": [
+       172.40625,
+       95.359375,
+       1340.6,
+       32
+      ],
+      "styles": {
+       "color": "rgb(157, 150, 142)",
+       "font-size": "13.3333px",
+       "accent-color": "auto",
+       "background-color": "rgba(0, 0, 0, 0)",
+       "cursor": "pointer",
+       "display": "block",
+       "height": "4px",
+       "opacity": "1",
+       "visibility": "visible",
+       "width": "1308.59px"
+      }
+     },
+     {
+      "depth": 7,
+      "tag": "div",
+      "attrs": {},
+      "box": [
+       188.40625,
+       109.359375,
+       1308.6,
+       4
+      ],
+      "styles": {
+       "color": "rgb(157, 150, 142)",
+       "font-size": "13.3333px",
+       "accent-color": "auto",
+       "background-color": "rgba(0, 0, 0, 0)",
+       "cursor": "pointer",
+       "display": "flex",
+       "height": "4px",
+       "opacity": "1",
+       "visibility": "visible",
+       "width": "1308.59px"
+      }
+     },
+     {
+      "depth": 8,
+      "tag": "div",
+      "pseudo": "-internal-media-controls-segmented-track",
+      "id": "track",
+      "attrs": {
+       "pseudo": "-internal-media-controls-segmented-track",
+       "id": "track"
+      },
+      "box": [
+       188.40625,
+       109.359375,
+       1308.6,
+       4
+      ],
+      "styles": {
+       "color": "rgb(157, 150, 142)",
+       "font-size": "13.3333px",
+       "accent-color": "auto",
+       "background-color": "rgba(255, 255, 255, 0.2)",
+       "cursor": "pointer",
+       "display": "block",
+       "height": "4px",
+       "opacity": "1",
+       "visibility": "visible",
+       "width": "1308.59px"
+      }
+     },
+     {
+      "depth": 9,
+      "tag": "div",
+      "id": "thumb",
+      "attrs": {
+       "id": "thumb"
+      },
+      "box": [
+       188.40625,
+       105.359375,
+       12,
+       12
+      ],
+      "styles": {
+       "color": "rgb(157, 150, 142)",
+       "font-size": "13.3333px",
+       "accent-color": "auto",
+       "background-color": "rgba(255, 255, 255, 0.87)",
+       "cursor": "pointer",
+       "display": "block",
+       "height": "12px",
+       "opacity": "0",
+       "visibility": "visible",
+       "width": "12px"
+      }
+     },
+     {
+      "depth": 9,
+      "tag": "div",
+      "pseudo": "-internal-track-segment-background",
+      "attrs": {
+       "pseudo": "-internal-track-segment-background"
+      },
+      "box": [
+       188.40625,
+       109.359375,
+       1308.6,
+       4
+      ],
+      "styles": {
+       "color": "rgb(157, 150, 142)",
+       "font-size": "13.3333px",
+       "accent-color": "auto",
+       "background-color": "rgba(0, 0, 0, 0)",
+       "cursor": "pointer",
+       "display": "block",
+       "height": "4px",
+       "opacity": "1",
+       "visibility": "visible",
+       "width": "1308.59px"
+      }
+     },
+     {
+      "depth": 10,
+      "tag": "div",
+      "pseudo": "-internal-track-segment-highlight-before",
+      "attrs": {
+       "pseudo": "-internal-track-segment-highlight-before"
+      },
+      "box": [
+       188.40625,
+       109.359375,
+       0,
+       4
+      ],
+      "styles": {
+       "color": "rgb(157, 150, 142)",
+       "font-size": "13.3333px",
+       "accent-color": "auto",
+       "background-color": "rgba(255, 255, 255, 0.87)",
+       "cursor": "pointer",
+       "display": "block",
+       "height": "4px",
+       "opacity": "1",
+       "visibility": "visible",
+       "width": "0px"
+      }
+     },
+     {
+      "depth": 10,
+      "tag": "div",
+      "pseudo": "-internal-track-segment-highlight-after",
+      "attrs": {
+       "pseudo": "-internal-track-segment-highlight-after",
+       "style": "width: 1309px; left: 0px;"
+      },
+      "box": [
+       188.40625,
+       109.359375,
+       1309,
+       4
+      ],
+      "styles": {
+       "color": "rgb(157, 150, 142)",
+       "font-size": "13.3333px",
+       "accent-color": "auto",
+       "background-color": "rgba(255, 255, 255, 0.54)",
+       "cursor": "pointer",
+       "display": "block",
+       "height": "4px",
+       "opacity": "1",
+       "visibility": "visible",
+       "width": "1309px"
+      }
+     },
+     {
+      "depth": 5,
+      "tag": "div",
+      "pseudo": "-webkit-media-controls-volume-control-container",
+      "cls": "closed",
+      "attrs": {
+       "pseudo": "-webkit-media-controls-volume-control-container",
+       "class": "closed",
+       "style": ""
+      },
+      "box": [
+       1513,
+       95.359375,
+       32,
+       32
+      ],
+      "styles": {
+       "color": "rgb(0, 0, 0)",
+       "font-size": "12px",
+       "accent-color": "auto",
+       "background-color": "rgba(0, 0, 0, 0)",
+       "cursor": "auto",
+       "display": "flex",
+       "height": "32px",
+       "opacity": "1",
+       "visibility": "visible",
+       "width": "32px"
+      }
+     },
+     {
+      "depth": 6,
+      "tag": "div",
+      "pseudo": "-webkit-media-controls-volume-control-hover-background",
+      "attrs": {
+       "pseudo": "-webkit-media-controls-volume-control-hover-background"
+      },
+      "box": [
+       1509,
+       95.359375,
+       36,
+       32
+      ],
+      "styles": {
+       "color": "rgb(0, 0, 0)",
+       "font-size": "12px",
+       "accent-color": "auto",
+       "background-color": "rgb(32, 33, 36)",
+       "cursor": "auto",
+       "display": "block",
+       "height": "32px",
+       "opacity": "0",
+       "visibility": "visible",
+       "width": "36px"
+      }
+     },
+     {
+      "depth": 6,
+      "tag": "input",
+      "pseudo": "-webkit-media-controls-volume-slider",
+      "aria": "volume",
+      "type": "range",
+      "cls": "closed",
+      "attrs": {
+       "type": "range",
+       "step": "any",
+       "max": "1",
+       "aria-valuemax": "100",
+       "aria-valuemin": "0",
+       "aria-label": "volume",
+       "pseudo": "-webkit-media-controls-volume-slider",
+       "aria-valuenow": "100",
+       "class": "closed",
+       "style": ""
+      },
+      "box": [
+       1513,
+       95.359375,
+       0,
+       32
+      ],
+      "styles": {
+       "color": "rgb(157, 150, 142)",
+       "font-size": "13.3333px",
+       "accent-color": "auto",
+       "background-color": "rgba(0, 0, 0, 0)",
+       "cursor": "pointer",
+       "display": "block",
+       "height": "4px",
+       "opacity": "0",
+       "visibility": "visible",
+       "width": "0px"
+      }
+     },
+     {
+      "depth": 8,
+      "tag": "div",
+      "attrs": {},
+      "box": [
+       1513,
+       109.359375,
+       0,
+       4
+      ],
+      "styles": {
+       "color": "rgb(157, 150, 142)",
+       "font-size": "13.3333px",
+       "accent-color": "auto",
+       "background-color": "rgba(0, 0, 0, 0)",
+       "cursor": "pointer",
+       "display": "flex",
+       "height": "4px",
+       "opacity": "1",
+       "visibility": "visible",
+       "width": "0px"
+      }
+     },
+     {
+      "depth": 9,
+      "tag": "div",
+      "pseudo": "-internal-media-controls-segmented-track",
+      "id": "track",
+      "attrs": {
+       "pseudo": "-internal-media-controls-segmented-track",
+       "id": "track"
+      },
+      "box": [
+       1513,
+       109.359375,
+       12,
+       4
+      ],
+      "styles": {
+       "color": "rgb(157, 150, 142)",
+       "font-size": "13.3333px",
+       "accent-color": "auto",
+       "background-color": "rgba(255, 255, 255, 0.2)",
+       "cursor": "pointer",
+       "display": "block",
+       "height": "4px",
+       "opacity": "1",
+       "visibility": "visible",
+       "width": "12px"
+      }
+     },
+     {
+      "depth": 10,
+      "tag": "div",
+      "id": "thumb",
+      "attrs": {
+       "id": "thumb"
+      },
+      "box": [
+       1513,
+       105.359375,
+       12,
+       12
+      ],
+      "styles": {
+       "color": "rgb(157, 150, 142)",
+       "font-size": "13.3333px",
+       "accent-color": "auto",
+       "background-color": "rgba(255, 255, 255, 0.87)",
+       "cursor": "pointer",
+       "display": "block",
+       "height": "12px",
+       "opacity": "0",
+       "visibility": "visible",
+       "width": "12px"
+      }
+     },
+     {
+      "depth": 10,
+      "tag": "div",
+      "pseudo": "-internal-track-segment-background",
+      "attrs": {
+       "pseudo": "-internal-track-segment-background"
+      },
+      "box": [
+       1513,
+       109.359375,
+       12,
+       4
+      ],
+      "styles": {
+       "color": "rgb(157, 150, 142)",
+       "font-size": "13.3333px",
+       "accent-color": "auto",
+       "background-color": "rgba(0, 0, 0, 0)",
+       "cursor": "pointer",
+       "display": "block",
+       "height": "4px",
+       "opacity": "1",
+       "visibility": "visible",
+       "width": "12px"
+      }
+     },
+     {
+      "depth": 11,
+      "tag": "div",
+      "pseudo": "-internal-track-segment-highlight-before",
+      "attrs": {
+       "pseudo": "-internal-track-segment-highlight-before"
+      },
+      "box": [
+       1513,
+       109.359375,
+       0,
+       4
+      ],
+      "styles": {
+       "color": "rgb(157, 150, 142)",
+       "font-size": "13.3333px",
+       "accent-color": "auto",
+       "background-color": "rgba(255, 255, 255, 0.87)",
+       "cursor": "pointer",
+       "display": "block",
+       "height": "4px",
+       "opacity": "1",
+       "visibility": "visible",
+       "width": "0px"
+      }
+     },
+     {
+      "depth": 11,
+      "tag": "div",
+      "pseudo": "-internal-track-segment-highlight-after",
+      "attrs": {
+       "pseudo": "-internal-track-segment-highlight-after",
+       "style": "width: 12px; left: 0px;"
+      },
+      "box": [
+       1513,
+       109.359375,
+       12,
+       4
+      ],
+      "styles": {
+       "color": "rgb(157, 150, 142)",
+       "font-size": "13.3333px",
+       "accent-color": "auto",
+       "background-color": "rgba(255, 255, 255, 0.54)",
+       "cursor": "pointer",
+       "display": "block",
+       "height": "4px",
+       "opacity": "1",
+       "visibility": "visible",
+       "width": "12px"
+      }
+     },
+     {
+      "depth": 6,
+      "tag": "input",
+      "pseudo": "-webkit-media-controls-mute-button",
+      "aria": "mute",
+      "type": "button",
+      "attrs": {
+       "type": "button",
+       "pseudo": "-webkit-media-controls-mute-button",
+       "aria-label": "mute",
+       "style": ""
+      },
+      "box": [
+       1513,
+       95.359375,
+       32,
+       32
+      ],
+      "styles": {
+       "color": "rgb(0, 0, 0)",
+       "font-size": "13.3333px",
+       "accent-color": "auto",
+       "background-color": "rgba(0, 0, 0, 0)",
+       "cursor": "pointer",
+       "display": "block",
+       "height": "32px",
+       "opacity": "1",
+       "visibility": "visible",
+       "width": "32px"
+      }
+     },
+     {
+      "depth": 5,
+      "tag": "input",
+      "pseudo": "-webkit-media-controls-fullscreen-button",
+      "aria": "enter full screen",
+      "type": "button",
+      "attrs": {
+       "type": "button",
+       "pseudo": "-webkit-media-controls-fullscreen-button",
+       "aria-label": "enter full screen",
+       "style": "display: none;"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 7,
+      "tag": "div",
+      "pseudo": "-internal-media-controls-button-hover-background",
+      "attrs": {
+       "pseudo": "-internal-media-controls-button-hover-background"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 5,
+      "tag": "input",
+      "pseudo": "-internal-media-controls-overflow-button",
+      "aria": "show more media controls",
+      "type": "button",
+      "attrs": {
+       "type": "button",
+       "aria-label": "show more media controls",
+       "title": "more options",
+       "aria-haspopup": "menu",
+       "pseudo": "-internal-media-controls-overflow-button",
+       "style": ""
+      },
+      "box": [
+       1545,
+       95.359375,
+       32,
+       32
+      ],
+      "styles": {
+       "color": "rgb(0, 0, 0)",
+       "font-size": "13.3333px",
+       "accent-color": "auto",
+       "background-color": "rgba(0, 0, 0, 0)",
+       "cursor": "pointer",
+       "display": "block",
+       "height": "32px",
+       "opacity": "1",
+       "visibility": "visible",
+       "width": "32px"
+      }
+     },
+     {
+      "depth": 7,
+      "tag": "div",
+      "pseudo": "-internal-media-controls-button-hover-background",
+      "attrs": {
+       "pseudo": "-internal-media-controls-button-hover-background"
+      },
+      "box": [
+       1545,
+       95.359375,
+       32,
+       32
+      ],
+      "styles": {
+       "color": "rgb(0, 0, 0)",
+       "font-size": "13.3333px",
+       "accent-color": "auto",
+       "background-color": "rgba(32, 33, 36, 0)",
+       "cursor": "pointer",
+       "display": "block",
+       "height": "32px",
+       "opacity": "1",
+       "visibility": "visible",
+       "width": "32px"
+      }
+     },
+     {
+      "depth": 3,
+      "tag": "div",
+      "pseudo": "-internal-media-controls-text-track-list",
+      "aria": "Options",
+      "role": "menu",
+      "attrs": {
+       "tabindex": "0",
+       "popover": "auto",
+       "role": "menu",
+       "aria-label": "Options",
+       "pseudo": "-internal-media-controls-text-track-list",
+       "style": "display: none;"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 3,
+      "tag": "div",
+      "pseudo": "-internal-media-controls-playback-speed-list",
+      "aria": "Options",
+      "role": "menu",
+      "attrs": {
+       "tabindex": "0",
+       "popover": "auto",
+       "role": "menu",
+       "aria-label": "Options",
+       "pseudo": "-internal-media-controls-playback-speed-list",
+       "style": "display: none;"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 3,
+      "tag": "div",
+      "pseudo": "-internal-media-controls-video-track-selection-list",
+      "aria": "Options",
+      "role": "menu",
+      "attrs": {
+       "tabindex": "0",
+       "popover": "auto",
+       "role": "menu",
+       "aria-label": "Options",
+       "pseudo": "-internal-media-controls-video-track-selection-list",
+       "style": "display: none;"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 3,
+      "tag": "div",
+      "pseudo": "-internal-media-controls-audio-track-selection-list",
+      "aria": "Options",
+      "role": "menu",
+      "attrs": {
+       "tabindex": "0",
+       "popover": "auto",
+       "role": "menu",
+       "aria-label": "Options",
+       "pseudo": "-internal-media-controls-audio-track-selection-list",
+       "style": "display: none;"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 3,
+      "tag": "div",
+      "pseudo": "-internal-media-controls-overflow-menu-list",
+      "role": "menu",
+      "cls": "closed",
+      "attrs": {
+       "tabindex": "0",
+       "popover": "auto",
+       "pseudo": "-internal-media-controls-overflow-menu-list",
+       "role": "menu",
+       "class": "closed",
+       "style": "display: none;"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 4,
+      "tag": "label",
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "aria": "Play",
+      "role": "menuitem",
+      "cls": "animated-1",
+      "attrs": {
+       "pseudo": "-internal-media-controls-overflow-menu-list-item",
+       "role": "menuitem",
+       "tabindex": "0",
+       "aria-label": "Play",
+       "class": "animated-1",
+       "style": "display: none;"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 5,
+      "tag": "input",
+      "pseudo": "-webkit-media-controls-play-button",
+      "aria": "play",
+      "type": "button",
+      "cls": "pause",
+      "attrs": {
+       "type": "button",
+       "pseudo": "-webkit-media-controls-play-button",
+       "tabindex": "-1",
+       "aria-hidden": "true",
+       "aria-label": "play",
+       "class": "pause",
+       "style": "display: none;"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 5,
+      "tag": "div",
+      "attrs": {
+       "aria-hidden": "true"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 6,
+      "tag": "span",
+      "attrs": {},
+      "text": "Play",
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 4,
+      "tag": "label",
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "aria": "enter full screen",
+      "role": "menuitem",
+      "attrs": {
+       "pseudo": "-internal-media-controls-overflow-menu-list-item",
+       "role": "menuitem",
+       "tabindex": "0",
+       "aria-label": "enter full screen",
+       "style": "display: none;"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 5,
+      "tag": "input",
+      "pseudo": "-webkit-media-controls-fullscreen-button",
+      "aria": "enter full screen",
+      "type": "button",
+      "attrs": {
+       "type": "button",
+       "pseudo": "-webkit-media-controls-fullscreen-button",
+       "aria-label": "enter full screen",
+       "tabindex": "-1",
+       "aria-hidden": "true",
+       "style": "display: none;"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 5,
+      "tag": "div",
+      "attrs": {
+       "aria-hidden": "true"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 6,
+      "tag": "span",
+      "attrs": {},
+      "text": "Fullscreen",
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 4,
+      "tag": "label",
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "aria": "download media",
+      "role": "menuitem",
+      "attrs": {
+       "pseudo": "-internal-media-controls-overflow-menu-list-item",
+       "role": "menuitem",
+       "tabindex": "0",
+       "aria-label": "download media",
+       "style": "display: none;"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 5,
+      "tag": "input",
+      "pseudo": "-internal-media-controls-download-button",
+      "aria": "download media",
+      "type": "button",
+      "attrs": {
+       "type": "button",
+       "aria-label": "download media",
+       "pseudo": "-internal-media-controls-download-button",
+       "tabindex": "-1",
+       "aria-hidden": "true",
+       "style": "display: none;"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 5,
+      "tag": "div",
+      "attrs": {
+       "aria-hidden": "true"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 6,
+      "tag": "span",
+      "attrs": {},
+      "text": "Download",
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 4,
+      "tag": "label",
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "aria": "Mute",
+      "role": "menuitem",
+      "cls": "animated-3",
+      "attrs": {
+       "pseudo": "-internal-media-controls-overflow-menu-list-item",
+       "role": "menuitem",
+       "tabindex": "0",
+       "aria-label": "Mute",
+       "class": "animated-3",
+       "style": "display: none;"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 5,
+      "tag": "input",
+      "pseudo": "-webkit-media-controls-mute-button",
+      "aria": "mute",
+      "type": "button",
+      "attrs": {
+       "type": "button",
+       "pseudo": "-webkit-media-controls-mute-button",
+       "tabindex": "-1",
+       "aria-hidden": "true",
+       "aria-label": "mute",
+       "style": "display: none;"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 5,
+      "tag": "div",
+      "attrs": {
+       "aria-hidden": "true"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 6,
+      "tag": "span",
+      "attrs": {},
+      "text": "Mute",
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 4,
+      "tag": "label",
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "aria": "play on remote device",
+      "role": "menuitem",
+      "cls": "animated-2",
+      "attrs": {
+       "pseudo": "-internal-media-controls-overflow-menu-list-item",
+       "role": "menuitem",
+       "tabindex": "0",
+       "aria-label": "play on remote device",
+       "class": "animated-2",
+       "style": "display: none;"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 5,
+      "tag": "input",
+      "pseudo": "-internal-media-controls-cast-button",
+      "aria": "play on remote device",
+      "type": "button",
+      "attrs": {
+       "pseudo": "-internal-media-controls-cast-button",
+       "type": "button",
+       "aria-label": "play on remote device",
+       "tabindex": "-1",
+       "aria-hidden": "true",
+       "style": "display: none;"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 5,
+      "tag": "div",
+      "attrs": {
+       "aria-hidden": "true"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 6,
+      "tag": "span",
+      "attrs": {},
+      "text": "Cast",
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 4,
+      "tag": "label",
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "aria": "show closed captions menu",
+      "role": "menuitem",
+      "cls": "animated-1",
+      "attrs": {
+       "pseudo": "-internal-media-controls-overflow-menu-list-item",
+       "role": "menuitem",
+       "tabindex": "0",
+       "aria-label": "show closed captions menu",
+       "class": "animated-1",
+       "style": "display: none;"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 5,
+      "tag": "input",
+      "pseudo": "-webkit-media-controls-toggle-closed-captions-button",
+      "aria": "show closed captions menu",
+      "type": "button",
+      "cls": "closed-captions",
+      "attrs": {
+       "aria-label": "show closed captions menu",
+       "type": "button",
+       "pseudo": "-webkit-media-controls-toggle-closed-captions-button",
+       "class": "closed-captions",
+       "tabindex": "-1",
+       "aria-hidden": "true",
+       "style": "display: none;"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 5,
+      "tag": "div",
+      "attrs": {
+       "aria-hidden": "true"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 6,
+      "tag": "span",
+      "attrs": {},
+      "text": "Captions",
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 4,
+      "tag": "label",
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "aria": "show playback speed menu",
+      "role": "menuitem",
+      "cls": "animated-0",
+      "attrs": {
+       "pseudo": "-internal-media-controls-overflow-menu-list-item",
+       "role": "menuitem",
+       "tabindex": "0",
+       "aria-label": "show playback speed menu",
+       "class": "animated-0",
+       "style": ""
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 5,
+      "tag": "input",
+      "pseudo": "-internal-media-controls-playback-speed-button",
+      "aria": "show playback speed menu",
+      "type": "button",
+      "attrs": {
+       "aria-label": "show playback speed menu",
+       "type": "button",
+       "pseudo": "-internal-media-controls-playback-speed-button",
+       "tabindex": "-1",
+       "aria-hidden": "true",
+       "style": ""
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 5,
+      "tag": "div",
+      "attrs": {
+       "aria-hidden": "true"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 6,
+      "tag": "span",
+      "attrs": {},
+      "text": "Playback speed",
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 4,
+      "tag": "label",
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "aria": "show video track selection menu",
+      "role": "menuitem",
+      "attrs": {
+       "pseudo": "-internal-media-controls-overflow-menu-list-item",
+       "role": "menuitem",
+       "tabindex": "0",
+       "aria-label": "show video track selection menu",
+       "style": "display: none;"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 5,
+      "tag": "input",
+      "pseudo": "-internal-media-controls-video-track-selection-button",
+      "aria": "show video track selection menu",
+      "type": "button",
+      "attrs": {
+       "type": "button",
+       "aria-label": "show video track selection menu",
+       "pseudo": "-internal-media-controls-video-track-selection-button",
+       "tabindex": "-1",
+       "aria-hidden": "true",
+       "style": "display: none;"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 5,
+      "tag": "div",
+      "attrs": {
+       "aria-hidden": "true"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 6,
+      "tag": "span",
+      "attrs": {},
+      "text": "Video Tracks",
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 4,
+      "tag": "label",
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "aria": "show audio track selection menu",
+      "role": "menuitem",
+      "attrs": {
+       "pseudo": "-internal-media-controls-overflow-menu-list-item",
+       "role": "menuitem",
+       "tabindex": "0",
+       "aria-label": "show audio track selection menu",
+       "style": "display: none;"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 5,
+      "tag": "input",
+      "pseudo": "-internal-media-controls-audio-track-selection-button",
+      "aria": "show audio track selection menu",
+      "type": "button",
+      "attrs": {
+       "type": "button",
+       "aria-label": "show audio track selection menu",
+       "pseudo": "-internal-media-controls-audio-track-selection-button",
+       "tabindex": "-1",
+       "aria-hidden": "true",
+       "style": "display: none;"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 5,
+      "tag": "div",
+      "attrs": {
+       "aria-hidden": "true"
+      },
+      "box": null,
+      "styles": null
+     },
+     {
+      "depth": 6,
+      "tag": "span",
+      "attrs": {},
+      "text": "Audio Tracks",
+      "box": null,
+      "styles": null
+     }
+    ],
+    "shot": "01-tab.png"
+   },
+   "s02-volume": {
+    "ok": true,
+    "ms": 11130,
+    "before": [
+     {
+      "pseudo": "audio",
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls",
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-enclosure",
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-panel",
+      "box": [
+       57,
+       91.359375,
+       1530,
+       40
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-play-button",
+      "box": [
+       67,
+       95.359375,
+       32,
+       32
+      ],
+      "aria": "play",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-button-hover-background",
+      "box": [
+       67,
+       95.359375,
+       32,
+       32
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-current-time-display",
+      "box": [
+       104,
+       102.265625,
+       27.8,
+       18.2
+      ],
+      "text": "0:00",
+      "opacity": "0.87"
+     },
+     {
+      "pseudo": "-webkit-media-controls-time-remaining-display",
+      "box": [
+       135.78125,
+       102.265625,
+       36.6,
+       18.2
+      ],
+      "text": "/ 1:00",
+      "opacity": "0.87"
+     },
+     {
+      "pseudo": "-webkit-media-controls-timeline",
+      "box": [
+       172.40625,
+       95.359375,
+       1340.6,
+       32
+      ],
+      "aria": "audio time scrubber",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       188.40625,
+       109.359375,
+       1308.6,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-segmented-track",
+      "box": [
+       188.40625,
+       109.359375,
+       1308.6,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       188.40625,
+       105.359375,
+       12,
+       12
+      ],
+      "opacity": "0"
+     },
+     {
+      "pseudo": "-internal-track-segment-background",
+      "box": [
+       188.40625,
+       109.359375,
+       1308.6,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-track-segment-highlight-after",
+      "box": [
+       188.40625,
+       109.359375,
+       1309,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-volume-control-container",
+      "box": [
+       1513,
+       95.359375,
+       32,
+       32
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-volume-control-hover-background",
+      "box": [
+       1509,
+       95.359375,
+       36,
+       32
+      ],
+      "opacity": "0"
+     },
+     {
+      "pseudo": "-internal-media-controls-segmented-track",
+      "box": [
+       1513,
+       109.359375,
+       12,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       1513,
+       105.359375,
+       12,
+       12
+      ],
+      "opacity": "0"
+     },
+     {
+      "pseudo": "-internal-track-segment-background",
+      "box": [
+       1513,
+       109.359375,
+       12,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-track-segment-highlight-after",
+      "box": [
+       1513,
+       109.359375,
+       12,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-mute-button",
+      "box": [
+       1513,
+       95.359375,
+       32,
+       32
+      ],
+      "aria": "mute",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-button",
+      "box": [
+       1545,
+       95.359375,
+       32,
+       32
+      ],
+      "aria": "show more media controls",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-button-hover-background",
+      "box": [
+       1545,
+       95.359375,
+       32,
+       32
+      ],
+      "opacity": "1"
+     }
+    ],
+    "mute": {
+     "box": [
+      1513,
+      95.359375,
+      32,
+      32
+     ],
+     "aria": "mute"
+    },
+    "hover_0": [
+     {
+      "pseudo": "audio",
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls",
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-enclosure",
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-panel",
+      "box": [
+       57,
+       91.359375,
+       1530,
+       40
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-play-button",
+      "box": [
+       67,
+       95.359375,
+       32,
+       32
+      ],
+      "aria": "play",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-button-hover-background",
+      "box": [
+       67,
+       95.359375,
+       32,
+       32
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-current-time-display",
+      "box": [
+       104,
+       102.265625,
+       27.8,
+       18.2
+      ],
+      "text": "0:00",
+      "opacity": "0.87"
+     },
+     {
+      "pseudo": "-webkit-media-controls-time-remaining-display",
+      "box": [
+       135.78125,
+       102.265625,
+       36.6,
+       18.2
+      ],
+      "text": "/ 1:00",
+      "opacity": "0.87"
+     },
+     {
+      "pseudo": "-webkit-media-controls-timeline",
+      "box": [
+       172.40625,
+       95.359375,
+       1340.6,
+       32
+      ],
+      "aria": "audio time scrubber",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       188.40625,
+       109.359375,
+       1308.6,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-segmented-track",
+      "box": [
+       188.40625,
+       109.359375,
+       1308.6,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       188.40625,
+       105.359375,
+       12,
+       12
+      ],
+      "opacity": "0"
+     },
+     {
+      "pseudo": "-internal-track-segment-background",
+      "box": [
+       188.40625,
+       109.359375,
+       1308.6,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-track-segment-highlight-after",
+      "box": [
+       188.40625,
+       109.359375,
+       1309,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-volume-control-container",
+      "box": [
+       1513,
+       95.359375,
+       32,
+       32
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-volume-control-hover-background",
+      "box": [
+       1509,
+       95.359375,
+       36,
+       32
+      ],
+      "opacity": "0"
+     },
+     {
+      "pseudo": "-internal-media-controls-segmented-track",
+      "box": [
+       1513,
+       109.359375,
+       12,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       1513,
+       105.359375,
+       12,
+       12
+      ],
+      "opacity": "0"
+     },
+     {
+      "pseudo": "-internal-track-segment-background",
+      "box": [
+       1513,
+       109.359375,
+       12,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-track-segment-highlight-after",
+      "box": [
+       1513,
+       109.359375,
+       12,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-mute-button",
+      "box": [
+       1513,
+       95.359375,
+       32,
+       32
+      ],
+      "aria": "mute",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-button",
+      "box": [
+       1545,
+       95.359375,
+       32,
+       32
+      ],
+      "aria": "show more media controls",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-button-hover-background",
+      "box": [
+       1545,
+       95.359375,
+       32,
+       32
+      ],
+      "opacity": "1"
+     }
+    ],
+    "hover_150": [
+     {
+      "pseudo": "audio",
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls",
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-enclosure",
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-panel",
+      "box": [
+       57,
+       91.359375,
+       1530,
+       40
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-play-button",
+      "box": [
+       67,
+       95.359375,
+       32,
+       32
+      ],
+      "aria": "play",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-button-hover-background",
+      "box": [
+       67,
+       95.359375,
+       32,
+       32
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-current-time-display",
+      "box": [
+       104,
+       102.265625,
+       27.8,
+       18.2
+      ],
+      "text": "0:00",
+      "opacity": "0.87"
+     },
+     {
+      "pseudo": "-webkit-media-controls-time-remaining-display",
+      "box": [
+       135.78125,
+       102.265625,
+       36.6,
+       18.2
+      ],
+      "text": "/ 1:00",
+      "opacity": "0.87"
+     },
+     {
+      "pseudo": "-webkit-media-controls-timeline",
+      "box": [
+       172.40625,
+       95.359375,
+       1278.8,
+       32
+      ],
+      "aria": "audio time scrubber",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       188.40625,
+       109.359375,
+       1246.8,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-segmented-track",
+      "box": [
+       188.40625,
+       109.359375,
+       1244.9,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       188.40625,
+       105.359375,
+       12,
+       12
+      ],
+      "opacity": "0"
+     },
+     {
+      "pseudo": "-internal-track-segment-background",
+      "box": [
+       188.40625,
+       109.359375,
+       1243.4,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-track-segment-highlight-after",
+      "box": [
+       188.40625,
+       109.359375,
+       1243,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-volume-control-container",
+      "box": [
+       1446.65625,
+       95.359375,
+       98.3,
+       32
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-volume-control-hover-background",
+      "box": [
+       1446.5625,
+       95.359375,
+       98.4,
+       32
+      ],
+      "opacity": "0.0599487"
+     },
+     {
+      "pseudo": "-webkit-media-controls-volume-slider",
+      "box": [
+       1461.640625,
+       95.359375,
+       51.4,
+       32
+      ],
+      "aria": "volume",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       1461.640625,
+       109.359375,
+       51.4,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-segmented-track",
+      "box": [
+       1461.25,
+       109.359375,
+       51.8,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       1501,
+       105.359375,
+       12,
+       12
+      ],
+      "opacity": "0"
+     },
+     {
+      "pseudo": "-internal-track-segment-background",
+      "box": [
+       1461.25,
+       109.359375,
+       51.8,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-track-segment-highlight-after",
+      "box": [
+       1461.046875,
+       109.359375,
+       52,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-mute-button",
+      "box": [
+       1513,
+       95.359375,
+       32,
+       32
+      ],
+      "aria": "mute",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-button",
+      "box": [
+       1545,
+       95.359375,
+       32,
+       32
+      ],
+      "aria": "show more media controls",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-button-hover-background",
+      "box": [
+       1545,
+       95.359375,
+       32,
+       32
+      ],
+      "opacity": "1"
+     }
+    ],
+    "hover_400": [
+     {
+      "pseudo": "audio",
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls",
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-enclosure",
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-panel",
+      "box": [
+       57,
+       91.359375,
+       1530,
+       40
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-play-button",
+      "box": [
+       67,
+       95.359375,
+       32,
+       32
+      ],
+      "aria": "play",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-button-hover-background",
+      "box": [
+       67,
+       95.359375,
+       32,
+       32
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-current-time-display",
+      "box": [
+       104,
+       102.265625,
+       27.8,
+       18.2
+      ],
+      "text": "0:00",
+      "opacity": "0.87"
+     },
+     {
+      "pseudo": "-webkit-media-controls-time-remaining-display",
+      "box": [
+       135.78125,
+       102.265625,
+       36.6,
+       18.2
+      ],
+      "text": "/ 1:00",
+      "opacity": "0.87"
+     },
+     {
+      "pseudo": "-webkit-media-controls-timeline",
+      "box": [
+       172.40625,
+       95.359375,
+       1272.6,
+       32
+      ],
+      "aria": "audio time scrubber",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       188.40625,
+       109.359375,
+       1240.6,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-segmented-track",
+      "box": [
+       188.40625,
+       109.359375,
+       1240.6,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       188.40625,
+       105.359375,
+       12,
+       12
+      ],
+      "opacity": "0"
+     },
+     {
+      "pseudo": "-internal-track-segment-background",
+      "box": [
+       188.40625,
+       109.359375,
+       1240.6,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-track-segment-highlight-after",
+      "box": [
+       188.40625,
+       109.359375,
+       1241,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-volume-control-container",
+      "box": [
+       1445,
+       95.359375,
+       100,
+       32
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-volume-control-hover-background",
+      "box": [
+       1445,
+       95.359375,
+       100,
+       32
+      ],
+      "opacity": "0.06"
+     },
+     {
+      "pseudo": "-webkit-media-controls-volume-slider",
+      "box": [
+       1461,
+       95.359375,
+       52,
+       32
+      ],
+      "aria": "volume",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       1461,
+       109.359375,
+       52,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-segmented-track",
+      "box": [
+       1461,
+       109.359375,
+       52,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       1501,
+       105.359375,
+       12,
+       12
+      ],
+      "opacity": "0"
+     },
+     {
+      "pseudo": "-internal-track-segment-background",
+      "box": [
+       1461,
+       109.359375,
+       52,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-track-segment-highlight-after",
+      "box": [
+       1461,
+       109.359375,
+       52,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-mute-button",
+      "box": [
+       1513,
+       95.359375,
+       32,
+       32
+      ],
+      "aria": "mute",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-button",
+      "box": [
+       1545,
+       95.359375,
+       32,
+       32
+      ],
+      "aria": "show more media controls",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-button-hover-background",
+      "box": [
+       1545,
+       95.359375,
+       32,
+       32
+      ],
+      "opacity": "1"
+     }
+    ],
+    "hover_1000": [
+     {
+      "pseudo": "audio",
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls",
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-enclosure",
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-panel",
+      "box": [
+       57,
+       91.359375,
+       1530,
+       40
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-play-button",
+      "box": [
+       67,
+       95.359375,
+       32,
+       32
+      ],
+      "aria": "play",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-button-hover-background",
+      "box": [
+       67,
+       95.359375,
+       32,
+       32
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-current-time-display",
+      "box": [
+       104,
+       102.265625,
+       27.8,
+       18.2
+      ],
+      "text": "0:00",
+      "opacity": "0.87"
+     },
+     {
+      "pseudo": "-webkit-media-controls-time-remaining-display",
+      "box": [
+       135.78125,
+       102.265625,
+       36.6,
+       18.2
+      ],
+      "text": "/ 1:00",
+      "opacity": "0.87"
+     },
+     {
+      "pseudo": "-webkit-media-controls-timeline",
+      "box": [
+       172.40625,
+       95.359375,
+       1272.6,
+       32
+      ],
+      "aria": "audio time scrubber",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       188.40625,
+       109.359375,
+       1240.6,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-segmented-track",
+      "box": [
+       188.40625,
+       109.359375,
+       1240.6,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       188.40625,
+       105.359375,
+       12,
+       12
+      ],
+      "opacity": "0"
+     },
+     {
+      "pseudo": "-internal-track-segment-background",
+      "box": [
+       188.40625,
+       109.359375,
+       1240.6,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-track-segment-highlight-after",
+      "box": [
+       188.40625,
+       109.359375,
+       1241,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-volume-control-container",
+      "box": [
+       1445,
+       95.359375,
+       100,
+       32
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-volume-control-hover-background",
+      "box": [
+       1445,
+       95.359375,
+       100,
+       32
+      ],
+      "opacity": "0.06"
+     },
+     {
+      "pseudo": "-webkit-media-controls-volume-slider",
+      "box": [
+       1461,
+       95.359375,
+       52,
+       32
+      ],
+      "aria": "volume",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       1461,
+       109.359375,
+       52,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-segmented-track",
+      "box": [
+       1461,
+       109.359375,
+       52,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       1501,
+       105.359375,
+       12,
+       12
+      ],
+      "opacity": "0"
+     },
+     {
+      "pseudo": "-internal-track-segment-background",
+      "box": [
+       1461,
+       109.359375,
+       52,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-track-segment-highlight-after",
+      "box": [
+       1461,
+       109.359375,
+       52,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-mute-button",
+      "box": [
+       1513,
+       95.359375,
+       32,
+       32
+      ],
+      "aria": "mute",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-button",
+      "box": [
+       1545,
+       95.359375,
+       32,
+       32
+      ],
+      "aria": "show more media controls",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-button-hover-background",
+      "box": [
+       1545,
+       95.359375,
+       32,
+       32
+      ],
+      "opacity": "1"
+     }
+    ],
+    "hoverShot": "01-volume-hover.png",
+    "slider": {
+     "box": [
+      1461,
+      95.359375,
+      52,
+      32
+     ],
+     "attrs": {
+      "type": "range",
+      "step": "any",
+      "max": "1",
+      "aria-valuemax": "100",
+      "aria-valuemin": "0",
+      "aria-label": "volume",
+      "pseudo": "-webkit-media-controls-volume-slider",
+      "aria-valuenow": "100",
+      "class": "",
+      "style": ""
+     },
+     "styles": {
+      "color": "rgb(157, 150, 142)",
+      "font-size": "13.3333px",
+      "accent-color": "auto",
+      "background-color": "rgba(0, 0, 0, 0)",
+      "cursor": "pointer",
+      "display": "block",
+      "height": "4px",
+      "opacity": "1",
+      "visibility": "visible",
+      "width": "52px"
+     }
+    },
+    "click_0.25": {
+     "st": {
+      "paused": true,
+      "t": 0,
+      "volume": 0.175,
+      "muted": false,
+      "rate": 1,
+      "pitch": true,
+      "connected": true
+     },
+     "active": {
+      "tag": "AUDIO",
+      "cls": ""
+     }
+    },
+    "click_0.75": {
+     "st": {
+      "paused": true,
+      "t": 0,
+      "volume": 0.825,
+      "muted": false,
+      "rate": 1,
+      "pitch": true,
+      "connected": true
+     },
+     "active": {
+      "tag": "AUDIO",
+      "cls": ""
+     }
+    },
+    "sliderShot": "02-volume-slider-set.png",
+    "key_ArrowRight": {
+     "paused": true,
+     "t": 0,
+     "volume": 0.835,
+     "muted": false,
+     "rate": 1,
+     "pitch": true,
+     "connected": true
+    },
+    "key_ArrowLeft": {
+     "paused": true,
+     "t": 0,
+     "volume": 0.825,
+     "muted": false,
+     "rate": 1,
+     "pitch": true,
+     "connected": true
+    },
+    "key_ArrowUp": {
+     "paused": true,
+     "t": 0,
+     "volume": 0.835,
+     "muted": false,
+     "rate": 1,
+     "pitch": true,
+     "connected": true
+    },
+    "key_ArrowDown": {
+     "paused": true,
+     "t": 0,
+     "volume": 0.825,
+     "muted": false,
+     "rate": 1,
+     "pitch": true,
+     "connected": true
+    },
+    "key_Home": {
+     "paused": true,
+     "t": 0,
+     "volume": 0,
+     "muted": false,
+     "rate": 1,
+     "pitch": true,
+     "connected": true
+    },
+    "key_End": {
+     "paused": true,
+     "t": 0,
+     "volume": 1,
+     "muted": false,
+     "rate": 1,
+     "pitch": true,
+     "connected": true
+    },
+    "dragHalf": {
+     "paused": true,
+     "t": 0,
+     "volume": 0.5,
+     "muted": false,
+     "rate": 1,
+     "pitch": true,
+     "connected": true
+    },
+    "muted": {
+     "st": {
+      "paused": true,
+      "t": 0,
+      "volume": 0.5,
+      "muted": true,
+      "rate": 1,
+      "pitch": true,
+      "connected": true
+     },
+     "slider": {
+      "type": "range",
+      "step": "any",
+      "max": "1",
+      "aria-valuemax": "100",
+      "aria-valuemin": "0",
+      "aria-label": "volume",
+      "pseudo": "-webkit-media-controls-volume-slider",
+      "aria-valuenow": "0",
+      "class": "",
+      "style": ""
+     }
+    },
+    "mutedShot": "03-volume-muted.png",
+    "unmuted": {
+     "st": {
+      "paused": true,
+      "t": 0,
+      "volume": 0.5,
+      "muted": false,
+      "rate": 1,
+      "pitch": true,
+      "connected": true
+     },
+     "slider": {
+      "type": "range",
+      "step": "any",
+      "max": "1",
+      "aria-valuemax": "100",
+      "aria-valuemin": "0",
+      "aria-label": "volume",
+      "pseudo": "-webkit-media-controls-volume-slider",
+      "aria-valuenow": "50",
+      "class": "",
+      "style": ""
+     }
+    },
+    "leave_0": {
+     "box": [
+      1461,
+      95.359375,
+      52,
+      32
+     ],
+     "styles": {
+      "color": "rgb(157, 150, 142)",
+      "font-size": "13.3333px",
+      "accent-color": "auto",
+      "background-color": "rgba(0, 0, 0, 0)",
+      "cursor": "pointer",
+      "display": "block",
+      "height": "4px",
+      "opacity": "1",
+      "visibility": "visible",
+      "width": "52px"
+     }
+    },
+    "leave_200": {
+     "box": [
+      1461,
+      95.359375,
+      52,
+      32
+     ],
+     "styles": {
+      "color": "rgb(157, 150, 142)",
+      "font-size": "13.3333px",
+      "accent-color": "auto",
+      "background-color": "rgba(0, 0, 0, 0)",
+      "cursor": "pointer",
+      "display": "block",
+      "height": "4px",
+      "opacity": "1",
+      "visibility": "visible",
+      "width": "52px"
+     }
+    },
+    "leave_500": {
+     "box": [
+      1461,
+      95.359375,
+      52,
+      32
+     ],
+     "styles": {
+      "color": "rgb(157, 150, 142)",
+      "font-size": "13.3333px",
+      "accent-color": "auto",
+      "background-color": "rgba(0, 0, 0, 0)",
+      "cursor": "pointer",
+      "display": "block",
+      "height": "4px",
+      "opacity": "1",
+      "visibility": "visible",
+      "width": "52px"
+     }
+    },
+    "leave_1500": {
+     "box": [
+      1461,
+      95.359375,
+      52,
+      32
+     ],
+     "styles": {
+      "color": "rgb(157, 150, 142)",
+      "font-size": "13.3333px",
+      "accent-color": "auto",
+      "background-color": "rgba(0, 0, 0, 0)",
+      "cursor": "pointer",
+      "display": "block",
+      "height": "4px",
+      "opacity": "1",
+      "visibility": "visible",
+      "width": "52px"
+     }
+    },
+    "overPlay": {
+     "box": [
+      1461,
+      95.359375,
+      52,
+      32
+     ]
+    }
+   },
+   "s03-overflow": {
+    "ok": true,
+    "ms": 7988,
+    "button": {
+     "box": [
+      1545,
+      95.359375,
+      32,
+      32
+     ],
+     "aria": "show more media controls"
+    },
+    "menu": [
+     {
+      "pseudo": "audio",
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls",
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-enclosure",
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-panel",
+      "box": [
+       57,
+       91.359375,
+       1530,
+       40
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-play-button",
+      "box": [
+       67,
+       95.359375,
+       32,
+       32
+      ],
+      "aria": "play",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-button-hover-background",
+      "box": [
+       67,
+       95.359375,
+       32,
+       32
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-current-time-display",
+      "box": [
+       104,
+       102.265625,
+       27.8,
+       18.2
+      ],
+      "text": "0:00",
+      "opacity": "0.87"
+     },
+     {
+      "pseudo": "-webkit-media-controls-time-remaining-display",
+      "box": [
+       135.78125,
+       102.265625,
+       36.6,
+       18.2
+      ],
+      "text": "/ 1:00",
+      "opacity": "0.87"
+     },
+     {
+      "pseudo": "-webkit-media-controls-timeline",
+      "box": [
+       172.40625,
+       95.359375,
+       1340.6,
+       32
+      ],
+      "aria": "audio time scrubber",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       188.40625,
+       109.359375,
+       1308.6,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-segmented-track",
+      "box": [
+       188.40625,
+       109.359375,
+       1308.6,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       188.40625,
+       105.359375,
+       12,
+       12
+      ],
+      "opacity": "0"
+     },
+     {
+      "pseudo": "-internal-track-segment-background",
+      "box": [
+       188.40625,
+       109.359375,
+       1308.6,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-track-segment-highlight-after",
+      "box": [
+       188.40625,
+       109.359375,
+       1309,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-volume-control-container",
+      "box": [
+       1513,
+       95.359375,
+       32,
+       32
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-volume-control-hover-background",
+      "box": [
+       1509,
+       95.359375,
+       36,
+       32
+      ],
+      "opacity": "0"
+     },
+     {
+      "pseudo": "-internal-media-controls-segmented-track",
+      "box": [
+       1513,
+       109.359375,
+       12,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       1513,
+       105.359375,
+       12,
+       12
+      ],
+      "opacity": "0"
+     },
+     {
+      "pseudo": "-internal-track-segment-background",
+      "box": [
+       1513,
+       109.359375,
+       12,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-track-segment-highlight-after",
+      "box": [
+       1513,
+       109.359375,
+       12,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-mute-button",
+      "box": [
+       1513,
+       95.359375,
+       32,
+       32
+      ],
+      "aria": "mute",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-button",
+      "box": [
+       1545,
+       95.359375,
+       32,
+       32
+      ],
+      "aria": "show more media controls",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-button-hover-background",
+      "box": [
+       1545,
+       95.359375,
+       32,
+       32
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list",
+      "box": [
+       1373,
+       77.359375,
+       200,
+       46
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "box": [
+       1373,
+       77.359375,
+       200,
+       46
+      ],
+      "aria": "show playback speed menu",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-button",
+      "box": [
+       1380,
+       84.359375,
+       32,
+       32
+      ],
+      "aria": "show playback speed menu",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       1418,
+       93.359375,
+       84.7,
+       14
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "span",
+      "box": [
+       1418,
+       93.359375,
+       84.7,
+       14
+      ],
+      "text": "Playback speed",
+      "opacity": "1"
+     }
+    ],
+    "menuItems": [
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list",
+      "role": "menu",
+      "aria": "Options",
+      "box": null,
+      "styles": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list",
+      "role": "menu",
+      "box": [
+       1373,
+       77.359375,
+       200,
+       46
+      ],
+      "styles": {
+       "display": "block",
+       "font-size": "12px",
+       "background-color": "rgb(59, 59, 59)",
+       "color": "rgb(255, 255, 255)"
+      }
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "role": "menuitem",
+      "aria": "Play",
+      "box": null,
+      "styles": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "role": "menuitem",
+      "aria": "enter full screen",
+      "box": null,
+      "styles": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "role": "menuitem",
+      "aria": "download media",
+      "box": null,
+      "styles": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "role": "menuitem",
+      "aria": "Mute",
+      "box": null,
+      "styles": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "role": "menuitem",
+      "aria": "play on remote device",
+      "box": null,
+      "styles": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "role": "menuitem",
+      "aria": "show closed captions menu",
+      "box": null,
+      "styles": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "role": "menuitem",
+      "aria": "show playback speed menu",
+      "box": [
+       1373,
+       77.359375,
+       200,
+       46
+      ],
+      "styles": {
+       "display": "flex",
+       "font-size": "12px",
+       "background-color": "rgb(84, 84, 84)",
+       "color": "rgba(255, 255, 255, 0.87)"
+      }
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-button",
+      "aria": "show playback speed menu",
+      "box": [
+       1380,
+       84.359375,
+       32,
+       32
+      ],
+      "styles": {
+       "display": "block",
+       "font-size": "13.3333px",
+       "background-color": "rgba(0, 0, 0, 0)",
+       "color": "rgba(255, 255, 255, 0.87)"
+      }
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "role": "menuitem",
+      "aria": "show video track selection menu",
+      "box": null,
+      "styles": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "role": "menuitem",
+      "aria": "show audio track selection menu",
+      "box": null,
+      "styles": null
+     }
+    ],
+    "menuShot": "04-overflow-menu.png",
+    "speedRow": {
+     "pseudo": "-internal-media-controls-overflow-menu-list-item",
+     "aria": "show playback speed menu",
+     "box": [
+      1373,
+      77.359375,
+      200,
+      46
+     ]
+    },
+    "speedList": [
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list",
+      "role": "menu",
+      "aria": "Options",
+      "box": [
+       1373,
+       -126.640625,
+       200,
+       250
+      ],
+      "styles": {
+       "display": "block",
+       "font-size": "12px",
+       "color": "rgb(255, 255, 255)"
+      }
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-header",
+      "role": "button",
+      "aria": "back to options",
+      "text": "Options",
+      "box": [
+       1373,
+       -217.640625,
+       185,
+       48
+      ],
+      "styles": {
+       "display": "flex",
+       "font-size": "12px",
+       "color": "rgba(255, 255, 255, 0.87)"
+      }
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item",
+      "role": "menuitemcheckbox",
+      "aria": "0.25",
+      "box": [
+       1373,
+       -169.640625,
+       185,
+       48
+      ],
+      "styles": {
+       "display": "flex",
+       "font-size": "12px",
+       "color": "rgba(255, 255, 255, 0.87)"
+      }
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item-input",
+      "box": [
+       1509,
+       -154.640625,
+       18,
+       18
+      ],
+      "styles": {
+       "display": "block",
+       "font-size": "13.3333px",
+       "color": "rgb(255, 255, 255)"
+      }
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item",
+      "role": "menuitemcheckbox",
+      "aria": "0.5",
+      "box": [
+       1373,
+       -121.640625,
+       185,
+       48
+      ],
+      "styles": {
+       "display": "flex",
+       "font-size": "12px",
+       "color": "rgba(255, 255, 255, 0.87)"
+      }
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item-input",
+      "box": [
+       1509,
+       -106.640625,
+       18,
+       18
+      ],
+      "styles": {
+       "display": "block",
+       "font-size": "13.3333px",
+       "color": "rgb(255, 255, 255)"
+      }
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item",
+      "role": "menuitemcheckbox",
+      "aria": "0.75",
+      "box": [
+       1373,
+       -73.640625,
+       185,
+       48
+      ],
+      "styles": {
+       "display": "flex",
+       "font-size": "12px",
+       "color": "rgba(255, 255, 255, 0.87)"
+      }
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item-input",
+      "box": [
+       1509,
+       -58.640625,
+       18,
+       18
+      ],
+      "styles": {
+       "display": "block",
+       "font-size": "13.3333px",
+       "color": "rgb(255, 255, 255)"
+      }
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item",
+      "role": "menuitemcheckbox",
+      "aria": "Normal",
+      "box": [
+       1373,
+       -25.640625,
+       185,
+       48
+      ],
+      "checked": "true",
+      "styles": {
+       "display": "flex",
+       "font-size": "12px",
+       "color": "rgba(255, 255, 255, 0.87)"
+      }
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item-input",
+      "box": [
+       1509,
+       -10.640625,
+       18,
+       18
+      ],
+      "styles": {
+       "display": "block",
+       "font-size": "13.3333px",
+       "color": "rgb(255, 255, 255)"
+      }
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item",
+      "role": "menuitemcheckbox",
+      "aria": "1.25",
+      "box": [
+       1373,
+       22.359375,
+       185,
+       48
+      ],
+      "styles": {
+       "display": "flex",
+       "font-size": "12px",
+       "color": "rgba(255, 255, 255, 0.87)"
+      }
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item-input",
+      "box": [
+       1509,
+       37.359375,
+       18,
+       18
+      ],
+      "styles": {
+       "display": "block",
+       "font-size": "13.3333px",
+       "color": "rgb(255, 255, 255)"
+      }
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item",
+      "role": "menuitemcheckbox",
+      "aria": "1.5",
+      "box": [
+       1373,
+       70.359375,
+       185,
+       48
+      ],
+      "styles": {
+       "display": "flex",
+       "font-size": "12px",
+       "color": "rgba(255, 255, 255, 0.87)"
+      }
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item-input",
+      "box": [
+       1509,
+       85.359375,
+       18,
+       18
+      ],
+      "styles": {
+       "display": "block",
+       "font-size": "13.3333px",
+       "color": "rgb(255, 255, 255)"
+      }
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item",
+      "role": "menuitemcheckbox",
+      "aria": "1.75",
+      "box": [
+       1373,
+       118.359375,
+       185,
+       48
+      ],
+      "styles": {
+       "display": "flex",
+       "font-size": "12px",
+       "color": "rgba(255, 255, 255, 0.87)"
+      }
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item-input",
+      "box": [
+       1509,
+       133.359375,
+       18,
+       18
+      ],
+      "styles": {
+       "display": "block",
+       "font-size": "13.3333px",
+       "color": "rgb(255, 255, 255)"
+      }
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item",
+      "role": "menuitemcheckbox",
+      "aria": "2",
+      "box": [
+       1373,
+       166.359375,
+       185,
+       48
+      ],
+      "styles": {
+       "display": "flex",
+       "font-size": "12px",
+       "color": "rgba(255, 255, 255, 0.87)"
+      }
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item-input",
+      "box": [
+       1509,
+       181.359375,
+       18,
+       18
+      ],
+      "styles": {
+       "display": "block",
+       "font-size": "13.3333px",
+       "color": "rgb(255, 255, 255)"
+      }
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list",
+      "role": "menu",
+      "box": null,
+      "styles": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "role": "menuitem",
+      "aria": "Play",
+      "box": null,
+      "styles": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "role": "menuitem",
+      "aria": "enter full screen",
+      "box": null,
+      "styles": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "role": "menuitem",
+      "aria": "download media",
+      "box": null,
+      "styles": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "role": "menuitem",
+      "aria": "Mute",
+      "box": null,
+      "styles": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "role": "menuitem",
+      "aria": "play on remote device",
+      "box": null,
+      "styles": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "role": "menuitem",
+      "aria": "show closed captions menu",
+      "box": null,
+      "styles": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "role": "menuitem",
+      "aria": "show playback speed menu",
+      "box": null,
+      "styles": null
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-button",
+      "aria": "show playback speed menu",
+      "box": null,
+      "styles": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "role": "menuitem",
+      "aria": "show video track selection menu",
+      "box": null,
+      "styles": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "role": "menuitem",
+      "aria": "show audio track selection menu",
+      "box": null,
+      "styles": null
+     }
+    ],
+    "speedVisible": [
+     {
+      "pseudo": "audio",
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls",
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-enclosure",
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-panel",
+      "box": [
+       57,
+       91.359375,
+       1530,
+       40
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-play-button",
+      "box": [
+       67,
+       95.359375,
+       32,
+       32
+      ],
+      "aria": "play",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-button-hover-background",
+      "box": [
+       67,
+       95.359375,
+       32,
+       32
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-current-time-display",
+      "box": [
+       104,
+       102.265625,
+       27.8,
+       18.2
+      ],
+      "text": "0:00",
+      "opacity": "0.87"
+     },
+     {
+      "pseudo": "-webkit-media-controls-time-remaining-display",
+      "box": [
+       135.78125,
+       102.265625,
+       36.6,
+       18.2
+      ],
+      "text": "/ 1:00",
+      "opacity": "0.87"
+     },
+     {
+      "pseudo": "-webkit-media-controls-timeline",
+      "box": [
+       172.40625,
+       95.359375,
+       1340.6,
+       32
+      ],
+      "aria": "audio time scrubber",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       188.40625,
+       109.359375,
+       1308.6,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-segmented-track",
+      "box": [
+       188.40625,
+       109.359375,
+       1308.6,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       188.40625,
+       105.359375,
+       12,
+       12
+      ],
+      "opacity": "0"
+     },
+     {
+      "pseudo": "-internal-track-segment-background",
+      "box": [
+       188.40625,
+       109.359375,
+       1308.6,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-track-segment-highlight-after",
+      "box": [
+       188.40625,
+       109.359375,
+       1309,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-volume-control-container",
+      "box": [
+       1513,
+       95.359375,
+       32,
+       32
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-volume-control-hover-background",
+      "box": [
+       1509,
+       95.359375,
+       36,
+       32
+      ],
+      "opacity": "0"
+     },
+     {
+      "pseudo": "-internal-media-controls-segmented-track",
+      "box": [
+       1513,
+       109.359375,
+       12,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       1513,
+       105.359375,
+       12,
+       12
+      ],
+      "opacity": "0"
+     },
+     {
+      "pseudo": "-internal-track-segment-background",
+      "box": [
+       1513,
+       109.359375,
+       12,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-track-segment-highlight-after",
+      "box": [
+       1513,
+       109.359375,
+       12,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-mute-button",
+      "box": [
+       1513,
+       95.359375,
+       32,
+       32
+      ],
+      "aria": "mute",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-button",
+      "box": [
+       1545,
+       95.359375,
+       32,
+       32
+      ],
+      "aria": "show more media controls",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-button-hover-background",
+      "box": [
+       1545,
+       95.359375,
+       32,
+       32
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list",
+      "box": [
+       1373,
+       -126.640625,
+       200,
+       250
+      ],
+      "aria": "Options",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-header",
+      "box": [
+       1373,
+       -217.640625,
+       185,
+       48
+      ],
+      "text": "Options",
+      "aria": "back to options",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item",
+      "box": [
+       1373,
+       -169.640625,
+       185,
+       48
+      ],
+      "aria": "0.25",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "span",
+      "box": [
+       1431,
+       -152.640625,
+       23.4,
+       14
+      ],
+      "text": "0.25",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item-input",
+      "box": [
+       1509,
+       -154.640625,
+       18,
+       18
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item",
+      "box": [
+       1373,
+       -121.640625,
+       185,
+       48
+      ],
+      "aria": "0.5",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "span",
+      "box": [
+       1431,
+       -104.640625,
+       16.7,
+       14
+      ],
+      "text": "0.5",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item-input",
+      "box": [
+       1509,
+       -106.640625,
+       18,
+       18
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item",
+      "box": [
+       1373,
+       -73.640625,
+       185,
+       48
+      ],
+      "aria": "0.75",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "span",
+      "box": [
+       1431,
+       -56.640625,
+       23.4,
+       14
+      ],
+      "text": "0.75",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item-input",
+      "box": [
+       1509,
+       -58.640625,
+       18,
+       18
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item",
+      "box": [
+       1373,
+       -25.640625,
+       185,
+       48
+      ],
+      "aria": "Normal",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "span",
+      "box": [
+       1431,
+       -8.640625,
+       38.7,
+       14
+      ],
+      "text": "Normal",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item-input",
+      "box": [
+       1509,
+       -10.640625,
+       18,
+       18
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item",
+      "box": [
+       1373,
+       22.359375,
+       185,
+       48
+      ],
+      "aria": "1.25",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "span",
+      "box": [
+       1431,
+       39.359375,
+       23.4,
+       14
+      ],
+      "text": "1.25",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item-input",
+      "box": [
+       1509,
+       37.359375,
+       18,
+       18
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item",
+      "box": [
+       1373,
+       70.359375,
+       185,
+       48
+      ],
+      "aria": "1.5",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "span",
+      "box": [
+       1431,
+       87.359375,
+       16.7,
+       14
+      ],
+      "text": "1.5",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item-input",
+      "box": [
+       1509,
+       85.359375,
+       18,
+       18
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item",
+      "box": [
+       1373,
+       118.359375,
+       185,
+       48
+      ],
+      "aria": "1.75",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "span",
+      "box": [
+       1431,
+       135.359375,
+       23.4,
+       14
+      ],
+      "text": "1.75",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item-input",
+      "box": [
+       1509,
+       133.359375,
+       18,
+       18
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item",
+      "box": [
+       1373,
+       166.359375,
+       185,
+       48
+      ],
+      "aria": "2",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "span",
+      "box": [
+       1431,
+       183.359375,
+       6.7,
+       14
+      ],
+      "text": "2",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item-input",
+      "box": [
+       1509,
+       181.359375,
+       18,
+       18
+      ],
+      "opacity": "1"
+     }
+    ],
+    "speedShot": "05-speed-list.png",
+    "pick": {
+     "pseudo": "-internal-media-controls-playback-speed-list-item",
+     "aria": "1.5",
+     "box": [
+      1373,
+      70.359375,
+      185,
+      48
+     ]
+    },
+    "afterPick": {
+     "st": {
+      "paused": true,
+      "t": 0,
+      "volume": 1,
+      "muted": false,
+      "rate": 1.5,
+      "pitch": true,
+      "connected": true
+     },
+     "visible": [
+      {
+       "pseudo": "audio",
+       "box": [
+        56,
+        90.359375,
+        1532,
+        42
+       ],
+       "opacity": "1"
+      },
+      {
+       "pseudo": "-webkit-media-controls",
+       "box": [
+        56,
+        90.359375,
+        1532,
+        42
+       ],
+       "opacity": "1"
+      },
+      {
+       "pseudo": "-webkit-media-controls-enclosure",
+       "box": [
+        56,
+        90.359375,
+        1532,
+        42
+       ],
+       "opacity": "1"
+      },
+      {
+       "pseudo": "-webkit-media-controls-panel",
+       "box": [
+        57,
+        91.359375,
+        1530,
+        40
+       ],
+       "opacity": "1"
+      },
+      {
+       "pseudo": "-webkit-media-controls-play-button",
+       "box": [
+        67,
+        95.359375,
+        32,
+        32
+       ],
+       "aria": "play",
+       "opacity": "1"
+      },
+      {
+       "pseudo": "-internal-media-controls-button-hover-background",
+       "box": [
+        67,
+        95.359375,
+        32,
+        32
+       ],
+       "opacity": "1"
+      },
+      {
+       "pseudo": "-webkit-media-controls-current-time-display",
+       "box": [
+        104,
+        102.265625,
+        27.8,
+        18.2
+       ],
+       "text": "0:00",
+       "opacity": "0.87"
+      },
+      {
+       "pseudo": "-webkit-media-controls-time-remaining-display",
+       "box": [
+        135.78125,
+        102.265625,
+        36.6,
+        18.2
+       ],
+       "text": "/ 1:00",
+       "opacity": "0.87"
+      },
+      {
+       "pseudo": "-webkit-media-controls-timeline",
+       "box": [
+        172.40625,
+        95.359375,
+        1340.6,
+        32
+       ],
+       "aria": "audio time scrubber",
+       "opacity": "1"
+      },
+      {
+       "pseudo": "div",
+       "box": [
+        188.40625,
+        109.359375,
+        1308.6,
+        4
+       ],
+       "opacity": "1"
+      },
+      {
+       "pseudo": "-internal-media-controls-segmented-track",
+       "box": [
+        188.40625,
+        109.359375,
+        1308.6,
+        4
+       ],
+       "opacity": "1"
+      },
+      {
+       "pseudo": "div",
+       "box": [
+        188.40625,
+        105.359375,
+        12,
+        12
+       ],
+       "opacity": "0"
+      },
+      {
+       "pseudo": "-internal-track-segment-background",
+       "box": [
+        188.40625,
+        109.359375,
+        1308.6,
+        4
+       ],
+       "opacity": "1"
+      },
+      {
+       "pseudo": "-internal-track-segment-highlight-after",
+       "box": [
+        188.40625,
+        109.359375,
+        1309,
+        4
+       ],
+       "opacity": "1"
+      },
+      {
+       "pseudo": "-webkit-media-controls-volume-control-container",
+       "box": [
+        1513,
+        95.359375,
+        32,
+        32
+       ],
+       "opacity": "1"
+      },
+      {
+       "pseudo": "-webkit-media-controls-volume-control-hover-background",
+       "box": [
+        1509,
+        95.359375,
+        36,
+        32
+       ],
+       "opacity": "0"
+      },
+      {
+       "pseudo": "-internal-media-controls-segmented-track",
+       "box": [
+        1513,
+        109.359375,
+        12,
+        4
+       ],
+       "opacity": "1"
+      },
+      {
+       "pseudo": "div",
+       "box": [
+        1513,
+        105.359375,
+        12,
+        12
+       ],
+       "opacity": "0"
+      },
+      {
+       "pseudo": "-internal-track-segment-background",
+       "box": [
+        1513,
+        109.359375,
+        12,
+        4
+       ],
+       "opacity": "1"
+      },
+      {
+       "pseudo": "-internal-track-segment-highlight-after",
+       "box": [
+        1513,
+        109.359375,
+        12,
+        4
+       ],
+       "opacity": "1"
+      },
+      {
+       "pseudo": "-webkit-media-controls-mute-button",
+       "box": [
+        1513,
+        95.359375,
+        32,
+        32
+       ],
+       "aria": "mute",
+       "opacity": "1"
+      },
+      {
+       "pseudo": "-internal-media-controls-overflow-button",
+       "box": [
+        1545,
+        95.359375,
+        32,
+        32
+       ],
+       "aria": "show more media controls",
+       "opacity": "1"
+      },
+      {
+       "pseudo": "-internal-media-controls-button-hover-background",
+       "box": [
+        1545,
+        95.359375,
+        32,
+        32
+       ],
+       "opacity": "1"
+      }
+     ]
+    },
+    "menuAgain": [
+     {
+      "pseudo": "audio",
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls",
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-enclosure",
+      "box": [
+       56,
+       90.359375,
+       1532,
+       42
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-panel",
+      "box": [
+       57,
+       91.359375,
+       1530,
+       40
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-play-button",
+      "box": [
+       67,
+       95.359375,
+       32,
+       32
+      ],
+      "aria": "play",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-button-hover-background",
+      "box": [
+       67,
+       95.359375,
+       32,
+       32
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-current-time-display",
+      "box": [
+       104,
+       102.265625,
+       27.8,
+       18.2
+      ],
+      "text": "0:00",
+      "opacity": "0.87"
+     },
+     {
+      "pseudo": "-webkit-media-controls-time-remaining-display",
+      "box": [
+       135.78125,
+       102.265625,
+       36.6,
+       18.2
+      ],
+      "text": "/ 1:00",
+      "opacity": "0.87"
+     },
+     {
+      "pseudo": "-webkit-media-controls-timeline",
+      "box": [
+       172.40625,
+       95.359375,
+       1340.6,
+       32
+      ],
+      "aria": "audio time scrubber",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       188.40625,
+       109.359375,
+       1308.6,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-segmented-track",
+      "box": [
+       188.40625,
+       109.359375,
+       1308.6,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       188.40625,
+       105.359375,
+       12,
+       12
+      ],
+      "opacity": "0"
+     },
+     {
+      "pseudo": "-internal-track-segment-background",
+      "box": [
+       188.40625,
+       109.359375,
+       1308.6,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-track-segment-highlight-after",
+      "box": [
+       188.40625,
+       109.359375,
+       1309,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-volume-control-container",
+      "box": [
+       1513,
+       95.359375,
+       32,
+       32
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-volume-control-hover-background",
+      "box": [
+       1509,
+       95.359375,
+       36,
+       32
+      ],
+      "opacity": "0"
+     },
+     {
+      "pseudo": "-internal-media-controls-segmented-track",
+      "box": [
+       1513,
+       109.359375,
+       12,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       1513,
+       105.359375,
+       12,
+       12
+      ],
+      "opacity": "0"
+     },
+     {
+      "pseudo": "-internal-track-segment-background",
+      "box": [
+       1513,
+       109.359375,
+       12,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-track-segment-highlight-after",
+      "box": [
+       1513,
+       109.359375,
+       12,
+       4
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-webkit-media-controls-mute-button",
+      "box": [
+       1513,
+       95.359375,
+       32,
+       32
+      ],
+      "aria": "mute",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-button",
+      "box": [
+       1545,
+       95.359375,
+       32,
+       32
+      ],
+      "aria": "show more media controls",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-button-hover-background",
+      "box": [
+       1545,
+       95.359375,
+       32,
+       32
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list",
+      "box": [
+       1373,
+       77.359375,
+       200,
+       46
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "box": [
+       1373,
+       77.359375,
+       200,
+       46
+      ],
+      "aria": "show playback speed menu",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-button",
+      "box": [
+       1380,
+       84.359375,
+       32,
+       32
+      ],
+      "aria": "show playback speed menu",
+      "opacity": "1"
+     },
+     {
+      "pseudo": "div",
+      "box": [
+       1418,
+       93.359375,
+       84.7,
+       14
+      ],
+      "opacity": "1"
+     },
+     {
+      "pseudo": "span",
+      "box": [
+       1418,
+       93.359375,
+       84.7,
+       14
+      ],
+      "text": "Playback speed",
+      "opacity": "1"
+     }
+    ],
+    "menuAgainShot": "06-overflow-menu-again.png",
+    "speedAgain": [
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list",
+      "aria": "Options",
+      "box": [
+       1373,
+       -126.640625,
+       200,
+       250
+      ]
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-header",
+      "aria": "back to options",
+      "text": "Options",
+      "box": [
+       1373,
+       -308.640625,
+       185,
+       48
+      ]
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item",
+      "aria": "0.25",
+      "box": [
+       1373,
+       -260.640625,
+       185,
+       48
+      ]
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item-input",
+      "box": [
+       1509,
+       -245.640625,
+       18,
+       18
+      ]
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item",
+      "aria": "0.5",
+      "box": [
+       1373,
+       -212.640625,
+       185,
+       48
+      ]
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item-input",
+      "box": [
+       1509,
+       -197.640625,
+       18,
+       18
+      ]
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item",
+      "aria": "0.75",
+      "box": [
+       1373,
+       -164.640625,
+       185,
+       48
+      ]
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item-input",
+      "box": [
+       1509,
+       -149.640625,
+       18,
+       18
+      ]
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item",
+      "aria": "Normal",
+      "box": [
+       1373,
+       -116.640625,
+       185,
+       48
+      ]
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item-input",
+      "box": [
+       1509,
+       -101.640625,
+       18,
+       18
+      ]
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item",
+      "aria": "1.25",
+      "box": [
+       1373,
+       -68.640625,
+       185,
+       48
+      ]
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item-input",
+      "box": [
+       1509,
+       -53.640625,
+       18,
+       18
+      ]
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item",
+      "aria": "1.5",
+      "checked": "true",
+      "box": [
+       1373,
+       -20.640625,
+       185,
+       48
+      ]
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item-input",
+      "box": [
+       1509,
+       -5.640625,
+       18,
+       18
+      ]
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item",
+      "aria": "1.75",
+      "box": [
+       1373,
+       27.359375,
+       185,
+       48
+      ]
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item-input",
+      "box": [
+       1509,
+       42.359375,
+       18,
+       18
+      ]
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item",
+      "aria": "2",
+      "box": [
+       1373,
+       75.359375,
+       185,
+       48
+      ]
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-list-item-input",
+      "box": [
+       1509,
+       90.359375,
+       18,
+       18
+      ]
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "aria": "Play",
+      "box": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "aria": "enter full screen",
+      "box": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "aria": "download media",
+      "box": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "aria": "Mute",
+      "box": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "aria": "play on remote device",
+      "box": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "aria": "show closed captions menu",
+      "box": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "aria": "show playback speed menu",
+      "box": null
+     },
+     {
+      "pseudo": "-internal-media-controls-playback-speed-button",
+      "aria": "show playback speed menu",
+      "box": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "aria": "show video track selection menu",
+      "box": null
+     },
+     {
+      "pseudo": "-internal-media-controls-overflow-menu-list-item",
+      "aria": "show audio track selection menu",
+      "box": null
+     }
+    ],
+    "speedAgainShot": "07-speed-list-again.png",
+    "afterEscape": [],
+    "openForOutside": 3,
+    "afterOutside": [],
+    "rateKept": {
+     "paused": true,
+     "t": 0,
+     "volume": 1,
+     "muted": false,
+     "rate": 1.5,
+     "pitch": true,
+     "connected": true
+    }
+   },
+   "s04-space": {
+    "ok": true,
+    "ms": 19088,
+    "parts": {
+     "play": [
+      67,
+      95.359375,
+      32,
+      32
+     ],
+     "timeline": [
+      172.40625,
+      95.359375,
+      1272.6,
+      32
+     ],
+     "mute": [
+      1513,
+      95.359375,
+      32,
+      32
+     ]
+    },
+    "tab_viewClick": {
+     "st": [
+      {
+       "paused": true,
+       "t": 0,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "active": {
+      "tag": "BODY",
+      "cls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header"
+     }
+    },
+    "tab_viewClick_space": {
+     "st": [
+      {
+       "paused": true,
+       "t": 0,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "active": {
+      "tag": "BODY",
+      "cls": "theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header"
+     }
+    },
+    "tab_timeClick": {
+     "st": [
+      {
+       "paused": true,
+       "t": 0,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "active": {
+      "tag": "AUDIO",
+      "cls": ""
+     }
+    },
+    "tab_timeClick_space": {
+     "st": [
+      {
+       "paused": false,
+       "t": 0.326,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "active": {
+      "tag": "AUDIO",
+      "cls": ""
+     }
+    },
+    "tab_timeClick_space2": {
+     "st": [
+      {
+       "paused": true,
+       "t": 0.34,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "active": {
+      "tag": "AUDIO",
+      "cls": ""
+     }
+    },
+    "tab_play": {
+     "st": [
+      {
+       "paused": false,
+       "t": 0.414,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "active": {
+      "tag": "AUDIO",
+      "cls": ""
+     }
+    },
+    "tab_play_space": {
+     "st": [
+      {
+       "paused": true,
+       "t": 0.425,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "active": {
+      "tag": "AUDIO",
+      "cls": ""
+     }
+    },
+    "tab_play_space2": {
+     "st": [
+      {
+       "paused": false,
+       "t": 0.825,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "active": {
+      "tag": "AUDIO",
+      "cls": ""
+     }
+    },
+    "tab_play_enter": {
+     "st": [
+      {
+       "paused": true,
+       "t": 0,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "active": {
+      "tag": "AUDIO",
+      "cls": ""
+     }
+    },
+    "tab_seek": {
+     "st": [
+      {
+       "paused": true,
+       "t": 16.64,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "active": {
+      "tag": "AUDIO",
+      "cls": ""
+     }
+    },
+    "tab_seek_space": {
+     "st": [
+      {
+       "paused": true,
+       "t": 16.64,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "active": {
+      "tag": "AUDIO",
+      "cls": ""
+     }
+    },
+    "tab_seek_space2": {
+     "st": [
+      {
+       "paused": true,
+       "t": 16.64,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "active": {
+      "tag": "AUDIO",
+      "cls": ""
+     }
+    },
+    "tab_seek_ArrowRight": {
+     "st": [
+      {
+       "paused": true,
+       "t": 17.24,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "active": {
+      "tag": "AUDIO",
+      "cls": ""
+     }
+    },
+    "tab_seek_ArrowLeft": {
+     "st": [
+      {
+       "paused": true,
+       "t": 16.64,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "active": {
+      "tag": "AUDIO",
+      "cls": ""
+     }
+    },
+    "tab_tabOrder": [
+     {
+      "tag": "AUDIO",
+      "cls": "",
+      "aria": null
+     },
+     {
+      "tag": "AUDIO",
+      "cls": "",
+      "aria": null
+     },
+     {
+      "tag": "AUDIO",
+      "cls": "",
+      "aria": null
+     },
+     {
+      "tag": "AUDIO",
+      "cls": "",
+      "aria": null
+     },
+     {
+      "tag": "AUDIO",
+      "cls": "",
+      "aria": null
+     },
+     {
+      "tag": "AUDIO",
+      "cls": "",
+      "aria": null
+     }
+    ],
+    "read_textClick": {
+     "st": [
+      {
+       "paused": true,
+       "t": 0,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties"
+     }
+    },
+    "read_textClick_space": {
+     "st": [
+      {
+       "paused": true,
+       "t": 0,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties"
+     }
+    },
+    "read_play": {
+     "st": [
+      {
+       "paused": false,
+       "t": 0.43,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "active": {
+      "tag": "AUDIO",
+      "cls": ""
+     }
+    },
+    "read_play_space": {
+     "st": [
+      {
+       "paused": true,
+       "t": 0.442,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "active": {
+      "tag": "AUDIO",
+      "cls": ""
+     }
+    },
+    "read_scroll": 0,
+    "read_textAfter": {
+     "st": [
+      {
+       "paused": true,
+       "t": 0.442,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties"
+     }
+    },
+    "read_textAfter_space": {
+     "st": [
+      {
+       "paused": true,
+       "t": 0.442,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "active": {
+      "tag": "DIV",
+      "cls": "markdown-preview-view markdown-rendered node-insert-event is-readable-line-width allow-fold-headings allow-fold-lists show-indentation-guide show-properties"
+     }
+    },
+    "live_caret_space": {
+     "st": [
+      {
+       "paused": true,
+       "t": 0,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "active": {
+      "tag": "DIV",
+      "cls": "cm-content cm-lineWrapping"
+     },
+     "line2": " A line before the player."
+    },
+    "live_play": {
+     "st": [
+      {
+       "paused": false,
+       "t": 0.421,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "active": {
+      "tag": "AUDIO",
+      "cls": ""
+     },
+     "cursor": {
+      "line": 2,
+      "ch": 0
+     }
+    },
+    "live_play_space": {
+     "st": [
+      {
+       "paused": true,
+       "t": 0.429,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "active": {
+      "tag": "AUDIO",
+      "cls": ""
+     },
+     "doc": "# Embed\n\nA line before the player.\n\n![[long.mp3]]\n\nA line after the player.\n"
+    },
+    "live_play_space2": {
+     "st": [
+      {
+       "paused": false,
+       "t": 0.828,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "active": {
+      "tag": "AUDIO",
+      "cls": ""
+     },
+     "doc": "# Embed\n\nA line before the player.\n\n![[long.mp3]]\n\nA line after the player.\n"
+    }
+   },
+   "s05-two-embeds": {
+    "ok": true,
+    "ms": 8522,
+    "reading": [
+     {
+      "paused": false,
+      "t": 1.111,
+      "volume": 1,
+      "muted": false,
+      "rate": 1,
+      "pitch": true,
+      "connected": true
+     },
+     {
+      "paused": true,
+      "t": 0,
+      "volume": 1,
+      "muted": false,
+      "rate": 1,
+      "pitch": true,
+      "connected": true
+     }
+    ],
+    "shot": "02-two-embeds.png",
+    "live": [
+     {
+      "paused": true,
+      "t": 0,
+      "volume": 1,
+      "muted": false,
+      "rate": 1,
+      "pitch": true,
+      "connected": true
+     },
+     {
+      "paused": false,
+      "t": 1.112,
+      "volume": 1,
+      "muted": false,
+      "rate": 1,
+      "pitch": true,
+      "connected": true
+     }
+    ]
+   },
+   "s06-margins": {
+    "ok": true,
+    "ms": 6490,
+    "live": [
+     {
+      "tag": "DIV",
+      "cls": "cm-line cm-active",
+      "rect": [
+       466,
+       154.4,
+       700,
+       24
+      ],
+      "text": "Line one",
+      "styles": {
+       "margin-top": "0px",
+       "margin-bottom": "0px",
+       "padding-top": "0px",
+       "padding-bottom": "0px",
+       "line-height": "24px",
+       "height": "24px",
+       "display": "block"
+      },
+      "embed": null
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "rect": [
+       466,
+       178.4,
+       700,
+       24
+      ],
+      "text": "",
+      "styles": {
+       "margin-top": "0px",
+       "margin-bottom": "0px",
+       "padding-top": "0px",
+       "padding-bottom": "0px",
+       "line-height": "24px",
+       "height": "24px",
+       "display": "block"
+      },
+      "embed": null
+     },
+     {
+      "tag": "DIV",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       466,
+       202.4,
+       700,
+       48
+      ],
+      "styles": {
+       "margin-top": "0px",
+       "margin-bottom": "0px",
+       "padding-top": "0px",
+       "padding-bottom": "0px",
+       "line-height": "24px",
+       "height": "48px",
+       "display": "block"
+      },
+      "embed": null
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "rect": [
+       466,
+       250.4,
+       700,
+       24
+      ],
+      "text": "",
+      "styles": {
+       "margin-top": "0px",
+       "margin-bottom": "0px",
+       "padding-top": "0px",
+       "padding-bottom": "0px",
+       "line-height": "24px",
+       "height": "24px",
+       "display": "block"
+      },
+      "embed": null
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "rect": [
+       466,
+       274.4,
+       700,
+       24
+      ],
+      "text": "Line two",
+      "styles": {
+       "margin-top": "0px",
+       "margin-bottom": "0px",
+       "padding-top": "0px",
+       "padding-bottom": "0px",
+       "line-height": "24px",
+       "height": "24px",
+       "display": "block"
+      },
+      "embed": null
+     },
+     {
+      "tag": "DIV",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       466,
+       298.4,
+       700,
+       48
+      ],
+      "styles": {
+       "margin-top": "0px",
+       "margin-bottom": "0px",
+       "padding-top": "0px",
+       "padding-bottom": "0px",
+       "line-height": "24px",
+       "height": "48px",
+       "display": "block"
+      },
+      "embed": null
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "rect": [
+       466,
+       346.4,
+       700,
+       24
+      ],
+      "text": "Line three",
+      "styles": {
+       "margin-top": "0px",
+       "margin-bottom": "0px",
+       "padding-top": "0px",
+       "padding-bottom": "0px",
+       "line-height": "24px",
+       "height": "24px",
+       "display": "block"
+      },
+      "embed": null
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "rect": [
+       466,
+       370.4,
+       700,
+       24
+      ],
+      "text": "",
+      "styles": {
+       "margin-top": "0px",
+       "margin-bottom": "0px",
+       "padding-top": "0px",
+       "padding-bottom": "0px",
+       "line-height": "24px",
+       "height": "24px",
+       "display": "block"
+      },
+      "embed": null
+     },
+     {
+      "tag": "DIV",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       466,
+       394.4,
+       700,
+       48
+      ],
+      "styles": {
+       "margin-top": "0px",
+       "margin-bottom": "0px",
+       "padding-top": "0px",
+       "padding-bottom": "0px",
+       "line-height": "24px",
+       "height": "48px",
+       "display": "block"
+      },
+      "embed": null
+     },
+     {
+      "tag": "DIV",
+      "cls": "internal-embed media-embed audio-embed is-loaded",
+      "rect": [
+       466,
+       442.4,
+       700,
+       48
+      ],
+      "styles": {
+       "margin-top": "0px",
+       "margin-bottom": "0px",
+       "padding-top": "0px",
+       "padding-bottom": "0px",
+       "line-height": "24px",
+       "height": "48px",
+       "display": "block"
+      },
+      "embed": null
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "rect": [
+       466,
+       490.4,
+       700,
+       24
+      ],
+      "text": "Line four",
+      "styles": {
+       "margin-top": "0px",
+       "margin-bottom": "0px",
+       "padding-top": "0px",
+       "padding-bottom": "0px",
+       "line-height": "24px",
+       "height": "24px",
+       "display": "block"
+      },
+      "embed": null
+     },
+     {
+      "tag": "DIV",
+      "cls": "cm-line",
+      "rect": [
+       466,
+       514.4,
+       700,
+       24
+      ],
+      "text": "",
+      "styles": {
+       "margin-top": "0px",
+       "margin-bottom": "0px",
+       "padding-top": "0px",
+       "padding-bottom": "0px",
+       "line-height": "24px",
+       "height": "24px",
+       "display": "block"
+      },
+      "embed": null
+     }
+    ],
+    "liveShot": "01-margins-live.png",
+    "reading": [
+     {
+      "cls": "markdown-preview-pusher",
+      "rect": [
+       466,
+       110.4,
+       1,
+       0.1
+      ],
+      "kids": []
+     },
+     {
+      "cls": "mod-header mod-ui",
+      "rect": [
+       466,
+       110.5,
+       700,
+       31.1
+      ],
+      "kids": [
+       {
+        "tag": "DIV",
+        "cls": "inline-title",
+        "rect": [
+         466,
+         110.5,
+         700,
+         31.1
+        ],
+        "text": "Margins",
+        "styles": {
+         "margin-top": "0px",
+         "margin-bottom": "12.944px",
+         "line-height": "31.0656px"
+        }
+       },
+       {
+        "tag": "DIV",
+        "cls": "metadata-container",
+        "rect": [
+         0,
+         0,
+         0,
+         0
+        ],
+        "text": "PropertiesAdd property",
+        "styles": {
+         "margin-top": "0px",
+         "margin-bottom": "32px",
+         "line-height": "24px"
+        }
+       }
+      ]
+     },
+     {
+      "cls": "el-p",
+      "rect": [
+       466,
+       154.5,
+       700,
+       24
+      ],
+      "kids": [
+       {
+        "tag": "P",
+        "cls": "",
+        "rect": [
+         466,
+         154.5,
+         700,
+         24
+        ],
+        "text": "Line one",
+        "styles": {
+         "margin-top": "0px",
+         "margin-bottom": "16px",
+         "line-height": "24px"
+        }
+       }
+      ]
+     },
+     {
+      "cls": "el-p",
+      "rect": [
+       466,
+       194.5,
+       700,
+       48
+      ],
+      "kids": [
+       {
+        "tag": "P",
+        "cls": "",
+        "rect": [
+         466,
+         194.5,
+         700,
+         48
+        ],
+        "text": "",
+        "styles": {
+         "margin-top": "16px",
+         "margin-bottom": "16px",
+         "line-height": "24px"
+        }
+       }
+      ]
+     },
+     {
+      "cls": "el-p",
+      "rect": [
+       466,
+       258.5,
+       700,
+       120
+      ],
+      "kids": [
+       {
+        "tag": "P",
+        "cls": "",
+        "rect": [
+         466,
+         258.5,
+         700,
+         120
+        ],
+        "text": "Line two\n\nLine three",
+        "styles": {
+         "margin-top": "16px",
+         "margin-bottom": "16px",
+         "line-height": "24px"
+        }
+       }
+      ]
+     },
+     {
+      "cls": "el-p",
+      "rect": [
+       466,
+       394.5,
+       700,
+       168
+      ],
+      "kids": [
+       {
+        "tag": "P",
+        "cls": "",
+        "rect": [
+         466,
+         394.5,
+         700,
+         168
+        ],
+        "text": "\n\nLine four",
+        "styles": {
+         "margin-top": "16px",
+         "margin-bottom": "16px",
+         "line-height": "24px"
+        }
+       }
+      ]
+     },
+     {
+      "cls": "mod-footer mod-ui",
+      "rect": [
+       466,
+       578.5,
+       700,
+       0
+      ],
+      "kids": [
+       {
+        "tag": "DIV",
+        "cls": "embedded-backlinks",
+        "rect": [
+         0,
+         0,
+         0,
+         0
+        ],
+        "text": "",
+        "styles": {
+         "margin-top": "48px",
+         "margin-bottom": "0px",
+         "line-height": "24px"
+        }
+       }
+      ]
+     }
+    ],
+    "readingShot": "02-margins-reading.png"
+   },
+   "s07-away": {
+    "ok": true,
+    "ms": 25474,
+    "read_playing": [
+     {
+      "paused": true,
+      "t": 0,
+      "volume": 1,
+      "muted": false,
+      "rate": 1,
+      "pitch": true,
+      "connected": true
+     },
+     {
+      "paused": false,
+      "t": 0.728,
+      "volume": 1,
+      "muted": false,
+      "rate": 1,
+      "pitch": true,
+      "connected": true
+     }
+    ],
+    "read_scrolled": {
+     "all": [
+      {
+       "paused": true,
+       "t": 0,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "inDom": 1
+    },
+    "read_back": {
+     "all": [
+      {
+       "paused": true,
+       "t": 0,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      },
+      {
+       "paused": true,
+       "t": 0.764,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "inDom": 2
+    },
+    "live_playing": [
+     {
+      "paused": false,
+      "t": 0.733,
+      "volume": 1,
+      "muted": false,
+      "rate": 1,
+      "pitch": true,
+      "connected": true
+     },
+     {
+      "paused": true,
+      "t": 0,
+      "volume": 1,
+      "muted": false,
+      "rate": 1,
+      "pitch": true,
+      "connected": true
+     }
+    ],
+    "live_scrolled": {
+     "all": [
+      {
+       "paused": true,
+       "t": 0,
+       "volume": 1,
+       "muted": false,
+       "rate": 1,
+       "pitch": true,
+       "connected": true
+      }
+     ],
+     "inDom": 1
+    },
+    "tab_background": [
+     {
+      "paused": false,
+      "t": 2.308,
+      "volume": 1,
+      "muted": false,
+      "rate": 1,
+      "pitch": true,
+      "connected": true
+     }
+    ],
+    "modeSwitch": [
+     {
+      "paused": true,
+      "t": 0,
+      "volume": 1,
+      "muted": false,
+      "rate": 1,
+      "pitch": true,
+      "connected": true,
+      "shown": true
+     },
+     {
+      "paused": false,
+      "t": 1.953,
+      "volume": 1,
+      "muted": false,
+      "rate": 1,
+      "pitch": true,
+      "connected": true,
+      "shown": false
+     }
+    ]
+   },
+   "s02b-volume-hover-only": {
+    "ok": true,
+    "ms": 29383,
+    "overPlay": 0,
+    "overOverflow": 0,
+    "opening": [
+     52,
+     52,
+     52,
+     52,
+     52,
+     52,
+     52,
+     52
+    ],
+    "thenOverflow": 0,
+    "closing": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "transition": {
+     "color": "rgb(0, 0, 0)",
+     "font-size": "12px",
+     "accent-color": "auto",
+     "background-color": "rgba(0, 0, 0, 0)",
+     "cursor": "auto",
+     "display": "flex",
+     "height": "32px",
+     "opacity": "1",
+     "visibility": "visible",
+     "width": "32px"
+    },
+    "mutedFirst": {
+     "paused": true,
+     "t": 0,
+     "volume": 1,
+     "muted": true,
+     "rate": 1,
+     "pitch": true,
+     "connected": true
+    },
+    "sliderWhileMuted": {
+     "st": {
+      "paused": true,
+      "t": 0,
+      "volume": 0.5,
+      "muted": false,
+      "rate": 1,
+      "pitch": true,
+      "connected": true
+     },
+     "aria": "mute"
+    },
+    "sliderAtZero": {
+     "st": {
+      "paused": true,
+      "t": 0,
+      "volume": 0,
+      "muted": false,
+      "rate": 1,
+      "pitch": true,
+      "connected": true
+     },
+     "aria": "unmute"
+    },
+    "zeroShot": "01-volume-zero.png",
+    "muteAtZero": {
+     "st": {
+      "paused": true,
+      "t": 0,
+      "volume": 0,
+      "muted": true,
+      "rate": 1,
+      "pitch": true,
+      "connected": true
+     },
+     "aria": "unmute",
+     "slider": {
+      "type": "range",
+      "step": "any",
+      "max": "1",
+      "aria-valuemax": "100",
+      "aria-valuemin": "0",
+      "aria-label": "volume",
+      "pseudo": "-webkit-media-controls-volume-slider",
+      "aria-valuenow": "0",
+      "class": "",
+      "style": ""
+     }
+    },
+    "muteAtZero2": {
+     "st": {
+      "paused": true,
+      "t": 0,
+      "volume": 0,
+      "muted": false,
+      "rate": 1,
+      "pitch": true,
+      "connected": true
+     },
+     "aria": "unmute"
+    }
+   }
+  },
+  "order": [
+   "s00-context",
+   "s01-shadow-tab",
+   "s02-volume",
+   "s03-overflow",
+   "s04-space",
+   "s05-two-embeds",
+   "s06-margins",
+   "s07-away",
+   "s02b-volume-hover-only"
+  ],
+  "elapsedMs": 82823,
+  "vaultPath": "/tmp/claude-1000/-home-ragtux-bstore2-raga-repos-scoria/892bde44-e469-45b7-ae54-7ac59f66638d/scratchpad/audio-extras/vault",
+  "version": {
+   "title": "New tab - vault - Obsidian 1.15.1",
+   "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+   "win": [
+    1600,
+    1000
+   ],
+   "dpr": 1
+  }
+ }
+}

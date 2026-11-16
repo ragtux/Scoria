@@ -367,6 +367,7 @@ pub fn bind_all_keys(cx: &mut App, registry: &CommandRegistry) {
     slides::bind_keys(cx);
     migrate_modal::bind_keys(cx);
     export_modals::bind_keys(cx);
+    media::bind_keys(cx);
     cx.bind_keys([KeyBinding::new("ctrl-q", Quit, None)]);
 }
 

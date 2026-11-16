@@ -335,7 +335,7 @@ The gate's run, its sheet and its log are in [[Parity gate run]].
 | The File properties pane | done 2026-11-16: edited through Live Preview's property editor, closable from its tab's menu and with Mod+W, Add alias from Source mode lands in it, its links preview, see [[#The File properties pane, 2026-11-16]] and [[Specification#Observed File properties pane, Obsidian 1.15.1 (installer build 1.13.7)]] |
 | Mermaid diagrams | done 2026-11-15: laid out by limu (a Rust port of Pele, the renderer Obsidian bundles) and painted natively in the reading view, Live Preview, embeds, hover previews and Export to PDF, see [[#Mermaid diagrams, 2026-11-15]] and [[Specification#Observed Mermaid diagrams, Obsidian 1.15.1]] |
 | Slash commands | done 2026-11-11: probed in a headless sway and built on the autocompletion popup, see [[#Slash commands, 2026-11-11]] and [[Specification#Observed Slash commands, Obsidian 1.15.0]] |
-| Canvas embeds, audio and video | 2026-11-15: `![[x.canvas]]` is the canvas's minimap as Obsidian draws it, audio plays in a tab and embedded, video is a card with "Open in default app" (no pure-Rust decoder is credible yet), see [[#Canvas embeds, the audio player and video, 2026-11-15]] and [[Specification#Observed canvas embeds, audio and video, Obsidian 1.15.0]] |
+| Canvas embeds, audio and video | 2026-11-15: `![[x.canvas]]` is the canvas's minimap as Obsidian draws it, audio plays in a tab and embedded, video is a card with "Open in default app" (no pure-Rust decoder is credible yet), see [[#Canvas embeds, the audio player and video, 2026-11-15]] and [[Specification#Observed canvas embeds, audio and video, Obsidian 1.15.0]]; the player's volume slider, playback speed, Space, one player per embed and Live Preview's margins landed 2026-11-16, see [[#The audio player's extras, 2026-11-16]] and [[Specification#Observed audio player extras, Obsidian 1.15.1]] |
 | Paste and drop | done 2026-11-15: pasted HTML as Markdown, clipboard images and files saved as attachments, files dropped from a file manager, see [[#Paste and drop, 2026-11-15]] and [[Specification#Observed HTML paste and file drops, Obsidian 1.15.0]] |
 | Spellcheck | done 2026-11-15: probed in a headless sway, then `scoria-spell` (spellbook, a bundled `en-US`), squiggles in both editing modes, the corrections and "Add to dictionary" in the editor menu, the custom dictionary page and the languages row, see [[#Spellcheck, 2026-11-15]] and [[Specification#Observed spellcheck, Obsidian 1.15.0 (installer build 1.13.7)]] |
 | Excluded files | done 2026-11-16: `userIgnoreFilters` matched as Obsidian 1.15.1 does and applied to search, the graph, unlinked mentions, the switcher, link autocompletion, the Tags pane and Bases; the Settings row edits it, see [[#Excluded files, 2026-11-16]] and [[Specification#Observed Excluded files, Obsidian 1.15.1]] |
@@ -530,6 +530,85 @@ steps against the `getFiles()` lists Obsidian printed),
 `ops::tests::a_new_folder_is_untitled_then_numbered`, and
 `settings::tests::the_file_suggester_lists_filters_and_writes_the_path` with two notes created
 after the vault opened.
+
+### The audio player's extras, 2026-11-16
+
+The manual's differences page listed what the 2026-11-15 player left out: Chromium's volume
+slider and playback-speed menu, Space, a player per embed, and Live Preview's spacing. Probed,
+then built on `scoria-audio`'s player. See [[Specification#Observed audio player extras, Obsidian 1.15.1]].
+
+**The probe.** `tools/obsidian-probe/audio-extras.mjs`, Obsidian 1.15.1 (installer 1.13.7) in a
+private headless sway with its own `XDG_RUNTIME_DIR`, a dead session bus, `USER_DATA_DIR` and
+`CDP_PORT=9476`. Chromium's control lives in a user-agent shadow root that `querySelector`
+cannot reach; CDP's `DOM.describeNode` with `pierce: true` on the `<audio>`'s remote object
+returns it whole, every part named by its `pseudo` attribute, and `DOM.getBoxModel` and
+`CSS.getComputedStyleForNode` by backend id give its boxes and paint. What it settled: the
+slider opens only over the mute button and closes the moment the pointer leaves (unless it has
+the focus); a press maps through the thumb's half-width at each end; moving it unmutes; the ⋮
+menu has one row for audio, Playback speed, whose list is 0.25, 0.5, 0.75, Normal, 1.25, 1.5,
+1.75, 2 with the pitch kept; Space works only once the `<audio>` has the focus, and the seek bar
+takes the arrows instead; two embeds are two players; a playing embed scrolled far off is
+paused (its element dropped) while a background tab keeps playing; and in Live Preview the
+48 px embed touches the lines around it.
+
+**Three harness traps.** The nix wrapper launches Obsidian on Wayland, so a probe whose sway
+was reached through XWayland's `DISPLAY` alone dies in a core dump with "Failed to connect to
+Wayland display" (pass `WAYLAND_DISPLAY`). Chromium's singleton socket path is capped like any
+Unix socket, and a `TMPDIR` inside the session scratchpad is too long ("Socket path too long"):
+point `TMPDIR` and `USER_DATA_DIR` under `/run/user/1000`. And ALSA's null device is not paced,
+so the first run's players ran a minute's file to its end within a click: the second ran with
+`--disable-audio-output`, Chromium's own paced fake sink. `DOM.describeNode` by object id also
+needs a `DOM.getDocument` first, or every node id after it is unknown.
+
+**What was built.**
+- `scoria-audio::stretch`, no gpui: a streaming WSOLA time stretcher (40 ms Hann frames, a
+  20 ms hop, each frame moved within ±10 ms to the offset best correlated with the previous
+  frame's continuation, a coarse pass then a fine one); rate 1 passes the samples through.
+  `player::Convert` chains remix, resample and stretch for the worker; `Engine::set_rate`
+  re-anchors at the current place (a seek, so the queue stretched at the old rate goes) and
+  the position counts output frames times the rate.
+- `media`: the registry keys a player by the view drawing the note (the editor or the reading
+  view, a new `Renderer::with_media_host`), the note, the file and the embed's ordinal among the
+  note's embeds of it (counted in the model builder beside the bases' ordinals, so a rebuild
+  keeps it). Probes stay per file. A slot keeps the settings (volume, mute, rate) and, once a
+  paused player has not been drawn for a minute, its place, closing the device. The controls
+  gain the slider (52 px, the thumb's run, opened by hover or a drag), the ⋮ button and its menu
+  (a deferred, anchored element over the button: the Playback speed row, then Options and the
+  eight speeds with the current one checked, scrolling at 250 px), and the focus: a press on the
+  player gives it a focus handle, recording which part (button, seek bar, slider) has the keys.
+  The keys are actions in an `AudioPlayer` key context beneath the editor's, so the arrows,
+  Home and End reach the player rather than the editor's caret commands (an `on_key_down`
+  handler never saw them: the editor's bindings consumed them first). Space with nothing
+  focused in the player still types or scrolls as before.
+- Live Preview: a widget that is one audio embed is laid out tight, without the paragraph gap
+  (14.4 px at 16 px text) the reading renderer puts under a paragraph.
+- `circle-play` (Lucide) for the Playback speed row; `state.audio` on the control socket lists
+  every player with its note, file, ordinal, settings, menu page and focused part.
+
+**Driven** in the private sway over the control socket on a scratch vault with a two-hour MP3
+(the null device again plays faster than real time). In Live Preview: play, then Space paused
+and played it with the caret left at 1:1 and the note's bytes unchanged; the slider opened over
+the button and not over play, a press 13 px in read 0.175, Up and Right 0.185 and 0.195, Home
+0 and End 1, the caret still at 1:1; mute, then the slider, unmuted at 0.5; the pointer away
+closed it. A press on the seek bar, then Right and Left stepped 72 s of 7200, and Space there
+did nothing. The menu, Playback speed, the list scrolled, 1.5 picked and checked; Escape closed
+an open menu. Two `![[long.mp3]]`: playing one left the other at 0; the second kept playing in
+a background tab and was there, still playing, on the way back; the reading view of the same
+note had players of its own. The embeds now stand 72 px apart and touch the lines around them,
+as Obsidian's.
+
+**Tests.** `scoria-audio`: `stretch::tests` (rate 1 is the identity; 0.25 to 2 keep a 1 kHz tone
+at its pitch and amplitude with no step at a joint and scale the length; block sizes do not
+matter; stereo stays apart) and `player::tests::the_rate_speeds_the_clock_and_keeps_the_pitch`.
+The app: `media::tests` (the slider's value, mute against the slider, keys by focused part, the
+speed list, two embeds as two players) and the model's ordinal and owner in
+`a_canvas_embed_is_its_minimap_and_media_embeds_read_nothing`.
+
+**Left.** The controls keep the theme's colours rather than Chromium's grey; a playing embed
+scrolled out of view keeps playing (Obsidian's pauses); the speed list opens scrolled to its
+top, where Chromium scrolls the checked row into view; an audio tab still sits in the readable
+column; the slider does not stay open while it has the focus after the pointer leaves; real-time
+pacing of the speed on a real device was not listened to.
 
 ### Excluded files, 2026-11-16
 

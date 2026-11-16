@@ -10,7 +10,8 @@
 //!   duration without decoding.
 //! - [`Engine`]: the playback state between a decoding worker and the audio
 //!   callback: the queue of samples ready to play, pause, seek, volume, the
-//!   position, the end. It has no device in it, so the tests drive it with
+//!   playback rate (pitch kept, by [`crate::stretch`]), the position, the
+//!   end. It has no device in it, so the tests drive it with
 //!   [`Engine::pump`] and [`Engine::fill`] the way the worker and the device
 //!   would.
 //! - [`Player`]: an engine with a worker thread decoding ahead and a cpal
@@ -23,6 +24,7 @@ use std::sync::{Arc, Condvar, Mutex};
 use std::thread::JoinHandle;
 use std::time::Duration;
 
+use crate::stretch::Stretch;
 use symphonia::core::audio::SampleBuffer;
 use symphonia::core::codecs::{DecoderOptions, CODEC_TYPE_NULL, CODEC_TYPE_OPUS};
 use symphonia::core::errors::Error as SymError;
@@ -374,6 +376,47 @@ impl Resampler {
     }
 }
 
+/// A decoded block on its way to the device: its channels remixed to the
+/// output's, resampled to the output's rate, then stretched to the playback
+/// rate.
+#[derive(Debug, Clone)]
+pub struct Convert {
+    out: Output,
+    resampler: Resampler,
+    stretch: Stretch,
+}
+
+impl Convert {
+    pub fn new(source_rate: u32, out: Output) -> Convert {
+        Convert {
+            out,
+            resampler: Resampler::new(source_rate, out.rate, out.channels),
+            stretch: Stretch::new(out.rate, out.channels, 1.0),
+        }
+    }
+
+    /// Starts afresh at `rate`, as after a seek.
+    pub fn reset(&mut self, rate: f64) {
+        self.resampler.reset();
+        if self.stretch.rate() == rate {
+            self.stretch.reset();
+        } else {
+            self.stretch = Stretch::new(self.out.rate, self.out.channels, rate);
+        }
+    }
+
+    pub fn process(&mut self, samples: &[f32], channels: usize) -> Vec<f32> {
+        let mixed = remix(samples, channels, self.out.channels);
+        let resampled = self.resampler.process(&mixed);
+        self.stretch.process(&resampled)
+    }
+
+    /// The stretcher's last overlap, at the end of the source.
+    pub fn flush(&mut self) -> Vec<f32> {
+        self.stretch.flush()
+    }
+}
+
 // ---- the engine -----------------------------------------------------------
 
 /// The output a player plays into: its rate and channel count.
@@ -400,6 +443,8 @@ struct State {
     ended: bool,
     /// A seek the worker has not done yet.
     seek: Option<f64>,
+    /// The playback rate: 1 is normal, 2 twice as fast, the pitch kept.
+    rate: f64,
     duration: Option<f64>,
     error: Option<String>,
     quit: bool,
@@ -429,6 +474,7 @@ impl Engine {
                     exhausted: false,
                     ended: false,
                     seek: None,
+                    rate: 1.0,
                     duration,
                     error: None,
                     quit: false,
@@ -489,6 +535,32 @@ impl Engine {
         self.wake();
     }
 
+    /// Sets the playback rate (`<audio>`'s `playbackRate`; the menu offers
+    /// 0.25 to 2). What is queued was stretched at the old rate, so the
+    /// worker goes back to where playback is and starts again from there.
+    pub fn set_rate(&self, rate: f64) {
+        if !rate.is_finite() || rate <= 0.0 {
+            return;
+        }
+        let rate = rate.clamp(0.0625, 16.0);
+        let at = self.position();
+        let mut s = self.state();
+        if s.rate == rate {
+            return;
+        }
+        s.rate = rate;
+        if !s.ended {
+            s.seek = Some(at);
+            s.queue.clear();
+        }
+        drop(s);
+        self.wake();
+    }
+
+    pub fn rate(&self) -> f64 {
+        self.state().rate
+    }
+
     pub fn set_volume(&self, volume: f32) {
         self.state().volume = volume.clamp(0.0, 1.0);
     }
@@ -514,18 +586,17 @@ impl Engine {
     }
 
     /// Where playback is, in seconds: a pending seek's target, else what the
-    /// device has played since the last one; the end once ended.
+    /// device has played since the last one (at the rate, which never
+    /// changes between seeks); the end once ended.
     pub fn position(&self) -> f64 {
         let s = self.state();
         if let Some(t) = s.seek {
             return t;
         }
+        let p = s.base + s.played as f64 * s.rate / self.out.rate as f64;
         if s.ended {
-            return s
-                .duration
-                .unwrap_or(s.base + s.played as f64 / self.out.rate as f64);
+            return s.duration.unwrap_or(p);
         }
-        let p = s.base + s.played as f64 / self.out.rate as f64;
         match s.duration {
             Some(d) => p.min(d),
             None => p,
@@ -540,18 +611,18 @@ impl Engine {
     /// One step of the worker: a pending seek, or one block decoded into the
     /// queue when it is short. `false` when there was nothing to do (or the
     /// player is closing), which is when the worker waits.
-    pub fn pump(&self, source: &mut Source, resampler: &mut Resampler) -> bool {
+    pub fn pump(&self, source: &mut Source, convert: &mut Convert) -> bool {
         let target = (AHEAD * self.out.rate as f64) as usize * self.out.channels;
-        let (seek, need) = {
+        let (seek, need, rate) = {
             let s = self.state();
             if s.quit {
                 return false;
             }
-            (s.seek, !s.exhausted && s.queue.len() < target)
+            (s.seek, !s.exhausted && s.queue.len() < target, s.rate)
         };
         if let Some(t) = seek {
             let r = source.seek(t);
-            resampler.reset();
+            convert.reset(rate);
             let mut s = self.state();
             if s.seek == Some(t) {
                 s.seek = None;
@@ -571,14 +642,20 @@ impl Engine {
         }
         match source.next_block() {
             Ok(Some(block)) => {
-                let mixed = remix(&block.samples, block.channels, self.out.channels);
-                let out = resampler.process(&mixed);
+                let out = convert.process(&block.samples, block.channels);
                 let mut s = self.state();
                 if s.seek.is_none() {
                     s.queue.extend(out);
                 }
             }
-            Ok(None) => self.state().exhausted = true,
+            Ok(None) => {
+                let tail = convert.flush();
+                let mut s = self.state();
+                if s.seek.is_none() {
+                    s.queue.extend(tail);
+                    s.exhausted = true;
+                }
+            }
             Err(e) => {
                 let mut s = self.state();
                 s.error = Some(e);
@@ -615,12 +692,12 @@ impl Engine {
 
     /// The worker: decodes ahead until the player closes.
     fn run(&self, mut source: Source) {
-        let mut resampler = Resampler::new(source.sample_rate, self.out.rate, self.out.channels);
+        let mut convert = Convert::new(source.sample_rate, self.out);
         loop {
             if self.state().quit {
                 return;
             }
-            if !self.pump(&mut source, &mut resampler) {
+            if !self.pump(&mut source, &mut convert) {
                 let s = self.state();
                 if s.quit {
                     return;
@@ -871,14 +948,14 @@ mod tests {
         assert!(max_jump < 0.14, "{max_jump}");
     }
 
-    fn engine_on(p: &Path, out: Output) -> (Engine, Source, Resampler) {
+    fn engine_on(p: &Path, out: Output) -> (Engine, Source, Convert) {
         let s = Source::open(p).unwrap();
         let e = Engine::new(out, s.info().duration);
-        let r = Resampler::new(s.sample_rate, out.rate, out.channels);
+        let r = Convert::new(s.sample_rate, out);
         (e, s, r)
     }
 
-    fn pump_all(e: &Engine, s: &mut Source, r: &mut Resampler) {
+    fn pump_all(e: &Engine, s: &mut Source, r: &mut Convert) {
         while e.pump(s, r) {}
     }
 
@@ -937,6 +1014,60 @@ mod tests {
         e.play();
         assert_eq!(e.position(), 0.0);
         assert!(e.is_playing());
+    }
+
+    #[test]
+    fn the_rate_speeds_the_clock_and_keeps_the_pitch() {
+        let dir = tempfile::tempdir().unwrap();
+        let p = dir.path().join("tone.wav");
+        wav(&p, 48_000, 4.0, 500.0);
+        let out = Output {
+            rate: 48_000,
+            channels: 1,
+        };
+        let (e, mut s, mut r) = engine_on(&p, out);
+        assert_eq!(e.rate(), 1.0);
+        e.play();
+        pump_all(&e, &mut s, &mut r);
+        let mut buf = vec![0.0; 4_800];
+        e.fill(&mut buf);
+        assert!((e.position() - 0.1).abs() < 1e-9);
+        // A new rate starts again from where playback is.
+        e.set_rate(1.5);
+        assert_eq!(e.rate(), 1.5);
+        assert!((e.position() - 0.1).abs() < 1e-9);
+        pump_all(&e, &mut s, &mut r);
+        let mut heard = Vec::new();
+        for _ in 0..10 {
+            pump_all(&e, &mut s, &mut r);
+            e.fill(&mut buf);
+            heard.extend_from_slice(&buf);
+        }
+        // A second of output is a second and a half of the file...
+        assert!((e.position() - 1.6).abs() < 1e-9, "{}", e.position());
+        // ...at the file's own pitch.
+        assert!((crossings(&heard, 1, 48_000) - 500.0).abs() < 8.0);
+        // Paused, a rate change leaves the place where it was.
+        e.pause();
+        e.set_rate(0.5);
+        assert!((e.position() - 1.6).abs() < 1e-9);
+        // Out of range or nonsense is held to the range or ignored.
+        e.set_rate(f64::NAN);
+        assert_eq!(e.rate(), 0.5);
+        e.set_rate(100.0);
+        assert_eq!(e.rate(), 16.0);
+        // The rest plays out at the rate and ends at the length.
+        e.set_rate(2.0);
+        e.play();
+        let mut big = vec![0.0; 48_000];
+        let mut guard = 0;
+        while !e.ended() && guard < 20 {
+            pump_all(&e, &mut s, &mut r);
+            e.fill(&mut big);
+            guard += 1;
+        }
+        assert!(e.ended());
+        assert_eq!(e.position(), 4.0);
     }
 
     #[test]

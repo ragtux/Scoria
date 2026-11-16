@@ -136,6 +136,7 @@ icons!(
     "picture-in-picture-2",
     "pin",
     "play",
+    "circle-play",
     "pause",
     "plus",
     "quote",
