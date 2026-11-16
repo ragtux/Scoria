@@ -18,7 +18,7 @@
 
 use gpui::{App, Global, ImageSource, RenderImage};
 use image::{Frame, RgbaImage};
-use scoria_pdf::{Bitmap, Document, OutlineItem, PageSize};
+use scoria_pdf::{Bitmap, Document, Error, OutlineItem, PageSize, TextItem, Theming};
 use std::collections::{HashMap, VecDeque};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, PoisonError};
@@ -46,6 +46,18 @@ pub enum DocState {
     Ready(Arc<Loaded>),
     /// Could not be read or parsed: the message to show.
     Failed(String),
+    /// Encrypted with a user password: the view asks for it (observed:
+    /// "This PDF is password protected"). `wrong` once a password was
+    /// tried and refused.
+    Locked {
+        wrong: bool,
+    },
+}
+
+/// A page's text items, being read or read.
+enum TextState {
+    Reading,
+    Ready(Arc<Vec<TextItem>>),
 }
 
 /// The cache. One per app, reached through [`documents`]; cheap to clone,
@@ -53,6 +65,43 @@ pub enum DocState {
 #[derive(Clone, Default)]
 pub struct Documents {
     inner: Arc<Mutex<Inner>>,
+}
+
+/// "Adapt to theme", app-wide: Obsidian keeps it in one `localStorage`
+/// key per vault (`<appId>-pdfjs-is-themed`), so every view, embed and
+/// card follows the toggle at once (observed). Kept for the session here.
+#[derive(Clone, Copy, Default)]
+pub struct AdaptToTheme(pub bool);
+
+impl Global for AdaptToTheme {}
+
+/// Whether "Adapt to theme" is on.
+pub fn adapt_to_theme(cx: &App) -> bool {
+    cx.try_global::<AdaptToTheme>().is_some_and(|a| a.0)
+}
+
+/// Turns "Adapt to theme" over for every PDF drawing.
+pub fn toggle_adapt_to_theme(cx: &mut App) {
+    let on = !adapt_to_theme(cx);
+    cx.set_global(AdaptToTheme(on));
+    cx.refresh_windows();
+}
+
+/// How pages are recoloured now: with the toggle on and a dark theme, on
+/// `--pdf-background` (observed: the light theme draws pages unchanged).
+pub fn theming(cx: &App) -> Option<Theming> {
+    if !adapt_to_theme(cx) {
+        return None;
+    }
+    let theme = cx.try_global::<crate::theme::Theme>()?;
+    if !theme.dark {
+        return None;
+    }
+    let rgb = theme.tokens.pdf_background.to_rgb();
+    let byte = |c: f32| (c.clamp(0.0, 1.0) * 255.0).round() as u8;
+    Some(Theming {
+        background: [byte(rgb.r), byte(rgb.g), byte(rgb.b)],
+    })
 }
 
 impl Global for Documents {}
@@ -65,6 +114,10 @@ pub fn documents(cx: &mut App) -> Documents {
 #[derive(Default)]
 struct Inner {
     docs: HashMap<PathBuf, DocState>,
+    /// Passwords that opened a file, for the session: an embed of a file
+    /// unlocked in a leaf opens too.
+    passwords: HashMap<PathBuf, String>,
+    texts: HashMap<(PathBuf, usize), TextState>,
     pages: HashMap<PageKey, PageState>,
     /// Ready pages, least recently used first.
     order: VecDeque<PageKey>,
@@ -79,14 +132,16 @@ struct PageKey {
     /// Pixels per point, in thousandths, so a key is hashable and two asks
     /// for the same zoom share a render.
     scale: u32,
+    theming: Option<Theming>,
 }
 
 impl PageKey {
-    fn new(path: &Path, page: usize, scale: f32) -> PageKey {
+    fn new(path: &Path, page: usize, scale: f32, theming: Option<Theming>) -> PageKey {
         PageKey {
             path: path.to_path_buf(),
             page,
             scale: ((scale.max(0.001)) * 1000.0).round() as u32,
+            theming,
         }
     }
 
@@ -145,6 +200,7 @@ impl Inner {
     /// Forgets a file and every page rendered from it.
     fn forget(&mut self, path: &Path) -> Vec<Arc<RenderImage>> {
         self.docs.remove(path);
+        self.texts.retain(|(p, _), _| p != path);
         let keys: Vec<PageKey> = self
             .pages
             .keys()
@@ -180,19 +236,40 @@ impl Documents {
             }
             inner.docs.insert(absolute.to_path_buf(), DocState::Loading);
         }
+        self.spawn_load(absolute, None, cx);
+        DocState::Loading
+    }
+
+    /// Tries `password` on a locked file; the view shows the outcome on the
+    /// next refresh (ready, or locked again with `wrong`).
+    pub fn unlock(&self, absolute: &Path, password: &str, cx: &mut App) {
+        Inner::lock(&self.inner)
+            .docs
+            .insert(absolute.to_path_buf(), DocState::Loading);
+        self.spawn_load(absolute, Some(password.to_string()), cx);
+    }
+
+    fn spawn_load(&self, absolute: &Path, tried: Option<String>, cx: &mut App) {
         let this = self.clone();
         let path = absolute.to_path_buf();
+        let remembered = Inner::lock(&self.inner).passwords.get(absolute).cloned();
         cx.spawn(async move |cx| {
             let read = path.clone();
+            let password = tried.clone().or(remembered).unwrap_or_default();
+            let used = password.clone();
             let state = cx
                 .background_executor()
-                .spawn(async move { load(&read) })
+                .spawn(async move { load(&read, &used, tried.is_some()) })
                 .await;
-            Inner::lock(&this.inner).docs.insert(path, state);
+            let mut inner = Inner::lock(&this.inner);
+            if matches!(state, DocState::Ready(_)) && !password.is_empty() {
+                inner.passwords.insert(path.clone(), password);
+            }
+            inner.docs.insert(path, state);
+            drop(inner);
             cx.update(|cx| cx.refresh_windows());
         })
         .detach();
-        DocState::Loading
     }
 
     /// Page `page` of the file at `absolute`, rendered at `scale` pixels per
@@ -204,6 +281,7 @@ impl Documents {
         absolute: &Path,
         page: usize,
         scale: f32,
+        theming: Option<Theming>,
         cx: &mut App,
     ) -> Option<Arc<RenderImage>> {
         let DocState::Ready(loaded) = self.document(absolute, cx) else {
@@ -212,7 +290,7 @@ impl Documents {
         if page >= loaded.sizes.len() {
             return None;
         }
-        let key = PageKey::new(absolute, page, scale);
+        let key = PageKey::new(absolute, page, scale, theming);
         {
             let mut inner = Inner::lock(&self.inner);
             match inner.pages.get(&key) {
@@ -231,7 +309,11 @@ impl Documents {
             let (doc, index, scale) = (loaded.clone(), key.page, key.scale());
             let image = cx
                 .background_executor()
-                .spawn(async move { doc.document.render(index, scale).and_then(render_image) })
+                .spawn(async move {
+                    doc.document
+                        .render_with(index, scale, theming)
+                        .and_then(render_image)
+                })
                 .await;
             let gone = {
                 let mut inner = Inner::lock(&this.inner);
@@ -258,11 +340,17 @@ impl Documents {
 
     /// Whether page `page` at `scale` is rendered and held, without asking
     /// for it: what a view counts for the socket.
-    pub fn has_page(&self, absolute: &Path, page: usize, scale: f32) -> bool {
+    pub fn has_page(
+        &self,
+        absolute: &Path,
+        page: usize,
+        scale: f32,
+        theming: Option<Theming>,
+    ) -> bool {
         matches!(
             Inner::lock(&self.inner)
                 .pages
-                .get(&PageKey::new(absolute, page, scale)),
+                .get(&PageKey::new(absolute, page, scale, theming)),
             Some(PageState::Ready(_))
         )
     }
@@ -277,6 +365,52 @@ impl Documents {
         cx.refresh_windows();
     }
 
+    /// Page `page`'s text items, once read; the first ask starts the read
+    /// on the background executor and refreshes the windows when it lands.
+    pub fn text(&self, absolute: &Path, page: usize, cx: &mut App) -> Option<Arc<Vec<TextItem>>> {
+        let DocState::Ready(loaded) = self.document(absolute, cx) else {
+            return None;
+        };
+        if page >= loaded.sizes.len() {
+            return None;
+        }
+        let key = (absolute.to_path_buf(), page);
+        {
+            let mut inner = Inner::lock(&self.inner);
+            match inner.texts.get(&key) {
+                Some(TextState::Ready(items)) => return Some(items.clone()),
+                Some(TextState::Reading) => return None,
+                None => {}
+            }
+            inner.texts.insert(key.clone(), TextState::Reading);
+        }
+        let this = self.clone();
+        cx.spawn(async move |cx| {
+            let doc = loaded.clone();
+            let items = cx
+                .background_executor()
+                .spawn(async move { doc.document.text_items(page).unwrap_or_default() })
+                .await;
+            Inner::lock(&this.inner)
+                .texts
+                .insert(key, TextState::Ready(Arc::new(items)));
+            cx.update(|cx| cx.refresh_windows());
+        })
+        .detach();
+        None
+    }
+
+    /// Page `page`'s text items if they are read, without asking for them.
+    pub fn cached_text(&self, absolute: &Path, page: usize) -> Option<Arc<Vec<TextItem>>> {
+        match Inner::lock(&self.inner)
+            .texts
+            .get(&(absolute.to_path_buf(), page))
+        {
+            Some(TextState::Ready(items)) => Some(items.clone()),
+            _ => None,
+        }
+    }
+
     /// Bytes of rendered pages held, for the socket's state dump and tests.
     pub fn cached_bytes(&self) -> usize {
         Inner::lock(&self.inner).bytes
@@ -285,18 +419,25 @@ impl Documents {
 
 /// An [`ImageSource`] for `img(..)` that draws page `page` at `scale`
 /// pixels per point once it is rendered, and nothing until then.
-pub fn page_source(absolute: PathBuf, page: usize, scale: f32) -> ImageSource {
+pub fn page_source(
+    absolute: PathBuf,
+    page: usize,
+    scale: f32,
+    theming: Option<Theming>,
+) -> ImageSource {
     ImageSource::Custom(Arc::new(move |_window, cx| {
-        documents(cx).page(&absolute, page, scale, cx).map(Ok)
+        documents(cx)
+            .page(&absolute, page, scale, theming, cx)
+            .map(Ok)
     }))
 }
 
-fn load(path: &Path) -> DocState {
+fn load(path: &Path, password: &str, tried: bool) -> DocState {
     let bytes = match std::fs::read(path) {
         Ok(bytes) => bytes,
         Err(err) => return DocState::Failed(err.to_string()),
     };
-    match Document::open(bytes) {
+    match Document::open_with_password(bytes, password) {
         Ok(document) => {
             let sizes = document.sizes();
             let outline = document.outline();
@@ -308,6 +449,7 @@ fn load(path: &Path) -> DocState {
                 title,
             }))
         }
+        Err(Error::Encrypted) => DocState::Locked { wrong: tried },
         Err(err) => DocState::Failed(err.to_string()),
     }
 }
@@ -367,7 +509,7 @@ mod tests {
     fn the_cache_evicts_least_recently_used_pages_first() {
         let mut inner = Inner::default();
         let path = Path::new("/v/a.pdf");
-        let k = |p| PageKey::new(path, p, 1.0);
+        let k = |p| PageKey::new(path, p, 1.0, None);
         for p in 0..4 {
             assert!(inner.insert_ready(k(p), image(10, 10)).is_empty());
         }
@@ -387,9 +529,9 @@ mod tests {
     fn the_page_just_rendered_survives_a_budget_it_alone_exceeds() {
         let mut inner = Inner::default();
         let path = Path::new("/v/a.pdf");
-        let small = PageKey::new(path, 0, 1.0);
+        let small = PageKey::new(path, 0, 1.0, None);
         inner.insert_ready(small.clone(), image(2, 2));
-        let big = PageKey::new(path, 1, 1.0);
+        let big = PageKey::new(path, 1, 1.0, None);
         inner.bytes = PAGE_CACHE_BYTES; // pretend the cache is full already
         let gone = inner.insert_ready(big.clone(), image(4, 4));
         assert_eq!(gone.len(), 1);
@@ -403,9 +545,9 @@ mod tests {
         let a = Path::new("/v/a.pdf");
         let b = Path::new("/v/b.pdf");
         inner.docs.insert(a.to_path_buf(), DocState::Loading);
-        inner.insert_ready(PageKey::new(a, 0, 1.0), image(1, 1));
-        inner.insert_ready(PageKey::new(a, 1, 2.0), image(1, 1));
-        inner.insert_ready(PageKey::new(b, 0, 1.0), image(1, 1));
+        inner.insert_ready(PageKey::new(a, 0, 1.0, None), image(1, 1));
+        inner.insert_ready(PageKey::new(a, 1, 2.0, None), image(1, 1));
+        inner.insert_ready(PageKey::new(b, 0, 1.0, None), image(1, 1));
         let gone = inner.forget(a);
         assert_eq!(gone.len(), 2);
         assert!(inner.docs.is_empty());
@@ -417,8 +559,14 @@ mod tests {
     #[test]
     fn a_key_rounds_the_scale_to_thousandths() {
         let path = Path::new("/v/a.pdf");
-        assert_eq!(PageKey::new(path, 0, 1.0004), PageKey::new(path, 0, 1.0));
-        assert_ne!(PageKey::new(path, 0, 1.001), PageKey::new(path, 0, 1.0));
-        assert_eq!(PageKey::new(path, 0, 0.0).scale(), 0.001);
+        assert_eq!(
+            PageKey::new(path, 0, 1.0004, None),
+            PageKey::new(path, 0, 1.0, None)
+        );
+        assert_ne!(
+            PageKey::new(path, 0, 1.001, None),
+            PageKey::new(path, 0, 1.0, None)
+        );
+        assert_eq!(PageKey::new(path, 0, 0.0, None).scale(), 0.001);
     }
 }

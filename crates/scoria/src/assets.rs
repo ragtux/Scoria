@@ -17,7 +17,9 @@
 //! accent (2026-11-07), and gpui paints an SVG's fill only where it has one.
 //! `wand-2` and `x-square` are Lucide's `wand-sparkles` and `square-x` under the
 //! older names Obsidian's DOM gives them (the graph's timelapse button, the
-//! presentation's close button, 2026-11-11). The font is Inter (SIL OFL,
+//! presentation's close button, 2026-11-11). `rectangle-vertical-double` is
+//! another of Obsidian's own names (the PDF view's two-page spreads,
+//! 2026-11-15), drawn here as two of Lucide's narrow rectangles side by side. The font is Inter (SIL OFL,
 //! `assets/fonts/LICENSE-Inter.txt`), the family at the head of Obsidian's
 //! own interface and text font stacks, in the static faces the pinned gpui
 //! can pick weights from (a variable font renders every weight as regular).
@@ -115,6 +117,7 @@ icons!(
     "links-going-out",
     "list",
     "list-start",
+    "lock",
     "maximize",
     "maximize-2",
     "menu",
@@ -133,6 +136,7 @@ icons!(
     "plus",
     "quote",
     "rectangle-vertical",
+    "rectangle-vertical-double",
     "redo-2",
     "refresh-cw",
     "rotate-ccw",

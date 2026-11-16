@@ -3755,8 +3755,18 @@ fn view_subscriptions(
     cx: &mut Context<Workspace>,
 ) -> Vec<Subscription> {
     vec![
-        cx.subscribe(pdf, |this, _, event: &PdfEvent, cx| match event {
+        cx.subscribe(pdf, |this, pdf, event: &PdfEvent, cx| match event {
             PdfEvent::Report(message) => this.report(message.clone(), cx),
+            PdfEvent::CopyLink {
+                subpath,
+                alias,
+                quote,
+            } => {
+                let Some(path) = pdf.read(cx).path().map(str::to_string) else {
+                    return;
+                };
+                this.copy_pdf_link(&path, subpath, alias, quote.as_deref(), cx);
+            }
         }),
         bases_subscription(bases, cx),
         cx.subscribe(
@@ -8038,10 +8048,15 @@ impl Workspace {
             if let Subpath::Headings(names) = subpath {
                 let raw = names.join("#");
                 // Observed: `#page=99` on a five-page file, `#page=0` and
-                // `#page=abc` leave the view where it is.
-                if let Some(page) = scoria_pdf::parse_subpath(&raw).page {
+                // `#page=abc` leave the view where it is. A `selection=`
+                // marks the text it names and brings it near the top.
+                let parsed = scoria_pdf::parse_subpath(&raw);
+                if let Some(page) = parsed.page {
                     if self.pdf.read(cx).path() == Some(path) {
-                        self.pdf.update(cx, |p, cx| p.go_to_page(page, false, cx));
+                        self.pdf.update(cx, |p, cx| match parsed.selection {
+                            Some(selection) => p.go_to_selection(page, selection, cx),
+                            None => p.go_to_page(page, false, cx),
+                        });
                     }
                 }
             }
@@ -8051,6 +8066,36 @@ impl Workspace {
         if let Some(offset) = offset {
             self.reveal_offset(offset, cx);
         }
+    }
+
+    /// "Copy link to selection" and "Copy as quote" in a PDF: the link is a
+    /// wikilink to the file at the vault's link format, the view's subpath
+    /// and alias after it (observed:
+    /// `[[doc.pdf#page=1&selection=8,0,8,17|doc, page 1]]`, and the quote
+    /// `> text`, a blank line, the link).
+    fn copy_pdf_link(
+        &mut self,
+        path: &str,
+        subpath: &str,
+        alias: &str,
+        quote: Option<&str>,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let target = scoria_cache::links::link_path(
+            state.cache().resolver(),
+            path,
+            path,
+            state.link_format(),
+        );
+        let link = format!("[[{target}#{subpath}|{alias}]]");
+        let text = match quote {
+            Some(text) => crate::pdf::selection::quote(text, &link),
+            None => link,
+        };
+        cx.write_to_clipboard(ClipboardItem::new_string(text));
     }
 
     /// Where a `#Heading` or `#^block` subpath starts in a note, by the cache.

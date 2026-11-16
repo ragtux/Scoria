@@ -731,6 +731,7 @@ impl Pages {
         bounds: Bounds<Pixels>,
         state: &State,
         window: &Window,
+        theming: Option<scoria_pdf::Theming>,
     ) -> (AnyElement, ToolbarState) {
         let client_width = (f32::from(bounds.size.width) - SCROLLBAR_WIDTH * self.scale).max(1.0);
         let viewport_height =
@@ -771,13 +772,26 @@ impl Pages {
                     .top(px(page.origin.y))
                     .w(px(page.size.width))
                     .h(px(page.size.height))
-                    .bg(white())
+                    .bg(match theming {
+                        Some(t) => gpui::rgb(
+                            (u32::from(t.background[0]) << 16)
+                                | (u32::from(t.background[1]) << 8)
+                                | u32::from(t.background[2]),
+                        )
+                        .into(),
+                        None => white(),
+                    })
                     .shadow(frame.clone());
                 if visible.contains(&ix) {
                     page_box.child(
-                        img(page_source(absolute.clone(), ix, layout.scale * factor))
-                            .w(px(page.size.width))
-                            .h(px(page.size.height)),
+                        img(page_source(
+                            absolute.clone(),
+                            ix,
+                            layout.scale * factor,
+                            theming,
+                        ))
+                        .w(px(page.size.width))
+                        .h(px(page.size.height)),
                     )
                 } else {
                     page_box
@@ -859,12 +873,13 @@ impl Element for Pages {
             let state: State = state.unwrap_or_default();
             (state.clone(), state)
         });
+        let theming = super::theming(cx);
         let (body, bar) = match documents(cx).document(&self.absolute, cx) {
-            DocState::Ready(loaded) => self.pages(&loaded, bounds, &state, window),
+            DocState::Ready(loaded) => self.pages(&loaded, bounds, &state, window, theming),
             // Observed on `broken.pdf`: the toolbar says "0 of 0" over an
             // empty box, and nothing else. OBSERVE: whether a loading file
             // looks the same; it does here.
-            DocState::Loading | DocState::Failed(_) => (
+            DocState::Loading | DocState::Failed(_) | DocState::Locked { .. } => (
                 div().flex_1().min_h_0().w_full().into_any_element(),
                 ToolbarState {
                     current: 0,

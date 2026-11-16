@@ -327,7 +327,7 @@ uses behave as Obsidian's do.
 | Bases: the expression language | done: the parser and the evaluator, held to 277 parse trees and 1044 evaluated statements, see [[#Bases evaluator, 2026-10-25]] |
 | Bases: the table view | done, read-only: a `.base` opens on its table, see [[#Bases table view, 2026-10-25]]; the ribbon's button creates one |
 | Bases: the rest of the view | done: the cards, list and kanban layouts, the toolbar's six panels, editing through the table, the five `bases:*` commands beyond `new-file`, and an embedded `![[x.base]]`, see [[#Bases: the rest of the view, 2026-10-25]]; the toolbar and panels rebuilt to the 2026-11-01 record, see [[#The Bases toolbar and its panels, 2026-11-01]]; the embed as the live view and the leaf's chrome, see [[#The embedded base and the base leaf's chrome, 2026-11-01]]; the header, summaries, cells and keyboard, see [[#The column header, summaries, cells and the table keyboard, 2026-11-01]]; the kanban's drags and menus, see [[#The kanban board, 2026-11-02]] |
-| PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]] |
+| PDF | done: a `.pdf` opens in a viewer with Obsidian's toolbar, sidebar and find bar, `![[x.pdf]]` embeds and canvas file cards draw the same viewer, see [[#PDF view, 2026-10-26]]; text selection and its copies, `#selection=` links, two-page spreads, Adapt to theme and the password prompt landed 2026-11-15, see [[#PDF selection, spreads, themes and passwords, 2026-11-15]] |
 | Math | done: `$x$` and `$$x$$` typeset on a KaTeX-compatible engine and painted natively in reading view, Live Preview and the math block widget, see [[#Math, 2026-10-26]]; MathJax-only syntax shows as source in red |
 | The themes subset, URI and CLI | the URI landed 2026-11-02 (see [[#Four small entries and a URI, 2026-11-02]]); the theme registry, the CSS loader, the Appearance tab's pickers and syntax highlighting all landed 2026-11-02, and the Bases, canvas, graph and PDF chrome was repointed to its own tokens 2026-11-04, see [[#The theme registry, 2026-11-02]], [[#The plugin chrome repointed, 2026-11-04]], [[#The Appearance tab's pickers, 2026-11-02]], [[#Syntax highlighting, 2026-11-02]] and [[Theming#Progress]] — the subset is done, and highlighting was widened to 85 languages on 2026-11-04, see [[#Syntax highlighting breadth, 2026-11-04]]; the command line and the desktop entry landed 2026-11-02, see [[#The command line, 2026-11-02]]; the rest of the Appearance tab — the three font pages, "Quick font size adjustment" and "Custom app icon" — landed 2026-11-04, see [[#The font pages, quick font size and the app icon, 2026-11-04]] |
 | Page preview | probed 2026-11-11 on macOS, see [[Specification#Observed page preview, Obsidian 1.15.0]] and [[#Page preview, the probe, 2026-11-11]]; step 1 landed the same day — the popover over links in the reading view and both editing modes, see [[#Page preview, step 1, 2026-11-11]]; step 2 the same day — the tab header and the Files, Bookmarks, Backlinks, Outgoing links and Outline rows, see [[#Page preview, step 2, 2026-11-11]]; step 3 the same day — nested popovers and the click that makes one an editor, see [[#Page preview, step 3, 2026-11-11]]; step 4 the same day — the Bases and Graph sources, the second-link timing and "Click to create", from a second probe pass, see [[#Page preview, step 4, 2026-11-11]] — done, bar the "Properties view" source, whose File properties view Scoria does not have |
@@ -395,6 +395,67 @@ colours.
 icons (`fa:`) and images in nodes; a halo under text and rotated text (gpui cannot stroke or
 turn glyphs; an axis title would draw level); dashes in the PDF; the CJK line height; and
 measuring in InterVariable, which would close most of the pixel gap.
+
+
+### PDF selection, spreads, themes and passwords, 2026-11-15
+
+The PDF viewer's last pieces: its text, the two-page spreads, "Adapt to theme" and an encrypted
+file. Probed first, then built. See [[Specification#Observed PDF text selection, Obsidian 1.15.0]]
+and [[Specification#What building PDF selection settled, 2026-11-15]].
+
+**The probe.** `tools/obsidian-probe/pdf-selection.mjs`, Obsidian 1.15.0 in a private headless
+sway with its own runtime dir and bus, `USER_DATA_DIR` and `CDP_PORT=9356`; nine steps, several
+re-run with `ONLY_STEPS`. What decided the design: a `#selection=a,b,c,d` link counts pdf.js's
+`getTextContent()` items, empty `hasEOL` items included and marked content left out, so the
+numbering only matches if the items are cut where pdf.js cuts them; the run recorded every item of
+a hand-written file built to exercise each way two text runs meet, and of the tagged typst file.
+Also: the selection menu has the three copy rows and nothing else (no highlight colours), a
+selection over two pages offers Copy alone, `Ctrl+A` does nothing, a followed link marks the text
+in yellow and leaves the window's selection empty, `&color=` is ignored, Adapt to theme turns HSL
+lightness over and leaves images alone (read back from the canvas), and a locked file shows an
+in-view password field rather than a modal. Two harness traps: a click on an internal link in the
+reading view sometimes did nothing (the script clicks twice, then falls back to `openLinkText`),
+and the Display options button sometimes needed a second click after a theme change.
+
+**What was built.**
+- `scoria-pdf`: `Document::text_items` (`items.rs`) cuts pdf.js's items from hayro's glyph runs and
+  marked-content events, each with its characters' edges, baseline and size;
+  `Document::open_with_password`; `Document::render_with` and `Theming` (`themed.rs`), which
+  renders over transparency, turns lightness over outside the images' placement boxes and lays the
+  page on the ground colour; `Subpath::selection`. `tests/probe.rs` holds the crate to pdf.js's
+  recorded items for both files (strings, `hasEOL`, positions within half a point), the two
+  encrypted files with the right and a wrong password, and the canvas samples of Adapt to theme;
+  the probe's PDFs are committed under `tests/fixtures/probe-*`.
+- `crates/scoria/src/pdf/selection.rs`: hit testing, words, page ranges, the selected text, the
+  copy and quote strings, and a link's `selection=` both ways, with unit tests on the observed
+  strings.
+- The view (`pdf/view.rs`): a drag, a double click and a triple click select; the selection is
+  drawn as accent boxes at the text layer's 0.2; `Ctrl+C` copies; a right-click on a selection
+  opens Copy / Copy as quote / Copy link to selection (Copy alone across pages), and the workspace
+  writes the link with the file's link path (`PdfEvent::CopyLink`). `Workspace::scroll_to_subpath`
+  now hands a `selection=` to `PdfView::go_to_selection`, which waits for the page's text, marks the
+  range in yellow with a 4 px pad and lands its first line 37 px down. Two-page (odd) and (even)
+  lay the pages in centred rows and fit two pages across; the spread is remembered with the page
+  for the session. Adapt to theme is an app-wide toggle (`pdf::documents::AdaptToTheme`) that the
+  leaf, its thumbnails, the embeds and the canvas cards all follow; the page cache keys renders by
+  it. A locked file shows the lock, the two lines and a masked field that has the keyboard; Enter
+  tries the password on the background executor, a refusal says "Invalid password", and a password
+  that worked is kept for the session. `documents.rs` also reads and caches each page's text items
+  in the background. `rectangle-vertical-double` (Obsidian's own icon name) and Lucide's `lock`
+  joined the bundled icons.
+
+**Driven.** The release build in the private sway over the control socket, grim for the pictures:
+a drag over three lines selected `Hello world\nKern ed\nWide `, the right-click menu showed its
+three rows; `open` of `doc.pdf#page=2&selection=8,0,8,17` landed on page 2 with `This is page two.`
+marked; Two-page (odd) put pages 1 and 2 side by side at 0.42; Adapt to theme drew the pages on
+`#1C1C1C` with light text; `locked.pdf` showed the prompt with the field focused, `wrong` gave
+"Invalid password", `secret` opened five pages; a double click took `world`, a triple click item 23,
+`First wrapped line of a paragraph that goes on`, the item Obsidian numbers 23. The clipboard of the
+headless session takes no writes, so the copied strings are held by the unit tests instead.
+
+**Left.** The landing margin's origin; the embeds' own selection, spreads and Display options menu
+(the embed's chevron stays inert); whether thumbnails recolour; a find match's highlight; Adapt to
+theme surviving a restart.
 
 ### Slash commands, 2026-11-11
 

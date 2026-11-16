@@ -8,10 +8,12 @@
 
 #![forbid(unsafe_code)]
 
+mod items;
 mod outline;
 mod subpath;
 mod text;
 mod textstring;
+mod themed;
 
 use std::fmt;
 use std::panic::{catch_unwind, AssertUnwindSafe};
@@ -20,11 +22,13 @@ use hayro::hayro_interpret::util::TransformExt;
 use hayro::hayro_interpret::InterpreterSettings;
 use hayro::hayro_syntax::{DecryptionError, LoadPdfError, Pdf};
 use hayro::kurbo::Affine;
-use hayro::vello_cpu::color::palette::css::WHITE;
+use hayro::vello_cpu::color::palette::css::{TRANSPARENT, WHITE};
 use hayro::vello_cpu::{Pixmap, RasterizerSettings, RenderContext, Resources, TargetInit};
 use hayro::{render_into, RenderCache, RenderSettings};
 
-pub use subpath::{parse_subpath, Subpath};
+pub use items::TextItem;
+pub use subpath::{parse_subpath, Selection, Subpath};
+pub use themed::Theming;
 
 /// The longest side a rendered page may have, in pixels. A larger request is
 /// scaled down to fit; the bitmap then reports the size it was actually drawn at.
@@ -89,7 +93,13 @@ impl std::error::Error for Error {}
 impl Document {
     /// Parse a PDF from its bytes.
     pub fn open(bytes: Vec<u8>) -> Result<Document, Error> {
-        let parsed = catch_unwind(AssertUnwindSafe(|| Pdf::new(bytes)))
+        Document::open_with_password(bytes, "")
+    }
+
+    /// Parse a PDF encrypted with a user password. A wrong password is
+    /// [`Error::Encrypted`], as no password is.
+    pub fn open_with_password(bytes: Vec<u8>, password: &str) -> Result<Document, Error> {
+        let parsed = catch_unwind(AssertUnwindSafe(|| Pdf::new_with_password(bytes, password)))
             .map_err(|_| Error::Parse("the parser panicked".to_string()))?;
         let pdf = match parsed {
             Ok(pdf) => pdf,
@@ -143,6 +153,17 @@ impl Document {
     /// [`MAX_BITMAP_SIDE`]. `None` past the last page, for a scale that is not
     /// positive and finite, or when the renderer gives up on the page.
     pub fn render(&self, index: usize, scale: f32) -> Option<Bitmap> {
+        self.render_with(index, scale, None)
+    }
+
+    /// Render a page as [`Document::render`] does, recoloured for a dark
+    /// theme when `theming` says so: see [`Theming`].
+    pub fn render_with(
+        &self,
+        index: usize,
+        scale: f32,
+        theming: Option<Theming>,
+    ) -> Option<Bitmap> {
         let page = self.pdf.pages().get(index)?;
         if !scale.is_finite() || scale <= 0.0 {
             return None;
@@ -156,7 +177,7 @@ impl Document {
             // The cache holds `Rc`s, so it lives for this call only.
             let cache = RenderCache::new();
             let mut ctx = RenderContext::new(width as u16, height as u16);
-            let transform = Affine::scale(scale as f64) * page.initial_transform(true).to_kurbo();
+            let transform = transform_for(page, scale);
             render_into(
                 page,
                 &cache,
@@ -171,7 +192,11 @@ impl Document {
                 &mut pixmap,
                 &mut Resources::default(),
                 RasterizerSettings {
-                    target_init: TargetInit::Clear(WHITE),
+                    target_init: TargetInit::Clear(if theming.is_some() {
+                        TRANSPARENT
+                    } else {
+                        WHITE
+                    }),
                     ..Default::default()
                 },
             );
@@ -179,7 +204,22 @@ impl Document {
         }))
         .ok()?;
 
-        Some(straight_rgba(rendered, width, height))
+        match theming {
+            None => Some(straight_rgba(rendered, width, height)),
+            Some(theming) => {
+                let images = catch_unwind(AssertUnwindSafe(|| {
+                    themed::image_areas(
+                        page,
+                        &self.settings,
+                        transform_for(page, scale),
+                        width,
+                        height,
+                    )
+                }))
+                .unwrap_or_default();
+                Some(themed::recolour(&rendered, width, height, theming, &images))
+            }
+        }
     }
 
     /// The document outline (bookmarks), flattened in document order; empty
@@ -197,6 +237,14 @@ impl Document {
         (!title.is_empty()).then(|| title.to_string())
     }
 
+    /// The page's text as pdf.js's items, positioned, in the numbering a
+    /// `#selection=` link uses; see [`TextItem`]. `None` past the last page
+    /// or when the interpreter gives up on the page.
+    pub fn text_items(&self, index: usize) -> Option<Vec<TextItem>> {
+        let page = self.pdf.pages().get(index)?;
+        catch_unwind(AssertUnwindSafe(|| items::text_items(page, &self.settings))).ok()
+    }
+
     /// The page's text in reading order, best effort, for find. `Some("")`
     /// when the page draws no text; `None` past the last page or when the
     /// interpreter gives up on the page.
@@ -204,6 +252,11 @@ impl Document {
         let page = self.pdf.pages().get(index)?;
         catch_unwind(AssertUnwindSafe(|| text::page_text(page, &self.settings))).ok()
     }
+}
+
+/// Page space to pixels at `scale` pixels per point.
+fn transform_for(page: &hayro::hayro_syntax::page::Page<'_>, scale: f32) -> Affine {
+    Affine::scale(scale as f64) * page.initial_transform(true).to_kurbo()
 }
 
 /// The scale that keeps both sides at or under [`MAX_BITMAP_SIDE`].

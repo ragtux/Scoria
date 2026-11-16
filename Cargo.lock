@@ -5794,6 +5794,7 @@ name = "scoria-pdf"
 version = "0.6.0"
 dependencies = [
  "hayro",
+ "serde_json",
 ]
 
 [[package]]
