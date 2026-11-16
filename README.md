@@ -10,7 +10,7 @@
   <img alt="100% Rust" src="https://img.shields.io/badge/100%25-Rust-FF5721?style=flat-square&logo=rust&logoColor=white">
   <img alt="Linux, Windows, macOS" src="https://img.shields.io/badge/Linux%20%7C%20Windows%20%7C%20macOS-2b2b2b?style=flat-square">
   <img alt="MIT licensed" src="https://img.shields.io/badge/license-MIT-2b2b2b?style=flat-square">
-  <img alt="Early alpha, v0.6.0" src="https://img.shields.io/badge/status-early%20alpha%20·%20v0.6.0-f2545b?style=flat-square">
+  <img alt="Early alpha, v0.7.0" src="https://img.shields.io/badge/status-early%20alpha%20·%20v0.7.0-f2545b?style=flat-square">
   <a href="https://github.com/ragtux/scoria/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/ragtux/Scoria/ci.yml?branch=main&style=flat-square&label=CI"></a>
 </p>
 
@@ -64,7 +64,9 @@ Obsidian's bytes. A `.pdf` opens in a viewer with Obsidian's toolbar, sidebar an
 KaTeX-compatible engine in Rust and painted in the text's own colour, inline in reading view and
 Live Preview and as centred blocks. The main area splits into tab groups
 (Split right, Split down, draggable dividers, the focus commands) and `workspace.json` records the
-tree the way Obsidian does, and the Bookmarks pane reads and writes `bookmarks.json` in Obsidian's bytes. Everything is bound through
+tree the way Obsidian does, and the Bookmarks pane reads and writes `bookmarks.json` in Obsidian's bytes. Phase 4 has added the core plugins around that core: bases in four layouts, Mermaid, page preview, popout
+windows, Slash commands, spellcheck, paste and drop, the Note composer, Workspaces, File recovery, Excluded files
+and the rest, each probed against Obsidian 1.15 first. Everything is bound through
 Obsidian's command ids, so a vault's `hotkeys.json` applies unchanged.
 
 > **Keep a backup of any vault you open with it.** Reading a vault is well covered; editing is
@@ -166,14 +168,31 @@ at [scoria.cc](https://scoria.cc), whose site is built from `site/` in this repo
 | Crate | Responsibility |
 | --- | --- |
 | `scoria` | GPUI application: window, workspace shell, views |
+| `scoria-cli` | The command line: flags and help, the file and URI arguments, the one-window-per-vault handover (no gpui) |
 | `scoria-vault` | A vault is a folder: scanning, file kinds, `.obsidian` config reads |
 | `scoria-markdown` | Obsidian Flavored Markdown: CommonMark + GFM + Obsidian syntax parsed into one spanned tree, HTML renderer |
 | `scoria-cache` | Metadata cache (`CachedMetadata`) and link resolution with Obsidian's rules |
+| `scoria-formats` | On-disk formats: file kinds, `app.json` and friends, JSON Canvas 1.0, Bases YAML |
+| `scoria-commands` | The 244 command ids and default hotkeys so vault `hotkeys.json` applies unchanged |
+| `scoria-search` | Obsidian's search query language, file matching, fuzzy search, and Excluded files |
+| `scoria-text` | The editor's text model: buffer, selections, undo, the editing commands' edit plans, Vim keys |
 | `scoria-suggest` | Autocompletion: what a line triggers, what the vault offers, and the link accepting one writes |
 | `scoria-templates` | Template placeholders and the moment.js date formats they take |
-| `scoria-formats` | On-disk formats: file kinds, `app.json` and friends, JSON Canvas 1.0, Bases YAML |
-| `scoria-bases` | The Bases expression language: a statement parsed into the tree Obsidian parses it into |
-| `scoria-commands` | The 244 command ids and default hotkeys so vault `hotkeys.json` applies unchanged |
+| `scoria-composer` | The Note composer: the bytes a merge and an extraction write, their links and their template |
+| `scoria-canvas` | The canvas model: viewport math, edge geometry, hit tests, selection, edits with undo, the embed's minimap |
+| `scoria-bases` | The Bases expression language, parsed into Obsidian's own tree, and the table's cell ranges |
+| `scoria-pdf` | PDF rendering on hayro: pages, the outline, page text, the `#page=` subpath |
+| `scoria-math` | TeX typeset on RaTeX (KaTeX-compatible) into a drawing list, with the KaTeX fonts |
+| `scoria-mermaid` | Mermaid diagrams laid out as Obsidian's Pele lays them out, through limu |
+| `scoria-highlight` | Code highlighting: Prism's tokenizer and grammars, ported |
+| `scoria-export` | Export to PDF (krilla) and Export as image (tiny-skia) |
+| `scoria-audio` | The Audio recorder (AAC `.m4a`) and the audio player, and what a video file holds |
+| `scoria-paste` | What a paste or a drop writes: copied HTML as Markdown, attachment names |
+| `scoria-spell` | Spellcheck: Hunspell dictionaries on spellbook, the words checked, the custom dictionary |
+| `scoria-control` | The control socket's protocol and a client, for driving the running app |
+| `scoria-mcp` | An MCP server that launches Scoria and drives it over the control socket |
+| `scoria-llm-mcp` | An MCP server in front of a local model, for bulk text work |
+| `scoria-bench` | Spike benchmarks: synthetic vault generator, index timer |
 
 ## Roadmap
 
@@ -182,8 +201,8 @@ at [scoria.cc](https://scoria.cc), whose site is built from `site/` in this repo
 | 1. Spike | 50k-line editor, parser conformance corpus, 2 s vault index | Done |
 | 2. Reader | A daily user browses their real vault with no missing content | Done: Files, reading view, Backlinks, Outgoing links, Outline, Tags, Search, quick switcher, graph, command palette, the Settings window, file watching |
 | 3. Writer | The vault round-trips byte-identical after a week of mixed use in both apps | Done, 9 November 2026: seven days of mixed use on a real vault, every changed byte attributed to a person's edit in one of the two apps (`docs/scoria/Writer gate run.md`). Source mode, Live Preview, find and replace, file operations with link rewriting, properties, autocompletion, table editing with handles, block references, templates, daily notes, tab groups, bookmarks, the round-trip harness, every Settings control Obsidian offers, and the editing commands; file recovery is out of phase 3 |
-| 4. Parity | Core plugin parity | Under way, every row of its table done: the canvas view and the canvas writer, and a `.base` parsed, written back, evaluated — its expression language held to 277 of Obsidian's parse trees and 1044 of its answers — and opened in all four of its layouts with its toolbar, panels, editable cells and live embeds; a `.pdf` in a viewer and embedded; `$x$` and `$$x$$` typeset (KaTeX's syntax, where Obsidian's MathJax takes more); a vault's CSS theme and snippets loaded and picked in the Appearance tab, with its font pages, and fenced code highlighted from Prism's own grammars in 85 languages; `obsidian://` URIs, the command line and the desktop entry; popout windows; and, to the 9 November 2026 probes of Obsidian 1.15.0, the Note composer, Workspaces, the Unique note creator, Random note, the Footnotes view, backlinks in the document, rename heading, add alias, File properties and the app's own toggles. 205 of the 244 command ids run; the 39 left are services Scoria does not have (Sync, Publish, the Web viewer), ids Obsidian does not register on desktop, and the window zoom and always on top (blocked on gpui); and Slash commands, which has no command id, is built: `/` in the editor offers the palette's commands, to the 11 November probe |
-| 5. Ecosystem | Native plugin SDK | Not started; the design study is `docs/scoria/Plugin SDK.md` |
+| 4. Parity | Core plugin parity | Under way, every row of its table done, and the gate — a vault's core plugins behaving as Obsidian's do — still to be run on a real vault: the canvas view and the canvas writer, and a `.base` parsed, written back, evaluated — its expression language held to 277 of Obsidian's parse trees and 1044 of its answers — and opened in all four of its layouts with its toolbar, panels, editable cells, cell ranges and live embeds; a `.pdf` in a viewer, embedded, selectable and in spreads; `$x$` and `$$x$$` typeset (KaTeX's syntax, where Obsidian's MathJax takes more); Mermaid diagrams laid out as Obsidian's Pele lays them out; a vault's CSS theme and snippets loaded and picked in the Appearance tab, with its font pages, and fenced code highlighted from Prism's own grammars in 85 languages; `obsidian://` URIs, the command line and the desktop entry; popout windows; page preview; Slash commands; spellcheck; paste and drop; canvas embeds and the audio player; line numbers, indentation guides and right-to-left text; Excluded files; and, each to a probe of Obsidian 1.15, the Note composer, Workspaces, the Unique note creator, Random note, the Footnotes view, backlinks in the document, rename heading, add alias, an editable File properties pane, File recovery, and the app's own toggles. 210 of the 244 command ids run; the 34 left are services Scoria does not have (Sync, Publish, the Web viewer) and ids Obsidian does not register on desktop |
+| 5. Ecosystem | Native plugin SDK | Designed and spiked: WebAssembly components on wasmtime with a WIT world of Scoria's own, Cranelift behind a `plugins` feature, measured on Linux and Windows 16 November 2026 (`docs/scoria/Plugin SDK.md`, `tools/plugin-spike`); the host crate is next |
 
 Progress notes, gates and the per-item status live in `docs/scoria/Development.md`.
 

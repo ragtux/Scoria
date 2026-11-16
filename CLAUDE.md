@@ -25,7 +25,7 @@ crates/scoria-cache     CachedMetadata, LinkResolver
 crates/scoria-formats   FileKind, config types, canvas, base
 crates/scoria-commands  command registry, default hotkeys
 crates/scoria-cli       the command line: flags and help, the file argument, the one-window-per-vault handover (no gpui)
-crates/scoria-search    search query grammar and matcher, fuzzy search
+crates/scoria-search    search query grammar and matcher, fuzzy search, Excluded files
 crates/scoria-text      editor text model: buffer, selections, undo, edit plans, the Vim key bindings (no gpui)
 crates/scoria-suggest   autocompletion: triggers, candidates, the link an accepted row writes (no gpui)
 crates/scoria-composer  the Note composer: a merge's joint and frontmatter, an extraction's section and link, the template (no gpui)
@@ -38,12 +38,18 @@ crates/scoria-export    Export to PDF and Export as image: block layout and pagi
 crates/scoria-audio     the Audio recorder (cpal capture, AAC encoding on a worker, the .m4a writer) and the player (symphonia + opus-decoder, cpal out), a video file's header (no gpui)
 crates/scoria-paste     what a paste or a drop writes: copied HTML as Markdown (html5ever), attachment names, a uri-list's paths (no gpui)
 crates/scoria-spell     spellcheck: Hunspell dictionaries on spellbook (SCOWL en_US bundled, others from the system), the words scoria-markdown leaves to check, the custom dictionary (no gpui)
+crates/scoria-templates template placeholders and the moment.js date formats they take (no gpui)
+crates/scoria-mermaid   Mermaid diagrams laid out as Obsidian's Pele lays them out (limu), into a drawing list (no gpui)
+crates/scoria-control   the control socket's wire types, method table and a blocking client (no gpui)
+crates/scoria-mcp       an MCP server that launches Scoria and drives it over the control socket (bin)
+crates/scoria-llm-mcp   an MCP server in front of a local model, for bulk text work (bin)
 crates/scoria-bench     spike benchmarks: synthetic vault generator, index timer (bin)
 docs/anya_scoria_gen    procedural scoria-logo generator (bin, zero deps, OUTSIDE the cargo workspace)
 docs/scoria             Obsidian vault: spec and design notes (dogfooded by Scoria)
 docs/scoria-demo        Obsidian vault: the geology field guide the README recordings are made on
 tools/demo-vault        the typst source of the PDF that vault embeds
 tools/prism-port        writes scoria-highlight's generated grammars and its Prism corpus from Prism 1.29 (node); change it and re-run, never hand-edit the output
+tools/plugin-spike      phase 5's runtime spike: WIT components on wasmtime against extism, measured (OUTSIDE the cargo workspace)
 tools/writer-gate       the Writer gate's baselines and diffs: `just gate-check`, `gate-baseline`, `gate-status` (the sheet and log are docs/scoria/Writer gate run.md)
 docs/img                brand art; docs/img/marks holds Anya's marks, and marks/clast-orange.svg is the logo every other copy is cut from
 docs/img/app            README screenshots and recordings, made by tools/readme-recording over the control socket

@@ -1,10 +1,10 @@
 ---
 title: Releases
 layout: page
-description: Every tagged release of Scoria, what landed in each, and the permanent addresses the archives live at. 0.6.0 is current: most of the core plugins' commands, popout windows, page preview, Vim keys, Slash commands, and export to PDF and image.
+description: Every tagged release of Scoria, what landed in each, and the permanent addresses the archives live at. 0.7.0 is current: every row of the core-plugin table done, Mermaid, spellcheck, paste and drop, Excluded files, and ranges of cells in a base.
 ---
 <section class="hero" style="padding-bottom:24px">
-  <span class="badge pre">Current: v0.6.0 · 11 November 2026 · MIT</span>
+  <span class="badge pre">Current: v0.7.0 · 16 November 2026 · MIT</span>
   <h1>Releases</h1>
   <p class="lede">
     A <code>v*</code> tag builds the <code>scoria</code> binary on both forges and publishes one
@@ -26,64 +26,64 @@ description: Every tagged release of Scoria, what landed in each, and the perman
 </section>
 
 <section class="band">
-  <h2>0.6.0 — the core plugins, nearly all of them</h2>
+  <h2>0.7.0 — the corners of the core plugins</h2>
   <p class="lede">
-    Released 11 November 2026. Phase 4 is parity with Obsidian's core plugins, and this release
-    is most of its commands: 205 of the 244 command ids now run, each one probed against Obsidian
-    1.15.0 first and written to its bytes. The 39 left are services Scoria does not have, ids
-    Obsidian does not register on desktop, and the window zoom and always on top, which wait on
-    gpui.
+    Released 16 November 2026. Every row of phase 4's table is now done: 210 of the 244 command
+    ids run, and the 34 left are services Scoria does not have and ids Obsidian does not register
+    on desktop. As before, each piece was watched in Obsidian 1.15 first and written to what it
+    did.
   </p>
   <div class="grid">
     <div class="card">
-      <span class="k">Windows</span>
-      <h3>Popouts, and tabs between them</h3>
-      <p>A tab opens in a window of its own and comes back on the next launch where it was left;
-      tabs drag between windows where the platform allows; the tab header has Obsidian's menu
-      with pinned tabs; modals, the file menu and notices come up in the window they belong to;
-      and a tab group stacks with <code>workspace:toggle-stacked-tabs</code>.</p>
+      <span class="k">Rendering</span>
+      <h3>Mermaid, and the HTML that was missing</h3>
+      <p>Mermaid diagrams are laid out as Obsidian's own Pele lays them out, through a Rust port,
+      and painted in the reading view, Live Preview, embeds, previews and PDF export.
+      Superscript, subscript and small HTML tags draw at their size and baseline, an inline <code>style</code>'s colours and weights apply, and a raw table
+      keeps its <code>colspan</code>, <code>rowspan</code> and caption.</p>
     </div>
     <div class="card">
-      <span class="k">Page preview</span>
-      <h3>Hover a link, read the note</h3>
-      <p>The popover over links in the reading view and the editor, the tab header, the Files,
-      Bookmarks, Backlinks, Outgoing links and Outline rows, bases and the graph — nested
-      previews raised over each other, a clicked one an editor of its note, and a missing note
-      created on click.</p>
+      <span class="k">Files</span>
+      <h3>PDFs, canvases, audio</h3>
+      <p>A PDF's text selects and copies, with <code>#selection=</code> links, two-page spreads,
+      Adapt to theme and the password prompt. An embedded canvas is its minimap, as Obsidian
+      draws it. Audio plays in a tab and embedded; a video is a card that opens in the default
+      app.</p>
     </div>
     <div class="card">
       <span class="k">Editing</span>
-      <h3>Vim keys and Slash commands</h3>
-      <p>Vim key bindings behind <code>vimMode</code>; <code>/</code> at the start of a line or
-      after a space offers the palette's commands, pinned and recent first; rename a heading
-      and every link to it; add an alias; and the Format converter's frontmatter migration.</p>
+      <h3>Spelling, pasting, line numbers</h3>
+      <p>Spellcheck on Hunspell dictionaries, with corrections and Add to dictionary in the
+      editor menu. Copied HTML pastes as Markdown, and images and files from the clipboard or
+      a file manager are saved as attachments. Line numbers, indentation guides and
+      right-to-left text.</p>
     </div>
     <div class="card">
-      <span class="k">Core plugins</span>
-      <h3>Composer, Workspaces and the rest</h3>
-      <p>The Note composer's merge, split and extract; Workspaces' save and load in
-      <code>workspaces.json</code>'s bytes; the Unique note creator; Random note; the Footnotes
-      view; backlinks at a note's foot; File properties; File recovery's snapshots, kept outside
-      the vault and opened in a modal; and Slides and the graph timelapse.</p>
+      <span class="k">Panes and bases</span>
+      <h3>Ranges of cells, an editable File properties</h3>
+      <p>A base's table selects ranges of cells with Shift and Ctrl+A, copies them as
+      tab-separated text, pastes over them and empties them. The File properties pane edits,
+      closes and previews, in every view. Search results have their right-click menus.</p>
     </div>
     <div class="card">
-      <span class="k">Export and audio</span>
-      <h3>PDF, PNG and an .m4a</h3>
-      <p>A note exports to PDF with its blocks laid out and paginated, a canvas exports as an
-      image, and the Audio recorder writes an AAC <code>.m4a</code> to the attachment folder
-      and embeds it — all in pure Rust, in two new crates.</p>
+      <span class="k">Settings</span>
+      <h3>Excluded files, and rows that act</h3>
+      <p>Excluded files are matched as Obsidian matches them, hidden from search, the graph,
+      unlinked mentions, tags and bases, ranked last in the switcher and autocompletion, and
+      edited on their own Settings page. Show tab title bar and Always focus new tabs take
+      effect, File recovery's View and Clear work, and template rows pick a file.</p>
     </div>
     <div class="card">
-      <span class="k">App</span>
-      <h3>Commands, debug info, release notes</h3>
-      <p>The app and window commands, the editor toggles, the file menu's path commands, the
-      attachment commands named and placed as Obsidian names them, Show debug info, and these
-      release notes inside the app. On macOS the hidden frame no longer drags the window off a
-      tab press, and windows keep clear of the traffic lights.</p>
+      <span class="k">Window and app</span>
+      <h3>Zoom, always on top, reload</h3>
+      <p>The window zooms with Ctrl+=, Ctrl+- and Ctrl+0, stays on top where the platform lets
+      it, and <em>Reload app without saving</em> reads the vault and its configuration again.
+      Ctrl+Enter in an extraction prompt makes a new note. And the plugin runtime for phase 5
+      is chosen: WebAssembly components on wasmtime, measured on Linux and Windows.</p>
     </div>
   </div>
   <p class="dim small" style="margin-top:18px">
-    <a href="https://github.com/ragtux/scoria/releases/tag/v0.6.0">The commit-level notes for 0.6.0 →</a>
+    <a href="https://github.com/ragtux/scoria/releases/tag/v0.7.0">The commit-level notes for 0.7.0 →</a>
   </p>
 </section>
 
@@ -99,6 +99,15 @@ description: Every tagged release of Scoria, what landed in each, and the perman
         <tr><th>Version</th><th>Date</th><th>What it was</th><th>Notes</th></tr>
       </thead>
       <tbody>
+        <tr>
+          <td><strong>0.6.0</strong></td>
+          <td>11 Nov 2026</td>
+          <td>The core plugins, nearly all of them: 205 of the 244 command ids, each probed
+          against Obsidian 1.15.0 — popouts and tabs between windows, page preview, Vim keys and
+          Slash commands, the Note composer, Workspaces, the Unique note creator and the Footnotes
+          view, export to PDF and image, and the Audio recorder.</td>
+          <td><a href="https://github.com/ragtux/scoria/releases/tag/v0.6.0">v0.6.0</a></td>
+        </tr>
         <tr>
           <td><strong>0.5.0</strong></td>
           <td>9 Nov 2026</td>
@@ -174,8 +183,8 @@ description: Every tagged release of Scoria, what landed in each, and the perman
   </div>
   <p class="dim small" style="margin-top:18px">
     Scoria is before 1.0 and the minor number is where the work shows: 0.2 was writing, 0.3 was
-    the shell and the other platforms, 0.4 is the file types and the look, 0.5 the Writer gate, 0.6 the core plugins. A tag with a hyphen in
-    it — <code>v0.6.0-rc1</code> — is published as a prerelease and is not what the addresses
+    the shell and the other platforms, 0.4 is the file types and the look, 0.5 the Writer gate, 0.6 the core plugins, 0.7 their corners. A tag with a hyphen in
+    it — <code>v0.7.0-rc1</code> — is published as a prerelease and is not what the addresses
     above resolve to. Releases before 0.3.2 carry their archives under the tagged names only.
   </p>
 </section>

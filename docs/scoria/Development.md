@@ -339,6 +339,26 @@ uses behave as Obsidian's do.
 | Spellcheck | done 2026-11-15: probed in a headless sway, then `scoria-spell` (spellbook, a bundled `en-US`), squiggles in both editing modes, the corrections and "Add to dictionary" in the editor menu, the custom dictionary page and the languages row, see [[#Spellcheck, 2026-11-15]] and [[Specification#Observed spellcheck, Obsidian 1.15.0 (installer build 1.13.7)]] |
 | Excluded files | done 2026-11-16: `userIgnoreFilters` matched as Obsidian 1.15.1 does and applied to search, the graph, unlinked mentions, the switcher, link autocompletion, the Tags pane and Bases; the Settings row edits it, see [[#Excluded files, 2026-11-16]] and [[Specification#Observed Excluded files, Obsidian 1.15.1]] |
 | Some HTML in notes | 2026-11-15: `<sup>`, `<sub>`, `<small>` and `<big>` at their size and baseline, an inline `style`'s colour, background, weight, slant and line, and a raw table's `colspan`, `rowspan` and `<caption>`, see [[#Some HTML in notes: scripts, inline styles and spanned tables, 2026-11-15]] |
+| Settings rows and small gaps | done 2026-11-16: Show tab title bar and Always focus new tabs acted on, Ctrl+Enter in an extraction prompt, File recovery's View and Clear, and a file picker for the template rows, see [[#Tab title bar, new-tab focus, extraction Ctrl+Enter, File recovery's buttons and the template picker, 2026-11-16]] and [[Specification#Observed tab title bar, new-tab focus, extraction Ctrl+Enter, File recovery's buttons and the file picker, Obsidian 1.15.0]] |
+| Bases cell ranges and the Search result menu | done 2026-11-16: ranges by Shift and Ctrl+A, copied as tab-separated text, pasted over and emptied; a file row's and a match line's right-click menus, see [[#Bases cell selection and the Search result menu, 2026-11-16]], [[Specification#Observed Bases cell selection, Obsidian 1.15.1]] and [[Specification#Observed Search result menus, Obsidian 1.15.1]] |
+
+### The 2026-11-16 merge and 0.7.0
+
+Six worktrees went out at once from `3c7c6ed`, each under the rule of the phase: probe first,
+then build to the observation. Five closed rows of the manual's differences page (Excluded
+files, the File properties pane, the Settings rows and small gaps, Bases cell ranges with the
+Search result menu, and the HTML in notes), and the sixth was phase 5's runtime spike, kept
+outside the workspace. Every conflict was two additions at one spot — the probe README's table,
+the specification's appended sections, `differences.md`'s rows, `file_menu::Target`'s path
+match (one side added `SideTab`, the other `Search`) and `settings.rs`'s fields — and all were
+resolved by keeping both. The gate on the merged tree: 80 test binaries and 1,864 tests passed,
+the corpus at 1,008 of 1,009 and CommonMark at 652 of 652, `cargo fmt --check` and
+`just clippy-ci` clean, and the site built with every link resolving.
+
+**A harness trap, new.** The agents shared one session scratchpad, and two of them wrote a
+`drive.py` under the same name: one ran the other's script, against the other's app, three
+times before noticing. Nothing in the repo was touched, but a scratch vault was. Give each
+agent a scratch folder named after itself from the start.
 
 ### Excluded files, 2026-11-16
 
@@ -482,6 +502,162 @@ gone, `currentTab: 4`). Every byte matched the probe's.
 splits are not run in a sidebar); the pane's key column keeps Live Preview's 160 px, which leaves
 a narrow value column in a 300 px dock; Undo after a pane edit and the pane in a popout were not
 probed.
+
+### Tab title bar, new-tab focus, extraction Ctrl+Enter, File recovery's buttons and the template picker, 2026-11-16
+
+Four small gaps the differences page listed: two Settings rows written for Obsidian only ("Show
+tab title bar", "Always focus new tabs"), Ctrl+Enter in an extraction's prompt, File recovery's
+inert View and Clear, and the template rows drawn as path fields. Probed first, see
+[[Specification#Observed tab title bar, new-tab focus, extraction Ctrl+Enter, File recovery's buttons and the file picker, Obsidian 1.15.0]].
+
+**The probe.** `tools/obsidian-probe/settings-gaps.mjs`, Obsidian 1.15.0 in a private headless
+sway with its own `XDG_RUNTIME_DIR` under `/run/user/1000`, a dead session bus, `USER_DATA_DIR`
+on that runtime folder and `CDP_PORT=9363`. Two passes: the whole script, then `ONLY='s01|s06'`
+on a fresh vault. What surprised: "Show tab title bar" lives on the Interface tab in 1.15, not
+Appearance (the first pass looked in the wrong tab and clicked nothing); a link's new tab goes
+right after the active one, not at the strip's end where `workspace:new-tab` puts its own; the
+quick switcher's Ctrl+Enter ignores "Always focus new tabs" while a Files row's menu honours it;
+an extraction's Ctrl+Enter always makes a new note, numbering a name that is taken and naming an
+empty query `Untitled`; Enter does not answer File recovery's "Clear history" even with Clear
+focused; and the Unique note creator's template picker lists every file, extensions and all,
+while the other two list notes.
+
+**What was built.**
+- "Show tab title bar": `Workspace::show_view_header` reads `showViewHeader`, and a group, a
+  stacked pane and a popout draw no view header while it is off; the tab strip stays. Live as
+  the row is clicked.
+- "Always focus new tabs": `open_link_in_new_tab` for a link (Ctrl or middle click, either view,
+  `editor:open-link-in-new-leaf`), a Files row, a bookmark, the ribbon's random note and the file
+  menus' "Open in new tab". On, it is `open_in_new_tab`; off, `open_in_background_tab` puts a tab
+  holding the file (`Tab::unloaded`: the path and one history entry) after the active one and
+  leaves the active tab, and the keyboard, where they were. `open_in_new_tab` itself now places
+  the tab after the active one (`place_new_tab`); `workspace:new-tab` still appends.
+- Ctrl+Enter in an extraction: `composer_prompt::create_new_event` turns it into the "Enter to
+  create" choice for the query (or `Untitled`), so the note is named, numbered and placed by
+  `composer_new_path` and goes through the template like any new note. The merge's rule is
+  unchanged.
+- File recovery's buttons: `Control::Button` rows carry a `ButtonAction`. View emits
+  `SettingsEvent::ViewSnapshots`, and the workspace opens the snapshots modal with no file chosen
+  over the vault's window and raises it. Clear opens the question in the Settings window — the
+  app's `Prompt`, rendered over the panel, with a new `destructive` button style
+  (`mod-destructive mod-cta`) and a `no_enter` flag — and Clear there emits
+  `SettingsEvent::ClearSnapshots`: `SnapshotStore::clear`, then the notice "Local history
+  cleared.".
+- The template picker: Settings had no suggest input, so the existing pieces make one rather than
+  a new widget: the row is `Control::File` over the row's own `TextField` (so it reads and writes
+  exactly what the path field did), its list is a popover under the button like the dropdowns',
+  closed by the same `menu` rule, with a `TextInput` "Search..." box and a `uniform_list` of rows
+  filtered by `scoria_search::fuzzy_match`. Up, Down, Enter, Escape and a click behave as observed;
+  the × writes `""`. Daily notes' row got it too, with Obsidian's "No file selected".
+
+**Driven.** The debug build in the private sway over the control socket, with grim: the Files
+and links and Interface rows untagged; "Always focus new tabs" clicked off wrote
+`{"focusNewTab": false}`, after which `editor:open-link-in-new-leaf` on `[[Other]]` put Other
+after Links with Links still active (on, Target had opened active); "Show tab title bar" clicked
+off wrote `{"showViewHeader": false}` and the header went from the open note at once, the inline
+title moving up; Clear's question drawn over Settings, Enter leaving it up, Clear removing the
+vault's store file and raising "Local history cleared."; View opening "File recovery" with
+"Choose a file..." empty over the main window; the Note composer picker listing the notes, `nes`
+leaving `Templates/Deep/Nested` with `Nes` bold, Enter writing
+`"template": "Templates/Deep/Nested.md"`; and Ctrl+Enter on "Existing target" in Split's
+extraction prompt making `Existing target 1.md`, the link `[[Existing target 1]]` left behind.
+
+**Traps.** The nix `obsidian` wrapper picks Wayland through its ozone hint and traps (SIGTRAP,
+no log line) with `WAYLAND_DISPLAY` unset: `OBSIDIAN_ARGS=--ozone-platform=x11` puts it on the
+sway's XWayland. A `USER_DATA_DIR` in the session scratchpad crashed the same way, apparently on
+its path length; `/run/user/1000/<dir>/udd` worked. Over the socket, Settings' window-local
+coordinates are grim's pixels minus the `move position` the sway rule gives it, not minus the
+frame's visible corner, which sits 24 px further in.
+
+**Left.** Obsidian lists files created since the vault opened at the top of the picker; Scoria
+keeps reverse path order throughout. A full path typed with `.md` matched in Obsidian; Scoria's
+fuzzy match runs against the row's text, which has no `.md`. A background tab does not keep a
+link's heading or block (it opens at the top when shown), and Scoria's quick switcher has no
+Ctrl+Enter at all. View opens the modal over the vault's window rather than over Settings, and
+Clear's notice shows there too.
+
+**Tests.** `settings::tests::the_template_rows_are_file_suggesters`,
+`the_file_suggester_lists_filters_and_writes_the_path`,
+`file_recovery_view_and_clear_are_live_buttons`, and the ratchet
+`only_the_toggles_scoria_reads_are_untagged` with the two rows added;
+`workspace::tests::a_tab_opened_from_a_link_goes_after_the_active_one`,
+`focus_new_tab_and_show_view_header_default_on`;
+`workspace::composer_prompt::tests::ctrl_enter_creates_from_the_query_and_an_extraction_always_does`;
+`workspace::note_composer::tests::ctrl_enter_in_an_extraction_makes_a_new_note_named_from_the_query`;
+`workspace::file_recovery::tests::clear_history_empties_the_store_and_the_clock_starts_over`.
+
+
+### Bases cell selection and the Search result menu, 2026-11-16
+
+Two rows of the manual's differences page: a base's table had no range of cells, and a Search
+result had no right-click menu. Both were probed first, see
+[[Specification#Observed Bases cell selection, Obsidian 1.15.1]] and
+[[Specification#Observed Search result menus, Obsidian 1.15.1]].
+
+**The probe.** `tools/obsidian-probe/bases-cells-search-menu.mjs`, Obsidian 1.15.1 in a private
+headless sway with `USER_DATA_DIR` and `CDP_PORT=9364`, nine steps: the cursor and the range by
+keys and by Shift+click with their computed look, every clipboard type a copy carries, Delete
+and Backspace with undo, 32 pastes of outside text and of the table's own copies over every
+property type, a grouped table, and the Search pane's two menus and what each of their rows
+does. Most of it was found first by hand, through a run held open (`HOLD=1`) and short CDP
+scripts against it, then written down as the script's steps and run once whole. What surprised:
+1.15.1 changed two things 1.14.5 did (leaving a field keeps the cursor; Delete on a lone cell
+empties it rather than opening its editor), external text is always written as a string whatever
+the property's type, and a paste more than one column wide is broken in Obsidian (every cell of
+a row takes the clipboard's value at the index of the target's first column). That last one is
+a bug that scrambles notes, so Scoria does not follow it and says so on the differences page.
+
+**What was built.**
+- `scoria-bases::selection`, no gpui: `Selection` (the cursor, the far corner, Ctrl+A's range),
+  `CellRange`, the group `Bounds` a range stays in, the copy's text (`copy_text`, `encode_tsv`
+  with the CSV-style quoting) and its typed cells (`copied_value`), the paste's parse
+  (`parse_text`: one value over a lone cursor when there is no tab, else naive line and tab
+  splits), `paste_plan` (one value fills, a block lands at the top-left, cut at the table's edge,
+  each cell its own value), `delete_plan` and `by_row`. Fifteen tests, each named for what the
+  probe saw.
+- `scoria::bases::select`: the selection over the table's flattened lines, Shift+arrows,
+  Shift+click, Ctrl+A, Ctrl+C, Ctrl+V and Delete, and one `BasesEvent::SetProperties` per row,
+  which the workspace writes through `bases::edit::write_values` (every key in one write, the
+  values as they are, a new block for a note with none) under the same unsaved-buffer guard as
+  a single cell. gpui's clipboard carries text only, so the table's own copy keeps its typed
+  cells in a global and a paste whose text is still that copy's takes them; anything else is
+  outside text. The cursor's ring (#555, or the accent at a range's cursor) and the range's wash
+  are drawn only while the view itself has focus. Escape on a range drops it; leaving a field
+  keeps the cursor.
+- `file_menu::Target::Search`: the observed rows, Delete on a file row only, Copy path last, and
+  the Search pane's rows raising it on a right click (`SearchEvent::ContextMenu`). The picks go
+  through the workspace's existing handlers.
+
+**Driven.** The debug build in the private sway over the control socket, with grim and
+wl-clipboard: the cursor's ring after Escape, a two-by-three range, Escape dropping it,
+Shift+click, Ctrl+A, a paste of the table's own two-by-two copy (`price: 1.5` written as a
+number), outside text into a number column (`price: abc`), a two-cell block at the cursor
+(`items: a`, `note: b`, each its own value), Delete over a note with no frontmatter (a new block
+of two empty keys), both Search menus as the socket's `file_menu` reports them, and *Open to the
+right* from a match row (a new group on the note).
+
+**Traps.**
+- The session's scratchpad was shared with other agents; one overwrote this session's sway
+  config and another ran an Obsidian on a `udd` folder of the same name. Keep every scratch file
+  in a folder named for the task, and give `run-block.sh` a short `TMPDIR`: Chromium's
+  `SingletonSocket` lives there and a scratchpad path is past the 108-byte socket limit (the
+  launch dies with "Socket path too long").
+- `run-block.sh` is not executable on the share; run it with `bash`.
+- A fresh `USER_DATA_DIR` updates itself (to 1.15.1 here) on its first launch on Linux, so label
+  the run with `document.title`.
+- A click near a date cell's right edge hits *Open daily note* and creates the day's note; reach
+  date and checkbox cells by the arrows.
+- `wl-copy` adds a newline unless given `-n`, which made the table's own copy look like outside
+  text; and it stays alive serving the selection, so a `| tail` on the drive never ends.
+- A synthetic Ctrl+C under the headless compositor leaves its clipboard empty (as the memory
+  notes say); the internal round trip was checked by putting the same bytes there with
+  `wl-copy -n`.
+
+**Left out.** Ctrl+Z does not undo a paste or a Delete (the table has no undo stack of its own
+yet); the clipboard gets only the text, not Obsidian's `text/markdown`, `obsidian/table` and
+`obsidian/bases-cells`; a Search result's Copy path is one row, not Obsidian's submenu of three,
+as on every other file menu; a lone cursor's Escape leaves the cursor, as observed, so nothing
+clears it short of leaving the view.
 
 ### Some HTML in notes: scripts, inline styles and spanned tables, 2026-11-15
 
@@ -939,90 +1115,6 @@ a hand-written 9 held to 3, nothing in the vault), and a pointer position shrunk
 `app:show-tab-switcher` out. The gate: 70 test binaries, 1,689 passed, 694 in the app's bin.
 
 
-### Tab title bar, new-tab focus, extraction Ctrl+Enter, File recovery's buttons and the template picker, 2026-11-16
-
-Four small gaps the differences page listed: two Settings rows written for Obsidian only ("Show
-tab title bar", "Always focus new tabs"), Ctrl+Enter in an extraction's prompt, File recovery's
-inert View and Clear, and the template rows drawn as path fields. Probed first, see
-[[Specification#Observed tab title bar, new-tab focus, extraction Ctrl+Enter, File recovery's buttons and the file picker, Obsidian 1.15.0]].
-
-**The probe.** `tools/obsidian-probe/settings-gaps.mjs`, Obsidian 1.15.0 in a private headless
-sway with its own `XDG_RUNTIME_DIR` under `/run/user/1000`, a dead session bus, `USER_DATA_DIR`
-on that runtime folder and `CDP_PORT=9363`. Two passes: the whole script, then `ONLY='s01|s06'`
-on a fresh vault. What surprised: "Show tab title bar" lives on the Interface tab in 1.15, not
-Appearance (the first pass looked in the wrong tab and clicked nothing); a link's new tab goes
-right after the active one, not at the strip's end where `workspace:new-tab` puts its own; the
-quick switcher's Ctrl+Enter ignores "Always focus new tabs" while a Files row's menu honours it;
-an extraction's Ctrl+Enter always makes a new note, numbering a name that is taken and naming an
-empty query `Untitled`; Enter does not answer File recovery's "Clear history" even with Clear
-focused; and the Unique note creator's template picker lists every file, extensions and all,
-while the other two list notes.
-
-**What was built.**
-- "Show tab title bar": `Workspace::show_view_header` reads `showViewHeader`, and a group, a
-  stacked pane and a popout draw no view header while it is off; the tab strip stays. Live as
-  the row is clicked.
-- "Always focus new tabs": `open_link_in_new_tab` for a link (Ctrl or middle click, either view,
-  `editor:open-link-in-new-leaf`), a Files row, a bookmark, the ribbon's random note and the file
-  menus' "Open in new tab". On, it is `open_in_new_tab`; off, `open_in_background_tab` puts a tab
-  holding the file (`Tab::unloaded`: the path and one history entry) after the active one and
-  leaves the active tab, and the keyboard, where they were. `open_in_new_tab` itself now places
-  the tab after the active one (`place_new_tab`); `workspace:new-tab` still appends.
-- Ctrl+Enter in an extraction: `composer_prompt::create_new_event` turns it into the "Enter to
-  create" choice for the query (or `Untitled`), so the note is named, numbered and placed by
-  `composer_new_path` and goes through the template like any new note. The merge's rule is
-  unchanged.
-- File recovery's buttons: `Control::Button` rows carry a `ButtonAction`. View emits
-  `SettingsEvent::ViewSnapshots`, and the workspace opens the snapshots modal with no file chosen
-  over the vault's window and raises it. Clear opens the question in the Settings window — the
-  app's `Prompt`, rendered over the panel, with a new `destructive` button style
-  (`mod-destructive mod-cta`) and a `no_enter` flag — and Clear there emits
-  `SettingsEvent::ClearSnapshots`: `SnapshotStore::clear`, then the notice "Local history
-  cleared.".
-- The template picker: Settings had no suggest input, so the existing pieces make one rather than
-  a new widget: the row is `Control::File` over the row's own `TextField` (so it reads and writes
-  exactly what the path field did), its list is a popover under the button like the dropdowns',
-  closed by the same `menu` rule, with a `TextInput` "Search..." box and a `uniform_list` of rows
-  filtered by `scoria_search::fuzzy_match`. Up, Down, Enter, Escape and a click behave as observed;
-  the × writes `""`. Daily notes' row got it too, with Obsidian's "No file selected".
-
-**Driven.** The debug build in the private sway over the control socket, with grim: the Files
-and links and Interface rows untagged; "Always focus new tabs" clicked off wrote
-`{"focusNewTab": false}`, after which `editor:open-link-in-new-leaf` on `[[Other]]` put Other
-after Links with Links still active (on, Target had opened active); "Show tab title bar" clicked
-off wrote `{"showViewHeader": false}` and the header went from the open note at once, the inline
-title moving up; Clear's question drawn over Settings, Enter leaving it up, Clear removing the
-vault's store file and raising "Local history cleared."; View opening "File recovery" with
-"Choose a file..." empty over the main window; the Note composer picker listing the notes, `nes`
-leaving `Templates/Deep/Nested` with `Nes` bold, Enter writing
-`"template": "Templates/Deep/Nested.md"`; and Ctrl+Enter on "Existing target" in Split's
-extraction prompt making `Existing target 1.md`, the link `[[Existing target 1]]` left behind.
-
-**Traps.** The nix `obsidian` wrapper picks Wayland through its ozone hint and traps (SIGTRAP,
-no log line) with `WAYLAND_DISPLAY` unset: `OBSIDIAN_ARGS=--ozone-platform=x11` puts it on the
-sway's XWayland. A `USER_DATA_DIR` in the session scratchpad crashed the same way, apparently on
-its path length; `/run/user/1000/<dir>/udd` worked. Over the socket, Settings' window-local
-coordinates are grim's pixels minus the `move position` the sway rule gives it, not minus the
-frame's visible corner, which sits 24 px further in.
-
-**Left.** Obsidian lists files created since the vault opened at the top of the picker; Scoria
-keeps reverse path order throughout. A full path typed with `.md` matched in Obsidian; Scoria's
-fuzzy match runs against the row's text, which has no `.md`. A background tab does not keep a
-link's heading or block (it opens at the top when shown), and Scoria's quick switcher has no
-Ctrl+Enter at all. View opens the modal over the vault's window rather than over Settings, and
-Clear's notice shows there too.
-
-**Tests.** `settings::tests::the_template_rows_are_file_suggesters`,
-`the_file_suggester_lists_filters_and_writes_the_path`,
-`file_recovery_view_and_clear_are_live_buttons`, and the ratchet
-`only_the_toggles_scoria_reads_are_untagged` with the two rows added;
-`workspace::tests::a_tab_opened_from_a_link_goes_after_the_active_one`,
-`focus_new_tab_and_show_view_header_default_on`;
-`workspace::composer_prompt::tests::ctrl_enter_creates_from_the_query_and_an_extraction_always_does`;
-`workspace::note_composer::tests::ctrl_enter_in_an_extraction_makes_a_new_note_named_from_the_query`;
-`workspace::file_recovery::tests::clear_history_empties_the_store_and_the_clock_starts_over`.
-
-
 ### Spellcheck, 2026-11-15
 
 The `spellcheck` setting and `editor:toggle-spellcheck` already wrote Obsidian's bytes; now they
@@ -1100,78 +1192,6 @@ limitation, not a behavior to copy); the properties view's fields and the title 
 checked; corrections across two languages are interleaved, an order not observed; the
 "Spellcheck dictionary" is a page of Settings rather than a modal over it; macOS's system
 checker is not imitated.
-
-### Bases cell selection and the Search result menu, 2026-11-16
-
-Two rows of the manual's differences page: a base's table had no range of cells, and a Search
-result had no right-click menu. Both were probed first, see
-[[Specification#Observed Bases cell selection, Obsidian 1.15.1]] and
-[[Specification#Observed Search result menus, Obsidian 1.15.1]].
-
-**The probe.** `tools/obsidian-probe/bases-cells-search-menu.mjs`, Obsidian 1.15.1 in a private
-headless sway with `USER_DATA_DIR` and `CDP_PORT=9364`, nine steps: the cursor and the range by
-keys and by Shift+click with their computed look, every clipboard type a copy carries, Delete
-and Backspace with undo, 32 pastes of outside text and of the table's own copies over every
-property type, a grouped table, and the Search pane's two menus and what each of their rows
-does. Most of it was found first by hand, through a run held open (`HOLD=1`) and short CDP
-scripts against it, then written down as the script's steps and run once whole. What surprised:
-1.15.1 changed two things 1.14.5 did (leaving a field keeps the cursor; Delete on a lone cell
-empties it rather than opening its editor), external text is always written as a string whatever
-the property's type, and a paste more than one column wide is broken in Obsidian (every cell of
-a row takes the clipboard's value at the index of the target's first column). That last one is
-a bug that scrambles notes, so Scoria does not follow it and says so on the differences page.
-
-**What was built.**
-- `scoria-bases::selection`, no gpui: `Selection` (the cursor, the far corner, Ctrl+A's range),
-  `CellRange`, the group `Bounds` a range stays in, the copy's text (`copy_text`, `encode_tsv`
-  with the CSV-style quoting) and its typed cells (`copied_value`), the paste's parse
-  (`parse_text`: one value over a lone cursor when there is no tab, else naive line and tab
-  splits), `paste_plan` (one value fills, a block lands at the top-left, cut at the table's edge,
-  each cell its own value), `delete_plan` and `by_row`. Fifteen tests, each named for what the
-  probe saw.
-- `scoria::bases::select`: the selection over the table's flattened lines, Shift+arrows,
-  Shift+click, Ctrl+A, Ctrl+C, Ctrl+V and Delete, and one `BasesEvent::SetProperties` per row,
-  which the workspace writes through `bases::edit::write_values` (every key in one write, the
-  values as they are, a new block for a note with none) under the same unsaved-buffer guard as
-  a single cell. gpui's clipboard carries text only, so the table's own copy keeps its typed
-  cells in a global and a paste whose text is still that copy's takes them; anything else is
-  outside text. The cursor's ring (#555, or the accent at a range's cursor) and the range's wash
-  are drawn only while the view itself has focus. Escape on a range drops it; leaving a field
-  keeps the cursor.
-- `file_menu::Target::Search`: the observed rows, Delete on a file row only, Copy path last, and
-  the Search pane's rows raising it on a right click (`SearchEvent::ContextMenu`). The picks go
-  through the workspace's existing handlers.
-
-**Driven.** The debug build in the private sway over the control socket, with grim and
-wl-clipboard: the cursor's ring after Escape, a two-by-three range, Escape dropping it,
-Shift+click, Ctrl+A, a paste of the table's own two-by-two copy (`price: 1.5` written as a
-number), outside text into a number column (`price: abc`), a two-cell block at the cursor
-(`items: a`, `note: b`, each its own value), Delete over a note with no frontmatter (a new block
-of two empty keys), both Search menus as the socket's `file_menu` reports them, and *Open to the
-right* from a match row (a new group on the note).
-
-**Traps.**
-- The session's scratchpad was shared with other agents; one overwrote this session's sway
-  config and another ran an Obsidian on a `udd` folder of the same name. Keep every scratch file
-  in a folder named for the task, and give `run-block.sh` a short `TMPDIR`: Chromium's
-  `SingletonSocket` lives there and a scratchpad path is past the 108-byte socket limit (the
-  launch dies with "Socket path too long").
-- `run-block.sh` is not executable on the share; run it with `bash`.
-- A fresh `USER_DATA_DIR` updates itself (to 1.15.1 here) on its first launch on Linux, so label
-  the run with `document.title`.
-- A click near a date cell's right edge hits *Open daily note* and creates the day's note; reach
-  date and checkbox cells by the arrows.
-- `wl-copy` adds a newline unless given `-n`, which made the table's own copy look like outside
-  text; and it stays alive serving the selection, so a `| tail` on the drive never ends.
-- A synthetic Ctrl+C under the headless compositor leaves its clipboard empty (as the memory
-  notes say); the internal round trip was checked by putting the same bytes there with
-  `wl-copy -n`.
-
-**Left out.** Ctrl+Z does not undo a paste or a Delete (the table has no undo stack of its own
-yet); the clipboard gets only the text, not Obsidian's `text/markdown`, `obsidian/table` and
-`obsidian/bases-cells`; a Search result's Copy path is one row, not Obsidian's submenu of three,
-as on every other file menu; a lone cursor's Escape leaves the cursor, as observed, so nothing
-clears it short of leaving the view.
 
 ### Line numbers, indentation guides and right-to-left, 2026-11-15
 

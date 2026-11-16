@@ -37,16 +37,15 @@ Be realistic about this list before you make Scoria your daily reader.
 - **Community plugins.** They are JavaScript against an Electron app; Scoria is a native
   binary. They cannot run, and making them run is out of scope. If your workflow rests on
   Dataview or Templater, Scoria is not yet a place you can work.
-- **Themes.** `appearance.json`'s base theme and accent color are honored, but a CSS theme
-  is not. A variable-level subset of Obsidian's CSS custom properties is a later phase.
 - **MathJax's extras.** Math is typeset, but with KaTeX's syntax; a MathJax-only command
   shows its source in red. See [tables, code and math](/docs/format/code-math/).
-- **Some HTML in notes.** The common tags render, `<iframe>` and `<form>` do not; see [what differs](/docs/reference/differences/).
-- **Remote images.** A `![](https://…)` does not load; local images do.
-- **A few settings controls.** Most rows write; the font pickers, accent
-  color and the theme list do not.
-- **Multiple vaults in one window**, PDF export, heading folding,
-  drag-and-drop in Files, inline title editing, pasting attachments.
+- **Some HTML in notes.** The common tags render, `<sup>`, `<sub>`, a raw table's spans and an
+  inline `style`'s colours included; `<iframe>` and `<form>` do not.
+- **Video and the Web viewer.** A video is a card with **Open in default app**, and there is no
+  web engine for the Web viewer.
+- **Code highlighting in rarer languages.** 85 of the languages Obsidian's Prism highlights.
+- **A second vault beside the first.** Switching vaults replaces the one in the window; run
+  Scoria again to have both open.
 
 The full list, kept honest, is [what differs from
 Obsidian](/docs/reference/differences/).
