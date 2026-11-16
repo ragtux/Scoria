@@ -97,7 +97,8 @@ switcher's and **New tab**'s tabs always come to the front, which is what Obsidi
 
 The **Template file location** rows of Daily notes, Note composer and Unique note creator are
 file pickers, as in Obsidian: a click lists the vault's notes (every file, for the Unique note
-creator) under a **Search...** box; type to filter, then `Enter` or a click picks, and the path
+creator) under a **Search...** box, in Obsidian's order — a note made, moved or renamed since
+the vault opened first in its folder; type to filter, then `Enter` or a click picks, and the path
 is stored with its extension. The × clears it, and a path naming no file is marked with a
 question-mark icon.
 

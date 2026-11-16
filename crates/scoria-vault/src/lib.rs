@@ -20,6 +20,7 @@ use scoria_formats::config::{
 use scoria_formats::workspaces::Workspaces;
 use scoria_formats::FileKind;
 use serde::de::DeserializeOwned;
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, thiserror::Error)]
@@ -125,6 +126,12 @@ pub struct Vault {
     /// Every folder, vault-relative and sorted, empty ones included (the
     /// Files view shows them; the file list alone would not).
     folders: Vec<String>,
+    /// The files and folders that came into the vault after it was opened
+    /// (made, moved or renamed there, by Scoria or from outside), each with
+    /// the turn it arrived on, counted up from 1: what puts it first in
+    /// [`Vault::file_order`].
+    arrived: HashMap<String, u64>,
+    arrivals: u64,
 }
 
 impl Vault {
@@ -146,6 +153,8 @@ impl Vault {
             config_dir: config_dir.to_string(),
             files: Vec::new(),
             folders: Vec::new(),
+            arrived: HashMap::new(),
+            arrivals: 0,
         };
         vault.rescan()?;
         Ok(vault)
@@ -178,7 +187,124 @@ impl Vault {
     fn add_folder(&mut self, rel: &str) {
         if let Err(ix) = self.folders.binary_search_by(|f| f.as_str().cmp(rel)) {
             self.folders.insert(ix, rel.to_string());
+            self.arrive(rel);
         }
+    }
+
+    /// Records `rel` as the newest arrival.
+    fn arrive(&mut self, rel: &str) {
+        self.arrivals += 1;
+        self.arrived.insert(rel.to_string(), self.arrivals);
+    }
+
+    /// The arrival turns of `rel` and of everything under it, keyed by
+    /// the path below `rel` (`""` for `rel` itself).
+    fn arrivals_under(&self, rel: &str) -> HashMap<String, u64> {
+        let prefix = format!("{rel}/");
+        self.arrived
+            .iter()
+            .filter_map(|(path, turn)| {
+                let below = if path == rel {
+                    ""
+                } else {
+                    path.strip_prefix(&prefix)?
+                };
+                Some((below.to_string(), *turn))
+            })
+            .collect()
+    }
+
+    /// After `from` was renamed to `to`: what came along keeps the turn it
+    /// had (none for what the vault was opened with), so a folder's files
+    /// keep their order, and `to` itself is the newest arrival -- Obsidian
+    /// moves the renamed item and only it.
+    fn carry_arrivals(&mut self, to: &str, before: &HashMap<String, u64>) {
+        let prefix = format!("{to}/");
+        let moved: Vec<String> = self
+            .arrived
+            .keys()
+            .filter(|path| path.starts_with(&prefix))
+            .cloned()
+            .collect();
+        for path in moved {
+            match before.get(&path[prefix.len()..]) {
+                Some(turn) => {
+                    self.arrived.insert(path, *turn);
+                }
+                None => {
+                    self.arrived.remove(&path);
+                }
+            }
+        }
+        self.arrive(to);
+    }
+
+    /// Every file in the order Obsidian's `vault.getFiles()` gives them,
+    /// which is the order its file pickers list them in with no query (the
+    /// template file picker of Note composer, Unique note creator and Daily
+    /// notes): the folder tree walked depth first from the root, each
+    /// folder's children newest arrival first, then the ones the vault was
+    /// opened with in descending byte order of their names, files and
+    /// folders mixed. A file made, moved or renamed since therefore heads
+    /// its own folder, not the list, and a renamed folder heads its parent
+    /// with its files in the order they had. Observed on Obsidian 1.15.0,
+    /// 2026-11-16 (`tools/obsidian-probe/new-folder-picker-order.mjs`).
+    pub fn file_order(&self) -> Vec<&VaultFile> {
+        enum Child<'a> {
+            Folder(&'a str),
+            File(usize),
+        }
+        /// A folder's child, with its arrival turn and its name.
+        type Entry<'a> = (Option<u64>, &'a str, Child<'a>);
+        let mut children: HashMap<&str, Vec<Entry>> = HashMap::new();
+        let split = |path: &str| match path.rsplit_once('/') {
+            Some((parent, name)) => (parent.len(), name.len()),
+            None => (0, path.len()),
+        };
+        for folder in &self.folders {
+            let (parent, name) = split(folder);
+            children.entry(&folder[..parent]).or_default().push((
+                self.arrived.get(folder.as_str()).copied(),
+                &folder[folder.len() - name..],
+                Child::Folder(folder),
+            ));
+        }
+        for (ix, file) in self.files.iter().enumerate() {
+            let (parent, name) = split(&file.path);
+            children.entry(&file.path[..parent]).or_default().push((
+                self.arrived.get(file.path.as_str()).copied(),
+                &file.path[file.path.len() - name..],
+                Child::File(ix),
+            ));
+        }
+        for list in children.values_mut() {
+            // Newest arrival first; the rest by name, descending.
+            list.sort_by(|a, b| match (a.0, b.0) {
+                (Some(x), Some(y)) => y.cmp(&x),
+                (Some(_), None) => std::cmp::Ordering::Less,
+                (None, Some(_)) => std::cmp::Ordering::Greater,
+                (None, None) => b.1.cmp(a.1),
+            });
+        }
+        let mut out = Vec::with_capacity(self.files.len());
+        // Depth first, children in list order: push a folder's children in
+        // reverse so the first comes off the stack first, and emit a file
+        // as it comes off.
+        let mut pending: Vec<&Child> = Vec::new();
+        if let Some(root) = children.get("") {
+            pending.extend(root.iter().rev().map(|c| &c.2));
+        }
+        while let Some(child) = pending.pop() {
+            match child {
+                Child::File(ix) => out.push(&self.files[*ix]),
+                Child::Folder(path) => {
+                    if let Some(list) = children.get(path) {
+                        pending.extend(list.iter().rev().map(|c| &c.2));
+                    }
+                }
+            }
+        }
+        out
     }
 
     /// Registers every folder above `rel` (a file or folder path).
@@ -359,6 +485,7 @@ impl Vault {
                     }
                     Err(ix) => {
                         self.files.insert(ix, file);
+                        self.arrive(&rel);
                         changes.push(FileChange::Added(rel));
                     }
                 }
@@ -393,6 +520,9 @@ impl Vault {
                         self.add_folder(&sub);
                     }
                 }
+                // In path order, so files that arrive together are numbered
+                // the same way on every filesystem.
+                seen.sort();
                 for file in seen {
                     changes.extend(self.refresh_path(&file));
                 }
@@ -414,6 +544,8 @@ impl Vault {
                     .retain(|f| !(f.path == rel || f.path.starts_with(&prefix)));
                 self.folders
                     .retain(|f| !(*f == rel || f.starts_with(&prefix)));
+                self.arrived
+                    .retain(|f, _| !(*f == rel || f.starts_with(&prefix)));
                 changes.extend(removed.into_iter().map(FileChange::Removed));
             }
         }
@@ -900,6 +1032,111 @@ mod tests {
             "{\n  \"workspaces\": {\n    \"One\": {\n      \"main\": {},\n      \"active\": \"a\",\n      \"mtime\": \"2026-11-09T20:05:44-06:00\"\n    }\n  },\n  \"active\": \"Two\"\n}"
         );
         assert_eq!(vault.workspaces().unwrap(), Some(file));
+    }
+
+    /// The probe's own fixture and steps (Obsidian 1.15.0, 2026-11-16,
+    /// `new-folder-picker-order.mjs` s01 and s02), with `getFiles()` as
+    /// Obsidian listed it after each.
+    #[test]
+    fn file_order_is_obsidians_get_files() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        for rel in [
+            "m.md",
+            "B/y.md",
+            "a.md",
+            "Z.md",
+            "B/c.md",
+            "Templates/T.md",
+            "Untitled.md",
+            "Templates/Deep/N.md",
+            "x.png",
+            "Proj/Plan.md",
+            "k.md",
+        ] {
+            fs::create_dir_all(root.join(rel).parent().unwrap()).unwrap();
+            fs::write(root.join(rel), "x").unwrap();
+        }
+        fs::create_dir_all(root.join("Empty")).unwrap();
+        let mut vault = Vault::open(root).unwrap();
+        let order =
+            |v: &Vault| -> Vec<String> { v.file_order().iter().map(|f| f.path.clone()).collect() };
+        assert_eq!(
+            order(&vault),
+            [
+                "x.png",
+                "m.md",
+                "k.md",
+                "a.md",
+                "Z.md",
+                "Untitled.md",
+                "Templates/T.md",
+                "Templates/Deep/N.md",
+                "Proj/Plan.md",
+                "B/y.md",
+                "B/c.md",
+            ]
+        );
+        for rel in ["Zeta new.md", "Aaa new.md", "B/Mid new.md"] {
+            vault.create_note(rel, "x").unwrap();
+        }
+        // A file made since heads its own folder, not the list.
+        assert_eq!(
+            order(&vault),
+            [
+                "Aaa new.md",
+                "Zeta new.md",
+                "x.png",
+                "m.md",
+                "k.md",
+                "a.md",
+                "Z.md",
+                "Untitled.md",
+                "Templates/T.md",
+                "Templates/Deep/N.md",
+                "Proj/Plan.md",
+                "B/Mid new.md",
+                "B/y.md",
+                "B/c.md",
+            ]
+        );
+        // A modified file stays where it was.
+        fs::write(root.join("a.md"), "changed").unwrap();
+        vault.refresh_path(&root.join("a.md"));
+        vault.rename("m.md", "m renamed.md").unwrap();
+        assert_eq!(
+            order(&vault)[..4],
+            ["m renamed.md", "Aaa new.md", "Zeta new.md", "x.png"]
+        );
+        // A renamed folder heads its parent, its files in the order they had.
+        vault.rename("B", "B moved").unwrap();
+        assert_eq!(
+            order(&vault),
+            [
+                "B moved/Mid new.md",
+                "B moved/y.md",
+                "B moved/c.md",
+                "m renamed.md",
+                "Aaa new.md",
+                "Zeta new.md",
+                "x.png",
+                "k.md",
+                "a.md",
+                "Z.md",
+                "Untitled.md",
+                "Templates/T.md",
+                "Templates/Deep/N.md",
+                "Proj/Plan.md",
+            ]
+        );
+        // One written from outside, seen by the watcher, goes first too.
+        fs::write(root.join("Outside.md"), "x").unwrap();
+        vault.refresh_path(&root.join("Outside.md"));
+        assert_eq!(order(&vault)[..2], ["Outside.md", "B moved/Mid new.md"]);
+        // A deleted file is forgotten: made again, it arrives anew.
+        fs::remove_file(root.join("Aaa new.md")).unwrap();
+        vault.refresh_path(&root.join("Aaa new.md"));
+        assert!(!order(&vault).iter().any(|p| p == "Aaa new.md"));
     }
 
     #[test]

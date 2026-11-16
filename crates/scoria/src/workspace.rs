@@ -1889,9 +1889,6 @@ enum PendingOp {
     RenameProperty(String),
     Move(String),
     Delete(String),
-    NewFolder {
-        parent: String,
-    },
     /// `alwaysUpdateLinks` is off: asking whether to rewrite links.
     UpdateLinks {
         from: String,
@@ -4464,6 +4461,12 @@ impl Workspace {
         let doc_filter = cx.new(pane_filter_input);
         subscriptions.push(cx.subscribe(&doc_filter, |ws, _, event: &InputEvent, cx| {
             ws.doc_filter_event(0, event, cx)
+        }));
+        // A Files row being renamed losing the keyboard: a click away
+        // commits it, as Enter does.
+        let rename_focus = explorer.read(cx).rename_focus_handle();
+        subscriptions.push(cx.on_focus_out(&rename_focus, window, |ws, _, window, cx| {
+            ws.explorer_rename_blurred(window, cx)
         }));
         let groups = vec![TabGroup::new(
             0,
@@ -10262,7 +10265,10 @@ impl Workspace {
         if allowed.is_err() {
             return;
         }
-        self.explorer.update(cx, |e, cx| e.end_rename(cx));
+        self.explorer.update(cx, |e, cx| {
+            e.end_rename(cx);
+            e.set_focused_row(&to, cx);
+        });
         self.rename_with_links(&from, &to, window, cx);
     }
 
@@ -10364,32 +10370,45 @@ impl Workspace {
         );
     }
 
+    /// A Files row's field losing the keyboard: a click elsewhere commits
+    /// the name as Enter does (Obsidian, 2026-10-25 and 2026-11-16). A name
+    /// the rename refuses -- empty, taken -- cannot keep a field open that
+    /// nothing types into, so the edit is dropped and the row keeps the
+    /// name it had (for a new folder, `Untitled`).
+    fn explorer_rename_blurred(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some((path, name)) = self.explorer.read(cx).rename_draft() else {
+            return;
+        };
+        self.commit_row_rename(path, &name, window, cx);
+        self.explorer.update(cx, |e, cx| e.end_rename(cx));
+    }
+
+    /// "New folder", Obsidian's way (1.15.0, 2026-11-16,
+    /// `new-folder-picker-order.mjs`): no question first. The folder is made
+    /// at once as `Untitled`, else `Untitled 1`, `Untitled 2`, ... (a note
+    /// `Untitled.md` does not take the name), in `parent` -- the vault root
+    /// from the header's button, the command and the empty space's menu
+    /// whatever `newFileLocation` says or which row is focused, the folder
+    /// itself from a folder's menu -- and its row opens in inline rename
+    /// with the name selected. Enter or a click away renames it through
+    /// the row's own rename; Escape, or an empty or taken name abandoned,
+    /// leaves the folder as `Untitled`.
     fn start_new_folder(&mut self, parent: &str, window: &mut Window, cx: &mut Context<Self>) {
-        let initial = self
-            .state
-            .as_ref()
-            .map(|s| s.vault().available_path(parent, "Untitled", ""))
-            .unwrap_or_else(|| "Untitled".to_string());
-        let initial = initial.rsplit('/').next().unwrap_or(&initial).to_string();
-        self.open_prompt(
-            PendingOp::NewFolder {
-                parent: parent.to_string(),
-            },
-            PromptSpec {
-                title: "New folder".into(),
-                detail: vec![if parent.is_empty() {
-                    "In the vault folder".into()
-                } else {
-                    format!("In {parent}").into()
-                }],
-                input: Some(initial),
-                placeholder: "Folder name".into(),
-                confirm: "Create".into(),
-                ..PromptSpec::default()
-            },
-            window,
-            cx,
-        );
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let path = state.vault().available_path(parent, "Untitled", "");
+        if let Err(err) = state.create_folder(&path) {
+            self.report(err, cx);
+            return;
+        }
+        self.refresh_vault_views(cx);
+        // The field is on the row, so the row has to be on screen.
+        self.leave_search_field(window, cx);
+        self.left_visible = true;
+        self.left_tab = LeftTab::Files;
+        self.explorer.update(cx, |e, cx| e.start_rename(&path, cx));
+        cx.notify();
     }
 
     fn start_delete(&mut self, path: &str, window: &mut Window, cx: &mut Context<Self>) {
@@ -10519,28 +10538,6 @@ impl Workspace {
                 self.pending = None;
                 self.close_modal(window, cx);
                 self.delete_now(&path, window, cx);
-            }
-            PendingOp::NewFolder { parent } => {
-                let path = if parent.is_empty() {
-                    value.to_string()
-                } else {
-                    format!("{parent}/{value}")
-                };
-                let result = self
-                    .state
-                    .as_ref()
-                    .map(|s| s.create_folder(&path))
-                    .unwrap_or(Ok(()));
-                match result {
-                    Ok(()) => {
-                        self.pending = None;
-                        self.close_modal(window, cx);
-                        self.refresh_vault_views(cx);
-                        self.explorer.update(cx, |e, cx| e.reveal_folder(&path, cx));
-                        self.report(format!("Created folder {path}"), cx);
-                    }
-                    Err(err) => self.prompt.update(cx, |p, cx| p.set_error(err, cx)),
-                }
             }
             PendingOp::UpdateLinks { from, to } => self.finish_rename(&from, &to, true, window, cx),
             PendingOp::AddBookmark(draft, groups) => {
@@ -11256,7 +11253,7 @@ impl Workspace {
     }
 
     /// Opens one of the file prompts for the open note (`--prompt` on the
-    /// command line, for screenshots): `rename`, `move`, `delete`, `folder`.
+    /// command line, for screenshots): `rename`, `move`, `delete`.
     pub fn open_file_prompt(&mut self, kind: &str, window: &mut Window, cx: &mut Context<Self>) {
         let Some(current) = self.current.clone() else {
             return;
@@ -11264,7 +11261,6 @@ impl Workspace {
         match kind {
             "move" => self.start_move(&current, window, cx),
             "delete" => self.start_delete(&current, window, cx),
-            "folder" => self.start_new_folder("", window, cx),
             _ => self.start_rename(&current, window, cx),
         }
     }
@@ -16532,9 +16528,6 @@ impl Workspace {
                 }
                 Some(PendingOp::Move(path)) => json!({"op": "move", "path": path}),
                 Some(PendingOp::Delete(path)) => json!({"op": "delete", "path": path}),
-                Some(PendingOp::NewFolder { parent }) => {
-                    json!({"op": "new-folder", "parent": parent})
-                }
                 Some(PendingOp::UpdateLinks { from, to }) => {
                     json!({"op": "update-links", "from": from, "to": to})
                 }

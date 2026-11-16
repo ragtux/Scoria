@@ -186,7 +186,7 @@ pub const FLAGS: &[Flag] = &[
         Some("<kind>"),
         Some("rename"),
         STATE,
-        "Open a file prompt for the opened note: `rename`, `move`, `delete`, `folder`",
+        "Open a file prompt for the opened note: `rename`, `move`, `delete`",
     ),
     f(
         "--cell",
@@ -298,7 +298,7 @@ pub struct Args {
     pub find_all: Option<String>,
     /// Rename the opened note to this name at startup (links rewritten).
     pub rename: Option<String>,
-    /// Open a file prompt for the opened note: rename, move, delete, folder.
+    /// Open a file prompt for the opened note: rename, move, delete.
     pub prompt: Option<String>,
     /// Type this text at the cursor in the source editor, which is how the
     /// autocompletion popup is opened for a screenshot (`--type "[[al"`).

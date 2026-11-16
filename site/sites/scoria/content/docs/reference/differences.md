@@ -45,7 +45,7 @@ Things Obsidian does that Scoria intends to do and does not.
 
 | | |
 |---|---|
-| **Note composer** | Merge, extract selection and extract heading work, `Ctrl + Enter` included, and the template setting is Obsidian's file picker. The picker lists files in reverse path order; Obsidian puts files created since the vault opened first |
+| **Note composer** | Merge, extract selection and extract heading work, `Ctrl + Enter` included, and the template setting is Obsidian's file picker, in Obsidian's order. A full path typed with its `.md` does not match in the picker; in Obsidian it picks that file |
 | **Unique note creator** | Both commands work. **Add unique internal link** with several cursors edits only the first |
 | **Slash commands** | Built. Within a query, rows that Obsidian's matcher scores equally can come in a different order (`/toggle` puts *Toggle left sidebar* first where Obsidian puts *Toggle pin*), the popup's width is estimated from its longest row, and an editing page preview has no slash popup. The list is the palette's, so it differs from Obsidian's where the palette does |
 | **Renaming a heading** | `editor:rename-heading` works as Obsidian's does, oddities included. Links to the heading in frontmatter are not rewritten |
@@ -69,7 +69,6 @@ Things Obsidian does that Scoria intends to do and does not.
 
 | | |
 |---|---|
-| **New folder** | Asks for a name in a prompt first, where Obsidian creates `Untitled` and renames it on the row |
 | **System trash on Windows and macOS** | Implemented on Linux (freedesktop trash with a `.trashinfo` record); elsewhere it falls back to the vault's `.trash/` |
 | **Settings Scoria does not act on yet** | The rows write what Obsidian writes, bar Override config folder (Spellcheck languages, which Obsidian keeps outside the vault, goes to `scoria.json`), and the option tabs of plugins Scoria does not have, which show their values only. Rows for behavior Scoria lacks are written for Obsidian and marked "not in Scoria yet": Language, Native menus, and the plugin options above. **Custom app icon** takes effect on X11 only. See [Settings](/docs/settings/) |
 | **Search result context menu** | A file row and a match line have Obsidian's right-click menus. **Copy path** there is one row copying the vault path, where Obsidian opens a submenu of three. See [search](/docs/app/search/) |

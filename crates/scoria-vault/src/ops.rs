@@ -427,8 +427,10 @@ impl Vault {
         }
         let moved = self.rename_plan(from, to);
         std::fs::rename(&from_abs, &to_abs).map_err(io("rename", &from_abs))?;
+        let before = self.arrivals_under(from);
         self.refresh_path(&from_abs);
         self.refresh_path(&to_abs);
+        self.carry_arrivals(to, &before);
         Ok(moved)
     }
 
@@ -666,6 +668,34 @@ mod tests {
 
     fn paths(v: &Vault) -> Vec<&str> {
         v.files().iter().map(|f| f.path.as_str()).collect()
+    }
+
+    /// "New folder" in Obsidian 1.15.0 (2026-11-16,
+    /// `new-folder-picker-order.mjs`): `Untitled`, then `Untitled 1`,
+    /// `Untitled 2`, ... beside a note `Untitled.md` that does not take the
+    /// name; in a folder from its menu, numbered there on their own.
+    #[test]
+    fn a_new_folder_is_untitled_then_numbered() {
+        let (dir, mut v) = vault();
+        let mut made = Vec::new();
+        for parent in ["", "", "", "Sub", "Sub"] {
+            let path = v.available_path(parent, "Untitled", "");
+            v.create_folder(&path).unwrap();
+            made.push(path);
+        }
+        assert_eq!(
+            made,
+            [
+                "Untitled",
+                "Untitled 1",
+                "Untitled 2",
+                "Sub/Untitled",
+                "Sub/Untitled 1"
+            ]
+        );
+        assert!(dir.path().join("Sub/Untitled 1").is_dir());
+        assert!(v.folders().iter().any(|f| f == "Untitled 2"));
+        assert!(matches!(v.create_folder("Untitled"), Err(OpError::Exists)));
     }
 
     /// Insert attachment and Download attachments in Obsidian 1.15.0: the
