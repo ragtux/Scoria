@@ -94,8 +94,8 @@ default values and their `var()` chains, so overriding `--color-base-70` moves e
 Obsidian derives from it.
 
 Today `appearance.json`'s base theme, accent color, three font families, font size, CSS theme
-(`cssTheme`) and enabled CSS snippets are all honored; its "Show tab title bar" and "Native
-menus" switches are not. A theme's `theme.css` and the snippets are read for their
+(`cssTheme`), enabled CSS snippets and the "Show tab title bar" switch are all honored; its
+"Native menus" switch is not. A theme's `theme.css` and the snippets are read for their
 custom-property declarations under `:root`, `html`, `body`, `.theme-dark` and `.theme-light`,
 the snippets in the folder's order as Obsidian applies them, and a change under `.obsidian/`
 restyles the app while it runs. The Appearance tab picks the theme, the snippets and the

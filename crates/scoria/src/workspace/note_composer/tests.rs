@@ -487,6 +487,60 @@ fn split_file_puts_the_new_note_where_new_file_location_says() {
     }
 }
 
+/// Ctrl+Enter in an extraction's prompt (2026-11-15, `settings-gaps.mjs`
+/// s03): a new note named from the query even when a note of that name
+/// exists, which numbers it (`Existing target 1`, then `2`), at the vault
+/// root for a source in a folder, and `Untitled` for an empty query.
+#[test]
+fn ctrl_enter_in_an_extraction_makes_a_new_note_named_from_the_query() {
+    let (dir, state) = vault(
+        &[
+            ("sp.md", PICK),
+            ("Sub/sp-sub.md", PICK),
+            ("Existing target.md", "existing target\n"),
+        ],
+        "{}",
+        None,
+    );
+    let target = state.composer_new_path("Existing target", "sp.md");
+    assert_eq!(target, "Existing target 1.md");
+    extract(
+        &dir,
+        &state,
+        "sp.md",
+        7..14,
+        &target,
+        true,
+        Placement::Append,
+    );
+    assert_eq!(
+        state.composer_new_path("Existing target", "sp.md"),
+        "Existing target 2.md"
+    );
+    let from_sub = state.composer_new_path("from-sub", "Sub/sp-sub.md");
+    assert_eq!(from_sub, "from-sub.md");
+    extract(
+        &dir,
+        &state,
+        "Sub/sp-sub.md",
+        7..14,
+        &from_sub,
+        true,
+        Placement::Append,
+    );
+    assert_eq!(state.composer_new_path("Untitled", "sp.md"), "Untitled.md");
+    assert_eq!(
+        files(&dir),
+        expect(&[
+            ("sp.md", "before\n[[Existing target 1]]\nafter\n"),
+            ("Existing target.md", "existing target\n"),
+            ("Existing target 1.md", "PICK ME"),
+            ("Sub/sp-sub.md", "before\n[[from-sub]]\nafter\n"),
+            ("from-sub.md", "PICK ME"),
+        ])
+    );
+}
+
 /// s03 and s03b: into an existing note, Enter then Shift+Enter.
 #[test]
 fn split_file_into_an_existing_note_appends_then_prepends() {

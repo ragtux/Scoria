@@ -1049,7 +1049,7 @@ is no "Open daily note on startup" row in this build.
 | Date format | dropdown: `YYYY-MM-DD`, `YYYY.MM.DD`, `YYYY/MM/DD`, `YYYY/MM/YYYY-MM-DD`, `custom`; each preset is labelled with today in that format (`2026-10-30`, `2026.10.30`, `2026/10/30`, `2026/10/2026-10-30`), the last `Custom` | Choose how daily note are named in your vault. *(sic)* | a preset writes `format` as the pattern, the default included (`{"format": "YYYY-MM-DD"}` from no file); `Custom` writes nothing and shows the next row |
 | Custom format | text, placeholder `YYYY-MM-DD`; hidden (`display: none`) unless the dropdown is on Custom | For more syntax, refer to [format reference](https://momentjs.com/docs/#/displaying/format/)<br>Your current syntax looks like this: **2026-10-30** — the sample re-renders as you type (`YYYY-MM-DD dddd` → `2026-10-30 Friday`) | `format` verbatim; cleared writes `"format": ""` and the sample falls back to the placeholder's |
 | New file location | text, placeholder `Example: folder 1/folder 2` | New daily notes will be placed here. | `folder` verbatim; cleared writes `""` |
-| Template file location | a file suggester (no `<select>`, `.checkbox-container`, `input[type=text]` or `button` in the row; its placeholder went unobserved) | Choose the file to use as a template. | `template` (from the config type; the suggester itself was not driven) |
+| Template file location | a file suggester over the notes, label placeholder `No file selected` (driven 2026-11-15) | Choose the file to use as a template. | `template`, the picked note's path with `.md` |
 
 **Templates** (`templates.json`):
 
@@ -1067,8 +1067,8 @@ A cleared field keeps its key as `""`; nothing removes a key.
 Scoria shows both tabs with these rows (`scoria::settings::plugin_items`):
 every field is a `TextField` on the plugin's config type, the dropdown is a
 `Typed` whose labels are rendered from today, and "Custom" is a pick the view
-remembers rather than a value it writes. Template file location is a plain
-text field here, since Scoria has no file suggester in Settings yet.
+remembers rather than a value it writes. Template file location is the file
+suggester the Note composer and Unique note creator tabs use (since 2026-11-15).
 
 ## Observed canvas write behavior, Obsidian 1.14.4 (installer build 1.13.7)
 
@@ -9546,8 +9546,9 @@ opened a new tab and made it active.
 - `trashOption: "system"`: the system trash refused the move in the probe's session and Obsidian
   fell back to `.trash/`; what it does when the system trash works is unobserved (and the default,
   unset, may be the same fallback).
-- Ctrl+Enter in the split/extract prompt ("to create new") was not pressed; nor was `Always update`
-  in the merge's Update links prompt (it presumably writes `alwaysUpdateLinks`, unobserved).
+- `Always update` in the merge's Update links prompt was not pressed (it presumably writes
+  `alwaysUpdateLinks`, unobserved). Ctrl+Enter in the split/extract prompt was settled on
+  2026-11-15, see [[#Observed tab title bar, new-tab focus, extraction Ctrl+Enter, File recovery's buttons and the file picker, Obsidian 1.15.0]].
 - Why the merge's leaf goes back in history in one case and to the target in another is not
   explained; the observed table above is the whole of what is known.
 - Extract-heading with `replacementText` `embed`/`none` and under Markdown links, and
@@ -10573,7 +10574,8 @@ Two spaces, no trailing newline, numbers as JavaScript writes them.
 - Whether a snapshot is kept on every open or only when the last one is older than the interval;
   what "History length" prunes and when; whether a canvas or a base is always snapshotted.
 - The diff view's markup with "Show changes" on; Copy's clipboard text; the modal's keyboard.
-- Whether Clear empties `backups` (the run that confirmed it had nothing to clear).
+- Whether Clear empties `backups`: it does (2026-11-15, 25 records to 0, the notice "Local
+  history cleared."), see [[#Observed tab title bar, new-tab focus, extraction Ctrl+Enter, File recovery's buttons and the file picker, Obsidian 1.15.0]].
 - Scoria's own store (not Obsidian's): `file-recovery/<vault id>.jsonl` under Scoria's
   configuration folder, the same `{path, ts, data}` records; see [[Development#File recovery, 2026-11-11]].
 
@@ -11101,3 +11103,90 @@ edge, 654.3 wide), and the reading view gets `rtl` (`direction: rtl` on the view
 is right-aligned too). In the reading view every block is `dir="auto"` in both modes, so Hebrew
 paragraphs, headings, list items (bullet on the right) and quotes run right to left with the
 setting off.
+
+## Observed tab title bar, new-tab focus, extraction Ctrl+Enter, File recovery's buttons and the file picker, Obsidian 1.15.0
+
+`tools/obsidian-probe/settings-gaps.mjs` over CDP, Obsidian 1.15.0 (installer build 1.13.7) in a
+private headless sway (XWayland: the nix wrapper's ozone hint picks Wayland and the app traps
+with no `WAYLAND_DISPLAY`, so the run passes `--ozone-platform=x11`), its own data directory and
+CDP port 9363, every scenario on a scratch vault. Results in
+`tools/obsidian-probe/results/2026-11-15-settings-gaps.json` (its `_readme` says which run is
+authoritative for which step) and screenshots beside it.
+
+**Show tab title bar** (`showViewHeader` in `appearance.json`) sits on the **Interface** tab in
+1.15, first row, "Display the header at the top of every tab.", a toggle, on when absent. A click
+off wrote `{"showRibbon": true, "showViewHeader": false}` (Obsidian writes the tab's whole object)
+and took at once, with Settings still up: `body` lost `show-view-header` and every `.view-header`
+under the root split went `display: none` — a note in source and in reading view, a canvas, the
+tabs not on screen, every leaf of a stacked group, and the leaf of a popout window (whose `body`
+followed). The tab strip stayed (40 px), the stacked tab headers stayed, and the note's inline
+title moved up from 71 px to 32 px below the leaf's top. The docks' panes show no view header
+either way.
+
+**Always focus new tabs** (`focusNewTab` in `app.json`, on when absent; `false` writes
+`{"focusNewTab": false}`). Every way of opening Target in a new tab from Links, the active tab in
+the middle of three, with the key on and off:
+
+| Route | New tab goes | On | Off |
+| --- | --- | --- | --- |
+| Ctrl+click a link, reading view | right after the active tab | new tab active, keyboard in it | Links stays active, focus on the clicked `a.internal-link` |
+| Middle click a link, reading view | right after the active tab | active | Links stays active |
+| Ctrl+click a link, Live Preview | right after the active tab | active | Links stays active |
+| `editor:open-link-in-new-leaf` | right after the active tab | active | Links stays active, the editor keeps the keyboard |
+| Ctrl+click a Files row | right after the active tab | active | Links stays active, the editor keeps the keyboard |
+| Files row menu, "Open in new tab" | right after the active tab | active | Links stays the group's tab, the Files pane the active leaf |
+| Quick switcher, Ctrl+Enter | right after the active tab | active | **active** (the key is ignored) |
+| `workspace:new-tab` | the strip's right end | active | **active** (the key is ignored) |
+
+A tab opened behind the active one is a deferred leaf: it holds the file and loads when shown.
+
+**Ctrl+Enter in an extraction prompt** (`note-composer:split-file`, `extract-heading`; the
+instruction `ctrl ↵` "to create new"). It always creates a new note named from the query, whatever
+the rows offer, with no confirmation, and the extraction goes on as for Enter on a new note (the
+selection or section moved, the link left in its place, the source's tab kept):
+
+| Query (rows listed) | New note | Source after |
+| --- | --- | --- |
+| `brand-new` (only its "Enter to create" row) | `brand-new.md` = `"PICK ME"` | `"before\n[[brand-new]]\nafter\n"` |
+| `Existing` (one row, `Existing target`, selected) | `Existing.md` | `[[Existing]]` |
+| `Existing target` (that note listed) | `Existing target 1.md` | `[[Existing target 1]]` |
+| empty (recent files listed) | `Untitled.md` | `[[Untitled]]` |
+| `from-sub`, source `Sub/sp-sub.md`, `newFileLocation` unset | `from-sub.md` at the root | `[[from-sub]]` |
+| extract-heading, default name `Uniform` | `Uniform.md` = `"## Uniform\nsec body"` | `"intro\n[[Uniform]]\n## Tango\nafter\n"` |
+| extract-heading, default `Existing target` (two notes match) | `Existing target 2.md` | `[[Existing target 2]]` |
+
+Ctrl+Shift+Enter did nothing and left the prompt up.
+
+**File recovery's Settings buttons.** **View** opened the snapshots modal over the Settings window
+titled "File recovery", the search field empty (placeholder "Choose a file..."), no file chosen,
+"Please select a file on the left to view snapshots." on the right — unlike the command, which
+prefills the active file. Typing in the field suggested the files with snapshots (`Al` →
+`Alpha`); Enter chose one, and the title became its name. Escape closed it and left Settings up.
+**Clear** asked "Clear history" / "Are you sure you want to delete all snapshots? Files inside
+your vault will not be affected." with **Clear** (`mod-destructive mod-cta`, focused) and
+**Cancel** (`mod-cancel`), no close button. Escape and Cancel left all 25 snapshots; **Enter left
+the question up and the snapshots in place** although Clear had the focus; a click on Clear
+emptied the vault's `backups` store (25 → 0) and raised the notice "Local history cleared." in the
+Settings window. Afterwards the command's modal listed nothing, and opening a note took a
+snapshot again at once (0 → 1).
+
+**The template file picker** (Note composer, Unique note creator and Daily notes, "Template file
+location"): a `combobox-button mod-file` showing the stored path without `.md`, its folders and
+name in `file-combobox-dir` / `file-combobox-sep` / `file-combobox-name` spans, a
+`combobox-clear-button` (`lucide-x`) while there is a value, and `chevrons-up-down`; empty, its
+label placeholder is `Example: folder/note` (Note composer), `Example: folder1/note` (Unique note
+creator) or `No file selected` (Daily notes). A path no file has shows `lucide-file-question`
+before it. A click opens `.suggestion-container.combobox` under it (236 px wide, at most 300 px
+tall) with a focused `Search...` field over every file it offers, the first selected, 30 px rows,
+no cap on their number (68 listed and scrolled): the Note composer's and Daily notes' list the
+notes by path without `.md`, the Unique note creator's lists **every file**, other kinds with
+their extension (`Templates/Pic.png`, `Templates/Sheet.canvas`, `Templates/Data.base`). The order
+is the vault's own reversed: files the vault opened with in reverse path order (`hd-c`, `hd-b`,
+`Templates/Unique`, `Templates/Deep/Nested`, `Templates/Composer`, `Target`, …), files created
+since above them, newest first. Typing filters fuzzily with `suggestion-highlight` spans, the best
+match selected; a query matching nothing lists nothing (no empty-state line) and Enter then does
+nothing, the list staying open. Up and Down move the selection; Enter or a click picks, writing the
+path **with** its extension (`"template": "Templates/Deep/Nested.md"`, the same in all three
+files); a typed full path, any case, picks that file (`templates/composer.md` →
+`Templates/Composer.md`). Escape or a click outside closes the list and writes nothing. The clear
+button writes `"template": ""`.

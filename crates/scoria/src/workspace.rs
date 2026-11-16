@@ -1921,6 +1921,25 @@ impl HistoryEntry {
     }
 }
 
+/// Puts `tab` right after the active one, the slot Obsidian 1.15 gave a
+/// tab opened from a link, a Files row or the quick switcher (2026-11-15),
+/// and says where it went.
+fn place_new_tab(tabs: &mut Vec<Tab>, active: usize, tab: Tab) -> usize {
+    let at = (active + 1).min(tabs.len());
+    tabs.insert(at, tab);
+    at
+}
+
+/// "Always focus new tabs": `focusNewTab`, on when absent.
+fn focus_new_tab_on(app: &AppConfig) -> bool {
+    app.focus_new_tab.unwrap_or(true)
+}
+
+/// "Show tab title bar": `showViewHeader`, on when absent.
+fn view_header_on(appearance: &AppearanceConfig) -> bool {
+    appearance.show_view_header.unwrap_or(true)
+}
+
 #[derive(Debug, Clone, PartialEq)]
 struct Tab {
     path: Option<String>,
@@ -1959,6 +1978,17 @@ impl Tab {
             view_state: None,
             pinned: false,
             doc_backlinks: DocBacklinks::default(),
+        }
+    }
+
+    /// A tab holding `path` that has not been on screen: one history entry,
+    /// loaded when it is shown.
+    fn unloaded(path: String, mode: ViewMode) -> Tab {
+        Tab {
+            history: vec![HistoryEntry::new(path.clone(), mode)],
+            history_ix: 1,
+            path: Some(path),
+            ..Tab::empty(mode)
         }
     }
 
@@ -4025,7 +4055,7 @@ impl Workspace {
                         this.focus_main(window, cx);
                     }
                     ExplorerEvent::OpenInNewTab(path) => {
-                        this.open_in_new_tab(path.clone(), None, cx)
+                        this.open_link_in_new_tab(path.clone(), None, cx)
                     }
                     ExplorerEvent::NewNote { folder } => this.new_note(folder, window, cx),
                     ExplorerEvent::NewNoteFromHeader => {
@@ -4098,7 +4128,7 @@ impl Workspace {
                         let link = format!("{path}{}", subpath.as_deref().unwrap_or(""));
                         let parsed = scoria_markdown::parse_linktext(&link);
                         if *new_tab {
-                            this.open_in_new_tab(path.clone(), parsed.subpath, cx);
+                            this.open_link_in_new_tab(path.clone(), parsed.subpath, cx);
                         } else {
                             this.open_file(path.clone(), parsed.subpath, cx);
                         }
@@ -4290,12 +4320,14 @@ impl Workspace {
             cx.subscribe_in(
                 &settings,
                 window,
-                |this, _, event: &SettingsEvent, _window, cx| match event {
+                |this, _, event: &SettingsEvent, window, cx| match event {
                     SettingsEvent::Close => this.close_settings(cx),
                     SettingsEvent::Changed(change) => {
                         this.change_setting(change.as_ref().clone(), cx)
                     }
                     SettingsEvent::Report(message) => this.report(message.clone(), cx),
+                    SettingsEvent::ViewSnapshots => this.view_snapshots(window, cx),
+                    SettingsEvent::ClearSnapshots => this.clear_snapshots(cx),
                 },
             ),
             cx.subscribe_in(
@@ -4947,7 +4979,7 @@ impl Workspace {
             return;
         };
         if new_tab {
-            self.open_in_new_tab(path, None, cx);
+            self.open_link_in_new_tab(path, None, cx);
         } else {
             self.open_file(path, None, cx);
         }
@@ -8938,7 +8970,7 @@ impl Workspace {
                 let parsed = scoria_markdown::parse_linktext(&body);
                 let resolved = state.cache().resolve(&body, &source).map(str::to_string);
                 match resolved {
-                    Some(path) if new_tab => self.open_in_new_tab(path, parsed.subpath, cx),
+                    Some(path) if new_tab => self.open_link_in_new_tab(path, parsed.subpath, cx),
                     Some(path) => {
                         if path == source {
                             if let Some(sub) = parsed.subpath {
@@ -11223,7 +11255,13 @@ impl Workspace {
                 if view.stacked {
                     return d.child(self.render_stack(&view, theme, cx));
                 }
-                d.child(self.render_header(&view, theme, cx)).child(
+                // "Show tab title bar" off: no view header on any tab, in
+                // the main area, a stack or a popout, the strip left as it
+                // is.
+                d.when(self.show_view_header(), |d| {
+                    d.child(self.render_header(&view, theme, cx))
+                })
+                .child(
                     div()
                         .relative()
                         .flex_1()
@@ -12131,15 +12169,61 @@ impl Workspace {
         self.load_tab(cx);
     }
 
-    /// Opens `path` in a new tab, leaving the active one as it is.
+    /// Opens `path` in a new tab right after the active one, and makes it
+    /// the active tab: where Obsidian 1.15 puts a tab a link, a Files row or
+    /// the quick switcher opens (2026-11-15, `settings-gaps.mjs` s02), unlike
+    /// `workspace:new-tab`'s, which goes on the strip's right end.
     pub fn open_in_new_tab(
         &mut self,
         path: String,
         subpath: Option<Subpath<'_>>,
         cx: &mut Context<Self>,
     ) {
-        self.new_tab(cx);
+        self.flush_save(cx);
+        self.stash_active_tab();
+        let mode = self.default_mode();
+        self.active_tab = place_new_tab(&mut self.tabs, self.active_tab, Tab::empty(mode));
+        self.load_tab(cx);
         self.open_file(path, subpath, cx);
+    }
+
+    /// Whether "Always focus new tabs" (`focusNewTab`, on when absent)
+    /// hands a tab opened from a link to the reader.
+    fn focus_new_tabs(&self) -> bool {
+        self.state
+            .as_ref()
+            .map(|s| focus_new_tab_on(&s.app()))
+            .unwrap_or(true)
+    }
+
+    /// A link, a Files row, a bookmark or a menu's "Open in new tab": a new
+    /// tab after the active one, made active only while "Always focus new
+    /// tabs" is on. Off, the tab opens behind the active one, which keeps
+    /// the keyboard, as Obsidian 1.15's did for a Ctrl or middle click on a
+    /// link in either view, `editor:open-link-in-new-leaf`, a Ctrl click on
+    /// a Files row and its menu's "Open in new tab" (2026-11-15). The quick
+    /// switcher's and `workspace:new-tab`'s tabs are always active.
+    pub fn open_link_in_new_tab(
+        &mut self,
+        path: String,
+        subpath: Option<Subpath<'_>>,
+        cx: &mut Context<Self>,
+    ) {
+        if self.focus_new_tabs() {
+            return self.open_in_new_tab(path, subpath, cx);
+        }
+        self.open_in_background_tab(path, cx);
+    }
+
+    /// `path` in a new tab right after the active one, which stays active
+    /// and on screen. The tab holds the file and one history entry, and is
+    /// loaded when it is shown, the way a tab restored from `workspace.json`
+    /// is.
+    fn open_in_background_tab(&mut self, path: String, cx: &mut Context<Self>) {
+        self.stash_active_tab();
+        let mode = self.default_mode();
+        place_new_tab(&mut self.tabs, self.active_tab, Tab::unloaded(path, mode));
+        cx.notify();
     }
 
     pub fn activate_tab(&mut self, ix: usize, cx: &mut Context<Self>) {
@@ -13860,6 +13944,15 @@ impl Workspace {
         self.state
             .as_ref()
             .map(|s| s.appearance().show_ribbon.unwrap_or(true))
+            .unwrap_or(true)
+    }
+
+    /// "Show tab title bar": whether `appearance.json`'s `showViewHeader`
+    /// leaves each tab's view header on screen. Absent means on.
+    pub(crate) fn show_view_header(&self) -> bool {
+        self.state
+            .as_ref()
+            .map(|s| view_header_on(&s.appearance()))
             .unwrap_or(true)
     }
 
@@ -16890,7 +16983,7 @@ impl Workspace {
             Pick::ToggleBacklinksInDocument => self.toggle_backlinks_in_document(cx),
             Pick::Find => self.run_command("editor:open-search", window, cx),
             Pick::Replace => self.run_command("editor:open-search-replace", window, cx),
-            Pick::OpenInNewTab => self.open_in_new_tab(path, None, cx),
+            Pick::OpenInNewTab => self.open_link_in_new_tab(path, None, cx),
             Pick::OpenToRight => self.open_to_right(path, window, cx),
             // The view header's "Open in new window" copies the leaf, as
             // `workspace:open-in-new-window` does; a row's opens its file.
@@ -20898,6 +20991,45 @@ fn any_markdown_leaf<'a>(mut leaves: impl Iterator<Item = (Option<&'a str>, bool
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A tab a link opens goes right after the active one, and with
+    /// "Always focus new tabs" off it is a tab holding the file that has
+    /// not been loaded, the active one left where it was (2026-11-15,
+    /// `settings-gaps.mjs` s02: Alpha, Links (active), Beta became Alpha,
+    /// Links, Target, Beta).
+    #[test]
+    fn a_tab_opened_from_a_link_goes_after_the_active_one() {
+        let note = |p: &str| Tab::unloaded(p.to_string(), ViewMode::LivePreview);
+        let mut tabs = vec![note("Alpha.md"), note("Links.md"), note("Beta.md")];
+        let at = place_new_tab(&mut tabs, 1, note("Target.md"));
+        assert_eq!(at, 2);
+        let order: Vec<_> = tabs.iter().map(|t| t.path.clone().unwrap()).collect();
+        assert_eq!(order, ["Alpha.md", "Links.md", "Target.md", "Beta.md"]);
+        // At the end of the strip it is the last tab.
+        assert_eq!(place_new_tab(&mut tabs, 3, note("End.md")), 4);
+        // The background tab: the file, one entry to go back from.
+        let t = Tab::unloaded("Target.md".into(), ViewMode::Reading);
+        assert_eq!(t.path.as_deref(), Some("Target.md"));
+        assert_eq!(t.history_ix, 1);
+        assert_eq!(t.history[0].path, "Target.md");
+        assert_eq!(t.mode, ViewMode::Reading);
+        assert!(!t.pinned);
+    }
+
+    /// `focusNewTab` and `showViewHeader` are on when the file says
+    /// nothing, as Obsidian reads them.
+    #[test]
+    fn focus_new_tab_and_show_view_header_default_on() {
+        let app: AppConfig = serde_json::from_str("{}").unwrap();
+        assert!(focus_new_tab_on(&app));
+        let app: AppConfig = serde_json::from_str(r#"{"focusNewTab": false}"#).unwrap();
+        assert!(!focus_new_tab_on(&app));
+        let look: AppearanceConfig = serde_json::from_str("{}").unwrap();
+        assert!(view_header_on(&look));
+        let look: AppearanceConfig =
+            serde_json::from_str(r#"{"showRibbon": true, "showViewHeader": false}"#).unwrap();
+        assert!(!view_header_on(&look));
+    }
 
     /// The "Bookmark group" dropdown of the probe's vault (`s11b`): the
     /// groups depth first, a nested one behind four non-breaking spaces,

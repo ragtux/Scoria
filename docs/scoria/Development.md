@@ -725,6 +725,90 @@ a hand-written 9 held to 3, nothing in the vault), and a pointer position shrunk
 `app:show-tab-switcher` out. The gate: 70 test binaries, 1,689 passed, 694 in the app's bin.
 
 
+### Tab title bar, new-tab focus, extraction Ctrl+Enter, File recovery's buttons and the template picker, 2026-11-16
+
+Four small gaps the differences page listed: two Settings rows written for Obsidian only ("Show
+tab title bar", "Always focus new tabs"), Ctrl+Enter in an extraction's prompt, File recovery's
+inert View and Clear, and the template rows drawn as path fields. Probed first, see
+[[Specification#Observed tab title bar, new-tab focus, extraction Ctrl+Enter, File recovery's buttons and the file picker, Obsidian 1.15.0]].
+
+**The probe.** `tools/obsidian-probe/settings-gaps.mjs`, Obsidian 1.15.0 in a private headless
+sway with its own `XDG_RUNTIME_DIR` under `/run/user/1000`, a dead session bus, `USER_DATA_DIR`
+on that runtime folder and `CDP_PORT=9363`. Two passes: the whole script, then `ONLY='s01|s06'`
+on a fresh vault. What surprised: "Show tab title bar" lives on the Interface tab in 1.15, not
+Appearance (the first pass looked in the wrong tab and clicked nothing); a link's new tab goes
+right after the active one, not at the strip's end where `workspace:new-tab` puts its own; the
+quick switcher's Ctrl+Enter ignores "Always focus new tabs" while a Files row's menu honours it;
+an extraction's Ctrl+Enter always makes a new note, numbering a name that is taken and naming an
+empty query `Untitled`; Enter does not answer File recovery's "Clear history" even with Clear
+focused; and the Unique note creator's template picker lists every file, extensions and all,
+while the other two list notes.
+
+**What was built.**
+- "Show tab title bar": `Workspace::show_view_header` reads `showViewHeader`, and a group, a
+  stacked pane and a popout draw no view header while it is off; the tab strip stays. Live as
+  the row is clicked.
+- "Always focus new tabs": `open_link_in_new_tab` for a link (Ctrl or middle click, either view,
+  `editor:open-link-in-new-leaf`), a Files row, a bookmark, the ribbon's random note and the file
+  menus' "Open in new tab". On, it is `open_in_new_tab`; off, `open_in_background_tab` puts a tab
+  holding the file (`Tab::unloaded`: the path and one history entry) after the active one and
+  leaves the active tab, and the keyboard, where they were. `open_in_new_tab` itself now places
+  the tab after the active one (`place_new_tab`); `workspace:new-tab` still appends.
+- Ctrl+Enter in an extraction: `composer_prompt::create_new_event` turns it into the "Enter to
+  create" choice for the query (or `Untitled`), so the note is named, numbered and placed by
+  `composer_new_path` and goes through the template like any new note. The merge's rule is
+  unchanged.
+- File recovery's buttons: `Control::Button` rows carry a `ButtonAction`. View emits
+  `SettingsEvent::ViewSnapshots`, and the workspace opens the snapshots modal with no file chosen
+  over the vault's window and raises it. Clear opens the question in the Settings window — the
+  app's `Prompt`, rendered over the panel, with a new `destructive` button style
+  (`mod-destructive mod-cta`) and a `no_enter` flag — and Clear there emits
+  `SettingsEvent::ClearSnapshots`: `SnapshotStore::clear`, then the notice "Local history
+  cleared.".
+- The template picker: Settings had no suggest input, so the existing pieces make one rather than
+  a new widget: the row is `Control::File` over the row's own `TextField` (so it reads and writes
+  exactly what the path field did), its list is a popover under the button like the dropdowns',
+  closed by the same `menu` rule, with a `TextInput` "Search..." box and a `uniform_list` of rows
+  filtered by `scoria_search::fuzzy_match`. Up, Down, Enter, Escape and a click behave as observed;
+  the × writes `""`. Daily notes' row got it too, with Obsidian's "No file selected".
+
+**Driven.** The debug build in the private sway over the control socket, with grim: the Files
+and links and Interface rows untagged; "Always focus new tabs" clicked off wrote
+`{"focusNewTab": false}`, after which `editor:open-link-in-new-leaf` on `[[Other]]` put Other
+after Links with Links still active (on, Target had opened active); "Show tab title bar" clicked
+off wrote `{"showViewHeader": false}` and the header went from the open note at once, the inline
+title moving up; Clear's question drawn over Settings, Enter leaving it up, Clear removing the
+vault's store file and raising "Local history cleared."; View opening "File recovery" with
+"Choose a file..." empty over the main window; the Note composer picker listing the notes, `nes`
+leaving `Templates/Deep/Nested` with `Nes` bold, Enter writing
+`"template": "Templates/Deep/Nested.md"`; and Ctrl+Enter on "Existing target" in Split's
+extraction prompt making `Existing target 1.md`, the link `[[Existing target 1]]` left behind.
+
+**Traps.** The nix `obsidian` wrapper picks Wayland through its ozone hint and traps (SIGTRAP,
+no log line) with `WAYLAND_DISPLAY` unset: `OBSIDIAN_ARGS=--ozone-platform=x11` puts it on the
+sway's XWayland. A `USER_DATA_DIR` in the session scratchpad crashed the same way, apparently on
+its path length; `/run/user/1000/<dir>/udd` worked. Over the socket, Settings' window-local
+coordinates are grim's pixels minus the `move position` the sway rule gives it, not minus the
+frame's visible corner, which sits 24 px further in.
+
+**Left.** Obsidian lists files created since the vault opened at the top of the picker; Scoria
+keeps reverse path order throughout. A full path typed with `.md` matched in Obsidian; Scoria's
+fuzzy match runs against the row's text, which has no `.md`. A background tab does not keep a
+link's heading or block (it opens at the top when shown), and Scoria's quick switcher has no
+Ctrl+Enter at all. View opens the modal over the vault's window rather than over Settings, and
+Clear's notice shows there too.
+
+**Tests.** `settings::tests::the_template_rows_are_file_suggesters`,
+`the_file_suggester_lists_filters_and_writes_the_path`,
+`file_recovery_view_and_clear_are_live_buttons`, and the ratchet
+`only_the_toggles_scoria_reads_are_untagged` with the two rows added;
+`workspace::tests::a_tab_opened_from_a_link_goes_after_the_active_one`,
+`focus_new_tab_and_show_view_header_default_on`;
+`workspace::composer_prompt::tests::ctrl_enter_creates_from_the_query_and_an_extraction_always_does`;
+`workspace::note_composer::tests::ctrl_enter_in_an_extraction_makes_a_new_note_named_from_the_query`;
+`workspace::file_recovery::tests::clear_history_empties_the_store_and_the_clock_starts_over`.
+
+
 ### Spellcheck, 2026-11-15
 
 The `spellcheck` setting and `editor:toggle-spellcheck` already wrote Obsidian's bytes; now they

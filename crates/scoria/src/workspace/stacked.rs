@@ -520,17 +520,21 @@ impl Workspace {
             .bg(theme.tokens.background_primary)
             .occlude();
         if active {
-            return pane.child(self.render_header(view, theme, cx)).child(
-                div()
-                    .relative()
-                    .flex_1()
-                    .min_h_0()
-                    .overflow_hidden()
-                    .child(self.render_group_main(view, theme, cx))
-                    .when(self.dragging_tab, |d| {
-                        d.child(self.render_drop_zones(group, theme, cx))
-                    }),
-            );
+            return pane
+                .when(self.show_view_header(), |d| {
+                    d.child(self.render_header(view, theme, cx))
+                })
+                .child(
+                    div()
+                        .relative()
+                        .flex_1()
+                        .min_h_0()
+                        .overflow_hidden()
+                        .child(self.render_group_main(view, theme, cx))
+                        .when(self.dragging_tab, |d| {
+                            d.child(self.render_drop_zones(group, theme, cx))
+                        }),
+                );
         }
         let pane_view = GroupView {
             id: group,
@@ -558,7 +562,9 @@ impl Workspace {
             this.activate_group(group, cx);
             this.activate_tab(i, cx);
         }))
-        .child(self.render_header(&pane_view, theme, cx))
+        .when(self.show_view_header(), |d| {
+            d.child(self.render_header(&pane_view, theme, cx))
+        })
         .child(
             div()
                 .flex_1()
