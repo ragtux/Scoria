@@ -36,6 +36,7 @@ mod hover_preview;
 mod inline_field;
 mod math;
 mod mentions;
+mod mermaid;
 mod migrate_modal;
 mod palette;
 mod panes;
@@ -435,6 +436,7 @@ fn main() {
             if let Err(e) = cx.text_system().add_fonts(assets::fonts()) {
                 eprintln!("could not register the bundled fonts: {e}");
             }
+            scoria_mermaid::set_fonts(assets::mermaid_fonts());
             theme::fonts::set_installed(installed_families(cx));
             bind_all_keys(cx, &registry);
             cx.set_global(Commands(registry));

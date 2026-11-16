@@ -486,6 +486,12 @@ pub fn build_widgets(
             // an editable table instead of raw YAML.
             BlockKind::Yaml { .. } => true,
             BlockKind::Table { .. } | BlockKind::Math { .. } => true,
+            // A ```mermaid fence is the one code block Live Preview draws
+            // rendered: Obsidian's `cm-preview-code-block cm-embed-block
+            // cm-lang-mermaid`, the diagram with an Edit this block button.
+            BlockKind::CodeBlock { info, .. } => scoria_mermaid::is_mermaid(
+                info.as_deref().and_then(|i| i.split_whitespace().next()),
+            ),
             // A callout is drawn as the same tinted block the reading view
             // draws; a cursor inside it still brings its source lines back.
             BlockKind::Callout { .. } => true,
@@ -2877,6 +2883,22 @@ mod tests {
     fn widgets(src: &str, vault: &dyn EmbedSource) -> Vec<Widget> {
         let doc = parse(src);
         build_widgets("Self.md", &doc, vault, BuildOptions::default())
+    }
+
+    #[test]
+    fn live_preview_makes_a_mermaid_fence_a_widget_and_no_other_code() {
+        let src = "```mermaid\nflowchart LR\n  A --> B\n```\n\n```rust\nfn x() {}\n```\n";
+        let w = widgets(src, &stub());
+        assert_eq!(w.len(), 1, "{w:?}");
+        let RBlock::Code { language, text, .. } = &w[0].block else {
+            panic!("{:?}", w[0].block)
+        };
+        assert_eq!(language.as_deref(), Some("mermaid"));
+        assert_eq!(text, "flowchart LR\n  A --> B");
+        assert_eq!(
+            &src[w[0].span.clone()],
+            "```mermaid\nflowchart LR\n  A --> B\n```"
+        );
     }
 
     #[test]

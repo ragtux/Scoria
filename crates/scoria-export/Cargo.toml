@@ -10,6 +10,7 @@ publish.workspace = true
 
 [dependencies]
 scoria-math.workspace = true
+scoria-mermaid.workspace = true
 scoria-highlight.workspace = true
 scoria-formats.workspace = true
 scoria-canvas.workspace = true

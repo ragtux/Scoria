@@ -1,0 +1,12497 @@
+{
+"title": "New tab - scoria-probe-vault.L5gFTx - Obsidian 1.15.1",
+"cases": {
+"flow-td": "flowchart TD\n    A[Start] --> B{Is it?}\n    B -->|Yes| C[OK]\n    C --> D[Rethink]\n    D --> B\n    B ---->|No| E[End]",
+"flow-lr-shapes": "flowchart LR\n    a[Rect] --> b(Round)\n    b --> c([Stadium])\n    c --> d[[Subroutine]]\n    d --> e[(Database)]\n    e --> f((Circle))\n    f --> g>Flag]\n    g --> h{Rhombus}\n    h --> i{{Hexagon}}\n    i --> j[/Parallel/]\n    j --> k[\\Alt\\]\n    k --> l[/Trapezoid\\]\n    l --> m[\\Inverse/]\n    m --> n(((Double)))",
+"flow-edges": "graph LR\n    A --- B\n    B --> C\n    C -.-> D\n    D ==> E\n    E --o F\n    F --x G\n    G <--> H\n    H -- text --> I\n    I -. dotted .-> J\n    J == thick ==> K\n    K ~~~ L",
+"flow-bt": "graph BT\n    A --> B\n    A --> C\n    B --> D\n    C --> D",
+"flow-rl": "graph RL\n    A[One] --> B[Two] --> C[Three]",
+"flow-subgraph": "flowchart TB\n    c1-->a2\n    subgraph one\n    a1-->a2\n    end\n    subgraph two\n    b1-->b2\n    end\n    subgraph three\n    c1-->c2\n    end\n    one --> two\n    three --> two\n    two --> c2",
+"flow-style": "flowchart LR\n    A:::hot --> B\n    B --> C\n    classDef hot fill:#f96,stroke:#333,stroke-width:4px\n    style C fill:#bbf,stroke:#f66,stroke-width:2px,color:#fff,stroke-dasharray: 5 5\n    linkStyle 0 stroke:#ff3,stroke-width:4px",
+"flow-long-label": "flowchart TD\n    A[\"A rather long label that has to wrap across more than one line of text\"] --> B[\"Short\"]\n    B --> C[\"Unicode: café, naïve, 日本語\"]\n    C --> D[\"**bold** and *italic*\"]",
+"sequence": "sequenceDiagram\n    participant Alice\n    participant Bob\n    Alice->>John: Hello John, how are you?\n    loop Healthcheck\n        John->>John: Fight against hypochondria\n    end\n    Note right of John: Rational thoughts <br/>prevail!\n    John-->>Alice: Great!\n    John->>Bob: How about you?\n    Bob-->>John: Jolly good!",
+"sequence-full": "sequenceDiagram\n    autonumber\n    actor U as User\n    participant S as Server\n    U->>+S: Request\n    S-->>-U: Response\n    U-)S: Async\n    U-xS: Lost\n    alt is ok\n        S->>U: fine\n    else is not\n        S->>U: sorry\n    end\n    opt maybe\n        U->>S: again\n    end\n    par one\n        U->>S: a\n    and two\n        U->>S: b\n    end\n    Note over U,S: Across both",
+"class": "classDiagram\n    Animal <|-- Duck\n    Animal <|-- Fish\n    Animal : +int age\n    Animal : +String gender\n    Animal: +isMammal()\n    class Duck{\n        +String beakColor\n        +swim()\n        +quack()\n    }\n    class Fish{\n        -int sizeInFeet\n        -canEat()\n    }",
+"state": "stateDiagram-v2\n    [*] --> Still\n    Still --> [*]\n    Still --> Moving\n    Moving --> Still\n    Moving --> Crash\n    Crash --> [*]",
+"gantt": "gantt\n    title A Gantt Diagram\n    dateFormat YYYY-MM-DD\n    section Section\n        A task          :a1, 2024-01-01, 30d\n        Another task    :after a1, 20d\n    section Another\n        Task in Another :2024-01-12, 12d\n        another task    :24d",
+"pie": "pie title Pets adopted by volunteers\n    \"Dogs\" : 386\n    \"Cats\" : 85\n    \"Rats\" : 15",
+"er": "erDiagram\n    CUSTOMER ||--o{ ORDER : places\n    ORDER ||--|{ LINE-ITEM : contains\n    CUSTOMER }|..|{ DELIVERY-ADDRESS : uses",
+"mindmap": "mindmap\n  root((mindmap))\n    Origins\n      Long history\n      Popularisation\n    Research\n      On effectiveness\n    Tools\n      Pen and paper\n      Mermaid",
+"journey": "journey\n    title My working day\n    section Go to work\n      Make tea: 5: Me\n      Go upstairs: 3: Me\n    section Go home\n      Go downstairs: 5: Me",
+"gitgraph": "gitGraph\n    commit\n    branch develop\n    checkout develop\n    commit\n    checkout main\n    merge develop",
+"error-syntax": "flowchart TD\n    A --> B -->\n    ((",
+"error-unknown": "notADiagram\n    A --> B",
+"empty": "",
+"flow-init": "%%{init: {\"theme\": \"forest\"}}%%\nflowchart LR\n    A --> B",
+"flow-frontmatter": "---\ntitle: Titled flow\n---\nflowchart LR\n    A --> B",
+"flow-click": "flowchart LR\n    A --> B\n    click A \"https://example.com\" \"Tooltip\""
+},
+"themes": {
+"moonstone": {
+"flow-td": {
+"size": [
+184.0,
+489.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+94.4,
+56,
+0,
+41
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+91.04,
+96,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+37.2,
+157.31,
+41.2,
+76
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+33.84,
+232.31,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+37.2,
+288.31,
+0,
+41
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+33.84,
+328.31,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+94.4,
+174.31,
+0,
+162
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+91.04,
+167.31,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+110.4,
+157.31,
+33.08,
+268
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+140.12,
+424.31,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-edge-label",
+"box": [
+22.29,
+189.81,
+29.83,
+21
+],
+"fill": "#ffffff"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+26.29,
+190.21,
+22.12,
+19
+],
+"fill": "#222222",
+"text": "Yes"
+},
+{
+"tag": "rect",
+"g": "pele-edge-label",
+"box": [
+129.92,
+253.81,
+27.11,
+21
+],
+"fill": "#ffffff"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+133.92,
+254.21,
+19.13,
+19
+],
+"fill": "#222222",
+"text": "No"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+58.44,
+8,
+71.92,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+76.44,
+20.6,
+36.14,
+22
+],
+"fill": "#222222",
+"text": "Start"
+},
+{
+"tag": "polygon",
+"g": "pele-node pele-shape-diam",
+"box": [
+43.75,
+104,
+101.3,
+63.32
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-diam",
+"box": [
+77.35,
+124.26,
+34.15,
+22
+],
+"fill": "#222222",
+"text": "Is it?"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+8,
+240.31,
+58.4,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+26,
+252.91,
+22.5,
+22
+],
+"fill": "#222222",
+"text": "OK"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+18.03,
+336.31,
+93.2,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+36.03,
+348.91,
+57.66,
+22
+],
+"fill": "#222222",
+"text": "Rethink"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+111.17,
+432.31,
+64.62,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+129.17,
+444.91,
+28.63,
+22
+],
+"fill": "#222222",
+"text": "End"
+}
+]
+},
+"flow-lr-shapes": {
+"size": [
+1934.0,
+103.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+76.74,
+51.44,
+28.99,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+104.73,
+48.08,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+197.95,
+51.44,
+28.99,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+225.94,
+48.08,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+348.25,
+51.44,
+28.99,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+376.24,
+48.08,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+519.38,
+51.44,
+28.99,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+547.37,
+48.08,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+662.24,
+51.44,
+28.99,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+690.23,
+48.08,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+762.02,
+51.44,
+40.99,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+802.01,
+48.08,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+877.23,
+51.44,
+28.99,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+905.22,
+48.08,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+1052.24,
+51.44,
+28.99,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+1080.23,
+48.08,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+1215.59,
+51.44,
+34.99,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+1249.58,
+48.08,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+1360.86,
+51.44,
+40.99,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+1400.85,
+48.08,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+1476.95,
+51.44,
+40.99,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+1516.94,
+48.08,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+1646.12,
+51.44,
+40.99,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+1686.11,
+48.08,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+1797.83,
+51.44,
+34.99,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+1831.82,
+48.08,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+8.33,
+27.45,
+68.41,
+47.98
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+26.33,
+39.4,
+32.5,
+23.51
+],
+"fill": "#222222",
+"text": "Rect"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rounded",
+"box": [
+112.74,
+27.45,
+85.22,
+47.98
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rounded",
+"box": [
+130.73,
+39.4,
+49.23,
+23.51
+],
+"fill": "#222222",
+"text": "Round"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-stadium",
+"box": [
+233.94,
+27.45,
+114.31,
+47.98
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-stadium",
+"box": [
+259.93,
+39.4,
+62.32,
+23.51
+],
+"fill": "#222222",
+"text": "Stadium"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-fr-rect",
+"box": [
+384.23,
+27.45,
+135.13,
+47.98
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-node pele-shape-fr-rect",
+"box": [
+392.23,
+27.45,
+119.14,
+47.98
+],
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-fr-rect",
+"box": [
+410.24,
+39.4,
+83.12,
+23.51
+],
+"fill": "#222222",
+"text": "Subroutine"
+},
+{
+"tag": "path",
+"g": "pele-node pele-shape-cyl",
+"box": [
+555.35,
+19.81,
+106.88,
+63.26
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-node pele-shape-cyl",
+"box": [
+555.35,
+27.45,
+106.88,
+7.64
+],
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-cyl",
+"box": [
+573.36,
+43.22,
+70.86,
+23.51
+],
+"fill": "#222222",
+"text": "Database"
+},
+{
+"tag": "circle",
+"g": "pele-node pele-shape-circle",
+"box": [
+698.22,
+19.54,
+63.8,
+63.8
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-circle",
+"box": [
+709.46,
+39.4,
+41.33,
+23.51
+],
+"fill": "#222222",
+"text": "Circle"
+},
+{
+"tag": "polygon",
+"g": "pele-node pele-shape-odd",
+"box": [
+798.01,
+27.45,
+79.21,
+47.98
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-odd",
+"box": [
+822,
+39.4,
+31.23,
+23.51
+],
+"fill": "#222222",
+"text": "Flag"
+},
+{
+"tag": "polygon",
+"g": "pele-node pele-shape-diam",
+"box": [
+913.21,
+8,
+139.03,
+86.89
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-diam",
+"box": [
+946.81,
+39.4,
+72.95,
+23.51
+],
+"fill": "#222222",
+"text": "Rhombus"
+},
+{
+"tag": "polygon",
+"g": "pele-node pele-shape-hex",
+"box": [
+1088.23,
+27.45,
+127.36,
+47.98
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-hex",
+"box": [
+1118.22,
+39.4,
+67.37,
+23.51
+],
+"fill": "#222222",
+"text": "Hexagon"
+},
+{
+"tag": "polygon",
+"g": "pele-node pele-shape-lean-r",
+"box": [
+1251.58,
+27.45,
+115.28,
+47.98
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-lean-r",
+"box": [
+1281.57,
+39.4,
+55.29,
+23.51
+],
+"fill": "#222222",
+"text": "Parallel"
+},
+{
+"tag": "polygon",
+"g": "pele-node pele-shape-lean-l",
+"box": [
+1402.86,
+27.45,
+80.09,
+47.98
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-lean-l",
+"box": [
+1432.85,
+39.4,
+20.21,
+23.51
+],
+"fill": "#222222",
+"text": "Alt"
+},
+{
+"tag": "polygon",
+"g": "pele-node pele-shape-trap-b",
+"box": [
+1518.94,
+27.45,
+133.19,
+47.98
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-trap-b",
+"box": [
+1548.96,
+39.4,
+73.16,
+23.51
+],
+"fill": "#222222",
+"text": "Trapezoid"
+},
+{
+"tag": "polygon",
+"g": "pele-node pele-shape-trap-t",
+"box": [
+1688.11,
+27.45,
+115.72,
+47.98
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-trap-t",
+"box": [
+1718.12,
+39.4,
+55.71,
+23.51
+],
+"fill": "#222222",
+"text": "Inverse"
+},
+{
+"tag": "circle",
+"g": "pele-node pele-shape-dbl-circ",
+"box": [
+1839.82,
+8.8,
+85.29,
+85.29
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "circle",
+"g": "pele-node pele-shape-dbl-circ",
+"box": [
+1844.81,
+13.8,
+75.29,
+75.29
+],
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-dbl-circ",
+"box": [
+1855.37,
+39.4,
+54.19,
+23.51
+],
+"fill": "#222222",
+"text": "Double"
+}
+]
+},
+"flow-edges": {
+"size": [
+1125.0,
+64.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+56.15,
+31.99,
+35.99,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+140.12,
+31.99,
+28.99,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+168.12,
+28.63,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+224.1,
+31.99,
+28.99,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+252.09,
+28.63,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+308.07,
+31.99,
+28.99,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+336.07,
+28.63,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+392.05,
+31.99,
+27.99,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "circle",
+"g": "pele-edge",
+"box": [
+420.54,
+28.49,
+7,
+7
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+476.03,
+31.99,
+31.99,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+504.52,
+28.49,
+7,
+7
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+567,
+31.99,
+21.99,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+560,
+28.63,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+587.99,
+28.63,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+643.98,
+31.99,
+66.11,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+709.09,
+28.63,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+765.07,
+31.99,
+84.67,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+848.74,
+28.63,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+904.72,
+31.99,
+72.5,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+976.22,
+28.63,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-edge-label",
+"box": [
+660.47,
+21.49,
+33.12,
+20.99
+],
+"fill": "#ffffff"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+664.48,
+21.5,
+25.16,
+18.81
+],
+"fill": "#222222",
+"text": "text"
+},
+{
+"tag": "rect",
+"g": "pele-edge-label",
+"box": [
+781.57,
+21.49,
+51.67,
+20.99
+],
+"fill": "#ffffff"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+785.6,
+21.5,
+43.62,
+18.81
+],
+"fill": "#222222",
+"text": "dotted"
+},
+{
+"tag": "rect",
+"g": "pele-edge-label",
+"box": [
+921.21,
+21.49,
+39.5,
+20.99
+],
+"fill": "#ffffff"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+925.23,
+21.5,
+32.54,
+18.81
+],
+"fill": "#222222",
+"text": "thick"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+8.16,
+8,
+47.99,
+47.99
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+27.04,
+20.49,
+10.26,
+22.23
+],
+"fill": "#222222",
+"text": "A"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+92.14,
+8,
+47.99,
+47.99
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+110.94,
+20.49,
+10.39,
+22.23
+],
+"fill": "#222222",
+"text": "B"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+176.11,
+8,
+47.99,
+47.99
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+195.06,
+20.49,
+10.26,
+22.23
+],
+"fill": "#222222",
+"text": "C"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+260.09,
+8,
+47.99,
+47.99
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+278.24,
+20.49,
+11.97,
+22.23
+],
+"fill": "#222222",
+"text": "D"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+344.06,
+8,
+47.99,
+47.99
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+363.61,
+20.49,
+8.9,
+22.23
+],
+"fill": "#222222",
+"text": "E"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+428.04,
+8,
+47.99,
+47.99
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+447.88,
+20.49,
+8.55,
+22.23
+],
+"fill": "#222222",
+"text": "F"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+512.01,
+8,
+47.99,
+47.99
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+530.18,
+20.49,
+11.97,
+22.23
+],
+"fill": "#222222",
+"text": "G"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+595.99,
+8,
+47.99,
+47.99
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+614.05,
+20.49,
+11.97,
+22.23
+],
+"fill": "#222222",
+"text": "H"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+717.08,
+8,
+47.99,
+47.99
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+738.37,
+20.49,
+5.42,
+22.23
+],
+"fill": "#222222",
+"text": "I"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+856.73,
+8,
+47.99,
+47.99
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+876.83,
+20.49,
+6.09,
+22.23
+],
+"fill": "#222222",
+"text": "J"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+984.22,
+8,
+47.99,
+47.99
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+1003.25,
+20.49,
+10.26,
+22.23
+],
+"fill": "#222222",
+"text": "K"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+1068.19,
+8,
+47.99,
+47.99
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+1087.99,
+20.49,
+8.55,
+22.23
+],
+"fill": "#222222",
+"text": "L"
+}
+]
+},
+"flow-bt": {
+"size": [
+152.0,
+256.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+32,
+159,
+36,
+41
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+28.64,
+152,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+84,
+159,
+36,
+41
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+116.64,
+152,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+32,
+63,
+36,
+41
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+64.64,
+56,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+84,
+63,
+36,
+41
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+80.64,
+56,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+52,
+200,
+48,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+70.88,
+212.6,
+11,
+22
+],
+"fill": "#222222",
+"text": "A"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+8,
+104,
+48,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+26.8,
+116.6,
+10.41,
+22
+],
+"fill": "#222222",
+"text": "B"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+96,
+104,
+48,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+114.94,
+116.6,
+10.13,
+22
+],
+"fill": "#222222",
+"text": "C"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+52,
+8,
+48,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+70.16,
+20.6,
+11.69,
+22
+],
+"fill": "#222222",
+"text": "D"
+}
+]
+},
+"flow-rl": {
+"size": [
+326.0,
+64.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+208.95,
+32,
+41,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+201.95,
+28.64,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+94.12,
+32,
+41,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+87.12,
+28.64,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+249.96,
+8,
+67.41,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+267.95,
+20.6,
+31.42,
+22
+],
+"fill": "#222222",
+"text": "One"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+135.12,
+8,
+66.83,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+153.12,
+20.6,
+30.84,
+22
+],
+"fill": "#222222",
+"text": "Two"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+8,
+8,
+79.12,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+26,
+20.6,
+43.13,
+22
+],
+"fill": "#222222",
+"text": "Three"
+}
+]
+},
+"flow-subgraph": {
+"size": [
+229.0,
+764.0
+],
+"items": [
+{
+"tag": "rect",
+"g": "pele-cluster",
+"box": [
+99.71,
+8,
+120.83,
+224
+],
+"fill": "#fafafa",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-cluster",
+"box": [
+113.7,
+16.6,
+40.02,
+22
+],
+"fill": "#5c5c5c",
+"text": "three"
+},
+{
+"tag": "rect",
+"g": "pele-cluster",
+"box": [
+100.33,
+552,
+94.99,
+204
+],
+"fill": "#fafafa",
+"stroke": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-cluster",
+"box": [
+8,
+280,
+122.13,
+224
+],
+"fill": "#fafafa",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-cluster",
+"box": [
+54.76,
+288.6,
+28.59,
+22
+],
+"fill": "#5c5c5c",
+"text": "one"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+28,
+96,
+110.92,
+333
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+44.17,
+428,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+63.53,
+388,
+19.53,
+41
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+60.17,
+428,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+147.82,
+640,
+0,
+41
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+144.46,
+680,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+154.92,
+96,
+19.21,
+41
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+170.77,
+136,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+69.06,
+504,
+73.07,
+41
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+138.77,
+544,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+158.13,
+232,
+0,
+313
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+154.77,
+544,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+174.13,
+199,
+0,
+353
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+170.77,
+192,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "text",
+"g": "pele-cluster-title",
+"box": [
+114.32,
+560.6,
+28.05,
+22
+],
+"stroke": "color(srgb 0.990196 0.990196 0.990196)",
+"text": "two"
+},
+{
+"tag": "text",
+"g": "pele-cluster-title",
+"box": [
+114.32,
+560.6,
+28.05,
+22
+],
+"fill": "#5c5c5c",
+"text": "two"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+120.5,
+48,
+52.83,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+138.5,
+60.6,
+16.84,
+22
+],
+"fill": "#222222",
+"text": "c1"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+28.47,
+436,
+54.13,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+46.46,
+448.6,
+18.14,
+22
+],
+"fill": "#222222",
+"text": "a2"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+56,
+340,
+54.13,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+73.99,
+352.6,
+18.14,
+22
+],
+"fill": "#222222",
+"text": "a1"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+120.32,
+592,
+54.99,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+138.32,
+604.6,
+19,
+22
+],
+"fill": "#222222",
+"text": "b1"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+120.32,
+688,
+54.99,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+138.32,
+700.6,
+19,
+22
+],
+"fill": "#222222",
+"text": "b2"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+147.71,
+144,
+52.83,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+165.71,
+156.6,
+16.84,
+22
+],
+"fill": "#222222",
+"text": "c2"
+}
+]
+},
+"flow-style": {
+"size": [
+256.0,
+64.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+56,
+32,
+41,
+0
+],
+"stroke": "#ffff33"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+96,
+28.64,
+8,
+6.72
+],
+"fill": "#ffff33"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+152,
+32,
+41,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+192,
+28.64,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect hot",
+"box": [
+8,
+8,
+48,
+48
+],
+"fill": "#ff9966",
+"stroke": "#333333"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect hot",
+"box": [
+26.88,
+20.6,
+11,
+22
+],
+"fill": "#1f1f1f",
+"text": "A"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+104,
+8,
+48,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+122.8,
+20.6,
+10.41,
+22
+],
+"fill": "#222222",
+"text": "B"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+200,
+8,
+48,
+48
+],
+"fill": "#bbbbff",
+"stroke": "#ff6666"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+218.94,
+20.6,
+10.13,
+22
+],
+"fill": "#ffffff",
+"text": "C"
+}
+]
+},
+"flow-long-label": {
+"size": [
+243.0,
+409.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+121.3,
+95,
+0,
+41
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+117.94,
+135,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+121.3,
+191,
+0,
+41
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+117.94,
+231,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+121.3,
+305,
+0,
+41
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+117.94,
+345,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+11.2,
+8,
+220.21,
+87
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+29.19,
+19.1,
+184.22,
+64
+],
+"fill": "#222222",
+"text": "A rather long label thathas to wrap across morethan one line of text"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+82.93,
+143,
+76.74,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+100.92,
+155.6,
+40.96,
+22
+],
+"fill": "#222222",
+"text": "Short"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+8,
+239,
+226.61,
+66
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+26,
+250.1,
+190.61,
+43
+],
+"fill": "#222222",
+"text": "Unicode: café, naïve, 日本語"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+24.19,
+353,
+194.22,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+42.18,
+365.6,
+158.41,
+22
+],
+"fill": "#222222",
+"text": "**bold** and *italic*"
+}
+]
+},
+"sequence": {
+"size": [
+542.0,
+419.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-lifelines",
+"box": [
+41.59,
+52,
+0,
+315
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-lifelines",
+"box": [
+147.18,
+52,
+0,
+315
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-lifelines",
+"box": [
+287.01,
+52,
+0,
+315
+],
+"stroke": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-frame pele-frame-loop",
+"box": [
+267.01,
+107,
+266.04,
+71
+],
+"stroke": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-frame pele-frame-loop",
+"box": [
+267.01,
+107,
+40.16,
+20
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-frame pele-frame-loop",
+"box": [
+274.23,
+108.2,
+25.72,
+17
+],
+"fill": "#5c5c5c",
+"text": "loop"
+},
+{
+"tag": "text",
+"g": "pele-frame pele-frame-loop",
+"box": [
+315.17,
+107.4,
+90.13,
+19
+],
+"fill": "#5c5c5c",
+"text": "[Healthcheck]"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+41.59,
+95,
+238.42,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+279.01,
+91.64,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+287.01,
+144,
+28,
+22
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+287.01,
+162.64,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+48.59,
+273,
+238.42,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+41.59,
+269.64,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+154.18,
+310,
+132.83,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+147.18,
+306.64,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+147.18,
+347,
+132.83,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+279.01,
+343.64,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-edge-label",
+"box": [
+80.65,
+72,
+167.31,
+17
+],
+"fill": "#ffffff"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+83.64,
+70.4,
+161.31,
+19
+],
+"fill": "#222222",
+"text": "Hello John, how are you?"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+323.01,
+144.9,
+180.05,
+19
+],
+"fill": "#222222",
+"text": "Fight against hypochondria"
+},
+{
+"tag": "rect",
+"g": "pele-edge-label",
+"box": [
+141.17,
+250,
+46.26,
+17
+],
+"fill": "#ffffff"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+144.17,
+248.4,
+40.27,
+19
+],
+"fill": "#222222",
+"text": "Great!"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+164.18,
+285.4,
+105.83,
+19
+],
+"fill": "#222222",
+"text": "How about you?"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+180.97,
+322.4,
+70.23,
+19
+],
+"fill": "#222222",
+"text": "Jolly good!"
+},
+{
+"tag": "rect",
+"g": "pele-note",
+"box": [
+297.01,
+188,
+137.31,
+48
+],
+"fill": "#fafafa",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-note",
+"box": [
+307,
+192.9,
+117.6,
+37
+],
+"fill": "#222222",
+"text": "Rational thoughtsprevail!"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-actor pele-actor-participant pele-actor-footer",
+"box": [
+8,
+367,
+67.18,
+44
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-actor pele-actor-participant pele-actor-footer",
+"box": [
+24,
+377.6,
+35.19,
+22
+],
+"fill": "#222222",
+"text": "Alice"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-actor pele-actor-participant pele-actor-footer",
+"box": [
+115.18,
+367,
+64,
+44
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-actor pele-actor-participant pele-actor-footer",
+"box": [
+132.22,
+377.6,
+29.92,
+22
+],
+"fill": "#222222",
+"text": "Bob"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-actor pele-actor-participant pele-actor-footer",
+"box": [
+254.1,
+367,
+65.82,
+44
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-actor pele-actor-participant pele-actor-footer",
+"box": [
+268.1,
+377.6,
+35.83,
+22
+],
+"fill": "#222222",
+"text": "John"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-actor pele-actor-participant",
+"box": [
+8,
+8,
+67.18,
+44
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-actor pele-actor-participant",
+"box": [
+24,
+18.6,
+35.19,
+22
+],
+"fill": "#222222",
+"text": "Alice"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-actor pele-actor-participant",
+"box": [
+115.18,
+8,
+64,
+44
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-actor pele-actor-participant",
+"box": [
+132.22,
+18.6,
+29.92,
+22
+],
+"fill": "#222222",
+"text": "Bob"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-actor pele-actor-participant",
+"box": [
+254.1,
+8,
+65.82,
+44
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-actor pele-actor-participant",
+"box": [
+268.1,
+18.6,
+35.83,
+22
+],
+"fill": "#222222",
+"text": "John"
+}
+]
+},
+"sequence-full": {
+"size": [
+192.0,
+749.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-lifelines",
+"box": [
+29.5,
+70,
+0,
+609
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-lifelines",
+"box": [
+143.14,
+70,
+0,
+609
+],
+"stroke": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-activations",
+"box": [
+138.14,
+113,
+10,
+37
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-frame pele-frame-alt",
+"box": [
+9.5,
+236,
+153.64,
+142
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-frame pele-frame-alt",
+"box": [
+9.5,
+308,
+153.64,
+0
+],
+"fill": "#222222",
+"stroke": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-frame pele-frame-alt",
+"box": [
+14.5,
+312,
+51.35,
+17
+],
+"fill": "#ffffff"
+},
+{
+"tag": "text",
+"g": "pele-frame pele-frame-alt",
+"box": [
+17.49,
+310.4,
+45.36,
+19
+],
+"fill": "#5c5c5c",
+"text": "[is not]"
+},
+{
+"tag": "rect",
+"g": "pele-frame pele-frame-alt",
+"box": [
+9.5,
+236,
+29.97,
+20
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-frame pele-frame-alt",
+"box": [
+16.84,
+237.2,
+15.42,
+17
+],
+"fill": "#5c5c5c",
+"text": "alt"
+},
+{
+"tag": "text",
+"g": "pele-frame pele-frame-alt",
+"box": [
+47.47,
+236.4,
+39.13,
+19
+],
+"fill": "#5c5c5c",
+"text": "[is ok]"
+},
+{
+"tag": "rect",
+"g": "pele-frame pele-frame-opt",
+"box": [
+9.5,
+390,
+153.64,
+72
+],
+"stroke": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-frame pele-frame-opt",
+"box": [
+9.5,
+390,
+34.29,
+20
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-frame pele-frame-opt",
+"box": [
+16.75,
+391.2,
+19.92,
+17
+],
+"fill": "#5c5c5c",
+"text": "opt"
+},
+{
+"tag": "text",
+"g": "pele-frame pele-frame-opt",
+"box": [
+51.78,
+390.4,
+53.81,
+19
+],
+"fill": "#5c5c5c",
+"text": "[maybe]"
+},
+{
+"tag": "rect",
+"g": "pele-frame pele-frame-par",
+"box": [
+9.5,
+474,
+153.64,
+142
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-frame pele-frame-par",
+"box": [
+9.5,
+546,
+153.64,
+0
+],
+"fill": "#222222",
+"stroke": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-frame pele-frame-par",
+"box": [
+14.5,
+550,
+39.74,
+17
+],
+"fill": "#ffffff"
+},
+{
+"tag": "text",
+"g": "pele-frame pele-frame-par",
+"box": [
+17.49,
+548.4,
+33.75,
+19
+],
+"fill": "#5c5c5c",
+"text": "[two]"
+},
+{
+"tag": "rect",
+"g": "pele-frame pele-frame-par",
+"box": [
+9.5,
+474,
+34.14,
+20
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-frame pele-frame-par",
+"box": [
+16.7,
+475.2,
+20.53,
+17
+],
+"fill": "#5c5c5c",
+"text": "par"
+},
+{
+"tag": "text",
+"g": "pele-frame pele-frame-par",
+"box": [
+51.63,
+474.4,
+34.23,
+19
+],
+"fill": "#5c5c5c",
+"text": "[one]"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+37.5,
+113,
+93.64,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+130.14,
+109.64,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-sequence-number",
+"box": [
+21.5,
+105,
+16,
+16
+],
+"fill": "#222222"
+},
+{
+"tag": "text",
+"g": "pele-sequence-number",
+"box": [
+26.06,
+104.2,
+6.88,
+17
+],
+"fill": "#ffffff",
+"text": "1"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+36.5,
+150,
+93.64,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+29.5,
+146.64,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-sequence-number",
+"box": [
+130.14,
+142,
+16,
+16
+],
+"fill": "#222222"
+},
+{
+"tag": "text",
+"g": "pele-sequence-number",
+"box": [
+134.7,
+141.2,
+7,
+17
+],
+"fill": "#ffffff",
+"text": "2"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+37.5,
+187,
+105.64,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+135.14,
+182.5,
+8,
+9
+],
+"stroke": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-sequence-number",
+"box": [
+21.5,
+179,
+16,
+16
+],
+"fill": "#222222"
+},
+{
+"tag": "text",
+"g": "pele-sequence-number",
+"box": [
+26.06,
+178.2,
+7,
+17
+],
+"fill": "#ffffff",
+"text": "3"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+37.5,
+224,
+101.64,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+135.64,
+220.5,
+7,
+7
+],
+"stroke": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-sequence-number",
+"box": [
+21.5,
+216,
+16,
+16
+],
+"fill": "#222222"
+},
+{
+"tag": "text",
+"g": "pele-sequence-number",
+"box": [
+26.06,
+215.2,
+7,
+17
+],
+"fill": "#ffffff",
+"text": "4"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+36.5,
+296,
+98.64,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+29.5,
+292.64,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-sequence-number",
+"box": [
+135.14,
+288,
+16,
+16
+],
+"fill": "#222222"
+},
+{
+"tag": "text",
+"g": "pele-sequence-number",
+"box": [
+139.7,
+287.2,
+7,
+17
+],
+"fill": "#ffffff",
+"text": "5"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+36.5,
+366,
+98.64,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+29.5,
+362.64,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-sequence-number",
+"box": [
+135.14,
+358,
+16,
+16
+],
+"fill": "#222222"
+},
+{
+"tag": "text",
+"g": "pele-sequence-number",
+"box": [
+139.7,
+357.2,
+7,
+17
+],
+"fill": "#ffffff",
+"text": "6"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+37.5,
+450,
+98.64,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+135.14,
+446.64,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-sequence-number",
+"box": [
+21.5,
+442,
+16,
+16
+],
+"fill": "#222222"
+},
+{
+"tag": "text",
+"g": "pele-sequence-number",
+"box": [
+26.06,
+441.2,
+7,
+17
+],
+"fill": "#ffffff",
+"text": "7"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+37.5,
+534,
+98.64,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+135.14,
+530.64,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-sequence-number",
+"box": [
+21.5,
+526,
+16,
+16
+],
+"fill": "#222222"
+},
+{
+"tag": "text",
+"g": "pele-sequence-number",
+"box": [
+26.06,
+525.2,
+7,
+17
+],
+"fill": "#ffffff",
+"text": "8"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+37.5,
+604,
+98.64,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+135.14,
+600.64,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-sequence-number",
+"box": [
+21.5,
+596,
+16,
+16
+],
+"fill": "#222222"
+},
+{
+"tag": "text",
+"g": "pele-sequence-number",
+"box": [
+26.06,
+595.2,
+7,
+17
+],
+"fill": "#ffffff",
+"text": "9"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+61.05,
+88.4,
+53.53,
+19
+],
+"fill": "#222222",
+"text": "Request"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+47.99,
+125.4,
+63.75,
+19
+],
+"fill": "#222222",
+"text": "Response"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+71.23,
+162.4,
+38.44,
+19
+],
+"fill": "#222222",
+"text": "Async"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+76.53,
+199.4,
+27.58,
+19
+],
+"fill": "#222222",
+"text": "Lost"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+69.83,
+271.4,
+25.08,
+19
+],
+"fill": "#222222",
+"text": "fine"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+65.37,
+341.4,
+34.74,
+19
+],
+"fill": "#222222",
+"text": "sorry"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+72.02,
+425.4,
+36.59,
+19
+],
+"fill": "#222222",
+"text": "again"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+86.39,
+509.4,
+7.86,
+19
+],
+"fill": "#222222",
+"text": "a"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+86.01,
+579.4,
+8.63,
+19
+],
+"fill": "#222222",
+"text": "b"
+},
+{
+"tag": "rect",
+"g": "pele-note",
+"box": [
+13.5,
+626,
+145.64,
+33
+],
+"fill": "#fafafa",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-note",
+"box": [
+47.58,
+632.4,
+77.48,
+19
+],
+"fill": "#222222",
+"text": "Across both"
+},
+{
+"tag": "circle",
+"g": "pele-node pele-actor pele-actor-actor pele-actor-footer",
+"box": [
+23.5,
+680,
+12,
+12
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-node pele-actor pele-actor-actor pele-actor-footer",
+"box": [
+19.5,
+692,
+20,
+21
+],
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-actor pele-actor-actor pele-actor-footer",
+"box": [
+12,
+717.6,
+35.38,
+22
+],
+"fill": "#222222",
+"text": "User"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-actor pele-actor-participant pele-actor-footer",
+"box": [
+103.06,
+679,
+80.18,
+44
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-actor pele-actor-participant pele-actor-footer",
+"box": [
+119.05,
+689.6,
+48.57,
+22
+],
+"fill": "#222222",
+"text": "Server"
+},
+{
+"tag": "circle",
+"g": "pele-node pele-actor pele-actor-actor",
+"box": [
+23.5,
+9,
+12,
+12
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-node pele-actor pele-actor-actor",
+"box": [
+19.5,
+21,
+20,
+21
+],
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-actor pele-actor-actor",
+"box": [
+12,
+46.6,
+35.38,
+22
+],
+"fill": "#222222",
+"text": "User"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-actor pele-actor-participant",
+"box": [
+103.06,
+26,
+80.18,
+44
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-actor pele-actor-participant",
+"box": [
+119.05,
+36.6,
+48.57,
+22
+],
+"fill": "#222222",
+"text": "Server"
+}
+]
+},
+"class": {
+"size": [
+314.0,
+326.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edge pele-relation",
+"box": [
+79.03,
+147,
+72.46,
+44
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-relation",
+"box": [
+145.49,
+135,
+12,
+12
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-relation",
+"box": [
+175.49,
+147,
+72.46,
+54.5
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-relation",
+"box": [
+169.49,
+135,
+12,
+12
+],
+"stroke": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-class",
+"box": [
+102.25,
+8,
+122.49,
+127
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-node pele-class",
+"box": [
+102.25,
+48,
+122.48,
+54
+],
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-class",
+"box": [
+136.11,
+16.6,
+54.75,
+22
+],
+"fill": "#222222",
+"text": "Animal"
+},
+{
+"tag": "text",
+"g": "pele-members",
+"box": [
+114.25,
+54.4,
+53.43,
+19
+],
+"fill": "#222222",
+"text": "+int age"
+},
+{
+"tag": "text",
+"g": "pele-members",
+"box": [
+114.25,
+75.4,
+98.71,
+19
+],
+"fill": "#222222",
+"text": "+String gender"
+},
+{
+"tag": "text",
+"g": "pele-members",
+"box": [
+114.25,
+108.4,
+84.94,
+19
+],
+"fill": "#222222",
+"text": "+isMammal()"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-class",
+"box": [
+8,
+191,
+142.06,
+127
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-node pele-class",
+"box": [
+8,
+231,
+142.06,
+33
+],
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-class",
+"box": [
+59.34,
+199.6,
+39.95,
+22
+],
+"fill": "#222222",
+"text": "Duck"
+},
+{
+"tag": "text",
+"g": "pele-members",
+"box": [
+20,
+237.4,
+118.28,
+19
+],
+"fill": "#222222",
+"text": "+String beakColor"
+},
+{
+"tag": "text",
+"g": "pele-members",
+"box": [
+20,
+270.4,
+50.83,
+19
+],
+"fill": "#222222",
+"text": "+swim()"
+},
+{
+"tag": "text",
+"g": "pele-members",
+"box": [
+20,
+291.4,
+55.73,
+19
+],
+"fill": "#222222",
+"text": "+quack()"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-class",
+"box": [
+190.07,
+201.5,
+115.77,
+106
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-node pele-class",
+"box": [
+190.07,
+241.5,
+115.76,
+33
+],
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-class",
+"box": [
+232.33,
+210.1,
+31.23,
+22
+],
+"fill": "#222222",
+"text": "Fish"
+},
+{
+"tag": "text",
+"g": "pele-members",
+"box": [
+202.07,
+247.9,
+91.78,
+19
+],
+"fill": "#222222",
+"text": "-int sizeInFeet"
+},
+{
+"tag": "text",
+"g": "pele-members",
+"box": [
+202.07,
+280.9,
+56.83,
+19
+],
+"fill": "#222222",
+"text": "-canEat()"
+}
+]
+},
+"state": {
+"size": [
+132.0,
+356.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edge pele-transition",
+"box": [
+50.2,
+22,
+0,
+37
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-transition",
+"box": [
+46.84,
+58,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-transition",
+"box": [
+8,
+110,
+38.2,
+213
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-transition",
+"box": [
+42.84,
+322,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-transition",
+"box": [
+51.67,
+110,
+0,
+37
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-transition",
+"box": [
+48.31,
+146,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-transition",
+"box": [
+67.67,
+117,
+0,
+37
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-transition",
+"box": [
+64.31,
+110,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-transition",
+"box": [
+79.93,
+198,
+0,
+37
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-transition",
+"box": [
+76.57,
+234,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-transition",
+"box": [
+46.2,
+286,
+33.73,
+37
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-transition",
+"box": [
+42.84,
+322,
+6.72,
+8
+],
+"fill": "#222222"
+},
+{
+"tag": "circle",
+"g": "pele-node pele-state-start",
+"box": [
+43.2,
+8,
+14,
+14
+],
+"fill": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-state",
+"box": [
+20.73,
+66,
+58.94,
+44
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-state",
+"box": [
+36.72,
+76.6,
+26.95,
+22
+],
+"fill": "#222222",
+"text": "Still"
+},
+{
+"tag": "circle",
+"g": "pele-node pele-state-end",
+"box": [
+37.7,
+330.5,
+17,
+17
+],
+"fill": "#ffffff",
+"stroke": "#222222"
+},
+{
+"tag": "circle",
+"g": "pele-node pele-state-end",
+"box": [
+41.2,
+334,
+10,
+10
+],
+"fill": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-state",
+"box": [
+36,
+154,
+87.86,
+44
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-state",
+"box": [
+52,
+164.6,
+55.86,
+22
+],
+"fill": "#222222",
+"text": "Moving"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-state",
+"box": [
+42.47,
+242,
+74.93,
+44
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-state",
+"box": [
+58.46,
+252.6,
+42.94,
+22
+],
+"fill": "#222222",
+"text": "Crash"
+}
+]
+},
+"gantt": {
+"size": [
+700.0,
+197.0
+],
+"items": [
+{
+"tag": "text",
+"g": null,
+"box": [
+284.89,
+8.6,
+130.22,
+22
+],
+"fill": "#222222",
+"text": "A Gantt Diagram"
+},
+{
+"tag": "rect",
+"g": "pele-sections",
+"box": [
+0,
+48,
+700,
+60
+],
+"fill": "#f6f6f6"
+},
+{
+"tag": "rect",
+"g": "pele-sections",
+"box": [
+0,
+108,
+700,
+60
+]
+},
+{
+"tag": "path",
+"g": "pele-grid",
+"box": [
+151.12,
+48,
+486.4,
+120
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-grid",
+"box": [
+81.63,
+168,
+579.05,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-task",
+"box": [
+81.63,
+51,
+347.43,
+24
+],
+"fill": "#9873f7",
+"stroke": "#9873f7"
+},
+{
+"tag": "text",
+"g": "pele-task",
+"box": [
+236.93,
+53.55,
+36.9,
+18
+],
+"fill": "#ffffff",
+"text": "A task"
+},
+{
+"tag": "rect",
+"g": "pele-task",
+"box": [
+429.06,
+81,
+231.62,
+24
+],
+"fill": "#9873f7",
+"stroke": "#9873f7"
+},
+{
+"tag": "text",
+"g": "pele-task",
+"box": [
+505.78,
+83.55,
+78.23,
+18
+],
+"fill": "#ffffff",
+"text": "Another task"
+},
+{
+"tag": "rect",
+"g": "pele-task",
+"box": [
+209.02,
+111,
+138.97,
+24
+],
+"fill": "#9873f7",
+"stroke": "#9873f7"
+},
+{
+"tag": "text",
+"g": "pele-task",
+"box": [
+231.29,
+113.55,
+95.06,
+18
+],
+"fill": "#ffffff",
+"text": "Task in Another"
+},
+{
+"tag": "rect",
+"g": "pele-task",
+"box": [
+348,
+141,
+277.94,
+24
+],
+"fill": "#9873f7",
+"stroke": "#9873f7"
+},
+{
+"tag": "text",
+"g": "pele-task",
+"box": [
+448.39,
+143.55,
+77.21,
+18
+],
+"fill": "#ffffff",
+"text": "another task"
+},
+{
+"tag": "text",
+"g": "pele-section-labels",
+"box": [
+16,
+68.55,
+44.66,
+18
+],
+"fill": "#222222",
+"text": "Section"
+},
+{
+"tag": "text",
+"g": "pele-section-labels",
+"box": [
+16,
+128.55,
+50.27,
+18
+],
+"fill": "#222222",
+"text": "Another"
+},
+{
+"tag": "text",
+"g": "pele-axis",
+"box": [
+119.8,
+171.7,
+62.78,
+17
+],
+"fill": "#5c5c5c",
+"text": "2024-01-07"
+},
+{
+"tag": "text",
+"g": "pele-axis",
+"box": [
+200.87,
+171.7,
+62.78,
+17
+],
+"fill": "#5c5c5c",
+"text": "2024-01-14"
+},
+{
+"tag": "text",
+"g": "pele-axis",
+"box": [
+281.93,
+171.7,
+62.64,
+17
+],
+"fill": "#5c5c5c",
+"text": "2024-01-21"
+},
+{
+"tag": "text",
+"g": "pele-axis",
+"box": [
+363,
+171.7,
+62.78,
+17
+],
+"fill": "#5c5c5c",
+"text": "2024-01-28"
+},
+{
+"tag": "text",
+"g": "pele-axis",
+"box": [
+444.07,
+171.7,
+62.78,
+17
+],
+"fill": "#5c5c5c",
+"text": "2024-02-04"
+},
+{
+"tag": "text",
+"g": "pele-axis",
+"box": [
+525.13,
+171.7,
+62.64,
+17
+],
+"fill": "#5c5c5c",
+"text": "2024-02-11"
+},
+{
+"tag": "text",
+"g": "pele-axis",
+"box": [
+606.2,
+171.7,
+62.78,
+17
+],
+"fill": "#5c5c5c",
+"text": "2024-02-18"
+}
+]
+},
+"pie": {
+"size": [
+399.0,
+352.0
+],
+"items": [
+{
+"tag": "text",
+"g": null,
+"box": [
+92.86,
+8.6,
+213.39,
+22
+],
+"fill": "#222222",
+"text": "Pets adopted by volunteers"
+},
+{
+"tag": "path",
+"g": "pele-slices",
+"box": [
+36,
+76,
+240,
+240
+],
+"fill": "#086ddd",
+"stroke": "#ffffff"
+},
+{
+"tag": "path",
+"g": "pele-slices",
+"box": [
+40.61,
+78.25,
+115.39,
+117.75
+],
+"fill": "#ec7500",
+"stroke": "#ffffff"
+},
+{
+"tag": "path",
+"g": "pele-slices",
+"box": [
+132.87,
+76,
+23.13,
+120
+],
+"fill": "#08b94e",
+"stroke": "#ffffff"
+},
+{
+"tag": "text",
+"g": "pele-slice-labels",
+"box": [
+196.38,
+257.74,
+27.66,
+19
+],
+"fill": "#ffffff",
+"text": "79%"
+},
+{
+"tag": "text",
+"g": "pele-slice-labels",
+"box": [
+81.26,
+119.64,
+27.66,
+19
+],
+"fill": "#ffffff",
+"text": "17%"
+},
+{
+"tag": "text",
+"g": "pele-slice-labels",
+"box": [
+133.2,
+52.53,
+19.66,
+19
+],
+"fill": "#222222",
+"text": "3%"
+},
+{
+"tag": "rect",
+"g": "pele-legend-item",
+"box": [
+336,
+164,
+12,
+12
+],
+"fill": "#086ddd"
+},
+{
+"tag": "text",
+"g": "pele-legend-item",
+"box": [
+355.99,
+159.9,
+34.3,
+19
+],
+"fill": "#222222",
+"text": "Dogs"
+},
+{
+"tag": "rect",
+"g": "pele-legend-item",
+"box": [
+336,
+190,
+12,
+12
+],
+"fill": "#ec7500"
+},
+{
+"tag": "text",
+"g": "pele-legend-item",
+"box": [
+356,
+185.9,
+28.76,
+19
+],
+"fill": "#222222",
+"text": "Cats"
+},
+{
+"tag": "rect",
+"g": "pele-legend-item",
+"box": [
+336,
+216,
+12,
+12
+],
+"fill": "#08b94e"
+},
+{
+"tag": "text",
+"g": "pele-legend-item",
+"box": [
+356,
+211.9,
+28.62,
+19
+],
+"fill": "#222222",
+"text": "Rats"
+}
+]
+},
+"er": {
+"size": [
+352.0,
+338.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edge pele-er-identifying",
+"box": [
+64.87,
+56,
+84.76,
+89
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-er-identifying",
+"box": [
+144.63,
+62,
+10,
+4
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-er-identifying",
+"box": [
+58.87,
+135,
+12,
+10
+],
+"stroke": "#222222"
+},
+{
+"tag": "circle",
+"g": "pele-edge pele-er-identifying",
+"box": [
+61.37,
+127.5,
+7,
+7
+],
+"fill": "#ffffff",
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-er-identifying",
+"box": [
+64.87,
+193,
+0,
+89
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-er-identifying",
+"box": [
+59.87,
+199,
+10,
+4
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-er-identifying",
+"box": [
+58.87,
+268.5,
+12,
+13.5
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-er-non-identifying",
+"box": [
+167.63,
+56,
+84.76,
+89
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-er-non-identifying",
+"box": [
+161.63,
+56,
+12,
+13.5
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-er-non-identifying",
+"box": [
+246.39,
+131.5,
+12,
+13.5
+],
+"stroke": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-edge-label",
+"box": [
+40.17,
+90,
+49.4,
+21
+],
+"fill": "#ffffff"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+44.17,
+90.4,
+41.69,
+19
+],
+"fill": "#222222",
+"text": "places"
+},
+{
+"tag": "rect",
+"g": "pele-edge-label",
+"box": [
+33.01,
+227,
+63.72,
+21
+],
+"fill": "#ffffff"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+37,
+227.4,
+56.01,
+19
+],
+"fill": "#222222",
+"text": "contains"
+},
+{
+"tag": "rect",
+"g": "pele-edge-label",
+"box": [
+233.41,
+90,
+37.96,
+21
+],
+"fill": "#ffffff"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+237.41,
+90.4,
+30.25,
+19
+],
+"fill": "#222222",
+"text": "uses"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-entity",
+"box": [
+98.12,
+8,
+121.02,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-entity",
+"box": [
+116.11,
+20.6,
+85.07,
+22
+],
+"fill": "#222222",
+"text": "CUSTOMER"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-entity",
+"box": [
+16.87,
+145,
+96,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-entity",
+"box": [
+38.38,
+157.6,
+53.02,
+22
+],
+"fill": "#222222",
+"text": "ORDER"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-entity",
+"box": [
+8,
+282,
+113.74,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-entity",
+"box": [
+25.99,
+294.6,
+77.75,
+22
+],
+"fill": "#222222",
+"text": "LINE-ITEM"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-entity",
+"box": [
+160.87,
+145,
+183.04,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-entity",
+"box": [
+178.87,
+157.6,
+147.26,
+22
+],
+"fill": "#222222",
+"text": "DELIVERY-ADDRESS"
+}
+]
+},
+"mindmap": {
+"size": [
+714.0,
+130.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edges",
+"box": [
+417.53,
+58.5,
+52,
+0
+],
+"stroke": "#086ddd"
+},
+{
+"tag": "path",
+"g": "pele-edges",
+"box": [
+548.27,
+42.5,
+36,
+16
+],
+"stroke": "#086ddd"
+},
+{
+"tag": "path",
+"g": "pele-edges",
+"box": [
+548.27,
+58.5,
+36,
+16
+],
+"stroke": "#086ddd"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-branch",
+"box": [
+469.51,
+43.5,
+78.75,
+30
+],
+"fill": "#086ddd",
+"stroke": "#086ddd"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-branch",
+"box": [
+481.53,
+46.73,
+54.71,
+21.7
+],
+"fill": "#222222",
+"text": "Origins"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-text",
+"box": [
+590.3,
+30.74,
+94.31,
+21.7
+],
+"fill": "#222222",
+"text": "Long history"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-text",
+"box": [
+590.3,
+62.73,
+108.97,
+21.7
+],
+"fill": "#222222",
+"text": "Popularisation"
+},
+{
+"tag": "path",
+"g": "pele-edges",
+"box": [
+273.07,
+23,
+52,
+35.5
+],
+"stroke": "#ec7500"
+},
+{
+"tag": "path",
+"g": "pele-edges",
+"box": [
+144.59,
+23,
+36,
+0
+],
+"stroke": "#ec7500"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-branch",
+"box": [
+180.58,
+8,
+92.49,
+30
+],
+"fill": "#ec7500",
+"stroke": "#ec7500"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-branch",
+"box": [
+192.6,
+11.24,
+68.45,
+21.7
+],
+"fill": "#222222",
+"text": "Research"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-text",
+"box": [
+14.06,
+11.24,
+124.5,
+21.7
+],
+"fill": "#222222",
+"text": "On effectiveness"
+},
+{
+"tag": "path",
+"g": "pele-edges",
+"box": [
+273.07,
+58.5,
+52,
+35.5
+],
+"stroke": "#08b94e"
+},
+{
+"tag": "path",
+"g": "pele-edges",
+"box": [
+174.15,
+78,
+36,
+16
+],
+"stroke": "#08b94e"
+},
+{
+"tag": "path",
+"g": "pele-edges",
+"box": [
+174.15,
+93.99,
+36,
+16
+],
+"stroke": "#08b94e"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-branch",
+"box": [
+210.16,
+79,
+62.93,
+30
+],
+"fill": "#08b94e",
+"stroke": "#08b94e"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-branch",
+"box": [
+222.16,
+82.23,
+38.91,
+21.7
+],
+"fill": "#222222",
+"text": "Tools"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-text",
+"box": [
+58.29,
+66.23,
+109.83,
+21.7
+],
+"fill": "#222222",
+"text": "Pen and paper"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-text",
+"box": [
+100.13,
+98.23,
+68.01,
+21.7
+],
+"fill": "#222222",
+"text": "Mermaid"
+},
+{
+"tag": "circle",
+"g": "pele-node pele-shape-circle pele-root",
+"box": [
+325.07,
+12.27,
+92.45,
+92.45
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-circle pele-root",
+"box": [
+335.02,
+46.73,
+72.55,
+21.7
+],
+"fill": "#222222",
+"text": "mindmap"
+}
+]
+},
+"journey": {
+"size": [
+496.0,
+327.0
+],
+"items": [
+{
+"tag": "text",
+"g": null,
+"box": [
+185.82,
+8.6,
+124.58,
+22
+],
+"fill": "#222222",
+"text": "My working day"
+},
+{
+"tag": "path",
+"g": null,
+"box": [
+26,
+167,
+462,
+104
+],
+"stroke": "#fafafa"
+},
+{
+"tag": "text",
+"g": "pele-scale",
+"box": [
+13.13,
+158.2,
+7,
+17
+],
+"fill": "#5c5c5c",
+"text": "5"
+},
+{
+"tag": "text",
+"g": "pele-scale",
+"box": [
+13.13,
+184.2,
+7,
+17
+],
+"fill": "#5c5c5c",
+"text": "4"
+},
+{
+"tag": "text",
+"g": "pele-scale",
+"box": [
+13.13,
+210.2,
+7,
+17
+],
+"fill": "#5c5c5c",
+"text": "3"
+},
+{
+"tag": "text",
+"g": "pele-scale",
+"box": [
+13.13,
+236.2,
+7,
+17
+],
+"fill": "#5c5c5c",
+"text": "2"
+},
+{
+"tag": "text",
+"g": "pele-scale",
+"box": [
+13.13,
+262.2,
+6.88,
+17
+],
+"fill": "#5c5c5c",
+"text": "1"
+},
+{
+"tag": "path",
+"g": null,
+"box": [
+104,
+140,
+312,
+68
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": null,
+"box": [
+104,
+167,
+312,
+52
+],
+"stroke": "#222222"
+},
+{
+"tag": "circle",
+"g": "pele-face pele-face-happy",
+"box": [
+93,
+156,
+22,
+22
+],
+"fill": "#ffffff",
+"stroke": "#222222"
+},
+{
+"tag": "circle",
+"g": "pele-face pele-face-happy",
+"box": [
+99.1,
+162.9,
+2.6,
+2.6
+],
+"fill": "#222222"
+},
+{
+"tag": "circle",
+"g": "pele-face pele-face-happy",
+"box": [
+106.3,
+162.9,
+2.6,
+2.6
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-face pele-face-happy",
+"box": [
+99,
+169,
+10,
+2.68
+],
+"stroke": "#222222"
+},
+{
+"tag": "circle",
+"g": "pele-face pele-face-neutral",
+"box": [
+249,
+208,
+22,
+22
+],
+"fill": "#ffffff",
+"stroke": "#222222"
+},
+{
+"tag": "circle",
+"g": "pele-face pele-face-neutral",
+"box": [
+255.1,
+214.9,
+2.6,
+2.6
+],
+"fill": "#222222"
+},
+{
+"tag": "circle",
+"g": "pele-face pele-face-neutral",
+"box": [
+262.3,
+214.9,
+2.6,
+2.6
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-face pele-face-neutral",
+"box": [
+255.5,
+223.5,
+9,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "circle",
+"g": "pele-face pele-face-happy",
+"box": [
+405,
+156,
+22,
+22
+],
+"fill": "#ffffff",
+"stroke": "#222222"
+},
+{
+"tag": "circle",
+"g": "pele-face pele-face-happy",
+"box": [
+411.1,
+162.9,
+2.6,
+2.6
+],
+"fill": "#222222"
+},
+{
+"tag": "circle",
+"g": "pele-face pele-face-happy",
+"box": [
+418.3,
+162.9,
+2.6,
+2.6
+],
+"fill": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-face pele-face-happy",
+"box": [
+411,
+169,
+10,
+2.68
+],
+"stroke": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-cluster pele-section",
+"box": [
+32,
+48,
+300,
+33
+],
+"fill": "#fafafa"
+},
+{
+"tag": "text",
+"g": "pele-cluster pele-section",
+"box": [
+144.51,
+54.4,
+75.74,
+19
+],
+"fill": "#222222",
+"text": "Go to work"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-task",
+"box": [
+32,
+87,
+144,
+53
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-task",
+"box": [
+73.81,
+95.4,
+60.38,
+19
+],
+"fill": "#222222",
+"text": "Make tea"
+},
+{
+"tag": "circle",
+"g": "pele-node pele-task",
+"box": [
+99,
+122,
+10,
+10
+],
+"fill": "#086ddd",
+"stroke": "#f6f6f6"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-task",
+"box": [
+188,
+87,
+144,
+53
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-task",
+"box": [
+222.36,
+95.4,
+75.57,
+19
+],
+"fill": "#222222",
+"text": "Go upstairs"
+},
+{
+"tag": "circle",
+"g": "pele-node pele-task",
+"box": [
+255,
+122,
+10,
+10
+],
+"fill": "#086ddd",
+"stroke": "#f6f6f6"
+},
+{
+"tag": "rect",
+"g": "pele-cluster pele-section",
+"box": [
+344,
+48,
+144,
+33
+],
+"fill": "#fafafa"
+},
+{
+"tag": "text",
+"g": "pele-cluster pele-section",
+"box": [
+385.17,
+54.4,
+61.66,
+19
+],
+"fill": "#222222",
+"text": "Go home"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-task",
+"box": [
+344,
+87,
+144,
+53
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-task",
+"box": [
+368.76,
+95.4,
+94.77,
+19
+],
+"fill": "#222222",
+"text": "Go downstairs"
+},
+{
+"tag": "circle",
+"g": "pele-node pele-task",
+"box": [
+411,
+122,
+10,
+10
+],
+"fill": "#086ddd",
+"stroke": "#f6f6f6"
+},
+{
+"tag": "circle",
+"g": "pele-legend-item",
+"box": [
+241.7,
+303.5,
+10,
+10
+],
+"fill": "#086ddd"
+},
+{
+"tag": "text",
+"g": "pele-legend-item",
+"box": [
+257.7,
+298.4,
+20.7,
+19
+],
+"fill": "#222222",
+"text": "Me"
+}
+]
+},
+"gitgraph": {
+"size": [
+212.0,
+176.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-branch",
+"box": [
+75.93,
+20.5,
+128,
+0
+],
+"stroke": "#086ddd"
+},
+{
+"tag": "rect",
+"g": "pele-branch",
+"box": [
+26.72,
+8,
+49.21,
+25
+],
+"fill": "#086ddd"
+},
+{
+"tag": "text",
+"g": "pele-branch",
+"box": [
+34.72,
+10.4,
+33.22,
+19
+],
+"fill": "#ffffff",
+"text": "main"
+},
+{
+"tag": "path",
+"g": "pele-branch",
+"box": [
+75.93,
+105.59,
+128,
+0
+],
+"stroke": "#ec7500"
+},
+{
+"tag": "rect",
+"g": "pele-branch",
+"box": [
+8,
+93.09,
+67.93,
+25
+],
+"fill": "#ec7500"
+},
+{
+"tag": "text",
+"g": "pele-branch",
+"box": [
+16,
+95.49,
+51.94,
+19
+],
+"fill": "#ffffff",
+"text": "develop"
+},
+{
+"tag": "path",
+"g": "pele-edges",
+"box": [
+95.93,
+20.5,
+44,
+85.09
+],
+"stroke": "#ec7500"
+},
+{
+"tag": "path",
+"g": "pele-edges",
+"box": [
+139.93,
+20.5,
+44,
+85.09
+],
+"stroke": "#ec7500"
+},
+{
+"tag": "path",
+"g": "pele-edges",
+"box": [
+95.93,
+20.5,
+88,
+0
+],
+"stroke": "#086ddd"
+},
+{
+"tag": "circle",
+"g": "pele-commit pele-commit-normal",
+"box": [
+88.93,
+13.5,
+14,
+14
+],
+"fill": "#086ddd"
+},
+{
+"tag": "rect",
+"g": "pele-commit-label",
+"box": [
+50.71,
+30.5,
+54.59,
+54.59
+],
+"fill": "#ffffff"
+},
+{
+"tag": "text",
+"g": "pele-commit-label",
+"box": [
+50.85,
+30.64,
+53.88,
+53.88
+],
+"fill": "#5c5c5c",
+"text": "0-9e3779b"
+},
+{
+"tag": "circle",
+"g": "pele-commit pele-commit-normal",
+"box": [
+132.93,
+98.59,
+14,
+14
+],
+"fill": "#ec7500"
+},
+{
+"tag": "rect",
+"g": "pele-commit-label",
+"box": [
+97.79,
+115.59,
+51.51,
+51.51
+],
+"fill": "#ffffff"
+},
+{
+"tag": "text",
+"g": "pele-commit-label",
+"box": [
+97.93,
+115.63,
+50.89,
+50.89
+],
+"fill": "#5c5c5c",
+"text": "1-3c6ef36"
+},
+{
+"tag": "circle",
+"g": "pele-commit pele-commit-merge",
+"box": [
+177.93,
+14.5,
+12,
+12
+],
+"fill": "#ffffff",
+"stroke": "#086ddd"
+},
+{
+"tag": "circle",
+"g": "pele-commit pele-commit-merge",
+"box": [
+181.43,
+18,
+5,
+5
+],
+"fill": "#086ddd"
+}
+]
+},
+"error-syntax": {
+"error": "Parse error on line 3:\n    ((\n----^\nExpecting 'NODE_STRING', got 'PS'"
+},
+"error-unknown": {
+"error": "No diagram type detected for the given text."
+},
+"empty": {
+"error": "No diagram type detected for the given text."
+},
+"flow-init": {
+"size": [
+160.0,
+64.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+56,
+32,
+41,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+96,
+28.64,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+8,
+8,
+48,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+26.88,
+20.6,
+11,
+22
+],
+"fill": "#222222",
+"text": "A"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+104,
+8,
+48,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+122.8,
+20.6,
+10.41,
+22
+],
+"fill": "#222222",
+"text": "B"
+}
+]
+},
+"flow-frontmatter": {
+"size": [
+160.0,
+100.0
+],
+"items": [
+{
+"tag": "text",
+"g": null,
+"box": [
+39.22,
+8.6,
+82.27,
+22
+],
+"fill": "#222222",
+"text": "Titled flow"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+56,
+68,
+41,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+96,
+64.64,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+8,
+44,
+48,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+26.88,
+56.6,
+11,
+22
+],
+"fill": "#222222",
+"text": "A"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+104,
+44,
+48,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+122.8,
+56.6,
+10.41,
+22
+],
+"fill": "#222222",
+"text": "B"
+}
+]
+},
+"flow-click": {
+"size": [
+160.0,
+64.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+56,
+32,
+41,
+0
+],
+"stroke": "#222222"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+96,
+28.64,
+8,
+6.72
+],
+"fill": "#222222"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect clickable",
+"box": [
+8,
+8,
+48,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect clickable",
+"box": [
+26.88,
+20.6,
+11,
+22
+],
+"fill": "#222222",
+"text": "A"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+104,
+8,
+48,
+48
+],
+"fill": "#f6f6f6",
+"stroke": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+122.8,
+20.6,
+10.41,
+22
+],
+"fill": "#222222",
+"text": "B"
+}
+]
+}
+},
+"obsidian": {
+"flow-td": {
+"size": [
+184.0,
+489.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+94.4,
+56,
+0,
+41
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+91.04,
+96,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+37.2,
+157.31,
+41.2,
+76
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+33.84,
+232.31,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+37.2,
+288.31,
+0,
+41
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+33.84,
+328.31,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+94.4,
+174.31,
+0,
+162
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+91.04,
+167.31,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+110.4,
+157.31,
+33.08,
+268
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+140.12,
+424.31,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-edge-label",
+"box": [
+22.29,
+189.81,
+29.83,
+21
+],
+"fill": "#1c1c1c"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+26.29,
+190.21,
+22.12,
+19
+],
+"fill": "#dadada",
+"text": "Yes"
+},
+{
+"tag": "rect",
+"g": "pele-edge-label",
+"box": [
+129.92,
+253.81,
+27.11,
+21
+],
+"fill": "#1c1c1c"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+133.92,
+254.21,
+19.13,
+19
+],
+"fill": "#dadada",
+"text": "No"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+58.44,
+8,
+71.92,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+76.44,
+20.6,
+36.14,
+22
+],
+"fill": "#dadada",
+"text": "Start"
+},
+{
+"tag": "polygon",
+"g": "pele-node pele-shape-diam",
+"box": [
+43.75,
+104,
+101.3,
+63.32
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-diam",
+"box": [
+77.35,
+124.26,
+34.15,
+22
+],
+"fill": "#dadada",
+"text": "Is it?"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+8,
+240.31,
+58.4,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+26,
+252.91,
+22.5,
+22
+],
+"fill": "#dadada",
+"text": "OK"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+18.03,
+336.31,
+93.2,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+36.03,
+348.91,
+57.66,
+22
+],
+"fill": "#dadada",
+"text": "Rethink"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+111.17,
+432.31,
+64.62,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+129.17,
+444.91,
+28.63,
+22
+],
+"fill": "#dadada",
+"text": "End"
+}
+]
+},
+"flow-lr-shapes": {
+"size": [
+1934.0,
+103.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+76.74,
+51.44,
+28.99,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+104.73,
+48.08,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+197.95,
+51.44,
+28.99,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+225.94,
+48.08,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+348.25,
+51.44,
+28.99,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+376.24,
+48.08,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+519.38,
+51.44,
+28.99,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+547.37,
+48.08,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+662.24,
+51.44,
+28.99,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+690.23,
+48.08,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+762.02,
+51.44,
+40.99,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+802.01,
+48.08,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+877.23,
+51.44,
+28.99,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+905.22,
+48.08,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+1052.24,
+51.44,
+28.99,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+1080.23,
+48.08,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+1215.59,
+51.44,
+34.99,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+1249.58,
+48.08,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+1360.86,
+51.44,
+40.99,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+1400.85,
+48.08,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+1476.95,
+51.44,
+40.99,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+1516.94,
+48.08,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+1646.12,
+51.44,
+40.99,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+1686.11,
+48.08,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+1797.83,
+51.44,
+34.99,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+1831.82,
+48.08,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+8.33,
+27.45,
+68.41,
+47.98
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+26.33,
+39.4,
+32.5,
+23.51
+],
+"fill": "#dadada",
+"text": "Rect"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rounded",
+"box": [
+112.74,
+27.45,
+85.22,
+47.98
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rounded",
+"box": [
+130.73,
+39.4,
+49.23,
+23.51
+],
+"fill": "#dadada",
+"text": "Round"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-stadium",
+"box": [
+233.94,
+27.45,
+114.31,
+47.98
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-stadium",
+"box": [
+259.93,
+39.4,
+62.32,
+23.51
+],
+"fill": "#dadada",
+"text": "Stadium"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-fr-rect",
+"box": [
+384.23,
+27.45,
+135.13,
+47.98
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "path",
+"g": "pele-node pele-shape-fr-rect",
+"box": [
+392.23,
+27.45,
+119.14,
+47.98
+],
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-fr-rect",
+"box": [
+410.24,
+39.4,
+83.12,
+23.51
+],
+"fill": "#dadada",
+"text": "Subroutine"
+},
+{
+"tag": "path",
+"g": "pele-node pele-shape-cyl",
+"box": [
+555.35,
+19.81,
+106.88,
+63.26
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "path",
+"g": "pele-node pele-shape-cyl",
+"box": [
+555.35,
+27.45,
+106.88,
+7.64
+],
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-cyl",
+"box": [
+573.36,
+43.22,
+70.86,
+23.51
+],
+"fill": "#dadada",
+"text": "Database"
+},
+{
+"tag": "circle",
+"g": "pele-node pele-shape-circle",
+"box": [
+698.22,
+19.54,
+63.8,
+63.8
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-circle",
+"box": [
+709.46,
+39.4,
+41.33,
+23.51
+],
+"fill": "#dadada",
+"text": "Circle"
+},
+{
+"tag": "polygon",
+"g": "pele-node pele-shape-odd",
+"box": [
+798.01,
+27.45,
+79.21,
+47.98
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-odd",
+"box": [
+822,
+39.4,
+31.23,
+23.51
+],
+"fill": "#dadada",
+"text": "Flag"
+},
+{
+"tag": "polygon",
+"g": "pele-node pele-shape-diam",
+"box": [
+913.21,
+8,
+139.03,
+86.89
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-diam",
+"box": [
+946.81,
+39.4,
+72.95,
+23.51
+],
+"fill": "#dadada",
+"text": "Rhombus"
+},
+{
+"tag": "polygon",
+"g": "pele-node pele-shape-hex",
+"box": [
+1088.23,
+27.45,
+127.36,
+47.98
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-hex",
+"box": [
+1118.22,
+39.4,
+67.37,
+23.51
+],
+"fill": "#dadada",
+"text": "Hexagon"
+},
+{
+"tag": "polygon",
+"g": "pele-node pele-shape-lean-r",
+"box": [
+1251.58,
+27.45,
+115.28,
+47.98
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-lean-r",
+"box": [
+1281.57,
+39.4,
+55.29,
+23.51
+],
+"fill": "#dadada",
+"text": "Parallel"
+},
+{
+"tag": "polygon",
+"g": "pele-node pele-shape-lean-l",
+"box": [
+1402.86,
+27.45,
+80.09,
+47.98
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-lean-l",
+"box": [
+1432.85,
+39.4,
+20.21,
+23.51
+],
+"fill": "#dadada",
+"text": "Alt"
+},
+{
+"tag": "polygon",
+"g": "pele-node pele-shape-trap-b",
+"box": [
+1518.94,
+27.45,
+133.19,
+47.98
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-trap-b",
+"box": [
+1548.96,
+39.4,
+73.16,
+23.51
+],
+"fill": "#dadada",
+"text": "Trapezoid"
+},
+{
+"tag": "polygon",
+"g": "pele-node pele-shape-trap-t",
+"box": [
+1688.11,
+27.45,
+115.72,
+47.98
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-trap-t",
+"box": [
+1718.12,
+39.4,
+55.71,
+23.51
+],
+"fill": "#dadada",
+"text": "Inverse"
+},
+{
+"tag": "circle",
+"g": "pele-node pele-shape-dbl-circ",
+"box": [
+1839.82,
+8.8,
+85.29,
+85.29
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "circle",
+"g": "pele-node pele-shape-dbl-circ",
+"box": [
+1844.81,
+13.8,
+75.29,
+75.29
+],
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-dbl-circ",
+"box": [
+1855.37,
+39.4,
+54.19,
+23.51
+],
+"fill": "#dadada",
+"text": "Double"
+}
+]
+},
+"flow-edges": {
+"size": [
+1125.0,
+64.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+56.15,
+31.99,
+35.99,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+140.12,
+31.99,
+28.99,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+168.12,
+28.63,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+224.1,
+31.99,
+28.99,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+252.09,
+28.63,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+308.07,
+31.99,
+28.99,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+336.07,
+28.63,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+392.05,
+31.99,
+27.99,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "circle",
+"g": "pele-edge",
+"box": [
+420.54,
+28.49,
+7,
+7
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+476.03,
+31.99,
+31.99,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+504.52,
+28.49,
+7,
+7
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+567,
+31.99,
+21.99,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+560,
+28.63,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+587.99,
+28.63,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+643.98,
+31.99,
+66.11,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+709.09,
+28.63,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+765.07,
+31.99,
+84.67,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+848.74,
+28.63,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+904.72,
+31.99,
+72.5,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+976.22,
+28.63,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-edge-label",
+"box": [
+660.47,
+21.49,
+33.12,
+20.99
+],
+"fill": "#1c1c1c"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+664.48,
+21.5,
+25.16,
+18.81
+],
+"fill": "#dadada",
+"text": "text"
+},
+{
+"tag": "rect",
+"g": "pele-edge-label",
+"box": [
+781.57,
+21.49,
+51.67,
+20.99
+],
+"fill": "#1c1c1c"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+785.6,
+21.5,
+43.62,
+18.81
+],
+"fill": "#dadada",
+"text": "dotted"
+},
+{
+"tag": "rect",
+"g": "pele-edge-label",
+"box": [
+921.21,
+21.49,
+39.5,
+20.99
+],
+"fill": "#1c1c1c"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+925.23,
+21.5,
+32.54,
+18.81
+],
+"fill": "#dadada",
+"text": "thick"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+8.16,
+8,
+47.99,
+47.99
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+27.04,
+20.49,
+10.26,
+22.23
+],
+"fill": "#dadada",
+"text": "A"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+92.14,
+8,
+47.99,
+47.99
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+110.94,
+20.49,
+10.39,
+22.23
+],
+"fill": "#dadada",
+"text": "B"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+176.11,
+8,
+47.99,
+47.99
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+195.06,
+20.49,
+10.26,
+22.23
+],
+"fill": "#dadada",
+"text": "C"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+260.09,
+8,
+47.99,
+47.99
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+278.24,
+20.49,
+11.97,
+22.23
+],
+"fill": "#dadada",
+"text": "D"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+344.06,
+8,
+47.99,
+47.99
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+363.61,
+20.49,
+8.9,
+22.23
+],
+"fill": "#dadada",
+"text": "E"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+428.04,
+8,
+47.99,
+47.99
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+447.88,
+20.49,
+8.55,
+22.23
+],
+"fill": "#dadada",
+"text": "F"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+512.01,
+8,
+47.99,
+47.99
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+530.18,
+20.49,
+11.97,
+22.23
+],
+"fill": "#dadada",
+"text": "G"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+595.99,
+8,
+47.99,
+47.99
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+614.05,
+20.49,
+11.97,
+22.23
+],
+"fill": "#dadada",
+"text": "H"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+717.08,
+8,
+47.99,
+47.99
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+738.37,
+20.49,
+5.42,
+22.23
+],
+"fill": "#dadada",
+"text": "I"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+856.73,
+8,
+47.99,
+47.99
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+876.83,
+20.49,
+6.09,
+22.23
+],
+"fill": "#dadada",
+"text": "J"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+984.22,
+8,
+47.99,
+47.99
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+1003.25,
+20.49,
+10.26,
+22.23
+],
+"fill": "#dadada",
+"text": "K"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+1068.19,
+8,
+47.99,
+47.99
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+1087.99,
+20.49,
+8.55,
+22.23
+],
+"fill": "#dadada",
+"text": "L"
+}
+]
+},
+"flow-bt": {
+"size": [
+152.0,
+256.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+32,
+159,
+36,
+41
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+28.64,
+152,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+84,
+159,
+36,
+41
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+116.64,
+152,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+32,
+63,
+36,
+41
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+64.64,
+56,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+84,
+63,
+36,
+41
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+80.64,
+56,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+52,
+200,
+48,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+70.88,
+212.6,
+11,
+22
+],
+"fill": "#dadada",
+"text": "A"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+8,
+104,
+48,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+26.8,
+116.6,
+10.41,
+22
+],
+"fill": "#dadada",
+"text": "B"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+96,
+104,
+48,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+114.94,
+116.6,
+10.13,
+22
+],
+"fill": "#dadada",
+"text": "C"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+52,
+8,
+48,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+70.16,
+20.6,
+11.69,
+22
+],
+"fill": "#dadada",
+"text": "D"
+}
+]
+},
+"flow-rl": {
+"size": [
+326.0,
+64.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+208.95,
+32,
+41,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+201.95,
+28.64,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+94.12,
+32,
+41,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+87.12,
+28.64,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+249.96,
+8,
+67.41,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+267.95,
+20.6,
+31.42,
+22
+],
+"fill": "#dadada",
+"text": "One"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+135.12,
+8,
+66.83,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+153.12,
+20.6,
+30.84,
+22
+],
+"fill": "#dadada",
+"text": "Two"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+8,
+8,
+79.12,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+26,
+20.6,
+43.13,
+22
+],
+"fill": "#dadada",
+"text": "Three"
+}
+]
+},
+"flow-subgraph": {
+"size": [
+229.0,
+764.0
+],
+"items": [
+{
+"tag": "rect",
+"g": "pele-cluster",
+"box": [
+99.71,
+8,
+120.83,
+224
+],
+"fill": "#232323",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-cluster",
+"box": [
+113.7,
+16.6,
+40.02,
+22
+],
+"fill": "#b3b3b3",
+"text": "three"
+},
+{
+"tag": "rect",
+"g": "pele-cluster",
+"box": [
+100.33,
+552,
+94.99,
+204
+],
+"fill": "#232323",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "rect",
+"g": "pele-cluster",
+"box": [
+8,
+280,
+122.13,
+224
+],
+"fill": "#232323",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-cluster",
+"box": [
+54.76,
+288.6,
+28.59,
+22
+],
+"fill": "#b3b3b3",
+"text": "one"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+28,
+96,
+110.92,
+333
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+44.17,
+428,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+63.53,
+388,
+19.53,
+41
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+60.17,
+428,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+147.82,
+640,
+0,
+41
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+144.46,
+680,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+154.92,
+96,
+19.21,
+41
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+170.77,
+136,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+69.06,
+504,
+73.07,
+41
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+138.77,
+544,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+158.13,
+232,
+0,
+313
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+154.77,
+544,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+174.13,
+199,
+0,
+353
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+170.77,
+192,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-cluster-title",
+"box": [
+114.32,
+560.6,
+28.05,
+22
+],
+"stroke": "color(srgb 0.123529 0.123529 0.123529)",
+"text": "two"
+},
+{
+"tag": "text",
+"g": "pele-cluster-title",
+"box": [
+114.32,
+560.6,
+28.05,
+22
+],
+"fill": "#b3b3b3",
+"text": "two"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+120.5,
+48,
+52.83,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+138.5,
+60.6,
+16.84,
+22
+],
+"fill": "#dadada",
+"text": "c1"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+28.47,
+436,
+54.13,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+46.46,
+448.6,
+18.14,
+22
+],
+"fill": "#dadada",
+"text": "a2"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+56,
+340,
+54.13,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+73.99,
+352.6,
+18.14,
+22
+],
+"fill": "#dadada",
+"text": "a1"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+120.32,
+592,
+54.99,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+138.32,
+604.6,
+19,
+22
+],
+"fill": "#dadada",
+"text": "b1"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+120.32,
+688,
+54.99,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+138.32,
+700.6,
+19,
+22
+],
+"fill": "#dadada",
+"text": "b2"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+147.71,
+144,
+52.83,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+165.71,
+156.6,
+16.84,
+22
+],
+"fill": "#dadada",
+"text": "c2"
+}
+]
+},
+"flow-style": {
+"size": [
+256.0,
+64.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+56,
+32,
+41,
+0
+],
+"stroke": "#ffff33"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+96,
+28.64,
+8,
+6.72
+],
+"fill": "#ffff33"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+152,
+32,
+41,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+192,
+28.64,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect hot",
+"box": [
+8,
+8,
+48,
+48
+],
+"fill": "#ff9966",
+"stroke": "#333333"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect hot",
+"box": [
+26.88,
+20.6,
+11,
+22
+],
+"fill": "#1f1f1f",
+"text": "A"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+104,
+8,
+48,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+122.8,
+20.6,
+10.41,
+22
+],
+"fill": "#dadada",
+"text": "B"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+200,
+8,
+48,
+48
+],
+"fill": "#bbbbff",
+"stroke": "#ff6666"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+218.94,
+20.6,
+10.13,
+22
+],
+"fill": "#ffffff",
+"text": "C"
+}
+]
+},
+"flow-long-label": {
+"size": [
+243.0,
+409.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+121.3,
+95,
+0,
+41
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+117.94,
+135,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+121.3,
+191,
+0,
+41
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+117.94,
+231,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+121.3,
+305,
+0,
+41
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+117.94,
+345,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+11.2,
+8,
+220.21,
+87
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+29.19,
+19.1,
+184.22,
+64
+],
+"fill": "#dadada",
+"text": "A rather long label thathas to wrap across morethan one line of text"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+82.93,
+143,
+76.74,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+100.92,
+155.6,
+40.96,
+22
+],
+"fill": "#dadada",
+"text": "Short"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+8,
+239,
+226.61,
+66
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+26,
+250.1,
+190.61,
+43
+],
+"fill": "#dadada",
+"text": "Unicode: café, naïve, 日本語"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+24.19,
+353,
+194.22,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+42.18,
+365.6,
+158.41,
+22
+],
+"fill": "#dadada",
+"text": "**bold** and *italic*"
+}
+]
+},
+"sequence": {
+"size": [
+542.0,
+419.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-lifelines",
+"box": [
+41.59,
+52,
+0,
+315
+],
+"stroke": "#3f3f3f"
+},
+{
+"tag": "path",
+"g": "pele-lifelines",
+"box": [
+147.18,
+52,
+0,
+315
+],
+"stroke": "#3f3f3f"
+},
+{
+"tag": "path",
+"g": "pele-lifelines",
+"box": [
+287.01,
+52,
+0,
+315
+],
+"stroke": "#3f3f3f"
+},
+{
+"tag": "rect",
+"g": "pele-frame pele-frame-loop",
+"box": [
+267.01,
+107,
+266.04,
+71
+],
+"stroke": "#3f3f3f"
+},
+{
+"tag": "rect",
+"g": "pele-frame pele-frame-loop",
+"box": [
+267.01,
+107,
+40.16,
+20
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-frame pele-frame-loop",
+"box": [
+274.23,
+108.2,
+25.72,
+17
+],
+"fill": "#b3b3b3",
+"text": "loop"
+},
+{
+"tag": "text",
+"g": "pele-frame pele-frame-loop",
+"box": [
+315.17,
+107.4,
+90.13,
+19
+],
+"fill": "#b3b3b3",
+"text": "[Healthcheck]"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+41.59,
+95,
+238.42,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+279.01,
+91.64,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+287.01,
+144,
+28,
+22
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+287.01,
+162.64,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+48.59,
+273,
+238.42,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+41.59,
+269.64,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+154.18,
+310,
+132.83,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+147.18,
+306.64,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+147.18,
+347,
+132.83,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+279.01,
+343.64,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-edge-label",
+"box": [
+80.65,
+72,
+167.31,
+17
+],
+"fill": "#1c1c1c"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+83.64,
+70.4,
+161.31,
+19
+],
+"fill": "#dadada",
+"text": "Hello John, how are you?"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+323.01,
+144.9,
+180.05,
+19
+],
+"fill": "#dadada",
+"text": "Fight against hypochondria"
+},
+{
+"tag": "rect",
+"g": "pele-edge-label",
+"box": [
+141.17,
+250,
+46.26,
+17
+],
+"fill": "#1c1c1c"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+144.17,
+248.4,
+40.27,
+19
+],
+"fill": "#dadada",
+"text": "Great!"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+164.18,
+285.4,
+105.83,
+19
+],
+"fill": "#dadada",
+"text": "How about you?"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+180.97,
+322.4,
+70.23,
+19
+],
+"fill": "#dadada",
+"text": "Jolly good!"
+},
+{
+"tag": "rect",
+"g": "pele-note",
+"box": [
+297.01,
+188,
+137.31,
+48
+],
+"fill": "#232323",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-note",
+"box": [
+307,
+192.9,
+117.6,
+37
+],
+"fill": "#dadada",
+"text": "Rational thoughtsprevail!"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-actor pele-actor-participant pele-actor-footer",
+"box": [
+8,
+367,
+67.18,
+44
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-actor pele-actor-participant pele-actor-footer",
+"box": [
+24,
+377.6,
+35.19,
+22
+],
+"fill": "#dadada",
+"text": "Alice"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-actor pele-actor-participant pele-actor-footer",
+"box": [
+115.18,
+367,
+64,
+44
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-actor pele-actor-participant pele-actor-footer",
+"box": [
+132.22,
+377.6,
+29.92,
+22
+],
+"fill": "#dadada",
+"text": "Bob"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-actor pele-actor-participant pele-actor-footer",
+"box": [
+254.1,
+367,
+65.82,
+44
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-actor pele-actor-participant pele-actor-footer",
+"box": [
+268.1,
+377.6,
+35.83,
+22
+],
+"fill": "#dadada",
+"text": "John"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-actor pele-actor-participant",
+"box": [
+8,
+8,
+67.18,
+44
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-actor pele-actor-participant",
+"box": [
+24,
+18.6,
+35.19,
+22
+],
+"fill": "#dadada",
+"text": "Alice"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-actor pele-actor-participant",
+"box": [
+115.18,
+8,
+64,
+44
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-actor pele-actor-participant",
+"box": [
+132.22,
+18.6,
+29.92,
+22
+],
+"fill": "#dadada",
+"text": "Bob"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-actor pele-actor-participant",
+"box": [
+254.1,
+8,
+65.82,
+44
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-actor pele-actor-participant",
+"box": [
+268.1,
+18.6,
+35.83,
+22
+],
+"fill": "#dadada",
+"text": "John"
+}
+]
+},
+"sequence-full": {
+"size": [
+192.0,
+749.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-lifelines",
+"box": [
+29.5,
+70,
+0,
+609
+],
+"stroke": "#3f3f3f"
+},
+{
+"tag": "path",
+"g": "pele-lifelines",
+"box": [
+143.14,
+70,
+0,
+609
+],
+"stroke": "#3f3f3f"
+},
+{
+"tag": "rect",
+"g": "pele-activations",
+"box": [
+138.14,
+113,
+10,
+37
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "rect",
+"g": "pele-frame pele-frame-alt",
+"box": [
+9.5,
+236,
+153.64,
+142
+],
+"stroke": "#3f3f3f"
+},
+{
+"tag": "path",
+"g": "pele-frame pele-frame-alt",
+"box": [
+9.5,
+308,
+153.64,
+0
+],
+"fill": "#dadada",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "rect",
+"g": "pele-frame pele-frame-alt",
+"box": [
+14.5,
+312,
+51.35,
+17
+],
+"fill": "#1c1c1c"
+},
+{
+"tag": "text",
+"g": "pele-frame pele-frame-alt",
+"box": [
+17.49,
+310.4,
+45.36,
+19
+],
+"fill": "#b3b3b3",
+"text": "[is not]"
+},
+{
+"tag": "rect",
+"g": "pele-frame pele-frame-alt",
+"box": [
+9.5,
+236,
+29.97,
+20
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-frame pele-frame-alt",
+"box": [
+16.84,
+237.2,
+15.42,
+17
+],
+"fill": "#b3b3b3",
+"text": "alt"
+},
+{
+"tag": "text",
+"g": "pele-frame pele-frame-alt",
+"box": [
+47.47,
+236.4,
+39.13,
+19
+],
+"fill": "#b3b3b3",
+"text": "[is ok]"
+},
+{
+"tag": "rect",
+"g": "pele-frame pele-frame-opt",
+"box": [
+9.5,
+390,
+153.64,
+72
+],
+"stroke": "#3f3f3f"
+},
+{
+"tag": "rect",
+"g": "pele-frame pele-frame-opt",
+"box": [
+9.5,
+390,
+34.29,
+20
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-frame pele-frame-opt",
+"box": [
+16.75,
+391.2,
+19.92,
+17
+],
+"fill": "#b3b3b3",
+"text": "opt"
+},
+{
+"tag": "text",
+"g": "pele-frame pele-frame-opt",
+"box": [
+51.78,
+390.4,
+53.81,
+19
+],
+"fill": "#b3b3b3",
+"text": "[maybe]"
+},
+{
+"tag": "rect",
+"g": "pele-frame pele-frame-par",
+"box": [
+9.5,
+474,
+153.64,
+142
+],
+"stroke": "#3f3f3f"
+},
+{
+"tag": "path",
+"g": "pele-frame pele-frame-par",
+"box": [
+9.5,
+546,
+153.64,
+0
+],
+"fill": "#dadada",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "rect",
+"g": "pele-frame pele-frame-par",
+"box": [
+14.5,
+550,
+39.74,
+17
+],
+"fill": "#1c1c1c"
+},
+{
+"tag": "text",
+"g": "pele-frame pele-frame-par",
+"box": [
+17.49,
+548.4,
+33.75,
+19
+],
+"fill": "#b3b3b3",
+"text": "[two]"
+},
+{
+"tag": "rect",
+"g": "pele-frame pele-frame-par",
+"box": [
+9.5,
+474,
+34.14,
+20
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-frame pele-frame-par",
+"box": [
+16.7,
+475.2,
+20.53,
+17
+],
+"fill": "#b3b3b3",
+"text": "par"
+},
+{
+"tag": "text",
+"g": "pele-frame pele-frame-par",
+"box": [
+51.63,
+474.4,
+34.23,
+19
+],
+"fill": "#b3b3b3",
+"text": "[one]"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+37.5,
+113,
+93.64,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+130.14,
+109.64,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-sequence-number",
+"box": [
+21.5,
+105,
+16,
+16
+],
+"fill": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-sequence-number",
+"box": [
+26.06,
+104.2,
+6.88,
+17
+],
+"fill": "#1c1c1c",
+"text": "1"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+36.5,
+150,
+93.64,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+29.5,
+146.64,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-sequence-number",
+"box": [
+130.14,
+142,
+16,
+16
+],
+"fill": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-sequence-number",
+"box": [
+134.7,
+141.2,
+7,
+17
+],
+"fill": "#1c1c1c",
+"text": "2"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+37.5,
+187,
+105.64,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+135.14,
+182.5,
+8,
+9
+],
+"stroke": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-sequence-number",
+"box": [
+21.5,
+179,
+16,
+16
+],
+"fill": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-sequence-number",
+"box": [
+26.06,
+178.2,
+7,
+17
+],
+"fill": "#1c1c1c",
+"text": "3"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+37.5,
+224,
+101.64,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+135.64,
+220.5,
+7,
+7
+],
+"stroke": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-sequence-number",
+"box": [
+21.5,
+216,
+16,
+16
+],
+"fill": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-sequence-number",
+"box": [
+26.06,
+215.2,
+7,
+17
+],
+"fill": "#1c1c1c",
+"text": "4"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+36.5,
+296,
+98.64,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+29.5,
+292.64,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-sequence-number",
+"box": [
+135.14,
+288,
+16,
+16
+],
+"fill": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-sequence-number",
+"box": [
+139.7,
+287.2,
+7,
+17
+],
+"fill": "#1c1c1c",
+"text": "5"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+36.5,
+366,
+98.64,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+29.5,
+362.64,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-sequence-number",
+"box": [
+135.14,
+358,
+16,
+16
+],
+"fill": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-sequence-number",
+"box": [
+139.7,
+357.2,
+7,
+17
+],
+"fill": "#1c1c1c",
+"text": "6"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+37.5,
+450,
+98.64,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+135.14,
+446.64,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-sequence-number",
+"box": [
+21.5,
+442,
+16,
+16
+],
+"fill": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-sequence-number",
+"box": [
+26.06,
+441.2,
+7,
+17
+],
+"fill": "#1c1c1c",
+"text": "7"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+37.5,
+534,
+98.64,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+135.14,
+530.64,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-sequence-number",
+"box": [
+21.5,
+526,
+16,
+16
+],
+"fill": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-sequence-number",
+"box": [
+26.06,
+525.2,
+7,
+17
+],
+"fill": "#1c1c1c",
+"text": "8"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+37.5,
+604,
+98.64,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-message",
+"box": [
+135.14,
+600.64,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-sequence-number",
+"box": [
+21.5,
+596,
+16,
+16
+],
+"fill": "#dadada"
+},
+{
+"tag": "text",
+"g": "pele-sequence-number",
+"box": [
+26.06,
+595.2,
+7,
+17
+],
+"fill": "#1c1c1c",
+"text": "9"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+61.05,
+88.4,
+53.53,
+19
+],
+"fill": "#dadada",
+"text": "Request"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+47.99,
+125.4,
+63.75,
+19
+],
+"fill": "#dadada",
+"text": "Response"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+71.23,
+162.4,
+38.44,
+19
+],
+"fill": "#dadada",
+"text": "Async"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+76.53,
+199.4,
+27.58,
+19
+],
+"fill": "#dadada",
+"text": "Lost"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+69.83,
+271.4,
+25.08,
+19
+],
+"fill": "#dadada",
+"text": "fine"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+65.37,
+341.4,
+34.74,
+19
+],
+"fill": "#dadada",
+"text": "sorry"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+72.02,
+425.4,
+36.59,
+19
+],
+"fill": "#dadada",
+"text": "again"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+86.39,
+509.4,
+7.86,
+19
+],
+"fill": "#dadada",
+"text": "a"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+86.01,
+579.4,
+8.63,
+19
+],
+"fill": "#dadada",
+"text": "b"
+},
+{
+"tag": "rect",
+"g": "pele-note",
+"box": [
+13.5,
+626,
+145.64,
+33
+],
+"fill": "#232323",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-note",
+"box": [
+47.58,
+632.4,
+77.48,
+19
+],
+"fill": "#dadada",
+"text": "Across both"
+},
+{
+"tag": "circle",
+"g": "pele-node pele-actor pele-actor-actor pele-actor-footer",
+"box": [
+23.5,
+680,
+12,
+12
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "path",
+"g": "pele-node pele-actor pele-actor-actor pele-actor-footer",
+"box": [
+19.5,
+692,
+20,
+21
+],
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-actor pele-actor-actor pele-actor-footer",
+"box": [
+12,
+717.6,
+35.38,
+22
+],
+"fill": "#dadada",
+"text": "User"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-actor pele-actor-participant pele-actor-footer",
+"box": [
+103.06,
+679,
+80.18,
+44
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-actor pele-actor-participant pele-actor-footer",
+"box": [
+119.05,
+689.6,
+48.57,
+22
+],
+"fill": "#dadada",
+"text": "Server"
+},
+{
+"tag": "circle",
+"g": "pele-node pele-actor pele-actor-actor",
+"box": [
+23.5,
+9,
+12,
+12
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "path",
+"g": "pele-node pele-actor pele-actor-actor",
+"box": [
+19.5,
+21,
+20,
+21
+],
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-actor pele-actor-actor",
+"box": [
+12,
+46.6,
+35.38,
+22
+],
+"fill": "#dadada",
+"text": "User"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-actor pele-actor-participant",
+"box": [
+103.06,
+26,
+80.18,
+44
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-actor pele-actor-participant",
+"box": [
+119.05,
+36.6,
+48.57,
+22
+],
+"fill": "#dadada",
+"text": "Server"
+}
+]
+},
+"class": {
+"size": [
+314.0,
+326.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edge pele-relation",
+"box": [
+79.03,
+147,
+72.46,
+44
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-relation",
+"box": [
+145.49,
+135,
+12,
+12
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-relation",
+"box": [
+175.49,
+147,
+72.46,
+54.5
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-relation",
+"box": [
+169.49,
+135,
+12,
+12
+],
+"stroke": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-class",
+"box": [
+102.25,
+8,
+122.49,
+127
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "path",
+"g": "pele-node pele-class",
+"box": [
+102.25,
+48,
+122.48,
+54
+],
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-class",
+"box": [
+136.11,
+16.6,
+54.75,
+22
+],
+"fill": "#dadada",
+"text": "Animal"
+},
+{
+"tag": "text",
+"g": "pele-members",
+"box": [
+114.25,
+54.4,
+53.43,
+19
+],
+"fill": "#dadada",
+"text": "+int age"
+},
+{
+"tag": "text",
+"g": "pele-members",
+"box": [
+114.25,
+75.4,
+98.71,
+19
+],
+"fill": "#dadada",
+"text": "+String gender"
+},
+{
+"tag": "text",
+"g": "pele-members",
+"box": [
+114.25,
+108.4,
+84.94,
+19
+],
+"fill": "#dadada",
+"text": "+isMammal()"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-class",
+"box": [
+8,
+191,
+142.06,
+127
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "path",
+"g": "pele-node pele-class",
+"box": [
+8,
+231,
+142.06,
+33
+],
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-class",
+"box": [
+59.34,
+199.6,
+39.95,
+22
+],
+"fill": "#dadada",
+"text": "Duck"
+},
+{
+"tag": "text",
+"g": "pele-members",
+"box": [
+20,
+237.4,
+118.28,
+19
+],
+"fill": "#dadada",
+"text": "+String beakColor"
+},
+{
+"tag": "text",
+"g": "pele-members",
+"box": [
+20,
+270.4,
+50.83,
+19
+],
+"fill": "#dadada",
+"text": "+swim()"
+},
+{
+"tag": "text",
+"g": "pele-members",
+"box": [
+20,
+291.4,
+55.73,
+19
+],
+"fill": "#dadada",
+"text": "+quack()"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-class",
+"box": [
+190.07,
+201.5,
+115.77,
+106
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "path",
+"g": "pele-node pele-class",
+"box": [
+190.07,
+241.5,
+115.76,
+33
+],
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-class",
+"box": [
+232.33,
+210.1,
+31.23,
+22
+],
+"fill": "#dadada",
+"text": "Fish"
+},
+{
+"tag": "text",
+"g": "pele-members",
+"box": [
+202.07,
+247.9,
+91.78,
+19
+],
+"fill": "#dadada",
+"text": "-int sizeInFeet"
+},
+{
+"tag": "text",
+"g": "pele-members",
+"box": [
+202.07,
+280.9,
+56.83,
+19
+],
+"fill": "#dadada",
+"text": "-canEat()"
+}
+]
+},
+"state": {
+"size": [
+132.0,
+356.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edge pele-transition",
+"box": [
+50.2,
+22,
+0,
+37
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-transition",
+"box": [
+46.84,
+58,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-transition",
+"box": [
+8,
+110,
+38.2,
+213
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-transition",
+"box": [
+42.84,
+322,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-transition",
+"box": [
+51.67,
+110,
+0,
+37
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-transition",
+"box": [
+48.31,
+146,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-transition",
+"box": [
+67.67,
+117,
+0,
+37
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-transition",
+"box": [
+64.31,
+110,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-transition",
+"box": [
+79.93,
+198,
+0,
+37
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-transition",
+"box": [
+76.57,
+234,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-transition",
+"box": [
+46.2,
+286,
+33.73,
+37
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-transition",
+"box": [
+42.84,
+322,
+6.72,
+8
+],
+"fill": "#dadada"
+},
+{
+"tag": "circle",
+"g": "pele-node pele-state-start",
+"box": [
+43.2,
+8,
+14,
+14
+],
+"fill": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-state",
+"box": [
+20.73,
+66,
+58.94,
+44
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-state",
+"box": [
+36.72,
+76.6,
+26.95,
+22
+],
+"fill": "#dadada",
+"text": "Still"
+},
+{
+"tag": "circle",
+"g": "pele-node pele-state-end",
+"box": [
+37.7,
+330.5,
+17,
+17
+],
+"fill": "#1c1c1c",
+"stroke": "#dadada"
+},
+{
+"tag": "circle",
+"g": "pele-node pele-state-end",
+"box": [
+41.2,
+334,
+10,
+10
+],
+"fill": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-state",
+"box": [
+36,
+154,
+87.86,
+44
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-state",
+"box": [
+52,
+164.6,
+55.86,
+22
+],
+"fill": "#dadada",
+"text": "Moving"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-state",
+"box": [
+42.47,
+242,
+74.93,
+44
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-state",
+"box": [
+58.46,
+252.6,
+42.94,
+22
+],
+"fill": "#dadada",
+"text": "Crash"
+}
+]
+},
+"gantt": {
+"size": [
+700.0,
+197.0
+],
+"items": [
+{
+"tag": "text",
+"g": null,
+"box": [
+284.89,
+8.6,
+130.22,
+22
+],
+"fill": "#dadada",
+"text": "A Gantt Diagram"
+},
+{
+"tag": "rect",
+"g": "pele-sections",
+"box": [
+0,
+48,
+700,
+60
+],
+"fill": "#282828"
+},
+{
+"tag": "rect",
+"g": "pele-sections",
+"box": [
+0,
+108,
+700,
+60
+]
+},
+{
+"tag": "path",
+"g": "pele-grid",
+"box": [
+151.12,
+48,
+486.4,
+120
+],
+"stroke": "#3f3f3f"
+},
+{
+"tag": "path",
+"g": "pele-grid",
+"box": [
+81.63,
+168,
+579.05,
+0
+],
+"stroke": "#3f3f3f"
+},
+{
+"tag": "rect",
+"g": "pele-task",
+"box": [
+81.63,
+51,
+347.43,
+24
+],
+"fill": "#8a5cf5",
+"stroke": "#8a5cf5"
+},
+{
+"tag": "text",
+"g": "pele-task",
+"box": [
+236.93,
+53.55,
+36.9,
+18
+],
+"fill": "#1c1c1c",
+"text": "A task"
+},
+{
+"tag": "rect",
+"g": "pele-task",
+"box": [
+429.06,
+81,
+231.62,
+24
+],
+"fill": "#8a5cf5",
+"stroke": "#8a5cf5"
+},
+{
+"tag": "text",
+"g": "pele-task",
+"box": [
+505.78,
+83.55,
+78.23,
+18
+],
+"fill": "#1c1c1c",
+"text": "Another task"
+},
+{
+"tag": "rect",
+"g": "pele-task",
+"box": [
+209.02,
+111,
+138.97,
+24
+],
+"fill": "#8a5cf5",
+"stroke": "#8a5cf5"
+},
+{
+"tag": "text",
+"g": "pele-task",
+"box": [
+231.29,
+113.55,
+95.06,
+18
+],
+"fill": "#1c1c1c",
+"text": "Task in Another"
+},
+{
+"tag": "rect",
+"g": "pele-task",
+"box": [
+348,
+141,
+277.94,
+24
+],
+"fill": "#8a5cf5",
+"stroke": "#8a5cf5"
+},
+{
+"tag": "text",
+"g": "pele-task",
+"box": [
+448.39,
+143.55,
+77.21,
+18
+],
+"fill": "#1c1c1c",
+"text": "another task"
+},
+{
+"tag": "text",
+"g": "pele-section-labels",
+"box": [
+16,
+68.55,
+44.66,
+18
+],
+"fill": "#dadada",
+"text": "Section"
+},
+{
+"tag": "text",
+"g": "pele-section-labels",
+"box": [
+16,
+128.55,
+50.27,
+18
+],
+"fill": "#dadada",
+"text": "Another"
+},
+{
+"tag": "text",
+"g": "pele-axis",
+"box": [
+119.8,
+171.7,
+62.78,
+17
+],
+"fill": "#b3b3b3",
+"text": "2024-01-07"
+},
+{
+"tag": "text",
+"g": "pele-axis",
+"box": [
+200.87,
+171.7,
+62.78,
+17
+],
+"fill": "#b3b3b3",
+"text": "2024-01-14"
+},
+{
+"tag": "text",
+"g": "pele-axis",
+"box": [
+281.93,
+171.7,
+62.64,
+17
+],
+"fill": "#b3b3b3",
+"text": "2024-01-21"
+},
+{
+"tag": "text",
+"g": "pele-axis",
+"box": [
+363,
+171.7,
+62.78,
+17
+],
+"fill": "#b3b3b3",
+"text": "2024-01-28"
+},
+{
+"tag": "text",
+"g": "pele-axis",
+"box": [
+444.07,
+171.7,
+62.78,
+17
+],
+"fill": "#b3b3b3",
+"text": "2024-02-04"
+},
+{
+"tag": "text",
+"g": "pele-axis",
+"box": [
+525.13,
+171.7,
+62.64,
+17
+],
+"fill": "#b3b3b3",
+"text": "2024-02-11"
+},
+{
+"tag": "text",
+"g": "pele-axis",
+"box": [
+606.2,
+171.7,
+62.78,
+17
+],
+"fill": "#b3b3b3",
+"text": "2024-02-18"
+}
+]
+},
+"pie": {
+"size": [
+399.0,
+352.0
+],
+"items": [
+{
+"tag": "text",
+"g": null,
+"box": [
+92.86,
+8.6,
+213.39,
+22
+],
+"fill": "#dadada",
+"text": "Pets adopted by volunteers"
+},
+{
+"tag": "path",
+"g": "pele-slices",
+"box": [
+36,
+76,
+240,
+240
+],
+"fill": "#027aff",
+"stroke": "#1c1c1c"
+},
+{
+"tag": "path",
+"g": "pele-slices",
+"box": [
+40.61,
+78.25,
+115.39,
+117.75
+],
+"fill": "#e9973f",
+"stroke": "#1c1c1c"
+},
+{
+"tag": "path",
+"g": "pele-slices",
+"box": [
+132.87,
+76,
+23.13,
+120
+],
+"fill": "#44cf6e",
+"stroke": "#1c1c1c"
+},
+{
+"tag": "text",
+"g": "pele-slice-labels",
+"box": [
+196.38,
+257.74,
+27.66,
+19
+],
+"fill": "#1c1c1c",
+"text": "79%"
+},
+{
+"tag": "text",
+"g": "pele-slice-labels",
+"box": [
+81.26,
+119.64,
+27.66,
+19
+],
+"fill": "#1c1c1c",
+"text": "17%"
+},
+{
+"tag": "text",
+"g": "pele-slice-labels",
+"box": [
+133.2,
+52.53,
+19.66,
+19
+],
+"fill": "#dadada",
+"text": "3%"
+},
+{
+"tag": "rect",
+"g": "pele-legend-item",
+"box": [
+336,
+164,
+12,
+12
+],
+"fill": "#027aff"
+},
+{
+"tag": "text",
+"g": "pele-legend-item",
+"box": [
+355.99,
+159.9,
+34.3,
+19
+],
+"fill": "#dadada",
+"text": "Dogs"
+},
+{
+"tag": "rect",
+"g": "pele-legend-item",
+"box": [
+336,
+190,
+12,
+12
+],
+"fill": "#e9973f"
+},
+{
+"tag": "text",
+"g": "pele-legend-item",
+"box": [
+356,
+185.9,
+28.76,
+19
+],
+"fill": "#dadada",
+"text": "Cats"
+},
+{
+"tag": "rect",
+"g": "pele-legend-item",
+"box": [
+336,
+216,
+12,
+12
+],
+"fill": "#44cf6e"
+},
+{
+"tag": "text",
+"g": "pele-legend-item",
+"box": [
+356,
+211.9,
+28.62,
+19
+],
+"fill": "#dadada",
+"text": "Rats"
+}
+]
+},
+"er": {
+"size": [
+352.0,
+338.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edge pele-er-identifying",
+"box": [
+64.87,
+56,
+84.76,
+89
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-er-identifying",
+"box": [
+144.63,
+62,
+10,
+4
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-er-identifying",
+"box": [
+58.87,
+135,
+12,
+10
+],
+"stroke": "#dadada"
+},
+{
+"tag": "circle",
+"g": "pele-edge pele-er-identifying",
+"box": [
+61.37,
+127.5,
+7,
+7
+],
+"fill": "#1c1c1c",
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-er-identifying",
+"box": [
+64.87,
+193,
+0,
+89
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-er-identifying",
+"box": [
+59.87,
+199,
+10,
+4
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-er-identifying",
+"box": [
+58.87,
+268.5,
+12,
+13.5
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-er-non-identifying",
+"box": [
+167.63,
+56,
+84.76,
+89
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-er-non-identifying",
+"box": [
+161.63,
+56,
+12,
+13.5
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge pele-er-non-identifying",
+"box": [
+246.39,
+131.5,
+12,
+13.5
+],
+"stroke": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-edge-label",
+"box": [
+40.17,
+90,
+49.4,
+21
+],
+"fill": "#1c1c1c"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+44.17,
+90.4,
+41.69,
+19
+],
+"fill": "#dadada",
+"text": "places"
+},
+{
+"tag": "rect",
+"g": "pele-edge-label",
+"box": [
+33.01,
+227,
+63.72,
+21
+],
+"fill": "#1c1c1c"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+37,
+227.4,
+56.01,
+19
+],
+"fill": "#dadada",
+"text": "contains"
+},
+{
+"tag": "rect",
+"g": "pele-edge-label",
+"box": [
+233.41,
+90,
+37.96,
+21
+],
+"fill": "#1c1c1c"
+},
+{
+"tag": "text",
+"g": "pele-edge-label",
+"box": [
+237.41,
+90.4,
+30.25,
+19
+],
+"fill": "#dadada",
+"text": "uses"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-entity",
+"box": [
+98.12,
+8,
+121.02,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-entity",
+"box": [
+116.11,
+20.6,
+85.07,
+22
+],
+"fill": "#dadada",
+"text": "CUSTOMER"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-entity",
+"box": [
+16.87,
+145,
+96,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-entity",
+"box": [
+38.38,
+157.6,
+53.02,
+22
+],
+"fill": "#dadada",
+"text": "ORDER"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-entity",
+"box": [
+8,
+282,
+113.74,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-entity",
+"box": [
+25.99,
+294.6,
+77.75,
+22
+],
+"fill": "#dadada",
+"text": "LINE-ITEM"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-entity",
+"box": [
+160.87,
+145,
+183.04,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-entity",
+"box": [
+178.87,
+157.6,
+147.26,
+22
+],
+"fill": "#dadada",
+"text": "DELIVERY-ADDRESS"
+}
+]
+},
+"mindmap": {
+"size": [
+714.0,
+130.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edges",
+"box": [
+417.53,
+58.5,
+52,
+0
+],
+"stroke": "#027aff"
+},
+{
+"tag": "path",
+"g": "pele-edges",
+"box": [
+548.27,
+42.5,
+36,
+16
+],
+"stroke": "#027aff"
+},
+{
+"tag": "path",
+"g": "pele-edges",
+"box": [
+548.27,
+58.5,
+36,
+16
+],
+"stroke": "#027aff"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-branch",
+"box": [
+469.51,
+43.5,
+78.75,
+30
+],
+"fill": "#027aff",
+"stroke": "#027aff"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-branch",
+"box": [
+481.53,
+46.73,
+54.71,
+21.7
+],
+"fill": "#dadada",
+"text": "Origins"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-text",
+"box": [
+590.3,
+30.74,
+94.31,
+21.7
+],
+"fill": "#dadada",
+"text": "Long history"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-text",
+"box": [
+590.3,
+62.73,
+108.97,
+21.7
+],
+"fill": "#dadada",
+"text": "Popularisation"
+},
+{
+"tag": "path",
+"g": "pele-edges",
+"box": [
+273.07,
+23,
+52,
+35.5
+],
+"stroke": "#e9973f"
+},
+{
+"tag": "path",
+"g": "pele-edges",
+"box": [
+144.59,
+23,
+36,
+0
+],
+"stroke": "#e9973f"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-branch",
+"box": [
+180.58,
+8,
+92.49,
+30
+],
+"fill": "#e9973f",
+"stroke": "#e9973f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-branch",
+"box": [
+192.6,
+11.24,
+68.45,
+21.7
+],
+"fill": "#dadada",
+"text": "Research"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-text",
+"box": [
+14.06,
+11.24,
+124.5,
+21.7
+],
+"fill": "#dadada",
+"text": "On effectiveness"
+},
+{
+"tag": "path",
+"g": "pele-edges",
+"box": [
+273.07,
+58.5,
+52,
+35.5
+],
+"stroke": "#44cf6e"
+},
+{
+"tag": "path",
+"g": "pele-edges",
+"box": [
+174.15,
+78,
+36,
+16
+],
+"stroke": "#44cf6e"
+},
+{
+"tag": "path",
+"g": "pele-edges",
+"box": [
+174.15,
+93.99,
+36,
+16
+],
+"stroke": "#44cf6e"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-branch",
+"box": [
+210.16,
+79,
+62.93,
+30
+],
+"fill": "#44cf6e",
+"stroke": "#44cf6e"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-branch",
+"box": [
+222.16,
+82.23,
+38.91,
+21.7
+],
+"fill": "#dadada",
+"text": "Tools"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-text",
+"box": [
+58.29,
+66.23,
+109.83,
+21.7
+],
+"fill": "#dadada",
+"text": "Pen and paper"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-text",
+"box": [
+100.13,
+98.23,
+68.01,
+21.7
+],
+"fill": "#dadada",
+"text": "Mermaid"
+},
+{
+"tag": "circle",
+"g": "pele-node pele-shape-circle pele-root",
+"box": [
+325.07,
+12.27,
+92.45,
+92.45
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-circle pele-root",
+"box": [
+335.02,
+46.73,
+72.55,
+21.7
+],
+"fill": "#dadada",
+"text": "mindmap"
+}
+]
+},
+"journey": {
+"size": [
+496.0,
+327.0
+],
+"items": [
+{
+"tag": "text",
+"g": null,
+"box": [
+185.82,
+8.6,
+124.58,
+22
+],
+"fill": "#dadada",
+"text": "My working day"
+},
+{
+"tag": "path",
+"g": null,
+"box": [
+26,
+167,
+462,
+104
+],
+"stroke": "#232323"
+},
+{
+"tag": "text",
+"g": "pele-scale",
+"box": [
+13.13,
+158.2,
+7,
+17
+],
+"fill": "#b3b3b3",
+"text": "5"
+},
+{
+"tag": "text",
+"g": "pele-scale",
+"box": [
+13.13,
+184.2,
+7,
+17
+],
+"fill": "#b3b3b3",
+"text": "4"
+},
+{
+"tag": "text",
+"g": "pele-scale",
+"box": [
+13.13,
+210.2,
+7,
+17
+],
+"fill": "#b3b3b3",
+"text": "3"
+},
+{
+"tag": "text",
+"g": "pele-scale",
+"box": [
+13.13,
+236.2,
+7,
+17
+],
+"fill": "#b3b3b3",
+"text": "2"
+},
+{
+"tag": "text",
+"g": "pele-scale",
+"box": [
+13.13,
+262.2,
+6.88,
+17
+],
+"fill": "#b3b3b3",
+"text": "1"
+},
+{
+"tag": "path",
+"g": null,
+"box": [
+104,
+140,
+312,
+68
+],
+"stroke": "#3f3f3f"
+},
+{
+"tag": "path",
+"g": null,
+"box": [
+104,
+167,
+312,
+52
+],
+"stroke": "#dadada"
+},
+{
+"tag": "circle",
+"g": "pele-face pele-face-happy",
+"box": [
+93,
+156,
+22,
+22
+],
+"fill": "#1c1c1c",
+"stroke": "#dadada"
+},
+{
+"tag": "circle",
+"g": "pele-face pele-face-happy",
+"box": [
+99.1,
+162.9,
+2.6,
+2.6
+],
+"fill": "#dadada"
+},
+{
+"tag": "circle",
+"g": "pele-face pele-face-happy",
+"box": [
+106.3,
+162.9,
+2.6,
+2.6
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-face pele-face-happy",
+"box": [
+99,
+169,
+10,
+2.68
+],
+"stroke": "#dadada"
+},
+{
+"tag": "circle",
+"g": "pele-face pele-face-neutral",
+"box": [
+249,
+208,
+22,
+22
+],
+"fill": "#1c1c1c",
+"stroke": "#dadada"
+},
+{
+"tag": "circle",
+"g": "pele-face pele-face-neutral",
+"box": [
+255.1,
+214.9,
+2.6,
+2.6
+],
+"fill": "#dadada"
+},
+{
+"tag": "circle",
+"g": "pele-face pele-face-neutral",
+"box": [
+262.3,
+214.9,
+2.6,
+2.6
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-face pele-face-neutral",
+"box": [
+255.5,
+223.5,
+9,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "circle",
+"g": "pele-face pele-face-happy",
+"box": [
+405,
+156,
+22,
+22
+],
+"fill": "#1c1c1c",
+"stroke": "#dadada"
+},
+{
+"tag": "circle",
+"g": "pele-face pele-face-happy",
+"box": [
+411.1,
+162.9,
+2.6,
+2.6
+],
+"fill": "#dadada"
+},
+{
+"tag": "circle",
+"g": "pele-face pele-face-happy",
+"box": [
+418.3,
+162.9,
+2.6,
+2.6
+],
+"fill": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-face pele-face-happy",
+"box": [
+411,
+169,
+10,
+2.68
+],
+"stroke": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-cluster pele-section",
+"box": [
+32,
+48,
+300,
+33
+],
+"fill": "#232323"
+},
+{
+"tag": "text",
+"g": "pele-cluster pele-section",
+"box": [
+144.51,
+54.4,
+75.74,
+19
+],
+"fill": "#dadada",
+"text": "Go to work"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-task",
+"box": [
+32,
+87,
+144,
+53
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-task",
+"box": [
+73.81,
+95.4,
+60.38,
+19
+],
+"fill": "#dadada",
+"text": "Make tea"
+},
+{
+"tag": "circle",
+"g": "pele-node pele-task",
+"box": [
+99,
+122,
+10,
+10
+],
+"fill": "#027aff",
+"stroke": "#282828"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-task",
+"box": [
+188,
+87,
+144,
+53
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-task",
+"box": [
+222.36,
+95.4,
+75.57,
+19
+],
+"fill": "#dadada",
+"text": "Go upstairs"
+},
+{
+"tag": "circle",
+"g": "pele-node pele-task",
+"box": [
+255,
+122,
+10,
+10
+],
+"fill": "#027aff",
+"stroke": "#282828"
+},
+{
+"tag": "rect",
+"g": "pele-cluster pele-section",
+"box": [
+344,
+48,
+144,
+33
+],
+"fill": "#232323"
+},
+{
+"tag": "text",
+"g": "pele-cluster pele-section",
+"box": [
+385.17,
+54.4,
+61.66,
+19
+],
+"fill": "#dadada",
+"text": "Go home"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-task",
+"box": [
+344,
+87,
+144,
+53
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-task",
+"box": [
+368.76,
+95.4,
+94.77,
+19
+],
+"fill": "#dadada",
+"text": "Go downstairs"
+},
+{
+"tag": "circle",
+"g": "pele-node pele-task",
+"box": [
+411,
+122,
+10,
+10
+],
+"fill": "#027aff",
+"stroke": "#282828"
+},
+{
+"tag": "circle",
+"g": "pele-legend-item",
+"box": [
+241.7,
+303.5,
+10,
+10
+],
+"fill": "#027aff"
+},
+{
+"tag": "text",
+"g": "pele-legend-item",
+"box": [
+257.7,
+298.4,
+20.7,
+19
+],
+"fill": "#dadada",
+"text": "Me"
+}
+]
+},
+"gitgraph": {
+"size": [
+212.0,
+176.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-branch",
+"box": [
+75.93,
+20.5,
+128,
+0
+],
+"stroke": "#027aff"
+},
+{
+"tag": "rect",
+"g": "pele-branch",
+"box": [
+26.72,
+8,
+49.21,
+25
+],
+"fill": "#027aff"
+},
+{
+"tag": "text",
+"g": "pele-branch",
+"box": [
+34.72,
+10.4,
+33.22,
+19
+],
+"fill": "#1c1c1c",
+"text": "main"
+},
+{
+"tag": "path",
+"g": "pele-branch",
+"box": [
+75.93,
+105.59,
+128,
+0
+],
+"stroke": "#e9973f"
+},
+{
+"tag": "rect",
+"g": "pele-branch",
+"box": [
+8,
+93.09,
+67.93,
+25
+],
+"fill": "#e9973f"
+},
+{
+"tag": "text",
+"g": "pele-branch",
+"box": [
+16,
+95.49,
+51.94,
+19
+],
+"fill": "#1c1c1c",
+"text": "develop"
+},
+{
+"tag": "path",
+"g": "pele-edges",
+"box": [
+95.93,
+20.5,
+44,
+85.09
+],
+"stroke": "#e9973f"
+},
+{
+"tag": "path",
+"g": "pele-edges",
+"box": [
+139.93,
+20.5,
+44,
+85.09
+],
+"stroke": "#e9973f"
+},
+{
+"tag": "path",
+"g": "pele-edges",
+"box": [
+95.93,
+20.5,
+88,
+0
+],
+"stroke": "#027aff"
+},
+{
+"tag": "circle",
+"g": "pele-commit pele-commit-normal",
+"box": [
+88.93,
+13.5,
+14,
+14
+],
+"fill": "#027aff"
+},
+{
+"tag": "rect",
+"g": "pele-commit-label",
+"box": [
+50.71,
+30.5,
+54.59,
+54.59
+],
+"fill": "#1c1c1c"
+},
+{
+"tag": "text",
+"g": "pele-commit-label",
+"box": [
+50.85,
+30.64,
+53.88,
+53.88
+],
+"fill": "#b3b3b3",
+"text": "0-9e3779b"
+},
+{
+"tag": "circle",
+"g": "pele-commit pele-commit-normal",
+"box": [
+132.93,
+98.59,
+14,
+14
+],
+"fill": "#e9973f"
+},
+{
+"tag": "rect",
+"g": "pele-commit-label",
+"box": [
+97.79,
+115.59,
+51.51,
+51.51
+],
+"fill": "#1c1c1c"
+},
+{
+"tag": "text",
+"g": "pele-commit-label",
+"box": [
+97.93,
+115.63,
+50.89,
+50.89
+],
+"fill": "#b3b3b3",
+"text": "1-3c6ef36"
+},
+{
+"tag": "circle",
+"g": "pele-commit pele-commit-merge",
+"box": [
+177.93,
+14.5,
+12,
+12
+],
+"fill": "#1c1c1c",
+"stroke": "#027aff"
+},
+{
+"tag": "circle",
+"g": "pele-commit pele-commit-merge",
+"box": [
+181.43,
+18,
+5,
+5
+],
+"fill": "#027aff"
+}
+]
+},
+"error-syntax": {
+"error": "Parse error on line 3:\n    ((\n----^\nExpecting 'NODE_STRING', got 'PS'"
+},
+"error-unknown": {
+"error": "No diagram type detected for the given text."
+},
+"empty": {
+"error": "No diagram type detected for the given text."
+},
+"flow-init": {
+"size": [
+160.0,
+64.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+56,
+32,
+41,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+96,
+28.64,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+8,
+8,
+48,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+26.88,
+20.6,
+11,
+22
+],
+"fill": "#dadada",
+"text": "A"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+104,
+8,
+48,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+122.8,
+20.6,
+10.41,
+22
+],
+"fill": "#dadada",
+"text": "B"
+}
+]
+},
+"flow-frontmatter": {
+"size": [
+160.0,
+100.0
+],
+"items": [
+{
+"tag": "text",
+"g": null,
+"box": [
+39.22,
+8.6,
+82.27,
+22
+],
+"fill": "#dadada",
+"text": "Titled flow"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+56,
+68,
+41,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+96,
+64.64,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+8,
+44,
+48,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+26.88,
+56.6,
+11,
+22
+],
+"fill": "#dadada",
+"text": "A"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+104,
+44,
+48,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+122.8,
+56.6,
+10.41,
+22
+],
+"fill": "#dadada",
+"text": "B"
+}
+]
+},
+"flow-click": {
+"size": [
+160.0,
+64.0
+],
+"items": [
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+56,
+32,
+41,
+0
+],
+"stroke": "#dadada"
+},
+{
+"tag": "path",
+"g": "pele-edge",
+"box": [
+96,
+28.64,
+8,
+6.72
+],
+"fill": "#dadada"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect clickable",
+"box": [
+8,
+8,
+48,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect clickable",
+"box": [
+26.88,
+20.6,
+11,
+22
+],
+"fill": "#dadada",
+"text": "A"
+},
+{
+"tag": "rect",
+"g": "pele-node pele-shape-rect",
+"box": [
+104,
+8,
+48,
+48
+],
+"fill": "#282828",
+"stroke": "#3f3f3f"
+},
+{
+"tag": "text",
+"g": "pele-node pele-shape-rect",
+"box": [
+122.8,
+20.6,
+10.41,
+22
+],
+"fill": "#dadada",
+"text": "B"
+}
+]
+}
+}
+}
+}

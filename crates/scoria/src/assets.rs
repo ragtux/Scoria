@@ -254,6 +254,18 @@ pub fn export_fonts() -> scoria_export::FontFiles {
     }
 }
 
+/// The faces Mermaid diagrams are measured in (`scoria-mermaid`): Inter,
+/// as Obsidian draws them, its bold at the `--bold-weight` of 600.
+pub fn mermaid_fonts() -> scoria_mermaid::Fonts {
+    scoria_mermaid::Fonts {
+        regular: INTER_REGULAR,
+        bold: Some(INTER_SEMIBOLD),
+        italic: Some(INTER_ITALIC),
+        bold_italic: Some(INTER_BOLD_ITALIC),
+        mono: None,
+    }
+}
+
 /// The mark's SVG, which Export as image draws in its logo strip.
 pub fn logo_svg() -> &'static [u8] {
     LOGO.1

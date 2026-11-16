@@ -255,6 +255,61 @@ fn math_is_typeset_in_the_katex_faces() {
 }
 
 #[test]
+fn a_mermaid_fence_is_drawn_as_its_diagram() {
+    let fonts = fonts();
+    let palette = Palette::light();
+    let blocks = vec![Block::Code {
+        language: Some("mermaid".into()),
+        text: "flowchart LR\n    A[Start] --> B[End]\n".into(),
+    }];
+    let (pages, _) = layout::layout(&blocks, None, 500.0, None, &fonts, &palette);
+    let items = &pages[0].items;
+    let texts: Vec<_> = items
+        .iter()
+        .filter_map(|i| match i {
+            Item::Text(r) => Some(r.text.as_str()),
+            _ => None,
+        })
+        .collect();
+    assert!(
+        texts.contains(&"Start") && texts.contains(&"End"),
+        "{texts:?}"
+    );
+    // Two node boxes filled, their borders and the edge stroked, the arrow.
+    assert!(
+        items
+            .iter()
+            .filter(|i| matches!(i, Item::Path { fill: true, .. }))
+            .count()
+            >= 3
+    );
+    assert!(items
+        .iter()
+        .any(|i| matches!(i, Item::Path { fill: false, .. })));
+    // No code band behind it.
+    assert!(!items
+        .iter()
+        .any(|i| matches!(i, Item::Rect { color, .. } if *color == palette.code_background)));
+
+    // A broken fence prints the message in the error colour.
+    let blocks = vec![Block::Code {
+        language: Some("mermaid".into()),
+        text: "notADiagram\n".into(),
+    }];
+    let (pages, _) = layout::layout(&blocks, None, 500.0, None, &fonts, &palette);
+    let words: String = pages[0]
+        .items
+        .iter()
+        .filter_map(|i| match i {
+            Item::Text(r) if r.color == palette.math_error => Some(r.text.clone()),
+            _ => None,
+        })
+        .collect::<Vec<_>>()
+        .join(" ");
+    assert!(words.contains("diagram"), "{words}");
+}
+
+#[test]
 fn a_container_broken_across_pages_paints_its_bar_on_both() {
     let fonts = fonts();
     let palette = Palette::light();

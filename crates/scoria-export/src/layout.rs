@@ -1345,7 +1345,170 @@ impl<'a> Flow<'a> {
         }
     }
 
+    /// A ```mermaid fence: the diagram `scoria-mermaid` lays out, left in
+    /// the column at its own size or shrunk to the column's width, its
+    /// paths as paths and its text shaped in the export's faces from each
+    /// run's anchor. Dashes are drawn solid. A fence that does not lay out
+    /// prints Pele's message in the monospace face in the error colour.
+    fn diagram(&mut self, source: &str) {
+        let palette = self.ts.palette;
+        let mut theme = scoria_mermaid::Theme::light();
+        let rgba = |c: Color| scoria_mermaid::Rgba {
+            r: c.r,
+            g: c.g,
+            b: c.b,
+            a: c.a,
+        };
+        theme.background = rgba(palette.background);
+        theme.text = rgba(palette.text);
+        theme.line = rgba(palette.text);
+        theme.muted = rgba(palette.muted);
+        let width = self.inner_width();
+        let d = match scoria_mermaid::render(source, f64::from(width), &theme) {
+            Ok(d) => d,
+            Err(e) => {
+                let ctx = TextCtx {
+                    color: palette.math_error,
+                    code: true,
+                    ..TextCtx::body(palette)
+                };
+                for line in e.message.split('\n') {
+                    self.inlines(&[Inline::plain(line)], &ctx);
+                }
+                return;
+            }
+        };
+        let k = if d.width as f32 > width && d.width > 0.0 {
+            width / d.width as f32
+        } else {
+            1.0
+        };
+        let top = self.place(d.height as f32 * k);
+        let left = self.left();
+        let at = |x: f64, y: f64| (left + x as f32 * k, top + y as f32 * k);
+        let colour = |c: scoria_mermaid::Rgba| {
+            Color::from_f32(
+                f32::from(c.r) / 255.0,
+                f32::from(c.g) / 255.0,
+                f32::from(c.b) / 255.0,
+                f32::from(c.a) / 255.0,
+            )
+        };
+        for shape in &d.shapes {
+            match shape {
+                scoria_mermaid::Shape::Path {
+                    segments,
+                    fill,
+                    stroke,
+                } => {
+                    use scoria_mermaid::Segment as S;
+                    let ops: Vec<PathOp> = segments
+                        .iter()
+                        .map(|s| match *s {
+                            S::Move(x, y) => {
+                                let (x, y) = at(x, y);
+                                PathOp::Move(x, y)
+                            }
+                            S::Line(x, y) => {
+                                let (x, y) = at(x, y);
+                                PathOp::Line(x, y)
+                            }
+                            S::Quad(cx, cy, x, y) => {
+                                let ((cx, cy), (x, y)) = (at(cx, cy), at(x, y));
+                                PathOp::Quad(cx, cy, x, y)
+                            }
+                            S::Cubic(ax, ay, bx, by, x, y) => {
+                                let ((ax, ay), (bx, by), (x, y)) =
+                                    (at(ax, ay), at(bx, by), at(x, y));
+                                PathOp::Cubic(ax, ay, bx, by, x, y)
+                            }
+                            S::Close => PathOp::Close,
+                        })
+                        .collect();
+                    if let Some(f) = fill {
+                        self.emit(Item::Path {
+                            ops: ops.clone(),
+                            fill: true,
+                            stroke: 0.0,
+                            color: colour(*f),
+                        });
+                    }
+                    if let Some(s) = stroke {
+                        self.emit(Item::Path {
+                            ops,
+                            fill: false,
+                            stroke: s.width as f32 * k,
+                            color: colour(s.color),
+                        });
+                    }
+                }
+                scoria_mermaid::Shape::Text(t) => {
+                    // Shape every span, then set them from the anchor.
+                    let mut runs = Vec::new();
+                    let mut pen = 0.0;
+                    for s in &t.spans {
+                        let face = if s.mono {
+                            Face::Mono
+                        } else if s.bold && !s.italic {
+                            Face::SemiBold
+                        } else {
+                            Face::text(s.bold, s.italic)
+                        };
+                        let size = s.size as f32 * k;
+                        let (shaped, w) = self.ts.shape_word(&s.text, face, size);
+                        runs.push((pen, size, s.shift as f32 * k, shaped));
+                        pen += w;
+                    }
+                    let (x, y) = at(t.x, t.y);
+                    let x0 = match t.anchor {
+                        scoria_mermaid::Anchor::Start => x,
+                        scoria_mermaid::Anchor::Middle => x - pen / 2.0,
+                        scoria_mermaid::Anchor::End => x - pen,
+                    };
+                    for (offset, size, shift, shaped) in runs {
+                        // One glyph run per face a fallback switched to.
+                        let mut gx = 0.0;
+                        let mut i = 0;
+                        while i < shaped.len() {
+                            let face = shaped[i].face;
+                            let start = gx;
+                            let mut glyphs = Vec::new();
+                            let mut text = String::new();
+                            while i < shaped.len() && shaped[i].face == face {
+                                let g = &shaped[i];
+                                let at = text.len();
+                                text.push(g.ch);
+                                glyphs.push(PlacedGlyph {
+                                    id: g.id,
+                                    x: gx - start,
+                                    advance: g.advance,
+                                    range: at..text.len(),
+                                });
+                                gx += g.advance;
+                                i += 1;
+                            }
+                            self.emit(Item::Text(GlyphRun {
+                                face,
+                                size,
+                                x: x0 + offset + start,
+                                y: y + shift,
+                                color: colour(t.color),
+                                glyphs,
+                                text,
+                            }));
+                        }
+                    }
+                }
+            }
+        }
+        self.gap(BLOCK_GAP);
+    }
+
     fn code(&mut self, language: Option<&str>, text: &str) {
+        if language == Some("mermaid") {
+            self.diagram(text);
+            return;
+        }
         let palette = self.ts.palette;
         let (x0, x1) = (self.left(), self.right());
         self.push(
