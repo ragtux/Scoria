@@ -1152,6 +1152,20 @@ impl Editor {
         cx.notify();
     }
 
+    /// Takes bytes the workspace just wrote to this note on another view's
+    /// behalf (a Bases cell edit, or its undo) as one step of the note's own
+    /// history, the way Obsidian's open editor does, instead of a
+    /// [`Editor::reload`] that drops the history. The buffer stays clean.
+    pub fn absorb(&mut self, raw: &str, cx: &mut Context<Self>) {
+        self.suggest = None;
+        self.table_field = None;
+        self.title_edit = None;
+        self.buf.absorb_file(raw);
+        self.scroll_line = self.scroll_line.min(self.line_count() - 1);
+        self.request_parse(cx);
+        cx.notify();
+    }
+
     /// The bytes to write back: the buffer with the file's original line
     /// endings and byte order mark.
     pub fn file_contents(&self) -> String {

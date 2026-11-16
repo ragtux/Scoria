@@ -342,6 +342,7 @@ The gate's run, its sheet and its log are in [[Parity gate run]].
 | Some HTML in notes | 2026-11-15: `<sup>`, `<sub>`, `<small>` and `<big>` at their size and baseline, an inline `style`'s colour, background, weight, slant and line, and a raw table's `colspan`, `rowspan` and `<caption>`, see [[#Some HTML in notes: scripts, inline styles and spanned tables, 2026-11-15]] |
 | Settings rows and small gaps | done 2026-11-16: Show tab title bar and Always focus new tabs acted on, Ctrl+Enter in an extraction prompt, File recovery's View and Clear, and a file picker for the template rows, see [[#Tab title bar, new-tab focus, extraction Ctrl+Enter, File recovery's buttons and the template picker, 2026-11-16]] and [[Specification#Observed tab title bar, new-tab focus, extraction Ctrl+Enter, File recovery's buttons and the file picker, Obsidian 1.15.0]] |
 | Bases cell ranges and the Search result menu | done 2026-11-16: ranges by Shift and Ctrl+A, copied as tab-separated text, pasted over and emptied; a file row's and a match line's right-click menus, see [[#Bases cell selection and the Search result menu, 2026-11-16]], [[Specification#Observed Bases cell selection, Obsidian 1.15.1]] and [[Specification#Observed Search result menus, Obsidian 1.15.1]] |
+| Bases cell undo | done 2026-11-16: Ctrl+Z and Ctrl+Shift+Z over a paste, a Delete, a typed cell and a checkbox, one step per action, the selection put back, an open note's history taking the writes; see [[#Bases cell undo, 2026-11-16]] and [[Specification#Observed Bases cell undo, Obsidian 1.15.1]] |
 
 ### The 2026-11-16 merge and 0.7.0
 
@@ -360,6 +361,61 @@ the corpus at 1,008 of 1,009 and CommonMark at 652 of 652, `cargo fmt --check` a
 `drive.py` under the same name: one ran the other's script, against the other's app, three
 times before noticing. Nothing in the repo was touched, but a scratch vault was. Give each
 agent a scratch folder named after itself from the start.
+
+### Bases cell undo, 2026-11-16
+
+A paste over a range of a base's cells, or a Delete emptying one, could not be undone: the
+differences page said so. Probed first, see [[Specification#Observed Bases cell undo, Obsidian 1.15.1]].
+
+**The probe.** `tools/obsidian-probe/bases-cell-undo.mjs`, eleven steps over CDP in a private
+headless sway (`USER_DATA_DIR`, `CDP_PORT=9472`, `--ozone-platform=x11` under the sway's
+XWayland). The first step listed every name on the view, the app and the workspace that speaks
+of undo, which found the table view's own `undoStack` and `redoStack` at once and made the rest
+a matter of checking each question against them. What surprised: an undo is value-wise and
+guarded by the frontmatter's values only, so a body edited from outside keeps its edit under the
+undone values while any other frontmatter change makes the undo do nothing at all, silently; an
+undo leaves behind a key or a block the action added (it assigns the old values over the new
+ones); and the table's writes are steps of an open note's own history, so the note's Ctrl+Z
+takes them back too. `Ctrl+Y` is not redo there.
+
+**What was built.**
+- `scoria::bases::undo`: `CellHistory` (the two stacks, one `Step` per action holding each
+  note's bytes before and after and the selection the action left) and `revert`, which takes a
+  note back only while it is what the step left: the same bytes come back exactly, the same
+  frontmatter values under a new body get the old block over that body, anything else is left
+  alone. Seven tests, named for the probe's steps.
+- The view binds `ctrl-z` and `ctrl-shift-z` in the `Bases` context while the table shows and
+  nothing is open over it (no cursor needed: Escape twice still undid), puts the step's
+  selection back, and raises `BasesEvent::RevertCells`. `BasesEvent::SetProperties` now carries
+  every row of a paste or a Delete, so the workspace writes them as one step and hands the
+  written bytes back (`record_cell_step`); a typed cell and a checkbox (`SetProperty`) are
+  steps too. The history is dropped when the view loads another file or lets go of the base,
+  and kept across a view switch and a reload, as Obsidian's is. The state dump reports its
+  depth as `cell_history`.
+- `TextBuffer::absorb_file` (`scoria-text`) and `Editor::absorb`: a note open in an editor
+  takes a cell write, or its undo, as one step of its own history instead of a reload that
+  drops the history, and stays clean. Three tests. Only the Bases writes go this way; any other
+  outside write still reloads.
+
+**Driven.** The debug build in a private headless sway over the control socket, with grim and
+wl-clipboard, on the probe's fixture: a paste of `Q` over three rows, `Ctrl+Z` (all three notes
+byte for byte), `Ctrl+Shift+Z`, `Ctrl+Y` doing nothing, `Ctrl+Z` again; a Delete over the
+`note` column of Charlie, Delta and Echo undone to the exact bytes (Charlie's added `note:` and
+Echo's new block gone, Delta's quotes kept); a typed cell committed by Enter and undone; and,
+with `cells/Alpha` open in Source mode in a split, a table paste taken back by the note's own
+`Ctrl+Z` and redone by its `Ctrl+Shift+Z` (the autosave writing each), then a table undo that
+the note's `Ctrl+Z` reverted in turn, as Obsidian's did. Opening another note in the table's
+group dropped the history, as observed.
+
+**What differs, on purpose.** Obsidian's undo re-assigns values, so it leaves an added `key:`
+and a created block behind and re-renders the block bare; Scoria keeps bytes, so an untouched
+note comes back byte for byte. Scoria's checkbox takes no focus of its own, so `Ctrl+Z` straight
+after a click on one undoes it, where Obsidian's focus sits on the checkbox and the key does
+nothing.
+
+**Traps.** A fresh `USER_DATA_DIR` updated itself between two runs of the same morning (1.15.0,
+then 1.15.1): read `document.title` every run. The view's `undoStack` holds `TFile`s, whose
+`vault` and `parent` are circular, so a dump of it needs a replacer that stops at depth.
 
 ### Excluded files, 2026-11-16
 

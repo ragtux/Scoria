@@ -82,7 +82,9 @@ actions!(
         ExtendRight,
         SelectAllCells,
         CopyCells,
-        PasteCells
+        PasteCells,
+        UndoCells,
+        RedoCells
     ]
 );
 
@@ -117,6 +119,10 @@ pub fn bind_keys(cx: &mut App) {
         KeyBinding::new("ctrl-a", SelectAllCells, ctx),
         KeyBinding::new("ctrl-c", CopyCells, ctx),
         KeyBinding::new("ctrl-v", PasteCells, ctx),
+        // The table's own history of cell edits (`undo`). Ctrl+Y is not
+        // bound: observed on 1.15.1, it redid nothing there.
+        KeyBinding::new("ctrl-z", UndoCells, ctx),
+        KeyBinding::new("ctrl-shift-z", RedoCells, ctx),
     ]);
 }
 
