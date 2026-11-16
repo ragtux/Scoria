@@ -1,0 +1,3092 @@
+{
+ "run": {
+  "startedAt": "2026-11-16T06:09:57.049Z",
+  "steps": {
+   "s00-context": {
+    "ok": true,
+    "ms": 2835,
+    "title": "Cells - scoria-probe-vault.arwmb1 - Obsidian 1.15.1",
+    "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+    "w": 1600,
+    "h": 1000
+   },
+   "s01-keys": {
+    "ok": true,
+    "ms": 8629,
+    "click": {
+     "active": {
+      "row": 0,
+      "column": 1,
+      "group": 0
+     },
+     "selection": null,
+     "activeCellEl": "bases-table-active-cell",
+     "selectionBox": null,
+     "focus": "DIV.metadata-input-longtext"
+    },
+    "clickStyles": {
+     "selection": null,
+     "activeCell": {
+      "cls": "bases-table-active-cell",
+      "rect": [
+       452,
+       149.4375,
+       71,
+       28
+      ],
+      "bg": "rgba(0, 0, 0, 0)",
+      "boxShadow": "none",
+      "radius": "0px",
+      "blend": "normal",
+      "pointer": "none"
+     }
+    },
+    "escape1": {
+     "active": {
+      "row": 0,
+      "column": 1,
+      "group": 0
+     },
+     "selection": null,
+     "activeCellEl": "bases-table-active-cell",
+     "selectionBox": null,
+     "focus": "DIV.metadata-input-longtext"
+    },
+    "escape2": {
+     "active": {
+      "row": 0,
+      "column": 1,
+      "group": 0
+     },
+     "selection": null,
+     "activeCellEl": "bases-table-active-cell",
+     "selectionBox": null,
+     "focus": "DIV.bases-table-container node-insert-event"
+    },
+    "cursorStyles": {
+     "selection": null,
+     "activeCell": {
+      "cls": "bases-table-active-cell",
+      "rect": [
+       452,
+       149.4375,
+       71,
+       28
+      ],
+      "bg": "rgba(0, 0, 0, 0)",
+      "boxShadow": "rgb(85, 85, 85) 0px 0px 0px 2px",
+      "radius": "2px",
+      "blend": "normal",
+      "pointer": "none"
+     }
+    },
+    "range": {
+     "active": {
+      "row": 2,
+      "column": 2,
+      "group": 0
+     },
+     "selection": {
+      "top": 0,
+      "bottom": 2,
+      "start": 1,
+      "end": 2,
+      "group": 0
+     },
+     "activeCellEl": "bases-table-active-cell mod-selection",
+     "selectionBox": [
+      452,
+      148.4375,
+      138,
+      90
+     ],
+     "focus": "DIV.bases-table-container node-insert-event"
+    },
+    "rangeStyles": {
+     "selection": {
+      "cls": "bases-table-selection",
+      "rect": [
+       452,
+       148.4375,
+       138,
+       90
+      ],
+      "bg": "oklch(0.603458 0.21722 292.49 / 0.1)",
+      "boxShadow": "none",
+      "radius": "0px",
+      "blend": "lighten",
+      "pointer": "none"
+     },
+     "activeCell": {
+      "cls": "bases-table-active-cell mod-selection",
+      "rect": [
+       524,
+       208.4375,
+       65,
+       29
+      ],
+      "bg": "rgba(0, 0, 0, 0)",
+      "boxShadow": "rgb(138, 92, 245) 0px 0px 0px 2px",
+      "radius": "2px",
+      "blend": "normal",
+      "pointer": "none"
+     }
+    },
+    "shrink": {
+     "active": {
+      "row": 1,
+      "column": 2,
+      "group": 0
+     },
+     "selection": {
+      "top": 0,
+      "bottom": 1,
+      "start": 1,
+      "end": 2,
+      "group": 0
+     },
+     "activeCellEl": "bases-table-active-cell mod-selection",
+     "selectionBox": [
+      452,
+      148.4375,
+      138,
+      60
+     ],
+     "focus": "DIV.bases-table-container node-insert-event"
+    },
+    "pastAnchor": {
+     "active": {
+      "row": 1,
+      "column": 0,
+      "group": 0
+     },
+     "selection": {
+      "top": 0,
+      "bottom": 1,
+      "start": 0,
+      "end": 1,
+      "group": 0
+     },
+     "activeCellEl": "bases-table-active-cell mod-selection",
+     "selectionBox": [
+      344,
+      148.4375,
+      180,
+      60
+     ],
+     "focus": "DIV.bases-table-container node-insert-event"
+    },
+    "plainArrow": {
+     "active": {
+      "row": 2,
+      "column": 0,
+      "group": 0
+     },
+     "selection": null,
+     "activeCellEl": "bases-table-active-cell",
+     "selectionBox": null,
+     "focus": "DIV.bases-table-container node-insert-event"
+    },
+    "again": {
+     "active": {
+      "row": 3,
+      "column": 0,
+      "group": 0
+     },
+     "selection": {
+      "top": 2,
+      "bottom": 3,
+      "start": 0,
+      "end": 0,
+      "group": 0
+     },
+     "activeCellEl": "bases-table-active-cell mod-selection",
+     "selectionBox": [
+      344,
+      208.4375,
+      108,
+      60
+     ],
+     "focus": "DIV.bases-table-container node-insert-event"
+    },
+    "escapeOnRange": {
+     "active": {
+      "row": 3,
+      "column": 0,
+      "group": 0
+     },
+     "selection": null,
+     "activeCellEl": "bases-table-active-cell",
+     "selectionBox": null,
+     "focus": "DIV.bases-table-container node-insert-event"
+    },
+    "escapeAgain": {
+     "active": {
+      "row": 3,
+      "column": 0,
+      "group": 0
+     },
+     "selection": null,
+     "activeCellEl": "bases-table-active-cell",
+     "selectionBox": null,
+     "focus": "DIV.bases-table-container node-insert-event"
+    },
+    "ctrlA": {
+     "active": {
+      "row": 0,
+      "column": 1,
+      "group": 0
+     },
+     "selection": {
+      "top": 0,
+      "bottom": 4,
+      "start": 0,
+      "end": 6,
+      "group": 0
+     },
+     "activeCellEl": "bases-table-active-cell mod-selection",
+     "selectionBox": [
+      344,
+      148.4375,
+      1243,
+      150
+     ],
+     "focus": "DIV.bases-table-container node-insert-event"
+    },
+    "files": {}
+   },
+   "s02-shift-click": {
+    "ok": true,
+    "ms": 8706,
+    "start": {
+     "active": {
+      "row": 0,
+      "column": 1,
+      "group": 0
+     },
+     "selection": null,
+     "activeCellEl": "bases-table-active-cell",
+     "selectionBox": null,
+     "focus": "DIV.bases-table-container node-insert-event"
+    },
+    "toCheckboxMargin": {
+     "active": {
+      "row": 0,
+      "column": 1,
+      "group": 0
+     },
+     "selection": {
+      "top": 0,
+      "bottom": 2,
+      "start": 1,
+      "end": 3,
+      "group": 0
+     },
+     "activeCellEl": "bases-table-active-cell mod-selection",
+     "selectionBox": [
+      452,
+      148.4375,
+      205,
+      90
+     ],
+     "focus": "DIV.bases-table-container node-insert-event"
+    },
+    "toNamePadding": {
+     "active": {
+      "row": 0,
+      "column": 1,
+      "group": 0
+     },
+     "selection": {
+      "top": 0,
+      "bottom": 3,
+      "start": 0,
+      "end": 1,
+      "group": 0
+     },
+     "activeCellEl": "bases-table-active-cell mod-selection",
+     "selectionBox": [
+      344,
+      148.4375,
+      180,
+      120
+     ],
+     "focus": "DIV.bases-table-container node-insert-event"
+    },
+    "thenShiftArrow": {
+     "active": {
+      "row": 0,
+      "column": 2,
+      "group": 0
+     },
+     "selection": {
+      "top": 0,
+      "bottom": 3,
+      "start": 0,
+      "end": 2,
+      "group": 0
+     },
+     "activeCellEl": "bases-table-active-cell mod-selection",
+     "selectionBox": [
+      344,
+      148.4375,
+      246,
+      120
+     ],
+     "focus": "DIV.bases-table-container node-insert-event"
+    },
+    "plainClickOnName": {
+     "active": {
+      "row": 3,
+      "column": 0,
+      "group": 0
+     },
+     "selection": null,
+     "activeCellEl": "bases-table-active-cell",
+     "selectionBox": null,
+     "focus": "DIV.bases-table-container node-insert-event"
+    },
+    "markdownLeaves": 0,
+    "ontoTextField": {
+     "active": {
+      "row": 2,
+      "column": 2,
+      "group": 0
+     },
+     "selection": {
+      "top": 0,
+      "bottom": 2,
+      "start": 1,
+      "end": 2,
+      "group": 0
+     },
+     "activeCellEl": "bases-table-active-cell mod-selection",
+     "selectionBox": [
+      452,
+      148.4375,
+      138,
+      90
+     ],
+     "focus": "DIV.metadata-input-longtext"
+    },
+    "files": {}
+   },
+   "s03-copy": {
+    "ok": true,
+    "ms": 17785,
+    "range": [
+     {
+      "kind": "copy",
+      "types": [
+       "text/plain",
+       "text/markdown",
+       "obsidian/table",
+       "obsidian/bases-cells"
+      ],
+      "data": {
+       "text/plain": "todo\t1.5\ndoing\t2\ndone\t30",
+       "text/markdown": "| status | price |\n| ------ | ----- |\n|  todo  |  1.5  |\n| doing  |   2   |\n|  done  |  30   |",
+       "obsidian/table": "{\"header\":[\"status\",\"price\"],\"rows\":[[\"todo\",\"1.5\"],[\"doing\",\"2\"],[\"done\",\"30\"]],\"alignment\":[null,null]}",
+       "obsidian/bases-cells": "[[{\"type\":\"note\",\"data\":\"todo\"},{\"type\":\"note\",\"data\":1.5}],[{\"type\":\"note\",\"data\":\"doing\"},{\"type\":\"note\",\"data\":2}],[{\"type\":\"note\",\"data\":\"done\"},{\"type\":\"note\",\"data\":30}]]"
+      },
+      "prevented": true
+     }
+    ],
+    "rangeClipboard": "todo\t1.5\ndoing\t2\ndone\t30",
+    "wholeSelection": {
+     "active": {
+      "row": 4,
+      "column": 6,
+      "group": 0
+     },
+     "selection": {
+      "top": 0,
+      "bottom": 4,
+      "start": 0,
+      "end": 6,
+      "group": 0
+     },
+     "activeCellEl": "bases-table-active-cell mod-selection",
+     "selectionBox": [
+      344,
+      148.4375,
+      1243,
+      150
+     ],
+     "focus": "DIV.bases-table-container node-insert-event"
+    },
+    "whole": [
+     {
+      "kind": "copy",
+      "types": [
+       "text/plain",
+       "text/markdown",
+       "obsidian/table",
+       "obsidian/bases-cells"
+      ],
+      "data": {
+       "text/plain": "Alpha\ttodo\t1.5\tfalse\t2026-01-02\tred, green\tplain\nBravo\tdoing\t2\ttrue\t2026-02-03\tblue\tsecond\nCharlie\tdone\t30\tfalse\t2026-03-04\t\t\nDelta\t\"with\ttab\"\t4\ttrue\t\t\tmulti word, comma\nEcho\t\t\t\t\t\t",
+       "text/markdown": "| file name |  status  | price | done  |    due     |   items    |       note        |\n| --------- | -------- | ----- | ----- | ---------- | ---------- | ----------------- |\n|   Alpha   |   todo   |  1.5  | false | 2026-01-02 | red, green |       plain       |\n|   Bravo   |  doing   |   2   | true  | 2026-02-03 |    blue    |      second       |\n|  Charlie  |   done   |  30   | false | 2026-03-04 |            |                   |\n|   Delta   | with\ttab |   4   | true  |            |            | multi word, comma |\n|   Echo    |          |       |       |            |            |                   |",
+       "obsidian/table": "{\"header\":[\"file name\",\"status\",\"price\",\"done\",\"due\",\"items\",\"note\"],\"rows\":[[\"Alpha\",\"todo\",\"1.5\",\"false\",\"2026-01-02\",\"red, green\",\"plain\"],[\"Bravo\",\"doing\",\"2\",\"true\",\"2026-02-03\",\"blue\",\"second\"],[\"Charlie\",\"done\",\"30\",\"false\",\"2026-03-04\",\"\",\"\"],[\"Delta\",\"with\\ttab\",\"4\",\"true\",\"\",\"\",\"multi word, comma\"],[\"Echo\",\"\",\"\",\"\",\"\",\"\",\"\"]],\"alignment\":[null,null,null,null,null,null,null]}",
+       "obsidian/bases-cells": "[[{\"type\":\"file\"},{\"type\":\"note\",\"data\":\"todo\"},{\"type\":\"note\",\"data\":1.5},{\"type\":\"note\",\"data\":false},{\"type\":\"note\",\"data\":\"2026-01-02\"},{\"type\":\"note\",\"data\":[\"red\",\"green\"]},{\"type\":\"note\",\"data\":\"plain\"}],[{\"type\":\"file\"},{\"type\":\"note\",\"data\":\"doing\"},{\"type\":\"note\",\"data\":2},{\"type\":\"note\",\"data\":true},{\"type\":\"note\",\"data\":\"2026-02-03\"},{\"type\":\"note\",\"data\":[\"blue\"]},{\"type\":\"note\",\"data\":\"second\"}],[{\"type\":\"file\"},{\"type\":\"note\",\"data\":\"done\"},{\"type\":\"note\",\"data\":30},{\"type\":\"note\",\"data\":false},{\"type\":\"note\",\"data\":\"2026-03-04\"},{\"type\":\"note\",\"data\":[]},{\"type\":\"note\",\"data\":null}],[{\"type\":\"file\"},{\"type\":\"note\",\"data\":\"with\\ttab\"},{\"type\":\"note\",\"data\":4},{\"type\":\"note\",\"data\":true},{\"type\":\"note\",\"data\":null},{\"type\":\"note\",\"data\":null},{\"type\":\"note\",\"data\":\"multi word, comma\"}],[{\"type\":\"file\"},{\"type\":\"note\",\"data\":null},{\"type\":\"note\",\"data\":null},{\"type\":\"note\",\"data\":null},{\"type\":\"note\",\"data\":null},{\"type\":\"note\",\"data\":null},{\"type\":\"note\",\"data\":null}]]"
+      },
+      "prevented": true
+     }
+    ],
+    "singleCell": [
+     {
+      "kind": "copy",
+      "types": [
+       "text/plain",
+       "text/markdown",
+       "obsidian/table",
+       "obsidian/bases-cells"
+      ],
+      "data": {
+       "text/plain": "doing",
+       "text/markdown": "| status |\n| ------ |\n| doing  |",
+       "obsidian/table": "{\"header\":[\"status\"],\"rows\":[[\"doing\"]],\"alignment\":[null]}",
+       "obsidian/bases-cells": "[[{\"type\":\"note\",\"data\":\"doing\"}]]"
+      },
+      "prevented": true
+     }
+    ],
+    "quoted": [
+     {
+      "kind": "copy",
+      "types": [
+       "text/plain",
+       "text/markdown",
+       "obsidian/table",
+       "obsidian/bases-cells"
+      ],
+      "data": {
+       "text/plain": "\"l1\nl2\"\t1.5\t\t\t\t\"say \"\"hi\"\"\"",
+       "text/markdown": "| status | price | done | due | items |   note   |\n| ------ | ----- | ---- | --- | ----- | -------- |\n| l1\nl2  |  1.5  |      |     |       | say \"hi\" |",
+       "obsidian/table": "{\"header\":[\"status\",\"price\",\"done\",\"due\",\"items\",\"note\"],\"rows\":[[\"l1\\nl2\",\"1.5\",\"\",\"\",\"\",\"say \\\"hi\\\"\"]],\"alignment\":[null,null,null,null,null,null]}",
+       "obsidian/bases-cells": "[[{\"type\":\"note\",\"data\":\"l1\\nl2\"},{\"type\":\"note\",\"data\":1.5},{\"type\":\"note\",\"data\":null},{\"type\":\"note\",\"data\":null},{\"type\":\"note\",\"data\":null},{\"type\":\"note\",\"data\":\"say \\\"hi\\\"\"}]]"
+      },
+      "prevented": true
+     }
+    ],
+    "cut": {
+     "events": [
+      {
+       "kind": "cut",
+       "types": [],
+       "data": {},
+       "prevented": false
+      }
+     ],
+     "clipboard": "SENTINEL",
+     "files": {}
+    },
+    "notices": []
+   },
+   "s04-delete": {
+    "ok": true,
+    "ms": 38029,
+    "deleteRange": {
+     "selection": {
+      "active": {
+       "row": 2,
+       "column": 2,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 2,
+       "start": 1,
+       "end": 2,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       148.4375,
+       138,
+       90
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 2,
+       "column": 2,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 2,
+       "start": 1,
+       "end": 2,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       148.4375,
+       138,
+       90
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus:\nprice:\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+      "Bravo": "---\nstatus:\nprice:\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n",
+      "Charlie": "---\nstatus:\nprice:\ndone: false\ndue: 2026-03-04\nitems: []\n---\nCharlie body.\n"
+     },
+     "undo": {},
+     "redo": {
+      "Alpha": "---\nstatus:\nprice:\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+      "Bravo": "---\nstatus:\nprice:\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n",
+      "Charlie": "---\nstatus:\nprice:\ndone: false\ndue: 2026-03-04\nitems: []\n---\nCharlie body.\n"
+     }
+    },
+    "backspaceRange": {
+     "selection": {
+      "active": {
+       "row": 1,
+       "column": 2,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 1,
+       "start": 1,
+       "end": 2,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       148.4375,
+       138,
+       60
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 1,
+       "column": 2,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 1,
+       "start": 1,
+       "end": 2,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       148.4375,
+       138,
+       60
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus:\nprice:\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+      "Bravo": "---\nstatus:\nprice:\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n"
+     }
+    },
+    "deleteSingle": {
+     "selection": {
+      "active": {
+       "row": 0,
+       "column": 1,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 0,
+       "column": 1,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus:\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n"
+     }
+    },
+    "backspaceSingle": {
+     "selection": {
+      "active": {
+       "row": 1,
+       "column": 2,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 1,
+       "column": 2,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Bravo": "---\nstatus: doing\nprice:\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n"
+     }
+    },
+    "deleteWholeTable": {
+     "selection": {
+      "active": {
+       "row": 4,
+       "column": 6,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 4,
+       "start": 0,
+       "end": 6,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       344,
+       148.4375,
+       1243,
+       150
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 4,
+       "column": 6,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 4,
+       "start": 0,
+       "end": 6,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       344,
+       148.4375,
+       1243,
+       150
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus:\nprice:\ndone:\ndue:\nitems:\nnote:\n---\nAlpha body.\n",
+      "Bravo": "---\nstatus:\nprice:\ndone:\ndue:\nitems:\nnote:\n---\nBravo body.\n",
+      "Charlie": "---\nstatus:\nprice:\ndone:\ndue:\nitems:\nnote:\n---\nCharlie body.\n",
+      "Delta": "---\nstatus:\nprice:\ndone:\nnote:\ndue:\nitems:\n---\nDelta body.\n",
+      "Echo": "---\nstatus:\nprice:\ndone:\ndue:\nitems:\nnote:\n---\nEcho has no frontmatter.\n"
+     }
+    }
+   },
+   "s05-paste": {
+    "ok": true,
+    "ms": 246150,
+    "singleOverCursor": {
+     "clipboard": "Q",
+     "target": {
+      "active": {
+       "row": 0,
+       "column": 1,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 0,
+       "column": 1,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 0,
+       "start": 1,
+       "end": 1,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       148.4375,
+       72,
+       30
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus: Q\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "singleOverColumn": {
+     "clipboard": "Q",
+     "target": {
+      "active": {
+       "row": 2,
+       "column": 1,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 2,
+       "start": 1,
+       "end": 1,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       148.4375,
+       72,
+       90
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 2,
+       "column": 1,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 2,
+       "start": 1,
+       "end": 1,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       148.4375,
+       72,
+       90
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus: Q\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+      "Bravo": "---\nstatus: Q\nprice: 2\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n",
+      "Charlie": "---\nstatus: Q\nprice: 30\ndone: false\ndue: 2026-03-04\nitems: []\n---\nCharlie body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "singleOverBlock": {
+     "clipboard": "F",
+     "target": {
+      "active": {
+       "row": 1,
+       "column": 2,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 1,
+       "start": 1,
+       "end": 2,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       148.4375,
+       138,
+       60
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 1,
+       "column": 2,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 1,
+       "start": 1,
+       "end": 2,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       148.4375,
+       138,
+       60
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus: F\nprice: F\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+      "Bravo": "---\nstatus: F\nprice: F\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "linesOverCursor": {
+     "clipboard": "r1\nr2\nr3",
+     "target": {
+      "active": {
+       "row": 3,
+       "column": 1,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 3,
+       "column": 1,
+       "group": 0
+      },
+      "selection": {
+       "top": 3,
+       "bottom": 3,
+       "start": 1,
+       "end": 1,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       238.4375,
+       72,
+       30
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Delta": "---\nstatus: |-\n  r1\n  r2\n  r3\nprice: 4\ndone: true\nnote: multi word, comma\n---\nDelta body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "crlfOverCursor": {
+     "clipboard": "c1\r\nc2\r\n",
+     "target": {
+      "active": {
+       "row": 0,
+       "column": 1,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 0,
+       "column": 1,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 0,
+       "start": 1,
+       "end": 1,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       148.4375,
+       72,
+       30
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus: \"c1\\r\\nc2\\r\\n\"\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "markdownTableOverCursor": {
+     "clipboard": "| h1 | h2 |\n| --- | --- |\n| m1 | m2 |",
+     "target": {
+      "active": {
+       "row": 0,
+       "column": 1,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 0,
+       "column": 1,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 0,
+       "start": 1,
+       "end": 1,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       148.4375,
+       72,
+       30
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus: |-\n  | h1 | h2 |\n  | --- | --- |\n  | m1 | m2 |\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "linesOverColumn": {
+     "clipboard": "abc\n12,5",
+     "target": {
+      "active": {
+       "row": 1,
+       "column": 2,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 1,
+       "start": 2,
+       "end": 2,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       524,
+       148.4375,
+       66,
+       60
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 1,
+       "column": 2,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 2,
+       "start": 2,
+       "end": 2,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       524,
+       148.4375,
+       66,
+       90
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus: todo\nprice: abc\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+      "Bravo": "---\nstatus: doing\nprice: 12,5\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "shortColumnOverLonger": {
+     "clipboard": "m\nn",
+     "target": {
+      "active": {
+       "row": 3,
+       "column": 1,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 3,
+       "start": 1,
+       "end": 1,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       148.4375,
+       72,
+       120
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 3,
+       "column": 1,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 4,
+       "start": 1,
+       "end": 1,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       148.4375,
+       72,
+       150
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus: m\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+      "Bravo": "---\nstatus: n\nprice: 2\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n",
+      "Delta": "---\nstatus: with\ttab\nprice: 4\ndone: true\nnote: multi word, comma\n---\nDelta body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "trailingNewlineOverColumn": {
+     "clipboard": "a, b\n[[Alpha]]\n\"q, r\"\n",
+     "target": {
+      "active": {
+       "row": 3,
+       "column": 5,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 3,
+       "start": 5,
+       "end": 5,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       793,
+       148.4375,
+       125,
+       120
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 3,
+       "column": 5,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus: todo\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems: a, b\nnote: plain\n---\nAlpha body.\n",
+      "Bravo": "---\nstatus: doing\nprice: 2\ndone: true\ndue: 2026-02-03\nitems: \"[[Alpha]]\"\nnote: second\n---\nBravo body.\n",
+      "Charlie": "---\nstatus: done\nprice: 30\ndone: false\ndue: 2026-03-04\nitems: '\"q, r\"'\n---\nCharlie body.\n",
+      "Delta": "---\nstatus: with\ttab\nprice: 4\ndone: true\nnote: multi word, comma\nitems: \"\"\n---\nDelta body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "tsvAtCursor": {
+     "clipboard": "x1\ty1\nx2\ty2",
+     "target": {
+      "active": {
+       "row": 2,
+       "column": 1,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 2,
+       "column": 1,
+       "group": 0
+      },
+      "selection": {
+       "top": 2,
+       "bottom": 3,
+       "start": 1,
+       "end": 2,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       208.4375,
+       138,
+       60
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Charlie": "---\nstatus: y1\nprice: y1\ndone: false\ndue: 2026-03-04\nitems: []\n---\nCharlie body.\n",
+      "Delta": "---\nstatus: y2\nprice: y2\ndone: true\nnote: multi word, comma\n---\nDelta body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "tsvAtCursorCol1": {
+     "clipboard": "a\tb",
+     "target": {
+      "active": {
+       "row": 0,
+       "column": 1,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 0,
+       "column": 1,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 0,
+       "start": 1,
+       "end": 2,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       148.4375,
+       138,
+       30
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus: b\nprice: b\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "tsvAtCursorCol2": {
+     "clipboard": "p\tq\tr\ts",
+     "target": {
+      "active": {
+       "row": 0,
+       "column": 2,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 0,
+       "column": 2,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 0,
+       "start": 2,
+       "end": 5,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       524,
+       148.4375,
+       394,
+       30
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus: todo\nprice: r\ndone: r\ndue: r\nitems: r\nnote: plain\n---\nAlpha body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "tsvAtCursorCol3": {
+     "clipboard": "u\tv\tw\tx",
+     "target": {
+      "active": {
+       "row": 0,
+       "column": 3,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 0,
+       "column": 3,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 0,
+       "start": 3,
+       "end": 6,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       590,
+       148.4375,
+       997,
+       30
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus: todo\nprice: 1.5\ndone: x\ndue: x\nitems: x\nnote: x\n---\nAlpha body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "tsvLargerThanCursor": {
+     "clipboard": "a\tb\tc\nd\te\tf\ng\th\ti",
+     "target": {
+      "active": {
+       "row": 0,
+       "column": 1,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 0,
+       "column": 1,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 2,
+       "start": 1,
+       "end": 3,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       148.4375,
+       205,
+       90
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus: b\nprice: b\ndone: b\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+      "Bravo": "---\nstatus: e\nprice: e\ndone: e\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n",
+      "Charlie": "---\nstatus: h\nprice: h\ndone: h\ndue: 2026-03-04\nitems: []\n---\nCharlie body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "tsvSmallerThanRange": {
+     "clipboard": "a\t7\nb\t8",
+     "target": {
+      "active": {
+       "row": 3,
+       "column": 2,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 3,
+       "start": 1,
+       "end": 2,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       148.4375,
+       138,
+       120
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 3,
+       "column": 2,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 4,
+       "start": 1,
+       "end": 3,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       148.4375,
+       205,
+       150
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus: \"7\"\nprice: \"7\"\ndone: \"7\"\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+      "Bravo": "---\nstatus: \"8\"\nprice: \"8\"\ndone: \"8\"\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n",
+      "Delta": "---\nstatus: with\ttab\nprice: 4\ndone: true\nnote: multi word, comma\n---\nDelta body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "tsvPastLastColumn": {
+     "clipboard": "i1\tn1\textra",
+     "target": {
+      "active": {
+       "row": 0,
+       "column": 5,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 0,
+       "column": 5,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {},
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "tsvQuoted": {
+     "clipboard": "\"x\ty\"\tz\n\"multi\nline\"\t\"say \"\"hi\"\"\"",
+     "target": {
+      "active": {
+       "row": 1,
+       "column": 1,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 1,
+       "column": 1,
+       "group": 0
+      },
+      "selection": {
+       "top": 1,
+       "bottom": 3,
+       "start": 1,
+       "end": 3,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       178.4375,
+       205,
+       90
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Bravo": "---\nstatus: y\"\nprice: y\"\ndone: y\"\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n",
+      "Charlie": "---\nstatus: '\"multi'\nprice: '\"multi'\ndone: '\"multi'\ndue: 2026-03-04\nitems: []\n---\nCharlie body.\n",
+      "Delta": "---\nstatus: '\"say \"\"hi\"\"\"'\nprice: '\"say \"\"hi\"\"\"'\ndone: '\"say \"\"hi\"\"\"'\nnote: multi word, comma\n---\nDelta body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "tsvIntoNoFrontmatter": {
+     "clipboard": "fresh\t9",
+     "target": {
+      "active": {
+       "row": 4,
+       "column": 2,
+       "group": 0
+      },
+      "selection": {
+       "top": 4,
+       "bottom": 4,
+       "start": 1,
+       "end": 2,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       268.4375,
+       138,
+       30
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 4,
+       "column": 2,
+       "group": 0
+      },
+      "selection": {
+       "top": 4,
+       "bottom": 4,
+       "start": 1,
+       "end": 3,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       268.4375,
+       205,
+       30
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Echo": "---\nstatus: \"9\"\nprice: \"9\"\ndone: \"9\"\n---\nEcho has no frontmatter.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "numberColumn": {
+     "clipboard": "1e3\n-0.50\n 7 \n0x10",
+     "target": {
+      "active": {
+       "row": 3,
+       "column": 2,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 3,
+       "start": 2,
+       "end": 2,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       524,
+       148.4375,
+       66,
+       120
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 3,
+       "column": 2,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus: todo\nprice: \"1e3\"\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+      "Bravo": "---\nstatus: doing\nprice: \"-0.50\"\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n",
+      "Charlie": "---\nstatus: done\nprice: \" 7 \"\ndone: false\ndue: 2026-03-04\nitems: []\n---\nCharlie body.\n",
+      "Delta": "---\nstatus: with\ttab\nprice: \"0x10\"\ndone: true\nnote: multi word, comma\n---\nDelta body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "checkboxColumn": {
+     "clipboard": "true\nyes\n1\nfalse\nx",
+     "target": {
+      "active": {
+       "row": 4,
+       "column": 3,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 4,
+       "start": 3,
+       "end": 3,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       590,
+       148.4375,
+       67,
+       150
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 4,
+       "column": 3,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus: todo\nprice: 1.5\ndone: \"true\"\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+      "Bravo": "---\nstatus: doing\nprice: 2\ndone: yes\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n",
+      "Charlie": "---\nstatus: done\nprice: 30\ndone: \"1\"\ndue: 2026-03-04\nitems: []\n---\nCharlie body.\n",
+      "Delta": "---\nstatus: with\ttab\nprice: 4\ndone: \"false\"\nnote: multi word, comma\n---\nDelta body.\n",
+      "Echo": "---\ndone: x\n---\nEcho has no frontmatter.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "dateColumn": {
+     "clipboard": "2026-05-06\nMay 6, 2026\n2026-05-06T10:20\nnope",
+     "target": {
+      "active": {
+       "row": 3,
+       "column": 4,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 3,
+       "start": 4,
+       "end": 4,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       657,
+       148.4375,
+       136,
+       120
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 3,
+       "column": 4,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus: todo\nprice: 1.5\ndone: false\ndue: 2026-05-06\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+      "Bravo": "---\nstatus: doing\nprice: 2\ndone: true\ndue: May 6, 2026\nitems:\n  - blue\nnote: second\n---\nBravo body.\n",
+      "Charlie": "---\nstatus: done\nprice: 30\ndone: false\ndue: 2026-05-06T10:20\nitems: []\n---\nCharlie body.\n",
+      "Delta": "---\nstatus: with\ttab\nprice: 4\ndone: true\nnote: multi word, comma\ndue: nope\n---\nDelta body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "nameColumn": {
+     "clipboard": "Renamed",
+     "target": {
+      "active": {
+       "row": 0,
+       "column": 0,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 0,
+       "column": 0,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 0,
+       "start": 0,
+       "end": 0,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       344,
+       148.4375,
+       108,
+       30
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {},
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "copiedListIntoText": {
+     "copyFrom": {
+      "active": {
+       "row": 0,
+       "column": 5,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "copied": "red, green",
+     "target": {
+      "active": {
+       "row": 0,
+       "column": 6,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 0,
+       "column": 6,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 0,
+       "start": 6,
+       "end": 6,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       918,
+       148.4375,
+       669,
+       30
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus: todo\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote:\n  - red\n  - green\n---\nAlpha body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "copiedNumbersIntoText": {
+     "copyFrom": {
+      "active": {
+       "row": 1,
+       "column": 2,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 1,
+       "start": 2,
+       "end": 2,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       524,
+       148.4375,
+       66,
+       60
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "copied": "1.5\n2",
+     "target": {
+      "active": {
+       "row": 2,
+       "column": 6,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 2,
+       "column": 6,
+       "group": 0
+      },
+      "selection": {
+       "top": 2,
+       "bottom": 3,
+       "start": 6,
+       "end": 6,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       918,
+       208.4375,
+       669,
+       60
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Charlie": "---\nstatus: done\nprice: 30\ndone: false\ndue: 2026-03-04\nitems: []\nnote: 1.5\n---\nCharlie body.\n",
+      "Delta": "---\nstatus: with\ttab\nprice: 4\ndone: true\nnote: 2\n---\nDelta body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "copiedTextIntoNumber": {
+     "copyFrom": {
+      "active": {
+       "row": 0,
+       "column": 1,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "copied": "todo",
+     "target": {
+      "active": {
+       "row": 0,
+       "column": 2,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 0,
+       "column": 2,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 0,
+       "start": 2,
+       "end": 2,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       524,
+       148.4375,
+       66,
+       30
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus: todo\nprice: todo\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "copiedCheckboxesIntoText": {
+     "copyFrom": {
+      "active": {
+       "row": 1,
+       "column": 3,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 1,
+       "start": 3,
+       "end": 3,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       590,
+       148.4375,
+       67,
+       60
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "copied": "false\ntrue",
+     "target": {
+      "active": {
+       "row": 1,
+       "column": 6,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 1,
+       "start": 6,
+       "end": 6,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       918,
+       148.4375,
+       669,
+       60
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 1,
+       "column": 6,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 2,
+       "start": 6,
+       "end": 6,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       918,
+       148.4375,
+       669,
+       90
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus: todo\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: false\n---\nAlpha body.\n",
+      "Bravo": "---\nstatus: doing\nprice: 2\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: true\n---\nBravo body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "copiedNamesIntoText": {
+     "copyFrom": {
+      "active": {
+       "row": 1,
+       "column": 0,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 1,
+       "start": 0,
+       "end": 0,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       344,
+       148.4375,
+       108,
+       60
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "copied": "Alpha\nBravo",
+     "target": {
+      "active": {
+       "row": 1,
+       "column": 6,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 1,
+       "start": 6,
+       "end": 6,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       918,
+       148.4375,
+       669,
+       60
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 1,
+       "column": 6,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 2,
+       "start": 6,
+       "end": 6,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       918,
+       148.4375,
+       669,
+       90
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {},
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "copiedDateIntoText": {
+     "copyFrom": {
+      "active": {
+       "row": 0,
+       "column": 4,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "copied": "2026-01-02",
+     "target": {
+      "active": {
+       "row": 0,
+       "column": 6,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 0,
+       "column": 6,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 0,
+       "start": 6,
+       "end": 6,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       918,
+       148.4375,
+       669,
+       30
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus: todo\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: 2026-01-02\n---\nAlpha body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "copiedEmptyIntoText": {
+     "copyFrom": {
+      "active": {
+       "row": 4,
+       "column": 1,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "copied": "",
+     "target": {
+      "active": {
+       "row": 0,
+       "column": 6,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 0,
+       "column": 6,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 0,
+       "start": 6,
+       "end": 6,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       918,
+       148.4375,
+       669,
+       30
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus: todo\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote:\n---\nAlpha body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "copiedSingleOverColumn": {
+     "copyFrom": {
+      "active": {
+       "row": 0,
+       "column": 1,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "copied": "todo",
+     "target": {
+      "active": {
+       "row": 2,
+       "column": 6,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 2,
+       "start": 6,
+       "end": 6,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       918,
+       148.4375,
+       669,
+       90
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 2,
+       "column": 6,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 2,
+       "start": 6,
+       "end": 6,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       918,
+       148.4375,
+       669,
+       90
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Alpha": "---\nstatus: todo\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: todo\n---\nAlpha body.\n",
+      "Bravo": "---\nstatus: doing\nprice: 2\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: todo\n---\nBravo body.\n",
+      "Charlie": "---\nstatus: done\nprice: 30\ndone: false\ndue: 2026-03-04\nitems: []\nnote: todo\n---\nCharlie body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "copiedBlockAtCursor": {
+     "copyFrom": {
+      "active": {
+       "row": 1,
+       "column": 2,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 1,
+       "start": 1,
+       "end": 2,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       148.4375,
+       138,
+       60
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "copied": "todo\t1.5\ndoing\t2",
+     "target": {
+      "active": {
+       "row": 2,
+       "column": 1,
+       "group": 0
+      },
+      "selection": null,
+      "activeCellEl": "bases-table-active-cell",
+      "selectionBox": null,
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 2,
+       "column": 1,
+       "group": 0
+      },
+      "selection": {
+       "top": 2,
+       "bottom": 3,
+       "start": 1,
+       "end": 2,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       208.4375,
+       138,
+       60
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Charlie": "---\nstatus: 1.5\nprice: 1.5\ndone: false\ndue: 2026-03-04\nitems: []\n---\nCharlie body.\n",
+      "Delta": "---\nstatus: 2\nprice: 2\ndone: true\nnote: multi word, comma\n---\nDelta body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    },
+    "copiedBlockOverRange": {
+     "copyFrom": {
+      "active": {
+       "row": 1,
+       "column": 2,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 1,
+       "start": 1,
+       "end": 2,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       148.4375,
+       138,
+       60
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "copied": "todo\t1.5\ndoing\t2",
+     "target": {
+      "active": {
+       "row": 3,
+       "column": 2,
+       "group": 0
+      },
+      "selection": {
+       "top": 2,
+       "bottom": 3,
+       "start": 1,
+       "end": 2,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       208.4375,
+       138,
+       60
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "after": {
+      "active": {
+       "row": 3,
+       "column": 2,
+       "group": 0
+      },
+      "selection": {
+       "top": 2,
+       "bottom": 4,
+       "start": 1,
+       "end": 3,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       208.4375,
+       205,
+       90
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Charlie": "---\nstatus: 1.5\nprice: 1.5\ndone: 1.5\ndue: 2026-03-04\nitems: []\n---\nCharlie body.\n",
+      "Delta": "---\nstatus: 2\nprice: 2\ndone: 2\nnote: multi word, comma\n---\nDelta body.\n"
+     },
+     "notices": [],
+     "paths": [
+      "cells/Alpha.md",
+      "cells/Bravo.md",
+      "cells/Charlie.md",
+      "cells/Delta.md",
+      "cells/Echo.md"
+     ]
+    }
+   },
+   "s06-grouped": {
+    "ok": true,
+    "ms": 9175,
+    "groups": [
+     "done",
+     "done",
+     "doneNone"
+    ],
+    "rows": [
+     "file namestatuspricedonedueitemsnote",
+     "Alpha",
+     "Charlie",
+     "Bravo",
+     "Delta",
+     "Echo"
+    ],
+    "start": {
+     "active": {
+      "row": 0,
+      "column": 1,
+      "group": 0
+     },
+     "selection": null,
+     "activeCellEl": "bases-table-active-cell",
+     "selectionBox": null,
+     "focus": "DIV.bases-table-container node-insert-event"
+    },
+    "shiftDown": [
+     {
+      "active": {
+       "row": 1,
+       "column": 1,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 1,
+       "start": 1,
+       "end": 1,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       178.4375,
+       72,
+       60
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     {
+      "active": {
+       "row": 1,
+       "column": 1,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 1,
+       "start": 1,
+       "end": 1,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       178.4375,
+       72,
+       60
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     {
+      "active": {
+       "row": 1,
+       "column": 1,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 1,
+       "start": 1,
+       "end": 1,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       178.4375,
+       72,
+       60
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     {
+      "active": {
+       "row": 1,
+       "column": 1,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 1,
+       "start": 1,
+       "end": 1,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       178.4375,
+       72,
+       60
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     {
+      "active": {
+       "row": 1,
+       "column": 1,
+       "group": 0
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 1,
+       "start": 1,
+       "end": 1,
+       "group": 0
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       178.4375,
+       72,
+       60
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     }
+    ],
+    "cursorAfterDown4": {
+     "active": {
+      "row": 0,
+      "column": 1,
+      "group": 2
+     },
+     "selection": null,
+     "activeCellEl": "bases-table-active-cell",
+     "selectionBox": null,
+     "focus": "DIV.bases-table-container node-insert-event"
+    },
+    "pasteAcrossGroups": {
+     "after": {
+      "active": {
+       "row": 0,
+       "column": 1,
+       "group": 2
+      },
+      "selection": {
+       "top": 0,
+       "bottom": 0,
+       "start": 1,
+       "end": 1,
+       "group": 2
+      },
+      "activeCellEl": "bases-table-active-cell mod-selection",
+      "selectionBox": [
+       452,
+       378.4375,
+       72,
+       30
+      ],
+      "focus": "DIV.bases-table-container node-insert-event"
+     },
+     "files": {
+      "Echo": "---\nstatus: |-\n  g1\n  g2\n  g3\n  g4\n  g5\n---\nEcho has no frontmatter.\n"
+     }
+    }
+   },
+   "s07-search-menus": {
+    "ok": true,
+    "ms": 4940,
+    "rows": [
+     {
+      "cls": "tree-item-self search-result-file-title is-clickable",
+      "text": "One2"
+     },
+     {
+      "cls": "search-result-file-match tappable",
+      "text": "The needle is here."
+     },
+     {
+      "cls": "search-result-file-match tappable",
+      "text": "A needle again."
+     },
+     {
+      "cls": "tree-item-self search-result-file-title is-clickable",
+      "text": "Three needle1"
+     },
+     {
+      "cls": "search-result-file-match tappable",
+      "text": "needle three."
+     },
+     {
+      "cls": "tree-item-self search-result-file-title is-clickable",
+      "text": "Two1"
+     },
+     {
+      "cls": "search-result-file-match tappable",
+      "text": "needle in two."
+     }
+    ],
+    "fileRow": [
+     {
+      "rect": [
+       196,
+       150,
+       202.765625,
+       339.796875
+      ],
+      "items": [
+       {
+        "title": "Open in new tab",
+        "section": "open",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-file-plus"
+       },
+       {
+        "title": "Open to the right",
+        "section": "open",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-separator-vertical"
+       },
+       {
+        "title": "Open in new window",
+        "section": "open",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-picture-in-picture-2"
+       },
+       {
+        "separator": true,
+        "drawn": true
+       },
+       {
+        "title": "Rename...",
+        "section": "action",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-edit-3"
+       },
+       {
+        "title": "Move file to...",
+        "section": "action",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-folder-tree"
+       },
+       {
+        "title": "Bookmark...",
+        "section": "action",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-bookmark"
+       },
+       {
+        "separator": true,
+        "drawn": true
+       },
+       {
+        "title": "Open in default app",
+        "section": "system",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-arrow-up-right"
+       },
+       {
+        "title": "Show in system explorer",
+        "section": "system",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-arrow-up-right"
+       },
+       {
+        "title": "Reveal file in navigation",
+        "section": "system",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-folder-open"
+       },
+       {
+        "separator": true,
+        "drawn": true
+       },
+       {
+        "separator": true,
+        "drawn": false
+       },
+       {
+        "title": "Delete file",
+        "section": "danger",
+        "cls": "menu-item tappable is-warning",
+        "icon": "svg-icon lucide-trash-2"
+       },
+       {
+        "separator": true,
+        "drawn": true
+       },
+       {
+        "title": "Copy path",
+        "section": null,
+        "cls": "menu-item tappable has-submenu",
+        "icon": "svg-icon lucide-clipboard"
+       }
+      ]
+     }
+    ],
+    "rowClassesAfter": [
+     "tree-item-self search-result-file-title is-clickable",
+     "search-result-file-match tappable",
+     "search-result-file-match tappable",
+     "tree-item-self search-result-file-title is-clickable",
+     "search-result-file-match tappable",
+     "tree-item-self search-result-file-title is-clickable",
+     "search-result-file-match tappable"
+    ],
+    "focusAfter": "BODY.theme-dark mod-linux is-frameless is-hid",
+    "matchRow": [
+     {
+      "rect": [
+       196,
+       182,
+       202.765625,
+       301.90625
+      ],
+      "items": [
+       {
+        "title": "Open in new tab",
+        "section": "open",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-file-plus"
+       },
+       {
+        "title": "Open to the right",
+        "section": "open",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-separator-vertical"
+       },
+       {
+        "title": "Open in new window",
+        "section": "open",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-picture-in-picture-2"
+       },
+       {
+        "separator": true,
+        "drawn": true
+       },
+       {
+        "title": "Rename...",
+        "section": "action",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-edit-3"
+       },
+       {
+        "title": "Move file to...",
+        "section": "action",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-folder-tree"
+       },
+       {
+        "title": "Bookmark...",
+        "section": "action",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-bookmark"
+       },
+       {
+        "separator": true,
+        "drawn": true
+       },
+       {
+        "title": "Open in default app",
+        "section": "system",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-arrow-up-right"
+       },
+       {
+        "title": "Show in system explorer",
+        "section": "system",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-arrow-up-right"
+       },
+       {
+        "title": "Reveal file in navigation",
+        "section": "system",
+        "cls": "menu-item tappable",
+        "icon": "svg-icon lucide-folder-open"
+       },
+       {
+        "separator": true,
+        "drawn": true
+       },
+       {
+        "title": "Copy path",
+        "section": null,
+        "cls": "menu-item tappable has-submenu",
+        "icon": "svg-icon lucide-clipboard"
+       }
+      ]
+     }
+    ]
+   },
+   "s08-search-menu-rows": {
+    "ok": true,
+    "ms": 86651,
+    "match: Open in new tab": {
+     "ok": true,
+     "markdown": [
+      {
+       "file": "search/One.md",
+       "active": false,
+       "window": "main",
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       }
+      }
+     ],
+     "activeType": "search"
+    },
+    "match: Open to the right": {
+     "ok": true,
+     "markdown": [
+      {
+       "file": "search/One.md",
+       "active": true,
+       "window": "main",
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       }
+      }
+     ],
+     "activeType": "markdown"
+    },
+    "match: Open in new window": {
+     "ok": true,
+     "markdown": [
+      {
+       "file": "search/One.md",
+       "active": false,
+       "window": "popout",
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       }
+      }
+     ],
+     "activeType": "search"
+    },
+    "file: Open in new tab": {
+     "ok": true,
+     "markdown": [
+      {
+       "file": "search/One.md",
+       "active": false,
+       "window": "main",
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       }
+      }
+     ],
+     "activeType": "search"
+    },
+    "file: Open to the right": {
+     "ok": true,
+     "markdown": [
+      {
+       "file": "search/One.md",
+       "active": true,
+       "window": "main",
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       }
+      }
+     ],
+     "activeType": "markdown"
+    },
+    "file: Open in new window": {
+     "ok": true,
+     "markdown": [
+      {
+       "file": "search/One.md",
+       "active": false,
+       "window": "popout",
+       "cursor": {
+        "line": 0,
+        "ch": 0
+       }
+      }
+     ],
+     "activeType": "search"
+    },
+    "copyPathSubmenu": {
+     "rect": [
+      394.765625,
+      453.015625,
+      159.171875,
+      88.671875
+     ],
+     "items": [
+      {
+       "title": "as Obsidian URL",
+       "section": "copy",
+       "cls": "menu-item tappable",
+       "icon": "svg-icon lucide-link"
+      },
+      {
+       "title": "from vault folder",
+       "section": "copy",
+       "cls": "menu-item tappable",
+       "icon": "svg-icon vault"
+      },
+      {
+       "title": "from system root",
+       "section": "copy",
+       "cls": "menu-item tappable",
+       "icon": "svg-icon lucide-hard-drive"
+      }
+     ]
+    },
+    "copyPath": {
+     "as Obsidian URL": "obsidian://open?vault=<name>&file=search%2FOne",
+     "from vault folder": "search/One",
+     "from system root": "<vault>/search/One.md"
+    },
+    "Rename...": {
+     "modal": "Note title\nSave\nCancel",
+     "modalCls": "modal mod-file-rename",
+     "prompt": null,
+     "focus": "TEXTAREA.rename-textarea",
+     "explorerFocus": null
+    },
+    "Move file to...": {
+     "modal": "/\ncells\nsearch\nshift ↵to create",
+     "modalCls": null,
+     "prompt": "/\ncells\nsearch\nshift ↵to create",
+     "focus": "INPUT.prompt-input",
+     "explorerFocus": null
+    },
+    "Bookmark...": {
+     "modal": "Add bookmark\nPath\nTitle\nBookmark group\nCancel\nSave",
+     "modalCls": "modal mod-bookmark mod-lg",
+     "prompt": null,
+     "focus": "INPUT.",
+     "explorerFocus": null
+    },
+    "Reveal file in navigation": {
+     "modal": null,
+     "modalCls": null,
+     "prompt": null,
+     "focus": "BODY.theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header",
+     "explorerFocus": "One"
+    },
+    "Delete file": {
+     "modal": "Delete file\n\nAre you sure you want to delete “Two.md”?\n\nIt will be moved to your system trash.\n\nDon't ask again\nCancel\nDelete",
+     "modalCls": "modal",
+     "prompt": null,
+     "focus": "BUTTON.mod-cta mod-destructive",
+     "explorerFocus": "One"
+    },
+    "filesAfter": [
+     "cells/Alpha.md",
+     "cells/Bravo.md",
+     "cells/Charlie.md",
+     "cells/Delta.md",
+     "cells/Echo.md",
+     "search/One.md",
+     "search/Three needle.md",
+     "search/Two.md"
+    ]
+   }
+  },
+  "order": [
+   "s00-context",
+   "s01-keys",
+   "s02-shift-click",
+   "s03-copy",
+   "s04-delete",
+   "s05-paste",
+   "s06-grouped",
+   "s07-search-menus",
+   "s08-search-menu-rows"
+  ],
+  "elapsedMs": 422963
+ }
+}

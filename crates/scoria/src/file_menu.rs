@@ -338,6 +338,13 @@ pub enum Target {
     /// `bl` `moreMenu`). Its two view-mode rows are left out, as the tab
     /// header's are.
     Note { path: String, backlinks: bool },
+    /// A right click on a Search pane result: a file row (`file_row`) or
+    /// one of its match rows, both standing for the file
+    /// (`tools/obsidian-probe/results/2026-11-16-bases-cells-search-menu.json`,
+    /// `s07`). The two menus are the same but for "Delete file", which only
+    /// the file row draws; a match row's rows act on the file, never on the
+    /// line.
+    Search { path: String, file_row: bool },
     /// A right click on a Bases row's name, a card or a list line's link
     /// (`s24` `linkMenu`, 2026-11-01): the file menu with the two open-in
     /// rows, Rename beside Move and Bookmark, and "Delete file".
@@ -443,7 +450,8 @@ impl Target {
             | Target::Row(p) => p,
             Target::Bookmark { path, .. }
             | Target::Tab { path, .. }
-            | Target::Note { path, .. } => path,
+            | Target::Note { path, .. }
+            | Target::Search { path, .. } => path,
             Target::Blank | Target::Property { .. } => "",
             Target::Editor(click) => match &click.spot {
                 Spot::Link(path) => path,
@@ -614,6 +622,60 @@ pub fn items(target: &Target) -> Vec<Item> {
             ),
         ],
         Target::Editor(click) => editor_items(click),
+        // Observed on Obsidian 1.15.1 by real right clicks (`s07`), in the
+        // order drawn: the three open rows, Rename / Move / Bookmark in
+        // `action` (Rename's `lucide-edit-3` is `pen-line`), the three
+        // `system` rows with Reveal's `lucide-folder-open`, the danger pair
+        // with "Delete file" on a file row only, and "Copy path" last,
+        // unsectioned. Copy path is a submenu there (as Obsidian URL / from
+        // vault folder / from system root) and one row here, as on every
+        // other menu of this module.
+        Target::Search { file_row, .. } => {
+            let mut rows = vec![
+                item("Open in new tab", "file-plus", S::Open, P::OpenInNewTab),
+                item(
+                    "Open to the right",
+                    "separator-vertical",
+                    S::Open,
+                    P::OpenToRight,
+                ),
+                item(
+                    "Open in new window",
+                    "picture-in-picture-2",
+                    S::Open,
+                    P::OpenInNewWindow,
+                ),
+                item("Rename...", "pen-line", S::Action, P::Rename),
+                item("Move file to...", "folder-tree", S::Action, P::Move),
+                item("Bookmark...", "bookmark", S::Action, P::Bookmark),
+                item(
+                    "Open in default app",
+                    "arrow-up-right",
+                    S::System,
+                    P::OpenInDefaultApp,
+                ),
+                item(
+                    "Show in system explorer",
+                    "arrow-up-right",
+                    S::System,
+                    P::ShowInSystemExplorer,
+                ),
+                item(
+                    "Reveal file in navigation",
+                    "folder-open",
+                    S::System,
+                    P::RevealInNavigation,
+                ),
+            ];
+            if *file_row {
+                rows.push(Item {
+                    warning: true,
+                    ..item("Delete file", "trash-2", S::Danger, P::Delete)
+                });
+            }
+            rows.push(item("Copy path", "clipboard", S::Unsectioned, P::CopyPath));
+            rows
+        }
         // Observed through a CDP right click on a property row: Rename
         // (`lucide-edit-3`, which is `pen-line`), Property type (`lucide-menu`,
         // a submenu of the six types), a separator, Delete property
@@ -1131,6 +1193,10 @@ pub fn describe(menu: &Menu) -> Value {
         Target::Folder(_) => "folder",
         Target::Blank => "blank",
         Target::Linked(_) => "linked",
+        Target::Search { file_row: true, .. } => "search-file",
+        Target::Search {
+            file_row: false, ..
+        } => "search-match",
         Target::Editor(click) => match click.spot {
             Spot::Text => "editor",
             Spot::Tag(_) => "editor-tag",
@@ -1606,6 +1672,46 @@ mod tests {
                 "Reveal file in navigation",
             ]
         );
+    }
+
+    /// A Search pane result's two menus, as Obsidian 1.15.1 drew them on a
+    /// real right click (`2026-11-16-bases-cells-search-menu.json`, `s07`):
+    /// the file row's ends "Delete file" in the danger pair, then "Copy
+    /// path"; a match row's is the same without Delete, and both act on
+    /// the file.
+    #[test]
+    fn a_search_results_menus_are_the_probes_lists() {
+        let match_row = [
+            "Open in new tab",
+            "Open to the right",
+            "Open in new window",
+            "---",
+            "Rename...",
+            "Move file to...",
+            "Bookmark...",
+            "---",
+            "Open in default app",
+            "Show in system explorer",
+            "Reveal file in navigation",
+            "---",
+            "Copy path",
+        ];
+        let target = |file_row| Target::Search {
+            path: "search/One.md".into(),
+            file_row,
+        };
+        assert_eq!(drawn(&target(false)), match_row);
+        let mut file_row: Vec<&str> = match_row[..11].to_vec();
+        file_row.extend(["---", "---", "Delete file", "---", "Copy path"]);
+        assert_eq!(drawn(&target(true)), file_row);
+        assert_eq!(target(false).path(), "search/One.md");
+        let delete = items(&target(true))
+            .into_iter()
+            .find(|i| i.pick == Pick::Delete)
+            .expect("the file row deletes");
+        assert!(delete.warning);
+        assert_eq!(delete.icon, "trash-2");
+        assert!(!items(&target(false)).iter().any(|i| i.pick == Pick::Delete));
     }
 
     /// The view header's More options over a base leaf (`s02` `moreOptions`,

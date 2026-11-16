@@ -283,6 +283,49 @@ pub fn write_property(text: &str, key: &str, typed: &str, types: &PropertyTypes)
     Some(out)
 }
 
+/// The note's bytes with every `(key, value)` set at once, or `None` when
+/// nothing would change: what a paste or a Delete over a range writes into
+/// one row's note.
+///
+/// Unlike [`write_property`] the values are written as they are, not read
+/// as the key's type: a paste of outside text writes strings into a number
+/// or a checkbox column (observed), and a paste of the table's own copy
+/// writes the types it copied. An emptied key stays as `key:`, and a note
+/// with no block gets one holding every key, empty ones included (observed:
+/// Delete over a row with no frontmatter wrote six empty keys).
+pub fn write_values(text: &str, values: &[(String, Value)]) -> Option<String> {
+    if values.is_empty() {
+        return None;
+    }
+    if let Some(props) = scoria_cache::note_properties(text) {
+        let changes: Vec<Change> = values
+            .iter()
+            .map(|(key, value)| Change::Set {
+                key: key.clone(),
+                value: value.clone(),
+            })
+            .collect();
+        let edits = plan(text, &props, &changes)?;
+        return Some(apply(text, &edits));
+    }
+    let at = if text.starts_with('\u{feff}') { 3 } else { 0 };
+    let newline = if text.contains("\r\n") { "\r\n" } else { "\n" };
+    let mut block = format!("---{newline}");
+    for (key, value) in values {
+        block.push_str(&scoria_formats::properties::render_entry(
+            key, value, newline,
+        ));
+        block.push_str(newline);
+    }
+    block.push_str("---");
+    block.push_str(newline);
+    let mut out = String::with_capacity(text.len() + block.len());
+    out.push_str(&text[..at]);
+    out.push_str(&block);
+    out.push_str(&text[at..]);
+    Some(out)
+}
+
 /// The width a header drag leaves a column at: the pointer, measured from
 /// the column's own left edge, floored at [`MIN_COLUMN_WIDTH`].
 ///
@@ -840,8 +883,9 @@ impl BasesView {
                     this.focus_view(window, cx);
                 }
                 // Observed: the first Escape closes the suggestion list,
-                // the second leaves the cell without writing, and the cursor
-                // goes with it.
+                // the second leaves the cell without writing. On 1.15.1 the
+                // cursor stays on the cell, ringed (`2026-11-16` `s01`
+                // `escape2`); 1.14.5 had let it go.
                 InputEvent::Cancel => {
                     if this.editing.suggestions {
                         this.editing.suggestions = false;
@@ -849,7 +893,6 @@ impl BasesView {
                         cx.notify();
                     } else {
                         this.cancel_cell_edit(cx);
-                        this.table_state.focused = None;
                         this.focus_view(window, cx);
                     }
                 }
@@ -914,6 +957,7 @@ impl BasesView {
         );
         self.editing.suggest = None;
         self.editing.frame_asked = false;
+        self.collapse_selection();
         self.table_state.focused = Some((line, column));
         self.editing.cell = Some(CellEdit {
             line,
@@ -947,6 +991,8 @@ impl BasesView {
         if rows.is_empty() || columns == 0 {
             return;
         }
+        // A plain arrow drops the range and moves from the cursor (`s01`).
+        self.collapse_selection();
         let at = rows.iter().position(|l| *l == line).unwrap_or(0) as i32;
         let next_row = (at + dl).clamp(0, rows.len() as i32 - 1) as usize;
         let next_col = (column as i32 + dc).clamp(0, columns as i32 - 1) as usize;
@@ -964,6 +1010,7 @@ impl BasesView {
         if rows.is_empty() || columns == 0 {
             return;
         }
+        self.collapse_selection();
         let at = rows.iter().position(|l| *l == line).unwrap_or(0);
         let flat = (at * columns + column) as i64 + delta as i64;
         let flat = flat.clamp(0, (rows.len() * columns) as i64 - 1) as usize;
@@ -1621,5 +1668,85 @@ mod tests {
         let text = "---\ndone: false\n---\nbody\n";
         let out = write_property(text, "done", "true", &types).expect("one edit");
         assert_eq!(out, "---\ndone: true\n---\nbody\n");
+    }
+
+    // ----- a range's writes ----------------------------------------------------
+
+    /// A paste of outside text writes strings whatever the column's type,
+    /// quoted where YAML would read them back as something else (`s05`
+    /// `numberColumn`, `checkboxColumn`: `price: "1e3"`, `done: "true"`).
+    #[test]
+    fn a_paste_writes_strings_into_typed_keys() {
+        let text = "---\nstatus: todo\nprice: 1.5\ndone: false\n---\nAlpha body.\n";
+        let out = write_values(
+            text,
+            &[
+                ("price".into(), Value::Text("1e3".into())),
+                ("done".into(), Value::Text("true".into())),
+            ],
+        )
+        .expect("two edits");
+        assert_eq!(
+            out,
+            "---\nstatus: todo\nprice: \"1e3\"\ndone: \"true\"\n---\nAlpha body.\n"
+        );
+    }
+
+    /// Delete over a range keeps each key with no value, and adds the ones
+    /// a note lacks after its last entry (`s04` `deleteWholeTable`).
+    #[test]
+    fn delete_empties_keys_and_adds_missing_ones() {
+        let text = "---\nstatus: doing\nprice: 2\n---\nBravo body.\n";
+        let out = write_values(
+            text,
+            &[
+                ("status".into(), Value::Empty),
+                ("price".into(), Value::Empty),
+                ("due".into(), Value::Empty),
+            ],
+        )
+        .expect("edits");
+        assert_eq!(out, "---\nstatus:\nprice:\ndue:\n---\nBravo body.\n");
+    }
+
+    /// A note with no frontmatter gets a block holding every key, empty
+    /// ones too (`s04`: `Echo` came out with six empty keys; `s05`
+    /// `tsvIntoNoFrontmatter` with the pasted ones).
+    #[test]
+    fn a_note_without_a_block_gets_one_with_every_key() {
+        let out = write_values(
+            "Echo has no frontmatter.\n",
+            &[
+                ("status".into(), Value::Text("fresh".into())),
+                ("price".into(), Value::Empty),
+            ],
+        )
+        .expect("a block");
+        assert_eq!(
+            out,
+            "---\nstatus: fresh\nprice:\n---\nEcho has no frontmatter.\n"
+        );
+        // A copied list and number keep their types.
+        let out = write_values(
+            "---\nnote: plain\n---\n",
+            &[
+                (
+                    "note".into(),
+                    Value::List(vec!["red".into(), "green".into()]),
+                ),
+                ("price".into(), Value::Number(1.5)),
+            ],
+        )
+        .expect("edits");
+        assert_eq!(out, "---\nnote:\n  - red\n  - green\nprice: 1.5\n---\n");
+        assert_eq!(write_values("---\nnote: plain\n---\n", &[]), None);
+        assert_eq!(
+            write_values(
+                "---\nnote: plain\n---\n",
+                &[("note".into(), Value::Text("plain".into()))]
+            ),
+            None,
+            "an unchanged value writes nothing"
+        );
     }
 }

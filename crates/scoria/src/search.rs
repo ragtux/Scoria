@@ -23,8 +23,8 @@ use crate::theme::{Theme, FONT_UI_SMALL, FONT_UI_SMALLER, ICON_SIZE};
 use crate::workspace::VaultState;
 use gpui::{
     anchored, deferred, div, list, prelude::*, px, relative, Anchor, App, ClickEvent, Context,
-    Entity, EventEmitter, FocusHandle, Focusable, HighlightStyle, ListAlignment, ListState, Pixels,
-    Point, SharedString, StyledText, Subscription, Window,
+    Entity, EventEmitter, FocusHandle, Focusable, HighlightStyle, ListAlignment, ListState,
+    MouseButton, MouseDownEvent, Pixels, Point, SharedString, StyledText, Subscription, Window,
 };
 use rayon::prelude::*;
 use scoria_cache::{all_tags, CachedMetadata};
@@ -96,6 +96,14 @@ pub enum SearchEvent {
     Dismiss,
     /// One of the six serialised keys changed; the layout wants saving.
     StateChanged,
+    /// A right click on a result: the file menu over the result's file, a
+    /// file row's or a match row's (`file_row`), which the workspace draws.
+    /// Observed: the click neither focuses nor marks the row.
+    ContextMenu {
+        path: String,
+        file_row: bool,
+        position: Point<Pixels>,
+    },
 }
 
 /// One line of the "Copy search results" modal: a file in the result list.
@@ -710,6 +718,17 @@ impl SearchPane {
                 this.focused = Some(row_ix);
                 this.toggle(path.clone(), cx)
             }))
+            .on_mouse_down(MouseButton::Right, {
+                let path = file.path.clone();
+                cx.listener(move |_, event: &MouseDownEvent, _, cx| {
+                    cx.stop_propagation();
+                    cx.emit(SearchEvent::ContextMenu {
+                        path: path.clone(),
+                        file_row: true,
+                        position: event.position,
+                    });
+                })
+            })
             .child(
                 // `tree-item-icon collapse-icon`: 16 px wide in the row's
                 // left gutter, the 10 px chevron faint at 85 %.
@@ -863,10 +882,24 @@ impl SearchPane {
             .py(px(8.))
             .cursor_pointer()
             .hover(move |s| s.bg(wash))
-            .on_click(cx.listener(move |this, _, _, cx| {
-                this.focused = Some(row_ix);
-                cx.emit(SearchEvent::Open(path.clone(), Some(offset)));
-            }))
+            .on_click({
+                let path = path.clone();
+                cx.listener(move |this, _, _, cx| {
+                    this.focused = Some(row_ix);
+                    cx.emit(SearchEvent::Open(path.clone(), Some(offset)));
+                })
+            })
+            .on_mouse_down(
+                MouseButton::Right,
+                cx.listener(move |_, event: &MouseDownEvent, _, cx| {
+                    cx.stop_propagation();
+                    cx.emit(SearchEvent::ContextMenu {
+                        path: path.clone(),
+                        file_row: false,
+                        position: event.position,
+                    });
+                }),
+            )
             .child(
                 div()
                     .text_size(px(FONT_UI_SMALLER))

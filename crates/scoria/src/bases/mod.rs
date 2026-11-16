@@ -36,6 +36,7 @@ pub mod embed;
 pub mod kanban;
 pub mod list;
 pub mod rows;
+pub mod select;
 pub mod summary;
 pub mod table;
 pub mod toolbar;

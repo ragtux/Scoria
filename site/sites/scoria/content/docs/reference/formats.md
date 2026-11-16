@@ -96,8 +96,28 @@ opens the canvas; a file card on another canvas draws the same picture.
 ## Bases
 
 `.base` files are Obsidian's Bases format, YAML. Scoria implements the top-level keys and the
-recursive filter structure, and round-trips a base file unchanged. There is no base view
-yet: opening a `.base` says the kind is not supported.
+recursive filter structure, and round-trips a base file unchanged. A `.base` opens on its
+view — table, cards, list or kanban — with Obsidian's toolbar, and a change made there is
+written back in Obsidian's bytes.
+
+A table cell typed into writes the **note** the row stands for, not the base. Cells can also
+be worked as a range, as in Obsidian:
+
+| Keys | What they do |
+| --- | --- |
+| Shift + arrows | Grow the range from the cursor, inside the cursor's group |
+| Shift + click | Run the range from the cursor to the clicked cell |
+| `Ctrl + A` | Select every cell of the group |
+| `Ctrl + C` | Copy the range as tab-separated text: no header, no trailing newline, a cell holding a tab, a line break or a `"` in double quotes |
+| `Ctrl + V` | Paste over the range: one value fills it, anything larger lands at its top-left corner |
+| Delete, Backspace | Empty every cell of the range (`key:` with no value) |
+| Escape | Drop the range and keep the cursor |
+
+A paste of text from elsewhere writes every cell as text, whatever the property's type, as
+Obsidian does; a paste of the table's own copy keeps the copied types. The name column and
+formula columns take nothing. Each row is one write to its note, and a note with no
+frontmatter gets a block. Where Scoria and Obsidian differ here is listed under
+[differences](/docs/reference/differences/).
 
 ## What Scoria writes, completely
 
@@ -110,7 +130,9 @@ The whole list:
 3. **Files you create, copy or delete.**
 4. **A `.trashinfo` record and a moved file**, when deleting with `trashOption: system` on
    Linux, or a file moved into `.trash/` with `local`.
-5. **A canvas you edited** — on its own autosave, through the JSON Canvas writer above.
+5. **A canvas you edited** — on its own autosave, through the JSON Canvas writer above; a
+   base you changed from its toolbar; and the frontmatter of a note whose cells you typed
+   into, pasted over or emptied in a base's table.
 6. **One key of one file under `.obsidian/`**, when you change something that lives there: a
    Settings control writes into `app.json`, `appearance.json`, `switcher.json`,
    `core-plugins.json` or `community-plugins.json`; a rebinding writes `hotkeys.json`; a

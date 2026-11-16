@@ -42,8 +42,8 @@ use crate::bases::view::BasesView;
 use crate::bases::writes::{sort_direction, DESC};
 use crate::theme::{Theme, FONT_UI_SMALL};
 use gpui::{
-    div, list, prelude::*, px, AnyElement, Context, DragMoveEvent, ListAlignment, ListState,
-    MouseButton, MouseDownEvent, SharedString, Window,
+    div, list, prelude::*, px, AnyElement, ClickEvent, Context, DragMoveEvent, ListAlignment,
+    ListState, MouseButton, MouseDownEvent, SharedString, Window,
 };
 use scoria_bases::{CellKind, Column, Row, Table, TableLayout, Value};
 use serde_json::{json, Value as Json};
@@ -114,9 +114,19 @@ pub struct TableState {
     /// A header being dragged to another slot: the slot the drop line marks.
     pub drop_at: Option<usize>,
     /// The table's own cursor -- a line and a column -- which Tab, the
-    /// arrows, Enter, Delete and typing act on. Observed to be invisible
-    /// ("the table holds an invisible cursor"), so nothing draws it.
+    /// arrows, Enter, Delete and typing act on. 1.14.5 read as invisible;
+    /// 1.15.1 rings it while the view has focus (`2026-11-16` `s01`), and
+    /// [`TableState::corner`] and [`TableState::all`] make it a range.
     pub focused: Option<(usize, usize)>,
+    /// The range's far corner, in row ordinals: see
+    /// [`scoria_bases::selection::Selection`].
+    pub corner: Option<scoria_bases::selection::CellAt>,
+    /// Ctrl+A's or a paste's range, which the cursor need not be a corner of.
+    pub all: Option<scoria_bases::selection::CellRange>,
+    /// Whether the view itself holds the keyboard, not a field inside it:
+    /// the cursor's ring and the range's wash are drawn only then
+    /// (`.bases-table-container:focus`, observed).
+    pub view_focused: bool,
     pub list: ListState,
 }
 
@@ -130,6 +140,9 @@ impl Default for TableState {
             resize: None,
             drop_at: None,
             focused: None,
+            corner: None,
+            all: None,
+            view_focused: false,
             list: ListState::new(0, ListAlignment::Top, px(400.)),
         }
     }
@@ -213,6 +226,36 @@ impl BasesView {
             if !still_there {
                 self.editing.cell = None;
             }
+        }
+        // A write from a paste or a Delete comes back as a rebuild, and
+        // Obsidian keeps the range up over it; a range the new rows no longer
+        // reach goes.
+        let rows = self
+            .table_state
+            .lines
+            .iter()
+            .filter(|l| matches!(l, Line::Row { .. }))
+            .count();
+        let columns = self.table().map_or(0, |t| t.columns.len());
+        let inside = |(r, c): (usize, usize)| r < rows && c < columns;
+        if self.table_state.corner.is_some_and(|at| !inside(at)) {
+            self.table_state.corner = None;
+        }
+        if self
+            .table_state
+            .all
+            .is_some_and(|r| !inside((r.bottom, r.end)))
+        {
+            self.table_state.all = None;
+        }
+        if self
+            .table_state
+            .focused
+            .is_some_and(|(l, c)| l >= self.table_state.lines.len() || c >= columns)
+        {
+            self.table_state.focused = None;
+            self.table_state.corner = None;
+            self.table_state.all = None;
         }
         let count = self.table_state.lines.len();
         self.table_state.list.reset(count);
@@ -534,6 +577,18 @@ impl BasesView {
             .filter(|edit| edit.line == ix)
             .map(|edit| edit.column);
         let field = self.editing.field.clone();
+        // The range's wash and the cursor's ring, drawn only while the view
+        // itself holds the keyboard (`.bases-table-container:focus`).
+        let focused_view = self.table_state.view_focused && self.editing.cell.is_none();
+        let range = focused_view.then(|| self.selected_range()).flatten();
+        let ring_at = self
+            .table_state
+            .focused
+            .filter(|(line, _)| focused_view && *line == ix)
+            .map(|(_, column)| column);
+        let in_range: Vec<bool> = (0..row.cells.len())
+            .map(|c| self.cell_in_range(range, ix, c))
+            .collect();
         div()
             .id(("bases-row", ix))
             .flex()
@@ -596,15 +651,50 @@ impl BasesView {
                             .child(field);
                     }
                 }
+                // `.bases-table-selection`: the accent at a tenth over every
+                // cell of the range (`--bases-table-cell-background-selected`,
+                // the same mix as `--table-selection`).
+                if in_range.get(c).copied().unwrap_or(false) {
+                    box_ = box_.bg(theme.tokens.table_selection);
+                }
+                // `.bases-table-active-cell`: a 2 px ring, radius 2, in
+                // `--background-modifier-border-focus` (#555) on a lone
+                // cursor and in the accent (`--bases-table-cell-shadow-focus`)
+                // at the cursor of a range (observed, `s01`).
+                if ring_at == Some(c) {
+                    let color = if range.is_some() {
+                        crate::theme::ring(&theme.tokens.bases_table_cell_shadow_focus)
+                    } else {
+                        theme.tokens.background_modifier_border_focus
+                    };
+                    box_ = box_.child(
+                        div()
+                            .absolute()
+                            .top_0()
+                            .left_0()
+                            .size_full()
+                            .border_2()
+                            .rounded(px(2.))
+                            .border_color(color),
+                    );
+                }
                 let path = row.file.path.clone();
                 let menu_path = row.file.path.clone();
                 box_ = match (kind, cell.kind, is_name) {
                     // The name is an internal link: a click opens the note,
                     // a right click raises the file menu (observed, `s09`
-                    // `nameLinkClick`, `s24` `linkMenu`).
+                    // `nameLinkClick`, `s24` `linkMenu`). A Shift+click on
+                    // any cell runs the range to it (`s02`).
                     (_, _, true) => box_
                         .cursor_pointer()
-                        .on_click(cx.listener(move |this, _, _, cx| this.open(path.clone(), cx)))
+                        .on_click(cx.listener(move |this, event: &ClickEvent, window, cx| {
+                            if event.modifiers().shift {
+                                this.shift_click(ix, c, window, cx);
+                            } else {
+                                this.collapse_selection();
+                                this.open(path.clone(), cx)
+                            }
+                        }))
                         .on_mouse_down(
                             MouseButton::Right,
                             cx.listener(move |this, event: &MouseDownEvent, _, cx| {
@@ -613,17 +703,41 @@ impl BasesView {
                         ),
                     // A boolean has no text to type, so the click flips it
                     // (observed: the checkbox writes on click).
+                    // A Shift+click on its margin selects and flips nothing
+                    // (`s02`).
                     (Some(_), CellKind::Checkbox, _) => box_.cursor_pointer().on_click(
-                        cx.listener(move |this, _, _, cx| this.toggle_checkbox_cell(ix, c, cx)),
+                        cx.listener(move |this, event: &ClickEvent, window, cx| {
+                            if event.modifiers().shift {
+                                this.shift_click(ix, c, window, cx);
+                            } else {
+                                this.collapse_selection();
+                                this.toggle_checkbox_cell(ix, c, cx)
+                            }
+                        }),
                     ),
                     // Every other frontmatter cell clicks straight into its
                     // editor.
                     (Some(_), _, _) => box_.cursor_text().on_click(cx.listener(
-                        move |this, _, window, cx| this.start_cell_edit(ix, c, window, cx),
+                        move |this, event: &ClickEvent, window, cx| {
+                            if event.modifiers().shift {
+                                this.shift_click(ix, c, window, cx);
+                            } else {
+                                this.start_cell_edit(ix, c, window, cx)
+                            }
+                        },
                     )),
-                    // A `file.*` or formula cell is read-only and takes no
-                    // click (observed: a left click on one did nothing).
-                    (None, _, _) => box_,
+                    // A `file.*` or formula cell is read-only: a click only
+                    // puts the cursor on it (observed: no file opened, the
+                    // cursor moved).
+                    (None, _, _) => box_.on_click(cx.listener(
+                        move |this, event: &ClickEvent, window, cx| {
+                            if event.modifiers().shift {
+                                this.shift_click(ix, c, window, cx);
+                            } else {
+                                this.place_cursor(ix, c, window, cx);
+                            }
+                        },
+                    )),
                 };
                 match (kind, cell.kind) {
                     // A boolean is Obsidian's checkbox, so there is no text

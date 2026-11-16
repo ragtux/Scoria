@@ -7225,7 +7225,8 @@ values (Average, Max, Median, Min, Range, Stddev, Sum for numbers;
 Earliest, Latest, Range for dates; Checked, Unchecked for checkboxes;
 Empty, Filled, Unique for all) plus the base's own `summaries` statements
 over `values`, *Add summary* and *Hide summary*. Scoria builds all of it
-except *Add summary* and the shift-click cell selection; `round(digits)`,
+except *Add summary* (the cell selection landed later, see
+[[#Observed Bases cell selection, Obsidian 1.15.1]]); `round(digits)`,
 which the fixture's `customMean` statement uses, is accepted by the engine.
 
 The same record settled the **kanban** (`s10`, `s20`, `s26`): a 280 px
@@ -11101,3 +11102,121 @@ edge, 654.3 wide), and the reading view gets `rtl` (`direction: rtl` on the view
 is right-aligned too). In the reading view every block is `dir="auto"` in both modes, so Hebrew
 paragraphs, headings, list items (bullet on the right) and quotes run right to left with the
 setting off.
+
+## Observed Bases cell selection, Obsidian 1.15.1
+
+`tools/obsidian-probe/bases-cells-search-menu.mjs` (steps `s00`-`s06`) over CDP in a private
+headless sway with `USER_DATA_DIR` (the installer build 1.13.7 running the 1.15.1 asar, window
+1600 × 1000); results in `tools/obsidian-probe/results/2026-11-16-bases-cells-search-menu.json`,
+screenshots beside it. Fixture: five notes under `cells/` with a text, a number, a checkbox, a
+date, a list and a second text property (`types.json` assigns them), one with a tab in its
+`status`, one with no frontmatter, and `Cells.base`, a table over them sorted by name
+(`Grouped.base` the same, grouped by `done`). Every case reseeded the notes through
+`app.vault.modify` first. The table view object keeps `activeCell` (`row`, `column`,
+`groupIdx`) and `selection` (`top`, `bottom`, `start`, `end`, `groupIdx`, inclusive), which is
+what the run read.
+
+**The cursor and the range.** A click into a cell opens its field and puts the cursor there;
+Escape twice (the suggestions, then the field) leaves the field and **keeps the cursor** on the
+cell (1.14.5 had let it go). Shift+arrows move the cursor and leave the far corner where the
+range started: from `(0,1)`, Shift+Down twice and Shift+Right selected rows 0-2 × columns 1-2
+with the cursor at `(2,2)`; Shift+Up shrank it from the cursor's side; two Shift+Lefts crossed
+the corner (columns 0-1). Shift+click leaves the cursor and moves the far corner to the clicked
+cell: a Shift+click on a checkbox cell's margin selected without flipping the box, one on a name
+cell's padding selected without opening the note, and a Shift+arrow after it moved the cursor
+with the clicked corner fixed. A Shift+click straight on a text cell's field selects too, but
+also opens that field. A plain arrow drops the range and moves from the cursor; a plain click on
+a name cell's padding moves the cursor there and opens nothing; Escape drops the range and keeps
+the cursor, and a second Escape leaves the cursor. `Ctrl+A` selects the whole table with the
+cursor where it was. In a grouped table the range stays inside the cursor's group (Shift+Down
+stopped at the group's last row) while the plain arrows cross groups.
+
+**The look.** Both are drawn only while the table container has focus
+(`.bases-table-container:focus`), never while a field is open. The cursor
+(`.bases-table-active-cell`) is a 2 px ring, radius 2, `--bases-table-cell-shadow-active`
+(`0 0 0 2px #555555`, which is `--background-modifier-border-focus`); at the cursor of a range
+(`mod-selection`) it is `--bases-table-cell-shadow-focus`, the accent. The range
+(`.bases-table-selection`, one box over the rectangle) is
+`--bases-table-cell-background-selected`, the accent at 10 % (the same mix as
+`--table-selection`), blended `lighten`.
+
+**Copy.** `Ctrl+C` writes the range (the cursor's cell when there is none) as tab-separated
+text with no header and no trailing newline (`todo\t1.5\ndoing\t2\ndone\t30`). A cell holding a
+tab, a line break or a double quote is quoted CSV-style with the quotes doubled
+(`"l1\nl2"\t1.5\t\t\t\t"say ""hi"""`); a comma alone is not (`red, green`). A list copies as
+its items joined with `, `, a checkbox as `true` or `false`, a number as JavaScript prints it, a
+date as `YYYY-MM-DD`, the name column as the file's name, an empty or missing value as nothing.
+The copy event also carries `text/markdown` (a padded Markdown table with the display names as
+its header), `obsidian/table` (`{"header","rows","alignment"}`) and `obsidian/bases-cells`, the
+cells typed: `{"type":"note","data":<the property's JSON value>}` for a property,
+`{"type":"file"}` for the name. `Ctrl+X` does nothing at all.
+
+**Delete and Backspace** over a range, and over a lone cursor too (1.14.5 opened the field
+instead), set every property cell of it to `key:` with no value; a note lacking a key gets it
+appended, and a note with no frontmatter gets a block of the empty keys (the whole table deleted
+wrote six into `Echo`). The name column is left alone and the range stays up. `Ctrl+Z` undid
+the whole Delete and `Ctrl+Shift+Z` redid it.
+
+**Paste.** Text from outside is written as **strings**, whatever the property's type: `abc` and
+`12,5` into a number (`price: abc`), `true`, `1` and `false` into a checkbox as `"true"`, `"1"`,
+`"false"` (`yes` and `x` bare), `May 6, 2026` and `nope` into a date, `a, b` into a list as the
+one string. Over a lone cursor, text with no tab is one value, line breaks and all (three lines
+wrote a `|-` block, so did a Markdown table, and `c1\r\nc2\r\n` was written as one quoted
+string); otherwise lines split at `\n` and cells at tabs, naively: `"x\ty"` is the two cells
+`"x` and `y"`, and a trailing newline is an empty last row that writes `""`. One value fills the
+range (`Q` over three rows, `F` over two by two). A longer column lands at the range's top and
+does not tile (`m\nn` over four rows wrote two). A paste over the name column renamed nothing. A
+paste of the table's own copy writes the copied values with their types (a list as a block
+list, `1.5` as a number, `true` as a boolean, an empty cell as `key:`), and copied name cells
+write nothing. No Notice either way.
+
+**What 1.15.1 gets wrong, and Scoria does not follow.** A paste several columns wide writes every
+cell of a row with the clipboard row's value at the index of the target's *first column*: `a\tb`
+at column 1 wrote `b` into both cells, `p\tq\tr\ts` at column 2 wrote `r` four times,
+`u\tv\tw\tx` at column 3 wrote `x` four times, and a block reaching past the last column wrote
+nothing. Over a range the selection afterwards grows by the clipboard's size less one in both
+directions (two by two over four by two came out five by three), and the paste writes that many
+columns. The table's own two-by-two copy pasted back did the same (`1.5` into `status` and
+`price`). Scoria writes each cell its own value, cuts a block at the last row and column, and
+leaves the range over what it covered (`scoria_bases::selection`).
+
+## Observed Search result menus, Obsidian 1.15.1
+
+The same script, steps `s07` and `s08`, on three notes holding `needle`, by real right clicks
+(`Input.dispatchMouseEvent`). This settles what the 2026-10-18 synthetic dump under
+[[#Observed search pane behavior, Obsidian 1.14.4]] left open.
+
+A **file row** (`search-result-file-title`) and a **match row** (`search-result-file-match`)
+open the same menu but for *Delete file*, which only the file row has. In the order drawn, with
+`data-section` and icon:
+
+| Row | Section | Icon |
+| --- | --- | --- |
+| Open in new tab | `open` | `lucide-file-plus` |
+| Open to the right | `open` | `lucide-separator-vertical` |
+| Open in new window | `open` | `lucide-picture-in-picture-2` |
+| --- | | |
+| Rename... | `action` | `lucide-edit-3` |
+| Move file to... | `action` | `lucide-folder-tree` |
+| Bookmark... | `action` | `lucide-bookmark` |
+| --- | | |
+| Open in default app | `system` | `lucide-arrow-up-right` |
+| Show in system explorer | `system` | `lucide-arrow-up-right` |
+| Reveal file in navigation | `system` | `lucide-folder-open` |
+| --- --- | | the danger pair, the second hidden; file row only |
+| Delete file | `danger` | `is-warning`, `lucide-trash-2`; file row only |
+| --- | | |
+| Copy path | none | `has-submenu`, `lucide-clipboard` |
+
+There is no *Make a copy*, *Merge entire file with...* or version history row. The right click
+neither focuses nor marks the row. Every row acts on the file, the match row's too: *Open in new
+tab* opens the note at its top (cursor `0:0`) in a new tab while the Search pane stays the
+active leaf; *Open to the right* splits and makes the note active, at its top; *Open in new
+window* opens a popout, the Search pane still active. *Rename...* opens the file-rename modal
+(`mod-file-rename`, "Note title", the title selected in its textarea), *Move file to...* the
+folder suggester, *Bookmark...* the Add bookmark modal, *Reveal file in navigation* switches the
+left dock to Files and focuses the row, *Delete file* the confirmation ("Are you sure you want to
+delete “Two.md”?"). Copy path's submenu (section `copy`) is *as Obsidian URL*
+(`lucide-link`: `obsidian://open?vault=…&file=search%2FOne`), *from vault folder* (`vault`:
+`search/One`, with no extension) and *from system root* (`lucide-hard-drive`: the absolute path
+with its extension).

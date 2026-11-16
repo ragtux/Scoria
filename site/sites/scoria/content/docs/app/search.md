@@ -54,6 +54,13 @@ at it; click the file row, or its chevron, to fold the card. A long line wraps. 
 pointer a line shows two chevrons that add a line of context above or below it; **Show more
 context** in the settings does that for every line at once.
 
+Right-click a result for its file's menu, the one Obsidian draws there: **Open in new tab**,
+**Open to the right**, **Open in new window**, **Rename...**, **Move file to...**,
+**Bookmark...**, **Open in default app**, **Show in system explorer**, **Reveal file in
+navigation**, and **Copy path** last. A file row adds **Delete file** above Copy path; a match
+line's menu is the same without it, and every row acts on the whole file — opening from a match
+line opens the note at its top, not at the line.
+
 The header has the same controls as Obsidian's:
 
 - **`Aa`** inside the field — *Match case*. Matching is case-insensitive unless this is on or
@@ -91,7 +98,8 @@ it.
 
 - **Search and replace across the vault.** Replace works inside one note — see [find and
   replace](/docs/app/find/).
-- **A right-click menu on a result.**
+- **Copy path's submenu.** On a result's menu Copy path is one row that copies the vault path;
+  Obsidian opens a submenu of three (as Obsidian URL, from vault folder, from system root).
 - The sort order and the copy modal's selects are menus rather than native drop-downs, and
   the modal's preview is read-only where Obsidian's is a text area you can edit before
   copying.
