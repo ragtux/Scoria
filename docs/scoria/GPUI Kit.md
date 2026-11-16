@@ -55,4 +55,4 @@ What should never move: the editor (`editor.rs` and `scoria-text`), the reading 
 - Measure the binary and the release build time before and after; the kit pulls in tree-sitter and a Markdown stack even if those modules go unused.
 - Run on the NVIDIA machine and on `w11` before committing, the same as a pin bump.
 
-See also [[Development]] for the pin and the build, [[UI parity backlog]] for which shell pieces are still being matched against Obsidian and so are not ready to move.
+See also [[Accessibility]] for why the kit is not the way to accessibility either, [[Development]] for the pin and the build, [[UI parity backlog]] for which shell pieces are still being matched against Obsidian and so are not ready to move.

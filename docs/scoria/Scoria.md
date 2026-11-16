@@ -16,6 +16,7 @@ browse a vault, open it in Scoria too. Anything the two apps disagree on here is
 - [[Development]] — machine setup, build commands, pinned dependencies, and benchmark results.
 - [[Interaction probes]] — the hands-on Obsidian observations the automated probe could not make.
 - [[GPUI Kit]] — the component framework Scoria does not use, and when adopting part of it would pay.
+- [[Accessibility]] — what a screen reader would need, why it comes from a gpui pin bump rather than gpui-kit, and how to start.
 - [[Theming]] — how far a Scoria theme can go, and the token registry it needs first.
 - [[Plugin SDK]] — the design study for phase 5: Obsidian's plugin API, the runtimes, and a first milestone.
 
