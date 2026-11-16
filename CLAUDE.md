@@ -76,6 +76,7 @@ cargo run --release -p scoria -- <vault> --note X --source --type '[[al' [--acce
 cargo run --release -p scoria-bench -- generate <dir>   # synthetic 20k-note vault
 cargo run --release -p scoria-bench -- index <vault>    # time scan/read/index/resolve, check the 2 s gate
 cargo fmt --all && cargo clippy --workspace --all-targets
+just clippy-ci                            # clippy as CI runs it: current stable (newer than the local rustc), -D warnings
 
 cd docs/anya_scoria_gen && cargo test     # the logo generator: standalone, not in the workspace
 cd docs/anya_scoria_gen && cargo run --release -- --seed 7 --out rock.svg   # one scoria

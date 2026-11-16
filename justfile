@@ -149,6 +149,33 @@ fmt:
 clippy:
     cargo clippy --workspace --all-targets
 
+# Clippy as CI runs it: the current stable toolchain (CI installs it fresh, so its clippy is
+# often newer than the machine's rustc and has lints this one does not) with warnings as errors.
+# The toolchain lives in SCORIA_RUSTUP_HOME (default ~/.cache/scoria-rustup) and is updated
+# to the newest stable on each run; rustup itself comes from nixpkgs when it is not on PATH.
+# The build goes to its own target directory, since another toolchain rebuilds everything.
+# Run it inside `nix-shell`: the app's build scripts need the libraries shell.nix supplies.
+clippy-ci:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export RUSTUP_HOME="${SCORIA_RUSTUP_HOME:-$HOME/.cache/scoria-rustup}"
+    rustup="$(command -v rustup || echo "$(nix-build '<nixpkgs>' -A rustup --no-out-link)/bin/rustup")"
+    "$rustup" toolchain install stable --profile minimal -c clippy -c rustfmt --no-self-update
+    # The toolchain's own bin goes first on PATH: `rustup run` relies on rustup's proxies being
+    # on PATH, and on NixOS the system's cargo and cargo-clippy are found before them, which
+    # silently lints with the old clippy.
+    bin="$(dirname "$("$rustup" which --toolchain stable cargo)")"
+    export PATH="$bin:$PATH"
+    want="$("$bin/cargo-clippy" --version)"
+    have="$(cargo clippy --version)"
+    if [ "$want" != "$have" ]; then echo "clippy-ci: found $have, wanted $want" >&2; exit 1; fi
+    echo "clippy-ci: $have"
+    # One target directory per clippy version: a directory another version checked can hold
+    # results cargo takes as fresh, and then a crate goes unlinted by the new one.
+    version="$(echo "$have" | awk '{print $2}')"
+    CARGO_TARGET_DIR="$CARGO_TARGET_DIR/clippy-$version" RUSTFLAGS="-D warnings" \
+        cargo clippy --workspace --all-targets
+
 # The CI lint job, step for step: formatting, the library tests, clippy without the app
 ci:
     cargo fmt --all -- --check
