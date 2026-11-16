@@ -12,6 +12,8 @@
 
 use crate::bases::cells::{row_of, Line};
 use crate::bases::edit::editable_key;
+use crate::bases::toolbar::{Panel, RedoCells, UndoCells};
+use crate::bases::undo::{NoteChange, Step};
 use crate::bases::view::{BasesEvent, BasesView};
 use gpui::{ClipboardItem, Context, Global, Window};
 use scoria_bases::selection::{
@@ -298,7 +300,8 @@ impl BasesView {
         self.send_writes(&writes, cx);
     }
 
-    /// One [`BasesEvent::SetProperties`] per row the writes touch.
+    /// One [`BasesEvent::SetProperties`] for every row the writes touch,
+    /// so the action is one step of the table's undo history.
     fn send_writes(
         &mut self,
         writes: &[scoria_bases::selection::CellWrite],
@@ -307,6 +310,7 @@ impl BasesView {
         let Some(columns) = self.table().map(|t| t.columns.clone()) else {
             return;
         };
+        let mut rows = Vec::new();
         for (ordinal, row) in by_row(writes) {
             let Some(path) = self.path_at(ordinal) else {
                 continue;
@@ -319,9 +323,90 @@ impl BasesView {
                 })
                 .collect();
             if !values.is_empty() {
-                cx.emit(BasesEvent::SetProperties { path, values });
+                rows.push((path, values));
             }
         }
+        if !rows.is_empty() {
+            cx.emit(BasesEvent::SetProperties { rows });
+        }
+    }
+
+    /// The workspace wrote an action's notes: one step of the table's
+    /// history, with the selection as the action left it. Only a table
+    /// keeps one (observed: the history is the table view's).
+    pub fn record_cell_step(&mut self, changes: Vec<NoteChange>) {
+        if !matches!(self.layout(), scoria_bases::Layout::Table(_)) {
+            return;
+        }
+        let selection = self.selection();
+        self.cell_history.record(Step { changes, selection });
+    }
+
+    /// Whether Ctrl+Z and Ctrl+Shift+Z go to the table's history: the
+    /// table is showing and nothing is open over it. Observed: with a field
+    /// open they are the field's own, and the cursor need not be up (after
+    /// Escape twice the container still undid).
+    fn history_takes_keys(&self) -> bool {
+        self.editing.cell.is_none()
+            && self.editing.menu.is_none()
+            && self.toolbar.panel == Panel::None
+            && self.toolbar.combo.is_none()
+            && self.toolbar.editing.is_none()
+            && matches!(self.layout(), scoria_bases::Layout::Table(_))
+    }
+
+    pub(super) fn undo_cells_action(
+        &mut self,
+        _: &UndoCells,
+        _: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if !self.history_takes_keys() {
+            cx.propagate();
+            return;
+        }
+        let step = self.cell_history.undo();
+        self.revert_step(step, true, cx);
+    }
+
+    pub(super) fn redo_cells_action(
+        &mut self,
+        _: &RedoCells,
+        _: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if !self.history_takes_keys() {
+            cx.propagate();
+            return;
+        }
+        let step = self.cell_history.redo();
+        self.revert_step(step, false, cx);
+    }
+
+    /// Puts the step's selection back and asks the workspace to write its
+    /// notes back (`undo`) or forward again.
+    pub(super) fn revert_step(&mut self, step: Option<Step>, undo: bool, cx: &mut Context<Self>) {
+        let Some(step) = step else {
+            return;
+        };
+        match step.selection {
+            Some(sel) => self.set_selection(sel, cx),
+            None => {
+                self.table_state.focused = None;
+                self.collapse_selection();
+                cx.notify();
+            }
+        }
+        cx.emit(BasesEvent::RevertCells {
+            changes: step.changes,
+            undo,
+        });
+    }
+
+    /// The history's depth on each side, as the control socket reports it.
+    pub(super) fn cell_history_json(&self) -> serde_json::Value {
+        let (undo, redo) = self.cell_history.depth();
+        serde_json::json!({ "undo": undo, "redo": redo })
     }
 
     /// The selection as the control socket reports it, in row ordinals.

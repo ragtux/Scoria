@@ -271,6 +271,79 @@ impl TextBuffer {
         self.rebuild_lines();
     }
 
+    /// Takes bytes another part of the app just wrote to this buffer's file
+    /// as **one undo step**, rather than a [`TextBuffer::load`] that drops
+    /// the history: what a note open beside a Bases table does when a cell
+    /// edit writes its frontmatter (observed on Obsidian 1.15.1, the note's
+    /// editor gains one step per write, and its own Ctrl+Z takes the write
+    /// back in the buffer).
+    ///
+    /// The step is the one span between the common prefix and suffix, the
+    /// cursors keep their place in the text around it, and the buffer is
+    /// left clean with `raw` as its disk bytes. False, and a plain `load`
+    /// instead, when the file's BOM or line endings differ from the
+    /// buffer's or either is mixed: a span could not say that.
+    pub fn absorb_file(&mut self, raw: &str) -> bool {
+        let file = FileText::parse(raw);
+        if file.bom != self.bom || file.crlf != self.crlf || file.mixed || self.mixed.is_some() {
+            let (head, anchor) = (self.head, self.anchor);
+            self.load(raw);
+            self.head = self.clamp_offset(head);
+            self.anchor = self.clamp_offset(anchor);
+            return false;
+        }
+        if file.text != self.text {
+            let old = self.text.as_bytes();
+            let new = file.text.as_bytes();
+            let mut start = old.iter().zip(new).take_while(|(a, b)| a == b).count();
+            while !self.text.is_char_boundary(start) || !file.text.is_char_boundary(start) {
+                start -= 1;
+            }
+            let room = old.len().min(new.len()) - start;
+            let mut tail = old
+                .iter()
+                .rev()
+                .zip(new.iter().rev())
+                .take(room)
+                .take_while(|(a, b)| a == b)
+                .count();
+            while !self.text.is_char_boundary(old.len() - tail)
+                || !file.text.is_char_boundary(new.len() - tail)
+            {
+                tail -= 1;
+            }
+            let range = start..old.len() - tail;
+            let insert = file.text[start..new.len() - tail].to_string();
+            let delta = insert.len() as isize - range.len() as isize;
+            let moved = |at: usize| {
+                if at >= range.end {
+                    (at as isize + delta) as usize
+                } else if at > range.start {
+                    range.start + insert.len().min(at - range.start)
+                } else {
+                    at
+                }
+            };
+            let cursors = self.cursors();
+            let after = Cursors {
+                sels: cursors
+                    .sels
+                    .iter()
+                    .map(|s| Sel {
+                        anchor: moved(s.anchor),
+                        head: moved(s.head),
+                        goal: None,
+                    })
+                    .collect(),
+                primary: cursors.primary,
+            };
+            self.apply_edits(vec![(range, insert)], after, EditKind::Other);
+        }
+        self.dirty = false;
+        self.disk = fingerprint(raw);
+        true
+    }
+
     /// The bytes to write back: the text with the file's original line
     /// endings and byte order mark.
     pub fn file_contents(&self) -> String {
@@ -1589,6 +1662,63 @@ pub fn char_class(c: char) -> u8 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Observed on Obsidian 1.15.1 (`bases-cell-undo.mjs` `u08`): a Bases
+    /// cell write to a note open in an editor is one step of that editor's
+    /// history, and its Ctrl+Z takes the write back in the buffer.
+    #[test]
+    fn an_outside_write_absorbed_is_one_undo_step_and_leaves_the_buffer_clean() {
+        let before = "---\nstatus: todo\nprice: 1.5\n---\nAlpha body.\n";
+        let after = "---\nstatus: S\nprice: 1.5\n---\nAlpha body.\n";
+        let mut buf = TextBuffer::from_file(before);
+        buf.set_cursor(before.len() - 2, None);
+        assert!(buf.absorb_file(after));
+        assert_eq!(buf.text(), after);
+        assert!(!buf.is_dirty());
+        assert!(buf.disk_unchanged(after));
+        // The cursor after the span keeps its place in the text.
+        assert_eq!(buf.head, after.len() - 2);
+        assert_eq!(buf.undo_depth(), 1);
+        assert!(buf.undo());
+        assert_eq!(buf.text(), before);
+        assert!(buf.is_dirty(), "the undo is an edit the autosave writes");
+        assert!(buf.redo());
+        assert_eq!(buf.text(), after);
+        // The same bytes again change nothing and add no step.
+        assert!(buf.absorb_file(after));
+        assert_eq!(buf.undo_depth(), 1);
+    }
+
+    #[test]
+    fn an_absorbed_write_keeps_the_typing_before_it_as_its_own_step() {
+        let mut buf = TextBuffer::from_file("---\na: 1\n---\nbody\n");
+        let end = buf.len();
+        buf.set_cursor(end, None);
+        buf.insert_all("x", EditKind::Typing);
+        let typed = buf.file_contents();
+        buf.mark_saved();
+        buf.mark_on_disk(&typed);
+        assert!(buf.absorb_file("---\na: 2\n---\nbody\nx"));
+        assert_eq!(buf.undo_depth(), 2);
+        assert!(buf.undo());
+        assert_eq!(buf.text(), "---\na: 1\n---\nbody\nx");
+        assert!(buf.undo());
+        assert_eq!(buf.text(), "---\na: 1\n---\nbody\n");
+    }
+
+    #[test]
+    fn a_write_that_changes_the_line_endings_is_loaded_not_absorbed() {
+        let mut buf = TextBuffer::from_file("---\na: 1\n---\nbody\n");
+        assert!(!buf.absorb_file("---\r\na: 2\r\n---\r\nbody\r\n"));
+        assert_eq!(buf.file_contents(), "---\r\na: 2\r\n---\r\nbody\r\n");
+        assert!(!buf.can_undo());
+        assert!(!buf.is_dirty());
+        // Multi-byte text on both sides of the span stays whole.
+        let mut buf = TextBuffer::from_file("é: ü\n");
+        assert!(buf.absorb_file("é: ö\n"));
+        assert!(buf.undo());
+        assert_eq!(buf.text(), "é: ü\n");
+    }
 
     #[test]
     fn word_classes_split_identifiers_from_punctuation() {

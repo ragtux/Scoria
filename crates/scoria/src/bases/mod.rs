@@ -45,6 +45,7 @@ pub mod toolbar_lists;
 pub mod toolbar_picks;
 pub mod toolbar_properties;
 pub mod toolbar_views;
+pub mod undo;
 pub mod view;
 pub mod writes;
 

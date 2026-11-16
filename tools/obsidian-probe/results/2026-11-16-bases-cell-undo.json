@@ -1,0 +1,1478 @@
+{
+ "run": {
+  "startedAt": "2026-11-16T14:45:55.560Z",
+  "steps": {
+   "u00-context": {
+    "ok": true,
+    "ms": 2823,
+    "title": "Cells - vault - Obsidian 1.15.1",
+    "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.13.7 Chrome/150.0.7871.47 Electron/43.1.0 Safari/537.36",
+    "w": 1592,
+    "h": 996,
+    "view": [
+     "undoStack",
+     "redoStack",
+     "undoTransaction",
+     "redoTransaction"
+    ],
+    "controller": [],
+    "leafView": [],
+    "app": [],
+    "workspace": [
+     "undoHistory",
+     "hasUndoHistory",
+     "pushUndoHistory"
+    ],
+    "fileManager": [
+     "notifyForBulkUndo"
+    ],
+    "vault": [],
+    "sources": {
+     "undoTransaction": "async undoTransaction(){if(this.undoStack.length===0)return;let e=this.undoStack.pop();this.redoStack.push(e),this.setEphemeralState(e.state);for(let i of e.changes)await this.app.fileManager.processFrontMatter(i.file,r=>{JSON.stringify(r)===JSON.stringify(i.end)&&Object.assign(r,i.start)})}",
+     "redoTransaction": "async redoTransaction(){if(this.redoStack.length==0)return;let e=this.redoStack.pop();this.undoStack.push(e),this.setEphemeralState(e.state);for(let i of e.changes)await this.app.fileManager.processFrontMatter(i.file,r=>{JSON.stringify(r)===JSON.stringify(i.start)&&Object.assign(r,i.end)})}",
+     "pushUndoHistory": "pushUndoHistory(e,i,r){if(!e)return;let n=e.getViewState();if(n.type===\"empty\")return;let a=e.getEphemeralState(),{undoHistory:s}=this;s.unshift({leafId:e.id,state:n,eState:a,parentId:i,rootId:r,leafHistory:e.history.serialize()}),s.length>10&&s.pop()}",
+     "hasUndoHistory": "hasUndoHistory(){return this.undoHistory.length>0}",
+     "notifyForBulkUndo": "notifyForBulkUndo(t,e=3e4){t.length!==0&&new R(w.dialogue.msgFilesUpdated({count:t.length}),e).addButton(w.dialogue.buttonUndo(),()=>{this.updateQueue.queue(async()=>{let{vault:i}=this.app;for(let{file:r,mtime:n,content:a}of t)await i.modify(r,a,{mtime:n});new R(w.dialogue.msgFilesReverted({count:t.length}))})})}"
+    },
+    "commands": [
+     "workspace:undo-close-pane"
+    ],
+    "hotkeys": {
+     "workspace:undo-close-pane": [
+      {
+       "modifiers": [
+        "Mod",
+        "Shift"
+       ],
+       "key": "T"
+      }
+     ]
+    }
+   },
+   "u01-paste": {
+    "ok": true,
+    "ms": 14707,
+    "target": {
+     "active": {
+      "row": 2,
+      "column": 1
+     },
+     "selection": {
+      "top": 0,
+      "bottom": 2,
+      "start": 1,
+      "end": 1
+     },
+     "focus": "DIV.bases-table-container node-insert-event",
+     "activeLeaf": "bases"
+    },
+    "pasted": {
+     "Alpha": "---\nstatus: Q\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+     "Bravo": "---\nstatus: Q\nprice: 2\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n",
+     "Charlie": "---\nstatus: Q\nprice: 30\ndone: false\ndue: 2026-03-04\nitems: []\n---\nCharlie body.\n"
+    },
+    "historyAfterPaste": {
+     "undo": [
+      {
+       "changes": [
+        {
+         "file": {
+          "parent": "[…]",
+          "deleted": false,
+          "vault": "[…]",
+          "path": "cells/Alpha.md",
+          "name": "Alpha.md",
+          "basename": "Alpha",
+          "extension": "md",
+          "saving": 0,
+          "stat": "[…]"
+         },
+         "start": {
+          "status": "todo",
+          "price": 1.5,
+          "done": false,
+          "due": "2026-01-02",
+          "items": "[…]",
+          "note": "plain"
+         },
+         "end": {
+          "status": "Q",
+          "price": 1.5,
+          "done": false,
+          "due": "2026-01-02",
+          "items": "[…]",
+          "note": "plain"
+         }
+        },
+        {
+         "file": {
+          "parent": "[…]",
+          "deleted": false,
+          "vault": "[…]",
+          "path": "cells/Bravo.md",
+          "name": "Bravo.md",
+          "basename": "Bravo",
+          "extension": "md",
+          "saving": 0,
+          "stat": "[…]"
+         },
+         "start": {
+          "status": "doing",
+          "price": 2,
+          "done": true,
+          "due": "2026-02-03",
+          "items": "[…]",
+          "note": "second"
+         },
+         "end": {
+          "status": "Q",
+          "price": 2,
+          "done": true,
+          "due": "2026-02-03",
+          "items": "[…]",
+          "note": "second"
+         }
+        },
+        {
+         "file": {
+          "parent": "[…]",
+          "deleted": false,
+          "vault": "[…]",
+          "path": "cells/Charlie.md",
+          "name": "Charlie.md",
+          "basename": "Charlie",
+          "extension": "md",
+          "saving": 0,
+          "stat": "[…]"
+         },
+         "start": {
+          "status": "done",
+          "price": 30,
+          "done": false,
+          "due": "2026-03-04",
+          "items": "[…]"
+         },
+         "end": {
+          "status": "Q",
+          "price": 30,
+          "done": false,
+          "due": "2026-03-04",
+          "items": "[…]"
+         }
+        }
+       ],
+       "state": {
+        "scroll": {
+         "top": 0,
+         "left": 0
+        },
+        "selection": {
+         "groupIdx": 0,
+         "top": 0,
+         "start": 1,
+         "bottom": 2,
+         "end": 1
+        },
+        "activeCell": {
+         "row": 2,
+         "column": 1,
+         "groupIdx": 0
+        }
+       }
+      }
+     ],
+     "redo": [],
+     "workspaceUndo": [
+      {
+       "leafId": "9a2af5da791a99e3",
+       "state": {
+        "type": "bases",
+        "state": {
+         "file": "Cells.base",
+         "viewName": "Table"
+        },
+        "icon": "lucide-table",
+        "title": "Cells"
+       },
+       "eState": {
+        "views": {
+         "Table": {
+          "scroll": "[…]",
+          "activeCell": null
+         }
+        }
+       },
+       "parentId": "fd65ad52ac5d1578",
+       "rootId": "06c60b657c78a6b8",
+       "leafHistory": {
+        "backHistory": [],
+        "forwardHistory": []
+       }
+      }
+     ]
+    },
+    "undo": {},
+    "undoState": {
+     "active": {
+      "row": 2,
+      "column": 1
+     },
+     "selection": {
+      "top": 0,
+      "bottom": 2,
+      "start": 1,
+      "end": 1
+     },
+     "focus": "DIV.bases-table-container node-insert-event",
+     "activeLeaf": "bases"
+    },
+    "historyAfterUndo": {
+     "undo": [],
+     "redo": [
+      {
+       "changes": [
+        {
+         "file": {
+          "parent": "[…]",
+          "deleted": false,
+          "vault": "[…]",
+          "path": "cells/Alpha.md",
+          "name": "Alpha.md",
+          "basename": "Alpha",
+          "extension": "md",
+          "saving": 0,
+          "stat": "[…]"
+         },
+         "start": {
+          "status": "todo",
+          "price": 1.5,
+          "done": false,
+          "due": "2026-01-02",
+          "items": "[…]",
+          "note": "plain"
+         },
+         "end": {
+          "status": "Q",
+          "price": 1.5,
+          "done": false,
+          "due": "2026-01-02",
+          "items": "[…]",
+          "note": "plain"
+         }
+        },
+        {
+         "file": {
+          "parent": "[…]",
+          "deleted": false,
+          "vault": "[…]",
+          "path": "cells/Bravo.md",
+          "name": "Bravo.md",
+          "basename": "Bravo",
+          "extension": "md",
+          "saving": 0,
+          "stat": "[…]"
+         },
+         "start": {
+          "status": "doing",
+          "price": 2,
+          "done": true,
+          "due": "2026-02-03",
+          "items": "[…]",
+          "note": "second"
+         },
+         "end": {
+          "status": "Q",
+          "price": 2,
+          "done": true,
+          "due": "2026-02-03",
+          "items": "[…]",
+          "note": "second"
+         }
+        },
+        {
+         "file": {
+          "parent": "[…]",
+          "deleted": false,
+          "vault": "[…]",
+          "path": "cells/Charlie.md",
+          "name": "Charlie.md",
+          "basename": "Charlie",
+          "extension": "md",
+          "saving": 0,
+          "stat": "[…]"
+         },
+         "start": {
+          "status": "done",
+          "price": 30,
+          "done": false,
+          "due": "2026-03-04",
+          "items": "[…]"
+         },
+         "end": {
+          "status": "Q",
+          "price": 30,
+          "done": false,
+          "due": "2026-03-04",
+          "items": "[…]"
+         }
+        }
+       ],
+       "state": {
+        "scroll": {
+         "top": 0,
+         "left": 0
+        },
+        "selection": {
+         "groupIdx": 0,
+         "top": 0,
+         "start": 1,
+         "bottom": 2,
+         "end": 1
+        },
+        "activeCell": {
+         "row": 2,
+         "column": 1,
+         "groupIdx": 0
+        }
+       }
+      }
+     ],
+     "workspaceUndo": [
+      {
+       "leafId": "9a2af5da791a99e3",
+       "state": {
+        "type": "bases",
+        "state": {
+         "file": "Cells.base",
+         "viewName": "Table"
+        },
+        "icon": "lucide-table",
+        "title": "Cells"
+       },
+       "eState": {
+        "views": {
+         "Table": {
+          "scroll": "[…]",
+          "activeCell": null
+         }
+        }
+       },
+       "parentId": "fd65ad52ac5d1578",
+       "rootId": "06c60b657c78a6b8",
+       "leafHistory": {
+        "backHistory": [],
+        "forwardHistory": []
+       }
+      }
+     ]
+    },
+    "redoShiftZ": {
+     "Alpha": "---\nstatus: Q\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+     "Bravo": "---\nstatus: Q\nprice: 2\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n",
+     "Charlie": "---\nstatus: Q\nprice: 30\ndone: false\ndue: 2026-03-04\nitems: []\n---\nCharlie body.\n"
+    },
+    "redoState": {
+     "active": {
+      "row": 2,
+      "column": 1
+     },
+     "selection": {
+      "top": 0,
+      "bottom": 2,
+      "start": 1,
+      "end": 1
+     },
+     "focus": "DIV.bases-table-container node-insert-event",
+     "activeLeaf": "bases"
+    },
+    "undo2": {},
+    "redoCtrlY": {},
+    "undo3": {},
+    "notices": []
+   },
+   "u02-delete-adds": {
+    "ok": true,
+    "ms": 19424,
+    "target": {
+     "active": {
+      "row": 4,
+      "column": 6
+     },
+     "selection": {
+      "top": 2,
+      "bottom": 4,
+      "start": 6,
+      "end": 6
+     },
+     "focus": "DIV.bases-table-container node-insert-event",
+     "activeLeaf": "bases"
+    },
+    "deleted": {
+     "Charlie": "---\nstatus: done\nprice: 30\ndone: false\ndue: 2026-03-04\nitems: []\nnote:\n---\nCharlie body.\n",
+     "Delta": "---\nstatus: with\ttab\nprice: 4\ndone: true\nnote:\n---\nDelta body.\n",
+     "Echo": "---\nnote:\n---\nEcho has no frontmatter.\n"
+    },
+    "undo": {
+     "Charlie": "---\nstatus: done\nprice: 30\ndone: false\ndue: 2026-03-04\nitems: []\nnote:\n---\nCharlie body.\n",
+     "Delta": "---\nstatus: with\ttab\nprice: 4\ndone: true\nnote: multi word, comma\n---\nDelta body.\n",
+     "Echo": "---\nnote:\n---\nEcho has no frontmatter.\n"
+    },
+    "undoState": {
+     "active": {
+      "row": 4,
+      "column": 6
+     },
+     "selection": {
+      "top": 2,
+      "bottom": 4,
+      "start": 6,
+      "end": 6
+     },
+     "focus": "DIV.bases-table-container node-insert-event",
+     "activeLeaf": "bases"
+    },
+    "redo": {
+     "Charlie": "---\nstatus: done\nprice: 30\ndone: false\ndue: 2026-03-04\nitems: []\nnote:\n---\nCharlie body.\n",
+     "Delta": "---\nstatus: with\ttab\nprice: 4\ndone: true\nnote:\n---\nDelta body.\n",
+     "Echo": "---\nnote:\n---\nEcho has no frontmatter.\n"
+    },
+    "target2": {
+     "active": {
+      "row": 3,
+      "column": 6
+     },
+     "selection": {
+      "top": 0,
+      "bottom": 3,
+      "start": 1,
+      "end": 6
+     },
+     "focus": "DIV.bases-table-container node-insert-event",
+     "activeLeaf": "bases"
+    },
+    "deletedAll": {
+     "Alpha": "---\nstatus:\nprice:\ndone:\ndue:\nitems:\nnote:\n---\nAlpha body.\n",
+     "Bravo": "---\nstatus:\nprice:\ndone:\ndue:\nitems:\nnote:\n---\nBravo body.\n",
+     "Charlie": "---\nstatus:\nprice:\ndone:\ndue:\nitems:\nnote:\n---\nCharlie body.\n",
+     "Delta": "---\nstatus:\nprice:\ndone:\nnote:\ndue:\nitems:\n---\nDelta body.\n"
+    },
+    "undoAll": {
+     "Charlie": "---\nstatus: done\nprice: 30\ndone: false\ndue: 2026-03-04\nitems: []\nnote:\n---\nCharlie body.\n",
+     "Delta": "---\nstatus: with\ttab\nprice: 4\ndone: true\nnote: multi word, comma\ndue:\nitems:\n---\nDelta body.\n"
+    }
+   },
+   "u03-typed-cell": {
+    "ok": true,
+    "ms": 26316,
+    "typing": {
+     "state": {
+      "active": {
+       "row": 0,
+       "column": 1
+      },
+      "selection": null,
+      "focus": "DIV.metadata-input-longtext",
+      "activeLeaf": "bases"
+     },
+     "files": {}
+    },
+    "afterEnter": {
+     "state": {
+      "active": {
+       "row": 0,
+       "column": 1
+      },
+      "selection": null,
+      "focus": "DIV.bases-table-container node-insert-event",
+      "activeLeaf": "bases"
+     },
+     "files": {
+      "Alpha": "---\nstatus: edited\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n"
+     }
+    },
+    "undoWhereEnterLeft": {
+     "state": {
+      "active": {
+       "row": 0,
+       "column": 1
+      },
+      "selection": null,
+      "focus": "DIV.bases-table-container node-insert-event",
+      "activeLeaf": "bases"
+     },
+     "files": {}
+    },
+    "redoWhereEnterLeft": {
+     "state": {
+      "active": {
+       "row": 0,
+       "column": 1
+      },
+      "selection": null,
+      "focus": "DIV.bases-table-container node-insert-event",
+      "activeLeaf": "bases"
+     },
+     "files": {
+      "Alpha": "---\nstatus: edited\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n"
+     }
+    },
+    "afterEscapes": {
+     "state": {
+      "active": {
+       "row": 1,
+       "column": 1
+      },
+      "selection": null,
+      "focus": "DIV.bases-table-container node-insert-event",
+      "activeLeaf": "bases"
+     },
+     "files": {}
+    },
+    "undoOnContainer": {
+     "state": {
+      "active": {
+       "row": 1,
+       "column": 1
+      },
+      "selection": null,
+      "focus": "DIV.bases-table-container node-insert-event",
+      "activeLeaf": "bases"
+     },
+     "files": {}
+    },
+    "redoOnContainer": {
+     "state": {
+      "active": {
+       "row": 1,
+       "column": 1
+      },
+      "selection": null,
+      "focus": "DIV.bases-table-container node-insert-event",
+      "activeLeaf": "bases"
+     },
+     "files": {}
+    },
+    "undoInsideField": {
+     "state": {
+      "active": {
+       "row": 2,
+       "column": 1
+      },
+      "selection": null,
+      "focus": "DIV.metadata-input-longtext",
+      "activeLeaf": "bases"
+     },
+     "files": {},
+     "fieldText": "donex"
+    },
+    "afterLeaving": {}
+   },
+   "u04-checkbox": {
+    "ok": true,
+    "ms": 19039,
+    "clicked": {
+     "state": {
+      "active": {
+       "row": 0,
+       "column": 3
+      },
+      "selection": null,
+      "focus": "INPUT.metadata-input-checkbox",
+      "activeLeaf": "bases"
+     },
+     "files": {
+      "Alpha": "---\nstatus: todo\nprice: 1.5\ndone: true\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n"
+     }
+    },
+    "undoWhereClickLeft": {
+     "state": {
+      "active": {
+       "row": 0,
+       "column": 3
+      },
+      "selection": null,
+      "focus": "INPUT.metadata-input-checkbox",
+      "activeLeaf": "bases"
+     },
+     "files": {
+      "Alpha": "---\nstatus: todo\nprice: 1.5\ndone: true\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n"
+     }
+    },
+    "cursorOnCell": {
+     "state": {
+      "active": {
+       "row": 0,
+       "column": 3
+      },
+      "selection": null,
+      "focus": "DIV.bases-table-container node-insert-event",
+      "activeLeaf": "bases"
+     },
+     "files": {
+      "Alpha": "---\nstatus: todo\nprice: 1.5\ndone: true\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n"
+     }
+    },
+    "undoOnContainer": {
+     "state": {
+      "active": {
+       "row": 0,
+       "column": 3
+      },
+      "selection": null,
+      "focus": "DIV.bases-table-container node-insert-event",
+      "activeLeaf": "bases"
+     },
+     "files": {}
+    },
+    "redo": {
+     "state": {
+      "active": {
+       "row": 0,
+       "column": 3
+      },
+      "selection": null,
+      "focus": "DIV.bases-table-container node-insert-event",
+      "activeLeaf": "bases"
+     },
+     "files": {
+      "Alpha": "---\nstatus: todo\nprice: 1.5\ndone: true\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n"
+     }
+    },
+    "space": {
+     "state": {
+      "active": {
+       "row": 1,
+       "column": 3
+      },
+      "selection": null,
+      "focus": "DIV.bases-table-container node-insert-event",
+      "activeLeaf": "bases"
+     },
+     "files": {}
+    },
+    "spaceUndo": {}
+   },
+   "u05-steps": {
+    "ok": true,
+    "ms": 22720,
+    "a1": {
+     "Alpha": "---\nstatus:\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n"
+    },
+    "a2": {
+     "Alpha": "---\nstatus:\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+     "Bravo": "---\nstatus: P\nprice: 2\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n"
+    },
+    "a3": {
+     "Alpha": "---\nstatus:\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+     "Bravo": "---\nstatus: P\nprice:\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n"
+    },
+    "state": {
+     "active": {
+      "row": 1,
+      "column": 2
+     },
+     "selection": null,
+     "focus": "DIV.bases-table-container node-insert-event",
+     "activeLeaf": "bases"
+    },
+    "history": {
+     "undo": [
+      {
+       "changes": [
+        {
+         "file": {
+          "parent": "[…]",
+          "deleted": false,
+          "vault": "[…]",
+          "path": "cells/Alpha.md",
+          "name": "Alpha.md",
+          "basename": "Alpha",
+          "extension": "md",
+          "saving": 0,
+          "stat": "[…]"
+         },
+         "start": {
+          "status": "todo",
+          "price": 1.5,
+          "done": false,
+          "due": "2026-01-02",
+          "items": "[…]",
+          "note": "plain"
+         },
+         "end": {
+          "status": null,
+          "price": 1.5,
+          "done": false,
+          "due": "2026-01-02",
+          "items": "[…]",
+          "note": "plain"
+         }
+        }
+       ],
+       "state": {
+        "scroll": {
+         "top": 0,
+         "left": 0
+        },
+        "selection": null,
+        "activeCell": {
+         "groupIdx": 0,
+         "row": 0,
+         "column": 1
+        }
+       }
+      },
+      {
+       "changes": [
+        {
+         "file": {
+          "parent": "[…]",
+          "deleted": false,
+          "vault": "[…]",
+          "path": "cells/Bravo.md",
+          "name": "Bravo.md",
+          "basename": "Bravo",
+          "extension": "md",
+          "saving": 0,
+          "stat": "[…]"
+         },
+         "start": {
+          "status": "doing",
+          "price": 2,
+          "done": true,
+          "due": "2026-02-03",
+          "items": "[…]",
+          "note": "second"
+         },
+         "end": {
+          "status": "P",
+          "price": 2,
+          "done": true,
+          "due": "2026-02-03",
+          "items": "[…]",
+          "note": "second"
+         }
+        }
+       ],
+       "state": {
+        "scroll": {
+         "top": 0,
+         "left": 0
+        },
+        "selection": {
+         "groupIdx": 0,
+         "top": 1,
+         "bottom": 1,
+         "start": 1,
+         "end": 1
+        },
+        "activeCell": {
+         "row": 1,
+         "column": 1,
+         "groupIdx": 0
+        }
+       }
+      },
+      {
+       "changes": [
+        {
+         "file": "[…]",
+         "start": {
+          "status": "P",
+          "price": 2,
+          "done": true,
+          "due": "2026-02-03",
+          "items": "[…]",
+          "note": "second"
+         },
+         "end": {
+          "status": "P",
+          "price": null,
+          "done": true,
+          "due": "2026-02-03",
+          "items": "[…]",
+          "note": "second"
+         }
+        }
+       ],
+       "state": {
+        "scroll": {
+         "top": 0,
+         "left": 0
+        },
+        "selection": null,
+        "activeCell": {
+         "row": 1,
+         "column": 2,
+         "groupIdx": 0
+        }
+       }
+      }
+     ],
+     "redo": [],
+     "workspaceUndo": [
+      {
+       "leafId": "cb93212531dca90e",
+       "state": {
+        "type": "bases",
+        "state": {
+         "file": "Cells.base",
+         "viewName": "Table"
+        },
+        "icon": "lucide-table",
+        "title": "Cells"
+       },
+       "eState": {
+        "views": {
+         "Table": {
+          "scroll": "[…]",
+          "selection": null,
+          "activeCell": "[…]"
+         }
+        }
+       },
+       "parentId": "f2c0952b172f5e55",
+       "rootId": "06c60b657c78a6b8",
+       "leafHistory": {
+        "backHistory": [],
+        "forwardHistory": []
+       }
+      },
+      {
+       "leafId": "b5a6e0ea816fc7b6",
+       "state": {
+        "type": "bases",
+        "state": {
+         "file": "Cells.base",
+         "viewName": "Table"
+        },
+        "icon": "lucide-table",
+        "title": "Cells"
+       },
+       "eState": {
+        "views": {
+         "Table": {
+          "scroll": "[…]",
+          "selection": null,
+          "activeCell": "[…]"
+         }
+        }
+       },
+       "parentId": "b7c0c8dfd70375ab",
+       "rootId": "06c60b657c78a6b8",
+       "leafHistory": {
+        "backHistory": [],
+        "forwardHistory": []
+       }
+      },
+      {
+       "leafId": "a334fff1684ca2ab",
+       "state": {
+        "type": "bases",
+        "state": {
+         "file": "Cells.base",
+         "viewName": "Table"
+        },
+        "icon": "lucide-table",
+        "title": "Cells"
+       },
+       "eState": {
+        "views": {
+         "Table": {
+          "scroll": "[…]",
+          "selection": null,
+          "activeCell": "[…]"
+         }
+        }
+       },
+       "parentId": "b71b06f13fafa40d",
+       "rootId": "06c60b657c78a6b8",
+       "leafHistory": {
+        "backHistory": [],
+        "forwardHistory": []
+       }
+      },
+      {
+       "leafId": "668c2e3bd9d51ec7",
+       "state": {
+        "type": "bases",
+        "state": {
+         "file": "Cells.base",
+         "viewName": "Table"
+        },
+        "icon": "lucide-table",
+        "title": "Cells"
+       },
+       "eState": {
+        "views": {
+         "Table": {
+          "scroll": "[…]",
+          "selection": null,
+          "activeCell": "[…]"
+         }
+        }
+       },
+       "parentId": "ad2205baa15acb86",
+       "rootId": "06c60b657c78a6b8",
+       "leafHistory": {
+        "backHistory": [],
+        "forwardHistory": []
+       }
+      },
+      {
+       "leafId": "5a4a6c95148f3508",
+       "state": {
+        "type": "bases",
+        "state": {
+         "file": "Cells.base",
+         "viewName": "Table"
+        },
+        "icon": "lucide-table",
+        "title": "Cells"
+       },
+       "eState": {
+        "views": {
+         "Table": {
+          "scroll": "[…]",
+          "selection": null,
+          "activeCell": "[…]"
+         }
+        }
+       },
+       "parentId": "591b6b77f21c4d33",
+       "rootId": "06c60b657c78a6b8",
+       "leafHistory": {
+        "backHistory": [],
+        "forwardHistory": []
+       }
+      },
+      {
+       "leafId": "5b6337ab82943b0d",
+       "state": {
+        "type": "bases",
+        "state": {
+         "file": "Cells.base",
+         "viewName": "Table"
+        },
+        "icon": "lucide-table",
+        "title": "Cells"
+       },
+       "eState": {
+        "views": {
+         "Table": {
+          "scroll": "[…]",
+          "selection": "[…]",
+          "activeCell": "[…]"
+         }
+        }
+       },
+       "parentId": "e824ad15085f82ed",
+       "rootId": "06c60b657c78a6b8",
+       "leafHistory": {
+        "backHistory": [],
+        "forwardHistory": []
+       }
+      },
+      {
+       "leafId": "21e58fdeb1c2aa2d",
+       "state": {
+        "type": "bases",
+        "state": {
+         "file": "Cells.base",
+         "viewName": "Table"
+        },
+        "icon": "lucide-table",
+        "title": "Cells"
+       },
+       "eState": {
+        "views": {
+         "Table": {
+          "scroll": "[…]",
+          "selection": "[…]",
+          "activeCell": "[…]"
+         }
+        }
+       },
+       "parentId": "2aac19d4ce118c29",
+       "rootId": "06c60b657c78a6b8",
+       "leafHistory": {
+        "backHistory": [],
+        "forwardHistory": []
+       }
+      },
+      {
+       "leafId": "703094545ac2db02",
+       "state": {
+        "type": "bases",
+        "state": {
+         "file": "Cells.base",
+         "viewName": "Table"
+        },
+        "icon": "lucide-table",
+        "title": "Cells"
+       },
+       "eState": {
+        "views": {
+         "Table": {
+          "scroll": "[…]",
+          "selection": "[…]",
+          "activeCell": "[…]"
+         }
+        }
+       },
+       "parentId": "648425daf169a2b2",
+       "rootId": "06c60b657c78a6b8",
+       "leafHistory": {
+        "backHistory": [],
+        "forwardHistory": []
+       }
+      },
+      {
+       "leafId": "9a2af5da791a99e3",
+       "state": {
+        "type": "bases",
+        "state": {
+         "file": "Cells.base",
+         "viewName": "Table"
+        },
+        "icon": "lucide-table",
+        "title": "Cells"
+       },
+       "eState": {
+        "views": {
+         "Table": {
+          "scroll": "[…]",
+          "activeCell": null
+         }
+        }
+       },
+       "parentId": "fd65ad52ac5d1578",
+       "rootId": "06c60b657c78a6b8",
+       "leafHistory": {
+        "backHistory": [],
+        "forwardHistory": []
+       }
+      }
+     ]
+    },
+    "undos": [
+     {
+      "files": {
+       "Alpha": "---\nstatus:\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+       "Bravo": "---\nstatus: P\nprice: 2\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n"
+      },
+      "state": {
+       "active": {
+        "row": 1,
+        "column": 2
+       },
+       "selection": null,
+       "focus": "DIV.bases-table-container node-insert-event",
+       "activeLeaf": "bases"
+      }
+     },
+     {
+      "files": {
+       "Alpha": "---\nstatus:\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n"
+      },
+      "state": {
+       "active": {
+        "row": 1,
+        "column": 1
+       },
+       "selection": {
+        "top": 1,
+        "bottom": 1,
+        "start": 1,
+        "end": 1
+       },
+       "focus": "DIV.bases-table-container node-insert-event",
+       "activeLeaf": "bases"
+      }
+     },
+     {
+      "files": {},
+      "state": {
+       "active": {
+        "row": 0,
+        "column": 1
+       },
+       "selection": null,
+       "focus": "DIV.bases-table-container node-insert-event",
+       "activeLeaf": "bases"
+      }
+     },
+     {
+      "files": {},
+      "state": {
+       "active": {
+        "row": 0,
+        "column": 1
+       },
+       "selection": null,
+       "focus": "DIV.bases-table-container node-insert-event",
+       "activeLeaf": "bases"
+      }
+     }
+    ],
+    "redos": [
+     {
+      "files": {
+       "Alpha": "---\nstatus:\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n"
+      },
+      "state": {
+       "active": {
+        "row": 0,
+        "column": 1
+       },
+       "selection": null,
+       "focus": "DIV.bases-table-container node-insert-event",
+       "activeLeaf": "bases"
+      }
+     },
+     {
+      "files": {
+       "Alpha": "---\nstatus:\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+       "Bravo": "---\nstatus: P\nprice: 2\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n"
+      },
+      "state": {
+       "active": {
+        "row": 1,
+        "column": 1
+       },
+       "selection": {
+        "top": 1,
+        "bottom": 1,
+        "start": 1,
+        "end": 1
+       },
+       "focus": "DIV.bases-table-container node-insert-event",
+       "activeLeaf": "bases"
+      }
+     },
+     {
+      "files": {
+       "Alpha": "---\nstatus:\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+       "Bravo": "---\nstatus: P\nprice:\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n"
+      },
+      "state": {
+       "active": {
+        "row": 1,
+        "column": 2
+       },
+       "selection": null,
+       "focus": "DIV.bases-table-container node-insert-event",
+       "activeLeaf": "bases"
+      }
+     },
+     {
+      "files": {
+       "Alpha": "---\nstatus:\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+       "Bravo": "---\nstatus: P\nprice:\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n"
+      },
+      "state": {
+       "active": {
+        "row": 1,
+        "column": 2
+       },
+       "selection": null,
+       "focus": "DIV.bases-table-container node-insert-event",
+       "activeLeaf": "bases"
+      }
+     }
+    ]
+   },
+   "u06-focus": {
+    "ok": true,
+    "ms": 31235,
+    "pasted": {
+     "Alpha": "---\nstatus: F\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+     "Bravo": "---\nstatus: F\nprice: 2\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n"
+    },
+    "explorerFocus": {
+     "active": {
+      "row": 1,
+      "column": 1
+     },
+     "selection": {
+      "top": 0,
+      "bottom": 1,
+      "start": 1,
+      "end": 1
+     },
+     "focus": "BODY.theme-dark mod-linux is-frameless is-hidden-frameless obsidian-app styled-scrollbars show-inline-title is-floating-nav auto-full-screen show-ribbon show-view-header is-focused",
+     "activeLeaf": "file-explorer"
+    },
+    "undoFromExplorer": {
+     "Alpha": "---\nstatus: F\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+     "Bravo": "---\nstatus: F\nprice: 2\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n"
+    },
+    "backOnTable": {
+     "active": {
+      "row": 3,
+      "column": 0
+     },
+     "selection": null,
+     "focus": "DIV.bases-table-container node-insert-event",
+     "activeLeaf": "bases"
+    },
+    "undoBackOnTable": {},
+    "pasted2": {
+     "Alpha": "---\nstatus: G\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+     "Bravo": "---\nstatus: G\nprice: 2\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n"
+    },
+    "fieldFocus": {
+     "active": {
+      "row": 3,
+      "column": 6
+     },
+     "selection": null,
+     "focus": "DIV.metadata-input-longtext",
+     "activeLeaf": "bases"
+    },
+    "undoInOtherField": {
+     "Alpha": "---\nstatus: G\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+     "Bravo": "---\nstatus: G\nprice: 2\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n"
+    },
+    "leftField": {
+     "active": {
+      "row": 3,
+      "column": 6
+     },
+     "selection": null,
+     "focus": "DIV.bases-table-container node-insert-event",
+     "activeLeaf": "bases"
+    },
+    "undoAfterLeaving": {},
+    "commands": [
+     "workspace:undo-close-pane"
+    ],
+    "noCursor": {
+     "active": {
+      "row": 1,
+      "column": 1
+     },
+     "selection": null,
+     "focus": "DIV.bases-table-container node-insert-event",
+     "activeLeaf": "bases"
+    },
+    "undoNoCursor": {}
+   },
+   "u07-external": {
+    "ok": true,
+    "ms": 44645,
+    "pasted": {
+     "Alpha": "---\nstatus: E\nprice: E\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n"
+    },
+    "external": {
+     "Alpha": "---\nstatus: E\nprice: E\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: changed\n---\nAlpha body, edited.\n"
+    },
+    "undo": {
+     "Alpha": "---\nstatus: E\nprice: E\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: changed\n---\nAlpha body, edited.\n"
+    },
+    "redo": {
+     "Alpha": "---\nstatus: E\nprice: E\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: changed\n---\nAlpha body, edited.\n"
+    },
+    "overwritten": {
+     "Alpha": "---\nstatus: outside\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n"
+    },
+    "undoOverwritten": {
+     "Alpha": "---\nstatus: outside\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n"
+    },
+    "bodyOnly": {
+     "Alpha": "---\nstatus: P2\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body, edited.\n"
+    },
+    "undoBodyOnly": {
+     "Alpha": "---\nstatus: todo\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body, edited.\n"
+    },
+    "redoBodyOnly": {
+     "Alpha": "---\nstatus: P2\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body, edited.\n"
+    },
+    "reformatted": {
+     "Alpha": "---\nstatus: \"P3\"\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n"
+    },
+    "undoReformatted": {},
+    "notices": []
+   },
+   "u08-note-open": {
+    "ok": true,
+    "ms": 29679,
+    "before": {
+     "text": "---\nstatus: todo\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+     "undoDepth": {
+      "done": 1,
+      "undone": 0
+     }
+    },
+    "pasted": {
+     "files": {
+      "Alpha": "---\nstatus: S\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n"
+     },
+     "editor": {
+      "text": "---\nstatus: S\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+      "undoDepth": {
+       "done": 2,
+       "undone": 0
+      }
+     }
+    },
+    "noteFocus": {
+     "active": {
+      "row": 0,
+      "column": 1
+     },
+     "selection": {
+      "top": 0,
+      "bottom": 0,
+      "start": 1,
+      "end": 1
+     },
+     "focus": "DIV.cm-content cm-lineWrapping",
+     "activeLeaf": "markdown"
+    },
+    "editorUndo": {
+     "files": {
+      "Alpha": "---\nstatus: S\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n"
+     },
+     "editor": {
+      "text": "---\nstatus: todo\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+      "undoDepth": {
+       "done": 1,
+       "undone": 1
+      }
+     }
+    },
+    "editorRedo": {
+     "files": {
+      "Alpha": "---\nstatus: S\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n"
+     },
+     "editor": {
+      "text": "---\nstatus: S\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+      "undoDepth": {
+       "done": 2,
+       "undone": 0
+      }
+     }
+    },
+    "tableUndo": {
+     "files": {},
+     "editor": {
+      "text": "---\nstatus: todo\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+      "undoDepth": {
+       "done": 3,
+       "undone": 0
+      }
+     }
+    },
+    "editorUndoAfterTableUndo": {
+     "files": {},
+     "editor": {
+      "text": "---\nstatus: S\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+      "undoDepth": {
+       "done": 2,
+       "undone": 1
+      }
+     }
+    },
+    "typedInNote": {
+     "files": {
+      "Alpha": "---\nstatus: S\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n typed"
+     },
+     "editor": {
+      "text": "---\nstatus: S\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n typed",
+      "undoDepth": {
+       "done": 3,
+       "undone": 0
+      }
+     }
+    },
+    "pastedAfterTyping": {
+     "files": {
+      "Alpha": "---\nstatus: T\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n typed"
+     },
+     "editor": {
+      "text": "---\nstatus: T\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n typed",
+      "undoDepth": {
+       "done": 4,
+       "undone": 0
+      }
+     }
+    },
+    "tableUndoAfterTyping": {
+     "files": {
+      "Alpha": "---\nstatus: S\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n typed"
+     },
+     "editor": {
+      "text": "---\nstatus: S\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n typed",
+      "undoDepth": {
+       "done": 5,
+       "undone": 0
+      }
+     }
+    }
+   },
+   "u09-lifetime": {
+    "ok": true,
+    "ms": 46213,
+    "pasted": {
+     "Alpha": "---\nstatus: L\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+     "Bravo": "---\nstatus: L\nprice: 2\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n"
+    },
+    "undoAfterReopen": {
+     "Alpha": "---\nstatus: L\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+     "Bravo": "---\nstatus: L\nprice: 2\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n"
+    },
+    "viewName": "Second",
+    "undoAfterViewSwitch": {},
+    "undoAfterNavigation": {
+     "Alpha": "---\nstatus: W\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+     "Bravo": "---\nstatus: W\nprice: 2\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n"
+    },
+    "undoInSecondLeaf": {
+     "Alpha": "---\nstatus: X\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+     "Bravo": "---\nstatus: X\nprice: 2\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n"
+    }
+   },
+   "u10-branch": {
+    "ok": true,
+    "ms": 29621,
+    "two": {
+     "Alpha": "---\nstatus: B1\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+     "Bravo": "---\nstatus: B2\nprice: 2\ndone: true\ndue: 2026-02-03\nitems:\n  - blue\nnote: second\n---\nBravo body.\n"
+    },
+    "undoOne": {
+     "Alpha": "---\nstatus: B1\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n"
+    },
+    "newAction": {
+     "Alpha": "---\nstatus: B1\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+     "Charlie": "---\nstatus: B3\nprice: 30\ndone: false\ndue: 2026-03-04\nitems: []\n---\nCharlie body.\n"
+    },
+    "redoAfterNew": {
+     "Alpha": "---\nstatus: B1\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n",
+     "Charlie": "---\nstatus: B3\nprice: 30\ndone: false\ndue: 2026-03-04\nitems: []\n---\nCharlie body.\n"
+    },
+    "undoNew": {
+     "Alpha": "---\nstatus: B1\nprice: 1.5\ndone: false\ndue: 2026-01-02\nitems:\n  - red\n  - green\nnote: plain\n---\nAlpha body.\n"
+    },
+    "undoFirst": {},
+    "sameValue": {},
+    "undoAfterSame1": {},
+    "undoAfterSame2": {}
+   }
+  },
+  "order": [
+   "u00-context",
+   "u01-paste",
+   "u02-delete-adds",
+   "u03-typed-cell",
+   "u04-checkbox",
+   "u05-steps",
+   "u06-focus",
+   "u07-external",
+   "u08-note-open",
+   "u09-lifetime",
+   "u10-branch"
+  ],
+  "elapsedMs": 286478
+ }
+}

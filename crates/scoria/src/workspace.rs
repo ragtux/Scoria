@@ -3811,11 +3811,10 @@ fn bases_subscription(bases: &Entity<BasesView>, cx: &mut Context<Workspace>) ->
         BasesEvent::Edited => this.schedule_save(cx),
         BasesEvent::Report(message) => this.report(message.clone(), cx),
         BasesEvent::SetProperty { path, key, value } => {
-            this.set_note_property(path.clone(), key.clone(), value.clone(), cx)
+            this.set_note_property(&bases, path.clone(), key.clone(), value.clone(), cx)
         }
-        BasesEvent::SetProperties { path, values } => {
-            this.set_note_properties(path.clone(), values.clone(), cx)
-        }
+        BasesEvent::SetProperties { rows } => this.set_note_properties(&bases, rows.clone(), cx),
+        BasesEvent::RevertCells { changes, undo } => this.revert_cells(changes.clone(), *undo, cx),
         BasesEvent::ExportCsv { name, csv } => this.export_base_csv(name.clone(), csv.clone(), cx),
         BasesEvent::SetPropertyType { key, ty } => this.assign_property_type(key.clone(), *ty, cx),
         BasesEvent::AddItem => this.add_base_item_from(&bases, cx),
@@ -9800,6 +9799,7 @@ impl Workspace {
     /// its line endings, its BOM and every key the edit did not name.
     fn set_note_property(
         &mut self,
+        bases: &Entity<BasesView>,
         path: String,
         key: String,
         value: String,
@@ -9837,55 +9837,160 @@ impl Workspace {
         let Some(written) = written else {
             return;
         };
-        if let Err(err) = scoria_vault::write_no_follow(&absolute, written.as_bytes()) {
-            self.report(format!("Could not write {path}: {err}"), cx);
+        if !self.write_cell_note(&path, &absolute, &written, cx) {
             return;
         }
         self.report(format!("{key} set in {path}"), cx);
         // The index is what every base resolves against, so the table comes
         // back through the same path an outside edit would take.
         self.files_changed(vec![absolute], cx);
+        // One step of the table's own history (observed: a typed cell and a
+        // checkbox are undone by the table's Ctrl+Z as a paste is).
+        bases.update(cx, |b, _| {
+            b.record_cell_step(vec![crate::bases::undo::NoteChange {
+                path,
+                before: on_disk,
+                after: written,
+            }])
+        });
     }
 
-    /// A paste or a Delete over a Bases range, one row's note: every key set
-    /// in one write, guarded as [`Self::set_note_property`] guards its own.
-    /// A success says nothing (observed: no Notice for either), a refusal
+    /// A paste or a Delete over a Bases range: each row's note with every
+    /// key set in one write, guarded as [`Self::set_note_property`] guards
+    /// its own, and the notes written one step of the table's history. A
+    /// success says nothing (observed: no Notice for either), a refusal
     /// says why.
     fn set_note_properties(
         &mut self,
-        path: String,
-        values: Vec<(String, scoria_formats::properties::Value)>,
+        bases: &Entity<BasesView>,
+        rows: Vec<(String, Vec<(String, scoria_formats::properties::Value)>)>,
         cx: &mut Context<Self>,
     ) {
         let Some(state) = self.state.clone() else {
             return;
         };
-        let absolute = match state.vault().write_path(&path) {
+        let mut changes = Vec::new();
+        let mut written_paths = Vec::new();
+        for (path, values) in rows {
+            let Some((absolute, on_disk)) = self.read_cell_note(&state, &path, cx) else {
+                continue;
+            };
+            if self.buffer_differs(&path, &on_disk, cx) {
+                self.report(format!("{path} has unsaved edits; not written"), cx);
+                continue;
+            }
+            let Some(written) = crate::bases::edit::write_values(&on_disk, &values) else {
+                continue;
+            };
+            if !self.write_cell_note(&path, &absolute, &written, cx) {
+                continue;
+            }
+            written_paths.push(absolute);
+            changes.push(crate::bases::undo::NoteChange {
+                path,
+                before: on_disk,
+                after: written,
+            });
+        }
+        if changes.is_empty() {
+            return;
+        }
+        self.files_changed(written_paths, cx);
+        bases.update(cx, |b, _| b.record_cell_step(changes));
+    }
+
+    /// Ctrl+Z or Ctrl+Shift+Z on a Bases table: each note of the step taken
+    /// from the side it is on to the other (`undo`: from after to before),
+    /// if it still is what the step left. A note changed since is left alone
+    /// without a word (observed); one open with unsaved edits is refused as
+    /// a cell write is, and says so.
+    fn revert_cells(
+        &mut self,
+        changes: Vec<crate::bases::undo::NoteChange>,
+        undo: bool,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(state) = self.state.clone() else {
+            return;
+        };
+        let mut written_paths = Vec::new();
+        for change in changes {
+            let (from, to) = if undo {
+                (&change.after, &change.before)
+            } else {
+                (&change.before, &change.after)
+            };
+            let path = &change.path;
+            let Some((absolute, on_disk)) = self.read_cell_note(&state, path, cx) else {
+                continue;
+            };
+            if self.buffer_differs(path, &on_disk, cx) {
+                self.report(format!("{path} has unsaved edits; not written"), cx);
+                continue;
+            }
+            let Some(written) = crate::bases::undo::revert(&on_disk, from, to) else {
+                continue;
+            };
+            if self.write_cell_note(path, &absolute, &written, cx) {
+                written_paths.push(absolute);
+            }
+        }
+        if !written_paths.is_empty() {
+            self.files_changed(written_paths, cx);
+        }
+    }
+
+    /// A note a Bases cell write is about to change: where it is and the
+    /// bytes it holds, or `None` after saying why it cannot be read.
+    fn read_cell_note(
+        &mut self,
+        state: &VaultState,
+        path: &str,
+        cx: &mut Context<Self>,
+    ) -> Option<(PathBuf, String)> {
+        let absolute = match state.vault().write_path(path) {
             Ok(absolute) => absolute,
             Err(err) => {
                 self.report(format!("{path} not written: {err}"), cx);
-                return;
+                return None;
             }
         };
-        let on_disk = match std::fs::read_to_string(&absolute) {
-            Ok(text) => text,
+        match std::fs::read_to_string(&absolute) {
+            Ok(text) => Some((absolute, text)),
             Err(err) => {
                 self.report(format!("Could not read {path}: {err}"), cx);
-                return;
+                None
             }
-        };
-        if self.buffer_differs(&path, &on_disk, cx) {
-            self.report(format!("{path} has unsaved edits; not written"), cx);
-            return;
         }
-        let Some(written) = crate::bases::edit::write_values(&on_disk, &values) else {
-            return;
-        };
-        if let Err(err) = scoria_vault::write_no_follow(&absolute, written.as_bytes()) {
+    }
+
+    /// Writes a Bases cell edit's bytes to its note, and hands them to every
+    /// editor holding the note as one step of its own history (observed: an
+    /// open note's Ctrl+Z takes the table's write back in the buffer), so
+    /// the watcher's echo finds the buffer already current. False after
+    /// saying why the write failed.
+    fn write_cell_note(
+        &mut self,
+        path: &str,
+        absolute: &Path,
+        written: &str,
+        cx: &mut Context<Self>,
+    ) -> bool {
+        if let Err(err) = scoria_vault::write_no_follow(absolute, written.as_bytes()) {
             self.report(format!("Could not write {path}: {err}"), cx);
-            return;
+            return false;
         }
-        self.files_changed(vec![absolute], cx);
+        let mut seen = HashSet::new();
+        let editors = std::iter::once(self.editor.clone())
+            .chain(self.groups.iter().map(|g| g.editor.clone()))
+            .collect::<Vec<_>>();
+        for editor in editors {
+            if !seen.insert(editor.entity_id()) || editor.read(cx).name.as_ref() != path {
+                continue;
+            }
+            editor.update(cx, |e, cx| e.absorb(written, cx));
+        }
+        true
     }
 
     /// Whether any group's editor holds `path` with bytes that are not

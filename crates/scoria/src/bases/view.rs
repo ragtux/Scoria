@@ -71,13 +71,20 @@ pub enum BasesEvent {
         key: String,
         value: String,
     },
-    /// A paste or a Delete over a range of cells: set every `(key, value)`
-    /// in the note `path`, in one write, with the values as they are (see
-    /// [`crate::bases::edit::write_values`]). Written by the workspace for
-    /// the reason [`BasesEvent::SetProperty`] is.
+    /// A paste or a Delete over a range of cells: in each row's note
+    /// `path`, set every `(key, value)` in one write, with the values as
+    /// they are (see [`crate::bases::edit::write_values`]). Written by the
+    /// workspace for the reason [`BasesEvent::SetProperty`] is, and one
+    /// step of the table's undo history however many notes it wrote.
     SetProperties {
-        path: String,
-        values: Vec<(String, scoria_formats::properties::Value)>,
+        rows: Vec<(String, Vec<(String, scoria_formats::properties::Value)>)>,
+    },
+    /// Ctrl+Z or Ctrl+Shift+Z on the table: take each note of a step from
+    /// the bytes it holds to the other side's, if it is still what the step
+    /// left (see [`crate::bases::undo::revert`]). The workspace writes them.
+    RevertCells {
+        changes: Vec<crate::bases::undo::NoteChange>,
+        undo: bool,
     },
     /// The results panel's *Export CSV...*: the workspace asks where the
     /// file goes and writes these bytes there.
@@ -148,6 +155,9 @@ pub struct BasesView {
     /// The suggestions the open cell's list last drew, in order, so Enter
     /// can take the keyboard's pick without the app context the list needs.
     pub(super) editing_shown: Vec<String>,
+    /// The table's cell edits, for Ctrl+Z and Ctrl+Shift+Z: kept while the
+    /// view shows this base, dropped when it shows another file or none.
+    pub(super) cell_history: super::undo::CellHistory,
 }
 
 impl BasesView {
@@ -174,6 +184,7 @@ impl BasesView {
             toolbar: super::toolbar::ToolbarState::default(),
             editing: super::edit::EditState::default(),
             editing_shown: Vec::new(),
+            cell_history: super::undo::CellHistory::default(),
         }
     }
 
@@ -188,6 +199,7 @@ impl BasesView {
         self.view_ix = 0;
         self.dirty = false;
         self.recent_saves.clear();
+        self.cell_history.clear();
         self.toolbar = super::toolbar::ToolbarState::default();
         self.editing = super::edit::EditState::default();
         self.resolve(cx);
@@ -218,6 +230,7 @@ impl BasesView {
         self.source.clear();
         self.state = None;
         self.dirty = false;
+        self.cell_history.clear();
         self.toolbar = super::toolbar::ToolbarState::default();
         self.editing = super::edit::EditState::default();
         self.rebuild();
@@ -567,6 +580,7 @@ impl BasesView {
             "toolbar": self.toolbar.state_json(),
             "editing": self.editing.state_json(),
             "selection": self.selection_json(),
+            "cell_history": self.cell_history_json(),
         })
     }
 
@@ -804,6 +818,8 @@ impl Render for BasesView {
             .on_action(cx.listener(Self::select_all_cells_action))
             .on_action(cx.listener(Self::copy_cells_action))
             .on_action(cx.listener(Self::paste_cells_action))
+            .on_action(cx.listener(Self::undo_cells_action))
+            .on_action(cx.listener(Self::redo_cells_action))
             // Typing on the cursor opens the cell with the character: the
             // keys that are not a binding reach here with their `key_char`.
             .on_key_down(cx.listener(|this, event: &gpui::KeyDownEvent, window, cx| {

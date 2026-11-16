@@ -11512,3 +11512,73 @@ delete “Two.md”?"). Copy path's submenu (section `copy`) is *as Obsidian URL
 (`lucide-link`: `obsidian://open?vault=…&file=search%2FOne`), *from vault folder* (`vault`:
 `search/One`, with no extension) and *from system root* (`lucide-hard-drive`: the absolute path
 with its extension).
+
+## Observed Bases cell undo, Obsidian 1.15.1
+
+`tools/obsidian-probe/bases-cell-undo.mjs` (steps `u00`-`u10`) over CDP in a private headless
+sway with `USER_DATA_DIR` and `CDP_PORT=9472`; the record's run reported 1.15.1 in its window
+title (the installer build 1.13.7; an exploratory run the same day on 1.15.0 agreed in every
+step). Results in `tools/obsidian-probe/results/2026-11-16-bases-cell-undo.json`. The fixture is
+[[#Observed Bases cell selection, Obsidian 1.15.1]]'s five notes and table, with a second view
+`Second` in the base and an `Other.md` beside it; every case reseeded the notes through
+`app.vault.modify` first. This settles the "Ctrl+Z" row that section left at the Delete.
+
+**Where the history lives.** The table view object keeps two stacks, `undoStack` and
+`redoStack`. Each entry is one action, `{changes, state}`: `changes` holds one item per note
+the action wrote, `{file, start, end}`, the note's whole frontmatter as an object before and
+after; `state` is the view's `scroll`, `selection` and `activeCell` after the action. Undo pops
+an entry onto the redo side, puts its `state` back, and for each note runs
+`processFrontMatter`, which assigns `start`'s keys over the frontmatter **only if the
+frontmatter as JSON still equals `end`**; redo does the same the other way. The workspace's own
+`undoHistory` is the closed-tabs list (`workspace:undo-close-pane`), and no command id speaks of
+a cell undo.
+
+**Keys and steps.** `Ctrl+Z` undoes and `Ctrl+Shift+Z` redoes; `Ctrl+Y` does nothing. A paste
+over three rows was one step, and so was a Delete over four rows by six columns. Three actions
+in a row (a Delete, a paste, a Delete) were undone by three `Ctrl+Z`s in reverse, a fourth did
+nothing, and three `Ctrl+Shift+Z`s redid them in order. Each undo and redo put back the
+selection and cursor the action had left (the paste's covered cell as a one-cell range, a lone
+Delete's cursor alone). A new action after an undo drops the redo side. No Notice either way.
+
+**What counts as an action.** A paste, a Delete or Backspace, a text cell typed into and
+committed by Enter (Enter hands focus back to the table), and a checkbox clicked. A field left
+by Escape writes nothing (Escape discards the typing), so there is nothing to undo. Inside an
+open field, `Ctrl+Z` is the field's own text undo and writes nothing.
+
+**Focus.** Only the table container (`.bases-table-container`) takes the keys. With the Files
+pane active, with another cell's field open, or with focus still on a checkbox just clicked,
+`Ctrl+Z` did nothing; a click on a name cell's padding, or leaving the field, and then `Ctrl+Z`
+undid. After Escape twice the container keeps focus and still undoes.
+
+**A note changed since.** The test is on the frontmatter's values, not the bytes:
+- the body edited from outside, the frontmatter as the action left it: the undo sets the old
+  values and the body edit stays (`Alpha body, edited.` under `status: todo`); redo likewise;
+- the pasted value re-quoted from outside (`status: "P3"` for `P3`): the same values, undone;
+- another key changed, or the pasted value overwritten (`status: outside`): nothing written,
+  silently, and the entry is spent; the redo then does nothing either.
+
+**What an undo writes.** The old values assigned over the current ones, so a key the action
+*added* stays: after a Delete over a column, Charlie (which had no `note`) kept `note:` and Echo
+(no frontmatter) kept its new block of `note:`; a Delete over four rows by six columns left
+Delta with `due:` and `items:` it never had. Keys keep their places, and the whole block is
+re-rendered by Obsidian's writer, so a quoted scalar the action re-rendered stays unquoted
+(Delta's quoted `status` and `note` came back unquoted).
+
+**How long it lives.** Switching the base to its second view kept the history. Closing
+the base and opening it again lost it, as did opening another note in the same leaf and coming
+back, and a second leaf on the same base has its own (empty) history.
+
+**The note's own editor.** With the note open in Source mode beside the table, the table's
+write arrives in the editor as one transaction of its history (CodeMirror's `done` went from 1
+to 2). `Ctrl+Z` in the note takes the write back in the buffer (the autosave then writes it),
+and `Ctrl+Shift+Z` there redoes it. The table's own undo is a further step in the note's history
+(`done` 3), not a pop of the earlier one, so the note's `Ctrl+Z` after it puts the pasted value
+back. A line typed in the note before the paste survives the table's undo.
+
+**Scoria** (`scoria::bases::undo`) follows all of the above but for what an undo writes: a step
+keeps each note's bytes either side of the write, and a note that is still those bytes gets its
+old bytes back exactly, so an added key or block goes again and a quoted scalar comes back
+quoted. A note whose body moved on but whose frontmatter values are the step's gets the old
+block back above the new body. Scoria's checkbox has no focus of its own, so `Ctrl+Z` straight
+after a click undoes it. The history is the view's: it is dropped when the view lets go of the
+base or loads another file, and kept across a view switch and a reload.
